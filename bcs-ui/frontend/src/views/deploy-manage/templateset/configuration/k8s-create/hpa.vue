@@ -26,8 +26,7 @@
             </bk-alert>
             <template v-if="!HPAs.length">
               <div class="biz-guide-box mt0">
-                <bk-button type="primary" @click.stop.prevent="addLocalHPA">
-                  <i class="bcs-icon bcs-icon-plus"></i>
+                <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalHPA">
                   <span style="margin-left: 0;">{{$t('添加')}}HPA</span>
                 </bk-button>
               </div>

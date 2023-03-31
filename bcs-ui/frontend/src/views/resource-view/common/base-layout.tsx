@@ -569,21 +569,16 @@ export default defineComponent({
   },
   render() {
     const renderCreate = () => {
-      if (this.showCreate) {
+      if (this.showCreate && !this.isLoading) {
         if (this.webAnnotations?.featureFlag?.FORM_CREATE) {
           return (
             <bk-dropdown-menu trigger="click" {...{
               scopedSlots: {
                 'dropdown-trigger': () => (
                         <bk-button
-                            class="resource-create"
-                            theme="primary">
-                            <div class="resource-create-wrapper">
-                                { this.$t('创建') }
-                                <span class="resource-create-icon">
-                                    <i class="bk-icon icon-angle-down"></i>
-                                </span>
-                            </div>
+                            theme="primary"
+                            icon-right="icon-angle-down">
+                            { this.$t('创建') }
                         </bk-button>
                 ),
                 'dropdown-content': () => (
@@ -601,7 +596,6 @@ export default defineComponent({
         }
         return (
           <bk-button
-              class="resource-create"
               icon="plus"
               theme="primary"
               onClick={this.handleCreateResource}>

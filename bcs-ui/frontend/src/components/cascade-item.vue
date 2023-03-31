@@ -5,7 +5,8 @@
         'bcs-dropdown-item',
         {
           'pr-[5px]': item.children && item.children.length,
-          'active': item.children && item.children.length && activeID === item.id
+          'active': item.children && item.children.length && activeID === item.id,
+          'disabled': item.disabled
         }
       ]"
       v-for="item, index in list"
@@ -45,6 +46,7 @@ export interface IData {
   id: string
   label: string
   children?: IData[]
+  disabled?: boolean
 }
 export default defineComponent({
   name: 'BcsCascadeItem',
@@ -65,6 +67,8 @@ export default defineComponent({
       popoverRef.value[index]?.show();
     };
     const handleClickItem = (item: IData, index) => {
+      if (item.disabled) return;
+
       popoverRef.value[index]?.show();
       if (item.children?.length) return;
       ctx.emit('click', item);

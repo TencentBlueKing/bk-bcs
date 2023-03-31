@@ -9,7 +9,6 @@
           <template #left>
             <!-- 权限详情接口目前暂不支持多个actionID -->
             <bcs-button
-              class="w-[100px]"
               theme="primary"
               icon="plus"
               v-authority="{

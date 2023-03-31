@@ -19,7 +19,7 @@
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
             cluster-type="all"
-            @search-change="getIngressList"
+            @search-change="searchIngress"
             @refresh="refresh" />
         </div>
       </div>
@@ -134,6 +134,9 @@
                 </bcs-popover>
               </template>
             </bk-table-column>
+            <template #empty>
+              <BcsEmptyTableStatus :type="searchKeyword ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+            </template>
           </bk-table>
         </div>
       </div>
@@ -799,7 +802,7 @@ export default {
       list.forEach((item) => {
         item.isChecked = false;
         for (const key of keyList) {
-          if (item[key].indexOf(keyword) > -1) {
+          if (item[key]?.indexOf(keyword) > -1) {
             results.push(item);
             return true;
           }
@@ -1208,6 +1211,10 @@ export default {
       return row.can_delete
                     && this.webAnnotations.perms[row.iam_ns_id]
                     && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;
+    },
+    handleClearSearchData() {
+      this.searchKeyword = '';
+      this.searchIngress();
     },
   },
 };

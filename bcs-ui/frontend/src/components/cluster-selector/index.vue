@@ -44,6 +44,7 @@
 
 <script>
 import { isEmpty } from '@/common/util';
+import useMenu from '@/views/app/use-menu';
 
 export default {
   name: 'ClusterSelector',
@@ -90,8 +91,8 @@ export default {
     isSharedCluster() {
       return this.$store.getters.isSharedCluster;
     },
-    curSideRouteName() {
-      return this.$store.state.curSideMenu?.route;
+    curSideMenu() {
+      return this.$store.state.curSideMenu;
     },
   },
   watch: {
@@ -123,12 +124,22 @@ export default {
       this.handleHideClusterSelector();
       this.$store.commit('updateCurCluster', cluster.clusterID ? cluster : {});
 
-      this.$router.replace({
-        name: this.curSideRouteName || this.$route.name,
-        params: {
-          clusterId: cluster.clusterID,
-        },
-      });
+      const { disabledMenuIDs } = useMenu();
+      if (disabledMenuIDs.value.includes(this.curSideMenu?.id)) {
+        this.$router.replace({
+          name: 'dashboardNamespace',
+          params: {
+            clusterId: cluster.clusterID,
+          },
+        });
+      } else {
+        this.$router.replace({
+          name: this.curSideMenu?.route || this.$route.name,
+          params: {
+            clusterId: cluster.clusterID,
+          },
+        });
+      }
     },
 
     /**

@@ -20,8 +20,7 @@
             </bk-alert>
             <template v-if="!configmaps.length">
               <div class="biz-guide-box mt0">
-                <bk-button type="primary" @click.stop.prevent="addLocalConfigmap">
-                  <i class="bcs-icon bcs-icon-plus"></i>
+                <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalConfigmap">
                   <span style="margin-left: 0;">{{$t('添加')}}ConfigMap</span>
                 </bk-button>
               </div>

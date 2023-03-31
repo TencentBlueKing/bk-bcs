@@ -6,9 +6,8 @@
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading }">
       <div class="biz-panel-header">
         <div class="left">
-          <bk-button type="primary" @click.stop.prevent="createLoadBlance">
-            <i class="bcs-icon bcs-icon-plus"></i>
-            <span>{{$t('新建LoadBalancer')}}</span>
+          <bk-button type="primary" icon="plus" @click.stop.prevent="createLoadBlance">
+            {{$t('新建LoadBalancer')}}
           </bk-button>
         </div>
         <div class="right">
@@ -66,6 +65,9 @@
                 <a href="javascript:void(0);" class="bk-text-button" @click.stop.prevent="removeLoadBalance(props.row)">{{$t('删除')}}</a>
               </template>
             </bk-table-column>
+            <template #empty>
+              <BcsEmptyTableStatus :type="searchKeyword ? 'search-empty' : 'empty'" @clear="searchKeyword = ''" />
+            </template>
           </bk-table>
         </div>
       </div>
