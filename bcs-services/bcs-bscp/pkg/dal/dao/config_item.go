@@ -42,6 +42,8 @@ type ConfigItem interface {
 	List(kit *kit.Kit, opts *types.ListConfigItemsOption) (*types.ListConfigItemDetails, error)
 	// Delete one configItem instance.
 	Delete(kit *kit.Kit, configItem *table.ConfigItem) error
+	// GetCount bizID config count
+	GetCount(kit *kit.Kit, id, bizID uint32) ([]*table.ListConfigItemCounts, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -366,4 +368,21 @@ func (dao *configItemDao) queryFileMode(kt *kit.Kit, id, bizID uint32) (
 	}
 
 	return one.FileMode, nil
+}
+
+// GetCount get bizID config count
+func (dao *configItemDao) GetCount(kit *kit.Kit, id, bizID uint32) ([]*table.ListConfigItemCounts, error) {
+
+	if id == 0 {
+		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
+	}
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT app_id, COUNT(*) as count, max(updated_at) as update_at FROM ", table.ConfigItemTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(bizID)), " GROUP BY app_id ")
+	sql := filter.SqlJoint(sqlSentence)
+
+	configItem := make([]*table.ListConfigItemCounts, 0)
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &configItem, sql); err != nil {
+		return nil, err
+	}
+	return configItem, nil
 }

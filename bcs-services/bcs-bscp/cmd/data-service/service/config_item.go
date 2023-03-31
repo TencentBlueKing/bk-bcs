@@ -199,3 +199,22 @@ func (s *Service) queryAppConfigItemList(kit *kit.Kit, bizID, appID uint32) ([]*
 
 	return cfgItems, nil
 }
+
+// ListConfigItemCount list config items count.
+func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigItemCountReq) (*pbds.ListConfigItemCountResp,
+	error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.ConfigItem().GetCount(grpcKit, req.AppId, req.BizId)
+	if err != nil {
+		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListConfigItemCountResp{
+		Details: pbci.PbConfigItemCounts(details),
+	}
+	return resp, nil
+
+}

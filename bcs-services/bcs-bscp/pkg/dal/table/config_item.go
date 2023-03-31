@@ -396,3 +396,10 @@ func (f FileMode) Validate() error {
 
 	return nil
 }
+
+// ListConfigItemCounts return data structure
+type ListConfigItemCounts struct {
+	AppId    uint32 `db:"app_id" json:"app_id"`
+	Count    uint32 `db:"count" json:"count"`
+	UpdateAt string `db:"update_at" json:"update_at"`
+}

@@ -96,7 +96,11 @@ service Config {
             get: "/api/v1/config/apps/{app_id}/config_items"
         };
     }
-
+    rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/apps/{app_id}/config_item_count"
+        };
+    }
     rpc CreateContent(CreateContentReq) returns (CreateContentResp) {
         option (google.api.http) = {
             post: "/api/v1/config/create/content/content/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}"
@@ -439,6 +443,15 @@ message ListConfigItemsReq {
 message ListConfigItemsResp {
     uint32                   count   = 1;
     repeated pbci.ConfigItem details = 2;
+}
+
+message ListConfigItemCountReq {
+    uint32 app_id     = 1;
+    uint32 biz_id     = 2;
+}
+
+message ListConfigItemCountResp {
+    repeated pbci.ListConfigItemCounts details = 1;
 }
 
 message CreateContentReq {

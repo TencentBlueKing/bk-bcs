@@ -126,3 +126,30 @@ func PbConfigItem(ci *table.ConfigItem) *ConfigItem {
 		Revision:   pbbase.PbRevision(ci.Revision),
 	}
 }
+
+// PbConfigItemCounts
+func PbConfigItemCounts(ccs []*table.ListConfigItemCounts) []*ListConfigItemCounts {
+	if ccs == nil {
+		return make([]*ListConfigItemCounts, 0)
+	}
+
+	result := make([]*ListConfigItemCounts, 0)
+	for _, cc := range ccs {
+		result = append(result, PbConfigItemCount(cc))
+	}
+
+	return result
+}
+
+// PbConfigItemCount
+func PbConfigItemCount(cc *table.ListConfigItemCounts) *ListConfigItemCounts {
+	if cc == nil {
+		return nil
+	}
+
+	return &ListConfigItemCounts{
+		AppId:    cc.AppId,
+		Count:    cc.Count,
+		UpdateAt: cc.UpdateAt,
+	}
+}
