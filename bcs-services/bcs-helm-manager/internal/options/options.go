@@ -80,6 +80,7 @@ type MongoConfig struct {
 // RepoConfig option for repo platform
 type RepoConfig struct {
 	URL               string `json:"url" yaml:"url"`
+	UID               string `json:"uid" yaml:"uid"`
 	Username          string `json:"username" yaml:"username"`
 	Password          string `json:"password" yaml:"password"`
 	OciURL            string `json:"ociurl" yaml:"ociurl"`

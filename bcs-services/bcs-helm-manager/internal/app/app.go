@@ -220,6 +220,7 @@ func (hm *HelmManager) initPlatform() error {
 		URL:      hm.opt.Repo.URL,
 		OciURL:   hm.opt.Repo.OciURL,
 		AuthType: "Platform",
+		UID:      hm.opt.Repo.UID,
 		Username: hm.opt.Repo.Username,
 		Password: password,
 	})
