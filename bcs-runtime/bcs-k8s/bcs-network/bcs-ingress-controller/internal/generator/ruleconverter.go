@@ -234,7 +234,8 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 
 	// set namespace when namespaced flag is set
 	svcNamespace := svcRoute.ServiceNamespace
-	if rc.isNamespaced {
+	// use ingressNS as default
+	if rc.isNamespaced || svcNamespace == ""{
 		svcNamespace = rc.ingressNamespace
 	}
 

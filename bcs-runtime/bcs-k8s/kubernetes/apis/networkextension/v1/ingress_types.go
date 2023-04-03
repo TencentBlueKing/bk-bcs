@@ -74,7 +74,7 @@ func (is *IngressSubset) GetWeight() int {
 // ServiceRoute service info
 type ServiceRoute struct {
 	ServiceName      string `json:"serviceName"`
-	ServiceNamespace string `json:"serviceNamespace"`
+	ServiceNamespace string `json:"serviceNamespace,omitempty"`
 	ServicePort      int    `json:"servicePort"`
 	// If specified, will use the hostport as backend's port
 	// +optional
