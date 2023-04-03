@@ -447,6 +447,8 @@ message ListConfigItemsResp {
 
 message ListConfigItemCountReq {
     uint32 biz_id     = 1;
+    uint32 start      = 2;
+    uint32 limit      = 3;
 }
 
 message ListConfigItemCountResp {

@@ -206,7 +206,7 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigI
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	details, err := s.dao.ConfigItem().GetCount(grpcKit, req.BizId)
+	details, err := s.dao.ConfigItem().GetCount(grpcKit, req.BizId, req.Start, req.Limit)
 	if err != nil {
 		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err

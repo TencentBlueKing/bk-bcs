@@ -43,7 +43,7 @@ type ConfigItem interface {
 	// Delete one configItem instance.
 	Delete(kit *kit.Kit, configItem *table.ConfigItem) error
 	// GetCount bizID config count
-	GetCount(kit *kit.Kit, bizID uint32) ([]*table.ListConfigItemCounts, error)
+	GetCount(kit *kit.Kit, bizID, start, limit uint32) ([]*table.ListConfigItemCounts, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -371,13 +371,15 @@ func (dao *configItemDao) queryFileMode(kt *kit.Kit, id, bizID uint32) (
 }
 
 // GetCount get bizID config count
-func (dao *configItemDao) GetCount(kit *kit.Kit, bizID uint32) ([]*table.ListConfigItemCounts, error) {
+func (dao *configItemDao) GetCount(kit *kit.Kit, bizID, start, limit uint32) ([]*table.ListConfigItemCounts, error) {
 
 	if bizID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
+		return nil, errf.New(errf.InvalidParameter, "config item biz id can not be 0")
 	}
+
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT app_id, COUNT(*) as count, max(updated_at) as update_at FROM ", table.ConfigItemTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(bizID)), " GROUP BY app_id ")
+	sqlSentence = append(sqlSentence, "SELECT app_id, COUNT(*) as count, max(updated_at) as update_at FROM ", table.ConfigItemTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(bizID)),
+		" GROUP BY app_id ORDER BY app_id LIMIT ", strconv.Itoa(int(limit)), " OFFSET ", strconv.Itoa(int(start)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	configItem := make([]*table.ListConfigItemCounts, 0)
