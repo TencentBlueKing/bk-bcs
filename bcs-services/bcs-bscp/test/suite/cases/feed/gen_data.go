@@ -18,11 +18,11 @@ import (
 	"net/http"
 
 	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/uuid"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	"bscp.io/pkg/tools"
 	"bscp.io/test/client/api"
 	"bscp.io/test/suite/cases"
 )
@@ -62,6 +62,7 @@ func (g *Generator) GenData(kt *kit.Kit) error {
 	header.Set(constant.UserKey, "gen-data")
 	header.Set(constant.RidKey, kt.Rid)
 	header.Set(constant.AppCodeKey, "test")
+	header.Add("Cookie", "bk_token="+constant.BKTokenForTest)
 
 	if err := g.GenBaseNormalData(kt.Ctx, header); err != nil {
 		return fmt.Errorf("gen base normal data failed, err: %v, rid: %s", err, kt.Rid)
@@ -100,28 +101,29 @@ func (g *Generator) GenBaseNormalData(ctx context.Context, header http.Header) e
 		}
 	}
 
-	stgSetSpec := &table.StrategySetSpec{
-		Name: cases.RandName("strategy_set"),
-	}
-	stgSetID, err := g.genStrategySetData(ctx, header, stgSetSpec, BaseNormalTestAppID)
-	if err != nil {
-		return err
-	}
-
-	// 1. exec one default strategy publish.
-	releaseID, err := g.defaultStrategyPublish(ctx, header, BaseNormalTestAppID, stgSetID)
-	if err != nil {
-		return fmt.Errorf("exec default strategy publish failed, err: %v", err)
-	}
-	BNMDefaultStrategyReleaseID = releaseID
-
-	// 2. exec one normal strategy with sub strategy publish.
-	if err = g.normalStrategyPublish(ctx, header, BaseNormalTestAppID, stgSetID); err != nil {
-		return fmt.Errorf("exec normal strategy publish failed, err: %v", err)
-	}
+	// TODO: strategy test depends on group, add group test first
+	//stgSetSpec := &table.StrategySetSpec{
+	//	Name: cases.RandName("strategy_set"),
+	//}
+	//stgSetID, err := g.genStrategySetData(ctx, header, stgSetSpec, BaseNormalTestAppID)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//// 1. exec one default strategy publish.
+	//releaseID, err := g.defaultStrategyPublish(ctx, header, BaseNormalTestAppID, stgSetID)
+	//if err != nil {
+	//	return fmt.Errorf("exec default strategy publish failed, err: %v", err)
+	//}
+	//BNMDefaultStrategyReleaseID = releaseID
+	//
+	//// 2. exec one normal strategy with sub strategy publish.
+	//if err = g.normalStrategyPublish(ctx, header, BaseNormalTestAppID, stgSetID); err != nil {
+	//	return fmt.Errorf("exec normal strategy publish failed, err: %v", err)
+	//}
 
 	// 3. exec one instance publish.
-	releaseID, err = g.instancePublish(ctx, header, BaseNormalTestAppID)
+	releaseID, err := g.instancePublish(ctx, header, BaseNormalTestAppID)
 	if err != nil {
 		return fmt.Errorf("exec instance publish failed, err: %v", err)
 	}
@@ -132,7 +134,9 @@ func (g *Generator) GenBaseNormalData(ctx context.Context, header http.Header) e
 
 // GenBaseNamespaceData gen base namespace publish way related data.
 // Data: 在 app_id = ${BaseNamespaceTestAppID} 的应用下，进行一次兜底策略发布；
-// 		 进行一次带子策略的Namespace策略发布；进行一次实例发布。
+//
+//	进行一次带子策略的Namespace策略发布；进行一次实例发布。
+//
 // Test Scene:
 // 1. 匹配兜底策略
 // 2. 匹配Namespace
@@ -157,28 +161,29 @@ func (g *Generator) GenBaseNamespaceData(ctx context.Context, header http.Header
 		}
 	}
 
-	stgSetSpec := &table.StrategySetSpec{
-		Name: cases.RandName("strategy_set"),
-	}
-	stgSetID, err := g.genStrategySetData(ctx, header, stgSetSpec, BaseNamespaceTestAppID)
-	if err != nil {
-		return err
-	}
-
-	// 1. exec one default strategy publish.
-	releaseID, err := g.defaultStrategyPublish(ctx, header, BaseNamespaceTestAppID, stgSetID)
-	if err != nil {
-		return fmt.Errorf("exec default strategy publish failed, err: %v", err)
-	}
-	BNSDefaultStrategyReleaseID = releaseID
-
-	// 2. exec one namespace strategy with sub strategy publish.
-	if err = g.namespaceStrategyPublish(ctx, header, BaseNamespaceTestAppID, stgSetID); err != nil {
-		return fmt.Errorf("exec namespace strategy publish failed, err: %v", err)
-	}
+	// TODO: strategy test depends on group, add group test first
+	//stgSetSpec := &table.StrategySetSpec{
+	//	Name: cases.RandName("strategy_set"),
+	//}
+	//stgSetID, err := g.genStrategySetData(ctx, header, stgSetSpec, BaseNamespaceTestAppID)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//// 1. exec one default strategy publish.
+	//releaseID, err := g.defaultStrategyPublish(ctx, header, BaseNamespaceTestAppID, stgSetID)
+	//if err != nil {
+	//	return fmt.Errorf("exec default strategy publish failed, err: %v", err)
+	//}
+	//BNSDefaultStrategyReleaseID = releaseID
+	//
+	//// 2. exec one namespace strategy with sub strategy publish.
+	//if err = g.namespaceStrategyPublish(ctx, header, BaseNamespaceTestAppID, stgSetID); err != nil {
+	//	return fmt.Errorf("exec namespace strategy publish failed, err: %v", err)
+	//}
 
 	// 3. exec one instance publish.
-	releaseID, err = g.instancePublish(ctx, header, BaseNamespaceTestAppID)
+	releaseID, err := g.instancePublish(ctx, header, BaseNamespaceTestAppID)
 	if err != nil {
 		return fmt.Errorf("exec instance publish failed, err: %v", err)
 	}
@@ -200,28 +205,20 @@ func (g *Generator) instancePublish(ctx context.Context, header http.Header, app
 		return 0, fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return 0, fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-
 	// publish instance.
 	ipReq := &pbcs.PublishInstanceReq{
 		BizId:     cases.TBizID,
 		AppId:     appID,
 		Uid:       InstanceUID,
-		ReleaseId: rlResp.Data.Id,
+		ReleaseId: rlResp.Id,
 		Memo:      TestDataMemo,
 	}
-	ipResp, err := g.Cli.Instance.Publish(ctx, header, ipReq)
+	_, err = g.Cli.Instance.Publish(ctx, header, ipReq)
 	if err != nil {
 		return 0, fmt.Errorf("create instance publish err, %v", err)
 	}
 
-	if ipResp.Code != errf.OK {
-		return 0, fmt.Errorf("create instance publish failed, code: %d, msg: %s", ipResp.Code, ipResp.Message)
-	}
-
-	return rlResp.Data.Id, nil
+	return rlResp.Id, nil
 }
 
 func (g *Generator) namespaceStrategyPublish(ctx context.Context, header http.Header, appID, stgSetID uint32) error {
@@ -237,10 +234,7 @@ func (g *Generator) namespaceStrategyPublish(ctx context.Context, header http.He
 		return fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-	BNSNamespaceReleaseID = rlResp.Data.Id
+	BNSNamespaceReleaseID = rlResp.Id
 
 	// create release.
 	rlReq = &pbcs.CreateReleaseReq{
@@ -254,10 +248,7 @@ func (g *Generator) namespaceStrategyPublish(ctx context.Context, header http.He
 		return fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-	BNSSubStrategyReleaseID = rlResp.Data.Id
+	BNSSubStrategyReleaseID = rlResp.Id
 
 	// create strategy.
 	styReq := &pbcs.CreateStrategyReq{
@@ -269,13 +260,9 @@ func (g *Generator) namespaceStrategyPublish(ctx context.Context, header http.He
 		Memo:          TestDataMemo,
 		ReleaseId:     BNSNamespaceReleaseID,
 	}
-	styResp, err := g.Cli.Strategy.Create(ctx, header, styReq)
+	_, err = g.Cli.Strategy.Create(ctx, header, styReq)
 	if err != nil {
 		return fmt.Errorf("create strategy err, %v", err)
-	}
-
-	if styResp.Code != errf.OK {
-		return fmt.Errorf("create strategy failed, code: %d, msg: %s", styResp.Code, styResp.Message)
 	}
 
 	// publish strategy.
@@ -283,13 +270,9 @@ func (g *Generator) namespaceStrategyPublish(ctx context.Context, header http.He
 		BizId: cases.TBizID,
 		AppId: appID,
 	}
-	pbResp, err := g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
+	_, err = g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
 		return fmt.Errorf("create strategy publish err, %v", err)
-	}
-
-	if pbResp.Code != errf.OK {
-		return fmt.Errorf("create strategy publish failed, code: %d, msg: %s", pbResp.Code, pbResp.Message)
 	}
 
 	return nil
@@ -308,10 +291,7 @@ func (g *Generator) normalStrategyPublish(ctx context.Context, header http.Heade
 		return fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-	BNMMainStrategyReleaseID = rlResp.Data.Id
+	BNMMainStrategyReleaseID = rlResp.Id
 
 	// create release.
 	rlReq = &pbcs.CreateReleaseReq{
@@ -325,10 +305,7 @@ func (g *Generator) normalStrategyPublish(ctx context.Context, header http.Heade
 		return fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-	BNMSubStrategyReleaseID = rlResp.Data.Id
+	BNMSubStrategyReleaseID = rlResp.Id
 
 	// create strategy.
 	styReq := &pbcs.CreateStrategyReq{
@@ -339,13 +316,9 @@ func (g *Generator) normalStrategyPublish(ctx context.Context, header http.Heade
 		Memo:          TestDataMemo,
 		ReleaseId:     BNMMainStrategyReleaseID,
 	}
-	styResp, err := g.Cli.Strategy.Create(ctx, header, styReq)
+	_, err = g.Cli.Strategy.Create(ctx, header, styReq)
 	if err != nil {
 		return fmt.Errorf("create strategy err, %v", err)
-	}
-
-	if styResp.Code != errf.OK {
-		return fmt.Errorf("create strategy failed, code: %d, msg: %s", styResp.Code, styResp.Message)
 	}
 
 	// publish strategy.
@@ -353,13 +326,9 @@ func (g *Generator) normalStrategyPublish(ctx context.Context, header http.Heade
 		BizId: cases.TBizID,
 		AppId: appID,
 	}
-	pbResp, err := g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
+	_, err = g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
 		return fmt.Errorf("create strategy publish err, %v", err)
-	}
-
-	if pbResp.Code != errf.OK {
-		return fmt.Errorf("create strategy publish failed, code: %d, msg: %s", pbResp.Code, pbResp.Message)
 	}
 
 	return nil
@@ -380,10 +349,6 @@ func (g *Generator) defaultStrategyPublish(ctx context.Context, header http.Head
 		return 0, fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return 0, fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-
 	// create strategy.
 	styReq := &pbcs.CreateStrategyReq{
 		BizId:         cases.TBizID,
@@ -392,15 +357,11 @@ func (g *Generator) defaultStrategyPublish(ctx context.Context, header http.Head
 		Name:          cases.RandName("strategy"),
 		AsDefault:     true,
 		Memo:          TestDataMemo,
-		ReleaseId:     rlResp.Data.Id,
+		ReleaseId:     rlResp.Id,
 	}
-	styResp, err := g.Cli.Strategy.Create(ctx, header, styReq)
+	_, err = g.Cli.Strategy.Create(ctx, header, styReq)
 	if err != nil {
 		return 0, fmt.Errorf("create strategy err, %v", err)
-	}
-
-	if styResp.Code != errf.OK {
-		return 0, fmt.Errorf("create strategy failed, code: %d, msg: %s", styResp.Code, styResp.Message)
 	}
 
 	// publish strategy.
@@ -408,16 +369,12 @@ func (g *Generator) defaultStrategyPublish(ctx context.Context, header http.Head
 		BizId: cases.TBizID,
 		AppId: appID,
 	}
-	pbResp, err := g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
+	_, err = g.Cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
 		return 0, fmt.Errorf("create strategy publish err, %v", err)
 	}
 
-	if pbResp.Code != errf.OK {
-		return 0, fmt.Errorf("create strategy publish failed, code: %d, msg: %s", pbResp.Code, pbResp.Message)
-	}
-
-	return rlResp.Data.Id, nil
+	return rlResp.Id, nil
 }
 
 func (g *Generator) genAppData(ctx context.Context, header http.Header, spec *table.AppSpec) (uint32, error) {
@@ -435,11 +392,7 @@ func (g *Generator) genAppData(ctx context.Context, header http.Header, spec *ta
 		return 0, fmt.Errorf("create app err, %v", err)
 	}
 
-	if resp.Code != errf.OK {
-		return 0, fmt.Errorf("create app failed, code: %d, msg: %s", resp.Code, resp.Message)
-	}
-
-	return resp.Data.Id, nil
+	return resp.Id, nil
 }
 
 func (g *Generator) genStrategySetData(ctx context.Context, header http.Header,
@@ -457,15 +410,15 @@ func (g *Generator) genStrategySetData(ctx context.Context, header http.Header,
 		return 0, fmt.Errorf("create strategy set err, %v", err)
 	}
 
-	if resp.Code != errf.OK {
-		return 0, fmt.Errorf("create strategy set failed, code: %d, msg: %s", resp.Code, resp.Message)
-	}
-
-	return resp.Data.Id, nil
+	return resp.Id, nil
 }
 
 // genCIRelatedData gen five config item for every app, and create one content and commit for every config item.
 func (g *Generator) genCIRelatedData(ctx context.Context, header http.Header, bizID, appID uint32) error {
+	content := "This is content for test"
+	signature := tools.SHA256(content)
+	size := uint64(len(content))
+
 	// create config item.
 	ciReq := &pbcs.CreateConfigItemReq{
 		BizId:     bizID,
@@ -478,45 +431,45 @@ func (g *Generator) genCIRelatedData(ctx context.Context, header http.Header, bi
 		User:      "root",
 		UserGroup: "root",
 		Privilege: "755",
+		Sign:      signature,
+		ByteSize:  size,
 	}
 	ciResp, err := g.Cli.ConfigItem.Create(ctx, header, ciReq)
 	if err != nil {
 		return fmt.Errorf("create config item err, %v", err)
 	}
-	if ciResp.Code != errf.OK {
-		return fmt.Errorf("create config item failed, code: %d, msg: %s", ciResp.Code, ciResp.Message)
+
+	// upload content.
+	header.Set(constant.ContentIDHeaderKey, signature)
+	_, err = g.Cli.Content.Upload(ctx, header, cases.TBizID, appID, content)
+	if err != nil {
+		return fmt.Errorf("upload content err, %v", err)
 	}
 
 	// create content.
 	conReq := &pbcs.CreateContentReq{
 		BizId:        bizID,
 		AppId:        appID,
-		ConfigItemId: ciResp.Data.Id,
-		Sign:         "c7d78b78205a2619eb2b80558f85ee18a8836ef5f4f317f8587ee38bc3712a8a",
-		ByteSize:     11,
+		ConfigItemId: ciResp.Id,
+		Sign:         signature,
+		ByteSize:     size,
 	}
 	conResp, err := g.Cli.Content.Create(ctx, header, conReq)
 	if err != nil {
 		return fmt.Errorf("create content err, %v", err)
-	}
-	if conResp.Code != errf.OK {
-		return fmt.Errorf("create content failed, code: %d, msg: %s", conResp.Code, conResp.Message)
 	}
 
 	// create commit.
 	comReq := &pbcs.CreateCommitReq{
 		BizId:        bizID,
 		AppId:        appID,
-		ConfigItemId: ciResp.Data.Id,
-		ContentId:    conResp.Data.Id,
+		ConfigItemId: ciResp.Id,
+		ContentId:    conResp.Id,
 		Memo:         TestDataMemo,
 	}
-	comResp, err := g.Cli.Commit.Create(ctx, header, comReq)
+	_, err = g.Cli.Commit.Create(ctx, header, comReq)
 	if err != nil {
 		return fmt.Errorf("create commit err, %v", err)
-	}
-	if comResp.Code != errf.OK {
-		return fmt.Errorf("create commit failed, code: %d, msg: %s", comResp.Code, comResp.Message)
 	}
 
 	return nil

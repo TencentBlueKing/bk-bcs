@@ -294,6 +294,7 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 		if err != nil {
 			logs.Errorf("create released ci cache failed, bizID: %d, releaseIDs: %v,err: %v, rid: %s", bizID,
 				releaseIDs, err, kt.Rid)
+			logs.V(5).Infof("create released ci cache failed, kv: %#v", kv)
 			return err
 		}
 	}

@@ -15,12 +15,12 @@ package api
 import (
 	"testing"
 
+	. "github.com/smartystreets/goconvey/convey" // import convey.
+
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/test/suite"
 	"bscp.io/test/suite/cases"
-
-	. "github.com/smartystreets/goconvey/convey" // import convey.
 )
 
 func TestApplication(t *testing.T) {
@@ -162,8 +162,8 @@ func TestApplication(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.App.Create(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -205,7 +205,7 @@ func TestApplication(t *testing.T) {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.App.Update(ctx, header, &req)
 				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(*resp, ShouldBeZeroValue)
 
 				// verify by list_app
 				listReq, err := cases.GenListAppByIdsReq(req.BizId, []uint32{appId})
@@ -257,8 +257,8 @@ func TestApplication(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.App.Update(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -277,7 +277,7 @@ func TestApplication(t *testing.T) {
 			ctx, header := cases.GenApiCtxHeader()
 			resp, err := cli.App.Delete(ctx, header, req)
 			So(err, ShouldBeNil)
-			So(resp, ShouldNotBeNil)
+			So(*resp, ShouldBeZeroValue)
 
 			// verify by list_app
 			listReq, err := cases.GenListAppByIdsReq(req.BizId, []uint32{appId})
@@ -308,37 +308,35 @@ func TestApplication(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.App.Delete(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 
 	})
 
 	Convey("List App Test", t, func() {
-		// list app logic about the count has changed, no need to test it, or it will occur error:
-		// "page.count is enabled, do not support generate SQL expression"
 		// The normal list_app is test by the first create_app case,
 		// so we just test list_app normal test on count page in here.
-		//Convey("1.list_app normal test: count page", func() {
-		//
-		//	appId := rm.GetApp(table.Normal)
-		//
-		//	filter, err := cases.GenQueryFilterByIds([]uint32{appId})
-		//	So(err, ShouldBeNil)
-		//
-		//	req := &pbcs.ListAppsReq{
-		//		BizId:  cases.TBizID,
-		//		Filter: filter,
-		//		Page:   cases.CountPage(),
-		//	}
-		//
-		//	ctx, header := cases.GenApiCtxHeader()
-		//	resp, err := cli.App.List(ctx, header, req)
-		//	So(err, ShouldBeNil)
-		//	So(resp, ShouldNotBeNil)
-		//	So(resp.Count, ShouldEqual, uint32(1))
-		//})
+		Convey("1.list_app normal test: count page", func() {
+
+			appId := rm.GetApp(table.Normal)
+
+			filter, err := cases.GenQueryFilterByIds([]uint32{appId})
+			So(err, ShouldBeNil)
+
+			req := &pbcs.ListAppsReq{
+				BizId:  cases.TBizID,
+				Filter: filter,
+				Page:   cases.ListPage(),
+			}
+
+			ctx, header := cases.GenApiCtxHeader()
+			resp, err := cli.App.List(ctx, header, req)
+			So(err, ShouldBeNil)
+			So(resp, ShouldNotBeNil)
+			So(resp.Count, ShouldEqual, uint32(1))
+		})
 
 		Convey("2.list_app abnormal test: set a invalid parameter", func() {
 			appId := rm.GetApp(table.Normal)
@@ -350,12 +348,12 @@ func TestApplication(t *testing.T) {
 				{ // biz_id is invalid
 					BizId:  cases.WID,
 					Filter: filter,
-					Page:   cases.CountPage(),
+					Page:   cases.ListPage(),
 				},
 				{ // filter is invalid
 					BizId:  cases.TBizID,
 					Filter: nil,
-					Page:   cases.CountPage(),
+					Page:   cases.ListPage(),
 				},
 				{ // page is invalid
 					BizId:  cases.TBizID,
@@ -367,8 +365,8 @@ func TestApplication(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.App.List(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})

@@ -130,5 +130,5 @@ func bscpResponse(ctx context.Context, w http.ResponseWriter, msg proto.Message)
 		return nil
 	}
 
-	return ww.BuildWebAnnotation(ctx, msg)
+	return ww.SetWriterAttrs(ctx, msg)
 }

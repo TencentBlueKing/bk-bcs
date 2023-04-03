@@ -13,13 +13,13 @@ limitations under the License.
 package api
 
 import (
-	"bscp.io/pkg/tools"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	"bscp.io/pkg/tools"
 	"bscp.io/test/client/api"
 	"bscp.io/test/suite"
 	"bscp.io/test/suite/cases"
@@ -112,32 +112,33 @@ func TestConfigItem(t *testing.T) {
 				So(resp, ShouldNotBeNil)
 				So(resp.Id, ShouldNotEqual, uint32(0))
 
+				// unsupported list query by self-defined filter using ids
 				// verify by list_config_item
-				listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
-				So(err, ShouldBeNil)
-
-				ctx, header = cases.GenApiCtxHeader()
-				listResp, err := cli.ConfigItem.List(ctx, header, listReq)
-				So(err, ShouldBeNil)
-				So(listResp, ShouldNotBeNil)
-
-				So(len(listResp.Details), ShouldEqual, 1)
-				one := listResp.Details[0]
-				So(one, ShouldNotBeNil)
-				So(one.Id, ShouldEqual, resp.Id)
-				So(one.Spec, ShouldNotBeNil)
-				So(one.Spec.Path, ShouldEqual, req.Path)
-				So(one.Spec.Name, ShouldEqual, req.Name)
-				So(one.Spec.FileType, ShouldEqual, req.FileType)
-				So(one.Spec.FileMode, ShouldEqual, req.FileMode)
-				So(one.Spec.Permission, ShouldNotBeNil)
-				So(one.Spec.Permission.User, ShouldEqual, req.User)
-				So(one.Spec.Permission.UserGroup, ShouldEqual, req.UserGroup)
-				So(one.Spec.Permission.Privilege, ShouldEqual, req.Privilege)
-
-				So(one.Attachment, ShouldNotBeNil)
-				So(one.Attachment.AppId, ShouldEqual, appId)
-				So(one.Attachment.BizId, ShouldEqual, cases.TBizID)
+				//listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
+				//So(err, ShouldBeNil)
+				//
+				//ctx, header = cases.GenApiCtxHeader()
+				//listResp, err := cli.ConfigItem.List(ctx, header, listReq)
+				//So(err, ShouldBeNil)
+				//So(listResp, ShouldNotBeNil)
+				//
+				//So(len(listResp.Details), ShouldEqual, 1)
+				//one := listResp.Details[0]
+				//So(one, ShouldNotBeNil)
+				//So(one.Id, ShouldEqual, resp.Id)
+				//So(one.Spec, ShouldNotBeNil)
+				//So(one.Spec.Path, ShouldEqual, req.Path)
+				//So(one.Spec.Name, ShouldEqual, req.Name)
+				//So(one.Spec.FileType, ShouldEqual, req.FileType)
+				//So(one.Spec.FileMode, ShouldEqual, req.FileMode)
+				//So(one.Spec.Permission, ShouldNotBeNil)
+				//So(one.Spec.Permission.User, ShouldEqual, req.User)
+				//So(one.Spec.Permission.UserGroup, ShouldEqual, req.UserGroup)
+				//So(one.Spec.Permission.Privilege, ShouldEqual, req.Privilege)
+				//
+				//So(one.Attachment, ShouldNotBeNil)
+				//So(one.Attachment.AppId, ShouldEqual, appId)
+				//So(one.Attachment.BizId, ShouldEqual, cases.TBizID)
 
 				rm.AddConfigItem(appId, resp.Id)
 			}
@@ -157,6 +158,8 @@ func TestConfigItem(t *testing.T) {
 				User:      "root",
 				UserGroup: "root",
 				Privilege: "755",
+				Sign:      signature,
+				ByteSize:  size,
 			}
 
 			// add preName field test case
@@ -203,8 +206,8 @@ func TestConfigItem(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.ConfigItem.Create(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -228,6 +231,8 @@ func TestConfigItem(t *testing.T) {
 				User:      "root",
 				UserGroup: "root",
 				Privilege: "755",
+				Sign:      signature,
+				ByteSize:  size,
 			}
 
 			// add preName field test case
@@ -269,34 +274,35 @@ func TestConfigItem(t *testing.T) {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.ConfigItem.Update(ctx, header, &req)
 				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(*resp, ShouldBeZeroValue)
 
+				// unsupported list query by self-defined filter using ids
 				// verify by list_config_item
-				listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{ciId})
-				So(err, ShouldBeNil)
-
-				ctx, header = cases.GenApiCtxHeader()
-				listResp, err := cli.ConfigItem.List(ctx, header, listReq)
-				So(err, ShouldBeNil)
-				So(listResp, ShouldNotBeNil)
-
-				So(len(listResp.Details), ShouldEqual, 1)
-				one := listResp.Details[0]
-				So(one, ShouldNotBeNil)
-				So(one.Id, ShouldEqual, ciId)
-				So(one.Spec, ShouldNotBeNil)
-				So(one.Spec.Path, ShouldEqual, req.Path)
-				So(one.Spec.Name, ShouldEqual, req.Name)
-				So(one.Spec.FileType, ShouldEqual, req.FileType)
-				So(one.Spec.FileMode, ShouldEqual, req.FileMode)
-				So(one.Spec.Permission, ShouldNotBeNil)
-				So(one.Spec.Permission.User, ShouldEqual, req.User)
-				So(one.Spec.Permission.UserGroup, ShouldEqual, req.UserGroup)
-				So(one.Spec.Permission.Privilege, ShouldEqual, req.Privilege)
-
-				So(one.Attachment, ShouldNotBeNil)
-				So(one.Attachment.AppId, ShouldEqual, appId)
-				So(one.Attachment.BizId, ShouldEqual, cases.TBizID)
+				//listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{ciId})
+				//So(err, ShouldBeNil)
+				//
+				//ctx, header = cases.GenApiCtxHeader()
+				//listResp, err := cli.ConfigItem.List(ctx, header, listReq)
+				//So(err, ShouldBeNil)
+				//So(listResp, ShouldNotBeNil)
+				//
+				//So(len(listResp.Details), ShouldEqual, 1)
+				//one := listResp.Details[0]
+				//So(one, ShouldNotBeNil)
+				//So(one.Id, ShouldEqual, ciId)
+				//So(one.Spec, ShouldNotBeNil)
+				//So(one.Spec.Path, ShouldEqual, req.Path)
+				//So(one.Spec.Name, ShouldEqual, req.Name)
+				//So(one.Spec.FileType, ShouldEqual, req.FileType)
+				//So(one.Spec.FileMode, ShouldEqual, req.FileMode)
+				//So(one.Spec.Permission, ShouldNotBeNil)
+				//So(one.Spec.Permission.User, ShouldEqual, req.User)
+				//So(one.Spec.Permission.UserGroup, ShouldEqual, req.UserGroup)
+				//So(one.Spec.Permission.Privilege, ShouldEqual, req.Privilege)
+				//
+				//So(one.Attachment, ShouldNotBeNil)
+				//So(one.Attachment.AppId, ShouldEqual, appId)
+				//So(one.Attachment.BizId, ShouldEqual, cases.TBizID)
 			}
 		})
 
@@ -314,6 +320,8 @@ func TestConfigItem(t *testing.T) {
 				User:      "root",
 				UserGroup: "root",
 				Privilege: "755",
+				Sign:      signature,
+				ByteSize:  size,
 			}
 
 			// add name field test case
@@ -367,77 +375,78 @@ func TestConfigItem(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.ConfigItem.Update(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
-	Convey("List Config Item Test", t, func() {
-		// The normal list_config_item is test by the first create_config_item case,
-		// so we just test list_config_item normal test on count page in here
-		Convey("1.list_config_item normal test: count page", func() {
-			// get a config item for list
-			ciId := rm.GetConfigItem(appId)
-			So(ciId, ShouldNotEqual, uint32(0))
-			filter, err := cases.GenQueryFilterByIds([]uint32{ciId})
-			So(err, ShouldBeNil)
-
-			req := &pbcs.ListConfigItemsReq{
-				BizId:  cases.TBizID,
-				AppId:  appId,
-				Filter: filter,
-				Page:   cases.CountPage(),
-			}
-
-			ctx, header := cases.GenApiCtxHeader()
-			resp, err := cli.ConfigItem.List(ctx, header, req)
-			So(err, ShouldBeNil)
-			So(resp, ShouldNotBeNil)
-			So(resp.Count, ShouldEqual, uint32(1))
-		})
-
-		Convey("2.list_config_item abnormal test", func() {
-			// get a config item for list
-			ciId := rm.GetConfigItem(appId)
-			So(ciId, ShouldNotEqual, uint32(0))
-			filter, err := cases.GenQueryFilterByIds([]uint32{ciId})
-			So(err, ShouldBeNil)
-
-			reqs := []*pbcs.ListConfigItemsReq{
-				{ // biz_id is invalid
-					BizId:  cases.WID,
-					AppId:  appId,
-					Filter: filter,
-					Page:   cases.CountPage(),
-				},
-				{ // app_id is invalid
-					BizId:  cases.TBizID,
-					AppId:  cases.WID,
-					Filter: filter,
-					Page:   cases.CountPage(),
-				},
-				{ // filter is invalid
-					BizId:  cases.TBizID,
-					AppId:  appId,
-					Filter: nil,
-					Page:   cases.CountPage(),
-				},
-				{ // page is invalid
-					BizId:  cases.TBizID,
-					AppId:  appId,
-					Filter: filter,
-					Page:   nil,
-				},
-			}
-
-			for _, req := range reqs {
-				ctx, header := cases.GenApiCtxHeader()
-				resp, err := cli.ConfigItem.List(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
-			}
-		})
-	})
+	// unsupported list query by self-defined filter using ids
+	//Convey("List Config Item Test", t, func() {
+	//	// The normal list_config_item is test by the first create_config_item case,
+	//	// so we just test list_config_item normal test on count page in here
+	//	Convey("1.list_config_item normal test: count page", func() {
+	//		// get a config item for list
+	//		ciId := rm.GetConfigItem(appId)
+	//		So(ciId, ShouldNotEqual, uint32(0))
+	//		filter, err := cases.GenQueryFilterByIds([]uint32{ciId})
+	//		So(err, ShouldBeNil)
+	//
+	//		req := &pbcs.ListConfigItemsReq{
+	//			BizId:  cases.TBizID,
+	//			AppId:  appId,
+	//			Filter: filter,
+	//			Page:   cases.CountPage(),
+	//		}
+	//
+	//		ctx, header := cases.GenApiCtxHeader()
+	//		resp, err := cli.ConfigItem.List(ctx, header, req)
+	//		So(err, ShouldBeNil)
+	//		So(resp, ShouldNotBeNil)
+	//		So(resp.Count, ShouldEqual, uint32(1))
+	//	})
+	//
+	//	Convey("2.list_config_item abnormal test", func() {
+	//		// get a config item for list
+	//		ciId := rm.GetConfigItem(appId)
+	//		So(ciId, ShouldNotEqual, uint32(0))
+	//		filter, err := cases.GenQueryFilterByIds([]uint32{ciId})
+	//		So(err, ShouldBeNil)
+	//
+	//		reqs := []*pbcs.ListConfigItemsReq{
+	//			{ // biz_id is invalid
+	//				BizId:  cases.WID,
+	//				AppId:  appId,
+	//				Filter: filter,
+	//				Page:   cases.CountPage(),
+	//			},
+	//			{ // app_id is invalid
+	//				BizId:  cases.TBizID,
+	//				AppId:  cases.WID,
+	//				Filter: filter,
+	//				Page:   cases.CountPage(),
+	//			},
+	//			{ // filter is invalid
+	//				BizId:  cases.TBizID,
+	//				AppId:  appId,
+	//				Filter: nil,
+	//				Page:   cases.CountPage(),
+	//			},
+	//			{ // page is invalid
+	//				BizId:  cases.TBizID,
+	//				AppId:  appId,
+	//				Filter: filter,
+	//				Page:   nil,
+	//			},
+	//		}
+	//
+	//		for _, req := range reqs {
+	//			ctx, header := cases.GenApiCtxHeader()
+	//			resp, err := cli.ConfigItem.List(ctx, header, req)
+	//			So(err, ShouldBeNil)
+	//			So(resp, ShouldNotBeNil)
+	//		}
+	//	})
+	//})
 
 	Convey("Delete Config Item Test", t, func() {
 		Convey("1.delete_config_item normal test", func() {
@@ -455,16 +464,16 @@ func TestConfigItem(t *testing.T) {
 			ctx, header := cases.GenApiCtxHeader()
 			resp, err := cli.ConfigItem.Delete(ctx, header, req)
 			So(err, ShouldBeNil)
-			So(resp, ShouldNotBeNil)
+			So(*resp, ShouldBeZeroValue)
 
 			// verify by list
-			listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{ciId})
-			So(err, ShouldBeNil)
-			ctx, header = cases.GenApiCtxHeader()
-			listResp, err := cli.ConfigItem.List(ctx, header, listReq)
-			So(err, ShouldBeNil)
-			So(listResp, ShouldNotBeNil)
-			So(len(listResp.Details), ShouldEqual, 0)
+			//listReq, err := cases.GenListConfigItemByIdsReq(cases.TBizID, appId, []uint32{ciId})
+			//So(err, ShouldBeNil)
+			//ctx, header = cases.GenApiCtxHeader()
+			//listResp, err := cli.ConfigItem.List(ctx, header, listReq)
+			//So(err, ShouldBeNil)
+			//So(listResp, ShouldNotBeNil)
+			//So(len(listResp.Details), ShouldEqual, 0)
 		})
 
 		Convey("2.delete_config_item abnormal test", func() {
@@ -492,8 +501,8 @@ func TestConfigItem(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.ConfigItem.Delete(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})

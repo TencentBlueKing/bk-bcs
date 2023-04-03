@@ -21,6 +21,8 @@ import (
 type ResourceManager struct {
 	// App key is app mode, value is []uint32 of app id
 	App map[table.AppMode][]uint32
+	// Hook key is app id, value is []uint32 of hook id
+	Hook map[uint32][]uint32
 	// ConfigItem key is app id, value is []uint32 of config item id
 	ConfigItem map[uint32][]uint32
 	// Content key is config item id, value is content id
@@ -47,6 +49,7 @@ func NewResourceManager() *ResourceManager {
 	rm.App = make(map[table.AppMode][]uint32)
 	rm.App[table.Normal] = make([]uint32, 0)
 	rm.App[table.Namespace] = make([]uint32, 0)
+	rm.Hook = make(map[uint32][]uint32)
 	rm.ConfigItem = make(map[uint32][]uint32)
 	rm.Content = make(map[uint32]uint32)
 	rm.Commit = make(map[uint32]uint32)
@@ -72,6 +75,27 @@ func (rm *ResourceManager) GetApp(mode table.AppMode) uint32 {
 // DeleteApp delete an app resource id
 func (rm *ResourceManager) DeleteApp(mode table.AppMode, id uint32) {
 	rm.App[mode] = deleteId(rm.App[mode], id)
+}
+
+// AddHook add a created hook id
+func (rm *ResourceManager) AddHook(appId, hookId uint32) {
+	if _, ok := rm.Hook[appId]; !ok {
+		rm.Hook[appId] = make([]uint32, 0)
+	}
+	rm.Hook[appId] = append(rm.Hook[appId], hookId)
+}
+
+// GetHook get a created hook id
+func (rm *ResourceManager) GetHook(appId uint32) uint32 {
+	if len(rm.Hook[appId]) == 0 {
+		return 0
+	}
+	return rm.Hook[appId][0]
+}
+
+// DeleteHook delete a created hook id
+func (rm *ResourceManager) DeleteHook(appId uint32, ciId uint32) {
+	rm.Hook[appId] = deleteId(rm.Hook[appId], ciId)
 }
 
 // AddConfigItem add a created config item id

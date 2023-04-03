@@ -230,7 +230,7 @@ func (dao *lockDao) AddUnique(kit *kit.Kit, lock *table.ResourceLock, opt *LockO
 		if strings.Contains(err.Error(), "Error 1062: Duplicate entry") {
 			return false, nil
 		}
-		return false, fmt.Errorf("get lock failed, err: %v", err)
+		return false, fmt.Errorf("add lock failed, err: %v", err)
 	}
 
 	return true, nil

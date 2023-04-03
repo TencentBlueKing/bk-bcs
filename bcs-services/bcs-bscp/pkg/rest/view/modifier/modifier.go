@@ -10,39 +10,9 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
-package api
+package modifier
 
-import (
-	"testing"
-
-	. "github.com/smartystreets/goconvey/convey" // import convey.
-
-	"bscp.io/test/suite"
-	"bscp.io/test/suite/cases"
-)
-
-// ResourceManager instance
-var rm *cases.ResourceManager
-
-func TestApi(t *testing.T) {
-	SetDefaultFailureMode(FailureHalts)
-
-	Convey("Prepare Job", t, func() {
-		rm = cases.NewResourceManager()
-
-		err := suite.ClearData()
-		So(err, ShouldBeNil)
-	})
-
-	TestApplication(t)
-	TestHook(t)
-	TestConfigItem(t)
-	TestContent(t)
-	TestCommit(t)
-	TestRelease(t)
-	TestStrategySet(t)
-	// TODO: strategy test depends on group, add group test first
-	//TestStrategy(t)
-	//TestPublish(t)
-	TestInstance(t)
+// RespModifier defines methods for modifying response
+type RespModifier interface {
+	ModifyResp(resp []byte) ([]byte, error)
 }
