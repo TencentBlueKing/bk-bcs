@@ -14,12 +14,14 @@ package service
 
 import (
 	"context"
+	"strconv"
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbrelease "bscp.io/pkg/protocol/core/release"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/filter"
@@ -65,26 +67,68 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListReleasesResp)
 
+	bizID, err := strconv.Atoi(grpcKit.SpaceID)
+	if err != nil {
+		return nil, err
+	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find,
-		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.AppId}, BizID: uint32(bizID)}
+	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.Page == nil {
-		return nil, errf.New(errf.InvalidParameter, "page is null")
+	if !req.All {
+		if req.Start < 0 {
+			return nil, errf.New(errf.InvalidParameter, "start has to be greater than 0")
+		}
+
+		if req.Limit < 0 {
+			return nil, errf.New(errf.InvalidParameter, "limit has to be greater than 0")
+		}
 	}
 
-	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+	ft := &filter.Expression{
+		Op:    filter.Or,
+		Rules: []filter.RuleFactory{},
+	}
+	if req.SearchKey != "" {
+		ft.Rules = append(ft.Rules, &filter.AtomRule{
+			Field: "name",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		}, &filter.AtomRule{
+			Field: "memo",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		}, &filter.AtomRule{
+			Field: "creator",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		})
+	}
+	ftpb, err := ft.MarshalPB()
+	if err != nil {
 		return nil, err
 	}
 
+	page := &pbbase.BasePage{
+		Start: req.Start,
+		Limit: req.Limit,
+	}
+
+	if req.All {
+		page = &pbbase.BasePage{
+			Start: 0,
+			Limit: 0,
+		}
+	}
+
 	r := &pbds.ListReleasesReq{
-		BizId:  req.BizId,
+		BizId:  uint32(bizID),
 		AppId:  req.AppId,
-		Filter: req.Filter,
-		Page:   req.Page,
+		Filter: ftpb,
+		Page:   page,
 	}
 	rp, err := s.client.DS.ListReleases(grpcKit.RpcCtx(), r)
 	if err != nil {
