@@ -55,11 +55,7 @@ const (
 	Config_CreateGroup_FullMethodName                    = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                    = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                    = "/pbcs.Config/UpdateGroup"
-	Config_ListGroups_FullMethodName                     = "/pbcs.Config/ListGroups"
 	Config_ListAllGroups_FullMethodName                  = "/pbcs.Config/ListAllGroups"
-	Config_CreateGroupCategory_FullMethodName            = "/pbcs.Config/CreateGroupCategory"
-	Config_DeleteGroupCategory_FullMethodName            = "/pbcs.Config/DeleteGroupCategory"
-	Config_ListGroupCategories_FullMethodName            = "/pbcs.Config/ListGroupCategories"
 	Config_Publish_FullMethodName                        = "/pbcs.Config/Publish"
 	Config_FinishPublish_FullMethodName                  = "/pbcs.Config/FinishPublish"
 	Config_ListPublishedStrategyHistories_FullMethodName = "/pbcs.Config/ListPublishedStrategyHistories"
@@ -109,11 +105,7 @@ type ConfigClient interface {
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
-	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
 	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
-	CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateGroupCategoryResp, error)
-	DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*DeleteGroupCategoryResp, error)
-	ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
@@ -445,45 +437,9 @@ func (c *configClient) UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts
 	return out, nil
 }
 
-func (c *configClient) ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error) {
-	out := new(ListGroupsResp)
-	err := c.cc.Invoke(ctx, Config_ListGroups_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error) {
 	out := new(ListAllGroupsResp)
 	err := c.cc.Invoke(ctx, Config_ListAllGroups_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateGroupCategoryResp, error) {
-	out := new(CreateGroupCategoryResp)
-	err := c.cc.Invoke(ctx, Config_CreateGroupCategory_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*DeleteGroupCategoryResp, error) {
-	out := new(DeleteGroupCategoryResp)
-	err := c.cc.Invoke(ctx, Config_DeleteGroupCategory_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error) {
-	out := new(ListGroupCategoriesResp)
-	err := c.cc.Invoke(ctx, Config_ListGroupCategories_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -585,11 +541,7 @@ type ConfigServer interface {
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
-	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
 	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
-	CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateGroupCategoryResp, error)
-	DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*DeleteGroupCategoryResp, error)
-	ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
@@ -707,20 +659,8 @@ func (UnimplementedConfigServer) DeleteGroup(context.Context, *DeleteGroupReq) (
 func (UnimplementedConfigServer) UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
 }
-func (UnimplementedConfigServer) ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListGroups not implemented")
-}
 func (UnimplementedConfigServer) ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAllGroups not implemented")
-}
-func (UnimplementedConfigServer) CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateGroupCategoryResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupCategory not implemented")
-}
-func (UnimplementedConfigServer) DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*DeleteGroupCategoryResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupCategory not implemented")
-}
-func (UnimplementedConfigServer) ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListGroupCategories not implemented")
 }
 func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
@@ -1382,24 +1322,6 @@ func _Config_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_ListGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListGroupsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListGroups(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListGroups_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListGroups(ctx, req.(*ListGroupsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_ListAllGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAllGroupsReq)
 	if err := dec(in); err != nil {
@@ -1414,60 +1336,6 @@ func _Config_ListAllGroups_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListAllGroups(ctx, req.(*ListAllGroupsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_CreateGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateGroupCategoryReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).CreateGroupCategory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_CreateGroupCategory_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).CreateGroupCategory(ctx, req.(*CreateGroupCategoryReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_DeleteGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteGroupCategoryReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).DeleteGroupCategory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_DeleteGroupCategory_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).DeleteGroupCategory(ctx, req.(*DeleteGroupCategoryReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_ListGroupCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListGroupCategoriesReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListGroupCategories(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListGroupCategories_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListGroupCategories(ctx, req.(*ListGroupCategoriesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1728,24 +1596,8 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_UpdateGroup_Handler,
 		},
 		{
-			MethodName: "ListGroups",
-			Handler:    _Config_ListGroups_Handler,
-		},
-		{
 			MethodName: "ListAllGroups",
 			Handler:    _Config_ListAllGroups_Handler,
-		},
-		{
-			MethodName: "CreateGroupCategory",
-			Handler:    _Config_CreateGroupCategory_Handler,
-		},
-		{
-			MethodName: "DeleteGroupCategory",
-			Handler:    _Config_DeleteGroupCategory_Handler,
-		},
-		{
-			MethodName: "ListGroupCategories",
-			Handler:    _Config_ListGroupCategories_Handler,
 		},
 		{
 			MethodName: "Publish",

@@ -103,10 +103,6 @@ func (s Group) ValidateUpdate() error {
 		return errors.New("biz id should be set")
 	}
 
-	if s.Attachment.AppID <= 0 {
-		return errors.New("app id should be set")
-	}
-
 	if !changed {
 		return errors.New("nothing is found to be change")
 	}
@@ -141,6 +137,7 @@ var GroupSpecColumns = mergeColumns(GroupSpecColumnDescriptor)
 // GroupSpecColumnDescriptor is GroupSpec's column descriptors.
 var GroupSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "name", NamedC: "name", Type: enumor.String},
+	{Column: "public", NamedC: "public", Type: enumor.Boolean},
 	{Column: "mode", NamedC: "mode", Type: enumor.String},
 	{Column: "selector", NamedC: "selector", Type: enumor.String},
 	{Column: "uid", NamedC: "uid", Type: enumor.String},
@@ -149,23 +146,20 @@ var GroupSpecColumnDescriptor = ColumnDescriptors{
 // GroupSpec defines all the specifics for group set by user.
 type GroupSpec struct {
 	Name string `db:"name" json:"name"`
-	// Mode defines which mode the group works in,
-	// it can not be updated once it is created.
-	Mode GroupMode `db:"mode" json:"mode"`
-	// Selector works in non-debug mode
+	// Public defines weather group can be used by all apps.
+	// It can not be updated once it is created.
+	Public   bool               `db:"public" json:"public"`
+	Mode     GroupMode          `db:"mode" json:"mode"`
 	Selector *selector.Selector `db:"selector" json:"selector"`
-	// UID works in debug mode
-	UID string `db:"uid" json:"uid"`
+	UID      string             `db:"uid" json:"uid"`
 }
 
 const (
 	// Custom means this is a user customed group, it's selector is defined by user
 	Custom GroupMode = "custom"
-
 	// Debug means that this group can noly set UID,
 	// in other word can only select specific instance
 	Debug GroupMode = "debug"
-
 	// BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
 	// TODO: BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
 	BuiltIn GroupMode = "builtin"
@@ -214,7 +208,7 @@ func (s GroupSpec) ValidateUpdate() error {
 	}
 
 	if s.Mode != "" {
-		return errors.New("group category's mode can not be updated")
+		return errors.New("group's mode can not be updated")
 	}
 
 	return nil
@@ -225,20 +219,16 @@ var GroupAttachmentColumns = mergeColumns(GroupAttachmentColumnDescriptor)
 
 // GroupAttachmentColumnDescriptor is GroupAttachment's column descriptors.
 var GroupAttachmentColumnDescriptor = ColumnDescriptors{
-	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
-	{Column: "app_id", NamedC: "app_id", Type: enumor.Numeric},
-	{Column: "group_category_id", NamedC: "group_category_id", Type: enumor.Numeric}}
+	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric}}
 
 // GroupAttachment defines the group attachments.
 type GroupAttachment struct {
-	BizID           uint32 `db:"biz_id" json:"biz_id"`
-	AppID           uint32 `db:"app_id" json:"app_id"`
-	GroupCategoryID uint32 `db:"group_category_id" json:"group_category_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id"`
 }
 
 // IsEmpty test whether group attachment is empty or not.
 func (s GroupAttachment) IsEmpty() bool {
-	return s.BizID == 0 && s.AppID == 0 && s.GroupCategoryID == 0
+	return s.BizID == 0
 }
 
 // Validate whether group attachment is valid or not.
@@ -246,14 +236,5 @@ func (s GroupAttachment) Validate() error {
 	if s.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
 	}
-
-	if s.AppID <= 0 {
-		return errors.New("invalid attachment app id")
-	}
-
-	if s.GroupCategoryID <= 0 {
-		return errors.New("invalid attachment group category id")
-	}
-
 	return nil
 }

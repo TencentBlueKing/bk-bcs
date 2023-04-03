@@ -63,9 +63,7 @@ const (
 	Data_ListGroups_FullMethodName                     = "/pbds.Data/ListGroups"
 	Data_UpdateGroup_FullMethodName                    = "/pbds.Data/UpdateGroup"
 	Data_DeleteGroup_FullMethodName                    = "/pbds.Data/DeleteGroup"
-	Data_CreateGroupCategory_FullMethodName            = "/pbds.Data/CreateGroupCategory"
-	Data_ListGroupCategories_FullMethodName            = "/pbds.Data/ListGroupCategories"
-	Data_DeleteGroupCategory_FullMethodName            = "/pbds.Data/DeleteGroupCategory"
+	Data_CountGroupsPublishedApps_FullMethodName       = "/pbds.Data/CountGroupsPublishedApps"
 	Data_Publish_FullMethodName                        = "/pbds.Data/Publish"
 	Data_FinishPublish_FullMethodName                  = "/pbds.Data/FinishPublish"
 	Data_ListPublishedStrategyHistories_FullMethodName = "/pbds.Data/ListPublishedStrategyHistories"
@@ -128,10 +126,7 @@ type DataClient interface {
 	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
-	// group category related interface.
-	CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateResp, error)
-	ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error)
-	DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CountGroupsPublishedApps(ctx context.Context, in *CountGroupsPublishedAppsReq, opts ...grpc.CallOption) (*CountGroupsPublishedAppsResp, error)
 	// publish related interface.
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -496,27 +491,9 @@ func (c *dataClient) DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts .
 	return out, nil
 }
 
-func (c *dataClient) CreateGroupCategory(ctx context.Context, in *CreateGroupCategoryReq, opts ...grpc.CallOption) (*CreateResp, error) {
-	out := new(CreateResp)
-	err := c.cc.Invoke(ctx, Data_CreateGroupCategory_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataClient) ListGroupCategories(ctx context.Context, in *ListGroupCategoriesReq, opts ...grpc.CallOption) (*ListGroupCategoriesResp, error) {
-	out := new(ListGroupCategoriesResp)
-	err := c.cc.Invoke(ctx, Data_ListGroupCategories_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataClient) DeleteGroupCategory(ctx context.Context, in *DeleteGroupCategoryReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
-	out := new(base.EmptyResp)
-	err := c.cc.Invoke(ctx, Data_DeleteGroupCategory_FullMethodName, in, out, opts...)
+func (c *dataClient) CountGroupsPublishedApps(ctx context.Context, in *CountGroupsPublishedAppsReq, opts ...grpc.CallOption) (*CountGroupsPublishedAppsResp, error) {
+	out := new(CountGroupsPublishedAppsResp)
+	err := c.cc.Invoke(ctx, Data_CountGroupsPublishedApps_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -647,10 +624,7 @@ type DataServer interface {
 	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*base.EmptyResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*base.EmptyResp, error)
-	// group category related interface.
-	CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateResp, error)
-	ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error)
-	DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*base.EmptyResp, error)
+	CountGroupsPublishedApps(context.Context, *CountGroupsPublishedAppsReq) (*CountGroupsPublishedAppsResp, error)
 	// publish related interface.
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*base.EmptyResp, error)
@@ -783,14 +757,8 @@ func (UnimplementedDataServer) UpdateGroup(context.Context, *UpdateGroupReq) (*b
 func (UnimplementedDataServer) DeleteGroup(context.Context, *DeleteGroupReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroup not implemented")
 }
-func (UnimplementedDataServer) CreateGroupCategory(context.Context, *CreateGroupCategoryReq) (*CreateResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateGroupCategory not implemented")
-}
-func (UnimplementedDataServer) ListGroupCategories(context.Context, *ListGroupCategoriesReq) (*ListGroupCategoriesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListGroupCategories not implemented")
-}
-func (UnimplementedDataServer) DeleteGroupCategory(context.Context, *DeleteGroupCategoryReq) (*base.EmptyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroupCategory not implemented")
+func (UnimplementedDataServer) CountGroupsPublishedApps(context.Context, *CountGroupsPublishedAppsReq) (*CountGroupsPublishedAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CountGroupsPublishedApps not implemented")
 }
 func (UnimplementedDataServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
@@ -1512,56 +1480,20 @@ func _Data_DeleteGroup_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_CreateGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateGroupCategoryReq)
+func _Data_CountGroupsPublishedApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CountGroupsPublishedAppsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataServer).CreateGroupCategory(ctx, in)
+		return srv.(DataServer).CountGroupsPublishedApps(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Data_CreateGroupCategory_FullMethodName,
+		FullMethod: Data_CountGroupsPublishedApps_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).CreateGroupCategory(ctx, req.(*CreateGroupCategoryReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Data_ListGroupCategories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListGroupCategoriesReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServer).ListGroupCategories(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Data_ListGroupCategories_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).ListGroupCategories(ctx, req.(*ListGroupCategoriesReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Data_DeleteGroupCategory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteGroupCategoryReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServer).DeleteGroupCategory(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Data_DeleteGroupCategory_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).DeleteGroupCategory(ctx, req.(*DeleteGroupCategoryReq))
+		return srv.(DataServer).CountGroupsPublishedApps(ctx, req.(*CountGroupsPublishedAppsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1870,16 +1802,8 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_DeleteGroup_Handler,
 		},
 		{
-			MethodName: "CreateGroupCategory",
-			Handler:    _Data_CreateGroupCategory_Handler,
-		},
-		{
-			MethodName: "ListGroupCategories",
-			Handler:    _Data_ListGroupCategories_Handler,
-		},
-		{
-			MethodName: "DeleteGroupCategory",
-			Handler:    _Data_DeleteGroupCategory_Handler,
+			MethodName: "CountGroupsPublishedApps",
+			Handler:    _Data_CountGroupsPublishedApps_Handler,
 		},
 		{
 			MethodName: "Publish",

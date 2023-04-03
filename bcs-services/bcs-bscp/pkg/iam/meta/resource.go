@@ -44,8 +44,6 @@ const (
 	Hook ResourceType = "hook"
 	// Group resource's bscp auth resource type
 	Group ResourceType = "group"
-	// GroupCategory resource's bscp auth resource type
-	GroupCategory ResourceType = "group_category"
 	// PSH resource's bscp auth resource type
 	PSH ResourceType = "published_strategy_history"
 	// Repo represents repository resource's related bscp auth resource type

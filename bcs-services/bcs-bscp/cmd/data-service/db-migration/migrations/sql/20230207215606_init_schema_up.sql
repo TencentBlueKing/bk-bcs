@@ -113,9 +113,11 @@ values (15, 'resource_locks', 0, now());
 insert into id_generators(id, resource, max_id, updated_at)
 values (16, 'groups', 0, now());
 insert into id_generators(id, resource, max_id, updated_at)
-values (17, 'group_categories', 0, now());
+values (17, 'group__apps', 0, now());
 insert into id_generators(id, resource, max_id, updated_at)
-values (18, 'hooks', 0, now());
+values (18, 'group_current_releases', 0, now());
+insert into id_generators(id, resource, max_id, updated_at)
+values (19, 'hooks', 0, now());
 
 create table if not exists `archived_apps`
 (
@@ -437,13 +439,12 @@ create table if not exists `groups`
     # Spec is specifics of the resource defined with user
     `name`              varchar(255)       not null,
     `mode`              varchar(20)        not null,
-    `selector`          json        default null,
-    `uid`               varchar(64) default '',
+    `public`            boolean            default false,
+    `selector`          json               default null,
+    `uid`               varchar(64)        default '',
 
     # Attachment is attachment info of the resource
     `biz_id`            bigint(1) unsigned not null,
-    `app_id`            bigint(1) unsigned not null,
-    `group_category_id` bigint(1) unsigned not null,
 
     # Revision record revision info of the resource
     `creator`           varchar(64)        not null,
@@ -452,29 +453,33 @@ create table if not exists `groups`
     `updated_at`        datetime(6)        not null,
 
     primary key (`id`),
-    unique key `idx_categoryID_name` (`group_category_id`, `name`),
-    index `idx_bizID_appID` (`biz_id`, `app_id`)
+    unique key `idx_bizID_name` (`biz_id`, `name`),
+    index `idx_bizID` (`biz_id`)
 ) engine = innodb
   default charset = utf8mb4;
 
-create table if not exists `group_categories`
+create table if not exists `group__apps`
 (
-    `id`         bigint(1) unsigned not null,
-
-    # Spec is specifics of the resource defined with user
-    `name`       varchar(255)       not null,
-
-    # Attachment is attachment info of the resource
-    `biz_id`     bigint(1) unsigned not null,
-    `app_id`     bigint(1) unsigned not null,
-
-    # CreatedRevision is reversion info of the resource being created.
-    `creator`    varchar(64)        not null,
-    `created_at` datetime(6)        not null,
-
+    `id`                bigint(1) unsigned not null,
+    `group_id`          bigint(1) unsigned not null,
+    `app_id`            bigint(1) unsigned not null,
+    `biz_id`            bigint(1) unsigned not null,
     primary key (`id`),
-    unique key `idx_bizID_appID_name` (`biz_id`, `app_id`, `name`),
-    index `idx_bizID_appID` (`biz_id`, `app_id`)
+    index `idx_groupID_appID_bizID` (`group_id`, `app_id`, `biz_id`)
+) engine = innodb
+  default charset = utf8mb4;
+
+create table if not exists `group_current_releases`
+(
+    `id`                bigint(1) unsigned not null,
+    `group_id`          bigint(1) unsigned not null,
+    `app_id`            bigint(1) unsigned not null,
+    `release_id`        bigint(1) unsigned not null,
+    `strategy_id`       bigint(1) unsigned not null,
+    `edited`            boolean            default false,
+    `biz_id`            bigint(1) unsigned not null,
+    primary key (`id`),
+    index `idx_groupID_appID_bizID` (`group_id`, `app_id`, `biz_id`)
 ) engine = innodb
   default charset = utf8mb4;
 

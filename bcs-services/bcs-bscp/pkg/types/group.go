@@ -21,7 +21,6 @@ import (
 // ListGroupsOption defines options to list group.
 type ListGroupsOption struct {
 	BizID  uint32             `json:"biz_id"`
-	AppID  uint32             `json:"app_id"`
 	Filter *filter.Expression `json:"filter"`
 	Page   *BasePage          `json:"page"`
 }
@@ -30,10 +29,6 @@ type ListGroupsOption struct {
 func (opt *ListGroupsOption) Validate(po *PageOption) error {
 	if opt.BizID <= 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
-	}
-
-	if opt.AppID <= 0 {
-		return errf.New(errf.InvalidParameter, "invalid app id, should >= 1")
 	}
 
 	if opt.Filter == nil {
@@ -63,4 +58,8 @@ func (opt *ListGroupsOption) Validate(po *PageOption) error {
 type ListGroupDetails struct {
 	Count   uint32         `json:"count"`
 	Details []*table.Group `json:"details"`
+}
+
+type ListAllWithBindAppsNameDetail struct {
+	
 }

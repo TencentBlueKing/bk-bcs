@@ -804,78 +804,7 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/apps/{app_id}/group_categories:
-    post:
-      operationId: create_group_category
-      description: 创建分组标签
-      tags:
-      - 分组管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path:  /api/v1/config/apps/{app_id}/group_categories
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-    get:
-      operationId: list_group_categories
-      description: 获取分组标签列表
-      tags:
-      - 分组管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path:  /api/v1/config/apps/{app_id}/group_categories
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/apps/{app_id}/group_categories/{group_category_id}:
-    delete:
-      operationId: delete_group_category
-      description: 删除分组标签
-      tags:
-      - 分组管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: delete
-          path:  /api/v1/config/apps/{app_id}/group_categories/{group_category_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/apps/{app_id}/groups:
+  /api/v1/config/biz/{biz_id}/groups:
     post:
       operationId: create_group
       description: 创建分组
@@ -891,7 +820,7 @@ paths:
         backend:
           type: HTTP
           method: post
-          path:  /api/v1/config/apps/{app_id}/groups
+          path:  /api/v1/config/biz/{biz_id}/groups
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -899,7 +828,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/apps/{app_id}/groups/{group_id}:
+    get:
+      operationId: list_all_group
+      description: 获取所有分组
+      tags:
+      - 分组管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path:  /api/v1/config/biz/{biz_id}/groups
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/groups/{group_id}:
     put:
       operationId: update_group
       description: 更新分组
@@ -915,7 +867,7 @@ paths:
         backend:
           type: HTTP
           method: put
-          path:  /api/v1/config/apps/{app_id}/groups/{group_id}
+          path:  /api/v1/config/biz/{biz_id}/groups/{group_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -938,31 +890,7 @@ paths:
         backend:
           type: HTTP
           method: delete
-          path:  /api/v1/config/apps/{app_id}/groups/{group_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/apps/{app_id}/group_categories/{group_category_id}/groups:
-    post:
-      operationId: list_groups
-      description: 获取分组列表
-      tags:
-      - 分组管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path:  /api/v1/config/apps/{app_id}/group_categories/{group_category_id}/groups
+          path:  /api/v1/config/biz/{biz_id}/groups/{group_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}

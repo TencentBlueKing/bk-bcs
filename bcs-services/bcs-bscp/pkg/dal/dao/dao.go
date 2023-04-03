@@ -37,7 +37,8 @@ type Set interface {
 	Strategy() Strategy
 	Hook() Hook
 	Group() Group
-	GroupCategory() GroupCategory
+	GroupApp() GroupApp
+	GroupCurrentRelease() GroupCurrentRelease
 	Publish() Publish
 	IAM() IAM
 	Event() Event
@@ -204,9 +205,20 @@ func (s *set) Group() Group {
 	}
 }
 
-// GroupCategory returns the group category's DAO
-func (s *set) GroupCategory() GroupCategory {
-	return &groupCategoryDao{
+// GroupApp returns the group app's DAO
+func (s *set) GroupApp() GroupApp {
+	return &groupAppDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		lock:     s.lock,
+	}
+}
+
+// GroupCurrentRelease returns the currnet release's DAO
+func (s *set) GroupCurrentRelease() GroupCurrentRelease {
+	return &currentReleaseDao{
 		orm:      s.orm,
 		sd:       s.sd,
 		idGen:    s.idGen,
