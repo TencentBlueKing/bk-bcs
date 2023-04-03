@@ -489,7 +489,7 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/apps/{app_id}/config_item_count:
+  /api/v1/config/config_item_count/biz_id/{biz_id}:
     get:
       operationId: list_config_item_count
       description: 查询当前业务下的app数量
@@ -505,7 +505,7 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/config/apps/{app_id}/config_item_count
+          path: /api/v1/config/config_item_count/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: { }

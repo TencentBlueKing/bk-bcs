@@ -192,7 +192,6 @@ message ListConfigItemsResp {
 
 message ListConfigItemCountReq {
     uint32 biz_id     = 1;
-    uint32 app_id     = 2;
 }
 
 message ListConfigItemCountResp {

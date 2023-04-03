@@ -43,7 +43,7 @@ type ConfigItem interface {
 	// Delete one configItem instance.
 	Delete(kit *kit.Kit, configItem *table.ConfigItem) error
 	// GetCount bizID config count
-	GetCount(kit *kit.Kit, id, bizID uint32) ([]*table.ListConfigItemCounts, error)
+	GetCount(kit *kit.Kit, bizID uint32) ([]*table.ListConfigItemCounts, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -371,9 +371,9 @@ func (dao *configItemDao) queryFileMode(kt *kit.Kit, id, bizID uint32) (
 }
 
 // GetCount get bizID config count
-func (dao *configItemDao) GetCount(kit *kit.Kit, id, bizID uint32) ([]*table.ListConfigItemCounts, error) {
+func (dao *configItemDao) GetCount(kit *kit.Kit, bizID uint32) ([]*table.ListConfigItemCounts, error) {
 
-	if id == 0 {
+	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
 	}
 	var sqlSentence []string

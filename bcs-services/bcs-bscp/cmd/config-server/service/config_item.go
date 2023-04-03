@@ -366,19 +366,14 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigItemCountReq) (*pbcs.ListConfigItemCountResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemCountResp)
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.ListConfigItemCountReq{
-		BizId: uint32(bizID),
-		AppId: req.AppId,
+		BizId: req.BizId,
 	}
 	rp, err := s.client.DS.ListConfigItemCount(grpcKit.RpcCtx(), r)
 	if err != nil {

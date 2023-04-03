@@ -98,7 +98,7 @@ service Config {
     }
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {
         option (google.api.http) = {
-            get: "/api/v1/config/apps/{app_id}/config_item_count"
+            get: "/api/v1/config/config_item_count/biz_id/{biz_id}"
         };
     }
     rpc CreateContent(CreateContentReq) returns (CreateContentResp) {
@@ -446,8 +446,7 @@ message ListConfigItemsResp {
 }
 
 message ListConfigItemCountReq {
-    uint32 app_id     = 1;
-    uint32 biz_id     = 2;
+    uint32 biz_id     = 1;
 }
 
 message ListConfigItemCountResp {
