@@ -41,6 +41,14 @@ service Auth {
         };
     }
 
+    // 权限中心权限检测
+    rpc CheckPermission(ResourceAttribute) returns (CheckPermissionResp) {
+        option (google.api.http) = {
+            post: "/api/v1/auth/iam/permission/check"
+            body: "*"
+        };
+    }
+
     // authorize resource batch.
     rpc AuthorizeBatch(AuthorizeBatchReq) returns (AuthorizeBatchResp) {}
 
@@ -67,6 +75,10 @@ message PullResourceResp {
     google.protobuf.Struct data = 1;
 }
 
+message CheckPermissionResp {
+    bool is_allowed = 1;
+}
+
 message Page {
     uint32 limit  = 1;
     uint32 offset = 2;
@@ -82,14 +94,29 @@ message UserInfo {
 }
 
 message ResourceAttribute {
-    Basic basic   = 1;
-    uint32 biz_id = 2;
+    Basic basic        = 1;
+    uint32 biz_id      = 2;
+    bool gen_apply_url = 3;
 }
 
 message Basic {
     string type        = 1;
     string action      = 2;
     uint32 resource_id = 3;
+}
+
+message BasicDetail {
+    string type          = 1;
+    string type_name     = 2;
+    string action        = 3;
+    string action_name   = 4;
+    string resource_id   = 5;
+    string resource_name = 6;
+}
+
+message ApplyDetail {
+    string apply_url               = 1;
+    repeated BasicDetail resources = 2;
 }
 
 message AuthorizeBatchResp {

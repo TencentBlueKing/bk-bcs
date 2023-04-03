@@ -16,9 +16,17 @@ package auth
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
+	bkiam "github.com/TencentBlueKing/iam-go-sdk"
+	bkiamlogger "github.com/TencentBlueKing/iam-go-sdk/logger"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+
 	"bscp.io/cmd/auth-server/options"
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
@@ -84,13 +92,13 @@ func (a *Auth) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) 
 	}
 
 	// if auth is disabled, returns authorized for all request resources
-	if a.disableAuth {
-		resp.Decisions = make([]*pbas.Decision, len(req.Resources))
-		for index := range req.Resources {
-			resp.Decisions[index] = &pbas.Decision{Authorized: true}
-		}
-		return resp, nil
-	}
+	// if a.disableAuth {
+	// 	resp.Decisions = make([]*pbas.Decision, len(req.Resources))
+	// 	for index := range req.Resources {
+	// 		resp.Decisions[index] = &pbas.Decision{Authorized: true}
+	// 	}
+	// 	return resp, nil
+	// }
 
 	// parse bscp resource to iam resource
 	resources := pbas.ResourceAttributes(req.Resources)
@@ -223,6 +231,75 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 
 	resp.Permission = pbas.PbIamPermission(permission)
 	return resp, nil
+}
+
+// CheckPermission
+func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	log := &logrus.Logger{
+		Out:          os.Stderr,
+		Formatter:    new(logrus.TextFormatter),
+		Hooks:        make(logrus.LevelHooks),
+		Level:        logrus.DebugLevel,
+		ExitFunc:     os.Exit,
+		ReportCaller: false,
+	}
+
+	bkiamlogger.SetLogger(log)
+
+	actionRequest, err := AdaptIAMResourceOptions(req)
+	if err != nil {
+		return nil, err
+	}
+
+	actionRequest.Subject = bkiam.NewSubject("user", kt.User)
+	// i := bkiam.NewIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.Endpoints[0], "")
+	i := bkiam.NewAPIGatewayIAM(sys.SystemIDBSCP, iamSettings.AppCode, iamSettings.AppSecret, iamSettings.APIURL)
+	allowed, err := i.IsAllowed(*actionRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pbas.CheckPermissionResp{IsAllowed: false}
+	if allowed {
+		resp.IsAllowed = true
+		return resp, nil
+	}
+
+	sErr := errf.PRCPermissionDenied()
+
+	if req.GenApplyURL {
+		applyDetail := &pbas.ApplyDetail{
+			Resources: []*pbas.BasicDetail{
+				{
+					Type:         string(req.Type),
+					Action:       req.Action.String(),
+					ResourceId:   strconv.FormatInt(int64(req.ResourceID), 10),
+					TypeName:     "业务",
+					ActionName:   "业务访问",
+					ResourceName: "蓝鲸",
+				},
+			},
+		}
+		application, err := AdaptIAMApplicationOptions(req)
+		if err != nil {
+			return nil, err
+		}
+		url, err := i.GetApplyURL(*application, "", kt.User)
+		if err != nil {
+			return nil, errors.Wrap(err, "gen apply url")
+		}
+		applyDetail.ApplyUrl = url
+		sErr, err := sErr.WithDetails(applyDetail)
+		if err != nil {
+			return nil, err
+		}
+		return nil, sErr.Err()
+
+	}
+
+	return nil, sErr.Err()
 }
 
 func (a *Auth) getPermissionToApply(kt *kit.Kit, resources []*meta.ResourceAttribute) (*meta.IamPermission, error) {

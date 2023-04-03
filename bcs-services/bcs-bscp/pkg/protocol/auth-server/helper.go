@@ -132,3 +132,8 @@ func (p *PullResourceResp) SetData(data interface{}) error {
 
 	return nil
 }
+
+// IsDataStruct view.DataStructInterface 实现
+func (p *PullResourceResp) IsDataStruct() bool {
+	return true
+}
