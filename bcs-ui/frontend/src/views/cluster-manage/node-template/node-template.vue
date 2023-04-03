@@ -3,7 +3,7 @@
     <ContentHeader :title="$t('节点模板')" hide-back>
       <template #right>
         <a
-          :href="PROJECT_CONFIG.nodeTemplate"
+          :href="PROJECT_CONFIG.nodetemplate"
           target="_blank"
           class="bk-text-button"
         >{{$t('如何使用节点模板？')}}</a>

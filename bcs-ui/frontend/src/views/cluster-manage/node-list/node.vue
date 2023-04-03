@@ -238,9 +238,10 @@
           :label="$t('状态')"
           :filters="filtersDataSource.status"
           :filtered-value="filteredValue.status"
-          min-width="120"
+          min-width="160"
           column-key="status"
-          prop="status">
+          prop="status"
+          show-overflow-tooltip>
           <template #default="{ row }">
             <LoadingIcon
               v-if="['INITIALIZATION', 'DELETING'].includes(row.status)"
@@ -359,7 +360,8 @@
                   project_id: curProject.project_id,
                   cluster_id: localClusterId
                 }
-              }">
+              }"
+              v-if="row.status !== 'REMOVE-CA-FAILURE'">
               <bk-button
                 class="mr10"
                 text
@@ -422,6 +424,7 @@
                 </template>
               </bk-popover>
             </div>
+            <span v-else>--</span>
           </template>
         </bcs-table-column>
         <bcs-table-column type="setting" :resizable="false">

@@ -1,6 +1,10 @@
 <script setup lang="ts">
   import { ref } from 'vue'
+  import { storeToRefs } from 'pinia';
+  import { useConfigStore } from '../../../../../../store/config';
   import CategoryGroupSelect from '../../../group/components/category-group-select.vue';
+
+  const { versionData } = storeToRefs(useConfigStore())
 
   const props = defineProps<{
     bkBizId: string,
@@ -24,7 +28,7 @@
 </script>
 <template>
   <section class="modify-group">
-    <bk-button theme="primary" @click="showDialog = true">调整分组上线</bk-button>
+    <bk-button theme="primary" :disabled="versionData.id === 0" @click="showDialog = true">调整分组上线</bk-button>
     <bk-dialog
       title="调整分组上线"
       :width="480"

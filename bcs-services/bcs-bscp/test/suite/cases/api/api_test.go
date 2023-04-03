@@ -15,10 +15,10 @@ package api
 import (
 	"testing"
 
+	. "github.com/smartystreets/goconvey/convey" // import convey.
+
 	"bscp.io/test/suite"
 	"bscp.io/test/suite/cases"
-
-	. "github.com/smartystreets/goconvey/convey" // import convey.
 )
 
 // ResourceManager instance
@@ -35,12 +35,14 @@ func TestApi(t *testing.T) {
 	})
 
 	TestApplication(t)
+	TestHook(t)
 	TestConfigItem(t)
 	TestContent(t)
 	TestCommit(t)
 	TestRelease(t)
 	TestStrategySet(t)
-	TestStrategy(t)
-	TestPublish(t)
+	// TODO: strategy test depends on group, add group test first
+	//TestStrategy(t)
+	//TestPublish(t)
 	TestInstance(t)
 }

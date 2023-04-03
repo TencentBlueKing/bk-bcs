@@ -43,7 +43,7 @@ export const parseUrl = (reqMethod, url, body = {}) => {
   // 全局URL变量替换
   const variableData = {
     $projectId: storage.curProject?.projectID,
-    $clusterId: storage.curCluster?.clusterID,
+    // $clusterId: storage.curCluster?.clusterID, // 自动加上集群ID变量在路由上有集群ID时容易出错, 最好手动传递，数据流向也清晰
     $projectCode: storage.curProject?.projectCode,
   };
   Object.keys(params).forEach((key) => {

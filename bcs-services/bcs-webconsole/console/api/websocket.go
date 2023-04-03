@@ -89,7 +89,8 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "session不合法"))
 		return
 	}
-
+	// 赋值session id
+	podCtx.SessionId = sessionId
 	consoleMgr := manager.NewConsoleManager(ctx, podCtx)
 	remoteStreamConn := manager.NewRemoteStreamConn(ctx, ws, consoleMgr, query.GetTerminalSize(), query.HideBanner)
 	connected = true

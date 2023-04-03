@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -48,10 +49,14 @@ func (c *Commit) Create(ctx context.Context, header http.Header, req *pbcs.Creat
 	}
 
 	pbResp := &struct {
-		Data *pbcs.CreateCommitResp `json:"data"`
+		Data  *pbcs.CreateCommitResp `json:"data"`
+		Error *rest.ErrorPayload     `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -72,10 +77,14 @@ func (c *Commit) List(ctx context.Context, header http.Header, req *pbcs.ListCom
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListCommitsResp `json:"data"`
+		Data  *pbcs.ListCommitsResp `json:"data"`
+		Error *rest.ErrorPayload    `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil

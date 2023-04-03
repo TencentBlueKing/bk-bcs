@@ -131,8 +131,7 @@ service Config {
     }
     rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {
         option (google.api.http) = {
-            post: "/api/v1/config/list/release/release/app_id/{app_id}/biz_id/{biz_id}"
-            body: "*"
+            get: "/api/v1/config/apps/{app_id}/releases"
         };
     }
     rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {
@@ -501,10 +500,11 @@ message CreateReleaseResp {
 }
 
 message ListReleasesReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    uint32 app_id     = 1;
+    string searchKey  = 2;
+    uint32 start      = 3;
+    uint32 limit      = 4;
+    bool all          = 5;
 }
 
 message ListReleasesResp {

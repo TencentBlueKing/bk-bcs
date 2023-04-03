@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -48,10 +49,14 @@ func (ss *StrategySet) Create(ctx context.Context, header http.Header, req *pbcs
 	}
 
 	pbResp := &struct {
-		Data *pbcs.CreateStrategySetResp `json:"data"`
+		Data  *pbcs.CreateStrategySetResp `json:"data"`
+		Error *rest.ErrorPayload          `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -74,10 +79,14 @@ func (ss *StrategySet) Update(ctx context.Context, header http.Header, req *pbcs
 	}
 
 	pbResp := &struct {
-		Data *pbcs.UpdateStrategySetResp `json:"data"`
+		Data  *pbcs.UpdateStrategySetResp `json:"data"`
+		Error *rest.ErrorPayload          `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -100,10 +109,14 @@ func (ss *StrategySet) Delete(ctx context.Context, header http.Header, req *pbcs
 	}
 
 	pbResp := &struct {
-		Data *pbcs.DeleteStrategySetResp `json:"data"`
+		Data  *pbcs.DeleteStrategySetResp `json:"data"`
+		Error *rest.ErrorPayload          `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -125,10 +138,14 @@ func (ss *StrategySet) List(ctx context.Context, header http.Header, req *pbcs.L
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListStrategySetsResp `json:"data"`
+		Data  *pbcs.ListStrategySetsResp `json:"data"`
+		Error *rest.ErrorPayload         `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil

@@ -21,11 +21,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
 	"github.com/thanos-io/thanos/pkg/store"
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
+	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
@@ -35,13 +37,32 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
+// Config 配置
+type Config struct {
+	Dispatch []clientutil.DispatchConf `yaml:"dispatch"`
+}
+
 // BKMonitorStore implements the store node API on top of the Prometheus remote read API.
 type BKMonitorStore struct {
+	config   *Config
+	dispatch map[string]clientutil.DispatchConf
 }
 
 // NewBKMonitorStore xxx
 func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
-	store := &BKMonitorStore{}
+	var config Config
+	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
+		return nil, errors.Wrap(err, "parsing bk_monitor store config")
+	}
+
+	store := &BKMonitorStore{
+		config:   &config,
+		dispatch: make(map[string]clientutil.DispatchConf, 0),
+	}
+
+	for _, d := range config.Dispatch {
+		store.dispatch[d.ClusterID] = d
+	}
 	return store, nil
 }
 
@@ -229,7 +250,11 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		// 传递函数到底层数据源，来实现特定的特性，如：把 avg_over_time 之类的时间函数传递到底层数据源，可以忽略 prometheus 回朔特性
 		pql = r.ToPromQL()
 	}
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), config.G.BKMonitor.URL, cluster.BKBizID,
+	bkmonitorURL := config.G.BKMonitor.URL
+	if url, ok := s.dispatch[clusterId]; ok {
+		bkmonitorURL = url.URL
+	}
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), bkmonitorURL, cluster.BKBizID,
 		start, end, step, newMatchers, pql)
 	if err != nil {
 		return err

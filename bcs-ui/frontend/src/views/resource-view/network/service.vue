@@ -76,8 +76,8 @@
         </template>
       </bk-table>
     </template>
-    <template #detail="{ data, extData }">
-      <ServiceDetail :data="data" :ext-data="extData"></ServiceDetail>
+    <template #detail="{ data, extData, clusterId }">
+      <ServiceDetail :data="data" :ext-data="extData" :cluster-id="clusterId"></ServiceDetail>
     </template>
   </BaseLayout>
 </template>

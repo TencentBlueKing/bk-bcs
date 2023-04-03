@@ -107,6 +107,11 @@ type ErrorPayload struct {
 	Details []interface{} `json:"details"`
 }
 
+// Error 实现error接口
+func (ep ErrorPayload) Error() string {
+	return fmt.Sprintf("error code:%s, message:%s", ep.Code, ep.Message)
+}
+
 // ErrorResponse 错误返回
 type ErrorResponse struct {
 	Err            error         `json:"-"` // low-level runtime error

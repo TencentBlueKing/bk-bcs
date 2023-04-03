@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -47,10 +48,14 @@ func (ins *Instance) Publish(ctx context.Context, header http.Header, req *pbcs.
 	}
 
 	pbResp := &struct {
-		Data *pbcs.PublishInstanceResp `json:"data"`
+		Data  *pbcs.PublishInstanceResp `json:"data"`
+		Error *rest.ErrorPayload        `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -72,10 +77,14 @@ func (ins *Instance) Delete(ctx context.Context, header http.Header, req *pbcs.D
 	}
 
 	pbResp := &struct {
-		Data *pbcs.DeletePublishedInstanceResp `json:"data"`
+		Data  *pbcs.DeletePublishedInstanceResp `json:"data"`
+		Error *rest.ErrorPayload                `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -97,10 +106,14 @@ func (ins *Instance) List(ctx context.Context, header http.Header, req *pbcs.Lis
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListPublishedInstanceResp `json:"data"`
+		Data  *pbcs.ListPublishedInstanceResp `json:"data"`
+		Error *rest.ErrorPayload              `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil

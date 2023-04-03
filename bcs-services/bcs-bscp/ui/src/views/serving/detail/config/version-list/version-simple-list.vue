@@ -8,12 +8,9 @@
   import { getConfigVersionList } from '../../../../../api/config'
   import { FilterOp, RuleOp } from '../../../../../types'
   import { IConfigVersion } from '../../../../../../types/config'
-  import VersionLayout from '../components/version-layout.vue'
-  import ConfigDiff from '../components/config-diff.vue';
+  import VersionDiff from '../components/version-diff/index.vue'
 
-  const servingStore = useServingStore()
   const versionStore = useConfigStore()
-  const { appData } = storeToRefs(servingStore)
   const { versionData } = storeToRefs(versionStore)
 
   const props = defineProps<{
@@ -82,12 +79,8 @@
   }
 
   const handleDiffDialogShow = (version: IConfigVersion) => {
-    // diffVersion.value = version
-    // showDiffPanel.value = true
-  }
-
-  const handleDiffClose = () => {
-    showDiffPanel.value = false
+    diffVersion.value = version
+    showDiffPanel.value = true
   }
 
   const handleDeprecate = (id: number) => {
@@ -129,29 +122,9 @@
         </bk-dropdown>
       </section>
     </bk-loading>
-    <VersionLayout v-if="showDiffPanel" :show-footer="false">
-      <template #header>
-        <section class="header-wrapper">
-          <span class="header-name" @click="handleDiffClose">
-            <ArrowsLeft class="arrow-left" />
-            <span class="service-name">{{ appData.spec.name }}</span>
-          </span>
-          <AngleRight class="arrow-right" />
-          版本对比
-        </section>
-      </template>
-      <config-diff
-        :base-version="0"
-        :current-config-list="[]"
-        :base-config-list="[]">
-        <template #head>
-          <div class="diff-left-panel-head">
-            {{ diffVersion.spec.name }}
-            <!-- @todo 待确定这里展示什么名称 -->
-          </div>
-        </template>
-      </config-diff>
-    </VersionLayout>
+    <VersionDiff
+      v-model:show="showDiffPanel"
+      :current-version="diffVersion" />
   </section>
 </template>
 
