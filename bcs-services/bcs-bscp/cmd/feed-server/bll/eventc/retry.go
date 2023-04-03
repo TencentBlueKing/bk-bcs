@@ -116,7 +116,7 @@ func (rl *retryList) Purge() (int, []*retryMember) {
 	}
 
 	cnt := len(rl.list)
-	copied := make([]*retryMember, cnt)
+	copied := make([]*retryMember, 0, cnt)
 	for sn := range rl.list {
 		rl.mc.retryCounter.With(prm.Labels{"biz": tools.Itoa(rl.list[sn].member.InstSpec.BizID),
 			"app": tools.Itoa(rl.list[sn].member.InstSpec.AppID)}).Inc()

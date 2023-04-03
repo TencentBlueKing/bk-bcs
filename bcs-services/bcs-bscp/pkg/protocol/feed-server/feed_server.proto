@@ -24,7 +24,6 @@ message SidecarSpec {
     uint32 biz_id = 1;
     // version is sidecar's version
     pbbase.Versioning version     = 2;
-    repeated SidecarAppMeta metas = 3;
 }
 
 // SidecarMeta define a sidecar's basic metadata information.

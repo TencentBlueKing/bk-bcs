@@ -61,38 +61,25 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 		return nil, status.Errorf(codes.PermissionDenied, "no permission to access bscp server")
 	}
 
-	// validate existence of the biz and app
-	appIDs := make([]uint32, len(hm.Spec.Metas))
-	for index, one := range hm.Spec.Metas {
-		appIDs[index] = one.AppId
-	}
-
-	exist, err := s.bll.AppCache().IsAppExist(im.Kit, hm.Spec.BizId, appIDs...)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
-	}
-
-	if !exist {
-		return nil, status.Errorf(codes.InvalidArgument, "app not exist")
-	}
-
-	appReloadOpt, err := s.getAppReload(im.Kit, hm.Spec.BizId, appIDs)
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, err.Error())
-	}
-
 	// TODO:
 	// 1. get the basic configurations for sidecar if necessary, and send it back to sidecar later.
 	// 2. collect the basic info for the app with biz dimension.
 
+	decorator := s.uriDecorator.Init(hm.Spec.BizId)
 	payload := &sfs.SidecarHandshakePayload{
 		ServiceInfo: &sfs.ServiceInfo{
 			Name: s.name,
 		},
 		RuntimeOption: &sfs.SidecarRuntimeOption{
 			BounceIntervalHour: s.dsSetting.BounceIntervalHour,
-			RepositoryTLS:      s.repositoryTLS,
-			AppReloads:         appReloadOpt,
+			Repository: &sfs.RepositoryV1{
+				RepositoryType: decorator.GetRepositoryType(),
+				Root:           decorator.Root(),
+				// TODO: TLS
+				AccessKeyID:     decorator.AccessKeyID(),
+				SecretAccessKey: decorator.SecretAccessKey(),
+				Url:             decorator.Url(),
+			},
 		},
 	}
 

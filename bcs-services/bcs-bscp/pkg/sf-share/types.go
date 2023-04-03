@@ -151,9 +151,10 @@ func (s SideAppMeta) Validate() error {
 type ConfigItemMetaV1 struct {
 	// ID is released configuration item identity id.
 	ID             uint32                 `json:"id"`
+	CommitID       uint32                 `json:"commentID"`
 	ContentSpec    *pbcontent.ContentSpec `json:"contentSpec"`
 	ConfigItemSpec *pbci.ConfigItemSpec   `json:"configItemSpec"`
-	RepositoryPath *RepositorySpecV1      `json:"repositoryPath"`
+	RepositoryPath string                 `json:"repositoryPath"`
 }
 
 // ReleaseEventMetaV1 defines the event details when the sidecar watch the feed server to
@@ -163,6 +164,40 @@ type ReleaseEventMetaV1 struct {
 	ReleaseID  uint32              `json:"releaseID"`
 	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
 	Repository *RepositoryV1       `json:"repository"`
+}
+
+// InstanceSpec defines the specifics for an app instance to watch the event.
+type InstanceSpec struct {
+	BizID  uint32            `json:"bizID"`
+	AppID  uint32            `json:"appID"`
+	Uid    string            `json:"uid"`
+	Labels map[string]string `json:"labels"`
+}
+
+// Validate the instance spec is valid or not
+func (is InstanceSpec) Validate() error {
+	if is.BizID <= 0 {
+		return errors.New("invalid biz id")
+	}
+
+	if is.AppID <= 0 {
+		return errors.New("invalid app id")
+	}
+
+	if len(is.Uid) == 0 {
+		return errors.New("invalid uid")
+	}
+
+	if err := validator.ValidateLabel(is.Labels); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Format the instance spec's basic info to string.
+func (is *InstanceSpec) Format() string {
+	return fmt.Sprintf("biz: %d, app: %d, uid: %s", is.BizID, is.AppID, is.Uid)
 }
 
 // RepositoryV1 defines repository related metas.
@@ -295,6 +330,7 @@ type RepositorySpecV1 struct {
 // release has been changed.
 type ReleaseChangePayload struct {
 	ReleaseMeta *ReleaseEventMetaV1 `json:"releaseMeta"`
+	Instance    *InstanceSpec       `json:"instance"`
 	CursorID    uint32              `json:"cursorID"`
 }
 
@@ -330,6 +366,7 @@ type SidecarRuntimeOption struct {
 	// reconnect stream server instance.
 	BounceIntervalHour uint                          `json:"bounceInterval"`
 	RepositoryTLS      *TLSBytes                     `json:"repositoryTLS"`
+	Repository         *RepositoryV1                 `json:"repository"`
 	AppReloads         map[ /*appID*/ uint32]*Reload `json:"reload"`
 }
 

@@ -281,7 +281,7 @@ func (ud *UriDecorator) Init(bizID uint32) DecoratorInter {
 
 	return &Decorator{
 		root:       ud.root() + repoName,
-		pathPrefix: nodeFrontPath,
+		pathPrefix: ud.root() + repoName + nodeFrontPath,
 	}
 }
 
