@@ -21,25 +21,25 @@ import (
 	"bscp.io/pkg/rest"
 )
 
-// Publish client of publish
-type Publish struct {
+// Hook related interface.
+type Hook struct {
 	client rest.ClientInterface
 }
 
-// NewPublishClient get a new publish client
-func NewPublishClient(client rest.ClientInterface) *Publish {
-	return &Publish{
+// NewHookClient get a new hook client
+func NewHookClient(client rest.ClientInterface) *Hook {
+	return &Hook{
 		client: client,
 	}
 }
 
-// PublishWithStrategy function to publish with strategy.
-func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, req *pbcs.PublishReq) (
-	*pbcs.PublishResp, error) {
-	resp := p.client.Post().
+// Create function to create hook.
+func (c *Hook) Create(ctx context.Context, header http.Header, req *pbcs.CreateHookReq) (
+	*pbcs.CreateHookResp, error) {
+
+	resp := c.client.Post().
 		WithContext(ctx).
-		SubResourcef("/config/update/strategy/publish/publish/strategy_id/%d/app_id/%d/biz_id/%d",
-			req.ReleaseId, req.AppId, req.BizId).
+		SubResourcef("/config/apps/%d/hooks", req.AppId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -49,8 +49,8 @@ func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, r
 	}
 
 	pbResp := &struct {
-		Data  *pbcs.PublishResp  `json:"data"`
-		Error *rest.ErrorPayload `json:"error"`
+		Data  *pbcs.CreateHookResp `json:"data"`
+		Error *rest.ErrorPayload   `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
@@ -62,14 +62,14 @@ func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, r
 	return pbResp.Data, nil
 }
 
-// FinishPublishWithStrategy function to finish publish with strategy.
-func (p *Publish) FinishPublishWithStrategy(ctx context.Context, header http.Header,
-	req *pbcs.FinishPublishReq) (*pbcs.FinishPublishResp, error) {
+// Update function to update hook.
+func (c *Hook) Update(ctx context.Context, header http.Header, req *pbcs.UpdateHookReq) (
+	*pbcs.UpdateHookResp, error) {
 
-	resp := p.client.Put().
+	resp := c.client.Put().
 		WithContext(ctx).
-		SubResourcef("/config/update/strategy/publish/finish/strategy_id/%d/app_id/%d/biz_id/%d",
-			req.Id, req.AppId, req.BizId).
+		SubResourcef("/config/apps/%d/hooks/%d",
+			req.AppId, req.HookId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -79,8 +79,8 @@ func (p *Publish) FinishPublishWithStrategy(ctx context.Context, header http.Hea
 	}
 
 	pbResp := &struct {
-		Data  *pbcs.FinishPublishResp `json:"data"`
-		Error *rest.ErrorPayload      `json:"error"`
+		Data  *pbcs.UpdateHookResp `json:"data"`
+		Error *rest.ErrorPayload   `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
@@ -92,13 +92,14 @@ func (p *Publish) FinishPublishWithStrategy(ctx context.Context, header http.Hea
 	return pbResp.Data, nil
 }
 
-// ListStrategyPublishHistory function to list strategy publish history.
-func (p *Publish) ListStrategyPublishHistory(ctx context.Context, header http.Header,
-	req *pbcs.ListPubStrategyHistoriesReq) (*pbcs.ListPubStrategyHistoriesResp, error) {
+// Delete function to delete hook.
+func (c *Hook) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteHookReq) (
+	*pbcs.DeleteHookResp, error) {
 
-	resp := p.client.Post().
+	resp := c.client.Delete().
 		WithContext(ctx).
-		SubResourcef("/config/list/strategy/publish/history/app_id/%d/biz_id/%d", req.AppId, req.BizId).
+		SubResourcef("/config/apps/%d/hooks/%d",
+			req.AppId, req.HookId).
 		WithHeaders(header).
 		Body(req).
 		Do()
@@ -108,8 +109,37 @@ func (p *Publish) ListStrategyPublishHistory(ctx context.Context, header http.He
 	}
 
 	pbResp := &struct {
-		Data  *pbcs.ListPubStrategyHistoriesResp `json:"data"`
-		Error *rest.ErrorPayload                 `json:"error"`
+		Data  *pbcs.DeleteHookResp `json:"data"`
+		Error *rest.ErrorPayload   `json:"error"`
+	}{}
+	if err := resp.Into(pbResp); err != nil {
+		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
+	}
+
+	return pbResp.Data, nil
+}
+
+// List to list hook.
+func (c *Hook) List(ctx context.Context, header http.Header,
+	req *pbcs.ListHooksReq) (*pbcs.ListHooksResp, error) {
+
+	resp := c.client.Post().
+		WithContext(ctx).
+		SubResourcef("/config/apps/%d/hooks/list", req.AppId).
+		WithHeaders(header).
+		Body(req).
+		Do()
+
+	if resp.Err != nil {
+		return nil, resp.Err
+	}
+
+	pbResp := &struct {
+		Data  *pbcs.ListHooksResp `json:"data"`
+		Error *rest.ErrorPayload  `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err

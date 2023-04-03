@@ -9,6 +9,7 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 either express or implied. See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package view
 
 import (
@@ -21,12 +22,15 @@ import (
 
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/rest/view/modifier"
 	"bscp.io/pkg/rest/view/webannotation"
 )
 
 // GenericResponseWriter 自定义Write，自动补充 data 和 web_annotations 数据
 type GenericResponseWriter struct {
 	http.ResponseWriter
+	ctx        context.Context
+	msg        proto.Message
 	authorizer auth.Authorizer
 	annotation *webannotation.Annotation
 	err        error // low-level runtime error
@@ -37,6 +41,19 @@ func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 	// 错误不需要特殊处理
 	if w.err != nil {
 		return w.ResponseWriter.Write(data)
+	}
+
+	w.beforeWriteHook(w.ctx, w.msg)
+
+	if w.msg != nil {
+		w, ok := w.msg.(modifier.RespModifier)
+		if ok {
+			var err error
+			data, err = w.ModifyResp(data)
+			if err != nil {
+				return 0, err
+			}
+		}
 	}
 
 	buf := bytes.NewBufferString(`{"data":`)
@@ -54,6 +71,11 @@ func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 	buf.WriteString("}")
 
 	return w.ResponseWriter.Write(buf.Bytes())
+}
+
+// beforeWriteHook is a hook before write response
+func (w *GenericResponseWriter) beforeWriteHook(ctx context.Context, msg proto.Message) error {
+	return w.BuildWebAnnotation(ctx, msg)
 }
 
 // BuildWebAnnotation 动态执行 webannotions 函数
@@ -85,6 +107,13 @@ func (w *GenericResponseWriter) BuildWebAnnotation(ctx context.Context, msg prot
 		w.annotation = annotation
 	}
 
+	return nil
+}
+
+// SetWriterAttrs set attributes of the writer
+func (w *GenericResponseWriter) SetWriterAttrs(ctx context.Context, msg proto.Message) error {
+	w.ctx = ctx
+	w.msg = msg
 	return nil
 }
 

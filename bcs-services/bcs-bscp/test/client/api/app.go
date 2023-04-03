@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -46,10 +47,14 @@ func (a *App) Create(ctx context.Context, header http.Header, req *pbcs.CreateAp
 	}
 
 	pbResp := &struct {
-		Data *pbcs.CreateAppResp `json:"data"`
+		Data  *pbcs.CreateAppResp `json:"data"`
+		Error *rest.ErrorPayload  `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -69,10 +74,14 @@ func (a *App) Update(ctx context.Context, header http.Header, req *pbcs.UpdateAp
 	}
 
 	pbResp := &struct {
-		Data *pbcs.UpdateAppResp `json:"data"`
+		Data  *pbcs.UpdateAppResp `json:"data"`
+		Error *rest.ErrorPayload  `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -92,10 +101,14 @@ func (a *App) Delete(ctx context.Context, header http.Header, req *pbcs.DeleteAp
 	}
 
 	pbResp := &struct {
-		Data *pbcs.DeleteAppResp `json:"data"`
+		Data  *pbcs.DeleteAppResp `json:"data"`
+		Error *rest.ErrorPayload  `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -115,10 +128,11 @@ func (a *App) List(ctx context.Context, header http.Header, req *pbcs.ListAppsRe
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListAppsResp `json:"data"`
+		Data  *pbcs.ListAppsResp `json:"data"`
+		Error *rest.ErrorPayload `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
 	}
-	return pbResp.Data, nil
+	return pbResp.Data, pbResp.Error
 }
