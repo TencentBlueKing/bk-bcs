@@ -510,7 +510,12 @@ func (s *Server) generateContainerEnvPatch(
 	for index, portEntry := range portEntryList {
 		var vipList []string
 		for _, lbObj := range portPoolItemStatusList[index].PoolItemLoadBalancers {
-			vipList = append(vipList, lbObj.IPs...)
+			if len(lbObj.IPs) != 0 {
+				vipList = append(vipList, lbObj.IPs...)
+			}
+			if len(lbObj.DNSName) != 0 {
+				vipList = append(vipList, lbObj.DNSName)
+			}
 		}
 		for _, item := range portItemList[index] {
 			envs = append(envs, k8scorev1.EnvVar{
