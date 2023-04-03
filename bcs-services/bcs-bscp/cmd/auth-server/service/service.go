@@ -32,6 +32,7 @@ import (
 	"bscp.io/pkg/components/bkpaas"
 	iamauth "bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/iam/client"
+	"bscp.io/pkg/iam/meta"
 	pkgauth "bscp.io/pkg/iam/sdk/auth"
 	"bscp.io/pkg/iam/sys"
 	"bscp.io/pkg/kit"
@@ -55,7 +56,7 @@ type Service struct {
 	disableAuth bool
 	// disableWriteOpt defines which biz's write operation needs to be disabled
 	disableWriteOpt *options.DisableWriteOption
-
+	iamSettings     cc.IAM
 	// iam logic module.
 	iam *iam.IAM
 	// initial logic module.
@@ -87,6 +88,7 @@ func NewService(sd serviced.Discover, iamSettings cc.IAM, disableAuth bool,
 		gateway:         gateway,
 		disableAuth:     disableAuth,
 		disableWriteOpt: disableWriteOpt,
+		iamSettings:     iamSettings,
 	}
 
 	if err = s.initLogicModule(); err != nil {
@@ -228,6 +230,12 @@ func (s *Service) GetPermissionToApply(ctx context.Context, req *pbas.GetPermiss
 	return s.auth.GetPermissionToApply(ctx, req)
 }
 
+// CheckPermission
+func (s *Service) CheckPermission(ctx context.Context, req *pbas.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
+	resp, err := s.auth.CheckPermission(ctx, s.iamSettings, req.ResourceAttribute())
+	return resp, err
+}
+
 // initLogicModule init logic module.
 func (s *Service) initLogicModule() error {
 	var err error
@@ -279,9 +287,24 @@ func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamaut
 	}
 
 	perms := map[string]webannotation.Perm{}
+	authRes := make([]*meta.ResourceAttribute, 0, len(resp.GetItems()))
 	for _, v := range resp.GetItems() {
-		perms[v.SpaceId] = webannotation.Perm{"update": false, "delete": false}
+		bID, _ := strconv.ParseInt(v.SpaceId, 10, 64)
+		authRes = append(authRes, &meta.ResourceAttribute{
+			Basic: &meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource, ResourceID: uint32(bID)}, BizID: uint32(bID)},
+		)
+
 	}
+
+	authResp, _, err := authorizer.Authorize(kt, authRes...)
+	if err != nil {
+		return nil, err
+	}
+
+	for idx, v := range resp.GetItems() {
+		perms[v.SpaceId] = webannotation.Perm{"has_perm": authResp[idx].Authorized}
+	}
+
 	return &webannotation.Annotation{Perms: perms}, nil
 }
 
