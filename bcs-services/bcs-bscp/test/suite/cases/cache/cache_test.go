@@ -18,7 +18,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
-	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/uuid"
 	"bscp.io/pkg/dal/table"
 	pbcache "bscp.io/pkg/protocol/cache-service"
@@ -26,7 +26,6 @@ import (
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
-	pbstrategy "bscp.io/pkg/protocol/core/strategy"
 	"bscp.io/pkg/tools"
 	"bscp.io/test/client"
 	"bscp.io/test/suite"
@@ -48,7 +47,8 @@ func TestCache(t *testing.T) {
 		nmApp        pbapp.App
 		nmConfigItem pbci.ConfigItem
 		nmContent    pbcontent.Content
-		nmStrategy   pbstrategy.Strategy
+		// TODO: strategy test depends on group, add group test first
+		//nmStrategy   pbstrategy.Strategy
 
 		// The following ids need to be assigned after generating resources.
 		// They are used for verification in the test process.
@@ -97,14 +97,15 @@ func TestCache(t *testing.T) {
 				},
 			}
 
+			// TODO: strategy test depends on group, add group test first
 			// normal mode strategy.
-			nmStrategy = pbstrategy.Strategy{
-				Spec: &pbstrategy.StrategySpec{
-					AsDefault: false,
-					Name:      name + "_strategy",
-					Namespace: "",
-				},
-			}
+			//nmStrategy = pbstrategy.Strategy{
+			//	Spec: &pbstrategy.StrategySpec{
+			//		AsDefault: false,
+			//		Name:      name + "_strategy",
+			//		Namespace: "",
+			//	},
+			//}
 		})
 
 		Convey("Generate Resource For Cache Test", func() {
@@ -124,14 +125,13 @@ func TestCache(t *testing.T) {
 			nmAppResp, err := cli.ApiClient.App.Create(ctx, header, nmAppReq)
 			So(err, ShouldBeNil)
 			So(nmAppResp, ShouldNotBeNil)
-			So(nmAppResp.Data, ShouldNotBeNil)
-			So(nmAppResp.Data.Id, ShouldNotEqual, uint32(0))
-			nmApp.Id = nmAppResp.Data.Id
+			So(nmAppResp.Id, ShouldNotEqual, uint32(0))
+			nmApp.Id = nmAppResp.Id
 
 			// create config item in normal mode
 			nmCIReq := &pbconfig.CreateConfigItemReq{
 				BizId:     cases.TBizID,
-				AppId:     nmAppResp.Data.Id,
+				AppId:     nmAppResp.Id,
 				Name:      nmConfigItem.Spec.Name,
 				Path:      nmConfigItem.Spec.Path,
 				FileType:  nmConfigItem.Spec.FileType,
@@ -139,19 +139,27 @@ func TestCache(t *testing.T) {
 				User:      nmConfigItem.Spec.Permission.User,
 				UserGroup: nmConfigItem.Spec.Permission.UserGroup,
 				Privilege: nmConfigItem.Spec.Permission.Privilege,
+				Sign:      nmContent.Spec.Signature,
+				ByteSize:  nmContent.Spec.ByteSize,
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nmCiResp, err := cli.ApiClient.ConfigItem.Create(ctx, header, nmCIReq)
 			So(err, ShouldBeNil)
 			So(nmCiResp, ShouldNotBeNil)
-			So(nmCiResp.Data, ShouldNotBeNil)
-			So(nmCiResp.Data.Id, ShouldNotEqual, uint32(0))
+			So(nmCiResp.Id, ShouldNotEqual, uint32(0))
+
+			// upload content in normal mode
+			ctx, header = cases.GenApiCtxHeader()
+			header.Set(constant.ContentIDHeaderKey, nmContent.Spec.Signature)
+			resp, err := cli.ApiClient.Content.Upload(ctx, header, cases.TBizID, nmAppResp.Id, content)
+			So(err, ShouldBeNil)
+			So(resp, ShouldNotBeNil)
 
 			// create content in normal mode
 			nmCtReq := &pbconfig.CreateContentReq{
 				BizId:        cases.TBizID,
-				AppId:        nmAppResp.Data.Id,
-				ConfigItemId: nmCiResp.Data.Id,
+				AppId:        nmAppResp.Id,
+				ConfigItemId: nmCiResp.Id,
 				Sign:         nmContent.Spec.Signature,
 				ByteSize:     nmContent.Spec.ByteSize,
 			}
@@ -159,122 +167,113 @@ func TestCache(t *testing.T) {
 			nmCtResp, err := cli.ApiClient.Content.Create(ctx, header, nmCtReq)
 			So(err, ShouldBeNil)
 			So(nmCtResp, ShouldNotBeNil)
-			So(nmCtResp.Data, ShouldNotBeNil)
-			So(nmCtResp.Data.Id, ShouldNotEqual, uint32(0))
-			nmContent.Id = nmCtResp.Data.Id
+			So(nmCtResp.Id, ShouldNotEqual, uint32(0))
+			nmContent.Id = nmCtResp.Id
 
 			// create commit in normal mode
 			nmCmReq := &pbconfig.CreateCommitReq{
 				BizId:        cases.TBizID,
-				AppId:        nmAppResp.Data.Id,
-				ConfigItemId: nmCiResp.Data.Id,
-				ContentId:    nmCtResp.Data.Id,
+				AppId:        nmAppResp.Id,
+				ConfigItemId: nmCiResp.Id,
+				ContentId:    nmCtResp.Id,
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nmCmResp, err := cli.ApiClient.Commit.Create(ctx, header, nmCmReq)
 			So(err, ShouldBeNil)
 			So(nmCmResp, ShouldNotBeNil)
-			So(nmCmResp.Data, ShouldNotBeNil)
-			So(nmCmResp.Data.Id, ShouldNotEqual, uint32(0))
-			nmCommitId = nmCmResp.Data.Id
+			So(nmCmResp.Id, ShouldNotEqual, uint32(0))
+			nmCommitId = nmCmResp.Id
 
 			// create release in normal mode
 			nmRelReq := &pbconfig.CreateReleaseReq{
 				BizId: cases.TBizID,
-				AppId: nmAppResp.Data.Id,
+				AppId: nmAppResp.Id,
 				Name:  name + "_release",
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nmRelResp, err := cli.ApiClient.Release.Create(ctx, header, nmRelReq)
 			So(err, ShouldBeNil)
 			So(nmRelResp, ShouldNotBeNil)
-			So(nmRelResp.Data, ShouldNotBeNil)
-			So(nmRelResp.Data.Id, ShouldNotEqual, uint32(0))
-			nmReleaseId = nmRelResp.Data.Id
+			So(nmRelResp.Id, ShouldNotEqual, uint32(0))
+			nmReleaseId = nmRelResp.Id
 
 			// publish instance in normal mode
 			nmInsReq := &pbconfig.PublishInstanceReq{
 				BizId:     cases.TBizID,
-				AppId:     nmAppResp.Data.Id,
+				AppId:     nmAppResp.Id,
 				Uid:       nmInstanceUid,
-				ReleaseId: nmRelResp.Data.Id,
+				ReleaseId: nmRelResp.Id,
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nmInsResp, err := cli.ApiClient.Instance.Publish(ctx, header, nmInsReq)
 			So(err, ShouldBeNil)
 			So(nmInsResp, ShouldNotBeNil)
-			So(nmInsResp.Data, ShouldNotBeNil)
-			So(nmInsResp.Data.Id, ShouldNotEqual, uint32(0))
+			So(nmInsResp.Id, ShouldNotEqual, uint32(0))
 
 			// create strategy set in normal mode
 			nmStgSetReq := &pbconfig.CreateStrategySetReq{
 				BizId: cases.TBizID,
-				AppId: nmAppResp.Data.Id,
+				AppId: nmAppResp.Id,
 				Name:  name + "_strategy_set",
 			}
 			ctx, header = cases.GenApiCtxHeader()
 			nmStgSetResp, err := cli.ApiClient.StrategySet.Create(ctx, header, nmStgSetReq)
 			So(err, ShouldBeNil)
 			So(nmStgSetResp, ShouldNotBeNil)
-			So(nmStgSetResp.Data, ShouldNotBeNil)
-			So(nmStgSetResp.Data.Id, ShouldNotEqual, uint32(0))
+			So(nmStgSetResp.Id, ShouldNotEqual, uint32(0))
 
-			// create strategy in normal mode
-			nmStgReq := &pbconfig.CreateStrategyReq{
-				BizId:         cases.TBizID,
-				AppId:         nmAppResp.Data.Id,
-				StrategySetId: nmStgSetResp.Data.Id,
-				ReleaseId:     nmRelResp.Data.Id,
-				AsDefault:     nmStrategy.Spec.AsDefault,
-				Name:          name + "_strategy",
-				Namespace:     "",
-			}
-			ctx, header = cases.GenApiCtxHeader()
-			nmStgResp, err := cli.ApiClient.Strategy.Create(ctx, header, nmStgReq)
-			So(err, ShouldBeNil)
-			So(nmStgResp, ShouldNotBeNil)
-			So(nmStgResp.Data, ShouldNotBeNil)
-			So(nmStgResp.Data.Id, ShouldNotEqual, uint32(0))
-
-			// publish with strategy in normal mode
-			pubStgReq := &pbconfig.PublishReq{
-				BizId: cases.TBizID,
-				AppId: nmAppResp.Data.Id,
-			}
-			ctx, header = cases.GenApiCtxHeader()
-			nmPubStgResp, err := cli.ApiClient.Publish.PublishWithStrategy(ctx, header, pubStgReq)
-			So(err, ShouldBeNil)
-			So(nmPubStgResp, ShouldNotBeNil)
-			So(nmPubStgResp.Data, ShouldNotBeNil)
-			So(nmPubStgResp.Data.Id, ShouldNotEqual, uint32(0))
-
-			// finish publish with strategy in normal mode
-			nmFinishPubStgReq := &pbconfig.FinishPublishReq{
-				BizId: cases.TBizID,
-				AppId: nmAppResp.Data.Id,
-				Id:    nmStgResp.Data.Id,
-			}
-			ctx, header = cases.GenApiCtxHeader()
-			finishPubStgResp, err := cli.ApiClient.Publish.FinishPublishWithStrategy(ctx, header, nmFinishPubStgReq)
-			So(err, ShouldBeNil)
-			So(finishPubStgResp, ShouldNotBeNil)
-			So(finishPubStgResp.Code, ShouldEqual, errf.OK)
-
-			// the application doesn't have release instance
-			nsAppReq := &pbconfig.CreateAppReq{
-				BizId:          cases.TBizID,
-				Name:           cases.RandName(name),
-				ConfigType:     string(table.File),
-				Mode:           string(table.Normal),
-				ReloadType:     string(table.ReloadWithFile),
-				ReloadFilePath: "/tmp/reload.json",
-			}
-			ctx, header = cases.GenApiCtxHeader()
-			nsAppResp, err := cli.ApiClient.App.Create(ctx, header, nsAppReq)
-			So(err, ShouldBeNil)
-			So(nsAppResp, ShouldNotBeNil)
-			So(nsAppResp.Data, ShouldNotBeNil)
-			So(nsAppResp.Data.Id, ShouldNotEqual, uint32(0))
+			// TODO: strategy test depends on group, add group test first
+			//// create strategy in normal mode
+			//nmStgReq := &pbconfig.CreateStrategyReq{
+			//	BizId:         cases.TBizID,
+			//	AppId:         nmAppResp.Id,
+			//	StrategySetId: nmStgSetResp.Id,
+			//	ReleaseId:     nmRelResp.Id,
+			//	AsDefault:     nmStrategy.Spec.AsDefault,
+			//	Name:          name + "_strategy",
+			//	Namespace:     "",
+			//}
+			//ctx, header = cases.GenApiCtxHeader()
+			//nmStgResp, err := cli.ApiClient.Strategy.Create(ctx, header, nmStgReq)
+			//So(err, ShouldBeNil)
+			//So(nmStgResp, ShouldNotBeNil)
+			//So(nmStgResp.Id, ShouldNotEqual, uint32(0))
+			//
+			//// publish with strategy in normal mode
+			//pubStgReq := &pbconfig.PublishReq{
+			//	BizId: cases.TBizID,
+			//	AppId: nmAppResp.Id,
+			//}
+			//ctx, header = cases.GenApiCtxHeader()
+			//nmPubStgResp, err := cli.ApiClient.Publish.PublishWithStrategy(ctx, header, pubStgReq)
+			//So(err, ShouldBeNil)
+			//So(nmPubStgResp, ShouldNotBeNil)
+			//So(nmPubStgResp.Id, ShouldNotEqual, uint32(0))
+			//
+			//// finish publish with strategy in normal mode
+			//nmFinishPubStgReq := &pbconfig.FinishPublishReq{
+			//	BizId: cases.TBizID,
+			//	AppId: nmAppResp.Id,
+			//	Id:    nmStgResp.Id,
+			//}
+			//ctx, header = cases.GenApiCtxHeader()
+			//finishPubStgResp, err := cli.ApiClient.Publish.FinishPublishWithStrategy(ctx, header, nmFinishPubStgReq)
+			//So(err, ShouldBeNil)
+			//So(*finishPubStgResp, ShouldBeZeroValue)
+			//// the application doesn't have release instance
+			//nsAppReq := &pbconfig.CreateAppReq{
+			//	BizId:          cases.TBizID,
+			//	Name:           cases.RandName(name),
+			//	ConfigType:     string(table.File),
+			//	Mode:           string(table.Normal),
+			//	ReloadType:     string(table.ReloadWithFile),
+			//	ReloadFilePath: "/tmp/reload.json",
+			//}
+			//ctx, header = cases.GenApiCtxHeader()
+			//nsAppResp, err := cli.ApiClient.App.Create(ctx, header, nsAppReq)
+			//So(err, ShouldBeNil)
+			//So(nsAppResp, ShouldNotBeNil)
+			//So(nsAppResp.Id, ShouldNotEqual, uint32(0))
 
 			// wait for cache to flush
 			time.Sleep(time.Second * 2)

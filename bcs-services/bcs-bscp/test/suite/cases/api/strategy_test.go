@@ -19,6 +19,7 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey" // import convey.
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/tools"
@@ -253,8 +254,8 @@ func TestStrategy(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header = cases.GenApiCtxHeader()
 				resp, err := cli.Strategy.Create(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 
@@ -289,8 +290,8 @@ func TestStrategy(t *testing.T) {
 				}
 				ctx, header = cases.GenApiCtxHeader()
 				resp, err := cli.Strategy.Create(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 
 			{ // normal mode limit 5
@@ -322,8 +323,8 @@ func TestStrategy(t *testing.T) {
 				}
 				ctx, header = cases.GenApiCtxHeader()
 				resp, err := cli.Strategy.Create(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -440,8 +441,8 @@ func TestStrategy(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header = cases.GenApiCtxHeader()
 				resp, err := cli.Strategy.Update(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -499,8 +500,8 @@ func TestStrategy(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header = cases.GenApiCtxHeader()
 				resp, err := cli.Strategy.Delete(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 
@@ -565,8 +566,8 @@ func TestStrategy(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header = cases.GenApiCtxHeader()
 				resp, err := cli.Strategy.List(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -590,6 +591,10 @@ func createResource(cli *api.Client, mode table.AppMode, name string) (appId, re
 	appId = appResp.Id
 	rm.AddApp(mode, appId)
 
+	content := "This is content for test"
+	signature := tools.SHA256(content)
+	size := uint64(len(content))
+
 	// create config item
 	ciReq := &pbcs.CreateConfigItemReq{
 		BizId:     cases.TBizID,
@@ -601,6 +606,8 @@ func createResource(cli *api.Client, mode table.AppMode, name string) (appId, re
 		User:      "root",
 		UserGroup: "root",
 		Privilege: "755",
+		Sign:      signature,
+		ByteSize:  size,
 	}
 	ctx, header = cases.GenApiCtxHeader()
 	ciResp, err := cli.ConfigItem.Create(ctx, header, ciReq)
@@ -609,13 +616,20 @@ func createResource(cli *api.Client, mode table.AppMode, name string) (appId, re
 	So(ciResp.Id, ShouldNotEqual, uint32(0))
 	rm.AddConfigItem(appId, ciResp.Id)
 
+	// upload content
+	ctx, header = cases.GenApiCtxHeader()
+	header.Set(constant.ContentIDHeaderKey, signature)
+	resp, err := cli.Content.Upload(ctx, header, cases.TBizID, appId, content)
+	So(err, ShouldBeNil)
+	So(resp, ShouldNotBeNil)
+
 	// create content
 	contReq := &pbcs.CreateContentReq{
 		BizId:        cases.TBizID,
 		AppId:        appId,
 		ConfigItemId: ciResp.Id,
-		Sign:         tools.SHA256(name),
-		ByteSize:     uint64(len(name)),
+		Sign:         signature,
+		ByteSize:     size,
 	}
 	ctx, header = cases.GenApiCtxHeader()
 	contResp, err := cli.Content.Create(ctx, header, contReq)

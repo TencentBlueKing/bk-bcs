@@ -131,7 +131,7 @@ func TestStrategySet(t *testing.T) {
 			}
 		})
 
-		Convey("2.create_strategy_set normal test: one app must create only one strategy set", func() {
+		Convey("2.create_strategy_set abnormal test: one app must create only one strategy set", func() {
 			// get an app id which has strategy set
 			appId, _ := rm.GetAppToStrategySet()
 			So(appId, ShouldNotEqual, uint32(0))
@@ -144,8 +144,8 @@ func TestStrategySet(t *testing.T) {
 
 			ctx, header := cases.GenApiCtxHeader()
 			resp, err := cli.StrategySet.Create(ctx, header, req)
-			So(err, ShouldBeNil)
-			So(resp, ShouldNotBeNil)
+			So(err, ShouldNotBeNil)
+			So(resp, ShouldBeNil)
 		})
 
 		Convey("3.create_strategy_set abnormal test", func() {
@@ -206,8 +206,8 @@ func TestStrategySet(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header = cases.GenApiCtxHeader()
 				resp, err := cli.StrategySet.Create(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -317,8 +317,8 @@ func TestStrategySet(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.StrategySet.Update(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -378,8 +378,8 @@ func TestStrategySet(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.StrategySet.Delete(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 
@@ -448,8 +448,8 @@ func TestStrategySet(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.StrategySet.List(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})

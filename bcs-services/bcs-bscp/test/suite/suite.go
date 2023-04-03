@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"bscp.io/pkg/dal/table"
+	"bscp.io/pkg/logs"
 	"bscp.io/test/client"
 
 	_ "github.com/go-sql-driver/mysql" // import mysql drive, used to create conn.
@@ -38,6 +39,8 @@ var (
 	// SidecarStartCmd sidecar start cmd, must init data, then start sidecar. if sidecar bind app not exist,
 	// sidecar will start failed.
 	SidecarStartCmd = ""
+	// logCfg is log config
+	logCfg logConfig
 )
 
 type dbConfig struct {
@@ -48,6 +51,10 @@ type dbConfig struct {
 	DB       string
 }
 
+type logConfig struct {
+	Verbosity uint
+}
+
 func init() {
 	var clientCfg client.Config
 	var concurrent int
@@ -56,7 +63,7 @@ func init() {
 
 	flag.StringVar(&clientCfg.ApiHost, "api-host", "http://127.0.0.1:8080", "api http server address")
 	flag.StringVar(&clientCfg.CacheHost, "cache-host", "127.0.0.1:9514", "cache rpc service address")
-	flag.StringVar(&clientCfg.FeedHost, "feed-host", "127.0.0.1:9510", "feed rpc server address")
+	flag.StringVar(&clientCfg.FeedHost, "feed-host", "http://127.0.0.1:9610", "feed http server address")
 	flag.IntVar(&concurrent, "concurrent", 1000, "concurrent request during the load test.")
 	flag.Float64Var(&sustainSeconds, "sustain-seconds", 10, "the load test sustain time in seconds ")
 	flag.Int64Var(&totalRequest, "total-request", 0, "the load test total request,it has higher priority than "+
@@ -67,6 +74,8 @@ func init() {
 	flag.StringVar(&dbCfg.Password, "mysql-passwd", "root", "mysql login password")
 	flag.StringVar(&dbCfg.DB, "mysql-db", "bk_bscp_admin", "mysql database")
 	flag.StringVar(&SidecarStartCmd, "sidecar-start-cmd", "", "sidecar start command")
+	flag.UintVar(&logCfg.Verbosity, "log-verbosity", 0, "log verbosity")
+
 	testing.Init()
 	flag.Parse()
 
@@ -81,6 +90,18 @@ func init() {
 		log.Printf("new suite test client err: %v", err)
 		os.Exit(0)
 	}
+
+	setLogger()
+}
+
+func setLogger() {
+	logs.InitLogger(
+		logs.LogConfig{
+			ToStdErr:       true,
+			LogLineMaxSize: 2,
+			Verbosity:      logCfg.Verbosity,
+		},
+	)
 }
 
 // ClearData clear data.
@@ -91,7 +112,10 @@ func ClearData() error {
 	if _, err := db.Exec("truncate table " + table.ArchivedAppTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + table.ContentTable.Name()); err != nil {
+	if _, err := db.Exec("truncate table " + string(table.HookTable)); err != nil {
+		return err
+	}
+	if _, err := db.Exec("truncate table " + string(table.ContentTable)); err != nil {
 		return err
 	}
 	if _, err := db.Exec("truncate table " + table.ConfigItemTable.Name()); err != nil {
@@ -131,11 +155,11 @@ func ClearData() error {
 		return err
 	}
 	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
-		" t1 set t1.max_id = 0 where resource != 'event'"); err != nil {
+		" t1 set t1.max_id = 0 where resource != 'events'"); err != nil {
 		return err
 	}
 	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
-		" t1 set t1.max_id = 500 where resource = 'event'"); err != nil {
+		" t1 set t1.max_id = 500 where resource = 'events'"); err != nil {
 		return err
 	}
 

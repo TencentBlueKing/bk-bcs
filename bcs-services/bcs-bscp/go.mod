@@ -34,6 +34,7 @@ require (
 	github.com/swaggo/http-swagger v1.3.3
 	github.com/swaggo/swag v1.8.10
 	github.com/tidwall/gjson v1.14.4
+	github.com/tidwall/sjson v1.2.5
 	go.etcd.io/etcd/api/v3 v3.5.7
 	go.etcd.io/etcd/client/v3 v3.5.7
 	go.uber.org/atomic v1.10.0
