@@ -379,7 +379,7 @@ func (dao *configItemDao) GetCount(kit *kit.Kit, bizID, start, limit uint32) ([]
 
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT app_id, COUNT(*) as count, max(updated_at) as update_at FROM ", table.ConfigItemTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(bizID)),
-		" GROUP BY app_id ORDER BY app_id LIMIT ", strconv.Itoa(int(limit)), " OFFSET ", strconv.Itoa(int(start)))
+		" GROUP BY app_id ORDER BY app_id DESC LIMIT ", strconv.Itoa(int(limit)), " OFFSET ", strconv.Itoa(int(start)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	configItem := make([]*table.ListConfigItemCounts, 0)
