@@ -43,25 +43,6 @@ func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeG
 	return nil
 }
 
-// updateNodeGroupDesiredSize set nodegroup desired size
-func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		return err
-	}
-
-	if group.AutoScaling == nil {
-		group.AutoScaling = &cmproto.AutoScalingGroup{}
-	}
-	group.AutoScaling.DesiredSize = desiredSize
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func checkOperationStatus(computeCli *api.ComputeServiceClient, url, taskID string, d time.Duration) error {
 	return cloudprovider.LoopDoFunc(context.Background(), func() error {
 		o, err := api.GetOperation(computeCli, url)

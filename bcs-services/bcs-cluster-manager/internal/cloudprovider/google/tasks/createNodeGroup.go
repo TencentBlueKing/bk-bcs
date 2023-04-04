@@ -23,7 +23,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -45,39 +44,20 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 
 	// step login started here
-	cloudID := step.Params["CloudID"]
-	nodeGroupID := step.Params["NodeGroupID"]
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: get nodegroup for %s failed", taskID, nodeGroupID)
-		retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	// get cloud and cluster info
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, group.ClusterID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
+		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: get credential for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	cmOption.Region = group.Region
+	cmOption := dependInfo.CmOption
+	cluster := dependInfo.Cluster
+	group := dependInfo.NodeGroup
 
 	// create node group
 	gkeCli, err := api.NewContainerServiceClient(cmOption)
@@ -164,57 +144,32 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	}
 
 	// step login started here
-	nodeGroupID := step.Params["NodeGroupID"]
-	cloudID := step.Params["CloudID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
 	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get nodegroup for %s failed", taskID, nodeGroupID)
-		retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
+		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, group.ClusterID)
-	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get credential for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	cmOption.Region = group.Region
+	cmOption := dependInfo.CmOption
+	cluster := dependInfo.Cluster
+	group := dependInfo.NodeGroup
 
 	// get google cloud client
-	containerCli, err := api.NewContainerServiceClient(cmOption)
+	client, err := api.NewGCPClientSet(cmOption)
 	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get gke container client for nodegroup[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud gke client err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	computeCli, err := api.NewComputeServiceClient(cmOption)
-	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get compute client for nodegroup[%s] in task %s step %s failed, %s",
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: get gcp client for nodegroup[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud as client err, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+	containerCli := client.ContainerServiceClient
+	computeCli := client.ComputeServiceClient
 
 	// wait node group state to normal
 	ctx, cancel := context.WithTimeout(context.TODO(), 20*time.Minute)
@@ -244,23 +199,105 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		}
 	}, cloudprovider.LoopInterval(5*time.Second))
 	if err != nil {
-		blog.Errorf("taskID[%s] GetClusterNodePool failed: %v", taskID, err)
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: GetClusterNodePool failed: %v", taskID, err)
+		retErr := fmt.Errorf("GetClusterNodePool failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	newIt, igm, err := getIgmAndIt(computeCli, cloudNodeGroup, group, cluster, taskID)
+	if err != nil {
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getIgmAndIt failed: %v", taskID, err)
+		retErr := fmt.Errorf("getIgmAndIt failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromIgmAndIt(group,
+		igm, newIt, cmOption))
+	if err != nil {
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
+			taskID, nodeGroupID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID,
+			err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// update response information to task common params
+	if state.Task.CommonParams == nil {
+		state.Task.CommonParams = make(map[string]string)
+	}
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
+	return nil
+}
+
+func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container.NodePool, group *proto.NodeGroup,
+	cluster *proto.Cluster, taskID string) (*compute.InstanceTemplate, *compute.InstanceGroupManager, error) {
 	// get instanceGroupManager
 	igm, err := api.GetInstanceGroupManager(computeCli, cloudNodeGroup.InstanceGroupUrls[0])
 	if err != nil {
 		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
-		return err
+		return nil, nil, err
 	}
 
 	// get instanceTemplate info
 	it, err := api.GetInstanceTemplate(computeCli, igm.InstanceTemplate)
 	if err != nil {
 		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
-		return err
+		return nil, nil, err
 	}
 	newIt := it
+
+	err = newItFromBaseIt(newIt, it, group, cluster, computeCli, taskID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = patchIgm(newIt, igm, computeCli, group, taskID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if newIt.Name != it.Name {
+		// 如果使用了新模版,则删除旧模版
+		_, err := computeCli.DeleteInstanceTemplate(context.Background(), it.Name)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return newIt, igm, nil
+}
+
+func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager, computeCli *api.ComputeServiceClient,
+	group *proto.NodeGroup, taskID string) error {
+	newIgm := &compute.InstanceGroupManager{
+		InstanceTemplate: newIt.SelfLink,
+		BaseInstanceName: newIt.Name,
+		UpdatePolicy:     api.GenerateUpdatePolicy(group),
+	}
+	o, err := api.PatchInstanceGroupManager(computeCli, igm.SelfLink, newIgm)
+	if err != nil {
+		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v, operation ID: %s", taskID, err, o.SelfLink)
+		return err
+	}
+	// 检查操作是否成功
+	err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
+	if err != nil {
+		return fmt.Errorf("CheckCloudNodeGroupStatusTask[%s] GetOperation failed: %v", taskID, err)
+	}
+
+	return nil
+}
+
+func newItFromBaseIt(newIt, it *compute.InstanceTemplate, group *proto.NodeGroup, cluster *proto.Cluster,
+	computeCli *api.ComputeServiceClient, taskID string) error {
 	if len(group.LaunchTemplate.DataDisks) != 0 {
 		newIt.Name = strings.Join([]string{"gke", cluster.SystemID, group.CloudNodeGroupID, utils.RandomHexString(8)}, "-")
 		dataDisks := make([]*compute.AttachedDisk, 0)
@@ -289,51 +326,6 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 		}
 	}
 
-	newIgm := &compute.InstanceGroupManager{
-		InstanceTemplate: newIt.SelfLink,
-		BaseInstanceName: newIt.Name,
-		UpdatePolicy:     api.GenerateUpdatePolicy(group),
-	}
-	o, err := api.PatchInstanceGroupManager(computeCli, igm.SelfLink, newIgm)
-	if err != nil {
-		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v, operation ID: %s", taskID, err, o.SelfLink)
-		return err
-	}
-	// 检查操作是否成功
-	err = checkOperationStatus(computeCli, o.SelfLink, taskID, 3*time.Second)
-	if err != nil {
-		return fmt.Errorf("CheckCloudNodeGroupStatusTask[%s] GetOperation failed: %v", taskID, err)
-	}
-
-	if newIt.Name != it.Name {
-		// 如果使用了新模版,则删除旧模版
-		_, err := computeCli.DeleteInstanceTemplate(context.Background(), it.Name)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), generateNodeGroupFromIgmAndIt(group,
-		igm, newIt, cmOption))
-	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID,
-			err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// update response information to task common params
-	if state.Task.CommonParams == nil {
-		state.Task.CommonParams = make(map[string]string)
-	}
-
-	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
-	}
 	return nil
 }
 

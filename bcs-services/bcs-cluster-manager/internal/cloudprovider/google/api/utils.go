@@ -63,6 +63,25 @@ type GkeServiceAccount struct {
 	ClientCertURL       string `json:"client_x509_cert_url"`
 }
 
+type GCPClientSet struct {
+	*ComputeServiceClient
+	*ContainerServiceClient
+}
+
+// NewGCPClientSet creates a GCP client set
+func NewGCPClientSet(opt *cloudprovider.CommonOption) (*GCPClientSet, error) {
+	computeCli, err := NewComputeServiceClient(opt)
+	if err != nil {
+		return nil, err
+	}
+	containerCli, err := NewContainerServiceClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GCPClientSet{computeCli, containerCli}, nil
+}
+
 // GetTokenSource gets token source from provided sa credential
 func GetTokenSource(ctx context.Context, credential string) (oauth2.TokenSource, error) {
 	ts, err := google.CredentialsFromJSON(ctx, []byte(credential), container.CloudPlatformScope)

@@ -134,16 +134,3 @@ func (t *cachedTokenSource) update(tok *oauth2.Token) map[string]string {
 	ret["expiry"] = t.expiry.Format(time.RFC3339Nano)
 	return ret
 }
-
-// baseCache is the base configuration value for this TokenSource, without any cached ephemeral tokens.
-func (t *cachedTokenSource) baseCache() map[string]string {
-	t.lk.Lock()
-	defer t.lk.Unlock()
-	ret := map[string]string{}
-	for k, v := range t.cache {
-		ret[k] = v
-	}
-	delete(ret, "access-token")
-	delete(ret, "expiry")
-	return ret
-}

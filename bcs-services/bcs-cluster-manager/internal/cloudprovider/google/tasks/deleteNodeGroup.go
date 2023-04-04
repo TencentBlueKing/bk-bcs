@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 )
@@ -38,39 +37,20 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 
 	// step login started here
-	cloudID := step.Params["CloudID"]
-	nodeGroupID := step.Params["NodeGroupID"]
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		blog.Errorf("DeleteCloudNodeGroupTask[%s]: get nodegroup for %s failed", taskID, nodeGroupID)
-		retErr := fmt.Errorf("get nodegroup information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	// get cloud and cluster info
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, group.ClusterID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
 	if err != nil {
-		blog.Errorf("DeleteCloudNodeGroupTask[%s]: get cloud/cluster for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/cluster information failed, %s", err.Error())
+		blog.Errorf("DeleteCloudNodeGroupTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
+		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("DeleteCloudNodeGroupTask[%s]: get credential for nodegroup %s in task %s step %s failed, %s",
-			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	cmOption.Region = group.Region
+	cmOption := dependInfo.CmOption
+	cluster := dependInfo.Cluster
+	group := dependInfo.NodeGroup
 
 	containerCli, err := api.NewContainerServiceClient(cmOption)
 	if err != nil {

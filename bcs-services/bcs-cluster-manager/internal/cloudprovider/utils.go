@@ -640,3 +640,22 @@ func GetSecretForServiceAccount(ctx context.Context, clientSet kubernetes.Interf
 	}
 	return secret, nil
 }
+
+// UpdateNodeGroupDesiredSize set nodegroup desired size
+func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+
+	if group.AutoScaling == nil {
+		group.AutoScaling = &proto.AutoScalingGroup{}
+	}
+	group.AutoScaling.DesiredSize = desiredSize
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
