@@ -384,11 +384,6 @@ func (s *Server) initController() error {
 
 // initLeaderElection init etcd leader election impelementation
 func (s *Server) initLeaderElection() error {
-	if s.option.Mode != common.ModeTunnel {
-		blog.Infof("manager is not in tunnel mode, leader election is unnecessary")
-		return nil
-	}
-
 	hosts := strings.Split(s.option.Registry.Endpoints, ",")
 	// for Context control
 	s.etcdSync = etcdsync.NewSync(
@@ -401,15 +396,11 @@ func (s *Server) initLeaderElection() error {
 
 // initLeaderElection init etcd leader election impelementation
 func (s *Server) startLeaderElection() {
-	if s.option.Mode != common.ModeTunnel {
-		blog.Infof("manager is not in tunnel mode, start leader election is unnecessary")
-		return
-	}
 	s.waitLeaderResign = make(chan struct{})
 	s.stops = append(s.stops, func() {
 		<-s.waitLeaderResign
 	})
-	blog.Infof("manager runs in tunnel mode, creating websocket tunnel")
+	blog.Infof("manager is running in %s mode", s.option.Mode)
 	cxt, cancel := context.WithCancel(s.cxt)
 	// if lost leader role, stop tunnel client by CancelFunc
 	defer cancel()
@@ -425,11 +416,14 @@ func (s *Server) startLeaderElection() {
 	}
 	blog.Infof("manager %s become leader, starting controller...", leaderID)
 	lost := leader.Status()
-	// server campaign leader successfully, construct tunnel for proxy.
-	// tunnel must start successfully or there is bug need to fix
-	if err := s.startTunnelClient(cxt); err != nil {
-		blog.Fatalf("server start tunnel fatal, %s", err.Error())
-		return
+	if s.option.Mode == common.ModeTunnel {
+		blog.Infof("manager is in tunnel mode, need to start tunnel connect")
+		// server campaign leader successfully, construct tunnel for proxy.
+		// tunnel must start successfully or there is bug need to fix
+		if err := s.startTunnelClient(cxt); err != nil {
+			blog.Fatalf("server start tunnel fatal, %s", err.Error())
+			return
+		}
 	}
 	// start cluster controller for interval synchronization
 	// only leader can start cluster controller
