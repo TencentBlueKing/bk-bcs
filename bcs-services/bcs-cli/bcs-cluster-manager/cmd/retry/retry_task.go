@@ -11,44 +11,46 @@
  *
  */
 
-package cluster
+package retry
 
 import (
 	"context"
 	"fmt"
-	"os"
 
-	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
+	taskMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func newCheckCloudKubeConfigCmd() *cobra.Command {
+var (
+	retryTaskExample = templates.Examples(i18n.T(`
+	kubectl-bcs-cluster-manager retry task --taskID xxx`))
+)
+
+func newRetryTaskCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "checkCloudKubeconfig",
-		Aliases: []string{"checkConfig"},
-		Short:   "check cloud kube config from bcs-cluster-manager",
-		Run:     checkCloudKubeconfig,
+		Use:     "task",
+		Short:   "retry task from bcs-cluster-manager",
+		Example: retryTaskExample,
+		Run:     retryTask,
 	}
 
-	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kube config file (required)")
+	cmd.Flags().StringVarP(&taskID, "taskID", "t", "", `task ID`)
+	cmd.MarkFlagRequired("taskID")
 
 	return cmd
 }
 
-func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		klog.Fatalf("read file failed: %v", err)
-	}
-
-	err = clusterMgr.New(context.Background()).CheckCloudKubeConfig(types.CheckCloudKubeConfigReq{
-		Kubeconfig: string(data),
+func retryTask(cmd *cobra.Command, args []string) {
+	resp, err := taskMgr.New(context.Background()).Retry(types.RetryTaskReq{
+		TaskID: taskID,
 	})
 	if err != nil {
-		klog.Fatalf("check cloud kube config failed: %v", err)
+		klog.Fatalf("retry task failed: %v", err)
 	}
 
-	fmt.Printf("check cloud kube config succeed")
+	fmt.Printf("retry task succeed: taskID: %v", resp.TaskID)
 }

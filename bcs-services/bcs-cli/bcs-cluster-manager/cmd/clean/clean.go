@@ -11,27 +11,39 @@
  *
  */
 
-package cluster
+package clean
 
 import (
-	"errors"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/spf13/cobra"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-// CheckCloudKubeConfig kubeConfig连接集群可用性检测
-func (c *ClusterMgr) CheckCloudKubeConfig(req types.CheckCloudKubeConfigReq) error {
-	resp, err := c.client.CheckCloudKubeConfig(c.ctx, &clustermanager.KubeConfigReq{
-		KubeConfig: req.Kubeconfig,
-	})
-	if err != nil {
-		return err
+var (
+	cleanLong = templates.LongDesc(i18n.T(`
+	clean some resource from stdin.`))
+
+	cleanExample = templates.Examples(i18n.T(`
+	# clean nodes in node group
+	kubectl-bcs-cluster-manager clean`))
+
+	clusterID   string
+	nodeGroupID string
+	nodes       []string
+)
+
+// NewCleanCmd 创建clean子命令实例
+func NewCleanCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "clean",
+		Short:   i18n.T("clean some resource from stdin"),
+		Long:    cleanLong,
+		Example: cleanExample,
 	}
 
-	if resp != nil && resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
+	// clean subcommands
+	cmd.AddCommand(newCleanNodesInGroupCmd())
+	cmd.AddCommand(newCleanNodesInGroupV2Cmd())
 
-	return nil
+	return cmd
 }

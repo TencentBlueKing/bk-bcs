@@ -11,44 +11,46 @@
  *
  */
 
-package cluster
+package get
 
 import (
 	"context"
-	"fmt"
-	"os"
 
-	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/util"
+	nodegroup "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/node_group"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func newCheckCloudKubeConfigCmd() *cobra.Command {
+var (
+	getNodeGroupExample = templates.Examples(i18n.T(`
+	kubectl-bcs-cluster-manager get nodeGroup --nodeGroupID xxx`))
+)
+
+func newGetNodeGroupCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "checkCloudKubeconfig",
-		Aliases: []string{"checkConfig"},
-		Short:   "check cloud kube config from bcs-cluster-manager",
-		Run:     checkCloudKubeconfig,
+		Use:     "nodeGroup",
+		Short:   "get node group from bcs-cluster-manager",
+		Example: getNodeGroupExample,
+		Run:     getNodeGroup,
 	}
 
-	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kube config file (required)")
+	cmd.Flags().StringVarP(&nodeGroupID, "nodeGroupID", "n", "", "node group ID")
+	cmd.MarkFlagRequired("nodeGroupID")
 
 	return cmd
 }
 
-func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		klog.Fatalf("read file failed: %v", err)
-	}
-
-	err = clusterMgr.New(context.Background()).CheckCloudKubeConfig(types.CheckCloudKubeConfigReq{
-		Kubeconfig: string(data),
+func getNodeGroup(cmd *cobra.Command, args []string) {
+	resp, err := nodegroup.New(context.Background()).Get(types.GetNodeGroupReq{
+		NodeGroupID: nodeGroupID,
 	})
 	if err != nil {
-		klog.Fatalf("check cloud kube config failed: %v", err)
+		klog.Fatalf("get node group failed: %v", err)
 	}
 
-	fmt.Printf("check cloud kube config succeed")
+	util.Output2Json(resp.Data)
 }

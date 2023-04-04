@@ -11,7 +11,7 @@
  *
  */
 
-package cluster
+package check
 
 import (
 	"context"
@@ -22,23 +22,28 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
+)
+
+var (
+	checkCloudKubeConfigExample = templates.Examples(i18n.T(`
+	kubectl-bcs-cluster-manager check cloudKubeConfig --filename xxx`))
 )
 
 func newCheckCloudKubeConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "checkCloudKubeconfig",
-		Aliases: []string{"checkConfig"},
+		Use:     "cloudKubeConfig",
 		Short:   "check cloud kube config from bcs-cluster-manager",
+		Example: checkCloudKubeConfigExample,
 		Run:     checkCloudKubeconfig,
 	}
-
-	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kube config file (required)")
 
 	return cmd
 }
 
 func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
-	data, err := os.ReadFile(file)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		klog.Fatalf("read file failed: %v", err)
 	}
