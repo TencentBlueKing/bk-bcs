@@ -126,6 +126,9 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 	}
 	igm, _ := api.GetInstanceGroupManager(client, info.NodeGroup.AutoScaling.AutoScalingID)
 	instances, err := api.ListInstanceGroupsInstances(client, igm.InstanceGroup)
+	if err != nil {
+		return err
+	}
 	for _, ins := range instances {
 		insInfo := strings.Split(ins.Instance, "/")
 		insID := insInfo[(len(insInfo) - 1)]

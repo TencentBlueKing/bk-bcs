@@ -97,6 +97,7 @@ func (n *NodeManager) ListOsImage(provider string, opt *cloudprovider.CommonOpti
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// ListNodesByInstanceID list node by instance id
 func (n *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
 	idChunks := utils.SplitStringsChunks(ids, limit)
 	nodeList := make([]*proto.Node, 0)

@@ -63,6 +63,7 @@ type GkeServiceAccount struct {
 	ClientCertURL       string `json:"client_x509_cert_url"`
 }
 
+// GCPClientSet google cloud platform client set
 type GCPClientSet struct {
 	*ComputeServiceClient
 	*ContainerServiceClient
@@ -101,12 +102,12 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 	parent := "projects/" + gkeProjectID + "/locations/" + region + "/clusters/" + clusterName
 	gkeCluster, err := client.Projects.Locations.Clusters.Get(parent).Do()
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig list clusters failed, project=%s: %w", gkeProjectID, err)
+		return "", fmt.Errorf("GetClusterKubeConfig list clusters failed, project=%s: %v", gkeProjectID, err)
 	}
 	name := fmt.Sprintf("%s_%s_%s", gkeProjectID, gkeCluster.Location, gkeCluster.Name)
 	cert, err := base64.StdEncoding.DecodeString(gkeCluster.MasterAuth.ClusterCaCertificate)
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %w", name, err)
+		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %v", name, err)
 	}
 
 	restConfig := &rest.Config{
@@ -126,7 +127,7 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 	var saToken string
 	saToken, err = cloudprovider.GenerateSAToken(restConfig)
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig generate k8s serviceaccount token failed, project=%s cluster=%s: %w",
+		return "", fmt.Errorf("GetClusterKubeConfig generate k8s serviceaccount token failed, project=%s cluster=%s: %v",
 			gkeProjectID, clusterName, err)
 	}
 
@@ -248,7 +249,7 @@ func GetInstanceGroupManager(computeCli *ComputeServiceClient, url string) (*com
 		blog.Errorf("GetInstanceGroupManager failed: %v", err)
 		return nil, err
 	}
-	igm := &compute.InstanceGroupManager{}
+	var igm *compute.InstanceGroupManager
 	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
 		igm, err = computeCli.GetInstanceGroupManager(context.Background(), igmInfo[2], igmInfo[(len(igmInfo)-1)])
 		if err != nil {
@@ -307,7 +308,7 @@ func GetInstanceTemplate(computeCli *ComputeServiceClient, url string) (*compute
 		blog.Errorf("GetInstanceTemplate failed: %v", err)
 		return nil, err
 	}
-	it := &compute.InstanceTemplate{}
+	var it *compute.InstanceTemplate
 	if utils.StringInSlice("instanceTemplates", itInfo) {
 		it, err = computeCli.GetInstanceTemplate(context.Background(), itInfo[(len(itInfo)-1)])
 		if err != nil {
@@ -346,7 +347,7 @@ func ListInstanceGroupsInstances(computeCli *ComputeServiceClient, url string) (
 		blog.Errorf("ListInstanceGroupsInstances failed: %v", err)
 		return nil, err
 	}
-	instances := make([]*compute.InstanceWithNamedPorts, 0)
+	var instances []*compute.InstanceWithNamedPorts
 	if (utils.StringInSlice("instanceGroups", igInfo) || utils.StringInSlice("instanceGroupManagers", igInfo)) &&
 		len(igInfo) >= 6 {
 		instances, err = computeCli.ListInstanceGroupsInstances(context.Background(), igInfo[2],
