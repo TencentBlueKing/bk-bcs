@@ -44,11 +44,11 @@ type DataStructInterface interface {
 type GenericResponseWriter struct {
 	http.ResponseWriter
 	isDataStruct bool
-	ctx        context.Context
-	msg        proto.Message
-	authorizer auth.Authorizer
-	annotation *webannotation.Annotation
-	err        error // low-level runtime error
+	ctx          context.Context
+	msg          proto.Message
+	authorizer   auth.Authorizer
+	annotation   *webannotation.Annotation
+	err          error // low-level runtime error
 
 }
 
@@ -66,6 +66,7 @@ func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 			return w.ResponseWriter.Write(ndata)
 		}
 		return w.ResponseWriter.Write(data)
+	}
 
 	w.beforeWriteHook(w.ctx, w.msg)
 
