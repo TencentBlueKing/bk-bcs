@@ -153,10 +153,6 @@ func (g *generator) initApp1(ctx context.Context, header http.Header) error {
 		return fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-
 	// create strategy.
 	styReq := &pbcs.CreateStrategyReq{
 		BizId:         testBizID,
@@ -165,15 +161,11 @@ func (g *generator) initApp1(ctx context.Context, header http.Header) error {
 		Name:          cases.RandName("strategy"),
 		AsDefault:     true,
 		Memo:          testDataMemo,
-		ReleaseId:     rlResp.Data.Id,
+		ReleaseId:     rlResp.Id,
 	}
-	styResp, err := g.cli.Strategy.Create(ctx, header, styReq)
+	_, err = g.cli.Strategy.Create(ctx, header, styReq)
 	if err != nil {
 		return fmt.Errorf("create strategy err, %v", err)
-	}
-
-	if styResp.Code != errf.OK {
-		return fmt.Errorf("create strategy failed, code: %d, msg: %s", styResp.Code, styResp.Message)
 	}
 
 	// publish strategy.
@@ -181,17 +173,13 @@ func (g *generator) initApp1(ctx context.Context, header http.Header) error {
 		BizId: testBizID,
 		AppId: appID,
 	}
-	pbResp, err := g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
+	_, err = g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
 		return fmt.Errorf("create strategy publish err, %v", err)
 	}
 
-	if pbResp.Code != errf.OK {
-		return fmt.Errorf("create strategy publish failed, code: %d, msg: %s", pbResp.Code, pbResp.Message)
-	}
-
 	g.data[appID] = append(g.data[appID], &ReleaseMeta{
-		releaseID: rlResp.Data.Id,
+		releaseID: rlResp.Id,
 		ciMeta:    ciMeta,
 	})
 
@@ -236,10 +224,6 @@ func (g *generator) initApp2(ctx context.Context, header http.Header) error {
 		return fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-
 	// create strategy.
 	styReq := &pbcs.CreateStrategyReq{
 		BizId:         testBizID,
@@ -248,15 +232,11 @@ func (g *generator) initApp2(ctx context.Context, header http.Header) error {
 		Name:          cases.RandName("strategy"),
 		AsDefault:     true,
 		Memo:          testDataMemo,
-		ReleaseId:     rlResp.Data.Id,
+		ReleaseId:     rlResp.Id,
 	}
-	styResp, err := g.cli.Strategy.Create(ctx, header, styReq)
+	_, err = g.cli.Strategy.Create(ctx, header, styReq)
 	if err != nil {
 		return fmt.Errorf("create strategy err, %v", err)
-	}
-
-	if styResp.Code != errf.OK {
-		return fmt.Errorf("create strategy failed, code: %d, msg: %s", styResp.Code, styResp.Message)
 	}
 
 	// publish strategy.
@@ -264,18 +244,14 @@ func (g *generator) initApp2(ctx context.Context, header http.Header) error {
 		BizId: testBizID,
 		AppId: appID,
 	}
-	pbResp, err := g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
+	_, err = g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 	if err != nil {
 		return fmt.Errorf("create strategy publish err, %v", err)
 	}
 
-	if pbResp.Code != errf.OK {
-		return fmt.Errorf("create strategy publish failed, code: %d, msg: %s", pbResp.Code, pbResp.Message)
-	}
-
 	// record sidecar can match release info.
 	g.data[appID] = append(g.data[appID], &ReleaseMeta{
-		releaseID: rlResp.Data.Id,
+		releaseID: rlResp.Id,
 		ciMeta:    ciMeta,
 	})
 
@@ -291,15 +267,11 @@ func (g *generator) initApp2(ctx context.Context, header http.Header) error {
 			return fmt.Errorf("create release err, %v", err)
 		}
 
-		if rlResp.Code != errf.OK {
-			return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-		}
-
 		ipReq := &pbcs.PublishInstanceReq{
 			BizId:     testBizID,
 			AppId:     appID,
 			Uid:       testInstanceUID,
-			ReleaseId: rlResp.Data.Id,
+			ReleaseId: rlResp.Id,
 			Memo:      testDataMemo,
 		}
 		if i != 0 {
@@ -311,15 +283,11 @@ func (g *generator) initApp2(ctx context.Context, header http.Header) error {
 			return fmt.Errorf("create instance publish err, %v", err)
 		}
 
-		if ipResp.Code != errf.OK {
-			return fmt.Errorf("create instance publish failed, code: %d, msg: %s", ipResp.Code, ipResp.Message)
-		}
-
 		if i == 0 {
 			// record sidecar can match release info.
 			g.data[appID] = append(g.data[appID], &ReleaseMeta{
-				releaseID:         rlResp.Data.Id,
-				instancePublishID: ipResp.Data.Id,
+				releaseID:         rlResp.Id,
+				instancePublishID: ipResp.Id,
 				ciMeta:            ciMeta,
 			})
 		}
@@ -369,10 +337,6 @@ func (g *generator) initApp3(ctx context.Context, header http.Header) error {
 			return fmt.Errorf("create release err, %v", err)
 		}
 
-		if rlResp.Code != errf.OK {
-			return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-		}
-
 		// create strategy.
 		styReq := &pbcs.CreateStrategyReq{
 			BizId:         testBizID,
@@ -381,18 +345,14 @@ func (g *generator) initApp3(ctx context.Context, header http.Header) error {
 			Name:          cases.RandName("strategy"),
 			Namespace:     testNamespace,
 			Memo:          testDataMemo,
-			ReleaseId:     rlResp.Data.Id,
+			ReleaseId:     rlResp.Id,
 		}
 		if i != 0 {
 			styReq.Namespace = testNamespace + strconv.Itoa(i)
 		}
-		styResp, err := g.cli.Strategy.Create(ctx, header, styReq)
+		_, err = g.cli.Strategy.Create(ctx, header, styReq)
 		if err != nil {
 			return fmt.Errorf("create strategy err, %v", err)
-		}
-
-		if styResp.Code != errf.OK {
-			return fmt.Errorf("create strategy failed, code: %d, msg: %s", styResp.Code, styResp.Message)
 		}
 
 		// publish strategy.
@@ -400,19 +360,15 @@ func (g *generator) initApp3(ctx context.Context, header http.Header) error {
 			BizId: testBizID,
 			AppId: appID,
 		}
-		pbResp, err := g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
+		_, err = g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 		if err != nil {
 			return fmt.Errorf("create strategy publish err, %v", err)
-		}
-
-		if pbResp.Code != errf.OK {
-			return fmt.Errorf("create strategy publish failed, code: %d, msg: %s", pbResp.Code, pbResp.Message)
 		}
 
 		if i == 0 {
 			// record sidecar can match release info.
 			g.data[appID] = append(g.data[appID], &ReleaseMeta{
-				releaseID: rlResp.Data.Id,
+				releaseID: rlResp.Id,
 				ciMeta:    ciMeta,
 			})
 		}
@@ -435,11 +391,7 @@ func (g *generator) genAppData(ctx context.Context, header http.Header, spec *ta
 		return 0, fmt.Errorf("create app err, %v", err)
 	}
 
-	if resp.Code != errf.OK {
-		return 0, fmt.Errorf("create app failed, code: %d, msg: %s", resp.Code, resp.Message)
-	}
-
-	return resp.Data.Id, nil
+	return resp.Id, nil
 }
 
 func (g *generator) genCIRelatedData(ctx context.Context, header http.Header, appID uint32) ([]*sfs.ConfigItemMetaV1,
@@ -464,9 +416,6 @@ func (g *generator) genCIRelatedData(ctx context.Context, header http.Header, ap
 		if err != nil {
 			return nil, fmt.Errorf("create config item err, %v", err)
 		}
-		if ciResp.Code != errf.OK {
-			return nil, fmt.Errorf("create config item failed, code: %d, msg: %s", ciResp.Code, ciResp.Message)
-		}
 
 		sha256 := tools.SHA256(testContent)
 		header.Set(constant.ContentIDHeaderKey, sha256)
@@ -482,7 +431,7 @@ func (g *generator) genCIRelatedData(ctx context.Context, header http.Header, ap
 		conReq := &pbcs.CreateContentReq{
 			BizId:        testBizID,
 			AppId:        appID,
-			ConfigItemId: ciResp.Data.Id,
+			ConfigItemId: ciResp.Id,
 			Sign:         sha256,
 			ByteSize:     uint64(len(testContent)),
 		}
@@ -490,24 +439,18 @@ func (g *generator) genCIRelatedData(ctx context.Context, header http.Header, ap
 		if err != nil {
 			return nil, fmt.Errorf("create content err, %v", err)
 		}
-		if conResp.Code != errf.OK {
-			return nil, fmt.Errorf("create content failed, code: %d, msg: %s", conResp.Code, conResp.Message)
-		}
 
 		// create commit.
 		comReq := &pbcs.CreateCommitReq{
 			BizId:        testBizID,
 			AppId:        appID,
-			ConfigItemId: ciResp.Data.Id,
-			ContentId:    conResp.Data.Id,
+			ConfigItemId: ciResp.Id,
+			ContentId:    conResp.Id,
 			Memo:         testDataMemo,
 		}
-		comResp, err := g.cli.Commit.Create(ctx, header, comReq)
+		_, err = g.cli.Commit.Create(ctx, header, comReq)
 		if err != nil {
 			return nil, fmt.Errorf("create commit err, %v", err)
-		}
-		if comResp.Code != errf.OK {
-			return nil, fmt.Errorf("create commit failed, code: %d, msg: %s", comResp.Code, comResp.Message)
 		}
 
 		result = append(result, &sfs.ConfigItemMetaV1{
@@ -548,11 +491,7 @@ func (g *generator) genStrategySetData(ctx context.Context, header http.Header, 
 		return 0, fmt.Errorf("create strategy set err, %v", err)
 	}
 
-	if resp.Code != errf.OK {
-		return 0, fmt.Errorf("create strategy set failed, code: %d, msg: %s", resp.Code, resp.Message)
-	}
-
-	return resp.Data.Id, nil
+	return resp.Id, nil
 }
 
 func (g *generator) simulationApp1(ctx context.Context, header http.Header) error {
@@ -567,30 +506,22 @@ func (g *generator) simulationApp1(ctx context.Context, header http.Header) erro
 		return fmt.Errorf("create release err, %v", err)
 	}
 
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-	}
-
 	ipReq := &pbcs.PublishInstanceReq{
 		BizId:     testBizID,
 		AppId:     testApp1ID,
 		Uid:       testInstanceUID,
-		ReleaseId: rlResp.Data.Id,
+		ReleaseId: rlResp.Id,
 		Memo:      testDataMemo,
 	}
 
-	ipResp, err := g.cli.Instance.Publish(ctx, header, ipReq)
+	_, err = g.cli.Instance.Publish(ctx, header, ipReq)
 	if err != nil {
 		return fmt.Errorf("create instance publish err, %v", err)
 	}
 
-	if ipResp.Code != errf.OK {
-		return fmt.Errorf("create instance publish failed, code: %d, msg: %s", ipResp.Code, ipResp.Message)
-	}
-
 	// every app release's ci detail is same.
 	g.data[testApp1ID] = append(g.data[testApp1ID], &ReleaseMeta{
-		releaseID: rlResp.Data.Id,
+		releaseID: rlResp.Id,
 		ciMeta:    g.data[testApp1ID][len(g.data[testApp1ID])-1].ciMeta,
 	})
 
@@ -603,13 +534,9 @@ func (g *generator) simulationApp2(ctx context.Context, header http.Header) erro
 		BizId: testBizID,
 		AppId: testApp2ID,
 	}
-	resp, err := g.cli.Instance.Delete(ctx, header, req)
+	_, err := g.cli.Instance.Delete(ctx, header, req)
 	if err != nil {
 		return fmt.Errorf("delete instance publish err, %v", err)
-	}
-
-	if resp.Code != errf.OK {
-		return fmt.Errorf("delete instance publish failed, code: %d, msg: %s", resp.Code, resp.Message)
 	}
 
 	g.data[testApp2ID] = g.data[testApp2ID][0:(len(g.data[testApp2ID]) - 1)]
@@ -630,10 +557,6 @@ func (g *generator) simulationApp3(ctx context.Context, header http.Header) erro
 			return fmt.Errorf("create release err, %v", err)
 		}
 
-		if rlResp.Code != errf.OK {
-			return fmt.Errorf("create release failed, code: %d, msg: %s", rlResp.Code, rlResp.Message)
-		}
-
 		// create strategy.
 		styReq := &pbcs.CreateStrategyReq{
 			BizId:         testBizID,
@@ -642,15 +565,11 @@ func (g *generator) simulationApp3(ctx context.Context, header http.Header) erro
 			Name:          cases.RandName("strategy"),
 			Namespace:     testNamespace + "-" + strconv.Itoa(i),
 			Memo:          testDataMemo,
-			ReleaseId:     rlResp.Data.Id,
+			ReleaseId:     rlResp.Id,
 		}
-		styResp, err := g.cli.Strategy.Create(ctx, header, styReq)
+		_, err = g.cli.Strategy.Create(ctx, header, styReq)
 		if err != nil {
 			return fmt.Errorf("create strategy err, %v", err)
-		}
-
-		if styResp.Code != errf.OK {
-			return fmt.Errorf("create strategy failed, code: %d, msg: %s", styResp.Code, styResp.Message)
 		}
 
 		// publish strategy.
@@ -658,13 +577,9 @@ func (g *generator) simulationApp3(ctx context.Context, header http.Header) erro
 			BizId: testBizID,
 			AppId: testApp3ID,
 		}
-		pbResp, err := g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
+		_, err = g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
 		if err != nil {
 			return fmt.Errorf("create strategy publish err, %v", err)
-		}
-
-		if pbResp.Code != errf.OK {
-			return fmt.Errorf("create strategy publish failed, code: %d, msg: %s", pbResp.Code, pbResp.Message)
 		}
 	}
 

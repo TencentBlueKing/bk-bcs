@@ -22,6 +22,8 @@ func (a Action) String() string {
 }
 
 const (
+	// FindBusinessResource
+	FindBusinessResource Action = "find_business_resource"
 	// Create operation's bscp auth action type
 	Create Action = "create"
 	// Update operation's bscp auth action type

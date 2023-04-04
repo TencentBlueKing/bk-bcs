@@ -15,6 +15,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"reflect"
 
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
@@ -48,10 +49,14 @@ func (p *Publish) PublishWithStrategy(ctx context.Context, header http.Header, r
 	}
 
 	pbResp := &struct {
-		Data *pbcs.PublishResp `json:"data"`
+		Data  *pbcs.PublishResp  `json:"data"`
+		Error *rest.ErrorPayload `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -74,10 +79,14 @@ func (p *Publish) FinishPublishWithStrategy(ctx context.Context, header http.Hea
 	}
 
 	pbResp := &struct {
-		Data *pbcs.FinishPublishResp `json:"data"`
+		Data  *pbcs.FinishPublishResp `json:"data"`
+		Error *rest.ErrorPayload      `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil
@@ -99,10 +108,14 @@ func (p *Publish) ListStrategyPublishHistory(ctx context.Context, header http.He
 	}
 
 	pbResp := &struct {
-		Data *pbcs.ListPubStrategyHistoriesResp `json:"data"`
+		Data  *pbcs.ListPubStrategyHistoriesResp `json:"data"`
+		Error *rest.ErrorPayload                 `json:"error"`
 	}{}
 	if err := resp.Into(pbResp); err != nil {
 		return nil, err
+	}
+	if !reflect.ValueOf(pbResp.Error).IsNil() {
+		return nil, pbResp.Error
 	}
 
 	return pbResp.Data, nil

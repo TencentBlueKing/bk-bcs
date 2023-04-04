@@ -146,8 +146,8 @@ func TestInstance(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.Instance.Publish(ctx, header, &req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})
@@ -201,8 +201,8 @@ func TestInstance(t *testing.T) {
 			for _, req := range reqs {
 				ctx, header := cases.GenApiCtxHeader()
 				resp, err := cli.Instance.List(ctx, header, req)
-				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
+				So(err, ShouldNotBeNil)
+				So(resp, ShouldBeNil)
 			}
 		})
 	})

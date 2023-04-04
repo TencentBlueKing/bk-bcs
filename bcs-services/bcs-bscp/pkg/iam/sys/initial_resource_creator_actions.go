@@ -30,19 +30,11 @@ func GenerateResourceCreatorActions() client.ResourceCreatorActions {
 						IsRequired: false,
 					},
 					{
-						ID:         StrategySetEdit,
+						ID:         GroupEdit,
 						IsRequired: false,
 					},
 					{
-						ID:         StrategySetDelete,
-						IsRequired: false,
-					},
-					{
-						ID:         StrategyEdit,
-						IsRequired: false,
-					},
-					{
-						ID:         StrategyDelete,
+						ID:         GroupDelete,
 						IsRequired: false,
 					},
 				},

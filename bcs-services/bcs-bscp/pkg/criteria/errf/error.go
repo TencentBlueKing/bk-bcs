@@ -115,3 +115,8 @@ func RPCAborted(format string, a ...interface{}) error {
 func RPCAbortedErr(err error) error {
 	return status.Errorf(codes.Aborted, err.Error())
 }
+
+// PRCPermissionDenied 无权限错误
+func PRCPermissionDenied() *status.Status {
+	return status.New(codes.PermissionDenied, ErrPermissionDenied.Error())
+}

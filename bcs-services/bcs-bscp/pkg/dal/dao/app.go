@@ -378,17 +378,17 @@ func getAppMode(kit *kit.Kit, orm orm.Interface, sd *sharding.Sharding, bizID, a
 	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
-	one := new(table.AppSpec)
+	one := new(table.App)
 	err := orm.Do(sd.MustSharding(bizID)).Get(kit.Ctx, one, sql)
 	if err != nil {
 		return "", errf.New(errf.DBOpFailed, fmt.Sprintf("get app mode failed, err: %v", err))
 	}
 
-	if err := one.Mode.Validate(); err != nil {
+	if err := one.Spec.Mode.Validate(); err != nil {
 		return "", errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	return one.Mode, nil
+	return one.Spec.Mode, nil
 }
 
 func (ap *appDao) archiveApp(kit *kit.Kit, txn *sqlx.Tx, app *table.App) error {

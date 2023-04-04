@@ -417,7 +417,9 @@ func (ed *eventDao) Purge(kt *kit.Kit, daysAgo uint) error {
 
 	for {
 		var sqlSentenceDel []string
-		sqlSentenceDel = append(sqlSentenceDel, "DELETE FROM ", table.EventTable.Name(), " WHERE id <= ", strconv.Itoa(int(lastID)), " ORDER BY id ASC LIMIT ", strconv.Itoa(int(step)))
+		sqlSentenceDel = append(sqlSentenceDel, "DELETE FROM ", table.EventTable.Name(), " WHERE id <= ",
+			strconv.Itoa(int(lastID)), " and id != ", strconv.Itoa(table.EventCursorReminderPrimaryID),
+			" ORDER BY id ASC LIMIT ", strconv.Itoa(int(step)))
 		sql = filter.SqlJoint(sqlSentenceDel)
 		cnt, err := ed.orm.Do(one.DB()).Exec(kt.Ctx, sql)
 		if err != nil {

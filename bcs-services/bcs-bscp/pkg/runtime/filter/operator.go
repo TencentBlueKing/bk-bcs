@@ -595,8 +595,8 @@ func (cso ContainsSensitiveOp) SQLExpr(field string, value interface{}) (string,
 	if len(s) == 0 {
 		return "", argList, errors.New("cs operator's value can not be a empty string")
 	}
-	argList = append(argList, value)
-	return fmt.Sprintf(`%s LIKE BINARY %%?%%`, field), argList, nil
+	argList = append(argList, fmt.Sprintf("%%%v%%", value))
+	return fmt.Sprintf(`%s LIKE BINARY ?`, field), argList, nil
 }
 
 // ContainsInsensitiveOp is contains insensitive operator
@@ -630,6 +630,6 @@ func (cio ContainsInsensitiveOp) ValidateValue(v interface{}, opt *ExprOption) e
 // query expression.
 func (cio ContainsInsensitiveOp) SQLExpr(field string, value interface{}) (string, []interface{}, error) {
 	var argList []interface{}
-	argList = append(argList, value)
-	return fmt.Sprintf(`%s LIKE %%?%%`, field), argList, nil
+	argList = append(argList, fmt.Sprintf("%%%v%%", value))
+	return fmt.Sprintf(`%s LIKE ?`, field), argList, nil
 }

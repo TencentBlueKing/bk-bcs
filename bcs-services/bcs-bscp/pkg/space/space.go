@@ -20,9 +20,7 @@ import (
 	"sync"
 
 	"bscp.io/pkg/components/bcs"
-	"bscp.io/pkg/components/bkcmdb"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
-	"bscp.io/pkg/thirdparty/esb/cmdb"
 	"k8s.io/klog/v2"
 )
 
@@ -57,31 +55,7 @@ type Space struct {
 }
 
 func listBKCMDB(ctx context.Context, client esbcli.Client, username string, bizIdList []int) ([]*Space, error) {
-	var params *cmdb.SearchBizParams
-	if username != "" {
-		params = &cmdb.SearchBizParams{
-			Condition: map[string]string{
-				"bk_biz_maintainer": username,
-			},
-		}
-	} else {
-		params = &cmdb.SearchBizParams{
-			BizPropertyFilter: &cmdb.QueryFilter{
-				Rule: cmdb.CombinedRule{
-					Condition: cmdb.ConditionAnd,
-					Rules: []cmdb.Rule{
-						cmdb.AtomRule{
-							Field:    "bk_biz_id",
-							Operator: cmdb.OperatorIn,
-							Value:    bizIdList,
-						},
-					},
-				},
-			},
-		}
-	}
-
-	bizList, err := bkcmdb.SearchBusiness(ctx, params)
+	bizList, err := client.Cmdb().ListAllBusiness(ctx)
 	if err != nil {
 		return nil, err
 	}

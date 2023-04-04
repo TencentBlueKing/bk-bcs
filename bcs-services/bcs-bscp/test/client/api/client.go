@@ -24,6 +24,7 @@ import (
 // Client struct of api client
 type Client struct {
 	App         *App
+	Hook        *Hook
 	ConfigItem  *ConfigItem
 	Content     *Content
 	Commit      *Commit
@@ -46,7 +47,7 @@ func NewApiClient(host string, c *tools.TLSConfig) (*Client, error) {
 		Discover: &discovery{
 			server: host,
 		},
-		ToleranceLatencyTime: time.Duration(2000),
+		ToleranceLatencyTime: 2 * time.Second,
 		MetricOpts:           client.MetricOption{Register: nil},
 	}
 
@@ -54,6 +55,7 @@ func NewApiClient(host string, c *tools.TLSConfig) (*Client, error) {
 
 	return &Client{
 		App:         NewAppClient(restCli),
+		Hook:        NewHookClient(restCli),
 		ConfigItem:  NewConfigItemClient(restCli),
 		Content:     NewContentClient(restCli),
 		Commit:      NewCommitClient(restCli),

@@ -24,6 +24,7 @@ const (
 	Auth_ListUserSpace_FullMethodName        = "/pbas.Auth/ListUserSpace"
 	Auth_QuerySpaceByAppID_FullMethodName    = "/pbas.Auth/QuerySpaceByAppID"
 	Auth_PullResource_FullMethodName         = "/pbas.Auth/PullResource"
+	Auth_CheckPermission_FullMethodName      = "/pbas.Auth/CheckPermission"
 	Auth_AuthorizeBatch_FullMethodName       = "/pbas.Auth/AuthorizeBatch"
 	Auth_GetPermissionToApply_FullMethodName = "/pbas.Auth/GetPermissionToApply"
 	Auth_QuerySpace_FullMethodName           = "/pbas.Auth/QuerySpace"
@@ -42,6 +43,8 @@ type AuthClient interface {
 	QuerySpaceByAppID(ctx context.Context, in *QuerySpaceByAppIDReq, opts ...grpc.CallOption) (*Space, error)
 	// iam pull resource callback.
 	PullResource(ctx context.Context, in *PullResourceReq, opts ...grpc.CallOption) (*PullResourceResp, error)
+	// 权限中心权限检测
+	CheckPermission(ctx context.Context, in *ResourceAttribute, opts ...grpc.CallOption) (*CheckPermissionResp, error)
 	// authorize resource batch.
 	AuthorizeBatch(ctx context.Context, in *AuthorizeBatchReq, opts ...grpc.CallOption) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
@@ -102,6 +105,15 @@ func (c *authClient) PullResource(ctx context.Context, in *PullResourceReq, opts
 	return out, nil
 }
 
+func (c *authClient) CheckPermission(ctx context.Context, in *ResourceAttribute, opts ...grpc.CallOption) (*CheckPermissionResp, error) {
+	out := new(CheckPermissionResp)
+	err := c.cc.Invoke(ctx, Auth_CheckPermission_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authClient) AuthorizeBatch(ctx context.Context, in *AuthorizeBatchReq, opts ...grpc.CallOption) (*AuthorizeBatchResp, error) {
 	out := new(AuthorizeBatchResp)
 	err := c.cc.Invoke(ctx, Auth_AuthorizeBatch_FullMethodName, in, out, opts...)
@@ -142,6 +154,8 @@ type AuthServer interface {
 	QuerySpaceByAppID(context.Context, *QuerySpaceByAppIDReq) (*Space, error)
 	// iam pull resource callback.
 	PullResource(context.Context, *PullResourceReq) (*PullResourceResp, error)
+	// 权限中心权限检测
+	CheckPermission(context.Context, *ResourceAttribute) (*CheckPermissionResp, error)
 	// authorize resource batch.
 	AuthorizeBatch(context.Context, *AuthorizeBatchReq) (*AuthorizeBatchResp, error)
 	// get iam permission to apply.
@@ -167,6 +181,9 @@ func (UnimplementedAuthServer) QuerySpaceByAppID(context.Context, *QuerySpaceByA
 }
 func (UnimplementedAuthServer) PullResource(context.Context, *PullResourceReq) (*PullResourceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PullResource not implemented")
+}
+func (UnimplementedAuthServer) CheckPermission(context.Context, *ResourceAttribute) (*CheckPermissionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckPermission not implemented")
 }
 func (UnimplementedAuthServer) AuthorizeBatch(context.Context, *AuthorizeBatchReq) (*AuthorizeBatchResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AuthorizeBatch not implemented")
@@ -279,6 +296,24 @@ func _Auth_PullResource_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_CheckPermission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResourceAttribute)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).CheckPermission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_CheckPermission_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).CheckPermission(ctx, req.(*ResourceAttribute))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Auth_AuthorizeBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthorizeBatchReq)
 	if err := dec(in); err != nil {
@@ -359,6 +394,10 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PullResource",
 			Handler:    _Auth_PullResource_Handler,
+		},
+		{
+			MethodName: "CheckPermission",
+			Handler:    _Auth_CheckPermission_Handler,
 		},
 		{
 			MethodName: "AuthorizeBatch",
