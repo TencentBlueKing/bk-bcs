@@ -90,7 +90,12 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 		return nil, errf.New(errf.InvalidParameter, "list releases options null")
 	}
 
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
+	po := &types.PageOption{
+		EnableUnlimitedLimit: true,
+		DisabledSort:         false,
+	}
+
+	if err := opts.Validate(po); err != nil {
 		return nil, err
 	}
 

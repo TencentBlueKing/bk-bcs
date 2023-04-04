@@ -102,8 +102,8 @@ type DeleteNodesClusterReq struct {
 	Nodes     []string `json:"nodes"`
 }
 
-// CheckCloudKubeconfigReq kubeConfig连接集群可用性检测request
-type CheckCloudKubeconfigReq struct {
+// CheckCloudKubeConfigReq kubeConfig连接集群可用性检测request
+type CheckCloudKubeConfigReq struct {
 	Kubeconfig string `json:"kubeconfig"`
 }
 
@@ -228,7 +228,7 @@ type ClusterMgr interface {
 	// DeleteNodes 从集群中删除节点
 	DeleteNodes(DeleteNodesClusterReq) (DeleteNodesClusterResp, error)
 	// CheckCloudKubeConfig kubeConfig连接集群可用性检测
-	CheckCloudKubeconfig(CheckCloudKubeconfigReq) error
+	CheckCloudKubeConfig(CheckCloudKubeConfigReq) error
 	// Import 导入用户集群(支持多云集群导入功能: 集群ID/kubeConfig)
 	Import(ImportClusterReq) error
 	// ListNodes 查询集群下所有节点列表

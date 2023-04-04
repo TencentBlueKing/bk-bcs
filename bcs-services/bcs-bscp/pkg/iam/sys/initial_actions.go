@@ -15,6 +15,7 @@ package sys
 import "bscp.io/pkg/iam/client"
 
 var (
+	// 业务资源, 自动拉取 cmdb 业务列表
 	businessResource = []client.RelateResourceType{
 		{
 			SystemID: SystemIDCMDB,
@@ -35,9 +36,10 @@ func GenerateStaticActions() []client.ResourceAction {
 
 	resourceActionList = append(resourceActionList, genBusinessActions()...)
 	resourceActionList = append(resourceActionList, genApplicationActions()...)
-	resourceActionList = append(resourceActionList, genStrategySetActions()...)
-	resourceActionList = append(resourceActionList, genStrategyActions()...)
-	resourceActionList = append(resourceActionList, genHistoryActions()...)
+	resourceActionList = append(resourceActionList, genGroupActions()...)
+	// resourceActionList = append(resourceActionList, genStrategySetActions()...)
+	// resourceActionList = append(resourceActionList, genStrategyActions()...)
+	// resourceActionList = append(resourceActionList, genHistoryActions()...)
 
 	return resourceActionList
 }
@@ -239,11 +241,60 @@ func genApplicationActions() []client.ResourceAction {
 		Version:              1,
 	})
 
+	return actions
+}
+
+// genGroupActions 应用分组
+func genGroupActions() []client.ResourceAction {
+	actions := make([]client.ResourceAction, 0)
+
 	actions = append(actions, client.ResourceAction{
-		ID:                   ConfigItemFinishPublish,
-		Name:                 ActionIDNameMap[ConfigItemFinishPublish],
-		NameEn:               "Finish Publish ConfigItem",
+		ID:     GroupCreate,
+		Name:   ActionIDNameMap[GroupCreate],
+		NameEn: "Create Group",
+		Type:   Create,
+		RelatedResourceTypes: []client.RelateResourceType{{
+			SystemID:    SystemIDBSCP,
+			ID:          Application,
+			NameAlias:   "",
+			NameAliasEn: "",
+			Scope:       nil,
+			InstanceSelections: []client.RelatedInstanceSelection{{
+				SystemID: SystemIDBSCP,
+				ID:       ApplicationSelection,
+			}},
+		}},
+		RelatedActions: []client.ActionID{BusinessViewResource},
+		Version:        1,
+	})
+
+	relatedResource := []client.RelateResourceType{{
+		SystemID:    SystemIDBSCP,
+		ID:          Application,
+		NameAlias:   "",
+		NameAliasEn: "",
+		Scope:       nil,
+		InstanceSelections: []client.RelatedInstanceSelection{{
+			SystemID: SystemIDBSCP,
+			ID:       ApplicationSelection,
+		}},
+	}}
+
+	actions = append(actions, client.ResourceAction{
+		ID:                   GroupEdit,
+		Name:                 ActionIDNameMap[GroupEdit],
+		NameEn:               "Edit Group",
 		Type:                 Edit,
+		RelatedResourceTypes: relatedResource,
+		RelatedActions:       nil,
+		Version:              1,
+	})
+
+	actions = append(actions, client.ResourceAction{
+		ID:                   GroupDelete,
+		Name:                 ActionIDNameMap[GroupDelete],
+		NameEn:               "Delete Group",
+		Type:                 Delete,
 		RelatedResourceTypes: relatedResource,
 		RelatedActions:       nil,
 		Version:              1,

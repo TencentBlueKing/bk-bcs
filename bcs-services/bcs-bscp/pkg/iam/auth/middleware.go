@@ -143,3 +143,36 @@ func (a authorizer) AppVerified(next http.Handler) http.Handler {
 	}
 	return http.HandlerFunc(fn)
 }
+
+// dummyVerified dummy鉴权方式，测试使用
+func dummyVerified(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		k := &kit.Kit{
+			Ctx:         r.Context(),
+			User:        "",
+			Rid:         components.RequestIDValue(r.Context()),
+			AppId:       "",
+			AppCode:     "dummyApp", // 测试 App
+			SpaceID:     "",
+			SpaceTypeID: "",
+		}
+		ctx := kit.WithKit(r.Context(), k)
+
+		r.Header.Set(constant.AppCodeKey, k.AppCode)
+		r.Header.Set(constant.RidKey, k.Rid)
+		r.Header.Set(constant.UserKey, k.User)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+	return http.HandlerFunc(fn)
+}
+
+// IAMVerified IAM 回调鉴权
+func IAMVerified(next http.Handler) http.Handler {
+	return dummyVerified(next)
+}
+
+// BKRepoVerified bk_repo 回调鉴权
+func BKRepoVerified(next http.Handler) http.Handler {
+	return dummyVerified(next)
+}

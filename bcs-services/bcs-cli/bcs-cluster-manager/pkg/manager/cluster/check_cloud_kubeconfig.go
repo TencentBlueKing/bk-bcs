@@ -20,8 +20,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
-// CheckCloudKubeconfig kubeConfig连接集群可用性检测
-func (c *ClusterMgr) CheckCloudKubeconfig(req types.CheckCloudKubeconfigReq) error {
+// CheckCloudKubeConfig kubeConfig连接集群可用性检测
+func (c *ClusterMgr) CheckCloudKubeConfig(req types.CheckCloudKubeConfigReq) error {
 	resp, err := c.client.CheckCloudKubeConfig(c.ctx, &clustermanager.KubeConfigReq{
 		KubeConfig: req.Kubeconfig,
 	})
