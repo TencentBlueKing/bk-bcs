@@ -13,6 +13,7 @@ limitations under the License.
 package pbci
 
 import (
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/protocol/core/base"
 )
@@ -150,6 +151,6 @@ func PbConfigItemCount(cc *table.ListConfigItemCounts) *ListConfigItemCounts {
 	return &ListConfigItemCounts{
 		AppId:    cc.AppId,
 		Count:    cc.Count,
-		UpdateAt: cc.UpdateAt,
+		UpdateAt: cc.UpdateAt.Format(constant.TimeStdFormat),
 	}
 }

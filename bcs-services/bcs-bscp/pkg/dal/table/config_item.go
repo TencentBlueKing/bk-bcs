@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
@@ -399,7 +400,7 @@ func (f FileMode) Validate() error {
 
 // ListConfigItemCounts return data structure
 type ListConfigItemCounts struct {
-	AppId    uint32 `db:"app_id" json:"app_id"`
-	Count    uint32 `db:"count" json:"count"`
-	UpdateAt string `db:"update_at" json:"update_at"`
+	AppId    uint32    `db:"app_id" json:"app_id"`
+	Count    uint32    `db:"count" json:"count"`
+	UpdateAt time.Time `db:"update_at" json:"update_at"`
 }

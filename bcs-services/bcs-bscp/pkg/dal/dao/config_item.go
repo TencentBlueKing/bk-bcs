@@ -43,7 +43,7 @@ type ConfigItem interface {
 	// Delete one configItem instance.
 	Delete(kit *kit.Kit, configItem *table.ConfigItem) error
 	// GetCount bizID config count
-	GetCount(kit *kit.Kit, bizID, start, limit uint32) ([]*table.ListConfigItemCounts, error)
+	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -371,7 +371,7 @@ func (dao *configItemDao) queryFileMode(kt *kit.Kit, id, bizID uint32) (
 }
 
 // GetCount get bizID config count
-func (dao *configItemDao) GetCount(kit *kit.Kit, bizID, start, limit uint32) ([]*table.ListConfigItemCounts, error) {
+func (dao *configItemDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error) {
 
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "config item biz id can not be 0")
@@ -387,13 +387,8 @@ func (dao *configItemDao) GetCount(kit *kit.Kit, bizID, start, limit uint32) ([]
 			},
 			&filter.AtomRule{
 				Field: "app_id",
-				Op:    filter.GreaterThanEqual.Factory(),
-				Value: start,
-			},
-			&filter.AtomRule{
-				Field: "app_id",
-				Op:    filter.LessThanEqual.Factory(),
-				Value: limit,
+				Op:    filter.In.Factory(),
+				Value: appId,
 			},
 		},
 	}

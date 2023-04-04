@@ -374,8 +374,7 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigI
 
 	r := &pbds.ListConfigItemCountReq{
 		BizId: req.BizId,
-		Start: req.Start,
-		Limit: req.Limit,
+		AppId: req.AppId,
 	}
 	rp, err := s.client.DS.ListConfigItemCount(grpcKit.RpcCtx(), r)
 	if err != nil {
