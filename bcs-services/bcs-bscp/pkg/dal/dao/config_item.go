@@ -377,13 +377,41 @@ func (dao *configItemDao) GetCount(kit *kit.Kit, bizID, start, limit uint32) ([]
 		return nil, errf.New(errf.InvalidParameter, "config item biz id can not be 0")
 	}
 
+	expr := &filter.Expression{
+		Op: filter.And,
+		Rules: []filter.RuleFactory{
+			&filter.AtomRule{
+				Field: "biz_id",
+				Op:    filter.Equal.Factory(),
+				Value: bizID,
+			},
+			&filter.AtomRule{
+				Field: "app_id",
+				Op:    filter.GreaterThanEqual.Factory(),
+				Value: start,
+			},
+			&filter.AtomRule{
+				Field: "app_id",
+				Op:    filter.LessThanEqual.Factory(),
+				Value: limit,
+			},
+		},
+	}
+
+	sqlOpt := &filter.SQLWhereOption{
+		Priority: filter.Priority{"biz_id", "app_id"},
+	}
+	whereExpr, args, err := expr.SQLWhereExpr(sqlOpt)
+	if err != nil {
+		return nil, err
+	}
+
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT app_id, COUNT(*) as count, max(updated_at) as update_at FROM ", table.ConfigItemTable.Name(), " WHERE biz_id = ", strconv.Itoa(int(bizID)),
-		" GROUP BY app_id ORDER BY app_id DESC LIMIT ", strconv.Itoa(int(limit)), " OFFSET ", strconv.Itoa(int(start)))
+	sqlSentence = append(sqlSentence, "SELECT app_id, COUNT(*) as count, max(updated_at) as update_at FROM ", table.ConfigItemTable.Name(), whereExpr, " GROUP BY app_id")
 	sql := filter.SqlJoint(sqlSentence)
 
 	configItem := make([]*table.ListConfigItemCounts, 0)
-	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &configItem, sql); err != nil {
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &configItem, sql, args...); err != nil {
 		return nil, err
 	}
 	return configItem, nil
