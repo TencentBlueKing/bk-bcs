@@ -76,13 +76,10 @@ type cachedTokenSource struct {
 	cache       map[string]string
 }
 
-func newCachedTokenSource(accessToken, expiry string, persister rest.AuthProviderConfigPersister,
-	ts oauth2.TokenSource, cache map[string]string) (*cachedTokenSource, error) {
+func newCachedTokenSource(accessToken, expiry string, persister rest.AuthProviderConfigPersister, ts oauth2.TokenSource, cache map[string]string) (*cachedTokenSource, error) {
 	var expiryTime time.Time
 	if parsedTime, err := time.Parse(time.RFC3339Nano, expiry); err == nil {
 		expiryTime = parsedTime
-	} else {
-		return nil, err
 	}
 	if cache == nil {
 		cache = make(map[string]string)

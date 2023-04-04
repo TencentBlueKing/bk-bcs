@@ -15,35 +15,38 @@ package api
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
-	errs "github.com/pkg/errors"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
-	v1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 const (
-	bcsNamespace              = "bcs-system"
-	clusterAdmin              = "cluster-admin"
-	bcsCusterManager          = "bcs-cluster-manager"
-	newClusterRoleBindingName = "bcs-system-cluster-manager-clusterRoleBinding"
+	gceURLPrefix = "https://www.googleapis.com/compute/v1/"
+)
+
+const (
+	UpdatePolicyProactive = "PROACTIVE"
+	// UpdatePolicyOpportunistic update is opportunistic
+	UpdatePolicyOpportunistic = "OPPORTUNISTIC"
+	UpdatePolicyActionNone    = "None"
+	// UpdatePolicyActionRefresh update action refresh
+	UpdatePolicyActionRefresh = "REFRESH"
+	UpdatePolicyActionRestart = "RESTART"
+	UpdatePolicyActionReplace = "REPLACE"
 )
 
 // GkeServiceAccount for GKE service account
@@ -60,6 +63,25 @@ type GkeServiceAccount struct {
 	ClientCertURL       string `json:"client_x509_cert_url"`
 }
 
+type GCPClientSet struct {
+	*ComputeServiceClient
+	*ContainerServiceClient
+}
+
+// NewGCPClientSet creates a GCP client set
+func NewGCPClientSet(opt *cloudprovider.CommonOption) (*GCPClientSet, error) {
+	computeCli, err := NewComputeServiceClient(opt)
+	if err != nil {
+		return nil, err
+	}
+	containerCli, err := NewContainerServiceClient(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &GCPClientSet{computeCli, containerCli}, nil
+}
+
 // GetTokenSource gets token source from provided sa credential
 func GetTokenSource(ctx context.Context, credential string) (oauth2.TokenSource, error) {
 	ts, err := google.CredentialsFromJSON(ctx, []byte(credential), container.CloudPlatformScope)
@@ -67,221 +89,6 @@ func GetTokenSource(ctx context.Context, credential string) (oauth2.TokenSource,
 		return nil, fmt.Errorf("GetTokenSource failed: %v", err)
 	}
 	return ts.TokenSource, nil
-}
-
-// GenerateSAToken generates a serviceAccountToken
-func GenerateSAToken(ctx context.Context, restConfig *rest.Config) (string, error) {
-	clientSet, err := kubernetes.NewForConfig(restConfig)
-	if err != nil {
-		return "", fmt.Errorf("GenerateSAToken create clientset failed: %v", err)
-	}
-
-	return GenerateServiceAccountToken(ctx, clientSet)
-}
-
-func createNamespace(ctx context.Context, clientset kubernetes.Interface) error {
-	_, err := clientset.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bcsNamespace,
-		},
-	}, metav1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		return err
-	}
-	return nil
-}
-
-func createServiceAccount(ctx context.Context, clientset kubernetes.Interface) (*v1.ServiceAccount, error) {
-	serviceAccount := &v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bcsCusterManager,
-		},
-	}
-
-	_, err := clientset.CoreV1().ServiceAccounts(bcsNamespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
-	if err != nil && !errors.IsAlreadyExists(err) {
-		return nil, fmt.Errorf("GenerateServiceAccountToken creating service account failed: %v", err)
-	}
-	return serviceAccount, nil
-}
-
-func createClusterRole(ctx context.Context, clientset kubernetes.Interface) (*rbacv1.ClusterRole, error) {
-	adminRole := &rbacv1.ClusterRole{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: clusterAdmin,
-		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				APIGroups: []string{"*"},
-				Resources: []string{"*"},
-				Verbs:     []string{"*"},
-			},
-			{
-				NonResourceURLs: []string{"*"},
-				Verbs:           []string{"*"},
-			},
-		},
-	}
-	clusterAdminRole, err := clientset.RbacV1().ClusterRoles().Get(ctx, clusterAdmin, metav1.GetOptions{})
-	if err != nil {
-		clusterAdminRole, err = clientset.RbacV1().ClusterRoles().Create(ctx, adminRole, metav1.CreateOptions{})
-		if err != nil {
-			return nil, fmt.Errorf("GenerateServiceAccountToken create admin role failed: %v", err)
-		}
-	}
-	return clusterAdminRole, nil
-}
-
-func createClusterRoleBinding(ctx context.Context, clientset kubernetes.Interface, sa *v1.ServiceAccount,
-	cr *rbacv1.ClusterRole) error {
-	clusterRoleBinding := &rbacv1.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: newClusterRoleBindingName,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      sa.Name,
-				Namespace: bcsNamespace,
-				APIGroup:  v1.GroupName,
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-			Name:     cr.Name,
-			APIGroup: rbacv1.GroupName,
-		},
-	}
-	if _, err := clientset.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding,
-		metav1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("GenerateServiceAccountToken create role bindings failed: %v", err)
-	}
-	return nil
-}
-
-// GenerateServiceAccountToken generates a serviceAccountToken for clusterAdmin given a rest clientset
-func GenerateServiceAccountToken(ctx context.Context, clientset kubernetes.Interface) (string, error) {
-	err := createNamespace(ctx, clientset)
-	if err != nil {
-		return "", err
-	}
-
-	serviceAccount, err := createServiceAccount(ctx, clientset)
-	if err != nil {
-		return "", err
-	}
-
-	clusterAdminRole, err := createClusterRole(ctx, clientset)
-	if err != nil {
-		return "", err
-	}
-
-	err = createClusterRoleBinding(ctx, clientset, serviceAccount, clusterAdminRole)
-	if err != nil {
-		return "", err
-	}
-
-	start := time.Millisecond * 250
-	for i := 0; i < 5; i++ {
-		time.Sleep(start)
-		if serviceAccount, err = clientset.CoreV1().ServiceAccounts(bcsNamespace).Get(ctx,
-			serviceAccount.Name, metav1.GetOptions{}); err != nil {
-			return "", fmt.Errorf("GenerateServiceAccountToken get service account failed: %v", err)
-		}
-		secret, err := CreateSecretForServiceAccount(ctx, clientset, serviceAccount)
-		if err != nil {
-			return "", fmt.Errorf("GenerateServiceAccountToken create secret for service account failed: %v", err)
-		}
-		if token, ok := secret.Data["token"]; ok {
-			return string(token), nil
-		}
-		start *= 2
-	}
-
-	return "", errs.New("GenerateServiceAccountToken fetch serviceAccountToken failed")
-}
-
-// CreateSecretForServiceAccount creates a service-account-token Secret for the provided Service Account.
-// If the secret already exists, the existing one is returned.
-func CreateSecretForServiceAccount(ctx context.Context, clientSet kubernetes.Interface, sa *v1.ServiceAccount) (
-	*v1.Secret, error) {
-	secretName := ServiceAccountSecretName(sa)
-	secretClient := clientSet.CoreV1().Secrets(sa.Namespace)
-	secret, err := secretClient.Get(ctx, secretName, metav1.GetOptions{})
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			return nil, err
-		}
-		sc := SecretTemplate(sa)
-		secret, err = secretClient.Create(ctx, sc, metav1.CreateOptions{})
-		if err != nil {
-			if !errors.IsAlreadyExists(err) {
-				return nil, err
-			}
-			secret, err = secretClient.Get(ctx, secretName, metav1.GetOptions{})
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-	if len(secret.Data[v1.ServiceAccountTokenKey]) > 0 {
-		return secret, nil
-	}
-	blog.Errorf("CreateSecretForServiceAccount: waiting for secret [%s] to be populated with token", secretName)
-	for {
-		if len(secret.Data[v1.ServiceAccountTokenKey]) > 0 {
-			return secret, nil
-		}
-		time.Sleep(2 * time.Second)
-		secret, err = secretClient.Get(ctx, secretName, metav1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
-	}
-}
-
-// SecretTemplate generate a template of service-account-token Secret for the provided Service Account.
-func SecretTemplate(sa *v1.ServiceAccount) *v1.Secret {
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ServiceAccountSecretName(sa),
-			Namespace: sa.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: "v1",
-					Kind:       "ServiceAccount",
-					Name:       sa.Name,
-					UID:        sa.UID,
-				},
-			},
-			Annotations: map[string]string{
-				"kubernetes.io/service-account.name": sa.Name,
-			},
-		},
-		Type: v1.SecretTypeServiceAccountToken,
-	}
-}
-
-// ServiceAccountSecretName returns the secret name for the given Service Account.
-func ServiceAccountSecretName(sa *v1.ServiceAccount) string {
-	return SafeConcatName(sa.Name, "token")
-}
-
-// SafeConcatName for safe concat name
-func SafeConcatName(name ...string) string {
-	fullPath := strings.Join(name, "-")
-	if len(fullPath) < 64 {
-		return fullPath
-	}
-	digest := sha256.Sum256([]byte(fullPath))
-	// since we cut the string in the middle, the last char may not be compatible with what is expected in k8s
-	// we are checking and if necessary removing the last char
-	c := fullPath[56]
-	if 'a' <= c && c <= 'z' || '0' <= c && c <= '9' {
-		return fullPath[0:57] + "-" + hex.EncodeToString(digest[0:])[0:5]
-	}
-
-	return fullPath[0:56] + "-" + hex.EncodeToString(digest[0:])[0:6]
 }
 
 // GetClusterKubeConfig get cloud cluster's kube config
@@ -292,7 +99,7 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 	}
 	// Get the kube cluster in given project.
 	parent := "projects/" + gkeProjectID + "/locations/" + region + "/clusters/" + clusterName
-	gkeCluster, err := client.Projects.Locations.Clusters.Get(parent).Context(ctx).Do()
+	gkeCluster, err := client.Projects.Locations.Clusters.Get(parent).Do()
 	if err != nil {
 		return "", fmt.Errorf("GetClusterKubeConfig list clusters failed, project=%s: %w", gkeProjectID, err)
 	}
@@ -317,9 +124,9 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 	}
 
 	var saToken string
-	saToken, err = GenerateSAToken(ctx, restConfig)
+	saToken, err = cloudprovider.GenerateSAToken(restConfig)
 	if err != nil {
-		return "", fmt.Errorf("getClusterKubeConfig generate k8s serviceaccount token failed, project=%s cluster=%s: %w",
+		return "", fmt.Errorf("GetClusterKubeConfig generate k8s serviceaccount token failed, project=%s cluster=%s: %w",
 			gkeProjectID, clusterName, err)
 	}
 
@@ -360,4 +167,208 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 		return "", fmt.Errorf("GetClusterKubeConfig marsh kubeconfig failed, %v", err)
 	}
 	return base64.StdEncoding.EncodeToString(configByte), nil
+}
+
+// MapTaints map cmproto.Taint to Taint
+func MapTaints(cmt []*cmproto.Taint) []*Taint {
+	t := make([]*Taint, 0)
+	for _, v := range cmt {
+		t = append(t, &Taint{
+			Key:    v.Key,
+			Value:  v.Value,
+			Effect: v.Effect,
+		})
+	}
+	return t
+}
+
+func genCreateNodePoolRequest(req *CreateNodePoolRequest) *container.CreateNodePoolRequest {
+	if req == nil || req.NodePool == nil {
+		return nil
+	}
+	newReq := &container.CreateNodePoolRequest{
+		NodePool: &container.NodePool{
+			Name:             req.NodePool.Name,
+			InitialNodeCount: req.NodePool.InitialNodeCount,
+			MaxPodsConstraint: &container.MaxPodsConstraint{
+				MaxPodsPerNode: req.NodePool.MaxPodsConstraint.MaxPodsPerNode,
+			},
+			Autoscaling: &container.NodePoolAutoscaling{
+				Enabled: false,
+			},
+		},
+	}
+	if req.NodePool.Config != nil {
+		newReq.NodePool.Config = generateNodeConfig(req.NodePool.Config)
+	}
+	if req.NodePool.Management != nil {
+		newReq.NodePool.Management = &container.NodeManagement{
+			AutoRepair:  req.NodePool.Management.AutoRepair,
+			AutoUpgrade: req.NodePool.Management.AutoUpgrade,
+		}
+	}
+	return newReq
+}
+
+func generateNodeConfig(nc *NodeConfig) *container.NodeConfig {
+	conf := &container.NodeConfig{}
+	conf.MachineType = nc.MachineType
+	conf.Labels = nc.Labels
+	conf.Taints = func(t []*Taint) []*container.NodeTaint {
+		nt := make([]*container.NodeTaint, 0)
+		for _, v := range t {
+			nt = append(nt, &container.NodeTaint{
+				Key:    v.Key,
+				Value:  v.Value,
+				Effect: v.Effect,
+			})
+		}
+		return nt
+	}(nc.Taints)
+	conf.DiskType = nc.DiskType
+	conf.DiskSizeGb = nc.DiskSizeGb
+	conf.ImageType = nc.ImageType
+	return conf
+}
+
+// GetGCEResourceInfo get resource info from url
+func GetGCEResourceInfo(url string) ([]string, error) {
+	if !strings.HasPrefix(url, gceURLPrefix) {
+		return nil, fmt.Errorf("GetGCEResourceInfo failed, %s doesn't start wirth %s", url, gceURLPrefix)
+	}
+	url = strings.TrimPrefix(url, gceURLPrefix)
+	ri := strings.Split(url, "/")
+	return ri, nil
+}
+
+// GetInstanceGroupManager get zonal/regional InstanceGroupManager
+func GetInstanceGroupManager(computeCli *ComputeServiceClient, url string) (*compute.InstanceGroupManager, error) {
+	igmInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("GetInstanceGroupManager failed: %v", err)
+		return nil, err
+	}
+	igm := &compute.InstanceGroupManager{}
+	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
+		igm, err = computeCli.GetInstanceGroupManager(context.Background(), igmInfo[2], igmInfo[(len(igmInfo)-1)])
+		if err != nil {
+			blog.Errorf("GetInstanceGroupManager failed: %v", err)
+			return nil, err
+		}
+		return igm, nil
+	}
+	return nil, fmt.Errorf("GetInstanceGroupManager failed, incorrect InstanceGroupManager url: %s", url)
+}
+
+// PatchInstanceGroupManager patch zonal/regional InstanceGroupManager
+func PatchInstanceGroupManager(computeCli *ComputeServiceClient, url string, igm *compute.InstanceGroupManager) (
+	*compute.Operation, error) {
+	igmInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("PatchInstanceGroupManager failed: %v", err)
+		return nil, err
+	}
+	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
+		o, err := computeCli.PatchInstanceGroupManager(context.Background(), igmInfo[2], igmInfo[(len(igmInfo)-1)], igm)
+		if err != nil {
+			blog.Errorf("PatchInstanceGroupManager failed, operation: %s, err: %v", o.SelfLink, err)
+			return nil, err
+		}
+		return o, nil
+	}
+	return nil, fmt.Errorf("PatchInstanceGroupManager failed, incorrect InstanceGroupManager url: %s", url)
+}
+
+// ResizeInstanceGroupManager resize zonal/regional InstanceGroupManager
+func ResizeInstanceGroupManager(computeCli *ComputeServiceClient, url string, size int64) (*compute.Operation, error) {
+	igmInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("ResizeInstanceGroupManager failed: %v", err)
+		return nil, err
+	}
+	if utils.StringInSlice("instanceGroupManagers", igmInfo) && len(igmInfo) >= 6 {
+		var o *compute.Operation
+		o, err = computeCli.ResizeInstanceGroupManager(context.Background(), igmInfo[2],
+			igmInfo[(len(igmInfo)-1)], size)
+		if err != nil {
+			blog.Errorf("ResizeInstanceGroupManager failed, operation: %s, err: %v", o.SelfLink, err)
+			return nil, err
+		}
+		return o, nil
+	}
+
+	return nil, fmt.Errorf("ResizeInstanceGroupManager failed, incorrect InstanceGroupManager url: %s", url)
+}
+
+// GetInstanceTemplate get zonal/regional InstanceTemplate
+func GetInstanceTemplate(computeCli *ComputeServiceClient, url string) (*compute.InstanceTemplate, error) {
+	itInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("GetInstanceTemplate failed: %v", err)
+		return nil, err
+	}
+	it := &compute.InstanceTemplate{}
+	if utils.StringInSlice("instanceTemplates", itInfo) {
+		it, err = computeCli.GetInstanceTemplate(context.Background(), itInfo[(len(itInfo)-1)])
+		if err != nil {
+			blog.Errorf("GetInstanceTemplate failed: %v", err)
+			return nil, err
+		}
+		return it, nil
+	}
+	return nil, fmt.Errorf("GetInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
+}
+
+// GetOperation get zonal/regional/global Operation
+func GetOperation(computeCli *ComputeServiceClient, url string) (*compute.Operation, error) {
+	opInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("GetOperation failed: %v", err)
+		return nil, err
+	}
+	var o *compute.Operation
+	if utils.StringInSlice("operations", opInfo) && len(opInfo) >= 5 {
+		o, err = computeCli.GetOperation(context.Background(), opInfo[2], opInfo[(len(opInfo)-1)])
+		if err != nil {
+			blog.Errorf("GetOperation failed, operation: %s, err: %v", o, err)
+			return nil, err
+		}
+		return o, nil
+	}
+	return nil, fmt.Errorf("GetOperation failed, incorrect Operation url: %s", url)
+}
+
+// ListInstanceGroupsInstances list zonal/regional InstanceGroupsInstances
+func ListInstanceGroupsInstances(computeCli *ComputeServiceClient, url string) (
+	[]*compute.InstanceWithNamedPorts, error) {
+	igInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("ListInstanceGroupsInstances failed: %v", err)
+		return nil, err
+	}
+	instances := make([]*compute.InstanceWithNamedPorts, 0)
+	if (utils.StringInSlice("instanceGroups", igInfo) || utils.StringInSlice("instanceGroupManagers", igInfo)) &&
+		len(igInfo) >= 6 {
+		instances, err = computeCli.ListInstanceGroupsInstances(context.Background(), igInfo[2],
+			igInfo[(len(igInfo)-1)])
+		if err != nil {
+			blog.Errorf("ListInstanceGroupsInstances failed: %v", err)
+			return nil, err
+		}
+		return instances, nil
+	}
+	return nil, fmt.Errorf("ListInstanceGroupsInstances failed, incorrect InstanceGroup url: %s", url)
+}
+
+// GenerateUpdatePolicy generate update policy
+func GenerateUpdatePolicy(group *cmproto.NodeGroup) *compute.InstanceGroupManagerUpdatePolicy {
+	p := &compute.InstanceGroupManagerUpdatePolicy{
+		Type:          UpdatePolicyOpportunistic,
+		MinimalAction: UpdatePolicyActionRefresh,
+	}
+	if group.AutoScaling == nil {
+		return p
+	}
+
+	return p
 }

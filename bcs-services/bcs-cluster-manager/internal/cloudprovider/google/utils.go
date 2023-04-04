@@ -13,16 +13,40 @@
 
 package google
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+)
 
 var (
 	cloudName = "google"
 )
 
-// task template name
+// googleCloud taskName
 const (
 	// deleteClusterTaskTemplate bk-sops add task template
 	deleteClusterTaskTemplate = "gke-delete cluster: %s"
+	// gkeAddNodeTaskTemplate bk-sops add task template
+	gkeAddNodeTaskTemplate = "gke-add node: %s"
+	// gkeCleanNodeTaskTemplate bk-sops add task template
+	gkeCleanNodeTaskTemplate = "gke-remove node: %s"
+	// createNodeGroupTaskTemplate bk-sops add task template
+	createNodeGroupTaskTemplate = "gke-create node group: %s/%s"
+	// deleteNodeGroupTaskTemplate bk-sops add task template
+	deleteNodeGroupTaskTemplate = "gke-delete node group: %s/%s"
+	// updateNodeGroupDesiredNode bk-sops add task template
+	updateNodeGroupDesiredNodeTemplate = "gke-update node group desired node: %s/%s"
+	// cleanNodeGroupNodesTaskTemplate bk-sops add task template
+	cleanNodeGroupNodesTaskTemplate = "gke-remove node group nodes: %s/%s"
+	// moveNodesToNodeGroupTaskTemplate bk-sops add task template
+	moveNodesToNodeGroupTaskTemplate = "gke-move nodes to node group: %s/%s"
+	// switchNodeGroupAutoScalingTaskTemplate bk-sops add task template
+	switchNodeGroupAutoScalingTaskTemplate = "gke-switch node group auto scaling: %s/%s"
+	// updateAutoScalingOptionTemplate bk-sops add task template
+	updateAutoScalingOptionTemplate = "gke-update auto scaling option: %s"
+	// switchAutoScalingOptionStatusTemplate bk-sops add task template
+	switchAutoScalingOptionStatusTemplate = "gke-switch auto scaling option status: %s"
 )
 
 // tasks
@@ -34,4 +58,24 @@ var (
 	// delete cluster task
 	deleteGKEClusterTask   = fmt.Sprintf("%s-deleteGKEClusterTask", cloudName)
 	cleanClusterDBInfoTask = fmt.Sprintf("%s-CleanClusterDBInfoTask", cloudName)
+
+	// create nodeGroup task
+	createCloudNodeGroupTask      = fmt.Sprintf("%s-CreateCloudNodeGroupTask", cloudName)
+	checkCloudNodeGroupStatusTask = fmt.Sprintf("%s-CheckCloudNodeGroupStatusTask", cloudName)
+
+	// delete nodeGroup task
+	deleteNodeGroupTask = fmt.Sprintf("%s-DeleteNodeGroupTask", cloudName)
+
+	// auto scale task
+	ensureAutoScalerTask = fmt.Sprintf("%s-EnsureAutoScalerTask", cloudName)
+
+	// update desired nodes task
+	applyInstanceMachinesTask    = fmt.Sprintf("%s-%s", cloudName, cloudprovider.ApplyInstanceMachinesTask)
+	checkClusterNodesStatusTask  = fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName)
+	updateDesiredNodesDBInfoTask = fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName)
+
+	// clean node in nodeGroup task
+	cleanNodeGroupNodesTask             = fmt.Sprintf("%s-CleanNodeGroupNodesTask", cloudName)
+	checkCleanNodeGroupNodesStatusTask  = fmt.Sprintf("%s-CheckCleanNodeGroupNodesStatusTask", cloudName)
+	updateCleanNodeGroupNodesDBInfoTask = fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName)
 )
