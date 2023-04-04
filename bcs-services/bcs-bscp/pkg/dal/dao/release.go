@@ -114,6 +114,11 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 					Op:    filter.Equal.Factory(),
 					Value: opts.AppID,
 				},
+				&filter.AtomRule{
+					Field: "deprecated",
+					Op:    filter.Equal.Factory(),
+					Value: opts.Deprecated,
+				},
 			},
 		},
 	}
