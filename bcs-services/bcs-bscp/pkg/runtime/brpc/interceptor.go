@@ -69,10 +69,11 @@ func UnaryServerInterceptorWithMetrics(mc *gprm.ServerMetrics) grpc.UnaryServerI
 // LogUnaryServerInterceptor 添加请求日志
 func LogUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		st := time.Now()
 		kt := kit.FromGrpcContext(ctx)
 		service := path.Dir(info.FullMethod)[1:]
 		method := path.Base(info.FullMethod)
-		st := time.Now()
+
 		defer func() {
 			klog.InfoS("grpc", "rid", kt.Rid, "system", "grpc", "span.kind", "grpc.service", "service", service, "method", method, "grpc.duration", time.Since(st))
 		}()
