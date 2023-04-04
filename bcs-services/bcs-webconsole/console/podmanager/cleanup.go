@@ -81,7 +81,6 @@ func (p *CleanUpManager) fetchAliveRes(key string, expireSeconds int64) ([]strin
 
 	vals, err := p.redisClient.ZRangeByScore(p.ctx, key, &redis.ZRangeBy{Min: min, Max: max}).Result()
 	if err != nil {
-		fmt.Println("lei", err)
 		return nil, err
 	}
 
