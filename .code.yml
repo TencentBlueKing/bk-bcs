@@ -75,7 +75,7 @@ source:
       - ".*/bcs-runtime/bcs-mesos/bcs-scheduler/.*"
       - ".*/bcs-services/bcs-storage/pkg/proto/.*"
       - ".*/bcs-services/cluster-resources/proto/.*"
-
+      - ".*/bcs-services/bcs-bscp/.*pb.*"
 
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
   # 此处备注的第三方代码在后续统计代码量环节会被排除，若代码库中不存在需要排除的第三方代码，该项配置标识可为空
@@ -95,4 +95,3 @@ source:
       - ".*/bcs-services/bcs-data-manager/third_party/.*"
       - ".*/bcs-services/bcs-alert-manager/pkg/third_party/protoc-gen-swagger/.*"
       - ".*/bcs-services/cluster-resources/third_party/protoc-gen-swagger/.*"
-
