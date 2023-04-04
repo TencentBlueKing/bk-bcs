@@ -4,29 +4,33 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package httpsvr
 
 import (
-	"context"
+	"errors"
 
 	"github.com/emicklei/go-restful"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-func (h *HttpServerClient) listIngress(request *restful.Request, response *restful.Response) {
-	ingressList := &networkextensionv1.IngressList{}
-	if err := h.Mgr.GetClient().List(context.Background(), ingressList); err != nil {
-		blog.Errorf("list ext ingresses failed when collect metrics, err %s", err.Error())
+func (h *HttpServerClient) listNode(request *restful.Request, response *restful.Response) {
+	nodeName := request.QueryParameter("node_name")
+	if nodeName == "" {
+		_, _ = response.Write(CreateResponseData(errors.New("empty parameter: node_name"), "", nil))
 		return
 	}
-	data := CreateResponseData(nil, "success", ingressList)
-	_, _ = response.Write(data)
+
+	nodeIps, err := h.NodeCache.GetNodeIps(nodeName)
+	if err != nil {
+		_, _ = response.Write(CreateResponseData(err, "", nil))
+		return
+	}
+
+	_, _ = response.Write(CreateResponseData(nil, "", nodeIps))
 }
