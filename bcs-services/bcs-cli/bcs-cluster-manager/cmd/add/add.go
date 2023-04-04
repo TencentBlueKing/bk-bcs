@@ -11,27 +11,38 @@
  *
  */
 
-package cluster
+package add
 
 import (
-	"errors"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/spf13/cobra"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-// CheckCloudKubeConfig kubeConfig连接集群可用性检测
-func (c *ClusterMgr) CheckCloudKubeConfig(req types.CheckCloudKubeConfigReq) error {
-	resp, err := c.client.CheckCloudKubeConfig(c.ctx, &clustermanager.KubeConfigReq{
-		KubeConfig: req.Kubeconfig,
-	})
-	if err != nil {
-		return err
+var (
+	addLong = templates.LongDesc(i18n.T(`
+    add a resource from stdin.`))
+
+	addExample = templates.Examples(i18n.T(`
+	# add a node to cluster
+	kubectl-bcs-cluster-manager add`))
+
+	clusterID    string
+	initPassword string
+	nodes        []string
+)
+
+// NewAddCmd 创建add子命令实例
+func NewAddCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "add",
+		Short:   i18n.T("add a resource from stdin"),
+		Long:    addLong,
+		Example: addExample,
 	}
 
-	if resp != nil && resp.Code != 0 {
-		return errors.New(resp.Message)
-	}
+	// add subcommands
+	cmd.AddCommand(newAddNodesToClusterCmd())
 
-	return nil
+	return cmd
 }

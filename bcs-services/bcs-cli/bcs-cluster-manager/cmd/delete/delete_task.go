@@ -11,44 +11,46 @@
  *
  */
 
-package cluster
+package delete
 
 import (
 	"context"
 	"fmt"
-	"os"
 
-	clusterMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/cluster"
+	taskMgr "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/task"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/pkg/manager/types"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"k8s.io/kubectl/pkg/util/i18n"
+	"k8s.io/kubectl/pkg/util/templates"
 )
 
-func newCheckCloudKubeConfigCmd() *cobra.Command {
+var (
+	deleteTaskExample = templates.Examples(i18n.T(`
+	kubectl-bcs-cluster-manager delete task --taskID xxx`))
+)
+
+func newDeleteTaskCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "checkCloudKubeconfig",
-		Aliases: []string{"checkConfig"},
-		Short:   "check cloud kube config from bcs-cluster-manager",
-		Run:     checkCloudKubeconfig,
+		Use:     "task",
+		Short:   "delete task from bcs-cluster-manager",
+		Example: deleteTaskExample,
+		Run:     deleteTask,
 	}
 
-	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kube config file (required)")
+	cmd.Flags().StringVarP(&taskID, "taskID", "t", "", `task ID`)
+	cmd.MarkFlagRequired("taskID")
 
 	return cmd
 }
 
-func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		klog.Fatalf("read file failed: %v", err)
-	}
-
-	err = clusterMgr.New(context.Background()).CheckCloudKubeConfig(types.CheckCloudKubeConfigReq{
-		Kubeconfig: string(data),
+func deleteTask(cmd *cobra.Command, args []string) {
+	err := taskMgr.New(context.Background()).Delete(types.DeleteTaskReq{
+		TaskID: taskID,
 	})
 	if err != nil {
-		klog.Fatalf("check cloud kube config failed: %v", err)
+		klog.Fatalf("delete task failed: %v", err)
 	}
 
-	fmt.Printf("check cloud kube config succeed")
+	fmt.Printf("delete task succeed")
 }
