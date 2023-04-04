@@ -493,7 +493,7 @@ export default {
         this.isInitLoading = false;
         this.isPageLoading = false;
       }
-      if (this.crdKind === 'BcsLog') {
+      if (this.crdKind === 'BcsLog' && this.clusterList.filter(item => !item.is_shared).length) {
         this.getLogPlans();
       }
     },

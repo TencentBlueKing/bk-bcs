@@ -19,7 +19,7 @@
               }"
               trigger="click">
               <bk-button type="primary" icon-right="icon-angle-down" slot="dropdown-trigger">
-                {{$t('添加模板集')}}
+                <span class="text-[14px]"> {{$t('添加模板集')}}</span>
               </bk-button>
               <ul class="bk-dropdown-list" slot="dropdown-content">
                 <li>
@@ -141,57 +141,59 @@
                                 </template>
                               </template>
 
-                              <bk-dropdown-menu class="dropdown-menu ml5" :align="'right'" ref="dropdown">
-                                <bk-button slot="dropdown-trigger" style="width: 82px; position: relative;">
+                              <PopoverSelector trigger="click" class="ml5" offset="0, 5">
+                                <bk-button icon-right="icon-angle-down" class="min-w-[82px]">
                                   <span class="f14">{{$t('更多')}}</span>
-                                  <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml0" style="font-size: 10px;"></i>
                                 </bk-button>
-                                <ul class="bk-dropdown-list" slot="dropdown-content">
-                                  <li v-if="template.edit_mode !== 'yaml'">
-                                    <a
-                                      href="javascript:void(0)"
-                                      v-authority="{
-                                        clickable: getAuthority('templateset_copy', template.id),
-                                        actionId: 'templateset_copy',
-                                        resourceName: template.name,
-                                        disablePerms: true,
-                                        permCtx: {
-                                          project_id: projectId,
-                                          template_id: template.id
-                                        }
-                                      }" @click="showCopy(template)">{{$t('复制模板集')}}</a>
+                                <ul class="bk-dropdown-list" slot="content">
+                                  <li
+                                    class="bcs-dropdown-item"
+                                    v-authority="{
+                                      clickable: getAuthority('templateset_copy', template.id),
+                                      actionId: 'templateset_copy',
+                                      resourceName: template.name,
+                                      disablePerms: true,
+                                      permCtx: {
+                                        project_id: projectId,
+                                        template_id: template.id
+                                      }
+                                    }"
+                                    v-if="template.edit_mode !== 'yaml'"
+                                    @click="showCopy(template)">
+                                    {{$t('复制模板集')}}
                                   </li>
-                                  <li>
-                                    <a
-                                      href="javascript:void(0)"
-                                      v-authority="{
-                                        clickable: getAuthority('templateset_delete', template.id),
-                                        actionId: 'templateset_delete',
-                                        resourceName: template.name,
-                                        disablePerms: true,
-                                        permCtx: {
-                                          project_id: projectId,
-                                          template_id: template.id
-                                        }
-                                      }" @click="removeTemplate(template)">{{$t('删除模板集')}}</a>
+                                  <li
+                                    class="bcs-dropdown-item"
+                                    v-authority="{
+                                      clickable: getAuthority('templateset_delete', template.id),
+                                      actionId: 'templateset_delete',
+                                      resourceName: template.name,
+                                      disablePerms: true,
+                                      permCtx: {
+                                        project_id: projectId,
+                                        template_id: template.id
+                                      }
+                                    }" @click="removeTemplate(template)">
+                                    {{$t('删除模板集')}}
                                   </li>
-                                  <li v-if="template.edit_mode !== 'yaml'">
-                                    <a
-                                      href="javascript:void(0)"
-                                      v-authority="{
-                                        clickable: getAuthority('templateset_instantiate', template.id),
-                                        actionId: 'templateset_instantiate',
-                                        resourceName: template.name,
-                                        disablePerms: true,
-                                        permCtx: {
-                                          project_id: projectId,
-                                          template_id: template.id
-                                        }
-                                      }"
-                                      @click="showChooseDialog(template)">{{$t('删除实例')}}</a>
+                                  <li
+                                    class="bcs-dropdown-item"
+                                    v-if="template.edit_mode !== 'yaml'"
+                                    v-authority="{
+                                      clickable: getAuthority('templateset_instantiate', template.id),
+                                      actionId: 'templateset_instantiate',
+                                      resourceName: template.name,
+                                      disablePerms: true,
+                                      permCtx: {
+                                        project_id: projectId,
+                                        template_id: template.id
+                                      }
+                                    }"
+                                    @click="showChooseDialog(template)">
+                                    {{$t('删除实例')}}
                                   </li>
                                 </ul>
-                              </bk-dropdown-menu>
+                              </PopoverSelector>
                             </div>
                           </td>
                         </tr>
@@ -421,9 +423,10 @@
 <script>
 import { catchErrorHandler } from '@/common/util';
 import Header from '@/components/layout/Header.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
 
 export default {
-  components: { Header },
+  components: { Header, PopoverSelector },
   data() {
     return {
       fileImportIndex: 0,
