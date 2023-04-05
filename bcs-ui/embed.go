@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
 
-//go:embed frontend/dist
+//go:embed frontend/dist frontend/static CHANGELOG
 var frontendAssets embed.FS
 
 var (
@@ -52,6 +52,7 @@ type EmbedWebServer interface {
 	IndexHandler() http.Handler
 	FaviconHandler(w http.ResponseWriter, r *http.Request)
 	StaticFileHandler(prefix string) http.Handler
+	RootFS() embed.FS
 }
 
 type gzipFileInfo struct {
@@ -132,6 +133,11 @@ func mergeConfig() ([]byte, error) {
 		return nil, err
 	}
 	return bcsConfigBytes, nil
+}
+
+// RootFS
+func (e *embedWeb) RootFS() embed.FS {
+	return frontendAssets
 }
 
 // IndexHandler Vue 模板渲染
@@ -237,13 +243,14 @@ func (e *embedWeb) StaticFileHandler(prefix string) http.Handler {
 			w.Header().Set("Content-Encoding", "gzip")
 			w.Header().Set("Content-Length", fileInfo.contentSize)
 			w.Header().Set("Content-Type", fileInfo.contentType)
-			// 添加缓存
-			w.Header().Set("Cache-Control", "max-age=86400, public")
+
 			// issue https://github.com/golang/go/issues/44854
 			// w.Header().Set("Last-Modified", fileInfo.lastModified)
 			w.Header().Del("Transfer-Encoding")
 		}
 
+		// 添加缓存
+		w.Header().Set("Cache-Control", "max-age=86400, public")
 		e.fsServer.ServeHTTP(w, r)
 	}
 

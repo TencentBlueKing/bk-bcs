@@ -21,7 +21,7 @@ import (
 
 // Configuration 配置
 type Configuration struct {
-	Viper        *viper.Viper
+	Viper        *viper.Viper               `yaml:"-"`
 	Base         *BaseConf                  `yaml:"base_conf"`
 	BCS          *BCSConf                   `yaml:"bcs_conf"`
 	BCSEnvConf   []*BCSConf                 `yaml:"bcs_env_conf"`

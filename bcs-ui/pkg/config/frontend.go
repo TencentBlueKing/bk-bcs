@@ -27,15 +27,17 @@ type HostConf struct {
 
 // FrontendConf
 type FrontendConf struct {
-	Docs map[string]string `yaml:"docs"`
-	Host *HostConf         `yaml:"hosts"`
+	Docs     map[string]string `yaml:"docs"`
+	Host     *HostConf         `yaml:"hosts"`
+	Features map[string]string `yaml:"features"`
 }
 
 // defaultFrontendConf 默认配置
 func defaultFrontendConf() *FrontendConf {
 	c := &FrontendConf{
-		Docs: map[string]string{},
-		Host: &HostConf{},
+		Docs:     map[string]string{},
+		Host:     &HostConf{},
+		Features: map[string]string{"zh_cn": ""},
 	}
 	return c
 }
