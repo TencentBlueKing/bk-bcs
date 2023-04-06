@@ -14,6 +14,7 @@
 package utils
 
 import (
+	"encoding/hex"
 	"math/rand"
 	"time"
 
@@ -90,3 +91,15 @@ func GenUUID() string {
 	return uuid.New().String()
 }
 
+// RandomHexString returns a random hexadecimal string of length n.
+// implementation comes from
+// https://stackoverflow.com/questions/46904588/efficient-way-to-to-generate-a-random-hex-string-of-a-fixed-length-in-golang
+func RandomHexString(n int) string {
+	b := make([]byte, (n+1)/2)
+
+	if _, err := rand.New(src).Read(b); err != nil {
+		panic(err)
+	}
+
+	return hex.EncodeToString(b)[:n]
+}

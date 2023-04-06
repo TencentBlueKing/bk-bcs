@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 
 	"golang.org/x/oauth2"
@@ -73,7 +74,7 @@ func (cs *ContainerServiceClient) ListCluster(ctx context.Context) ([]*container
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region
 	clusters, err := cs.containerServiceClient.Projects.Locations.Clusters.List(parent).Context(ctx).Do()
 	if err != nil {
-		return nil, fmt.Errorf("ListCluster failed: %v", err)
+		return nil, fmt.Errorf("gke client ListCluster failed: %v", err)
 	}
 
 	return clusters.Clusters, nil
@@ -84,7 +85,7 @@ func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName st
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
 	cluster, err := cs.containerServiceClient.Projects.Locations.Clusters.Get(parent).Context(ctx).Do()
 	if err != nil {
-		return nil, fmt.Errorf("GetCluster failed: %v", err)
+		return nil, fmt.Errorf("gke client GetCluster failed: %v", err)
 	}
 
 	return cluster, nil
@@ -93,10 +94,67 @@ func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName st
 // DeleteCluster delete cluster
 func (cs *ContainerServiceClient) DeleteCluster(ctx context.Context, clusterName string) error {
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
-	_, err := cs.containerServiceClient.Projects.Locations.Clusters.Delete(parent).Context(ctx).Do()
+	o, err := cs.containerServiceClient.Projects.Locations.Clusters.Delete(parent).Context(ctx).Do()
 	if err != nil {
-		return fmt.Errorf("DeleteCluster failed: %v", err)
+		return fmt.Errorf("gke client DeleteCluster failed: %v", err)
 	}
+	blog.Infof("gke client DeleteCluster[%s] successful, operation ID: %s", clusterName, o.SelfLink)
 
 	return nil
+}
+
+// CreateClusterNodePool create a node pool
+func (cs *ContainerServiceClient) CreateClusterNodePool(ctx context.Context, req *CreateNodePoolRequest,
+	clusterName string) (string, error) {
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
+	req.Parent = parent
+	newReq := genCreateNodePoolRequest(req)
+	o, err := cs.containerServiceClient.Projects.Locations.Clusters.NodePools.Create(parent, newReq).Context(ctx).Do()
+	if err != nil {
+		return "", fmt.Errorf("gke client CreateClusterNodePool failed: %v", err)
+	}
+	blog.Infof("gke client CreateClusterNodePool[%s] successful, operation ID: %s", req.NodePool.Name, o.SelfLink)
+
+	return o.SelfLink, nil
+}
+
+// GetClusterNodePool create the node pool
+func (cs *ContainerServiceClient) GetClusterNodePool(ctx context.Context, clusterName, nodePoolName string) (
+	*container.NodePool, error) {
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName +
+		"/nodePools/" + nodePoolName
+	np, err := cs.containerServiceClient.Projects.Locations.Clusters.NodePools.Get(parent).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gke client GetClusterNodePool failed: %v", err)
+	}
+
+	return np, nil
+}
+
+// UpdateClusterNodePool update the node pool
+func (cs *ContainerServiceClient) UpdateClusterNodePool(ctx context.Context,
+	req *container.UpdateNodePoolRequest, clusterName, nodePoolName string) (string, error) {
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName +
+		"/nodePools/" + nodePoolName
+	o, err := cs.containerServiceClient.Projects.Locations.Clusters.NodePools.Update(parent, req).Context(ctx).Do()
+	if err != nil {
+		return "", fmt.Errorf("gke client UpdateClusterNodePool failed: %v", err)
+	}
+	blog.Infof("gke client UpdateClusterNodePool[%s] successful, operation ID: %s", nodePoolName, o.SelfLink)
+
+	return o.SelfLink, nil
+}
+
+// DeleteClusterNodePool update the node pool
+func (cs *ContainerServiceClient) DeleteClusterNodePool(ctx context.Context, clusterName, nodePoolName string) (
+	string, error) {
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName +
+		"/nodePools/" + nodePoolName
+	o, err := cs.containerServiceClient.Projects.Locations.Clusters.NodePools.Delete(parent).Context(ctx).Do()
+	if err != nil {
+		return "", fmt.Errorf("gke client DeleteClusterNodePool failed: %v", err)
+	}
+	blog.Infof("gke client DeleteClusterNodePool[%s] successful, operation ID: %s", nodePoolName, o.SelfLink)
+
+	return o.SelfLink, nil
 }

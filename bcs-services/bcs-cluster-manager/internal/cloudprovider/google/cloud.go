@@ -16,8 +16,10 @@ package google
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
@@ -61,7 +63,20 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 		return fmt.Errorf("SyncClusterCloudInfo failed: %v", err)
 	}
 	cls.SystemID = cluster.Name
-
+	cls.VpcID = cluster.NetworkConfig.Network
+	// 记录gke集群发布类型
+	if cluster.ReleaseChannel != nil {
+		if cls.ExtraInfo == nil {
+			cls.ExtraInfo = make(map[string]string, 0)
+		}
+		cls.ExtraInfo["releaseChannel"] = cluster.ReleaseChannel.Channel
+	}
+	// 区分gke集群是zone级别还是region级别
+	if len(strings.Split(cluster.Location, "-")) == 2 {
+		cls.ExtraInfo["locationType"] = "regions"
+	} else if len(strings.Split(cluster.Location, "-")) == 3 {
+		cls.ExtraInfo["locationType"] = "zones"
+	}
 	kubeConfig, err := api.GetClusterKubeConfig(context.Background(), opt.Common.Account.ServiceAccountSecret,
 		opt.Common.Account.GkeProjectID, cls.Region, cls.SystemID)
 	if err != nil {
@@ -72,7 +87,10 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	clusterBasicSettingByGKE(cls, cluster)
 
 	// cluster cloud network setting
-	clusterNetworkSettingByGKE(cls, cluster)
+	err = clusterNetworkSettingByGKE(cls, cluster)
+	if err != nil {
+		blog.Errorf("SyncClusterCloudInfo clusterNetworkSettingByGKE failed: %v", err)
+	}
 
 	return nil
 }
@@ -100,7 +118,7 @@ func clusterBasicSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster) 
 	}
 }
 
-func clusterNetworkSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster) {
+func clusterNetworkSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster) error {
 	cls.NetworkSettings = &cmproto.NetworkSetting{
 		ClusterIPv4CIDR: cluster.ClusterIpv4Cidr,
 		ServiceIPv4CIDR: cluster.ServicesIpv4Cidr,
@@ -108,4 +126,6 @@ func clusterNetworkSettingByGKE(cls *cmproto.Cluster, cluster *container.Cluster
 	if cluster.DefaultMaxPodsConstraint != nil {
 		cls.NetworkSettings.MaxNodePodNum = uint32(cluster.DefaultMaxPodsConstraint.MaxPodsPerNode)
 	}
+
+	return nil
 }

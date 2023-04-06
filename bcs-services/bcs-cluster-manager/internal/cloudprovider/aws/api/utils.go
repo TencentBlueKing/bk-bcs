@@ -1,14 +1,13 @@
 package api
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -48,7 +47,7 @@ func GetClusterKubeConfig(sess *session.Session, cluster *eks.Cluster) (string, 
 		}).DialContext,
 	}
 
-	saToken, err := api.GenerateSAToken(context.Background(), restConfig)
+	saToken, err := cloudprovider.GenerateSAToken(restConfig)
 	if err != nil {
 		return "", fmt.Errorf("getClusterKubeConfig generate k8s serviceaccount token failed,cluster=%s: %w",
 			*cluster.Name, err)
