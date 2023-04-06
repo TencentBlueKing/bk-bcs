@@ -336,11 +336,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	nodeReconciler := nodecontroller.NewNodeReconciler(context.Background(), mgr.GetClient(),
-		mgr.GetEventRecorderFor("bcs-ingress-controller"), opts, nodeCache, nodeClient)
-	if err = nodeReconciler.SetupWithManager(mgr); err != nil {
-		blog.Errorf("unable to create node reconciler, err %s", err.Error())
-		os.Exit(1)
+	if opts.NodeInfoExporterOpen {
+		nodeReconciler := nodecontroller.NewNodeReconciler(context.Background(), mgr.GetClient(),
+			mgr.GetEventRecorderFor("bcs-ingress-controller"), opts, nodeCache, nodeClient)
+		if err = nodeReconciler.SetupWithManager(mgr); err != nil {
+			blog.Errorf("unable to create node reconciler, err %s", err.Error())
+			os.Exit(1)
+		}
 	}
 
 	conflictHandler := conflicthandler.NewConflictHandler(opts.ConflictCheckOpen, opts.IsTCPUDPPortReuse, opts.Region,
