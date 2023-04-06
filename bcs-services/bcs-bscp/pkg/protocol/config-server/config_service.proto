@@ -96,7 +96,12 @@ service Config {
             get: "/api/v1/config/apps/{app_id}/config_items"
         };
     }
-
+    rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/config_item_count/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
     rpc CreateContent(CreateContentReq) returns (CreateContentResp) {
         option (google.api.http) = {
             post: "/api/v1/config/create/content/content/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}"
@@ -440,6 +445,15 @@ message ListConfigItemsResp {
     repeated pbci.ConfigItem details = 2;
 }
 
+message ListConfigItemCountReq {
+    uint32   biz_id          = 1;
+    repeated uint32 app_id   = 2;
+}
+
+message ListConfigItemCountResp {
+    repeated pbci.ListConfigItemCounts details = 1;
+}
+
 message CreateContentReq {
     uint32 biz_id         = 1;
     uint32 app_id         = 2;
@@ -505,6 +519,7 @@ message ListReleasesReq {
     uint32 start      = 3;
     uint32 limit      = 4;
     bool all          = 5;
+    bool deprecated   = 6;
 }
 
 message ListReleasesResp {

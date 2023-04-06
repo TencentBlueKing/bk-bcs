@@ -36,6 +36,7 @@ service Data {
     rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
+    rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
 
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
@@ -189,6 +190,15 @@ message ListConfigItemsResp {
     repeated pbci.ConfigItem details = 2;
 }
 
+message ListConfigItemCountReq {
+    uint32          biz_id     = 1;
+    repeated uint32 app_id     = 2;
+}
+
+message ListConfigItemCountResp {
+    repeated pbci.ListConfigItemCounts details = 1;
+}
+
 message CreateContentReq {
     pbcontent.ContentAttachment attachment = 1;
     pbcontent.ContentSpec       spec       = 2;
@@ -244,8 +254,9 @@ message CreateReleaseReq {
 message ListReleasesReq {
     uint32                 biz_id = 1;
     uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    bool               deprecated = 3;
+    google.protobuf.Struct filter = 4;
+    pbbase.BasePage        page   = 5;
 }
 
 message ListReleasesResp {

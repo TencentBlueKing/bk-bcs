@@ -36,7 +36,7 @@ func GenerateStaticActions() []client.ResourceAction {
 
 	resourceActionList = append(resourceActionList, genBusinessActions()...)
 	resourceActionList = append(resourceActionList, genApplicationActions()...)
-	resourceActionList = append(resourceActionList, genGroupActions()...)
+	// resourceActionList = append(resourceActionList, genGroupActions()...)
 	// resourceActionList = append(resourceActionList, genStrategySetActions()...)
 	// resourceActionList = append(resourceActionList, genStrategyActions()...)
 	// resourceActionList = append(resourceActionList, genHistoryActions()...)
@@ -200,6 +200,16 @@ func genApplicationActions() []client.ResourceAction {
 			ID:       ApplicationSelection,
 		}},
 	}}
+
+	actions = append(actions, client.ResourceAction{
+		ID:                   AppView,
+		Name:                 ActionIDNameMap[AppView],
+		NameEn:               "View App",
+		Type:                 View,
+		RelatedResourceTypes: relatedResource,
+		RelatedActions:       nil,
+		Version:              1,
+	})
 
 	actions = append(actions, client.ResourceAction{
 		ID:                   AppEdit,

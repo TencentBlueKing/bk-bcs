@@ -125,10 +125,11 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 	}
 
 	r := &pbds.ListReleasesReq{
-		BizId:  uint32(bizID),
-		AppId:  req.AppId,
-		Filter: ftpb,
-		Page:   page,
+		BizId:      uint32(bizID),
+		AppId:      req.AppId,
+		Filter:     ftpb,
+		Page:       page,
+		Deprecated: req.Deprecated,
 	}
 	rp, err := s.client.DS.ListReleases(grpcKit.RpcCtx(), r)
 	if err != nil {
