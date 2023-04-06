@@ -1,6 +1,9 @@
 ### 描述
 查询是否有权限和申请链接，可以结合返回的web_annotations.perms字段交互
 
+### 请求方法和URL
+`POST {BK_BCS_BSCP_API}/api/v1/auth/iam/permission/check`
+
 ### 输入参数
 | 参数名称     | 参数类型     | 必选   | 描述             |
 | ------------ | ------------ | ------ | ---------------- |
