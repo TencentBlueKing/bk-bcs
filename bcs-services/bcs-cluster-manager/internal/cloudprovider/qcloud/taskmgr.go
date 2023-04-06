@@ -915,7 +915,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	cleanStep.Params[cloudprovider.CloudIDKey.String()] = group.Provider
 
 	cleanStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
-	cleanStep.Params[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
+	cleanStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 
 	task.Steps[cleanNodeGroupNodesTask] = cleanStep
 	task.StepSequence = append(task.StepSequence, cleanNodeGroupNodesTask)

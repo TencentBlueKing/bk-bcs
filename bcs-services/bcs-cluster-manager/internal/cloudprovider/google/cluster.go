@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -25,6 +26,7 @@ import (
 )
 
 var clusterMgr sync.Once
+var defaultTimeout = 10 * time.Second
 
 func init() {
 	clusterMgr.Do(func() {

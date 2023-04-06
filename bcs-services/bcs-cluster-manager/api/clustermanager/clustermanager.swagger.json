@@ -4802,6 +4802,12 @@
           },
           "description": "定时自动扩容集群节点配置信息",
           "title": "timeRanges"
+        },
+        "autoUpgrade": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "开启自动升级GKE版本功能,如果集群为发布版本,则强制开启",
+          "title": "autoUpgrade"
         }
       },
       "title": "AutoScalingGroup define auto scaling information"
@@ -10926,6 +10932,12 @@
           "$ref": "#/definitions/clustermanagerModuleInfo",
           "description": "节点池节点上下架时当前集群业务下转移模块信息",
           "title": "module"
+        },
+        "maxPodsPerNode": {
+          "type": "integer",
+          "format": "int64",
+          "description": "每个节点的最大Pod数量",
+          "title": "maxPodsPerNode"
         }
       },
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",
