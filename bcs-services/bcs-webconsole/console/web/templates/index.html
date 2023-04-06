@@ -343,15 +343,18 @@
                     self.term.onKey(function (e) {
                         // 获取光标所在行的行号 相对于窗口 + 光标位置
                         const row = self.term.buffer.active.viewportY + self.term.buffer.active.cursorY;
-                        // 获取光标所在行的内容
-                        const text = self.term.buffer.normal.getLine(row).translateToString();
-                        // 过滤其他字符串
-                        const str = text.trim()
-                        if (e.domEvent.keyCode === 13) {
-                            if (str.length !== 0 && self.term.buffer.active.type === "normal") {
-                                self.ws.send('5' + Base64.encode(str));
+                        setTimeout(() => {
+                            // 获取光标所在行的内容
+                           const text = self.term.buffer.active.getLine(row).translateToString();
+                            // 处理数据
+                            // 过滤其他字符串
+                            const str = text.replace(/^root:[^$]+\$ /, '').trim()
+                            if (e.domEvent.keyCode === 13) {
+                                if (str.length !== 0 && self.term.buffer.active.type === "normal"){
+                                    self.ws.send('5' + Base64.encode(str));
+                                }
                             }
-                        }
+                        }, 100); // 等待 0.1 秒
                     })
 
                     // 使用 BCS API 首个字节流判断是否连接
