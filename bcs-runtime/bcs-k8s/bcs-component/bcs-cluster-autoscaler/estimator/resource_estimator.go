@@ -149,6 +149,9 @@ func (estimator *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate 
 		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
 			continue
 		}
+		if node.Labels["node-role.kubernetes.io/master"] == "true" {
+			continue
+		}
 		allocatable := nodeInfo.AllocatableResource()
 		sumResourcesList.Add(allocatable.ResourceList())
 		leftResourcesList.Add(singleNodeResource(nodeInfo).ResourceList())

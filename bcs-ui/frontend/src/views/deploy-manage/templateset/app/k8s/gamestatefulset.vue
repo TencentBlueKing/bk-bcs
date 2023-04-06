@@ -80,6 +80,9 @@
                   <a href="javascript:void(0);" class="bk-text-button" @click.stop="del(row, index)">{{$t('删除')}}</a>
                 </template>
               </bk-table-column>
+              <template #empty>
+                <BcsEmptyTableStatus :type="searchKey ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+              </template>
             </bk-table>
           </div>
         </div>
@@ -760,6 +763,10 @@ export default {
       } finally {
         this.batchDelDialogConf.isDeleting = false;
       }
+    },
+    handleClearSearchData() {
+      this.searchKey = '';
+      this.handleClick();
     },
   },
 };

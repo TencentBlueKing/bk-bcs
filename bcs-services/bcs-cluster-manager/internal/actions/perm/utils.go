@@ -58,13 +58,17 @@ func CheckUserPermByActionID(ctx context.Context, iam iam.PermClient, permInfo U
 		projectIAM := project.NewBCSProjectPermClient(iam)
 		switch permInfo.ActionID {
 		case project.ProjectCreate.String():
-			return projectIAM.CanCreateProject(permInfo.User)
+			allow, url, _, err := projectIAM.CanCreateProject(permInfo.User)
+			return allow, url, err
 		case project.ProjectView.String():
-			return projectIAM.CanViewProject(permInfo.User, permInfo.ProjectID)
+			allow, url, _, err := projectIAM.CanViewProject(permInfo.User, permInfo.ProjectID)
+			return allow, url, err
 		case project.ProjectEdit.String():
-			return projectIAM.CanEditProject(permInfo.User, permInfo.ProjectID)
+			allow, url, _, err := projectIAM.CanEditProject(permInfo.User, permInfo.ProjectID)
+			return allow, url, err
 		case project.ProjectDelete.String():
-			return projectIAM.CanDeleteProject(permInfo.User, permInfo.ProjectID)
+			allow, url, _, err := projectIAM.CanDeleteProject(permInfo.User, permInfo.ProjectID)
+			return allow, url, err
 		default:
 			return false, "", errFunc(permInfo.ActionID)
 		}

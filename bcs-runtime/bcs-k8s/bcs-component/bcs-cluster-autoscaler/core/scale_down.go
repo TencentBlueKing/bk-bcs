@@ -46,6 +46,7 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 )
 
@@ -57,6 +58,12 @@ const (
 	DelayDeletionAnnotationPrefix = "delay-deletion.cluster-autoscaler.kubernetes.io/"
 	// NodeDeletionCost is the cost of node's deletion
 	NodeDeletionCost = "io.tencent.bcs.dev/node-deletion-cost"
+	// NodeDeleteErrorFailedToDelete indicates the reson is FailedToDelete
+	NodeDeleteErrorFailedToDelete = "FailedToDelete"
+	// NodeDeleteErrorFailedToEvictPods indicates the reson is FailedToEvictPods
+	NodeDeleteErrorFailedToEvictPods = "FailedToEvictPods"
+	// NodeDeleteErrorFailedToMarkToBeDeleted indicates the reson is FailedToMarkToBeDeleted
+	NodeDeleteErrorFailedToMarkToBeDeleted = "FailedToMarkToBeDeleted"
 )
 
 const (
@@ -149,6 +156,19 @@ func (n *NodeDeletionTracker) GetDeletionsInProgress(nodeGroupID string) int {
 func (n *NodeDeletionTracker) AddNodeDeleteResult(nodeName string, result status.NodeDeleteResult) {
 	n.Lock()
 	defer n.Unlock()
+	if result.ResultType != status.NodeDeleteOk {
+		switch result.ResultType {
+		case status.NodeDeleteErrorFailedToDelete:
+			metrics.UpdateUnremovableNodes(nodeName, NodeDeleteErrorFailedToDelete, "", "")
+			metricsinternal.RegisterFailedScaleDown(nodeName, NodeDeleteErrorFailedToDelete)
+		case status.NodeDeleteErrorFailedToEvictPods:
+			metrics.UpdateUnremovableNodes(nodeName, NodeDeleteErrorFailedToEvictPods, "", "")
+			metricsinternal.RegisterFailedScaleDown(nodeName, NodeDeleteErrorFailedToEvictPods)
+		case status.NodeDeleteErrorFailedToMarkToBeDeleted:
+			metrics.UpdateUnremovableNodes(nodeName, NodeDeleteErrorFailedToMarkToBeDeleted, "", "")
+			metricsinternal.RegisterFailedScaleDown(nodeName, NodeDeleteErrorFailedToMarkToBeDeleted)
+		}
+	}
 	n.nodeDeleteResults[nodeName] = result
 }
 
@@ -575,7 +595,7 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 	for _, node := range nodesToRemove {
 		name := node.Node.Name
 		unneededNodesList = append(unneededNodesList, node.Node)
-		if haveEmpty {
+		if !emptyNodes[name] && haveEmpty {
 			// 有空节点情况下，重置非空节点时间，保证优先缩容空节点
 			result[name] = timestamp
 		} else if val, found := sd.unneededNodes[name]; !found {
@@ -854,6 +874,9 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		scaleDownStatus.Result = status.ScaleDownNoUnneeded
 		return scaleDownStatus, nil
 	}
+	for _, c := range candidates {
+		klog.Infof("candidate: %s", c.Name)
+	}
 
 	// Trying to delete empty nodes in bulk. If there are no empty nodes then CA will
 	// try to delete not-so-empty nodes, possibly killing some pods and allowing them
@@ -868,6 +891,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 			// 被移除的节点需先有 soft taint 阻止新 Pod 调度，减少极端情况
 			// 否则移到下一轮循环再判断
 			if !deletetaint.HasDeletionCandidateTaint(node) {
+				klog.Infof("empty node %s should be soft tainted before delete", node.Name)
 				continue
 			}
 			pods := nodeInfos[node.Name]
@@ -875,11 +899,17 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 			if checkResourceNotEnough(nodeInfos, nil, sd.cpuRatio, sd.memRatio, sd.ratio) {
 				nodeInfos[node.Name] = pods
 				klog.Infof("Skip node %v due to left resource ratio", node.Name)
+				metrics.UpdateUnremovableNodes(node.Name, string(simulator.BufferNotEnough), "", "")
 				continue
 			}
 			emptyNodesAfterFilter = append(emptyNodesAfterFilter, node)
 		}
 		emptyNodes = emptyNodesAfterFilter
+		if len(emptyNodes) == 0 {
+			klog.Infof("No empty node can be deleted after filter")
+			scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
+			return scaleDownStatus, nil
+		}
 
 		nodeDeletionStart := time.Now()
 		deletedNodes, err := sd.scheduleDeleteEmptyNodes(emptyNodes, sd.context.ClientSet, sd.context.Recorder,
@@ -945,6 +975,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	if checkResourceNotEnough(nodeInfos, toRemove.PodsToReschedule,
 		sd.cpuRatio, sd.memRatio, sd.ratio) {
 		klog.Infof("Skip node %v due to left resource ratio", toRemove.Node.Name)
+		metrics.UpdateUnremovableNodes(toRemove.Node.Name, string(simulator.BufferNotEnough), "", "")
 		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
 		return scaleDownStatus, nil
 	}
@@ -1033,6 +1064,10 @@ func (sd *ScaleDown) getEmptyNodes(candidates []*apiv1.Node, pods []*apiv1.Pod, 
 	resourcesLimits scaleDownResourcesLimits, temporaryNodesPerNodeGroup map[string]int) []*apiv1.Node {
 
 	emptyNodes := simulator.FindEmptyNodesToRemove(candidates, pods)
+	sort.SliceStable(emptyNodes, func(i, j int) bool {
+		return emptyNodes[i].Name < emptyNodes[j].Name
+	})
+
 	availabilityMap := make(map[string]int)
 	result := make([]*apiv1.Node, 0)
 	resourcesLimitsCopy := copyScaleDownResourcesLimits(resourcesLimits) // we do not want to modify input parameter
@@ -1178,8 +1213,9 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 	for i := range podList.Items {
 		podsOfNode = append(podsOfNode, &podList.Items[i])
 	}
+	nonExpendablePods := filterOutExpendablePods(podsOfNode, sd.context.ExpendablePodsPriorityCutoff)
 	podsToDrain, _, _, getErr := simulator.GetPodsForDeletionOnNodeDrain(
-		podsOfNode, []*policyv1.PodDisruptionBudget{}, false, false, false,
+		nonExpendablePods, []*policyv1.PodDisruptionBudget{}, false, false, false,
 		false, nil, 0, time.Now())
 	if getErr != nil {
 		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: getErr}
@@ -1480,6 +1516,9 @@ func hasGameServer(pods []*apiv1.Pod) bool {
 }
 
 func sortNodesByDeletionCost(nodes []simulator.NodeToBeRemoved) []simulator.NodeToBeRemoved {
+	if len(nodes) <= 1 {
+		return nodes
+	}
 	sort.Slice(nodes, func(i, j int) bool {
 		costi := getCostFromNode(nodes[i].Node)
 		costj := getCostFromNode(nodes[j].Node)

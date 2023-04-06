@@ -14,19 +14,21 @@ package httpsvr
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+
 	"github.com/emicklei/go-restful"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	k8sapitypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 func (h *HttpServerClient) listListener(request *restful.Request, response *restful.Response) {
 
-	var data string
+	var data []byte
 	switch request.PathParameter("condition") {
 	case "ingress":
 		ingress := &networkextensionv1.Ingress{}
@@ -88,5 +90,5 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 		data = CreateResponseData(nil, "success", result)
 	}
 
-	_, _ = response.Write([]byte(data))
+	_, _ = response.Write(data)
 }

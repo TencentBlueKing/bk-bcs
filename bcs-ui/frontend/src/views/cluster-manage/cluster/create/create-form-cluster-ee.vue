@@ -38,8 +38,7 @@
         </div>
       </bk-form-item>
       <bk-form-item :label="$t('选择Master')" property="ipList" error-display-type="normal" required>
-        <bk-button @click="handleShowIpSelector">
-          <i class="bcs-icon bcs-icon-plus" style="position: relative;top: -1px;"></i>
+        <bk-button icon="plus" @click="handleShowIpSelector">
           {{$t('选择服务器')}}
         </bk-button>
         <bk-table class="ip-list mt10" :data="basicInfo.ipList" v-if="basicInfo.ipList.length">

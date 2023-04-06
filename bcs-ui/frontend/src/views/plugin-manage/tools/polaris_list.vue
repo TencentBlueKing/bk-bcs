@@ -6,8 +6,7 @@
       <template v-if="!isInitLoading">
         <div class="biz-panel-header">
           <div class="left">
-            <bk-button type="primary" @click.stop.prevent="createPolarisRules">
-              <i class="bcs-icon bcs-icon-plus" style="top: -1px;"></i>
+            <bk-button icon="plus" type="primary" @click.stop.prevent="createPolarisRules">
               <span>{{$t('新建规则')}}</span>
             </bk-button>
           </div>

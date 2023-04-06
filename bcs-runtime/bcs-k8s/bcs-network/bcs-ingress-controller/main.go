@@ -43,16 +43,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/namespacedlb"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloudcollector"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloudnode"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloudnode/native"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/conflicthandler"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/httpsvr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/ingresscache"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/nodecache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/webhookserver"
 	listenerctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/listenercontroller"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/nodecontroller"
 	portbindingctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
 	portpoolctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portpoolcontroller"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -110,8 +114,10 @@ func main() {
 
 	flag.BoolVar(&opts.ConflictCheckOpen, "conflict_check_open", true, "if false, "+
 		"skip all conflict checking about ingress and port pool")
+	flag.BoolVar(&opts.NodeInfoExporterOpen, "node_info_exporter_open", false, "if true, "+
+		"bcs-ingress-controller will record node info in cluster")
 
-	flag.UintVar(&opts.HttpServerPort, "http_svr_port", 8082, "port for ingress controller http server")
+	flag.UintVar(&opts.HttpServerPort, "http_svr_port", 8088, "port for ingress controller http server")
 
 	flag.Parse()
 
@@ -199,8 +205,20 @@ func main() {
 	}
 	runPrometheusMetrics(opts)
 
+	// init event watcher
+	k8sClient, err := initInClusterClient()
+	if err != nil {
+		blog.Fatalf("init in-cluster client failed: %v", err)
+	}
+	eventWatcher := eventer.NewKubeEventer(k8sClient)
+	if err = eventWatcher.Init(); err != nil {
+		blog.Fatalf("init event watcher failed: %v", err)
+	}
+	go eventWatcher.Start(context.Background())
+
 	var validater cloud.Validater
 	var lbClient cloud.LoadBalance
+	var nodeClient cloudnode.NodeClient
 	switch opts.Cloud {
 	case constant.CloudTencent:
 		validater = tencentcloud.NewClbValidater()
@@ -211,8 +229,10 @@ func main() {
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), tencentcloud.NewClbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher,
+				tencentcloud.NewClbWithSecret)
 		}
+		nodeClient = native.NewNativeNodeClient()
 
 	case constant.CloudAWS:
 		validater = aws.NewELbValidater()
@@ -223,20 +243,24 @@ func main() {
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), aws.NewElbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher, aws.NewElbWithSecret)
 		}
+		nodeClient = native.NewNativeNodeClient()
 
 	case constant.CloudGCP:
 		validater = gcp.NewGclbValidater()
 		if !opts.IsNamespaceScope {
-			lbClient, err = gcp.NewGclb(mgr.GetClient())
+			lbClient, err = gcp.NewGclb(mgr.GetClient(), eventWatcher)
 			if err != nil {
 				blog.Errorf("init cloud failed, err %s", err.Error())
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), gcp.NewGclbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher,
+				gcp.NewGclbWithSecret)
 		}
+		nodeClient = native.NewNativeNodeClient()
+
 	case constant.CloudAzure:
 		validater = azure.NewAlbValidater()
 		if !opts.IsNamespaceScope {
@@ -246,8 +270,10 @@ func main() {
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), azure.NewAlbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher, azure.NewAlbWithSecret)
 		}
+		nodeClient = native.NewNativeNodeClient()
+
 	default:
 		blog.Errorf("unknown cloud type '%s'", opts.Cloud)
 		os.Exit(1)
@@ -267,6 +293,8 @@ func main() {
 		blog.Errorf("create ingress converter failed, err %s", err.Error())
 		os.Exit(1)
 	}
+
+	nodeCache := nodecache.NewNodeCache(mgr.GetClient(), nodeClient)
 	ingressCache := ingresscache.NewDefaultCache()
 	if err = (&ingressctrl.IngressReconciler{
 		Ctx:              context.Background(),
@@ -308,16 +336,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// init event watcher
-	k8sClient, err := initInClusterClient()
-	if err != nil {
-		blog.Fatalf("init in-cluster client failed: %v", err)
+	nodeReconciler := nodecontroller.NewNodeReconciler(context.Background(), mgr.GetClient(),
+		mgr.GetEventRecorderFor("bcs-ingress-controller"), opts, nodeCache, nodeClient)
+	if err = nodeReconciler.SetupWithManager(mgr); err != nil {
+		blog.Errorf("unable to create node reconciler, err %s", err.Error())
+		os.Exit(1)
 	}
-	eventClient := eventer.NewKubeEventer(k8sClient)
-	if err = eventClient.Init(); err != nil {
-		blog.Fatalf("init event watcher failed: %v", err)
-	}
-	go eventClient.Start(context.Background())
 
 	conflictHandler := conflicthandler.NewConflictHandler(opts.ConflictCheckOpen, opts.IsTCPUDPPortReuse, opts.Region,
 		mgr.GetClient(), ingressConverter, mgr.GetEventRecorderFor("bcs-ingress-controller"))
@@ -329,7 +353,7 @@ func main() {
 		ServerKeyFile:  opts.ServerKeyFile,
 	}
 	webhookServer, err := webhookserver.NewHookServer(webhookServerOpts, mgr.GetClient(), lbClient, portPoolCache,
-		eventClient, validater, ingressConverter, conflictHandler)
+		eventWatcher, validater, ingressConverter, conflictHandler)
 	if err != nil {
 		blog.Errorf("create hook server failed, err %s", err.Error())
 		os.Exit(1)
@@ -343,7 +367,7 @@ func main() {
 
 	blog.Infof("starting manager")
 
-	err = initHttpServer(opts, mgr)
+	err = initHttpServer(opts, mgr, nodeCache)
 	if err != nil {
 		blog.Errorf("init http server failed: %v", err.Error())
 		os.Exit(1)
@@ -389,17 +413,19 @@ func runPrometheusMetrics(op *option.ControllerOption) {
 }
 
 // initHttpServer init ingress controller http server
-func initHttpServer(op *option.ControllerOption, mgr manager.Manager) error {
+func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache *nodecache.NodeCache) error {
 	server := httpserver.NewHttpServer(op.HttpServerPort, op.Address, "")
 	if op.Conf.ServCert.IsSSL {
 		server.SetSsl(op.Conf.ServCert.CAFile, op.Conf.ServCert.CertFile, op.Conf.ServCert.KeyFile,
 			op.Conf.ServCert.CertPasswd)
 	}
 
-	server.SetInsecureServer(op.Conf.InsecureAddress, op.Conf.InsecurePort)
+	// server.SetInsecureServer(op.Conf.InsecureAddress, op.Conf.InsecurePort)
+	server.SetInsecureServer(op.Address, op.HttpServerPort)
 	ws := server.NewWebService("/ingresscontroller", nil)
 	httpServerClient := &httpsvr.HttpServerClient{
-		Mgr: mgr,
+		Mgr:       mgr,
+		NodeCache: nodeCache,
 	}
 	httpsvr.InitRouters(ws, httpServerClient)
 
@@ -410,5 +436,4 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager) error {
 		return fmt.Errorf("http ListenAndServe error %s", err.Error())
 	}
 	return nil
-
 }

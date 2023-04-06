@@ -634,7 +634,7 @@ export default {
   '修改命名空间：{nsName}': ['Update Namespace: {nsName}'],
   '确定删除命名空间？': ['Confirm want to delete the namespace?'],
   '输入关键字，按Enter搜索': ['Press Enter to search'],
-  集群列表: ['Clusters'],
+  集群列表: ['Cluster List'],
   命名空间列表: ['Namespaces'],
   HPA管理: ['HPA Manage'],
   批量删除: ['Batch Delete'],
@@ -2588,7 +2588,7 @@ export default {
     'Named space view',
   ],
   容器监控: [
-    'Container monitoring',
+    'Container Monitoring',
   ],
   必填项: [
     'Requiring item',
@@ -3278,7 +3278,7 @@ export default {
     'Edit node template',
   ],
   节点模板: [
-    'Node template',
+    'Node Template',
   ],
   命名空间列举: [
     'List of naming space',
@@ -3390,7 +3390,6 @@ export default {
     'Search event level, component',
   ],
   'NotReady节点数大于 {0} 个且超过集群总节点数 {1} 时暂停自动扩缩容': ['When the number of NotReady nodes is greater than {0} and exceeds the total number of nodes in the cluster {1}, automatic capacity expansion is suspended'],
-  集群总览: ['Cluster Overview'],
   节点列表: ['Nodes'],
   部署管理: ['Deploy'],
   插件管理: ['Plugin'],
@@ -3398,10 +3397,6 @@ export default {
   '确认删除 {name}': ['Confirm delete {name}'],
   '可以尝试 调整关键词 或{action}': ['You can try adjusting keywords or {action}'],
   个人密钥: ['Api Token'],
-
-  '模板集1.0': [
-    'Template set 1.0',
-  ],
   Charts包: [
     'Charts',
   ],

@@ -16,17 +16,17 @@
                   resource_type: 'project',
                   project_id: projectId
                 }
-              }">
-              <bk-button type="primary" slot="dropdown-trigger">
-                <i class="bcs-icon bcs-icon-plus f14" style="top: -1px;"></i>
-                <span class="f14">{{$t('添加模板集')}}</span>
+              }"
+              trigger="click">
+              <bk-button type="primary" icon-right="icon-angle-down" slot="dropdown-trigger">
+                {{$t('添加模板集')}}
               </bk-button>
               <ul class="bk-dropdown-list" slot="dropdown-content">
                 <li>
-                  <a href="javascript:;" @click="addTemplate('K8sYamlTemplateset')">{{$t('YAML模式')}}</a>
+                  <a href="javascript:;" @click.stop.prevent="addTemplate('k8sTemplatesetDeployment')">{{$t('表单模式')}}</a>
                 </li>
                 <li>
-                  <a href="javascript:;" @click.stop.prevent="addTemplate('k8sTemplatesetDeployment')">{{$t('表单模式')}}</a>
+                  <a href="javascript:;" @click="addTemplate('K8sYamlTemplateset')">{{$t('YAML模式')}}</a>
                 </li>
               </ul>
             </bk-dropdown-menu>

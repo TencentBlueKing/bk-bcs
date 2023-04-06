@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -46,7 +47,7 @@ func NewAlb() (*Alb, error) {
 }
 
 // NewAlbWithSecret create alb client with k8s secret
-func NewAlbWithSecret(secret *k8scorev1.Secret, _ client.Client) (cloud.LoadBalance, error) {
+func NewAlbWithSecret(secret *k8scorev1.Secret, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
 	secretIDBytes, ok := secret.Data[envNameAzureClientID]
 	if !ok {
 		return nil, fmt.Errorf("lost %s in secret %s/%s", envNameAzureClientID,

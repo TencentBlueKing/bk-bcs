@@ -40,6 +40,20 @@ func (agent *BKAgent) Alive() bool {
 	return agent.BKAgentAlive == 1
 }
 
+// BKAgentV2 agent info
+type BKAgentV2 struct {
+	BkAgentID    string `json:"bk_agent_id"` // 格式: '{cloud_id}:{ip}' 或 '{agent_id}'
+	BKCloudID    int    `json:"bk_cloud_id"` // 云区域ID
+	Version      string `json:"version"`
+	RunMode      int    `json:"run_mode"`    // Agent运行模式, 0:proxy 1:agent
+	BKAgentAlive int    `json:"status_code"` // agent在线状态 -1:未知 0:初始安装 1:启动中 2:运行中 3:有损状态 4:繁忙状态 5:升级中 6:停止中 7:解除安装
+}
+
+// Alive return bk_agent_alive
+func (agent *BKAgentV2) Alive() bool {
+	return agent.BKAgentAlive == 2
+}
+
 // BaseResp base response
 type BaseResp struct {
 	Code      int    `json:"code"`
@@ -50,14 +64,25 @@ type BaseResp struct {
 
 // GetAgentStatusReq get agent status req
 type GetAgentStatusReq struct {
-	BKSupplierAccount string `json:"bk_supplier_account"` // 开发商账号
-	Hosts             []Host `json:"hosts"`               // 主机列表
+	BKSupplierAccount string `json:"bk_supplier_account,omitempty"` // 开发商账号
+	Hosts             []Host `json:"hosts"`                         // 主机列表
+}
+
+// GetAgentStatusReqV2 get agent status req
+type GetAgentStatusReqV2 struct {
+	AgentIDList []string `json:"agent_id_list"` // 主机列表
 }
 
 // GetAgentStatusResp get agent status resp
 type GetAgentStatusResp struct {
 	BaseResp
 	Data map[string]BKAgent `json:"data"` // key 格式: bk_cloud_id:ip
+}
+
+// GetAgentStatusRespV2 get agent status resp
+type GetAgentStatusRespV2 struct {
+	BaseResp
+	Data []BKAgentV2 `json:"data"`
 }
 
 // BKAgentKey agent key

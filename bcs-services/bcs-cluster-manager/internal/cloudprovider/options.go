@@ -326,3 +326,9 @@ type DeleteScalingOption struct {
 type UpdateScalingOption struct {
 	CommonOption
 }
+
+// StepPara step parameter
+type StepInfo struct {
+	StepMethod string
+	StepName   string
+}

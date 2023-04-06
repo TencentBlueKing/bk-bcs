@@ -57,6 +57,7 @@ import (
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
@@ -333,6 +334,19 @@ func (cm *ClusterManager) initRemoteClient() error {
 		Server:     cm.opt.Gse.Server,
 		Debug:      cm.opt.Gse.Debug,
 	}); err != nil {
+		return err
+	}
+
+	// init helm client
+	err = helm.SetHelmManagerClient(&helm.Options{
+		Enable:          cm.opt.Helm.Enable,
+		GateWay:         cm.opt.Helm.GateWay,
+		Token:           cm.opt.Helm.Token,
+		Module:          cm.opt.Helm.Module,
+		EtcdRegistry:    cm.microRegistry,
+		ClientTLSConfig: cm.clientTLSConfig,
+	})
+	if err != nil {
 		return err
 	}
 
@@ -688,7 +702,7 @@ func (cm *ClusterManager) initHTTPService() error {
 
 	// server address
 	addresses := []string{cm.opt.Address}
-	if len(cm.opt.Ipv6Address) > 0 {
+	if len(cm.opt.Ipv6Address) > 0 && (cm.opt.Ipv6Address != cm.opt.Address) {
 		addresses = append(addresses, cm.opt.Ipv6Address)
 	}
 	cm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(cm.opt.HTTPPort)), "", muxServe)
@@ -744,7 +758,7 @@ func (cm *ClusterManager) initExtraModules() {
 	cm.initMetric(extraMux)
 
 	ips := []string{cm.opt.Address}
-	if len(cm.opt.Ipv6Address) > 0 {
+	if len(cm.opt.Ipv6Address) > 0 && (cm.opt.Ipv6Address != cm.opt.Address) {
 		ips = append(ips, cm.opt.Ipv6Address)
 	}
 	cm.extraServer = ipv6server.NewIPv6Server(ips, strconv.Itoa(int(cm.opt.MetricPort)), "", extraMux)
@@ -801,7 +815,8 @@ func (cm *ClusterManager) initMicro() error {
 			return nil
 		}),
 		microsvc.WrapHandler(
-			cmcommon.RequestLogWarpper,
+			utils.RequestLogWarpper,
+			utils.ResponseWrapper,
 			authWrapper.AuthenticationFunc,
 			authWrapper.AuthorizationFunc,
 		),
@@ -818,11 +833,13 @@ func (cm *ClusterManager) initMicro() error {
 	})
 	// 创建双栈监听
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListener(ipv4, port); err != nil { // 添加IPv4地址监听
+	if err := dualStackListener.AddListener(ipv4, port); err != nil { // 添加主地址监听
 		return err
 	}
-	if err := dualStackListener.AddListener(ipv6, port); err != nil { // 添加IPv6地址监听
-		return err
+	if ipv6 != ipv4 {
+		if err := dualStackListener.AddListener(ipv6, port); err != nil { // 添加副地址监听
+			return err
+		}
 	}
 
 	// grpc server

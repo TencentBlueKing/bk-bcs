@@ -129,7 +129,8 @@ func (c *Clb) create7LayerListener(region string, listener *networkextensionv1.L
 
 	// if rules is not empty, create listener rule
 	for _, rule := range listener.Spec.Rules {
-		err := c.addListenerRule(region, listener.Spec.LoadbalancerID, listenerID, rule)
+		err := c.addListenerRule(region, listener.Spec.LoadbalancerID, listenerID, listener.Spec.ListenerAttribute,
+			rule)
 		if err != nil {
 			return "", err
 		}
@@ -178,10 +179,12 @@ func (c *Clb) getListenerInfoByPort(region, lbID, protocol string, port int) (*n
 	li.Spec.Certificate = convertCertificate(respListener.Certificate)
 	li.Spec.ListenerAttribute = convertListenerAttribute(respListener)
 	ruleIDAttrMap := make(map[string]*networkextensionv1.IngressListenerAttribute)
+	ruleIDCertMap := make(map[string]*networkextensionv1.IngressListenerCertificate)
 	if len(respListener.Rules) != 0 {
 		for _, respRule := range respListener.Rules {
 			if respRule.LocationId != nil {
 				ruleIDAttrMap[*respRule.LocationId] = convertRuleAttribute(respRule)
+				ruleIDCertMap[*respRule.LocationId] = convertCertificate(respRule.Certificate)
 			}
 		}
 	}
@@ -195,6 +198,9 @@ func (c *Clb) getListenerInfoByPort(region, lbID, protocol string, port int) (*n
 		for index := range rules {
 			if ruleAttr, ok := ruleIDAttrMap[rules[index].RuleID]; ok {
 				rules[index].ListenerAttribute = ruleAttr
+			}
+			if ruleCert, ok := ruleIDCertMap[rules[index].RuleID]; ok {
+				rules[index].Certificate = ruleCert
 			}
 		}
 	}
@@ -338,7 +344,8 @@ func (c *Clb) updateHTTPListener(region string, ingressListener, cloudListener *
 	}
 	// do add rules
 	for _, rule := range addRules {
-		err := c.addListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, rule)
+		err := c.addListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID,
+			cloudListener.Spec.ListenerAttribute, rule)
 		if err != nil {
 			return err
 		}
@@ -424,6 +431,11 @@ func (c *Clb) updateListenerAttrAndCerts(region, listenerID string, listener *ne
 			req.Scheduler = tcommon.StringPtr(attr.LbPolicy)
 		}
 		req.HealthCheck = transIngressHealtchCheck(attr.HealthCheck)
+
+		// 注意：未开启SNI的监听器可以开启SNI；已开启SNI的监听器不能关闭SNI。
+		req.SniSwitch = tcommon.Int64Ptr(int64(attr.SniSwitch))
+	} else {
+		req.SniSwitch = tcommon.Int64Ptr(0)
 	}
 	certs := listener.Spec.Certificate
 	req.Certificate = transIngressCertificate(certs)
@@ -464,11 +476,37 @@ func (c *Clb) updateRuleAttr(region, lbID, listenerID, locationID string, rule n
 	return nil
 }
 
+// update domain related attributes
+// doc https://cloud.tencent.com/document/api/214/38092
+func (c *Clb) updateDomainAttributes(region, lbID, listenerID string, rule networkextensionv1.ListenerRule) error {
+	req := tclb.NewModifyDomainAttributesRequest()
+	req.LoadBalancerId = tcommon.StringPtr(lbID)
+	req.ListenerId = tcommon.StringPtr(listenerID)
+	req.Domain = tcommon.StringPtr(rule.Domain)
+
+	req.Certificate = transIngressCertificate(rule.Certificate)
+
+	ctime := time.Now()
+	err := c.sdkWrapper.ModifyDomainAttributes(region, req)
+	if err != nil {
+		cloud.StatRequest("ModifyDomainAttributes", cloud.MetricAPIFailed, ctime, time.Now())
+		return err
+	}
+	cloud.StatRequest("ModifyDomainAttributes", cloud.MetricAPISuccess, ctime, time.Now())
+	return nil
+}
+
 // update listener rule
 func (c *Clb) updateListenerRule(region, lbID, listenerID string,
 	existedRule, newRule networkextensionv1.ListenerRule) error {
 	if needUpdateAttribute(existedRule.ListenerAttribute, newRule.ListenerAttribute) {
 		err := c.updateRuleAttr(region, lbID, listenerID, existedRule.RuleID, newRule)
+		if err != nil {
+			return err
+		}
+	}
+	if newRule.Certificate != nil && !reflect.DeepEqual(newRule.Certificate, existedRule.Certificate) {
+		err := c.updateDomainAttributes(region, lbID, listenerID, newRule)
 		if err != nil {
 			return err
 		}
@@ -525,7 +563,8 @@ func (c *Clb) updateListenerRule(region, lbID, listenerID string,
 }
 
 // add listener rule
-func (c *Clb) addListenerRule(region, lbID, listenerID string, rule networkextensionv1.ListenerRule) error {
+func (c *Clb) addListenerRule(region, lbID, listenerID string, listenerAttribute *networkextensionv1.
+	IngressListenerAttribute, rule networkextensionv1.ListenerRule) error {
 	// construct create rule request
 	req := tclb.NewCreateRuleRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
@@ -547,6 +586,9 @@ func (c *Clb) addListenerRule(region, lbID, listenerID string, rule networkexten
 			ruleInput.Scheduler = tcommon.StringPtr(rule.ListenerAttribute.LbPolicy)
 		}
 		ruleInput.HealthCheck = transIngressHealtchCheck(rule.ListenerAttribute.HealthCheck)
+	}
+	if listenerAttribute != nil && listenerAttribute.SniSwitch == 1 {
+		ruleInput.Certificate = transIngressCertificate(rule.Certificate)
 	}
 	req.Rules = append(req.Rules, ruleInput)
 	ctime := time.Now()

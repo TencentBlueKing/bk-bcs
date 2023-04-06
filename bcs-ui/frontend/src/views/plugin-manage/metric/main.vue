@@ -14,9 +14,8 @@
                 </div>
                 <div class="biz-panel-header biz-metric-manage-create">
                     <div class="left">
-                        <bk-button type="primary" :title="$t('新建Metric')" @click="showCreateMetric">
-                            <i class="bcs-icon bcs-icon-plus"></i>
-                            <span class="text">{{$t('新建Metric')}}</span>
+                        <bk-button type="primary" :title="$t('新建Metric')" icon="plus" @click="showCreateMetric">
+                            {{$t('新建Metric')}}
                         </bk-button>
                         <bk-button class="bk-button" @click="batchDel">
                             <span>{{$t('批量删除')}}</span>

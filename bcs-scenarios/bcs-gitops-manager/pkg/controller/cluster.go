@@ -61,9 +61,9 @@ func (control *cluster) Init() error {
 	if control.option == nil {
 		return fmt.Errorf("cluster controller lost options")
 	}
-	if control.option.Mode == common.ModeService {
-		return fmt.Errorf("service mode is not implenmented")
-	}
+	//if control.option.Mode == common.ModeService {
+	//	return fmt.Errorf("service mode is not implenmented")
+	//}
 	// init with raw grpc connection
 	if err := control.initClient(); err != nil {
 		return err

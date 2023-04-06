@@ -36,12 +36,17 @@ import (
 	k8scorev1 "k8s.io/api/core/v1"
 )
 
-var (
-	defaultTaskID = "qwertyuiop123456"
+const (
 	// BKSOPTask bk-sops common job
 	BKSOPTask = "bksopsjob"
 	// WatchTask watch component common job
 	WatchTask = "watchjob"
+	// EnsureAutoScalerAction install/update ca component
+	EnsureAutoScalerAction = "ensureAutoScaler"
+)
+
+var (
+	defaultTaskID = "qwertyuiop123456"
 	// TaskID inject taskID into ctx
 	TaskID = "taskID"
 )
@@ -522,4 +527,59 @@ func ImportClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, cluster
 	}
 
 	return nil
+}
+
+// StepOptions xxx
+type StepOptions struct {
+	Retry      uint32
+	SkipFailed bool
+	TaskName   string
+}
+
+// StepOption xxx
+type StepOption func(opt *StepOptions)
+
+// WithStepRetry xxx
+func WithStepRetry(retry uint32) StepOption {
+	return func(opt *StepOptions) {
+		opt.Retry = retry
+	}
+}
+
+// WithStepSkipFailed xxx
+func WithStepSkipFailed(skip bool) StepOption {
+	return func(opt *StepOptions) {
+		opt.SkipFailed = skip
+	}
+}
+
+// WithStepTaskName xxx
+func WithStepTaskName(taskName string) StepOption {
+	return func(opt *StepOptions) {
+		opt.TaskName = taskName
+	}
+}
+
+// InitTaskStep init task step
+func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
+	defaultOptions := &StepOptions{Retry: 0}
+	for _, opt := range opts {
+		opt(defaultOptions)
+	}
+	if defaultOptions.TaskName != "" {
+		stepInfo.StepName = defaultOptions.TaskName
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	return &proto.Step{
+		Name:         stepInfo.StepMethod,
+		System:       "api",
+		Params:       make(map[string]string),
+		Retry:        0,
+		SkipOnFailed: false,
+		Start:        nowStr,
+		Status:       TaskStatusNotStarted,
+		TaskMethod:   stepInfo.StepMethod,
+		TaskName:     stepInfo.StepName,
+	}
 }
