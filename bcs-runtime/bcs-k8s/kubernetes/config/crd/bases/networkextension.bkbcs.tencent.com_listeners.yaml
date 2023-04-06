@@ -126,6 +126,8 @@ spec:
                     type: integer
                   sessionTime:
                     type: integer
+                  sniSwitch:
+                    type: integer
                 type: object
               loadbalancerID:
                 description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -139,6 +141,17 @@ spec:
                 items:
                   description: ListenerRule route rule for listener
                   properties:
+                    certificate:
+                      description: IngressListenerCertificate certificate configs
+                        for listener
+                      properties:
+                        certCaID:
+                          type: string
+                        certID:
+                          type: string
+                        mode:
+                          type: string
+                      type: object
                     domain:
                       type: string
                     listenerAttribute:
@@ -197,6 +210,8 @@ spec:
                             per second allowed for every target instance.
                           type: integer
                         sessionTime:
+                          type: integer
+                        sniSwitch:
                           type: integer
                       type: object
                     path:

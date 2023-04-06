@@ -1537,7 +1537,7 @@ func computeDesiredSize(gpa *autoscaling.GeneralPodAutoscaler,
 			klog.Error(err)
 			errs = pkgerrors.Wrap(err,
 				fmt.Sprintf("GPA: %v get replicas error when call %v", gpa.Name, s.ScalerName()))
-			continue
+			return -1, s.ScalerName(), errs
 		}
 		klog.V(4).Infof("GPA: %v scaler: %v, suggested replicas: %v",
 			gpa.Name, s.ScalerName(), chainReplicas)

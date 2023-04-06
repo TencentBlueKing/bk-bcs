@@ -96,11 +96,12 @@ type ListenerTargetGroup struct {
 
 // ListenerRule route rule for listener
 type ListenerRule struct {
-	RuleID            string                    `json:"ruleID,omitempty"`
-	Domain            string                    `json:"domain,omitempty"`
-	Path              string                    `json:"path,omitempty"`
-	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
-	TargetGroup       *ListenerTargetGroup      `json:"targetGroup,omitempty"`
+	RuleID            string                      `json:"ruleID,omitempty"`
+	Domain            string                      `json:"domain,omitempty"`
+	Path              string                      `json:"path,omitempty"`
+	Certificate       *IngressListenerCertificate `json:"certificate,omitempty"`
+	ListenerAttribute *IngressListenerAttribute   `json:"listenerAttribute,omitempty"`
+	TargetGroup       *ListenerTargetGroup        `json:"targetGroup,omitempty"`
 }
 
 // ListenerRuleList list of listener rule

@@ -28,7 +28,10 @@ var (
 // ValuesTemplate watch values
 type ValuesTemplate struct {
 	ReplicaCount int `yaml:"replicaCount"`
-	Env          struct {
+	Image        struct {
+		Registry string `yaml:"registry"`
+	}
+	Env struct {
 		ClusterID     string `yaml:"BK_BCS_clusterId"`
 		StorageServer string `yaml:"BK_BCS_customStorage"`
 	}
@@ -63,6 +66,11 @@ func (bw *BcsWatch) GetValues() (string, error) {
 
 	values := ValuesTemplate{
 		ReplicaCount: bw.Replicas,
+		Image: struct {
+			Registry string `yaml:"registry"`
+		}{
+			Registry: op.ComponentDeploy.Registry,
+		},
 		Env: struct {
 			ClusterID     string `yaml:"BK_BCS_clusterId"`
 			StorageServer string `yaml:"BK_BCS_customStorage"`

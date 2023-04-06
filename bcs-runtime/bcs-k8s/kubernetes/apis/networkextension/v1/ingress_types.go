@@ -74,7 +74,7 @@ func (is *IngressSubset) GetWeight() int {
 // ServiceRoute service info
 type ServiceRoute struct {
 	ServiceName      string `json:"serviceName"`
-	ServiceNamespace string `json:"serviceNamespace"`
+	ServiceNamespace string `json:"serviceNamespace,omitempty"`
 	ServicePort      int    `json:"servicePort"`
 	// If specified, will use the hostport as backend's port
 	// +optional
@@ -94,10 +94,11 @@ func (sr *ServiceRoute) GetWeight() int {
 
 // Layer7Route 7 layer route config
 type Layer7Route struct {
-	Domain            string                    `json:"domain"`
-	Path              string                    `json:"path,omitempty"`
-	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
-	Services          []ServiceRoute            `json:"services,omitempty"`
+	Domain            string                      `json:"domain"`
+	Path              string                      `json:"path,omitempty"`
+	ListenerAttribute *IngressListenerAttribute   `json:"listenerAttribute,omitempty"`
+	Certificate       *IngressListenerCertificate `json:"certificate,omitempty"`
+	Services          []ServiceRoute              `json:"services,omitempty"`
 	// ForwardType Forwarding protocol between load balancing and backend services
 	ForwardType string `json:"forwardType,omitempty"`
 }
@@ -124,6 +125,7 @@ type ListenerHealthCheck struct {
 // IngressListenerAttribute attribute for listener
 type IngressListenerAttribute struct {
 	SessionTime int    `json:"sessionTime,omitempty"`
+	SniSwitch   int    `json:"sniSwitch,omitempty"`
 	LbPolicy    string `json:"lbPolicy,omitempty"`
 	// BackendInsecure specifies whether to enable insecure access to the backend.
 	BackendInsecure bool `json:"backendInsecure,omitempty"`

@@ -49,7 +49,8 @@ func (ga *GetAction) getCluster() error {
 	if err != nil {
 		return err
 	}
-	ga.cluster = cluster
+
+	ga.cluster = shieldClusterInfo(cluster)
 	return nil
 }
 
@@ -140,9 +141,8 @@ func (ga *GetNodeAction) Handle(ctx context.Context, req *cmproto.GetNodeRequest
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	if !req.ShowPwd {
-		node.Passwd = ""
-	}
+	node.Passwd = ""
+
 	resp.Data = append(resp.Data, node)
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 

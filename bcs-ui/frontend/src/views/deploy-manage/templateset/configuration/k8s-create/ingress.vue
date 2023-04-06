@@ -63,8 +63,7 @@
           </bk-alert>
           <template v-if="!ingresss.length">
             <div class="biz-guide-box mt0">
-              <bk-button type="primary" @click.stop.prevent="addLocalIngress">
-                <i class="bcs-icon bcs-icon-plus"></i>
+              <bk-button icon="plus" type="primary" @click.stop.prevent="addLocalIngress">
                 <span style="margin-left: 0;">{{$t('添加')}}Ingress</span>
               </bk-button>
             </div>

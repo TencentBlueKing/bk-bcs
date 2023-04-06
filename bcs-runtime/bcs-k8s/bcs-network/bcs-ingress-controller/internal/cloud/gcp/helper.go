@@ -20,9 +20,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/google/uuid"
 	"google.golang.org/api/compute/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -30,19 +30,77 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+)
+
+const (
+	// eventReasonLBEnsured 判断GCP下LoadBalancerService Ensured
+	eventReasonLBEnsured = "EnsuredLoadBalancer"
+	// eventReasonLBEnsuring 判断GCP下LoadBalancerService Ensuring
+	eventReasonLBEnsuring = "EnsuringLoadBalancer"
 )
 
 // do ensure network lb listener, create lb listener by service, return service name
 func (e *GCLB) ensureNetworkLBListener(region string, listener *networkextensionv1.Listener) (string, error) {
 	// ensure service without selector
-	serviceName, err := e.ensureListenerService(region, listener)
+	serviceName, svcUpdated, err := e.ensureListenerService(region, listener)
 	if err != nil {
 		return "", err
 	}
 
 	// ensure endpoints
-	if err := e.ensureListenerEndpoints(listener); err != nil {
+	epsUpdated, err := e.ensureListenerEndpoints(listener)
+	if err != nil {
 		return "", err
+	}
+
+	if svcUpdated || epsUpdated {
+		// Note GCP使用GKE loadBalancer service来创建监听器，因此需要通过事件监听来判断监听器是否创建完成
+		traceID := uuid.New().String()
+		errChan := make(chan error)
+		defer close(errChan)
+		e.eventWatcher.RegisterEventHook(eventer.HookKindLBEnsured, traceID, func(event *k8scorev1.Event) {
+			if event.InvolvedObject.Namespace != listener.Namespace || event.InvolvedObject.Name != listener.
+				Name || event.InvolvedObject.Kind != eventer.KindService {
+				return
+			}
+
+			if event.Reason == eventReasonLBEnsuring {
+				return
+			}
+
+			if event.Reason == eventReasonLBEnsured {
+				blog.Infof("ensure listener '%s/%s' success", listener.GetNamespace(), listener.GetName())
+				errChan <- nil
+				return
+			}
+
+			blog.Warnf("ensure listener %s/%s failed, reason: %s, msg: %s, requeue", listener.GetName(),
+				listener.GetNamespace(), event.Reason, event.Message)
+
+			errChan <- errors.New(event.Message)
+			return
+		})
+
+		timeout := time.After(watchServiceEnsuredDuration)
+		select {
+		case err := <-errChan:
+			e.eventWatcher.UnRegisterEventHook(eventer.HookKindLBEnsured, traceID)
+			if err != nil {
+				// 删除endpoints触发重试
+				e.deleteEndpoints(listener)
+				return "", err
+			}
+			return serviceName, nil
+		case <-timeout:
+			e.eventWatcher.UnRegisterEventHook(eventer.HookKindLBEnsured, traceID)
+			// 删除endpoints触发重试
+			e.deleteEndpoints(listener)
+			return "", errors.New("ensure timeout, retrying")
+		}
 	}
 
 	return serviceName, nil
@@ -65,12 +123,12 @@ func (e *GCLB) ensureApplicationLBListener(region string, listener *networkexten
 }
 
 // ensure service for lb
-func (e *GCLB) ensureListenerService(region string, listener *networkextensionv1.Listener) (string, error) {
+func (e *GCLB) ensureListenerService(region string, listener *networkextensionv1.Listener) (string, bool, error) {
 	// get lb ip
 	address, err := e.sdkWrapper.GetAddress(e.project, region, listener.Spec.LoadbalancerID)
 	if err != nil {
 		blog.Errorf("GetAddress failed, err %s", err.Error())
-		return "", fmt.Errorf("GetAddress failed, err %s", err.Error())
+		return "", false, fmt.Errorf("GetAddress failed, err %s", err.Error())
 	}
 
 	// ensure service without selector
@@ -81,16 +139,16 @@ func (e *GCLB) ensureListenerService(region string, listener *networkextensionv1
 			// create service
 			service := e.generateListenerService(listener, address.Address)
 			if err := e.client.Create(context.TODO(), service); err != nil {
-				return "", err
+				return "", false, err
 			}
-			return service.Name, nil
+			return service.Name, true, nil
 		}
-		return "", err
+		return "", false, err
 	}
 
 	if service.DeletionTimestamp != nil {
 		blog.Warnf("service %s is being deleted, retry later", service.Name)
-		return "", fmt.Errorf("service %s is being deleted, retry later", service.Name)
+		return "", false, fmt.Errorf("service %s is being deleted, retry later", service.Name)
 	}
 
 	// update service
@@ -98,10 +156,10 @@ func (e *GCLB) ensureListenerService(region string, listener *networkextensionv1
 	if !reflect.DeepEqual(service.Spec, generateService.Spec) {
 		service.Spec = generateService.Spec
 		if err := e.client.Update(context.TODO(), service); err != nil {
-			return "", err
+			return "", true, err
 		}
 	}
-	return service.Name, nil
+	return service.Name, false, nil
 }
 
 // generate service for lb listener
@@ -148,7 +206,7 @@ func (e *GCLB) generateListenerService(listener *networkextensionv1.Listener, lb
 	return service
 }
 
-func (e *GCLB) ensureListenerEndpoints(listener *networkextensionv1.Listener) error {
+func (e *GCLB) ensureListenerEndpoints(listener *networkextensionv1.Listener) (bool, error) {
 	ep := &k8scorev1.Endpoints{}
 	objectKey := types.NamespacedName{Namespace: listener.Namespace, Name: listener.Name}
 	if err := e.client.Get(context.TODO(), objectKey, ep); err != nil {
@@ -157,16 +215,16 @@ func (e *GCLB) ensureListenerEndpoints(listener *networkextensionv1.Listener) er
 			ep := e.generateListenerEndpoints(listener)
 			if ep == nil {
 				blog.Warnf("endpoints %s is empty", objectKey.String())
-				return nil
+				return false, nil
 			}
-			return e.client.Create(context.TODO(), ep)
+			return true, e.client.Create(context.TODO(), ep)
 		}
-		return err
+		return false, err
 	}
 
 	if ep.DeletionTimestamp != nil {
 		blog.Warnf("endpoints %s is being deleted, retry later", objectKey.String())
-		return fmt.Errorf("endpoints %s is being deleted, retry later", objectKey.String())
+		return false, fmt.Errorf("endpoints %s is being deleted, retry later", objectKey.String())
 	}
 
 	// update endpoints
@@ -174,13 +232,13 @@ func (e *GCLB) ensureListenerEndpoints(listener *networkextensionv1.Listener) er
 	if generateEP.Subsets == nil {
 		blog.Warnf("new endpoints %s is empty", objectKey.String())
 		e.client.Delete(context.TODO(), generateEP)
-		return nil
+		return false, nil
 	}
 	if !reflect.DeepEqual(ep.Subsets, generateEP.Subsets) {
 		ep.Subsets = generateEP.Subsets
-		return e.client.Update(context.TODO(), ep)
+		return true, e.client.Update(context.TODO(), ep)
 	}
-	return nil
+	return false, nil
 }
 
 type backend struct {
@@ -197,7 +255,7 @@ func (e *GCLB) generateListenerEndpoints(listener *networkextensionv1.Listener) 
 			Name:      listener.Name,
 		},
 	}
-	if listener.Spec.TargetGroup == nil {
+	if listener.Spec.TargetGroup == nil || len(listener.Spec.TargetGroup.Backends) == 0 {
 		return ep
 	}
 
@@ -852,6 +910,20 @@ func (e *GCLB) deleteL7Listener(listener *networkextensionv1.Listener) error {
 			negName := groupStrs[5]
 			e.sdkWrapper.DeleteNetworkEndpointGroups(e.project, zone, negName)
 		}
+	}
+	return nil
+}
+
+func (e *GCLB) deleteEndpoints(listener *networkextensionv1.Listener) error {
+	ep := &k8scorev1.Endpoints{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: listener.Namespace,
+			Name:      listener.Name,
+		},
+	}
+	if err := e.client.Delete(context.TODO(), ep); err != nil {
+		blog.Errorf("delete endpoints of listener '%s/%s' failed", listener.GetNamespace(), listener.GetName())
+		return err
 	}
 	return nil
 }

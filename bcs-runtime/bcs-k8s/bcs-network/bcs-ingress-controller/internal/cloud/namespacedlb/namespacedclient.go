@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -34,19 +35,24 @@ const (
 type NamespacedLB struct {
 	k8sClient client.Client
 
+	eventWatcher eventer.WatchEventInterface
+
 	// map for (namespace, cloud.LoadBalance)
 	nsClientSet map[string]cloud.LoadBalance
 
 	// func for create cloud.LoadBalance
-	newLBFunc func(*k8scorev1.Secret, client.Client) (cloud.LoadBalance, error)
+	newLBFunc func(*k8scorev1.Secret, client.Client, eventer.WatchEventInterface) (cloud.LoadBalance, error)
 }
 
 // NewNamespacedLB create namespaced lb client
-func NewNamespacedLB(k8sClient client.Client, newLBFunc func(secret *k8scorev1.Secret, cli client.Client) (cloud.LoadBalance, error)) *NamespacedLB {
+func NewNamespacedLB(k8sClient client.Client, eventWatcher eventer.WatchEventInterface,
+	newLBFunc func(secret *k8scorev1.Secret, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
+		LoadBalance, error)) *NamespacedLB {
 	return &NamespacedLB{
-		k8sClient:   k8sClient,
-		nsClientSet: make(map[string]cloud.LoadBalance),
-		newLBFunc:   newLBFunc,
+		k8sClient:    k8sClient,
+		eventWatcher: eventWatcher,
+		nsClientSet:  make(map[string]cloud.LoadBalance),
+		newLBFunc:    newLBFunc,
 	}
 }
 
@@ -61,7 +67,7 @@ func (nc *NamespacedLB) initNsClient(ns string) (cloud.LoadBalance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get secret %s/%s failed, err %s", IDKeySecretName, ns, err.Error())
 	}
-	newClient, err := nc.newLBFunc(tmpSecret, nc.k8sClient)
+	newClient, err := nc.newLBFunc(tmpSecret, nc.k8sClient, nc.eventWatcher)
 	if err != nil {
 		return nil, fmt.Errorf("create client for ns %s failed, err %s", ns, err.Error())
 	}

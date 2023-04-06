@@ -85,6 +85,14 @@ var (
 		},
 		[]string{"task_id", "node_group", "scale_type", "status"},
 	)
+
+	failedScaleDownCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: caNamespace,
+			Name:      "failed_scale_downs_total",
+			Help:      "Number of times scale-down operation has failed.",
+		}, []string{"node", "reason"},
+	)
 )
 
 // RegisterLocal registers local metrics
@@ -95,6 +103,7 @@ func RegisterLocal() {
 	prometheus.MustRegister(webhookScaleDownIPResponse)
 	prometheus.MustRegister(webhookScaleDownNumResponse)
 	prometheus.MustRegister(webhookScaleDownFailed)
+	prometheus.MustRegister(failedScaleDownCount)
 }
 
 // RegisterWebhookParams collects parameters fo webhook mode
@@ -136,4 +145,9 @@ func RegisterScaleTask() {
 // UpdateScaleTask updates scale task status of CA
 func UpdateScaleTask(id, nodeGroup, scaleType, status string) {
 	scaleTask.WithLabelValues(id, nodeGroup, scaleType, status).Set(1)
+}
+
+// RegisterFailedScaleDown records a failed scale-down operation
+func RegisterFailedScaleDown(node, reason string) {
+	failedScaleDownCount.WithLabelValues(node, reason).Inc()
 }

@@ -245,7 +245,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 			},
 		}, nil,
 	).Times(4)
-	m.EXPECT().UpdateDesiredNode(gomock.Eq("test-ng-1"), 5).Return(nil)
+	m.EXPECT().UpdateDesiredNode(gomock.Eq("test-ng-1"), 5).Return("1", nil)
 	m.EXPECT().GetPoolConfig(gomock.Eq("test-ng-2")).Return(
 		&clustermanager.AutoScalingGroup{
 			MaxSize:     10,

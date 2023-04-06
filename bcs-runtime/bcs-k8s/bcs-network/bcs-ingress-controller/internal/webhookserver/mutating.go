@@ -316,7 +316,7 @@ func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr []
 	}
 	traceID := uuid.New().String()
 	triggered := make(chan struct{})
-	s.eventWatcher.RegisterPodCreateFailed(traceID, func(event *k8scorev1.Event) {
+	s.eventWatcher.RegisterEventHook(eventer.HookKindPodCreateFailed, traceID, func(event *k8scorev1.Event) {
 		if event.InvolvedObject.Namespace != pod.GetNamespace() || event.InvolvedObject.Name != workloadName {
 			return
 		}
@@ -357,9 +357,9 @@ func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr []
 	timeout := time.After(compensationPodCreateFailedDuration * time.Second)
 	select {
 	case <-triggered:
-		s.eventWatcher.UnRegisterPodCreateFailed(traceID)
+		s.eventWatcher.UnRegisterEventHook(eventer.HookKindPodCreateFailed, traceID)
 	case <-timeout:
-		s.eventWatcher.UnRegisterPodCreateFailed(traceID)
+		s.eventWatcher.UnRegisterEventHook(eventer.HookKindPodCreateFailed, traceID)
 	}
 }
 
@@ -510,7 +510,12 @@ func (s *Server) generateContainerEnvPatch(
 	for index, portEntry := range portEntryList {
 		var vipList []string
 		for _, lbObj := range portPoolItemStatusList[index].PoolItemLoadBalancers {
-			vipList = append(vipList, lbObj.IPs...)
+			if len(lbObj.IPs) != 0 {
+				vipList = append(vipList, lbObj.IPs...)
+			}
+			if len(lbObj.DNSName) != 0 {
+				vipList = append(vipList, lbObj.DNSName)
+			}
 		}
 		for _, item := range portItemList[index] {
 			envs = append(envs, k8scorev1.EnvVar{

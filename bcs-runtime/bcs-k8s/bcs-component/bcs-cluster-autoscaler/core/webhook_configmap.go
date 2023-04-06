@@ -65,6 +65,12 @@ func (c *ConfigMapScaler) DoWebhook(context *contextinternal.Context,
 		return errors.NewAutoscalerError(errors.InternalError,
 			"failed to get response from configmap: %v", err)
 	}
+
+	checkErr := checkResourcesLimits(context, nodes, options, candidates)
+	if checkErr != nil {
+		return checkErr
+	}
+
 	err = c.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)
 	if err != nil {
 		return errors.NewAutoscalerError(errors.CloudProviderError,
@@ -89,7 +95,7 @@ func (c *ConfigMapScaler) GetResponses(context *contextinternal.Context,
 
 	// construct requests
 	req, err := GenerateAutoscalerRequest(context.CloudProvider.NodeGroups(), clusterStateRegistry.GetUpcomingNodes(),
-		newPriorities)
+		newPriorities, sd.nodeDeletionTracker)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Cannot generate autoscaler requests, err: %s", err.Error())
 	}

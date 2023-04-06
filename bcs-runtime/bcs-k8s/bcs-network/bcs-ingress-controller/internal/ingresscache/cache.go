@@ -127,7 +127,7 @@ func (cu *cacheUnit) remove(key string, ingressKey string) {
 	ingressSet, ok := cu.ingressMap[key]
 	if !ok {
 		err := errors.Errorf("ingress[%s] not related to key[%s]", ingressKey, key)
-		blog.Warnf("ingress cache release failed: %+v", err)
+		blog.Warnf("ingress cache release failed: %s", err.Error())
 		return
 	}
 	ingressSet.Remove(ingressKey)

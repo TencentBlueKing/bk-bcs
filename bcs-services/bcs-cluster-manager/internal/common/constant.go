@@ -71,6 +71,9 @@ var DefaultClusterConfig = map[string]string{
 }
 
 const (
+	// ClusterManager xxx
+	ClusterManager = "bcs-cluster-manager"
+
 	// Prod prod env
 	Prod = "prod"
 	// Debug debug env
@@ -155,6 +158,8 @@ const (
 	StatusDeleteNodeGroupFailed = "DELETE-FAILURE"
 	// StatusCreateNodeGroupCreating xxx
 	StatusCreateNodeGroupCreating = "CREATING"
+	// StatusDeleteNodeGroupDeleting xxx
+	StatusDeleteNodeGroupDeleting = "DELETING"
 	// StatusCreateNodeGroupFailed xxx
 	StatusCreateNodeGroupFailed = "CREATE-FAILURE"
 	// StatusNodeGroupUpdating xxx

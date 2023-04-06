@@ -16,6 +16,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
@@ -23,7 +25,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/pkg/errors"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -76,9 +77,6 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 		LbClient:      pph.lbClient,
 		K8sClient:     pph.k8sClient,
 		ListenerAttr:  pool.Spec.ListenerAttribute}
-
-	pph.poolCache.Lock()
-	defer pph.poolCache.Unlock()
 
 	// try to delete
 	successDeletedKeyMap := make(map[string]struct{})
@@ -154,6 +152,9 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 	if err != nil {
 		return true, fmt.Errorf("update %s/%s status failed, err %s", pool.GetNamespace(), pool.GetName(), err.Error())
 	}
+
+	pph.poolCache.Lock()
+	defer pph.poolCache.Unlock()
 
 	// delete item from pool cache
 	poolKey := ingresscommon.GetNamespacedNameKey(pool.GetName(), pool.GetNamespace())

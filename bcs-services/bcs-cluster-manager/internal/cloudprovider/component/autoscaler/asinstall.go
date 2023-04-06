@@ -17,7 +17,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component"
 	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/bkapi"
 )
 
 // GetAutoScalerInstaller autoscaler installer
@@ -25,7 +24,7 @@ func GetAutoScalerInstaller(projectID string) (install.Installer, error) {
 	op := cmoptions.GetGlobalCMOptions()
 
 	return component.GetComponentInstaller(component.InstallOptions{
-		InstallType:      bkapi.BcsApp,
+		InstallType:      op.ComponentDeploy.DeployService,
 		ProjectID:        projectID,
 		ChartName:        op.ComponentDeploy.AutoScaler.ChartName,
 		ReleaseNamespace: op.ComponentDeploy.AutoScaler.ReleaseNamespace,
