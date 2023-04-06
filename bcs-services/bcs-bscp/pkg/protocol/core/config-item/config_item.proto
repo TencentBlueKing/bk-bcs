@@ -36,3 +36,10 @@ message FilePermission {
     string user_group = 2;
     string privilege  = 3;
 }
+
+// ListConfigItemCounts source resource reference: pkg/dal/table/config_item.go
+message ListConfigItemCounts {
+    uint32 app_id     = 1;
+    uint32 count      = 2;
+    string update_at  = 3;
+}

@@ -33,6 +33,7 @@ const (
 	Config_DeleteConfigItem_FullMethodName               = "/pbcs.Config/DeleteConfigItem"
 	Config_GetConfigItem_FullMethodName                  = "/pbcs.Config/GetConfigItem"
 	Config_ListConfigItems_FullMethodName                = "/pbcs.Config/ListConfigItems"
+	Config_ListConfigItemCount_FullMethodName            = "/pbcs.Config/ListConfigItemCount"
 	Config_CreateContent_FullMethodName                  = "/pbcs.Config/CreateContent"
 	Config_ListContents_FullMethodName                   = "/pbcs.Config/ListContents"
 	Config_CreateCommit_FullMethodName                   = "/pbcs.Config/CreateCommit"
@@ -87,6 +88,7 @@ type ConfigClient interface {
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
+	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
 	CreateContent(ctx context.Context, in *CreateContentReq, opts ...grpc.CallOption) (*CreateContentResp, error)
 	ListContents(ctx context.Context, in *ListContentsReq, opts ...grpc.CallOption) (*ListContentsResp, error)
 	CreateCommit(ctx context.Context, in *CreateCommitReq, opts ...grpc.CallOption) (*CreateCommitResp, error)
@@ -241,6 +243,15 @@ func (c *configClient) GetConfigItem(ctx context.Context, in *GetConfigItemReq, 
 func (c *configClient) ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error) {
 	out := new(ListConfigItemsResp)
 	err := c.cc.Invoke(ctx, Config_ListConfigItems_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error) {
+	out := new(ListConfigItemCountResp)
+	err := c.cc.Invoke(ctx, Config_ListConfigItemCount_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -563,6 +574,7 @@ type ConfigServer interface {
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
+	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
 	CreateContent(context.Context, *CreateContentReq) (*CreateContentResp, error)
 	ListContents(context.Context, *ListContentsReq) (*ListContentsResp, error)
 	CreateCommit(context.Context, *CreateCommitReq) (*CreateCommitResp, error)
@@ -640,6 +652,9 @@ func (UnimplementedConfigServer) GetConfigItem(context.Context, *GetConfigItemRe
 }
 func (UnimplementedConfigServer) ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItems not implemented")
+}
+func (UnimplementedConfigServer) ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemCount not implemented")
 }
 func (UnimplementedConfigServer) CreateContent(context.Context, *CreateContentReq) (*CreateContentResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContent not implemented")
@@ -982,6 +997,24 @@ func _Config_ListConfigItems_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListConfigItems(ctx, req.(*ListConfigItemsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListConfigItemCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListConfigItemCountReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListConfigItemCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListConfigItemCount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListConfigItemCount(ctx, req.(*ListConfigItemCountReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1638,6 +1671,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListConfigItems",
 			Handler:    _Config_ListConfigItems_Handler,
+		},
+		{
+			MethodName: "ListConfigItemCount",
+			Handler:    _Config_ListConfigItemCount_Handler,
 		},
 		{
 			MethodName: "CreateContent",
