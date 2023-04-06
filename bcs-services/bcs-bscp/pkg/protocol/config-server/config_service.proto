@@ -519,6 +519,7 @@ message ListReleasesReq {
     uint32 start      = 3;
     uint32 limit      = 4;
     bool all          = 5;
+    bool deprecated   = 6;
 }
 
 message ListReleasesResp {
