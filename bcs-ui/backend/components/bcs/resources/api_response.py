@@ -52,7 +52,7 @@ class KubeResponseTransformer:
                     logger.error('request bcs api error, %s', err)
 
                 error_msg = self.extract_message(err)
-                return self.make_error_resp(error_msg)
+                return self.make_error_resp(error_msg, err.status)
             except Exception as err:
                 logger.exception('request bcs api error, %s', err)
                 return self.make_error_resp(str(err))
@@ -70,5 +70,5 @@ class KubeResponseTransformer:
     def make_success_resp(self, data: Any) -> Dict:
         return {'code': self._default_success_code, 'result': True, 'data': data, 'message': 'success'}
 
-    def make_error_resp(self, message: str) -> Dict:
-        return {'code': self._default_error_code, 'result': False, 'message': message}
+    def make_error_resp(self, message: str, code: int = _default_error_code) -> Dict:
+        return {'code': code, 'result': False, 'message': message}

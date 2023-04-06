@@ -73,6 +73,8 @@ class IngressResource(viewsets.ViewSet, BaseAPI, ResourceOperate):
         code, cluster_ingress = self.get_ingress_by_cluser_id(request, {}, project_id, cluster_id)
         # 单个集群错误时，不抛出异常信息
         if code != ErrorCode.NoError:
+            if code == ErrorCode.NotFoundError:
+                return Response({'code': code, 'message': "Kubernetes 集群 1.22 及以上版本，请使用资源视图管理 Ingresses"})
             return Response({'code': code, 'message': cluster_ingress})
 
         self.handle_data(
