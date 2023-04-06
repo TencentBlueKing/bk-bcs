@@ -3995,4 +3995,6 @@ export default {
     'Unregistry BCS',
   ],
   '确定使用节点模板 {name}': ['Make sure to use node template {name}'],
+  Chart列表: ['Charts'],
+  模板集列表: ['TemplateSets List'],
 };
