@@ -13,6 +13,7 @@ limitations under the License.
 package pbci
 
 import (
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/protocol/core/base"
 )
@@ -124,5 +125,32 @@ func PbConfigItem(ci *table.ConfigItem) *ConfigItem {
 		Spec:       PbConfigItemSpec(ci.Spec),
 		Attachment: PbConfigItemAttachment(ci.Attachment),
 		Revision:   pbbase.PbRevision(ci.Revision),
+	}
+}
+
+// PbConfigItemCounts
+func PbConfigItemCounts(ccs []*table.ListConfigItemCounts) []*ListConfigItemCounts {
+	if ccs == nil {
+		return make([]*ListConfigItemCounts, 0)
+	}
+
+	result := make([]*ListConfigItemCounts, 0)
+	for _, cc := range ccs {
+		result = append(result, PbConfigItemCount(cc))
+	}
+
+	return result
+}
+
+// PbConfigItemCount
+func PbConfigItemCount(cc *table.ListConfigItemCounts) *ListConfigItemCounts {
+	if cc == nil {
+		return nil
+	}
+
+	return &ListConfigItemCounts{
+		AppId:    cc.AppId,
+		Count:    cc.Count,
+		UpdateAt: cc.UpdateAt.Format(constant.TimeStdFormat),
 	}
 }

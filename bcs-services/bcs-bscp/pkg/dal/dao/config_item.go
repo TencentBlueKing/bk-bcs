@@ -42,6 +42,8 @@ type ConfigItem interface {
 	List(kit *kit.Kit, opts *types.ListConfigItemsOption) (*types.ListConfigItemDetails, error)
 	// Delete one configItem instance.
 	Delete(kit *kit.Kit, configItem *table.ConfigItem) error
+	// GetCount bizID config count
+	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -366,4 +368,46 @@ func (dao *configItemDao) queryFileMode(kt *kit.Kit, id, bizID uint32) (
 	}
 
 	return one.FileMode, nil
+}
+
+// GetCount get bizID config count
+func (dao *configItemDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error) {
+
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "config item biz id can not be 0")
+	}
+
+	expr := &filter.Expression{
+		Op: filter.And,
+		Rules: []filter.RuleFactory{
+			&filter.AtomRule{
+				Field: "biz_id",
+				Op:    filter.Equal.Factory(),
+				Value: bizID,
+			},
+			&filter.AtomRule{
+				Field: "app_id",
+				Op:    filter.In.Factory(),
+				Value: appId,
+			},
+		},
+	}
+
+	sqlOpt := &filter.SQLWhereOption{
+		Priority: filter.Priority{"biz_id", "app_id"},
+	}
+	whereExpr, args, err := expr.SQLWhereExpr(sqlOpt)
+	if err != nil {
+		return nil, err
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT app_id, COUNT(*) as count, max(updated_at) as update_at FROM ", table.ConfigItemTable.Name(), whereExpr, " GROUP BY app_id")
+	sql := filter.SqlJoint(sqlSentence)
+
+	configItem := make([]*table.ListConfigItemCounts, 0)
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &configItem, sql, args...); err != nil {
+		return nil, err
+	}
+	return configItem, nil
 }

@@ -489,6 +489,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/config_item_count/biz_id/{biz_id}:
+    post:
+      operationId: list_config_item_count
+      description: 查询当前业务下的app数量
+      tags:
+        - 配置项管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/config_item_count/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
   /api/v1/config/list/content/content/app_id/{app_id}/biz_id/{biz_id}:
     post:
       operationId: list_content

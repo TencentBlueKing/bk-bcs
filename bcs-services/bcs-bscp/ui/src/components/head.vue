@@ -13,7 +13,7 @@
       <span class="logo">
         <img src="../assets/logo.svg" alt="" />
       </span>
-      <span class="head-title"> 服务配置中心 </span>
+      <span class="head-title"> 服务配置平台 </span>
       <div class="head-routes">
         <router-link to="/serving/mine/">服务管理</router-link>
       </div>
