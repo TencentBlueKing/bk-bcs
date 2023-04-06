@@ -142,7 +142,7 @@ func (as *authService) listenAndServe() error {
 
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(math.MaxInt32),
 		// add bscp unary interceptor and standard grpc server metrics interceptor.
-		grpc.UnaryInterceptor(brpc.UnaryServerInterceptorWithMetrics(grpcMetrics)),
+		grpc.ChainUnaryInterceptor(brpc.LogUnaryServerInterceptor(), brpc.UnaryServerInterceptorWithMetrics(grpcMetrics)),
 		grpc.StreamInterceptor(grpcMetrics.StreamServerInterceptor())}
 	network := cc.AuthServer().Network
 	if network.TLS.Enable() {

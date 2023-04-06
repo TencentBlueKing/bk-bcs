@@ -14,12 +14,15 @@ package brpc
 
 import (
 	"context"
+	"path"
 	"runtime/debug"
+	"time"
 
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/runtime/jsoni"
+	"k8s.io/klog/v2"
 
 	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
@@ -60,5 +63,22 @@ func UnaryServerInterceptorWithMetrics(mc *gprm.ServerMetrics) grpc.UnaryServerI
 
 			return resp, err
 		})
+	}
+}
+
+// LogUnaryServerInterceptor 添加请求日志
+func LogUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		st := time.Now()
+		kt := kit.FromGrpcContext(ctx)
+		service := path.Dir(info.FullMethod)[1:]
+		method := path.Base(info.FullMethod)
+
+		defer func() {
+			klog.InfoS("grpc", "rid", kt.Rid, "system", "grpc", "span.kind", "grpc.service", "service", service, "method", method, "grpc.duration", time.Since(st))
+		}()
+
+		resp, err = handler(ctx, req)
+		return resp, err
 	}
 }
