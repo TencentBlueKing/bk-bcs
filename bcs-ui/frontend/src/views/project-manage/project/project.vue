@@ -88,7 +88,7 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, watch } from '@vue/composition-api';
 import ProjectCreate from './project-create.vue';
-import useProjects from '@/composables/use-project';
+import useProjects from './use-project';
 import useDebouncedRef from '@/composables/use-debounce';
 
 export default defineComponent({

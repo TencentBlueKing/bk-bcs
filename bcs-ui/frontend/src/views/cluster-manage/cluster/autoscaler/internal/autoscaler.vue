@@ -155,6 +155,7 @@
                 :arrow="false"
                 class="ml15"
                 :disabled="row.status === 'DELETING'"
+                trigger="click"
                 :ref="row.nodeGroupID">
                 <span class="more-icon"><i class="bcs-icon bcs-icon-more"></i></span>
                 <div slot="content">
@@ -257,6 +258,7 @@
                 theme="light dropdown"
                 :arrow="false"
                 :disabled="['DELETING', 'INITIALIZATION'].includes(row.status)"
+                trigger="click"
                 class="ml15">
                 <span
                   :class="['more-icon', { 'disabled': ['DELETING', 'INITIALIZATION'].includes(row.status) }]">

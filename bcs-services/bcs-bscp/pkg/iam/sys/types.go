@@ -20,7 +20,7 @@ const (
 	// SystemNameBSCPEn is bscp in iam's system english name.
 	SystemNameBSCPEn = "bscp"
 	// SystemNameBSCP is bscp in iam's system name.
-	SystemNameBSCP = "基础服务配置平台"
+	SystemNameBSCP = "服务配置平台"
 
 	// SystemIDCMDB is cmdb in iam's system id.
 	SystemIDCMDB = "bk_cmdb"
@@ -47,6 +47,8 @@ const (
 
 	// AppCreate app create.
 	AppCreate client.ActionID = "app_create"
+	// AppView
+	AppView client.ActionID = "app_view"
 	// AppEdit app edit.
 	AppEdit client.ActionID = "app_edit"
 	// AppDelete app delete.
@@ -92,9 +94,10 @@ const (
 var ActionIDNameMap = map[client.ActionID]string{
 	BusinessViewResource: "业务访问",
 
-	AppCreate:               "应用创建",
-	AppEdit:                 "应用编辑",
-	AppDelete:               "应用删除",
+	AppCreate:               "服务创建",
+	AppView:                 "服务查看",
+	AppEdit:                 "服务编辑",
+	AppDelete:               "服务删除",
 	ConfigItemPacking:       "生成版本",
 	ConfigItemPublish:       "上线版本",
 	ConfigItemFinishPublish: "配置项结束发布",

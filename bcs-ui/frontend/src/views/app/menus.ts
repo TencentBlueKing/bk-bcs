@@ -343,11 +343,12 @@ const menus: IMenu[] = [
       //     },
       //   ],
       // },
-      // {
-      //   title: $i18n.t('项目信息'),
-      //   id: 'PROJECT',
-      //   route: 'project',
-      // },
+      {
+        title: $i18n.t('项目信息'),
+        id: 'PROJECT',
+        icon: 'bcs-icon bcs-icon-apps',
+        route: 'projectInfo',
+      },
     ],
   },
   {

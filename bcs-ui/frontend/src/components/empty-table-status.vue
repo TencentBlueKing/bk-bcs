@@ -26,7 +26,7 @@ export default defineComponent({
   setup(props, ctx) {
     const typeMap = ref({
       empty: $i18n.t('暂无数据'),
-      'search-empty': $i18n.t('暂无数据'),
+      'search-empty': $i18n.t('搜索结果为空'),
     });
     const handleClear = () => {
       ctx.emit('clear');

@@ -99,13 +99,13 @@ func (r *NodeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *NodeReconciler) getNodePredicate() predicate.Predicate {
 	return predicate.Funcs{
 		CreateFunc: func(createEvent event.CreateEvent) bool {
-			if r.opts.NodeInfoExporterOpen == false {
+			if !r.opts.NodeInfoExporterOpen {
 				return false
 			}
 			return true
 		},
 		UpdateFunc: func(event event.UpdateEvent) bool {
-			if r.opts.NodeInfoExporterOpen == false {
+			if !r.opts.NodeInfoExporterOpen {
 				return false
 			}
 			newNode, okNew := event.ObjectNew.(*corev1.Node)
@@ -122,13 +122,13 @@ func (r *NodeReconciler) getNodePredicate() predicate.Predicate {
 			return false
 		},
 		DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
-			if r.opts.NodeInfoExporterOpen == false {
+			if !r.opts.NodeInfoExporterOpen {
 				return false
 			}
 			return true
 		},
 		GenericFunc: func(genericEvent event.GenericEvent) bool {
-			if r.opts.NodeInfoExporterOpen == false {
+			if !r.opts.NodeInfoExporterOpen {
 				return false
 			}
 			return true

@@ -1,32 +1,70 @@
 <template>
-  <bk-exception type="403">
-    <span>{{$t('无项目权限')}}</span>
-    <div class="text-subtitle">{{$t('你没有相应项目的访问权限，请前往申请相关项目权限')}}</div>
-    <div class="flex items-center justify-center mt-[24px]">
-      <bk-button theme="primary" @click="handleGotoIAM">{{$t('去申请')}}</bk-button>
-      <bk-button
-        v-authority="{
-          actionId: 'project_create',
-          permCtx: {}
-        }"
-        class="ml-[8px]"
-        @click="handleGotoProjectManage">
-        {{$t('创建项目')}}
-      </bk-button>
+  <div class="flex justify-center relative top-[20%]">
+    <div class="bg-[#fff] px-[76px] pt-[64px] pb-[40px] max-w-[640px]" v-if="$INTERNAL">
+      <div class="text-[#313238] text-[28px] font-bold flex justify-center">{{ $t('欢迎使用 TKEx-IEG 容器平台') }}</div>
+      <div class="text-[16px] mt-[24px] leading-[24px]">
+        {{ $t('TKEx-IEG 是公司 K8S Oteam 指定的 IEG 容器服务平台。') }}
+        {{ $t('TKEx-IEG 依托于 TKE，聚焦打造游戏一站式微服务部署治理方案，并基于 IEG 各类游戏的特点，提供游戏特色的容器管理服务。') }}
+      </div>
+      <div class="flex justify-center mt-[32px]">
+        <bk-button
+          theme="primary"
+          v-authority="{
+            actionId: 'project_create',
+            permCtx: {}
+          }"
+          @click="handleGotoProjectManage">{{ $t('创建项目') }}</bk-button>
+        <bk-button @click="handleGotoIAM">{{ $t('加入项目') }}</bk-button>
+      </div>
+      <div class="flex justify-center mt-[16px]">
+        <bk-button text @click="handleGotoDoc">
+          <span class="relative top-[-1px]">
+            <i class="bcs-icon bcs-icon-question-circle"></i>
+          </span>
+          {{ $t('游戏接入指南') }}
+        </bk-button>
+      </div>
     </div>
-  </bk-exception>
+    <div class="bg-[#fff] px-[76px] pt-[64px] pb-[40px] max-w-[640px]" v-else>
+      <div class="text-[#313238] text-[28px] font-bold flex justify-center">
+        {{ $t('欢迎使用蓝鲸容器管理平台') }}
+      </div>
+      <div class="text-[16px] mt-[24px] leading-[24px]">
+        {{ $t('蓝鲸容器管理平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；') }}
+        {{ $t('聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；') }}
+        {{ $t('致力于为游戏等复杂应用提供一站式、低门槛的容器编排和服务治理服务。') }}
+      </div>
+      <div class="flex justify-center mt-[32px]">
+        <bk-button
+          theme="primary"
+          v-authority="{
+            actionId: 'project_create',
+            permCtx: {}
+          }"
+          @click="handleGotoProjectManage">{{ $t('创建项目') }}</bk-button>
+        <bk-button @click="handleGotoIAM">{{ $t('加入项目') }}</bk-button>
+      </div>
+      <div class="flex justify-center mt-[16px]">
+        <bk-button text @click="handleGotoDoc">
+          <span class="relative top-[-1px]">
+            <i class="bcs-icon bcs-icon-question-circle"></i>
+          </span>
+          {{ $t('游戏接入指南') }}
+        </bk-button>
+      </div>
+    </div>
+  </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref } from '@vue/composition-api';
-import { projectViewPerms } from '@/api/base';
+import { defineComponent } from '@vue/composition-api';
 
 export default defineComponent({
   name: 'ProjectGuide',
   setup(props, ctx) {
     const { $router, $route } = ctx.root;
-    const iamUrl = ref<string>(window.BK_IAM_APP_URL);
+
     function handleGotoIAM() {
-      window.open(iamUrl.value);
+      window.open(`${window.BK_IAM_APP_URL}apply-join-user-group?system_id=bk_bcs_app`);
     }
     function handleGotoProjectManage() {
       if (window.REGION === 'ieod') {
@@ -38,31 +76,15 @@ export default defineComponent({
         });
       }
     }
-    onMounted(async () => {
-      const data = await projectViewPerms();
-      // eslint-disable-next-line camelcase
-      iamUrl.value = data.perms?.apply_url;
-    });
+    function handleGotoDoc() {
+      window.open(window.BCS_CONFIG?.help);
+    }
+
     return {
       handleGotoIAM,
       handleGotoProjectManage,
+      handleGotoDoc,
     };
   },
 });
 </script>
-<style lang="postcss" scoped>
->>> .text-subtitle {
-  color: #979BA5;
-  font-size: 14px;
-  text-align: center;
-  margin-top: 14px;
-}
->>> .text-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #3A84FF;
-  font-size: 14px;
-  margin-top: 12px;
-}
-</style>

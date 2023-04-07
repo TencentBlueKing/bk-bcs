@@ -95,3 +95,4 @@ source:
       - ".*/bcs-services/bcs-data-manager/third_party/.*"
       - ".*/bcs-services/bcs-alert-manager/pkg/third_party/protoc-gen-swagger/.*"
       - ".*/bcs-services/cluster-resources/third_party/protoc-gen-swagger/.*"
+      - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-vcluster-plugins/pkg/apis/bk-log-sidecar/.*"
