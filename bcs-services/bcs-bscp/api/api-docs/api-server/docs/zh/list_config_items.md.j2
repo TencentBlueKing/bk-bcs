@@ -34,6 +34,7 @@
                         "privilege": "755"
                     }
                 },
+                "file_state": "INCREASED"，
                 "attachment": {
                     "biz_id": 1,
                     "app_id": 1
@@ -70,6 +71,17 @@
 |      spec        |      object      |            资源信息                    |
 |      attachment        |      object      |            配置项关联信息                  |
 |      revision        |      object      |            修改信息                    |
+| file_state | string | 配置文件状态      |
+
+#####  file_state 的字段说明
+	// 增加
+    INCREASED = "INCREASED"
+    //删除
+    DELETE = "DELETE"
+    //修改
+    REVISE = "REVISE"
+    //不变
+    INVARIANT = "INVARIANT"
 
 #### spec
 | 参数名称     | 参数类型   | 描述                           |
