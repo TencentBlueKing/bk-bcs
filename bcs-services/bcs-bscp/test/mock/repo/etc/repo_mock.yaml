@@ -21,7 +21,7 @@ network:
 workspace:
   # repo-mock's absolute workspace root directory. it stores the repo-mock's runtime related
   # logs, files and metadata information.
-  rootDirectory:
+  rootDirectory: ./repo
 
 # defines log's related configuration
 log:
@@ -35,7 +35,7 @@ log:
   maxFileNum: 5
   # whether the restart service log is appended to the latest log file, or whether a new
   # log file is created.
-  logAppend: true
+  logAppend: false
   # log the log to std err only, it can not be used with alsoToStdErr at the same time.
   toStdErr: false
   # log the log to file and also to std err. it can not be used with toStdErr at the same time.

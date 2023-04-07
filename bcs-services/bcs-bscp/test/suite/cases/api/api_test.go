@@ -19,6 +19,7 @@ import (
 
 	"bscp.io/test/suite"
 	"bscp.io/test/suite/cases"
+	"bscp.io/test/util"
 )
 
 // ResourceManager instance
@@ -30,7 +31,7 @@ func TestApi(t *testing.T) {
 	Convey("Prepare Job", t, func() {
 		rm = cases.NewResourceManager()
 
-		err := suite.ClearData()
+		err := util.ClearDB(suite.DB)
 		So(err, ShouldBeNil)
 	})
 
@@ -41,7 +42,7 @@ func TestApi(t *testing.T) {
 	TestCommit(t)
 	TestRelease(t)
 	TestStrategySet(t)
-	// TODO: strategy test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//TestStrategy(t)
 	//TestPublish(t)
 	TestInstance(t)

@@ -39,7 +39,10 @@ const (
 	BKGWJWTTokenKey = "X-Bkapi-JWT"
 
 	// BKTokenForTest is a token for test
-	BKTokenForTest = "bk_token_for_test"
+	BKTokenForTest = "bk-token-for-test"
+
+	// BKUserForTestPrefix is a user prefix for test
+	BKUserForTestPrefix = "bk-user-for-test-"
 
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"

@@ -256,7 +256,7 @@ func GenMainSelector() *selector.Selector {
 // GenApiCtxHeader generate request context for api client
 func GenApiCtxHeader() (context.Context, http.Header) {
 	header := http.Header{}
-	header.Set(constant.UserKey, "suite")
+	header.Set(constant.UserKey, constant.BKUserForTestPrefix+"suite")
 	header.Set(constant.RidKey, uuid.UUID())
 	header.Set(constant.AppCodeKey, "test")
 	header.Add("Cookie", "bk_token="+constant.BKTokenForTest)
@@ -266,7 +266,7 @@ func GenApiCtxHeader() (context.Context, http.Header) {
 // GenCacheContext generate request context for cache client
 func GenCacheContext() context.Context {
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, constant.UserKey, "suite")
+	ctx = context.WithValue(ctx, constant.UserKey, constant.BKUserForTestPrefix+"suite")
 	ctx = context.WithValue(ctx, constant.RidKey, uuid.UUID())
 	ctx = context.WithValue(ctx, constant.AppCodeKey, "test")
 	return ctx

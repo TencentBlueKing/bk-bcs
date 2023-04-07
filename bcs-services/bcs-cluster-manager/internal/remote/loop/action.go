@@ -83,4 +83,3 @@ func LoopDoFunc(ctx context.Context, do func() error, ops ...LoopOption) error {
 		}
 	}
 }
-

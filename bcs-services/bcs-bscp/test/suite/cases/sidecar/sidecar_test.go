@@ -19,10 +19,11 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/smartystreets/goconvey/convey" // import convey.
+
 	"bscp.io/pkg/kit"
 	"bscp.io/test/suite"
-
-	. "github.com/smartystreets/goconvey/convey" // import convey.
+	"bscp.io/test/util"
 )
 
 func TestSidecar(t *testing.T) {
@@ -32,6 +33,11 @@ func TestSidecar(t *testing.T) {
 	gener := generator{
 		cli: cli.ApiClient,
 	}
+
+	Convey("Prepare Job", t, func() {
+		err := util.ClearDB(suite.DB)
+		So(err, ShouldBeNil)
+	})
 
 	Convey("Sidecar Suite Test", t, func() {
 		Convey("Init Data For Sidecar Test", func() {

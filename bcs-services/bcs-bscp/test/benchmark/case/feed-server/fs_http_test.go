@@ -23,15 +23,16 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql" // import mysql drive, used to create conn.
+	"github.com/jmoiron/sqlx"
+
 	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/uuid"
 	"bscp.io/test/benchmark/run"
 	"bscp.io/test/client/feed"
-
-	_ "github.com/go-sql-driver/mysql" // import mysql drive, used to create conn.
-	"github.com/jmoiron/sqlx"
+	"bscp.io/test/util"
 )
 
 var (
@@ -39,6 +40,8 @@ var (
 	cli *feed.Client
 	// db config.
 	dbCfg DBConfig
+	// logCfg is log config
+	logCfg util.LogConfig
 	// debug if debug is true, bench only request one, and print response result.
 	debug bool
 	// gwOpt api gateway bench request need reqs.
@@ -72,8 +75,8 @@ type ApiGatewayOpt struct {
 func init() {
 	var host string
 
-	flag.StringVar(&host, "host", "http://127.0.0.1:8080", "feed server http address")
-	flag.IntVar(&run.Concurrent, "concurrent", 1000, "concurrent request during the load test.")
+	flag.StringVar(&host, "host", "http://127.0.0.1:9610", "feed server http address")
+	flag.IntVar(&run.Concurrent, "concurrent", 100, "concurrent request during the load test.")
 	flag.Float64Var(&run.SustainSeconds, "sustain-seconds", 10, "the load test sustain time in seconds ")
 	flag.Int64Var(&run.TotalRequest, "total-request", 0, "the load test total request,it has higher priority than "+
 		"SustainSeconds")
@@ -81,14 +84,17 @@ func init() {
 	flag.IntVar(&appRandomNum, "app-num", 1000, "randomly select the total number of stress testing applications, "+
 		"only used to TestScene12-14")
 
-	// mysql related flag req.
+	// mysql related flag
 	flag.StringVar(&dbCfg.IP, "mysql-ip", "127.0.0.1", "mysql ip address")
 	flag.Int64Var(&dbCfg.Port, "mysql-port", 3306, "mysql port")
 	flag.StringVar(&dbCfg.User, "mysql-user", "root", "mysql login user")
 	flag.StringVar(&dbCfg.Password, "mysql-passwd", "admin", "mysql login password")
 	flag.StringVar(&dbCfg.DB, "mysql-db", "bk_bscp_admin", "mysql database")
 
-	// api gateway bench related flag req.
+	// log related flag
+	flag.UintVar(&logCfg.Verbosity, "log-verbosity", 0, "log verbosity")
+
+	// api gateway bench related flag
 	flag.StringVar(&gwOpt.AppCode, "app-code", "bscp", "request api gateway's app code")
 	flag.StringVar(&gwOpt.AppSecret, "app-secret", "xxxxxx", "request api gateway's app secret")
 	flag.StringVar(&gwOpt.Ticket, "ticket", "xxxxxx", "request api gateway's ticket")
@@ -101,6 +107,8 @@ func init() {
 	testing.Init()
 	flag.Parse()
 
+	util.SetLogger(logCfg)
+
 	// build feed server client.
 	var err error
 	cli, err = feed.NewFeedClient(host, nil)
@@ -112,7 +120,9 @@ func init() {
 
 // TestReport bench scene 1-10.
 func TestReport(t *testing.T) {
-	TestScene12(t)
+	TestScene3(t)
+	//TODO: strategy related test depends on group, add group test first
+	//TestScene12(t)
 
 	if err := run.GenReport(outputPath); err != nil {
 		fmt.Println(err)
@@ -198,8 +208,8 @@ func TestScene2(t *testing.T) {
 // TestScene3 在场景4压测数据下，匹配实例发布
 func TestScene3(t *testing.T) {
 	req := &types.ListFileAppLatestReleaseMetaReq{
-		BizId: 2001,
-		AppId: 100004,
+		BizId: 12,
+		AppId: 501,
 		Uid:   "961b6dd3ede3cb8ecbaacbd68de040cd78eb2ed5889130cceb4c49268ea4d506",
 	}
 
@@ -662,7 +672,7 @@ func TestScene13(t *testing.T) {
 // header http request need header.
 func header() http.Header {
 	header := http.Header{}
-	header.Set(constant.UserKey, "stress")
+	header.Set(constant.UserKey, constant.BKUserForTestPrefix+"stress")
 	header.Set(constant.RidKey, uuid.UUID())
 	header.Set(constant.AppCodeKey, "test")
 	header.Set(constant.BKGWJWTTokenKey, gwOpt.Jwt)
