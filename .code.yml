@@ -61,6 +61,17 @@ source:
       - ".*/bcs-services/bcs-helm-manager/proto/.*"
       - ".*/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr/proto/.*"
       - ".*/bcs-services/bcs-project-manager/internal/component/clustermanager/clustermanager.pb.go"
+      - ".*/bcs-runtime/bcs-mesos/bcs-clb-controller/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-container-executor/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-dns/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-hpacontroller/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-loadbalance/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-mesos-driver/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-mesos-watch/.*"
+      - ".*/bcs-runtime/bcs-mesos/bcs-scheduler/.*"
+      - ".*/bcs-services/bcs-storage/pkg/proto/.*"
+      - ".*/bcs-services/cluster-resources/proto/.*"
+      - ".*/bcs-services/bcs-bscp/.*pb.*"
 
 
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
