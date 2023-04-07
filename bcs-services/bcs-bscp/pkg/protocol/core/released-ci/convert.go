@@ -131,7 +131,7 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 		var fileState string
 		if len(fileRelease) == 0 {
 			if ci.Revision.CreatedAt == ci.Revision.UpdatedAt {
-				fileState = INCREASED
+				fileState = ADD
 			} else {
 				fileState = REVISE
 			}
@@ -139,7 +139,7 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 			for key, value := range fileRelease {
 				if value.ConfigItemID == ci.ID {
 					if ci.Revision.UpdatedAt == value.Revision.UpdatedAt {
-						fileState = INVARIANT
+						fileState = UNCHANGE
 					} else {
 						fileState = REVISE
 					}
@@ -149,7 +149,7 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 			}
 		}
 		if len(fileState) == 0 {
-			fileState = INCREASED
+			fileState = ADD
 		}
 		result = append(result, pbci.PbConfigItem(ci, fileState))
 	}
@@ -166,11 +166,11 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 // 文件状态
 const (
 	// 增加
-	INCREASED = "INCREASED"
+	ADD = "ADD"
 	//删除
 	DELETE = "DELETE"
 	//修改
 	REVISE = "REVISE"
 	//不变
-	INVARIANT = "INVARIANT"
+	UNCHANGE = "UNCHANGE"
 )
