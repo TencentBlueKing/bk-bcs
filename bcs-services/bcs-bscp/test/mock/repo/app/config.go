@@ -134,7 +134,7 @@ func (s *Setting) trySetFlagBindIP(ip net.IP) error {
 }
 
 // Validate repo mock setting.
-func (s Setting) Validate() error {
+func (s *Setting) Validate() error {
 	if err := s.Network.validate(); err != nil {
 		return err
 	}
@@ -147,6 +147,10 @@ func (s Setting) Validate() error {
 }
 
 func (s *Setting) trySetDefault() {
+	if len(s.Network.BindIP) == 0 {
+		s.Network.BindIP = "127.0.0.1"
+	}
+
 	if len(s.Log.LogDir) == 0 {
 		s.Log.LogDir = "./log"
 	}
@@ -185,12 +189,12 @@ func LoadSettings(sys *cc.SysOption) (*Setting, error) {
 		return nil, err
 	}
 
+	// set the default value if user not configured.
+	s.trySetDefault()
+
 	if err := s.Validate(); err != nil {
 		return nil, err
 	}
-
-	// s the default value if user not configured.
-	s.trySetDefault()
 
 	return s, nil
 }

@@ -21,19 +21,22 @@ import (
 	"sync"
 	"testing"
 
+	"google.golang.org/grpc"
+
 	pbcs "bscp.io/pkg/protocol/cache-service"
 	"bscp.io/test/benchmark/run"
-
-	"google.golang.org/grpc"
+	"bscp.io/test/util"
 )
 
 const (
-	stressBizID     = 2001
-	stressAppID     = 100001
-	stressReleaseID = 100001
+	stressBizID     = 11
+	stressAppID     = 501
+	stressReleaseID = 501
 )
 
 var (
+	// logCfg is log config
+	logCfg util.LogConfig
 	// conSize cache service conn pool size.
 	conSize int
 	// debug if debug is true, bench only request one, and print response result.
@@ -70,17 +73,20 @@ func init() {
 	var host string
 	csPool = new(pool)
 
-	flag.StringVar(&host, "host", "127.0.0.1:8080", "cache service grpc address")
+	flag.StringVar(&host, "host", "127.0.0.1:9514", "cache service grpc address")
 	flag.IntVar(&conSize, "pool-size", 10, "cache service grpc client conn pool size")
-	flag.IntVar(&run.Concurrent, "concurrent", 1000, "concurrent request during the load test.")
+	flag.IntVar(&run.Concurrent, "concurrent", 100, "concurrent request during the load test.")
 	flag.Float64Var(&run.SustainSeconds, "sustain-seconds", 10, "the load test sustain time in seconds ")
 	flag.Int64Var(&run.TotalRequest, "total-request", 0, "the load test total request,it has higher priority than "+
 		"SustainSeconds")
 	flag.BoolVar(&debug, "debug", false, "debug model only request one, and print response result")
 	flag.StringVar(&outputPath, "output-path", "./bench.html", "statistics result html "+
 		"file that by bench test result, save file path")
+	flag.UintVar(&logCfg.Verbosity, "log-verbosity", 0, "log verbosity")
 	testing.Init()
 	flag.Parse()
+
+	util.SetLogger(logCfg)
 
 	// build cache service conn pool.
 	csPool.conn = make([]pbcs.CacheClient, conSize)
@@ -101,13 +107,15 @@ func init() {
 // TestReport perform routine stress tests and generate stress test reports.
 func TestReport(t *testing.T) {
 	TestBenchAppMeta(t)
-	TestBenchAppCPS(t)
+	// TODO: strategy related test depends on group, add group test first
+	//TestBenchAppCPS(t)
 	TestBenchAppCRIMeta(t)
 	TestBenchReleasedCI(t)
 	TestGetAppMeta(t)
 	TestGetReleasedCI(t)
 	TestGetAppInstanceRelease(t)
-	TestGetAppReleasedStrategy(t)
+	// TODO: strategy related test depends on group, add group test first
+	//TestGetAppReleasedStrategy(t)
 
 	if err := run.GenReport(outputPath); err != nil {
 		fmt.Println(err)
@@ -164,7 +172,7 @@ func TestBenchAppCPS(t *testing.T) {
 			return
 		}
 
-		fmt.Printf("BenchAppCPS Resp: %+v", resp)
+		fmt.Printf("BenchAppCPS Resp: %+v\n", resp)
 		return
 	}
 
@@ -199,7 +207,7 @@ func TestBenchAppCRIMeta(t *testing.T) {
 			return
 		}
 
-		fmt.Printf("BenchAppCRIMeta Resp: %+v", resp)
+		fmt.Printf("BenchAppCRIMeta Resp: %+v\n", resp)
 		return
 	}
 
@@ -234,7 +242,7 @@ func TestBenchReleasedCI(t *testing.T) {
 			return
 		}
 
-		fmt.Printf("BenchReleasedCI Resp: %+v", resp)
+		fmt.Printf("BenchReleasedCI Resp: %+v\n", resp)
 		return
 	}
 
@@ -375,7 +383,7 @@ func TestGetAppMeta(t *testing.T) {
 			return
 		}
 
-		fmt.Printf("GetAppMeta Resp: %+v", resp)
+		fmt.Printf("GetAppMeta Resp: %+v\n", resp)
 		return
 	}
 
@@ -410,7 +418,7 @@ func TestGetReleasedCI(t *testing.T) {
 			return
 		}
 
-		fmt.Printf("GetReleasedCI Resp: %+v", resp)
+		fmt.Printf("GetReleasedCI Resp: %+v\n", resp)
 		return
 	}
 
@@ -446,7 +454,7 @@ func TestGetAppInstanceRelease(t *testing.T) {
 			return
 		}
 
-		fmt.Printf("GetAppInstanceRelease Resp: %+v", resp)
+		fmt.Printf("GetAppInstanceRelease Resp: %+v\n", resp)
 		return
 	}
 
@@ -493,7 +501,7 @@ func TestGetAppReleasedStrategy(t *testing.T) {
 			return
 		}
 
-		fmt.Printf("GetAppReleasedStrategy Resp: %+v", resp)
+		fmt.Printf("GetAppReleasedStrategy Resp: %+v\n", resp)
 		return
 	}
 

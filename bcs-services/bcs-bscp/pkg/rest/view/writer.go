@@ -43,13 +43,13 @@ type DataStructInterface interface {
 // GenericResponseWriter 自定义Write，自动补充 data 和 web_annotations 数据
 type GenericResponseWriter struct {
 	http.ResponseWriter
+
 	isDataStruct bool
 	ctx          context.Context
 	msg          proto.Message
 	authorizer   auth.Authorizer
 	annotation   *webannotation.Annotation
 	err          error // low-level runtime error
-
 }
 
 // Write http write 接口实现
@@ -105,6 +105,11 @@ func (w *GenericResponseWriter) beforeWriteHook(ctx context.Context, msg proto.M
 
 // BuildWebAnnotation 动态执行 webannotions 函数
 func (w *GenericResponseWriter) BuildWebAnnotation(ctx context.Context, msg proto.Message) error {
+	// when not using grpc-gateway
+	if ctx == nil {
+		return nil
+	}
+
 	kt := kit.MustGetKit(ctx)
 
 	var (

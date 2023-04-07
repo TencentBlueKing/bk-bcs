@@ -59,7 +59,7 @@ type Generator struct {
 // GenData gen need scene match related data.
 func (g *Generator) GenData(kt *kit.Kit) error {
 	header := http.Header{}
-	header.Set(constant.UserKey, "gen-data")
+	header.Set(constant.UserKey, constant.BKUserForTestPrefix+"gen-data")
 	header.Set(constant.RidKey, kt.Rid)
 	header.Set(constant.AppCodeKey, "test")
 	header.Add("Cookie", "bk_token="+constant.BKTokenForTest)
@@ -101,7 +101,7 @@ func (g *Generator) GenBaseNormalData(ctx context.Context, header http.Header) e
 		}
 	}
 
-	// TODO: strategy test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//stgSetSpec := &table.StrategySetSpec{
 	//	Name: cases.RandName("strategy_set"),
 	//}
@@ -161,7 +161,7 @@ func (g *Generator) GenBaseNamespaceData(ctx context.Context, header http.Header
 		}
 	}
 
-	// TODO: strategy test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//stgSetSpec := &table.StrategySetSpec{
 	//	Name: cases.RandName("strategy_set"),
 	//}

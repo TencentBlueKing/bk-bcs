@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 )
@@ -38,13 +37,10 @@ func genSceneData6() error {
 	if err != nil {
 		return fmt.Errorf("create app err, %v, rid: %s", err, rid)
 	}
-	if appResp.Code != errf.OK {
-		return fmt.Errorf("create app failed, code: %d, msg: %s, rid: %s", appResp.Code, appResp.Message, rid)
-	}
 
 	// // gen five config item for every app, and create one content and commit for every config item.
 	for i := 0; i < 5; i++ {
-		if err := genCIRelatedData(stressBizId, appResp.Data.Id); err != nil {
+		if err := genCIRelatedData(stressBizId, appResp.Id); err != nil {
 			return err
 		}
 	}
@@ -52,7 +48,7 @@ func genSceneData6() error {
 	// create release.
 	rlReq := &pbcs.CreateReleaseReq{
 		BizId: stressBizId,
-		AppId: appResp.Data.Id,
+		AppId: appResp.Id,
 		Name:  randName("release"),
 		Memo:  memo,
 	}
@@ -61,14 +57,11 @@ func genSceneData6() error {
 	if err != nil {
 		return fmt.Errorf("create release err, %v, rid: %s", err, rid)
 	}
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s, rid: %s", rlResp.Code, rlResp.Message, rid)
-	}
 
 	// create strategy set.
 	setReq := &pbcs.CreateStrategySetReq{
 		BizId: stressBizId,
-		AppId: appResp.Data.Id,
+		AppId: appResp.Id,
 		Name:  randName("strategy_set"),
 		Memo:  memo,
 	}
@@ -77,16 +70,12 @@ func genSceneData6() error {
 	if err != nil {
 		return fmt.Errorf("create strategy set err, %v, rid: %s", err, rid)
 	}
-	if setResp.Code != errf.OK {
-		return fmt.Errorf("create strategy set failed, code: %d, msg: %s, rid: %s", setResp.Code,
-			setResp.Message, rid)
-	}
 
 	opt := &pubOption{
 		bizID:         stressBizId,
-		appID:         appResp.Data.Id,
-		strategySetID: setResp.Data.Id,
-		releaseID:     rlResp.Data.Id,
+		appID:         appResp.Id,
+		strategySetID: setResp.Id,
+		releaseID:     rlResp.Id,
 	}
 	if err := genScene6PublishData(opt); err != nil {
 		return err
@@ -107,12 +96,9 @@ func genScene6PublishData(opt *pubOption) error {
 		ReleaseId:     opt.releaseID,
 	}
 	rid := RequestID()
-	styResp, err := cli.Strategy.Create(context.Background(), Header(rid), styReq)
+	_, err := cli.Strategy.Create(context.Background(), Header(rid), styReq)
 	if err != nil {
 		return fmt.Errorf("create strategy err, %v, rid: %s", err, rid)
-	}
-	if styResp.Code != errf.OK {
-		return fmt.Errorf("create strategy failed, code: %d, msg: %s, rid: %s", styResp.Code, styResp.Message, rid)
 	}
 
 	// publish strategy.
@@ -121,13 +107,9 @@ func genScene6PublishData(opt *pubOption) error {
 		AppId: opt.appID,
 	}
 	rid = RequestID()
-	pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
+	_, err = cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
 	if err != nil {
 		return fmt.Errorf("create strategy publish err, %v, rid: %s", err, rid)
-	}
-	if pbResp.Code != errf.OK {
-		return fmt.Errorf("create strategy publish failed, code: %d, msg: %s, rid: %s", pbResp.Code,
-			pbResp.Message, rid)
 	}
 
 	for i := 0; i < 199; i++ {
@@ -144,12 +126,9 @@ func genScene6PublishData(opt *pubOption) error {
 		}
 
 		rid = RequestID()
-		styResp, err := cli.Strategy.Create(context.Background(), Header(rid), styReq)
+		_, err = cli.Strategy.Create(context.Background(), Header(rid), styReq)
 		if err != nil {
 			return fmt.Errorf("create strategy err, %v, rid: %s", err, rid)
-		}
-		if styResp.Code != errf.OK {
-			return fmt.Errorf("create strategy failed, code: %d, msg: %s, rid: %s", styResp.Code, styResp.Message, rid)
 		}
 
 		// publish strategy.
@@ -158,13 +137,9 @@ func genScene6PublishData(opt *pubOption) error {
 			AppId: opt.appID,
 		}
 		rid = RequestID()
-		pbResp, err := cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
+		_, err = cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
 		if err != nil {
 			return fmt.Errorf("create strategy publish err, %v, rid: %s", err, rid)
-		}
-		if pbResp.Code != errf.OK {
-			return fmt.Errorf("create strategy publish failed, code: %d, msg: %s, rid: %s", pbResp.Code,
-				pbResp.Message, rid)
 		}
 	}
 

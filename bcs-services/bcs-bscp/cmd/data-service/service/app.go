@@ -15,8 +15,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -36,9 +38,12 @@ import (
 func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.validateBizExist(kt, req.BizId); err != nil {
-		logs.Errorf("validate biz exist failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	// validate biz exist when user is not for test
+	if !strings.HasPrefix(kt.User, constant.BKUserForTestPrefix) {
+		if err := s.validateBizExist(kt, req.BizId); err != nil {
+			logs.Errorf("validate biz exist failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
 	}
 
 	now := time.Now()

@@ -43,7 +43,7 @@ func PbConfigItems(rcis []*table.ReleasedConfigItem) []*pbci.ConfigItem {
 
 	result := make([]*pbci.ConfigItem, len(rcis))
 	for idx := range rcis {
-		result[idx] = PbConfigItem(rcis[idx])
+		result[idx] = PbConfigItem(rcis[idx], "")
 	}
 
 	return result
@@ -106,15 +106,71 @@ func PbReleasedConfigItem(rci *table.ReleasedConfigItem) *ReleasedConfigItem {
 }
 
 // PbConfigItem convert table ReleasedConfigItem to pb ConfigItem
-func PbConfigItem(rci *table.ReleasedConfigItem) *pbci.ConfigItem {
+func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigItem {
 	if rci == nil {
 		return nil
 	}
 
 	return &pbci.ConfigItem{
 		Id:         rci.ConfigItemID,
+		FileState:  fileState,
 		Spec:       pbci.PbConfigItemSpec(rci.ConfigItemSpec),
 		Attachment: pbci.PbConfigItemAttachment(rci.Attachment),
 		Revision:   pbbase.PbRevision(rci.Revision),
 	}
 }
+
+// PbConfigItemState
+func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) []*pbci.ConfigItem {
+	if cis == nil {
+		return make([]*pbci.ConfigItem, 0)
+	}
+
+	result := make([]*pbci.ConfigItem, 0)
+	for _, ci := range cis {
+		var fileState string
+		if len(fileRelease) == 0 {
+			if ci.Revision.CreatedAt == ci.Revision.UpdatedAt {
+				fileState = ADD
+			} else {
+				fileState = REVISE
+			}
+		} else {
+			for key, value := range fileRelease {
+				if value.ConfigItemID == ci.ID {
+					if ci.Revision.UpdatedAt == value.Revision.UpdatedAt {
+						fileState = UNCHANGE
+					} else {
+						fileState = REVISE
+					}
+					fileRelease = append(fileRelease[:key], fileRelease[key+1:]...)
+					break
+				}
+			}
+		}
+		if len(fileState) == 0 {
+			fileState = ADD
+		}
+		result = append(result, pbci.PbConfigItem(ci, fileState))
+	}
+
+	if len(fileRelease) != 0 {
+		for _, file := range fileRelease {
+			result = append(result, PbConfigItem(file, DELETE))
+		}
+	}
+
+	return result
+}
+
+// 文件状态
+const (
+	// 增加
+	ADD = "ADD"
+	//删除
+	DELETE = "DELETE"
+	//修改
+	REVISE = "REVISE"
+	//不变
+	UNCHANGE = "UNCHANGE"
+)
