@@ -214,11 +214,7 @@ func TestFeed(t *testing.T) {
 			So(nmStgSetResp, ShouldNotBeNil)
 			So(nmStgSetResp.Id, ShouldNotEqual, uint32(0))
 
-<<<<<<< HEAD
 			// TODO: strategy related test depends on group, add group test first
-=======
-			// TODO: strategy test depends on group, add group test first
->>>>>>> master
 			//// create strategy
 			//nmStgReq := &pbcs.CreateStrategyReq{
 			//	BizId:         cases.TBizID,
@@ -411,11 +407,7 @@ func TestFeed(t *testing.T) {
 			// normal test
 			{
 				reqs := []*types.ListFileAppLatestReleaseMetaReq{
-<<<<<<< HEAD
 					// TODO: strategy related test depends on group, add group test first
-=======
-					// TODO: strategy test depends on group, add group test first
->>>>>>> master
 					//{ // Publish with strategy, and hit main strategy
 					//	BizId: cases.TBizID,
 					//	AppId: nmApp.Id,
@@ -549,11 +541,7 @@ func TestFeed(t *testing.T) {
 
 		})
 
-<<<<<<< HEAD
 		// TODO: strategy related test depends on group, add group test first
-=======
-		// TODO: strategy test depends on group, add group test first
->>>>>>> master
 		//// 2. Namespace Mode App Base Request Test: in namespace mode app under, feed server handle test right and not
 		//// right request params, return response data is expected.
 		//Convey("2. Namespace Mode App Base Request Test", func() {
