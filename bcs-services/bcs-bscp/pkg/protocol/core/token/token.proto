@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
+
+package pbtoken;
+
+option go_package = "bscp.io/pkg/protocol/core/token;pbtoken";
+
+message TokenList {
+  uint32  id  = 1;
+  string  token = 2;
+  string memo = 3;
+  uint32  enable = 4;
+  pbbase.Revision revision   = 5;
+  repeated TokenRule rule = 6;
+}
+
+message TokenRule {
+  string token_rule = 1;
+}
+
+message ListMatchRule {
+  string app_name = 1;
+  string file_name = 2;
+}

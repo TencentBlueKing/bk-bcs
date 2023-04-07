@@ -13,6 +13,7 @@ import "bscp.io/pkg/protocol/core/hook/hook.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/group-category/group_category.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
+import "bscp.io/pkg/protocol/core/token/token.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -95,6 +96,13 @@ service Data {
     rpc ListCRInstances(ListCRInstancesReq) returns (ListCRInstancesResp) {}
     rpc DeleteCRInstance(DeleteCRInstanceReq) returns (pbbase.EmptyResp) {}
 
+    rpc CreateToken(CreateTokenReq) returns (CreateResp) {}
+    rpc ListToken(ListTokenReq) returns (ListTokenResp) {}
+    rpc UpdateToken(UpdateTokenReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteToken(DeleteTokenReq) returns (pbbase.EmptyResp) {}
+    rpc EnableToken(EnableTokenReq) returns (pbbase.EmptyResp) {}
+    rpc ListMatchRuleToken(ListMatchRuleTokenReq) returns (ListMatchRuleTokenResp) {}
+
     // used iam pull resource callback.
     rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
 
@@ -105,6 +113,49 @@ service Data {
             body: "*"
         };
     }
+}
+
+message CreateTokenReq {
+    string memo = 1;
+    repeated pbtoken.TokenRule rule = 2;
+    uint32 biz_id =3;
+    string token = 4;
+}
+
+message ListTokenReq {
+    uint32  biz_id    = 1;
+}
+
+message ListTokenResp{
+    uint32 count = 1;
+    repeated pbtoken.TokenList details = 2;
+}
+
+message UpdateTokenReq{
+    uint32 id =1;
+    uint32 biz_id =2;
+    repeated pbtoken.TokenRule rule = 3;
+}
+
+message DeleteTokenReq {
+    uint32 id =1;
+    uint32 biz_id =2;
+}
+
+message EnableTokenReq {
+    uint32 id =1;
+    uint32 biz_id =2;
+    uint32 enable =3;
+}
+
+message ListMatchRuleTokenReq{
+    uint32 id =1;
+    uint32 biz_id =2;
+    repeated pbtoken.TokenRule rule = 3;
+}
+
+message ListMatchRuleTokenResp{
+    repeated pbtoken.ListMatchRule match_rule= 1;
 }
 
 message CreateResp {

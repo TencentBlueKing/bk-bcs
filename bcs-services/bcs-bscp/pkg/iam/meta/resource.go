@@ -54,4 +54,6 @@ const (
 	Repo ResourceType = "repository"
 	// Sidecar represent requests form sidecar
 	Sidecar ResourceType = "sidecar"
+	//
+	Token ResourceType = "token"
 )

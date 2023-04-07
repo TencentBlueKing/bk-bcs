@@ -73,6 +73,12 @@ const (
 	Data_CreateCRInstance_FullMethodName               = "/pbds.Data/CreateCRInstance"
 	Data_ListCRInstances_FullMethodName                = "/pbds.Data/ListCRInstances"
 	Data_DeleteCRInstance_FullMethodName               = "/pbds.Data/DeleteCRInstance"
+	Data_CreateToken_FullMethodName                    = "/pbds.Data/CreateToken"
+	Data_ListToken_FullMethodName                      = "/pbds.Data/ListToken"
+	Data_UpdateToken_FullMethodName                    = "/pbds.Data/UpdateToken"
+	Data_DeleteToken_FullMethodName                    = "/pbds.Data/DeleteToken"
+	Data_EnableToken_FullMethodName                    = "/pbds.Data/EnableToken"
+	Data_ListMatchRuleToken_FullMethodName             = "/pbds.Data/ListMatchRuleToken"
 	Data_ListInstances_FullMethodName                  = "/pbds.Data/ListInstances"
 	Data_Ping_FullMethodName                           = "/pbds.Data/Ping"
 )
@@ -142,6 +148,12 @@ type DataClient interface {
 	CreateCRInstance(ctx context.Context, in *CreateCRInstanceReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListCRInstances(ctx context.Context, in *ListCRInstancesReq, opts ...grpc.CallOption) (*ListCRInstancesResp, error)
 	DeleteCRInstance(ctx context.Context, in *DeleteCRInstanceReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	CreateToken(ctx context.Context, in *CreateTokenReq, opts ...grpc.CallOption) (*CreateResp, error)
+	ListToken(ctx context.Context, in *ListTokenReq, opts ...grpc.CallOption) (*ListTokenResp, error)
+	UpdateToken(ctx context.Context, in *UpdateTokenReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	DeleteToken(ctx context.Context, in *DeleteTokenReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	EnableToken(ctx context.Context, in *EnableTokenReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	ListMatchRuleToken(ctx context.Context, in *ListMatchRuleTokenReq, opts ...grpc.CallOption) (*ListMatchRuleTokenResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	// Ping verifies if the grpc connection is still alive.
@@ -588,6 +600,60 @@ func (c *dataClient) DeleteCRInstance(ctx context.Context, in *DeleteCRInstanceR
 	return out, nil
 }
 
+func (c *dataClient) CreateToken(ctx context.Context, in *CreateTokenReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, Data_CreateToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListToken(ctx context.Context, in *ListTokenReq, opts ...grpc.CallOption) (*ListTokenResp, error) {
+	out := new(ListTokenResp)
+	err := c.cc.Invoke(ctx, Data_ListToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateToken(ctx context.Context, in *UpdateTokenReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UpdateToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteToken(ctx context.Context, in *DeleteTokenReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_DeleteToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) EnableToken(ctx context.Context, in *EnableTokenReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_EnableToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListMatchRuleToken(ctx context.Context, in *ListMatchRuleTokenReq, opts ...grpc.CallOption) (*ListMatchRuleTokenResp, error) {
+	out := new(ListMatchRuleTokenResp)
+	err := c.cc.Invoke(ctx, Data_ListMatchRuleToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -671,6 +737,12 @@ type DataServer interface {
 	CreateCRInstance(context.Context, *CreateCRInstanceReq) (*CreateResp, error)
 	ListCRInstances(context.Context, *ListCRInstancesReq) (*ListCRInstancesResp, error)
 	DeleteCRInstance(context.Context, *DeleteCRInstanceReq) (*base.EmptyResp, error)
+	CreateToken(context.Context, *CreateTokenReq) (*CreateResp, error)
+	ListToken(context.Context, *ListTokenReq) (*ListTokenResp, error)
+	UpdateToken(context.Context, *UpdateTokenReq) (*base.EmptyResp, error)
+	DeleteToken(context.Context, *DeleteTokenReq) (*base.EmptyResp, error)
+	EnableToken(context.Context, *EnableTokenReq) (*base.EmptyResp, error)
+	ListMatchRuleToken(context.Context, *ListMatchRuleTokenReq) (*ListMatchRuleTokenResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	// Ping verifies if the grpc connection is still alive.
@@ -824,6 +896,24 @@ func (UnimplementedDataServer) ListCRInstances(context.Context, *ListCRInstances
 }
 func (UnimplementedDataServer) DeleteCRInstance(context.Context, *DeleteCRInstanceReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCRInstance not implemented")
+}
+func (UnimplementedDataServer) CreateToken(context.Context, *CreateTokenReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateToken not implemented")
+}
+func (UnimplementedDataServer) ListToken(context.Context, *ListTokenReq) (*ListTokenResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListToken not implemented")
+}
+func (UnimplementedDataServer) UpdateToken(context.Context, *UpdateTokenReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateToken not implemented")
+}
+func (UnimplementedDataServer) DeleteToken(context.Context, *DeleteTokenReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteToken not implemented")
+}
+func (UnimplementedDataServer) EnableToken(context.Context, *EnableTokenReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableToken not implemented")
+}
+func (UnimplementedDataServer) ListMatchRuleToken(context.Context, *ListMatchRuleTokenReq) (*ListMatchRuleTokenResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMatchRuleToken not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -1707,6 +1797,114 @@ func _Data_DeleteCRInstance_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CreateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CreateToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CreateToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CreateToken(ctx, req.(*CreateTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListToken(ctx, req.(*ListTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateToken(ctx, req.(*UpdateTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_DeleteToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteToken(ctx, req.(*DeleteTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_EnableToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnableTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).EnableToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_EnableToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).EnableToken(ctx, req.(*EnableTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListMatchRuleToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMatchRuleTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListMatchRuleToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListMatchRuleToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListMatchRuleToken(ctx, req.(*ListMatchRuleTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -1941,6 +2139,30 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteCRInstance",
 			Handler:    _Data_DeleteCRInstance_Handler,
+		},
+		{
+			MethodName: "CreateToken",
+			Handler:    _Data_CreateToken_Handler,
+		},
+		{
+			MethodName: "ListToken",
+			Handler:    _Data_ListToken_Handler,
+		},
+		{
+			MethodName: "UpdateToken",
+			Handler:    _Data_UpdateToken_Handler,
+		},
+		{
+			MethodName: "DeleteToken",
+			Handler:    _Data_DeleteToken_Handler,
+		},
+		{
+			MethodName: "EnableToken",
+			Handler:    _Data_EnableToken_Handler,
+		},
+		{
+			MethodName: "ListMatchRuleToken",
+			Handler:    _Data_ListMatchRuleToken_Handler,
 		},
 		{
 			MethodName: "ListInstances",

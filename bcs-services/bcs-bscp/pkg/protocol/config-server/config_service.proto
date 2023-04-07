@@ -13,6 +13,7 @@ import "bscp.io/pkg/protocol/core/hook/hook.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/group-category/group_category.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
+import "bscp.io/pkg/protocol/core/token/token.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -299,6 +300,93 @@ service Config {
             body: "*"
         };
     }
+
+    rpc CreateToken(CreateTokenReq) returns (CreateTokenResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/token/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc ListTokens(ListTokensReq) returns (ListTokensResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/token/list/biz_id/{biz_id}"
+        };
+    }
+    rpc UpdateToken(UpdateTokensReq) returns (UpdateTokensResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/token/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc DeleteToken(DeleteTokensReq) returns (DeleteTokensResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/token/biz_id/{biz_id}"
+        };
+    }
+    rpc EnableToken(EnableTokensReq) returns (EnableTokensResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/token/enable/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc ListMatchRuleToken(ListMatchRuleTokensReq) returns (ListMatchRuleTokensResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/token/rule/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+}
+
+message ListMatchRuleTokensReq {
+    uint32 id =1;
+    uint32 biz_id =2;
+    repeated pbtoken.TokenRule rule = 3;
+}
+
+message ListMatchRuleTokensResp{
+    repeated pbtoken.ListMatchRule match_rule= 1;
+}
+
+message EnableTokensReq{
+    uint32 id =1;
+    uint32 biz_id =2;
+    uint32 enable =3;
+}
+
+message EnableTokensResp {}
+
+message DeleteTokensReq{
+    uint32 id =1;
+    uint32 biz_id =2;
+}
+
+message DeleteTokensResp {}
+message UpdateTokensReq {
+    uint32 id =1;
+    uint32 biz_id =2;
+    repeated pbtoken.TokenRule rule = 3;
+}
+
+message UpdateTokensResp{}
+
+message ListTokensReq {
+    uint32  biz_id    = 1;
+}
+
+message ListTokensResp{
+    uint32 count = 1;
+    repeated pbtoken.TokenList details = 2;
+}
+
+message CreateTokenReq {
+    string memo = 1;
+    uint32  biz_id    = 2;
+    repeated pbtoken.TokenRule rule = 3;
+
+}
+
+message CreateTokenResp {
+    uint32 id = 1;
 }
 
 message ListBizReq {

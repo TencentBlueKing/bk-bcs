@@ -879,3 +879,23 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 		lm.WaitTimeMil = 50
 	}
 }
+
+//
+type Token struct {
+	MasterKey string `yaml:"master_key"`
+	Ea        string `yaml:"ea"`
+}
+
+// validate network options
+func (t Token) validate() error {
+
+	if len(t.MasterKey) == 0 {
+		return errors.New("token master key is not set")
+	}
+
+	if len(t.Ea) == 0 {
+		return errors.New("token Encryption Algorithm is not set")
+	}
+
+	return nil
+}

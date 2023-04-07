@@ -67,6 +67,12 @@ const (
 	Config_PublishInstance_FullMethodName                = "/pbcs.Config/PublishInstance"
 	Config_DeletePublishedInstance_FullMethodName        = "/pbcs.Config/DeletePublishedInstance"
 	Config_ListPublishedInstance_FullMethodName          = "/pbcs.Config/ListPublishedInstance"
+	Config_CreateToken_FullMethodName                    = "/pbcs.Config/CreateToken"
+	Config_ListTokens_FullMethodName                     = "/pbcs.Config/ListTokens"
+	Config_UpdateToken_FullMethodName                    = "/pbcs.Config/UpdateToken"
+	Config_DeleteToken_FullMethodName                    = "/pbcs.Config/DeleteToken"
+	Config_EnableToken_FullMethodName                    = "/pbcs.Config/EnableToken"
+	Config_ListMatchRuleToken_FullMethodName             = "/pbcs.Config/ListMatchRuleToken"
 )
 
 // ConfigClient is the client API for Config service.
@@ -122,6 +128,12 @@ type ConfigClient interface {
 	PublishInstance(ctx context.Context, in *PublishInstanceReq, opts ...grpc.CallOption) (*PublishInstanceResp, error)
 	DeletePublishedInstance(ctx context.Context, in *DeletePublishedInstanceReq, opts ...grpc.CallOption) (*DeletePublishedInstanceResp, error)
 	ListPublishedInstance(ctx context.Context, in *ListPublishedInstanceReq, opts ...grpc.CallOption) (*ListPublishedInstanceResp, error)
+	CreateToken(ctx context.Context, in *CreateTokenReq, opts ...grpc.CallOption) (*CreateTokenResp, error)
+	ListTokens(ctx context.Context, in *ListTokensReq, opts ...grpc.CallOption) (*ListTokensResp, error)
+	UpdateToken(ctx context.Context, in *UpdateTokensReq, opts ...grpc.CallOption) (*UpdateTokensResp, error)
+	DeleteToken(ctx context.Context, in *DeleteTokensReq, opts ...grpc.CallOption) (*DeleteTokensResp, error)
+	EnableToken(ctx context.Context, in *EnableTokensReq, opts ...grpc.CallOption) (*EnableTokensResp, error)
+	ListMatchRuleToken(ctx context.Context, in *ListMatchRuleTokensReq, opts ...grpc.CallOption) (*ListMatchRuleTokensResp, error)
 }
 
 type configClient struct {
@@ -555,6 +567,60 @@ func (c *configClient) ListPublishedInstance(ctx context.Context, in *ListPublis
 	return out, nil
 }
 
+func (c *configClient) CreateToken(ctx context.Context, in *CreateTokenReq, opts ...grpc.CallOption) (*CreateTokenResp, error) {
+	out := new(CreateTokenResp)
+	err := c.cc.Invoke(ctx, Config_CreateToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListTokens(ctx context.Context, in *ListTokensReq, opts ...grpc.CallOption) (*ListTokensResp, error) {
+	out := new(ListTokensResp)
+	err := c.cc.Invoke(ctx, Config_ListTokens_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateToken(ctx context.Context, in *UpdateTokensReq, opts ...grpc.CallOption) (*UpdateTokensResp, error) {
+	out := new(UpdateTokensResp)
+	err := c.cc.Invoke(ctx, Config_UpdateToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteToken(ctx context.Context, in *DeleteTokensReq, opts ...grpc.CallOption) (*DeleteTokensResp, error) {
+	out := new(DeleteTokensResp)
+	err := c.cc.Invoke(ctx, Config_DeleteToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) EnableToken(ctx context.Context, in *EnableTokensReq, opts ...grpc.CallOption) (*EnableTokensResp, error) {
+	out := new(EnableTokensResp)
+	err := c.cc.Invoke(ctx, Config_EnableToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListMatchRuleToken(ctx context.Context, in *ListMatchRuleTokensReq, opts ...grpc.CallOption) (*ListMatchRuleTokensResp, error) {
+	out := new(ListMatchRuleTokensResp)
+	err := c.cc.Invoke(ctx, Config_ListMatchRuleToken_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -608,6 +674,12 @@ type ConfigServer interface {
 	PublishInstance(context.Context, *PublishInstanceReq) (*PublishInstanceResp, error)
 	DeletePublishedInstance(context.Context, *DeletePublishedInstanceReq) (*DeletePublishedInstanceResp, error)
 	ListPublishedInstance(context.Context, *ListPublishedInstanceReq) (*ListPublishedInstanceResp, error)
+	CreateToken(context.Context, *CreateTokenReq) (*CreateTokenResp, error)
+	ListTokens(context.Context, *ListTokensReq) (*ListTokensResp, error)
+	UpdateToken(context.Context, *UpdateTokensReq) (*UpdateTokensResp, error)
+	DeleteToken(context.Context, *DeleteTokensReq) (*DeleteTokensResp, error)
+	EnableToken(context.Context, *EnableTokensReq) (*EnableTokensResp, error)
+	ListMatchRuleToken(context.Context, *ListMatchRuleTokensReq) (*ListMatchRuleTokensResp, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -754,6 +826,24 @@ func (UnimplementedConfigServer) DeletePublishedInstance(context.Context, *Delet
 }
 func (UnimplementedConfigServer) ListPublishedInstance(context.Context, *ListPublishedInstanceReq) (*ListPublishedInstanceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPublishedInstance not implemented")
+}
+func (UnimplementedConfigServer) CreateToken(context.Context, *CreateTokenReq) (*CreateTokenResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateToken not implemented")
+}
+func (UnimplementedConfigServer) ListTokens(context.Context, *ListTokensReq) (*ListTokensResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTokens not implemented")
+}
+func (UnimplementedConfigServer) UpdateToken(context.Context, *UpdateTokensReq) (*UpdateTokensResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateToken not implemented")
+}
+func (UnimplementedConfigServer) DeleteToken(context.Context, *DeleteTokensReq) (*DeleteTokensResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteToken not implemented")
+}
+func (UnimplementedConfigServer) EnableToken(context.Context, *EnableTokensReq) (*EnableTokensResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableToken not implemented")
+}
+func (UnimplementedConfigServer) ListMatchRuleToken(context.Context, *ListMatchRuleTokensReq) (*ListMatchRuleTokensResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMatchRuleToken not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -1613,6 +1703,114 @@ func _Config_ListPublishedInstance_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CreateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateToken(ctx, req.(*CreateTokenReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTokensReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTokens_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTokens(ctx, req.(*ListTokensReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTokensReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateToken(ctx, req.(*UpdateTokensReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTokensReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteToken(ctx, req.(*DeleteTokensReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_EnableToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnableTokensReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).EnableToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_EnableToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).EnableToken(ctx, req.(*EnableTokensReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListMatchRuleToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMatchRuleTokensReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListMatchRuleToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListMatchRuleToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListMatchRuleToken(ctx, req.(*ListMatchRuleTokensReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1807,6 +2005,30 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListPublishedInstance",
 			Handler:    _Config_ListPublishedInstance_Handler,
+		},
+		{
+			MethodName: "CreateToken",
+			Handler:    _Config_CreateToken_Handler,
+		},
+		{
+			MethodName: "ListTokens",
+			Handler:    _Config_ListTokens_Handler,
+		},
+		{
+			MethodName: "UpdateToken",
+			Handler:    _Config_UpdateToken_Handler,
+		},
+		{
+			MethodName: "DeleteToken",
+			Handler:    _Config_DeleteToken_Handler,
+		},
+		{
+			MethodName: "EnableToken",
+			Handler:    _Config_EnableToken_Handler,
+		},
+		{
+			MethodName: "ListMatchRuleToken",
+			Handler:    _Config_ListMatchRuleToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

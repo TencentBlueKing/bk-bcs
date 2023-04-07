@@ -108,6 +108,7 @@ func (s ApiServerSetting) Validate() error {
 // AuthServerSetting defines auth server used setting options.
 type AuthServerSetting struct {
 	Network   Network           `yaml:"network"`
+	Token     Token             `yaml:"token"`
 	Service   Service           `yaml:"service"`
 	Log       LogOption         `yaml:"log"`
 	LoginAuth LoginAuthSettings `yaml:"loginAuth"`
@@ -147,6 +148,10 @@ func (s AuthServerSetting) Validate() error {
 	}
 
 	if err := s.IAM.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Token.validate(); err != nil {
 		return err
 	}
 
