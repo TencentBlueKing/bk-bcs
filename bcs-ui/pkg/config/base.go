@@ -21,17 +21,18 @@ import (
 const (
 	// DevEnv TODO
 	DevEnv = "dev"
-	// StagEnv TODO
-	StagEnv = "stag"
 	// ProdEnv TODO
 	ProdEnv = "prod"
+	// LocalEnv 本地开发, 和前端区别
+	LocalEnv = "local"
 )
 
 // BaseConf :
 type BaseConf struct {
 	TimeZone     string         `yaml:"time_zone"`
 	LanguageCode string         `yaml:"language_code"`
-	RunEnv       string         `yaml:"run_env"`
+	RunEnv       string         `yaml:"run_env"` // 前端依赖, 必须是 dev / prod
+	Region       string         `yaml:"region"`
 	Location     *time.Location `yaml:"-"`
 }
 
@@ -39,8 +40,9 @@ type BaseConf struct {
 func (c *BaseConf) Init() error {
 	var err error
 	c.TimeZone = "Asia/Shanghai"
-	c.LanguageCode = ""
+	c.LanguageCode = "en-us"
 	c.RunEnv = DevEnv
+	c.Region = "ce"
 	c.Location, err = time.LoadLocation(c.TimeZone)
 	if err != nil {
 		return err

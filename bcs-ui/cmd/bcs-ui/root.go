@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/automaxprocs/maxprocs"
+	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
@@ -39,6 +40,7 @@ var (
 	cfgFile       string
 	bindAddress   string
 	port          int
+	outConfInfo   bool
 	appName       = "bcs-ui"
 	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
@@ -47,6 +49,17 @@ var (
 		Use:   appName,
 		Short: "bcs-ui server",
 		Run: func(cmd *cobra.Command, args []string) {
+			// 输出初始化配置
+			if outConfInfo {
+				encoder := yaml.NewEncoder(os.Stdout)
+				encoder.SetIndent(2)
+				if err := encoder.Encode(config.G); err != nil {
+					klog.ErrorS(err, "output init confinfo failed")
+					os.Exit(1)
+				}
+				os.Exit(0)
+			}
+
 			RunSrv()
 		},
 	}
@@ -77,13 +90,13 @@ func RunSrv() {
 
 	sd, err := discovery.NewServiceDiscovery(ctx, appName, version.BcsVersion, addr, "", addrIPv6)
 	if err != nil {
-		klog.Errorf("init micro sd err: %s, exited", err)
+		klog.ErrorS(err, "init micro sd failed, exited")
 		os.Exit(1)
 	}
 
 	svr, err := web.NewWebServer(ctx, addr, addrIPv6)
 	if err != nil {
-		klog.Errorf("init web svr err: %s, exited", err)
+		klog.ErrorS(err, "init web svr failed, exited")
 		os.Exit(1)
 	}
 	klog.InfoS("listening for requests and metrics", "address", addr)
@@ -91,7 +104,7 @@ func RunSrv() {
 	g.Add(svr.Run, func(err error) { svr.Close() })
 	g.Add(sd.Run, func(error) {})
 	if err := g.Run(); err != nil && err != ctx.Err() {
-		klog.Errorf("run srv err: %s", err)
+		klog.ErrorS(err, "run srv failed, exited")
 		os.Exit(1)
 	}
 }
@@ -105,9 +118,10 @@ func init() {
 	// 不开启 completion 子命令
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
-	rootCmd.PersistentFlags().StringVar(&bindAddress, "bind-address", "127.0.0.1", `the IP address on which to listen`)
-	rootCmd.PersistentFlags().IntVar(&port, "port", 8080, `listen http/metrics port`)
+	rootCmd.Flags().StringVarP(&cfgFile, "config", "c", "", "config file path")
+	rootCmd.Flags().StringVar(&bindAddress, "bind-address", "127.0.0.1", "the IP address on which to listen")
+	rootCmd.Flags().IntVar(&port, "port", 8080, "http/metrics port")
+	rootCmd.Flags().BoolVarP(&outConfInfo, "confinfo", "o", false, "print init confinfo to stdout")
 
 	rootCmd.SetVersionTemplate(`{{print .Version}}`)
 	rootCmd.Version = version.GetVersion()
@@ -116,7 +130,7 @@ func init() {
 func initConfig() {
 	// 过滤不需要配置的子命令
 	cmd, _, _ := rootCmd.Find(os.Args[1:])
-	if cmd.Name() == "help" || cmd.Name() == "version" {
+	if cmd.Name() == "help" || cmd.Name() == "version" || outConfInfo {
 		return
 	}
 
@@ -129,12 +143,12 @@ func initConfig() {
 	viper.SetConfigFile(cfgFile)
 
 	if err := viper.ReadInConfig(); err != nil {
-		klog.Errorf("parse config file error: %s", err)
+		klog.ErrorS(err, "parse config file failed")
 		os.Exit(1)
 	}
 
 	if err := config.G.ReadFromViper(viper.GetViper()); err != nil {
-		klog.Errorf("read config file error: %s", err)
+		klog.ErrorS(err, "readFrom config file failed")
 		os.Exit(1)
 	}
 

@@ -1,26 +1,43 @@
 <script setup lang="ts">
   import { ref } from 'vue'
   import { ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
-  import InfoBox from "bkui-vue/lib/info-box";
+  import InfoBox from 'bkui-vue/lib/info-box';
+  import BkMessage from 'bkui-vue/lib/message';
+  import { storeToRefs } from 'pinia'
+  import { useServingStore } from '../../../../../../../store/serving'
+  import { useConfigStore } from '../../../../../../../store/config'
   import VersionLayout from '../../../components/version-layout.vue'
   import ConfirmDialog from './confirm-dialog.vue'
-  import ConfigDiff from '../../../components/config-diff.vue'
-  import { IConfigVersionItem } from '../../../../../../../types'
+  import { IConfigItem } from '../../../../../../../../types/config'
+  import SelectGroup from './select-group/index.vue'
+  import VersionDiff from '../../../components/version-diff/index.vue';
+  import { IGroupTreeItem } from '../../../../../../../../types/group';
+
+  const servingStore = useServingStore()
+  const versionStore = useConfigStore()
+  const { appData } = storeToRefs(servingStore)
+  const { versionData } = storeToRefs(versionStore)
 
   const props = defineProps<{
     bkBizId: string,
     appId: number,
-    releaseId: number|null,
-    appName: string,
-    versionName: string,
-    configList: Array<IConfigVersionItem>
+    configList: IConfigItem[]
   }>()
 
   const emit = defineEmits(['confirm'])
 
-  const showDiffPanel = ref(false)
+  const openSelectGroupPanel = ref(false)
+  const isDiffSliderShow = ref(false)
   const isConfirmDialogShow = ref(false)
-  const groups = ref([5])
+  const groups = ref<IGroupTreeItem[]>([])
+
+  const handleOpenPublishDialog = () => {
+    if (groups.value.length === 0) {
+      BkMessage({ theme: 'error', message: '请选择上线分组' })
+      return
+    }
+    isConfirmDialogShow.value = true
+  }
 
   const handleConfirm = () => {
     InfoBox({
@@ -30,43 +47,36 @@
       dialogType: 'confirm',
       onConfirm () {
         emit('confirm')
-        handleClose()
+        handlePanelClose()
+        isDiffSliderShow.value = false
       }
     })
   }
 
-  const handleClose = () => {
-    showDiffPanel.value = false
+  const handlePanelClose = () => {
+    openSelectGroupPanel.value = false
   }
 
 </script>
 <template>
     <section class="create-version">
-        <bk-button theme="primary" :disabled=" typeof props.releaseId !== 'number' || props.releaseId === 0"  @click="showDiffPanel = true">上线版本</bk-button>
-        <VersionLayout v-if="showDiffPanel">
+        <bk-button theme="primary" :disabled="versionData.id === 0" @click="openSelectGroupPanel = true">上线版本</bk-button>
+        <VersionLayout v-if="openSelectGroupPanel">
             <template #header>
                 <section class="header-wrapper">
-                    <span class="header-name" @click="handleClose">
+                    <span class="header-name" @click="handlePanelClose">
                         <ArrowsLeft class="arrow-left" />
-                        <span class="service-name">{{ props.appName }}</span>
+                        <span class="service-name">{{ appData.spec.name }}</span>
                     </span>
                     <AngleRight class="arrow-right" />
-                    上线版本：{{ props.versionName }}
+                    上线版本：{{ versionData.spec.name }}
                 </section>
             </template>
-            <config-diff :config-list="configList">
-                <template #head>
-                    <div class="diff-left-panel-head">
-                        <span class="version-status">待上线</span>
-                        {{ props.versionName }}
-                        <!-- @todo 待确定这里展示什么名称 -->
-                    </div>
-                </template>
-            </config-diff>
+            <select-group @change="groups = $event"></select-group>
             <template #footer>
                 <section class="actions-wrapper">
-                    <bk-button theme="primary" style="margin-right: 8px;" @click="isConfirmDialogShow = true">上线版本</bk-button>
-                    <bk-button @click="handleClose">取消</bk-button>
+                    <bk-button class="publish-btn" theme="primary" @click="isDiffSliderShow = true">对比并上线</bk-button>
+                    <bk-button @click="handlePanelClose">取消</bk-button>
                 </section>
             </template>
         </VersionLayout>
@@ -74,9 +84,10 @@
             v-model:show="isConfirmDialogShow"
             :bk-biz-id="props.bkBizId"
             :app-id="props.appId"
-            :release-id="props.releaseId"
+            :release-id="versionData.id"
             :groups="groups"
             @confirm="handleConfirm"/>
+        <VersionDiff v-model:show="isDiffSliderShow" :current-version="versionData" :show-publish-btn="true" @publish="handleOpenPublishDialog" />
     </section>
 </template>
 <style lang="scss" scoped>
@@ -103,22 +114,23 @@
         font-size: 24px;
         color: #c4c6cc;
     }
-    .diff-left-panel-head {
-        padding: 0 24px;
-        font-size: 12px;
-        .version-status {
-            margin-right: 4px;
-            padding: 4px 10px;
-            line-height: 1;
-            color: #14a568;
-            background: #e4faf0;
-            border-radius: 2px;
-        }
-    }
     .actions-wrapper {
         display: flex;
         align-items: center;
         padding: 0 24px;
         height: 100%;
+        .publish-btn {
+          margin-right: 8px;
+        }
+        .bk-button {
+          min-width: 88px;
+        }
+    }
+    .version-selector {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        padding: 0 24px;
+        font-size: 12px;
     }
 </style>

@@ -31,3 +31,10 @@ type InstallerType string
 func (it InstallerType) String() string {
 	return string(it)
 }
+
+var (
+	// DefaultCmdFlag xxx
+	DefaultCmdFlag = []map[string]interface{}{{"--insecure-skip-tls-verify": ""}, {"--wait": true}}
+	// DefaultArgsFlag xxx
+	DefaultArgsFlag = []string{"--insecure-skip-tls-verify", "--wait"}
+)

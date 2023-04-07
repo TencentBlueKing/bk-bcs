@@ -27,7 +27,7 @@
 import _ from 'lodash';
 
 import http from '@/api';
-import { json2Query } from '@/common/util';
+import { json2Query, sort } from '@/common/util';
 import {
   fetchClusterList,
   fetchNodePodsData,
@@ -51,22 +51,14 @@ export default {
          * @param {Array} list cluster 列表
          */
     forceUpdateClusterList(state, list) {
-      const clusterList = list.sort((pre, next) => {
-        const preDate = new Date(pre.createTime);
-        const nextDate = new Date(next.createTime);
-        if (preDate > nextDate) {
-          return -1;
-        } if (preDate < nextDate) {
-          return 1;
-        }
-        return 0;
-      }).map(item => ({
+      const clusterList = list.map(item => ({
         cluster_id: item.clusterID,
         name: item.clusterName,
         project_id: item.projectID,
         ...item,
       }));
-      state.clusterList.splice(0, state.clusterList.length, ...clusterList);
+      const sortData = sort(clusterList, 'clusterName');
+      state.clusterList.splice(0, state.clusterList.length, ...sortData);
       state.isClusterDataReady = true;
     },
     updateClusterWebAnnotations(state, data) {

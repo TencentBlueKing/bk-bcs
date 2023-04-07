@@ -21,17 +21,17 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
+
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 // EndOfTransmission xxx
@@ -124,6 +124,13 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 		}
 
 		r.resizeMsgChan <- resizeMsg
+		return nil, nil
+	}
+
+	// 打印日志
+	if channel == LogChannel {
+		inputMsg, _ := r.bindMgr.HandleInputMsg(decodeMsg)
+		logger.Infof("UserName=%s  SessionID=%s  Command=%s", r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
 		return nil, nil
 	}
 

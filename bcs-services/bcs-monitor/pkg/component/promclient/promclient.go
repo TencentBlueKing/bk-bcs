@@ -257,10 +257,11 @@ func QueryLabelValues(ctx context.Context, rawURL string, header http.Header, r 
 	if r.End != 0 {
 		query["end"] = strconv.Itoa(int(r.End))
 	}
+	query["match[]"] = storepb.MatchersToString(r.Matchers...)
 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
-		SetPathParams(query).
+		SetQueryParams(query).
 		SetHeaderMultiValues(header).
 		Get(rawURL)
 

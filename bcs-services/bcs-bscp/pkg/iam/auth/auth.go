@@ -38,6 +38,7 @@ type Authorizer interface {
 	Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) ([]*meta.Decision, bool, error)
 	// AuthorizeWithResp authorize if user has permission to the resources, assign error to response if occurred.
 	// If user is unauthorized, assign error and need applied permissions into response, returns unauthorized error.
+	// Authorize(kt *kit.Kit, resource *meta.ResourceAttribute) error
 	AuthorizeWithResp(kt *kit.Kit, resp interface{}, resources ...*meta.ResourceAttribute) error
 	// UnifiedAuthentication API 鉴权中间件
 	UnifiedAuthentication(next http.Handler) http.Handler

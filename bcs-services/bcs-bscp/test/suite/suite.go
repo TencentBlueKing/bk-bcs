@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"bscp.io/test/util"
+
 	_ "github.com/go-sql-driver/mysql" // import mysql drive, used to create conn.
 	"github.com/jmoiron/sqlx"
 	_ "github.com/smartystreets/goconvey/convey" // import convey.
@@ -72,7 +73,6 @@ func init() {
 		log.Printf("new suite test client err: %v", err)
 		os.Exit(0)
 	}
-
 	util.SetLogger(logCfg)
 }
 

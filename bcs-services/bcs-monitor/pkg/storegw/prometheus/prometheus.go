@@ -98,6 +98,7 @@ func (s *PromStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest
 // LabelValues 返回 label values 列表
 func (s *PromStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse,
 	error) {
+	klog.InfoS(storepb.MatchersToString(r.Matchers...), "request_id", store.RequestIDValue(ctx))
 	values, err := promclient.QueryLabelValues(ctx, s.promURL.String(), nil, r)
 	if err != nil {
 		return &storepb.LabelValuesResponse{Values: values}, err
@@ -136,6 +137,19 @@ func (s *PromStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesSer
 
 	// bcs 聚合 metrics 忽略
 	if strings.HasPrefix(metricName, "bcs:") {
+		return nil
+	}
+
+	clusterId, err := clientutil.GetLabelMatchValue("bcs_cluster_id", r.Matchers)
+	if err != nil {
+		return err
+	}
+
+	scopeClusterID := store.ClusterIDValue(ctx)
+	if clusterId == "" && scopeClusterID == "" {
+		return nil
+	}
+	if clusterId != s.config.ClusterID && scopeClusterID != s.config.ClusterID {
 		return nil
 	}
 

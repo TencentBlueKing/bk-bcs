@@ -52,7 +52,7 @@ export default defineComponent({
   align-items: center;
   justify-content: center;
   height: 52px;
-  margin: -12px 0 0 0;
+  margin: -6px 0 6px 0;
   padding: 0 20px 0 12px;
   font-size: 12px;
   background-color: #fafbfd;

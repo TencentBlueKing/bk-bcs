@@ -14,6 +14,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
@@ -75,6 +76,7 @@ func (c *Content) Upload(ctx context.Context, header http.Header, bizId, appId u
 		Body(data).
 		Do()
 
+	fmt.Printf("uplaod resp:%#v\nerr:%s\n", resp, resp.Err)
 	if resp.Err != nil {
 		//报无效的gzip header，实际是上传成功
 		if strings.Contains(resp.Err.Error(), "gzip: invalid header") {

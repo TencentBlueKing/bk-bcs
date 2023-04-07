@@ -61,7 +61,7 @@ func (la *ListAction) listCloud() error {
 		return err
 	}
 	for i := range clouds {
-		if clouds[i].CloudCredential != nil && !la.req.ShowCredential {
+		if clouds[i].CloudCredential != nil {
 			clouds[i].CloudCredential.Key = ""
 			clouds[i].CloudCredential.Secret = ""
 		}

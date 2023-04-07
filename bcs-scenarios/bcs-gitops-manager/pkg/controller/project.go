@@ -23,7 +23,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	pm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
 // ProjectControl for bcs project data sync
@@ -50,9 +49,9 @@ type project struct {
 
 // Init controller
 func (control *project) Init() error {
-	if control.option.Mode == common.ModeService {
-		return fmt.Errorf("service mode is not implenmented")
-	}
+	//if control.option.Mode == common.ModeService {
+	//	return fmt.Errorf("service mode is not implenmented")
+	//}
 	// init with raw grpc connection
 	if err := control.initClient(); err != nil {
 		return err

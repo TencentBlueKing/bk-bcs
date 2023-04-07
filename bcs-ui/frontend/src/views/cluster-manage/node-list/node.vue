@@ -238,9 +238,10 @@
           :label="$t('状态')"
           :filters="filtersDataSource.status"
           :filtered-value="filteredValue.status"
-          min-width="120"
+          min-width="160"
           column-key="status"
-          prop="status">
+          prop="status"
+          show-overflow-tooltip>
           <template #default="{ row }">
             <LoadingIcon
               v-if="['INITIALIZATION', 'DELETING'].includes(row.status)"
@@ -359,7 +360,8 @@
                   project_id: curProject.project_id,
                   cluster_id: localClusterId
                 }
-              }">
+              }"
+              v-if="row.status !== 'REMOVE-CA-FAILURE'">
               <bk-button
                 class="mr10"
                 text
@@ -422,6 +424,13 @@
                 </template>
               </bk-popover>
             </div>
+            <bk-button
+              class="mr10"
+              text
+              v-else
+              @click="handleShowLog(row)">
+              {{$t('查看日志')}}
+            </bk-button>
           </template>
         </bcs-table-column>
         <bcs-table-column type="setting" :resizable="false">
@@ -902,7 +911,7 @@ export default defineComponent({
 
     // IP复制
     const showCopyMenu = ref(false);
-    const copyList = ref([
+    const copyList = computed(() => [
       {
         id: 'checked',
         label: $i18n.t('复制勾选IP'),
@@ -910,10 +919,12 @@ export default defineComponent({
           {
             id: 'checked-ipv4',
             label: 'IPv4',
+            disabled: !selections.value.length,
           },
           {
             id: 'checked-ipv6',
             label: 'IPv6',
+            disabled: !selections.value.length,
           },
         ],
       },

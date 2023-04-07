@@ -1,7 +1,7 @@
 <template>
   <div class="biz-content">
     <Header>
-      {{$t('集群总览')}}
+      {{$t('集群列表')}}
       <span class="ml5 text-[12px] text-[#979ba5]">
         {{`( ${$t('业务')}: ${curProject.cc_app_name}  ${$t('编排类型')}: ${kindMap[curProject.kind]} )`}}
       </span>
@@ -201,30 +201,7 @@
         </div>
       </template>
       <!-- 集群创建引导 -->
-      <div class="biz-guide-box" v-else-if="!isLoading">
-        <p class="title">{{$t('欢迎使用容器服务')}}</p>
-        <p class="desc">{{$t('使用容器服务，蓝鲸将为您快速搭建、运维和管理容器集群，您可以轻松对容器进行启动、停止等操作，也可以查看集群、容器及服务的状态，以及使用各种组件服务。')}}</p>
-        <div class="guide-btn-group">
-          <a
-            href="javascript:void(0);"
-            class="bk-button bk-primary bk-button-large"
-            v-authority="{
-              actionId: 'cluster_create',
-              resourceName: curProject.project_name,
-              permCtx: {
-                resource_type: 'project',
-                project_id: curProject.project_id
-              }
-            }"
-            @click="goCreateCluster">
-            <span style="margin-left: 0;">{{$t('创建容器集群')}}</span>
-          </a>
-          <a class="bk-button bk-default bk-button-large" :href="PROJECT_CONFIG.quickStart" target="_blank">
-            <span style="margin-left: 0;">{{$t('快速入门指引')}}</span>
-          </a>
-          <apply-host :title="$t('申请Master服务器')" class="apply-host ml5" v-if="$INTERNAL" />
-        </div>
-      </div>
+      <ClusterGuide v-else-if="!isLoading" />
     </div>
     <!-- 集群日志 -->
     <bcs-sideslider
@@ -264,6 +241,7 @@ import tipDialog from '@/components/tip-dialog/index.vue';
 import { useClusterList, useClusterOverview, useClusterOperate, useTask } from './use-cluster';
 import TaskList from '@/views/cluster-manage/components/task-list.vue';
 import Header from '@/components/layout/Header.vue';
+import ClusterGuide from './cluster-guide.vue';
 
 export default defineComponent({
   name: 'ClusterList',
@@ -273,6 +251,7 @@ export default defineComponent({
     tipDialog,
     TaskList,
     Header,
+    ClusterGuide,
   },
   setup(props, ctx) {
     const { $store, $router, $i18n, $bkMessage, $bkInfo } = ctx.root;

@@ -123,3 +123,11 @@
 .bk-dialog-wrapper .bk-dialog {
   top: 10%;
 }
+
+.bk-button-text span {
+  text-align: left;
+}
+
+.bk-table .bk-loading {
+  transform: translate(-1px, -1px);
+}

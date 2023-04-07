@@ -108,14 +108,14 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 // DeleteProject delete a project record
 func (p *ProjectHandler) DeleteProject(ctx context.Context,
 	req *proto.DeleteProjectRequest, resp *proto.ProjectResponse) error {
-	// 删除项目
-	da := project.NewDeleteAction(p.model)
-	if err := da.Do(ctx, req); err != nil {
-		return err
-	}
-	// 处理返回数据及权限
-	setResp(resp, nil)
-	return nil
+	// // 删除项目
+	// da := project.NewDeleteAction(p.model)
+	// if err := da.Do(ctx, req); err != nil {
+	// 	return err
+	// }
+	// // 处理返回数据及权限
+	// setResp(resp, nil)
+	return errorx.NewReadableErr(errorx.PermDeniedErr, "projects are not allowed to be deleted")
 }
 
 // UpdateProject update a project record

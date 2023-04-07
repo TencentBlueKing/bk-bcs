@@ -76,7 +76,15 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { $router, $i18n, $bkInfo, $store, $bkMessage } = ctx.root;
-    const { type, category, kind, showNameSpace, showCrd, defaultActiveDetailType, defaultCrd } = toRefs(props);
+    const {
+      type,
+      category,
+      kind,
+      showNameSpace,
+      showCrd,
+      defaultActiveDetailType,
+      defaultCrd,
+    } = toRefs(props);
     const defaultCustomObjectsMap = ref(['gamedeployments.tkex.tencent.com', 'gamestatefulsets.tkex.tencent.com', 'hooktemplates.tkex.tencent.com']);
     const updateStrategyMap = ref({
       RollingUpdate: $i18n.t('滚动升级'),
@@ -107,7 +115,7 @@ export default defineComponent({
     const clusterId = computed(() => $store.getters.curClusterId);
     const handleGetCrdData = async () => {
       crdLoading.value = true;
-      const res = await fetchCRDData();
+      const res = await fetchCRDData(clusterId.value);
       crdData.value = res.data;
       crdLoading.value = false;
       // 校验初始化的crd值是否正确
@@ -179,9 +187,9 @@ export default defineComponent({
           : undefined;
         // crd 界面无需传当前crd参数
         const crd = customCrd.value ? currentCrd.value : '';
-        await handleFetchCustomResourceList(crd, category.value, customResourceNamespace);
+        await handleFetchCustomResourceList(clusterId.value, crd, category.value, customResourceNamespace);
       } else {
-        await handleFetchList(type.value, category.value, namespaceValue.value);
+        await handleFetchList(type.value, category.value, namespaceValue.value, clusterId.value);
       }
 
       // 重新订阅（获取表格数据之后，resourceVersion可能会变更）
@@ -280,6 +288,7 @@ export default defineComponent({
           category: category.value,
           name: row.metadata.name,
           namespace: row.metadata.namespace,
+          clusterId: clusterId.value,
         },
         query: {
           kind: subscribeKind.value,
@@ -294,6 +303,7 @@ export default defineComponent({
     const curDetailRow = ref<any>({
       data: {},
       extData: {},
+      clusterId: clusterId.value,
     });
     // 侧栏展示类型
     const detailType = ref({
@@ -332,6 +342,7 @@ export default defineComponent({
         result = await $store.dispatch('dashboard/crdEnlargeCapacityChange', {
           $crdName: defaultCrd.value,
           $cobjName: name,
+          $clusterId: clusterId.value,
           replicas: replicas.value,
           namespace,
         });
@@ -340,6 +351,7 @@ export default defineComponent({
           $namespace: namespace,
           $category: category.value,
           $name: name,
+          $clusterId: clusterId.value,
           replicas: replicas.value,
         });
       }
@@ -459,6 +471,7 @@ export default defineComponent({
               namespace,
               $crd: currentCrd.value,
               $category: category.value,
+              $clusterId: clusterId.value,
               $name: name,
             });
           } else {
@@ -466,6 +479,7 @@ export default defineComponent({
               $namespaceId: namespace,
               $type: type.value,
               $category: category.value,
+              $clusterId: clusterId.value,
               $name: name,
             });
           };
@@ -555,21 +569,16 @@ export default defineComponent({
   },
   render() {
     const renderCreate = () => {
-      if (this.showCreate) {
+      if (this.showCreate && !this.isLoading) {
         if (this.webAnnotations?.featureFlag?.FORM_CREATE) {
           return (
             <bk-dropdown-menu trigger="click" {...{
               scopedSlots: {
                 'dropdown-trigger': () => (
                         <bk-button
-                            class="resource-create"
-                            theme="primary">
-                            <div class="resource-create-wrapper">
-                                { this.$t('创建') }
-                                <span class="resource-create-icon">
-                                    <i class="bk-icon icon-angle-down"></i>
-                                </span>
-                            </div>
+                            theme="primary"
+                            icon-right="icon-angle-down">
+                            { this.$t('创建') }
                         </bk-button>
                 ),
                 'dropdown-content': () => (
@@ -587,7 +596,6 @@ export default defineComponent({
         }
         return (
           <bk-button
-              class="resource-create"
               icon="plus"
               theme="primary"
               onClick={this.handleCreateResource}>

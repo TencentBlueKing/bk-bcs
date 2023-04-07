@@ -16,26 +16,28 @@ package config
 
 // HostConf :
 type HostConf struct {
-	DevOpsHost            string `yaml:"devops_host"`
-	DevOpsBCSAPIURL       string `yaml:"devops_bcs_api_url"`
-	DevOpsArtifactoryHost string `yaml:"devops_artifactory_host"`
-	BKIAMAppURL           string `yaml:"bk_iam_app_url"`
-	PaaSHost              string `yaml:"paas_host"`
-	BKCMDBHost            string `yaml:"bk_cmdb_host"`
-	BKMonitorHost         string `yaml:"bk_monitor_host"`
+	DevOpsHost            string `yaml:"devops_host"`             // 蓝盾
+	DevOpsBCSAPIURL       string `yaml:"devops_bcs_api_url"`      // SaaS Backend api 地址
+	DevOpsArtifactoryHost string `yaml:"devops_artifactory_host"` // 制品库地址
+	BKPaaSHost            string `yaml:"bk_paas_host"`            // PaaS 地址
+	BKIAMAppURL           string `yaml:"bk_iam_app_url"`          // 权限中心
+	BKCCHost              string `yaml:"bk_cc_host"`              // cmdb
+	BKMonitorHost         string `yaml:"bk_monitor_host"`         // 蓝鲸监控
 }
 
 // FrontendConf
 type FrontendConf struct {
-	Docs map[string]string `yaml:"docs"`
-	Host *HostConf         `yaml:"hosts"`
+	Docs     map[string]string `yaml:"docs"`
+	Host     *HostConf         `yaml:"hosts"`
+	Features map[string]string `yaml:"features"`
 }
 
 // defaultFrontendConf 默认配置
 func defaultFrontendConf() *FrontendConf {
 	c := &FrontendConf{
-		Docs: map[string]string{},
-		Host: &HostConf{},
+		Docs:     map[string]string{},
+		Host:     &HostConf{},
+		Features: map[string]string{"zh_cn": ""},
 	}
 	return c
 }

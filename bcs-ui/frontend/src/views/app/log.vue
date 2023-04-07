@@ -23,7 +23,6 @@
             <div v-if="index === 0" class="new-flag">{{ $t('当前版本') }}</div>
           </div>
         </div>
-        <bk-button class="version-features" text @click="handleShowFeature">{{$t('功能特性指引')}}</bk-button>
       </div>
       <div class="layout-right">
         <div class="content-wraper">
@@ -43,12 +42,15 @@ export default {
       type: Boolean,
       default: false,
     },
+    list: {
+      type: Array,
+      default: () => [],
+    },
   },
   data() {
     return {
       isLoading: false,
       activeIndex: 0,
-      list: [],
     };
   },
   computed: {
@@ -76,24 +78,23 @@ export default {
       };
       return md.render(this.list[this.activeIndex].content);
     },
+    latestBcsVerSion() {
+      return this.list[0]?.version || '';
+    },
   },
-  created() {
-    this.fetchData();
+  watch: {
+    list: {
+      handler() {
+        if (!this.list.length) return;
+        const curBcsVerSion = localStorage.getItem('__bcs_latest_version__');
+        if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
+          this.$emit('input', true);
+        }
+      },
+      immediate: true,
+    },
   },
   methods: {
-    async fetchData() {
-      this.isLoading = true;
-      const res = await this.$store.dispatch('app/getVersionsLogList', this.projectId);
-      this.list = res.data || [];
-      // 按发布日期顺序排序
-      this.list.sort((a, b) => (b.date).split('-').join('') * 1 - a.date.split('-').join('') * 1);
-      this.latestBcsVerSion = this.list[0]?.version || '';
-      this.isLoading = false;
-      const curBcsVerSion = localStorage.getItem('__bcs_latest_version__');
-      if (curBcsVerSion !== this.latestBcsVerSion && this.list.length) {
-        this.$emit('input', true);
-      }
-    },
     handleTabChange(index) {
       this.activeIndex = index;
     },
@@ -132,9 +133,6 @@ export default {
     },
     dialogChange(val) {
       if (!val) this.handleClose();
-    },
-    handleShowFeature() {
-      this.$emit('show-feature');
     },
   },
 };

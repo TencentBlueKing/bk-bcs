@@ -41,7 +41,7 @@ type DeleteCloudVPCReq struct {
 	VPCID   string `json:"vpcID"`
 }
 
-// 查询云私有网络request
+// ListCloudVPCReq 查询云私有网络request
 type ListCloudVPCReq struct {
 	NetworkType string `json:"networkType"`
 }

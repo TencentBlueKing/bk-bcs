@@ -92,8 +92,8 @@
         </template>
       </bk-table>
     </template>
-    <template #detail="{ data, extData }">
-      <PvcDetail :data="data" :ext-data="extData"></PvcDetail>
+    <template #detail="{ data, extData, clusterId }">
+      <PvcDetail :data="data" :ext-data="extData" :cluster-id="clusterId"></PvcDetail>
     </template>
   </BaseLayout>
 </template>

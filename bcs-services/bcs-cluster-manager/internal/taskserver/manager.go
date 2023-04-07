@@ -200,9 +200,14 @@ func (ts *TaskServer) initServer() error {
 		}
 	}
 
-	// register common job task(bksops、watch)
-	allTasks["bksopsjob"] = localtask.RunBKsopsJob
-	allTasks["watchjob"] = localtask.EnsureWatchComponentTask
+	// register common actions
+	for name, action := range localtask.RegisterCommonActions() {
+		if _, ok := allTasks[name]; ok {
+			blog.Errorf("taskserver init failed, task %s duplicated", name)
+			return fmt.Errorf("task %s duplicated", name)
+		}
+		allTasks[name] = action
+	}
 	if err := ts.server.RegisterTasks(allTasks); err != nil {
 		blog.Errorf("task server register tasks failed, %s", err.Error())
 		return err

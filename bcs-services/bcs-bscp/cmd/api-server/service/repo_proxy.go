@@ -63,6 +63,44 @@ type repoProxy struct {
 	authorizer auth.Authorizer
 }
 
+// FileMetadata get repo head data
+func (p repoProxy) FileMetadata(w http.ResponseWriter, r *http.Request) {
+	kt, err := gwparser.Parse(r.Context(), r.Header)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, errf.Error(err).Error())
+		return
+	}
+
+	authRes, needReturn := p.authorize(kt, r)
+	if needReturn {
+		fmt.Fprintf(w, authRes)
+		return
+	}
+	config := cc.ApiServer().Repo
+
+	bizID, _, err := repository.GetBizIDAndAppID(nil, r)
+	if err != nil {
+		logs.Errorf("get biz_id and app_id from request failed, err: %v, rid: %s", err, kt.Rid)
+		return
+	}
+
+	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+	opt := &repo.NodeOption{
+		Project: config.BkRepo.Project,
+		BizID:   bizID,
+		Sign:    sha256,
+	}
+	path, _ := repo.GenNodePath(opt)
+	fileMetadata, err := p.repoCli.FileMetadataHead(kt.Ctx, path)
+	if err != nil {
+		logs.Errorf("get file metadata information failed, err: %v, rid: %s", err, kt.Rid)
+		return
+	}
+	msg, _ := json.Marshal(fileMetadata)
+	w.Write(msg)
+}
+
 func (p repoProxy) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {

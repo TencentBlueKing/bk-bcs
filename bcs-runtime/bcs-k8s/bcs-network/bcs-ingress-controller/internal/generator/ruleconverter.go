@@ -129,6 +129,11 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 	if rc.rule.Certificate != nil {
 		li.Spec.Certificate = rc.rule.Certificate
 	}
+	// 暂时只允许使用listener.listenerAttribute.sniSwitch参数
+	if rc.rule.ListenerAttribute != nil && rc.rule.ListenerAttribute.SniSwitch != 0 {
+		li.Spec.ListenerAttribute = &networkextensionv1.IngressListenerAttribute{SniSwitch: rc.rule.
+			ListenerAttribute.SniSwitch}
+	}
 
 	listenerRules, err := rc.generateListenerRule(rc.rule.Routes)
 	if err != nil {
@@ -148,6 +153,7 @@ func (rc *RuleConverter) generateListenerRule(l7Routes []networkextensionv1.Laye
 		liRule.Domain = l7Route.Domain
 		liRule.Path = l7Route.Path
 		liRule.ListenerAttribute = l7Route.ListenerAttribute
+		liRule.Certificate = l7Route.Certificate
 		protocol := rc.rule.Protocol
 		if len(l7Route.ForwardType) != 0 {
 			protocol = l7Route.ForwardType
@@ -228,7 +234,8 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 
 	// set namespace when namespaced flag is set
 	svcNamespace := svcRoute.ServiceNamespace
-	if rc.isNamespaced {
+	// use ingressNS as default
+	if rc.isNamespaced || svcNamespace == "" {
 		svcNamespace = rc.ingressNamespace
 	}
 

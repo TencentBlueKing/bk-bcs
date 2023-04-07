@@ -345,6 +345,11 @@ export default defineComponent({
       default: '',
       required: true,
     },
+    clusterId: {
+      type: String,
+      default: '',
+      required: true,
+    },
     // 是否隐藏 更新 和 删除操作（兼容集群管理应用详情）
     hiddenOperate: {
       type: Boolean,
@@ -373,9 +378,10 @@ export default defineComponent({
       defaultActivePanel: 'container',
       type: 'workloads',
     });
-    const { name, namespace } = toRefs(props);
+    const { name, namespace, clusterId } = toRefs(props);
     const params = computed(() => ({
       $namespaceId: namespace.value,
+      $clusterId: clusterId.value,
       pod_name_list: [name.value],
     }));
 
@@ -389,6 +395,7 @@ export default defineComponent({
       container.value = await $store.dispatch('dashboard/listContainers', {
         $podId: name.value,
         $namespaceId: namespace.value,
+        $clusterId: clusterId.value,
       });
       const containerIDs = container.value.map(item => item.containerID).filter(id => !!id);
       if (containerIDs.length) {
@@ -430,6 +437,7 @@ export default defineComponent({
         $podId: name.value,
         $type: type,
         $namespaceId: namespace.value,
+        $clusterId: clusterId.value,
       }));
       const [pvcs = {}, configmaps = {}, secrets = {}] = await Promise.all(promises);
       storage.value = {
@@ -464,7 +472,6 @@ export default defineComponent({
     // 容器操作
     // 1. 跳转WebConsole
     const projectId = computed(() => $route.params.projectId);
-    const clusterId = computed(() => $store.getters.curClusterId || $route.query.cluster_id);
     const terminalWins = new Map();
     const handleShowTerminal = (row) => {
       const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
@@ -493,7 +500,6 @@ export default defineComponent({
     });
 
     return {
-      clusterId,
       params,
       container,
       conditions,

@@ -16,6 +16,7 @@ package api
 import (
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
@@ -36,7 +37,13 @@ type NodeManager struct {
 // GetNodeByIP get specified Node by innerIP address
 func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	node := &proto.Node{}
-	node.InnerIP = ip
+
+	if util.IsIPv6(ip) {
+		node.InnerIPv6 = ip
+	}
+	if util.IsIPv4(ip) {
+		node.InnerIP = ip
+	}
 	node.Region = opt.Common.Region
 	return node, nil
 }

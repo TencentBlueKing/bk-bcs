@@ -123,7 +123,15 @@
                 </div>
                 <ul class="bk-dropdown-list">
                     <li>
-                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList" v-if="showItem(cluster)">$[cluster.clusterName]</a>
+                        <a href="javascript:;" v-cloak :class="{selected: index === selectIndex}" :style="{
+                                height: '46px',
+                                display: 'flex',
+                                'flex-direction': 'column',
+                                'justify-content': 'center'
+                            }" @click.stop.prevent="addTerminal(cluster)" v-for="(cluster, index) of clusterList" v-if="showItem(cluster)">
+                            <div :style="{'line-height': 1}">$[cluster.clusterName]</div>
+                            <div :style="{'line-height': 1, 'margin-top': '8px'}">$[cluster.clusterID]</div>
+                        </a>
                     </li>
                 </ul>
             </div>

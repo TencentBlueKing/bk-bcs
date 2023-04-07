@@ -20,7 +20,7 @@
         class="bcs-border-right bcs-border-bottom"
         :title="$t('CPU使用率/装箱率')"
         :metric="['cpu_usage', 'cpu_request_usage']"
-        :params="{ $nodeIP: nodeName }"
+        :params="{ $nodeIP: nodeName, $clusterId: clusterId }"
         :colors="['#3a84ff', '#30d878']"
         category="nodes">
       </Metric>
@@ -28,7 +28,7 @@
         class="bcs-border-bottom"
         :title="$t('内存使用率/装箱率')"
         :metric="['memory_usage', 'memory_request_usage']"
-        :params="{ $nodeIP: nodeName }"
+        :params="{ $nodeIP: nodeName, $clusterId: clusterId }"
         :colors="['#853cff', '#3ede78']"
         category="nodes">
       </Metric>
@@ -36,7 +36,7 @@
         class="bcs-border-right"
         :title="$t('网络')"
         :metric="['network_receive', 'network_transmit']"
-        :params="{ $nodeIP: nodeName }"
+        :params="{ $nodeIP: nodeName, $clusterId: clusterId }"
         :colors="['#3ede78', '#853cff']"
         unit="byte"
         category="nodes">
@@ -44,7 +44,7 @@
       <Metric
         :title="$t('磁盘容量/IO使用率')"
         :metric="['disk_usage', 'diskio_usage']"
-        :params="{ $nodeIP: nodeName }"
+        :params="{ $nodeIP: nodeName, $clusterId: clusterId }"
         :colors="['#853cff', '#30d878']"
         category="nodes">
       </Metric>
@@ -350,7 +350,7 @@ export default defineComponent({
     // 跳转Pods详情
     const gotoPodDetail = (row) => {
       $router.push({
-        name: 'dashboardWorkloadDetail',
+        name: 'nodePodDetail',
         params: {
           category: 'pods',
           name: row.name,

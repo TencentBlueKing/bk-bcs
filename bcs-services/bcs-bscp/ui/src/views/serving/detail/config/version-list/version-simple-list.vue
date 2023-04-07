@@ -8,18 +8,17 @@
   import { getConfigVersionList } from '../../../../../api/config'
   import { FilterOp, RuleOp } from '../../../../../types'
   import { IConfigVersion } from '../../../../../../types/config'
-  import VersionLayout from '../components/version-layout.vue'
-  import ConfigDiff from '../components/config-diff.vue';
+  import VersionDiff from '../components/version-diff/index.vue'
 
-  const servingStore = useServingStore()
   const versionStore = useConfigStore()
-  const { appData } = storeToRefs(servingStore)
   const { versionData } = storeToRefs(versionStore)
 
   const props = defineProps<{
     bkBizId: string,
     appId: number,
   }>()
+
+  const emits = defineEmits(['loaded'])
 
   const currentConfig: IConfigVersion = {
     id: 0,
@@ -54,15 +53,6 @@
     limit: 200 // @todo 分页条数待确认
   }
 
-  const listData = computed(() => {
-    return [currentConfig, ...versionList.value]
-  })
-
-
-  watch(() => props.appId, () => {
-    getVersionList()
-  })
-
   onMounted(() => {
     getVersionList()
   })
@@ -71,8 +61,10 @@
     try {
       versionListLoading.value = true
       const res = await getConfigVersionList(props.bkBizId, props.appId, filter, page)
-      versionList.value = res.data.details
+      versionList.value = [currentConfig, ...res.data.details]
+      // 默认选中未命名版本
       handleSelectVersion(currentConfig)
+      emits('loaded')
     } catch (e) {
       console.error(e)
     } finally {
@@ -87,13 +79,8 @@
   }
 
   const handleDiffDialogShow = (version: IConfigVersion) => {
-    console.log(version)
     diffVersion.value = version
     showDiffPanel.value = true
-  }
-
-  const handleDiffClose = () => {
-    showDiffPanel.value = false
   }
 
   const handleDeprecate = (id: number) => {
@@ -116,12 +103,12 @@
   <section class="version-container">
     <bk-loading :loading="versionListLoading">
       <section
-        v-for="(version, index) in listData"
+        v-for="(version, index) in versionList"
         :key="version.id"
         :class="['version-item', { active: versionData.id === version.id }]"
         @click="handleSelectVersion(version)">
         <div class="dot-line">
-          <div :class="['dot', { first: index === 0, last: index === listData.length - 1 }]"></div>
+          <div :class="['dot', { first: index === 0, last: index === versionList.length - 1 }]"></div>
         </div>
         <div class="version-name">{{ version.spec.name }}</div>
         <bk-dropdown class="action-area">
@@ -135,26 +122,9 @@
         </bk-dropdown>
       </section>
     </bk-loading>
-    <VersionLayout v-if="showDiffPanel" :show-footer="false">
-      <template #header>
-        <section class="header-wrapper">
-          <span class="header-name" @click="handleDiffClose">
-            <ArrowsLeft class="arrow-left" />
-            <span class="service-name">{{ appData.spec.name }}</span>
-          </span>
-          <AngleRight class="arrow-right" />
-          版本对比
-        </section>
-      </template>
-      <config-diff :config-list="[]">
-        <template #head>
-          <div class="diff-left-panel-head">
-            {{ diffVersion.spec.name }}
-            <!-- @todo 待确定这里展示什么名称 -->
-          </div>
-        </template>
-      </config-diff>
-    </VersionLayout>
+    <VersionDiff
+      v-model:show="showDiffPanel"
+      :current-version="diffVersion" />
   </section>
 </template>
 

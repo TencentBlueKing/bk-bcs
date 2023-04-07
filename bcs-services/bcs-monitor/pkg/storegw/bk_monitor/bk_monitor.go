@@ -17,14 +17,17 @@ package bk_monitor
 import (
 	"context"
 	"math"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
 	"github.com/thanos-io/thanos/pkg/store"
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
+	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
@@ -34,13 +37,32 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
+// Config 配置
+type Config struct {
+	Dispatch []clientutil.DispatchConf `yaml:"dispatch"`
+}
+
 // BKMonitorStore implements the store node API on top of the Prometheus remote read API.
 type BKMonitorStore struct {
+	config   *Config
+	dispatch map[string]clientutil.DispatchConf
 }
 
 // NewBKMonitorStore xxx
 func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
-	store := &BKMonitorStore{}
+	var config Config
+	if err := yaml.UnmarshalStrict(conf, &config); err != nil {
+		return nil, errors.Wrap(err, "parsing bk_monitor store config")
+	}
+
+	store := &BKMonitorStore{
+		config:   &config,
+		dispatch: make(map[string]clientutil.DispatchConf, 0),
+	}
+
+	for _, d := range config.Dispatch {
+		store.dispatch[d.ClusterID] = d
+	}
 	return store, nil
 }
 
@@ -59,7 +81,7 @@ func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*sto
 	}
 
 	grayClusterMap := make(map[string]struct{}, 0)
-	if len(config.G.BKMonitor.MetadataURL) != 0 {
+	if config.G.BKMonitor.EnableGrey {
 		grayClusterMap, err = bkmonitor_client.QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
 		if err != nil {
 			klog.Errorf("query bk_monitor cluster list error, %s", err)
@@ -105,9 +127,35 @@ func (s *BKMonitorStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRe
 // LabelValues 返回 label values 列表
 func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse,
 	error) {
+	klog.InfoS(storepb.MatchersToString(r.Matchers...), "request_id", store.RequestIDValue(ctx))
 	values := []string{}
-	if r.Label == "__name__" {
-		values = []string{"container_network_receive_bytes_total"}
+	if r.Label != "__name__" {
+		return &storepb.LabelValuesResponse{Values: values}, nil
+	}
+
+	// get cluster id
+	clusterID, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
+	if err != nil {
+		return nil, err
+	}
+
+	scopeClusterID := store.ClusterIDValue(ctx)
+	if clusterID == "" && scopeClusterID == "" {
+		return &storepb.LabelValuesResponse{Values: values}, nil
+	}
+
+	// 优先使用 clusterID
+	if scopeClusterID != "" {
+		clusterID = scopeClusterID
+	}
+
+	// get bk_monitor metrics
+	metrics, err := bkmonitor_client.GetMetricsList(ctx, config.G.BKMonitor.MetadataURL, clusterID)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range metrics {
+		values = append(values, v.Metric)
 	}
 	values = append(values, AvailableNodeMetrics...)
 
@@ -117,7 +165,8 @@ func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 // Series 返回时序数据
 func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
 	ctx := srv.Context()
-	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
+	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime",
+		r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	// step 固定1分钟
 	// 注意: 目前实现的 aggrChunk 为 Raw 格式, 不支持降采样, 支持参考 https://thanos.io/tip/components/compact.md/
@@ -126,12 +175,6 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	// 毫秒转换为秒
 	start := time.UnixMilli(r.MinTime).Unix()
 	end := time.UnixMilli(r.MaxTime).Unix()
-
-	// series 数据, 这里只查询最近 SeriesStepDeltaSeconds
-	if r.SkipChunks {
-		end = time.Now().Unix()
-		start = end - clientutil.SeriesStepDeltaSeconds
-	}
 
 	metricName, err := clientutil.GetLabelMatchValue("__name__", r.Matchers)
 	if err != nil {
@@ -164,6 +207,13 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	cluster, err := bcs.GetCluster(clusterId)
 	if err != nil {
 		return err
+	}
+
+	// series 数据, 这里只查询最近 SeriesStepDeltaSeconds
+	if r.SkipChunks {
+		// end = time.Now().Unix()
+		// start = end - clientutil.SeriesStepDeltaSeconds
+		return s.getMatcherSeries(r, srv, clusterId)
 	}
 
 	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
@@ -200,7 +250,11 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		// 传递函数到底层数据源，来实现特定的特性，如：把 avg_over_time 之类的时间函数传递到底层数据源，可以忽略 prometheus 回朔特性
 		pql = r.ToPromQL()
 	}
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), config.G.BKMonitor.URL, cluster.BKBizID,
+	bkmonitorURL := config.G.BKMonitor.URL
+	if url, ok := s.dispatch[clusterId]; ok {
+		bkmonitorURL = url.URL
+	}
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), bkmonitorURL, cluster.BKBizID,
 		start, end, step, newMatchers, pql)
 	if err != nil {
 		return err
@@ -223,4 +277,57 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	}
 
 	return nil
+}
+
+func (s *BKMonitorStore) getMatcherSeries(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer,
+	clusterID string) error {
+	ctx := srv.Context()
+	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "clusterID", clusterID)
+	series, err := bkmonitor_client.GetMetricsSeries(ctx, config.G.BKMonitor.MetadataURL, clusterID)
+	if err != nil {
+		return err
+	}
+	klog.InfoS("series", "request_id", store.RequestIDValue(ctx), "clusterID", clusterID, "len", len(series))
+
+	metricsLabel := clientutil.GetLabelMatch("__name__", r.Matchers)
+	if metricsLabel == nil || metricsLabel.Value == "" {
+		return nil
+	}
+
+	for _, promSeries := range series {
+		name := clientutil.GetLabelMatchValueFromSeries("__name__", promSeries.Labels)
+		match := filterMetrics(name, metricsLabel.Value, metricsLabel.Type)
+		if !match {
+			continue
+		}
+		series := &clientutil.TimeSeries{TimeSeries: promSeries}
+		series = series.AddLabel("cluster_id", clusterID)
+		series = series.RenameLabel("bk_namespace", "namespace")
+		series = series.RenameLabel("bk_pod", "pod")
+
+		s, err := series.ToThanosSeries(r.SkipChunks)
+		if err != nil {
+			return err
+		}
+		if err := srv.Send(storepb.NewSeriesResponse(s)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func filterMetrics(name, queryName string, matchType storepb.LabelMatcher_Type) bool {
+	switch matchType {
+	case storepb.LabelMatcher_EQ:
+		return name == queryName
+	case storepb.LabelMatcher_NEQ:
+		return name != queryName
+	case storepb.LabelMatcher_RE:
+		reg, _ := regexp.Compile(queryName)
+		return reg.MatchString(name)
+	case storepb.LabelMatcher_NRE:
+		reg, _ := regexp.Compile(queryName)
+		return !reg.MatchString(name)
+	}
+	return false
 }

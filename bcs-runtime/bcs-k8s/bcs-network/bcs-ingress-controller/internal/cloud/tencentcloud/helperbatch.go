@@ -58,6 +58,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 		return nil, nil
 	}
 	ruleIDAttrMap := make(map[string]*networkextensionv1.IngressListenerAttribute)
+	ruleIDCertMap := make(map[string]*networkextensionv1.IngressListenerCertificate)
 	for _, cloudLi := range resp.Response.Listeners {
 		// only care about listener with given ports
 		if _, ok := portMap[int(*cloudLi.Port)]; !ok {
@@ -78,6 +79,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 			for _, respRule := range cloudLi.Rules {
 				if respRule.LocationId != nil {
 					ruleIDAttrMap[*respRule.LocationId] = convertRuleAttribute(respRule)
+					ruleIDCertMap[*respRule.LocationId] = convertCertificate(respRule.Certificate)
 				}
 			}
 		}
@@ -116,6 +118,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 					Domain:      *retRule.Domain,
 					Path:        *retRule.Url,
 					TargetGroup: convertClbBackends(retRule.Targets),
+					Certificate: ruleIDCertMap[*retRule.LocationId],
 				})
 			}
 		case ClbProtocolTCP, ClbProtocolUDP:
@@ -448,6 +451,9 @@ func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkexten
 	listener := listeners[0]
 	req.Protocol = tcommon.StringPtr(listener.Spec.Protocol)
 	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
+	if listener.Spec.ListenerAttribute != nil {
+		req.SniSwitch = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.SniSwitch))
+	}
 
 	ctime := time.Now()
 	listenerIDs, err := c.sdkWrapper.CreateListener(region, req)
@@ -466,7 +472,8 @@ func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkexten
 	failedListenerIDMap := make(map[string]error)
 	for liIndex, listener := range listeners {
 		for _, rule := range listener.Spec.Rules {
-			err := c.addListenerRule(region, listener.Spec.LoadbalancerID, listenerIDs[liIndex], rule)
+			err := c.addListenerRule(region, listener.Spec.LoadbalancerID, listenerIDs[liIndex],
+				listener.Spec.ListenerAttribute, rule)
 			if err != nil {
 				err = errors.Wrapf(err, "add listener rule %v for listener %s/%s failed", rule, listener.GetName(),
 					listener.GetNamespace())
@@ -610,7 +617,8 @@ func (c *Clb) updateHTTPListenerAndCollectRsChanges(
 	}
 	// do add rules
 	for _, rule := range addRules {
-		err := c.addListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, rule)
+		err := c.addListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID,
+			cloudListener.Spec.ListenerAttribute, rule)
 		if err != nil {
 			err = errors.Wrapf(err, "add listener rule %v of lb %s listener %s failed", rule,
 				cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID)
@@ -626,6 +634,16 @@ func (c *Clb) updateHTTPListenerAndCollectRsChanges(
 				cloudListener.Status.ListenerID, existedRule.RuleID, rule)
 			if err != nil {
 				err = errors.Wrapf(err, "update rule %v of lb %s listener %s attribute failed", rule,
+					cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID)
+				blog.Warnf(err.Error())
+				resultErr = multierror.Append(resultErr, err)
+			}
+		}
+		if !reflect.DeepEqual(rule.Certificate, existedRule.Certificate) {
+			err := c.updateDomainAttributes(region, cloudListener.Spec.LoadbalancerID,
+				cloudListener.Status.ListenerID, rule)
+			if err != nil {
+				err = errors.Wrapf(err, "update rule %v of lb %s listener %s domain attribute failed", rule,
 					cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID)
 				blog.Warnf(err.Error())
 				resultErr = multierror.Append(resultErr, err)

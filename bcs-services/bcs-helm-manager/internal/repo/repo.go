@@ -77,6 +77,7 @@ type Config struct {
 	URL      string
 	OciURL   string
 	AuthType string
+	UID      string
 	Username string
 	Password string
 }

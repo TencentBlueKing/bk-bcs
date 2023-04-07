@@ -79,7 +79,7 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	// 如果返回对象为空，直接返回错误给客户端
 	if resp.obj == nil {
-		blog.Errorf("[requestID=%s] handler return code '%d': %s",
+		blog.Warnf("[requestID=%s] handler return code '%d': %s",
 			requestID, resp.statusCode, resp.err.Error())
 		http.Error(rw, resp.err.Error(), resp.statusCode)
 		return

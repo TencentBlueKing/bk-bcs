@@ -1,10 +1,10 @@
 <template>
   <bcs-navigation-menu
-    item-hover-bg-color="#E1ECFF"
+    item-hover-bg-color="#EAEBF0"
     item-active-bg-color="#E1ECFF"
-    item-hover-color="#3A84FF"
+    item-hover-color="#63656E"
     item-active-color="#3A84FF"
-    item-hover-icon-color="#3A84FF"
+    sub-menu-open-bg-color="#F5F7FA"
     item-active-icon-color="#3A84FF"
     :unique-opened="false"
     :default-active="activeMenu.id"
@@ -38,13 +38,14 @@
 import { defineComponent, ref, watch, computed, toRef, reactive } from '@vue/composition-api';
 import $router from '@/router';
 import $store from '@/store';
-import { useCluster, useConfig, useProject } from '@/composables/use-app';
-import menusData, { IMenu } from './menus';
+import { useProject } from '@/composables/use-app';
+import { IMenu } from './menus';
+import useMenu from './use-menu';
 
 export default defineComponent({
   name: 'SideMenu',
   setup() {
-    const menus = ref<IMenu[]>(menusData);
+    const { menus, disabledMenuIDs } = useMenu();
     // 左侧菜单
     const activeMenu = ref<Partial<IMenu>>({});
     // 一级菜单
@@ -53,27 +54,6 @@ export default defineComponent({
     const leafMenus = computed(() => flatLeafMenus(menus.value));
     // 当前路由
     const route = computed(() => toRef(reactive($router), 'currentRoute').value);
-
-    // 共享集群禁用菜单
-    const { _INTERNAL_ } = useConfig();
-    const { isSharedCluster } = useCluster();
-    const disabledMenuIDs = computed(() => {
-      const disabledIDs: string[] = [];
-      if (isSharedCluster.value) {
-        disabledIDs.push(...[
-          'DAEMONSET',
-          'STORAGE',
-          'RBAC',
-          'HPA',
-          'CRD',
-          'CUSTOMOBJECT',
-        ]);
-      }
-      if (_INTERNAL_.value) {
-        disabledIDs.push('CLOUDTOKEN');
-      }
-      return disabledIDs;
-    });
 
     // 设置当前菜单ID
     watch(route, () => {
@@ -134,9 +114,20 @@ export default defineComponent({
   },
 });
 </script>
-<style lang="postcss" scoped>
->>> .navigation-sbmenu.is-disabled {
-  cursor: not-allowed;
-  opacity: .3;
+<!-- 覆盖导航默认样式 -->
+<style lang="postcss">
+.nav-slider {
+  .navigation-sbmenu {
+    margin-bottom: 2px;
+  }
+  .nav-slider-list {
+    padding: 6px 0 4px 0!important;
+  }
+  .navigation-menu-item:hover:not(.is-disabled) {
+    background-color: #EAEBF0;
+  }
+  .footer-icon {
+    color: #C4C6CC !important;
+  }
 }
 </style>

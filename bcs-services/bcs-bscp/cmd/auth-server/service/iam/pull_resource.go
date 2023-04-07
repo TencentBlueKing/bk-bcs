@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"bscp.io/cmd/auth-server/types"
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
@@ -30,11 +29,11 @@ func (i *IAM) PullResource(ctx context.Context, req *pbas.PullResourceReq) (*pba
 	resp := new(pbas.PullResourceResp)
 
 	// if auth is disabled, returns error if iam calls pull resource callback function
-	if i.disableAuth {
-		err := errf.New(errf.Aborted, "authorize function is disabled, can not pull auth resource.")
-		logs.Errorf("authorize function is disabled, can not pull auth resource, rid: %s", kt.Rid)
-		return nil, err
-	}
+	// if i.disableAuth {
+	// 	err := errf.New(errf.Aborted, "authorize function is disabled, can not pull auth resource.")
+	// 	logs.Errorf("authorize function is disabled, can not pull auth resource, rid: %s", kt.Rid)
+	// 	return nil, err
+	// }
 
 	query, err := req.PullResourceReq()
 	if err != nil {

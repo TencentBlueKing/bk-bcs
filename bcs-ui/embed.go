@@ -28,7 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
 
-//go:embed frontend/dist
+//go:embed frontend/dist frontend/static CHANGELOG
 var frontendAssets embed.FS
 
 var (
@@ -39,10 +39,12 @@ var (
 )
 
 const (
+	confFilePath     = "frontend/dist/static/config.json"
+	defaultStaticURL = "/web"
 	// SITE_URL 前端Vue配置, 修改影响用户路由
-	site_url     = "/bcs"
-	static_url   = "/web"
-	confFilePath = "frontend/dist/static/config.json"
+	defaultSiteURL = "/bcs"
+	// siteURLHeaderKey 前端前缀URL
+	siteURLHeaderKey = "X-BCS-SiteURL"
 )
 
 // EmbedWebServer
@@ -50,6 +52,7 @@ type EmbedWebServer interface {
 	IndexHandler() http.Handler
 	FaviconHandler(w http.ResponseWriter, r *http.Request)
 	StaticFileHandler(prefix string) http.Handler
+	RootFS() embed.FS
 }
 
 type gzipFileInfo struct {
@@ -132,6 +135,11 @@ func mergeConfig() ([]byte, error) {
 	return bcsConfigBytes, nil
 }
 
+// RootFS
+func (e *embedWeb) RootFS() embed.FS {
+	return frontendAssets
+}
+
 // IndexHandler Vue 模板渲染
 func (e *embedWeb) IndexHandler() http.Handler {
 	bcsConfigBytes, err := mergeConfig()
@@ -141,24 +149,36 @@ func (e *embedWeb) IndexHandler() http.Handler {
 	bcsConfig := string(bcsConfigBytes)
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		// 头部指定 SiteURL, 使用头部的， 多域名访问场景
+		siteURL := r.Header.Get(siteURLHeaderKey)
+		if siteURL == "" {
+			siteURL = path.Join(config.G.Web.RoutePrefix, defaultSiteURL)
+		}
+
+		// 首页根路径下重定向跳转到 siteURL 前缀
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, siteURL, http.StatusMovedPermanently)
+		}
+
 		data := map[string]string{
-			"STATIC_URL":              path.Join(config.G.Web.RoutePrefix, static_url),
-			"SITE_URL":                path.Join(config.G.Web.RoutePrefix, site_url),
+			"STATIC_URL":              path.Join(config.G.Web.RoutePrefix, defaultStaticURL),
+			"SITE_URL":                siteURL,
 			"RUN_ENV":                 config.G.Base.RunEnv,
+			"REGION":                  config.G.Base.Region,
 			"PREFERRED_DOMAINS":       config.G.Web.PreferredDomains,
 			"DEVOPS_HOST":             config.G.FrontendConf.Host.DevOpsHost,
 			"DEVOPS_BCS_API_URL":      config.G.FrontendConf.Host.DevOpsBCSAPIURL,
 			"DEVOPS_ARTIFACTORY_HOST": config.G.FrontendConf.Host.DevOpsArtifactoryHost,
 			"BK_IAM_APP_URL":          config.G.FrontendConf.Host.BKIAMAppURL,
-			"PAAS_HOST":               config.G.FrontendConf.Host.PaaSHost,
+			"PAAS_HOST":               config.G.FrontendConf.Host.BKPaaSHost,
 			"BKMONITOR_HOST":          config.G.FrontendConf.Host.BKMonitorHost,
+			"BK_CC_HOST":              config.G.FrontendConf.Host.BKCCHost,
 			"BCS_API_HOST":            config.G.BCS.Host,
-			"BK_CC_HOST":              config.G.FrontendConf.Host.BKCMDBHost,
 			"BCS_DEBUG_API_HOST":      config.G.BCSDebugAPIHost(),
 			"BCS_CONFIG":              bcsConfig,
 		}
 
-		if config.G.IsDevMode() {
+		if config.G.IsLocalDevMode() {
 			data["DEVOPS_BCS_API_URL"] = fmt.Sprintf("%s/backend", config.G.Web.Host)
 			data["BCS_API_HOST"] = config.G.Web.Host
 		}
@@ -223,13 +243,14 @@ func (e *embedWeb) StaticFileHandler(prefix string) http.Handler {
 			w.Header().Set("Content-Encoding", "gzip")
 			w.Header().Set("Content-Length", fileInfo.contentSize)
 			w.Header().Set("Content-Type", fileInfo.contentType)
-			// 添加缓存
-			w.Header().Set("Cache-Control", "max-age=86400, public")
+
 			// issue https://github.com/golang/go/issues/44854
 			// w.Header().Set("Last-Modified", fileInfo.lastModified)
 			w.Header().Del("Transfer-Encoding")
 		}
 
+		// 添加缓存
+		w.Header().Set("Cache-Control", "max-age=86400, public")
 		e.fsServer.ServeHTTP(w, r)
 	}
 

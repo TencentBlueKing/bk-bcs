@@ -28,11 +28,11 @@ func newCheckCloudKubeConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "checkCloudKubeconfig",
 		Aliases: []string{"checkConfig"},
-		Short:   "check cloud kubeconfig from bcs-cluster-manager",
+		Short:   "check cloud kube config from bcs-cluster-manager",
 		Run:     checkCloudKubeconfig,
 	}
 
-	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kubeconfig file (required)")
+	cmd.Flags().StringVarP(&file, "file", "f", "./config", "kube config file (required)")
 
 	return cmd
 }
@@ -43,12 +43,12 @@ func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
 		klog.Fatalf("read file failed: %v", err)
 	}
 
-	err = clusterMgr.New(context.Background()).CheckCloudKubeconfig(types.CheckCloudKubeconfigReq{
+	err = clusterMgr.New(context.Background()).CheckCloudKubeConfig(types.CheckCloudKubeConfigReq{
 		Kubeconfig: string(data),
 	})
 	if err != nil {
-		klog.Fatalf("check cloud kubeconfig failed: %v", err)
+		klog.Fatalf("check cloud kube config failed: %v", err)
 	}
 
-	fmt.Printf("check cloud kubeconfig succeed")
+	fmt.Printf("check cloud kube config succeed")
 }

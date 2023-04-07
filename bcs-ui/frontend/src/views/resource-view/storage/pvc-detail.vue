@@ -85,6 +85,10 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    clusterId: {
+      type: String,
+      required: true,
+    },
   },
   setup(props) {
     const handleTransformObjToArr = (obj) => {
@@ -106,6 +110,7 @@ export default defineComponent({
       const { podNames = [] } = await $store.dispatch('dashboard/getPvcMountInfo', {
         $namespace: props.data.metadata.namespace,
         $pvcID: props.data.metadata.name,
+        $clusterId: props.clusterId,
       });
       mountInfo.value = podNames;
       isLoading.value = false;

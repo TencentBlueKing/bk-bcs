@@ -108,7 +108,8 @@ export function useSelectItemsNamespace() {
     const data = await getNamespaceList({
       $clusterId: clusterId,
     });
-    namespaceList.value = data || [];
+    // 过滤未创建成功的命名空间
+    namespaceList.value = (data || []).filter(item => item.itsmTicketType !== 'CREATE');
     // 初始化默认选中命名空间
     const defaultSelectNamespace = namespaceList.value
       .find(data => data.name === $store.state.curNamespace);

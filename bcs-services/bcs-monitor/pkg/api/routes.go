@@ -31,6 +31,7 @@ import (
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs" // docs xxx
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
+	service_monitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/servicemonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/telemetry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -190,6 +191,19 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 			rest.RestHandlerFunc(metrics.ContainerDiskReadTotal))
 		route.GET("/namespaces/:namespace/pods/:pod/containers/:container/disk_write_total",
 			rest.RestHandlerFunc(metrics.ContainerDiskWriteTotal))
+
+		route.GET("/namespaces/:namespace/service_monitors",
+			rest.RestHandlerFunc(service_monitor.ListServiceMonitors))
+		route.GET("/namespaces/:namespace/service_monitors/:name",
+			rest.RestHandlerFunc(service_monitor.GetServiceMonitor))
+		route.POST("/namespaces/:namespace/service_monitors",
+			rest.RestHandlerFunc(service_monitor.CreateServiceMonitor))
+		route.PUT("/namespaces/:namespace/service_monitors/:name",
+			rest.RestHandlerFunc(service_monitor.UpdateServiceMonitor))
+		route.DELETE("/namespaces/:namespace/service_monitors/:name",
+			rest.RestHandlerFunc(service_monitor.DeleteServiceMonitor))
+		route.POST("/service_monitors/batchdelete",
+			rest.RestHandlerFunc(service_monitor.BatchDeleteServiceMonitor))
 	}
 }
 

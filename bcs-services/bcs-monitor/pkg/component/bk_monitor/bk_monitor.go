@@ -191,12 +191,17 @@ func QueryByPromQL(ctx context.Context, rawURL, bkBizID string, start, end, step
 	return result.ToPromSeriesSet()
 }
 
+// BaseResponse base response
+type BaseResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Result  bool   `json:"result"`
+}
+
 // BKMonitorResult 蓝鲸监控返回的结构体, 和component下的BKResult数据接口规范不一致, 重新定义一份
 type BKMonitorResult struct {
-	Code    int              `json:"code"`
-	Message string           `json:"message"`
-	Result  bool             `json:"result"`
-	Data    *GrayClusterList `json:"data"`
+	BaseResponse
+	Data *GrayClusterList `json:"data"`
 }
 
 // GrayClusterList 灰度列表
@@ -271,7 +276,7 @@ func QueryGrayClusterMap(ctx context.Context, host string) (map[string]struct{},
 // IsBKMonitorEnabled 集群是否接入到蓝鲸监控
 func IsBKMonitorEnabled(ctx context.Context, clusterId string) (bool, error) {
 	// 不配置则全量接入
-	if len(config.G.BKMonitor.MetadataURL) == 0 {
+	if !config.G.BKMonitor.EnableGrey {
 		return true, nil
 	}
 	grayClusterMap, err := QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
@@ -281,4 +286,84 @@ func IsBKMonitorEnabled(ctx context.Context, clusterId string) (bool, error) {
 
 	_, ok := grayClusterMap[clusterId]
 	return ok, nil
+}
+
+// MetricsListResult metrics 列表
+type MetricsListResult struct {
+	BaseResponse
+	Data []MetricList `json:"data"`
+}
+
+// MetricList metrics list
+type MetricList struct {
+	Metric string        `json:"field_name"`
+	Labels []MetricLabel `json:"dimensions"`
+}
+
+// MetricListSlice metrics list slice
+type MetricListSlice []MetricList
+
+// ToSeries trans metrics to series
+func (m MetricListSlice) ToSeries() []*prompb.TimeSeries {
+	series := make([]*prompb.TimeSeries, 0)
+	for _, v := range m {
+		labels := make([]prompb.Label, 0)
+		labels = append(labels, prompb.Label{
+			Name:  "__name__",
+			Value: v.Metric,
+		})
+		for _, lb := range v.Labels {
+			labels = append(labels, prompb.Label{
+				Name:  lb.Key,
+				Value: lb.Value,
+			})
+		}
+		series = append(series, &prompb.TimeSeries{
+			Labels: labels,
+		})
+	}
+	return series
+}
+
+// MetricLabel metrics label
+type MetricLabel struct {
+	Key   string `json:"field_name"`
+	Value string `json:"type"`
+}
+
+// GetMetricsList 获取 metrics 列表
+func GetMetricsList(ctx context.Context, host, clusterID string) ([]MetricList, error) {
+	cacheKey := fmt.Sprintf("bcs.QueryGrayClusterMap.%s", clusterID)
+	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
+		return cacheResult.([]MetricList), nil
+	}
+
+	url := fmt.Sprintf("%s/query_bcs_metrics", host)
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetQueryParam("bk_app_code", config.G.Base.AppCode).
+		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
+		SetQueryParam("cluster_ids", clusterID).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+	result := new(MetricsListResult)
+	if err := json.Unmarshal(resp.Body(), result); err != nil {
+		return nil, err
+	}
+	storage.LocalCache.Slot.Set(cacheKey, result.Data, time.Minute*10)
+	return result.Data, nil
+}
+
+// GetMetricsSeries 获取 metrics series 列表
+func GetMetricsSeries(ctx context.Context, host, clusterID string) ([]*prompb.TimeSeries, error) {
+	metrics, err := GetMetricsList(ctx, host, clusterID)
+	if err != nil {
+		return nil, err
+	}
+	return MetricListSlice(metrics).ToSeries(), nil
 }

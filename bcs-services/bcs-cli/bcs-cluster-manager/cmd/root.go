@@ -20,12 +20,23 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/klog"
 
-	cloudaccount "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cloud_account"
-	cloudvpc "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cloud_vpc"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/node"
-	nodegroup "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/node_group"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/task"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/add"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/check"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/clean"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/cordon"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/create"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/delete"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/disable"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/drain"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/enable"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/get"
+	imported "github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/import"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/list"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/move"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/remove"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/retry"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/uncordon"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-cluster-manager/cmd/update"
 )
 
 const (
@@ -64,12 +75,30 @@ func NewRootCommand() *cobra.Command {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "cfg", defaultCfgFile, "config file")
 
-	rootCmd.AddCommand(cluster.NewClusterCmd())
-	rootCmd.AddCommand(node.NewNodeCmd())
-	rootCmd.AddCommand(cloudvpc.NewCloudVPCCmd())
-	rootCmd.AddCommand(cloudaccount.NewCloudAccountCmd())
-	rootCmd.AddCommand(task.NewTaskCmd())
-	rootCmd.AddCommand(nodegroup.NewNodeGroupCmd())
+	// rootCmd.AddCommand(cluster.NewClusterCmd())
+	// rootCmd.AddCommand(node.NewNodeCmd())
+	// rootCmd.AddCommand(cloudvpc.NewCloudVPCCmd())
+	// rootCmd.AddCommand(cloudaccount.NewCloudAccountCmd())
+	// rootCmd.AddCommand(task.NewTaskCmd())
+	// rootCmd.AddCommand(nodegroup.NewNodeGroupCmd())
+
+	rootCmd.AddCommand(create.NewCreateCmd())
+	rootCmd.AddCommand(delete.NewDeleteCmd())
+	rootCmd.AddCommand(update.NewUpdateCmd())
+	rootCmd.AddCommand(list.NewListCmd())
+	rootCmd.AddCommand(get.NewGetCmd())
+	rootCmd.AddCommand(add.NewAddCmd())
+	rootCmd.AddCommand(check.NewCheckCmd())
+	rootCmd.AddCommand(clean.NewCleanCmd())
+	rootCmd.AddCommand(cordon.NewCordonCmd())
+	rootCmd.AddCommand(disable.NewDisableCmd())
+	rootCmd.AddCommand(drain.NewDrainCmd())
+	rootCmd.AddCommand(enable.NewEnableCmd())
+	rootCmd.AddCommand(imported.NewImportCmd())
+	rootCmd.AddCommand(move.NewMoveCmd())
+	rootCmd.AddCommand(remove.NewRemoveCmd())
+	rootCmd.AddCommand(retry.NewRetryCmd())
+	rootCmd.AddCommand(uncordon.NewUncordonCmd())
 
 	return rootCmd
 }

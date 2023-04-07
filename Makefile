@@ -66,7 +66,7 @@ bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
     helm-manager project-manager nodegroup-manager
 
-bcs-scenarios: kourse gitops
+bcs-scenarios: kourse
 
 kourse: gamedeployment gamestatefulset hook-operator
 

@@ -37,6 +37,7 @@ type WebServer struct {
 	srv            *http.Server
 	addrIPv6       string
 	embedWebServer bcsui.EmbedWebServer
+	releaseNote    *ReleaseNote
 }
 
 // NewWebServer :
@@ -46,6 +47,12 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 		addrIPv6:       addrIPv6,
 		embedWebServer: bcsui.NewEmbedWeb(),
 	}
+
+	// 初始化版本日志和特性
+	if err := s.initReleaseNote(); err != nil {
+		return nil, err
+	}
+
 	srv := &http.Server{Addr: addr, Handler: s.newRouter()}
 	s.srv = srv
 
@@ -91,7 +98,7 @@ func (w *WebServer) newRouter() http.Handler {
 	// metrics 配置
 	r.Get("/metrics", promhttp.Handler().ServeHTTP)
 
-	if config.G.IsDevMode() {
+	if config.G.IsLocalDevMode() {
 		r.Mount("/backend", ReverseAPIHandler("bcs_saas_api_url", config.G.FrontendConf.Host.DevOpsBCSAPIURL))
 		r.Mount("/bcsapi", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
 	}
@@ -105,6 +112,7 @@ func (w *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
+	r.Get("/release_note", w.ReleaseNoteHandler)
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 
 	// vue 模版渲染
@@ -139,6 +147,14 @@ func ReverseAPIHandler(name, remoteURL string) http.Handler {
 	}
 
 	return http.HandlerFunc(fn)
+}
+
+// OKResponse
+type OKResponse struct {
+	Code      int         `json:"code"`
+	Data      interface{} `json:"data"`
+	Message   string      `json:"message"`
+	RequestID string      `json:"request_id"`
 }
 
 // HealthyHandler 健康检查

@@ -27,11 +27,8 @@ import (
 
 	"bscp.io/cmd/feed-server/bll"
 	"bscp.io/pkg/cc"
-	"bscp.io/pkg/components"
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
 	view "bscp.io/pkg/rest/view"
@@ -157,36 +154,13 @@ func (s *Service) handler() http.Handler {
 
 	// feedserver方法
 	r.Route("/api/v1/feed", func(r chi.Router) {
-		r.Use(s.Authentication)
+		r.Use(auth.BKRepoVerified)
 		r.Use(view.Generic(s.authorizer))
 		r.Method("POST", "/list/app/release/type/file/latest", view.GenericFunc(s.ListFileAppLatestReleaseMetaRest))
 		r.Method("POST", "/auth/repository/file_pull", view.GenericFunc(s.AuthRepoRest))
 	})
 
 	return r
-}
-
-// Authentication TODO 需要对齐bkrepo/feed回调鉴权方式等
-func (s *Service) Authentication(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		k := &kit.Kit{
-			Ctx:         r.Context(),
-			User:        "",
-			Rid:         components.RequestIDValue(r.Context()),
-			AppId:       "",
-			AppCode:     "dummyApp", // 测试 App
-			SpaceID:     "",
-			SpaceTypeID: "",
-		}
-		ctx := kit.WithKit(r.Context(), k)
-
-		r.Header.Set(constant.AppCodeKey, k.AppCode)
-		r.Header.Set(constant.RidKey, k.Rid)
-		r.Header.Set(constant.UserKey, k.User)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	}
-	return http.HandlerFunc(fn)
 }
 
 // Healthz check whether the service is healthy.

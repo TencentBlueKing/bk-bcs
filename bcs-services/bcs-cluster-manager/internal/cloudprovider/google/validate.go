@@ -38,22 +38,29 @@ func init() {
 type CloudValidate struct {
 }
 
-func commonOptValidate(opt *cloudprovider.CommonOption) error {
+// ImportClusterValidate check importCluster operation
+func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *cloudprovider.CommonOption) error {
+	// call cloud interface to check cluster
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ImportClusterValidate request is empty", cloudName)
+	}
+
 	if opt == nil || opt.Account == nil {
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
 	if len(opt.Account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s ImportClusterValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(opt.Account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid gkeProjectID info", cloudName)
+		return fmt.Errorf("%s ImportClusterValidate request lost valid gkeProjectID info", cloudName)
 	}
-	return nil
-}
 
-func checkClusterConnection(req *proto.ImportClusterReq) error {
+	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" {
+		return fmt.Errorf("%s ImportClusterValidate cluster cloudID & kubeConfig empty", cloudName)
+	}
+
 	if req.CloudMode.KubeConfig != "" {
 		_, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
 			FileName:    "",
@@ -76,28 +83,6 @@ func checkClusterConnection(req *proto.ImportClusterReq) error {
 
 		blog.Infof("%s ImportClusterValidate CloudMode connect cluster ByKubeConfig success", cloudName)
 	}
-	return nil
-}
-
-// ImportClusterValidate check importCluster operation
-func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *cloudprovider.CommonOption) error {
-	// call cloud interface to check cluster
-	if c == nil || req == nil {
-		return fmt.Errorf("%s ImportClusterValidate request is empty", cloudName)
-	}
-
-	if err := commonOptValidate(opt); err != nil {
-		return err
-	}
-
-	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" {
-		return fmt.Errorf("%s ImportClusterValidate cluster cloudID & kubeConfig empty", cloudName)
-	}
-
-	err := checkClusterConnection(req)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -110,11 +95,11 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 	}
 
 	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid gkeProjectID info", cloudName)
+		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid gkeProjectID info", cloudName)
 	}
 
 	return nil
@@ -129,11 +114,11 @@ func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZon
 	}
 
 	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid gkeProjectID info", cloudName)
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid gkeProjectID info", cloudName)
 	}
 
 	return nil
@@ -170,11 +155,11 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 	}
 
 	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid gkeProjectID info", cloudName)
+		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid gkeProjectID info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
@@ -196,11 +181,11 @@ func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityG
 	}
 
 	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid gkeProjectID info", cloudName)
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid gkeProjectID info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
@@ -219,11 +204,11 @@ func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTyp
 	}
 
 	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid gkeProjectID info", cloudName)
+		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid gkeProjectID info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
@@ -241,11 +226,11 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 	}
 
 	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid gkeProjectID info", cloudName)
+		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid gkeProjectID info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
@@ -264,11 +249,11 @@ func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupReques
 	}
 
 	if len(opt.Account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(opt.Account.GkeProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid gkeProjectID info", cloudName)
+		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid gkeProjectID info", cloudName)
 	}
 
 	if len(req.Region) == 0 {

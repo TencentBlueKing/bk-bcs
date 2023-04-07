@@ -21,7 +21,8 @@ import (
 // BKMonitorConf :
 type BKMonitorConf struct {
 	URL                  string    `yaml:"url"`          // unify-query 访问地址
-	MetadataURL          string    `yaml:"metadata_url"` // 元数据地址, 目前只包含白名单
+	EnableGrey           bool      `yaml:"enable_grey"`  // 是否使用灰度
+	MetadataURL          string    `yaml:"metadata_url"` // 元数据地址
 	AgentEnableAfter     string    `yaml:"agent_enable_after"`
 	AgentEnableAfterTime time.Time `yaml:"-"`
 }

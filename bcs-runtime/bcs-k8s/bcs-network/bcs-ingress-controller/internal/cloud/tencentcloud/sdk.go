@@ -340,6 +340,7 @@ func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequ
 		newReq.Scheduler = req.Scheduler
 		newReq.HealthCheck = req.HealthCheck
 		newReq.Certificate = req.Certificate
+		newReq.SniSwitch = req.SniSwitch
 		if req.EndPort != nil {
 			newReq.EndPort = req.EndPort
 		}
@@ -937,6 +938,59 @@ func (sw *SdkWrapper) ModifyListener(region string, req *tclb.ModifyListenerRequ
 		mf(metrics.LibCallStatusErr)
 		blog.Errorf("ModifyListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("ModifyListener out of maxRetry %d", maxRetry)
+	}
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
+	if err != nil {
+		mf(metrics.LibCallStatusErr)
+		return err
+	}
+	mf(metrics.LibCallStatusOK)
+	return nil
+}
+
+// ModifyDomainAttributes wrap ModifyDomainAttributes
+func (sw *SdkWrapper) ModifyDomainAttributes(region string, req *tclb.ModifyDomainAttributesRequest) error {
+	blog.V(3).Infof("ModifyDomainAttributes request: %s", req.ToJsonString())
+	var err error
+	var resp *tclb.ModifyDomainAttributesResponse
+
+	startTime := time.Now()
+	mf := func(ret string) {
+		metrics.ReportLibRequestMetric(
+			SystemNameInMetricTencentCloud,
+			HandlerNameInMetricTencentCloudSDK,
+			"ModifyDomainAttributes", ret, startTime)
+	}
+
+	counter := 1
+	for ; counter <= maxRetry; counter++ {
+		blog.V(3).Infof("ModifyDomainAttributes try %d/%d", counter, maxRetry)
+		sw.tryThrottle()
+		// get client by region
+		clbCli, inErr := sw.getRegionClient(region)
+		if inErr != nil {
+			mf(metrics.LibCallStatusErr)
+			return inErr
+		}
+		resp, err = clbCli.ModifyDomainAttributes(req)
+		if err != nil {
+			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
+				sw.checkErrCode(terr)
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+					continue
+				}
+			}
+			mf(metrics.LibCallStatusErr)
+			blog.Errorf("ModifyDomainAttributes failed, err %s", err.Error())
+			return fmt.Errorf("ModifyDomainAttributes failed, err %s", err.Error())
+		}
+		blog.V(3).Infof("ModifyDomainAttributes response: %s", resp.ToJsonString())
+		break
+	}
+	if counter > maxRetry {
+		mf(metrics.LibCallStatusErr)
+		blog.Errorf("ModifyDomainAttributes out of maxRetry %d", maxRetry)
+		return fmt.Errorf("ModifyDomainAttributes out of maxRetry %d", maxRetry)
 	}
 	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {

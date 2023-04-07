@@ -27,5 +27,5 @@ func (h *HttpServerClient) listPortPool(request *restful.Request, response *rest
 		blog.Errorf("list port pool failed when collect metrics, err %s", err.Error())
 	}
 	data := CreateResponseData(nil, "success", poolList)
-	_, _ = response.Write([]byte(data))
+	_, _ = response.Write(data)
 }
