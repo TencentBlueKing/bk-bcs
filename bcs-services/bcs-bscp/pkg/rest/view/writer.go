@@ -80,6 +80,11 @@ func (w *GenericResponseWriter) beforeWriteHook(ctx context.Context, msg proto.M
 
 // BuildWebAnnotation 动态执行 webannotions 函数
 func (w *GenericResponseWriter) BuildWebAnnotation(ctx context.Context, msg proto.Message) error {
+	// when not using grpc-gateway
+	if ctx == nil {
+		return nil
+	}
+
 	kt := kit.MustGetKit(ctx)
 
 	var (

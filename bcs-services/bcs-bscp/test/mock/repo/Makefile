@@ -1,5 +1,5 @@
 SERVER = bk-bscp-repomock
-ARGS   = -bind-ip 127.0.0.1 -port 9999
+ARGS   = -c ./etc/repo_mock.yaml
 
 LOCALBUILD  = $(PWD)/build
 OUTPUT_DIR ?= $(LOCALBUILD)

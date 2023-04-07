@@ -15,45 +15,31 @@ package suite
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"testing"
 
-	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/logs"
-	"bscp.io/test/client"
-
+	"bscp.io/test/util"
 	_ "github.com/go-sql-driver/mysql" // import mysql drive, used to create conn.
 	"github.com/jmoiron/sqlx"
 	_ "github.com/smartystreets/goconvey/convey" // import convey.
+
+	"bscp.io/test/client"
 )
 
 var (
 	// cli is service request client.
 	cli *client.Client
 	// dbCfg is db config file.
-	dbCfg dbConfig
-	// db is db request client.
-	db *sqlx.DB
+	dbCfg util.DBConfig
+	// DB is db request client.
+	DB *sqlx.DB
 	// SidecarStartCmd sidecar start cmd, must init data, then start sidecar. if sidecar bind app not exist,
 	// sidecar will start failed.
 	SidecarStartCmd = ""
 	// logCfg is log config
-	logCfg logConfig
+	logCfg util.LogConfig
 )
-
-type dbConfig struct {
-	IP       string
-	Port     int64
-	User     string
-	Password string
-	DB       string
-}
-
-type logConfig struct {
-	Verbosity uint
-}
 
 func init() {
 	var clientCfg client.Config
@@ -79,11 +65,7 @@ func init() {
 	testing.Init()
 	flag.Parse()
 
-	dsn := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=utf8&parseTime=True&loc=UTC",
-		dbCfg.User, dbCfg.Password, dbCfg.IP, dbCfg.Port, dbCfg.DB)
-	db = sqlx.MustConnect("mysql", dsn)
-	db.SetMaxOpenConns(500)
-	db.SetMaxIdleConns(5)
+	DB = util.NewDB(dbCfg)
 
 	var err error
 	if cli, err = client.NewClient(clientCfg); err != nil {
@@ -91,79 +73,7 @@ func init() {
 		os.Exit(0)
 	}
 
-	setLogger()
-}
-
-func setLogger() {
-	logs.InitLogger(
-		logs.LogConfig{
-			ToStdErr:       true,
-			LogLineMaxSize: 2,
-			Verbosity:      logCfg.Verbosity,
-		},
-	)
-}
-
-// ClearData clear data.
-func ClearData() error {
-	if _, err := db.Exec("truncate table " + table.AppTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ArchivedAppTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + string(table.HookTable)); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + string(table.ContentTable)); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ConfigItemTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.CommitsTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ReleaseTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ReleasedConfigItemTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.StrategySetTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.StrategyTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.CurrentPublishedStrategyTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.PublishedStrategyHistoryTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.CurrentReleasedInstanceTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.EventTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.AuditTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ResourceLockTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
-		" t1 set t1.max_id = 0 where resource != 'events'"); err != nil {
-		return err
-	}
-	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
-		" t1 set t1.max_id = 500 where resource = 'events'"); err != nil {
-		return err
-	}
-
-	return nil
+	util.SetLogger(logCfg)
 }
 
 // GetClient get suite-test client.

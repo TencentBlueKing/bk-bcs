@@ -18,22 +18,35 @@ import (
 	"log"
 	"sync"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/uuid"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	"bscp.io/pkg/tools"
 )
 
-// genBaseData 在业务id为 1-2000 的业务下，生成 50 个应用，且都生成 5 个配置项，执行一次 Namespace 策略发布，
+var (
+	// 协程并发数
+	concurrence = 10
+	// 业务总数，可多次运行，分别调整该值为10、100、1000
+	// 对比不同业务、应用量级下的性能情况(10业务-500应用；100业务-5000应用；1000业务-50000应用)
+	bizCnt = 10
+	// 单个业务下的应用数
+	appCnt = 50
+	// 单个应用下的配置项数
+	cfgItemCnt = 5
+	// 实例发布次数
+	publishInstCnt = 5
+)
+
+// genBaseData 在业务id为 1-10 的业务下，生成 50 个应用，且都生成 5 个配置项，执行一次 Namespace 策略发布，
 // 此外，每个应用进行5次实例发布。
 func genBaseData() error {
-	concurrence := 50
 	wg := sync.WaitGroup{}
 	wg.Add(concurrence)
 
 	for i := 0; i < concurrence; i++ {
 		go func(i int) {
-			for bizID := i*2000/concurrence + 1; bizID < (i+1)*2000/concurrence+1; bizID++ {
+			for bizID := i*bizCnt/concurrence + 1; bizID < (i+1)*bizCnt/concurrence+1; bizID++ {
 				if err := genAppData(uint32(bizID)); err != nil {
 					log.Fatalln(err)
 				}
@@ -48,7 +61,7 @@ func genBaseData() error {
 }
 
 func genAppData(bizID uint32) error {
-	for i := 0; i < 50; i++ {
+	for i := 0; i < appCnt; i++ {
 		// create app.
 		appReq := &pbcs.CreateAppReq{
 			BizId:          bizID,
@@ -64,13 +77,10 @@ func genAppData(bizID uint32) error {
 		if err != nil {
 			return fmt.Errorf("create app err, %v, rid: %s", err, rid)
 		}
-		if appResp.Code != errf.OK {
-			return fmt.Errorf("create app failed, code: %d, msg: %s, rid: %s", appResp.Code, appResp.Message, rid)
-		}
 
 		// gen five config item for every app, and create one content and commit for every config item.
-		for i := 0; i < 5; i++ {
-			if err := genCIRelatedData(bizID, appResp.Data.Id); err != nil {
+		for i := 0; i < cfgItemCnt; i++ {
+			if err := genCIRelatedData(bizID, appResp.Id); err != nil {
 				return err
 			}
 		}
@@ -78,7 +88,7 @@ func genAppData(bizID uint32) error {
 		// create release.
 		rlReq := &pbcs.CreateReleaseReq{
 			BizId: bizID,
-			AppId: appResp.Data.Id,
+			AppId: appResp.Id,
 			Name:  randName("release"),
 			Memo:  memo,
 		}
@@ -87,75 +97,62 @@ func genAppData(bizID uint32) error {
 		if err != nil {
 			return fmt.Errorf("create release err, %v, rid: %s", err, rid)
 		}
-		if rlResp.Code != errf.OK {
-			return fmt.Errorf("create release failed, code: %d, msg: %s, rid: %s", rlResp.Code, rlResp.Message, rid)
-		}
 
-		// create strategy set.
-		setReq := &pbcs.CreateStrategySetReq{
-			BizId: bizID,
-			AppId: appResp.Data.Id,
-			Name:  randName("strategy_set"),
-			Memo:  memo,
-		}
-		rid = RequestID()
-		setResp, err := cli.StrategySet.Create(context.Background(), Header(rid), setReq)
-		if err != nil {
-			return fmt.Errorf("create strategy set err, %v, rid: %s", err, rid)
-		}
-		if setResp.Code != errf.OK {
-			return fmt.Errorf("create strategy set failed, code: %d, msg: %s, rid: %s", setResp.Code,
-				setResp.Message, rid)
-		}
-
-		// create strategy.
-		styReq := &pbcs.CreateStrategyReq{
-			BizId:         bizID,
-			AppId:         appResp.Data.Id,
-			StrategySetId: setResp.Data.Id,
-			ReleaseId:     rlResp.Data.Id,
-			AsDefault:     false,
-			Name:          randName("strategy"),
-			Namespace:     uuid.UUID(),
-			Memo:          memo,
-		}
-		rid = RequestID()
-		styResp, err := cli.Strategy.Create(context.Background(), Header(rid), styReq)
-		if err != nil {
-			return fmt.Errorf("create strategy err, %v, rid: %s", err, rid)
-		}
-		if styResp.Code != errf.OK {
-			return fmt.Errorf("create strategy failed, code: %d, msg: %s, rid: %s", styResp.Code, styResp.Message, rid)
-		}
-
-		// publish strategy.
-		pbReq := &pbcs.PublishReq{
-			BizId: bizID,
-			AppId: appResp.Data.Id,
-		}
-		rid = RequestID()
-		_, err = cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
-		if err != nil {
-			return fmt.Errorf("create strategy publish err, %v, rid: %s", err, rid)
-		}
+		// TODO: strategy related test depends on group, add group test first
+		//// create strategy set.
+		//setReq := &pbcs.CreateStrategySetReq{
+		//	BizId: bizID,
+		//	AppId: appResp.Id,
+		//	Name:  randName("strategy_set"),
+		//	Memo:  memo,
+		//}
+		//rid = RequestID()
+		//setResp, err := cli.StrategySet.Create(context.Background(), Header(rid), setReq)
+		//if err != nil {
+		//	return fmt.Errorf("create strategy set err, %v, rid: %s", err, rid)
+		//}
+		//
+		//// create strategy.
+		//styReq := &pbcs.CreateStrategyReq{
+		//	BizId:         bizID,
+		//	AppId:         appResp.Id,
+		//	StrategySetId: setResp.Id,
+		//	ReleaseId:     rlResp.Id,
+		//	AsDefault:     false,
+		//	Name:          randName("strategy"),
+		//	Namespace:     uuid.UUID(),
+		//	Memo:          memo,
+		//}
+		//rid = RequestID()
+		//_, err = cli.Strategy.Create(context.Background(), Header(rid), styReq)
+		//if err != nil {
+		//	return fmt.Errorf("create strategy err, %v, rid: %s", err, rid)
+		//}
+		//
+		//// publish strategy.
+		//pbReq := &pbcs.PublishReq{
+		//	BizId: bizID,
+		//	AppId: appResp.Id,
+		//}
+		//rid = RequestID()
+		//_, err = cli.Publish.PublishWithStrategy(context.Background(), Header(rid), pbReq)
+		//if err != nil {
+		//	return fmt.Errorf("create strategy publish err, %v, rid: %s", err, rid)
+		//}
 
 		// publish instance.
-		for i := 0; i < 5; i++ {
+		for i := 0; i < publishInstCnt; i++ {
 			ipReq := &pbcs.PublishInstanceReq{
 				BizId:     bizID,
-				AppId:     appResp.Data.Id,
+				AppId:     appResp.Id,
 				Uid:       uuid.UUID(),
-				ReleaseId: rlResp.Data.Id,
+				ReleaseId: rlResp.Id,
 				Memo:      memo,
 			}
 			rid = RequestID()
-			ipResp, err := cli.Instance.Publish(context.Background(), Header(rid), ipReq)
+			_, err = cli.Instance.Publish(context.Background(), Header(rid), ipReq)
 			if err != nil {
 				return fmt.Errorf("create instance publish err, %v, rid: %s", err, rid)
-			}
-			if ipResp.Code != errf.OK {
-				return fmt.Errorf("create instance publish failed, code: %d, msg: %s, rid: %s", ipResp.Code,
-					ipResp.Message, rid)
 			}
 		}
 	}
@@ -165,6 +162,10 @@ func genAppData(bizID uint32) error {
 
 // genCIRelatedData gen five config item for every app, and create one content and commit for every config item.
 func genCIRelatedData(bizID, appID uint32) error {
+	content := "This is content for test"
+	signature := tools.SHA256(content)
+	size := uint64(len(content))
+
 	// create config item.
 	ciReq := &pbcs.CreateConfigItemReq{
 		BizId:     bizID,
@@ -177,49 +178,52 @@ func genCIRelatedData(bizID, appID uint32) error {
 		User:      "root",
 		UserGroup: "root",
 		Privilege: "755",
+		Sign:      signature,
+		ByteSize:  size,
 	}
 	rid := RequestID()
-	ciResp, err := cli.ConfigItem.Create(context.Background(), Header(rid), ciReq)
+	_, err := cli.ConfigItem.Create(context.Background(), Header(rid), ciReq)
 	if err != nil {
 		return fmt.Errorf("create config item err, %v, rid: %s", err, rid)
 	}
-	if ciResp.Code != errf.OK {
-		return fmt.Errorf("create config item failed, code: %d, msg: %s, rid: %s", ciResp.Code, ciResp.Message, rid)
-	}
 
-	// create content.
-	conReq := &pbcs.CreateContentReq{
-		BizId:        bizID,
-		AppId:        appID,
-		ConfigItemId: ciResp.Data.Id,
-		Sign:         "c7d78b78205a2619eb2b80558f85ee18a8836ef5f4f317f8587ee38bc3712a8a",
-		ByteSize:     11,
-	}
-	rid = RequestID()
-	conResp, err := cli.Content.Create(context.Background(), Header(rid), conReq)
-	if err != nil {
-		return fmt.Errorf("create content err, %v, rid: %s", err, rid)
-	}
-	if conResp.Code != errf.OK {
-		return fmt.Errorf("create content failed, code: %d, msg: %s, rid: %s", conResp.Code, conResp.Message, rid)
-	}
-
-	// create commit.
-	comReq := &pbcs.CreateCommitReq{
-		BizId:        bizID,
-		AppId:        appID,
-		ConfigItemId: ciResp.Data.Id,
-		ContentId:    conResp.Data.Id,
-		Memo:         memo,
-	}
-	rid = RequestID()
-	comResp, err := cli.Commit.Create(context.Background(), Header(rid), comReq)
-	if err != nil {
-		return fmt.Errorf("create commit err, %v, rid: %s", err, rid)
-	}
-	if comResp.Code != errf.OK {
-		return fmt.Errorf("create commit failed, code: %d, msg: %s, rid: %s", comResp.Code, comResp.Message, rid)
-	}
+	// create ConfigItem will create content and commit too, so no need to create them
+	//// upload content.
+	//rid = RequestID()
+	//header := Header(rid)
+	//header.Set(constant.ContentIDHeaderKey, signature)
+	//_, err = cli.Content.Upload(context.Background(), header, bizID, appID, content)
+	//if err != nil {
+	//	return fmt.Errorf("upload content err, %v", err)
+	//}
+	//
+	//// create content.
+	//conReq := &pbcs.CreateContentReq{
+	//	BizId:        bizID,
+	//	AppId:        appID,
+	//	ConfigItemId: ciResp.Id,
+	//	Sign:         signature,
+	//	ByteSize:     size,
+	//}
+	//rid = RequestID()
+	//conResp, err := cli.Content.Create(context.Background(), Header(rid), conReq)
+	//if err != nil {
+	//	return fmt.Errorf("create content err, %v, rid: %s", err, rid)
+	//}
+	//
+	//// create commit.
+	//comReq := &pbcs.CreateCommitReq{
+	//	BizId:        bizID,
+	//	AppId:        appID,
+	//	ConfigItemId: ciResp.Id,
+	//	ContentId:    conResp.Id,
+	//	Memo:         memo,
+	//}
+	//rid = RequestID()
+	//_, err = cli.Commit.Create(context.Background(), Header(rid), comReq)
+	//if err != nil {
+	//	return fmt.Errorf("create commit err, %v, rid: %s", err, rid)
+	//}
 
 	return nil
 }

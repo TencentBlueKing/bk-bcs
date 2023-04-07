@@ -71,23 +71,24 @@ type generator struct {
 // InitData gen need init scene related data.
 func (g *generator) InitData(kt *kit.Kit) error {
 	header := http.Header{}
-	header.Set(constant.UserKey, "gen-data")
+	header.Set(constant.UserKey, constant.BKUserForTestPrefix+"gen-data")
 	header.Set(constant.RidKey, kt.Rid)
 	header.Set(constant.AppCodeKey, "test")
+	header.Add("Cookie", "bk_token="+constant.BKTokenForTest)
 
 	g.data = make(AppReleaseMeta, 0)
 
-	if err := g.initApp1(kt.Ctx, header); err != nil {
-		return err
-	}
+	//if err := g.initApp1(kt.Ctx, header); err != nil {
+	//	return err
+	//}
 
 	if err := g.initApp2(kt.Ctx, header); err != nil {
 		return err
 	}
 
-	if err := g.initApp3(kt.Ctx, header); err != nil {
-		return err
-	}
+	//if err := g.initApp3(kt.Ctx, header); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
@@ -96,9 +97,10 @@ func (g *generator) InitData(kt *kit.Kit) error {
 func (g *generator) SimulationData(kt *kit.Kit) error {
 
 	header := http.Header{}
-	header.Set(constant.UserKey, "gen-data")
+	header.Set(constant.UserKey, constant.BKUserForTestPrefix+"gen-data")
 	header.Set(constant.RidKey, kt.Rid)
 	header.Set(constant.AppCodeKey, "test")
+	header.Add("Cookie", "bk_token="+constant.BKTokenForTest)
 
 	if err := g.simulationApp1(kt.Ctx, header); err != nil {
 		return err
@@ -108,9 +110,10 @@ func (g *generator) SimulationData(kt *kit.Kit) error {
 		return err
 	}
 
-	if err := g.simulationApp3(kt.Ctx, header); err != nil {
-		return err
-	}
+	// TODO: strategy related test depends on group, add group test first
+	//if err := g.simulationApp3(kt.Ctx, header); err != nil {
+	//	return err
+	//}
 
 	return nil
 }
@@ -205,55 +208,57 @@ func (g *generator) initApp2(ctx context.Context, header http.Header) error {
 		return err
 	}
 
-	stgSetSpec := &table.StrategySetSpec{
-		Name: cases.RandName("strategy_set"),
-	}
-	stgSetID, err := g.genStrategySetData(ctx, header, stgSetSpec, appID)
-	if err != nil {
-		return err
-	}
-
-	rlReq := &pbcs.CreateReleaseReq{
-		BizId: testBizID,
-		AppId: appID,
-		Name:  cases.RandName("release"),
-		Memo:  testDataMemo,
-	}
-	rlResp, err := g.cli.Release.Create(ctx, header, rlReq)
-	if err != nil {
-		return fmt.Errorf("create release err, %v", err)
-	}
-
-	// create strategy.
-	styReq := &pbcs.CreateStrategyReq{
-		BizId:         testBizID,
-		AppId:         appID,
-		StrategySetId: stgSetID,
-		Name:          cases.RandName("strategy"),
-		AsDefault:     true,
-		Memo:          testDataMemo,
-		ReleaseId:     rlResp.Id,
-	}
-	_, err = g.cli.Strategy.Create(ctx, header, styReq)
-	if err != nil {
-		return fmt.Errorf("create strategy err, %v", err)
-	}
-
-	// publish strategy.
-	pbReq := &pbcs.PublishReq{
-		BizId: testBizID,
-		AppId: appID,
-	}
-	_, err = g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
-	if err != nil {
-		return fmt.Errorf("create strategy publish err, %v", err)
-	}
-
-	// record sidecar can match release info.
-	g.data[appID] = append(g.data[appID], &ReleaseMeta{
-		releaseID: rlResp.Id,
-		ciMeta:    ciMeta,
-	})
+	// TODO: strategy related test depends on group, add group test first
+	//stgSetSpec := &table.StrategySetSpec{
+	//	Name: cases.RandName("strategy_set"),
+	//}
+	//stgSetID, err := g.genStrategySetData(ctx, header, stgSetSpec, appID)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//rlReq := &pbcs.CreateReleaseReq{
+	//	BizId: testBizID,
+	//	AppId: appID,
+	//	Name:  cases.RandName("release"),
+	//	Memo:  testDataMemo,
+	//}
+	//rlResp, err := g.cli.Release.Create(ctx, header, rlReq)
+	//if err != nil {
+	//	return fmt.Errorf("create release err, %v", err)
+	//}
+	//
+	//
+	//// create strategy.
+	//styReq := &pbcs.CreateStrategyReq{
+	//	BizId:         testBizID,
+	//	AppId:         appID,
+	//	StrategySetId: stgSetID,
+	//	Name:          cases.RandName("strategy"),
+	//	AsDefault:     true,
+	//	Memo:          testDataMemo,
+	//	ReleaseId:     rlResp.Id,
+	//}
+	//_, err = g.cli.Strategy.Create(ctx, header, styReq)
+	//if err != nil {
+	//	return fmt.Errorf("create strategy err, %v", err)
+	//}
+	//
+	//// publish strategy.
+	//pbReq := &pbcs.PublishReq{
+	//	BizId: testBizID,
+	//	AppId: appID,
+	//}
+	//_, err = g.cli.Publish.PublishWithStrategy(ctx, header, pbReq)
+	//if err != nil {
+	//	return fmt.Errorf("create strategy publish err, %v", err)
+	//}
+	//
+	//// record sidecar can match release info.
+	//g.data[appID] = append(g.data[appID], &ReleaseMeta{
+	//	releaseID: rlResp.Id,
+	//	ciMeta:    ciMeta,
+	//})
 
 	for i := 0; i < 5; i++ {
 		rlReq := &pbcs.CreateReleaseReq{
@@ -397,6 +402,8 @@ func (g *generator) genAppData(ctx context.Context, header http.Header, spec *ta
 func (g *generator) genCIRelatedData(ctx context.Context, header http.Header, appID uint32) ([]*sfs.ConfigItemMetaV1,
 	error) {
 
+	sign := tools.SHA256(testContent)
+	size := uint64(len(testContent))
 	result := make([]*sfs.ConfigItemMetaV1, 0)
 	for i := 0; i < 2; i++ {
 		// create config item.
@@ -411,14 +418,15 @@ func (g *generator) genCIRelatedData(ctx context.Context, header http.Header, ap
 			User:      "root",
 			UserGroup: "root",
 			Privilege: "755",
+			Sign:      sign,
+			ByteSize:  size,
 		}
-		ciResp, err := g.cli.ConfigItem.Create(ctx, header, ciReq)
+		_, err := g.cli.ConfigItem.Create(ctx, header, ciReq)
 		if err != nil {
 			return nil, fmt.Errorf("create config item err, %v", err)
 		}
 
-		sha256 := tools.SHA256(testContent)
-		header.Set(constant.ContentIDHeaderKey, sha256)
+		header.Set(constant.ContentIDHeaderKey, sign)
 		uploadResp, err := g.cli.Content.Upload(context.Background(), header, testBizID, appID, testContent)
 		if err != nil {
 			return nil, fmt.Errorf("upload content failed, err: %v", err)
@@ -427,35 +435,36 @@ func (g *generator) genCIRelatedData(ctx context.Context, header http.Header, ap
 			return nil, fmt.Errorf("upload content failed, code: %d, msg: %s", uploadResp.Code, uploadResp.Message)
 		}
 
-		// create content.
-		conReq := &pbcs.CreateContentReq{
-			BizId:        testBizID,
-			AppId:        appID,
-			ConfigItemId: ciResp.Id,
-			Sign:         sha256,
-			ByteSize:     uint64(len(testContent)),
-		}
-		conResp, err := g.cli.Content.Create(ctx, header, conReq)
-		if err != nil {
-			return nil, fmt.Errorf("create content err, %v", err)
-		}
-
-		// create commit.
-		comReq := &pbcs.CreateCommitReq{
-			BizId:        testBizID,
-			AppId:        appID,
-			ConfigItemId: ciResp.Id,
-			ContentId:    conResp.Id,
-			Memo:         testDataMemo,
-		}
-		_, err = g.cli.Commit.Create(ctx, header, comReq)
-		if err != nil {
-			return nil, fmt.Errorf("create commit err, %v", err)
-		}
+		// create ConfigItem will create content and commit too, so no need to create them
+		//// create content.
+		//conReq := &pbcs.CreateContentReq{
+		//	BizId:        testBizID,
+		//	AppId:        appID,
+		//	ConfigItemId: ciResp.Id,
+		//	Sign:         sign,
+		//	ByteSize:     size,
+		//}
+		//conResp, err := g.cli.Content.Create(ctx, header, conReq)
+		//if err != nil {
+		//	return nil, fmt.Errorf("create content err, %v", err)
+		//}
+		//
+		//// create commit.
+		//comReq := &pbcs.CreateCommitReq{
+		//	BizId:        testBizID,
+		//	AppId:        appID,
+		//	ConfigItemId: ciResp.Id,
+		//	ContentId:    conResp.Id,
+		//	Memo:         testDataMemo,
+		//}
+		//_, err = g.cli.Commit.Create(ctx, header, comReq)
+		//if err != nil {
+		//	return nil, fmt.Errorf("create commit err, %v", err)
+		//}
 
 		result = append(result, &sfs.ConfigItemMetaV1{
 			ContentSpec: &pbcontent.ContentSpec{
-				Signature: sha256,
+				Signature: sign,
 				ByteSize:  uint64(len(testContent)),
 			},
 			ConfigItemSpec: &pbci.ConfigItemSpec{

@@ -91,9 +91,10 @@ unit-test: pre
 	@cd cmd/sidecar/scheduler && go test -o ${OUTPUT_DIR}/unit-test/scheduler.test -c
 	@echo -e "\e[34;1mExec Unit Test Success\n\033[0m"
 
-all: pre validate pb install test unit-test api
-	@cd ${PRO_DIR}/cmd && make
+mock: pre
 	@cd ${PRO_DIR}/test/mock/repo && make
+
+all: pre validate pb install test unit-test api mock build_bscp
 	@echo -e "\e[34;1mBuild All Success!\n\033[0m"
 
 server: validate api
