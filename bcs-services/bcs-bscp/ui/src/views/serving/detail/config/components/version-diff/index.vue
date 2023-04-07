@@ -79,7 +79,7 @@
   const getVersionList = async() => {
     try {
       versionListLoading.value = true
-      const res = await getConfigVersionList(bkBizId, appId, filter.value, page.value)
+      const res = await getConfigVersionList(appId, { start: 0, all: true })
       versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== props.currentVersion.id)
     } catch (e) {
       console.error(e)

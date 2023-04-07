@@ -5,6 +5,7 @@
   import { useConfigStore } from '../../../../../../store/config'
   import InfoBox from "bkui-vue/lib/info-box";
   import { IConfigItem, IConfigListQueryParams } from '../../../../../../../types/config'
+  import { CONFIG_STATUS_MAP } from '../../../../../../constants/index'
   import { getConfigList, deleteServingConfigItem } from '../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../utils/config'
   import EditConfig from './edit-config.vue'
@@ -27,7 +28,7 @@
   }>()
 
   const loading = ref(false)
-  const configList = ref<Array<IConfigItem>>([])
+  const configList = ref<IConfigItem[]>([])
   const pagination = ref({
     current: 1,
     count: 0,
@@ -154,7 +155,13 @@
           <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
           <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
           <bk-table-column label="修改时间" prop="revision.update_at" :sort="true"></bk-table-column>
-          <bk-table-column label="变更状态">-</bk-table-column>
+          <bk-table-column label="变更状态">
+            <template #default="{ row }">
+                <span v-if="row.file_state" :class="['status', row.file_state.toLowerCase()]">
+                  {{ CONFIG_STATUS_MAP[row.file_state as keyof typeof CONFIG_STATUS_MAP] }}
+                </span>
+            </template>
+          </bk-table-column>
           <bk-table-column label="操作">
             <template #default="{ row }">
               <div class="operate-action-btns">
@@ -226,6 +233,25 @@
   .config-list-table {
     :deep(.bk-pagination) {
       padding-left: 15px;
+    }
+    .status{
+      &:not(.nochange) {
+        padding: 4px 10px;
+        border-radius: 2px;
+        font-size: 12px;
+      }
+      &.add {
+        background: #edf4ff;
+        color: #3a84ff;
+      }
+      &.delete {
+        background: #feebea;
+        color: #ea3536;
+      }
+      &.revise {
+        background: #fff1db;
+        color: #fe9c00;
+      }
     }
   }
   .operate-action-btns {

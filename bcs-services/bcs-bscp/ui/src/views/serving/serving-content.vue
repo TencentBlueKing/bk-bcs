@@ -4,8 +4,9 @@ import { useRouter } from 'vue-router'
 import { Plus, Del } from "bkui-vue/lib/icon";
 import InfoBox from "bkui-vue/lib/info-box";
 import { useI18n } from "vue-i18n";
-import { IServingItem } from '../../types'
-import { getBizList, deleteApp, getAppList, createApp, updateApp, IAppListQuery } from "../../api";
+import { IAppItem } from '../../../types/app'
+import { IAppListQuery } from "../../../types/app";
+import { getBizList, getAppList, getAppsConfigData, createApp, updateApp, deleteApp } from "../../api";
 
 const router = useRouter()
 const { t } = useI18n();
@@ -19,7 +20,7 @@ const pagination = ref({
   limit: 50,
   count: 0,
 });
-const servingList = ref([]) as Ref<IServingItem[]>
+const servingList = ref([]) as Ref<IAppItem[]>
 
 const isEmpty = computed(() => {
   return servingList.value.length === 0;
@@ -41,7 +42,7 @@ const getDefaultSetting = () => {
 const isCreateAppShow = ref(false);
 const isAttrShow = ref(false);
 const appName = ref("");
-const isLoading = ref(false);
+const isLoading = ref(true);
 const isBizLoading = ref(false);
 const createAppPending = ref(false);
 const bkBizId = ref();
@@ -94,7 +95,7 @@ const filterKeyword = computed(() => {
 watch(
   () => bkBizId.value,
   (value) => {
-    loadServingList();
+    loadAppList();
   }
 );
 
@@ -106,10 +107,19 @@ onMounted(async() => {
   isBizLoading.value = false;
 });
 
-const loadServingList = async () => {
+const loadAppList = async () => {
   isLoading.value = true;
   try {
-    const resp = await getAppList(Number(bkBizId.value), filterKeyword.value)
+    const bizId = Number(bkBizId.value)
+    const resp = await getAppList(bizId, filterKeyword.value)
+    if (resp.details.length > 0) {
+      const appIds = resp.details.map((item: IAppItem) => item.id)
+      const appsConfigData = await getAppsConfigData(bizId, appIds)
+      resp.details.forEach((item: IAppItem, index: number) => {
+        const { count, update_at } = appsConfigData[index]
+        item.config = { count, update_at }
+      })
+    }
     // @ts-ignore
     servingList.value = resp.details
     // @ts-ignore
@@ -138,7 +148,7 @@ const handleDeleteItem = (item: any) => {
       if (servingList.value.length === 1 && pagination.value.current > 1) {
         pagination.value.current -= 1
       }
-      loadServingList();
+      loadAppList();
     },
   } as any);
 };
@@ -171,7 +181,7 @@ const handleCreateAppForm = async () => {
         })
       },
       onClosed() {
-        loadServingList()
+        loadAppList()
       }
     } as any);
   } catch (e) {
@@ -199,12 +209,12 @@ const handleItemMemoBlur = () => {
 }
 
 const handlePaginationChange = () => {
-  loadServingList();
+  loadAppList();
 };
 
 const handleLimitChange = (limit: number) => {
   pagination.value.limit = limit;
-  loadServingList();
+  loadAppList();
 };
 
 const handleItemAttributeClick = (item: any) => {
@@ -225,13 +235,13 @@ const handleNameInputChange = (val: string) => {
 
 const handleSearch = () => {
   pagination.value.current = 1
-  loadServingList()
+  loadAppList()
 }
 
 </script>
 
 <template>
-  <bk-loading :loading="isLoading" class="serving-content">
+  <bk-loading class="serving-content" :loading="isLoading">
     <div class="head-section">
       <bk-button theme="primary" @click="handleCreateAppClick">
         <Plus />
@@ -265,7 +275,7 @@ const handleSearch = () => {
       </div>
     </div>
     <div class="content-body">
-      <template v-if="isEmpty">
+      <template v-if="!isLoading && isEmpty">
         <bk-exception
           class="exception-wrap-item"
           type="empty"
@@ -289,11 +299,11 @@ const handleSearch = () => {
               <div class="item-config">
                 <div class="config-info">
                   <span class="bk-bscp-icon icon-configuration-line"></span>
-                  xx个配置项
+                  {{ item.config?.count }}个配置项
                 </div>
                 <div class="time-info">
                   <span class="bk-bscp-icon icon-time-2"></span>
-                  {{ item.revision?.update_at }}
+                  {{ item.config?.update_at }}
                 </div>
               </div>
               <div class="item-footer">
@@ -469,6 +479,7 @@ const handleSearch = () => {
 
 <style lang="scss" scoped>
 .serving-content {
+  height: 100%;
   overflow-x: hidden;
   .head-section {
     padding: 16px 80px;

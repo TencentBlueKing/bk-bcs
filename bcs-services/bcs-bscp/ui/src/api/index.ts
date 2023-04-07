@@ -1,4 +1,5 @@
 import http from "../request"
+import { IAppListQuery } from '../../types/app'
 
 /**
  * 获取空间、项目列表
@@ -25,17 +26,16 @@ export const getAllApp = () => {
  * @param params 查询过滤条件
  * @returns 
  */
-export type IAppListQuery = {
-  operator?: string,
-  name?: string,
-  start?: number,
-  limit?: number 
-}
-
 export const getAppList = (biz_id: number, params: IAppListQuery = {}) => {
   return http.get(`config/list/app/app/biz_id/${biz_id}`, { params }).then(resp => resp.data);
 }
 
+/**
+ * 获取应用下配置文件数量、更新时间等信息
+ */
+export const getAppsConfigData = (biz_id: number, app_id: number[]) => {
+  return http.post(`/config/config_item_count/biz_id/${biz_id}`, { biz_id, app_id }).then(resp => resp.data);
+}
 
 /**
  * 
