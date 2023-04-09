@@ -32,24 +32,24 @@ const menus: IMenu[] = [
             id: 'DEPLOYMENT',
           },
           {
-            title: 'DaemonSets',
-            route: 'dashboardWorkloadDaemonSets',
-            id: 'DAEMONSET',
-          },
-          {
             title: 'StatefulSets',
             route: 'dashboardWorkloadStatefulSets',
             id: 'STATEFULSET',
           },
           {
-            title: 'CronJobs',
-            route: 'dashboardWorkloadCronJobs',
-            id: 'CRONJOB',
+            title: 'DaemonSets',
+            route: 'dashboardWorkloadDaemonSets',
+            id: 'DAEMONSET',
           },
           {
             title: 'Jobs',
             route: 'dashboardWorkloadJobs',
             id: 'JOB',
+          },
+          {
+            title: 'CronJobs',
+            route: 'dashboardWorkloadCronJobs',
+            id: 'CRONJOB',
           },
           {
             title: 'Pods',
@@ -142,19 +142,14 @@ const menus: IMenu[] = [
         icon: 'bcs-icon-customize',
         children: [
           {
-            title: 'CRD',
-            route: 'dashboardCRD',
-            id: 'CRD',
+            title: 'GameDeployments',
+            route: 'dashboardGameDeployments',
+            id: 'GAMEDEPLOYMENT',
           },
           {
             title: 'GameStatefulSets',
             route: 'dashboardGameStatefulSets',
             id: 'GAMESTATEFULSET',
-          },
-          {
-            title: 'GameDeployments',
-            route: 'dashboardGameDeployments',
-            id: 'GAMEDEPLOYMENT',
           },
           {
             title: 'HookTemplates',
@@ -165,6 +160,11 @@ const menus: IMenu[] = [
             title: 'CustomObjects',
             route: 'dashboardCustomObjects',
             id: 'CUSTOMOBJECT',
+          },
+          {
+            title: 'CRD',
+            route: 'dashboardCRD',
+            id: 'CRD',
           },
         ],
         id: 'CUSTOM_RESOURCE',
@@ -177,7 +177,7 @@ const menus: IMenu[] = [
     route: 'clusterMain',
     children: [
       {
-        title: $i18n.t('集群总览'),
+        title: $i18n.t('集群列表'),
         icon: 'bcs-icon-jq-colony',
         route: 'clusterMain',
         id: 'CLUSTER',
@@ -212,25 +212,19 @@ const menus: IMenu[] = [
             route: 'releaseList',
           },
           {
-            title: 'Charts',
+            title: $i18n.t('Chart列表'),
             id: 'CHARTLIST',
             route: 'chartList',
           },
         ],
       },
       {
-        title: $i18n.t('变量管理'),
-        icon: 'bcs-icon-var',
-        route: 'variable',
-        id: 'VARIABLE',
-      },
-      {
-        title: $i18n.t('模板集1.0'),
+        title: $i18n.t('模板集'),
         id: 'TEMPLATESET_v1.0',
         icon: 'bcs-icon-templateset',
         children: [
           {
-            title: $i18n.t('模板集'),
+            title: $i18n.t('模板集列表'),
             route: 'templateset',
             id: 'TEMPLATESET',
           },
@@ -240,14 +234,14 @@ const menus: IMenu[] = [
             id: 'TEMPLATESET_DEPLOYMENT',
           },
           {
-            title: 'DaemonSets',
-            route: 'daemonset',
-            id: 'TEMPLATESET_DAEMONSET',
-          },
-          {
             title: 'StatefulSets',
             route: 'statefulset',
             id: 'TEMPLATESET_STATEFULSET',
+          },
+          {
+            title: 'DaemonSets',
+            route: 'daemonset',
+            id: 'TEMPLATESET_DAEMONSET',
           },
           {
             title: 'Jobs',
@@ -255,29 +249,14 @@ const menus: IMenu[] = [
             id: 'TEMPLATESET_JOB',
           },
           {
-            title: 'GameStatefulSets',
-            route: 'gamestatefulset',
-            id: 'TEMPLATESET_GAMESTATEFULSET',
-          },
-          {
-            title: 'GameDeployments',
-            route: 'gamedeployments',
-            id: 'TEMPLATESET_GAMEDEPLOYMENT',
-          },
-          {
-            title: 'CustomObjects',
-            route: 'customobjects',
-            id: 'TEMPLATESET_CUSTOMOBJECT',
+            title: 'Ingresses',
+            route: 'resourceIngress',
+            id: 'TEMPLATESET_INGRESSE',
           },
           {
             title: 'Services',
             route: 'service',
             id: 'TEMPLATESET_SERVICE',
-          },
-          {
-            title: 'Ingresses',
-            route: 'resourceIngress',
-            id: 'TEMPLATESET_INGRESSE',
           },
           {
             title: 'ConfigMaps',
@@ -294,7 +273,28 @@ const menus: IMenu[] = [
             id: 'TEMPLATESET_HPA',
             route: 'hpa',
           },
+          {
+            title: 'GameDeployments',
+            route: 'gamedeployments',
+            id: 'TEMPLATESET_GAMEDEPLOYMENT',
+          },
+          {
+            title: 'GameStatefulSets',
+            route: 'gamestatefulset',
+            id: 'TEMPLATESET_GAMESTATEFULSET',
+          },
+          {
+            title: 'CustomObjects',
+            route: 'customobjects',
+            id: 'TEMPLATESET_CUSTOMOBJECT',
+          },
         ],
+      },
+      {
+        title: $i18n.t('变量管理'),
+        icon: 'bcs-icon-var',
+        route: 'variable',
+        id: 'VARIABLE',
       },
       // {
       //   title: $i18n.t('仓库'),
@@ -343,11 +343,12 @@ const menus: IMenu[] = [
       //     },
       //   ],
       // },
-      // {
-      //   title: $i18n.t('项目信息'),
-      //   id: 'PROJECT',
-      //   route: 'project',
-      // },
+      {
+        title: $i18n.t('项目信息'),
+        id: 'PROJECT',
+        icon: 'bcs-icon bcs-icon-apps',
+        route: 'projectInfo',
+      },
     ],
   },
   {

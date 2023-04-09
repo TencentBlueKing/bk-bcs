@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/tidwall/sjson"
 	"google.golang.org/protobuf/proto"
 
 	"bscp.io/pkg/iam/auth"
@@ -26,20 +27,44 @@ import (
 	"bscp.io/pkg/rest/view/webannotation"
 )
 
+const (
+	// BK_CODE_KEY 蓝鲸规范返回的 code key
+	BK_APIv1_CODE_KEY = "code"
+
+	// BK_CODE_OK_VALUE 蓝鲸规范返回正常请求的 code value
+	BK_APIv1_CODE_OK_VALUE = 0
+)
+
+// DataStructInterface 判断是否已经包含 data 结构体实现, 处理 structpb.Struct 问题
+type DataStructInterface interface {
+	IsDataStruct() bool
+}
+
 // GenericResponseWriter 自定义Write，自动补充 data 和 web_annotations 数据
 type GenericResponseWriter struct {
 	http.ResponseWriter
-	ctx        context.Context
-	msg        proto.Message
-	authorizer auth.Authorizer
-	annotation *webannotation.Annotation
-	err        error // low-level runtime error
+
+	isDataStruct bool
+	ctx          context.Context
+	msg          proto.Message
+	authorizer   auth.Authorizer
+	annotation   *webannotation.Annotation
+	err          error // low-level runtime error
 }
 
 // Write http write 接口实现
 func (w *GenericResponseWriter) Write(data []byte) (int, error) {
 	// 错误不需要特殊处理
 	if w.err != nil {
+		return w.ResponseWriter.Write(data)
+	}
+
+	// data struct 类型不需要处理
+	if w.isDataStruct {
+		// data 需要是合法的 json 格式, 蓝鲸老的规范需要添加 code
+		if ndata, err := sjson.SetBytes(data, BK_APIv1_CODE_KEY, BK_APIv1_CODE_OK_VALUE); err != nil {
+			return w.ResponseWriter.Write(ndata)
+		}
 		return w.ResponseWriter.Write(data)
 	}
 
@@ -80,6 +105,11 @@ func (w *GenericResponseWriter) beforeWriteHook(ctx context.Context, msg proto.M
 
 // BuildWebAnnotation 动态执行 webannotions 函数
 func (w *GenericResponseWriter) BuildWebAnnotation(ctx context.Context, msg proto.Message) error {
+	// when not using grpc-gateway
+	if ctx == nil {
+		return nil
+	}
+
 	kt := kit.MustGetKit(ctx)
 
 	var (
@@ -120,6 +150,11 @@ func (w *GenericResponseWriter) SetWriterAttrs(ctx context.Context, msg proto.Me
 // SetError 设置错误请求
 func (w *GenericResponseWriter) SetError(err error) {
 	w.err = err
+}
+
+// SetDataStructFlag 设置是否是 DataStruct 类型
+func (w *GenericResponseWriter) SetDataStructFlag(ok bool) {
+	w.isDataStruct = ok
 }
 
 // NewGenericResponseWriter GenericResponseWriter初始化

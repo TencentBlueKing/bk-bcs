@@ -14,14 +14,18 @@ package clusterops
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 
@@ -87,11 +91,16 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 			cfg.Host = "https://" + ko.opt.Address + ":" + strconv.Itoa(int(ko.opt.HTTPPort)) +
 				"/clustermanager/clusters/" + clusterID
 
+			_, certData, keyData, err := loadClusterClientCert(clusterID, ko.opt.ClientCa,
+				ko.opt.ClientCert, ko.opt.ClientKey, static.ClientCertPwd)
+			if err != nil {
+				return nil, err
+			}
+
 			cfg.TLSClientConfig = rest.TLSClientConfig{
-				Insecure: false,
-				CertFile: ko.opt.ClientCert,
-				CAFile:   ko.opt.ClientCa,
-				KeyFile:  ko.opt.ClientKey,
+				Insecure: true,
+				CertData: certData,
+				KeyData:  keyData,
 			}
 		} else {
 			cfg.Host = "http://" + ko.opt.Address + ":" + strconv.Itoa(int(ko.opt.HTTPPort)) +
@@ -128,4 +137,48 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 	}
 
 	return nil, fmt.Errorf("invalid credential mode %s of cluster %s", cred.ConnectMode, clusterID)
+}
+
+func loadClusterClientCert(clusterID, clientCa, clientCert, clientKey string, passwd string) ([]byte, []byte, []byte, error) {
+	caData, err := loadCertificates(clientCa, "")
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientCA) failed: %v", clusterID, err)
+	}
+	certData, err := loadCertificates(clientCert, "")
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientCert) failed: %v", clusterID, err)
+	}
+	keyData, err := loadCertificates(clientKey, passwd)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("cluster[%s] websocketTunnel LoadCertificates(clientKey) failed: %v", clusterID, err)
+	}
+
+	return []byte(caData), []byte(certData), []byte(keyData), nil
+}
+
+// loadCertificates parse cert
+func loadCertificates(keyFile, passwd string) (string, error) {
+	priKey, err := ioutil.ReadFile(keyFile)
+	if err != nil {
+		return "", err
+	}
+
+	if "" != passwd {
+		priPem, _ := pem.Decode(priKey)
+		if priPem == nil {
+			return "", fmt.Errorf("decode private key failed")
+		}
+
+		priDecrPem, err := x509.DecryptPEMBlock(priPem, []byte(passwd))
+		if err != nil {
+			return "", err
+		}
+
+		priKey = pem.EncodeToMemory(&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: priDecrPem,
+		})
+	}
+
+	return string(priKey), nil
 }

@@ -36,6 +36,7 @@ import (
 	// "k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
 	// ca_errors "k8s.io/autoscaler/cluster-autoscaler/utils/errors"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
@@ -969,6 +970,13 @@ func TestScaleDown(t *testing.T) {
 	}
 	n1 := BuildTestNode("n1", 1000, 1000)
 	SetNodeReadyState(n1, true, time.Time{})
+	n1.Spec.Taints = []apiv1.Taint{
+		{
+			Key:    deletetaint.DeletionCandidateTaint,
+			Effect: apiv1.TaintEffectPreferNoSchedule,
+			Value:  fmt.Sprint(time.Now().Unix()),
+		},
+	}
 	n2 := BuildTestNode("n2", 1000, 1000)
 	SetNodeReadyState(n2, true, time.Time{})
 	p1 := BuildTestPod("p1", 100, 0)
@@ -985,6 +993,14 @@ func TestScaleDown(t *testing.T) {
 	p3.Spec.NodeName = "n2"
 
 	fakeClient.Fake.AddReactor("list", "pods", func(action core.Action) (bool, runtime.Object, error) {
+		listAction, ok := action.(core.ListAction)
+		if !ok {
+			t.Logf("Action is bad value")
+		}
+		restriction := listAction.GetListRestrictions()
+		if restriction.Fields != fields.Everything() {
+			return true, &apiv1.PodList{Items: []apiv1.Pod{*p1, *p2}}, nil
+		}
 		return true, &apiv1.PodList{Items: []apiv1.Pod{*p1, *p2, *p3}}, nil
 	})
 	fakeClient.Fake.AddReactor("get", "pods", func(action core.Action) (bool, runtime.Object, error) {
@@ -1298,6 +1314,13 @@ func simpleScaleDownEmpty(t *testing.T, config *scaleTestConfig) {
 
 	for i, n := range config.nodes {
 		node := BuildTestNode(n.name, n.cpu, n.memory)
+		node.Spec.Taints = []apiv1.Taint{
+			{
+				Key:    deletetaint.DeletionCandidateTaint,
+				Effect: apiv1.TaintEffectPreferNoSchedule,
+				Value:  fmt.Sprint(time.Now().Unix()),
+			},
+		}
 		if n.gpu > 0 {
 			AddGpusToNode(node, n.gpu)
 			node.Labels[provider.GPULabel()] = gpu.DefaultGPUType

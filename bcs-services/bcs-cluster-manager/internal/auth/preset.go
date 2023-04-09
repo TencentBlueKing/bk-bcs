@@ -32,6 +32,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.DeleteCluster":          cluster.CanDeleteClusterOperation,
 	"ClusterManager.GetCluster":             cluster.CanViewClusterOperation,
 	"ClusterManager.ListCluster":            project.CanViewProjectOperation,
+	"ClusterManager.ListProjectCluster":     project.CanViewProjectOperation,
 	// node
 	"ClusterManager.GetNode":          cluster.CanViewClusterOperation,
 	"ClusterManager.UpdateNode":       cluster.CanManageClusterOperation,

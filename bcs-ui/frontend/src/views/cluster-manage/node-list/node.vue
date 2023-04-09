@@ -424,7 +424,13 @@
                 </template>
               </bk-popover>
             </div>
-            <span v-else>--</span>
+            <bk-button
+              class="mr10"
+              text
+              v-else
+              @click="handleShowLog(row)">
+              {{$t('查看日志')}}
+            </bk-button>
           </template>
         </bcs-table-column>
         <bcs-table-column type="setting" :resizable="false">
@@ -905,7 +911,7 @@ export default defineComponent({
 
     // IP复制
     const showCopyMenu = ref(false);
-    const copyList = ref([
+    const copyList = computed(() => [
       {
         id: 'checked',
         label: $i18n.t('复制勾选IP'),
@@ -913,10 +919,12 @@ export default defineComponent({
           {
             id: 'checked-ipv4',
             label: 'IPv4',
+            disabled: !selections.value.length,
           },
           {
             id: 'checked-ipv6',
             label: 'IPv6',
+            disabled: !selections.value.length,
           },
         ],
       },

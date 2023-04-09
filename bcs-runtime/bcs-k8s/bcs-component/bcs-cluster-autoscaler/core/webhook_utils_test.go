@@ -49,7 +49,7 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 
 	tn := BuildTestNode("tn", 1000, 1000)
 	tni := schedulernodeinfo.NewNodeInfo()
-	tni.SetNode(tn)
+	_ = tni.SetNode(tn)
 
 	provider := testprovider.NewTestAutoprovisioningCloudProvider(
 		func(id string, delta int) error {
@@ -74,9 +74,10 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 	uuid.SetRand(reader)
 
 	type args struct {
-		nodeGroups    []cloudprovider.NodeGroup
-		upcomingNodes map[string]int
-		newPriorities priorities
+		nodeGroups          []cloudprovider.NodeGroup
+		upcomingNodes       map[string]int
+		newPriorities       priorities
+		nodeDeletionTracker *NodeDeletionTracker
 	}
 	tests := []struct {
 		name    string
@@ -96,6 +97,11 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 					"ng2": 1,
 					"ng1": 2,
 				},
+				nodeDeletionTracker: func() *NodeDeletionTracker {
+					tracker := NewNodeDeletionTracker()
+					tracker.StartDeletion("ng1")
+					return tracker
+				}(),
 			},
 			want: &AutoscalerRequest{
 				UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
@@ -106,6 +112,7 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 						MinSize:      1,
 						DesiredSize:  1,
 						UpcomingSize: 0,
+						DeletingSize: 1,
 						NodeTemplate: Template{
 							CPU:    1,
 							Mem:    1000,
@@ -121,6 +128,7 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 						MinSize:      0,
 						DesiredSize:  2,
 						UpcomingSize: 1,
+						DeletingSize: 0,
 						NodeTemplate: Template{
 							CPU:    1,
 							Mem:    1000,
@@ -141,6 +149,7 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 				upcomingNodes: map[string]int{
 					"ng2": 1,
 				},
+				nodeDeletionTracker: NewNodeDeletionTracker(),
 			},
 			want: &AutoscalerRequest{
 				UID: apitypes.UID("31312d31-3131-412d-b131-313131313131"),
@@ -182,7 +191,8 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GenerateAutoscalerRequest(tt.args.nodeGroups, tt.args.upcomingNodes, tt.args.newPriorities)
+			got, err := GenerateAutoscalerRequest(tt.args.nodeGroups, tt.args.upcomingNodes,
+				tt.args.newPriorities, tt.args.nodeDeletionTracker)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GenerateAutoscalerRequest() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -221,7 +231,7 @@ func TestHandleResponse(t *testing.T) {
 		"io.tencent.bcs.dev/node-deletion-cost": "200",
 	}
 	tn2 := schedulernodeinfo.NewNodeInfo(p2)
-	tn2.SetNode(n2)
+	_ = tn2.SetNode(n2)
 	n3 := BuildTestNode("n3", 1000, 1000)
 	injectNodeIP(n3, "n3")
 	n3.ObjectMeta.Annotations = map[string]string{
@@ -229,7 +239,7 @@ func TestHandleResponse(t *testing.T) {
 	}
 	SetNodeReadyState(n3, true, time.Now())
 	tn3 := schedulernodeinfo.NewNodeInfo()
-	tn3.SetNode(n3)
+	_ = tn3.SetNode(n3)
 	n4 := BuildTestNode("n4", 1000, 1000)
 	injectNodeIP(n4, "n4")
 	n4.ObjectMeta.Annotations = map[string]string{
@@ -237,11 +247,11 @@ func TestHandleResponse(t *testing.T) {
 	}
 	SetNodeReadyState(n4, true, time.Now())
 	tn4 := schedulernodeinfo.NewNodeInfo()
-	tn4.SetNode(n4)
+	_ = tn4.SetNode(n4)
 
 	tn := BuildTestNode("tn", 1000, 1000)
 	tni := schedulernodeinfo.NewNodeInfo()
-	tni.SetNode(tn)
+	_ = tni.SetNode(tn)
 
 	provider := testprovider.NewTestAutoprovisioningCloudProvider(
 		func(id string, delta int) error {
@@ -592,7 +602,8 @@ func TestHandleResponse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := HandleResponse(tt.args.review, tt.args.nodes, tt.args.nodeNameToNodeInfo, tt.args.sd, tt.args.newPriorities)
+			got, got1, err := HandleResponse(tt.args.review, tt.args.nodes, tt.args.nodeNameToNodeInfo,
+				tt.args.sd, tt.args.newPriorities)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("HandleResponse() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -673,6 +684,7 @@ func TestExecuteScaleUp(t *testing.T) {
 		context              *contextinternal.Context
 		clusterStateRegistry *clusterstate.ClusterStateRegistry
 		options              ScaleUpOptions
+		maxBulkScaleUpCount  int
 	}
 	tests := []struct {
 		name    string
@@ -689,6 +701,7 @@ func TestExecuteScaleUp(t *testing.T) {
 					"ng1": 5,
 					"ng2": 8,
 				},
+				maxBulkScaleUpCount: 100,
 			},
 			wantErr: false,
 		},
@@ -696,7 +709,7 @@ func TestExecuteScaleUp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ExecuteScaleUp(tt.args.context, tt.args.clusterStateRegistry,
-				tt.args.options); (err != nil) != tt.wantErr {
+				tt.args.options, tt.args.maxBulkScaleUpCount); (err != nil) != tt.wantErr {
 				t.Errorf("ExecuteScaleUp() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -725,7 +738,7 @@ func TestExecuteScaleDown(t *testing.T) {
 	SetNodeReadyState(n1, true, time.Now())
 	injectNodeIP(n1, "n1")
 	tn1 := schedulernodeinfo.NewNodeInfo(p1)
-	tn1.SetNode(n1)
+	_ = tn1.SetNode(n1)
 	n2 := BuildTestNode("n2", 1000, 1000)
 	SetNodeReadyState(n2, true, time.Now())
 	injectNodeIP(n2, "n2")
@@ -733,7 +746,7 @@ func TestExecuteScaleDown(t *testing.T) {
 		"io.tencent.bcs.dev/node-deletion-cost": "200",
 	}
 	tn2 := schedulernodeinfo.NewNodeInfo(p2)
-	tn2.SetNode(n2)
+	_ = tn2.SetNode(n2)
 	n3 := BuildTestNode("n3", 1000, 1000)
 	injectNodeIP(n3, "n3")
 	n3.ObjectMeta.Annotations = map[string]string{
@@ -741,7 +754,7 @@ func TestExecuteScaleDown(t *testing.T) {
 	}
 	SetNodeReadyState(n3, true, time.Now())
 	tn3 := schedulernodeinfo.NewNodeInfo()
-	tn3.SetNode(n3)
+	_ = tn3.SetNode(n3)
 	n4 := BuildTestNode("n4", 1000, 1000)
 	injectNodeIP(n4, "n4")
 	n4.ObjectMeta.Annotations = map[string]string{
@@ -749,11 +762,11 @@ func TestExecuteScaleDown(t *testing.T) {
 	}
 	SetNodeReadyState(n4, true, time.Now())
 	tn4 := schedulernodeinfo.NewNodeInfo()
-	tn4.SetNode(n4)
+	_ = tn4.SetNode(n4)
 
 	tn := BuildTestNode("tn", 1000, 1000)
 	tni := schedulernodeinfo.NewNodeInfo()
-	tni.SetNode(tn)
+	_ = tni.SetNode(tn)
 
 	provider := testprovider.NewTestAutoprovisioningCloudProvider(
 		func(id string, delta int) error {
@@ -823,7 +836,8 @@ func TestExecuteScaleDown(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ExecuteScaleDown(tt.args.context, tt.args.sd, tt.args.nodes, tt.args.candidates, tt.args.nodeNameToNodeInfo); (err != nil) != tt.wantErr {
+			if err := ExecuteScaleDown(tt.args.context, tt.args.sd, tt.args.nodes, tt.args.candidates,
+				tt.args.nodeNameToNodeInfo); (err != nil) != tt.wantErr {
 				t.Errorf("ExecuteScaleDown() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

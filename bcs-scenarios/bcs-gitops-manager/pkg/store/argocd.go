@@ -170,7 +170,12 @@ func (cd *argo) UpdateCluster(ctx context.Context, argoCluster *v1alpha1.Cluster
 		return errors.Wrapf(err, "argocd init cluster client failed")
 	}
 	defer connection.Close() // nolint
-	if _, err := client.Update(ctx, &cluster.ClusterUpdateRequest{Cluster: argoCluster}); err != nil {
+
+	// UpdateFields: github.com/argoproj/argo-cd/server/cluster/cluster.go:#235
+	if _, err := client.Update(ctx, &cluster.ClusterUpdateRequest{
+		Cluster:       argoCluster,
+		UpdatedFields: []string{"annotations"},
+	}); err != nil {
 		return errors.Wrapf(err, "update cluster '%s' failed", argoCluster.Name)
 	}
 	return nil

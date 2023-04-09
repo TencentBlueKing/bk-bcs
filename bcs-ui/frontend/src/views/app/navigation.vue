@@ -86,28 +86,28 @@
       </template>
     </bcs-navigation>
     <!-- 系统日志 -->
-    <SystemLog v-model="showSystemLog" @show-feature="handleShowFeatures" />
+    <SystemLog v-model="showSystemLog" :list="releaseData.changelog" />
     <!-- 产品特性 -->
     <bcs-dialog
       v-model="showFeatures"
       :title="$t('产品功能特性')"
       :show-footer="false"
       width="480">
-      <BcsMd :code="featureData" />
+      <BcsMd :code="releaseData.feature.content" />
     </bcs-dialog>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, toRef, reactive } from '@vue/composition-api';
+import { defineComponent, ref, computed, toRef, reactive, onMounted } from '@vue/composition-api';
 import SystemLog from '@/views/app/log.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
-import featureData from '../../../static/features.md';
 import ProjectSelector from '@/views/app/project-selector.vue';
 import PopoverSelector from '../../components/popover-selector.vue';
 import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import menusData, { IMenu } from './menus';
+import { releaseNode } from '@/api/modules/project';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -206,12 +206,21 @@ export default defineComponent({
       window.location.href = `${window.LOGIN_FULL}?c_url=${window.location}`;
     };
 
+    // release信息
+    const releaseData = ref({
+      changelog: [],
+      feature: { content: '' },
+    });
+    onMounted(async () => {
+      releaseData.value = await releaseNode().catch(() => ({ changelog: [], feature: {} }));
+    });
+
     return {
       activeNav,
       needMenu,
       curProject,
       openSideMenu,
-      featureData,
+      releaseData,
       menus,
       langs,
       curLang,

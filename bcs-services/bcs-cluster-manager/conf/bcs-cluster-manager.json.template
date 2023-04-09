@@ -107,6 +107,10 @@
         "enable": ${bcsAppEnable},
         "debug": ${bcsAppDebug}
     },
+    "helm": {
+        "module": "${bcsHelmManagerModule}",
+        "enable": ${bcsHelmManagerEnable}
+    },
     "componentDeploy": {
         "autoScaler": {
             "chartName": "${bcsCAChartName}",
@@ -121,8 +125,10 @@
             "isPublicRepo": ${bcsWatchIsPublicRepo},
             "storageServer": "${bcsStorageServer}"
         },
+        "registry": "${bcsImageRegistry}",
         "bcsApiGateway": "${bcsCAApiGateway}",
-        "token": "${bcsCAToken}"
+        "token": "${bcsCAToken}",
+        "deployService": "${deployService}"
     },
     "cloudTemplatePath": "${bcsCloudTemplatePath}",
     "resourceSchemaPath": "${bcsResourceSchemaPath}",

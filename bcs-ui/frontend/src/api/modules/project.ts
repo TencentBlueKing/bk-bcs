@@ -30,15 +30,21 @@ export const fetchNamespaceInfo = request('get', '/clusters/$clusterId/namespace
 export const syncNamespaceList = request('post', '/clusters/$clusterId/namespaces/sync');
 export const withdrawNamespace = request('post', '/clusters/$clusterId/namespaces/$namespace/withdraw');
 
-const request2 = createRequest({
+const projectRequest = createRequest({
   domain: window.BCS_API_HOST,
   prefix: '/bcsapi/v4/bcsproject/v1',
 });
 // project
-export const createProject = request2('post', '/projects');
-export const getProject = request2('get', '/projects/$projectId');
-export const editProject = request2('put', '/projects/$projectId');
-export const fetchProjectList = request2('get', '/authorized_projects');
-export const fetchAllProjectList = request2('get', '/projects');
-export const businessList = request2('get', '/business');
-export const projectBusiness = request2('get', '/projects/$projectCode/business');
+export const createProject = projectRequest('post', '/projects');
+export const getProject = projectRequest('get', '/projects/$projectId');
+export const editProject = projectRequest('put', '/projects/$projectId');
+export const fetchProjectList = projectRequest('get', '/authorized_projects');
+export const fetchAllProjectList = projectRequest('get', '/projects');
+export const businessList = projectRequest('get', '/business');
+export const projectBusiness = projectRequest('get', '/projects/$projectCode/business');
+
+const uiRequest = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/ui',
+});
+export const releaseNode = uiRequest('get', '/release_note');

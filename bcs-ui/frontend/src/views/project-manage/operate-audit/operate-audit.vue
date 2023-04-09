@@ -81,6 +81,9 @@
           </bk-table-column>
           <bk-table-column :label="$t('发起者')" prop="user"></bk-table-column>
           <bk-table-column :label="$t('描述')" prop="description" :show-overflow-tooltip="true" min-width="160"></bk-table-column>
+          <template #empty>
+            <BcsEmptyTableStatus :type="searchEmpty ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          </template>
         </bk-table>
       </template>
     </div>
@@ -233,6 +236,12 @@ export default {
   computed: {
     isEn() {
       return this.$store.state.isEn;
+    },
+    searchEmpty() {
+      return (this.resourceTypeIndex !== -1 && this.resourceTypeIndex)
+      || (this.activityTypeIndex !== -1 && this.activityTypeIndex)
+      || (this.activityStatusIndex !== -1 && this.activityStatusIndex)
+      || this.dataRange.some(item => item);
     },
   },
   watch: {
@@ -444,6 +453,14 @@ export default {
         limit: this.pageConf.pageSize,
         offset: 0,
       });
+    },
+
+    handleClearSearchData() {
+      this.resourceTypeIndex = -1;
+      this.activityTypeIndex = -1;
+      this.activityStatusIndex = -1;
+      this.dataRange = [];
+      this.handleClick();
     },
   },
 };

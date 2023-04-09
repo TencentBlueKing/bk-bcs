@@ -17,7 +17,7 @@
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
             cluster-type="all"
-            @search-change="getConfigmapList"
+            @search-change="searchConfigmap"
             @refresh="refresh" />
         </div>
       </div>
@@ -129,6 +129,9 @@
               </li>
             </template>
           </bk-table-column>
+          <template #empty>
+            <BcsEmptyTableStatus :type="searchKeyword ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+          </template>
         </bk-table>
       </div>
 
@@ -990,6 +993,10 @@ export default {
       return row.can_delete
                     && this.webAnnotations.perms[row.iam_ns_id]
                     && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;
+    },
+    handleClearSearchData() {
+      this.searchKeyword = '';
+      this.searchConfigmap();
     },
   },
 };

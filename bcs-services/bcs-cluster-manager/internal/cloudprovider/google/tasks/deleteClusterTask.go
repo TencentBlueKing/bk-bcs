@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
@@ -42,31 +41,16 @@ func DeleteGKEClusterTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
 	if err != nil {
-		blog.Errorf("DeleteGKEClusterTask[%s]: get cloud/project for cluster %s in task %s step %s failed, %s",
-			taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+		blog.Errorf("DeleteGKEClusterTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
+		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("DeleteGKEClusterTask[%s]: get credential for cluster %s in task %s step %s failed, %s",
-			taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	cmOption.Region = cluster.Region
 
 	// get google container service client
-	cli, err := api.NewContainerServiceClient(cmOption)
+	cli, err := api.NewContainerServiceClient(basicInfo.CmOption)
 	if err != nil {
 		blog.Errorf("DeleteGKEClusterTask[%s]: get google client for cluster[%s] in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -75,8 +59,8 @@ func DeleteGKEClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	if cluster.SystemID != "" {
-		err = cli.DeleteCluster(context.Background(), cluster.SystemID)
+	if basicInfo.Cluster.SystemID != "" {
+		err = cli.DeleteCluster(context.Background(), basicInfo.Cluster.SystemID)
 		if err != nil {
 			blog.Errorf("DeleteGKEClusterTask[%s]: task[%s] step[%s] call google DeleteGKECluster failed: %v",
 				taskID, taskID, stepName, err)
@@ -85,7 +69,8 @@ func DeleteGKEClusterTask(taskID string, stepName string) error {
 			return retErr
 		}
 		_ = cloudprovider.UpdateClusterSystemID(clusterID, "")
-		blog.Infof("DeleteGKEClusterTask[%s]: task %s DeleteGKECluster[%s] successful", taskID, taskID, cluster.SystemID)
+		blog.Infof("DeleteGKEClusterTask[%s]: task %s DeleteGKECluster[%s] successful", taskID, taskID,
+			basicInfo.Cluster.SystemID)
 	} else {
 		blog.Infof("DeleteGKEClusterTask[%s]: task %s DeleteGKECluster skip current step because SystemID empty", taskID,
 			taskID)

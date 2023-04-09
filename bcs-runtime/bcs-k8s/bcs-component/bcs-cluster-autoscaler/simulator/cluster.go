@@ -111,6 +111,8 @@ const (
 	NoPlaceToMovePods UnremovableReason = "NoPlaceToMovePods"
 	// BlockedByPod - node can't be removed because a pod running on it can't be moved. The reason why should be in BlockingPod.
 	BlockedByPod UnremovableReason = "BlockedByPod"
+	// BufferNotEnough - node can't be removed because of buffer ratio
+	BufferNotEnough UnremovableReason = "BufferNotEnough"
 	// UnexpectedError - node can't be removed because of an unexpected error.
 	UnexpectedError UnremovableReason = "UnexpectedError"
 )

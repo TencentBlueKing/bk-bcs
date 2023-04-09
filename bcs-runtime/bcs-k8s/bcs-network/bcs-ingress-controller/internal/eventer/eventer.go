@@ -18,7 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	kubeapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,16 +25,19 @@ import (
 	kubewatch "k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
-type PodCreateFailedFunc func(event *kubeapi.Event)
+type EventHookFunc func(event *kubeapi.Event)
 
 // WatchEventInterface defines the interface the watch events of pod
 type WatchEventInterface interface {
 	Init() error
 	Start(ctx context.Context)
-	RegisterPodCreateFailed(id string, f PodCreateFailedFunc)
-	UnRegisterPodCreateFailed(id string)
+
+	RegisterEventHook(hookKind string, id string, f EventHookFunc)
+	UnRegisterEventHook(hookKind string, id string)
 }
 
 type kubeEventer struct {
@@ -43,15 +45,15 @@ type kubeEventer struct {
 	resourceVersion string
 	watcher         watch.Interface
 
-	podCreateFailed *sync.Map
+	hookMap *sync.Map
 }
 
 // NewKubeEventer create the instance of kubeEventer
 func NewKubeEventer(client *kubernetes.Clientset) WatchEventInterface {
 	eventClient := client.CoreV1().Events(kubeapi.NamespaceAll)
 	return &kubeEventer{
-		eventClient:     eventClient,
-		podCreateFailed: &sync.Map{},
+		eventClient: eventClient,
+		hookMap:     &sync.Map{},
 	}
 }
 
@@ -76,14 +78,33 @@ func (e *kubeEventer) Start(ctx context.Context) {
 	}
 }
 
-// RegisterPodCreateFailed register the event of pod 'CreateFailed'
-func (e *kubeEventer) RegisterPodCreateFailed(id string, f PodCreateFailedFunc) {
-	e.podCreateFailed.Store(id, f)
+// RegisterEventHook register event hook for eventKind
+func (e *kubeEventer) RegisterEventHook(hookKind, id string, f EventHookFunc) {
+	eventHookMapVal, _ := e.hookMap.LoadOrStore(hookKind, &sync.Map{})
+	eventHookMap, ok := eventHookMapVal.(*sync.Map)
+	if !ok {
+		blog.Errorf("unknown hook type, val: %+v", eventHookMapVal)
+
+		// 如果处理到未知类型，则先用空的Map覆盖
+		eventHookMap = &sync.Map{}
+		e.hookMap.Store(hookKind, eventHookMap)
+	}
+	eventHookMap.Store(id, f)
 }
 
-// UnRegisterPodCreateFailed unregister the CreateFailed event
-func (e *kubeEventer) UnRegisterPodCreateFailed(id string) {
-	e.podCreateFailed.Delete(id)
+// UnRegisterEventHook unregister event hook of eventKind
+func (e *kubeEventer) UnRegisterEventHook(eventKind, id string) {
+	eventHookMapVal, _ := e.hookMap.LoadOrStore(eventKind, &sync.Map{})
+	eventHookMap, ok := eventHookMapVal.(*sync.Map)
+	if !ok {
+		blog.Errorf("unknown hook type, val: %+v", eventHookMapVal)
+
+		// 如果处理到未知类型，则先用空的Map覆盖
+		eventHookMap = &sync.Map{}
+		e.hookMap.Store(eventKind, eventHookMap)
+	}
+
+	eventHookMap.Delete(id)
 }
 
 func (e *kubeEventer) watch(ctx context.Context) error {
@@ -120,24 +141,49 @@ const (
 	// Cache 中分配的逻辑。
 	podFailedCreateReason = "FailedCreate"
 
+	// HookKindPodCreateFailed pod eventKind
+	HookKindPodCreateFailed = "HookKindPodCreateFailed"
 	// KindGameDeployment GameWorkload 类型
 	KindGameDeployment = "GameDeployment"
 	// KindGameStatefulSet GameWorkload 类型
 	KindGameStatefulSet = "GameStatefulSet"
+
+	// HookKindLBEnsured service eventKind
+	HookKindLBEnsured = "HookKindLBService"
+	// KindService service 类型
+	KindService = "Service"
 )
 
 func (e *kubeEventer) handleRegister(event *kubeapi.Event) {
 	kind := event.InvolvedObject.Kind
+	var hookKind string
+
 	if event.Reason == podFailedCreateReason && (kind == KindGameDeployment || kind == KindGameStatefulSet) {
-		// 遍历并执行所有注册 Pod FailedCreate 事件的函数
-		e.podCreateFailed.Range(func(key, value interface{}) bool {
-			f, ok := value.(PodCreateFailedFunc)
-			if ok {
-				f(event)
-			}
-			return true
-		})
+		hookKind = HookKindPodCreateFailed
+	} else if kind == KindService {
+		hookKind = HookKindLBEnsured
+	} else {
+		return
 	}
+
+	hookMapVal, exist := e.hookMap.Load(hookKind)
+	if !exist {
+		return
+	}
+	hookMap, ok := hookMapVal.(*sync.Map)
+	if !ok {
+		blog.Errorf("unknown type, val:%+v", hookMapVal)
+		return
+	}
+
+	// 遍历并执行所有注册 Pod FailedCreate 事件的函数
+	hookMap.Range(func(key, value interface{}) bool {
+		f, ok := value.(EventHookFunc)
+		if ok {
+			f(event)
+		}
+		return true
+	})
 }
 
 const (

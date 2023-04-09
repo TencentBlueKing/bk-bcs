@@ -192,6 +192,7 @@ func (ca *CreateAction) defaultSetting(cls *cmproto.Cluster, cloud *cmproto.Clou
 			blog.Errorf(errMsg.Error())
 			return errMsg
 		}
+		node.Status = common.StatusRunning
 		cls.Master[masterIP] = node
 	}
 	// cluster status
@@ -360,14 +361,12 @@ func (ca *CreateAction) importClusterData(cls *cmproto.Cluster) error {
 	cls.Status = common.StatusRunning
 
 	// save clusterInfo to DB
-	if err := ca.model.CreateCluster(ca.ctx, cls); err != nil {
-		if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
-			ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
-			return err
-		}
+	err := importClusterData(ca.model, cls)
+	if err != nil {
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
 	}
+
 	ca.resp.Data = cls
 	// import cluster info to extra system
 	importClusterExtraOperation(cls)

@@ -155,6 +155,7 @@
                 :arrow="false"
                 class="ml15"
                 :disabled="row.status === 'DELETING'"
+                trigger="click"
                 :ref="row.nodeGroupID">
                 <span class="more-icon"><i class="bcs-icon bcs-icon-more"></i></span>
                 <div slot="content">
@@ -257,6 +258,7 @@
                 theme="light dropdown"
                 :arrow="false"
                 :disabled="['DELETING', 'INITIALIZATION'].includes(row.status)"
+                trigger="click"
                 class="ml15">
                 <span
                   :class="['more-icon', { 'disabled': ['DELETING', 'INITIALIZATION'].includes(row.status) }]">
@@ -417,10 +419,10 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('操作')" width="120">
           <template #default="{ row }">
-            <bcs-button
+            <!-- <bcs-button
               text
               :disabled="!(row.task && taskStatusColorMap[row.task.status] === 'red')"
-              @click="handleRetryTask(row)">{{$t('重试')}}</bcs-button>
+              @click="handleRetryTask(row)">{{$t('重试')}}</bcs-button> -->
             <bcs-button
               text
               class="ml-[8px]"
@@ -1216,13 +1218,13 @@ export default defineComponent({
     const { clusterOS, getClusterDetail } = useClusterInfo();
 
     // 重试任务
-    const handleRetryTask = async (row) => {
-      const result = await $store.dispatch('clustermanager/taskRetry', {
-        $taskId: row.taskID,
-        updater: user.value.username,
-      });
-      result && handleGetRecordList();
-    };
+    // const handleRetryTask = async (row) => {
+    //   const result = await $store.dispatch('clustermanager/taskRetry', {
+    //     $taskId: row.taskID,
+    //     updater: user.value.username,
+    //   });
+    //   result && handleGetRecordList();
+    // };
     // ip列表
     const ipTableKey = ref('');
     const showIPList = ref(false);
@@ -1329,7 +1331,7 @@ export default defineComponent({
       handleEditPool,
       taskStatusMap,
       taskStatusColorMap,
-      handleRetryTask,
+      // handleRetryTask,
       handleExpandChange,
       handleGotoSops,
       handleShowIPList,

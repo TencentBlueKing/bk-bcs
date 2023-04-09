@@ -70,7 +70,11 @@ type ControllerOption struct {
 	// ConflictCheckOpen if false, skip all conflict checking about ingress and port pool
 	ConflictCheckOpen bool
 
+	// HttpServerPort port for http api
 	HttpServerPort uint
+
+	// NodeInfoExporterOpen 如果为true，将会记录集群中的节点信息
+	NodeInfoExporterOpen bool
 
 	Conf Conf
 

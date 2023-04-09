@@ -28,5 +28,5 @@ func (h *HttpServerClient) listIngress(request *restful.Request, response *restf
 		return
 	}
 	data := CreateResponseData(nil, "success", ingressList)
-	_, _ = response.Write([]byte(data))
+	_, _ = response.Write(data)
 }

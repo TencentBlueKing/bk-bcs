@@ -180,6 +180,7 @@ require (
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 	k8s.io/apiextensions-apiserver v0.0.0 // indirect
 	k8s.io/cloud-provider v0.16.15 // indirect
+	k8s.io/cluster-bootstrap v0.0.0 // indirect
 	k8s.io/cri-api v0.0.0 // indirect
 	k8s.io/csi-translation-lib v0.16.15 // indirect
 	k8s.io/klog/v2 v2.2.0 // indirect
@@ -204,7 +205,7 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.15
 	k8s.io/apimachinery => k8s.io/apimachinery v0.16.15
 	k8s.io/apiserver => k8s.io/apiserver v0.16.15
-	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20230202125108-9821a4d526e6
+	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20230314084328-8391c8e6a59f
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.16.15
 	k8s.io/client-go => k8s.io/client-go v0.16.15
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.16.15

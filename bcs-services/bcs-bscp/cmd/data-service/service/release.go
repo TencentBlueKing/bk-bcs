@@ -110,10 +110,11 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 	}
 
 	query := &types.ListReleasesOption{
-		BizID:  req.BizId,
-		AppID:  req.AppId,
-		Filter: filter,
-		Page:   req.Page.BasePage(),
+		BizID:      req.BizId,
+		AppID:      req.AppId,
+		Filter:     filter,
+		Page:       req.Page.BasePage(),
+		Deprecated: req.Deprecated,
 	}
 
 	details, err := s.dao.Release().List(grpcKit, query)

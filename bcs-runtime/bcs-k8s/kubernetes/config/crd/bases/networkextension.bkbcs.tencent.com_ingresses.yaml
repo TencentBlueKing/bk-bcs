@@ -116,6 +116,8 @@ spec:
                           type: integer
                         sessionTime:
                           type: integer
+                        sniSwitch:
+                          type: integer
                       type: object
                     protocol:
                       type: string
@@ -186,6 +188,8 @@ spec:
                                 type: integer
                               sessionTime:
                                 type: integer
+                              sniSwitch:
+                                type: integer
                             type: object
                           path:
                             type: string
@@ -236,6 +240,17 @@ spec:
                       items:
                         description: Layer7Route 7 layer route config
                         properties:
+                          certificate:
+                            description: IngressListenerCertificate certificate configs
+                              for listener
+                            properties:
+                              certCaID:
+                                type: string
+                              certID:
+                                type: string
+                              mode:
+                                type: string
+                            type: object
                           domain:
                             type: string
                           forwardType:
@@ -301,6 +316,8 @@ spec:
                                   instance.
                                 type: integer
                               sessionTime:
+                                type: integer
+                              sniSwitch:
                                 type: integer
                             type: object
                           path:
@@ -416,6 +433,8 @@ spec:
                             per second allowed for every target instance.
                           type: integer
                         sessionTime:
+                          type: integer
+                        sniSwitch:
                           type: integer
                       type: object
                     port:

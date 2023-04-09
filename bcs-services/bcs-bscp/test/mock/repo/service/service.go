@@ -42,7 +42,7 @@ func (s *Service) Handler() http.Handler {
 	r.Post("/repository/api/repo/create", s.createRepo)
 	r.Get("/repository/api/metadata/{project}/{repo}/file/{sign}", s.queryMetadataInfo)
 	r.Put("/generic/{project}/{repo}/file/{sign}", s.uploadNode)
-	r.Get("/generic/{project}/{repo}/file/{sign}", s.getNodeInfo)
+	r.Head("/generic/{project}/{repo}/file/{sign}", s.getNodeInfo)
 	r.Get("/generic/{project}/{repo}/file/{sign}", s.downloadNode)
 
 	return r

@@ -84,6 +84,9 @@
               </div>
             </template>
           </bk-table-column>
+          <template #empty>
+            <BcsEmptyTableStatus :type="searchKeyword ? 'search-empty' : 'empty'" @clear="searchKeyword = ''" />
+          </template>
         </bk-table>
       </div>
 

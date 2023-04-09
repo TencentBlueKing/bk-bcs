@@ -38,54 +38,26 @@ func genBusinessManagementActionGroups() []client.ActionGroup {
 			NameEn: "Configuration Management",
 			SubGroups: []client.ActionGroup{
 				{
-					Name:   "应用管理",
-					NameEn: "Application Management",
+					Name:   "服务管理",
+					NameEn: "Application Management", // 有业务访问权限即可查看, 默认显示有编辑权限的应用
 					Actions: []client.ActionWithID{
 						{ID: AppCreate},
+						{ID: AppView},
 						{ID: AppEdit},
 						{ID: AppDelete},
 						{ID: ConfigItemPacking},
 						{ID: ConfigItemPublish},
-						{ID: ConfigItemFinishPublish},
 					},
 				},
-			},
-		},
-		{
-			Name:   "策略管理",
-			NameEn: "Strategy Management",
-			SubGroups: []client.ActionGroup{
-				{
-					Name:   "策略集管理",
-					NameEn: "StrategySet Management",
-					Actions: []client.ActionWithID{
-						{ID: StrategySetCreate},
-						{ID: StrategySetEdit},
-						{ID: StrategySetDelete},
-					},
-				},
-				{
-					Name:   "策略管理",
-					NameEn: "Strategy Management",
-					Actions: []client.ActionWithID{
-						{ID: StrategyCreate},
-						{ID: StrategyEdit},
-						{ID: StrategyDelete},
-					},
-				},
-			},
-		},
-		{
-			Name:   "任务历史",
-			NameEn: "Task History",
-			SubGroups: []client.ActionGroup{
-				{
-					Name:   "任务历史",
-					NameEn: "Task History",
-					Actions: []client.ActionWithID{
-						{ID: TaskHistoryView},
-					},
-				},
+				// {
+				// 	Name:   "分组管理",
+				// 	NameEn: "Group Management",
+				// 	Actions: []client.ActionWithID{ // 有应用编辑权限即可查看
+				// 		{ID: GroupCreate},
+				// 		{ID: GroupEdit},
+				// 		{ID: GroupDelete},
+				// 	},
+				// },
 			},
 		},
 	}

@@ -38,10 +38,14 @@ type bkRepo struct {
 
 // User 针对给定用户权限实例化一个handler, 共享bkRepo的client
 func (br *bkRepo) User(user repo.User) repo.Handler {
+	uid := user.Name
+	if br.config.UID != "" {
+		uid = br.config.UID
+	}
 	return &handler{
 		bkRepo: br,
 		user:   user,
-		auth:   bkRepoAuth.New(br.config.AuthType, user.Name, br.config.Username, br.config.Password),
+		auth:   bkRepoAuth.New(br.config.AuthType, uid, br.config.Username, br.config.Password),
 	}
 }
 

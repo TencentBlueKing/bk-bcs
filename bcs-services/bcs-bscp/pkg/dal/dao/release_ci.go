@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
@@ -31,6 +32,8 @@ type ReleasedCI interface {
 	BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.ReleasedConfigItem) error
 	// Get released config item by id and released id
 	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
+	// GetReleasedLately released config item by app id and biz id
+	GetReleasedLately(kit *kit.Kit, appId, bizID uint32) ([]*table.ReleasedConfigItem, error)
 	// List released config items with options.
 	List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (*types.ListReleasedCIsDetails, error)
 }
@@ -94,8 +97,10 @@ func (dao *releasedCIDao) Get(kit *kit.Kit, id, bizID, releasedID uint32) (*tabl
 		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
 	}
 
-	sql := fmt.Sprintf(`SELECT %s FROM %s WHERE config_item_id = %d AND release_id = %d`,
-		table.ReleasedConfigItemColumns.NamedExpr(), table.ReleasedConfigItemTable, id, releasedID)
+	var sqlSentenceCount []string
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", table.ReleasedConfigItemTable.Name(),
+		" WHERE config_item_id = ", strconv.Itoa(int(id)), " AND release_id = ", strconv.Itoa(int(releasedID)))
+	sql := filter.SqlJoint(sqlSentenceCount)
 
 	releasedCI := &table.ReleasedConfigItem{}
 	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, releasedCI, sql); err != nil {
@@ -163,4 +168,24 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 	}
 
 	return &types.ListReleasedCIsDetails{Count: count, Details: list}, nil
+}
+
+// GetReleasedLately
+func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32) ([]*table.ReleasedConfigItem, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
+	}
+
+	var sqlSentenceCount []string
+	sqlSentenceCount = append(sqlSentenceCount, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", table.ReleasedConfigItemTable.Name(),
+		" WHERE  biz_id = ", strconv.Itoa(int(bizID)), " AND app_id = ", strconv.Itoa(int(appId)), " AND release_id = (SELECT release_id from ", table.ReleasedConfigItemTable.Name(),
+		" where app_id = ", strconv.Itoa(int(appId)), " ORDER BY release_id desc limit 1)")
+	sql := filter.SqlJoint(sqlSentenceCount)
+
+	fileInfo := make([]*table.ReleasedConfigItem, 0)
+	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sql)
+	if err != nil {
+		return nil, err
+	}
+	return fileInfo, nil
 }

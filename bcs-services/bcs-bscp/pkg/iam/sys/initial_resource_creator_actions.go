@@ -22,27 +22,25 @@ func GenerateResourceCreatorActions() client.ResourceCreatorActions {
 				ResourceID: Application,
 				Actions: []client.CreatorRelatedAction{
 					{
+						ID:         AppView,
+						IsRequired: false,
+					},
+					{
 						ID:         AppEdit,
 						IsRequired: false,
 					},
+
 					{
 						ID:         AppDelete,
 						IsRequired: false,
 					},
+
 					{
-						ID:         StrategySetEdit,
+						ID:         ConfigItemPacking,
 						IsRequired: false,
 					},
 					{
-						ID:         StrategySetDelete,
-						IsRequired: false,
-					},
-					{
-						ID:         StrategyEdit,
-						IsRequired: false,
-					},
-					{
-						ID:         StrategyDelete,
+						ID:         ConfigItemPublish,
 						IsRequired: false,
 					},
 				},

@@ -20,7 +20,7 @@
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
             cluster-type="all"
-            @search-change="getServiceList"
+            @search-change="searchService"
             @refresh="refresh" />
         </div>
       </div>
@@ -186,6 +186,9 @@
                 </bcs-button>
               </template>
             </bk-table-column>
+            <template #empty>
+              <BcsEmptyTableStatus :type="searchKeyword ? 'search-empty' : 'empty'" @clear="handleClearSearchData" />
+            </template>
           </bk-table>
         </div>
       </div>
@@ -1504,6 +1507,10 @@ export default {
       return row.can_delete
                     && this.webAnnotations.perms[row.iam_ns_id]
                     && this.webAnnotations.perms[row.iam_ns_id].namespace_scoped_delete;
+    },
+    handleClearSearchData() {
+      this.searchKeyword = '';
+      this.searchService();
     },
   },
 };

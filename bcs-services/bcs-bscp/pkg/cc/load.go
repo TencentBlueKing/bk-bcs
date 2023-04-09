@@ -46,7 +46,7 @@ func LoadSettings(sys *SysOption) error {
 		return err
 	}
 
-	// s the default value if user not configured.
+	// set the default value if user not configured.
 	s.trySetDefault()
 
 	if err := s.Validate(); err != nil {

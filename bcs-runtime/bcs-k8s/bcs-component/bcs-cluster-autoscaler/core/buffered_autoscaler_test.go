@@ -576,7 +576,7 @@ func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 	allNodeLister.SetNodes([]*apiv1.Node{n1, n2})
 	scheduledPodMock.On("List").Return([]*apiv1.Pod{p1}, nil).Times(4)
 	unschedulablePodMock.On("List").Return([]*apiv1.Pod{p2}, nil).Once()
-	onScaleDownMock.On("ScaleDown", "ng1", "n1").Return(nil).Once()
+	onScaleDownMock.On("ScaleDown", "ng1", "broken").Return(nil).Once()
 	daemonSetListerMock.On("List", labels.Everything()).Return([]*appsv1.DaemonSet{}, nil).Twice()
 	podDisruptionBudgetListerMock.On("List").Return([]*policyv1.PodDisruptionBudget{}, nil).Once()
 

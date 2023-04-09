@@ -162,6 +162,36 @@ func (cm *ClusterManager) GetCluster(ctx context.Context,
 	return nil
 }
 
+// ListProjectCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListProjectCluster(ctx context.Context,
+	req *cmproto.ListProjectClusterReq, resp *cmproto.ListProjectClusterResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewListAction(cm.model, cm.iam)
+
+	newReq := &cmproto.ListClusterReq{
+		ProjectID: req.ProjectID,
+		Operator:  req.Operator,
+	}
+	newResp := &cmproto.ListClusterResp{}
+	ca.Handle(ctx, newReq, newResp)
+
+	resp.Code = newResp.Code
+	resp.Message = newResp.Message
+	resp.Data = newResp.Data
+	resp.ClusterExtraInfo = newResp.ClusterExtraInfo
+	resp.WebAnnotations = newResp.WebAnnotations
+
+	metrics.ReportAPIRequestMetric("ListProjectCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListProjectCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListProjectCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCluster(ctx context.Context,
 	req *cmproto.ListClusterReq, resp *cmproto.ListClusterResp) error {

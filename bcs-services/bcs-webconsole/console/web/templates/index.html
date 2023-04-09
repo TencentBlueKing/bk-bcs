@@ -346,9 +346,9 @@
                         // 获取光标所在行的内容
                         const text = self.term.buffer.normal.getLine(row).translateToString();
                         // 过滤其他字符串
-                        const str = text.replace(/^root:[^$]+\$ /, '').trim()
+                        const str = text.trim()
                         if (e.domEvent.keyCode === 13) {
-                            if (str.length !== 0 && self.term.buffer.active.type === "normal"){
+                            if (str.length !== 0 && self.term.buffer.active.type === "normal") {
                                 self.ws.send('5' + Base64.encode(str));
                             }
                         }

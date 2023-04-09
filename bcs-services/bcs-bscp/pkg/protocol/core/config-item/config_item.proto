@@ -9,9 +9,10 @@ option go_package = "bscp.io/pkg/protocol/core/config-item;pbci";
 // ConfigItem source resource reference: pkg/dal/table/config_item.go
 message ConfigItem {
     uint32 id                       = 1;
-    ConfigItemSpec spec             = 2;
-    ConfigItemAttachment attachment = 3;
-    pbbase.Revision revision        = 4;
+    string file_state               = 2;
+    ConfigItemSpec spec             = 3;
+    ConfigItemAttachment attachment = 4;
+    pbbase.Revision revision        = 5;
 }
 
 // ConfigItemSpec source resource reference: pkg/dal/table/config_item.go
@@ -35,4 +36,11 @@ message FilePermission {
     string user       = 1;
     string user_group = 2;
     string privilege  = 3;
+}
+
+// ListConfigItemCounts source resource reference: pkg/dal/table/config_item.go
+message ListConfigItemCounts {
+    uint32 app_id     = 1;
+    uint32 count      = 2;
+    string update_at  = 3;
 }

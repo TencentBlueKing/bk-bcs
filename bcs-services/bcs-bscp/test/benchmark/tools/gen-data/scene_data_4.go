@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	pbcs "bscp.io/pkg/protocol/config-server"
 )
@@ -37,13 +36,10 @@ func genSceneData4() error {
 	if err != nil {
 		return fmt.Errorf("create app err, %v, rid: %s", err, rid)
 	}
-	if appResp.Code != errf.OK {
-		return fmt.Errorf("create app failed, code: %d, msg: %s, rid: %s", appResp.Code, appResp.Message, rid)
-	}
 
 	// // gen five config item for every app, and create one content and commit for every config item.
 	for i := 0; i < 5; i++ {
-		if err := genCIRelatedData(stressBizId, appResp.Data.Id); err != nil {
+		if err := genCIRelatedData(stressBizId, appResp.Id); err != nil {
 			return err
 		}
 	}
@@ -51,7 +47,7 @@ func genSceneData4() error {
 	// create release.
 	rlReq := &pbcs.CreateReleaseReq{
 		BizId: stressBizId,
-		AppId: appResp.Data.Id,
+		AppId: appResp.Id,
 		Name:  randName("release"),
 		Memo:  memo,
 	}
@@ -60,43 +56,32 @@ func genSceneData4() error {
 	if err != nil {
 		return fmt.Errorf("create release err, %v, rid: %s", err, rid)
 	}
-	if rlResp.Code != errf.OK {
-		return fmt.Errorf("create release failed, code: %d, msg: %s, rid: %s", rlResp.Code, rlResp.Message, rid)
-	}
 
 	// create strategy set.
 	setReq := &pbcs.CreateStrategySetReq{
 		BizId: stressBizId,
-		AppId: appResp.Data.Id,
+		AppId: appResp.Id,
 		Name:  randName("strategy_set"),
 		Memo:  memo,
 	}
 	rid = RequestID()
-	setResp, err := cli.StrategySet.Create(context.Background(), Header(rid), setReq)
+	_, err = cli.StrategySet.Create(context.Background(), Header(rid), setReq)
 	if err != nil {
 		return fmt.Errorf("create strategy set err, %v, rid: %s", err, rid)
-	}
-	if setResp.Code != errf.OK {
-		return fmt.Errorf("create strategy set failed, code: %d, msg: %s, rid: %s", setResp.Code,
-			setResp.Message, rid)
 	}
 
 	// exec instance publish.
 	ipReq := &pbcs.PublishInstanceReq{
 		BizId:     stressBizId,
-		AppId:     appResp.Data.Id,
+		AppId:     appResp.Id,
 		Uid:       stressInstanceID,
-		ReleaseId: rlResp.Data.Id,
+		ReleaseId: rlResp.Id,
 		Memo:      memo,
 	}
 	rid = RequestID()
-	ipResp, err := cli.Instance.Publish(context.Background(), Header(rid), ipReq)
+	_, err = cli.Instance.Publish(context.Background(), Header(rid), ipReq)
 	if err != nil {
 		return fmt.Errorf("create instance publish err, %v, rid: %s", err, rid)
-	}
-	if ipResp.Code != errf.OK {
-		return fmt.Errorf("create instance publish failed, code: %d, msg: %s, rid: %s", ipResp.Code,
-			ipResp.Message, rid)
 	}
 
 	return nil
