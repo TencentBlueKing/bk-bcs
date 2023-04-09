@@ -189,7 +189,7 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 		laReq := &pbds.ListAppsReq{
 			BizId:  req.BizId,
 			Filter: laftpb,
-			Page:  &pbbase.BasePage{},
+			Page:   &pbbase.BasePage{},
 		}
 		laResp, err := s.client.DS.ListApps(grpcKit.RpcCtx(), laReq)
 		if err != nil {
@@ -206,7 +206,7 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 	for idx, group := range lgResp.Details {
 		groups[idx] = group.Id
 	}
-	countResp, err := s.client.DS.CountGroupsPublishedApps(grpcKit.RpcCtx(), &pbds.CountGroupsPublishedAppsReq{
+	countResp, err := s.client.DS.CountGroupsReleasedApps(grpcKit.RpcCtx(), &pbds.CountGroupsReleasedAppsReq{
 		BizId:  req.BizId,
 		Groups: groups,
 	})
@@ -223,16 +223,60 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 				apps = append(apps, app.Spec.Name)
 			}
 		}
-		respData = append(respData, &pbcs.ListAllGroupsResp_ListAllGroupsData{
-			Id:              group.Id,
-			Name:            group.Spec.Name,
-			Public:          group.Spec.Public,
-			BindApps:        apps,
-			Selector:        group.Spec.Selector,
-			ReleasedAppsNum: countResp.Counts[group.Id],
-		})
+		data := &pbcs.ListAllGroupsResp_ListAllGroupsData{
+			Id:       group.Id,
+			Name:     group.Spec.Name,
+			Public:   group.Spec.Public,
+			BindApps: apps,
+			Selector: group.Spec.Selector,
+		}
+		for _, d := range countResp.Data {
+			if d.GroupId == group.Id {
+				data.ReleasedAppsNum = d.Count
+				data.Edited = d.Edited
+			}
+		}
+		respData = append(respData, data)
 	}
 	resp.Details = respData
 
+	return resp, nil
+}
+
+// ListGroupReleasedApps list released apps in group
+func (s *Service) ListGroupReleasedApps(ctx context.Context, req *pbcs.ListGroupReleasedAppsReq) (
+	*pbcs.ListGroupReleasedAppsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListGroupReleasedAppsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	if err != nil {
+		return nil, err
+	}
+
+	lReq := &pbds.ListGroupRleasesdAppsReq{
+		BizId:   req.BizId,
+		GroupId: req.GroupId,
+		Start:   req.Start,
+		Limit:   req.Limit,
+	}
+	lResp, err := s.client.DS.ListGroupRleasesdApps(grpcKit.RpcCtx(), lReq)
+	if err != nil {
+		logs.Errorf("list group released apps failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	data := make([]*pbcs.ListGroupReleasedAppsResp_ListGroupReleasedAppsData, len(lResp.Details))
+	for idx, detail := range lResp.Details {
+		data[idx] = &pbcs.ListGroupReleasedAppsResp_ListGroupReleasedAppsData{
+			AppId:       detail.AppId,
+			AppName:     detail.AppName,
+			ReleaseId:   detail.ReleaseId,
+			ReleaseName: detail.ReleaseName,
+			Edited:      detail.Edited,
+		}
+	}
+	resp.Details = data
+	resp.Count = lResp.Count
 	return resp, nil
 }

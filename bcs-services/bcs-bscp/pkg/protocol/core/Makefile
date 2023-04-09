@@ -12,6 +12,7 @@ all:
 	@cd event && make
 	@cd hook && make
 	@cd group && make
+	@cd group-current-release && make
 
 clean:
 	@cd base && make clean
@@ -27,3 +28,4 @@ clean:
 	@cd event && make clean
 	@cd hook && make
 	@cd group && make clean
+	@cd group-current-release && make clean

@@ -37,10 +37,11 @@ type Group interface {
 	Get(kit *kit.Kit, id, bizID uint32) (*table.Group, error)
 	// List groups with options.
 	List(kit *kit.Kit, opts *types.ListGroupsOption) (*types.ListGroupDetails, error)
-	// ListAllWithBindAppsName list all groups with bind apps name.
-	ListAllWithBindAppsName(kit *kit.Kit, bizID uint32) (*types.ListAllWithBindAppsNameDetail, error)
 	// DeleteWithTx delete one group instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, group *table.Group) error
+	// ListGroupRleasesdApps list all the released apps of the group.
+	ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRleasesdAppsOption) (
+		*types.ListGroupRleasesdAppsDetails, error)
 }
 
 var _ Group = new(groupDao)
@@ -233,14 +234,6 @@ func (dao *groupDao) List(kit *kit.Kit, opts *types.ListGroupsOption) (
 	return &types.ListGroupDetails{Count: count, Details: list}, nil
 }
 
-func (dao *groupDao) ListAllWithBindAppsName(kit *kit.Kit, bizID uint32) (
-	*types.ListAllWithBindAppsNameDetail, error) {
-	if bizID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "bizID is 0")
-	}
-	return nil, nil
-}
-
 // DeleteWithTx delete group with transaction.
 func (dao *groupDao) DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, g *table.Group) error {
 
@@ -270,4 +263,46 @@ func (dao *groupDao) DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, g *table.Group)
 		return fmt.Errorf("audit delete group failed, err: %v", err)
 	}
 	return nil
+}
+
+// ListGroupRleasesdApps list group released apps and their latest release info.
+func (dao *groupDao) ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRleasesdAppsOption) (
+	*types.ListGroupRleasesdAppsDetails, error) {
+	if opts == nil {
+		return nil, errf.New(errf.InvalidParameter, "list group released apps options null")
+	}
+	if err := opts.Validate(); err != nil {
+		return nil, err
+	}
+
+	var countSqlSentence []string
+	countSqlSentence = append(countSqlSentence, "SELECT COUNT(*) FROM ", table.AppTable.Name(), " a JOIN ",
+		table.ReleaseTable.Name(), " r ON a.id = r.app_id JOIN ", table.GroupCurrentReleaseTable.Name(),
+		" g ON r.id = g.release_id AND a.id = g.app_id ", fmt.Sprintf(" WHERE g.group_id = %d ", opts.GroupID),
+		fmt.Sprintf(" AND a.biz_id = %d AND r.biz_id = %d AND g.biz_id = %d", opts.BizID, opts.BizID, opts.BizID),
+	)
+	countSql := filter.SqlJoint(countSqlSentence)
+	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
+	if err != nil {
+		return nil, err
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT a.id AS app_id, a.name AS app_name, r.id AS release_id, ",
+		"r.name AS release_name, g.edited as edited ", " FROM ", table.AppTable.Name(), " a JOIN ",
+		table.ReleaseTable.Name(), " r ON a.id = r.app_id JOIN ", table.GroupCurrentReleaseTable.Name(),
+		" g ON r.id = g.release_id AND a.id = g.app_id ", fmt.Sprintf(" WHERE g.group_id = %d ", opts.GroupID),
+		fmt.Sprintf(" AND a.biz_id = %d AND r.biz_id = %d AND g.biz_id = %d", opts.BizID, opts.BizID, opts.BizID),
+		fmt.Sprintf(" LIMIT %d, %d", opts.Start, opts.Limit),
+	)
+	sql := filter.SqlJoint(sqlSentence)
+
+	list := make([]*types.ListGroupRleasesdAppsData, 0)
+	if err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql); err != nil {
+		return nil, err
+	}
+	return &types.ListGroupRleasesdAppsDetails{
+		Count:   count,
+		Details: list,
+	}, nil
 }

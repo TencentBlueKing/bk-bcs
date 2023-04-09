@@ -27,8 +27,8 @@ import (
 
 // GroupCurrentRelease supplies all the group related operations.
 type GroupCurrentRelease interface {
-	// CountGroupsPublishedApps counts each group's published apps.
-	CountGroupsPublishedApps(kit *kit.Kit, opts *types.CountGroupsPublishedAppsOption) (
+	// CountGroupsReleasedApps counts each group's published apps.
+	CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
 		[]*types.GroupPublishedAppsCount, error)
 	ListPublishedAppsByGrouID(kit *kit.Kit, groupID, bizID uint32) ([]*table.GroupCurrentRelease, error)
 }
@@ -43,8 +43,8 @@ type currentReleaseDao struct {
 	lock     LockDao
 }
 
-// CountGroupsPublishedApps counts each group's published apps.
-func (dao *currentReleaseDao) CountGroupsPublishedApps(kit *kit.Kit, opts *types.CountGroupsPublishedAppsOption) (
+// CountGroupsReleasedApps counts each group's published apps.
+func (dao *currentReleaseDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
 	[]*types.GroupPublishedAppsCount, error) {
 	if err := opts.Validate(nil); err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (dao *currentReleaseDao) CountGroupsPublishedApps(kit *kit.Kit, opts *types
 	args := tools.JoinUint32(opts.Groups, ",")
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT group_id, COUNT(DISTINCT app_id) AS counts FROM ",
+	sqlSentence = append(sqlSentence, "SELECT group_id, COUNT(DISTINCT app_id) AS counts, MAX(edited) AS edited FROM ",
 		table.GroupCurrentReleaseTable.Name(), fmt.Sprintf(" WHERE biz_id = %d AND group_id IN (%s) ", opts.BizID, args),
 		" GROUP BY group_id ")
 	sql := filter.SqlJoint(sqlSentence)

@@ -21,12 +21,12 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// CountGroupsPublishedApps count each group's published apps.
-func (s *Service) CountGroupsPublishedApps(ctx context.Context, req *pbds.CountGroupsPublishedAppsReq) (
-	*pbds.CountGroupsPublishedAppsResp, error) {
+// CountGroupsReleasedApps count each group's published apps.
+func (s *Service) CountGroupsReleasedApps(ctx context.Context, req *pbds.CountGroupsReleasedAppsReq) (
+	*pbds.CountGroupsReleasedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	counts, err := s.dao.GroupCurrentRelease().CountGroupsPublishedApps(kt, &types.CountGroupsPublishedAppsOption{
+	counts, err := s.dao.GroupCurrentRelease().CountGroupsReleasedApps(kt, &types.CountGroupsReleasedAppsOption{
 		BizID:  req.BizId,
 		Groups: req.Groups,
 	})
@@ -35,12 +35,16 @@ func (s *Service) CountGroupsPublishedApps(ctx context.Context, req *pbds.CountG
 		return nil, err
 	}
 
-	countMap := make(map[uint32]uint32, len(counts))
-	for _, count := range counts {
-		countMap[count.GroupID] = count.Counts
+	data := make([]*pbds.CountGroupsReleasedAppsResp_CountGroupsReleasedAppsData, len(counts))
+	for i, count := range counts {
+		data[i] = &pbds.CountGroupsReleasedAppsResp_CountGroupsReleasedAppsData{
+			GroupId: count.GroupID,
+			Count:   count.Counts,
+			Edited:  count.Edited,
+		}
 	}
-	resp := &pbds.CountGroupsPublishedAppsResp{
-		Counts: countMap,
+	resp := &pbds.CountGroupsReleasedAppsResp{
+		Data: data,
 	}
 
 	return resp, nil

@@ -16,22 +16,23 @@ import (
 	"bscp.io/pkg/criteria/errf"
 )
 
-// CountGroupsPublishedAppsOption defines options to count each group's published apps.
-type CountGroupsPublishedAppsOption struct {
+// CountGroupsReleasedAppsOption defines options to count each group's published apps.
+type CountGroupsReleasedAppsOption struct {
 	BizID  uint32   `json:"biz_id"`
 	Groups []uint32 `json:"groups"`
 }
 
 // Validate the count group's published apps options
-func (opt *CountGroupsPublishedAppsOption) Validate(po *PageOption) error {
+func (opt *CountGroupsReleasedAppsOption) Validate(po *PageOption) error {
 	if opt.BizID <= 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
 	}
 	return nil
 }
 
-// GroupPublishedAppsCount defines the response details of requested CountGroupsPublishedAppsOption.
+// GroupPublishedAppsCount defines the response details of requested CountGroupsReleasedAppsOption.
 type GroupPublishedAppsCount struct {
 	GroupID uint32 `db:"group_id" json:"group_id"`
 	Counts  uint32 `db:"counts" json:"counts"`
+	Edited  bool   `db:"edited" json:"edited"`
 }

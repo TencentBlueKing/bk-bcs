@@ -56,6 +56,7 @@ const (
 	Config_DeleteGroup_FullMethodName                    = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                    = "/pbcs.Config/UpdateGroup"
 	Config_ListAllGroups_FullMethodName                  = "/pbcs.Config/ListAllGroups"
+	Config_ListGroupReleasedApps_FullMethodName          = "/pbcs.Config/ListGroupReleasedApps"
 	Config_Publish_FullMethodName                        = "/pbcs.Config/Publish"
 	Config_FinishPublish_FullMethodName                  = "/pbcs.Config/FinishPublish"
 	Config_ListPublishedStrategyHistories_FullMethodName = "/pbcs.Config/ListPublishedStrategyHistories"
@@ -106,6 +107,7 @@ type ConfigClient interface {
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
 	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
+	ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
@@ -446,6 +448,15 @@ func (c *configClient) ListAllGroups(ctx context.Context, in *ListAllGroupsReq, 
 	return out, nil
 }
 
+func (c *configClient) ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error) {
+	out := new(ListGroupReleasedAppsResp)
+	err := c.cc.Invoke(ctx, Config_ListGroupReleasedApps_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
 	out := new(PublishResp)
 	err := c.cc.Invoke(ctx, Config_Publish_FullMethodName, in, out, opts...)
@@ -542,6 +553,7 @@ type ConfigServer interface {
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
 	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
+	ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
@@ -661,6 +673,9 @@ func (UnimplementedConfigServer) UpdateGroup(context.Context, *UpdateGroupReq) (
 }
 func (UnimplementedConfigServer) ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAllGroups not implemented")
+}
+func (UnimplementedConfigServer) ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListGroupReleasedApps not implemented")
 }
 func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
@@ -1340,6 +1355,24 @@ func _Config_ListAllGroups_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListGroupReleasedApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListGroupReleasedAppsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListGroupReleasedApps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListGroupReleasedApps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListGroupReleasedApps(ctx, req.(*ListGroupReleasedAppsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PublishReq)
 	if err := dec(in); err != nil {
@@ -1598,6 +1631,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAllGroups",
 			Handler:    _Config_ListAllGroups_Handler,
+		},
+		{
+			MethodName: "ListGroupReleasedApps",
+			Handler:    _Config_ListGroupReleasedApps_Handler,
 		},
 		{
 			MethodName: "Publish",

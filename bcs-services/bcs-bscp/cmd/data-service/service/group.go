@@ -297,6 +297,39 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbds.DeleteGroupReq) (*p
 	return new(pbbase.EmptyResp), nil
 }
 
+// ListGroupRleasesdApps list group's published apps and their release.
+func (s *Service) ListGroupRleasesdApps(ctx context.Context, req *pbds.ListGroupRleasesdAppsReq) (
+	*pbds.ListGroupRleasesdAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	resp, err := s.dao.Group().ListGroupRleasesdApps(kt, &types.ListGroupRleasesdAppsOption{
+		BizID:   req.BizId,
+		GroupID: req.GroupId,
+		Start:   req.Start,
+		Limit:   req.Limit,
+	})
+	if err != nil {
+		logs.Errorf("list groups published apps failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	data := make([]*pbds.ListGroupRleasesdAppsResp_ListGroupReleasedAppsData, len(resp.Details))
+	for idx, detail := range resp.Details {
+		data[idx] = &pbds.ListGroupRleasesdAppsResp_ListGroupReleasedAppsData{
+			AppId:       detail.AppID,
+			AppName:     detail.AppName,
+			ReleaseId:   detail.ReleaseID,
+			ReleaseName: detail.ReleaseName,
+			Edited:      detail.Edited,
+		}
+	}
+
+	return &pbds.ListGroupRleasesdAppsResp{
+		Count:   resp.Count,
+		Details: data,
+	}, nil
+}
+
 func (s *Service) queryReducedApps(kt *kit.Kit, old *table.Group, new *pbds.UpdateGroupReq) ([]*table.App, error) {
 	reduced := make([]*table.App, 0)
 	if new.Spec.Public {
