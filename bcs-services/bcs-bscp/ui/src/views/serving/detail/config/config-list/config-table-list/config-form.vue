@@ -7,9 +7,9 @@
   import CodeEditor from '../../../../../../components/code-editor/index.vue'
   import { IAppEditParams } from '../../../../../../../types/app'
   import { IFileConfigContentSummary } from '../../../../../../../types/config'
-  import { updateConfigContent } from '../../../../../../api/config'
+  import { updateConfigContent, getConfigContent } from '../../../../../../api/config'
   import { stringLengthInBytes } from '../../../../../../utils/index'
-  import { transFileToObject } from '../../../../../../utils/file'
+  import { transFileToObject, fileDownload } from '../../../../../../utils/file'
   import { CONFIG_FILE_TYPE } from '../../../../../../constants/index'
 
   const props = withDefaults(defineProps<{
@@ -144,6 +144,13 @@
     return SHA256(stringContent.value).toString()
   }
 
+  // 下载已上传文件
+  const handleDownloadFile = async () => {
+    const { signature, name } = <IFileConfigContentSummary>fileContent.value
+    const res = await getConfigContent(props.bkBizId, props.appId, signature)
+    fileDownload(res, `${name}.bin`)
+  }
+
   const cancel = () => {
     emit('cancel')
   }
@@ -185,7 +192,7 @@
               <div class="file-wrapper">
                 <Done class="done-icon"/>
                 <TextFill class="file-icon" />
-                <div v-bk-ellipsis class="name">{{ file.name }}</div>
+                <div v-bk-ellipsis class="name" @click="handleDownloadFile">{{ file.name }}</div>
                 ({{ file.size }})
               </div>
             </template>
@@ -246,6 +253,11 @@
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+        cursor: pointer;
+        &:hover {
+          color: #3a84ff;
+          text-decoration: underline;
+        }
       }
     }
   }
