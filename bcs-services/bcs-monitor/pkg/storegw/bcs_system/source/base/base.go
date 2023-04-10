@@ -184,3 +184,48 @@ func MatrixToSeries(matrix model.Matrix) []*prompb.TimeSeries {
 	}
 	return series
 }
+
+// GetNodeMatchWithScale 处理集群的节点列表，按照给定的粒度划分
+func GetNodeMatchWithScale(ctx context.Context, clusterId string, scale int) ([]*ResultTuple, error) {
+	nodeList, nodeNameList, err := k8sclient.GetNodeList(ctx, clusterId, true)
+	if err != nil {
+		return nil, err
+	}
+	resslice := chunkSlice(nodeList, nodeNameList, scale)
+	return resslice, nil
+}
+
+func chunkSlice(nodeList []string, nodeNameList []string, chunkSize int) []*ResultTuple {
+	var res []*ResultTuple
+	res = make([]*ResultTuple, 0)
+	for i := 0; i < len(nodeList); i += chunkSize {
+		end := i + chunkSize
+		if end > len(nodeList) {
+			end = len(nodeList)
+		}
+		res = append(res, &ResultTuple{
+			utils.StringJoinWithRegex(nodeList[i:end], "|", ".*"),
+			utils.StringJoinWithRegex(nodeNameList[i:end], "|", "$"),
+			nil,
+		})
+	}
+
+	return res
+}
+
+type ResultTuple struct {
+	NodeMatch     string
+	NodeNameMatch string
+	Err           error
+}
+
+// MatrixsToSeries prom返回转换为时序对象
+func MatrixsToSeries(matrixs []model.Matrix) []*prompb.TimeSeries {
+	series := make([]*prompb.TimeSeries, 0)
+	for _, matrix := range matrixs {
+		for _, m := range matrix {
+			series = append(series, sampleStreamToSeries(m))
+		}
+	}
+	return series
+}
