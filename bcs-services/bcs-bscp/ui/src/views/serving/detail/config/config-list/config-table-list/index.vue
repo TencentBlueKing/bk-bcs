@@ -145,7 +145,7 @@
     <CreateConfig v-if="versionData.id === 0" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
     <section class="config-list-table">
       <bk-loading :loading="loading">
-        <bk-table :border="['outer']" :data="configList">
+        <bk-table v-if="!loading" :border="['outer']" :data="configList">
           <bk-table-column label="配置项名称" prop="spec.name" :sort="true"></bk-table-column>
           <bk-table-column label="配置格式">
             <template #default="{ row }">
@@ -155,7 +155,7 @@
           <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
           <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
           <bk-table-column label="修改时间" prop="revision.update_at" :sort="true"></bk-table-column>
-          <bk-table-column label="变更状态">
+          <bk-table-column v-if="versionData.id === 0" label="变更状态">
             <template #default="{ row }">
                 <span v-if="row.file_state" :class="['status', row.file_state.toLowerCase()]">
                   {{ CONFIG_STATUS_MAP[row.file_state as keyof typeof CONFIG_STATUS_MAP] }}

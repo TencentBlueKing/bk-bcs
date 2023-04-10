@@ -123,14 +123,14 @@ const loadAppList = async () => {
   try {
     const bizId = Number(bkBizId.value)
     const resp = await getAppList(bizId, filterKeyword.value)
-    // if (resp.details.length > 0) {
-    //   const appIds = resp.details.map((item: IAppItem) => item.id)
-    //   const appsConfigData = await getAppsConfigData(bizId, appIds)
-    //   resp.details.forEach((item: IAppItem, index: number) => {
-    //     const { count, update_at } = appsConfigData[index]
-    //     item.config = { count, update_at }
-    //   })
-    // }
+    if (resp.details.length > 0) {
+      const appIds = resp.details.map((item: IAppItem) => item.id)
+      const appsConfigData = await getAppsConfigData(bizId, appIds)
+      resp.details.forEach((item: IAppItem, index: number) => {
+        const { count, update_at } = appsConfigData[index]
+        item.config = { count, update_at }
+      })
+    }
     // @ts-ignore
     servingList.value = resp.details
     // @ts-ignore

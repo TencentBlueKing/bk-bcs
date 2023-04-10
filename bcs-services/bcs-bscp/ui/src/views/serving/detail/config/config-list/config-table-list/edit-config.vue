@@ -54,7 +54,11 @@
   const getConfigDetail = async() => {
     try {
       configDetailLoading.value = true
-      const detail = await getConfigItemDetail(props.configId, props.appId)
+      const params: { release_id?: number } = {}
+      if (versionData.value.id) {
+        params.release_id = versionData.value.id
+      }
+      const detail = await getConfigItemDetail(props.configId, props.appId, params)
       const { name, path, file_type, permission } = detail.config_item.spec
       config.value = { id: props.configId, biz_id: props.bkBizId, app_id: props.appId, name, file_type, path, ...permission }
       const signature = detail.content.signature

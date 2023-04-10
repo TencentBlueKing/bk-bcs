@@ -68,8 +68,8 @@
     currentConfigLoading.value = true
     isPanelShow.value = val
     getVersionList()
-    const list = await getConfigsForVersion()
-    currentList.value = await getConfigDetails(list)
+    const list = await getConfigsForVersion(props.currentVersion.id)
+    currentList.value = await getConfigDetails(list, props.currentVersion.id)
     calcDiff()
     setSelectedConfig(props.currentConfig)
     currentConfigLoading.value = false
@@ -89,13 +89,13 @@
   }
 
   // 获取某个版本下配置项列表
-  const getConfigsForVersion = async (relaseId?: number) => {
+  const getConfigsForVersion = async (releaseId?: number) => {
     const params: IConfigListQueryParams = {
       start: 0,
       limit: 200 // @todo 分页条数待确认
     }
-    if (relaseId) {
-      params.release_id = relaseId
+    if (releaseId) {
+      params.release_id = releaseId
     }
 
     const res = await getConfigList(appId, params)
@@ -108,15 +108,15 @@
     if (version) {
       params.release_id = version
     }
-    return Promise.all(list.map(item => getConfigItemDetail(item.id, appId), params))
+    return Promise.all(list.map(item => getConfigItemDetail(item.id, appId, params)))
   }
 
   // 选择对比基准版本
   const handleSelectVersion = async(val: number) => {
     baseConfigLoading.value = true
     selectedVersion.value = val
-    const list = await getConfigsForVersion()
-    currentList.value = await getConfigDetails(list)
+    const list = await getConfigsForVersion(val)
+    baseList.value = await getConfigDetails(list, val)
     calcDiff()
     setSelectedConfig(selectedConfig.value.id)
     baseConfigLoading.value = false
@@ -129,6 +129,7 @@
     currentList.value.forEach(currentItem => {
         const { config_item } = currentItem
         const baseItem = baseList.value.find(item => config_item.id === item.config_item.id)
+        // 在基准版本中存在
         if (baseItem) {
             const diffConfig = {
                 id: config_item.id,
@@ -136,18 +137,18 @@
                 file_type: config_item.spec.file_type,
                 current: {
                     ...currentItem.content,
-                    update_at: config_item.revision.update_at
+                    update_at: config_item.revision?.update_at
                 },
                 base: {
                     ...baseItem.content,
-                    update_at: baseItem.config_item.revision.update_at
+                    update_at: baseItem.config_item.revision?.update_at
                 }
             }
             if (currentItem.content.signature !== baseItem.content.signature) {
                 diffCount.value++
-            }
-            list.push(diffConfig)
-        } else {
+              }
+              list.push(diffConfig)
+        } else { // 在基准版本中被删除
             diffCount.value++
             list.push({
                 id: config_item.id,
@@ -155,7 +156,7 @@
                 file_type: config_item.spec.file_type,
                 current: {
                     ...currentItem.content,
-                    update_at: config_item.revision.update_at
+                    update_at: config_item.revision?.update_at
                 },
                 base: {
                     signature: '',
@@ -165,6 +166,7 @@
             })
         }
     })
+    // 基准版本中的新增项
     baseList.value.forEach(baseItem => {
         const { config_item: base_config_item } = baseItem
         const currentItem = currentList.value.find(item => base_config_item.id === item.config_item.id)
