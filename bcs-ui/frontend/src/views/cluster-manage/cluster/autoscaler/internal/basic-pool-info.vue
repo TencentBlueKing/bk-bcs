@@ -48,6 +48,14 @@
         v-else>
       </Taints>
     </bk-form-item>
+    <bk-form-item :label="$t('注解')" property="annotations" error-display-type="normal">
+      <KeyValue
+        class="labels"
+        :min-item="0"
+        :disable-delete-item="false"
+        v-model="nodePoolInfo.nodeTemplate.annotations">
+      </KeyValue>
+    </bk-form-item>
     <bk-form-item
       :label="$t('实例创建策略')"
       :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点规格指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
@@ -148,6 +156,7 @@ export default defineComponent({
         unSchedulable: defaultValues.value.nodeTemplate?.unSchedulable || 0, // 是否开启调度 0 代表开启调度，1 不可调度
         labels: defaultValues.value.nodeTemplate?.labels || {}, // 标签
         taints: defaultValues.value.nodeTemplate?.taints || [], // 污点
+        annotations: defaultValues.value.nodeTemplate?.annotations || {}, // 注解
         // module: {
         //   scaleOutModuleID: defaultValues.value.nodeTemplate?.module?.scaleOutModuleID || '',
         //   scaleOutModuleName: defaultValues.value.nodeTemplate?.module?.scaleOutModuleName || '',

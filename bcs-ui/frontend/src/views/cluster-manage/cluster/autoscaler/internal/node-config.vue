@@ -156,7 +156,7 @@
                 type="number"
                 :disabled="isEdit"
                 :min="50"
-                :max="2000"
+                :max="16380"
                 v-model="disk.diskSize">
               </bk-input>
               <span :class="['company', { disabled: isEdit }]">GB</span>

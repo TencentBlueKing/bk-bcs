@@ -49,6 +49,12 @@
           <bk-table-column label="Effect" prop="effect"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
+      <bcs-tab-panel name="annotations" :label="$t('注解')">
+        <bk-table :data="handleTransformObjToArr(data.annotations)">
+          <bk-table-column label="Key" prop="key"></bk-table-column>
+          <bk-table-column label="Value" prop="value"></bk-table-column>
+        </bk-table>
+      </bcs-tab-panel>
     </bcs-tab>
 
     <bcs-tab class="mt20" type="card" :label-height="42">

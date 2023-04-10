@@ -4,6 +4,7 @@
       <div class="text-[#313238] text-[28px] font-bold flex justify-center">{{ $t('欢迎使用 TKEx-IEG 容器平台') }}</div>
       <div class="text-[16px] mt-[24px] leading-[24px]">
         {{ $t('TKEx-IEG 是公司 K8S Oteam 指定的 IEG 容器服务平台。') }}
+        <br />
         {{ $t('TKEx-IEG 依托于 TKE，聚焦打造游戏一站式微服务部署治理方案，并基于 IEG 各类游戏的特点，提供游戏特色的容器管理服务。') }}
       </div>
       <div class="flex justify-center mt-[32px]">
@@ -31,7 +32,9 @@
       </div>
       <div class="text-[16px] mt-[24px] leading-[24px]">
         {{ $t('蓝鲸容器管理平台（Blueking Container Service）定位于打造云原生技术和业务实际应用场景之间的桥梁；') }}
+        <br />
         {{ $t('聚焦于复杂应用场景的容器化部署技术方案的研发、整合和产品化；') }}
+        <br />
         {{ $t('致力于为游戏等复杂应用提供一站式、低门槛的容器编排和服务治理服务。') }}
       </div>
       <div class="flex justify-center mt-[32px]">
