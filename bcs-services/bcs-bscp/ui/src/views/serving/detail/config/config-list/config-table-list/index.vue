@@ -51,8 +51,8 @@
     loading.value = true
     try {
       const params: IConfigListQueryParams = {
-        start: 0,
-        limit: 200 // @todo 分页条数待确认
+        start: (pagination.value.current - 1) * pagination.value.limit,
+        limit: pagination.value.limit
       }
       if (versionData.value.id !== 0) {
         params.release_id = versionData.value.id
