@@ -127,7 +127,7 @@ const loadAppList = async () => {
       const appIds = resp.details.map((item: IAppItem) => item.id)
       const appsConfigData = await getAppsConfigData(bizId, appIds)
       resp.details.forEach((item: IAppItem, index: number) => {
-        const { count, update_at } = appsConfigData[index]
+        const { count, update_at } = appsConfigData.details[index]
         item.config = { count, update_at }
       })
     }
@@ -469,7 +469,7 @@ const handleSearch = () => {
         <div class="serving-attribute-head">
           <span class="title">{{ t("服务属性") }}</span>
           <span class="secret-key"
-            ><a href="" target="_blank">{{ t("密钥管理") }}</a></span
+            ><a href="" target="_blank">{{ t("服务密钥") }}</a></span
           >
         </div>
       </template>
