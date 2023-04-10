@@ -127,7 +127,7 @@ const loadAppList = async () => {
       const appIds = resp.details.map((item: IAppItem) => item.id)
       const appsConfigData = await getAppsConfigData(bizId, appIds)
       resp.details.forEach((item: IAppItem, index: number) => {
-        const { count, update_at } = appsConfigData[index]
+        const { count, update_at } = appsConfigData.details[index]
         item.config = { count, update_at }
       })
     }
