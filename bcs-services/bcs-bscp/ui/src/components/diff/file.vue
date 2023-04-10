@@ -1,17 +1,31 @@
 <script setup lang="ts">
+    import { useRoute } from 'vue-router'
     import { TextFill } from 'bkui-vue/lib/icon'
     import { IFileConfigContentSummary } from '../../../types/config';
+    import { getConfigContent } from '../../api/config'
+    import { fileDownload } from '../../utils/file'
+
+    const route = useRoute()
+    const bkBizId = String(route.params.spaceId)
+    const appId = Number(route.params.appId)
 
     const props = defineProps<{
         current: IFileConfigContentSummary,
         base: IFileConfigContentSummary
     }>()
 
+      // 下载已上传文件
+    const handleDownloadFile = async (config: IFileConfigContentSummary) => {
+        const { signature, name } = config
+        const res = await getConfigContent(bkBizId, appId, signature)
+        fileDownload(res, `${name}.bin`)
+    }
+
 </script>
 <template>
     <section class="file-diff">
         <div class="left-version-content">
-            <div v-if="props.base" class="file-wrapper">
+            <div v-if="props.base" class="file-wrapper" @click="handleDownloadFile(props.base)">
                 <TextFill class="file-icon" />
                 <div class="content">
                     <div class="name">{{ props.base.name }}</div>
@@ -22,7 +36,7 @@
             <bk-exception v-else class="exception-tips" scene="part" type="empty">该版本下文件不存在</bk-exception>
         </div>
         <div class="right-version-content">
-            <div v-if="props.current" class="file-wrapper">
+            <div v-if="props.current" class="file-wrapper" @click="handleDownloadFile(props.current)">
                 <TextFill class="file-icon" />
                 <div class="content">
                     <div class="name">{{ props.current.name }}</div>
@@ -59,6 +73,10 @@
         font-size: 12px;
         border: 1px solid #c4c6cc;
         border-radius: 2px;
+        cursor: pointer;
+        &:hover {
+            border-color: #3a84ff;
+        }
     }
     .file-icon {
         margin-right: 17px;
