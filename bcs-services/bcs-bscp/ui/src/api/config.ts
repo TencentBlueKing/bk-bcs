@@ -1,6 +1,6 @@
 import http from "../request"
-import { IPageFilter, IRequestFilter, IServingEditParams } from '../types'
-import { IConfigListQueryParams } from '../../types/config'
+import { IAppEditParams } from '../../types/app'
+import { IConfigListQueryParams, IConfigVersionQueryParams } from '../../types/config'
 
 /**
  * 获取配置项列表，通过params中的release_id区分是否拿某个版本下的配置项列表
@@ -19,7 +19,7 @@ export const getConfigList = (app_id: number, params: IConfigListQueryParams = {
  * @param page 分页设置
  * @returns 
  */
- export const createServingConfigItem = (params: IServingEditParams) => {
+ export const createServingConfigItem = (params: IAppEditParams) => {
   const { biz_id, app_id } = params
   return http.post(`/config/create/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, params);
 }
@@ -31,7 +31,7 @@ export const getConfigList = (app_id: number, params: IConfigListQueryParams = {
  * @param page 分页设置
  * @returns 
  */
- export const updateServingConfigItem = (params: IServingEditParams) => {
+ export const updateServingConfigItem = (params: IAppEditParams) => {
   const { id, biz_id, app_id } = params
   return http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 }
@@ -104,13 +104,12 @@ export const createVersion = (bizId: string, appId: number, name: string, memo: 
 
 /**
  * 获取版本列表
- * @param bizId 业务ID
  * @param appId 应用ID
+ * @param params 查询参数
  * @returns 
  */
-export const getConfigVersionList = (bizId: string, appId: number, filter: IRequestFilter, page: IPageFilter) => {
-  // @todo 接口筛选条件需要修改，目前不能拉全量数据，最大限制是200条
-  return http.post(`config/list/release/release/app_id/${appId}/biz_id/${bizId}`, { filter, page })
+export const getConfigVersionList = (appId: number, params: IConfigVersionQueryParams) => {
+  return http.get(`config/apps/${appId}/releases`, { params })
 }
 
 /**

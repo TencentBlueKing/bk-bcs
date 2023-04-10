@@ -34,6 +34,8 @@ http.interceptors.response.use(
                 state.showLoginModal = true
               })
               return
+          } else if (response.status === 403) {
+            return response.data.error
           }
           if (response.data.error) {
             message = response.data.error.message

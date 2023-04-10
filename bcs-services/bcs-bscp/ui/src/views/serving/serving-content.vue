@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, Ref, watch, defineProps } from "vue";
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { Plus, Del } from "bkui-vue/lib/icon";
 import InfoBox from "bkui-vue/lib/info-box";
 import { useI18n } from "vue-i18n";
-import { IServingItem } from '../../types'
-import { getBizList, deleteApp, getAppList, createApp, updateApp, IAppListQuery } from "../../api";
+import { useGlobalStore } from '../../store/global'
+import { IAppItem } from '../../../types/app'
+import { IAppListQuery } from "../../../types/app";
+import { getBizList, getAppList, getAppsConfigData, createApp, updateApp, deleteApp } from "../../api";
+import { ISpaceItem } from "../../../types/index";
+
+const globalStore = useGlobalStore()
+const { showApplyPermDialog, permissionQuery } = storeToRefs(globalStore)
 
 const router = useRouter()
 const { t } = useI18n();
@@ -13,13 +20,13 @@ const props = defineProps<{
   type: string
 }>()
 
-const bizList = ref();
+const bizList = ref<ISpaceItem[]>([]);
 const pagination = ref({
   current: 1,
   limit: 50,
   count: 0,
 });
-const servingList = ref([]) as Ref<IServingItem[]>
+const servingList = ref([]) as Ref<IAppItem[]>
 
 const isEmpty = computed(() => {
   return servingList.value.length === 0;
@@ -41,7 +48,7 @@ const getDefaultSetting = () => {
 const isCreateAppShow = ref(false);
 const isAttrShow = ref(false);
 const appName = ref("");
-const isLoading = ref(false);
+const isLoading = ref(true);
 const isBizLoading = ref(false);
 const createAppPending = ref(false);
 const bkBizId = ref();
@@ -94,7 +101,7 @@ const filterKeyword = computed(() => {
 watch(
   () => bkBizId.value,
   (value) => {
-    loadServingList();
+    loadAppList();
   }
 );
 
@@ -102,14 +109,28 @@ onMounted(async() => {
   isBizLoading.value = true;
   const res = await getBizList()
   bizList.value = res.items
-  bkBizId.value = bizList.value[0]?.space_id;
+  const hasPermSpace = bizList.value.find((item: ISpaceItem) => item.permission)
+  if (hasPermSpace) {
+    bkBizId.value = hasPermSpace.space_id;
+  } else {
+    bkBizId.value = bizList.value[0]?.space_id;
+  }
   isBizLoading.value = false;
 });
 
-const loadServingList = async () => {
+const loadAppList = async () => {
   isLoading.value = true;
   try {
-    const resp = await getAppList(Number(bkBizId.value), filterKeyword.value)
+    const bizId = Number(bkBizId.value)
+    const resp = await getAppList(bizId, filterKeyword.value)
+    if (resp.details.length > 0) {
+      const appIds = resp.details.map((item: IAppItem) => item.id)
+      const appsConfigData = await getAppsConfigData(bizId, appIds)
+      resp.details.forEach((item: IAppItem, index: number) => {
+        const { count, update_at } = appsConfigData[index]
+        item.config = { count, update_at }
+      })
+    }
     // @ts-ignore
     servingList.value = resp.details
     // @ts-ignore
@@ -138,7 +159,7 @@ const handleDeleteItem = (item: any) => {
       if (servingList.value.length === 1 && pagination.value.current > 1) {
         pagination.value.current -= 1
       }
-      loadServingList();
+      loadAppList();
     },
   } as any);
 };
@@ -171,7 +192,7 @@ const handleCreateAppForm = async () => {
         })
       },
       onClosed() {
-        loadServingList()
+        loadAppList()
       }
     } as any);
   } catch (e) {
@@ -198,13 +219,36 @@ const handleItemMemoBlur = () => {
   updateApp({ id, biz_id, data });
 }
 
+const handleSelectSpace = (id: string) => {
+  const space = bizList.value.find((item: ISpaceItem) => item.space_id === id)
+  if (space) {
+    if (!space.permission) {
+      permissionQuery.value = {
+        // biz_id: bkBizId.value,
+        biz_id: id,
+        basic: {
+          type: "biz",
+          action: "find_business_resource",
+          resource_id: id
+        },
+        gen_apply_url: true
+      }
+      
+      showApplyPermDialog.value = true
+      bkBizId.value = bkBizId.value
+      return
+    }
+    bkBizId.value = space.space_id
+  }
+}
+
 const handlePaginationChange = () => {
-  loadServingList();
+  loadAppList();
 };
 
 const handleLimitChange = (limit: number) => {
   pagination.value.limit = limit;
-  loadServingList();
+  loadAppList();
 };
 
 const handleItemAttributeClick = (item: any) => {
@@ -225,13 +269,13 @@ const handleNameInputChange = (val: string) => {
 
 const handleSearch = () => {
   pagination.value.current = 1
-  loadServingList()
+  loadAppList()
 }
 
 </script>
 
 <template>
-  <bk-loading :loading="isLoading" class="serving-content">
+  <bk-loading class="serving-content" :loading="isLoading">
     <div class="head-section">
       <bk-button theme="primary" @click="handleCreateAppClick">
         <Plus />
@@ -239,14 +283,16 @@ const handleSearch = () => {
       </bk-button>
       <div class="head-right">
         <bk-select
-          v-model="bkBizId"
+          :model-value="bkBizId"
+          :popover-options="{ theme: 'light bk-select-popover space-selector' }"
           id-key="space_id"
           display-key="space_name"
           :loading="isBizLoading"
           :filterable="true"
-          :clearable="false">
+          :clearable="false"
+          @change="handleSelectSpace">
           <bk-option v-for="item in bizList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
-            <div class="biz-option-item">
+            <div v-cursor="{ active: !item.permission }" :class="['biz-option-item', { 'no-perm': !item.permission }]">
               <div class="name">{{ item.space_name }}</div>
               <span class="tag">{{ item.space_type_name }}</span>
             </div>
@@ -265,7 +311,7 @@ const handleSearch = () => {
       </div>
     </div>
     <div class="content-body">
-      <template v-if="isEmpty">
+      <template v-if="!isLoading && isEmpty">
         <bk-exception
           class="exception-wrap-item"
           type="empty"
@@ -276,7 +322,7 @@ const handleSearch = () => {
               t("立即创建")
             }}</bk-button>
             <span class="divider-middle"></span>
-            <bk-button text theme="primary">{{ t("申请权限") }}</bk-button>
+            <!-- <bk-button text theme="primary">{{ t("申请权限") }}</bk-button> -->
           </div>
         </bk-exception>
       </template>
@@ -289,11 +335,11 @@ const handleSearch = () => {
               <div class="item-config">
                 <div class="config-info">
                   <span class="bk-bscp-icon icon-configuration-line"></span>
-                  xx个配置项
+                  {{ item.config?.count }}个配置项
                 </div>
                 <div class="time-info">
                   <span class="bk-bscp-icon icon-time-2"></span>
-                  {{ item.revision?.update_at }}
+                  {{ item.config?.update_at }}
                 </div>
               </div>
               <div class="item-footer">
@@ -335,11 +381,11 @@ const handleSearch = () => {
               display-key="space_name"
               filterable>
               <bk-option v-for="item in bizList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
-              <div class="biz-option-item">
-                <div class="name">{{ item.space_name }}</div>
-                <span class="tag">{{ item.space_type_name }}</span>
-              </div>
-            </bk-option>
+                <div class="biz-option-item">
+                  <div class="name">{{ item.space_name }}</div>
+                  <span class="tag">{{ item.space_type_name }}</span>
+                </div>
+              </bk-option>
             </bk-select>
           </bk-form-item>
           <bk-form-item :label="t('服务名称')" property="name" required>
@@ -465,10 +511,9 @@ const handleSearch = () => {
     </bk-sideslider>
   </bk-loading>
 </template>
-
-
 <style lang="scss" scoped>
 .serving-content {
+  height: 100%;
   overflow-x: hidden;
   .head-section {
     padding: 16px 80px;
@@ -628,8 +673,17 @@ const handleSearch = () => {
 
 .biz-option-item {
   position: relative;
-  padding-right: 25px;
+  padding: 0 12px;
+  &.no-perm {
+    background-color: #fafafa !important;
+    color: #cccccc !important;
+    .tag {
+      border-color: #e6e6e6 !important;
+      color: #cccccc !important;
+    }
+  }
   .name {
+    padding-right: 30px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -637,11 +691,13 @@ const handleSearch = () => {
   .tag {
     position: absolute;
     top: 10px;
-    right: -4px;
+    right: 8px;
+    padding: 2px;
     font-size: 12px;
     line-height: 1;
     color: #3a84ff;
     border: 1px solid #3a84ff;
+    border-radius: 2px;
   }
 }
 
@@ -783,4 +839,9 @@ const handleSearch = () => {
     font-size: 12px;
   }
 }
+</style>
+<style lang="scss">
+  .space-selector .bk-select-option {
+    padding: 0 !important;
+  }
 </style>

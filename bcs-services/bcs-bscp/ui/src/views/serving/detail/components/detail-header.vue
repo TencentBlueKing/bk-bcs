@@ -14,8 +14,8 @@
 
   const tabs = ref([
     { name: 'config', label: '配置管理', routeName: 'serving-config' },
-    { name: 'group', label: '分组管理', routeName: 'serving-group' },
-    { name: 'client', label: '客户端统计', routeName: 'serving-client' },
+    // { name: 'group', label: '分组管理', routeName: 'serving-group' },
+    // { name: 'client', label: '客户端统计', routeName: 'serving-client' },
   ])
 
   const getDefaultTab = () => {

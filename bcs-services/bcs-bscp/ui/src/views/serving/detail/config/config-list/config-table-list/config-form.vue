@@ -5,14 +5,15 @@
   import { TextFill, InfoLine, Upload, Done, FilliscreenLine } from 'bkui-vue/lib/icon'
   import BkMessage from 'bkui-vue/lib/message'
   import CodeEditor from '../../../../../../components/code-editor/index.vue'
-  import { IServingEditParams } from '../../../../../../types'
+  import { IAppEditParams } from '../../../../../../../types/app'
   import { IFileConfigContentSummary } from '../../../../../../../types/config'
   import { updateConfigContent } from '../../../../../../api/config'
+  import { stringLengthInBytes } from '../../../../../../utils/index'
   import { transFileToObject } from '../../../../../../utils/file'
   import { CONFIG_FILE_TYPE } from '../../../../../../constants/index'
 
   const props = withDefaults(defineProps<{
-    config: IServingEditParams,
+    config: IAppEditParams,
     editable: boolean,
     content: string|IFileConfigContentSummary,
     bkBizId: string,
@@ -82,10 +83,18 @@
   const handleSubmit = async() => {
     try {
       await formRef.value.validate()
-      if (localVal.value.file_type === 'binary' && fileList.value.length === 0) {
-        BkMessage({ theme: 'error', message: '请上传文件' })
-        return
+      if (localVal.value.file_type === 'binary'){
+        if (fileList.value.length === 0) {
+          BkMessage({ theme: 'error', message: '请上传文件' })
+          return
+        }
+      } else if (localVal.value.file_type === 'text') {
+        if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 100 ) {
+          BkMessage({ theme: 'error', message: '配置内容不能超过100M' })
+          return
+        }
       }
+      
       submitPending.value = true
       let sign = await generateSHA256()
       let size = 0
@@ -171,7 +180,6 @@
             :disabled="!editable"
             :multiple="false"
             :files="fileList"
-            :size="100"
             :custom-request="handleFileUpload">
             <template #file="{ file }">
               <div class="file-wrapper">

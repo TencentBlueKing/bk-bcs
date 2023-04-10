@@ -1,3 +1,4 @@
+import path from 'path'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import viteCompression from "vite-plugin-compression"
@@ -29,6 +30,12 @@ export default defineConfig(({ command, mode }) => {
   return {
     base: "./",
     publicDir: 'static',
+    plugins,
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "/src"),
+      },
+    },
     build: {
       outDir: "dist",
       assetsDir: 'static',
@@ -44,7 +51,6 @@ export default defineConfig(({ command, mode }) => {
         }
       }
     },
-    plugins,
     server: {
       proxy: {
         '/api/c/compapi/v2/cc/': {

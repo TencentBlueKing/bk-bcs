@@ -1,4 +1,7 @@
 import http from "../request"
+import { ISpaceItem } from '../../types/index'
+import { IAppListQuery } from '../../types/app'
+import { IPermissionQuery } from '../../types/index'
 
 /**
  * 获取空间、项目列表
@@ -8,7 +11,14 @@ import http from "../request"
  */
 
 export const getBizList = () => {
-  return http.get('auth/user/spaces').then(resp => resp.data);
+  return http.get('auth/user/spaces').then(resp => {
+    resp.data.items.forEach((item: ISpaceItem) => {
+      const { space_id } = item
+      // @ts-ignore
+      item.permission = resp.web_annotations.perms[space_id].find_business_resource
+    })
+    return resp.data
+  });
 }
 
 /**
@@ -16,7 +26,7 @@ export const getBizList = () => {
  * @returns 
  */
 export const getAllApp = () => {
-  return http.get('config/apps ').then(resp => resp.data);
+  return http.get('config/apps').then(resp => resp.data);
 }
 
 /**
@@ -25,17 +35,16 @@ export const getAllApp = () => {
  * @param params 查询过滤条件
  * @returns 
  */
-export type IAppListQuery = {
-  operator?: string,
-  name?: string,
-  start?: number,
-  limit?: number 
-}
-
 export const getAppList = (biz_id: number, params: IAppListQuery = {}) => {
   return http.get(`config/list/app/app/biz_id/${biz_id}`, { params }).then(resp => resp.data);
 }
 
+/**
+ * 获取应用下配置文件数量、更新时间等信息
+ */
+export const getAppsConfigData = (biz_id: number, app_id: number[]) => {
+  return http.post(`/config/config_item_count/biz_id/${biz_id}`, { biz_id, app_id }).then(resp => resp.data);
+}
 
 /**
  * 
@@ -75,4 +84,12 @@ export const createApp = (biz_id: number, params: any) => {
 export const updateApp = (params: any) => {
   const { id, biz_id, data } = params;
   return http.put(`config/update/app/app/app_id/${id}/biz_id/${biz_id}`, data).then(resp => resp.data);
+}
+
+/**
+ * 查询资源权限以及返回权限申请链接
+ * @param params IPermissionQuery 查询参数
+ */
+export const permissionCheck = (params: IPermissionQuery) => {
+  return http.post(`/auth/iam/permission/check`, params).then(resp => resp.data);
 }

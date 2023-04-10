@@ -1,12 +1,11 @@
 <script setup lang="ts">
-  import { ref, onMounted, computed } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { Search } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../store/config'
   import { getConfigVersionList } from '../../../../../api/config';
-  import { IRequestFilter, IPageFilter, FilterOp, RuleOp } from '../../../../../types'
-  import { IConfigVersion } from '../../../../../../types/config';
+  import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../types/config';
   import VersionDiff from '../components/version-diff/index.vue';
 
   const configStore = useConfigStore()
@@ -37,7 +36,8 @@
 
   const listLoading = ref(true)
   const versionList = ref<Array<IConfigVersion>>([])
-  const currentTab = ref('available')
+  const currentTab = ref('avaliable')
+  const searchStr = ref('')
   const showDiffPanel = ref(false)
   const diffVersion = ref()
   const pagination = ref({
@@ -45,21 +45,10 @@
     count: 0,
     limit: 10,
   })
-  const filter = ref<IRequestFilter>({
-    op: FilterOp.AND,
-    rules: [{
-      field: "deprecated",
-      op: RuleOp.eq,
-      value: false
-    }]
-  })
 
-  const page = computed(():IPageFilter => {
-    return {
-      count: false,
-      start: (pagination.value.current - 1) * pagination.value.limit,
-      limit: pagination.value.limit,
-    }
+  // 可用版本非搜索查看视图
+  const isAvaliableView = computed(() => {
+    return currentTab.value === 'avaliable' && searchStr.value === ''
   })
 
   onMounted(async() => {
@@ -70,12 +59,23 @@
 
   const getVersionList = async() => {
     listLoading.value = true
-    const res = await getConfigVersionList(props.bkBizId, props.appId, filter.value, page.value)
-    if (pagination.value.current === 1 && currentTab.value === 'available') {
+    const notFirstPageStart = isAvaliableView.value ? (pagination.value.current - 1) * pagination.value.limit - 1 : (pagination.value.current - 1) * pagination.value.limit
+    const params: IConfigVersionQueryParams = {
+      start: pagination.value.current === 1 ? 0 : notFirstPageStart,
+      limit: pagination.value.current === 1 && isAvaliableView.value ? pagination.value.limit - 1 : pagination.value.limit,
+      deprecated: currentTab.value !== 'avaliable'
+    }
+    if (searchStr.value) {
+      params.searchKey = searchStr.value
+    }
+    const res = await getConfigVersionList(props.appId, params)
+    const count = isAvaliableView.value ? res.data.count + 1 : res.data.count
+    if (isAvaliableView.value && pagination.value.current === 1) {
       versionList.value = [UN_NAMED_VERSION, ...res.data.details]
     } else {
       versionList.value = res.data.details
     }
+    pagination.value.count = count
     listLoading.value = false
   }
 
@@ -88,14 +88,21 @@
 
   const handleTabChange = (tab: string) =>  {
     currentTab.value = tab
-    filter.value.rules[0].value = tab === 'deprecate'
-    refreshConfigList()
+    refreshVersionList()
   }
 
+  // 选择某个版本
   const handleSelectVersion = (event: Event|undefined, data: IConfigVersion) => {
     configStore.$patch((state) => {
       state.versionData = data
     })
+  }
+
+  // 搜索框输入事件处理，内容为空时触发一次搜索
+  const handleSearchInputChange = (val: string) => {
+    if (!val) {
+      refreshVersionList()
+    }
   }
 
   // 打开版本对比
@@ -118,10 +125,10 @@
 
   const handlePageLimitChange = (limit: number) => {
     pagination.value.limit = limit
-    refreshConfigList()
+    refreshVersionList()
   }
 
-  const refreshConfigList = (current: number = 1) => {
+  const refreshVersionList = (current: number = 1) => {
     pagination.value.current = current
     getVersionList()
   }
@@ -131,11 +138,18 @@
   <section class="version-detail-table">
     <div class="head-operate-wrapper">
       <div class="type-tabs">
-        <div :class="['tab-item', { active: currentTab === 'available' }]" @click="handleTabChange('available')">可用版本</div>
+        <div :class="['tab-item', { active: currentTab === 'avaliable' }]" @click="handleTabChange('avaliable')">可用版本</div>
         <div class="split-line"></div>
         <div :class="['tab-item', { active: currentTab === 'deprecate' }]" @click="handleTabChange('deprecate')">废弃版本</div>
       </div>
-      <bk-input class="version-search-input" placeholder="版本名称/版本说明/修改人">
+      <bk-input
+        v-model="searchStr"
+        class="version-search-input"
+        placeholder="版本名称/版本说明/修改人"
+        :clearable="true"
+        @change="handleSearchInputChange"
+        @enter="refreshVersionList()"
+        @clear="refreshVersionList()">
         <template #suffix>
             <Search class="search-input-icon" />
          </template>
@@ -174,7 +188,7 @@
           :layout="['total', 'limit', 'list']"
           :count="pagination.count"
           :limit="pagination.limit"
-          @change="refreshConfigList($event)"
+          @change="refreshVersionList($event)"
           @limit-change="handlePageLimitChange"/>
     </bk-loading>
     <VersionDiff
