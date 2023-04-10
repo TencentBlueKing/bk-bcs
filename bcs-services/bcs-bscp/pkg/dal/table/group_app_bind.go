@@ -18,21 +18,20 @@ import (
 	"bscp.io/pkg/criteria/enumor"
 )
 
-// GroupAppColumns defines group app's columns
-var GroupAppColumns = mergeColumns(GroupAppColumnDescriptor)
+// GroupAppBindColumns defines group app's columns
+var GroupAppBindColumns = mergeColumns(GroupAppBindColumnDescriptor)
 
-// GroupAppColumnDescriptor is GroupApp's column descriptors.
-var GroupAppColumnDescriptor = mergeColumnDescriptors("",
+// GroupAppBindColumnDescriptor is GroupApp's column descriptors.
+var GroupAppBindColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{
 		{Column: "id", NamedC: "id", Type: enumor.Numeric},
 		{Column: "group_id", NamedC: "group_id", Type: enumor.Numeric},
 		{Column: "app_id", NamedC: "app_id", Type: enumor.Numeric},
 		{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
-
 	})
 
-// GroupApp defines a basic configuration item
-type GroupApp struct {
+// GroupAppBind defines a basic configuration item
+type GroupAppBind struct {
 	// ID is an auto-increased value, which is a group app's
 	// unique identity.
 	ID      uint32 `db:"id" json:"id"`
@@ -42,12 +41,12 @@ type GroupApp struct {
 }
 
 // TableName is the group app's database table name.
-func (c GroupApp) TableName() Name {
-	return GroupAppTable
+func (c GroupAppBind) TableName() Name {
+	return GroupAppBindTable
 }
 
 // ValidateCreate validate the group app's specific when create it.
-func (c GroupApp) ValidateCreate() error {
+func (c GroupAppBind) ValidateCreate() error {
 	if c.ID != 0 {
 		return errors.New("group app id can not be set")
 	}
@@ -66,7 +65,7 @@ func (c GroupApp) ValidateCreate() error {
 }
 
 // ValidateUpdate validate the group app's specific when update it.
-func (c GroupApp) ValidateUpdate() error {
+func (c GroupAppBind) ValidateUpdate() error {
 	if c.ID <= 0 {
 		return errors.New("group app id should be set")
 	}
@@ -75,7 +74,7 @@ func (c GroupApp) ValidateUpdate() error {
 }
 
 // ValidateDelete validate the group app's info when delete it.
-func (c GroupApp) ValidateDelete() error {
+func (c GroupAppBind) ValidateDelete() error {
 	if c.ID <= 0 {
 		return errors.New("group app id should be set")
 	}

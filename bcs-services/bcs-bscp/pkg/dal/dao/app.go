@@ -153,7 +153,7 @@ func (ap *appDao) ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*tab
 	getGroupSqlSentence = append(getGroupSqlSentence, "SELECT ", table.GroupColumns.NamedExpr(),
 		" FROM "+table.GroupTable.Name()+fmt.Sprintf(" WHERE biz_id = %d AND id = %d", bizID, groupID))
 	getGroupSql := filter.SqlJoint(getGroupSqlSentence)
-	
+
 	err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, getGroupSql)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (ap *appDao) ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*tab
 	} else {
 		var sqlSentence []string
 		sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
-			" WHERE biz_id = ? AND id IN (SELECT app_id FROM ", table.GroupAppTable.Name(), " WHERE group_id = ?)")
+			" WHERE biz_id = ? AND id IN (SELECT app_id FROM ", table.GroupAppBindTable.Name(), " WHERE group_id = ?)")
 		sql := filter.SqlJoint(sqlSentence)
 
 		err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &list, sql, bizID, groupID)

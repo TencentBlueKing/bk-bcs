@@ -22,17 +22,17 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// GroupApp supplies all the group related operations.
-type GroupApp interface {
+// GroupAppBind supplies all the group related operations.
+type GroupAppBind interface {
 	// BatchCreateWithTx batch create group app with transaction.
-	BatchCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.GroupApp) error
+	BatchCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.GroupAppBind) error
 	// BatchDeleteByGroupIDWithTx batch delete group app by group id with transaction.
 	BatchDeleteByGroupIDWithTx(kit *kit.Kit, tx *sharding.Tx, groupID, bizID uint32) error
 	// BatchListByGroupIDs batch list group app by group ids.
-	List(kit *kit.Kit, opts *types.ListGroupAppsOption) ([]*table.GroupApp, error)
+	List(kit *kit.Kit, opts *types.ListGroupAppBindsOption) ([]*table.GroupAppBind, error)
 }
 
-var _ GroupApp = new(groupAppDao)
+var _ GroupAppBind = new(groupAppDao)
 
 type groupAppDao struct {
 	orm      orm.Interface
@@ -43,7 +43,7 @@ type groupAppDao struct {
 }
 
 // BatchCreateWithTx batch create group app with transaction.
-func (dao *groupAppDao) BatchCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.GroupApp) error {
+func (dao *groupAppDao) BatchCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.GroupAppBind) error {
 	// validate released config item field.
 	for _, item := range items {
 		if err := item.ValidateCreate(); err != nil {
@@ -52,7 +52,7 @@ func (dao *groupAppDao) BatchCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items [
 	}
 
 	// generate released config items id.
-	ids, err := dao.idGen.Batch(kit, table.GroupAppTable, len(items))
+	ids, err := dao.idGen.Batch(kit, table.GroupAppBindTable, len(items))
 	if err != nil {
 		return err
 	}
@@ -64,8 +64,8 @@ func (dao *groupAppDao) BatchCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items [
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.GroupAppTable.Name(), " (", table.GroupAppColumns.ColumnExpr(),
-		")  VALUES(", table.GroupAppColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.GroupAppBindTable.Name(), " (", table.GroupAppBindColumns.ColumnExpr(),
+		")  VALUES(", table.GroupAppBindColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
 	return dao.orm.Txn(tx.Tx()).BulkInsert(kit.Ctx, sql, items)
@@ -83,7 +83,7 @@ func (dao *groupAppDao) BatchDeleteByGroupIDWithTx(kit *kit.Kit, tx *sharding.Tx
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", table.GroupAppTable.Name(), " WHERE group_id = ? AND biz_id = ?")
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.GroupAppBindTable.Name(), " WHERE group_id = ? AND biz_id = ?")
 
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -94,7 +94,7 @@ func (dao *groupAppDao) BatchDeleteByGroupIDWithTx(kit *kit.Kit, tx *sharding.Tx
 	return nil
 }
 
-func (dao *groupAppDao) List(kit *kit.Kit, opts *types.ListGroupAppsOption) ([]*table.GroupApp, error) {
+func (dao *groupAppDao) List(kit *kit.Kit, opts *types.ListGroupAppBindsOption) ([]*table.GroupAppBind, error) {
 	if opts == nil {
 		return nil, errf.New(errf.InvalidParameter, "opts is nil")
 	}
@@ -121,11 +121,11 @@ func (dao *groupAppDao) List(kit *kit.Kit, opts *types.ListGroupAppsOption) ([]*
 		return nil, err
 	}
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.GroupAppColumns.NamedExpr(), " FROM ",
-		table.GroupAppTable.Name(), whereExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupAppBindColumns.NamedExpr(), " FROM ",
+		table.GroupAppBindTable.Name(), whereExpr)
 	sql := filter.SqlJoint(sqlSentence)
 
-	list := make([]*table.GroupApp, 0)
+	list := make([]*table.GroupAppBind, 0)
 	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err

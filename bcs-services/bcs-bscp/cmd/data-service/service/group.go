@@ -70,15 +70,15 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 		return nil, err
 	}
 	if len(req.Spec.BindApps) != 0 {
-		groupApps := make([]*table.GroupApp, len(req.Spec.BindApps))
+		groupApps := make([]*table.GroupAppBind, len(req.Spec.BindApps))
 		for idx, app := range req.Spec.BindApps {
-			groupApps[idx] = &table.GroupApp{
+			groupApps[idx] = &table.GroupAppBind{
 				GroupID: id,
 				AppID:   app,
 				BizID:   req.Attachment.BizId,
 			}
 		}
-		if err := s.dao.GroupApp().BatchCreateWithTx(kt, tx, groupApps); err != nil {
+		if err := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); err != nil {
 			logs.Errorf("create group app failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback(kt)
 			return nil, err
@@ -134,11 +134,11 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 			},
 		},
 	}
-	opts := &types.ListGroupAppsOption{
+	opts := &types.ListGroupAppBindsOption{
 		BizID:  req.BizId,
 		Filter: ft,
 	}
-	list, err := s.dao.GroupApp().List(kt, opts)
+	list, err := s.dao.GroupAppBind().List(kt, opts)
 	if err != nil {
 		logs.Errorf("list group app failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -224,22 +224,22 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		return nil, err
 	}
 
-	if err := s.dao.GroupApp().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); err != nil {
+	if err := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); err != nil {
 		logs.Errorf("delete group app failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback(kt)
 		return nil, err
 	}
 
 	if !new.Spec.Public {
-		groupApps := make([]*table.GroupApp, len(req.Spec.BindApps))
+		groupApps := make([]*table.GroupAppBind, len(req.Spec.BindApps))
 		for idx, app := range req.Spec.BindApps {
-			groupApps[idx] = &table.GroupApp{
+			groupApps[idx] = &table.GroupAppBind{
 				GroupID: req.Id,
 				AppID:   app,
 				BizID:   req.Attachment.BizId,
 			}
 		}
-		if err := s.dao.GroupApp().BatchCreateWithTx(kt, tx, groupApps); err != nil {
+		if err := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); err != nil {
 			logs.Errorf("create group app failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback(kt)
 			return nil, err
@@ -286,7 +286,7 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbds.DeleteGroupReq) (*p
 		return nil, err
 	}
 
-	if err := s.dao.GroupApp().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); err != nil {
+	if err := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); err != nil {
 		logs.Errorf("delete group app failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback(kt)
 		return nil, err

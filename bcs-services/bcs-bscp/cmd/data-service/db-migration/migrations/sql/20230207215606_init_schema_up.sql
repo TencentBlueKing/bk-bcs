@@ -113,7 +113,7 @@ values (15, 'resource_locks', 0, now());
 insert into id_generators(id, resource, max_id, updated_at)
 values (16, 'groups', 0, now());
 insert into id_generators(id, resource, max_id, updated_at)
-values (17, 'group__apps', 0, now());
+values (17, 'group_app_binds', 0, now());
 insert into id_generators(id, resource, max_id, updated_at)
 values (18, 'group_current_releases', 0, now());
 insert into id_generators(id, resource, max_id, updated_at)
@@ -458,7 +458,7 @@ create table if not exists `groups`
 ) engine = innodb
   default charset = utf8mb4;
 
-create table if not exists `group__apps`
+create table if not exists `group_app_binds`
 (
     `id`                bigint(1) unsigned not null,
     `group_id`          bigint(1) unsigned not null,

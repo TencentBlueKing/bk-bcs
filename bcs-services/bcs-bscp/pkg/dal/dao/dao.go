@@ -37,7 +37,7 @@ type Set interface {
 	Strategy() Strategy
 	Hook() Hook
 	Group() Group
-	GroupApp() GroupApp
+	GroupAppBind() GroupAppBind
 	GroupCurrentRelease() GroupCurrentRelease
 	Publish() Publish
 	IAM() IAM
@@ -205,8 +205,8 @@ func (s *set) Group() Group {
 	}
 }
 
-// GroupApp returns the group app's DAO
-func (s *set) GroupApp() GroupApp {
+// GroupAppBind returns the group app bind's DAO
+func (s *set) GroupAppBind() GroupAppBind {
 	return &groupAppDao{
 		orm:      s.orm,
 		sd:       s.sd,

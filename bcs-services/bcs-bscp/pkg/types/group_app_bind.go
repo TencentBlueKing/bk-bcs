@@ -18,14 +18,14 @@ import (
 	"bscp.io/pkg/runtime/filter"
 )
 
-// ListGroupAppsOption defines the option for list group apps.
-type ListGroupAppsOption struct {
+// ListGroupAppBindsOption defines the option for list group apps.
+type ListGroupAppBindsOption struct {
 	BizID  uint32             `json:"biz_id"`
 	Filter *filter.Expression `json:"filter"`
 }
 
 // Validate the list group apps options
-func (opt *ListGroupAppsOption) Validate() error {
+func (opt *ListGroupAppBindsOption) Validate() error {
 	if opt.BizID <= 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
 	}
@@ -36,7 +36,7 @@ func (opt *ListGroupAppsOption) Validate() error {
 
 	exprOpt := &filter.ExprOption{
 		// remove biz_id because it's a required field in the option.
-		RuleFields: table.GroupAppColumns.WithoutColumn("biz_id"),
+		RuleFields: table.GroupAppBindColumns.WithoutColumn("biz_id"),
 	}
 	if err := opt.Filter.Validate(exprOpt); err != nil {
 		return err
