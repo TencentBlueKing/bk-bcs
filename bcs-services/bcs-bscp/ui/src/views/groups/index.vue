@@ -3,6 +3,15 @@
   import { Plus, Search } from 'bkui-vue/lib/icon'
 
   const groupList = ref([])
+  const pagination = ref({
+    current: 1,
+    count: 0,
+    limit: 10,
+  })
+
+  const refreshList = () => {}
+
+  const handlePageLimitChange = () => {}
 
 </script>
 <template>
@@ -19,13 +28,24 @@
       </div>
     </div>
     <div class="group-table-wrapper">
-      <bk-table v-if="groupList.length > 0">
-        <bk-table-column label="分组名称"></bk-table-column>
-        <bk-table-column label="分组规则"></bk-table-column>
-        <bk-table-column label="服务可见范围"></bk-table-column>
-        <bk-table-column label="上线服务数"></bk-table-column>
-        <bk-table-column label="操作"></bk-table-column>
-      </bk-table>
+      <template v-if="groupList.length > 0">
+        <bk-table :border="['outer']">
+          <bk-table-column label="分组名称" :width="210"></bk-table-column>
+          <bk-table-column label="分组规则"></bk-table-column>
+          <bk-table-column label="服务可见范围" :width="240"></bk-table-column>
+          <bk-table-column label="上线服务数" :width="110"></bk-table-column>
+          <bk-table-column label="操作" :width="120"></bk-table-column>
+        </bk-table>
+        <bk-pagination
+          class="table-list-pagination"
+          v-model="pagination.current"
+          location="left"
+          :layout="['total', 'limit', 'list']"
+          :count="pagination.count"
+          :limit="pagination.limit"
+          @change="refreshList()"
+          @limit-change="handlePageLimitChange"/>
+      </template>
       <bk-exception v-else class="group-data-empty" type="empty" scene="part">
         当前暂无数据
         <div class="create-group-text-btn">
@@ -45,6 +65,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 16px;
     .button-icon {
       font-size: 18px;
     }
@@ -69,6 +90,15 @@
     color: #63656e;
     .create-group-text-btn {
       margin-top: 8px;
+    }
+  }
+  .table-list-pagination {
+    padding: 12px;
+    border: 1px solid #dcdee5;
+    border-top: none;
+    border-radius: 0 0 2px 2px;
+    :deep(.bk-pagination-list.is-last) {
+      margin-left: auto;
     }
   }
 </style>

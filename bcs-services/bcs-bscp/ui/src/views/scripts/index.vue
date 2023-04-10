@@ -22,7 +22,7 @@
     </div>
     <div class="script-list-wrapper">
       <div class="operate-area">
-        <bk-button theme="primary"><Plus class="button-icon" />新增分组</bk-button>
+        <bk-button theme="primary"><Plus class="button-icon" />新建脚本</bk-button>
         <bk-input class="search-group-input" placeholder="脚本名称">
            <template #suffix>
               <Search class="search-input-icon" />
