@@ -12,7 +12,7 @@
     { id: 'serving', name: '服务管理'},
     { id: 'groups-management', name: '分组管理'},
     { id: 'scripts-management', name: '脚本管理'},
-    { id: 'keys-management', name: '密钥管理'}
+    { id: 'keys-management', name: '服务密钥'}
   ]
 
   const activedRootRoute = computed(() => {

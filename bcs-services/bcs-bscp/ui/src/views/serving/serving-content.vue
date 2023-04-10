@@ -469,7 +469,7 @@ const handleSearch = () => {
         <div class="serving-attribute-head">
           <span class="title">{{ t("服务属性") }}</span>
           <span class="secret-key"
-            ><a href="" target="_blank">{{ t("密钥管理") }}</a></span
+            ><a href="" target="_blank">{{ t("服务密钥") }}</a></span
           >
         </div>
       </template>
