@@ -246,11 +246,6 @@ func (bp BasePage) SQLExpr(ps *PageSQLOption) (where string, err error) {
 		return "", errors.New("page.count is enabled, do not support generate SQL expression")
 	}
 
-	if bp.Start == 0 && bp.Limit == 0 {
-		// it means do not need to sort.
-		return "", nil
-	}
-
 	var sort string
 	if ps.Sort.ForceOverlap {
 		// force overlapped user defined sort field.
