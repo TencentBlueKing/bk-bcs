@@ -40,7 +40,7 @@ func (s *Service) CreateStrategy(ctx context.Context, req *pbcs.CreateStrategyRe
 		return nil, err
 	}
 
-	groups, err := s.queryGroups(grpcKit.RpcCtx(), req.BizId, req.AppId, req.Groups)
+	groups, err := s.queryGroups(grpcKit.RpcCtx(), req.BizId, req.Groups)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (s *Service) UpdateStrategy(ctx context.Context, req *pbcs.UpdateStrategyRe
 		return nil, err
 	}
 
-	groups, err := s.queryGroups(grpcKit.RpcCtx(), req.BizId, req.AppId, req.Groups)
+	groups, err := s.queryGroups(grpcKit.RpcCtx(), req.BizId, req.Groups)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (s *Service) ListStrategies(ctx context.Context, req *pbcs.ListStrategiesRe
 	return resp, nil
 }
 
-func (s *Service) queryGroups(ctx context.Context, bizID, appID uint32, groupIDs []uint32) ([]*pbgroup.Group, error) {
+func (s *Service) queryGroups(ctx context.Context, bizID uint32, groupIDs []uint32) ([]*pbgroup.Group, error) {
 
 	exp := &filter.Expression{
 		Op: filter.And,
@@ -200,7 +200,6 @@ func (s *Service) queryGroups(ctx context.Context, bizID, appID uint32, groupIDs
 	}
 	in := &pbds.ListGroupsReq{
 		BizId:  bizID,
-		AppId:  appID,
 		Filter: ft,
 		Page: &pbbase.BasePage{
 			Count: false,

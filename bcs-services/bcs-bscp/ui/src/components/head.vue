@@ -1,9 +1,26 @@
 <script setup lang="ts">
+  import { computed } from 'vue'
+  import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useUserStore } from '../store/user'
 
+  const route = useRoute()
   const store = useUserStore()
   const { userInfo } = storeToRefs(store)
+
+  const navList = [
+    { id: 'serving', name: '服务管理'},
+    { id: 'groups-management', name: '分组管理'},
+    { id: 'scripts-management', name: '脚本管理'},
+    { id: 'keys-management', name: '服务密钥'}
+  ]
+
+  const activedRootRoute = computed(() => {
+    if (route.name === 'serving-config') {
+      return 'serving'
+    }
+    return route.matched[0]?.name
+  })
 
 </script>
 
@@ -15,7 +32,13 @@
       </span>
       <span class="head-title"> 服务配置平台 </span>
       <div class="head-routes">
-        <router-link to="/serving/mine/">服务管理</router-link>
+        <router-link
+          v-for="nav in navList"
+          :class="['nav-item', { actived: activedRootRoute === nav.id }]"
+          :key="nav.id"
+          :to="{ name: nav.id }">
+          {{ nav.name }}
+        </router-link>
       </div>
     </div>
     <div class="head-right">
@@ -46,9 +69,13 @@
     .head-routes {
       padding-left: 112px;
       font-size: 14px;
-
-      a {
-        color: #fff;
+      .nav-item {
+        margin-left: 32px;
+        color: #96a2b9;
+        font-size: 14px;
+        &.actived {
+          color: #ffffff;
+        }
       }
     }
 

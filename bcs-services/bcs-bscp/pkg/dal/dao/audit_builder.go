@@ -133,12 +133,6 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 
 	case *table.Group:
 		sset := cur.(*table.Group)
-		ab.toAudit.AppID = sset.Attachment.AppID
-		ab.toAudit.ResourceID = sset.ID
-
-	case *table.GroupCategory:
-		sset := cur.(*table.GroupCategory)
-		ab.toAudit.AppID = sset.Attachment.AppID
 		ab.toAudit.ResourceID = sset.ID
 
 	case []*table.ReleasedConfigItem:
@@ -281,13 +275,6 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 			return ab
 		}
 
-	case *table.GroupCategory:
-		groupCategory := updatedTo.(*table.GroupCategory)
-		if err := ab.decorateGroupCategoryUpdate(groupCategory); err != nil {
-			ab.hitErr = err
-			return ab
-		}
-
 	case *table.Hook:
 		hook := updatedTo.(*table.Hook)
 		if err := ab.decorateHookUpdate(hook); err != nil {
@@ -401,29 +388,7 @@ func (ab *AuditBuilder) decorateStrategyUpdate(strategy *table.Strategy) error {
 	return nil
 }
 
-func (ab *AuditBuilder) decorateGroupCategoryUpdate(groupCategory *table.GroupCategory) error {
-	ab.toAudit.AppID = groupCategory.Attachment.AppID
-	ab.toAudit.ResourceID = groupCategory.ID
-
-	preGroupCategory, err := ab.getGroupCategory(groupCategory.ID)
-	if err != nil {
-		return err
-	}
-
-	ab.prev = preGroupCategory
-
-	changed, err := parseChangedSpecFields(preGroupCategory, groupCategory)
-	if err != nil {
-		ab.hitErr = err
-		return fmt.Errorf("parse group category changed spec field failed, err: %v", err)
-	}
-
-	ab.changed = changed
-	return nil
-}
-
 func (ab *AuditBuilder) decorateGroupUpdate(group *table.Group) error {
-	ab.toAudit.AppID = group.Attachment.AppID
 	ab.toAudit.ResourceID = group.ID
 
 	preGroup, err := ab.getGroup(group.ID)
@@ -620,22 +585,6 @@ func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) 
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get strategy details failed, err: %v", err)
-	}
-
-	return one, nil
-}
-
-func (ab *AuditBuilder) getGroupCategory(groupCategoryID uint32) (*table.GroupCategory, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCategoryColumns.NamedExpr(),
-		" FROM ", table.GroupCategoryTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(groupCategoryID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
-	filter := filter2.SqlJoint(sqlSentence)
-
-	one := new(table.GroupCategory)
-	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
-	if err != nil {
-		return nil, fmt.Errorf("get group category details failed, err: %v", err)
 	}
 
 	return one, nil

@@ -32,9 +32,9 @@ import (
 // RegisterCommonActions register common actions
 func RegisterCommonActions() map[string]interface{} {
 	return map[string]interface{}{
-		cloudprovider.BKSOPTask:                  RunBKsopsJob,
-		cloudprovider.WatchTask:                  EnsureWatchComponentTask,
-		cloudprovider.EnsureAutoScalerAction:     EnsureAutoScalerTask,
+		cloudprovider.BKSOPTask:              RunBKsopsJob,
+		cloudprovider.WatchTask:              EnsureWatchComponentTask,
+		cloudprovider.EnsureAutoScalerAction: EnsureAutoScalerTask,
 	}
 }
 

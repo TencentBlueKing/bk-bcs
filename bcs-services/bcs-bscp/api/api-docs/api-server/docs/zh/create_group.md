@@ -7,9 +7,10 @@
 ### 输入参数
 | 参数名称     | 参数类型     | 必选   | 描述             |
 | ------------ | ------------ | ------ | ---------------- |
-| app_id         | uint32       | 是     | 应用ID     |
-| group_category_id   | uint32       | 是     | 分类标签ID     |
-| name                | string       | 是      | 应用名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾
+| biz_id       | uint32       | 是     | 业务ID     |
+| name         | string       | 是     | 应用名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾
+| public       | bool         | 是     | 是否为公共分组    |
+| bind_apps    | []uint32     | 否     | 绑定的应用ID列表 |
 | mode         | string       | 是     | 分组枚举类型：custom,debug     |
 | selector     | selector     | 否     | 分组选择器   |
 | uid          | string       | 否     | debug UID  |
@@ -51,6 +52,11 @@
 {
     "name": "广东",
     "mode": "custom",
+    "public": false,
+    "bind_apps": [
+        1,
+        2
+    ],
     "selector": {
         "labels_or": [
             {

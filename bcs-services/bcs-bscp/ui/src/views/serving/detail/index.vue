@@ -14,9 +14,11 @@
   const appDataLoading = ref(true)
 
   watch(() => route.params.appId, val => {
-    appId.value = Number(val)
-    bkBizId.value = String(route.params.spaceId)
-    getAppData()
+    if (val) {
+      appId.value = Number(val)
+      bkBizId.value = String(route.params.spaceId)
+      getAppData()
+    }
   })
 
   onMounted(() => {

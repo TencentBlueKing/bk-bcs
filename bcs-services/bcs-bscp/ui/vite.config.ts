@@ -29,6 +29,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     base: "./",
     publicDir: 'static',
+    plugins,
     build: {
       outDir: "dist",
       assetsDir: 'static',
@@ -44,7 +45,6 @@ export default defineConfig(({ command, mode }) => {
         }
       }
     },
-    plugins,
     server: {
       proxy: {
         '/api/c/compapi/v2/cc/': {

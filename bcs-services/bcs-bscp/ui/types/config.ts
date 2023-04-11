@@ -39,7 +39,8 @@ export interface IConfigItem {
     create_at: string;
     reviser: string;
     update_at: string;
-  }
+  };
+  file_state: string;
 }
 
 // 配置项详情（包含签名信息）
@@ -82,4 +83,13 @@ export interface IConfigListQueryParams {
   release_id?: number;
   start?: number;
   limit?: number
+}
+
+// 版本列表查询接口请求参数
+export interface IConfigVersionQueryParams {
+  searchKey?: string;
+  start?: number;
+  limit?: number;
+  all?: boolean;
+  deprecated?: boolean;
 }

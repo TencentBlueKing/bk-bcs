@@ -100,28 +100,15 @@ func PbConfigItemAttachment(at *table.ConfigItemAttachment) *ConfigItemAttachmen
 	}
 }
 
-// PbConfigItems convert table ConfigItems to pb ConfigItems
-func PbConfigItems(cis []*table.ConfigItem) []*ConfigItem {
-	if cis == nil {
-		return make([]*ConfigItem, 0)
-	}
-
-	result := make([]*ConfigItem, 0)
-	for _, ci := range cis {
-		result = append(result, PbConfigItem(ci))
-	}
-
-	return result
-}
-
 // PbConfigItem convert table ConfigItem to pb ConfigItem
-func PbConfigItem(ci *table.ConfigItem) *ConfigItem {
+func PbConfigItem(ci *table.ConfigItem, fileState string) *ConfigItem {
 	if ci == nil {
 		return nil
 	}
 
 	return &ConfigItem{
 		Id:         ci.ID,
+		FileState:  fileState,
 		Spec:       PbConfigItemSpec(ci.Spec),
 		Attachment: PbConfigItemAttachment(ci.Attachment),
 		Revision:   pbbase.PbRevision(ci.Revision),
@@ -129,16 +116,24 @@ func PbConfigItem(ci *table.ConfigItem) *ConfigItem {
 }
 
 // PbConfigItemCounts
-func PbConfigItemCounts(ccs []*table.ListConfigItemCounts) []*ListConfigItemCounts {
+func PbConfigItemCounts(ccs []*table.ListConfigItemCounts, appList []uint32) []*ListConfigItemCounts {
 	if ccs == nil {
 		return make([]*ListConfigItemCounts, 0)
 	}
 
 	result := make([]*ListConfigItemCounts, 0)
+	ccsList := make(map[uint32]*ListConfigItemCounts, 0)
 	for _, cc := range ccs {
-		result = append(result, PbConfigItemCount(cc))
+		ccsList[cc.AppId] = PbConfigItemCount(cc)
 	}
 
+	for _, app := range appList {
+		if _, ok := ccsList[app]; !ok {
+			result = append(result, &ListConfigItemCounts{AppId: app})
+		} else {
+			result = append(result, ccsList[app])
+		}
+	}
 	return result
 }
 

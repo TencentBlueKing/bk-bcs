@@ -27,7 +27,7 @@ import (
 
 const (
 	memo             = "stress-test"
-	stressBizId      = 2001
+	stressBizId      = 11
 	stressInstanceID = "961b6dd3ede3cb8ecbaacbd68de040cd78eb2ed5889130cceb4c49268ea4d506"
 	namespacePrefix  = "namespace"
 )
@@ -40,9 +40,11 @@ func RequestID() string {
 // Header generate request header for api client.
 func Header(rid string) http.Header {
 	header := http.Header{}
-	header.Set(constant.UserKey, "stress")
+	header.Set(constant.UserKey, constant.BKUserForTestPrefix+"stress")
 	header.Set(constant.RidKey, rid)
 	header.Set(constant.AppCodeKey, "test")
+	header.Add("Cookie", "bk_token="+constant.BKTokenForTest)
+
 	return header
 }
 

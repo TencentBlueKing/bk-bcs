@@ -130,7 +130,6 @@ func bscpResponse(ctx context.Context, w http.ResponseWriter, msg proto.Message)
 		return nil
 	}
 
-
 	if d, ok := msg.(view.DataStructInterface); ok {
 		ww.SetDataStructFlag(d.IsDataStruct())
 	}

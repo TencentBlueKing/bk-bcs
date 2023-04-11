@@ -1,12 +1,10 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted, defineExpose } from 'vue'
+  import { ref, onMounted, defineExpose } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { useServingStore } from '../../../../../store/serving'
   import { useConfigStore } from '../../../../../store/config'
-  import { Ellipsis, ArrowsLeft, AngleRight } from 'bkui-vue/lib/icon'
+  import { Ellipsis } from 'bkui-vue/lib/icon'
   import InfoBox from "bkui-vue/lib/info-box";
   import { getConfigVersionList } from '../../../../../api/config'
-  import { FilterOp, RuleOp } from '../../../../../types'
   import { IConfigVersion } from '../../../../../../types/config'
   import VersionDiff from '../components/version-diff/index.vue'
 
@@ -39,31 +37,32 @@
   const versionList = ref<IConfigVersion[]>([])
   const showDiffPanel = ref(false)
   const diffVersion = ref()
-  const filter = {
-    op: FilterOp.AND,
-    rules: [{
-      field: "deprecated",
-      op: RuleOp.eq,
-      value: false
-    }]
-  }
-  const page = {
-    count: false,
-    start: 0,
-    limit: 200 // @todo 分页条数待确认
-  }
+  const pagination = ref({
+    current: 1,
+    limit: 10,
+    count: 0
+  })
 
-  onMounted(() => {
-    getVersionList()
+  onMounted(async() => {
+    await getVersionList()
+    // 默认选中未命名版本
+    handleSelectVersion(currentConfig)
   })
 
   const getVersionList = async() => {
     try {
       versionListLoading.value = true
-      const res = await getConfigVersionList(props.bkBizId, props.appId, filter, page)
-      versionList.value = [currentConfig, ...res.data.details]
-      // 默认选中未命名版本
-      handleSelectVersion(currentConfig)
+      const params = {
+        start: pagination.value.current === 1 ? 0 : (pagination.value.current - 1) * pagination.value.limit - 1,
+        limit: pagination.value.current === 1 ? pagination.value.limit - 1 : pagination.value.limit,
+      }
+      const res = await getConfigVersionList(props.appId, params)
+      if (pagination.value.current === 1) {
+        versionList.value = [currentConfig, ...res.data.details]
+      } else {
+        versionList.value = res.data.details
+      }
+      pagination.value.count = res.data.count + 1
       emits('loaded')
     } catch (e) {
       console.error(e)
@@ -76,6 +75,12 @@
     versionStore.$patch(state => {
       state.versionData = version
     })
+  }
+
+  // @todo 切换页码时，组件会调用两次change事件，待确认
+  const handlePageChange = (val: number) => {
+    pagination.value.current = val
+    getVersionList()
   }
 
   const handleDiffDialogShow = (version: IConfigVersion) => {
@@ -102,26 +107,36 @@
 <template>
   <section class="version-container">
     <bk-loading :loading="versionListLoading">
-      <section
-        v-for="(version, index) in versionList"
-        :key="version.id"
-        :class="['version-item', { active: versionData.id === version.id }]"
-        @click="handleSelectVersion(version)">
-        <div class="dot-line">
-          <div :class="['dot', { first: index === 0, last: index === versionList.length - 1 }]"></div>
-        </div>
-        <div class="version-name">{{ version.spec.name }}</div>
-        <bk-dropdown class="action-area">
-          <Ellipsis class="action-more-icon" />
-          <template #content>
-            <bk-dropdown-menu placement="bottom-end">
-              <bk-dropdown-item @click="handleDiffDialogShow(version)">版本对比</bk-dropdown-item>
-              <bk-dropdown-item @click="handleDeprecate(version.id)">废弃</bk-dropdown-item>
-            </bk-dropdown-menu>
-          </template>
-        </bk-dropdown>
+      <section class="versions-wrapper">
+        <section
+          v-for="(version, index) in versionList"
+          :key="version.id"
+          :class="['version-item', { active: versionData.id === version.id }]"
+          @click="handleSelectVersion(version)">
+          <div class="dot"></div>
+          <div class="version-name">{{ version.spec.name }}</div>
+          <bk-dropdown class="action-area">
+            <Ellipsis class="action-more-icon" />
+            <template #content>
+              <bk-dropdown-menu placement="bottom-end">
+                <bk-dropdown-item @click="handleDiffDialogShow(version)">版本对比</bk-dropdown-item>
+                <bk-dropdown-item @click="handleDeprecate(version.id)">废弃</bk-dropdown-item>
+              </bk-dropdown-menu>
+            </template>
+          </bk-dropdown>
+        </section>
       </section>
     </bk-loading>
+      <bk-pagination
+          class="list-pagination"
+          v-model="pagination.current"
+          small
+          align="right"
+          :show-limit="false"
+          :show-total-count="false"
+          :count="pagination.count"
+          :limit="pagination.limit"
+          @change="handlePageChange"/>
     <VersionDiff
       v-model:show="showDiffPanel"
       :current-version="diffVersion" />
@@ -132,6 +147,9 @@
   .version-container {
     padding: 16px 0;
     height: 100%;
+  }
+  .versions-wrapper {
+    overflow: auto;
   }
   .version-steps {
     padding: 16px 0;
@@ -147,38 +165,15 @@
     &:hover {
       background: #e1ecff;
     }
-    .dot-line {
+    .dot {
       position: absolute;
       left: 28px;
-      top: 0;
-      display: flex;
-      align-items: center;
-      height: 100%;
-      .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        border: 1px solid #c4c6cc;
-        background: #f0f1f5;
-        &:not(.first):before {
-          position: absolute;
-          top: 0;
-          left: 4px;
-          content: '';
-          width: 1px;
-          height: 16px;
-          background: #dcdee5;
-        }
-        &:not(.last):after {
-          position: absolute;
-          bottom: 0;
-          left: 4px;
-          content: '';
-          width: 1px;
-          height: 16px;
-          background: #dcdee5;
-        }
-      }
+      top: 16px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1px solid #c4c6cc;
+      background: #f0f1f5;
     }
   }
   .version-name {
@@ -212,32 +207,7 @@
       }
     }
   }
-  .header-wrapper {
-    display: flex;
-    align-items: center;
-    padding: 0 24px;
-    height: 100%;
-    font-size: 12px;
-    line-height: 1;
-  }
-  .header-name {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    color: #3a84ff;
-    cursor: pointer;
-  }
-  .arrow-left {
-    font-size: 26px;
-    color: #3884ff;
-  }
-  .arrow-right {
-    font-size: 24px;
-    color: #c4c6cc;
-  }
-  .diff-left-panel-head {
-    padding-left: 16px;
-    font-size: 12px;
-    color: #313238;
+  .list-pagination {
+    margin-top: 16px;
   }
 </style>

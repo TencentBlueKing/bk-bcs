@@ -11,7 +11,6 @@ import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
-import "bscp.io/pkg/protocol/core/group-category/group_category.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
@@ -80,10 +79,9 @@ service Data {
     rpc UpdateGroup(UpdateGroupReq) returns (pbbase.EmptyResp) {}
     rpc DeleteGroup(DeleteGroupReq) returns (pbbase.EmptyResp) {}
 
-    // group category related interface.
-    rpc CreateGroupCategory(CreateGroupCategoryReq) returns (CreateResp) {}
-    rpc ListGroupCategories(ListGroupCategoriesReq) returns (ListGroupCategoriesResp) {}
-    rpc DeleteGroupCategory(DeleteGroupCategoryReq) returns (pbbase.EmptyResp) {}
+    // group current release related interface.
+    rpc CountGroupsReleasedApps(CountGroupsReleasedAppsReq) returns (CountGroupsReleasedAppsResp) {}
+    rpc ListGroupRleasesdApps(ListGroupRleasesdAppsReq) returns (ListGroupRleasesdAppsResp) {}
 
     // publish related interface.
     rpc Publish(PublishReq) returns (PublishResp) {}
@@ -375,9 +373,8 @@ message CreateGroupReq {
 
 message ListGroupsReq {
     uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    google.protobuf.Struct filter = 2;
+    pbbase.BasePage        page   = 3;
 }
 
 message ListGroupsResp {
@@ -396,26 +393,37 @@ message DeleteGroupReq {
     pbgroup.GroupAttachment attachment = 2;
 }
 
-message CreateGroupCategoryReq {
-    pbgc.GroupCategoryAttachment attachment = 1;
-    pbgc.GroupCategorySpec       spec       = 2;
+message CountGroupsReleasedAppsReq {
+    uint32 biz_id = 1;
+    repeated uint32 groups = 2;
 }
 
-message ListGroupCategoriesReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+message CountGroupsReleasedAppsResp {
+    message CountGroupsReleasedAppsData {
+        uint32 group_id = 1;
+        uint32 count    = 2;
+        bool   edited   = 3;
+    }
+    repeated CountGroupsReleasedAppsData data = 1;
 }
 
-message ListGroupCategoriesResp {
-    uint32                      count   = 1;
-    repeated pbgc.GroupCategory details = 2;
+message ListGroupRleasesdAppsReq {
+    uint32                biz_id   = 1;
+    uint32                group_id = 2;
+    uint32                start    = 3;
+    uint32                limit    = 4;
 }
 
-message DeleteGroupCategoryReq {
-    uint32                       id         = 1;
-    pbgc.GroupCategoryAttachment attachment = 2;
+message ListGroupRleasesdAppsResp {
+    message ListGroupReleasedAppsData {
+        uint32 app_id       = 1;
+        string app_name     = 2;
+        uint32 release_id   = 3;
+        string release_name = 4;
+        bool   edited       = 5;
+    }
+    uint32                             count   = 1;
+    repeated ListGroupReleasedAppsData details = 2;
 }
 
 message PublishReq {

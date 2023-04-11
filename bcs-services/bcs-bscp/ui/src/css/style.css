@@ -29,10 +29,14 @@ h1 {
   line-height: 1.1;
 }
 
-ul {
+ul, ol {
   list-style: none;
   padding: 0;
   margin: 0;
+}
+
+li {
+list-style: none;
 }
 
 a {

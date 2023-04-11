@@ -29,7 +29,7 @@ var (
 	// PendingInstall xxx
 	PendingInstall = "pending-install"
 	// FailedInstall xxx
-	FailedInstall  = "failed-install"
+	FailedInstall = "failed-install"
 	// DeployedInstall xxx
 	DeployedInstall = "deployed"
 
@@ -54,5 +54,4 @@ var (
 	UnInstalling = "uninstalling"
 	// FailedUninstall xxx
 	FailedUninstall = "failed-uninstall"
-
 )

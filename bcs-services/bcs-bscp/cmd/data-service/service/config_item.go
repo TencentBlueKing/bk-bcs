@@ -101,7 +101,7 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq)
 		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-	resp := pbci.PbConfigItem(configItem)
+	resp := pbci.PbConfigItem(configItem, "")
 	return resp, nil
 }
 
@@ -130,9 +130,16 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
+
+		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId)
+		if err != nil {
+			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+
 		resp := &pbds.ListConfigItemsResp{
 			Count:   details.Count,
-			Details: pbci.PbConfigItems(details.Details),
+			Details: pbrci.PbConfigItemState(details.Details, fileReleased),
 		}
 		return resp, nil
 	}
@@ -213,7 +220,7 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigI
 	}
 
 	resp := &pbds.ListConfigItemCountResp{
-		Details: pbci.PbConfigItemCounts(details),
+		Details: pbci.PbConfigItemCounts(details, req.AppId),
 	}
 	return resp, nil
 

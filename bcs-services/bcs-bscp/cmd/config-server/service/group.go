@@ -14,13 +14,12 @@ package service
 
 import (
 	"context"
-	"strconv"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	pbapp "bscp.io/pkg/protocol/core/app"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbgroup "bscp.io/pkg/protocol/core/group"
 	pbds "bscp.io/pkg/protocol/data-service"
@@ -32,25 +31,21 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbcs.CreateGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateGroupResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Create,
-		ResourceID: req.AppId}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.BizId}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
 	r := &pbds.CreateGroupReq{
 		Attachment: &pbgroup.GroupAttachment{
-			BizId:           uint32(bizID),
-			AppId:           req.AppId,
-			GroupCategoryId: req.GroupCategoryId,
+			BizId: req.BizId,
 		},
 		Spec: &pbgroup.GroupSpec{
 			Name:     req.Name,
+			Public:   req.Public,
+			BindApps: req.BindApps,
 			Mode:     req.Mode,
 			Selector: req.Selector,
 			Uid:      req.Uid,
@@ -73,13 +68,9 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbcs.DeleteGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteGroupResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Delete,
-		ResourceID: req.AppId}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.GroupId}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
@@ -87,8 +78,7 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbcs.DeleteGroupReq) (*p
 	r := &pbds.DeleteGroupReq{
 		Id: req.GroupId,
 		Attachment: &pbgroup.GroupAttachment{
-			BizId: uint32(bizID),
-			AppId: req.AppId,
+			BizId: req.BizId,
 		},
 	}
 	_, err = s.client.DS.DeleteGroup(grpcKit.RpcCtx(), r)
@@ -105,13 +95,9 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbcs.UpdateGroupReq) (*p
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateGroupResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Update,
-		ResourceID: req.AppId}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+		ResourceID: req.GroupId}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +105,12 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbcs.UpdateGroupReq) (*p
 	r := &pbds.UpdateGroupReq{
 		Id: req.GroupId,
 		Attachment: &pbgroup.GroupAttachment{
-			BizId: uint32(bizID),
-			AppId: req.AppId,
+			BizId: req.BizId,
 		},
 		Spec: &pbgroup.GroupSpec{
 			Name:     req.Name,
+			Public:   req.Public,
+			BindApps: req.BindApps,
 			Mode:     req.Mode,
 			Selector: req.Selector,
 			Uid:      req.Uid,
@@ -138,155 +125,158 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbcs.UpdateGroupReq) (*p
 	return resp, nil
 }
 
-// ListGroups list groups with filter
-func (s *Service) ListGroups(ctx context.Context, req *pbcs.ListGroupsReq) (*pbcs.ListGroupsResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListGroupsResp)
-
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
-		return nil, err
-	}
-
-	if req.Start < 0 {
-		return nil, errf.New(errf.InvalidParameter, "start has to be greater than 0")
-	}
-
-	if req.Limit < 0 {
-		return nil, errf.New(errf.InvalidParameter, "limit has to be greater than 0")
-	}
-
-	ft := &filter.Expression{
-		Op: filter.And,
-		Rules: []filter.RuleFactory{
-			&filter.AtomRule{
-				Field: "group_category_id",
-				Op:    filter.Equal.Factory(),
-				Value: req.GroupCategoryId,
-			},
-			&filter.AtomRule{
-				Field: "mode",
-				Op:    filter.Equal.Factory(),
-				Value: req.Mode,
-			},
-		},
-	}
-	ftpb, err := ft.MarshalPB()
-	if err != nil {
-		return nil, err
-	}
-
-	r := &pbds.ListGroupsReq{
-		BizId:  uint32(bizID),
-		AppId:  req.AppId,
-		Filter: ftpb,
-		Page: &pbbase.BasePage{
-			Start: req.Start,
-			Limit: req.Limit,
-		},
-	}
-	rp, err := s.client.DS.ListGroups(grpcKit.RpcCtx(), r)
-	if err != nil {
-		logs.Errorf("list groups failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	resp = &pbcs.ListGroupsResp{
-		Count:   rp.Count,
-		Details: rp.Details,
-	}
-	return resp, nil
-}
-
-// ListAllGroups list all groups
+// ListAllGroups list all groups in biz
 func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq) (*pbcs.ListAllGroupsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAllGroupsResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
-	ft := &filter.Expression{
+	// 1. list groups
+	lgft := &filter.Expression{
 		Op:    filter.And,
 		Rules: []filter.RuleFactory{},
 	}
-	ftpb, err := ft.MarshalPB()
-	if err != nil {
-		return nil, err
-	}
-
-	lgcReq := &pbds.ListGroupCategoriesReq{
-		BizId:  uint32(bizID),
-		AppId:  req.AppId,
-		Filter: ftpb,
-		Page:   &pbbase.BasePage{},
-	}
-	lgcResp, err := s.client.DS.ListGroupCategories(grpcKit.RpcCtx(), lgcReq)
-	if err != nil {
-		logs.Errorf("list all group categories failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	ft = &filter.Expression{
-		Op: filter.And,
-		Rules: []filter.RuleFactory{
-			&filter.AtomRule{
-				Field: "mode",
-				Op:    filter.Equal.Factory(),
-				Value: req.Mode,
-			},
-		},
-	}
-	ftpb, err = ft.MarshalPB()
+	lgftpb, err := lgft.MarshalPB()
 	if err != nil {
 		return nil, err
 	}
 
 	lgReq := &pbds.ListGroupsReq{
-		BizId:  uint32(bizID),
-		AppId:  req.AppId,
-		Filter: ftpb,
+		BizId:  req.BizId,
+		Filter: lgftpb,
 		Page:   &pbbase.BasePage{},
 	}
-
 	lgResp, err := s.client.DS.ListGroups(grpcKit.RpcCtx(), lgReq)
 	if err != nil {
-		logs.Errorf("list all groups failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list groups failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	groupsMap := make(map[uint32][]*pbgroup.Group, len(lgcResp.Details))
-	for _, detail := range lgResp.Details {
-		if _, exists := groupsMap[detail.Attachment.GroupCategoryId]; exists {
-			groupsMap[detail.Attachment.GroupCategoryId] = append(groupsMap[detail.Attachment.GroupCategoryId], detail)
-		} else {
-			groupsMap[detail.Attachment.GroupCategoryId] = []*pbgroup.Group{detail}
+	if lgResp.Count == 0 {
+		return resp, nil
+	}
+
+	// 2. list apps binded by groups if group is not public
+	appMap := make(map[uint32]*pbapp.App)
+	for _, group := range lgResp.Details {
+		for _, appID := range group.Spec.BindApps {
+			appMap[appID] = nil
 		}
 	}
-	respData := []*pbcs.ListAllGroupsResp_ListAllGroupsData{}
-
-	for _, detail := range lgcResp.Details {
-		respData = append(respData, &pbcs.ListAllGroupsResp_ListAllGroupsData{
-			GroupCategoryId:   detail.Id,
-			GroupCategoryName: detail.Spec.Name,
-			Groups:            groupsMap[detail.Id],
-		})
+	appIDs := make([]uint32, 0, len(appMap))
+	for appID := range appMap {
+		appIDs = append(appIDs, appID)
 	}
 
-	resp = &pbcs.ListAllGroupsResp{
-		Details: respData,
+	if len(appIDs) != 0 {
+		laft := &filter.Expression{
+			Op: filter.And,
+			Rules: []filter.RuleFactory{&filter.AtomRule{
+				Field: "id",
+				Op:    filter.In.Factory(),
+				Value: appIDs,
+			}},
+		}
+		laftpb, err := laft.MarshalPB()
+		if err != nil {
+			return nil, err
+		}
+		laReq := &pbds.ListAppsReq{
+			BizId:  req.BizId,
+			Filter: laftpb,
+			Page:   &pbbase.BasePage{},
+		}
+		laResp, err := s.client.DS.ListApps(grpcKit.RpcCtx(), laReq)
+		if err != nil {
+			logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		for _, app := range laResp.Details {
+			appMap[app.Id] = app
+		}
 	}
+
+	// 3. caculate published apps count
+	groups := make([]uint32, len(lgResp.Details))
+	for idx, group := range lgResp.Details {
+		groups[idx] = group.Id
+	}
+	countResp, err := s.client.DS.CountGroupsReleasedApps(grpcKit.RpcCtx(), &pbds.CountGroupsReleasedAppsReq{
+		BizId:  req.BizId,
+		Groups: groups,
+	})
+	if err != nil {
+		logs.Errorf("count group published apps failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	respData := make([]*pbcs.ListAllGroupsResp_ListAllGroupsData, 0, len(lgResp.Details))
+	for _, group := range lgResp.Details {
+		apps := make([]string, 0, len(group.Spec.BindApps))
+		for _, appID := range group.Spec.BindApps {
+			if app, ok := appMap[appID]; ok {
+				apps = append(apps, app.Spec.Name)
+			}
+		}
+		data := &pbcs.ListAllGroupsResp_ListAllGroupsData{
+			Id:       group.Id,
+			Name:     group.Spec.Name,
+			Public:   group.Spec.Public,
+			BindApps: apps,
+			Selector: group.Spec.Selector,
+		}
+		for _, d := range countResp.Data {
+			if d.GroupId == group.Id {
+				data.ReleasedAppsNum = d.Count
+				data.Edited = d.Edited
+			}
+		}
+		respData = append(respData, data)
+	}
+	resp.Details = respData
+
+	return resp, nil
+}
+
+// ListGroupReleasedApps list released apps in group
+func (s *Service) ListGroupReleasedApps(ctx context.Context, req *pbcs.ListGroupReleasedAppsReq) (
+	*pbcs.ListGroupReleasedAppsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListGroupReleasedAppsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	if err != nil {
+		return nil, err
+	}
+
+	lReq := &pbds.ListGroupRleasesdAppsReq{
+		BizId:   req.BizId,
+		GroupId: req.GroupId,
+		Start:   req.Start,
+		Limit:   req.Limit,
+	}
+	lResp, err := s.client.DS.ListGroupRleasesdApps(grpcKit.RpcCtx(), lReq)
+	if err != nil {
+		logs.Errorf("list group released apps failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	data := make([]*pbcs.ListGroupReleasedAppsResp_ListGroupReleasedAppsData, len(lResp.Details))
+	for idx, detail := range lResp.Details {
+		data[idx] = &pbcs.ListGroupReleasedAppsResp_ListGroupReleasedAppsData{
+			AppId:       detail.AppId,
+			AppName:     detail.AppName,
+			ReleaseId:   detail.ReleaseId,
+			ReleaseName: detail.ReleaseName,
+			Edited:      detail.Edited,
+		}
+	}
+	resp.Details = data
+	resp.Count = lResp.Count
 	return resp, nil
 }
