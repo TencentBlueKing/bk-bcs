@@ -332,7 +332,7 @@ type MetricLabel struct {
 }
 
 // GetMetricsList 获取 metrics 列表
-func GetMetricsList(ctx context.Context, host, clusterID string) ([]MetricList, error) {
+func GetMetricsList(ctx context.Context, host, clusterID, bizID string) ([]MetricList, error) {
 	cacheKey := fmt.Sprintf("bcs.QueryGrayClusterMap.%s", clusterID)
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
 		return cacheResult.([]MetricList), nil
@@ -344,6 +344,7 @@ func GetMetricsList(ctx context.Context, host, clusterID string) ([]MetricList, 
 		SetQueryParam("bk_app_code", config.G.Base.AppCode).
 		SetQueryParam("bk_app_secret", config.G.Base.AppSecret).
 		SetQueryParam("cluster_ids", clusterID).
+		SetQueryString(fmt.Sprintf("bk_biz_ids=0&bk_biz_ids=%s", bizID)).
 		Get(url)
 	if err != nil {
 		return nil, err
@@ -360,8 +361,8 @@ func GetMetricsList(ctx context.Context, host, clusterID string) ([]MetricList, 
 }
 
 // GetMetricsSeries 获取 metrics series 列表
-func GetMetricsSeries(ctx context.Context, host, clusterID string) ([]*prompb.TimeSeries, error) {
-	metrics, err := GetMetricsList(ctx, host, clusterID)
+func GetMetricsSeries(ctx context.Context, host, clusterID, bizID string) ([]*prompb.TimeSeries, error) {
+	metrics, err := GetMetricsList(ctx, host, clusterID, bizID)
 	if err != nil {
 		return nil, err
 	}
