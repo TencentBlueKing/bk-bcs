@@ -576,6 +576,8 @@ func (m *Node) validate(all bool) error {
 
 	// no validation rules for InnerIPv6
 
+	// no validation rules for Username
+
 	if len(errors) > 0 {
 		return NodeMultiError(errors)
 	}
@@ -8719,6 +8721,8 @@ func (m *LaunchConfiguration) validate(all bool) error {
 	// no validation rules for IsMonitorService
 
 	// no validation rules for UserData
+
+	// no validation rules for InitLoginUsername
 
 	if len(errors) > 0 {
 		return LaunchConfigurationMultiError(errors)

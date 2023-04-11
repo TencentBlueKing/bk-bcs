@@ -559,6 +559,7 @@ func (da *CleanNodesAction) handleTask() error {
 		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return err
 	}
+
 	if err = da.model.CreateTask(da.ctx, task); err != nil {
 		blog.Errorf("save clean Node %v task from NodeGroup %s failed, %s",
 			da.req.Nodes, da.group.NodeGroupID, err.Error())

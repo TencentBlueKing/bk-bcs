@@ -58,7 +58,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params["CloudID"]
 
 	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
@@ -120,7 +120,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params["CloudID"]
 
 	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")

@@ -203,7 +203,7 @@ func (cm *ClusterManager) ListCluster(ctx context.Context,
 	ca := clusterac.NewListAction(cm.model, cm.iam)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCluster, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -220,7 +220,7 @@ func (cm *ClusterManager) ListCommonCluster(ctx context.Context,
 	ca := clusterac.NewListCommonClusterAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCommonCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCommonCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListCommonCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCommonCluster, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -310,7 +310,7 @@ func (cm *ClusterManager) ListNodesInCluster(ctx context.Context,
 	fa := clusterac.NewListNodesInClusterAction(cm.model, cm.kubeOp)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListNodesInCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListNodesInCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListNodesInCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListNodesInCluster, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -327,7 +327,7 @@ func (cm *ClusterManager) ListMastersInCluster(ctx context.Context,
 	fa := clusterac.NewListMastersInClusterAction(cm.model, cm.kubeOp)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListMastersInCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListMastersInCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListMastersInCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListMastersInCluster, req %v, resp %v", reqID, req, resp)
 	return nil

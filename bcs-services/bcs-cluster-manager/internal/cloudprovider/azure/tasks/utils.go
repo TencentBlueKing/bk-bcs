@@ -15,12 +15,13 @@ package tasks
 
 import (
 	"context"
-	"errors"
+	"strconv"
+
+	"github.com/pkg/errors"
+	k8scorev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	k8scorev1 "k8s.io/api/core/v1"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -60,4 +61,13 @@ func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, cluster
 	}
 
 	return nil
+}
+
+func setModuleInfo(group *proto.NodeGroup, bkBizIDString string) {
+	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
+		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
+		bkBizID, _ := strconv.Atoi(bkBizIDString)
+		bkModuleID, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
+		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
+	}
 }

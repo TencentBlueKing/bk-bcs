@@ -19,9 +19,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -43,7 +44,6 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-
 	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
@@ -53,10 +53,23 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	}
 
 	// import cluster instances
-	err = importClusterInstances(basicInfo)
-	if err != nil {
+	if err = importClusterInstances(basicInfo); err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterInstances failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	// 导入集群nodeResourceGroup
+	if err = importNodeResourceGroup(basicInfo); err != nil {
+		blog.Errorf("ImportClusterNodesTask[%s]: importNodeResourceGroup failed: %v", taskID, err)
+		retErr := fmt.Errorf("importNodeResourceGroup failed, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	// 导入vpcID
+	if err = importVpcID(basicInfo); err != nil {
+		blog.Errorf("ImportClusterNodesTask[%s]: importVpcID failed: %v", taskID, err)
+		retErr := fmt.Errorf("importVpcID failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -65,9 +78,9 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
+		return errors.Wrapf(err, "ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID,
+			stepName)
 	}
 	return nil
 }
@@ -97,9 +110,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-
-	err = importClusterCredential(ctx, basicInfo)
-	if err != nil {
+	if err = importClusterCredential(ctx, basicInfo); err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: importClusterCredential failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterCredential failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -107,20 +118,20 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("RegisterClusterKubeConfigTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
+		return errors.Wrapf(err, "RegisterClusterKubeConfigTask[%s] BasicInfo %s %s update to storage fatal",
+			taskID, taskID, stepName)
 	}
 	return nil
 }
 
 func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error {
-	cli, err := api.NewContainerServiceClient(data.CmOption)
+	client, err := api.NewAksServiceImplWithCommonOption(data.CmOption)
 	if err != nil {
 		return err
 	}
 
-	credentials, err := cli.GetClusterCredentials(ctx, data.Cluster.SystemID)
+	credentials, err := client.GetClusterAdminCredentials(ctx, data)
 	if err != nil {
 		return err
 	}
@@ -129,7 +140,7 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 	}
 
 	// save cluster kubeConfig
-	kubeConfig := string(*credentials[0].Value)
+	kubeConfig := string(credentials[0].Value)
 	data.Cluster.KubeConfig = kubeConfig
 	cloudprovider.UpdateCluster(data.Cluster)
 
@@ -160,10 +171,54 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
 	}
 
-	err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
-	if err != nil {
+	if err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+// importNodeResourceGroup 导入nodeResourceGroup
+func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
+	cluster := info.Cluster
+	if cluster.ExtraInfo != nil && len(cluster.ExtraInfo[api.NodeResourceGroup]) > 0 {
+		return nil
+	}
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
+	if err != nil {
+		return errors.Wrapf(err, "create AksService failed")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	managedCluster, err := client.GetCluster(ctx, info)
+	if err != nil {
+		return errors.Wrapf(err, "call GetCluster falied")
+	}
+	if cluster.ExtraInfo == nil {
+		cluster.ExtraInfo = make(map[string]string)
+	}
+	cluster.ExtraInfo[api.NodeResourceGroup] = *managedCluster.Properties.NodeResourceGroup
+	return nil
+}
+
+// importVpcID 导入vpc id
+func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
+	cluster := info.Cluster
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
+	if err != nil {
+		return errors.Wrapf(err, "create AksService failed")
+	}
+	nodeResourceGroup := cluster.ExtraInfo[api.NodeResourceGroup]
+	blog.Infof("importVpcID nodeResourceGroup:%s", nodeResourceGroup)
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+	list, err := client.ListVirtualNetwork(ctx, nodeResourceGroup)
+	if err != nil {
+		return errors.Wrapf(err, "call ListVirtualNetwork failed")
+	}
+	//blog.Infof("importVpcID list:%s", toPrettyJsonString(list))
+	if len(list) > 0 {
+		cluster.VpcID = *list[0].Name
+	}
 	return nil
 }

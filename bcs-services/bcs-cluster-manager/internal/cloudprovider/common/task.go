@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
@@ -220,6 +219,11 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 	nodeIPs := state.Task.CommonParams[cloudprovider.NodeIPsKey.String()]
 	// get password
 	passwd := step.Params[cloudprovider.PasswordKey.String()]
+	// get user
+	user := step.Params[cloudprovider.UsernameKey.String()]
+	if len(user) == 0 {
+		user = nodeman.RootAccount
+	}
 
 	if len(nodeIPs) == 0 {
 		blog.Infof("InstallGSEAgentTask %s skip, cause of empty node", taskID)
@@ -267,7 +271,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 			OSType:    nodeman.LinuxOSType,
 			InnerIP:   v,
 			LoginIP:   v,
-			Account:   nodeman.RootAccount,
+			Account:   user,
 			Port:      nodeman.DefaultPort,
 			AuthType:  nodeman.PasswordAuthType,
 			Password:  passwd,

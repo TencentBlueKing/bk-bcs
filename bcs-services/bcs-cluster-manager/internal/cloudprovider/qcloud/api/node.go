@@ -145,7 +145,7 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 	return regions, nil
 }
 
-// GetNodeByIP get specified Node by innerIP address
+// GetNodeByIP get specified Node by innerIP address - 通过IP查询节点
 func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	client, err := GetCVMClient(opt.Common)
 	if err != nil {

@@ -430,7 +430,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	}, nil
 }
 
-// SwitchNodeGroupAutoScaling switch nodegroup auto scaling
+// SwitchNodeGroupAutoScaling 开/关CA - switch nodegroup auto scaling
 func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool,
 	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
 	mgr, err := cloudprovider.GetTaskManager(cloudName)

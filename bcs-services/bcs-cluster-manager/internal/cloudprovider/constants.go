@@ -75,6 +75,8 @@ var (
 
 	// PasswordKey xxx
 	PasswordKey ParamKey = "password"
+	// UsernameKey xxx
+	UsernameKey ParamKey = "username"
 	// ScalingKey xxx
 	ScalingKey ParamKey = "scaling"
 	// OperatorKey xxx

@@ -65,7 +65,7 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// extract valid info
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	_ = step.Params["NodeIPs"]
 	ipList := strings.Split(step.Params["NodeIPs"], ",")
 	_, err = cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
@@ -131,7 +131,7 @@ func AddNodesToClusterTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// extract valid info
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params["NodeGroupID"] // nodeGroup may be empty
 	cloudID := step.Params["CloudID"]
 	initPasswd := step.Params["InitPasswd"] // initPasswd may be empty
@@ -313,7 +313,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// extract valid info
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params["NodeGroupID"] // nodeGroup may be empty
 	cloudID := step.Params["CloudID"]
 

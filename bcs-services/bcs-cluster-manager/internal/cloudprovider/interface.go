@@ -210,11 +210,11 @@ type CloudInfoManager interface {
 
 // NodeManager cloud interface for cvm management
 type NodeManager interface {
-	// GetNodeByIP get specified Node by innerIP address
+	// GetNodeByIP get specified Node by innerIP address - 通过IP查询节点
 	GetNodeByIP(ip string, opt *GetNodeOption) (*proto.Node, error)
-	// ListNodesByIP list node by IP set
+	// ListNodesByIP list node by IP set - 通过IP查询节点
 	ListNodesByIP(ips []string, opt *ListNodesOption) ([]*proto.Node, error)
-	// GetCVMImageIDByImageName get imageID by imageName
+	// GetCVMImageIDByImageName get imageID by imageName -
 	GetCVMImageIDByImageName(imageName string, opt *CommonOption) (string, error)
 	// GetCloudRegions get cloud regions
 	GetCloudRegions(opt *CommonOption) ([]*proto.RegionInfo, error)
@@ -248,7 +248,7 @@ type CloudValidateManager interface {
 	CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *CommonOption) error
 }
 
-// ClusterManager cloud interface for kubernetes cluster management
+// ClusterManager cloud interface for kubernetes cluster management 集群管理
 type ClusterManager interface {
 	// CreateCluster create kubernetes cluster according cloudprovider
 	CreateCluster(cls *proto.Cluster, opt *CreateClusterOption) (*proto.Task, error)
@@ -272,27 +272,27 @@ type ClusterManager interface {
 	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
 }
 
-// NodeGroupManager cloud interface for nodegroup management
+// NodeGroupManager cloud interface for nodegroup management - 节点池管理
 type NodeGroupManager interface {
-	// CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
+	// CreateNodeGroup 创建节点池 - create nodegroup by cloudprovider api, only create NodeGroup entity
 	CreateNodeGroup(group *proto.NodeGroup, opt *CreateNodeGroupOption) (*proto.Task, error)
-	// DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
+	// DeleteNodeGroup 删除节点池 - delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
 	// will be released. Task is backgroup automatic task
 	DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
-	// UpdateNodeGroup update specified nodegroup configuration
+	// UpdateNodeGroup 更新节点池 - update specified nodegroup configuration
 	UpdateNodeGroup(group *proto.NodeGroup, opt *CommonOption) error
-	// GetNodesInGroup get all nodes belong to NodeGroup
+	// GetNodesInGroup 从云上拉取该节点池的所有节点 - get all nodes belong to NodeGroup
 	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.NodeGroupNode, error)
-	// MoveNodesToGroup add cluster nodes to NodeGroup
+	// MoveNodesToGroup 添加节点到节点池中 - add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 
-	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
+	// RemoveNodesFromGroup 缩容（保留节点） - remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error
-	// CleanNodesInGroup clean specified nodes in NodeGroup,
+	// CleanNodesInGroup 缩容（不保留节点） - clean specified nodes in NodeGroup
 	CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
-	// UpdateDesiredNodes update nodegroup desired node
+	// UpdateDesiredNodes 扩容 - update nodegroup desired node
 	UpdateDesiredNodes(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*ScalingResponse, error)
-	// SwitchNodeGroupAutoScaling switch nodegroup auto scale
+	// SwitchNodeGroupAutoScaling 开/关CA - switch nodegroup auto scale
 	SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (*proto.Task,
 		error)
 
@@ -302,11 +302,11 @@ type NodeGroupManager interface {
 	// DeleteAutoScalingOption delete cluster autoscaling, cloudprovider will clean
 	// cluster-autoscaler in backgroup according cloudprovider implementation
 	DeleteAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *DeleteScalingOption) (*proto.Task, error)
-	// UpdateAutoScalingOption update cluster autoscaling option, cloudprovider will update
+	// UpdateAutoScalingOption 更新CA - update cluster autoscaling option, cloudprovider will update
 	// cluster-autoscaler configuration in backgroup according cloudprovider implementation.
 	// Implementation is optional.
 	UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task, error)
-	// SwitchAutoScalingOptionStatus switch cluster autoscaling option enable auto scaling status
+	// SwitchAutoScalingOptionStatus 更新CA状态 - switch cluster autoscaling option enable auto scaling status
 	SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 		opt *CommonOption) (*proto.Task, error)
 }
@@ -319,7 +319,7 @@ type VPCManager interface {
 	ListSecurityGroups(opt *CommonOption) ([]*proto.SecurityGroup, error)
 }
 
-// TaskManager backgroup back management
+// TaskManager 后台任务队列 - back management
 type TaskManager interface {
 	Name() string
 	// GetAllTask get all register task for worker running
@@ -327,31 +327,31 @@ type TaskManager interface {
 
 	// specific cloud different implement
 
-	// BuildCreateNodeGroupTask TODO
-	// NodeGroup taskList
-	// BuildCreateNodeGroupTask build create nodegroup task
+	// NodeGroup taskList - 节点池任务队列
+
+	// BuildCreateNodeGroupTask 创建节点池 - build create node group task
 	BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *CreateNodeGroupOption) (*proto.Task, error)
-	// BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
+	// BuildDeleteNodeGroupTask 删除节点池 - when delete nodegroup, we need to create background
 	// task to clean all nodes in nodegroup, release all resource in cloudprovider,
 	// finally delete nodes information in local storage.
 	BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
-	// BuildMoveNodesToGroupTask when move nodes to nodegroup, we need to create background task
+	// BuildMoveNodesToGroupTask 节点移入节点池 - when move nodes to nodegroup, we need to create background task
 	BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
-	// BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
+	// BuildCleanNodesInGroupTask 缩容，不保留节点 - clean specified nodes in NodeGroup
 	BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup, opt *CleanNodesOption) (*proto.Task, error)
-	// BuildUpdateDesiredNodesTask update nodegroup desired node
+	// BuildUpdateDesiredNodesTask 扩容节点 - update nodegroup desired node
 	BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, opt *UpdateDesiredNodeOption) (*proto.Task, error)
-	// BuildSwitchNodeGroupAutoScalingTask switch nodegroup autoscaling
+	// BuildSwitchNodeGroupAutoScalingTask 开启/关闭节点池 - switch nodegroup autoscaling
 	BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool, opt *SwitchNodeGroupAutoScalingOption) (
 		*proto.Task, error)
-	// BuildUpdateAutoScalingOptionTask update cluster autoscaling option
+	// BuildUpdateAutoScalingOptionTask 更新CA配置 - update cluster autoscaling option
 	BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task,
 		error)
-	// BuildSwitchAutoScalingOptionStatusTask switch cluster autoscaling option enable auto scaling status
+	// BuildSwitchAutoScalingOptionStatusTask 开启/关闭CA - switch cluster autoscaling option enable auto scaling status
 	BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 		opt *CommonOption) (*proto.Task, error)
 
-	// ClusterManager taskList
+	// ClusterManager taskList - 集群任务队列
 
 	// BuildImportClusterTask create cluster by different cloud provider
 	BuildImportClusterTask(cls *proto.Cluster, opt *ImportClusterOption) (*proto.Task, error)

@@ -172,6 +172,9 @@ func (ua *UpdateAction) updateCluster() error {
 	if len(ua.req.CloudAccountID) > 0 {
 		ua.cluster.CloudAccountID = ua.req.CloudAccountID
 	}
+	if len(ua.req.ExtraInfo) > 0 {
+		ua.cluster.ExtraInfo = ua.req.ExtraInfo
+	}
 
 	for _, ip := range ua.req.Master {
 		if ua.cluster.Master == nil {

@@ -588,7 +588,7 @@ func NewUpdateDesiredNodeAction(model store.ClusterManagerModel) *UpdateDesiredN
 func (ua *UpdateDesiredNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
-	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	ua.resp.Result = code == common.BcsErrClusterManagerSuccess
 }
 
 func (ua *UpdateDesiredNodeAction) validate() error {
@@ -688,6 +688,7 @@ func (ua *UpdateDesiredNodeAction) returnCurrentScaleNodesNum() (uint32, error) 
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return 0, err
 	}
+
 	mgr, err := cloudprovider.GetNodeGroupMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s NodeGroupMgr when updateDesiredNode %d in NodeGroup %s failed, %s",
@@ -696,6 +697,7 @@ func (ua *UpdateDesiredNodeAction) returnCurrentScaleNodesNum() (uint32, error) 
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return 0, err
 	}
+
 	cmOption.Region = ua.group.Region
 	// pay more attention, in order to compatible with aws/tencentcloud/blueking
 	// implementation, no common UpdateDesiredNodes task flow definition, just
