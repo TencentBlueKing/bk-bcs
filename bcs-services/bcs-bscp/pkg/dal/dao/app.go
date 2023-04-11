@@ -44,6 +44,8 @@ type App interface {
 	GetByID(kit *kit.Kit, AppID uint32) (*table.App, error)
 	// List apps with options.
 	List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListAppDetails, error)
+	// ListAppsByGroupID list apps by group id.
+	ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.App, error)
 	// Delete one app instance.
 	Delete(kit *kit.Kit, app *table.App) error
 	// ListAppMetaForCache list app's basic meta info.
@@ -67,7 +69,12 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 		return nil, errf.New(errf.InvalidParameter, "list app options is nil")
 	}
 
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
+	po := &types.PageOption{
+		EnableUnlimitedLimit: true,
+		DisabledSort:         false,
+	}
+
+	if err := opts.Validate(po); err != nil {
 		return nil, err
 	}
 
@@ -129,6 +136,51 @@ func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListApp
 	}
 
 	return &types.ListAppDetails{Count: count, Details: list}, nil
+}
+
+// ListAppsByGroupID list apps by group id.
+func (ap *appDao) ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.App, error) {
+
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz id is 0")
+	}
+	if groupID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "group id is 0")
+	}
+
+	group := &table.Group{}
+	var getGroupSqlSentence []string
+	getGroupSqlSentence = append(getGroupSqlSentence, "SELECT ", table.GroupColumns.NamedExpr(),
+		" FROM "+table.GroupTable.Name()+fmt.Sprintf(" WHERE biz_id = %d AND id = %d", bizID, groupID))
+	getGroupSql := filter.SqlJoint(getGroupSqlSentence)
+
+	err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, getGroupSql)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*table.App, 0)
+
+	if group.Spec.Public {
+		var sqlSentence []string
+		sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
+			" WHERE biz_id = ?")
+		sql := filter.SqlJoint(sqlSentence)
+
+		if err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &list, sql, bizID); err != nil {
+			return nil, err
+		}
+	} else {
+		var sqlSentence []string
+		sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
+			" WHERE biz_id = ? AND id IN (SELECT app_id FROM ", table.GroupAppBindTable.Name(), " WHERE group_id = ?)")
+		sql := filter.SqlJoint(sqlSentence)
+
+		err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &list, sql, bizID, groupID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
 }
 
 // Create one app instance

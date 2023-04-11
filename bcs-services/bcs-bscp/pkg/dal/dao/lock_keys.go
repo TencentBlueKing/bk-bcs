@@ -86,12 +86,3 @@ func (k lockKeyGenerator) Group(bizID uint32, appID uint32) *table.ResourceLock 
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }
-
-// GroupCategory generate group category's lock ResKey
-func (k lockKeyGenerator) GroupCategory(bizID uint32, appID uint32) *table.ResourceLock {
-	return &table.ResourceLock{
-		BizID:   bizID,
-		ResType: table.GroupCategoryTable.String(),
-		ResKey:  strconv.FormatInt(int64(appID), 10),
-	}
-}

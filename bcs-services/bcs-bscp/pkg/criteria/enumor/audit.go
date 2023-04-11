@@ -40,8 +40,6 @@ const (
 	Hook AuditResourceType = "hook"
 	// Group 分组资源
 	Group AuditResourceType = "group"
-	// GroupCategory 分组分类资源
-	GroupCategory AuditResourceType = "group_category"
 )
 
 // AuditResourceTypeEnums resource type map.
@@ -55,7 +53,6 @@ var AuditResourceTypeEnums = map[AuditResourceType]bool{
 	Strategy:      true,
 	Hook:          true,
 	Group:         true,
-	GroupCategory: true,
 }
 
 // Exist judge enum value exist.
