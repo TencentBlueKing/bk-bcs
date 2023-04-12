@@ -313,6 +313,9 @@ func (m MetricListSlice) ToSeries() []*prompb.TimeSeries {
 			Value: v.Metric,
 		})
 		for _, lb := range v.Labels {
+			if lb.Value == "" {
+				lb.Value = "string"
+			}
 			labels = append(labels, prompb.Label{
 				Name:  lb.Key,
 				Value: lb.Value,

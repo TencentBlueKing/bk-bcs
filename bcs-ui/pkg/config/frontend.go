@@ -23,6 +23,7 @@ type HostConf struct {
 	BKIAMAppURL           string `yaml:"bk_iam_app_url"`          // 权限中心
 	BKCCHost              string `yaml:"bk_cc_host"`              // cmdb
 	BKMonitorHost         string `yaml:"bk_monitor_host"`         // 蓝鲸监控
+	BKSREHOST             string `yaml:"bk_sre_host"`             // 申请服务器地址
 }
 
 // FrontendConf
