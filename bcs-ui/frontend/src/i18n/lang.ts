@@ -3997,4 +3997,6 @@ export default {
   '确定使用节点模板 {name}': ['Make sure to use node template {name}'],
   Chart列表: ['Charts'],
   模板集列表: ['TemplateSets List'],
+  '集群CPU装箱率 = 集群所有Pod CPU Request之和 / 集群所有节点CPU总核数（不包含Master节点），集群CPU装箱率越接近集群CPU使用率，集群CPU资源利用率越高 {0}': [],
+  '集群内存装箱率 = 集群所有Pod 内存 Request之和 / 集群所有节点内存总大小（不包含Master节点），集群内存装箱率越接近集群内存使用率，集群内存资源利用率越高 {0}': [],
 };

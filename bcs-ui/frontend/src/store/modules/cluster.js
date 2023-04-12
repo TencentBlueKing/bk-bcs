@@ -76,6 +76,9 @@ export default {
          * @return {Promise} promise 对象
          */
     async getClusterList(context, projectID) {
+      if (!context.rootState.user?.username) {
+        console.warn('failed to get rootState username');
+      }
       const res = await fetchClusterList({
         projectID,
         operator: context.rootState.user?.username,

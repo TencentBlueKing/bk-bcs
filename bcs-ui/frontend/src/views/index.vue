@@ -19,7 +19,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, toRef, reactive, computed, onBeforeMount, ref } from '@vue/composition-api';
+import { defineComponent, toRef, reactive, computed, onMounted, ref } from '@vue/composition-api';
 import $router from '@/router';
 import Terminal from '@/views/app/terminal.vue';
 import Unregistry from '@/views/app/unregistry.vue';
@@ -76,7 +76,7 @@ export default defineComponent({
       return !!project;
     };
 
-    onBeforeMount(async () => {
+    onMounted(async () => {
       if (!currentRoute.value.params?.projectCode) {
         // 路由中不存在项目Code, 设置projectCode并跳转
         const route = $router.resolve({

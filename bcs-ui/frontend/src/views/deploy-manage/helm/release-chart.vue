@@ -211,6 +211,7 @@
               :model-value="customArgs"
               :min-items="0"
               :unique-key="false"
+              key-required
               ref="keyValueRef">
             </KeyValue>
           </div>
@@ -503,7 +504,7 @@ export default defineComponent({
         contentRef.value.handleScollTop();
         return false;
       }
-      const isArgsValidate = keyValueRef.value?.validate();
+      const isArgsValidate = await keyValueRef.value?.validateAll();
       if (!isArgsValidate) {
         // 聚焦到helm部署参数
         activeTab.value = 'params';

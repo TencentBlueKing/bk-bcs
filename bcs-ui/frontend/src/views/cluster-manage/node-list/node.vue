@@ -184,7 +184,7 @@
         <bcs-table-column :label="$t('节点名')" min-width="120" prop="nodeName" fixed="left" show-overflow-tooltip>
           <template #default="{ row }">
             <bcs-button
-              :disabled="['INITIALIZATION', 'DELETING'].includes(row.status)"
+              :disabled="['INITIALIZATION', 'DELETING'].includes(row.status) || !row.nodeName"
               text
               v-authority="{
                 clickable: webAnnotations.perms[localClusterId]
@@ -198,7 +198,7 @@
                 }
               }"
               @click="handleGoOverview(row)">
-              <span class="bcs-ellipsis">{{ row.nodeName }}</span>
+              <span class="bcs-ellipsis">{{ row.nodeName || '--' }}</span>
             </bcs-button>
           </template>
         </bcs-table-column>

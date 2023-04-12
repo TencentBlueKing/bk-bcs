@@ -2,7 +2,7 @@
   <div class="user-token">
     <div class="user-token-header">
       <span>
-        <!-- <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i> -->
+        <i class="bcs-icon bcs-icon-arrows-left back" @click="goBack"></i>
         <span class="title">{{$t('API密钥')}}</span>
       </span>
       <a class="bk-text-button help" :href="PROJECT_CONFIG.token" target="_blank">
