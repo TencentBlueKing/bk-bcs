@@ -15,6 +15,7 @@ package release
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -109,6 +110,7 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 	if rl == nil {
 		return detail
 	}
+	rl.Args = filterArgs(rl.Args)
 	if detail == nil {
 		return rl.Transfer2DetailProto()
 	}
@@ -126,6 +128,16 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 	detail.UpdateBy = &rl.UpdateBy
 	detail.Repo = &rl.Repo
 	return detail
+}
+
+func filterArgs(args []string) []string {
+	result := make([]string, 0)
+	for _, v := range args {
+		if strings.HasPrefix(v, "--") {
+			result = append(result, v)
+		}
+	}
+	return result
 }
 
 func (g *GetReleaseDetailV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.ReleaseDetail) {
