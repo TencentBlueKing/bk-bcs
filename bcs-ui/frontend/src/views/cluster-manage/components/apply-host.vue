@@ -743,7 +743,7 @@ export default {
     async getCvmCapacity() {
       if (!this.formdata.zone_id || !this.formdata.region || !this.$INTERNAL) return;
       this.isHostLoading = true;
-      const srePrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_CONFIG?.host?.BKSRE_HOST}`;
+      const srePrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BK_SRE_HOST}`;
       const cvmCapacity = request('get', `${srePrefix}/bcsadmin/cvmcapacity`);
       this.cvmData = await cvmCapacity({
         zone_id: this.formdata.zone_id,
