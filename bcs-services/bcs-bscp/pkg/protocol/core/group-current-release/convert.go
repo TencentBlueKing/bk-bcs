@@ -23,13 +23,14 @@ func (m *GroupCurrentRelease) GroupCurrentRelease() (*table.GroupCurrentRelease,
 	}
 
 	return &table.GroupCurrentRelease{
-		ID:         m.Id,
-		GroupID:    m.GroupId,
-		AppID:      m.AppId,
-		ReleaseID:  m.ReleaseId,
-		StrategyID: m.StrategyId,
-		Edited:     m.Edited,
-		BizID:      m.BizId,
+		ID:          m.Id,
+		GroupID:     m.GroupId,
+		AppID:       m.AppId,
+		ReleaseID:   m.ReleaseId,
+		ReleaseName: m.ReleaseName,
+		StrategyID:  m.StrategyId,
+		Edited:      m.Edited,
+		BizID:       m.BizId,
 	}, nil
 }
 
@@ -58,12 +59,13 @@ func PbGroupCurrentRelease(s *table.GroupCurrentRelease) (*GroupCurrentRelease, 
 	}
 
 	return &GroupCurrentRelease{
-		Id:         s.ID,
-		GroupId:    s.GroupID,
-		AppId:      s.AppID,
-		ReleaseId:  s.ReleaseID,
-		StrategyId: s.StrategyID,
-		Edited:     s.Edited,
-		BizId:      s.BizID,
+		Id:          s.ID,
+		GroupId:     s.GroupID,
+		AppId:       s.AppID,
+		ReleaseId:   s.ReleaseID,
+		ReleaseName: s.ReleaseName,
+		StrategyId:  s.StrategyID,
+		Edited:      s.Edited,
+		BizId:       s.BizID,
 	}, nil
 }

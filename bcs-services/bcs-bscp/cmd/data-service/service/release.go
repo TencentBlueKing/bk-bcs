@@ -16,12 +16,15 @@ import (
 	"context"
 	"time"
 
+	pbstruct "github.com/golang/protobuf/ptypes/struct"
+
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/protocol/core/base"
-	"bscp.io/pkg/protocol/core/release"
-	"bscp.io/pkg/protocol/data-service"
+	pbbase "bscp.io/pkg/protocol/core/base"
+	pbrelease "bscp.io/pkg/protocol/core/release"
+	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
@@ -103,7 +106,7 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
-	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
+	ft, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
 		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -112,7 +115,7 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 	query := &types.ListReleasesOption{
 		BizID:      req.BizId,
 		AppID:      req.AppId,
-		Filter:     filter,
+		Filter:     ft,
 		Page:       req.Page.BasePage(),
 		Deprecated: req.Deprecated,
 	}
@@ -123,9 +126,112 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 		return nil, err
 	}
 
+	releases := pbrelease.PbReleases(details.Details)
+
+	gcrs, err := s.dao.GroupCurrentRelease().List(grpcKit, &types.ListGroupCurrentReleasesOption{
+		BizID: req.BizId,
+		Filter: &filter.Expression{
+			Op: filter.And,
+			Rules: []filter.RuleFactory{
+				filter.AtomRule{
+					Field: "app_id",
+					Op:    filter.Equal.Factory(),
+					Value: req.AppId,
+				},
+			},
+		},
+	})
+	if err != nil {
+		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	groups, err := s.dao.Group().ListAppGroups(grpcKit, req.BizId, req.AppId)
+	if err != nil {
+		logs.Errorf("list app groups failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	for _, release := range releases {
+		status, selected := s.queryPublishStatus(gcrs, release.Id)
+		releasedGroups := make([]*pbrelease.ReleaseStatus_ReleasedGroup, 0)
+		for _, gcr := range selected {
+			if gcr.GroupID == 0 {
+				releasedGroups = append(releasedGroups, &pbrelease.ReleaseStatus_ReleasedGroup{
+					Id:   0,
+					Name: "默认分组",
+					Mode: table.Default.String(),
+				})
+			}
+			for _, group := range groups {
+				if group.ID == gcr.GroupID {
+					oldSelector := new(pbstruct.Struct)
+					newSelector := new(pbstruct.Struct)
+					if gcr.Selector != nil {
+						s, err := gcr.Selector.MarshalPB()
+						if err != nil {
+							return nil, err
+						}
+						oldSelector = s
+					}
+					if group.Spec.Selector != nil {
+						s, err := group.Spec.Selector.MarshalPB()
+						if err != nil {
+							return nil, err
+						}
+						newSelector = s
+					}
+					releasedGroups = append(releasedGroups, &pbrelease.ReleaseStatus_ReleasedGroup{
+						Id:          group.ID,
+						Name:        group.Spec.Name,
+						Mode:        gcr.Mode.String(),
+						OldSelector: oldSelector,
+						NewSelector: newSelector,
+						Edited:      gcr.Edited,
+					})
+					break
+				}
+			}
+		}
+		release.Status = &pbrelease.ReleaseStatus{
+			PublishStatus:  status,
+			ReleasedGroups: releasedGroups,
+		}
+	}
+
 	resp := &pbds.ListReleasesResp{
 		Count:   details.Count,
-		Details: pbrelease.PbReleases(details.Details),
+		Details: releases,
 	}
 	return resp, nil
+}
+
+func (s *Service) queryPublishStatus(gcrs []*table.GroupCurrentRelease, releaseID uint32) (
+	string, []*table.GroupCurrentRelease) {
+	var includeDefault = false
+	var inRelease = make([]*table.GroupCurrentRelease, 0)
+	var outRelease = make([]*table.GroupCurrentRelease, 0)
+	for _, gcr := range gcrs {
+		if gcr.ReleaseID == releaseID {
+			inRelease = append(inRelease, gcr)
+			if gcr.GroupID == 0 {
+				includeDefault = true
+			}
+		} else {
+			outRelease = append(outRelease, gcr)
+		}
+	}
+
+	// len(inRelease) == 0: not released
+	if len(inRelease) == 0 {
+		return table.NotReleased.String(), inRelease
+		// len(inRelease) != 0 && len(outRelease) != 0: gray released
+	} else if len(outRelease) != 0 {
+		return table.PartialReleased.String(), inRelease
+		// len(inRelease) != 0 && len(outRelease) == 0 && includeDefault: full released
+	} else if includeDefault {
+		return table.FullReleased.String(), inRelease
+		// len(inRelease) != 0 && len(outRelease) == 0 && !includeDefault: gray released
+	} else {
+		return table.PartialReleased.String(), inRelease
+	}
 }

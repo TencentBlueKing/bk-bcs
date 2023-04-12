@@ -62,6 +62,7 @@ const (
 	Data_DeleteHook_FullMethodName                     = "/pbds.Data/DeleteHook"
 	Data_CreateGroup_FullMethodName                    = "/pbds.Data/CreateGroup"
 	Data_ListGroups_FullMethodName                     = "/pbds.Data/ListGroups"
+	Data_ListAppGroups_FullMethodName                  = "/pbds.Data/ListAppGroups"
 	Data_UpdateGroup_FullMethodName                    = "/pbds.Data/UpdateGroup"
 	Data_DeleteGroup_FullMethodName                    = "/pbds.Data/DeleteGroup"
 	Data_CountGroupsReleasedApps_FullMethodName        = "/pbds.Data/CountGroupsReleasedApps"
@@ -127,6 +128,7 @@ type DataClient interface {
 	// group related interface.
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
+	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// group current release related interface.
@@ -487,6 +489,15 @@ func (c *dataClient) ListGroups(ctx context.Context, in *ListGroupsReq, opts ...
 	return out, nil
 }
 
+func (c *dataClient) ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error) {
+	out := new(ListAppGroupsResp)
+	err := c.cc.Invoke(ctx, Data_ListAppGroups_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_UpdateGroup_FullMethodName, in, out, opts...)
@@ -646,6 +657,7 @@ type DataServer interface {
 	// group related interface.
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error)
 	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
+	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*base.EmptyResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*base.EmptyResp, error)
 	// group current release related interface.
@@ -779,6 +791,9 @@ func (UnimplementedDataServer) CreateGroup(context.Context, *CreateGroupReq) (*C
 }
 func (UnimplementedDataServer) ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGroups not implemented")
+}
+func (UnimplementedDataServer) ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAppGroups not implemented")
 }
 func (UnimplementedDataServer) UpdateGroup(context.Context, *UpdateGroupReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
@@ -1494,6 +1509,24 @@ func _Data_ListGroups_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListAppGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppGroupsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListAppGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListAppGroups_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListAppGroups(ctx, req.(*ListAppGroupsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateGroupReq)
 	if err := dec(in); err != nil {
@@ -1864,6 +1897,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListGroups",
 			Handler:    _Data_ListGroups_Handler,
+		},
+		{
+			MethodName: "ListAppGroups",
+			Handler:    _Data_ListAppGroups_Handler,
 		},
 		{
 			MethodName: "UpdateGroup",

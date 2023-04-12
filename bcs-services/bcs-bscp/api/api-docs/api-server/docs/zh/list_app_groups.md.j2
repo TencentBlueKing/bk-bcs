@@ -8,6 +8,7 @@
 | 参数名称     | 参数类型     | 必选   | 描述             |
 | ------------ | ------------ | ------ | ---------------- |
 | biz_id      | uint32      | 是     | 业务ID     |
+| app_id      | uint32      | 是     | 应用ID     |
 
 
 ### 响应示例
@@ -16,11 +17,12 @@
     "data": {
         "details": [
             {
-                "id": 8,
-                "name": "广州1",
-                "public": true,
-                "bind_apps": [],
-                "selector": {
+                "group_id": 2,
+                "group_name": "广州",
+                "release_id": 0,
+                "release_name": "",
+                "old_selector": {},
+                "new_selector": {
                     "labels_or": [
                         {
                             "key": "name",
@@ -38,18 +40,15 @@
                         }
                     ]
                 },
-                "released_apps_num": 0,
-                "edited": true
+                "edited": false
             },
             {
-                "id": 12,
-                "name": "深圳",
-                "public": false,
-                "bind_apps": [
-                    "alkaid-test1",
-                    "alkaid-test2"
-                ],
-                "selector": {
+                "group_id": 1,
+                "group_name": "深圳",
+                "release_id": 1,
+                "release_name": "v1",
+                "old_selector": {},
+                "new_selector": {
                     "labels_or": [
                         {
                             "key": "name",
@@ -67,7 +66,15 @@
                         }
                     ]
                 },
-                "released_apps_num": 0,
+                "edited": false
+            },
+            {
+                "group_id": 0,
+                "group_name": "默认分组",
+                "release_id": 1,
+                "release_name": "v1",
+                "old_selector": {},
+                "new_selector": {},
                 "edited": false
             }
         ]
@@ -90,14 +97,13 @@
 #### data.detail[n]
 | 参数名称     | 参数类型   | 描述                           |
 | ------------ | ---------- | ------------------------------ |
-| id           | uint32       | 分组ID  |
-| name         | string       | 分组名称 |
-| public       | bool         | 是否为公共分组 |
-| bind_apps    | []string     | 绑定的应用列表 |
-| mode         | string       | 分组枚举类型：custom,debug,default   |
-| selector     | selector     | 分组选择器   |
-| uid          | string       | debug UID  |
-| released_apps_num | uint32 | 已上线应用数量 |
+| group_id     | uint32       | 分组ID |
+| group_name   | string       | 分组名称 |
+| release_id   | uint32       | 分组当前的版本 ID |
+| release_name | string       | 分组当前的版本名称 |
+| old_selector | selector     | 当前线上分组选择器，如未上线则为空   |
+| new_selector | selector     | 即将上线的分组选择器   |
+| edited       | bool         | 分组是否编辑过（old_selector和new_selector不一致） |
 
 #### selector:
 | 参数名称     | 参数类型     | 必选   | 描述             |

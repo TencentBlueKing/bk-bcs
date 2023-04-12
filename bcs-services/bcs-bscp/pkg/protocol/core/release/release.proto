@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
 import "bscp.io/pkg/protocol/core/base/base.proto";
 
 package pbrelease;
@@ -10,8 +11,9 @@ option go_package = "bscp.io/pkg/protocol/core/release;pbrelease";
 message Release {
     uint32 id                       = 1;
     ReleaseSpec spec                = 2;
-    ReleaseAttachment attachment    = 3;
-    pbbase.CreatedRevision revision = 4;
+    ReleaseStatus status            = 3;
+    ReleaseAttachment attachment    = 4;
+    pbbase.CreatedRevision revision = 5;
 }
 
 // ReleaseSpec source resource reference: pkg/dal/table/release.go
@@ -20,6 +22,21 @@ message ReleaseSpec {
     string memo          = 2;
     bool deprecated      = 3;
     uint32 publish_num   = 4;
+}
+
+// ReleaseStatus status that not in db
+message ReleaseStatus {
+    message ReleasedGroup {
+        uint32 id                           = 1;
+        string name                         = 2;
+        string mode                         = 3;
+        google.protobuf.Struct old_selector = 4;
+        google.protobuf.Struct new_selector = 5;
+        string uid                          = 6;
+        bool   edited                       = 7;
+    }
+    string publish_status = 1;
+    repeated ReleasedGroup released_groups = 2;
 }
 
 // ReleaseAttachment source resource reference: pkg/dal/table/release.go
