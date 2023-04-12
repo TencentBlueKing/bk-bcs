@@ -147,7 +147,8 @@ func (cv *ClbValidater) validateListenerAttribute(attr *networkextensionv1.Ingre
 	}
 	if len(attr.LbPolicy) != 0 {
 		if attr.LbPolicy != "WRR" &&
-			attr.LbPolicy != "LEAST_CONN" {
+			attr.LbPolicy != "LEAST_CONN" &&
+			attr.LbPolicy != "IP_HASH" {
 			return false, fmt.Sprintf("invalid lb policy %s, available [WRR, LEAST_CONN]", attr.LbPolicy)
 		}
 	}
