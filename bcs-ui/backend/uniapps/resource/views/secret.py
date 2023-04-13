@@ -16,15 +16,18 @@ import copy
 import logging
 
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import permissions, viewsets
+from rest_framework import exceptions, permissions, viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
 from backend.bcs_web.permissions import AccessProjectPermission, ProjectEnableBCS
+from backend.components.base import ComponentAuth
 from backend.components.bcs import k8s
+from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.utils import get_cluster_type
 from backend.container_service.clusters.constants import ClusterType
 from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.cluster import ClusterPermCtx, ClusterPermission
 from backend.iam.permissions.resources.namespace import NamespaceRequest
 from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedAction, NamespaceScopedPermission
 from backend.templatesets.legacy_apps.configuration.serializers import K8sSecretCreateOrUpdateSLZ
@@ -79,6 +82,19 @@ class Secrets(viewsets.ViewSet, BaseAPI, ResourceOperate):
         is_decode = str2bool(request.GET.get('decode'))
 
         cluster_id = params['cluster_id']
+
+        # TODO 优化实现(序列化中校验)
+        cc_client = PaaSCCClient(auth=ComponentAuth(request.user.token.access_token))
+        resp = cc_client.get_cluster(project_id, cluster_id)
+        if resp['result'] == False:
+            return exceptions.ValidationError(f"获取集群信息失败，错误信息：{resp['message']}")
+
+        cluster_perm_ctx = ClusterPermCtx(
+            username=request.user.username,
+            project_id=project_id,
+            cluster_id=cluster_id,
+        )
+        ClusterPermission().can_view(cluster_perm_ctx)
 
         code, cluster_secrets = self.get_secrets_by_cluster_id(request, params, project_id, cluster_id)
         if code != ErrorCode.NoError:
