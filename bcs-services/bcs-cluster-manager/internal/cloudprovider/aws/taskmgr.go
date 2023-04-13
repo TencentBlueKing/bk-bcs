@@ -39,6 +39,7 @@ func newtask() *Task {
 
 	// import task
 	task.works[importClusterNodesTask] = tasks.ImportClusterNodesTask
+	task.works[registerClusterKubeConfigTask] = tasks.RegisterClusterKubeConfigTask
 
 	// create nodeGroup task
 	task.works[createCloudNodeGroupTask] = tasks.CreateCloudNodeGroupTask
