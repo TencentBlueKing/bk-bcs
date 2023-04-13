@@ -111,7 +111,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	group.CloudNodeGroupID = npID
 
 	// update nodegorup cloudNodeGroupID
-	err = updateNodeGroupCloudNodeGroupID(nodeGroupID, group)
+	err = cloudprovider.UpdateNodeGroupCloudNodeGroupID(nodeGroupID, group)
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudNodeGroupID[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())

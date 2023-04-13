@@ -33,7 +33,7 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 
 // ImportCluster import cluster according cloudprovider
 func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
-	// call qcloud interface to create cluster
+	// call aws interface to create cluster
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -79,7 +79,7 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovid
 	return true, nil
 }
 
-// ListOsImage list image os
+// ListOsImage get osimage list
 func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) ([]*proto.OsImage, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

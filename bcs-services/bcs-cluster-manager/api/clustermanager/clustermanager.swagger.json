@@ -7240,6 +7240,11 @@
           "$ref": "#/definitions/clustermanagerGroupExtraInfo",
           "description": "节点池创建extra信息, 主要是针对云的个性化参数",
           "title": "extra"
+        },
+        "nodeRole": {
+          "type": "string",
+          "description": "创建eks节点池时指定的iam角色名称",
+          "title": "nodeRole"
         }
       },
       "description": "创建节点组请求",
@@ -8893,7 +8898,7 @@
         },
         "instanceChargeType": {
           "type": "string",
-          "description": "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。如不设置，BCS暂时默认提供包年包月的类型",
+          "description": "机型计费模型，tencentCloud包含POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。aws包含ON_DEMAND按需付费,SPOT竞价付费。如不设置，BCS暂时默认提供包年包月的类型",
           "title": "instanceChargeType"
         },
         "systemDisk": {
@@ -9165,6 +9170,11 @@
           "type": "string",
           "description": "经过 Base64 编码后的自定义数据，最大长度不超过16KB。",
           "title": "userData"
+        },
+        "sshKey": {
+          "type": "string",
+          "description": "用于ssh登录实例的密钥或密钥名称。",
+          "title": "sshKey"
         }
       },
       "title": "LaunchConfigure template for scaling node"
@@ -10534,6 +10544,11 @@
           "$ref": "#/definitions/clustermanagerCloudArea",
           "description": "节点所在云区域信息(用户不指定, 则使用默认云区域)",
           "title": "area"
+        },
+        "nodeRole": {
+          "type": "string",
+          "description": "创建eks节点池时指定的iam角色名称",
+          "title": "nodeRole"
         }
       },
       "description": "节点组，对蓝鲸、腾讯云、AWS弹性伸缩能力封装",
