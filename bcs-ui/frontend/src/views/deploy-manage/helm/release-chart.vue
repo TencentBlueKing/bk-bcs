@@ -62,6 +62,7 @@
             <ClusterSelect
               :disabled="isEdit"
               searchable
+              cluster-type="all"
               v-model="clusterID">
             </ClusterSelect>
           </bk-form-item>
