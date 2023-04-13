@@ -300,7 +300,7 @@ export default defineComponent({
         .icon {
             display: inline-block;
             font-size: 14px;
-            color: #979ba5;
+            color: #C4C6CC;
             display: flex;
             align-items: center;
             justify-content: center;

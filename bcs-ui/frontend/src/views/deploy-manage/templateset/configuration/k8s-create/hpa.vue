@@ -19,9 +19,6 @@
                   {{$t('HPA (Horizontal Pod Autoscaler) 是k8s自动扩缩容服务，利用HPA，k8s能够根据监测到的 cpu, memory 利用率, 自动的扩缩容 Deployment 中 Pod 的数量')}}，
                   <a v-if="$INTERNAL" class="bk-text-button" :href="PROJECT_CONFIG.k8sHpa" target="_blank">{{$t('详情查看文档')}}</a>
                 </div>
-                <div class="mt5" v-if="$INTERNAL">
-                  {{$t('注意：功能灰度测试中，请联系')}}<a :href="PROJECT_CONFIG.contact" class="bk-text-button">【{{$t('蓝鲸容器助手')}}】</a>{{$t('添加白名单')}}
-                </div>
               </div>
             </bk-alert>
             <template v-if="!HPAs.length">

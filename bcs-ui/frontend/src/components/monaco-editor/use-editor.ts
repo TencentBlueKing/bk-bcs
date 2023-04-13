@@ -63,6 +63,10 @@ export default function useEditor(config?: Partial<IConfig>) {
       },
       readOnly: readonly,
       automaticLayout: true,
+      scrollbar: {
+        alwaysConsumeMouseWheel: !readonly,
+      },
+      contextmenu: !readonly,
       ...options,
     };
     if (diffEditor) {

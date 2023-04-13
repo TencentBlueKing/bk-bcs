@@ -190,24 +190,6 @@ const store = new Vuex.Store({
   },
   actions: {
     /**
-     * 获取用户信息
-     *
-     * @param {Object} context store 上下文对象
-     * @param {Object} params 请求参数
-     * @param {Object} config 请求的配置
-     *
-     * @return {Promise} promise 对象
-     */
-    userInfo(context, params, config = { cancelWhenRouteChange: false }) {
-      // return http.get(`/app/index?invoke=userInfo`, {}, config)
-      return http.get(`${DEVOPS_BCS_API_URL}/api/user/`, params, config).then((response) => {
-        const userData = response.data || {};
-        context.commit('updateUser', userData);
-        return userData;
-      });
-    },
-
-    /**
      * 获取项目信息
      *
      * @param {Object} context store 上下文对象

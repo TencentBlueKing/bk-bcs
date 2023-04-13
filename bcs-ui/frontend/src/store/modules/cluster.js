@@ -32,6 +32,7 @@ import {
   fetchClusterList,
   fetchNodePodsData,
 } from '@/api/base';
+import { userInfo } from '@/api/modules/user-manager';
 import { projectBusiness } from '@/api/modules/project';
 
 export default {
@@ -76,12 +77,15 @@ export default {
          * @return {Promise} promise 对象
          */
     async getClusterList(context, projectID) {
+      let userData = {};
       if (!context.rootState.user?.username) {
+        // 修复username偶尔拿不到问题
         console.warn('failed to get rootState username');
+        userData = await userInfo().catch(() => ({}));
       }
       const res = await fetchClusterList({
         projectID,
-        operator: context.rootState.user?.username,
+        operator: context.rootState.user?.username || userData.username,
       }, {
         needRes: true,
         cancelWhenRouteChange: false,

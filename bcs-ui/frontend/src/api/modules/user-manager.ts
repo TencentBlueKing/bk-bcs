@@ -7,6 +7,8 @@ const request = createRequest({
 // auth
 export const userPerms = request('post', '/api/iam/user_perms/');
 export const userPermsByAction = request('post', '/api/iam/user_perms/actions/$actionId/');
+// user
+export const userInfo = request('get', '/api/user/');
 
 const request2 = createRequest({
   domain: window.DEVOPS_BCS_API_URL,

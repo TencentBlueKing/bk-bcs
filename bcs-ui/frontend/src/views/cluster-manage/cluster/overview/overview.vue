@@ -85,7 +85,7 @@
           <span class="text-[14px] font-bold">
             {{ $t('CPU装箱率') }}
             <bk-popover theme="light">
-              <span class="text-[#979ba5] relative top-[-1px]">
+              <span class="text-[#C4C6CC] relative top-[-1px]">
                 <i class="bcs-icon bcs-icon-info-circle-shape"></i>
               </span>
               <template #content>
@@ -128,7 +128,7 @@
           <span class="text-[14px] font-bold">
             {{ $t('内存装箱率') }}
             <bk-popover theme="light">
-              <span class="text-[#979ba5] relative top-[-1px]">
+              <span class="text-[#C4C6CC] relative top-[-1px]">
                 <i class="bcs-icon bcs-icon-info-circle-shape"></i>
               </span>
               <template #content>

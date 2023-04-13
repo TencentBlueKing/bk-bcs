@@ -11,7 +11,8 @@
         </ClusterSelect>
         <NamespaceSelect
           :cluster-id="params.clusterId"
-          clearable
+          :clearable="false"
+          required
           v-model="params.namespace"
           class="w-[180px] ml-[5px]">
         </NamespaceSelect>

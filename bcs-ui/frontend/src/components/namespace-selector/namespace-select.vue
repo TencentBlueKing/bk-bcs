@@ -49,9 +49,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    // 必须存在namespace
+    required: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props, ctx) {
-    const { clusterId, value } = toRefs(props);
+    const { clusterId, value, required } = toRefs(props);
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
     watch(clusterId,  () => {
@@ -71,7 +76,7 @@ export default defineComponent({
         clusterId: clusterId.value,
       });
       if (!namespaceList.value.find(item => item.name === value.value)) {
-        handleNamespaceChange('');
+        handleNamespaceChange(required.value ? namespaceList.value[0]?.name : '');
       } else {
         $store.commit('updateCurNamespace', value.value);
       }
