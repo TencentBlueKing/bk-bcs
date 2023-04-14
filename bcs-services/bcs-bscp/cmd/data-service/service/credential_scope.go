@@ -11,7 +11,7 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 )
 
-// CreateCredentialScope
+// CreateCredentialScope create credential scope
 func (s *Service) CreateCredentialScope(ctx context.Context, req *pbds.CreateCredentialScopeReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -40,7 +40,7 @@ func (s *Service) CreateCredentialScope(ctx context.Context, req *pbds.CreateCre
 	return resp, nil
 }
 
-// ListCredentialScopes
+// ListCredentialScopes  get credential scopes
 func (s *Service) ListCredentialScopes(ctx context.Context, req *pbds.ListCredentialScopesReq) (*pbds.ListCredentialScopesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -62,7 +62,7 @@ func (s *Service) ListCredentialScopes(ctx context.Context, req *pbds.ListCreden
 	return resp, nil
 }
 
-// DeleteCredentialScopes
+// DeleteCredentialScopes delete credential scopes
 func (s *Service) DeleteCredentialScopes(ctx context.Context, req *pbds.DeleteCredentialScopesReq) (*pbds.DeleteCredentialScopesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 

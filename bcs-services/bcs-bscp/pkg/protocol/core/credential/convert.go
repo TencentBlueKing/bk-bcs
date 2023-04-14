@@ -31,7 +31,7 @@ func (m *CredentialAttachment) CredentialAttachment() *table.CredentialAttachmen
 	}
 }
 
-// PbCredentials
+// PbCredentials Credentials
 func PbCredentials(s []*table.Credential) ([]*CredentialList, error) {
 	if s == nil {
 		return make([]*CredentialList, 0), nil
@@ -68,7 +68,7 @@ func PbCredential(s *table.Credential) (*CredentialList, error) {
 	}, nil
 }
 
-// PbCredentialSpec
+// PbCredentialSpec convert table CredentialSpec to pb CredentialSpec
 func PbCredentialSpec(spec *table.CredentialSpec) (*CredentialSpec, error) {
 	if spec == nil {
 		return nil, nil
@@ -83,7 +83,7 @@ func PbCredentialSpec(spec *table.CredentialSpec) (*CredentialSpec, error) {
 	}, nil
 }
 
-// PbCredentialAttachment
+// PbCredentialAttachment convert table CredentialAttachment to pb CredentialAttachment
 func PbCredentialAttachment(at *table.CredentialAttachment) *CredentialAttachment {
 	if at == nil {
 		return nil
@@ -94,6 +94,7 @@ func PbCredentialAttachment(at *table.CredentialAttachment) *CredentialAttachmen
 	}
 }
 
+// PbCredentialRevision convert table CredentialRevision to pb CredentialRevision
 func PbCredentialRevision(r *table.CredentialRevision) *CredentialRevision {
 	if r == nil {
 		return nil

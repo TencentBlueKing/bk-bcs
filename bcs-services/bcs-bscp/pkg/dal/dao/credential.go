@@ -19,13 +19,13 @@ import (
 
 // Credential supplies all the Credential related operations.
 type Credential interface {
-	// Create one Credential instance.
+	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
-	// List
+	// List get credentials
 	List(kit *kit.Kit, opts *types.ListCredentialsOption) (*types.ListCredentialDetails, error)
-	// Delete
+	// Delete delete credential
 	Delete(kit *kit.Kit, strategy *table.Credential) error
-	// Update
+	// Update update credential
 	Update(kit *kit.Kit, credential *table.Credential) error
 }
 
@@ -38,7 +38,7 @@ type credentialDao struct {
 	auditDao AuditDao
 }
 
-// Create
+// Create create credential
 func (dao *credentialDao) Create(kit *kit.Kit, c *table.Credential) (uint32, error) {
 
 	if c == nil {
@@ -84,7 +84,7 @@ func (dao *credentialDao) Create(kit *kit.Kit, c *table.Credential) (uint32, err
 	return id, nil
 }
 
-// List
+// List get credentials
 func (dao *credentialDao) List(kit *kit.Kit, opts *types.ListCredentialsOption) (*types.ListCredentialDetails, error) {
 	if opts == nil {
 		return nil, errf.New(errf.InvalidParameter, "list credential options null")
@@ -134,7 +134,7 @@ func (dao *credentialDao) List(kit *kit.Kit, opts *types.ListCredentialsOption) 
 	return &types.ListCredentialDetails{Count: count, Details: list}, nil
 }
 
-// Delete
+// Delete delete credential
 func (dao *credentialDao) Delete(kit *kit.Kit, g *table.Credential) error {
 	if g == nil {
 		return errf.New(errf.InvalidParameter, "credential is nil")
@@ -173,7 +173,7 @@ func (dao *credentialDao) Delete(kit *kit.Kit, g *table.Credential) error {
 	return nil
 }
 
-// Update
+// Update update credential
 func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	if g == nil {
 		return errf.New(errf.InvalidParameter, "credential is nil")

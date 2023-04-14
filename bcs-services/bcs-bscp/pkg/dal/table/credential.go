@@ -26,7 +26,7 @@ type Credential struct {
 	Revision   *CredentialRevision   `db:"revision" json:"revision"`
 }
 
-// TableName
+// TableName  Credentials
 func (s Credential) TableName() Name {
 	return CredentialTable
 }
@@ -153,6 +153,7 @@ var CredentialRevisionColumnDescriptor = ColumnDescriptors{
 	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
 }
 
+// CredentialRevision credential revision
 type CredentialRevision struct {
 	Creator   string    `db:"creator" json:"creator"`
 	Reviser   string    `db:"reviser" json:"reviser"`

@@ -14,7 +14,7 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// CreateCredential
+// CreateCredential Create Credential
 func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredentialReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -46,7 +46,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredenti
 
 }
 
-// ListCredentials
+// ListCredentials get credentials
 func (s *Service) ListCredentials(ctx context.Context, req *pbds.ListCredentialReq) (*pbds.ListCredentialResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -80,7 +80,7 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbds.ListCredentialR
 	return resp, nil
 }
 
-// DeleteCredential
+// DeleteCredential delete credential
 func (s *Service) DeleteCredential(ctx context.Context, req *pbds.DeleteCredentialReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -108,7 +108,7 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbds.DeleteCredenti
 	return new(pbbase.EmptyResp), nil
 }
 
-// UpdateCredential
+// UpdateCredential update credential
 func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredentialReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 

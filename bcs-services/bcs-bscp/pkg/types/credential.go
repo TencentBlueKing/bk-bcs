@@ -34,6 +34,7 @@ func (opt *ListCredentialsOption) Validate(po *PageOption) error {
 	return nil
 }
 
+// ListCredentialDetails return credential details
 type ListCredentialDetails struct {
 	Count   uint32              `json:"count"`
 	Details []*table.Credential `json:"details"`

@@ -78,7 +78,7 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 	return resp, nil
 }
 
-// ListCredentials
+// ListCredentials get Credentials
 func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentialsReq) (*pbcs.ListCredentialsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListCredentialsResp)
@@ -139,7 +139,7 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 	return resp, nil
 }
 
-// DeleteCredential
+// DeleteCredential delete Credential
 func (s *Service) DeleteCredential(ctx context.Context, req *pbcs.DeleteCredentialsReq) (*pbcs.DeleteCredentialsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteCredentialsResp)
@@ -166,7 +166,7 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbcs.DeleteCredenti
 	return resp, nil
 }
 
-// UpdateCredential
+// UpdateCredential update credential
 func (s *Service) UpdateCredential(ctx context.Context, req *pbcs.UpdateCredentialsReq) (*pbcs.UpdateCredentialsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateCredentialsResp)

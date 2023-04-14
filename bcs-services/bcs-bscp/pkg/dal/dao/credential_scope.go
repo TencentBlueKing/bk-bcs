@@ -19,10 +19,11 @@ import (
 
 // Credential supplies all the Credential related operations.
 type CredentialScope interface {
+	// Create create credential scope
 	Create(kit *kit.Kit, credential *table.CredentialScope) (uint32, error)
-
+	// Get get credential scopes
 	Get(kit *kit.Kit, credentialId, bizId uint32) (*types.ListCredentialScopeDetails, error)
-
+	// Delete delete credential scope
 	Delete(kit *kit.Kit, strategy *table.CredentialScope) error
 }
 
@@ -35,7 +36,7 @@ type credentialScopeDao struct {
 	auditDao AuditDao
 }
 
-// Create
+// Create create credential scope
 func (dao *credentialScopeDao) Create(kit *kit.Kit, c *table.CredentialScope) (uint32, error) {
 
 	if c == nil {
@@ -82,6 +83,7 @@ func (dao *credentialScopeDao) Create(kit *kit.Kit, c *table.CredentialScope) (u
 	return id, nil
 }
 
+// Get get credential scope
 func (dao *credentialScopeDao) Get(kit *kit.Kit, credentialId, bizId uint32) (*types.ListCredentialScopeDetails, error) {
 	if credentialId == 0 {
 		return nil, errf.New(errf.InvalidParameter, "credential scope credential id null")
@@ -132,6 +134,7 @@ func (dao *credentialScopeDao) Get(kit *kit.Kit, credentialId, bizId uint32) (*t
 	return &types.ListCredentialScopeDetails{Count: count, Details: list}, nil
 }
 
+// Delete delete credential scope
 func (dao *credentialScopeDao) Delete(kit *kit.Kit, g *table.CredentialScope) error {
 	if g == nil {
 		return errf.New(errf.InvalidParameter, "credential scope is nil")

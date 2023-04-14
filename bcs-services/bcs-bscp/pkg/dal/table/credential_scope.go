@@ -9,6 +9,7 @@ import (
 // CredentialColumns defines credential's columns
 var CredentialScopeColumns = mergeColumns(CredentialScopeColumnDescriptor)
 
+// CredentialScopeColumnDescriptor is mergeColumnDescriptors
 var CredentialScopeColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
 	mergeColumnDescriptors("spec", CredentialScopeSpecColumnDescriptor),
@@ -54,16 +55,20 @@ func (s CredentialScope) ValidateCreate() error {
 	return nil
 }
 
+// CredentialScopeSpecColumns defines credential scope's columns
 var CredentialScopeSpecColumns = mergeColumns(CredentialScopeSpecColumnDescriptor)
 
+// CredentialScopeSpecColumnDescriptor defines credential scope's descriptor
 var CredentialScopeSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "credential_scope", NamedC: "credential_scope", Type: enumor.String},
 }
 
+// CredentialScopeSpec defines credential scope's Spec
 type CredentialScopeSpec struct {
 	CredentialScope string `db:"credential_scope" json:"credential_scope"`
 }
 
+// CredentialScopeAttachmentColumnDescriptor defines credential scope's ColumnDescriptors
 var CredentialScopeAttachmentColumnDescriptor = ColumnDescriptors{
 	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
 	{Column: "credential_id", NamedC: "credential_id", Type: enumor.Numeric},
@@ -74,6 +79,7 @@ type CredentialScopeAttachment struct {
 	CredentialId uint32 `db:"credential_id" json:"credential_id"`
 }
 
+// ValidateDelete credential scope validate
 func (s CredentialScope) ValidateDelete() error {
 	if s.ID <= 0 {
 		return errors.New("credential id should be set")

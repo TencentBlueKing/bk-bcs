@@ -48,15 +48,15 @@ const (
 
 // AuditResourceTypeEnums resource type map.
 var AuditResourceTypeEnums = map[AuditResourceType]bool{
-	App:           true,
-	ConfigItem:    true,
-	Commit:        true,
-	Content:       true,
-	Release:       true,
-	StrategySet:   true,
-	Strategy:      true,
-	Hook:          true,
-	Group:         true,
+	App:             true,
+	ConfigItem:      true,
+	Commit:          true,
+	Content:         true,
+	Release:         true,
+	StrategySet:     true,
+	Strategy:        true,
+	Hook:            true,
+	Group:           true,
 	Credential:      true,
 	CredentialScope: true,
 }

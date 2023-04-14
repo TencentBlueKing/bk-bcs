@@ -880,7 +880,7 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 	}
 }
 
-//
+// Credential credential encryption algorithm and master key
 type Credential struct {
 	MasterKey           string `yaml:"master_key"`
 	EncryptionAlgorithm string `yaml:"encryption_algorithm"`

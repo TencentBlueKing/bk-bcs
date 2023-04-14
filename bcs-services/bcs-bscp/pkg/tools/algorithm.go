@@ -15,7 +15,7 @@ var (
 	DES = "des"
 )
 
-// CreateCredential
+// CreateCredential create credential
 func CreateCredential(bizId uint32, masterKey, encryptionAlgorithm string) (string, error) {
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
@@ -84,14 +84,14 @@ func DesDecryptFromBase(crypted, key []byte) ([]byte, error) {
 	return out, nil
 }
 
-// PKCS7Padding
+// PKCS7Padding PKCS7Padding
 func PKCS7Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
 }
 
-// PKCS7UnPadding
+// PKCS7UnPadding PKCS7UnPadding
 func PKCS7UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])

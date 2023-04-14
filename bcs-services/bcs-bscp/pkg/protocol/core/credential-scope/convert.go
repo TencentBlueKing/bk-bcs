@@ -17,7 +17,7 @@ func (m *CredentialScopeAttachment) CredentialAttachment() *table.CredentialScop
 	}
 }
 
-// PbCredentialScopes
+// PbCredentialScopes convert pb CredentialScope to table CredentialScope
 func PbCredentialScopes(s []*table.CredentialScope) ([]*CredentialScopeList, error) {
 	if s == nil {
 		return make([]*CredentialScopeList, 0), nil
@@ -54,7 +54,7 @@ func PbCredentialScope(s *table.CredentialScope) (*CredentialScopeList, error) {
 	}, nil
 }
 
-// PbCredentialScopeSpec
+// PbCredentialScopeSpec convert table CredentialScopeSpec to pb CredentialScopeSpec
 func PbCredentialScopeSpec(spec *table.CredentialScopeSpec) (*CredentialScopeSpec, error) {
 	if spec == nil {
 		return nil, nil
@@ -65,7 +65,7 @@ func PbCredentialScopeSpec(spec *table.CredentialScopeSpec) (*CredentialScopeSpe
 	}, nil
 }
 
-// PbCredentialScopeAttachment
+// PbCredentialScopeAttachment convert table CredentialScopeAttachment to pb CredentialScopeAttachment
 func PbCredentialScopeAttachment(at *table.CredentialScopeAttachment) *CredentialScopeAttachment {
 	if at == nil {
 		return nil

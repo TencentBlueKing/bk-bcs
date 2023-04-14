@@ -12,7 +12,7 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 )
 
-// ListCredentialScopes
+// ListCredentialScopes get credential scopes
 func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCredentialScopesReq) (*pbcs.ListCredentialScopesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListCredentialScopesResp)
@@ -42,7 +42,7 @@ func (s *Service) ListCredentialScopes(ctx context.Context, req *pbcs.ListCreden
 
 }
 
-// UpdateCredentialScope
+// UpdateCredentialScope  update credential scope
 func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCredentialScopeReq) (*pbcs.UpdateCredentialScopeResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateCredentialScopeResp)
