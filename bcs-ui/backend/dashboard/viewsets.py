@@ -14,7 +14,6 @@ specific language governing permissions and limitations under the License.
 """
 from django.utils.translation import ugettext_lazy as _
 from kubernetes.dynamic.exceptions import DynamicApiError
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
@@ -39,6 +38,7 @@ from backend.resources.constants import NATIVE_CLUSTER_SCOPE_RES_KINDS
 from backend.utils.basic import getitems
 from backend.utils.response import BKAPIResponse
 from backend.utils.url_slug import KUBE_NAME_REGEX
+from backend.utils.error_codes import error_codes
 
 from .constants import DashboardAction
 from .exceptions import ActionUnsupported
@@ -52,7 +52,7 @@ class ListAndRetrieveMixin:
         cc_client = PaaSCCClient(auth=ComponentAuth(request.user.token.access_token))
         resp = cc_client.get_cluster(project_id, cluster_id)
         if resp['result'] is False:
-            return ValidationError(f"获取集群信息失败，错误信息：{resp['message']}")
+            raise error_codes.APIError((f"获取集群信息失败，错误信息：{resp['message']}"))
 
         self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         params = self.params_validate(ListResourceSLZ)
@@ -67,7 +67,7 @@ class ListAndRetrieveMixin:
         cc_client = PaaSCCClient(auth=ComponentAuth(request.user.token.access_token))
         resp = cc_client.get_cluster(project_id, cluster_id)
         if resp['result'] is False:
-            return ValidationError(f"获取集群信息失败，错误信息：{resp['message']}")
+            raise error_codes.APIError((f"获取集群信息失败，错误信息：{resp['message']}"))
 
         self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         client = self.resource_client(request.ctx_cluster)

@@ -268,7 +268,7 @@ class Services(viewsets.ViewSet, BaseAPI):
         cc_client = PaaSCCClient(auth=ComponentAuth(request.user.token.access_token))
         resp = cc_client.get_cluster(project_id, cluster_id)
         if resp['result'] == False:
-            return exceptions.ValidationError(f"获取集群信息失败，错误信息：{resp['message']}")
+            return Response({'code': resp['code'], 'message': resp['message']})
 
         cluster_perm_ctx = ClusterPermCtx(
             username=request.user.username,
