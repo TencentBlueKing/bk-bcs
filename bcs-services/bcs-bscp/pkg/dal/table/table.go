@@ -221,6 +221,8 @@ func (n Name) Validate() error {
 	case IDGeneratorTable:
 	case AuditTable:
 	case ResourceLockTable:
+	case CredentialTable:
+	case CredentialScopeTable:
 	default:
 		return fmt.Errorf("unknown table name: %s", n)
 	}
@@ -271,6 +273,10 @@ const (
 	AuditTable Name = "audits"
 	// ResourceLockTable is lock table's name
 	ResourceLockTable Name = "resource_locks"
+	// CredentialTable is credential table's name
+	CredentialTable Name = "Credentials"
+	// CredentialScopeTable is credential_scope table's name
+	CredentialScopeTable Name = "credential_scopes"
 )
 
 // RevisionColumns defines all the Revision table's columns.

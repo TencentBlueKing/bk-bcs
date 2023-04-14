@@ -42,20 +42,26 @@ const (
 	Group AuditResourceType = "group"
 	// GroupCategory 分组分类资源
 	GroupCategory AuditResourceType = "group_category"
+	// Credential 凭据资源
+	Credential AuditResourceType = "credential"
+	// CredentialScope 凭据规则资源
+	CredentialScope AuditResourceType = "credential_scope"
 )
 
 // AuditResourceTypeEnums resource type map.
 var AuditResourceTypeEnums = map[AuditResourceType]bool{
-	App:           true,
-	ConfigItem:    true,
-	Commit:        true,
-	Content:       true,
-	Release:       true,
-	StrategySet:   true,
-	Strategy:      true,
-	Hook:          true,
-	Group:         true,
-	GroupCategory: true,
+	App:             true,
+	ConfigItem:      true,
+	Commit:          true,
+	Content:         true,
+	Release:         true,
+	StrategySet:     true,
+	Strategy:        true,
+	Hook:            true,
+	Group:           true,
+	GroupCategory:   true,
+	Credential:      true,
+	CredentialScope: true,
 }
 
 // Exist judge enum value exist.

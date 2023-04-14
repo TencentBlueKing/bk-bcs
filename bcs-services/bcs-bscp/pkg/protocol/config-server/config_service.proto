@@ -13,7 +13,8 @@ import "bscp.io/pkg/protocol/core/hook/hook.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/group-category/group_category.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
-import "bscp.io/pkg/protocol/core/token/token.proto";
+import "bscp.io/pkg/protocol/core/credential/credential.proto";
+import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -301,91 +302,104 @@ service Config {
         };
     }
 
-    rpc CreateToken(CreateTokenReq) returns (CreateTokenResp) {
+    rpc CreateCredentials(CreateCredentialReq) returns (CreateCredentialResp) {
         option (google.api.http) = {
-            post: "/api/v1/config/token/biz_id/{biz_id}"
+            post: "/api/v1/config/biz_id/{biz_id}/credentials"
             body: "*"
         };
     }
-    rpc ListTokens(ListTokensReq) returns (ListTokensResp) {
+    rpc ListCredentials(ListCredentialsReq) returns (ListCredentialsResp) {
         option (google.api.http) = {
-            get: "/api/v1/config/token/list/biz_id/{biz_id}"
+            get: "/api/v1/config/biz_id/{biz_id}/credentials/list"
         };
     }
-    rpc UpdateToken(UpdateTokensReq) returns (UpdateTokensResp) {
+    rpc DeleteCredential(DeleteCredentialsReq) returns (DeleteCredentialsResp) {
         option (google.api.http) = {
-            put: "/api/v1/config/token/biz_id/{biz_id}"
+            delete: "/api/v1/config/biz_id/{biz_id}/credential"
+        };
+    }
+    rpc UpdateCredential(UpdateCredentialsReq) returns (UpdateCredentialsResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/biz_id/{biz_id}/credential"
             body: "*"
         };
     }
-    rpc DeleteToken(DeleteTokensReq) returns (DeleteTokensResp) {
+
+    rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {
         option (google.api.http) = {
-            delete: "/api/v1/config/token/biz_id/{biz_id}"
+            get: "/api/v1/config/biz_id/{biz_id}/credential/scopes"
         };
     }
-    rpc EnableToken(EnableTokensReq) returns (EnableTokensResp) {
+    rpc UpdateCredentialScope(UpdateCredentialScopeReq) returns (UpdateCredentialScopeResp) {
         option (google.api.http) = {
-            put: "/api/v1/config/token/enable/biz_id/{biz_id}"
-            body: "*"
-        };
-    }
-    rpc ListMatchRuleToken(ListMatchRuleTokensReq) returns (ListMatchRuleTokensResp) {
-        option (google.api.http) = {
-            post: "/api/v1/config/token/rule/biz_id/{biz_id}"
+            put: "/api/v1/config/biz_id/{biz_id}/credential/scope"
             body: "*"
         };
     }
 }
 
-message ListMatchRuleTokensReq {
-    uint32 id =1;
-    uint32 biz_id =2;
-    repeated pbtoken.TokenRule rule = 3;
+message UpdateCredentialScopeReq {
+    repeated uint32 del_id    = 1;
+    repeated string add_scope = 2;
+    uint32   biz_id           = 3;
+    uint32   credential_id    = 4;
 }
 
-message ListMatchRuleTokensResp{
-    repeated pbtoken.ListMatchRule match_rule= 1;
+message UpdateCredentialScopeResp{}
+
+message ListCredentialScopesReq {
+    uint32 biz_id        = 1;
+    uint32 credential_id = 2;
 }
 
-message EnableTokensReq{
-    uint32 id =1;
-    uint32 biz_id =2;
-    uint32 enable =3;
+message ListCredentialScopesResp{
+    uint32   count                             = 1;
+    repeated pbcrs.CredentialScopeList details = 2;
 }
 
-message EnableTokensResp {}
-
-message DeleteTokensReq{
-    uint32 id =1;
-    uint32 biz_id =2;
+message EnableCredentialsReq{
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    bool   enable = 3;
 }
 
-message DeleteTokensResp {}
-message UpdateTokensReq {
-    uint32 id =1;
-    uint32 biz_id =2;
-    repeated pbtoken.TokenRule rule = 3;
+message EnableCredentialsResp {}
+
+message DeleteCredentialsReq{
+    uint32 id     = 1;
+    uint32 biz_id = 2;
 }
 
-message UpdateTokensResp{}
-
-message ListTokensReq {
-    uint32  biz_id    = 1;
+message DeleteCredentialsResp {}
+message UpdateCredentialsReq {
+    uint32  id     = 1;
+    uint32  biz_id = 2;
+    bool    enable = 3;
+    string  memo   = 4;
 }
 
-message ListTokensResp{
-    uint32 count = 1;
-    repeated pbtoken.TokenList details = 2;
+message UpdateCredentialsResp{}
+
+message ListCredentialsReq {
+    uint32 biz_id     = 1;
+    string searchKey  = 2;
+    uint32 start      = 3;
+    uint32 limit      = 4;
 }
 
-message CreateTokenReq {
-    string memo = 1;
-    uint32  biz_id    = 2;
-    repeated pbtoken.TokenRule rule = 3;
+message ListCredentialsResp{
+    uint32                               count   = 1;
+    repeated pbcredential.CredentialList details = 2;
+}
+
+message CreateCredentialReq {
+    string   memo                   = 1;
+    uint32   biz_id                 = 2;
+    repeated string scope           = 3;
 
 }
 
-message CreateTokenResp {
+message CreateCredentialResp {
     uint32 id = 1;
 }
 

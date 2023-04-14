@@ -13,7 +13,8 @@ all:
 	@cd hook && make
 	@cd group && make
 	@cd group-category && make
-	@cd token && make
+	@cd credential && make
+	@cd credential-scope && make
 
 clean:
 	@cd base && make clean
@@ -30,4 +31,5 @@ clean:
 	@cd hook && make
 	@cd group && make clean
 	@cd group-category && make clean
-	@cd token && make clean
+	@cd credential && make clean
+	@cd credential-scope && make clean

@@ -1113,3 +1113,147 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
+  api/v1/config/biz_id/{biz_id}/credentials:
+    post:
+      operationId: create_credential
+      description: 创建凭据
+      tags:
+        - credential管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: api/v1/config/biz_id/{biz_id}/credentials
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz_id/{biz_id}/credentials/list:
+    get:
+      operationId: list_credential
+      description: 凭据列表
+      tags:
+        - credential管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz_id/{biz_id}/credentials/list
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz_id/{biz_id}/credential:
+    delete:
+      operationId: delete_credential
+      description: 删除凭据
+      tags:
+        - credential管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/config/biz_id/{biz_id}/credential
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz_id/{biz_id}/credential:
+    put:
+      operationId: update_credential
+      description: 更新凭据
+      tags:
+        - credential管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz_id/{biz_id}/credential
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz_id/{biz_id}/credential/scopes:
+    get:
+      operationId: list_credential_scope
+      description: 获取凭据规则
+      tags:
+        - credential管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz_id/{biz_id}/credential/scopes
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz_id/{biz_id}/credential/scope:
+    put:
+      operationId: put_credential_scope
+      description: 更新凭据规则
+      tags:
+        - credential管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz_id/{biz_id}/credential/scope
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]

@@ -881,20 +881,20 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 }
 
 //
-type Token struct {
-	MasterKey string `yaml:"master_key"`
-	Ea        string `yaml:"ea"`
+type Credential struct {
+	MasterKey           string `yaml:"master_key"`
+	EncryptionAlgorithm string `yaml:"encryption_algorithm"`
 }
 
-// validate network options
-func (t Token) validate() error {
+// validate credential options
+func (c Credential) validate() error {
 
-	if len(t.MasterKey) == 0 {
-		return errors.New("token master key is not set")
+	if len(c.MasterKey) == 0 {
+		return errors.New("credential master key is not set")
 	}
 
-	if len(t.Ea) == 0 {
-		return errors.New("token Encryption Algorithm is not set")
+	if len(c.EncryptionAlgorithm) == 0 {
+		return errors.New("credential Encryption Algorithm is not set")
 	}
 
 	return nil

@@ -77,6 +77,10 @@ service:
       # the password to decrypt the certificate.
       password:
 
+credential:
+  master_key: "XXXXXXXXXXXXXXXXXXXXXXXX"
+  encryption_algorithm: "des"
+
 # defines log's related configuration
 log:
   # log storage directory.

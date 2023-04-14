@@ -19,9 +19,6 @@ network:
     # the password to decrypt the certificate.
     password:
 
-token:
-  master_key: "jndsndkandknakd"
-  ea: "jdmsaa"
 
 # 登入鉴权
 loginAuth:
