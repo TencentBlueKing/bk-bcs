@@ -56,11 +56,19 @@ const router = new VueRouter({
       },
     },
     {
+      path: `${SITE_URL}/:projectCode`,
+      redirect: {
+        name: 'dashboardHome',
+      },
+    },
+    {
       path: `${SITE_URL}/projects/:projectCode`,
-      // name: 'entry',
       components: {
         default: Entry,
         sideMenu: DefaultSideMenu,
+      },
+      redirect: {
+        name: 'clusterMain',
       },
       children: [
         ...ClusterManage,
