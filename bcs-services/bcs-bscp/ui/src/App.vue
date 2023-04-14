@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useUserStore } from './store/user'
+import { useGlobalStore } from './store/global'
 import isCrossOriginIFrame from './utils/is-cross-origin-iframe'
 
 import Header from "./components/head.vue";
+import PermissionDialog from './components/permission/apply-dialog.vue'
 
-const store = useUserStore()
-const { getUserInfo } = store
+const userStore = useUserStore()
+const globalStore = useGlobalStore()
+const { getUserInfo } = userStore
+const { showApplyPermDialog } = storeToRefs(globalStore)
 
-watch(() => store.showLoginModal, (val) => {
+watch(() => userStore.showLoginModal, (val) => {
   if (val) {
     const topWindow = isCrossOriginIFrame() ? window : window.top
     // @ts-ignore
@@ -28,6 +33,7 @@ onMounted(() => {
     <Header></Header>
     <div class="content">
       <router-view></router-view>
+      <permission-dialog :show="showApplyPermDialog"></permission-dialog>
     </div>
   </div>
 </template>

@@ -5,11 +5,11 @@
     :clearable="clearable"
     :searchable="searchable"
     :disabled="disabled"
-    :loading="namespaceLoading"
+    :loading="namespaceLoading || loading"
     :placeholder="$t('请选择命名空间')"
     @change="handleNamespaceChange">
     <bcs-option
-      v-for="option in namespaceList"
+      v-for="option in nsList"
       :key="option.name"
       :id="option.name"
       :name="option.name"
@@ -17,7 +17,7 @@
   </bcs-select>
 </template>
 <script lang="ts">
-import { defineComponent, watch, toRefs } from '@vue/composition-api';
+import { defineComponent, watch, toRefs, computed } from '@vue/composition-api';
 import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 import $store from '@/store';
 
@@ -49,14 +49,29 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    // 必须存在namespace
+    required: {
+      type: Boolean,
+      default: false,
+    },
+    // 数据源
+    list: {
+      type: Array,
+    },
+    loading: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props, ctx) {
-    const { clusterId, value } = toRefs(props);
+    const { clusterId, value, required, list } = toRefs(props);
     const { namespaceLoading, namespaceList, getNamespaceData } = useSelectItemsNamespace();
 
     watch(clusterId,  () => {
-      handleGetNsData();
+      !list?.value && handleGetNsData();
     });
+
+    const nsList = computed(() => list?.value || namespaceList.value);
 
     const handleNamespaceChange = (name) => {
       if (value.value === name) return;
@@ -71,17 +86,17 @@ export default defineComponent({
         clusterId: clusterId.value,
       });
       if (!namespaceList.value.find(item => item.name === value.value)) {
-        handleNamespaceChange('');
+        handleNamespaceChange(required.value ? namespaceList.value[0]?.name : '');
       } else {
         $store.commit('updateCurNamespace', value.value);
       }
     };
 
-    handleGetNsData();
+    !list?.value && handleGetNsData();
 
     return {
       namespaceLoading,
-      namespaceList,
+      nsList,
       handleNamespaceChange,
     };
   },

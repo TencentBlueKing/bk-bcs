@@ -209,8 +209,9 @@ func (n Name) Validate() error {
 	case ReleasedConfigItemTable:
 	case StrategySetTable:
 	case StrategyTable:
-	case GroupCategoryTable:
 	case GroupTable:
+	case GroupAppBindTable:
+	case GroupCurrentReleaseTable:
 	case HookTable:
 	case CurrentPublishedStrategyTable:
 	case PublishedStrategyHistoryTable:
@@ -245,10 +246,12 @@ const (
 	ReleaseTable Name = "releases"
 	// ReleasedConfigItemTable is released config item table's name
 	ReleasedConfigItemTable Name = "released_config_items"
-	// GroupCategory is group category table's name
-	GroupCategoryTable Name = "group_categories"
 	// GroupTable is group table's name
 	GroupTable Name = "groups"
+	// GroupAppBindTable is group app table's name
+	GroupAppBindTable Name = "group_app_binds"
+	// GroupCurrentReleaseTable is current release table's name
+	GroupCurrentReleaseTable Name = "group_current_releases"
 	// HookTable is hook table's name
 	HookTable Name = "hooks"
 	// StrategySetTable is strategy set table's name

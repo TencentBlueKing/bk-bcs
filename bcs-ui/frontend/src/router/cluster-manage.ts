@@ -75,7 +75,7 @@ export default [
   },
   // 集群总览
   {
-    path: '',
+    path: 'clusters/:clusterId',
     name: 'clusterOverview',
     redirect: {
       name: 'clusterDetail',
@@ -86,7 +86,7 @@ export default [
   },
   // 节点列表
   {
-    path: '',
+    path: 'clusters/:clusterId',
     name: 'clusterNode',
     redirect: {
       name: 'clusterDetail',
@@ -100,7 +100,7 @@ export default [
   },
   // 集群里的集群信息
   {
-    path: '',
+    path: 'clusters/:clusterId',
     name: 'clusterInfo',
     redirect: {
       name: 'clusterDetail',

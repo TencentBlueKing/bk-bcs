@@ -173,6 +173,7 @@ func (e *embedWeb) IndexHandler() http.Handler {
 			"PAAS_HOST":               config.G.FrontendConf.Host.BKPaaSHost,
 			"BKMONITOR_HOST":          config.G.FrontendConf.Host.BKMonitorHost,
 			"BK_CC_HOST":              config.G.FrontendConf.Host.BKCCHost,
+			"BK_SRE_HOST":             config.G.FrontendConf.Host.BKSREHOST,
 			"BCS_API_HOST":            config.G.BCS.Host,
 			"BCS_DEBUG_API_HOST":      config.G.BCSDebugAPIHost(),
 			"BCS_CONFIG":              bcsConfig,

@@ -18,14 +18,14 @@ message Group {
 // GroupSpec source resource reference: pkg/dal/table/group.go
 message GroupSpec {
     string name                     = 1;
-    string mode                     = 2;
-    google.protobuf.Struct selector = 3;
-    string uid                      = 4;
+    bool public                     = 2;
+    repeated uint32 bind_apps       = 3;
+    string mode                     = 4;
+    google.protobuf.Struct selector = 5;
+    string uid                      = 6;
 }
 
 // GroupAttachment source resource reference: pkg/dal/table/group.go
 message GroupAttachment {
     uint32 biz_id                   = 1;
-    uint32 app_id                   = 2;
-    uint32 group_category_id        = 3;
 }

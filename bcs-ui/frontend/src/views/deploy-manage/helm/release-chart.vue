@@ -62,6 +62,7 @@
             <ClusterSelect
               :disabled="isEdit"
               searchable
+              cluster-type="all"
               v-model="clusterID">
             </ClusterSelect>
           </bk-form-item>
@@ -211,6 +212,7 @@
               :model-value="customArgs"
               :min-items="0"
               :unique-key="false"
+              key-required
               ref="keyValueRef">
             </KeyValue>
           </div>
@@ -483,7 +485,9 @@ export default defineComponent({
         chartName.value,
         releaseData.value.chartVersion,
       );
-      valuesData.value.valueFile = valuesFileList.value?.[0];
+      if (!valuesFileList.value?.some(name => name === valuesData.value.valueFile)) {
+        valuesData.value.valueFile = valuesFileList.value?.[0];
+      }
       setValuesContent();
       versionDetailLoading.value = false;
     });
@@ -501,7 +505,7 @@ export default defineComponent({
         contentRef.value.handleScollTop();
         return false;
       }
-      const isArgsValidate = keyValueRef.value?.validate();
+      const isArgsValidate = await keyValueRef.value?.validateAll();
       if (!isArgsValidate) {
         // 聚焦到helm部署参数
         activeTab.value = 'params';
@@ -512,7 +516,7 @@ export default defineComponent({
     // 获取提交参数
     const handleGetReleaseParams = () => {
       const { namespace, name, chartVersion } = releaseData.value;
-      const { valueFileContent } = valuesData.value;
+      const { valueFileContent, valueFile } = valuesData.value;
       // 处理command参数信息
       const data = Object.keys(args.value).map(key => ({
         key,
@@ -532,6 +536,7 @@ export default defineComponent({
         repository: repoName.value,
         version: chartVersion,
         chart: chartName.value,
+        valueFile,
         values: [valueFileContent],
         args: commands,
       };
@@ -640,6 +645,8 @@ export default defineComponent({
       if (customArgs.value.length) {
         showCustomArgs.value = true;
       }
+      // values文件名称
+      valuesData.value.valueFile = releaseDetail.value?.valueFile;
       // values内容
       setValuesContent();
     };

@@ -148,9 +148,13 @@ func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 	if scopeClusterID != "" {
 		clusterID = scopeClusterID
 	}
+	cluster, err := bcs.GetCluster(clusterID)
+	if err != nil {
+		return nil, err
+	}
 
 	// get bk_monitor metrics
-	metrics, err := bkmonitor_client.GetMetricsList(ctx, config.G.BKMonitor.MetadataURL, clusterID)
+	metrics, err := bkmonitor_client.GetMetricsList(ctx, config.G.BKMonitor.MetadataURL, clusterID, cluster.BKBizID)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +217,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	if r.SkipChunks {
 		// end = time.Now().Unix()
 		// start = end - clientutil.SeriesStepDeltaSeconds
-		return s.getMatcherSeries(r, srv, clusterId)
+		return s.getMatcherSeries(r, srv, clusterId, cluster.BKBizID)
 	}
 
 	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
@@ -280,10 +284,10 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 }
 
 func (s *BKMonitorStore) getMatcherSeries(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer,
-	clusterID string) error {
+	clusterID, bizID string) error {
 	ctx := srv.Context()
 	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "clusterID", clusterID)
-	series, err := bkmonitor_client.GetMetricsSeries(ctx, config.G.BKMonitor.MetadataURL, clusterID)
+	series, err := bkmonitor_client.GetMetricsSeries(ctx, config.G.BKMonitor.MetadataURL, clusterID, bizID)
 	if err != nil {
 		return err
 	}

@@ -12,7 +12,7 @@ all:
 	@cd event && make
 	@cd hook && make
 	@cd group && make
-	@cd group-category && make
+	@cd group-current-release && make
 	@cd credential && make
 	@cd credential-scope && make
 
@@ -30,6 +30,6 @@ clean:
 	@cd event && make clean
 	@cd hook && make
 	@cd group && make clean
-	@cd group-category && make clean
+	@cd group-current-release && make clean
 	@cd credential && make clean
 	@cd credential-scope && make clean

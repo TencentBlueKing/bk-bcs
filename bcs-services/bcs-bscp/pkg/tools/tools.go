@@ -29,3 +29,17 @@ func GetIntList(value string) ([]int, error) {
 	}
 	return result, nil
 }
+
+// GetUint32List convert string to uint32 list
+func GetUint32List(value string) ([]uint32, error) {
+	items := strings.Split(value, ",")
+	result := make([]uint32, 0, len(items))
+	for _, v := range items {
+		intValue, err := strconv.Atoi(v)
+		if err != nil {
+			return []uint32{}, err
+		}
+		result = append(result, uint32(intValue))
+	}
+	return result, nil
+}

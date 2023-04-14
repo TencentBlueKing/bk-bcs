@@ -55,6 +55,7 @@ func (m *GroupSpec) GroupSpec() (*table.GroupSpec, error) {
 
 	return &table.GroupSpec{
 		Name:     m.Name,
+		Public:   m.Public,
 		Mode:     table.GroupMode(m.Mode),
 		Selector: selector,
 		UID:      m.Uid,
@@ -78,6 +79,7 @@ func PbGroupSpec(spec *table.GroupSpec) (*GroupSpec, error) {
 
 	return &GroupSpec{
 		Name:     spec.Name,
+		Public:   spec.Public,
 		Mode:     string(spec.Mode),
 		Selector: selector,
 		Uid:      spec.UID,
@@ -91,9 +93,7 @@ func (m *GroupAttachment) GroupAttachment() *table.GroupAttachment {
 	}
 
 	return &table.GroupAttachment{
-		BizID:           m.BizId,
-		AppID:           m.AppId,
-		GroupCategoryID: m.GroupCategoryId,
+		BizID: m.BizId,
 	}
 }
 
@@ -104,9 +104,7 @@ func PbGroupAttachment(at *table.GroupAttachment) *GroupAttachment {
 	}
 
 	return &GroupAttachment{
-		BizId:           at.BizID,
-		AppId:           at.AppID,
-		GroupCategoryId: at.GroupCategoryID,
+		BizId: at.BizID,
 	}
 }
 

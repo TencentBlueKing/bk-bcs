@@ -7,11 +7,11 @@
 ### 输入参数
 | 参数名称     | 参数类型     | 必选   | 描述             |
 | ------------ | ------------ | ------ | ---------------- |
-| biz_id         | uint32       | 是     | 业务ID     |
-| app_id         | uint32       | 是     | 应用ID     |
-| id             | uint32       | 是     | 分组ID     |
-| name           | string       | 是        | 应用名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾
-| mode         | string       | 是     | 分组枚举类型：custom,debug     |
+| biz_id       | uint32       | 是     | 业务ID     |
+| group_id     | uint32       | 是     | 分组ID     |
+| name         | string       | 是     | 应用名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾
+| public       | bool         | 是     | 是否为公共分组    |
+| bind_apps    | []uint32     | 否     | 绑定的应用ID列表 |
 | selector     | selector     | 否     | 分组选择器   |
 | uid          | string       | 否     | debug UID  |
 
@@ -53,6 +53,11 @@ mode 创建以后不能修改
 ```json
 {
     "name": "广东",
+    "public": false,
+    "bind_apps": [
+        1,
+        2
+    ],
     "selector": {
         "labels_or": [
             {

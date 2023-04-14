@@ -32,7 +32,6 @@ export default {
     },
     selected: {
       type: [Number, Array, String],
-      required: true,
     },
     settingKey: {
       type: String,
@@ -52,7 +51,6 @@ export default {
     },
     list: {
       type: Array,
-      required: true,
     },
   },
 

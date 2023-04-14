@@ -31,7 +31,9 @@
             <Validate
               :rules="rules"
               :value="item.key"
-              :meta="index">
+              :meta="index"
+              :required="keyRequired"
+              ref="validateRefs">
               <bcs-input
                 :placeholder="$t('键')"
                 :disabled="item.disabled"
@@ -62,6 +64,8 @@
           :rules="rules"
           :value="item.key"
           :meta="index"
+          :required="keyRequired"
+          ref="validateRefs"
           v-else>
           <bcs-input
             :placeholder="$t('键')"
@@ -74,7 +78,8 @@
           class="value"
           :rules="valueRules"
           :value="item.value"
-          :meta="index">
+          :meta="index"
+          ref="validateRefs">
           <bcs-input :placeholder="item.placeholder || $t('值')" class="value" v-model="item.value"></bcs-input>
         </Validate>
         <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
@@ -177,6 +182,10 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+    keyRequired: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props, ctx) {
     const { modelValue, keyRules, valueRules, minItems, uniqueKey } = toRefs(props);
@@ -233,6 +242,7 @@ export default defineComponent({
     const rules = ref<IRule[]>([
       ...keyRules.value,
     ]);
+    // 数据校验
     const validate = () => {
       const keys: string[] = [];
       const values: string[] = [];
@@ -248,6 +258,13 @@ export default defineComponent({
       }
       return keys.every(key => keyRules.value.every(rule => new RegExp(rule.validator).test(key)))
       && values.every(value => valueRules.value.every(rule => new RegExp(rule.validator).test(value)));
+    };
+    // 组件校验（调用validate组件的方法）
+    const validateRefs = ref<any[]>([]);
+    const validateAll = async () => {
+      const data = validateRefs.value.map($ref => $ref?.validate('blur'));
+      const results = await Promise.all(data);
+      return results.every(result => result);
     };
 
     onMounted(() => {
@@ -265,6 +282,8 @@ export default defineComponent({
       labels,
       keyValueData,
       validate,
+      validateRefs,
+      validateAll,
       confirmSetLabel,
       hideSetLabel,
       handleAddKeyValue,

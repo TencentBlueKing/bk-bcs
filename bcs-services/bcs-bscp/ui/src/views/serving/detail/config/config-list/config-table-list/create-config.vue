@@ -2,7 +2,8 @@
   import { ref } from 'vue'
   import ConfigForm from './config-form.vue'
   import { createServingConfigItem } from '../../../../../../api/config'
-  import { IServingEditParams } from '../../../../../../types'
+  import { IAppEditParams } from '../../../../../../../types/app'
+
 
   const getDefaultConfig = () => {
     return {
@@ -34,7 +35,7 @@
     setting.value = getDefaultConfig()
   }
 
-  const submitConfig = (params: IServingEditParams) => {
+  const submitConfig = (params: IAppEditParams) => {
     return createServingConfigItem(params)
   }
 

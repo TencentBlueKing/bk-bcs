@@ -39,6 +39,21 @@ const routes = [
         component: () => import('./views/serving/detail/client/index.vue')
       }
     ]
+  },
+  {
+    path: '/groups',
+    name: 'groups-management',
+    component: () => import('./views/groups/index.vue')
+  },
+  {
+    path: '/scripts',
+    name: 'scripts-management',
+    component: () => import('./views/scripts/index.vue')
+  },
+  {
+    path: '/keys',
+    name: 'keys-management',
+    component: () => import('./views/keys/index.vue')
   }
 ]
 

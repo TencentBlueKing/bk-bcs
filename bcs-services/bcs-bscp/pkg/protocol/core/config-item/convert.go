@@ -116,16 +116,24 @@ func PbConfigItem(ci *table.ConfigItem, fileState string) *ConfigItem {
 }
 
 // PbConfigItemCounts
-func PbConfigItemCounts(ccs []*table.ListConfigItemCounts) []*ListConfigItemCounts {
+func PbConfigItemCounts(ccs []*table.ListConfigItemCounts, appList []uint32) []*ListConfigItemCounts {
 	if ccs == nil {
 		return make([]*ListConfigItemCounts, 0)
 	}
 
 	result := make([]*ListConfigItemCounts, 0)
+	ccsList := make(map[uint32]*ListConfigItemCounts, 0)
 	for _, cc := range ccs {
-		result = append(result, PbConfigItemCount(cc))
+		ccsList[cc.AppId] = PbConfigItemCount(cc)
 	}
 
+	for _, app := range appList {
+		if _, ok := ccsList[app]; !ok {
+			result = append(result, &ListConfigItemCounts{AppId: app})
+		} else {
+			result = append(result, ccsList[app])
+		}
+	}
 	return result
 }
 

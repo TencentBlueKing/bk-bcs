@@ -4,7 +4,8 @@
   import ConfigForm from './config-form.vue'
   import { getConfigItemDetail, getConfigContent, updateServingConfigItem } from '../../../../../../api/config'
   import { IFileConfigContentSummary } from '../../../../../../../types/config'
-  import { IServingEditParams } from '../../../../../../types'
+  import { IAppEditParams } from '../../../../../../../types/app'
+  
   import { useConfigStore } from '../../../../../../store/config'
 
   const { versionData } = storeToRefs(useConfigStore())
@@ -33,7 +34,7 @@
   const emit = defineEmits(['update:show', 'confirm'])
 
   const configDetailLoading = ref(true)
-  const config = ref<IServingEditParams>(getDefaultConfig())
+  const config = ref<IAppEditParams>(getDefaultConfig())
   const content = ref<string|IFileConfigContentSummary>('')
 
   const editable = computed(() => {
@@ -53,7 +54,11 @@
   const getConfigDetail = async() => {
     try {
       configDetailLoading.value = true
-      const detail = await getConfigItemDetail(props.configId, props.appId)
+      const params: { release_id?: number } = {}
+      if (versionData.value.id) {
+        params.release_id = versionData.value.id
+      }
+      const detail = await getConfigItemDetail(props.configId, props.appId, params)
       const { name, path, file_type, permission } = detail.config_item.spec
       config.value = { id: props.configId, biz_id: props.bkBizId, app_id: props.appId, name, file_type, path, ...permission }
       const signature = detail.content.signature
@@ -70,7 +75,7 @@
     }
   }
 
-  const submitConfig = (data: IServingEditParams) => {
+  const submitConfig = (data: IAppEditParams) => {
     return updateServingConfigItem(data)
   }
 

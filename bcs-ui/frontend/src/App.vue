@@ -20,7 +20,6 @@ import Navigation from '@/views/app/navigation.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
 import PermDialog from '@/views/app/apply-perm.vue';
 import ProjectGuide from '@/views/app/empty-project-guide.vue';
-import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import { bus } from '@/common/bus';
 import useProject from '@/views/project-manage/project/use-project';
@@ -29,7 +28,7 @@ export default defineComponent({
   name: 'App',
   components: { Navigation, BkPaaSLogin, PermDialog, ProjectGuide },
   setup() {
-    const { projectList, getProjectList } = useProject();
+    const { projectList, getProjectList, getUserInfo } = useProject();
     const isLoading = ref(false);
     const applyPermRef = ref<any>(null);
     const loginRef = ref<any>(null);
@@ -66,7 +65,7 @@ export default defineComponent({
 
       isLoading.value = true;
       await Promise.all([
-        $store.dispatch('userInfo'),
+        getUserInfo(),
         getProjectList(),
       ]).catch((err) => {
         console.error(err);

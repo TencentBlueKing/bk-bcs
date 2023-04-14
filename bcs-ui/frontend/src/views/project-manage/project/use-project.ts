@@ -6,6 +6,7 @@ import {
   businessList,
   createProject as handleCreateProject,
 } from '@/api/modules/project';
+import { userInfo } from '@/api/modules/user-manager';
 import $store from '@/store';
 import { computed } from '@vue/composition-api';
 
@@ -78,7 +79,15 @@ export default function useProjects() {
     return result;
   }
 
+  async function getUserInfo() {
+    const data = await userInfo().catch(() => ({}));
+    $store.commit('updateUser', data);
+    console.log($store.state.user);
+    return data;
+  }
+
   return {
+    getUserInfo,
     projectList,
     fetchProjectInfo,
     getProjectList,

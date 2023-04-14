@@ -54,6 +54,15 @@
               @click="showTaints = true">{{$t('查看')}}</bk-button>
             <span v-else>--</span>
           </bk-form-item>
+          <bk-form-item :label="$t('注解')">
+            <bk-button
+              text
+              size="small"
+              style="padding: 0;"
+              v-if="annotations.length"
+              @click="showAnnotations = true">{{$t('查看')}}</bk-button>
+            <span v-else>--</span>
+          </bk-form-item>
           <bk-form-item
             :label="$t('扩缩容模式')"
             :desc="$t('释放模式：缩容时自动释放Cluster AutoScaler判断的空余节点， 扩容时自动创建新的CVM节点加入到伸缩组<br/>关机模式：扩容时优先对已关机的节点执行开机操作，节点数依旧不满足要求时再创建新的CVM节点')">
@@ -153,7 +162,7 @@
       theme="primary"
       v-model="showLabels"
       :show-footer="false"
-      title="Labels"
+      :title="$t('标签')"
       header-position="left"
       width="600">
       <bcs-table
@@ -171,7 +180,7 @@
       theme="primary"
       v-model="showTaints"
       :show-footer="false"
-      title="Taints"
+      :title="$t('污点')"
       header-position="left"
       width="600">
       <bcs-table
@@ -183,6 +192,24 @@
         <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
         <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
         <bcs-table-column label="Effect" prop="effect"></bcs-table-column>
+      </bcs-table>
+    </bcs-dialog>
+    <!-- 注解 -->
+    <bcs-dialog
+      theme="primary"
+      v-model="showAnnotations"
+      :show-footer="false"
+      :title="$t('注解')"
+      header-position="left"
+      width="600">
+      <bcs-table
+        :data="annotations"
+        :outer-border="false"
+        :header-border="false"
+        :header-cell-style="{ background: '#fff' }"
+      >
+        <bcs-table-column :label="$t('键')" prop="key"></bcs-table-column>
+        <bcs-table-column :label="$t('值')" prop="value"></bcs-table-column>
       </bcs-table>
     </bcs-dialog>
     <!-- 数据盘 -->
@@ -254,6 +281,7 @@ export default defineComponent({
     const showDataDisks = ref(false);
     const showLabels = ref(false);
     const showTaints = ref(false);
+    const showAnnotations = ref(false);
     const nodePoolData = ref<any>(null);
     const loading = ref(false);
     const statusTextMap = { // 节点规格状态
@@ -343,6 +371,10 @@ export default defineComponent({
       key,
       value: nodePoolData.value.nodeTemplate.labels[key],
     })));
+    const annotations = computed(() => Object.keys(nodePoolData.value?.nodeTemplate?.annotations || {}).map(key => ({
+      key,
+      value: nodePoolData.value.nodeTemplate.annotations[key],
+    })));
     const taints = computed(() => nodePoolData.value?.nodeTemplate?.taints || []);
     const dataDisks = computed(() => nodePoolData.value?.nodeTemplate?.dataDisks || []);
 
@@ -392,8 +424,10 @@ export default defineComponent({
       loading,
       showLabels,
       showTaints,
+      showAnnotations,
       labels,
       taints,
+      annotations,
       navList,
       statusTextMap,
       statusColorMap,

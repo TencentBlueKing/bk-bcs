@@ -14,6 +14,7 @@
 </template>
 <script lang="ts">
 import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
+import $i18n from '@/i18n/i18n-setup';
 
 export interface IValidate {
   validator: Function | RegExp;
@@ -49,21 +50,31 @@ export default defineComponent({
     meta: {
       type: [String, Array, Object, Number],
     },
+    // 必填项
+    required: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['validate'],
   setup(props, ctx) {
-    const { disabled, message, rules, value, meta } = toRefs(props);
+    const { disabled, message, rules, value, meta, required } = toRefs(props);
     const focus = ref(false);
     function handleFocus() {
       focus.value = true;
     }
     function handleBlur() {
       focus.value = false;
-      validate();
+      validate('blur');
     }
 
-    async function validate() {
+    async function validate(event?: string) {
       curErrMsg.value = '';
+      if (required.value && !value.value && event === 'blur') {
+        // 必填项校验
+        curErrMsg.value = $i18n.t('必填项');
+        return false;
+      };
       if (!rules.value.length || !value.value) return true;
 
       const allPromise: Array<Promise<any>> = [];
@@ -89,10 +100,12 @@ export default defineComponent({
         .then(() => {
           curErrMsg.value = '';
           ctx.emit('validate', true);
+          return true;
         })
         .catch((err) => {
           curErrMsg.value = err.message;
           ctx.emit('validate', false);
+          return false;
         });
     }
     const curErrMsg = ref('');
@@ -102,10 +115,12 @@ export default defineComponent({
 
     const errorMsg = computed(() => curErrMsg.value || message.value);
     const isError = computed(() => !focus.value && !disabled.value && errorMsg.value);
+
     return {
       errorMsg,
       focus,
       isError,
+      validate,
       handleFocus,
       handleBlur,
     };

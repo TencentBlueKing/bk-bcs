@@ -82,7 +82,7 @@
       </bcs-tab-panel>
       <bcs-tab-panel name="event" :label="$t('事件')">
         <EventQueryTableVue
-          is-specify-kinds
+          hide-cluster-and-namespace
           :kinds="data.kind"
           :namespace="data.metadata.namespace"
           :name="data.metadata.name" />

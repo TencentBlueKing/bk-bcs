@@ -14,14 +14,18 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbgroup "bscp.io/pkg/protocol/core/group"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/filter"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -34,6 +38,16 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 		logs.Errorf("get group spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+
+	if !req.Spec.Public && len(req.Spec.BindApps) == 0 {
+		logs.Errorf("group must bind apps when public is set to false, rid: %s", kt.Rid)
+		return nil, errf.New(errf.InvalidParameter, "group must bind apps when public is set to false")
+	}
+	if req.Spec.Public && len(req.Spec.BindApps) > 0 {
+		logs.Errorf("group must not bind apps when public is set to true, rid: %s", kt.Rid)
+		return nil, errf.New(errf.InvalidParameter, "group must not bind apps when public is set to true")
+	}
+
 	now := time.Now()
 	group := &table.Group{
 		Spec:       spec,
@@ -45,11 +59,32 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 			UpdatedAt: now,
 		},
 	}
-	id, err := s.dao.Group().Create(kt, group)
+	tx, err := s.dao.BeginTx(kt, req.Attachment.BizId)
 	if err != nil {
-		logs.Errorf("create group failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+	id, err := s.dao.Group().CreateWithTx(kt, tx, group)
+	if err != nil {
+		logs.Errorf("create group failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback(kt)
+		return nil, err
+	}
+	if len(req.Spec.BindApps) != 0 {
+		groupApps := make([]*table.GroupAppBind, len(req.Spec.BindApps))
+		for idx, app := range req.Spec.BindApps {
+			groupApps[idx] = &table.GroupAppBind{
+				GroupID: id,
+				AppID:   app,
+				BizID:   req.Attachment.BizId,
+			}
+		}
+		if err := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); err != nil {
+			logs.Errorf("create group app failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback(kt)
+			return nil, err
+		}
+	}
+	tx.Commit(kt)
 
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
@@ -60,7 +95,7 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 	kt := kit.FromGrpcContext(ctx)
 
 	// parse pb struct filter to filter.Expression.
-	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
+	lgft, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
 		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -68,8 +103,7 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 
 	query := &types.ListGroupsOption{
 		BizID:  req.BizId,
-		AppID:  req.AppId,
-		Filter: filter,
+		Filter: lgft,
 		Page:   req.Page.BasePage(),
 	}
 
@@ -83,6 +117,38 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 	if err != nil {
 		logs.Errorf("get pb group failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
+	}
+
+	groupIDs := make([]uint32, len(groups))
+	for idx, group := range groups {
+		groupIDs[idx] = group.Id
+	}
+
+	ft := &filter.Expression{
+		Op: filter.And,
+		Rules: []filter.RuleFactory{
+			&filter.AtomRule{
+				Field: "group_id",
+				Op:    filter.In.Factory(),
+				Value: groupIDs,
+			},
+		},
+	}
+	opts := &types.ListGroupAppBindsOption{
+		BizID:  req.BizId,
+		Filter: ft,
+	}
+	list, err := s.dao.GroupAppBind().List(kt, opts)
+	if err != nil {
+		logs.Errorf("list group app failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	for _, group := range groups {
+		for _, app := range list {
+			if group.Id == app.GroupID {
+				group.Spec.BindApps = append(group.Spec.BindApps, app.AppID)
+			}
+		}
 	}
 
 	resp := &pbds.ListGroupsResp{
@@ -101,8 +167,18 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		logs.Errorf("get group spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+
+	if !req.Spec.Public && len(req.Spec.BindApps) == 0 {
+		logs.Errorf("group must bind apps when public is set to false, rid: %s", kt.Rid)
+		return nil, errf.New(errf.InvalidParameter, "group must bind apps when public is set to false")
+	}
+	if req.Spec.Public && len(req.Spec.BindApps) > 0 {
+		logs.Errorf("group must not bind apps when public is set to true, rid: %s", kt.Rid)
+		return nil, errf.New(errf.InvalidParameter, "group must not bind apps when public is set to true")
+	}
+
 	now := time.Now()
-	group := &table.Group{
+	new := &table.Group{
 		ID:         req.Id,
 		Spec:       spec,
 		Attachment: req.Attachment.GroupAttachment(),
@@ -111,12 +187,71 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 			UpdatedAt: now,
 		},
 	}
-	if err := s.dao.Group().Update(kt, group); err != nil {
+
+	if !new.Spec.Public {
+		// check if the reduced app was already released.
+		old, err := s.dao.Group().Get(kt, req.Id, req.Attachment.BizId)
+		if err != nil {
+			return nil, err
+		}
+
+		apps, err := s.queryReducedApps(kt, old, req)
+		if err != nil {
+			return nil, err
+		}
+		published, err := s.dao.GroupCurrentRelease().ListPublishedAppsByGrouID(kt, req.Id, new.Attachment.BizID)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, app := range apps {
+			for _, p := range published {
+				if app.ID == p.AppID {
+					return nil, errf.New(errf.ErrGroupAlreadyPublished,
+						fmt.Sprintf("group has already published in app [%s]", app.Spec.Name))
+				}
+			}
+		}
+	}
+
+	tx, err := s.dao.BeginTx(kt, req.Attachment.BizId)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.dao.Group().UpdateWithTx(kt, tx, new); err != nil {
 		logs.Errorf("update group failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback(kt)
 		return nil, err
 	}
 
-	return new(pbbase.EmptyResp), nil
+	if err := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); err != nil {
+		logs.Errorf("delete group app failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback(kt)
+		return nil, err
+	}
+
+	if !new.Spec.Public {
+		groupApps := make([]*table.GroupAppBind, len(req.Spec.BindApps))
+		for idx, app := range req.Spec.BindApps {
+			groupApps[idx] = &table.GroupAppBind{
+				GroupID: req.Id,
+				AppID:   app,
+				BizID:   req.Attachment.BizId,
+			}
+		}
+		if err := s.dao.GroupAppBind().BatchCreateWithTx(kt, tx, groupApps); err != nil {
+			logs.Errorf("create group app failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback(kt)
+			return nil, err
+		}
+	}
+
+	if err := tx.Commit(kt); err != nil {
+		logs.Errorf("commit tx failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return &pbbase.EmptyResp{}, nil
 }
 
 // DeleteGroup delete group.
@@ -127,10 +262,94 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbds.DeleteGroupReq) (*p
 		ID:         req.Id,
 		Attachment: req.Attachment.GroupAttachment(),
 	}
-	if err := s.dao.Group().Delete(kt, group); err != nil {
+
+	// check if the group was already released in any app.
+	published, err := s.dao.GroupCurrentRelease().ListPublishedAppsByGrouID(kt, req.Id, req.Attachment.BizId)
+	if err != nil {
+		return nil, err
+	}
+	publishedApps := make([]uint32, len(published))
+	for idx, app := range published {
+		publishedApps[idx] = app.AppID
+	}
+	if len(published) > 0 {
+		return nil, errf.New(errf.ErrGroupAlreadyPublished,
+			fmt.Sprintf("group has already published in apps [%s]", tools.JoinUint32(publishedApps, ",")))
+	}
+	tx, err := s.dao.BeginTx(kt, req.Attachment.BizId)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.dao.Group().DeleteWithTx(kt, tx, group); err != nil {
 		logs.Errorf("delete group failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback(kt)
 		return nil, err
 	}
 
+	if err := s.dao.GroupAppBind().BatchDeleteByGroupIDWithTx(kt, tx, req.Id, req.Attachment.BizId); err != nil {
+		logs.Errorf("delete group app failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback(kt)
+		return nil, err
+	}
+
+	tx.Commit(kt)
+
 	return new(pbbase.EmptyResp), nil
+}
+
+// ListGroupRleasesdApps list group's published apps and their release.
+func (s *Service) ListGroupRleasesdApps(ctx context.Context, req *pbds.ListGroupRleasesdAppsReq) (
+	*pbds.ListGroupRleasesdAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	resp, err := s.dao.Group().ListGroupRleasesdApps(kt, &types.ListGroupRleasesdAppsOption{
+		BizID:   req.BizId,
+		GroupID: req.GroupId,
+		Start:   req.Start,
+		Limit:   req.Limit,
+	})
+	if err != nil {
+		logs.Errorf("list groups published apps failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	data := make([]*pbds.ListGroupRleasesdAppsResp_ListGroupReleasedAppsData, len(resp.Details))
+	for idx, detail := range resp.Details {
+		data[idx] = &pbds.ListGroupRleasesdAppsResp_ListGroupReleasedAppsData{
+			AppId:       detail.AppID,
+			AppName:     detail.AppName,
+			ReleaseId:   detail.ReleaseID,
+			ReleaseName: detail.ReleaseName,
+			Edited:      detail.Edited,
+		}
+	}
+
+	return &pbds.ListGroupRleasesdAppsResp{
+		Count:   resp.Count,
+		Details: data,
+	}, nil
+}
+
+func (s *Service) queryReducedApps(kt *kit.Kit, old *table.Group, new *pbds.UpdateGroupReq) ([]*table.App, error) {
+	reduced := make([]*table.App, 0)
+	if new.Spec.Public {
+		return reduced, nil
+	}
+	apps, err := s.dao.App().ListAppsByGroupID(kt, old.ID, old.Attachment.BizID)
+	if err != nil {
+		return reduced, err
+	}
+	for _, app := range apps {
+		exists := false
+		for _, newApp := range new.Spec.BindApps {
+			if app.ID == newApp {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			reduced = append(reduced, app)
+		}
+	}
+	return reduced, nil
 }

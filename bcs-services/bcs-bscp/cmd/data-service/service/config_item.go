@@ -220,7 +220,7 @@ func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigI
 	}
 
 	resp := &pbds.ListConfigItemCountResp{
-		Details: pbci.PbConfigItemCounts(details),
+		Details: pbci.PbConfigItemCounts(details, req.AppId),
 	}
 	return resp, nil
 

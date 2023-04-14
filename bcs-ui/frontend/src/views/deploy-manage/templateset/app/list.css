@@ -216,6 +216,7 @@
 
                 .bk-table {
                     border-bottom: none;
+                    overflow: auto;
                 }
 
                 table {
@@ -512,6 +513,7 @@
 
                 .bk-table {
                     border-bottom: none;
+                    overflow: auto;
                 }
 
                 table {

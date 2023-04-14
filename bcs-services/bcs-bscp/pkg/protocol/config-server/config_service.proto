@@ -10,8 +10,6 @@ import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
-import "bscp.io/pkg/protocol/core/group/group.proto";
-import "bscp.io/pkg/protocol/core/group-category/group_category.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
@@ -222,46 +220,29 @@ service Config {
 
     rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp) {
         option (google.api.http) = {
-            post: "/api/v1/config/apps/{app_id}/groups"
+            post: "/api/v1/config/biz/{biz_id}/groups"
             body: "*"
         };
     }
     rpc DeleteGroup(DeleteGroupReq) returns (DeleteGroupResp) {
         option (google.api.http) = {
-            delete: "/api/v1/config/apps/{app_id}/groups/{group_id}"
+            delete: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
         };
     }
     rpc UpdateGroup(UpdateGroupReq) returns (UpdateGroupResp) {
         option (google.api.http) = {
-            put: "/api/v1/config/apps/{app_id}/groups/{group_id}"
+            put: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
             body: "*"
-        };
-    }
-    rpc ListGroups(ListGroupsReq) returns (ListGroupsResp) {
-        option (google.api.http) = {
-            get: "/api/v1/config/apps/{app_id}/group_categories/{group_category_id}/groups"
         };
     }
     rpc ListAllGroups(ListAllGroupsReq) returns (ListAllGroupsResp) {
         option (google.api.http) = {
-            get: "/api/v1/config/apps/{app_id}/groups"
+            get: "/api/v1/config/biz/{biz_id}/groups"
         };
     }
-
-    rpc CreateGroupCategory(CreateGroupCategoryReq) returns (CreateGroupCategoryResp) {
+    rpc ListGroupReleasedApps(ListGroupReleasedAppsReq) returns (ListGroupReleasedAppsResp) {
         option (google.api.http) = {
-            post: "/api/v1/config/apps/{app_id}/group_categories"
-            body: "*"
-        };
-    }
-    rpc DeleteGroupCategory(DeleteGroupCategoryReq) returns (DeleteGroupCategoryResp) {
-        option (google.api.http) = {
-            delete: "/api/v1/config/apps/{app_id}/group_categories/{group_category_id}"
-        };
-    }
-    rpc ListGroupCategories(ListGroupCategoriesReq) returns (ListGroupCategoriesResp) {
-        option (google.api.http) = {
-            get: "/api/v1/config/apps/{app_id}/group_categories"
+            get: "/api/v1/config/biz/{biz_id}/groups/{group_id}/released_apps"
         };
     }
 
@@ -779,12 +760,13 @@ message ListHooksResp {
 
 
 message CreateGroupReq {
-    uint32                 app_id            = 1;
-    uint32                 group_category_id = 2;
-    string                 name              = 3;
-    string                 mode              = 4;
-    google.protobuf.Struct selector          = 5;
-    string                 uid               = 6;
+    uint32                 biz_id            = 1;
+    string                 name              = 2;
+    bool                   public            = 3;
+    repeated uint32        bind_apps         = 4;
+    string                 mode              = 5;
+    google.protobuf.Struct selector          = 6;
+    string                 uid               = 7;
 }
 
 message CreateGroupResp {
@@ -792,77 +774,59 @@ message CreateGroupResp {
 }
 
 message UpdateGroupReq {
-    uint32                 app_id   = 1;
-    uint32                 group_id = 2;
-    string                 name     = 3;
-    string                 mode     = 4;
-    google.protobuf.Struct selector = 5;
-    string                 uid      = 6;
+    uint32                 biz_id    = 1;
+    uint32                 group_id  = 2;
+    string                 name      = 3;
+    bool                   public    = 4;
+    repeated uint32        bind_apps = 5;
+    string                 mode      = 6;
+    google.protobuf.Struct selector  = 7;
+    string                 uid       = 8;
 }
 
-message UpdateGroupResp {
-}
+message UpdateGroupResp {}
 
 message DeleteGroupReq {
-    uint32 app_id   = 1;
+    uint32 biz_id   = 1;
     uint32 group_id = 2;
 }
 
 message DeleteGroupResp {}
 
-message ListGroupsReq {
-    uint32 app_id            = 1;
-    uint32 group_category_id = 2;
-    string mode              = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
-}
-
-message ListGroupsResp {
-    uint32                 count   = 1;
-    repeated pbgroup.Group details = 2;
-}
-
-
 message ListAllGroupsReq {
-    uint32 app_id                   = 1;
-    string mode                     = 3;
+    uint32 biz_id            = 1;
 }
 
 message ListAllGroupsResp {
     message ListAllGroupsData {
-        uint32 group_category_id = 1;
-        string group_category_name = 2;
-        repeated pbgroup.Group groups = 3;
+        uint32                 id                = 1;
+        string                 name              = 2;
+        bool                   public            = 3;
+        repeated string        bind_apps         = 4;
+        google.protobuf.Struct selector          = 5;
+        uint32                 released_apps_num = 6;
+        bool                   edited            = 7;
     }
     repeated ListAllGroupsData details = 1;
 }
 
-message CreateGroupCategoryReq {
-    uint32 app_id = 1;
-    string name   = 2;
+message ListGroupReleasedAppsReq {
+    uint32 biz_id   = 1;
+    uint32 group_id = 2;
+    uint32 start    = 3;
+    uint32 limit    = 4;
 }
 
-message CreateGroupCategoryResp {
-    uint32 id = 1;
-}
-
-message DeleteGroupCategoryReq {
-    uint32 app_id            = 1;
-    uint32 group_category_id = 2;
-}
-
-message DeleteGroupCategoryResp {}
-
-message ListGroupCategoriesReq {
-    uint32 app_id = 1;
-    uint32 start  = 2;
-    uint32 limit  = 3;
-}
-
-message ListGroupCategoriesResp {
-    uint32                      count   = 1;
-    repeated pbgc.GroupCategory details = 2;
+message ListGroupReleasedAppsResp {
+    message ListGroupReleasedAppsData {
+        uint32 app_id       = 1;
+        string app_name     = 2;
+        uint32 release_id   = 3;
+        string release_name = 4;
+        bool   edited       = 5;
+    }
+    uint32   count = 1;
+    repeated ListGroupReleasedAppsData details = 2;
 }
 
 message PublishReq {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, Ref, watch ,onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import { IServingItem } from '../../../../types'
+  import { IAppItem } from '../../../../../types/app'
   import { getAllApp } from "../../../../api";
 
   interface IServingGroupItem {
@@ -9,7 +9,7 @@
     space_name: string;
     space_type_id: string;
     space_type_name: string;
-    children: Array<IServingItem>;
+    children: Array<IAppItem>;
   }
 
   const route = useRoute()

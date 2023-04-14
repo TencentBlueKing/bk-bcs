@@ -59,6 +59,14 @@
                 @delete="handleValidateForm"
               ></Taints>
             </bk-form-item>
+            <bk-form-item :label="$t('注解')">
+              <KeyValue
+                style="max-width: 420px;"
+                :disable-delete-item="false"
+                :min-item="0"
+                v-model="formData.annotations.values">
+              </KeyValue>
+            </bk-form-item>
           </FormGroup>
           <FormGroup class="mt15" :title="$t('Kubelet组件参数配置')" :allow-toggle="false">
             <div style="padding: 0 24px">
@@ -362,6 +370,7 @@ export default defineComponent({
       desc: '',
       labels: {},
       taints: [],
+      annotations: { values: {} },
       preStartUserScript: '',
       userScript: '',
       extraArgs: {
@@ -655,7 +664,13 @@ export default defineComponent({
       const data = await $store.dispatch('clustermanager/nodeTemplateDetail', {
         $nodeTemplateId: props.nodeTemplateID,
       });
-      formData.value = data;
+      formData.value = {
+        ...data,
+        // 传给后端的结构和返回的结构不一致
+        annotations: {
+          values: data.annotations,
+        },
+      };
       // 处理标准运维相关回显参数
       postActionType.value = data.scaleOutExtraAddons?.postActions?.length ? 'complex' : 'simple';
       // eslint-disable-next-line camelcase, max-len

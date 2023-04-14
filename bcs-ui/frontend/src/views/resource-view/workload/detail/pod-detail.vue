@@ -148,7 +148,7 @@
         <bcs-tab-panel name="event" :label="$t('事件')">
           <EventQueryTableVue
             class="min-h-[360px]"
-            is-specify-kinds
+            hide-cluster-and-namespace
             :kinds="['Pod']"
             :cluster-id="clusterId"
             :namespace="namespace"

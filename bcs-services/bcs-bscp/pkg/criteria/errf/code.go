@@ -51,6 +51,8 @@ const (
 	TooManyRequest int32 = 4000008
 	// UnHealth means service health check failed, current service has problem.
 	UnHealth int32 = 4000009
+	// ErrGroupAlreadyPublished means the group has already been published in specified app.
+	ErrGroupAlreadyPublished int32 = 4000010
 
 	// endOfThisScope is a flag to show this scope's error code's end.
 	endOfThisScope int32 = 4089999

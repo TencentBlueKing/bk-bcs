@@ -156,12 +156,12 @@
                 type="number"
                 :disabled="isEdit"
                 :min="50"
-                :max="2000"
+                :max="16380"
                 v-model="disk.diskSize">
               </bk-input>
               <span :class="['company', { disabled: isEdit }]">GB</span>
             </div>
-            <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('范围: 50~2000, 步长: 10')}}</p>
+            <p class="error-tips" v-if="disk.diskSize % 10 !== 0">{{$t('范围: 50~16380, 步长: 10')}}</p>
             <div class="panel-item mt10">
               <bk-checkbox
                 :disabled="(isEdit || index === 0)"
