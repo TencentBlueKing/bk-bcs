@@ -204,28 +204,6 @@ func releaseClusterCIDR(cls *cmproto.Cluster) error {
 	return nil
 }
 
-// updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
-func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeGroup) error {
-	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
-	if err != nil {
-		return err
-	}
-
-	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
-	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
-		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
-	}
-	if group.LaunchTemplate != nil {
-		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType
-	}
-	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // updateNodeGroupDesiredSize set nodegroup desired size
 func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
 	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)

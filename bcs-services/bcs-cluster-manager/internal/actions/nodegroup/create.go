@@ -91,6 +91,7 @@ func (ca *CreateAction) constructNodeGroup() *cmproto.NodeGroup {
 		Taints:          ca.req.Taints,
 		Tags:            ca.req.Tags,
 		NodeOS:          ca.req.NodeOS,
+		NodeRole:        ca.req.NodeRole,
 		Provider:        ca.req.Provider,
 		Status:          common.StatusCreateNodeGroupCreating,
 		ConsumerID:      ca.req.ConsumerID,

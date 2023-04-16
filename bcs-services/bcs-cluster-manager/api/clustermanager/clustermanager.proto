@@ -2618,6 +2618,10 @@ message NodeGroup {
     title: "area",
     description: "节点所在云区域信息(用户不指定, 则使用默认云区域)"
   }];
+  string nodeRole = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeRole",
+    description: "创建eks节点池时指定的iam角色名称"
+  }];
 }
 
 message CloudArea {
@@ -2807,7 +2811,8 @@ message InstanceTemplateConfig {
   }];
   string instanceChargeType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "instanceChargeType",
-    description: "机型计费模型，POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。"
+    description: "机型计费模型，tencentCloud包含POSTPAID_BY_HOUR按小时后付费，SPOTPAID竞价付费，PREPAID包年包月。"
+        "aws包含ON_DEMAND按需付费,SPOT竞价付费。"
         "如不设置，BCS暂时默认提供包年包月的类型"
   },(validate.rules).string = {in: ["PREPAID", "POSTPAID_BY_HOUR", "SPOTPAID"]}
   ];
@@ -2911,6 +2916,10 @@ message LaunchConfiguration {
   string userData = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "userData",
     description: "经过 Base64 编码后的自定义数据，最大长度不超过16KB。"
+  }];
+  string sshKey = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sshKey",
+    description: "用于ssh登录实例的密钥或密钥名称。"
   }];
 }
 
@@ -7043,7 +7052,11 @@ message CreateNodeGroupRequest {
   GroupExtraInfo extra = 24 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {	
     title: "extra",	
     description: "节点池创建extra信息, 主要是针对云的个性化参数"	
-  }];	
+  }];
+  string nodeRole = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeRole",
+    description: "创建eks节点池时指定的iam角色名称"
+  }];
 }	
 
 message GroupExtraInfo {	
