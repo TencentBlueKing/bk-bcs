@@ -14,6 +14,8 @@ package bkmonitor
 
 import (
 	"context"
+	"github.com/prometheus/common/model"
+	"sync"
 	"time"
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
@@ -41,26 +43,46 @@ func NewBKMonitor() *BKMonitor {
 // handleClusterMetric Cluster 处理公共函数
 func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterId string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	nodeMatch, nodeNameMatch, err := base.GetNodeMatch(ctx, clusterId)
+	var scale = 100
+	nodeSlice, err := base.GetNodeMatchWithScale(ctx, clusterId, scale)
 	if err != nil {
 		return nil, err
 	}
+	matrixs := make([]model.Matrix, 0)
+	var mtx sync.Mutex
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(nodeSlice))
+	for _, res := range nodeSlice {
+		wg.Add(1)
+		go func(res *base.ResultTuple) {
+			defer wg.Done()
+			params := map[string]interface{}{
+				"clusterId":  clusterId,
+				"node":       res.NodeNameMatch,
+				"instance":   res.NodeMatch,
+				"fstype":     DISK_FSTYPE,
+				"mountpoint": DISK_MOUNTPOINT,
+				"provider":   PROVIDER,
+			}
 
-	params := map[string]interface{}{
-		"clusterId":  clusterId,
-		"node":       nodeNameMatch,
-		"instance":   nodeMatch,
-		"fstype":     DISK_FSTYPE,
-		"mountpoint": DISK_MOUNTPOINT,
-		"provider":   PROVIDER,
+			matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
+			if err != nil {
+				errCh <- err
+				return
+			}
+			mtx.Lock()
+			matrixs = append(matrixs, matrix)
+			mtx.Unlock()
+		}(res)
 	}
-
-	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
-	if err != nil {
-		return nil, err
+	wg.Wait()
+	close(errCh)
+	for err := range errCh {
+		if err != nil {
+			return nil, err
+		}
 	}
-
-	return base.MatrixToSeries(matrix), nil
+	return base.MatrixsToSeries(matrixs), nil
 }
 
 // GetClusterCPUTotal 获取集群CPU核心总量
