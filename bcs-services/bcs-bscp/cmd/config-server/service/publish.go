@@ -44,6 +44,7 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 		ReleaseId: req.ReleaseId,
 		Memo:      req.Memo,
 		All:       req.All,
+		Default:   req.Default,
 		Groups:    req.Groups,
 	}
 	rp, err := s.client.DS.Publish(grpcKit.RpcCtx(), r)

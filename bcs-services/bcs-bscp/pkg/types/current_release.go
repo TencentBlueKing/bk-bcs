@@ -14,6 +14,8 @@ package types
 
 import (
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/table"
+	"bscp.io/pkg/runtime/filter"
 )
 
 // CountGroupsReleasedAppsOption defines options to count each group's published apps.
@@ -36,3 +38,31 @@ type GroupPublishedAppsCount struct {
 	Counts  uint32 `db:"counts" json:"counts"`
 	Edited  bool   `db:"edited" json:"edited"`
 }
+
+// ListGroupCurrentReleasesOption defines options to list group current releases.
+type ListGroupCurrentReleasesOption struct {
+	BizID  uint32             `json:"biz_id"`
+	Filter *filter.Expression `json:"filter"`
+}
+
+// Validate the list group current release options
+func (opt *ListGroupCurrentReleasesOption) Validate() error {
+	if opt.BizID <= 0 {
+		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
+	}
+
+	if opt.Filter == nil {
+		return errf.New(errf.InvalidParameter, "filter is nil")
+	}
+
+	exprOpt := &filter.ExprOption{
+		// remove biz_id because it's a required field in the option.
+		RuleFields: table.GroupCurrentReleaseColumns.WithoutColumn("biz_id"),
+	}
+	if err := opt.Filter.Validate(exprOpt); err != nil {
+		return err
+	}
+
+	return nil
+}
+

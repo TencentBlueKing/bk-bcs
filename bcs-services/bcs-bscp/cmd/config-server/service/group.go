@@ -219,7 +219,7 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 	for _, group := range lgResp.Details {
 		apps := make([]string, 0, len(group.Spec.BindApps))
 		for _, appID := range group.Spec.BindApps {
-			if app, ok := appMap[appID]; ok {
+			if app, ok := appMap[appID]; ok && app != nil {
 				apps = append(apps, app.Spec.Name)
 			}
 		}
@@ -235,6 +235,45 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 				data.ReleasedAppsNum = d.Count
 				data.Edited = d.Edited
 			}
+		}
+		respData = append(respData, data)
+	}
+	resp.Details = respData
+
+	return resp, nil
+}
+
+// ListAppGroups list groups in app
+func (s *Service) ListAppGroups(ctx context.Context, req *pbcs.ListAppGroupsReq) (*pbcs.ListAppGroupsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppGroupsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Group, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	if err != nil {
+		return nil, err
+	}
+
+	lReq := &pbds.ListAppGroupsReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+	}
+	lResp, err := s.client.DS.ListAppGroups(grpcKit.RpcCtx(), lReq)
+	if err != nil {
+		logs.Errorf("list app groups failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	respData := make([]*pbcs.ListAppGroupsResp_ListAppGroupsData, 0, len(lResp.Details))
+	for _, detail := range lResp.Details {
+		data := &pbcs.ListAppGroupsResp_ListAppGroupsData{
+			GroupId:     detail.GroupId,
+			GroupName:   detail.GroupName,
+			ReleaseId:   detail.ReleaseId,
+			ReleaseName: detail.ReleaseName,
+			OldSelector: detail.OldSelector,
+			NewSelector: detail.NewSelector,
+			Edited:      detail.Edited,
 		}
 		respData = append(respData, data)
 	}

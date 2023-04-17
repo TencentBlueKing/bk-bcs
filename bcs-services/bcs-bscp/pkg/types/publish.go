@@ -30,6 +30,7 @@ type PublishOption struct {
 	ReleaseID uint32                 `json:"release_id"`
 	Memo      string                 `json:"memo"`
 	All       bool                   `json:"all"`
+	Default   bool                   `json:"default"`
 	Groups    []uint32               `json:"groups"`
 	Revision  *table.CreatedRevision `json:"revision"`
 }

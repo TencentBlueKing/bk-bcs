@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"bscp.io/pkg/criteria/errf"
@@ -25,8 +26,10 @@ import (
 	pbgroup "bscp.io/pkg/protocol/core/group"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/filter"
+	"bscp.io/pkg/runtime/selector"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // CreateGroup create group.
@@ -158,6 +161,118 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 	return resp, nil
 }
 
+// ListAppGroups list groups in app.
+func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq) (*pbds.ListAppGroupsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	groups, err := s.dao.Group().ListAppGroups(kt, req.BizId, req.AppId)
+	if err != nil {
+		logs.Errorf("list app groups failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	groups = append(groups, &table.Group{
+		ID: 0,
+		Spec: &table.GroupSpec{
+			Name:     "默认分组",
+			Public:   true,
+			Mode:     table.Default,
+			Selector: new(selector.Selector),
+			UID:      "",
+		},
+	})
+
+	gcrs, err := s.dao.GroupCurrentRelease().List(kt, &types.ListGroupCurrentReleasesOption{
+		BizID: req.BizId,
+		Filter: &filter.Expression{
+			Op: filter.And,
+			Rules: []filter.RuleFactory{
+				&filter.AtomRule{
+					Field: "app_id",
+					Op:    filter.Equal.Factory(),
+					Value: req.AppId,
+				},
+			},
+		},
+	})
+	releaseMap := make(map[uint32]*table.Release, 0)
+	for _, gcr := range gcrs {
+		releaseMap[gcr.ReleaseID] = nil
+	}
+	releaseIDs := make([]uint32, 0)
+	for releaseID := range releaseMap {
+		releaseIDs = append(releaseIDs, releaseID)
+	}
+
+	if len(releaseIDs) != 0 {
+		releases, err := s.dao.Release().List(kt, &types.ListReleasesOption{
+			BizID: req.BizId,
+			AppID: req.AppId,
+			Filter: &filter.Expression{
+				Op: filter.And,
+				Rules: []filter.RuleFactory{
+					&filter.AtomRule{
+						Field: "id",
+						Op:    filter.In.Factory(),
+						Value: releaseIDs,
+					},
+				},
+			},
+			Page: &types.BasePage{},
+		})
+		if err != nil {
+			logs.Errorf("list app releases failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		for _, release := range releases.Details {
+			if _, ok := releaseMap[release.ID]; ok {
+				releaseMap[release.ID] = release
+			}
+		}
+	}
+	details := make([]*pbds.ListAppGroupsResp_ListAppGroupsData, 0)
+	for _, group := range groups {
+		oldSelector := new(structpb.Struct)
+		newSelector := new(structpb.Struct)
+		if group.Spec.Selector != nil {
+			newSelector, err = group.Spec.Selector.MarshalPB()
+			if err != nil {
+				logs.Errorf("marshal selector failed, err: %v, rid: %s", err, kt.Rid)
+				return nil, err
+			}
+		}
+		data := &pbds.ListAppGroupsResp_ListAppGroupsData{
+			GroupId:     group.ID,
+			GroupName:   group.Spec.Name,
+			ReleaseId:   0,
+			ReleaseName: "",
+			OldSelector: oldSelector,
+			NewSelector: newSelector,
+			Edited:      false,
+		}
+		for _, gcr := range gcrs {
+			if group.ID == gcr.GroupID {
+				data.ReleaseId = gcr.ReleaseID
+				data.Edited = gcr.Edited
+				if gcr.Selector != nil {
+					oldSelector, err = gcr.Selector.MarshalPB()
+					if err != nil {
+						logs.Errorf("marshal selector failed, err: %v, rid: %s", err, kt.Rid)
+						return nil, err
+					}
+					data.NewSelector = oldSelector
+				}
+				if release, ok := releaseMap[gcr.ReleaseID]; ok && release != nil {
+					data.ReleaseName = release.Spec.Name
+				}
+				break
+			}
+		}
+		details = append(details, data)
+	}
+	return &pbds.ListAppGroupsResp{
+		Details: details,
+	}, nil
+}
+
 // UpdateGroup update group.
 func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
@@ -188,18 +303,30 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		},
 	}
 
+	old, err := s.dao.Group().Get(kt, req.Id, req.Attachment.BizId)
+	if err != nil {
+		return nil, err
+	}
+
 	if !new.Spec.Public {
 		// check if the reduced app was already released.
-		old, err := s.dao.Group().Get(kt, req.Id, req.Attachment.BizId)
-		if err != nil {
-			return nil, err
-		}
-
 		apps, err := s.queryReducedApps(kt, old, req)
 		if err != nil {
 			return nil, err
 		}
-		published, err := s.dao.GroupCurrentRelease().ListPublishedAppsByGrouID(kt, req.Id, new.Attachment.BizID)
+		published, err := s.dao.GroupCurrentRelease().List(kt, &types.ListGroupCurrentReleasesOption{
+			BizID: req.Attachment.BizId,
+			Filter: &filter.Expression{
+				Op: filter.And,
+				Rules: []filter.RuleFactory{
+					&filter.AtomRule{
+						Field: "group_id",
+						Op:    filter.Equal.Factory(),
+						Value: req.Id,
+					},
+				},
+			},
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -246,6 +373,24 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		}
 	}
 
+	var edited = false
+	if old.Spec.UID != new.Spec.UID {
+		edited = true
+	}
+
+	if !edited && !reflect.DeepEqual(old.Spec.Selector, new.Spec.Selector) {
+		edited = true
+	}
+
+	if edited {
+		if err := s.dao.GroupCurrentRelease().UpdateEditedStatusWithTx(kt, tx,
+			edited, req.Id, req.Attachment.BizId); err != nil {
+			logs.Errorf("update group current release failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback(kt)
+			return nil, err
+		}
+	}
+
 	if err := tx.Commit(kt); err != nil {
 		logs.Errorf("commit tx failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -264,7 +409,19 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbds.DeleteGroupReq) (*p
 	}
 
 	// check if the group was already released in any app.
-	published, err := s.dao.GroupCurrentRelease().ListPublishedAppsByGrouID(kt, req.Id, req.Attachment.BizId)
+	published, err := s.dao.GroupCurrentRelease().List(kt, &types.ListGroupCurrentReleasesOption{
+		BizID: req.Attachment.BizId,
+		Filter: &filter.Expression{
+			Op: filter.And,
+			Rules: []filter.RuleFactory{
+				&filter.AtomRule{
+					Field: "group_id",
+					Op:    filter.Equal.Factory(),
+					Value: req.Id,
+				},
+			},
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
