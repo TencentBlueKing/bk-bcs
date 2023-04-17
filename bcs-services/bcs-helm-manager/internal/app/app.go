@@ -29,6 +29,19 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/mux"
+	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	microCfg "github.com/micro/go-micro/v2/config"
+	"github.com/micro/go-micro/v2/config/source"
+	microRgt "github.com/micro/go-micro/v2/registry"
+	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
+	microSvc "github.com/micro/go-micro/v2/service"
+	microGrpc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
+	gCred "google.golang.org/grpc/credentials"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
@@ -39,17 +52,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	"github.com/gorilla/mux"
-	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	microSvc "github.com/micro/go-micro/v2/service"
-	microGrpc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	gCred "google.golang.org/grpc/credentials"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
@@ -68,6 +70,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // HelmManager describe the helm-service manager instance
@@ -97,16 +100,18 @@ type HelmManager struct {
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	stopCh        chan struct{}
+	CredConf      microCfg.Config
 }
 
 // NewHelmManager create a new helm manager
-func NewHelmManager(opt *options.HelmManagerOptions) *HelmManager {
+func NewHelmManager(opt *options.HelmManagerOptions, credConf microCfg.Config) *HelmManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &HelmManager{
 		opt:           opt,
 		ctx:           ctx,
 		ctxCancelFunc: cancel,
 		stopCh:        make(chan struct{}),
+		CredConf:      credConf,
 	}
 }
 
@@ -137,11 +142,19 @@ func (hm *HelmManager) Init() error {
 
 // Run helm manager server
 func (hm *HelmManager) Run() error {
-	// run the service
-	if err := hm.microSvc.Run(); err != nil {
-		blog.Fatal(err)
+	eg, _ := errgroup.WithContext(hm.ctx)
+
+	eg.Go(func() error {
+		return hm.watch()
+	})
+	eg.Go(func() error {
+		// run the service
+		return hm.microSvc.Run()
+	})
+	if err := eg.Wait(); err != nil {
+		defer blog.CloseLogs()
+		return err
 	}
-	blog.CloseLogs()
 	return nil
 }
 
@@ -554,5 +567,38 @@ func (hm *HelmManager) InitComponentConfig() error {
 		return err
 	}
 	blog.Info("init all client successfully")
+	return nil
+}
+
+// 监听配置文件
+func (hm *HelmManager) watch() error {
+	var eg errgroup.Group
+	w, err := hm.CredConf.Watch("credentials")
+	if err != nil {
+		return err
+	}
+
+	eg.Go(func() error {
+		for {
+			value, err := w.Next()
+			if err != nil {
+				if err.Error() == source.ErrWatcherStopped.Error() {
+					return nil
+				}
+				return err
+			}
+			// watch 会传入 null 空值
+			if string(value.Bytes()) == "null" {
+				continue
+			}
+			cred := []options.Credential{}
+			err = value.Scan(&cred)
+			if err != nil {
+				blog.Errorf("reload credential error, %s", err)
+			}
+			options.GlobalOptions.Credentials = cred
+			blog.Infof("reload credential conf from %s", string(value.Bytes()))
+		}
+	})
 	return nil
 }
