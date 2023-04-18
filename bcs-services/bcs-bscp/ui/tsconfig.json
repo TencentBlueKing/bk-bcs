@@ -14,5 +14,6 @@
     "skipLibCheck": true
   },
   "include": ["./*.ts", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "exclude": ["src/views/service/detail/group/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -19,7 +19,7 @@ export const getConfigList = (app_id: number, params: IConfigListQueryParams = {
  * @param page 分页设置
  * @returns 
  */
- export const createServingConfigItem = (params: IAppEditParams) => {
+ export const createServiceConfigItem = (params: IAppEditParams) => {
   const { biz_id, app_id } = params
   return http.post(`/config/create/config_item/config_item/app_id/${app_id}/biz_id/${biz_id}`, params);
 }
@@ -31,7 +31,7 @@ export const getConfigList = (app_id: number, params: IConfigListQueryParams = {
  * @param page 分页设置
  * @returns 
  */
- export const updateServingConfigItem = (params: IAppEditParams) => {
+ export const updateServiceConfigItem = (params: IAppEditParams) => {
   const { id, biz_id, app_id } = params
   return http.put(`/config/update/config_item/config_item/config_item_id/${id}/app_id/${app_id}/biz_id/${biz_id}`, params);
 }
@@ -43,7 +43,7 @@ export const getConfigList = (app_id: number, params: IConfigListQueryParams = {
  * @param appId 应用ID
  * @returns 
  */
- export const deleteServingConfigItem = (id: number, bizId: number, appId: number) => {
+ export const deleteServiceConfigItem = (id: number, bizId: number, appId: number) => {
   return http.delete(`/config/delete/config_item/config_item/config_item_id/${id}/app_id/${appId}/biz_id/${bizId}`, {});
 }
 

@@ -19,7 +19,6 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  min-width: 320px;
   min-height: 100vh;
   overflow: hidden;
 }
@@ -49,11 +48,10 @@ a {
 }
 
 #app {
-  /* max-width: 1280px; */
   width: 100%;
   height: 100vh;
   margin: 0 auto;
-  /* padding: 2rem; */
+  overflow: auto;
 }
 
 @media (prefers-color-scheme: light) {

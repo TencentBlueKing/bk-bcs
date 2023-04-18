@@ -43,34 +43,24 @@ export interface ICategoryItem {
 // 分组详情
 export interface IGroupItem {
   id: number;
-  spec: {
-    name: string;
-    mode: string;
-    uid: string;
-    selector: {
-      labels_and?: IGroupRuleItem[];
-      labels_or?: IGroupRuleItem[];
-    }
-  };
-  attachment: {
-    biz_id: number;
-    app_id: number;
-    group_category_id: number;
-  };
-  revision: {
-    creator: string;
-    reviser: string;
-    create_at: string;
-    update_at: string;
+  name: string;
+  public: boolean;
+  bind_apps: number[];
+  released_apps_num: number;
+  mode?: string;
+  uid?: string;
+  selector: {
+    labels_and?: IGroupRuleItem[];
+    labels_or?: IGroupRuleItem[];
   }
 }
 
 // 分组编辑数据
 export interface IGroupEditing {
   id?: number;
-  group_category_id: number|string;
   name: string;
-  mode: string;
+  public: boolean;
+  bind_apps: number[];
   rules: IGroupRuleItem[];
   rule_logic: string;
   uid?: string;
