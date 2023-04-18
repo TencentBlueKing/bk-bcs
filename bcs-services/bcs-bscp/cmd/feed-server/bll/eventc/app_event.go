@@ -95,11 +95,10 @@ func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, u
 	cursor := ae.cursor.ID()
 
 	meta := &btyp.AppInstanceMeta{
-		BizID:     subSpec.InstSpec.BizID,
-		AppID:     subSpec.InstSpec.AppID,
-		Namespace: subSpec.InstSpec.Namespace,
-		Uid:       subSpec.InstSpec.Uid,
-		Labels:    subSpec.InstSpec.Labels,
+		BizID:  subSpec.InstSpec.BizID,
+		AppID:  subSpec.InstSpec.AppID,
+		Uid:    subSpec.InstSpec.Uid,
+		Labels: subSpec.InstSpec.Labels,
 	}
 
 	matchedRelease, err := ae.sch.handler.GetMatchedRelease(kt, meta)
@@ -109,7 +108,9 @@ func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, u
 		if errf.Error(err).Code == errf.RecordNotFound {
 			return 0, 0, nil
 		}
-		return 0, 0, err
+		if errf.Error(err).Code == errf.AppInstanceNotMatchedStrategy {
+			return 0, 0, nil
+		}
 	}
 
 	return matchedRelease, cursor, nil

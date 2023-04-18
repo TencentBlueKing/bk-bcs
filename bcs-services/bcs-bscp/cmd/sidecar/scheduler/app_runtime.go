@@ -269,7 +269,6 @@ func (ar *AppRuntime) downloadReleasedCI(vas *kit.Vas, readiness map[uint32]bool
 				sem.Release(1)
 			}()
 
-			uri := desc.Repository.DownloadUri(ciMeta.RepositoryPath)
 			spec := ciMeta.ConfigItemSpec
 			filePath := ar.workspace.ConfigItemFile(desc.ReleaseID, spec.Path, spec.Name)
 			if err := ar.workspace.PrepareCIDirectory(desc.ReleaseID, spec.Path); err != nil {
@@ -287,10 +286,10 @@ func (ar *AppRuntime) downloadReleasedCI(vas *kit.Vas, readiness map[uint32]bool
 					Name:            desc.Repository.Root,
 				}
 			}
-			if err := ar.repository[desc.Repository.RepositoryType].Download(vas, uri, ciMeta.ContentSpec.ByteSize, filePath); err != nil {
+			if err := ar.repository[desc.Repository.RepositoryType].Download(vas, ciMeta.RepositoryPath, ciMeta.ContentSpec.ByteSize, filePath); err != nil {
 				hitErr = err
 				logs.Errorf("download app: %d, CI[%d, %s/%s] failed, uri: %s, err: %v, rid: %s", ar.appID, ciMeta.ID,
-					spec.Path, spec.Name, uri, err, vas.Rid)
+					spec.Path, spec.Name, ciMeta.RepositoryPath, err, vas.Rid)
 				return
 			}
 

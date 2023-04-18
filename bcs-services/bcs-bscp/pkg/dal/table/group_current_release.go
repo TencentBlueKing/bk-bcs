@@ -16,6 +16,7 @@ import (
 	"errors"
 
 	"bscp.io/pkg/criteria/enumor"
+	"bscp.io/pkg/runtime/selector"
 )
 
 // GroupCurrentReleaseColumns defines group app's columns
@@ -29,6 +30,9 @@ var GroupCurrentReleaseColumnDescriptor = mergeColumnDescriptors("",
 		{Column: "app_id", NamedC: "app_id", Type: enumor.Numeric},
 		{Column: "release_id", NamedC: "release_id", Type: enumor.Numeric},
 		{Column: "strategy_id", NamedC: "strategy_id", Type: enumor.Numeric},
+		{Column: "mode", NamedC: "mode", Type: enumor.String},
+		{Column: "selector", NamedC: "selector", Type: enumor.String},
+		{Column: "uid", NamedC: "uid", Type: enumor.String},
 		{Column: "edited", NamedC: "edited", Type: enumor.Boolean},
 		{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
 	})
@@ -37,13 +41,16 @@ var GroupCurrentReleaseColumnDescriptor = mergeColumnDescriptors("",
 type GroupCurrentRelease struct {
 	// ID is an auto-increased value, which is a group app's
 	// unique identity.
-	ID         uint32 `db:"id" json:"id"`
-	GroupID    uint32 `db:"group_id" json:"group_id"`
-	AppID      uint32 `db:"app_id" json:"app_id"`
-	ReleaseID  uint32 `db:"release_id" json:"release_id"`
-	StrategyID uint32 `db:"strategy_id" json:"strategy_id"`
-	Edited     bool   `db:"edited" json:"edited"`
-	BizID      uint32 `db:"biz_id" json:"biz_id"`
+	ID         uint32             `db:"id" json:"id"`
+	GroupID    uint32             `db:"group_id" json:"group_id"`
+	AppID      uint32             `db:"app_id" json:"app_id"`
+	ReleaseID  uint32             `db:"release_id" json:"release_id"`
+	StrategyID uint32             `db:"strategy_id" json:"strategy_id"`
+	Mode       GroupMode          `db:"mode" json:"mode"`
+	Selector   *selector.Selector `db:"selector" json:"selector"`
+	UID        string             `db:"uid" json:"uid"`
+	Edited     bool               `db:"edited" json:"edited"`
+	BizID      uint32             `db:"biz_id" json:"biz_id"`
 }
 
 // TableName is the group app's database table name.
@@ -65,6 +72,15 @@ func (c GroupCurrentRelease) ValidateCreate() error {
 	}
 	if c.BizID <= 0 {
 		return errors.New("biz id should be set")
+	}
+	if err := c.Mode.Validate(); err != nil {
+		return err
+	}
+	if c.Mode == Custom && c.Selector == nil {
+		return errors.New("selector should be set when mode is custom")
+	}
+	if c.Mode == Debug && c.UID == "" {
+		return errors.New("uid should be set when mode is debug")
 	}
 
 	return nil

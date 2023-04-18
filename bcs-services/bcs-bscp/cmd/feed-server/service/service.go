@@ -35,7 +35,7 @@ import (
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
-	sfs "bscp.io/pkg/sf-share"
+	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/tools"
 )
 
@@ -49,10 +49,9 @@ type Service struct {
 	// name feed server instance name.
 	name string
 	// dsSetting down stream related setting.
-	dsSetting cc.Downstream
-	// repositoryTLS used send to sidecar to download file. if repository not in use tls, repositoryTLS is nil.
-	repositoryTLS *sfs.TLSBytes
-	mc            *metric
+	dsSetting    cc.Downstream
+	uriDecorator repo.UriDecoratorInter
+	mc           *metric
 }
 
 // NewService create a service instance.
@@ -73,19 +72,25 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("initialize business logical layer failed, err: %v", err)
 	}
 
-	tlsBytes, err := sfs.LoadTLSBytes(cc.FeedServer().Repository)
+	// TODO: repository TLS
+	// tlsBytes, err := sfs.LoadTLSBytes(cc.FeedServer().Repository)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("conv tls to tls bytes failed, err: %v", err)
+	// }
+
+	uriDecorator, err := repo.NewUriDecorator(cc.FeedServer().Repository)
 	if err != nil {
-		return nil, fmt.Errorf("conv tls to tls bytes failed, err: %v", err)
+		return nil, fmt.Errorf("new repository uri decorator failed, err: %v", err)
 	}
 
 	return &Service{
-		bll:           bl,
-		authorizer:    authorizer,
-		state:         state,
-		name:          name,
-		dsSetting:     cc.FeedServer().Downstream,
-		repositoryTLS: tlsBytes,
-		mc:            initMetric(name),
+		bll:          bl,
+		authorizer:   authorizer,
+		state:        state,
+		name:         name,
+		dsSetting:    cc.FeedServer().Downstream,
+		uriDecorator: uriDecorator,
+		mc:           initMetric(name),
 	}, nil
 }
 

@@ -23,6 +23,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -61,7 +62,19 @@ func ProjectAuthorization() gin.HandlerFunc {
 		}
 
 		projectID := restContext.ProjectId
+		clusterID := restContext.ClusterId
 		username := restContext.Username
+
+		// check cluster
+		cls, err := bcs.GetCluster(clusterID)
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+		if !cls.IsShared && cls.ProjectId != projectID {
+			rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid"))
+			return
+		}
 
 		// call iam
 		client, err := iam.GetProjectPermClient()
@@ -97,6 +110,17 @@ func NsScopeAuthorization() gin.HandlerFunc {
 		clusterID := restContext.ClusterId
 		namespace := c.Param("namespace")
 		username := restContext.Username
+
+		// check cluster
+		cls, err := bcs.GetCluster(clusterID)
+		if err != nil {
+			rest.AbortWithWithForbiddenError(restContext, err)
+			return
+		}
+		if !cls.IsShared && cls.ProjectId != projectID {
+			rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid"))
+			return
+		}
 
 		// call iam
 		client, err := iam.GetNsScopePermClient()

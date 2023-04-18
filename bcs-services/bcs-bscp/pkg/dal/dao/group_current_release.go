@@ -27,10 +27,13 @@ import (
 
 // GroupCurrentRelease supplies all the group related operations.
 type GroupCurrentRelease interface {
+	// List list group current releases by option
+	List(kit *kit.Kit, opts *types.ListGroupCurrentReleasesOption) ([]*table.GroupCurrentRelease, error)
 	// CountGroupsReleasedApps counts each group's published apps.
 	CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
 		[]*types.GroupPublishedAppsCount, error)
-	ListPublishedAppsByGrouID(kit *kit.Kit, groupID, bizID uint32) ([]*table.GroupCurrentRelease, error)
+	// UpdateEditedStatusWithTx update edited status with transaction
+	UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding.Tx, edited bool, groupID, bizID uint32) error
 }
 
 var _ GroupCurrentRelease = new(currentReleaseDao)
@@ -43,9 +46,56 @@ type currentReleaseDao struct {
 	lock     LockDao
 }
 
+// List list group current releases by option
+func (dao *currentReleaseDao) List(kit *kit.Kit, opts *types.ListGroupCurrentReleasesOption) (
+	[]*table.GroupCurrentRelease, error) {
+	if opts == nil {
+		return nil, errf.New(errf.InvalidParameter, "list group current releases option is nil")
+	}
+
+	if err := opts.Validate(); err != nil {
+		return nil, err
+	}
+
+	sqlOpt := &filter.SQLWhereOption{
+		Priority: filter.Priority{"biz_id", "app_id"},
+		CrownedOption: &filter.CrownedOption{
+			CrownedOp: filter.And,
+			Rules: []filter.RuleFactory{
+				&filter.AtomRule{
+					Field: "biz_id",
+					Op:    filter.Equal.Factory(),
+					Value: opts.BizID,
+				},
+			},
+		},
+	}
+
+	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	if err != nil {
+		return nil, err
+	}
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCurrentReleaseColumns.NamedExpr(), " FROM ",
+		table.GroupCurrentReleaseTable.Name(), whereExpr)
+	sql := filter.SqlJoint(sqlSentence)
+
+	list := make([]*table.GroupCurrentRelease, 0)
+	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
 // CountGroupsReleasedApps counts each group's published apps.
 func (dao *currentReleaseDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
 	[]*types.GroupPublishedAppsCount, error) {
+
+	if opts == nil {
+		return nil, errf.New(errf.InvalidParameter, "count groups released apps option is nil")
+	}
+
 	if err := opts.Validate(nil); err != nil {
 		return nil, err
 	}
@@ -66,21 +116,28 @@ func (dao *currentReleaseDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.
 	return counts, nil
 }
 
-// ListPublishedAppsByGrouID list all published apps by group id
-func (dao *currentReleaseDao) ListPublishedAppsByGrouID(kit *kit.Kit, groupID, bizID uint32) (
-	[]*table.GroupCurrentRelease, error) {
+// UpdateEditedStatusWithTx update edited status with transaction
+func (dao *currentReleaseDao) UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding.Tx, edited bool, groupID, bizID uint32) error {
 	if bizID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "bizID is 0")
+		return errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	if groupID == 0 {
+		// group id is 0, means it is a default group,can not be edited
+		return errf.New(errf.InvalidParameter, "groupID is 0")
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCurrentReleaseColumns.NamedExpr(), " FROM ",
-		table.GroupCurrentReleaseTable.Name(), " WHERE biz_id = ? AND group_id = ?")
+	sqlSentence = append(sqlSentence, "UPDATE ", table.GroupCurrentReleaseTable.Name(),
+		fmt.Sprintf(" SET edited = %t WHERE biz_id = %d AND group_id = %d", edited, bizID, groupID))
 	sql := filter.SqlJoint(sqlSentence)
 
-	list := make([]*table.GroupCurrentRelease, 0)
-	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &list, sql, bizID, groupID); err != nil {
-		return nil, err
+	toUpdate := map[string]interface{}{
+		"edited": edited,
 	}
-	return list, nil
+
+	_, err := dao.orm.Txn(tx.Tx()).Update(kit.Ctx, sql, toUpdate)
+	if err != nil {
+		return err
+	}
+	return nil
 }

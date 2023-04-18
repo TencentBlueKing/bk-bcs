@@ -40,7 +40,6 @@ func (rc *rollingClient) Handshake(vas *kit.Vas, spec *types.SidecarSpec) (*pbfs
 		Spec: &pbfs.SidecarSpec{
 			BizId:   spec.BizID,
 			Version: rc.sidecarVer,
-			Metas:   metas,
 		},
 	}
 

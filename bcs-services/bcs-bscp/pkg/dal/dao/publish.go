@@ -27,6 +27,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/filter"
+	"bscp.io/pkg/runtime/selector"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 
@@ -81,7 +82,7 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 	eDecorator := pd.event.Eventf(kit)
 	var pshID uint32
 	err := pd.sd.ShardingOne(opt.BizID).AutoTxn(kit, func(txn *sqlx.Tx, options *sharding.TxnOption) error {
-		groups := make([]*table.Group, len(opt.Groups))
+		groups := make([]*table.Group, 0, len(opt.Groups))
 		if !opt.All {
 			// list groups if gray release
 			var sqlSentence []string
@@ -94,6 +95,7 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 				return errf.New(errf.DBOpFailed, err.Error())
 			}
 			// if any group can not match,return err
+			// TODO: confim is opt.Groups include default group,if yes,can not compare with len(groups)
 			if len(groups) != len(opt.Groups) {
 				return errf.New(errf.DBOpFailed,
 					fmt.Sprintf("groups num not matched with id(%s)", tools.JoinUint32(opt.Groups, ",")))
@@ -164,6 +166,7 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 			logs.Errorf("record the published strategy history table failed, err: %v, rid: %s", err, kit.Rid)
 			return err
 		}
+		pshID = id
 
 		// add release publish num
 		if err := pd.increaseReleasePublishNum(kit, txn, stg.Spec.ReleaseID); err != nil {
@@ -171,7 +174,10 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 			return err
 		}
 
-		pshID = id
+		if err := pd.upsertGroupCurrentReleases(kit, txn, opt, stg); err != nil {
+			logs.Errorf("upsert group current releases failed, err: %v, rid: %s", err, kit.Rid)
+			return err
+		}
 
 		// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
 		one := types.Event{
@@ -307,6 +313,79 @@ func (pd *pubDao) increaseReleasePublishNum(kit *kit.Kit, txn *sqlx.Tx, releaseI
 	if _, err := txn.ExecContext(kit.Ctx, sql); err != nil {
 		logs.Errorf("increate release publish num failed, sql: %s, err: %v, rid: %s", sql, err, kit.Rid)
 		return errf.New(errf.DBOpFailed, "insert published strategy history failed, err: "+err.Error())
+	}
+	return nil
+}
+
+func (pd *pubDao) upsertGroupCurrentReleases(kit *kit.Kit, txn *sqlx.Tx,
+	opt *types.PublishOption, stg *table.Strategy) error {
+	groups := stg.Spec.Scope.Groups
+	if opt.Default {
+		groups = append(groups, &table.Group{
+			ID: 0,
+			Spec: &table.GroupSpec{
+				Name:     "默认分组",
+				Mode:     table.Default,
+				Public:   true,
+				Selector: new(selector.Selector),
+				UID:      "",
+			},
+		})
+	}
+	for _, group := range groups {
+		gcr := &table.GroupCurrentRelease{
+			GroupID:     group.ID,
+			AppID:       opt.AppID,
+			ReleaseID:   opt.ReleaseID,
+			StrategyID:  stg.ID,
+			Mode:        group.Spec.Mode,
+			Selector:    group.Spec.Selector,
+			UID:         group.Spec.UID,
+			Edited:      false,
+			BizID:       opt.BizID,
+		}
+		opts := orm.NewFieldOptions().AddIgnoredFields("id").AddBlankedFields("edited")
+		expr, toUpdate, err := orm.RearrangeSQLDataWithOption(gcr, opts)
+		var sqlSentence []string
+		sqlSentence = append(sqlSentence, "UPDATE ", table.GroupCurrentReleaseTable.Name(), " SET ", expr,
+			fmt.Sprintf(" WHERE biz_id = %d AND group_id = %d AND app_id = %d AND release_id = %d",
+				opt.BizID, group.ID, opt.AppID, opt.ReleaseID))
+		sql := filter.SqlJoint(sqlSentence)
+		result, err := txn.NamedExecContext(kit.Ctx, sql, toUpdate)
+		if err != nil {
+			return errf.New(errf.DBOpFailed, "update group current releases failed, err: "+err.Error())
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return errf.New(errf.DBOpFailed, err.Error())
+		}
+
+		if rowsAffected > 1 {
+			return fmt.Errorf("update group current releases affected is %d", rowsAffected)
+		}
+
+		if rowsAffected == 1 {
+			continue
+		}
+
+		id, err := pd.idGen.One(kit, table.GroupCurrentReleaseTable)
+		if err != nil {
+			return errf.New(errf.DBOpFailed, "generate group current releases id failed, err: "+err.Error())
+		}
+		gcr.ID = id
+
+		var sqlSentenceIn []string
+		sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", table.GroupCurrentReleaseTable.Name(), " (",
+			table.GroupCurrentReleaseColumns.ColumnExpr(), ") VALUES(", table.GroupCurrentReleaseColumns.ColonNameExpr(), ")")
+		sql = filter.SqlJoint(sqlSentenceIn)
+		if _, err := txn.NamedExecContext(kit.Ctx, sql, gcr); err != nil {
+			// concurrency can cause deadlock problems and provide three retries
+			if strings.Contains(err.Error(), orm.ErrDeadLock) {
+				return sharding.ErrRetryTransaction
+			}
+			return errf.New(errf.DBOpFailed, "insert group current releases failed, err: "+err.Error())
+		}
 	}
 	return nil
 }

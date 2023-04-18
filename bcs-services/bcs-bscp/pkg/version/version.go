@@ -77,7 +77,7 @@ func ShowVersion() {
 
 // FormatVersion returns service's version.
 func FormatVersion() string {
-	return fmt.Sprintf("Version: %s\nBuildTime: %s\nGitHash: %s\n", VERSION, BUILDTIME, GITHASH)
+	return fmt.Sprintf(`Server {"Version": "%s", "BuildTime": "%s", "GitHash": "%s"}`, VERSION, BUILDTIME, GITHASH)
 }
 
 // GetStartInfo returns start info that includes version and logo.

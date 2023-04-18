@@ -14,7 +14,7 @@ limitations under the License.
 package types
 
 import (
-	pbbase "bscp.io/pkg/protocol/core/base"
+	sfs "bscp.io/pkg/sf-share"
 )
 
 // SidecarSpec defines sidecar's specifics
@@ -40,19 +40,11 @@ func (rs ReconnectSignal) String() string {
 	return rs.Reason
 }
 
-// ReleaseChangeEvent defines the release change event's
-// detail information.
-type ReleaseChangeEvent struct {
-	Rid        string
-	APIVersion *pbbase.Versioning
-	Payload    []byte
-}
-
 // OnChange defines the callback handlers for stream to notify the
 // related events.
 type OnChange struct {
 	// OnAppReleaseChange is used to receive app release change event from the upstream.
-	OnReleaseChange func(event *ReleaseChangeEvent)
+	OnReleaseChange func(event *sfs.ReleaseChangeEvent)
 	// CurrentRelease get the current release metadata if it exists for an app.
 	CurrentRelease func(appID uint32) (releaseID uint32, cursorID uint32, exist bool)
 }

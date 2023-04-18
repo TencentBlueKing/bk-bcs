@@ -39,6 +39,8 @@ type Group interface {
 	List(kit *kit.Kit, opts *types.ListGroupsOption) (*types.ListGroupDetails, error)
 	// DeleteWithTx delete one group instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, group *table.Group) error
+	// ListAppGroups list all the groups of the app.
+	ListAppGroups(kit *kit.Kit, bizID, appID uint32) ([]*table.Group, error)
 	// ListGroupRleasesdApps list all the released apps of the group.
 	ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRleasesdAppsOption) (
 		*types.ListGroupRleasesdAppsDetails, error)
@@ -263,6 +265,28 @@ func (dao *groupDao) DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, g *table.Group)
 		return fmt.Errorf("audit delete group failed, err: %v", err)
 	}
 	return nil
+}
+
+// ListAppGroups list groups by app id.
+func (dao *groupDao) ListAppGroups(kit *kit.Kit, bizID, appID uint32) ([]*table.Group, error) {
+
+	if bizID == 0 || appID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID or appID is 0")
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(),
+		fmt.Sprintf(" WHERE biz_id = %d AND (public = true OR id IN (SELECT group_id FROM group_app_binds WHERE biz_id = %d AND app_id = %d))",
+			bizID, bizID, appID))
+	sql := filter.SqlJoint(sqlSentence)
+
+	list := make([]*table.Group, 0)
+	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &list, sql)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
 }
 
 // ListGroupRleasesdApps list group released apps and their latest release info.

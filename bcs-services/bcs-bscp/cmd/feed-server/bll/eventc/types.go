@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"sync"
 
-	"bscp.io/pkg/criteria/validator"
 	"bscp.io/pkg/logs"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/types"
@@ -28,7 +27,7 @@ import (
 
 // SubscribeSpec defines the metadata to watch the event.
 type SubscribeSpec struct {
-	InstSpec *InstanceSpec
+	InstSpec *sfs.InstanceSpec
 	Receiver *Receiver
 }
 
@@ -101,44 +100,10 @@ func (r *Receiver) CloseWatch() {
 	r.closeWatch()
 }
 
-// InstanceSpec defines the specifics for an app instance to watch the event.
-type InstanceSpec struct {
-	BizID     uint32
-	AppID     uint32
-	Uid       string
-	Namespace string
-	Labels    map[string]string
-}
-
-// Validate the instance spec is valid or not
-func (is InstanceSpec) Validate() error {
-	if is.BizID <= 0 {
-		return errors.New("invalid biz id")
-	}
-
-	if is.AppID <= 0 {
-		return errors.New("invalid app id")
-	}
-
-	if len(is.Uid) == 0 {
-		return errors.New("invalid uid")
-	}
-
-	if err := validator.ValidateLabel(is.Labels); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Format the instance spec's basic info to string.
-func (is *InstanceSpec) Format() string {
-	return fmt.Sprintf("biz: %d, app: %d, uid: %s", is.BizID, is.AppID, is.Uid)
-}
-
 // Event defines the event details.
 type Event struct {
 	Change   *sfs.ReleaseEventMetaV1
+	Instance *sfs.InstanceSpec
 	CursorID uint32
 }
 
