@@ -75,10 +75,6 @@ func ListClusters() {
 
 	clusterMap := map[string]*Cluster{}
 	for _, cluster := range result {
-		// 过滤掉共享集群
-		if cluster.IsShared {
-			continue
-		}
 		// 集群状态 https://github.com/Tencent/bk-bcs/blob/master/bcs-services/bcs-cluster-manager/api/clustermanager/clustermanager.proto#L1003
 		if cluster.Status != "RUNNING" {
 			continue
