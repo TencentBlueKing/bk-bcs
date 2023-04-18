@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/micro/go-micro/v2/server"
 
+	clusterClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
@@ -38,6 +39,7 @@ func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		type bodyStruct struct {
 			ProjectCode string `json:"projectCode,omitempty"`
 			ProjectID   string `json:"projectID,omitempty"`
+			ClusterID   string `json:"clusterID,omitempty"`
 		}
 		project := &bodyStruct{}
 		err = json.Unmarshal(b, project)
@@ -56,6 +58,18 @@ func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 		if err != nil {
 			return fmt.Errorf("ParseProjectIDWrapper get projectID error, projectCode: %s, err: %s",
 				project.ProjectCode, err.Error())
+		}
+
+		// check cluster
+		if project.ClusterID != "" {
+			cls, err := clusterClient.GetCluster(project.ClusterID)
+			if err != nil {
+				return fmt.Errorf("get cluster error, clusterID: %s, err: %s",
+					project.ClusterID, err.Error())
+			}
+			if !cls.IsShared && cls.ProjectID != pj.ProjectID {
+				return fmt.Errorf("cluster is invalid")
+			}
 		}
 
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
