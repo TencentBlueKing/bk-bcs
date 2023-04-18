@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 
+	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -187,4 +188,70 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 	logs.V(3).Infof("receive %d biz %s sidecar %s message, payload: %s, rid: %s", im.Meta.BizID, im.Meta.Fingerprint,
 		sfs.MessagingType(msg.Type).String(), msg.Payload, msg.Rid)
 	return new(pbfs.MessagingResp), nil
+}
+
+// PullAppFileMeta pull an app's latest release metadata only when the app's configures is file type.
+func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) (
+	*pbfs.PullAppFileMetaResp, error) {
+
+	// check if the sidecar's version can be accepted.
+	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
+		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
+	}
+
+	im, err := sfs.ParseFeedIncomingContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: im.Meta.BizID}
+	authorized, err := s.bll.Auth().Authorize(im.Kit, ra)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "do authorization failed, %s", err.Error())
+	}
+
+	if !authorized {
+		return nil, status.Error(codes.PermissionDenied, "no permission to access bscp server")
+	}
+
+	if req.AppMeta == nil {
+		return nil, status.Error(codes.InvalidArgument, "app meta is empty")
+	}
+
+	meta := &types.AppInstanceMeta{
+		BizID:  req.BizId,
+		AppID:  req.AppMeta.AppId,
+		Uid:    req.AppMeta.Uid,
+		Labels: req.AppMeta.Labels,
+	}
+
+	cancel := im.Kit.CtxWithTimeoutMS(1500)
+	defer cancel()
+
+	metas, err := s.bll.Release().ListAppLatestReleaseMeta(im.Kit, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	fileMetas := make([]*pbfs.FileMeta, len(metas.ConfigItems))
+	for idx, ci := range metas.ConfigItems {
+		fileMetas[idx] = &pbfs.FileMeta{
+			Id:             ci.RciId,
+			CommitId:       ci.CommitID,
+			CommitSpec:     ci.CommitSpec,
+			ConfigItemSpec: ci.ConfigItemSpec,
+			RepositorySpec: &pbfs.RepositorySpec{
+				Path: ci.RepositorySpec.Path,
+			},
+		}
+	}
+	resp := &pbfs.PullAppFileMetaResp{
+		ReleaseId: metas.ReleaseId,
+		Repository: &pbfs.Repository{
+			Root: metas.Repository.Root,
+		},
+		FileMetas: fileMetas,
+	}
+
+	return resp, nil
 }

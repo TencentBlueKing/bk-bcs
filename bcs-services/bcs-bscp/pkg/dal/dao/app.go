@@ -152,7 +152,7 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "INSERT INTO ", table.AppTable.Name(),
-		" (", table.AppColumns.ColumnExpr(), ") ", "VALUES(", table.AppColumns.ColonNameExpr(), ")")
+		" (", table.AppColumns.ColumnExpr(), ") ", "VALUES(", table.AppColumns.ColonNameExpr(), "),()")
 	sql := filter.SqlJoint(sqlSentence)
 	eDecorator := ap.event.Eventf(kit)
 	err = ap.sd.ShardingOne(app.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {

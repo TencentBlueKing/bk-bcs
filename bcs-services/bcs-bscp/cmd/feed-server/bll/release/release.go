@@ -23,6 +23,7 @@ import (
 	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/kit"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	"bscp.io/pkg/thirdparty/repo"
@@ -85,14 +86,15 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 	for idx, one := range rci {
 		ciList[idx] = &types.ReleasedCIMeta{
 			RciId: one.ID,
-			CommitSpec: &types.CommitSpec{
+			CommitID: one.CommitID,
+			CommitSpec: &pbcommit.CommitSpec{
 				ContentId: one.CommitSpec.ContentID,
 				Content: &pbcontent.ContentSpec{
 					Signature: one.CommitSpec.Signature,
 					ByteSize:  one.CommitSpec.ByteSize,
 				},
 			},
-			ConfigItemSpec: &types.ConfigItemSpec{
+			ConfigItemSpec: &pbci.ConfigItemSpec{
 				Name:     one.ConfigItemSpec.Name,
 				Path:     one.ConfigItemSpec.Path,
 				FileType: string(one.ConfigItemSpec.FileType),

@@ -22,6 +22,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/validator"
 	"bscp.io/pkg/dal/table"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	"bscp.io/pkg/runtime/jsoni"
@@ -324,6 +325,13 @@ func LoadTLSBytes(tls cc.Repository) (*TLSBytes, error) {
 type RepositorySpecV1 struct {
 	// Path is the configuration item's relative path according to the root path.
 	Path string `json:"path"`
+}
+
+// ReleaseChangeEvent defines the release change event's detail information.
+type ReleaseChangeEvent struct {
+	Rid        string
+	APIVersion *pbbase.Versioning
+	Payload    []byte
 }
 
 // ReleaseChangePayload defines the details when the sidecar's app instance's related
