@@ -1089,7 +1089,7 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
-  /api/v1/config/biz_id/{biz_id}/credentials/list:
+  /api/v1/config/biz_id/{biz_id}/credentials:
     get:
       operationId: list_credential
       description: 凭据列表
@@ -1105,7 +1105,7 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/config/biz_id/{biz_id}/credentials/list
+          path: /api/v1/config/biz_id/{biz_id}/credentials
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -1161,7 +1161,7 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
-  /api/v1/config/biz_id/{biz_id}/credential/scopes:
+  /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scopes:
     get:
       operationId: list_credential_scope
       description: 获取凭据规则
@@ -1177,7 +1177,7 @@ paths:
         backend:
           type: HTTP
           method: get
-          path: /api/v1/config/biz_id/{biz_id}/credential/scopes
+          path: /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scopes
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -1185,7 +1185,7 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
-  /api/v1/config/biz_id/{biz_id}/credential/scope:
+  /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope:
     put:
       operationId: put_credential_scope
       description: 更新凭据规则
@@ -1201,7 +1201,7 @@ paths:
         backend:
           type: HTTP
           method: put
-          path: /api/v1/config/biz_id/{biz_id}/credential/scope
+          path: /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope
           matchSubpath: false
           timeout: 0
           upstreams: { }

@@ -136,14 +136,13 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 				fileState = REVISE
 			}
 		} else {
-			for key, value := range fileRelease {
+			for _, value := range fileRelease {
 				if value.ConfigItemID == ci.ID {
 					if ci.Revision.UpdatedAt == value.Revision.UpdatedAt {
 						fileState = UNCHANGE
 					} else {
 						fileState = REVISE
 					}
-					fileRelease = append(fileRelease[:key], fileRelease[key+1:]...)
 					break
 				}
 			}

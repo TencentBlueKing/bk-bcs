@@ -3943,10 +3943,6 @@ func local_request_Config_UpdateCredential_0(ctx context.Context, marshaler runt
 
 }
 
-var (
-	filter_Config_ListCredentialScopes_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
-)
-
 func request_Config_ListCredentialScopes_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListCredentialScopesReq
 	var metadata runtime.ServerMetadata
@@ -3968,11 +3964,14 @@ func request_Config_ListCredentialScopes_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
 	}
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["credential_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "credential_id")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListCredentialScopes_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.CredentialId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "credential_id", err)
 	}
 
 	msg, err := client.ListCredentialScopes(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -4001,11 +4000,14 @@ func local_request_Config_ListCredentialScopes_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
 	}
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["credential_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "credential_id")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Config_ListCredentialScopes_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.CredentialId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "credential_id", err)
 	}
 
 	msg, err := server.ListCredentialScopes(ctx, &protoReq)
@@ -4042,6 +4044,16 @@ func request_Config_UpdateCredentialScope_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
 	}
 
+	val, ok = pathParams["credential_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "credential_id")
+	}
+
+	protoReq.CredentialId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "credential_id", err)
+	}
+
 	msg, err := client.UpdateCredentialScope(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -4074,6 +4086,16 @@ func local_request_Config_UpdateCredentialScope_0(ctx context.Context, marshaler
 	protoReq.BizId, err = runtime.Uint32(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	val, ok = pathParams["credential_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "credential_id")
+	}
+
+	protoReq.CredentialId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "credential_id", err)
 	}
 
 	msg, err := server.UpdateCredentialScope(ctx, &protoReq)
@@ -5220,7 +5242,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListCredentials", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credentials/list"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListCredentials", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -5295,7 +5317,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListCredentialScopes", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/scopes"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListCredentialScopes", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scopes"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -5320,7 +5342,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UpdateCredentialScope", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/scope"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UpdateCredentialScope", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6374,7 +6396,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListCredentials", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credentials/list"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListCredentials", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credentials"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6440,7 +6462,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListCredentialScopes", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/scopes"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListCredentialScopes", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scopes"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6462,7 +6484,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UpdateCredentialScope", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/scope"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UpdateCredentialScope", runtime.WithHTTPPathPattern("/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6572,15 +6594,15 @@ var (
 
 	pattern_Config_CreateCredentials_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "config", "biz_id", "credentials"}, ""))
 
-	pattern_Config_ListCredentials_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"api", "v1", "config", "biz_id", "credentials", "list"}, ""))
+	pattern_Config_ListCredentials_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "config", "biz_id", "credentials"}, ""))
 
 	pattern_Config_DeleteCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "config", "biz_id", "credential"}, ""))
 
 	pattern_Config_UpdateCredential_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "config", "biz_id", "credential"}, ""))
 
-	pattern_Config_ListCredentialScopes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"api", "v1", "config", "biz_id", "credential", "scopes"}, ""))
+	pattern_Config_ListCredentialScopes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "config", "biz_id", "credential", "credential_id", "scopes"}, ""))
 
-	pattern_Config_UpdateCredentialScope_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"api", "v1", "config", "biz_id", "credential", "scope"}, ""))
+	pattern_Config_UpdateCredentialScope_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"api", "v1", "config", "biz_id", "credential", "credential_id", "scope"}, ""))
 )
 
 var (

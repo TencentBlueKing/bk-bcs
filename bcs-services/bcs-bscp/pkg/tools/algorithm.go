@@ -20,7 +20,7 @@ func CreateCredential(bizId uint32, masterKey, encryptionAlgorithm string) (stri
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
 	}
-	algorithmText := fmt.Sprintf("%d-%s-%s", bizId, encryptionAlgorithm, randStr(10))
+	algorithmText := fmt.Sprintf("%d-%s-%s", bizId, encryptionAlgorithm, randStr(15))
 	switch encryptionAlgorithm {
 	case AES:
 		return AesEncrypt([]byte(algorithmText), []byte(masterKey))
@@ -31,7 +31,23 @@ func CreateCredential(bizId uint32, masterKey, encryptionAlgorithm string) (stri
 	}
 }
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+// DecryptCredential Decrypt credential
+func DecryptCredential(credential, masterKey, encryptionAlgorithm string) (string, error) {
+	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
+		return "", fmt.Errorf("key or encryption algorithm is null")
+	}
+	b64Byte, _ := base64.StdEncoding.DecodeString(credential)
+	switch encryptionAlgorithm {
+	case AES:
+		return AesDecrypt(b64Byte, []byte(masterKey))
+	case DES:
+		return DesDecryptFromBase(b64Byte, []byte(masterKey))
+	default:
+		return "", fmt.Errorf("algorithm type is is not supported, type: %s", encryptionAlgorithm)
+	}
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 // randStr 随机生成字符串
 func randStr(n int) string {
@@ -71,17 +87,17 @@ func DesEncryptToBase(origData, key []byte) (string, error) {
 }
 
 // DesDecryptFromBase base64 decoding, and decrypt with priKey
-func DesDecryptFromBase(crypted, key []byte) ([]byte, error) {
+func DesDecryptFromBase(crypted, key []byte) (string, error) {
 	ori, _ := base64.StdEncoding.DecodeString(string(crypted))
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	blockMode := cipher.NewCBCDecrypter(block, key[:block.BlockSize()])
 	out := make([]byte, len(ori))
 	blockMode.CryptBlocks(out, ori)
 	out = PKCS5UnPadding(out)
-	return out, nil
+	return string(out), nil
 }
 
 // PKCS7Padding PKCS7Padding
@@ -123,5 +139,5 @@ func AesDecrypt(crypted, key []byte) (string, error) {
 	origData := make([]byte, len(crypted))
 	blockMode.CryptBlocks(origData, crypted)
 	origData = PKCS7UnPadding(origData)
-	return base64.StdEncoding.EncodeToString(origData), nil
+	return string(origData), nil
 }

@@ -132,6 +132,15 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 		return nil, err
 	}
 
+	for _, val := range rp.Details {
+		credential, err := tools.DecryptCredential(val.Spec.EncCredential, cc.ConfigServer().Credential.MasterKey, val.Spec.EncAlgorithm)
+		if err != nil {
+			logs.Errorf("credentials decrypt failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		val.Spec.EncCredential = credential
+	}
+
 	resp = &pbcs.ListCredentialsResp{
 		Count:   rp.Count,
 		Details: rp.Details,

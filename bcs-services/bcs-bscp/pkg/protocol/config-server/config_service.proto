@@ -291,7 +291,7 @@ service Config {
     }
     rpc ListCredentials(ListCredentialsReq) returns (ListCredentialsResp) {
         option (google.api.http) = {
-            get: "/api/v1/config/biz_id/{biz_id}/credentials/list"
+            get: "/api/v1/config/biz_id/{biz_id}/credentials"
         };
     }
     rpc DeleteCredential(DeleteCredentialsReq) returns (DeleteCredentialsResp) {
@@ -308,12 +308,12 @@ service Config {
 
     rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {
         option (google.api.http) = {
-            get: "/api/v1/config/biz_id/{biz_id}/credential/scopes"
+            get: "/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scopes"
         };
     }
     rpc UpdateCredentialScope(UpdateCredentialScopeReq) returns (UpdateCredentialScopeResp) {
         option (google.api.http) = {
-            put: "/api/v1/config/biz_id/{biz_id}/credential/scope"
+            put: "/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope"
             body: "*"
         };
     }
