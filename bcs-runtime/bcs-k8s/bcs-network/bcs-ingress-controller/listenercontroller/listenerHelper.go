@@ -11,7 +11,7 @@
  *
  */
 
-package generator
+package listenercontroller
 
 import (
 	"context"
@@ -25,7 +25,8 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-type listenerHelper struct {
+// ListenerHelper do some listener operation in go routine
+type ListenerHelper struct {
 	ctx    context.Context
 	client client.Client
 
@@ -33,8 +34,9 @@ type listenerHelper struct {
 	sync.Mutex
 }
 
-func newListenerHelper(cli client.Client) *listenerHelper {
-	helper := &listenerHelper{
+// NewListenerHelper return listener helper
+func NewListenerHelper(cli client.Client) *ListenerHelper {
+	helper := &ListenerHelper{
 		ctx:               context.Background(),
 		client:            cli,
 		toDeleteListeners: make(map[string]networkextensionv1.Listener),
@@ -44,7 +46,8 @@ func newListenerHelper(cli client.Client) *listenerHelper {
 	return helper
 }
 
-func (l *listenerHelper) setDeleteListeners(listeners []networkextensionv1.Listener) {
+// SetDeleteListeners delete listeners
+func (l *ListenerHelper) SetDeleteListeners(listeners []networkextensionv1.Listener) {
 	l.Lock()
 	defer l.Unlock()
 	for _, listener := range listeners {
@@ -57,20 +60,20 @@ func (l *listenerHelper) setDeleteListeners(listeners []networkextensionv1.Liste
 	}
 }
 
-func (l *listenerHelper) run() {
+func (l *ListenerHelper) run() {
 	ticker := time.NewTicker(3 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			l.doDeleteListeners()
 		case <-l.ctx.Done():
-			blog.Infof("listenerHelper stopped")
+			blog.Infof("ListenerHelper stopped")
 			return
 		}
 	}
 }
 
-func (l *listenerHelper) doDeleteListeners() {
+func (l *ListenerHelper) doDeleteListeners() {
 	listenerList := make([]networkextensionv1.Listener, 0, len(l.toDeleteListeners))
 	l.Lock()
 	// 取出listener 再删除， 避免长时间占用锁

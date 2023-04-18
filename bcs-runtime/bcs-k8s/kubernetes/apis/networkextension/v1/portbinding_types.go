@@ -46,7 +46,7 @@ type PortBindingItem struct {
 
 // GetKey get port pool item key
 func (pbi *PortBindingItem) GetKey() string {
-	return GetPoolItemKey(pbi.PoolItemName, pbi.LoadBalancerIDs)
+	return pbi.PoolItemName
 }
 
 // PortBindingSpec defines the desired state of PortBinding

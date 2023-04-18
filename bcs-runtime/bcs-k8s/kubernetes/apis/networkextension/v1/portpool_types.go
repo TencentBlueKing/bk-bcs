@@ -43,7 +43,7 @@ type PortPoolItem struct {
 
 // GetKey get port pool item key
 func (ppi *PortPoolItem) GetKey() string {
-	return GetPoolItemKey(ppi.ItemName, ppi.LoadBalancerIDs)
+	return ppi.ItemName
 }
 
 // Validate do validation
@@ -85,7 +85,7 @@ type PortPoolItemStatus struct {
 
 // GetKey get port pool item key
 func (ppis *PortPoolItemStatus) GetKey() string {
-	return GetPoolItemKey(ppis.ItemName, ppis.LoadBalancerIDs)
+	return ppis.ItemName
 }
 
 // GetPoolItemKey get port pool item key

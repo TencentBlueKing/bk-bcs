@@ -35,6 +35,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/listenercontroller"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -75,12 +76,13 @@ type IngressConverter struct {
 	// cloud e.g. tencentcloud aws gcp
 	cloud string
 
-	listenerHelper *listenerHelper
+	listenerHelper *listenercontroller.ListenerHelper
 }
 
 // NewIngressConverter create ingress generator
 func NewIngressConverter(opt *IngressConverterOpt,
-	cli client.Client, ingressValidater cloud.Validater, lbClient cloud.LoadBalance) (*IngressConverter, error) {
+	cli client.Client, ingressValidater cloud.Validater, lbClient cloud.LoadBalance,
+	listenerHelper *listenercontroller.ListenerHelper) (*IngressConverter, error) {
 	if opt == nil {
 		return nil, fmt.Errorf("option cannot be empty")
 	}
@@ -94,7 +96,7 @@ func NewIngressConverter(opt *IngressConverterOpt,
 		// set cache expire time
 		lbIDCache:      gocache.New(60*time.Minute, 120*time.Minute),
 		lbNameCache:    gocache.New(60*time.Minute, 120*time.Minute),
-		listenerHelper: newListenerHelper(cli),
+		listenerHelper: listenerHelper,
 	}, nil
 }
 
@@ -414,7 +416,7 @@ func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace st
 		return false, nil
 	}
 
-	g.listenerHelper.setDeleteListeners(append(listenerList, segListenerList...))
+	g.listenerHelper.SetDeleteListeners(append(listenerList, segListenerList...))
 
 	return true, nil
 }

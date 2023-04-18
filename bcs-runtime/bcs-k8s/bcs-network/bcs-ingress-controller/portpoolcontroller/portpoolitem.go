@@ -18,6 +18,8 @@ import (
 	"sort"
 	"strings"
 
+	"k8s.io/client-go/util/retry"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -65,6 +67,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 		retItemStatus = itemStatus.DeepCopy()
 		retItemStatus.EndPort = item.EndPort
 		retItemStatus.External = item.External
+		retItemStatus.LoadBalancerIDs = item.LoadBalancerIDs
 		retItemStatus.Protocol = common.GetPortPoolItemProtocols(item.Protocol)
 	}
 	// check loadbalanceIDs
@@ -265,14 +268,21 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, 
 					blog.Warnf("create listener %s failed, err %s", tmpName, err.Error())
 				}
 			} else {
-				// set label to identify this listener is created by what port pool
-				poolNameLabel := common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName)
-				if v, ok := listener.Labels[poolNameLabel]; !ok || v != netextv1.LabelValueForPortPoolItemName {
+				// 部分旧版本监听器labels不全需要补齐
+				if !checkListenerLabels(listener.Labels, ppih.PortPoolName, itemName) {
+					poolNameLabel := common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName)
 					listener.Labels[poolNameLabel] = netextv1.LabelValueForPortPoolItemName
-					if err := ppih.K8sClient.Update(context.Background(), listener, &client.UpdateOptions{}); err != nil {
+					listener.Labels[netextv1.LabelKeyForOwnerKind] = constant.KindPortPool
+					listener.Labels[netextv1.LabelKeyForOwnerName] = ppih.PortPoolName
+					if err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+						return ppih.K8sClient.Update(context.Background(), listener,
+							&client.UpdateOptions{},
+						)
+					}); err != nil {
 						blog.Warnf("update listener %s failed, err %s", tmpName, err.Error())
 					}
 				}
+
 				if len(listener.Status.ListenerID) == 0 {
 					notReady = true
 					blog.V(4).Infof("listener %s is not ready", tmpName)
