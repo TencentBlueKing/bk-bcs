@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"bscp.io/cmd/sidecar/stream"
-	"bscp.io/cmd/sidecar/stream/types"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/jsoni"
@@ -27,7 +26,7 @@ import (
 
 // Interface defines all the supported operation by the scheduler.
 type Interface interface {
-	OnAppReleaseChange(event *types.ReleaseChangeEvent)
+	OnAppReleaseChange(event *sfs.ReleaseChangeEvent)
 	CurrentRelease(appID uint32) (releaseID uint32, cursorID uint32, exist bool)
 }
 
@@ -61,7 +60,7 @@ type Scheduler struct {
 }
 
 // OnAppReleaseChange is used to receive app release change event from the upstream.
-func (sch *Scheduler) OnAppReleaseChange(event *types.ReleaseChangeEvent) {
+func (sch *Scheduler) OnAppReleaseChange(event *sfs.ReleaseChangeEvent) {
 
 	// parse payload according the api version.
 	pl := new(sfs.ReleaseChangePayload)
