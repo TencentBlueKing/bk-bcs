@@ -49,7 +49,7 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
-	if len(opt.Account.ServiceAccountSecret) == 0 {
+	if opt.Account.SecretID == "" && opt.Account.SecretKey == "" {
 		return fmt.Errorf("%s ImportClusterValidate request lost valid crendential info", cloudName)
 	}
 
@@ -90,18 +90,6 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 // ImportCloudAccountValidate create cloudAccount account validation
 func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error {
 	// call cloud interface to check account
-	if c == nil || account == nil {
-		return fmt.Errorf("%s ImportCloudAccountValidate request is empty", cloudName)
-	}
-
-	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s ImportCloudAccountValidate request lost valid HwCCEProjectID info", cloudName)
-	}
-
 	return nil
 }
 
@@ -109,18 +97,6 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest,
 	account *proto.Account) error {
 	// call cloud interface to check account
-	if c == nil || account == nil {
-		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
-	}
-
-	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid HwCCEProjectID info", cloudName)
-	}
-
 	return nil
 }
 
@@ -132,8 +108,8 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 		return fmt.Errorf("%s ListCloudRegionClusterValidate request is empty", cloudName)
 	}
 
-	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudRegionClusterValidate request lost valid crendential info", cloudName)
+	if account.SecretID == "" && account.SecretKey == "" {
+		return fmt.Errorf("%s ImportClusterValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(account.HwCCEProjectID) == 0 {
@@ -150,25 +126,6 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 // ListCloudSubnetsValidate xxx
 func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
 	// call cloud interface to check account
-	if c == nil || account == nil {
-		return fmt.Errorf("%s ListCloudSubnetsValidate request is empty", cloudName)
-	}
-
-	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid HwCCEProjectID info", cloudName)
-	}
-
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid region info", cloudName)
-	}
-	if len(req.VpcID) == 0 {
-		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid vpcID info", cloudName)
-	}
-
 	return nil
 }
 
@@ -176,22 +133,6 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
 	account *proto.Account) error {
 	// call cloud interface to check account
-	if c == nil || account == nil {
-		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
-	}
-
-	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid HwCCEProjectID info", cloudName)
-	}
-
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid region info", cloudName)
-	}
-
 	return nil
 }
 
@@ -199,44 +140,12 @@ func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityG
 func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
 	account *proto.Account) error {
 	// call cloud interface to check account
-	if c == nil || account == nil {
-		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
-	}
-
-	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid HwCCEProjectID info", cloudName)
-	}
-
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid region info", cloudName)
-	}
-
 	return nil
 }
 
 // ListCloudOsImageValidate xxx
 func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequest, account *proto.Account) error {
 	// call cloud interface to check account
-	if c == nil || account == nil {
-		return fmt.Errorf("%s ListCloudOsImageValidate request is empty", cloudName)
-	}
-
-	if len(account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid HwCCEProjectID info", cloudName)
-	}
-
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid region info", cloudName)
-	}
-
 	return nil
 }
 
@@ -244,21 +153,5 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
 	opt *cloudprovider.CommonOption) error {
 	// call cloud interface to check account
-	if c == nil || opt.Account == nil {
-		return fmt.Errorf("%s CreateNodeGroupValidate request is empty", cloudName)
-	}
-
-	if len(opt.Account.ServiceAccountSecret) == 0 {
-		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(opt.Account.HwCCEProjectID) == 0 {
-		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid HwCCEProjectID info", cloudName)
-	}
-
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid region info", cloudName)
-	}
-
 	return nil
 }
