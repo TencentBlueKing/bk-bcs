@@ -36,6 +36,7 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (
 		AppID:     req.AppId,
 		ReleaseID: req.ReleaseId,
 		All:       req.All,
+		Default:   req.Default,
 		Memo:      req.Memo,
 		Groups:    req.Groups,
 		Revision: &table.CreatedRevision{

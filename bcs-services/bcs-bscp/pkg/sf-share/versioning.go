@@ -34,6 +34,10 @@ var leastAPIVersion = &pbbase.Versioning{
 // feed server's version request.
 func IsAPIVersionMatch(ver *pbbase.Versioning) bool {
 
+	if ver == nil {
+		return false
+	}
+
 	if ver.Major > leastAPIVersion.Major {
 		return false
 	}

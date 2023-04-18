@@ -78,12 +78,11 @@ func (wh *watchHandler) subscribe() error {
 
 	for _, one := range wh.sidePayload.Applications {
 		spec := &eventc.SubscribeSpec{
-			InstSpec: &eventc.InstanceSpec{
-				BizID:     wh.sidePayload.BizID,
-				AppID:     one.AppID,
-				Uid:       one.Uid,
-				Namespace: one.Namespace,
-				Labels:    one.Labels,
+			InstSpec: &sfs.InstanceSpec{
+				BizID:  wh.sidePayload.BizID,
+				AppID:  one.AppID,
+				Uid:    one.Uid,
+				Labels: one.Labels,
 			},
 			Receiver: eventc.InitReceiver(wh.eventReceiver, wh.cancelCtx),
 		}
@@ -108,6 +107,7 @@ func (wh *watchHandler) eventReceiver(event *eventc.Event, sn uint64) bool {
 	rid := wh.nextRid()
 	releasePayload := &sfs.ReleaseChangePayload{
 		ReleaseMeta: event.Change,
+		Instance:    event.Instance,
 		CursorID:    event.CursorID,
 	}
 

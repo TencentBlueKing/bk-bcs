@@ -729,6 +729,11 @@ type FSLocalCache struct {
 	// the large of value, the longer it takes for the published app strategy take effected. should <= 120.
 	PublishedStrategyCacheTTLSec uint `yaml:"publishedStrategyCacheTTLSec"`
 
+	// GCRCacheSize defines how many GCRs can be cached.
+	GCRCacheSize uint `yaml:"GCRCacheSize"`
+	// GCRCacheTTLSec defines how long will this GCR can be cached in seconds.
+	GCRCacheTTLSec uint `yaml:"GCRCacheTTLSec"`
+
 	// AuthCacheSize defines how many auth results can be cached.
 	AuthCacheSize uint `yaml:"authCacheSize"`
 	// AuthCacheTTLSec defines how long this auth result with permission can be cached in seconds.
@@ -780,6 +785,14 @@ func (fc *FSLocalCache) trySetDefault() {
 	}
 
 	if fc.PublishedStrategyCacheTTLSec == 0 {
+		fc.PublishedStrategyCacheTTLSec = 120
+	}
+
+	if fc.GCRCacheSize == 0 {
+		fc.PublishedStrategyCacheSize = 100
+	}
+
+	if fc.GCRCacheTTLSec == 0 {
 		fc.PublishedStrategyCacheTTLSec = 120
 	}
 

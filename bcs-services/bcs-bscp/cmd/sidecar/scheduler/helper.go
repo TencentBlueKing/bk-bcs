@@ -203,7 +203,7 @@ func (cr *currentRelease) Set(to *sfs.ReleaseEventMetaV1) {
 			ID:             one.ID,
 			ContentSpec:    nil,
 			ConfigItemSpec: nil,
-			RepositoryPath: nil,
+			RepositoryPath: one.RepositoryPath,
 		}
 
 		if one.ContentSpec != nil {
@@ -229,12 +229,6 @@ func (cr *currentRelease) Set(to *sfs.ReleaseEventMetaV1) {
 					UserGroup: one.ConfigItemSpec.Permission.UserGroup,
 					Privilege: one.ConfigItemSpec.Permission.Privilege,
 				}
-			}
-		}
-
-		if one.RepositoryPath != nil {
-			meta.RepositoryPath = &sfs.RepositorySpecV1{
-				Path: one.RepositoryPath.Path,
 			}
 		}
 

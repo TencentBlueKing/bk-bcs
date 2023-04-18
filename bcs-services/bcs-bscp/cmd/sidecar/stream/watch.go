@@ -142,7 +142,7 @@ func (w *watch) loopReceiveWatchedEvent(vas *kit.Vas, wStream pbfs.Upstream_Watc
 			return
 
 		case sfs.PublishRelease:
-			change := &types.ReleaseChangeEvent{
+			change := &sfs.ReleaseChangeEvent{
 				Rid:        event.Rid,
 				APIVersion: event.ApiVersion,
 				Payload:    event.Payload,

@@ -1,6 +1,8 @@
 syntax = "proto3";
 
 import "bscp.io/pkg/protocol/core/base/base.proto";
+import "bscp.io/pkg/protocol/core/commit/commit.proto";
+import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
 
 package pbfs;
 
@@ -11,6 +13,7 @@ service Upstream {
     rpc Handshake(HandshakeMessage) returns (HandshakeResp) {}
     rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
     rpc Messaging(MessagingMeta) returns (MessagingResp) {}
+    rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
 }
 
 // HandshakeMessage defines the handshake message from sidecar to feed server.
@@ -24,7 +27,6 @@ message SidecarSpec {
     uint32 biz_id = 1;
     // version is sidecar's version
     pbbase.Versioning version     = 2;
-    repeated SidecarAppMeta metas = 3;
 }
 
 // SidecarMeta define a sidecar's basic metadata information.
@@ -49,7 +51,45 @@ message SideWatchMeta {
     bytes payload = 2;
 }
 
-// FeedWatchMessage defines watch messages send from feed server to sidecar.
+message PullAppFileMetaReq {
+    // version defines message's protocol version from sidecar
+    pbbase.Versioning api_version = 1;
+    // payload is the message's details information which is a json raw bytes.
+    // refer to sfs.SideWatchPayload.
+    uint32 biz_id = 2;
+    AppMeta app_meta = 3;
+}
+
+message AppMeta {
+    uint32 app_id = 1;
+    string uid    = 2;
+    map<string, string> labels = 3;
+}
+
+message PullAppFileMetaResp {
+    uint32 release_id = 1;
+    Repository repository = 2;
+    repeated FileMeta file_metas = 3;
+}
+
+message Repository {
+    string root = 1;
+}
+
+message FileMeta {
+    uint32 id = 1;
+    uint32 commit_id = 2;
+    pbcommit.CommitSpec commit_spec = 3;
+    pbci.ConfigItemSpec config_item_spec = 4;
+    RepositorySpec repository_spec = 5;
+
+}
+
+message RepositorySpec {
+    string path = 1;
+}
+
+// FeedWatchMessage defines watch messages send from feed server to sdk.
 message FeedWatchMessage {
     // version defines message's protocol version from feed server
     pbbase.Versioning api_version = 1;
@@ -61,7 +101,7 @@ message FeedWatchMessage {
     bytes payload = 4;
 }
 
-// MessagingMeta defines the message metadata send from sidecar to upstream server.
+// MessagingMeta defines the message metadata send from sdk to upstream server.
 message MessagingMeta {
     // version defines message's protocol version from feed server
     pbbase.Versioning api_version = 1;
@@ -73,6 +113,6 @@ message MessagingMeta {
     bytes payload = 4;
 }
 
-// MessagingResp defines response from upstream server to sidecar,
+// MessagingResp defines response from upstream server to sdk,
 // which is empty.
 message MessagingResp {}
