@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"time"
 
+	prm "github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -26,8 +28,6 @@ import (
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
-
-	prm "github.com/prometheus/client_golang/prometheus"
 )
 
 type consumerFunc func(kt *kit.Kit, es []*table.Event) (needRetry bool)

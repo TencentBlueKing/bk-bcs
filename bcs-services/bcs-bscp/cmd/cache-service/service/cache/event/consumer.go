@@ -28,6 +28,9 @@ import (
 	"bscp.io/pkg/types"
 )
 
+// MaxCacheConcurrent is the max concurrent(goroutine) number of cache.
+var MaxCacheConcurrent = 10
+
 // consumer is used to consume the produced events.
 type consumer struct {
 	bds bedis.Client
@@ -311,7 +314,7 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 
 // cacheReleasedGroup cache the all released's group.
 func (c *consumer) cacheReleasedGroup(kt *kit.Kit, appBizID map[uint32]uint32) error {
-	pipe := make(chan struct{}, 10)
+	pipe := make(chan struct{}, MaxCacheConcurrent)
 	wg := sync.WaitGroup{}
 	var hitErr error
 	// get app's all released groups and cache them.
@@ -378,7 +381,7 @@ func (c *consumer) cacheOneReleasedGroup(kt *kit.Kit, bizID, appID uint32) error
 
 // cacheAppStrategy cache all the event strategy's related app's all the strategies.
 func (c *consumer) cacheAppStrategy(kt *kit.Kit, appBizID map[uint32]uint32) (map[uint32]uint32, error) {
-	pipe := make(chan struct{}, 10)
+	pipe := make(chan struct{}, MaxCacheConcurrent)
 	releaseBizID := newReleaseBizID()
 	wg := sync.WaitGroup{}
 	var hitErr error
