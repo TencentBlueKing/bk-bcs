@@ -25,11 +25,18 @@ import (
 )
 
 const (
-	urlReleaseList      = "/helmmanager/v1/release/%s"
-	urlReleaseInstall   = "/helmmanager/v1/release/%s/%s/%s/install"
-	urlReleaseUninstall = "/helmmanager/v1/release/%s/%s/%s/uninstall"
-	urlReleaseUpgrade   = "/helmmanager/v1/release/%s/%s/%s/upgrade"
-	urlReleaseRollback  = "/helmmanager/v1/release/%s/%s/%s/rollback"
+	urlReleaseList              = "/helmmanager/v1/release/%s"
+	urlReleaseListV1            = "/helmmanager/v1/projects/%s/clusters/%s/releases"
+	urlReleaseInstall           = "/helmmanager/v1/release/%s/%s/%s/install"
+	urlReleaseUninstall         = "/helmmanager/v1/release/%s/%s/%s/uninstall"
+	urlReleaseUpgrade           = "/helmmanager/v1/release/%s/%s/%s/upgrade"
+	urlReleaseRollback          = "/helmmanager/v1/release/%s/%s/%s/rollback"
+	urlReleaseDetailV1Get       = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	urlReleaseDetailV1Install   = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	urlReleaseDetailV1Uninstall = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	urlReleaseDetailV1Upgrade   = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	urlReleaseDetailV1Rollback  = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s/rollback"
+	urlReleaseHistoryGet        = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s/history"
 )
 
 // Release return a pkg.ReleaseClient instance
@@ -271,4 +278,347 @@ func (rl *release) Rollback(ctx context.Context, req *helmmanager.RollbackReleas
 	}
 
 	return nil
+}
+
+// GetReleaseDetailV1 get release detail v1
+func (rl *release) GetReleaseDetailV1(ctx context.Context, req *helmmanager.GetReleaseDetailV1Req) (*helmmanager.ReleaseDetail, error) {
+	if req == nil {
+		return nil, fmt.Errorf("get release detail v1 request is empty")
+	}
+
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return nil, fmt.Errorf("release projectCode can not be empty")
+	}
+
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return nil, fmt.Errorf("release clusterID can not be empty")
+	}
+
+	namespace := req.GetNamespace()
+	if namespace == "" {
+		return nil, fmt.Errorf("release namespace can not be empty")
+	}
+
+	name := req.GetName()
+	if name == "" {
+		return nil, fmt.Errorf("release name can not be empty")
+	}
+	resp, err := rl.get(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Get, projectCode, clusterID, namespace, name),
+		nil,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var r helmmanager.GetReleaseDetailV1Resp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return nil, err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return nil, fmt.Errorf("get release detail v1 get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return r.Data, nil
+}
+
+// List release v1
+func (rl *release) ListV1(ctx context.Context, req *helmmanager.ListReleaseV1Req) (*helmmanager.ReleaseListData, error) {
+	if req == nil {
+		return nil, fmt.Errorf("list release request is empty")
+	}
+
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return nil, fmt.Errorf("release projectCode can not be empty")
+	}
+
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return nil, fmt.Errorf("release clusterID can not be empty")
+	}
+
+	resp, err := rl.get(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleaseListV1, projectCode, clusterID)+"?"+rl.listReleaseQueryV1(req).Encode(),
+		nil,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var r helmmanager.ListReleaseV1Resp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return nil, err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return nil, fmt.Errorf("list release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return r.Data, nil
+}
+
+func (rl *release) listReleaseQueryV1(req *helmmanager.ListReleaseV1Req) url.Values {
+	query := url.Values{}
+	if req.Page != nil {
+		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
+	}
+	if req.Size != nil {
+		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
+	}
+	if req.Namespace != nil {
+		query.Set("namespace", req.GetNamespace())
+	}
+	if req.Name != nil {
+		query.Set("name", req.GetName())
+	}
+	return query
+}
+
+// InstallV1 release v1
+func (rl *release) InstallV1(ctx context.Context, req *helmmanager.InstallReleaseV1Req) error {
+	if req == nil {
+		return fmt.Errorf("install release request is empty")
+	}
+
+	req.Operator = common.GetStringP(rl.conf.Operator)
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return fmt.Errorf("install release projectCode can not be empty")
+	}
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return fmt.Errorf("install release clusterID can not be empty")
+	}
+	namespace := req.GetNamespace()
+	if namespace == "" {
+		return fmt.Errorf("install release namespace can not be empty")
+	}
+	name := req.GetName()
+	if name == "" {
+		return fmt.Errorf("install release name can not be empty")
+	}
+
+	var data []byte
+	_ = codec.EncJson(req, &data)
+
+	resp, err := rl.post(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Install, projectCode, clusterID, namespace, name),
+		nil,
+		data,
+	)
+	if err != nil {
+		return err
+	}
+
+	var r helmmanager.InstallReleaseV1Resp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return fmt.Errorf("install release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return nil
+}
+
+// Uninstall release v1
+func (rl *release) UninstallV1(ctx context.Context, req *helmmanager.UninstallReleaseV1Req) error {
+	if req == nil {
+		return fmt.Errorf("uninstall release request is empty")
+	}
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return fmt.Errorf("uninstall release projectCode can not be empty")
+	}
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return fmt.Errorf("uninstall release clusterID can not be empty")
+	}
+	namespace := req.GetNamespace()
+	if namespace == "" {
+		return fmt.Errorf("uninstall release namespace can not be empty")
+	}
+	name := req.GetName()
+	if name == "" {
+		return fmt.Errorf("uninstall release name can not be empty")
+	}
+
+	var data []byte
+	_ = codec.EncJson(req, &data)
+
+	resp, err := rl.post(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Uninstall, projectCode, clusterID, namespace, name),
+		nil,
+		data,
+	)
+	if err != nil {
+		return err
+	}
+
+	var r helmmanager.UninstallReleaseV1Resp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return fmt.Errorf("uninstall release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return nil
+}
+
+// Upgrade release v1
+func (rl *release) UpgradeV1(ctx context.Context, req *helmmanager.UpgradeReleaseV1Req) error {
+	if req == nil {
+		return fmt.Errorf("upgrade release request is empty")
+	}
+
+	req.Operator = common.GetStringP(rl.conf.Operator)
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return fmt.Errorf("upgrade release projectCode can not be empty")
+	}
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return fmt.Errorf("upgrade release clusterID can not be empty")
+	}
+	namespace := req.GetNamespace()
+	if namespace == "" {
+		return fmt.Errorf("upgrade release namespace can not be empty")
+	}
+	name := req.GetName()
+	if name == "" {
+		return fmt.Errorf("upgrade release name can not be empty")
+	}
+
+	var data []byte
+	_ = codec.EncJson(req, &data)
+
+	resp, err := rl.post(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Upgrade, projectCode, clusterID, namespace, name),
+		nil,
+		data,
+	)
+	if err != nil {
+		return err
+	}
+
+	var r helmmanager.UpgradeReleaseV1Resp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return fmt.Errorf("upgrade release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return nil
+}
+
+// Rollback release
+func (rl *release) RollbackV1(ctx context.Context, req *helmmanager.RollbackReleaseV1Req) error {
+	if req == nil {
+		return fmt.Errorf("rollback release request is empty")
+	}
+
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return fmt.Errorf("upgrade release projectCode can not be empty")
+	}
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return fmt.Errorf("rollback release clusterID can not be empty")
+	}
+	namespace := req.GetNamespace()
+	if namespace == "" {
+		return fmt.Errorf("rollback release namespace can not be empty")
+	}
+	name := req.GetName()
+	if name == "" {
+		return fmt.Errorf("rollback release name can not be empty")
+	}
+
+	var data []byte
+	_ = codec.EncJson(req, &data)
+
+	resp, err := rl.post(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Rollback, projectCode, clusterID, namespace, name),
+		nil,
+		data,
+	)
+	if err != nil {
+		return err
+	}
+
+	var r helmmanager.RollbackReleaseV1Resp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return fmt.Errorf("rollback release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return nil
+}
+
+// GetReleaseHistory get release history
+func (rl *release) GetReleaseHistory(ctx context.Context, req *helmmanager.GetReleaseHistoryReq) ([]*helmmanager.ReleaseHistory, error) {
+	if req == nil {
+		return nil, fmt.Errorf("get release history request is empty")
+	}
+
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return nil, fmt.Errorf("get release history projectCode can not be empty")
+	}
+	clusterID := req.GetClusterID()
+	if clusterID == "" {
+		return nil, fmt.Errorf("get release history clusterID can not be empty")
+	}
+	namespace := req.GetNamespace()
+	if namespace == "" {
+		return nil, fmt.Errorf("get release history namespace can not be empty")
+	}
+	name := req.GetName()
+	if name == "" {
+		return nil, fmt.Errorf("get release history name can not be empty")
+	}
+
+	var data []byte
+	_ = codec.EncJson(req, &data)
+
+	resp, err := rl.get(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlReleaseHistoryGet, projectCode, clusterID, namespace, name),
+		nil,
+		data,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var r helmmanager.GetReleaseHistoryResp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return nil, err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return nil, fmt.Errorf("rollback release get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return r.Data, nil
 }

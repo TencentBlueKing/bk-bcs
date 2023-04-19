@@ -31,14 +31,20 @@ type RepositoryClient interface {
 	Create(ctx context.Context, req *helmmanager.CreateRepositoryReq) error
 	Update(ctx context.Context, req *helmmanager.UpdateRepositoryReq) error
 	Delete(ctx context.Context, req *helmmanager.DeleteRepositoryReq) error
+	Get(ctx context.Context, req *helmmanager.GetRepositoryReq) (*helmmanager.Repository, error)
 	List(ctx context.Context, req *helmmanager.ListRepositoryReq) ([]*helmmanager.Repository, error)
 }
 
 // ChartClient define the chart operation handler
 type ChartClient interface {
 	List(ctx context.Context, req *helmmanager.ListChartReq) (*helmmanager.ChartListData, error)
+	ListV1(ctx context.Context, req *helmmanager.ListChartV1Req) (*helmmanager.ChartListData, error)
 	Versions(ctx context.Context, req *helmmanager.ListChartVersionReq) (*helmmanager.ChartVersionListData, error)
 	Detail(ctx context.Context, req *helmmanager.GetVersionDetailReq) (*helmmanager.ChartDetail, error)
+	GetChartDetailV1(ctx context.Context, req *helmmanager.GetChartDetailV1Req) (*helmmanager.Chart, error)
+	GetVersionDetailV1(ctx context.Context, req *helmmanager.GetVersionDetailV1Req) (*helmmanager.ChartDetail, error)
+	DeleteChart(ctx context.Context, req *helmmanager.DeleteChartReq) error
+	DeleteChartVersion(ctx context.Context, req *helmmanager.DeleteChartVersionReq) error
 }
 
 // ReleaseClient define the release operation handler
@@ -48,4 +54,11 @@ type ReleaseClient interface {
 	Uninstall(ctx context.Context, req *helmmanager.UninstallReleaseReq) error
 	Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseReq) (*helmmanager.ReleaseDetail, error)
 	Rollback(ctx context.Context, req *helmmanager.RollbackReleaseReq) error
+	GetReleaseDetailV1(ctx context.Context, req *helmmanager.GetReleaseDetailV1Req) (*helmmanager.ReleaseDetail, error)
+	ListV1(ctx context.Context, req *helmmanager.ListReleaseV1Req) (*helmmanager.ReleaseListData, error)
+	InstallV1(ctx context.Context, req *helmmanager.InstallReleaseV1Req) error
+	UninstallV1(ctx context.Context, req *helmmanager.UninstallReleaseV1Req) error
+	UpgradeV1(ctx context.Context, req *helmmanager.UpgradeReleaseV1Req) error
+	RollbackV1(ctx context.Context, req *helmmanager.RollbackReleaseV1Req) error
+	GetReleaseHistory(ctx context.Context, req *helmmanager.GetReleaseHistoryReq) ([]*helmmanager.ReleaseHistory, error)
 }

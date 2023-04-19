@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	urlRepository = "/helmmanager/v1/projects/%s/repos"
+	urlRepository    = "/helmmanager/v1/projects/%s/repos"
+	urlGetRepository = "/helmmanager/v1/projects/%s/repos/%s"
 )
 
 // Repository return a pkg.RepositoryClient instance
@@ -169,6 +170,43 @@ func (rp *repository) List(ctx context.Context, req *helmmanager.ListRepositoryR
 
 	if r.GetCode() != resultCodeSuccess {
 		return nil, fmt.Errorf("list repository get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return r.Data, nil
+}
+
+// Get repository
+func (rp *repository) Get(ctx context.Context, req *helmmanager.GetRepositoryReq) (
+	*helmmanager.Repository, error) {
+	if req == nil {
+		return nil, fmt.Errorf("get repository request is empty")
+	}
+
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return nil, fmt.Errorf("repository project can not be empty")
+	}
+	repositoryName := req.GetName()
+	if repositoryName == "" {
+		return nil, fmt.Errorf("repository name can not be empty")
+	}
+	resp, err := rp.get(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlGetRepository, projectCode, repositoryName),
+		nil,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var r helmmanager.GetRepositoryResp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return nil, err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return nil, fmt.Errorf("get repository get result code %d, message: %s", r.GetCode(), r.GetMessage())
 	}
 
 	return r.Data, nil
