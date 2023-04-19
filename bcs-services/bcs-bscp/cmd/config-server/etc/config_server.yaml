@@ -77,6 +77,7 @@ service:
       # the password to decrypt the certificate.
       password:
 
+# defines credential's related settings
 credential:
   master_key: "XXXXXXXXXXXXXXXX"
   encryption_algorithm: "aes"
