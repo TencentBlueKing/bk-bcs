@@ -730,7 +730,7 @@ type FSLocalCache struct {
 	PublishedStrategyCacheTTLSec uint `yaml:"publishedStrategyCacheTTLSec"`
 
 	// ReleasedGroupCacheSize defines how many released groups can be cached.
-	ReleasedGroupCacheSize uint `yaml:"releasedGroupCacheTTLSec"`
+	ReleasedGroupCacheSize uint `yaml:"releasedGroupCacheSize"`
 	// ReleasedGroupCacheTTLSec defines how long will this released group can be cached in seconds.
 	ReleasedGroupCacheTTLSec uint `yaml:"releasedGroupCacheTTLSec"`
 
