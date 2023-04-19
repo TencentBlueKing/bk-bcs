@@ -1,3 +1,7 @@
+insert into id_generators(resource, max_id, updated_at)
+values ('credentials', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('credential_scopes', 0, now());
 
 CREATE TABLE if not exists `credentials` (
     `id` bigint(1) unsigned NOT NULL,

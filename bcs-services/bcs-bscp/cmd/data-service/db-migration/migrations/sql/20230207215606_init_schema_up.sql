@@ -80,44 +80,44 @@ create table if not exists `id_generators`
 ) engine = innodb
   default charset = utf8mb4;
 
-insert into id_generators(id, resource, max_id, updated_at)
-values (1, 'applications', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (2, 'archived_apps', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (3, 'commits', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (4, 'config_items', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (5, 'contents', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (6, 'audits', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (7, 'events', 500, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (8, 'current_released_instances', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (9, 'releases', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (10, 'released_config_items', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (11, 'strategies', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (12, 'current_published_strategies', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (13, 'published_strategy_histories', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (14, 'strategy_sets', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (15, 'resource_locks', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (16, 'groups', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (17, 'group_app_binds', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (18, 'group_current_releases', 0, now());
-insert into id_generators(id, resource, max_id, updated_at)
-values (19, 'hooks', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('applications', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('archived_apps', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('commits', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('config_items', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('contents', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('audits', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('events', 500, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('current_released_instances', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('releases', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('released_config_items', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('strategies', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('current_published_strategies', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('published_strategy_histories', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('strategy_sets', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('resource_locks', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('groups', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('group_app_binds', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('group_current_releases', 0, now());
+insert into id_generators(resource, max_id, updated_at)
+values ('hooks', 0, now());
 
 create table if not exists `archived_apps`
 (
