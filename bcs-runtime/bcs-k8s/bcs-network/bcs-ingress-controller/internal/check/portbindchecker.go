@@ -79,8 +79,8 @@ func (p *PortBindChecker) getPortConflictMap(portBindingList *networkextensionv1
 	if portBindingList == nil {
 		return nil
 	}
-	// itemKey -> {startPort -> podName}
-	itemMap := make(map[string]map[int]string)
+	// itemKey -> {protocol/startPort -> podName}
+	itemMap := make(map[string]map[string]string)
 	// itemKey:port -> [podName...] 记录itemKey+port下有哪些pod发生冲突
 	conflictMap := make(map[string][]string)
 	for _, portBinding := range portBindingList.Items {
@@ -89,13 +89,14 @@ func (p *PortBindChecker) getPortConflictMap(portBindingList *networkextensionv1
 			itemKey := buildPortBindingItemKey(item)
 			portMap, ok := itemMap[itemKey]
 			if !ok {
-				portMap = make(map[int]string)
+				portMap = make(map[string]string)
 				itemMap[itemKey] = portMap
 			}
 
-			namespaceName, ok := portMap[item.StartPort]
+			portKey := fmt.Sprintf("%s/%d", item.Protocol, item.StartPort)
+			namespaceName, ok := portMap[portKey]
 			if !ok {
-				portMap[item.StartPort] = fmt.Sprintf("%s/%s", portBinding.Namespace, portBinding.Name)
+				portMap[portKey] = fmt.Sprintf("%s/%s", portBinding.Namespace, portBinding.Name)
 			} else {
 				// startPort冲突说明发生端口重复分配,
 				conflictKey := buildConflictKey(item)

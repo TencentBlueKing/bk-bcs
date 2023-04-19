@@ -284,11 +284,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	listenerHelper := listenerctrl.NewListenerHelper(mgr.GetClient())
 	ingressConverter, err := generator.NewIngressConverter(&generator.IngressConverterOpt{
 		DefaultRegion:     opts.Region,
 		IsTCPUDPPortReuse: opts.IsTCPUDPPortReuse,
 		Cloud:             opts.Cloud,
-	}, mgr.GetClient(), validater, lbClient)
+	}, mgr.GetClient(), validater, lbClient, listenerHelper)
 	if err != nil {
 		blog.Errorf("create ingress converter failed, err %s", err.Error())
 		os.Exit(1)
@@ -379,7 +380,7 @@ func main() {
 	checkRunner := check.NewCheckRunner(context.Background())
 	checkRunner.
 		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"))).
-		Register(check.NewListenerChecker(mgr.GetClient())).
+		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper)).
 		Start()
 	blog.Infof("starting check runner")
 

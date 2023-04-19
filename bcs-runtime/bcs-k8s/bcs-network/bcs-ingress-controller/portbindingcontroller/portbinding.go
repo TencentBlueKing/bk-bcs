@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -269,6 +270,14 @@ func (pbh *portBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *networ
 
 		if podPortBindingItem.External != portBindingItem.External {
 			podPortBindingList[idx].External = portBindingItem.External
+			changed = true
+		}
+		if !reflect.DeepEqual(podPortBindingItem.LoadBalancerIDs, portBindingItem.LoadBalancerIDs) {
+			podPortBindingList[idx].LoadBalancerIDs = portBindingItem.LoadBalancerIDs
+			changed = true
+		}
+		if !reflect.DeepEqual(podPortBindingItem.PoolItemLoadBalancers, portBindingItem.PoolItemLoadBalancers) {
+			podPortBindingList[idx].PoolItemLoadBalancers = portBindingItem.PoolItemLoadBalancers
 			changed = true
 		}
 	}

@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	api "github.com/argoproj/argo-cd/v2/pkg/apiclient"
@@ -195,8 +196,27 @@ func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) 
 	return cls, nil
 }
 
+// repo name perhaps encoded, such as: https%253A%252F%252Fgit.fake.com%252Ftest%252Fhelloworld.git.
+// So we should urldecode the repo name twice. It also works fine when repo is normal.
+func (cd *argo) decoreRepoUrl(repo string) (string, error) {
+	t, err := url.PathUnescape(repo)
+	if err != nil {
+		return "", errors.Wrapf(err, "decode failed")
+	}
+	result, err := url.PathUnescape(t)
+	if err != nil {
+		return "", errors.Wrapf(err, "decode second failed")
+	}
+	return result, nil
+}
+
 // GetRepository interface
 func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error) {
+	var err error
+	repo, err = cd.decoreRepoUrl(repo)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get repository failed with decode repo '%s'", repo)
+	}
 	// create new single connection per request
 	// ! please make more attension to performance issue
 	connection, client, err := cd.basicClient.NewRepoClient()
