@@ -52,4 +52,8 @@ const (
 	Repo ResourceType = "repository"
 	// Sidecar represent requests form sidecar
 	Sidecar ResourceType = "sidecar"
+	// Credential resource's bscp auth resource type
+	Credential ResourceType = "credential"
+	// CredentialScope resource's bscp auth resource type
+	CredentialScope ResourceType = "credential_scope"
 )

@@ -115,7 +115,7 @@ func PbConfigItem(ci *table.ConfigItem, fileState string) *ConfigItem {
 	}
 }
 
-// PbConfigItemCounts
+// PbConfigItemCounts convert table ListConfigItemCounts to pb ListConfigItemCounts
 func PbConfigItemCounts(ccs []*table.ListConfigItemCounts, appList []uint32) []*ListConfigItemCounts {
 	if ccs == nil {
 		return make([]*ListConfigItemCounts, 0)
@@ -137,7 +137,7 @@ func PbConfigItemCounts(ccs []*table.ListConfigItemCounts, appList []uint32) []*
 	return result
 }
 
-// PbConfigItemCount
+// PbConfigItemCount convert table ListConfigItemCounts to pb ListConfigItemCounts
 func PbConfigItemCount(cc *table.ListConfigItemCounts) *ListConfigItemCounts {
 	if cc == nil {
 		return nil

@@ -254,6 +254,7 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 
 }
 
+// getEditingConfigItem get edit config item
 func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, appID uint32) (
 	*pbcs.GetConfigItemResp, error) {
 	// 1. get config item
@@ -299,6 +300,7 @@ func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, ap
 	return resp, nil
 }
 
+// getReleasedConfigItem get release config item
 func (s *Service) getReleasedConfigItem(grpcKit *kit.Kit, configItemID, bizID, appID, releaseID uint32) (
 	*pbcs.GetConfigItemResp, error) {
 	// 1. get config item
@@ -362,7 +364,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	return resp, nil
 }
 
-// ListConfigItemCount
+// ListConfigItemCount get config item count number
 func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigItemCountReq) (*pbcs.ListConfigItemCountResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemCountResp)
