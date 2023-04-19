@@ -250,7 +250,7 @@
             <span class="bk-outline"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('未实例化过')}}</span>
             <span class="bk-default"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('已实例化过')}}</span>
           </div>
-          <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList" v-show="!curClusterId || (curClusterId && item.cluster_id === curClusterId)">
+          <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList">
             <div class="content-trigger" @click="triggerHandler(item, index)">
               <div class="left-area" style="border-right: none;">
                 <div class="label">
