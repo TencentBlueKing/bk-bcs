@@ -78,8 +78,8 @@ service:
       password:
 
 credential:
-  master_key: "XXXXXXXXXXXXXXXXXXXXXXXX"
-  encryption_algorithm: "des"
+  master_key: "XXXXXXXXXXXXXXXX"
+  encryption_algorithm: "aes"
 
 # defines log's related configuration
 log:
