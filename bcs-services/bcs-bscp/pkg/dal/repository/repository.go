@@ -31,14 +31,14 @@ const (
 	RepoRecordCacheExpiration = time.Hour
 )
 
-// FileApiType
+// FileApiType file api type
 type FileApiType interface {
 	DownloadFile(w http.ResponseWriter, r *http.Request)
 	FileMetadata(w http.ResponseWriter, r *http.Request)
 	UploadFile(w http.ResponseWriter, r *http.Request)
 }
 
-// DownloadFile
+// DownloadFile download file
 func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
@@ -88,7 +88,7 @@ func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, reader)
 }
 
-// UploadFile
+// UploadFile upload file
 func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 	kt, err := gwparser.Parse(r.Context(), r.Header)
 	if err != nil {
@@ -212,7 +212,7 @@ type ResponseBody struct {
 	Message string
 }
 
-// S3Client
+// S3Client s3 client struct
 type S3Client struct {
 	// repoCli s3 client.
 	s3Cli *repo.ClientS3
@@ -257,7 +257,7 @@ type AuthResp struct {
 	Permission *pbas.IamPermission `json:"permission,omitempty"`
 }
 
-// NewS3Service
+// NewS3Service new s3 service
 func NewS3Service(settings cc.Repository, authorizer auth.Authorizer) (FileApiType, error) {
 	s3Client, err := repo.NewClientS3(&settings, metrics.Register())
 	if err != nil {

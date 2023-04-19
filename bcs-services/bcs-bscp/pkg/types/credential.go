@@ -6,6 +6,7 @@ import (
 	"bscp.io/pkg/runtime/filter"
 )
 
+// ListCredentialsOption credential option
 type ListCredentialsOption struct {
 	BizID  uint32             `json:"biz_id"`
 	Filter *filter.Expression `json:"filter"`

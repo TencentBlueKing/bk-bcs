@@ -11,6 +11,7 @@ import (
 // CredentialColumns defines credential's columns
 var CredentialColumns = mergeColumns(CredentialColumnDescriptor)
 
+// CredentialColumnDescriptor is Credential's column descriptors.
 var CredentialColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
 	mergeColumnDescriptors("spec", CredentialSpecColumnDescriptor),
@@ -18,6 +19,8 @@ var CredentialColumnDescriptor = mergeColumnDescriptors("",
 	mergeColumnDescriptors("revision", CredentialRevisionColumnDescriptor),
 )
 
+// Credential defines a hook for an app to publish.
+// it contains the selector to define the scope of the matched instances.
 type Credential struct {
 	// ID is an auto-increased value, which is a unique identity of a Credential.
 	ID         uint32                `db:"id" json:"id"`
@@ -26,7 +29,7 @@ type Credential struct {
 	Revision   *CredentialRevision   `db:"revision" json:"revision"`
 }
 
-// TableName  Credentials
+// TableName  is the Credential's database table name.
 func (s Credential) TableName() Name {
 	return CredentialTable
 }
@@ -65,8 +68,10 @@ func (s Credential) ValidateCreate() error {
 	return nil
 }
 
+// CredentialSpecColumns defines CredentialSpec's columns
 var CredentialSpecColumns = mergeColumns(CredentialSpecColumnDescriptor)
 
+// CredentialSpecColumnDescriptor is CredentialSpec's column descriptors.
 var CredentialSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "credential_type", NamedC: "credential_type", Type: enumor.String},
 	{Column: "enc_credential", NamedC: "enc_credential", Type: enumor.String},
@@ -75,6 +80,7 @@ var CredentialSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "enable", NamedC: "enable", Type: enumor.Boolean},
 }
 
+// CredentialSpec defines all the specifics for credential set by user.
 type CredentialSpec struct {
 	CredentialType CredentialType `db:"credential_type" json:"credential_type"`
 	EncCredential  string         `db:"enc_credential" json:"enc_credential"`
@@ -105,6 +111,7 @@ func (s CredentialType) Validate() error {
 	return nil
 }
 
+// String credential to string
 func (s CredentialType) String() string {
 	return string(s)
 }
@@ -117,7 +124,7 @@ func (c CredentialSpec) ValidateCreate() error {
 	return nil
 }
 
-//CredentialAttachment
+//CredentialAttachment defines the credential attachments.
 type CredentialAttachment struct {
 	BizID uint32 `db:"biz_id" json:"biz_id"`
 }
@@ -144,7 +151,7 @@ func (c CredentialAttachment) Validate() error {
 // CredentialRevisionColumns defines all the Revision table's columns.
 var CredentialRevisionColumns = mergeColumns(CredentialRevisionColumnDescriptor)
 
-// RevisionColumnDescriptor is Revision's column descriptors.
+// CredentialRevisionColumnDescriptor is Revision's column descriptors.
 var CredentialRevisionColumnDescriptor = ColumnDescriptors{
 	{Column: "creator", NamedC: "creator", Type: enumor.String},
 	{Column: "reviser", NamedC: "reviser", Type: enumor.String},

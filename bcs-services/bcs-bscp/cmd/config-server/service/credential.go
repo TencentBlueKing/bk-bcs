@@ -17,7 +17,7 @@ import (
 	"bscp.io/pkg/tools"
 )
 
-// CreateCredential create a credential
+// CreateCredentials create a credential
 func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredentialReq) (*pbcs.CreateCredentialResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateCredentialResp)

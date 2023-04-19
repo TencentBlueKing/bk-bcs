@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/des"
 	"encoding/base64"
 	"fmt"
 	"math/rand"
@@ -12,7 +11,6 @@ import (
 
 var (
 	AES = "aes"
-	DES = "des"
 )
 
 // CreateCredential create credential
@@ -24,8 +22,6 @@ func CreateCredential(bizId uint32, masterKey, encryptionAlgorithm string) (stri
 	switch encryptionAlgorithm {
 	case AES:
 		return AesEncrypt([]byte(algorithmText), []byte(masterKey))
-	case DES:
-		return DesEncryptToBase([]byte(algorithmText), []byte(masterKey))
 	default:
 		return "", fmt.Errorf("algorithm type is is not supported, type: %s", encryptionAlgorithm)
 	}
@@ -40,8 +36,6 @@ func DecryptCredential(credential, masterKey, encryptionAlgorithm string) (strin
 	switch encryptionAlgorithm {
 	case AES:
 		return AesDecrypt(b64Byte, []byte(masterKey))
-	case DES:
-		return DesDecryptFromBase(b64Byte, []byte(masterKey))
 	default:
 		return "", fmt.Errorf("algorithm type is is not supported, type: %s", encryptionAlgorithm)
 	}
@@ -56,48 +50,6 @@ func randStr(n int) string {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
-}
-
-// PKCS5Padding size padding
-func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
-	padding := blockSize - len(ciphertext)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(ciphertext, padtext...)
-}
-
-// PKCS5UnPadding size unpadding
-func PKCS5UnPadding(origData []byte) []byte {
-	length := len(origData)
-	unpadding := int(origData[length-1])
-	return origData[:(length - unpadding)]
-}
-
-// DesEncryptToBase encrypt with priKey simply, out base64 string
-func DesEncryptToBase(origData, key []byte) (string, error) {
-	block, err := des.NewTripleDESCipher(key)
-	if err != nil {
-		return "", err
-	}
-	src := PKCS5Padding(origData, block.BlockSize())
-	blockMode := cipher.NewCBCEncrypter(block, key[:block.BlockSize()])
-	out := make([]byte, len(src))
-	blockMode.CryptBlocks(out, src)
-	strOut := base64.StdEncoding.EncodeToString(out)
-	return strOut, nil
-}
-
-// DesDecryptFromBase base64 decoding, and decrypt with priKey
-func DesDecryptFromBase(crypted, key []byte) (string, error) {
-	ori, _ := base64.StdEncoding.DecodeString(string(crypted))
-	block, err := des.NewTripleDESCipher(key)
-	if err != nil {
-		return "", err
-	}
-	blockMode := cipher.NewCBCDecrypter(block, key[:block.BlockSize()])
-	out := make([]byte, len(ori))
-	blockMode.CryptBlocks(out, ori)
-	out = PKCS5UnPadding(out)
-	return string(out), nil
 }
 
 // PKCS7Padding PKCS7Padding

@@ -5,7 +5,7 @@ import (
 	pbcredential "bscp.io/pkg/protocol/core/credential"
 )
 
-// CredentialScopeAttachment convert pb CredentialAttachment to table CredentialScopeAttachment
+// CredentialAttachment convert pb CredentialAttachment to table CredentialScopeAttachment
 func (m *CredentialScopeAttachment) CredentialAttachment() *table.CredentialScopeAttachment {
 	if m == nil {
 		return nil

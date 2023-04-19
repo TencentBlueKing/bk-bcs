@@ -6,27 +6,6 @@ import (
 	"testing"
 )
 
-// TestDeEncrytion des DeEncrytion test
-func TestDeEncrytion(t *testing.T) {
-	priKey := "abcdefghijklmnopqrstuvwx"
-	oriStr := "abcdefgjijklmn"
-	fmt.Println("original: ", oriStr)
-	b64Str, err := DesEncryptToBase([]byte(oriStr), []byte(priKey))
-	if err != nil {
-		t.Errorf("encrypt err: %s\n", err.Error())
-	}
-	fmt.Println("base64 out string: ", b64Str)
-
-	original, err := DesDecryptFromBase([]byte(b64Str), []byte(priKey))
-	if err != nil {
-		t.Errorf("decrypt err: %s\n", err.Error())
-	}
-	fmt.Println("decrypt: ", original)
-	if original != oriStr {
-		t.Errorf("Decryption Error, old: %s, new: %s", oriStr, original)
-	}
-}
-
 // TestAesDeEncrytion aes DeEncrytion test
 func TestAesDeEncrytion(t *testing.T) {
 	//需要16的倍数

@@ -704,10 +704,10 @@ func (ab *AuditBuilder) getCredential(credentialID uint32) (*table.Credential, e
 	return one, nil
 }
 
-func (ab *AuditBuilder) getCredentialScope(ID uint32) (*table.CredentialScope, error) {
+func (ab *AuditBuilder) getCredentialScope(id uint32) (*table.CredentialScope, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialScopeColumns.NamedExpr(), " FROM ", table.CredentialScopeTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(ID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+		" WHERE id = ", strconv.Itoa(int(id)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
 	filter := filter2.SqlJoint(sqlSentence)
 
 	one := new(table.CredentialScope)

@@ -17,6 +17,7 @@ var CredentialScopeColumnDescriptor = mergeColumnDescriptors("",
 	mergeColumnDescriptors("revision", CredentialRevisionColumnDescriptor),
 )
 
+// CredentialScope defines CredentialScope's columns
 type CredentialScope struct {
 	// ID is an auto-increased value, which is a unique identity of a Credential.
 	ID         uint32                     `db:"id" json:"id"`
@@ -25,6 +26,7 @@ type CredentialScope struct {
 	Revision   *CredentialRevision        `db:"revision" json:"revision"`
 }
 
+// TableName is the CredentialScope's database table name.
 func (s CredentialScope) TableName() Name {
 	return CredentialScopeTable
 }
@@ -74,6 +76,7 @@ var CredentialScopeAttachmentColumnDescriptor = ColumnDescriptors{
 	{Column: "credential_id", NamedC: "credential_id", Type: enumor.Numeric},
 }
 
+// CredentialScopeAttachment defines the credential scope attachments.
 type CredentialScopeAttachment struct {
 	BizID        uint32 `db:"biz_id" json:"biz_id"`
 	CredentialId uint32 `db:"credential_id" json:"credential_id"`

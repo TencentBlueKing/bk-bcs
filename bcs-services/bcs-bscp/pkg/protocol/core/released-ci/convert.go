@@ -120,7 +120,7 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 	}
 }
 
-// PbConfigItemState
+// PbConfigItemState convert config item state
 func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) []*pbci.ConfigItem {
 	if cis == nil {
 		return make([]*pbci.ConfigItem, 0)

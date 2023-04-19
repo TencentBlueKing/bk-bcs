@@ -17,7 +17,7 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// Credential supplies all the Credential related operations.
+// CredentialScope supplies all the credential scope related operations.
 type CredentialScope interface {
 	// Create create credential scope
 	Create(kit *kit.Kit, credential *table.CredentialScope) (uint32, error)
