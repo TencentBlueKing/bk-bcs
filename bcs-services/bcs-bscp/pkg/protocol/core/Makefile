@@ -13,6 +13,8 @@ all:
 	@cd hook && make
 	@cd group && make
 	@cd released-group && make
+	@cd credential && make
+	@cd credential-scope && make
 
 clean:
 	@cd base && make clean
@@ -29,3 +31,5 @@ clean:
 	@cd hook && make
 	@cd group && make clean
 	@cd released-group && make clean
+	@cd credential && make clean
+	@cd credential-scope && make clean

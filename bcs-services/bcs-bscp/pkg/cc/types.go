@@ -892,3 +892,23 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 		lm.WaitTimeMil = 50
 	}
 }
+
+// Credential credential encryption algorithm and master key
+type Credential struct {
+	MasterKey           string `yaml:"master_key"`
+	EncryptionAlgorithm string `yaml:"encryption_algorithm"`
+}
+
+// validate credential options
+func (c Credential) validate() error {
+
+	if len(c.MasterKey) == 0 {
+		return errors.New("credential master key is not set")
+	}
+
+	if len(c.EncryptionAlgorithm) == 0 {
+		return errors.New("credential Encryption Algorithm is not set")
+	}
+
+	return nil
+}

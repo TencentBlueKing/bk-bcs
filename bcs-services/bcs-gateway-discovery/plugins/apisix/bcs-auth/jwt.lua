@@ -14,6 +14,7 @@
 local core = require("apisix.core")
 local redis_new = require("resty.redis").new
 local jwt = require("resty.jwt")
+local error = error
 
 local pcall = pcall
 local ngx_decode_base64 = ngx.decode_base64
@@ -28,11 +29,76 @@ local function get_redis_client(conf)
 
     red:set_timeout(1000)
 
-    red:connect(conf.redis_host, conf.redis_port)
-    red:auth(conf.redis_password)
+    local ok, err = red:connect(conf.redis_host, conf.redis_port)
+    if not ok then
+        core.log.error("failed to connect redis, err:", err)
+        error("failed to connect redis")
+    end
+
+    local res, err = red:auth(conf.redis_password)
+    if not res then
+        core.log.error("failed to authenticate redis, err:", err)
+        error("failed to authenticate redis")
+    end
     red:select(conf.redis_database)
 
     return red
+end
+
+local function retry(max_attempts, func, ...)
+    local args = { ... }
+    local attempts = 0
+    repeat
+        attempts = attempts + 1
+        local success, result = pcall(func, unpack(args))
+        if success then
+            return result
+        end
+        if attempts >= max_attempts then
+            error("Retry failed after " .. attempts .. " attempts")
+        end
+    until false
+end
+
+local function conn_and_get(key, conf)
+    local ok, red = pcall(get_redis_client, conf)
+    if not ok then
+        core.log.error("failed to connect redis:", red)
+        error("failed to connect redis")
+    end
+
+    local jwt_token, err = red:get(key)
+    if not jwt_token then
+        core.log.error("failed to get jwt_token, err: ", err)
+        error("failed to get jwt_token")
+    end
+
+    local ok, err = red:set_keepalive(10000, 100) -- tcp status : TIME_WAIT
+    if not ok then
+        core.log.error("failed to set keepalive:", err)
+    end
+    return jwt_token
+end
+
+
+local function conn_and_set(key, jwt_token, conf)
+    local ok, red = pcall(get_redis_client, conf)
+    if not ok then
+        core.log.error("failed to connect redis:", red)
+        error("failed to connect redis")
+    end
+
+    local setok, err = red:set(key, jwt_token, "EX", conf.exp)
+    if not setok then
+        core.log.error("failed to set jwt_token, err: ", err)
+        error("failed to set jwt_token")
+    end
+
+    local ok, err = red:set_keepalive(10000, 100) -- tcp status : TIME_WAIT
+    if not ok then
+        core.log.error("failed to set keepalive:", err)
+    end
+    return setok
 end
 
 
@@ -72,14 +138,14 @@ end
 local function sign_jwt_with_RS256(userinfo, auth_conf)
     local auth_secret = get_secret(auth_conf)
     local ok, jwt_token = pcall(jwt.sign, _M,
-        auth_secret,
-        {
-            header = {
-                typ = "JWT",
-                alg = "RS256"
-            },
-            payload = get_real_payload(userinfo, auth_conf)
-        }
+            auth_secret,
+            {
+                header = {
+                    typ = "JWT",
+                    alg = "RS256"
+                },
+                payload = get_real_payload(userinfo, auth_conf)
+            }
     )
     if not ok then
         core.log.error("failed to sign jwt, err: ", jwt_token.reason)
@@ -93,19 +159,14 @@ local _M = {}
 
 
 function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get_userinfo_handler)
-    local ok, red = pcall(get_redis_client, conf)
-    if not ok then
-        core.log.error("failed to connect redis:", red)
-        core.response.exit(500, plugin_error_msg)
-    end
-
     local key = key_prefix
     if not credential.redis_key then
         key = key .. credential.user_token
     else
         key = key .. credential.redis_key
     end
-    local jwt_token, err = red:get(key)
+
+    local jwt_token = retry(3, conn_and_get, key, conf)
     if not jwt_token then
         core.log.error("failed to get jwt_token, err: ", err)
         core.response.exit(500, plugin_error_msg)
@@ -117,18 +178,12 @@ function _M:get_jwt_from_redis(credential, conf, key_prefix, create_if_null, get
         if userinfo then
             jwt_token = sign_jwt_with_RS256(userinfo, conf)
 
-            local ok, err = red:set(key, jwt_token, "EX", conf.exp)
+            local ok = retry(3, conn_and_set, key, jwt_token, conf)
             if not ok then
                 core.log.error("failed to set jwt_token, err: ", err)
                 core.response.exit(500, plugin_error_msg)
             end
         end
-    end
-
-    local ok, err = red:set_keepalive(10000, 100) -- tcp status : TIME_WAIT
-    if not ok then
-        core.log.error("failed to set keepalive:", err)
-        core.response.exit(500, plugin_error_msg)
     end
 
     if jwt_token == ngx.null then

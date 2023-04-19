@@ -44,6 +44,8 @@ type Set interface {
 	Event() Event
 	BeginTx(kit *kit.Kit, bizID uint32) (*sharding.Tx, error)
 	Healthz() error
+	Credential() Credential
+	CredentialScope() CredentialScope
 }
 
 // NewDaoSet create the DAO set instance.
@@ -271,4 +273,24 @@ func (s *set) Event() Event {
 // Healthz check mysql healthz.
 func (s *set) Healthz() error {
 	return s.sd.Healthz()
+}
+
+// Credential returns the Credential's DAO
+func (s *set) Credential() Credential {
+	return &credentialDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+	}
+}
+
+// CredentialScope returns the Credential scope's DAO
+func (s *set) CredentialScope() CredentialScope {
+	return &credentialScopeDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+	}
 }

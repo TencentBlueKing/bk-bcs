@@ -1,5 +1,6 @@
-// 空间列表单个详情
-export interface ISpaceItem {
+
+// 空间详情
+export interface ISpaceDetail {
   permission?: boolean;
   space_id: string;
   space_name: string;
@@ -8,6 +9,7 @@ export interface ISpaceItem {
   space_uid: number;
 }
 
+// 权限查询参数
 export interface IPermissionQuery {
   biz_id: number|string;
   basic: {
@@ -18,6 +20,7 @@ export interface IPermissionQuery {
   gen_apply_url: boolean;
 }
 
+// 权限申请资源信息
 export interface IPermissionResource {
   action: string;
   action_name: string;

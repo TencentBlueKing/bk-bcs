@@ -2,7 +2,7 @@
     import { ref, watch, onMounted } from 'vue'
     import { useRoute } from 'vue-router'
     import { storeToRefs } from 'pinia'
-    import { useServingStore } from '../../store/serving'
+    import { useServiceStore } from '../../store/service'
     import { IConfigDiffDetail } from '../../../types/config';
     import { getConfigContent } from '../../api/config';
     import { byteUnitConverse } from '../../utils';
@@ -10,7 +10,7 @@
     import Text from './text.vue'
 
     const route = useRoute()
-    const { appData } = storeToRefs(useServingStore())
+    const { appData } = storeToRefs(useServiceStore())
     const bkBizId = ref(String(route.params.spaceId))
 
     const props = defineProps<{
