@@ -85,13 +85,16 @@ func ShowVersion(prefix string, format VersionFormat) {
 
 // FormatVersion returns service's version.
 func FormatVersion(prefix string, format VersionFormat) string {
+	if prefix != "" {
+		prefix = prefix + " "
+	}
 	switch format {
 	case Row:
-		return fmt.Sprintf("%s Version: %s\nBuildTime: %s\nGitHash: %s\n", prefix, VERSION, BUILDTIME, GITHASH)
+		return fmt.Sprintf("%sVersion: %s\nBuildTime: %s\nGitHash: %s\n", prefix, VERSION, BUILDTIME, GITHASH)
 	case JSON:
-		return fmt.Sprintf(`%s {"Version": "%s", "BuildTime": "%s", "GitHash": "%s"}`, prefix, VERSION, BUILDTIME, GITHASH)
+		return fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s"}`, prefix, VERSION, BUILDTIME, GITHASH)
 	default:
-		return fmt.Sprintf("%s Version: %s\nBuildTime: %s\nGitHash: %s\n", prefix, VERSION, BUILDTIME, GITHASH)
+		return fmt.Sprintf("%sVersion: %s\nBuildTime: %s\nGitHash: %s\n", prefix, VERSION, BUILDTIME, GITHASH)
 	}
 }
 
