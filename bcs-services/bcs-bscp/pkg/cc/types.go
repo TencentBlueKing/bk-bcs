@@ -789,11 +789,11 @@ func (fc *FSLocalCache) trySetDefault() {
 	}
 
 	if fc.ReleasedGroupCacheSize == 0 {
-		fc.PublishedStrategyCacheSize = 100
+		fc.ReleasedGroupCacheSize = 100
 	}
 
 	if fc.ReleasedGroupCacheTTLSec == 0 {
-		fc.PublishedStrategyCacheTTLSec = 120
+		fc.ReleasedGroupCacheTTLSec = 120
 	}
 
 	if fc.AuthCacheSize == 0 {

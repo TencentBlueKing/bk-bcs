@@ -41,6 +41,7 @@ func (c *client) ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) 
 	}
 
 	if hit {
+		fmt.Println(" ================ cache hit ================== ")
 		c.mc.hitCounter.With(prm.Labels{"rsc": releasedGroupRes, "biz": tools.Itoa(bizID)}).Inc()
 		return list, nil
 	}
@@ -80,12 +81,20 @@ func (c *client) ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) 
 
 func (c *client) getReleasedGroupsFromCache(kt *kit.Kit, bizID uint32, appID uint32) (string, bool, error) {
 
-	list, err := c.bds.Get(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID))
+	val, err := c.bds.Get(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID))
 	if err != nil {
 		return "", false, err
 	}
 
-	return list, true, nil
+	if len(val) == 0 {
+		return "", false, nil
+	}
+
+	if val == keys.Key.NullValue() {
+		return "", false, errf.New(errf.RecordNotFound, fmt.Sprintf("released groups: %d not found", appID))
+	}
+
+	return val, true, nil
 }
 
 // refreshAppReleasedGroupCache get the app released groups from db and try to refresh to the cache.
