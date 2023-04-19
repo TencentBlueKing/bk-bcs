@@ -65,6 +65,12 @@ const (
 	Config_PublishInstance_FullMethodName                = "/pbcs.Config/PublishInstance"
 	Config_DeletePublishedInstance_FullMethodName        = "/pbcs.Config/DeletePublishedInstance"
 	Config_ListPublishedInstance_FullMethodName          = "/pbcs.Config/ListPublishedInstance"
+	Config_CreateCredentials_FullMethodName              = "/pbcs.Config/CreateCredentials"
+	Config_ListCredentials_FullMethodName                = "/pbcs.Config/ListCredentials"
+	Config_DeleteCredential_FullMethodName               = "/pbcs.Config/DeleteCredential"
+	Config_UpdateCredential_FullMethodName               = "/pbcs.Config/UpdateCredential"
+	Config_ListCredentialScopes_FullMethodName           = "/pbcs.Config/ListCredentialScopes"
+	Config_UpdateCredentialScope_FullMethodName          = "/pbcs.Config/UpdateCredentialScope"
 )
 
 // ConfigClient is the client API for Config service.
@@ -118,6 +124,12 @@ type ConfigClient interface {
 	PublishInstance(ctx context.Context, in *PublishInstanceReq, opts ...grpc.CallOption) (*PublishInstanceResp, error)
 	DeletePublishedInstance(ctx context.Context, in *DeletePublishedInstanceReq, opts ...grpc.CallOption) (*DeletePublishedInstanceResp, error)
 	ListPublishedInstance(ctx context.Context, in *ListPublishedInstanceReq, opts ...grpc.CallOption) (*ListPublishedInstanceResp, error)
+	CreateCredentials(ctx context.Context, in *CreateCredentialReq, opts ...grpc.CallOption) (*CreateCredentialResp, error)
+	ListCredentials(ctx context.Context, in *ListCredentialsReq, opts ...grpc.CallOption) (*ListCredentialsResp, error)
+	DeleteCredential(ctx context.Context, in *DeleteCredentialsReq, opts ...grpc.CallOption) (*DeleteCredentialsResp, error)
+	UpdateCredential(ctx context.Context, in *UpdateCredentialsReq, opts ...grpc.CallOption) (*UpdateCredentialsResp, error)
+	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
+	UpdateCredentialScope(ctx context.Context, in *UpdateCredentialScopeReq, opts ...grpc.CallOption) (*UpdateCredentialScopeResp, error)
 }
 
 type configClient struct {
@@ -533,6 +545,60 @@ func (c *configClient) ListPublishedInstance(ctx context.Context, in *ListPublis
 	return out, nil
 }
 
+func (c *configClient) CreateCredentials(ctx context.Context, in *CreateCredentialReq, opts ...grpc.CallOption) (*CreateCredentialResp, error) {
+	out := new(CreateCredentialResp)
+	err := c.cc.Invoke(ctx, Config_CreateCredentials_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListCredentials(ctx context.Context, in *ListCredentialsReq, opts ...grpc.CallOption) (*ListCredentialsResp, error) {
+	out := new(ListCredentialsResp)
+	err := c.cc.Invoke(ctx, Config_ListCredentials_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteCredential(ctx context.Context, in *DeleteCredentialsReq, opts ...grpc.CallOption) (*DeleteCredentialsResp, error) {
+	out := new(DeleteCredentialsResp)
+	err := c.cc.Invoke(ctx, Config_DeleteCredential_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateCredential(ctx context.Context, in *UpdateCredentialsReq, opts ...grpc.CallOption) (*UpdateCredentialsResp, error) {
+	out := new(UpdateCredentialsResp)
+	err := c.cc.Invoke(ctx, Config_UpdateCredential_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error) {
+	out := new(ListCredentialScopesResp)
+	err := c.cc.Invoke(ctx, Config_ListCredentialScopes_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateCredentialScope(ctx context.Context, in *UpdateCredentialScopeReq, opts ...grpc.CallOption) (*UpdateCredentialScopeResp, error) {
+	out := new(UpdateCredentialScopeResp)
+	err := c.cc.Invoke(ctx, Config_UpdateCredentialScope_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -584,6 +650,12 @@ type ConfigServer interface {
 	PublishInstance(context.Context, *PublishInstanceReq) (*PublishInstanceResp, error)
 	DeletePublishedInstance(context.Context, *DeletePublishedInstanceReq) (*DeletePublishedInstanceResp, error)
 	ListPublishedInstance(context.Context, *ListPublishedInstanceReq) (*ListPublishedInstanceResp, error)
+	CreateCredentials(context.Context, *CreateCredentialReq) (*CreateCredentialResp, error)
+	ListCredentials(context.Context, *ListCredentialsReq) (*ListCredentialsResp, error)
+	DeleteCredential(context.Context, *DeleteCredentialsReq) (*DeleteCredentialsResp, error)
+	UpdateCredential(context.Context, *UpdateCredentialsReq) (*UpdateCredentialsResp, error)
+	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
+	UpdateCredentialScope(context.Context, *UpdateCredentialScopeReq) (*UpdateCredentialScopeResp, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -724,6 +796,24 @@ func (UnimplementedConfigServer) DeletePublishedInstance(context.Context, *Delet
 }
 func (UnimplementedConfigServer) ListPublishedInstance(context.Context, *ListPublishedInstanceReq) (*ListPublishedInstanceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPublishedInstance not implemented")
+}
+func (UnimplementedConfigServer) CreateCredentials(context.Context, *CreateCredentialReq) (*CreateCredentialResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCredentials not implemented")
+}
+func (UnimplementedConfigServer) ListCredentials(context.Context, *ListCredentialsReq) (*ListCredentialsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCredentials not implemented")
+}
+func (UnimplementedConfigServer) DeleteCredential(context.Context, *DeleteCredentialsReq) (*DeleteCredentialsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCredential not implemented")
+}
+func (UnimplementedConfigServer) UpdateCredential(context.Context, *UpdateCredentialsReq) (*UpdateCredentialsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredential not implemented")
+}
+func (UnimplementedConfigServer) ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCredentialScopes not implemented")
+}
+func (UnimplementedConfigServer) UpdateCredentialScope(context.Context, *UpdateCredentialScopeReq) (*UpdateCredentialScopeResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredentialScope not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -1547,6 +1637,114 @@ func _Config_ListPublishedInstance_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CreateCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCredentialReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateCredentials_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateCredentials(ctx, req.(*CreateCredentialReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCredentialsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListCredentials(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListCredentials_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListCredentials(ctx, req.(*ListCredentialsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteCredential_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteCredentialsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteCredential(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteCredential_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteCredential(ctx, req.(*DeleteCredentialsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateCredential_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCredentialsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateCredential(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateCredential_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateCredential(ctx, req.(*UpdateCredentialsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListCredentialScopes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCredentialScopesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListCredentialScopes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListCredentialScopes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListCredentialScopes(ctx, req.(*ListCredentialScopesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateCredentialScope_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCredentialScopeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateCredentialScope(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateCredentialScope_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateCredentialScope(ctx, req.(*UpdateCredentialScopeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1733,6 +1931,30 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListPublishedInstance",
 			Handler:    _Config_ListPublishedInstance_Handler,
+		},
+		{
+			MethodName: "CreateCredentials",
+			Handler:    _Config_CreateCredentials_Handler,
+		},
+		{
+			MethodName: "ListCredentials",
+			Handler:    _Config_ListCredentials_Handler,
+		},
+		{
+			MethodName: "DeleteCredential",
+			Handler:    _Config_DeleteCredential_Handler,
+		},
+		{
+			MethodName: "UpdateCredential",
+			Handler:    _Config_UpdateCredential_Handler,
+		},
+		{
+			MethodName: "ListCredentialScopes",
+			Handler:    _Config_ListCredentialScopes_Handler,
+		},
+		{
+			MethodName: "UpdateCredentialScope",
+			Handler:    _Config_UpdateCredentialScope_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

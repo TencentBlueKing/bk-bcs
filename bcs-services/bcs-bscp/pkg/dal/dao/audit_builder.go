@@ -140,6 +140,14 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 		ab.toAudit.AppID = items[0].Attachment.AppID
 		ab.toAudit.ResourceID = items[0].ReleaseID
 
+	case *table.Credential:
+		sset := cur.(*table.Credential)
+		ab.toAudit.ResourceID = sset.ID
+
+	case *table.CredentialScope:
+		sset := cur.(*table.CredentialScope)
+		ab.toAudit.ResourceID = sset.ID
+
 	default:
 		logs.Errorf("unsupported audit create resource: %s, type: %s, rid: %v", ab.toAudit.ResourceType,
 			reflect.TypeOf(cur), ab.toAudit.Rid)
@@ -278,6 +286,13 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 	case *table.Hook:
 		hook := updatedTo.(*table.Hook)
 		if err := ab.decorateHookUpdate(hook); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
+	case *table.Credential:
+		credential := updatedTo.(*table.Credential)
+		if err := ab.decorateCredentialUpdate(credential); err != nil {
 			ab.hitErr = err
 			return ab
 		}
@@ -429,6 +444,26 @@ func (ab *AuditBuilder) decorateHookUpdate(hook *table.Hook) error {
 	return nil
 }
 
+func (ab *AuditBuilder) decorateCredentialUpdate(credential *table.Credential) error {
+	ab.toAudit.ResourceID = credential.ID
+
+	preCredential, err := ab.getCredential(credential.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preCredential
+
+	changed, err := parseChangedSpecFields(preCredential, credential)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse credential changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
 // PrepareDelete prepare the resource's previous instance details by
 // get the instance's detail from db and save it to ab.prev for later use.
 // Note: call this before resource is deleted.
@@ -499,6 +534,24 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.AppID = cri.Attachment.AppID
 		ab.toAudit.ResourceID = cri.ID
 		ab.prev = cri
+
+	case enumor.Credential:
+		credential, err := ab.getCredential(resID)
+		if err != nil {
+			ab.hitErr = err
+			return ab
+		}
+		ab.toAudit.ResourceID = credential.ID
+		ab.prev = credential
+
+	case enumor.CredentialScope:
+		credentialScope, err := ab.getCredentialScope(resID)
+		if err != nil {
+			ab.hitErr = err
+			return ab
+		}
+		ab.toAudit.ResourceID = credentialScope.ID
+		ab.prev = credentialScope
 
 	default:
 		ab.hitErr = fmt.Errorf("unsupported audit deleted resource: %s", ab.toAudit.ResourceType)
@@ -631,6 +684,36 @@ func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInsta
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get current released instance details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getCredential(credentialID uint32) (*table.Credential, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialColumns.NamedExpr(), " FROM ", table.CredentialTable.Name(),
+		" WHERE id = ", strconv.Itoa(int(credentialID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.Credential)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get credential details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getCredentialScope(id uint32) (*table.CredentialScope, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialScopeColumns.NamedExpr(), " FROM ", table.CredentialScopeTable.Name(),
+		" WHERE id = ", strconv.Itoa(int(id)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.CredentialScope)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get credential scope details failed, err: %v", err)
 	}
 
 	return one, nil
