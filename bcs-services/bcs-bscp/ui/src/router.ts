@@ -1,57 +1,57 @@
 import { createRouter, createWebHistory } from 'vue-router';
 const routes = [
-  { path: '/', component: () => import('./views/home.vue') },
+  { path: '/', name:'home', component: () => import('./views/home.vue') },
   {
-    path: '/serving',
-    name: 'serving',
-    component: () => import('./views/serving/index.vue'),
+    path: '/space/:spaceId/service',
+    name: 'service',
+    component: () => import('./views/service/list/index.vue'),
     children: [
       {
         path: 'mine/',
-        name: 'serving-mine',
-        component: () => import('./views/serving/serving-mine.vue'),
+        name: 'service-mine',
+        component: () => import('./views/service/list/mine.vue'),
       },
       {
         path: 'all/',
-        name: 'serving-all',
-        component: () => import('./views/serving/serving-all.vue'),
+        name: 'service-all',
+        component: () => import('./views/service/list/all.vue'),
       },
     ]
   },
   {
-    path: '/serving/:spaceId/app/:appId',
-    name: 'serving-detail',
-    component: () => import('./views/serving/detail/index.vue'),
+    path: '/space/:spaceId/service/:appId',
+    name: 'service-detail',
+    component: () => import('./views/service/detail/index.vue'),
     children: [
       {
         path: 'config/',
-        name: 'serving-config',
-        component: () => import('./views/serving/detail/config/index.vue')
+        name: 'service-config',
+        component: () => import('./views/service/detail/config/index.vue')
       },
-      {
-        path: 'group/',
-        name: 'serving-group',
-        component: () => import('./views/serving/detail/group/index.vue')
-      },
-      {
-        path: 'client/',
-        name: 'serving-client',
-        component: () => import('./views/serving/detail/client/index.vue')
-      }
+      // {
+      //   path: 'group/',
+      //   name: 'service-group',
+      //   component: () => import('./views/service/detail/group/index.vue')
+      // },
+      // {
+      //   path: 'client/',
+      //   name: 'service-client',
+      //   component: () => import('./views/service/detail/client/index.vue')
+      // }
     ]
   },
   {
-    path: '/groups',
+    path: '/space/:spaceId/groups/',
     name: 'groups-management',
     component: () => import('./views/groups/index.vue')
   },
   {
-    path: '/scripts',
+    path: '/space/:spaceId/scripts/',
     name: 'scripts-management',
     component: () => import('./views/scripts/index.vue')
   },
   {
-    path: '/keys',
+    path: '/space/:spaceId/keys/',
     name: 'keys-management',
     component: () => import('./views/keys/index.vue')
   }

@@ -32,24 +32,23 @@ export const delCategory = (app_id: number, group_category_id: number) => {
 }
 
 /**
- * 获取分类下分组列表
+ * 获取服务下分组列表
+ * @param biz_id 空间ID
  * @param app_id 应用ID
- * @param group_category_id 分类ID
  * @param params 查询参数
  * @returns 
  */
-export const getCategoryGroupList = (app_id: number, group_category_id: number, params: IGroupCategoriesQuery) => {
-  return http.get(`/config/apps/${app_id}/group_categories/${group_category_id}/groups`, { params }).then(res => res.data)
+export const getCategoryGroupList = (biz_id: string, app_id: number, params: IGroupCategoriesQuery) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/groups`, { params }).then(res => res.data)
 }
 
 /**
- * 获取全量分组
- * @param app_id 应用ID
- * @param params 查询参数
+ * 获取空间下分组
+ * @param biz_id 空间ID
  * @returns 
  */
-export const getAllGroupList = (app_id: number, params: IGroupCategoriesQuery) => {
-  return http.get(`/config/apps/${app_id}/groups`, { params }).then(res => res.data)
+export const getSpaceGroupList = (biz_id: string) => {
+  return http.get(`/config/biz/${biz_id}/groups`).then(res => res.data)
 }
 
 /**
@@ -58,27 +57,27 @@ export const getAllGroupList = (app_id: number, params: IGroupCategoriesQuery) =
  * @param params 分组编辑参数
  * @returns 
  */
-export const createGroup = (app_id: number, params: IGroupEditArg) => {
-  return http.post(`/config/apps/${app_id}/groups`, params).then(res => res.data)
+export const createGroup = (biz_id: string, params: IGroupEditArg) => {
+  return http.post(`/config/biz/${biz_id}/groups`, params).then(res => res.data)
 }
 
 /**
  * 编辑分组
- * @param app_id 应用ID
+ * @param biz_id 空间ID
  * @param group_id 分组ID
  * @param params 分组编辑参数
  * @returns 
  */
-export const updateGroup = (app_id: number, group_id: number, params: IGroupEditArg) => {
-  return http.put(`/config/apps/${app_id}/groups/${group_id}`, params).then(res => res.data)
+export const updateGroup = (biz_id: string, group_id: number, params: IGroupEditArg) => {
+  return http.put(`/config/biz/${biz_id}/groups/${group_id}`, params).then(res => res.data)
 }
 
 /**
  * 删除分组
- * @param app_id 应用ID
+ * @param biz_id 空间ID
  * @param group_id 分组ID
  * @returns 
  */
-export const deleteGroup = (app_id: number, group_id: number) => {
-  return http.delete(`/config/apps/${app_id}/groups/${group_id}`)
+export const deleteGroup = (biz_id: string, group_id: number) => {
+  return http.delete(`/config/biz/${biz_id}/groups/${group_id}`)
 }
