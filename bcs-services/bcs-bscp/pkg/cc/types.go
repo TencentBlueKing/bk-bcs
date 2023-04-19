@@ -662,7 +662,7 @@ type SysOption struct {
 // CheckV check if show current version info.
 func (s SysOption) CheckV() {
 	if s.Versioned {
-		version.ShowVersion()
+		version.ShowVersion("", version.Row)
 		os.Exit(0)
 	}
 }
@@ -729,10 +729,10 @@ type FSLocalCache struct {
 	// the large of value, the longer it takes for the published app strategy take effected. should <= 120.
 	PublishedStrategyCacheTTLSec uint `yaml:"publishedStrategyCacheTTLSec"`
 
-	// GCRCacheSize defines how many GCRs can be cached.
-	GCRCacheSize uint `yaml:"GCRCacheSize"`
-	// GCRCacheTTLSec defines how long will this GCR can be cached in seconds.
-	GCRCacheTTLSec uint `yaml:"GCRCacheTTLSec"`
+	// ReleasedGroupCacheSize defines how many released groups can be cached.
+	ReleasedGroupCacheSize uint `yaml:"releasedGroupCacheTTLSec"`
+	// ReleasedGroupCacheTTLSec defines how long will this released group can be cached in seconds.
+	ReleasedGroupCacheTTLSec uint `yaml:"releasedGroupCacheTTLSec"`
 
 	// AuthCacheSize defines how many auth results can be cached.
 	AuthCacheSize uint `yaml:"authCacheSize"`
@@ -788,11 +788,11 @@ func (fc *FSLocalCache) trySetDefault() {
 		fc.PublishedStrategyCacheTTLSec = 120
 	}
 
-	if fc.GCRCacheSize == 0 {
+	if fc.ReleasedGroupCacheSize == 0 {
 		fc.PublishedStrategyCacheSize = 100
 	}
 
-	if fc.GCRCacheTTLSec == 0 {
+	if fc.ReleasedGroupCacheTTLSec == 0 {
 		fc.PublishedStrategyCacheTTLSec = 120
 	}
 

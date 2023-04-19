@@ -46,6 +46,12 @@ service Cache {
         };
     }
 
+    rpc ListAppReleasedGroups(ListAppReleasedGroupsReq) returns(JsonRawResp) {
+        option (google.api.http) = {
+            get: "/api/v1/cache/biz/{biz_id}/apps/{app_id}/released_groups"
+        };
+    }
+
     rpc GetAppCpsID(GetAppCpsIDReq) returns (GetAppCpsIDResp) {
         // get the app's current latest released strategies with namespace or not.
         // returns with the json array raw of pkg/types/cache.PublishedStrategyCache
@@ -109,6 +115,11 @@ message GetAppReleasedStrategyReq {
     uint32 biz_id          = 1;
     uint32 app_id          = 2;
     repeated uint32 cps_id = 3;
+}
+
+message ListAppReleasedGroupsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
 }
 
 message JsonArrayRawResp {

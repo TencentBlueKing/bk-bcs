@@ -57,34 +57,50 @@ func (rs *ReleasedService) GetMatchedRelease(kt *kit.Kit, meta *types.AppInstanc
 		return 0, errf.Newf(errf.InvalidParameter, "unsupported app mode: %s", am.Mode)
 	}
 
-	// check if this app instance has already been configured a special release.
-	releaseID, hit, err := rs.getAppInstanceRelease(kt, meta.BizID, meta.AppID, meta.Uid)
-	if err != nil {
-		return 0, err
-	}
+	// // check if this app instance has already been configured a special release.
+	// releaseID, hit, err := rs.getAppInstanceRelease(kt, meta.BizID, meta.AppID, meta.Uid)
+	// if err != nil {
+	// 	return 0, err
+	// }
 
-	if hit {
-		return releaseID, nil
-	}
+	// if hit {
+	// 	return releaseID, nil
+	// }
 
 	// this app instance does not be configured with a special release.
 	// check its app strategy for now.
-	strategyList, err := rs.getStrategy(kt, meta)
+
+	// strategyList, err := rs.getStrategy(kt, meta)
+	// if err != nil {
+	// 	return 0, err
+	// }
+
+	// matched, err := rs.matchOneStrategyWithLabels(kt, am.Mode, strategyList, meta)
+	// if err != nil {
+	// 	return 0, err
+	// }
+	groups, err := rs.listReleasedGroups(kt, meta)
 	if err != nil {
 		return 0, err
 	}
 
-	matched, err := rs.matchOneStrategyWithLabels(kt, am.Mode, strategyList, meta)
+	matched, err := rs.matchReleasedGroupWithLabels(kt, groups, meta)
 	if err != nil {
 		return 0, err
-	}
-
-	if logs.V(2) {
-		logs.Infof("biz: %d, app: %d, instance(uid: %s) matched CP strategy: %d, release id: %d, rid: %s", meta.BizID,
-			meta.AppID, meta.Uid, matched.StrategyID, matched.ReleaseID, kt.Rid)
 	}
 
 	return matched.ReleaseID, nil
+}
+
+// listReleasedGroups list released groups
+func (rs *ReleasedService) listReleasedGroups(kt *kit.Kit, meta *types.AppInstanceMeta) (
+	[]*ptypes.ReleasedGroupCache, error) {
+	list, err := rs.cache.ReleasedGroup.Get(kt, meta.BizID, meta.AppID)
+	if err != nil {
+		return nil, fmt.Errorf("get current published strategy failed, err: %v", err)
+	}
+
+	return list, nil
 }
 
 // getStrategy get current published strategy, if not exist return error.
@@ -141,6 +157,7 @@ func (rs *ReleasedService) getAppInstanceRelease(kt *kit.Kit, bizID uint32, appI
 type matchedMeta struct {
 	StrategyID uint32
 	ReleaseID  uint32
+	GroupID    uint32
 }
 
 // matchOneStrategyWithLabels match at most only one strategy with app instance labels.
@@ -161,6 +178,59 @@ func (rs *ReleasedService) matchOneStrategyWithLabels(
 		return nil, errf.New(errf.InvalidParameter, "unsupported strategy type: "+string(mode))
 	}
 
+}
+
+// matchOneStrategyWithLabels match at most only one strategy with app instance labels.
+func (rs *ReleasedService) matchReleasedGroupWithLabels(
+	kt *kit.Kit,
+	groups []*ptypes.ReleasedGroupCache,
+	meta *types.AppInstanceMeta) (*matchedMeta, error) {
+	matchedList := []*matchedMeta{}
+	var def *matchedMeta
+	for _, group := range groups {
+		switch group.Mode {
+		case table.Debug:
+			if group.UID == meta.Uid {
+				matchedList = append(matchedList, &matchedMeta{
+					ReleaseID:  group.ReleaseID,
+					GroupID:    group.GroupID,
+					StrategyID: group.StrategyID,
+				})
+			}
+		case table.Custom:
+			if group.Selector == nil {
+				return nil, errf.New(errf.InvalidParameter, "custom group must have selector")
+			}
+			matched, err := group.Selector.MatchLabels(meta.Labels)
+			if err != nil {
+				return nil, err
+			}
+			if matched {
+				matchedList = append(matchedList, &matchedMeta{
+					ReleaseID:  group.ReleaseID,
+					GroupID:    group.GroupID,
+					StrategyID: group.StrategyID,
+				})
+			}
+		case table.Default:
+			def = &matchedMeta{
+				ReleaseID:  group.ReleaseID,
+				GroupID:    group.GroupID,
+				StrategyID: group.StrategyID,
+			}
+		}
+	}
+
+	if len(matchedList) == 0 {
+		if def == nil {
+			return nil, errf.New(errf.AppInstanceNotMatchedStrategy, "no strategy can match this app instance")
+		}
+		return def, nil
+	}
+
+	// released groups were sorted by strategy id, so the first one is the latest one.
+
+	return matchedList[0], nil
 }
 
 // matchNamespacedStrategyWithLabels match at most only one strategy with app instance labels

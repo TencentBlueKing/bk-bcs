@@ -26,7 +26,7 @@ func (s *Service) CountGroupsReleasedApps(ctx context.Context, req *pbds.CountGr
 	*pbds.CountGroupsReleasedAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	counts, err := s.dao.GroupCurrentRelease().CountGroupsReleasedApps(kt, &types.CountGroupsReleasedAppsOption{
+	counts, err := s.dao.ReleasedGroup().CountGroupsReleasedApps(kt, &types.CountGroupsReleasedAppsOption{
 		BizID:  req.BizId,
 		Groups: req.Groups,
 	})
