@@ -7306,8 +7306,6 @@ func (m *ListClustersVariablesRequest) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for IsShared
-
 	if len(errors) > 0 {
 		return ListClustersVariablesRequestMultiError(errors)
 	}
@@ -7574,8 +7572,6 @@ func (m *ListNamespacesVariablesRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
-
-	// no validation rules for IsShared
 
 	if len(errors) > 0 {
 		return ListNamespacesVariablesRequestMultiError(errors)

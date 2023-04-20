@@ -1308,14 +1308,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "isShared",
-            "description": "isShared. 是否为共享集群",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
@@ -1402,14 +1394,6 @@
             "in": "path",
             "required": true,
             "type": "string"
-          },
-          {
-            "name": "isShared",
-            "description": "isShared. 是否为共享集群",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
