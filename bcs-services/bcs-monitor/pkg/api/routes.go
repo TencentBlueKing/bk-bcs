@@ -202,6 +202,8 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 			rest.RestHandlerFunc(service_monitor.UpdateServiceMonitor))
 		route.DELETE("/namespaces/:namespace/service_monitors/:name",
 			rest.RestHandlerFunc(service_monitor.DeleteServiceMonitor))
+		route.GET("/service_monitors",
+			rest.RestHandlerFunc(service_monitor.ListServiceMonitors))
 		route.POST("/service_monitors/batchdelete",
 			rest.RestHandlerFunc(service_monitor.BatchDeleteServiceMonitor))
 	}
