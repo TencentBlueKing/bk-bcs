@@ -133,8 +133,8 @@
             <bk-button
               v-if="showBatchDispatch"
               :loading="batchBtnLoading"
-              @click="handelShowRescheduleDialog"
-              :disabled="!selectPods.length">
+              :disabled="!selectPods.length"
+              @click="handelShowRescheduleDialog">
               {{ $t('批量重新调度') }}
             </bk-button>
             <!-- 占位 -->
@@ -448,7 +448,7 @@ export default defineComponent({
     // 是否展示升级策略
     const showUpdateStrategy = computed(() => ['deployments', 'statefulsets', 'custom_objects'].includes(props.category));
     // 是否展示批量调度功能
-    const showBatchDispatch = computed(() => ['Deployment', 'Statefulset', 'GameDeployment', 'GameStatefulSet'].includes(props.kind));
+    const showBatchDispatch = computed(() => ['Deployment', 'StatefulSet', 'GameDeployment', 'GameStatefulSet'].includes(props.kind));
     // 获取pod manifestExt数据
     const handleGetExtData = (uid, prop) => workloadPods.value?.manifestExt?.[uid]?.[prop];
     // 指标参数

@@ -113,7 +113,7 @@
             <bk-radio
               v-for="item in scopeList"
               :key="item.id"
-              :disabled="currentRow"
+              :disabled="!!currentRow"
               :value="item.id">
               {{item.name}}
             </bk-radio>
@@ -123,7 +123,7 @@
           <bcs-input v-model="formData.name"></bcs-input>
         </BkFormItem>
         <BkFormItem :label="$t('KEY')" property="key" required>
-          <bcs-input v-model="formData.key" :disabled="currentRow"></bcs-input>
+          <bcs-input v-model="formData.key" :disabled="!!currentRow"></bcs-input>
         </BkFormItem>
         <BkFormItem :label="$t('默认值')">
           <bcs-input v-model="formData.default"></bcs-input>
@@ -215,7 +215,6 @@ import BkFormItem from 'bk-magic-vue/lib/form-item';
 import BkForm from 'bk-magic-vue/lib/form';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import exampleData from './variable.json';
-import $store from '@/store';
 import useDebouncedRef from '@/composables/use-debounce';
 
 export default defineComponent({
@@ -469,7 +468,6 @@ export default defineComponent({
         mode.value = 'form';
       }
     });
-    const isSharedCluster = computed(() => $store.state.curCluster?.is_shared);
     async function handleSetVariable(row) {
       showSetSlider.value = true;
       currentRow.value = row;
@@ -478,12 +476,10 @@ export default defineComponent({
       if (row.scope === 'cluster') {
         data = await getClusterVariable({
           $variableID: row.id,
-          isShared: isSharedCluster.value || false,
         });
       } else {
         data = await getNamespaceVariable({
           $variableID: row.id,
-          isShared: isSharedCluster.value || false,
         });
       }
       setData.value = data.results || [];
