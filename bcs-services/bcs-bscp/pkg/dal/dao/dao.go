@@ -38,7 +38,7 @@ type Set interface {
 	Hook() Hook
 	Group() Group
 	GroupAppBind() GroupAppBind
-	GroupCurrentRelease() GroupCurrentRelease
+	ReleasedGroup() ReleasedGroup
 	Publish() Publish
 	IAM() IAM
 	Event() Event
@@ -218,9 +218,9 @@ func (s *set) GroupAppBind() GroupAppBind {
 	}
 }
 
-// GroupCurrentRelease returns the currnet release's DAO
-func (s *set) GroupCurrentRelease() GroupCurrentRelease {
-	return &currentReleaseDao{
+// ReleasedGroup returns the currnet release's DAO
+func (s *set) ReleasedGroup() ReleasedGroup {
+	return &releasedGroupDao{
 		orm:      s.orm,
 		sd:       s.sd,
 		idGen:    s.idGen,

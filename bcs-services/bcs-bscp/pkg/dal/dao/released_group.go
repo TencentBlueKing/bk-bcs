@@ -25,10 +25,10 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// GroupCurrentRelease supplies all the group related operations.
-type GroupCurrentRelease interface {
+// ReleasedGroup supplies all the group related operations.
+type ReleasedGroup interface {
 	// List list group current releases by option
-	List(kit *kit.Kit, opts *types.ListGroupCurrentReleasesOption) ([]*table.GroupCurrentRelease, error)
+	List(kit *kit.Kit, opts *types.ListReleasedGroupsOption) ([]*table.ReleasedGroup, error)
 	// CountGroupsReleasedApps counts each group's published apps.
 	CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
 		[]*types.GroupPublishedAppsCount, error)
@@ -36,9 +36,9 @@ type GroupCurrentRelease interface {
 	UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding.Tx, edited bool, groupID, bizID uint32) error
 }
 
-var _ GroupCurrentRelease = new(currentReleaseDao)
+var _ ReleasedGroup = new(releasedGroupDao)
 
-type currentReleaseDao struct {
+type releasedGroupDao struct {
 	orm      orm.Interface
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
@@ -47,8 +47,8 @@ type currentReleaseDao struct {
 }
 
 // List list group current releases by option
-func (dao *currentReleaseDao) List(kit *kit.Kit, opts *types.ListGroupCurrentReleasesOption) (
-	[]*table.GroupCurrentRelease, error) {
+func (dao *releasedGroupDao) List(kit *kit.Kit, opts *types.ListReleasedGroupsOption) (
+	[]*table.ReleasedGroup, error) {
 	if opts == nil {
 		return nil, errf.New(errf.InvalidParameter, "list group current releases option is nil")
 	}
@@ -76,11 +76,11 @@ func (dao *currentReleaseDao) List(kit *kit.Kit, opts *types.ListGroupCurrentRel
 		return nil, err
 	}
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.GroupCurrentReleaseColumns.NamedExpr(), " FROM ",
-		table.GroupCurrentReleaseTable.Name(), whereExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.ReleasedGroupColumns.NamedExpr(), " FROM ",
+		table.ReleasedGroupTable.Name(), whereExpr)
 	sql := filter.SqlJoint(sqlSentence)
 
-	list := make([]*table.GroupCurrentRelease, 0)
+	list := make([]*table.ReleasedGroup, 0)
 	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (dao *currentReleaseDao) List(kit *kit.Kit, opts *types.ListGroupCurrentRel
 }
 
 // CountGroupsReleasedApps counts each group's published apps.
-func (dao *currentReleaseDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
+func (dao *releasedGroupDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
 	[]*types.GroupPublishedAppsCount, error) {
 
 	if opts == nil {
@@ -104,7 +104,7 @@ func (dao *currentReleaseDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.
 
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT group_id, COUNT(DISTINCT app_id) AS counts, MAX(edited) AS edited FROM ",
-		table.GroupCurrentReleaseTable.Name(), fmt.Sprintf(" WHERE biz_id = %d AND group_id IN (%s) ", opts.BizID, args),
+		table.ReleasedGroupTable.Name(), fmt.Sprintf(" WHERE biz_id = %d AND group_id IN (%s) ", opts.BizID, args),
 		" GROUP BY group_id ")
 	sql := filter.SqlJoint(sqlSentence)
 
@@ -117,7 +117,7 @@ func (dao *currentReleaseDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.
 }
 
 // UpdateEditedStatusWithTx update edited status with transaction
-func (dao *currentReleaseDao) UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding.Tx, edited bool, groupID, bizID uint32) error {
+func (dao *releasedGroupDao) UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding.Tx, edited bool, groupID, bizID uint32) error {
 	if bizID == 0 {
 		return errf.New(errf.InvalidParameter, "bizID is 0")
 	}
@@ -127,7 +127,7 @@ func (dao *currentReleaseDao) UpdateEditedStatusWithTx(kit *kit.Kit, tx *shardin
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", table.GroupCurrentReleaseTable.Name(),
+	sqlSentence = append(sqlSentence, "UPDATE ", table.ReleasedGroupTable.Name(),
 		fmt.Sprintf(" SET edited = %t WHERE biz_id = %d AND group_id = %d", edited, bizID, groupID))
 	sql := filter.SqlJoint(sqlSentence)
 

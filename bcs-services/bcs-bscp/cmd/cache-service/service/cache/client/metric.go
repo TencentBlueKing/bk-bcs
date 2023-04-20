@@ -51,6 +51,16 @@ func initMetric() *metric {
 	}, []string{"rsc", "biz"})
 	metrics.Register().MustRegister(m.strategyByteSize)
 
+	m.releasedGroupByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.CSCacheSubSys,
+		Name:        "released_group_size_bytes",
+		Help:        "the total released groups size of an app's instance to be matched in bytes",
+		ConstLabels: labels,
+		Buckets:     []float64{400, 600, 800, 1000, 1200, 1400, 1800, 2000, 2500, 3000, 3500, 4000, 5000, 6000},
+	}, []string{"rsc", "biz"})
+	metrics.Register().MustRegister(m.releasedGroupByteSize)
+
 	m.releasedCIByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace:   metrics.Namespace,
 		Subsystem:   metrics.CSCacheSubSys,
@@ -74,13 +84,17 @@ type metric struct {
 	// record the total strategy size of an app's instance to be matched with bytes.
 	strategyByteSize *prometheus.HistogramVec
 
+	// record the total size of an app's all the released-groups of one release with bytes.
+	releasedGroupByteSize *prometheus.HistogramVec
+
 	// record the total size of an app's all the configure-items of one release with bytes.
 	releasedCIByteSize *prometheus.HistogramVec
 }
 
 const (
-	amRes         = "app-meta"
-	instRes       = "instance"
-	releasedCIRes = "release-ci"
-	strategyRes   = "strategy"
+	amRes            = "app-meta"
+	instRes          = "instance"
+	releasedCIRes    = "release-ci"
+	strategyRes      = "strategy"
+	releasedGroupRes = "released-group"
 )

@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package pbgcr;
+package pbrg;
 
-option go_package = "bscp.io/pkg/protocol/core/group-current-release;pbgcr";
+option go_package = "bscp.io/pkg/protocol/core/released-group;pbrg";
 
-// GroupCurrentRelease source resource reference: pkg/dal/table/group_current_release.go
-message GroupCurrentRelease {
+// ReleasedGroup source resource reference: pkg/dal/table/released_group.go
+message ReleasedGroup {
     uint32 id           = 1;
     uint32 group_id     = 2;
     uint32 app_id       = 3;

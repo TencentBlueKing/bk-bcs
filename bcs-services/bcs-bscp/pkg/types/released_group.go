@@ -39,14 +39,14 @@ type GroupPublishedAppsCount struct {
 	Edited  bool   `db:"edited" json:"edited"`
 }
 
-// ListGroupCurrentReleasesOption defines options to list group current releases.
-type ListGroupCurrentReleasesOption struct {
+// ListReleasedGroupsOption defines options to list group current releases.
+type ListReleasedGroupsOption struct {
 	BizID  uint32             `json:"biz_id"`
 	Filter *filter.Expression `json:"filter"`
 }
 
 // Validate the list group current release options
-func (opt *ListGroupCurrentReleasesOption) Validate() error {
+func (opt *ListReleasedGroupsOption) Validate() error {
 	if opt.BizID <= 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
 	}
@@ -57,7 +57,7 @@ func (opt *ListGroupCurrentReleasesOption) Validate() error {
 
 	exprOpt := &filter.ExprOption{
 		// remove biz_id because it's a required field in the option.
-		RuleFields: table.GroupCurrentReleaseColumns.WithoutColumn("biz_id"),
+		RuleFields: table.ReleasedGroupColumns.WithoutColumn("biz_id"),
 	}
 	if err := opt.Filter.Validate(exprOpt); err != nil {
 		return err
@@ -65,4 +65,3 @@ func (opt *ListGroupCurrentReleasesOption) Validate() error {
 
 	return nil
 }
-

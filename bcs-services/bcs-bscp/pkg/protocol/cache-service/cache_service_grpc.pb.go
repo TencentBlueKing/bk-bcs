@@ -24,6 +24,7 @@ const (
 	Cache_GetReleasedCI_FullMethodName            = "/pbcs.Cache/GetReleasedCI"
 	Cache_GetAppInstanceRelease_FullMethodName    = "/pbcs.Cache/GetAppInstanceRelease"
 	Cache_GetAppReleasedStrategy_FullMethodName   = "/pbcs.Cache/GetAppReleasedStrategy"
+	Cache_ListAppReleasedGroups_FullMethodName    = "/pbcs.Cache/ListAppReleasedGroups"
 	Cache_GetAppCpsID_FullMethodName              = "/pbcs.Cache/GetAppCpsID"
 	Cache_GetCurrentCursorReminder_FullMethodName = "/pbcs.Cache/GetCurrentCursorReminder"
 	Cache_ListEventsMeta_FullMethodName           = "/pbcs.Cache/ListEventsMeta"
@@ -41,6 +42,7 @@ type CacheClient interface {
 	GetReleasedCI(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetAppInstanceRelease(ctx context.Context, in *GetAppInstanceReleaseReq, opts ...grpc.CallOption) (*GetAppInstanceReleaseResp, error)
 	GetAppReleasedStrategy(ctx context.Context, in *GetAppReleasedStrategyReq, opts ...grpc.CallOption) (*JsonArrayRawResp, error)
+	ListAppReleasedGroups(ctx context.Context, in *ListAppReleasedGroupsReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetAppCpsID(ctx context.Context, in *GetAppCpsIDReq, opts ...grpc.CallOption) (*GetAppCpsIDResp, error)
 	GetCurrentCursorReminder(ctx context.Context, in *base.EmptyReq, opts ...grpc.CallOption) (*CurrentCursorReminderResp, error)
 	ListEventsMeta(ctx context.Context, in *ListEventsReq, opts ...grpc.CallOption) (*ListEventsResp, error)
@@ -89,6 +91,15 @@ func (c *cacheClient) GetAppInstanceRelease(ctx context.Context, in *GetAppInsta
 func (c *cacheClient) GetAppReleasedStrategy(ctx context.Context, in *GetAppReleasedStrategyReq, opts ...grpc.CallOption) (*JsonArrayRawResp, error) {
 	out := new(JsonArrayRawResp)
 	err := c.cc.Invoke(ctx, Cache_GetAppReleasedStrategy_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cacheClient) ListAppReleasedGroups(ctx context.Context, in *ListAppReleasedGroupsReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
+	out := new(JsonRawResp)
+	err := c.cc.Invoke(ctx, Cache_ListAppReleasedGroups_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +177,7 @@ type CacheServer interface {
 	GetReleasedCI(context.Context, *GetReleasedCIReq) (*JsonRawResp, error)
 	GetAppInstanceRelease(context.Context, *GetAppInstanceReleaseReq) (*GetAppInstanceReleaseResp, error)
 	GetAppReleasedStrategy(context.Context, *GetAppReleasedStrategyReq) (*JsonArrayRawResp, error)
+	ListAppReleasedGroups(context.Context, *ListAppReleasedGroupsReq) (*JsonRawResp, error)
 	GetAppCpsID(context.Context, *GetAppCpsIDReq) (*GetAppCpsIDResp, error)
 	GetCurrentCursorReminder(context.Context, *base.EmptyReq) (*CurrentCursorReminderResp, error)
 	ListEventsMeta(context.Context, *ListEventsReq) (*ListEventsResp, error)
@@ -191,6 +203,9 @@ func (UnimplementedCacheServer) GetAppInstanceRelease(context.Context, *GetAppIn
 }
 func (UnimplementedCacheServer) GetAppReleasedStrategy(context.Context, *GetAppReleasedStrategyReq) (*JsonArrayRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppReleasedStrategy not implemented")
+}
+func (UnimplementedCacheServer) ListAppReleasedGroups(context.Context, *ListAppReleasedGroupsReq) (*JsonRawResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAppReleasedGroups not implemented")
 }
 func (UnimplementedCacheServer) GetAppCpsID(context.Context, *GetAppCpsIDReq) (*GetAppCpsIDResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppCpsID not implemented")
@@ -293,6 +308,24 @@ func _Cache_GetAppReleasedStrategy_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CacheServer).GetAppReleasedStrategy(ctx, req.(*GetAppReleasedStrategyReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Cache_ListAppReleasedGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppReleasedGroupsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).ListAppReleasedGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_ListAppReleasedGroups_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).ListAppReleasedGroups(ctx, req.(*ListAppReleasedGroupsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -445,6 +478,10 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAppReleasedStrategy",
 			Handler:    _Cache_GetAppReleasedStrategy_Handler,
+		},
+		{
+			MethodName: "ListAppReleasedGroups",
+			Handler:    _Cache_ListAppReleasedGroups_Handler,
 		},
 		{
 			MethodName: "GetAppCpsID",

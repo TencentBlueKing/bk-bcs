@@ -301,7 +301,7 @@ func (dao *groupDao) ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRl
 
 	var countSqlSentence []string
 	countSqlSentence = append(countSqlSentence, "SELECT COUNT(*) FROM ", table.AppTable.Name(), " a JOIN ",
-		table.ReleaseTable.Name(), " r ON a.id = r.app_id JOIN ", table.GroupCurrentReleaseTable.Name(),
+		table.ReleaseTable.Name(), " r ON a.id = r.app_id JOIN ", table.ReleasedGroupTable.Name(),
 		" g ON r.id = g.release_id AND a.id = g.app_id ", fmt.Sprintf(" WHERE g.group_id = %d ", opts.GroupID),
 		fmt.Sprintf(" AND a.biz_id = %d AND r.biz_id = %d AND g.biz_id = %d", opts.BizID, opts.BizID, opts.BizID),
 	)
@@ -314,7 +314,7 @@ func (dao *groupDao) ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRl
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT a.id AS app_id, a.name AS app_name, r.id AS release_id, ",
 		"r.name AS release_name, g.edited as edited ", " FROM ", table.AppTable.Name(), " a JOIN ",
-		table.ReleaseTable.Name(), " r ON a.id = r.app_id JOIN ", table.GroupCurrentReleaseTable.Name(),
+		table.ReleaseTable.Name(), " r ON a.id = r.app_id JOIN ", table.ReleasedGroupTable.Name(),
 		" g ON r.id = g.release_id AND a.id = g.app_id ", fmt.Sprintf(" WHERE g.group_id = %d ", opts.GroupID),
 		fmt.Sprintf(" AND a.biz_id = %d AND r.biz_id = %d AND g.biz_id = %d", opts.BizID, opts.BizID, opts.BizID),
 		fmt.Sprintf(" LIMIT %d, %d", opts.Start, opts.Limit),
