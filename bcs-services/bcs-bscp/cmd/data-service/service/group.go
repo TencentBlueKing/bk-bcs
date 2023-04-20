@@ -180,7 +180,7 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 		},
 	})
 
-	gcrs, err := s.dao.GroupCurrentRelease().List(kt, &types.ListGroupCurrentReleasesOption{
+	gcrs, err := s.dao.ReleasedGroup().List(kt, &types.ListReleasedGroupsOption{
 		BizID: req.BizId,
 		Filter: &filter.Expression{
 			Op: filter.And,
@@ -314,7 +314,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		if err != nil {
 			return nil, err
 		}
-		published, err := s.dao.GroupCurrentRelease().List(kt, &types.ListGroupCurrentReleasesOption{
+		published, err := s.dao.ReleasedGroup().List(kt, &types.ListReleasedGroupsOption{
 			BizID: req.Attachment.BizId,
 			Filter: &filter.Expression{
 				Op: filter.And,
@@ -383,7 +383,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 	}
 
 	if edited {
-		if err := s.dao.GroupCurrentRelease().UpdateEditedStatusWithTx(kt, tx,
+		if err := s.dao.ReleasedGroup().UpdateEditedStatusWithTx(kt, tx,
 			edited, req.Id, req.Attachment.BizId); err != nil {
 			logs.Errorf("update group current release failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback(kt)
@@ -409,7 +409,7 @@ func (s *Service) DeleteGroup(ctx context.Context, req *pbds.DeleteGroupReq) (*p
 	}
 
 	// check if the group was already released in any app.
-	published, err := s.dao.GroupCurrentRelease().List(kt, &types.ListGroupCurrentReleasesOption{
+	published, err := s.dao.ReleasedGroup().List(kt, &types.ListReleasedGroupsOption{
 		BizID: req.Attachment.BizId,
 		Filter: &filter.Expression{
 			Op: filter.And,

@@ -128,7 +128,7 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 
 	releases := pbrelease.PbReleases(details.Details)
 
-	gcrs, err := s.dao.GroupCurrentRelease().List(grpcKit, &types.ListGroupCurrentReleasesOption{
+	gcrs, err := s.dao.ReleasedGroup().List(grpcKit, &types.ListReleasedGroupsOption{
 		BizID: req.BizId,
 		Filter: &filter.Expression{
 			Op: filter.And,
@@ -205,11 +205,11 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 	return resp, nil
 }
 
-func (s *Service) queryPublishStatus(gcrs []*table.GroupCurrentRelease, releaseID uint32) (
-	string, []*table.GroupCurrentRelease) {
+func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint32) (
+	string, []*table.ReleasedGroup) {
 	var includeDefault = false
-	var inRelease = make([]*table.GroupCurrentRelease, 0)
-	var outRelease = make([]*table.GroupCurrentRelease, 0)
+	var inRelease = make([]*table.ReleasedGroup, 0)
+	var outRelease = make([]*table.ReleasedGroup, 0)
 	for _, gcr := range gcrs {
 		if gcr.ReleaseID == releaseID {
 			inRelease = append(inRelease, gcr)

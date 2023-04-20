@@ -39,6 +39,11 @@ func (rk resKind) AppStrategy(appID uint32) string {
 	return fmt.Sprintf("app-stg-%d", appID)
 }
 
+// ReleasedGroup return the released group resource kind.
+func (rk resKind) ReleasedGroup(appID uint32) string {
+	return fmt.Sprintf("released-group-%d", appID)
+}
+
 // ReleasedInstance return the released instance resource kind.
 func (rk resKind) ReleasedInstance(appID uint32) string {
 	return fmt.Sprintf("released-inst-%d", appID)

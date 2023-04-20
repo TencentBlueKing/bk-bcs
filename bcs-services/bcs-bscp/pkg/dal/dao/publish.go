@@ -94,12 +94,6 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 					tools.JoinUint32(opt.Groups, ","), err, kit.Rid)
 				return errf.New(errf.DBOpFailed, err.Error())
 			}
-			// if any group can not match,return err
-			// TODO: confim is opt.Groups include default group,if yes,can not compare with len(groups)
-			if len(groups) != len(opt.Groups) {
-				return errf.New(errf.DBOpFailed,
-					fmt.Sprintf("groups num not matched with id(%s)", tools.JoinUint32(opt.Groups, ",")))
-			}
 		}
 		// create strategy to publish it later
 		now := time.Now()
@@ -107,8 +101,7 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 		stg := &table.Strategy{
 			ID: stgID,
 			Spec: &table.StrategySpec{
-				// TODO: strategy name
-				Name:      "TODO",
+				Name:      now.Format(time.RFC3339),
 				ReleaseID: opt.ReleaseID,
 				AsDefault: opt.All,
 				Scope: &table.Scope{
@@ -174,7 +167,7 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 			return err
 		}
 
-		if err := pd.upsertGroupCurrentReleases(kit, txn, opt, stg); err != nil {
+		if err := pd.upsertReleasedGroups(kit, txn, opt, stg); err != nil {
 			logs.Errorf("upsert group current releases failed, err: %v, rid: %s", err, kit.Rid)
 			return err
 		}
@@ -317,9 +310,10 @@ func (pd *pubDao) increaseReleasePublishNum(kit *kit.Kit, txn *sqlx.Tx, releaseI
 	return nil
 }
 
-func (pd *pubDao) upsertGroupCurrentReleases(kit *kit.Kit, txn *sqlx.Tx,
+func (pd *pubDao) upsertReleasedGroups(kit *kit.Kit, txn *sqlx.Tx,
 	opt *types.PublishOption, stg *table.Strategy) error {
 	groups := stg.Spec.Scope.Groups
+	now := time.Now()
 	if opt.Default {
 		groups = append(groups, &table.Group{
 			ID: 0,
@@ -333,21 +327,23 @@ func (pd *pubDao) upsertGroupCurrentReleases(kit *kit.Kit, txn *sqlx.Tx,
 		})
 	}
 	for _, group := range groups {
-		gcr := &table.GroupCurrentRelease{
-			GroupID:     group.ID,
-			AppID:       opt.AppID,
-			ReleaseID:   opt.ReleaseID,
-			StrategyID:  stg.ID,
-			Mode:        group.Spec.Mode,
-			Selector:    group.Spec.Selector,
-			UID:         group.Spec.UID,
-			Edited:      false,
-			BizID:       opt.BizID,
+		gcr := &table.ReleasedGroup{
+			GroupID:    group.ID,
+			AppID:      opt.AppID,
+			ReleaseID:  opt.ReleaseID,
+			StrategyID: stg.ID,
+			Mode:       group.Spec.Mode,
+			Selector:   group.Spec.Selector,
+			UID:        group.Spec.UID,
+			Edited:     false,
+			BizID:      opt.BizID,
+			Reviser:    kit.User,
+			UpdatedAt:  now,
 		}
 		opts := orm.NewFieldOptions().AddIgnoredFields("id").AddBlankedFields("edited")
 		expr, toUpdate, err := orm.RearrangeSQLDataWithOption(gcr, opts)
 		var sqlSentence []string
-		sqlSentence = append(sqlSentence, "UPDATE ", table.GroupCurrentReleaseTable.Name(), " SET ", expr,
+		sqlSentence = append(sqlSentence, "UPDATE ", table.ReleasedGroupTable.Name(), " SET ", expr,
 			fmt.Sprintf(" WHERE biz_id = %d AND group_id = %d AND app_id = %d AND release_id = %d",
 				opt.BizID, group.ID, opt.AppID, opt.ReleaseID))
 		sql := filter.SqlJoint(sqlSentence)
@@ -369,15 +365,15 @@ func (pd *pubDao) upsertGroupCurrentReleases(kit *kit.Kit, txn *sqlx.Tx,
 			continue
 		}
 
-		id, err := pd.idGen.One(kit, table.GroupCurrentReleaseTable)
+		id, err := pd.idGen.One(kit, table.ReleasedGroupTable)
 		if err != nil {
 			return errf.New(errf.DBOpFailed, "generate group current releases id failed, err: "+err.Error())
 		}
 		gcr.ID = id
 
 		var sqlSentenceIn []string
-		sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", table.GroupCurrentReleaseTable.Name(), " (",
-			table.GroupCurrentReleaseColumns.ColumnExpr(), ") VALUES(", table.GroupCurrentReleaseColumns.ColonNameExpr(), ")")
+		sqlSentenceIn = append(sqlSentenceIn, "INSERT INTO ", table.ReleasedGroupTable.Name(), " (",
+			table.ReleasedGroupColumns.ColumnExpr(), ") VALUES(", table.ReleasedGroupColumns.ColonNameExpr(), ")")
 		sql = filter.SqlJoint(sqlSentenceIn)
 		if _, err := txn.NamedExecContext(kit.Ctx, sql, gcr); err != nil {
 			// concurrency can cause deadlock problems and provide three retries
