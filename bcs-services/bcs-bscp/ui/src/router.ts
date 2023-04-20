@@ -51,9 +51,14 @@ const routes = [
     component: () => import('./views/scripts/index.vue')
   },
   {
-    path: '/space/:spaceId/keys/',
-    name: 'keys-management',
-    component: () => import('./views/keys/index.vue')
+    path: '/space/:spaceId/credentials/',
+    name: 'credentials-management',
+    component: () => import('./views/credentials/index.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('./views/404.vue')
   }
 ]
 
