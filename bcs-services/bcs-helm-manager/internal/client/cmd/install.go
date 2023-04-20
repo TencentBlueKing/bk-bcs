@@ -21,13 +21,11 @@ import (
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 var (
 	flagValueFile []string
 	flagArgs      string
-	sysVarFile    string
 	installCMD    = &cobra.Command{
 		Use:   "install",
 		Short: "install",
@@ -49,8 +47,6 @@ func init() {
 		&flagValueFile, "file", "f", nil, "value file for installation")
 	installCMD.PersistentFlags().StringVarP(
 		&flagArgs, "args", "", "", "args to append to helm command")
-	installCMD.PersistentFlags().StringVarP(
-		&sysVarFile, "sysvar", "", "", "sys var file")
 }
 
 // Install provide the actions to do installCMD
@@ -103,24 +99,4 @@ func getValues() ([]string, error) {
 	}
 
 	return values, nil
-}
-
-func getSysVar() map[string]string {
-	if sysVarFile == "" {
-		return nil
-	}
-
-	f, err := os.Open(sysVarFile)
-	if err != nil {
-		fmt.Printf("open sys var file from %s failed, %s\n", sysVarFile, err.Error())
-		os.Exit(1)
-	}
-
-	var r map[string]string
-	if err = yaml.NewYAMLOrJSONDecoder(f, 20).Decode(&r); err != nil {
-		fmt.Printf("load sys var file from %s failed, %s\n", sysVarFile, err.Error())
-		os.Exit(1)
-	}
-
-	return r
 }

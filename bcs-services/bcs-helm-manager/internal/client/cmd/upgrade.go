@@ -82,6 +82,4 @@ func init() {
 		&flagValueFile, "file", "f", nil, "value file for installation")
 	upgradeCMD.PersistentFlags().StringVarP(
 		&flagArgs, "args", "", "", "args to append to helm command")
-	upgradeCMD.PersistentFlags().StringVarP(
-		&sysVarFile, "sysvar", "", "", "sys var file")
 }
