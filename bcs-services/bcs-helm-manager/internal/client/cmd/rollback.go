@@ -32,22 +32,23 @@ var rollbackCMD = &cobra.Command{
 
 // Rollback provide the actions to do rollbackCMD
 func Rollback(cmd *cobra.Command, args []string) {
-	req := &helmmanager.RollbackReleaseReq{}
+	req := &helmmanager.RollbackReleaseV1Req{}
 
 	if len(args) < 2 {
-		fmt.Printf("rollback args need at least 2, install [name] [revision]\n")
+		fmt.Printf("rollback  args need at least 2, install [name] [revision]\n")
 		os.Exit(1)
 	}
 	revision, err := strconv.Atoi(args[1])
 	if err != nil {
-		fmt.Printf("rollback get invalid revision %s, %s\n", args[1], err.Error())
+		fmt.Printf("rollback  get invalid revision %s, %s\n", args[1], err.Error())
 		os.Exit(1)
 	}
 	if revision <= 0 {
-		fmt.Printf("rollback get invalid revision %s, revision should be positive\n", args[1])
+		fmt.Printf("rollback  get invalid revision %s, revision should be positive\n", args[1])
 		os.Exit(1)
 	}
 
+	req.ProjectCode = &flagProject
 	req.Name = common.GetStringP(args[0])
 	req.Namespace = &flagNamespace
 	req.ClusterID = &flagCluster
@@ -64,6 +65,8 @@ func Rollback(cmd *cobra.Command, args []string) {
 }
 
 func init() {
+	rollbackCMD.PersistentFlags().StringVarP(
+		&flagProject, "project", "p", "", "project id for operation")
 	rollbackCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace for operation")
 	rollbackCMD.PersistentFlags().StringVarP(

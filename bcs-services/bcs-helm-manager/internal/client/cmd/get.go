@@ -58,26 +58,19 @@ var (
 		Long:    "get chart detail",
 		Run:     GetChartDetail,
 	}
-	getChartDetailV1CMD = &cobra.Command{
-		Use:     "chartdetailv1",
-		Aliases: []string{"detailv1", "cdv1"},
-		Short:   "get chart detail v1",
-		Long:    "get chart detail v1",
-		Run:     GetChartDetailV1,
+	getVersionDetailCMD = &cobra.Command{
+		Use:     "versiondetail",
+		Aliases: []string{"versiondetail", "vd"},
+		Short:   "get version detail",
+		Long:    "get version detail",
+		Run:     GetVersionDetail,
 	}
-	getVersionDetailV1CMD = &cobra.Command{
-		Use:     "versiondetailv1",
-		Aliases: []string{"versiondetailv1", "vdv1"},
-		Short:   "get version detail v1",
-		Long:    "get version detail v1",
-		Run:     GetVersionDetailV1,
-	}
-	getReleaseDetailV1CMD = &cobra.Command{
-		Use:     "releasev1",
-		Aliases: []string{"rlv1"},
-		Short:   "get release detail v1",
-		Long:    "get release detail v1",
-		Run:     GetReleaseDetailV1,
+	getReleaseDetailCMD = &cobra.Command{
+		Use:     "release",
+		Aliases: []string{"rl"},
+		Short:   "get release detail",
+		Long:    "get release detail",
+		Run:     GetReleaseDetail,
 	}
 	getReleaseHistoryCMD = &cobra.Command{
 		Use:     "releasehistory",
@@ -116,38 +109,6 @@ func GetChartDetail(cmd *cobra.Command, args []string) {
 		fmt.Printf("get chart detail need specific chart name\n")
 		os.Exit(1)
 	}
-	if len(args) == 1 {
-		fmt.Printf("get chart detail need specific chart version\n")
-		os.Exit(1)
-	}
-
-	req := &helmmanager.GetVersionDetailReq{}
-	req.ProjectID = &flagProject
-	req.Repository = &flagRepository
-	req.Name = common.GetStringP(args[0])
-	req.Version = common.GetStringP(args[1])
-
-	c := newClientWithConfiguration()
-	r, err := c.Chart().Detail(cmd.Context(), req)
-	if err != nil {
-		fmt.Printf("get chart detail failed, %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	if flagOutput == outputTypeJson {
-		printer.PrintChartDetailInJson(r)
-		return
-	}
-
-	printer.PrintChartDetailInTable(flagOutput == outputTypeWide, r)
-}
-
-// GetChartDetailV1 provide the actions to do getChartDetailV1CMD
-func GetChartDetailV1(cmd *cobra.Command, args []string) {
-	if len(args) == 0 {
-		fmt.Printf("get chart detail need specific chart name\n")
-		os.Exit(1)
-	}
 
 	req := &helmmanager.GetChartDetailV1Req{}
 	req.ProjectCode = &flagProject
@@ -157,7 +118,7 @@ func GetChartDetailV1(cmd *cobra.Command, args []string) {
 	c := newClientWithConfiguration()
 	r, err := c.Chart().GetChartDetailV1(cmd.Context(), req)
 	if err != nil {
-		fmt.Printf("get chart detail v1 failed, %s\n", err.Error())
+		fmt.Printf("get chart detail failed, %s\n", err.Error())
 		os.Exit(1)
 	}
 	printData := &helmmanager.ChartListData{
@@ -171,14 +132,14 @@ func GetChartDetailV1(cmd *cobra.Command, args []string) {
 	printer.PrintChartInTable(flagOutput == outputTypeWide, printData)
 }
 
-// GetVersionDetailV1 provide the actions to do getVersionDetailV1CMD
-func GetVersionDetailV1(cmd *cobra.Command, args []string) {
+// GetVersionDetail provide the actions to do getVersionDetailCMD
+func GetVersionDetail(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
-		fmt.Printf("get chart detail v1 need specific chart name\n")
+		fmt.Printf("get chart detail need specific chart name\n")
 		os.Exit(1)
 	}
 	if len(args) == 1 {
-		fmt.Printf("get chart detail v1 need specific chart version\n")
+		fmt.Printf("get chart detail need specific chart version\n")
 		os.Exit(1)
 	}
 
@@ -191,7 +152,7 @@ func GetVersionDetailV1(cmd *cobra.Command, args []string) {
 	c := newClientWithConfiguration()
 	r, err := c.Chart().GetVersionDetailV1(cmd.Context(), req)
 	if err != nil {
-		fmt.Printf("get chart detail v1 failed, %s\n", err.Error())
+		fmt.Printf("get chart detail failed, %s\n", err.Error())
 		os.Exit(1)
 	}
 	if flagOutput == outputTypeJson {
@@ -202,8 +163,8 @@ func GetVersionDetailV1(cmd *cobra.Command, args []string) {
 	printer.PrintChartDetailInTable(flagOutput == outputTypeWide, r)
 }
 
-// GetReleaseDetailV1 provide the action to do getReleaseDetailV1CMD
-func GetReleaseDetailV1(cmd *cobra.Command, args []string) {
+// GetReleaseDetail provide the action to do getReleaseDetailCMD
+func GetReleaseDetail(cmd *cobra.Command, args []string) {
 	req := &helmmanager.GetReleaseDetailV1Req{}
 
 	req.ProjectCode = &flagProject
@@ -212,9 +173,9 @@ func GetReleaseDetailV1(cmd *cobra.Command, args []string) {
 	req.Name = &flagName
 
 	c := newClientWithConfiguration()
-	r, err := c.Release().GetReleaseDetailV1(cmd.Context(), req)
+	r, err := c.Release().GetReleaseDetail(cmd.Context(), req)
 	if err != nil {
-		fmt.Printf("get release detail v1 failed, %s\n", err.Error())
+		fmt.Printf("get release detail failed, %s\n", err.Error())
 		os.Exit(1)
 	}
 	printData := []*helmmanager.ReleaseDetail{r}
@@ -257,9 +218,8 @@ func GetReleaseHistory(cmd *cobra.Command, args []string) {
 func init() {
 	getCMD.AddCommand(getRepositoryCMD)
 	getCMD.AddCommand(getChartDetailCMD)
-	getCMD.AddCommand(getChartDetailV1CMD)
-	getCMD.AddCommand(getVersionDetailV1CMD)
-	getCMD.AddCommand(getReleaseDetailV1CMD)
+	getCMD.AddCommand(getVersionDetailCMD)
+	getCMD.AddCommand(getReleaseDetailCMD)
 	getCMD.AddCommand(getReleaseHistoryCMD)
 	getCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")

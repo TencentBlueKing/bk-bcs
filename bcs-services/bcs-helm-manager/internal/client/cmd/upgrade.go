@@ -30,12 +30,12 @@ var upgradeCMD = &cobra.Command{
 	Run:   Upgrade,
 }
 
-// Upgrade provide the actions to do upgradeCMD
+// UpgradeV1 provide the actions to do upgradeCMD
 func Upgrade(cmd *cobra.Command, args []string) {
-	req := &helmmanager.UpgradeReleaseReq{}
+	req := &helmmanager.UpgradeReleaseV1Req{}
 
 	if len(args) < 3 {
-		fmt.Printf("upgrade args need at least 3, install [name] [chart] [version]\n")
+		fmt.Printf("upgradev1 args need at least 3, install [name] [chart] [version]\n")
 		os.Exit(1)
 	}
 	values, err := getValues()
@@ -47,18 +47,18 @@ func Upgrade(cmd *cobra.Command, args []string) {
 	req.Name = common.GetStringP(args[0])
 	req.Namespace = &flagNamespace
 	req.ClusterID = &flagCluster
-	req.ProjectID = &flagProject
+	req.ProjectCode = &flagProject
 	req.Repository = &flagRepository
 	req.Chart = common.GetStringP(args[1])
 	req.Version = common.GetStringP(args[2])
 	req.Values = values
-	req.BcsSysVar = getSysVar()
+	req.ValueFile = &flagValueFile[0]
 	if flagArgs != "" {
 		req.Args = strings.Split(flagArgs, " ")
 	}
 
 	c := newClientWithConfiguration()
-	data, err := c.Release().Upgrade(cmd.Context(), req)
+	err = c.Release().Upgrade(cmd.Context(), req)
 	if err != nil {
 		fmt.Printf("upgrade release failed, %s\n", err.Error())
 		os.Exit(1)
@@ -66,8 +66,7 @@ func Upgrade(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("success to upgrade release %s in version %s namespace %s cluster %s "+
 		"with appVersion %s revision %d\n",
-		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID(),
-		data.GetAppVersion(), data.GetRevision())
+		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID())
 }
 
 func init() {

@@ -89,7 +89,7 @@ bcs-helm-client get repo -p [projectname to query] -r [repositoryname to query]
 ### 获取Chart列表V1版 - ListChartV1
 
 ```bash
-bcs-helm-client list chv1 --help
+bcs-helm-client list ch --help
 ```
 
 参数详情:
@@ -110,7 +110,7 @@ bcs-helm-client list chv1 --help
 示例:
 
 ```
-list chv1 -p [projectname to query] -r [repositoryname to query] --name [name to query]
+list ch -p [projectname to query] -r [repositoryname to query] --name [name to query]
 ```
 
 
@@ -120,7 +120,7 @@ list chv1 -p [projectname to query] -r [repositoryname to query] --name [name to
 ### 获取Chart明细V1版 - GetChartDetailV1
 
 ```bash
-bcs-helm-client get detailv1 --help
+bcs-helm-client get detail --help
 ```
 
 参数详情:
@@ -139,7 +139,7 @@ bcs-helm-client get detailv1 --help
 示例:
 
 ```
-bcs-helm-client get detailv1 [chartname to query] -p [projectname to query] -r [repositoryname to query]
+bcs-helm-client get detail [chartname to query] -p [projectname to query] -r [repositoryname to query]
 ```
 
 
@@ -238,7 +238,7 @@ bcs-helm-client delete [chartname to delete] [chartversion to delete] -p [projec
 ### 
 
 ```bash
-bcs-helm-client list rlv1 --help
+bcs-helm-client list rl --help
 ```
 
 参数详情:
@@ -258,8 +258,8 @@ bcs-helm-client list rlv1 --help
 示例:
 
 ```bash
-bcs-helm-client list rlv1 -p [projectname to query] -r [repositoryname to query] --name [releasename to query] -n [namespace to query] --cluster [cluster to query]
-bcs-helm-client list rlv1  -p project -r repo --name releasename -n default --cluster BCS-K8S-00000
+bcs-helm-client list rl -p [projectname to query] -r [repositoryname to query] --name [releasename to query] -n [namespace to query] --cluster [cluster to query]
+bcs-helm-client list rl -p project -r repo --name releasename -n default --cluster BCS-K8S-00000
 ```
 
 
@@ -269,13 +269,13 @@ bcs-helm-client list rlv1  -p project -r repo --name releasename -n default --cl
 ### 
 
 ```bash
-bcs-helm-client get releasev1 --help
+bcs-helm-client get release --help
 ```
 
 子命令Aliases:
 
 ```bash
-releasev1, rlv1
+release, rl
 ```
 
 参数详情:
@@ -294,7 +294,7 @@ releasev1, rlv1
 示例:
 
 ```bash
-bcs-helm-client get releasev1  --name [releasename to query] -p [projectname to query]  -n [namespace to query] --cluster [cluster to query]
+bcs-helm-client get release  --name [releasename to query] -p [projectname to query]  -n [namespace to query] --cluster [cluster to query]
 ```
 
 
@@ -304,7 +304,7 @@ bcs-helm-client get releasev1  --name [releasename to query] -p [projectname to 
 ### 
 
 ```bash
-bcs-helm-client installv1  --help
+bcs-helm-client install  --help
 ```
 
 参数详情:
@@ -324,7 +324,7 @@ bcs-helm-client installv1  --help
 示例:
 
 ```bash
-bcs-helm-client  installv1 [releasename to install] [chartname to install] [version to install] -n [namespace to install] -p [projectname to install]  -r [repositoryname to install] --cluster [cluster to install] -f [value file for installation]
+bcs-helm-client  install [releasename to install] [chartname to install] [version to install] -n [namespace to install] -p [projectname to install]  -r [repositoryname to install] --cluster [cluster to install] -f [value file for installation]
 ```
 
 
@@ -334,7 +334,7 @@ bcs-helm-client  installv1 [releasename to install] [chartname to install] [vers
 ### 
 
 ```bash
-bcs-helm-client uninstallv1 --help
+bcs-helm-client uninstall --help
 ```
 
 参数详情:
@@ -349,7 +349,7 @@ bcs-helm-client uninstallv1 --help
 示例:
 
 ```bash
-bcs-helm-client uninstallv1 [releasename to uninstall] -n [namespace to install] -p [projectname to install]  --cluster [cluster to uninstall]
+bcs-helm-client uninstall [releasename to uninstall] -n [namespace to install] -p [projectname to install]  --cluster [cluster to uninstall]
 ```
 
 
@@ -359,7 +359,7 @@ bcs-helm-client uninstallv1 [releasename to uninstall] -n [namespace to install]
 ### 
 
 ```bash
-bcs-helm-client upgradev1 --help
+bcs-helm-client upgrade --help
 ```
 
 参数详情:
@@ -379,7 +379,7 @@ bcs-helm-client upgradev1 --help
 示例:
 
 ```bash
-bcs-helm-client upgradev1   [releasename to upgrade] [chartname to upgrade] [version to upgrade]  -n [namespace to upgrade] -p [projectname to upgrade]  -r [repositoryname to upgrade] --cluster [cluster to upgrade] -f [value file for upgrade]
+bcs-helm-client upgrade   [releasename to upgrade] [chartname to upgrade] [version to upgrade]  -n [namespace to upgrade] -p [projectname to upgrade]  -r [repositoryname to upgrade] --cluster [cluster to upgrade] -f [value file for upgrade]
 ```
 
 
@@ -389,7 +389,7 @@ bcs-helm-client upgradev1   [releasename to upgrade] [chartname to upgrade] [ver
 ### 
 
 ```bash
-bcs-helm-client rollbackv1 --help
+bcs-helm-client rollback --help
 ```
 
 参数详情:
@@ -404,7 +404,7 @@ bcs-helm-client rollbackv1 --help
 示例:
 
 ```bash
-bcs-helm-client  rollbackv1  [releasename to upgrade] [releasename to upgrade(类型为正整数)] -n [namespace to upgrade] -p [projectname to upgrade] --cluster [cluster to upgrade] 
+bcs-helm-client  rollback  [releasename to upgrade] [releasename to upgrade(类型为正整数)] -n [namespace to upgrade] -p [projectname to upgrade] --cluster [cluster to upgrade] 
 ```
 
 

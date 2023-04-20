@@ -28,8 +28,7 @@ var (
 	flagValueFile []string
 	flagArgs      string
 	sysVarFile    string
-
-	installCMD = &cobra.Command{
+	installCMD    = &cobra.Command{
 		Use:   "install",
 		Short: "install",
 		Long:  "install chart release",
@@ -37,9 +36,26 @@ var (
 	}
 )
 
+func init() {
+	installCMD.PersistentFlags().StringVarP(
+		&flagProject, "project", "p", "", "project id for operation")
+	installCMD.PersistentFlags().StringVarP(
+		&flagRepository, "repository", "r", "", "repository name for operation")
+	installCMD.PersistentFlags().StringVarP(
+		&flagNamespace, "namespace", "n", "", "release namespace for operation")
+	installCMD.PersistentFlags().StringVarP(
+		&flagCluster, "cluster", "", "", "release cluster id for operation")
+	installCMD.PersistentFlags().StringSliceVarP(
+		&flagValueFile, "file", "f", nil, "value file for installation")
+	installCMD.PersistentFlags().StringVarP(
+		&flagArgs, "args", "", "", "args to append to helm command")
+	installCMD.PersistentFlags().StringVarP(
+		&sysVarFile, "sysvar", "", "", "sys var file")
+}
+
 // Install provide the actions to do installCMD
 func Install(cmd *cobra.Command, args []string) {
-	req := &helmmanager.InstallReleaseReq{}
+	req := &helmmanager.InstallReleaseV1Req{}
 
 	if len(args) < 3 {
 		fmt.Printf("install args need at least 3, install [name] [chart] [version]\n")
@@ -54,18 +70,18 @@ func Install(cmd *cobra.Command, args []string) {
 	req.Name = common.GetStringP(args[0])
 	req.Namespace = &flagNamespace
 	req.ClusterID = &flagCluster
-	req.ProjectID = &flagProject
+	req.ProjectCode = &flagProject
 	req.Repository = &flagRepository
 	req.Chart = common.GetStringP(args[1])
 	req.Version = common.GetStringP(args[2])
 	req.Values = values
-	req.BcsSysVar = getSysVar()
+	req.ValueFile = &flagValueFile[0]
 	if flagArgs != "" {
 		req.Args = strings.Split(flagArgs, " ")
 	}
 
 	c := newClientWithConfiguration()
-	data, err := c.Release().Install(cmd.Context(), req)
+	err = c.Release().Install(cmd.Context(), req)
 	if err != nil {
 		fmt.Printf("install release failed, %s\n", err.Error())
 		os.Exit(1)
@@ -73,8 +89,7 @@ func Install(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("success to install release %s in version %s namespace %s cluster %s "+
 		"with appVersion %s revision %d\n",
-		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID(),
-		data.GetAppVersion(), data.GetRevision())
+		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID())
 }
 
 func getValues() ([]string, error) {
@@ -108,21 +123,4 @@ func getSysVar() map[string]string {
 	}
 
 	return r
-}
-
-func init() {
-	installCMD.PersistentFlags().StringVarP(
-		&flagProject, "project", "p", "", "project id for operation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagRepository, "repository", "r", "", "repository name for operation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagNamespace, "namespace", "n", "", "release namespace for operation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagCluster, "cluster", "", "", "release cluster id for operation")
-	installCMD.PersistentFlags().StringSliceVarP(
-		&flagValueFile, "file", "f", nil, "value file for installation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagArgs, "args", "", "", "args to append to helm command")
-	installCMD.PersistentFlags().StringVarP(
-		&sysVarFile, "sysvar", "", "", "sys var file")
 }

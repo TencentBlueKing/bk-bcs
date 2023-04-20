@@ -48,242 +48,10 @@ type release struct {
 	*Client
 }
 
-// List release
-func (rl *release) List(ctx context.Context, req *helmmanager.ListReleaseReq) (*helmmanager.ReleaseListData, error) {
+// GetReleaseDetail get release detail
+func (rl *release) GetReleaseDetail(ctx context.Context, req *helmmanager.GetReleaseDetailV1Req) (*helmmanager.ReleaseDetail, error) {
 	if req == nil {
-		return nil, fmt.Errorf("list release request is empty")
-	}
-
-	clusterID := req.GetClusterID()
-	if clusterID == "" {
-		return nil, fmt.Errorf("release clusterID can not be empty")
-	}
-
-	resp, err := rl.get(
-		ctx,
-		urlPrefix+fmt.Sprintf(urlReleaseList, clusterID)+"?"+rl.listReleaseQuery(req).Encode(),
-		nil,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	var r helmmanager.ListReleaseResp
-	if err = unmarshalPB(resp.Reply, &r); err != nil {
-		return nil, err
-	}
-
-	if r.GetCode() != resultCodeSuccess {
-		return nil, fmt.Errorf("list release get result code %d, message: %s", r.GetCode(), r.GetMessage())
-	}
-
-	return r.Data, nil
-}
-
-func (rl *release) listReleaseQuery(req *helmmanager.ListReleaseReq) url.Values {
-	query := url.Values{}
-	if req.Page != nil {
-		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
-	}
-	if req.Size != nil {
-		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
-	}
-	if req.Namespace != nil {
-		query.Set("namespace", req.GetNamespace())
-	}
-	if req.Name != nil {
-		query.Set("name", req.GetName())
-	}
-	return query
-}
-
-// Install release
-func (rl *release) Install(ctx context.Context, req *helmmanager.InstallReleaseReq) (
-	*helmmanager.ReleaseDetail, error) {
-	if req == nil {
-		return nil, fmt.Errorf("install release request is empty")
-	}
-
-	req.Operator = common.GetStringP(rl.conf.Operator)
-	clusterID := req.GetClusterID()
-	if clusterID == "" {
-		return nil, fmt.Errorf("install release clusterID can not be empty")
-	}
-	namespace := req.GetNamespace()
-	if namespace == "" {
-		return nil, fmt.Errorf("install release namespace can not be empty")
-	}
-	name := req.GetName()
-	if name == "" {
-		return nil, fmt.Errorf("install release name can not be empty")
-	}
-
-	var data []byte
-	_ = codec.EncJson(req, &data)
-
-	resp, err := rl.post(
-		ctx,
-		urlPrefix+fmt.Sprintf(urlReleaseInstall, clusterID, namespace, name),
-		nil,
-		data,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	var r helmmanager.InstallReleaseResp
-	if err = unmarshalPB(resp.Reply, &r); err != nil {
-		return nil, err
-	}
-
-	if r.GetCode() != resultCodeSuccess {
-		return nil, fmt.Errorf("install release get result code %d, message: %s", r.GetCode(), r.GetMessage())
-	}
-
-	return r.Data, nil
-}
-
-// Uninstall release
-func (rl *release) Uninstall(ctx context.Context, req *helmmanager.UninstallReleaseReq) error {
-	if req == nil {
-		return fmt.Errorf("uninstall release request is empty")
-	}
-
-	req.Operator = common.GetStringP(rl.conf.Operator)
-	clusterID := req.GetClusterID()
-	if clusterID == "" {
-		return fmt.Errorf("uninstall release clusterID can not be empty")
-	}
-	namespace := req.GetNamespace()
-	if namespace == "" {
-		return fmt.Errorf("uninstall release namespace can not be empty")
-	}
-	name := req.GetName()
-	if name == "" {
-		return fmt.Errorf("uninstall release name can not be empty")
-	}
-
-	var data []byte
-	_ = codec.EncJson(req, &data)
-
-	resp, err := rl.post(
-		ctx,
-		urlPrefix+fmt.Sprintf(urlReleaseUninstall, clusterID, namespace, name),
-		nil,
-		data,
-	)
-	if err != nil {
-		return err
-	}
-
-	var r helmmanager.UninstallReleaseResp
-	if err = unmarshalPB(resp.Reply, &r); err != nil {
-		return err
-	}
-
-	if r.GetCode() != resultCodeSuccess {
-		return fmt.Errorf("uninstall release get result code %d, message: %s", r.GetCode(), r.GetMessage())
-	}
-
-	return nil
-}
-
-// Upgrade release
-func (rl *release) Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseReq) (
-	*helmmanager.ReleaseDetail, error) {
-	if req == nil {
-		return nil, fmt.Errorf("upgrade release request is empty")
-	}
-
-	req.Operator = common.GetStringP(rl.conf.Operator)
-	clusterID := req.GetClusterID()
-	if clusterID == "" {
-		return nil, fmt.Errorf("upgrade release clusterID can not be empty")
-	}
-	namespace := req.GetNamespace()
-	if namespace == "" {
-		return nil, fmt.Errorf("upgrade release namespace can not be empty")
-	}
-	name := req.GetName()
-	if name == "" {
-		return nil, fmt.Errorf("upgrade release name can not be empty")
-	}
-
-	var data []byte
-	_ = codec.EncJson(req, &data)
-
-	resp, err := rl.post(
-		ctx,
-		urlPrefix+fmt.Sprintf(urlReleaseUpgrade, clusterID, namespace, name),
-		nil,
-		data,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	var r helmmanager.UpgradeReleaseResp
-	if err = unmarshalPB(resp.Reply, &r); err != nil {
-		return nil, err
-	}
-
-	if r.GetCode() != resultCodeSuccess {
-		return nil, fmt.Errorf("upgrade release get result code %d, message: %s", r.GetCode(), r.GetMessage())
-	}
-
-	return r.Data, nil
-}
-
-// Rollback release
-func (rl *release) Rollback(ctx context.Context, req *helmmanager.RollbackReleaseReq) error {
-	if req == nil {
-		return fmt.Errorf("rollback release request is empty")
-	}
-
-	req.Operator = common.GetStringP(rl.conf.Operator)
-	clusterID := req.GetClusterID()
-	if clusterID == "" {
-		return fmt.Errorf("rollback release clusterID can not be empty")
-	}
-	namespace := req.GetNamespace()
-	if namespace == "" {
-		return fmt.Errorf("rollback release namespace can not be empty")
-	}
-	name := req.GetName()
-	if name == "" {
-		return fmt.Errorf("rollback release name can not be empty")
-	}
-
-	var data []byte
-	_ = codec.EncJson(req, &data)
-
-	resp, err := rl.post(
-		ctx,
-		urlPrefix+fmt.Sprintf(urlReleaseRollback, clusterID, namespace, name),
-		nil,
-		data,
-	)
-	if err != nil {
-		return err
-	}
-
-	var r helmmanager.RollbackReleaseResp
-	if err = unmarshalPB(resp.Reply, &r); err != nil {
-		return err
-	}
-
-	if r.GetCode() != resultCodeSuccess {
-		return fmt.Errorf("rollback release get result code %d, message: %s", r.GetCode(), r.GetMessage())
-	}
-
-	return nil
-}
-
-// GetReleaseDetailV1 get release detail v1
-func (rl *release) GetReleaseDetailV1(ctx context.Context, req *helmmanager.GetReleaseDetailV1Req) (*helmmanager.ReleaseDetail, error) {
-	if req == nil {
-		return nil, fmt.Errorf("get release detail v1 request is empty")
+		return nil, fmt.Errorf("get release detail request is empty")
 	}
 
 	projectCode := req.GetProjectCode()
@@ -321,14 +89,14 @@ func (rl *release) GetReleaseDetailV1(ctx context.Context, req *helmmanager.GetR
 	}
 
 	if r.GetCode() != resultCodeSuccess {
-		return nil, fmt.Errorf("get release detail v1 get result code %d, message: %s", r.GetCode(), r.GetMessage())
+		return nil, fmt.Errorf("get release detail get result code %d, message: %s", r.GetCode(), r.GetMessage())
 	}
 
 	return r.Data, nil
 }
 
-// List release v1
-func (rl *release) ListV1(ctx context.Context, req *helmmanager.ListReleaseV1Req) (*helmmanager.ReleaseListData, error) {
+// List release
+func (rl *release) List(ctx context.Context, req *helmmanager.ListReleaseV1Req) (*helmmanager.ReleaseListData, error) {
 	if req == nil {
 		return nil, fmt.Errorf("list release request is empty")
 	}
@@ -345,7 +113,7 @@ func (rl *release) ListV1(ctx context.Context, req *helmmanager.ListReleaseV1Req
 
 	resp, err := rl.get(
 		ctx,
-		urlPrefix+fmt.Sprintf(urlReleaseListV1, projectCode, clusterID)+"?"+rl.listReleaseQueryV1(req).Encode(),
+		urlPrefix+fmt.Sprintf(urlReleaseListV1, projectCode, clusterID)+"?"+rl.listReleaseQuery(req).Encode(),
 		nil,
 		nil,
 	)
@@ -365,7 +133,7 @@ func (rl *release) ListV1(ctx context.Context, req *helmmanager.ListReleaseV1Req
 	return r.Data, nil
 }
 
-func (rl *release) listReleaseQueryV1(req *helmmanager.ListReleaseV1Req) url.Values {
+func (rl *release) listReleaseQuery(req *helmmanager.ListReleaseV1Req) url.Values {
 	query := url.Values{}
 	if req.Page != nil {
 		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
@@ -382,8 +150,8 @@ func (rl *release) listReleaseQueryV1(req *helmmanager.ListReleaseV1Req) url.Val
 	return query
 }
 
-// InstallV1 release v1
-func (rl *release) InstallV1(ctx context.Context, req *helmmanager.InstallReleaseV1Req) error {
+// Install release
+func (rl *release) Install(ctx context.Context, req *helmmanager.InstallReleaseV1Req) error {
 	if req == nil {
 		return fmt.Errorf("install release request is empty")
 	}
@@ -431,8 +199,8 @@ func (rl *release) InstallV1(ctx context.Context, req *helmmanager.InstallReleas
 	return nil
 }
 
-// Uninstall release v1
-func (rl *release) UninstallV1(ctx context.Context, req *helmmanager.UninstallReleaseV1Req) error {
+// Uninstall release
+func (rl *release) Uninstall(ctx context.Context, req *helmmanager.UninstallReleaseV1Req) error {
 	if req == nil {
 		return fmt.Errorf("uninstall release request is empty")
 	}
@@ -478,8 +246,8 @@ func (rl *release) UninstallV1(ctx context.Context, req *helmmanager.UninstallRe
 	return nil
 }
 
-// Upgrade release v1
-func (rl *release) UpgradeV1(ctx context.Context, req *helmmanager.UpgradeReleaseV1Req) error {
+// Upgrade release
+func (rl *release) Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseV1Req) error {
 	if req == nil {
 		return fmt.Errorf("upgrade release request is empty")
 	}
@@ -528,7 +296,7 @@ func (rl *release) UpgradeV1(ctx context.Context, req *helmmanager.UpgradeReleas
 }
 
 // Rollback release
-func (rl *release) RollbackV1(ctx context.Context, req *helmmanager.RollbackReleaseV1Req) error {
+func (rl *release) Rollback(ctx context.Context, req *helmmanager.RollbackReleaseV1Req) error {
 	if req == nil {
 		return fmt.Errorf("rollback release request is empty")
 	}
