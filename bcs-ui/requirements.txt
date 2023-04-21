@@ -121,7 +121,7 @@ s3transfer==0.1.13
 semantic-version==2.8.4
 service-identity==21.1.0
 six==1.16.0
-sqlparse==0.4.1
+sqlparse==0.4.4
 tornado==5.1.1
 twisted==21.2.0
 txaio==21.2.1
