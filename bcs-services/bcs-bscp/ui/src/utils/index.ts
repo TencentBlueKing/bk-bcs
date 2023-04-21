@@ -16,3 +16,19 @@ export const byteUnitConverse = (size: number) => {
 export const stringLengthInBytes = (content: string) => {
   return (new TextEncoder().encode(content)).length
 }
+
+export const copyToClipBoard = (content: string) => {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(content)
+  } else {
+    const $textarea = document.createElement('textarea')
+    document.body.appendChild($textarea)
+    $textarea.style.position = 'fixed'
+    $textarea.style.clip = 'rect(0 0 0 0)'
+    $textarea.style.top = '10px'
+    $textarea.value = content
+    $textarea.select()
+    document.execCommand('copy', true)
+    document.body.removeChild($textarea)
+  }
+}
