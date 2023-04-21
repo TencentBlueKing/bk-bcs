@@ -126,25 +126,24 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 		return make([]*pbci.ConfigItem, 0)
 	}
 
+	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
+	for _, release := range fileRelease {
+		releaseMap[release.ConfigItemID] = release
+	}
+
 	result := make([]*pbci.ConfigItem, 0)
 	for _, ci := range cis {
 		var fileState string
 		if len(fileRelease) == 0 {
-			if ci.Revision.CreatedAt == ci.Revision.UpdatedAt {
-				fileState = ADD
-			} else {
-				fileState = REVISE
-			}
+			fileState = ADD
 		} else {
-			for _, value := range fileRelease {
-				if value.ConfigItemID == ci.ID {
-					if ci.Revision.UpdatedAt == value.Revision.UpdatedAt {
-						fileState = UNCHANGE
-					} else {
-						fileState = REVISE
-					}
-					break
+			if _, ok := releaseMap[ci.ID]; ok {
+				if ci.Revision.UpdatedAt == releaseMap[ci.ID].Revision.UpdatedAt {
+					fileState = UNCHANGE
+				} else {
+					fileState = REVISE
 				}
+				delete(releaseMap, ci.ID)
 			}
 		}
 		if len(fileState) == 0 {
@@ -153,8 +152,8 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 		result = append(result, pbci.PbConfigItem(ci, fileState))
 	}
 
-	if len(fileRelease) != 0 {
-		for _, file := range fileRelease {
+	if len(releaseMap) != 0 {
+		for _, file := range releaseMap {
 			result = append(result, PbConfigItem(file, DELETE))
 		}
 	}
