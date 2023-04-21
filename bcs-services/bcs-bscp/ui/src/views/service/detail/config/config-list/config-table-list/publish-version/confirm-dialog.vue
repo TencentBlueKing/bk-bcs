@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
-  import InfoBox from "bkui-vue/lib/info-box";
+  import { InfoBox } from "bkui-vue/lib";
   import { publishVersion } from '../../../../../../../api/config'
   import { IGroupTreeItem } from '../../../../../../../../types/group';
 

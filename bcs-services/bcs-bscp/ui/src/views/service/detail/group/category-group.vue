@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
   import { RightShape, Del } from 'bkui-vue/lib/icon'
-  import InfoBox from "bkui-vue/lib/info-box";
+  import { InfoBox } from "bkui-vue/lib";
   import { IGroupItem, ICategoryItem, ECategoryType, IAllCategoryGroupItem } from '../../../../../types/group'
   import { getCategoryGroupList, delCategory, deleteGroup } from '../../../../api/group'
   import RuleTag from '../../../groups/components/rule-tag.vue'

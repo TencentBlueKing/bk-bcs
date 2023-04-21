@@ -3,7 +3,7 @@
   import { storeToRefs } from 'pinia'
   import { useServiceStore } from '../../../../../../store/service'
   import { useConfigStore } from '../../../../../../store/config'
-  import InfoBox from "bkui-vue/lib/info-box";
+  import { InfoBox } from "bkui-vue/lib";
   import { IConfigItem, IConfigListQueryParams } from '../../../../../../../types/config'
   import { CONFIG_STATUS_MAP } from '../../../../../../constants/index'
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../api/config'

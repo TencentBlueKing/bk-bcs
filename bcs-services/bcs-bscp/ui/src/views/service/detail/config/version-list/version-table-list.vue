@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
   import { Search } from 'bkui-vue/lib/icon'
-  import InfoBox from "bkui-vue/lib/info-box";
+  import { InfoBox } from "bkui-vue/lib";
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../store/config'
   import { getConfigVersionList } from '../../../../../api/config';
