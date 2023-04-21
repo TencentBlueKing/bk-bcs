@@ -297,6 +297,13 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 			return ab
 		}
 
+	case *table.CredentialScope:
+		credentialScope := updatedTo.(*table.CredentialScope)
+		if err := ab.decorateCredentialScopeUpdate(credentialScope); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
 	default:
 		logs.Errorf("unsupported audit update resource: %s, type: %s, rid: %v", ab.toAudit.ResourceType,
 			reflect.TypeOf(updatedTo), ab.toAudit.Rid)
@@ -458,6 +465,26 @@ func (ab *AuditBuilder) decorateCredentialUpdate(credential *table.Credential) e
 	if err != nil {
 		ab.hitErr = err
 		return fmt.Errorf("parse credential changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
+func (ab *AuditBuilder) decorateCredentialScopeUpdate(credentialScope *table.CredentialScope) error {
+	ab.toAudit.ResourceID = credentialScope.ID
+
+	preCredential, err := ab.getCredentialScope(credentialScope.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preCredential
+
+	changed, err := parseChangedSpecFields(preCredential, credentialScope)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse credential scope changed spec field failed, err: %v", err)
 	}
 
 	ab.changed = changed

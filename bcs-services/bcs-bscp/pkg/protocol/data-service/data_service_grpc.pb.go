@@ -80,6 +80,7 @@ const (
 	Data_CreateCredentialScope_FullMethodName          = "/pbds.Data/CreateCredentialScope"
 	Data_ListCredentialScopes_FullMethodName           = "/pbds.Data/ListCredentialScopes"
 	Data_DeleteCredentialScopes_FullMethodName         = "/pbds.Data/DeleteCredentialScopes"
+	Data_UpdateCredentialScopes_FullMethodName         = "/pbds.Data/UpdateCredentialScopes"
 	Data_ListInstances_FullMethodName                  = "/pbds.Data/ListInstances"
 	Data_Ping_FullMethodName                           = "/pbds.Data/Ping"
 )
@@ -158,6 +159,7 @@ type DataClient interface {
 	CreateCredentialScope(ctx context.Context, in *CreateCredentialScopeReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	DeleteCredentialScopes(ctx context.Context, in *DeleteCredentialScopesReq, opts ...grpc.CallOption) (*DeleteCredentialScopesResp, error)
+	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	// Ping verifies if the grpc connection is still alive.
@@ -667,6 +669,15 @@ func (c *dataClient) DeleteCredentialScopes(ctx context.Context, in *DeleteCrede
 	return out, nil
 }
 
+func (c *dataClient) UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error) {
+	out := new(UpdateCredentialScopesResp)
+	err := c.cc.Invoke(ctx, Data_UpdateCredentialScopes_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -759,6 +770,7 @@ type DataServer interface {
 	CreateCredentialScope(context.Context, *CreateCredentialScopeReq) (*CreateResp, error)
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	DeleteCredentialScopes(context.Context, *DeleteCredentialScopesReq) (*DeleteCredentialScopesResp, error)
+	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	// Ping verifies if the grpc connection is still alive.
@@ -933,6 +945,9 @@ func (UnimplementedDataServer) ListCredentialScopes(context.Context, *ListCreden
 }
 func (UnimplementedDataServer) DeleteCredentialScopes(context.Context, *DeleteCredentialScopesReq) (*DeleteCredentialScopesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCredentialScopes not implemented")
+}
+func (UnimplementedDataServer) UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredentialScopes not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -1942,6 +1957,24 @@ func _Data_DeleteCredentialScopes_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_UpdateCredentialScopes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCredentialScopesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateCredentialScopes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateCredentialScopes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateCredentialScopes(ctx, req.(*UpdateCredentialScopesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -2204,6 +2237,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteCredentialScopes",
 			Handler:    _Data_DeleteCredentialScopes_Handler,
+		},
+		{
+			MethodName: "UpdateCredentialScopes",
+			Handler:    _Data_UpdateCredentialScopes_Handler,
 		},
 		{
 			MethodName: "ListInstances",

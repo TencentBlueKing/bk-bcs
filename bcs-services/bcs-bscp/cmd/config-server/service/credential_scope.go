@@ -70,7 +70,7 @@ func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCre
 	}
 
 	// create Credential_scopes
-	rs := &pbds.CreateCredentialScopeReq{
+	rcs := &pbds.CreateCredentialScopeReq{
 		Spec: req.AddScope,
 		Attachment: &pbcrs.CredentialScopeAttachment{
 			BizId:        bizID,
@@ -78,9 +78,24 @@ func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCre
 		},
 	}
 
-	_, err = s.client.DS.CreateCredentialScope(grpcKit.RpcCtx(), rs)
+	_, err = s.client.DS.CreateCredentialScope(grpcKit.RpcCtx(), rcs)
 	if err != nil {
 		logs.Errorf("create credential scope failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	// update credential scope
+	rus := &pbds.UpdateCredentialScopesReq{
+		AlterScope: req.AlterScope,
+		Attachment: &pbcrs.CredentialScopeAttachment{
+			BizId:        bizID,
+			CredentialId: req.CredentialId,
+		},
+	}
+
+	_, err = s.client.DS.UpdateCredentialScopes(grpcKit.RpcCtx(), rus)
+	if err != nil {
+		logs.Errorf("update credential scope failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

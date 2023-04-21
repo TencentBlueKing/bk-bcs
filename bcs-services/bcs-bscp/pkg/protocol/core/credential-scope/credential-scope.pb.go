@@ -194,6 +194,61 @@ func (x *CredentialScopeSpec) GetCredentialScope() string {
 	return ""
 }
 
+type UpdateScopeSpec struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id    uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Scope string `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
+}
+
+func (x *UpdateScopeSpec) Reset() {
+	*x = UpdateScopeSpec{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_credential_scope_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UpdateScopeSpec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateScopeSpec) ProtoMessage() {}
+
+func (x *UpdateScopeSpec) ProtoReflect() protoreflect.Message {
+	mi := &file_credential_scope_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateScopeSpec.ProtoReflect.Descriptor instead.
+func (*UpdateScopeSpec) Descriptor() ([]byte, []int) {
+	return file_credential_scope_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UpdateScopeSpec) GetId() uint32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *UpdateScopeSpec) GetScope() string {
+	if x != nil {
+		return x.Scope
+	}
+	return ""
+}
+
 var File_credential_scope_proto protoreflect.FileDescriptor
 
 var file_credential_scope_proto_rawDesc = []byte{
@@ -225,11 +280,14 @@ var file_credential_scope_proto_rawDesc = []byte{
 	0x6e, 0x74, 0x69, 0x61, 0x6c, 0x53, 0x63, 0x6f, 0x70, 0x65, 0x53, 0x70, 0x65, 0x63, 0x12, 0x29,
 	0x0a, 0x10, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x5f, 0x73, 0x63, 0x6f,
 	0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e,
-	0x74, 0x69, 0x61, 0x6c, 0x53, 0x63, 0x6f, 0x70, 0x65, 0x42, 0x32, 0x5a, 0x30, 0x62, 0x73, 0x63,
-	0x70, 0x2e, 0x69, 0x6f, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
-	0x6c, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61,
-	0x6c, 0x2d, 0x73, 0x63, 0x6f, 0x70, 0x65, 0x3b, 0x70, 0x62, 0x63, 0x72, 0x73, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x69, 0x61, 0x6c, 0x53, 0x63, 0x6f, 0x70, 0x65, 0x22, 0x37, 0x0a, 0x0f, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x53, 0x63, 0x6f, 0x70, 0x65, 0x53, 0x70, 0x65, 0x63, 0x12, 0x0e, 0x0a, 0x02,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x02, 0x69, 0x64, 0x12, 0x14, 0x0a, 0x05,
+	0x73, 0x63, 0x6f, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x73, 0x63, 0x6f,
+	0x70, 0x65, 0x42, 0x32, 0x5a, 0x30, 0x62, 0x73, 0x63, 0x70, 0x2e, 0x69, 0x6f, 0x2f, 0x70, 0x6b,
+	0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f,
+	0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x2d, 0x73, 0x63, 0x6f, 0x70, 0x65,
+	0x3b, 0x70, 0x62, 0x63, 0x72, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -244,17 +302,18 @@ func file_credential_scope_proto_rawDescGZIP() []byte {
 	return file_credential_scope_proto_rawDescData
 }
 
-var file_credential_scope_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_credential_scope_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_credential_scope_proto_goTypes = []interface{}{
 	(*CredentialScopeAttachment)(nil),     // 0: pbcrs.CredentialScopeAttachment
 	(*CredentialScopeList)(nil),           // 1: pbcrs.CredentialScopeList
 	(*CredentialScopeSpec)(nil),           // 2: pbcrs.CredentialScopeSpec
-	(*credential.CredentialRevision)(nil), // 3: pbcredential.CredentialRevision
+	(*UpdateScopeSpec)(nil),               // 3: pbcrs.UpdateScopeSpec
+	(*credential.CredentialRevision)(nil), // 4: pbcredential.CredentialRevision
 }
 var file_credential_scope_proto_depIdxs = []int32{
 	2, // 0: pbcrs.CredentialScopeList.spec:type_name -> pbcrs.CredentialScopeSpec
 	0, // 1: pbcrs.CredentialScopeList.attachment:type_name -> pbcrs.CredentialScopeAttachment
-	3, // 2: pbcrs.CredentialScopeList.revision:type_name -> pbcredential.CredentialRevision
+	4, // 2: pbcrs.CredentialScopeList.revision:type_name -> pbcredential.CredentialRevision
 	3, // [3:3] is the sub-list for method output_type
 	3, // [3:3] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -304,6 +363,18 @@ func file_credential_scope_proto_init() {
 				return nil
 			}
 		}
+		file_credential_scope_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateScopeSpec); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -311,7 +382,7 @@ func file_credential_scope_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_credential_scope_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

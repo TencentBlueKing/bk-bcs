@@ -14,11 +14,11 @@ var (
 )
 
 // CreateCredential create credential
-func CreateCredential(bizId uint32, masterKey, encryptionAlgorithm string) (string, error) {
+func CreateCredential(masterKey, encryptionAlgorithm string) (string, error) {
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
 	}
-	algorithmText := fmt.Sprintf("%d-%s-%s", bizId, encryptionAlgorithm, randStr(15))
+	algorithmText := randStr(32)
 	switch encryptionAlgorithm {
 	case AES:
 		return AesEncrypt([]byte(algorithmText), []byte(masterKey))

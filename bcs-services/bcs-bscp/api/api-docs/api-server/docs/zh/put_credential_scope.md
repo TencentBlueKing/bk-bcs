@@ -12,6 +12,13 @@
 | biz_id | uint32 | 是 | 业务ID |
 | add_scope | []string | 否 | 增加的规则 |
 | del_id | []uint32 | 否 | 删除规则的id |
+| alter_scope | []alterScope | 否 | 更新规则 |
+
+#### alterScope
+| 参数名称     | 参数类型     | 必选   | 描述             |
+| ------------ | ------------ | ------ | ---------------- |
+| id    | uint32       | 是     | credential_scope的ID |
+| scope | string | 是 | 更新的规则信息 |
 
 #### 调用示例
 
@@ -20,7 +27,10 @@
   "credential_id": 6,
   "biz_id":5,
   "add_scope":["XXX","AAAA"],
-  "del_id":[9,10]
+  "del_id":[9,10],
+  "alter_scope":[
+    {"id":1,"scope":"BBBBB"}
+  ]
 }
 ```
 

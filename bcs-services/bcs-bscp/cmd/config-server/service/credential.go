@@ -33,7 +33,7 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 	encryptionAlgorithm := cc.ConfigServer().Credential.EncryptionAlgorithm
 
 	//create token
-	credential, err := tools.CreateCredential(bizID, masterKey, encryptionAlgorithm)
+	credential, err := tools.CreateCredential(masterKey, encryptionAlgorithm)
 	if err != nil {
 		return nil, err
 	}
