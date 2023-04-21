@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	AES = "aes"
+	AES           = "aes"
+	EncryptionLen = 32
 )
 
 // CreateCredential create credential
@@ -18,7 +19,7 @@ func CreateCredential(masterKey, encryptionAlgorithm string) (string, error) {
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
 	}
-	algorithmText := randStr(32)
+	algorithmText := randStr(EncryptionLen)
 	switch encryptionAlgorithm {
 	case AES:
 		return AesEncrypt([]byte(algorithmText), []byte(masterKey))
