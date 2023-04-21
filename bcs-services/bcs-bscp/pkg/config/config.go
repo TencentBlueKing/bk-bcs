@@ -30,10 +30,11 @@ import (
 
 // Configuration 配置
 type Configuration struct {
-	Viper *viper.Viper
-	Base  *BaseConf `yaml:"base_conf"`
-	BCS   *BCSConf  `yaml:"bcs_conf"`
-	Web   *WebConf  `yaml:"web"`
+	Viper *viper.Viper `yaml:"-"`
+	Base  *BaseConf    `yaml:"base_conf"`
+	BCS   *BCSConf     `yaml:"bcs_conf"`
+	Web   *WebConf     `yaml:"web"`
+	IAM   *IAMConf     `yaml:"iam"`
 }
 
 // init 初始化
@@ -59,6 +60,9 @@ func newConfiguration() (*Configuration, error) {
 	// BCS Config
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
+
+	c.IAM = &IAMConf{}
+	c.IAM.Init()
 
 	return c, nil
 }
