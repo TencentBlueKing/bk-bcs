@@ -31,8 +31,8 @@ const (
 type BaseConf struct {
 	AppCode      string         `yaml:"app_code"`
 	AppSecret    string         `yaml:"app_secret"`
-	TimeZone     string         `yaml:"time_zone"`
 	BKPaaSHost   string         `yaml:"bk_paas_host"` // esb 调用地址
+	TimeZone     string         `yaml:"time_zone"`
 	LanguageCode string         `yaml:"language_code"`
 	RunEnv       string         `yaml:"run_env"`
 	Location     *time.Location `yaml:"-"`
@@ -42,7 +42,7 @@ type BaseConf struct {
 func (c *BaseConf) Init() error {
 	var err error
 	c.TimeZone = "Asia/Shanghai"
-	c.LanguageCode = ""
+	c.LanguageCode = "en-us"
 	c.RunEnv = DevEnv
 	c.Location, err = time.LoadLocation(c.TimeZone)
 	if err != nil {
