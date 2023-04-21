@@ -15,13 +15,11 @@ const props = defineProps<{
   id: number
 }>()
 
-const emits = defineEmits(['update:show'])
+const emits = defineEmits(['close'])
 
 const loading = ref(true)
 const rules = ref<ICredentialRule[]>([])
 const ruleChangeParams = ref<IRuleUpdateParams>({
-  biz_id: spaceId.value,
-  credential_id: props.id,
   add_scope: [],
   del_id: [],
   alter_scope: []
@@ -33,8 +31,6 @@ watch(() => props.show, (val) => {
   if (val) {
     loadRules()
     ruleChangeParams.value = {
-      biz_id: spaceId.value,
-      credential_id: props.id,
       add_scope: [],
       del_id: [],
       alter_scope: []
@@ -56,10 +52,8 @@ const handleRuleChange = (val: IRuleUpdateParams) => {
 const handleSave = async() => {
   pending.value = true
   try {
-    await updateCredentialScopes(spaceId.value, ruleChangeParams.value)
+    await updateCredentialScopes(spaceId.value, props.id, ruleChangeParams.value)
     ruleChangeParams.value = {
-      biz_id: spaceId.value,
-      credential_id: props.id,
       add_scope: [],
       del_id: [],
       alter_scope: []
@@ -75,7 +69,7 @@ const handleSave = async() => {
 const handleClose = () => {
   isRuleEdit.value = false
   pending.value = false
-  emits('update:show', false)
+  emits('close')
 }
 
 </script>

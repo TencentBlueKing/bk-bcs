@@ -54,6 +54,6 @@ export const getCredentialScopes = (biz_id: string, credential_id: number) => {
  * @param credential_id 密钥ID
  * @returns 
  */
-export const updateCredentialScopes = (biz_id: string, params: IRuleUpdateParams) => {
-  return http.put(`/config/biz_id/${biz_id}/credential/scopes`, params).then(res => res.data)
+export const updateCredentialScopes = (biz_id: string, credential_id: number, params: IRuleUpdateParams) => {
+  return http.put(`/config/biz_id/${biz_id}/credential/${credential_id}/scope`, params).then(res => res.data)
 }

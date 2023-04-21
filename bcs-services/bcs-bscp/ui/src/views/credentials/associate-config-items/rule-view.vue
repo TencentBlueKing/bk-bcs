@@ -10,7 +10,7 @@
 
 <template>
   <section class="rule-view">
-    <p class="title">共有<span :class="['num', { zero: props.rules.length === 0 }]"> 0 </span>项关联规则</p>
+    <p class="title">共有<span :class="['num', { zero: props.rules.length === 0 }]">{{ props.rules.length }}</span>项关联规则</p>
     <div v-if="props.rules.length > 0" class="rule-list">
       <div v-for="rule in rules" :key="rule.id" class="rule-item">{{ rule.spec.credential_scope }}</div>
     </div>

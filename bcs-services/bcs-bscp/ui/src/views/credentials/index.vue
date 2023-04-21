@@ -18,7 +18,6 @@
   const newCredentials = ref<number[]>([]) // 记录新增加的密钥id，实现表格标记效果
   const editingMemoId = ref(0) // 记录当前正在编辑说明的密钥id
   const memoInputRef = ref()
-  const isCreateKeyDialogShow = ref(false)
   const isAssociateSliderShow = ref(false)
   const currentCredential = ref(0)
   const pagination = ref({
@@ -45,6 +44,10 @@
 
   // 更新列表数据，带loading效果
   const refreshListWithLoading = async () => {
+    // 创建新密钥时，页码会切换会首页，此时不另外发请求
+    if (createPending.value) {
+      return
+    }
     listLoading.value = true
     await loadCredentialList()
     listLoading.value = false
@@ -54,6 +57,9 @@
   const getRowCls = (data: ICredentialItem) => {
     if (newCredentials.value.includes(data.id)) {
       return 'new-row-marked'
+    }
+    if (currentCredential.value === data.id) {
+      return 'selected'
     }
     return ''
   }
@@ -73,6 +79,7 @@
       createPending.value = true
       const params = { memo: '' }
       const res = await createCredential(spaceId.value, params)
+      pagination.value.current = 1
       await loadCredentialList()
       newCredentials.value.push(res.id)
       setTimeout(() => {
@@ -147,10 +154,16 @@
     }
   }
 
-  // 关联配置项
+  // 打开关联配置项侧滑
   const handleOpenAssociate = (credential: ICredentialItem) => {
     isAssociateSliderShow.value = true
     currentCredential.value = credential.id
+  }
+
+  // 关闭关联配置项侧滑
+  const handleAssociateSliderClose = () => {
+    isAssociateSliderShow.value = false
+    currentCredential.value = 0
   }
 
   // 删除配置项
@@ -196,7 +209,7 @@
           </bk-input>
         </div>
       </div>
-      <bk-loading :loading="listLoading">
+      <bk-loading style="min-height: 300px;" :loading="listLoading">
         <bk-table class="credential-table" :data="credentialList" :border="['outer']" :row-class="getRowCls">
           <bk-table-column label="密钥" width="296">
             <template #default="{ row }">
@@ -228,7 +241,7 @@
           <bk-table-column label="状态" width="110">
             <template #default="{ row }">
               <div v-if="row.spec" class="status-action">
-                <bk-switcher size="small" theme="primary" :value="row.spec.enable" @change="handelToggleEnable(row)"></bk-switcher>
+                <bk-switcher size="small" theme="primary" :key="row.id" :value="row.spec.enable" @change="handelToggleEnable(row)"></bk-switcher>
                 <span class="text">{{ row.spec.enable ? '已启用' : '已禁用' }}</span>
               </div>
             </template>
@@ -260,7 +273,7 @@
           @limit-change="handlePageLimitChange" />
       </bk-loading>
     </div>
-    <AssociateConfigItems v-model:show="isAssociateSliderShow" :id="currentCredential" />
+    <AssociateConfigItems :show="isAssociateSliderShow" :id="currentCredential" @close="handleAssociateSliderClose" />
   </section>
 </template>
 <style lang="scss" scoped>
@@ -310,6 +323,9 @@
     :deep(.bk-table-body) {
       tr.new-row-marked td {
         background: #f2fff4 !important;
+      }
+      tr.selected td {
+        background: #e1ecff !important;
       }
     }
     :deep(.bk-table-body) {
@@ -409,6 +425,7 @@
     border: 1px solid #dcdee5;
     border-top: none;
     border-radius: 0 0 2px 2px;
+    background: #ffffff;
     :deep(.bk-pagination-list.is-last) {
       margin-left: auto;
     }
