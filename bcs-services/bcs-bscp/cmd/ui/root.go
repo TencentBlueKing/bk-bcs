@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/automaxprocs/maxprocs"
+	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/config"
@@ -41,6 +42,7 @@ var (
 	appName       = "bcs-bscp-ui"
 	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
+	outConfInfo   bool
 
 	rootCmd = &cobra.Command{
 		Use:   appName,
@@ -51,6 +53,17 @@ var (
 // Execute 执行
 func Execute() {
 	rootCmd.Run = func(cmd *cobra.Command, args []string) {
+		// 输出初始化配置
+		if outConfInfo {
+			encoder := yaml.NewEncoder(os.Stdout)
+			encoder.SetIndent(2)
+			if err := encoder.Encode(config.G); err != nil {
+				klog.ErrorS(err, "output init confinfo failed")
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
+
 		// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
 		// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
 		if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { klog.Infof(template, args) })); err != nil {
@@ -106,6 +119,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/bcs-ui.yml)")
 	rootCmd.PersistentFlags().StringVar(&httpAddress, "http-address", "127.0.0.1:8080", `listen http address`)
+	rootCmd.Flags().BoolVarP(&outConfInfo, "confinfo", "o", false, "print init confinfo to stdout")
 
 	// rootCmd.SilenceErrors = true
 	// rootCmd.SilenceUsage = true
@@ -115,6 +129,12 @@ func init() {
 }
 
 func initConfig() {
+	// 过滤不需要配置的子命令
+	cmd, _, _ := rootCmd.Find(os.Args[1:])
+	if cmd.Name() == "help" || cmd.Name() == "version" || outConfInfo {
+		return
+	}
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
