@@ -10,7 +10,9 @@ import (
 )
 
 var (
-	AES           = "aes"
+	// 加密算法
+	AES = "aes"
+	// 加密长度
 	EncryptionLen = 32
 )
 
