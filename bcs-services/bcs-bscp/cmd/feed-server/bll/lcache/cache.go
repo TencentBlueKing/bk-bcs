@@ -62,6 +62,8 @@ func (c *Cache) Purge(kt *kit.Kit, es []*types.EventMeta) {
 		case table.Publish:
 			switch one.Spec.OpType {
 			case table.InsertOp, table.DeleteOp:
+				c.ReleasedGroup.client.Purge()
+				c.Strategy.client.Purge()
 			default:
 				logs.V(1).Infof("skip publish strategy event op, %s, rid: %s", formatEvent(one), kt.Rid)
 				continue
