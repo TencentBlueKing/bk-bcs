@@ -118,7 +118,7 @@
         class="w-[88px] mr-[10px] ml-[20px]"
         @click="handleCreated"
         :loading="isLoading">{{ $t('创建') }}</bcs-button>
-      <bcs-button class="w-[88px]" :loading="isLoading" @click="handleCancel">{{ $t('取消') }}</bcs-button>
+      <bcs-button class="w-[88px]" :disabled="isLoading" @click="handleCancel">{{ $t('取消') }}</bcs-button>
     </div>
   </LayoutContent>
 </template>

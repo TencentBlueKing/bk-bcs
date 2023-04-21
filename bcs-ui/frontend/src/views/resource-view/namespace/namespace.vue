@@ -188,7 +188,6 @@
                   <ul class="bcs-dropdown-list">
                     <template v-if="!isSharedCluster">
                       <li
-                        v-if="!isSharedCluster"
                         class="bcs-dropdown-item"
                         v-authority="{
                           clickable: webAnnotations.perms[row.name]
@@ -206,7 +205,6 @@
                         {{ $t('设置标签') }}
                       </li>
                       <li
-                        v-if="!isSharedCluster"
                         class="bcs-dropdown-item"
                         v-authority="{
                           clickable: webAnnotations.perms[row.name]
@@ -364,7 +362,7 @@
           @click="updateNamespace"
         >{{ $t('确定') }}</bcs-button>
         <bcs-button
-          :loading="setQuotaConf.loading"
+          :disabled="setQuotaConf.loading"
           @click="cancelUpdateNamespace"
         >{{ $t('取消') }}</bcs-button>
       </div>
@@ -879,9 +877,12 @@ export default defineComponent({
     };
 
     const withdrawNamespace = async (row) => {
+      namespaceLoading.value = true;
       const result = await handleWithdrawNamespace({
+        $clusterId: clusterID.value,
         $namespace: row.name,
       });
+      namespaceLoading.value = false;
       if (result) {
         $bkMessage({
           theme: 'success',

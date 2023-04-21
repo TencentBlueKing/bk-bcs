@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
@@ -71,16 +70,11 @@ func SyncNamespace(projectCode, clusterID string, namespaces []corev1.Namespace)
 	for _, ccns := range ccNsList.Results {
 		ccnsMap[ccns.Name] = ccns
 	}
-	g1, ctx := errgroup.WithContext(context.Background())
 	for _, item := range namespaces {
 		if _, ok := ccnsMap[item.GetName()]; !ok {
-			ns := item
-			g1.Go(func() error {
-				if err := bcscc.CreateNamespace(projectCode, clusterID, ns.GetName(), creator); err != nil {
-					return errorx.NewRequestBCSCCErr(err.Error())
-				}
-				return nil
-			})
+			if err := bcscc.CreateNamespace(projectCode, clusterID, item.GetName(), creator); err != nil {
+				return errorx.NewRequestBCSCCErr(err.Error())
+			}
 		}
 	}
 	// delete old namespace in bcscc
@@ -88,25 +82,12 @@ func SyncNamespace(projectCode, clusterID string, namespaces []corev1.Namespace)
 	for _, item := range namespaces {
 		bcsnsMap[item.GetName()] = item
 	}
-	g2, ctx := errgroup.WithContext(ctx)
 	for _, item := range ccNsList.Results {
 		if _, ok := bcsnsMap[item.Name]; !ok {
-			ns := item
-			g2.Go(func() error {
-				if err := bcscc.DeleteNamespace(projectCode, clusterID, ns.Name); err != nil {
-					return errorx.NewRequestBCSCCErr(err.Error())
-				}
-				return nil
-			})
+			if err := bcscc.DeleteNamespace(projectCode, clusterID, item.Name); err != nil {
+				return errorx.NewRequestBCSCCErr(err.Error())
+			}
 		}
-	}
-	if err := g1.Wait(); err != nil {
-		logging.Error("create namespace in bcscc failed, err:%s", err.Error())
-		return err
-	}
-	if err := g2.Wait(); err != nil {
-		logging.Error("delete namespace in bcscc failed, err:%s", err.Error())
-		return err
 	}
 	logging.Info("sync namespace in %s/%s success", projectCode, clusterID)
 	return nil
