@@ -12,7 +12,12 @@ limitations under the License.
 
 package types
 
-import "bscp.io/pkg/dal/table"
+import (
+	"time"
+
+	"bscp.io/pkg/dal/table"
+	"bscp.io/pkg/runtime/selector"
+)
 
 // AppCacheMeta defines app's basic meta info
 type AppCacheMeta struct {
@@ -36,6 +41,22 @@ type PublishedStrategyCache struct {
 	Scope      *table.Scope  `db:"scope" json:"scope"`
 	Mode       table.AppMode `db:"mode" json:"mode"`
 	Namespace  string        `db:"namespace" json:"ns"`
+}
+
+// ReleasedGroupCache is the released group info which will be stored in cache.
+type ReleasedGroupCache struct {
+	// ID is an auto-increased value, which is a group app's
+	// unique identity.
+	ID         uint32             `db:"id" json:"id"`
+	GroupID    uint32             `db:"group_id" json:"group_id"`
+	AppID      uint32             `db:"app_id" json:"app_id"`
+	ReleaseID  uint32             `db:"release_id" json:"release_id"`
+	StrategyID uint32             `db:"strategy_id" json:"strategy_id"`
+	Mode       table.GroupMode    `db:"mode" json:"mode"`
+	Selector   *selector.Selector `db:"selector" json:"selector"`
+	UID        string             `db:"uid" json:"uid"`
+	BizID      uint32             `db:"biz_id" json:"biz_id"`
+	UpdatedAt  time.Time          `db:"updated_at" json:"updated_at"`
 }
 
 // EventMeta is an event's meta info which is used by feed server to gc cache.

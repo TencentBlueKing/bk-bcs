@@ -24,12 +24,13 @@ var oneDaySeconds = 24 * oneHourSeconds
 
 // Key is an instance of the keyFactory
 var Key = &keyGenerator{
-	nullKeyTTLRange:      [2]int{60, 120},
-	cpStrategyTTLRange:   [2]int{30 * 60, 60 * 60},
-	releasedCITTLRange:   [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
-	releasedInstTTLRange: [2]int{15 * 60, 30 * 60},
-	appMetaTTLRange:      [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
-	appHasRITTLRange:     [2]int{5 * 60, 10 * 60},
+	nullKeyTTLRange:       [2]int{60, 120},
+	cpStrategyTTLRange:    [2]int{30 * 60, 60 * 60},
+	releasedGroupTTLRange: [2]int{30 * 60, 60 * 60},
+	releasedCITTLRange:    [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
+	releasedInstTTLRange:  [2]int{15 * 60, 30 * 60},
+	appMetaTTLRange:       [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
+	appHasRITTLRange:      [2]int{5 * 60, 10 * 60},
 }
 
 type namespace string
@@ -39,16 +40,18 @@ const (
 
 	cpStrategy         namespace = "cp-strategy"
 	releasedConfigItem namespace = "released-ci"
+	releasedGroup      namespace = "released-group"
 	appMeta            namespace = "app-meta"
 )
 
 type keyGenerator struct {
-	nullKeyTTLRange      [2]int
-	cpStrategyTTLRange   [2]int
-	releasedCITTLRange   [2]int
-	releasedInstTTLRange [2]int
-	appMetaTTLRange      [2]int
-	appHasRITTLRange     [2]int
+	nullKeyTTLRange       [2]int
+	cpStrategyTTLRange    [2]int
+	releasedGroupTTLRange [2]int
+	releasedCITTLRange    [2]int
+	releasedInstTTLRange  [2]int
+	appMetaTTLRange       [2]int
+	appHasRITTLRange      [2]int
 }
 
 // CPStrategy generate current published strategy's cache key
@@ -70,6 +73,27 @@ func (k keyGenerator) CPStrategyTtlSec(withRange bool) int {
 	}
 
 	return k.cpStrategyTTLRange[1]
+}
+
+// ReleasedGroup generate a release's released group cache key to save all the released groups under this release
+func (k keyGenerator) ReleasedGroup(bizID uint32, appID uint32) string {
+	return element{
+		biz: bizID,
+		ns:  releasedGroup,
+		key: strconv.FormatUint(uint64(appID), 10),
+	}.String()
+}
+
+// ReleasedCITtlSec generate the current released config item's TTL seconds
+func (k keyGenerator) ReleasedGroupTtlSec(withRange bool) int {
+
+	if withRange {
+		rand.Seed(time.Now().UnixNano())
+		seconds := rand.Intn(k.releasedGroupTTLRange[1]-k.releasedGroupTTLRange[0]) + k.releasedGroupTTLRange[0]
+		return seconds
+	}
+
+	return k.releasedGroupTTLRange[1]
 }
 
 // ReleasedCI generate a release's CI cache key to save all the CIs under

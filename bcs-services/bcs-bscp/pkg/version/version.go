@@ -59,7 +59,15 @@ var (
 
 	// DEBUG if enable debug.
 	DEBUG = "false"
+
+	// Row print version info by row.
+	Row VersionFormat = "row"
+	// JSON print version info by json.
+	JSON VersionFormat = "json"
 )
+
+// VersionFormat defines the format to print version.
+type VersionFormat string
 
 // Debug show the version if enable debug.
 func Debug() bool {
@@ -71,18 +79,28 @@ func Debug() bool {
 }
 
 // ShowVersion shows the version info.
-func ShowVersion() {
-	fmt.Println(FormatVersion())
+func ShowVersion(prefix string, format VersionFormat) {
+	fmt.Println(FormatVersion(prefix, format))
 }
 
 // FormatVersion returns service's version.
-func FormatVersion() string {
-	return fmt.Sprintf(`Server {"Version": "%s", "BuildTime": "%s", "GitHash": "%s"}`, VERSION, BUILDTIME, GITHASH)
+func FormatVersion(prefix string, format VersionFormat) string {
+	if prefix != "" {
+		prefix = prefix + " "
+	}
+	switch format {
+	case Row:
+		return fmt.Sprintf("%sVersion: %s\nBuildTime: %s\nGitHash: %s\n", prefix, VERSION, BUILDTIME, GITHASH)
+	case JSON:
+		return fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s"}`, prefix, VERSION, BUILDTIME, GITHASH)
+	default:
+		return fmt.Sprintf("%sVersion: %s\nBuildTime: %s\nGitHash: %s\n", prefix, VERSION, BUILDTIME, GITHASH)
+	}
 }
 
 // GetStartInfo returns start info that includes version and logo.
 func GetStartInfo() string {
-	startInfo := fmt.Sprintf("%s\n\n%s\n", LOGO, FormatVersion())
+	startInfo := fmt.Sprintf("%s\n\n%s\n", LOGO, FormatVersion("", Row))
 	return startInfo
 }
 

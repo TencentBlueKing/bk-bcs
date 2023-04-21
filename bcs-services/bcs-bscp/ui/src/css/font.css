@@ -50,3 +50,6 @@ url("../assets/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .icon-app-store:before {
 	content: "\e10a";
 }
+.icon-revoke:before {
+	content: "\e10b";
+}

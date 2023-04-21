@@ -28,19 +28,21 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 	mc := initMetric()
 
 	return &Cache{
-		App:        newApp(mc, cs),
-		ReleasedCI: newReleasedCI(mc, cs),
-		Strategy:   newStrategy(mc, cs),
-		Auth:       newAuth(mc, cs.Authorizer()),
+		App:           newApp(mc, cs),
+		ReleasedCI:    newReleasedCI(mc, cs),
+		Strategy:      newStrategy(mc, cs),
+		ReleasedGroup: newReleasedGroup(mc, cs),
+		Auth:          newAuth(mc, cs.Authorizer()),
 	}, nil
 }
 
 // Cache defines a cache instance.
 type Cache struct {
-	App        *App
-	ReleasedCI *ReleasedCI
-	Strategy   *Strategy
-	Auth       *Auth
+	App           *App
+	ReleasedCI    *ReleasedCI
+	Strategy      *Strategy
+	ReleasedGroup *ReleasedGroup
+	Auth          *Auth
 }
 
 // Purge is used to clean the resource's cache with events.
@@ -60,6 +62,8 @@ func (c *Cache) Purge(kt *kit.Kit, es []*types.EventMeta) {
 		case table.Publish:
 			switch one.Spec.OpType {
 			case table.InsertOp, table.DeleteOp:
+				c.ReleasedGroup.client.Purge()
+				c.Strategy.client.Purge()
 			default:
 				logs.V(1).Infof("skip publish strategy event op, %s, rid: %s", formatEvent(one), kt.Rid)
 				continue

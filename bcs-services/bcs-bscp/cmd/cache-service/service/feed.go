@@ -118,6 +118,23 @@ func (s *Service) GetAppReleasedStrategy(ctx context.Context, req *pbcs.GetAppRe
 	return &pbcs.JsonArrayRawResp{JsonRaw: list}, nil
 }
 
+// ListAppReleasedGroups list app's released groups.
+func (s *Service) ListAppReleasedGroups(ctx context.Context, req *pbcs.ListAppReleasedGroupsReq) (
+	*pbcs.JsonRawResp, error) {
+
+	if req.BizId <= 0 || req.AppId <= 0 {
+		return nil, errf.New(errf.InvalidParameter, "invalid biz id or app id")
+	}
+
+	kt := kit.FromGrpcContext(ctx)
+	list, err := s.op.ListAppReleasedGroups(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.JsonRawResp{JsonRaw: list}, nil
+}
+
 // GetCurrentCursorReminder get the current consumed event's id, which is the cursor reminder's resource id.
 func (s *Service) GetCurrentCursorReminder(ctx context.Context, _ *pbbase.EmptyReq) (*pbcs.CurrentCursorReminderResp,
 	error) {

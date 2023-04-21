@@ -14,16 +14,17 @@ package table
 
 import (
 	"errors"
+	"time"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/runtime/selector"
 )
 
-// GroupCurrentReleaseColumns defines group app's columns
-var GroupCurrentReleaseColumns = mergeColumns(GroupCurrentReleaseColumnDescriptor)
+// ReleasedGroupColumns defines group app's columns
+var ReleasedGroupColumns = mergeColumns(ReleasedGroupColumnDescriptor)
 
-// GroupCurrentReleaseColumnDescriptor is CurrentRelease's column descriptors.
-var GroupCurrentReleaseColumnDescriptor = mergeColumnDescriptors("",
+// ReleasedGroupColumnDescriptor is CurrentRelease's column descriptors.
+var ReleasedGroupColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{
 		{Column: "id", NamedC: "id", Type: enumor.Numeric},
 		{Column: "group_id", NamedC: "group_id", Type: enumor.Numeric},
@@ -35,10 +36,12 @@ var GroupCurrentReleaseColumnDescriptor = mergeColumnDescriptors("",
 		{Column: "uid", NamedC: "uid", Type: enumor.String},
 		{Column: "edited", NamedC: "edited", Type: enumor.Boolean},
 		{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
+		{Column: "reviser", NamedC: "reviser", Type: enumor.String},
+		{Column: "updated_at", NamedC: "updated_at", Type: enumor.Time},
 	})
 
-// GroupCurrentRelease defines a basic configuration item
-type GroupCurrentRelease struct {
+// ReleasedGroup defines a basic configuration item
+type ReleasedGroup struct {
 	// ID is an auto-increased value, which is a group app's
 	// unique identity.
 	ID         uint32             `db:"id" json:"id"`
@@ -51,15 +54,17 @@ type GroupCurrentRelease struct {
 	UID        string             `db:"uid" json:"uid"`
 	Edited     bool               `db:"edited" json:"edited"`
 	BizID      uint32             `db:"biz_id" json:"biz_id"`
+	Reviser    string             `db:"reviser" json:"reviser"`
+	UpdatedAt  time.Time          `db:"updated_at" json:"updated_at"`
 }
 
 // TableName is the group app's database table name.
-func (c GroupCurrentRelease) TableName() Name {
-	return GroupCurrentReleaseTable
+func (c ReleasedGroup) TableName() Name {
+	return ReleasedGroupTable
 }
 
 // ValidateCreate validate the group app's specific when create it.
-func (c GroupCurrentRelease) ValidateCreate() error {
+func (c ReleasedGroup) ValidateCreate() error {
 	if c.ID != 0 {
 		return errors.New("group app id can not be set")
 	}
@@ -82,24 +87,30 @@ func (c GroupCurrentRelease) ValidateCreate() error {
 	if c.Mode == Debug && c.UID == "" {
 		return errors.New("uid should be set when mode is debug")
 	}
+	if c.UpdatedAt.IsZero() {
+		return errors.New("updated_at should be set")
+	}
 
 	return nil
 }
 
 // ValidateUpdate validate the group app's specific when update it.
-func (c GroupCurrentRelease) ValidateUpdate() error {
+func (c ReleasedGroup) ValidateUpdate() error {
 	if c.ID <= 0 {
 		return errors.New("group app id should be set")
 	}
 	if c.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
+	if c.UpdatedAt.IsZero() {
+		return errors.New("updated_at should be set")
+	}
 
 	return nil
 }
 
 // ValidateDelete validate the group app's info when delete it.
-func (c GroupCurrentRelease) ValidateDelete() error {
+func (c ReleasedGroup) ValidateDelete() error {
 	if c.ID <= 0 {
 		return errors.New("group app id should be set")
 	}

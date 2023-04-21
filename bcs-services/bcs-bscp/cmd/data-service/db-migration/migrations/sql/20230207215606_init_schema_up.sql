@@ -115,7 +115,7 @@ values ('groups', 0, now());
 insert into id_generators(resource, max_id, updated_at)
 values ('group_app_binds', 0, now());
 insert into id_generators(resource, max_id, updated_at)
-values ('group_current_releases', 0, now());
+values ('released_groups', 0, now());
 insert into id_generators(resource, max_id, updated_at)
 values ('hooks', 0, now());
 
@@ -469,7 +469,7 @@ create table if not exists `group_app_binds`
 ) engine = innodb
   default charset = utf8mb4;
 
-create table if not exists `group_current_releases`
+create table if not exists `released_groups`
 (
     `id`                bigint(1) unsigned not null,
     `group_id`          bigint(1) unsigned not null,
@@ -481,6 +481,8 @@ create table if not exists `group_current_releases`
     `uid`               varchar(64)        default '',
     `edited`            boolean            default false,
     `biz_id`            bigint(1) unsigned not null,
+    `reviser`           varchar(64)        not null,
+    `updated_at`        datetime(6)        not null,
     primary key (`id`),
     index `idx_groupID_appID_bizID` (`group_id`, `app_id`, `biz_id`)
 ) engine = innodb

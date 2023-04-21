@@ -64,7 +64,7 @@
       <template #header>
         <div class="service-edit-head">
           <span class="title">{{ t("服务属性") }}</span>
-          <span class="secret-key"><a href="" target="_blank">{{ t("服务密钥") }}</a></span>
+          <router-link class="credential-btn" :to="{ name: 'credentials-management' }">服务密钥</router-link>
         </div>
       </template>
       <div class="service-edit-wrapper">
@@ -108,8 +108,9 @@
     align-content: center;
     justify-content: space-between;
     padding-right: 24px;
-    a {
+    .credential-btn {
       font-size: 12px;
+      color: #3a84ff;
     }
   }
   .service-edit-wrapper {

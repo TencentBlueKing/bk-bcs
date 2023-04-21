@@ -491,7 +491,8 @@ export default defineComponent({
     // 2. 日志检索
     const isDropdownShow = ref(false);
 
-    const isSharedCluster = computed(() => $store.getters.isSharedCluster);
+    const isSharedCluster = computed(() => ($store.state.cluster.clusterList as any[])
+      .find(item => item.clusterID === clusterId.value)?.is_shared);
 
     onMounted(async () => {
       handleGetDetail();

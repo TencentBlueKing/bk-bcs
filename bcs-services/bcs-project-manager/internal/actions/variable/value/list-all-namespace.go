@@ -28,7 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
-	clusterutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	nsutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/namespace"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -76,12 +75,10 @@ func (la *ListNamespacesVariablesAction) listNamespaceVariables() ([]*proto.Vari
 		return nil, fmt.Errorf("variable %s scope is %s rather than namespace",
 			la.req.GetVariableID(), variableDefinition.Scope)
 	}
-	clusterList, err := clustermanager.ListClusters(project.ProjectID)
+	clusters, err := clustermanager.ListClusters(project.ProjectID)
 	if err != nil {
 		return nil, err
 	}
-	clusters := clusterutils.FilterClusters(clusterList, la.req.GetIsShared())
-
 	// concurrently list namespace variables from cluster
 	variables := []*proto.VariableValue{}
 	lock := &sync.Mutex{}

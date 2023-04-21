@@ -31,6 +31,7 @@ type Interface interface {
 	GetAppMeta(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
 	GetReleasedCI(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)
 	GetAppReleasedStrategies(kt *kit.Kit, bizID uint32, appID uint32, cpsID []uint32) ([]string, error)
+	ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
 	RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error
 }
 
@@ -101,5 +102,10 @@ func (c *client) RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error 
 		kt.Ctx = context.TODO()
 	}
 
+	_, err = c.refreshAppReleasedGroupCache(kt, bizID, appID)
+	if err != nil {
+		logs.Errorf("refresh app released group cache failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
 	return nil
 }

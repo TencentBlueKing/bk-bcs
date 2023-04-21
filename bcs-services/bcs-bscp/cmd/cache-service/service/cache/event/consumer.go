@@ -28,6 +28,9 @@ import (
 	"bscp.io/pkg/types"
 )
 
+// MaxCacheConcurrent is the max concurrent(goroutine) number of cache.
+var MaxCacheConcurrent = 10
+
 // consumer is used to consume the produced events.
 type consumer struct {
 	bds bedis.Client
@@ -138,13 +141,18 @@ func (c *consumer) refreshAllCache(kt *kit.Kit, events []*table.Event) error {
 		return err
 	}
 
-	// step3: query all instance release id.
+	// step3: refresh released group cache.
+	if err = c.cacheReleasedGroup(kt, appBizID); err != nil {
+		return err
+	}
+
+	// step4: query all instance release id.
 	instReleaseID, err := c.queryInstReleaseID(kt, appBizID)
 	if err != nil {
 		return err
 	}
 
-	// step4: refresh released config item cache.
+	// step5: refresh released config item cache.
 	releaseID := instReleaseID
 	for k, v := range stgReleaseID {
 		releaseID[k] = v
@@ -304,9 +312,76 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 	return nil
 }
 
+// cacheReleasedGroup cache the all released's group.
+func (c *consumer) cacheReleasedGroup(kt *kit.Kit, appBizID map[uint32]uint32) error {
+	pipe := make(chan struct{}, MaxCacheConcurrent)
+	wg := sync.WaitGroup{}
+	var hitErr error
+	// get app's all released groups and cache them.
+	for appID, bizID := range appBizID {
+		pipe <- struct{}{}
+		wg.Add(1)
+
+		go func(bizID, appID uint32) {
+			defer func() {
+				<-pipe
+				wg.Done()
+			}()
+
+			// in the namespace mode, an app has at most for 200 strategies,
+			// so we get strategies with app one by one.
+			if err := c.cacheOneReleasedGroup(kt, bizID, appID); err != nil {
+				hitErr = err
+				return
+			}
+
+			logs.Infof("event cache biz: %d, app: %d, released groups success, rid: %s", bizID, appID, kt.Rid)
+
+		}(bizID, appID)
+	}
+
+	wg.Wait()
+
+	return hitErr
+}
+
+// cacheOneReleasedGroup cache one released group.
+func (c *consumer) cacheOneReleasedGroup(kt *kit.Kit, bizID, appID uint32) error {
+	groups, err := c.op.ReleasedGroup().List(kt, &types.ListReleasedGroupsOption{
+		BizID: bizID,
+		Filter: &filter.Expression{
+			Op: filter.And,
+			Rules: []filter.RuleFactory{
+				&filter.AtomRule{
+					Field: "app_id",
+					Op:    filter.Equal.Factory(),
+					Value: appID,
+				},
+			},
+		},
+	})
+	if err != nil {
+		logs.Errorf("get biz: %d, app: %d all the released groups failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
+		return err
+	}
+
+	b, err := jsoni.Marshal(groups)
+	if err != nil {
+		logs.Errorf("marshal app: %d, released group list failed, err: %v", appID, err)
+		return err
+	}
+
+	if err := c.bds.Set(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID), string(b), keys.Key.ReleasedGroupTtlSec(false)); err != nil {
+		logs.Errorf("set biz: %d, app: %d, strategies cache failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
+		return err
+	}
+
+	return nil
+}
+
 // cacheAppStrategy cache all the event strategy's related app's all the strategies.
 func (c *consumer) cacheAppStrategy(kt *kit.Kit, appBizID map[uint32]uint32) (map[uint32]uint32, error) {
-	pipe := make(chan struct{}, 10)
+	pipe := make(chan struct{}, MaxCacheConcurrent)
 	releaseBizID := newReleaseBizID()
 	wg := sync.WaitGroup{}
 	var hitErr error

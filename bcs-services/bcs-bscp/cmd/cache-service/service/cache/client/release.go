@@ -16,6 +16,8 @@ import (
 	"fmt"
 	"time"
 
+	prm "github.com/prometheus/client_golang/prometheus"
+
 	"bscp.io/cmd/cache-service/service/cache/keys"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
@@ -24,8 +26,6 @@ import (
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
-
-	prm "github.com/prometheus/client_golang/prometheus"
 )
 
 // GetReleasedCI get released configure items from cache.
