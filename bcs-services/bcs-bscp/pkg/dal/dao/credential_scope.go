@@ -24,7 +24,9 @@ type CredentialScope interface {
 	// Get get credential scopes
 	Get(kit *kit.Kit, credentialId, bizId uint32) (*types.ListCredentialScopeDetails, error)
 	// Delete delete credential scope
-	Delete(kit *kit.Kit, strategy *table.CredentialScope) error
+	Delete(kit *kit.Kit, credentialScope *table.CredentialScope) error
+	// Update update credential scope
+	Update(kit *kit.Kit, credentialScope *table.CredentialScope) error
 }
 
 var _ CredentialScope = new(credentialScopeDao)
@@ -170,5 +172,64 @@ func (dao *credentialScopeDao) Delete(kit *kit.Kit, g *table.CredentialScope) er
 		logs.Errorf("delete credential scope: %d failed, err: %v, rid: %v", g.ID, err, kit.Rid)
 		return fmt.Errorf("delete credential scope, but run txn failed, err: %v", err)
 	}
+	return nil
+}
+
+// Update update credential scope
+func (dao *credentialScopeDao) Update(kit *kit.Kit, c *table.CredentialScope) error {
+
+	if c == nil {
+		return errf.New(errf.InvalidParameter, "credential scope is nil")
+	}
+
+	if err := c.ValidateUpdate(); err != nil {
+		return errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	opts := orm.NewFieldOptions().AddIgnoredFields(
+		"id", "biz_id")
+	expr, toUpdate, err := orm.RearrangeSQLDataWithOption(c, opts)
+	if err != nil {
+		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)
+	}
+
+	ab := dao.auditDao.Decorator(kit, c.Attachment.BizID, enumor.CredentialScope).PrepareUpdate(c)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialScopeTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(c.ID)),
+		" AND biz_id = ", strconv.Itoa(int(c.Attachment.BizID)))
+	sql := filter.SqlJoint(sqlSentence)
+
+	err = dao.sd.ShardingOne(c.Attachment.BizID).AutoTxn(kit,
+		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
+			var effected int64
+			effected, err = dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
+			if err != nil {
+				logs.Errorf("update credential scope: %d failed, err: %v, rid: %v", c.ID, err, kit.Rid)
+				return err
+			}
+
+			if effected == 0 {
+				logs.Errorf("update one credential scope: %d, but record not found, rid: %v", c.ID, kit.Rid)
+				return errf.New(errf.RecordNotFound, orm.ErrRecordNotFound.Error())
+			}
+
+			if effected > 1 {
+				logs.Errorf("update one credential scope: %d, but got updated credential count: %d, rid: %v", c.ID,
+					effected, kit.Rid)
+				return fmt.Errorf("matched credential scope count %d is not as excepted", effected)
+			}
+
+			// do audit
+			if err := ab.Do(&AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}); err != nil {
+				return fmt.Errorf("do credential scope update audit failed, err: %v", err)
+			}
+
+			return nil
+		})
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

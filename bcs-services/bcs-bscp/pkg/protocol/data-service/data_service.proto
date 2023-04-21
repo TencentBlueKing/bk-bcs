@@ -106,6 +106,7 @@ service Data {
     rpc CreateCredentialScope(CreateCredentialScopeReq) returns (CreateResp) {}
     rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
     rpc DeleteCredentialScopes(DeleteCredentialScopesReq) returns (DeleteCredentialScopesResp) {}
+    rpc UpdateCredentialScopes(UpdateCredentialScopesReq) returns (UpdateCredentialScopesResp) {}
 
     // used iam pull resource callback.
     rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {}
@@ -118,6 +119,11 @@ service Data {
         };
     }
 }
+message UpdateCredentialScopesReq {
+    repeated  pbcrs.UpdateScopeSpec      alter_scope = 1;
+    pbcrs.CredentialScopeAttachment      attachment  = 2;
+}
+message UpdateCredentialScopesResp{}
 
 message DeleteCredentialScopesReq{
     repeated   uint32                    id         = 1;
@@ -125,6 +131,7 @@ message DeleteCredentialScopesReq{
 }
 
 message DeleteCredentialScopesResp{}
+
 message ListCredentialScopesReq {
     uint32 biz_id        = 1;
     uint32 credential_id = 2;

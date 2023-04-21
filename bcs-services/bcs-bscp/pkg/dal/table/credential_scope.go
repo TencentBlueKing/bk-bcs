@@ -85,11 +85,33 @@ type CredentialScopeAttachment struct {
 // ValidateDelete credential scope validate
 func (s CredentialScope) ValidateDelete() error {
 	if s.ID <= 0 {
-		return errors.New("credential id should be set")
+		return errors.New("credential scope id should be set")
 	}
 
 	if s.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
+	}
+
+	return nil
+}
+
+// ValidateUpdate validate Credential is valid or not when update it.
+func (s CredentialScope) ValidateUpdate() error {
+
+	if s.ID <= 0 {
+		return errors.New("credential scope id should be set")
+	}
+
+	if s.Spec == nil {
+		return errors.New("spec not set")
+	}
+
+	if s.Attachment == nil {
+		return errors.New("attachment not set")
+	}
+
+	if s.Revision == nil {
+		return errors.New("revision not set")
 	}
 
 	return nil

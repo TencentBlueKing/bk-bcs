@@ -10,15 +10,18 @@ import (
 )
 
 var (
+	// 加密算法
 	AES = "aes"
+	// 加密长度
+	EncryptionLen = 32
 )
 
 // CreateCredential create credential
-func CreateCredential(bizId uint32, masterKey, encryptionAlgorithm string) (string, error) {
+func CreateCredential(masterKey, encryptionAlgorithm string) (string, error) {
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
 	}
-	algorithmText := fmt.Sprintf("%d-%s-%s", bizId, encryptionAlgorithm, randStr(15))
+	algorithmText := randStr(EncryptionLen)
 	switch encryptionAlgorithm {
 	case AES:
 		return AesEncrypt([]byte(algorithmText), []byte(masterKey))

@@ -80,3 +80,30 @@ func (s *Service) DeleteCredentialScopes(ctx context.Context, req *pbds.DeleteCr
 	resp := &pbds.DeleteCredentialScopesResp{}
 	return resp, nil
 }
+
+// UpdateCredentialScopes update credential scopes
+func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCredentialScopesReq) (*pbds.UpdateCredentialScopesResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	now := time.Now()
+	for _, value := range req.AlterScope {
+		credentialScope := &table.CredentialScope{
+			ID: value.Id,
+			Spec: &table.CredentialScopeSpec{
+				CredentialScope: value.Scope,
+			},
+			Attachment: req.Attachment.CredentialAttachment(),
+			Revision: &table.CredentialRevision{
+				Reviser:   kt.User,
+				UpdatedAt: now,
+			},
+		}
+		err := s.dao.CredentialScope().Update(kt, credentialScope)
+		if err != nil {
+			logs.Errorf("update credential scope failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+	}
+	resp := &pbds.UpdateCredentialScopesResp{}
+	return resp, nil
+}
