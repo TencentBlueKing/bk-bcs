@@ -31,6 +31,10 @@ var (
 	flagRepository string
 	flagNamespace  string
 	flagCluster    string
+	flagChart      string
+	flagName       string
+	flagSize       = uint32(20)
+	flagPage       = uint32(1)
 
 	outputTypeJson = "json"
 	outputTypeWide = "wide"
@@ -47,20 +51,6 @@ var (
 		Long:    "get repository",
 		Run:     GetRepository,
 	}
-	getChartCMD = &cobra.Command{
-		Use:     "chart",
-		Aliases: []string{"ct"},
-		Short:   "get chart",
-		Long:    "get chart",
-		Run:     GetChart,
-	}
-	getChartVersionCMD = &cobra.Command{
-		Use:     "chartversion",
-		Aliases: []string{"version", "cv"},
-		Short:   "get chart version",
-		Long:    "get chart version",
-		Run:     GetChartVersion,
-	}
 	getChartDetailCMD = &cobra.Command{
 		Use:     "chartdetail",
 		Aliases: []string{"detail", "cd"},
@@ -68,96 +58,82 @@ var (
 		Long:    "get chart detail",
 		Run:     GetChartDetail,
 	}
-	getReleaseCMD = &cobra.Command{
+	getVersionDetailCMD = &cobra.Command{
+		Use:     "versiondetail",
+		Aliases: []string{"versiondetail", "vd"},
+		Short:   "get version detail",
+		Long:    "get version detail",
+		Run:     GetVersionDetail,
+	}
+	getReleaseDetailCMD = &cobra.Command{
 		Use:     "release",
 		Aliases: []string{"rl"},
-		Short:   "get release",
-		Long:    "get release",
-		Run:     GetRelease,
+		Short:   "get release detail",
+		Long:    "get release detail",
+		Run:     GetReleaseDetail,
+	}
+	getReleaseHistoryCMD = &cobra.Command{
+		Use:     "releasehistory",
+		Aliases: []string{"rlh"},
+		Short:   "get release history",
+		Long:    "get release history",
+		Run:     GetReleaseHistory,
 	}
 )
 
 // GetRepository provide the actions to do getRepositoryCMD
 func GetRepository(cmd *cobra.Command, args []string) {
-	req := &helmmanager.ListRepositoryReq{}
+	req := &helmmanager.GetRepositoryReq{}
 
 	req.ProjectCode = &flagProject
+	req.Name = &flagRepository
 
 	c := newClientWithConfiguration()
-	r, err := c.Repository().List(cmd.Context(), req)
+	r, err := c.Repository().Get(cmd.Context(), req)
 	if err != nil {
 		fmt.Printf("get repository failed, %s\n", err.Error())
 		os.Exit(1)
 	}
-
+	printData := []*helmmanager.Repository{r}
 	if flagOutput == outputTypeJson {
-		printer.PrintRepositoryInJSON(r)
+		printer.PrintRepositoryInJSON(printData)
 		return
 	}
 
-	printer.PrintRepositoryInTable(flagOutput == outputTypeWide, r)
-}
-
-// GetChart provide the actions to do getChartCMD
-func GetChart(cmd *cobra.Command, args []string) {
-	req := &helmmanager.ListChartReq{}
-
-	if !flagAll {
-		req.Size = common.GetUint32P(uint32(flagNum))
-	}
-	if len(args) > 0 {
-		req.Size = common.GetUint32P(1)
-	}
-	req.ProjectID = &flagProject
-	req.Repository = &flagRepository
-
-	c := newClientWithConfiguration()
-	r, err := c.Chart().List(cmd.Context(), req)
-	if err != nil {
-		fmt.Printf("get chart failed, %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	if flagOutput == outputTypeJson {
-		printer.PrintChartInJson(r)
-		return
-	}
-
-	printer.PrintChartInTable(flagOutput == outputTypeWide, r)
-}
-
-// GetChartVersion provide the actions to do getChartVersionCMD
-func GetChartVersion(cmd *cobra.Command, args []string) {
-	req := &helmmanager.ListChartVersionReq{}
-
-	if !flagAll {
-		req.Size = common.GetUint32P(uint32(flagNum))
-	}
-	if len(args) == 0 {
-		fmt.Printf("get chart version need specific chart name\n")
-		os.Exit(1)
-	}
-	req.ProjectID = &flagProject
-	req.Repository = &flagRepository
-	req.Name = common.GetStringP(args[0])
-
-	c := newClientWithConfiguration()
-	r, err := c.Chart().Versions(cmd.Context(), req)
-	if err != nil {
-		fmt.Printf("get chart version failed, %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	if flagOutput == outputTypeJson {
-		printer.PrintChartVersionInJson(r)
-		return
-	}
-
-	printer.PrintChartVersionInTable(flagOutput == outputTypeWide, r)
+	printer.PrintRepositoryInTable(flagOutput == outputTypeWide, printData)
 }
 
 // GetChartDetail provide the actions to do getChartDetailCMD
 func GetChartDetail(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		fmt.Printf("get chart detail need specific chart name\n")
+		os.Exit(1)
+	}
+
+	req := &helmmanager.GetChartDetailV1Req{}
+	req.ProjectCode = &flagProject
+	req.RepoName = &flagRepository
+	req.Name = common.GetStringP(args[0])
+
+	c := newClientWithConfiguration()
+	r, err := c.Chart().GetChartDetailV1(cmd.Context(), req)
+	if err != nil {
+		fmt.Printf("get chart detail failed, %s\n", err.Error())
+		os.Exit(1)
+	}
+	printData := &helmmanager.ChartListData{
+		Data: []*helmmanager.Chart{r},
+	}
+	if flagOutput == outputTypeJson {
+		printer.PrintChartInJson(printData)
+		return
+	}
+
+	printer.PrintChartInTable(flagOutput == outputTypeWide, printData)
+}
+
+// GetVersionDetail provide the actions to do getVersionDetailCMD
+func GetVersionDetail(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		fmt.Printf("get chart detail need specific chart name\n")
 		os.Exit(1)
@@ -167,19 +143,18 @@ func GetChartDetail(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	req := &helmmanager.GetVersionDetailReq{}
-	req.ProjectID = &flagProject
-	req.Repository = &flagRepository
+	req := &helmmanager.GetVersionDetailV1Req{}
+	req.ProjectCode = &flagProject
+	req.RepoName = &flagRepository
 	req.Name = common.GetStringP(args[0])
 	req.Version = common.GetStringP(args[1])
 
 	c := newClientWithConfiguration()
-	r, err := c.Chart().Detail(cmd.Context(), req)
+	r, err := c.Chart().GetVersionDetailV1(cmd.Context(), req)
 	if err != nil {
 		fmt.Printf("get chart detail failed, %s\n", err.Error())
 		os.Exit(1)
 	}
-
 	if flagOutput == outputTypeJson {
 		printer.PrintChartDetailInJson(r)
 		return
@@ -188,41 +163,64 @@ func GetChartDetail(cmd *cobra.Command, args []string) {
 	printer.PrintChartDetailInTable(flagOutput == outputTypeWide, r)
 }
 
-// GetRelease provide the action to do getReleaseCMD
-func GetRelease(cmd *cobra.Command, args []string) {
-	req := &helmmanager.ListReleaseReq{}
+// GetReleaseDetail provide the action to do getReleaseDetailCMD
+func GetReleaseDetail(cmd *cobra.Command, args []string) {
+	req := &helmmanager.GetReleaseDetailV1Req{}
 
-	if !flagAll {
-		req.Size = common.GetUint32P(uint32(flagNum))
-	}
-	if len(args) > 0 {
-		req.Size = common.GetUint32P(1)
-		req.Name = common.GetStringP(args[0])
-	}
+	req.ProjectCode = &flagProject
 	req.ClusterID = &flagCluster
 	req.Namespace = &flagNamespace
+	req.Name = &flagName
 
 	c := newClientWithConfiguration()
-	r, err := c.Release().List(cmd.Context(), req)
+	r, err := c.Release().GetReleaseDetail(cmd.Context(), req)
 	if err != nil {
-		fmt.Printf("get release failed, %s\n", err.Error())
+		fmt.Printf("get release detail failed, %s\n", err.Error())
 		os.Exit(1)
 	}
-
+	printData := []*helmmanager.ReleaseDetail{r}
 	if flagOutput == outputTypeJson {
-		printer.PrintReleaseInJson(r)
+		printer.PrintReleaseDetailInJson(printData)
 		return
 	}
 
-	printer.PrintReleaseInTable(flagOutput == outputTypeWide, r)
+	printer.PrintReleaseDetailInTable(flagOutput == outputTypeWide, printData)
+}
+
+// GetReleaseHistory provide the actions to do getReleaseHistoryCMD
+func GetReleaseHistory(cmd *cobra.Command, args []string) {
+	req := &helmmanager.GetReleaseHistoryReq{}
+
+	if len(args) != 1 {
+		fmt.Printf("get release history need release name, rlh [name] \n")
+		os.Exit(1)
+	}
+
+	req.ProjectCode = &flagProject
+	req.Name = common.GetStringP(args[0])
+	req.Namespace = &flagNamespace
+	req.ClusterID = &flagCluster
+
+	c := newClientWithConfiguration()
+	r, err := c.Release().GetReleaseHistory(cmd.Context(), req)
+	if err != nil {
+		fmt.Printf("get release history failed, %s\n", err.Error())
+		os.Exit(1)
+	}
+	if flagOutput == outputTypeJson {
+		printer.PrintReleaseHistoryInJson(r)
+		return
+	}
+
+	printer.PrintReleaseHistoryInTable(flagOutput == outputTypeWide, r)
 }
 
 func init() {
 	getCMD.AddCommand(getRepositoryCMD)
-	getCMD.AddCommand(getChartCMD)
-	getCMD.AddCommand(getChartVersionCMD)
 	getCMD.AddCommand(getChartDetailCMD)
-	getCMD.AddCommand(getReleaseCMD)
+	getCMD.AddCommand(getVersionDetailCMD)
+	getCMD.AddCommand(getReleaseDetailCMD)
+	getCMD.AddCommand(getReleaseHistoryCMD)
 	getCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
 	getCMD.PersistentFlags().StringVarP(
@@ -230,9 +228,9 @@ func init() {
 	getCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace for operation")
 	getCMD.PersistentFlags().StringVarP(
+		&flagName, "name", "", "", "release name for operation")
+	getCMD.PersistentFlags().StringVarP(
 		&flagCluster, "cluster", "", "", "release cluster id for operation")
 	getCMD.PersistentFlags().StringVarP(
 		&flagOutput, "output", "o", "", "output format, one of json|wide")
-	getCMD.PersistentFlags().BoolVarP(&flagAll, "all", "A", false, "list all records")
-	getCMD.PersistentFlags().IntVarP(&flagNum, "num", "", 20, "list records num")
 }
