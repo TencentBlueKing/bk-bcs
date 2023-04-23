@@ -16,14 +16,6 @@
 
   const localRules = ref<IRuleEditing[]>([])
 
-  watch(() => props.rules, (val) => {
-    if (val.length === 0) {
-      localRules.value = [{ id: 0, type: 'new', content: '', original: '' }]
-    } else {
-      localRules.value = transformRulesToEditing(val)
-    }
-  }, { immediate: true })
-
   const transformRulesToEditing = (rules: ICredentialRule[]) => {
     const rulesEditing: IRuleEditing[] = []
     rules.forEach(item => {
@@ -32,6 +24,14 @@
     })
     return rulesEditing
   }
+
+  watch(() => props.rules, (val) => {
+    if (val.length === 0) {
+      localRules.value = [{ id: 0, type: 'new', content: '', original: '' }]
+    } else {
+      localRules.value = transformRulesToEditing(val)
+    }
+  }, { immediate: true })
 
   const handleAddRule = (index: number) => {
     localRules.value.splice(index + 1, 0, { id: 0, type: 'new', content: '', original: '' })
@@ -130,6 +130,7 @@
 <style lang="scss" scoped>
   .title {
     position: relative;
+    margin: 0 0 6px;
     line-height: 20px;
     font-size: 12px;
     color: #63656e;

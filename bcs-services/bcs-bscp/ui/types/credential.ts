@@ -49,8 +49,6 @@ export interface IRuleEditing {
 
 // 调用关联规则更新接口参数
 export interface IRuleUpdateParams {
-  biz_id?: string;
-  credential_id?: number;
   add_scope: string[];
   del_id: number[];
   alter_scope: { id: number; scope: string }[]
