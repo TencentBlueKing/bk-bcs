@@ -88,6 +88,7 @@ func initTokenRouters(ws *restful.WebService) {
 	// for Temporary Token
 	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/temp").To(tokenHandler.CreateTempToken)))
 	ws.Route(auth.TokenAuthFunc(ws.POST("/v1/tokens/client").To(tokenHandler.CreateClientToken)))
+	ws.Route(auth.TokenAuthFunc(ws.GET("/v1/users/info")).To(user.GetCurrentUserInfo))
 }
 
 // initExtraTokenRouters init bcs extra token for third-party system
