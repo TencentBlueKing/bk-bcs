@@ -37,6 +37,7 @@ type Configurations struct {
 	Redis       *RedisConf                 `yaml:"redis"`
 	WebConsole  *WebConsoleConf            `yaml:"webconsole"`
 	Web         *WebConf                   `yaml:"web"`
+	Tracing     *TracingConf               `yaml:"tracing"`
 }
 
 // newConfigurations 新增配置
@@ -81,6 +82,9 @@ func newConfigurations() (*Configurations, error) {
 	c.Credentials = map[string][]*Credential{}
 
 	c.Web = defaultWebConf()
+
+	c.Tracing = &TracingConf{}
+	c.Tracing.Init()
 
 	return c, nil
 }

@@ -28,6 +28,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/klog/v2"
 )
@@ -172,6 +173,7 @@ func GetClient() *resty.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {
 			globalClient = resty.New().
+				SetTransport(otelhttp.NewTransport(http.DefaultTransport)).
 				SetTimeout(timeout).
 				SetDebug(false).   // 更多详情, 可以开启为 true
 				SetCookieJar(nil). // 后台API去掉 cookie 记录

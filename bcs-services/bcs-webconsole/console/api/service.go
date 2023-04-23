@@ -26,10 +26,11 @@ import (
 	"strings"
 	"time"
 
-	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	ginTrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -37,6 +38,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
@@ -57,7 +59,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
-	api := router.Use(route.APIAuthRequired())
+	api := router.Use(route.APIAuthRequired(), ginTrace.Middleware(tracing.ServiceName))
 
 	// 用户登入态鉴权, session鉴权
 	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",

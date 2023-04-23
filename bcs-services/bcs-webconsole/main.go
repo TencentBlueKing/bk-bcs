@@ -14,13 +14,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 )
 
 func main() {
@@ -32,6 +34,19 @@ func main() {
 	if err := mgr.Init(); err != nil {
 		logger.Errorf("init webconsole error: %s", err)
 		os.Exit(1)
+	}
+
+	//初始化 Tracer
+	shutdown, err := tracing.InitTracing(config.G.Tracing)
+	if err != nil {
+		logger.Info(err.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				logger.Infof(fmt.Sprintf("failed to shutdown TracerProvider: %s", err.Error()))
+			}
+		}()
 	}
 
 	if err := mgr.Run(); err != nil {
