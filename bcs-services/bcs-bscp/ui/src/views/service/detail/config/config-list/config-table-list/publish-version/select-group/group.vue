@@ -1,22 +1,22 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
-  import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { Search } from 'bkui-vue/lib/icon'
-  import { IGroupCategoriesQuery, ECategoryType, IAllCategoryGroupItem, ICategoryTreeItem, IGroupTreeItem, IGroupRuleItem, EGroupRuleType } from '../../../../../../../../../types/group'
-  import { getSpaceGroupList } from '../../../../../../../../api/group';
-  import { useServiceStore } from '../../../../../../../../store/service'
-  import { GROUP_RULE_OPS } from '../../../../../../../../constants';
+  import { useGlobalStore } from '../../../../../../../../store/global'
+  import { IGroupTreeItem, IGroupItem } from '../../../../../../../../../types/group'
+  import { getSpaceGroupList } from '../../../../../../../../api/group'
+  import RuleTag from '../../../../../../../groups/components/rule-tag.vue'
 
-  const { appData } = storeToRefs(useServiceStore())
-
-  const route = useRoute()
+  const { spaceId } = storeToRefs(useGlobalStore())
 
   const emits = defineEmits(['change'])
 
-  const categoryListLoading = ref(false)
-  const categoryList = ref<ICategoryTreeItem[]>([])
-  const groups = ref<IGroupTreeItem[]>([])
+  const listLoading = ref(true)
+  const groupList = ref<{ label: string; count: number; children: IGroupTreeItem[] }[]>([])
+  const groups = ref<IGroupTreeItem[]>([]) // 选中的分组
+
+  // const categoryListLoading = ref(false)
+  // const categoryList = ref<ICategoryTreeItem[]>([])
 
   onMounted(() => {
     getAllGroupData()
@@ -24,46 +24,40 @@
 
   // 获取所有分组，并转化为tree组件需要的结构
   const getAllGroupData = async() => {
-    categoryListLoading.value = true
-    const params: IGroupCategoriesQuery = {
-      mode: ECategoryType.Custom,
-      start: 0,
-      limit: 100 // @todo 确认分页方式
-    }
-    const res = await getSpaceGroupList(<string>route.params.spaceId)
-    const list: ICategoryTreeItem[] = []
-    res.details.forEach((category: IAllCategoryGroupItem) => {
-      const { group_category_id, group_category_name, groups } = category
-      const groupsList = groups.map(item => {
-        const { id, name, selector } = item
-        const rules = <IGroupRuleItem[]>selector.labels_and || selector.labels_or
-        const rulesWithName: { key: string; opName: string; op: EGroupRuleType; value: string|number}[] = rules.map(item => {
-          const { key, op, value } = item
-          const opType = GROUP_RULE_OPS.find(typeItem => typeItem.id === op)
-          return { key, value, op, opName: <string>opType?.name }
-        })
-        return {
-          id,
-          rules: rulesWithName,
-          label: name,
+    listLoading.value = true
+    const res = await getSpaceGroupList(spaceId.value)
+    groupList.value = categorizingData(res.details)
+    listLoading.value = false
+  }
+
+    // 将全量分组数据按照分类分组
+  const categorizingData = (data: IGroupItem[]) => {
+    const treeData: { label: string; count: number; children: IGroupTreeItem[] }[] = []
+    data.forEach(group => {
+      const selector = group.selector.labels_and || group.selector.labels_or
+      const { id, name } = group
+      selector?.forEach(rule => {
+        const data = treeData.find(item => item.label === rule.key)
+        if (data) {
+          data.count++
+          data.children.push({ id, label: name, rules: selector })
+        } else {
+          treeData.push({
+            label: rule.key,
+            count: 1,
+            children: [{ id, label: name, rules: selector }]
+          })
         }
       })
-      list.push({
-        id: group_category_id,
-        label: group_category_name,
-        count: groupsList.length,
-        children: groupsList
-      })
     })
-
-    categoryList.value = list
-    categoryListLoading.value = false
+    return treeData
   }
 
   const handleNodeChecked = (selected: string[]) => {
+    console.log(selected)
     const allGroupList: IGroupTreeItem[] = []
     const list: IGroupTreeItem[] = []
-    categoryList.value.forEach(item => allGroupList.push(...item.children))
+    groupList.value.forEach(item => allGroupList.push(...item.children))
     selected.forEach(item => {
       const group = allGroupList.find(group => group.__uuid === item)
       if (group) {
@@ -77,7 +71,7 @@
 </script>
 <template>
   <div class="group-tree-select">
-    <h3 class="title">回滚相关分组</h3>
+    <h3 class="title">选择上线分组</h3>
     <bk-input class="group-search-input" placeholder="请输入">
       <template #suffix>
         <Search class="search-input-icon" />
@@ -85,20 +79,26 @@
     </bk-input>
     <div class="tree-wrapper">
       <bk-tree
-        :data="categoryList"
+        :data="groupList"
         :show-checkbox="true"
+        :expand-all="true"
         :show-node-type-icon="false"
         @node-checked="handleNodeChecked">
         <template #node="node">
           <div class="node-label">
-            <span class="label">{{ node.label }}</span>
-            <template v-if="node.count">
-              <span>（{{ node.count }}）</span>
+            <div class="label">{{ node.label }}</div>
+            <span v-if="node.count" class="count">({{ node.count }})</span>
+            <template v-if="node.rules">
+              <span class="split-line"> | </span>
+              <div class="rules">
+                <bk-overflow-title type="tips">
+                  <span v-for="(rule, index) in node.rules" :key="index" class="rule">
+                    <span v-if="index > 0 "> & </span>
+                    <rule-tag class="tag-item" :rule="rule"/>
+                  </span>
+                </bk-overflow-title>
+              </div>
             </template>
-            <span class="rules" v-if="node.rules">
-              <span> | </span>
-              <span v-for="(rule, index) in node.rules" :key="index" class="rule">{{ `${rule.key} ${rule.opName} ${rule.value}` }}<span> ; </span></span>
-            </span>
           </div>
         </template>
       </bk-tree>
@@ -128,11 +128,21 @@
     height: calc(100% - 100px);
     overflow: auto;
     .node-label {
+      display: flex;
+      align-items: center;
       padding: 0 8px;
       color: #63656e;
       font-size: 12px;
     }
+    .count {
+      margin-left: 4px;
+    }
+    .split-line {
+      margin: 0 4px;
+      color: #979ba5;
+    }
     .rules {
+      min-width: 0;
       color: #979ba5;
     }
   }

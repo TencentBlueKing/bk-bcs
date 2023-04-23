@@ -46,7 +46,7 @@
 </script>
 <template>
   <section class="create-config-btn">
-    <bk-button style="margin: 16px 0;" outline theme="primary" @click="handleCreateConfig">新增配置项</bk-button>
+    <bk-button outline theme="primary" @click="handleCreateConfig">新增配置项</bk-button>
     <bk-sideslider
       width="640"
       title="新增配置项"

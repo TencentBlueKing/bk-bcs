@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import { pinia } from './store/index'
-import bkui, { bkTooltips, bkEllipsis } from 'bkui-vue';
+import bkui, { bkTooltips, bkEllipsis, overflowTitle } from 'bkui-vue';
 import 'bkui-vue/dist/style.css'
 import './css/style.css';
 import App from './App.vue';
@@ -14,6 +14,7 @@ const app = createApp(App)
 
 app.directive('bkTooltips', bkTooltips)
 app.directive('bkEllipsis', bkEllipsis)
+app.directive('bkOverflowTitle', overflowTitle)
 
 app
 .use(pinia)

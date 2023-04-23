@@ -51,9 +51,9 @@
 </script>
 <template>
   <bk-select :value="groups" :size="props.size" :loading="groupListLoading" multiple-mode="tag" :multiple="props.multiple" @change="emits('change', $event)">
-    <bk-group v-for="category in groupList" collapsible :key="category.group_category_id" :label="category.group_category_name">
+    <bk-option-group v-for="category in groupList" collapsible :key="category.group_category_id" :label="category.group_category_name">
       <bk-option v-for="group in category.groups" :key="group.id" :value="group.id" :label="group.name"></bk-option>
-    </bk-group>
+    </bk-option-group>
     <div class="selector-extensition" slot="extension">
       <div class="content" @click="handleGoToCreateGroup">
         <i class="bk-bscp-icon icon-add create-group-icon"></i>

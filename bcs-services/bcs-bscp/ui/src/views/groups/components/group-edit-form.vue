@@ -1,10 +1,10 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, withDefaults, watch, onMounted } from 'vue'
   import { useRoute } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { cloneDeep } from 'lodash'
   import { useUserStore } from '../../../store/user'
-  import { IGroupEditing, ECategoryType, EGroupRuleType, ICategoryItem, IGroupEditArg, IGroupRuleItem, IAllCategoryGroupItem } from '../../../../types/group'
+  import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupToService } from '../../../../types/group'
   import { GROUP_RULE_OPS } from '../../../constants'
   import { getAppList } from '../../../api/index'
   import { IAppItem } from '../../../../types/app'
@@ -16,9 +16,12 @@
   const route = useRoute()
   const { userInfo } = storeToRefs(useUserStore())
 
-  const props = defineProps<{
-    group: IGroupEditing
-  }>()
+  const props = withDefaults(defineProps<{
+    group: IGroupEditing,
+    released: IGroupToService[]
+  }>(), {
+    released: () => []
+  })
 
   const emits = defineEmits(['change'])
 
@@ -42,8 +45,24 @@
         },
         message: '仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'
       }
+    ],
+    public: [
+      {
+        validator: (val: boolean) => {
+          if (!val && formData.value.bind_apps.length === 0) {
+            return false
+          }
+          return true
+        },
+        message: '指定服务不能为空'
+      }
     ]
   }
+
+  watch(() => props.group, (val) => {
+    formData.value = cloneDeep(val)
+    getServiceList()
+  })
 
   onMounted(() => {
     getServiceList()
@@ -78,6 +97,16 @@
     formData.value.rules.splice(index, 1)
   }
 
+  const handleLogicChange = (index: number, val: EGroupRuleType) => {
+    const rule = formData.value.rules[index]
+    if (['in', 'nin'].includes(val) && !['in', 'nin'].includes(rule.op)) {
+      rule.value = []
+    } else if (!['in', 'nin'].includes(val) && ['in', 'nin'].includes(rule.op)) {
+      rule.value = ''
+    }
+    rule.op = val
+  }
+
   const change = () => {
     emits('change', formData.value)
   }
@@ -94,7 +123,7 @@
 <template>
   <bk-form form-type="vertical" ref="formRef" :model="formData" :rules="rules">
     <bk-form-item label="分组名称" required property="name">
-      <bk-input v-model="formData.name" size="small" placeholder="请输入分组名称" @blur="change"></bk-input>
+      <bk-input v-model="formData.name" placeholder="请输入分组名称" @blur="change"></bk-input>
     </bk-form-item>
     <bk-form-item class="radio-group-form" label="服务可见范围" required property="public">
       <bk-radio-group v-model="formData.public" @change="change">
@@ -107,30 +136,45 @@
         class="service-selector"
         multiple
         filterable
-        size="small"
         placeholder="请选择服务"
         @change="change">
         <bk-option v-for="service in serviceList" :key="service.id" :label="service.spec.name" :value="service.id"></bk-option>
       </bk-select>
     </bk-form-item>
+    <bk-form-item v-if="formData.id" label="当前上线版本">
+      <div class="published-version">
+        <template v-if="props.released.length > 0">
+          <div v-for="(item, index) in props.released" class="released-item">
+            <template v-if="index > 0"> ; </template>
+            {{ `${item.app_name}-${item.release_name}` }}
+          </div>
+        </template>
+        <template v-else>--</template>
+      </div>
+    </bk-form-item>
     <bk-form-item class="radio-group-form" label="分组规则" required property="rule_logic"> 
-      <bk-radio-group v-model="formData.rule_logic" @change="change">
-        <bk-radio label="AND">AND</bk-radio>
-        <bk-radio label="OR">OR</bk-radio>
-      </bk-radio-group>
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
-        <bk-input v-model="rule.key" style="width: 176px;" size="small" placeholder="" @change="change"></bk-input>
-        <bk-select v-model="rule.op" style="width: 72px;" size="small" :clearable="false" @change="change">
+        <bk-input v-model="rule.key" style="width: 176px;" placeholder="" @change="change"></bk-input>
+        <bk-select :model-value="rule.op" style="width: 82px;" :clearable="false" @change="handleLogicChange(index, $event)">
           <bk-option v-for="op in GROUP_RULE_OPS" :key="op.id" :value="op.id" :label="op.name"></bk-option>
         </bk-select>
-        <bk-input
-          v-model="rule.value"
-          style="width: 280px;"
-          size="small"
-          placeholder=""
-          :type="['gt', 'ge', 'lt', 'le'].includes(rule.op) ? 'number' : 'text'"
-          @change="change">
-        </bk-input>
+        <div class="value-input">
+          <bk-tag-input
+            v-if="['in', 'nin'].includes(rule.op)"
+            v-model="rule.value"
+            :allow-create="true"
+            :show-clear-only-hover="true"
+            :list="[]"
+            @change="change">
+          </bk-tag-input>
+          <bk-input
+            v-else
+            v-model="rule.value"
+            placeholder=""
+            :type="['gt', 'ge', 'lt', 'le'].includes(rule.op) ? 'number' : 'text'"
+            @change="change">
+          </bk-input>
+        </div>
         <div class="action-btns">
           <i v-if="index > 0 || formData.rules.length > 1" class="bk-bscp-icon icon-reduce" @click="handleDeleteRule(index)"></i>
           <i v-if="index === formData.rules.length - 1" style="margin-left: 10px;" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
@@ -151,6 +195,11 @@
   .service-selector {
     margin-top: 10px;
   }
+  .published-version {
+    line-height: 16px;
+    font-size: 12px;
+    color: #313238;
+  }
   .rule-config {
     display: flex;
     align-items: center;
@@ -169,6 +218,9 @@
       font-size: 12px;
       text-align: center;
       cursor: pointer;
+    }
+    .value-input {
+      width: 270px;
     }
   }
   .action-btns {

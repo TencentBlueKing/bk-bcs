@@ -21,6 +21,13 @@ export interface IGroupCategoriesQuery {
   limit: number;
 }
 
+// 全量分类下分组列表单个详情
+export interface IAllCategoryGroupItem {
+  group_category_id: number;
+  group_category_name: string;
+  groups: IGroupItem[];
+}
+
 // 分类详情
 export interface ICategoryItem {
   id: number;
@@ -55,6 +62,30 @@ export interface IGroupItem {
   }
 }
 
+// 分组按规则key分类数据
+export interface IGroupCategory {
+  name: string;
+  show: boolean;
+  fold: boolean;
+  children: IGroupCategoryItem[]
+}
+
+// 分组按规则key分类的单条表格数据
+export interface IGroupCategoryItem {
+  IS_CATEORY_ROW?: boolean;
+  CATEGORY_NAME?: string;
+  fold?: boolean;
+  id?: number;
+  name?: string;
+  public?: boolean;
+  bind_apps?: number[];
+  released_apps_num?: number;
+  selector?: {
+    labels_and?: IGroupRuleItem[];
+    labels_or?: IGroupRuleItem[];
+  }
+}
+
 // 分组编辑数据
 export interface IGroupEditing {
   id?: number;
@@ -70,7 +101,7 @@ export interface IGroupEditing {
 export interface IGroupRuleItem {
   key: string;
   op: EGroupRuleType;
-  value: string|number
+  value: string|number|string[]
 }
 
 // 分组新建、编辑提交到接口参数
@@ -86,25 +117,20 @@ export interface IGroupEditArg {
   uid?: string
 }
 
-// 全量分类下分组列表单个详情
-export interface IAllCategoryGroupItem {
-  group_category_id: number;
-  group_category_name: string;
-  groups: IGroupItem[];
-}
-
-// 分组选择树单个详情
-export interface ICategoryTreeItem {
-  id: number;
-  label: string;
-  count: number;
-  children: IGroupTreeItem[];
-}
 
 // 分组选择树分组节点单个详情
 export interface IGroupTreeItem {
   __uuid?: string;
   id: number;
   label: string;
-  rules: {key: string; opName?: string; op: EGroupRuleType; value: string|number}[];
+  rules: IGroupRuleItem[];
+}
+
+// 分组上线服务
+export interface IGroupToService {
+  app_id: number;
+  app_name: string;
+  release_id: number;
+  release_name: string;
+  edited: boolean;
 }

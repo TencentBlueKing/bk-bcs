@@ -3,8 +3,8 @@
 <template>
   <div class="roll-back-preview">
     <h3 class="title">
-      回滚预览
-      <span class="tips">回滚后，相关分组将退回至以下各版本</span>
+      上线预览
+      <span class="tips">上线后，所选分组将从以下各版本更新至当前版本</span>
     </h3>
     <div class="version-list-wrapper">
       <bk-exception scene="part" type="empty">没有数据</bk-exception>

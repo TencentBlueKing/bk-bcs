@@ -79,7 +79,7 @@
     :clearable="false"
     :loading="loading"
     @change="handleAppChange">
-    <bk-group
+    <bk-option-group
       v-for="group in serviceList"
       collapsible
       :key="group.space_id"
@@ -90,7 +90,7 @@
         :value="item.id"
         :label="item.spec.name">
       </bk-option>
-    </bk-group>
+    </bk-option-group>
     <div class="selector-extensition" slot="extension">
       <div class="content" @click="router.push({ name: 'service-mine' })">
         <i class="bk-bscp-icon icon-app-store app-icon"></i>

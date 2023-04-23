@@ -189,13 +189,17 @@
     refreshListWithLoading()
   }
 
+  const goToIAM = () => {
+    window.open((<any>window).BK_IAM_HOST, '__blank')
+  }
+
 </script>
 <template>
   <section class="keys-management-page">
     <bk-alert theme="info">
       <div class="alert-tips">
         <p>密钥仅用于 SDK/API 拉取配置使用。服务管理/配置管理/分组管理等功能的权限申请，请前往</p>
-        <bk-button text theme="primary">蓝鲸权限中心</bk-button>
+        <bk-button text theme="primary" @click="goToIAM">蓝鲸权限中心</bk-button>
       </div>
     </bk-alert>
     <div class="management-data-container">
@@ -211,10 +215,10 @@
       </div>
       <bk-loading style="min-height: 300px;" :loading="listLoading">
         <bk-table class="credential-table" :data="credentialList" :border="['outer']" :row-class="getRowCls">
-          <bk-table-column label="密钥" width="296">
+          <bk-table-column label="密钥" width="300">
             <template #default="{ row }">
               <div v-if="row.spec" class="credential-text">
-                <div class="text">{{ row.visible ? row.spec.enc_credential : '********************************' }}</div>
+                <div class="text"><bk-overflow-title type="tips">{{ row.visible ? row.spec.enc_credential : '********************************' }}</bk-overflow-title></div>
                 <div class="actions">
                   <Eye v-if="!row.visible" class="view-icon" @click="row.visible = true"/>
                   <Unvisible v-else class="view-icon" @click="row.visible = false" />
@@ -269,7 +273,7 @@
           :layout="['total', 'limit', 'list']"
           :count="pagination.count"
           :limit="pagination.limit"
-          @change="refreshListWithLoading()"
+          @change="refreshListWithLoading"
           @limit-change="handlePageLimitChange" />
       </bk-loading>
     </div>
@@ -290,7 +294,7 @@
   }
   .management-data-container {
     padding: 16px 24px 24px;
-    height: calc(100% - 32px);
+    height: calc(100% - 38px);
   }
   .operate-area {
     display: flex;

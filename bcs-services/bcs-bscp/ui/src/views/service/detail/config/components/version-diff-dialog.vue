@@ -155,7 +155,6 @@
                 <bk-select
                   :model-value="selectedVersion"
                   style="width: 320px;"
-                  size="small"
                   :loading="versionListLoading"
                   :clearable="false"
                   @change="handleSelectVersion">

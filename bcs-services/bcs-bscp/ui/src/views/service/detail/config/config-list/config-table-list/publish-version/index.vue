@@ -60,7 +60,7 @@
 </script>
 <template>
     <section class="create-version">
-        <bk-button theme="primary" :disabled="versionData.id === 0" @click="openSelectGroupPanel = true">上线版本</bk-button>
+        <bk-button theme="primary" @click="openSelectGroupPanel = true">上线版本</bk-button>
         <VersionLayout v-if="openSelectGroupPanel">
             <template #header>
                 <section class="header-wrapper">
