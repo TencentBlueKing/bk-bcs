@@ -9,6 +9,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbcrs "bscp.io/pkg/protocol/core/credential-scope"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/credential"
 )
 
 // CreateCredentialScope create credential scope
@@ -19,7 +20,7 @@ func (s *Service) CreateCredentialScope(ctx context.Context, req *pbds.CreateCre
 	for _, value := range req.Spec {
 		credentialScope := &table.CredentialScope{
 			Spec: &table.CredentialScopeSpec{
-				CredentialScope: value,
+				CredentialScope: credential.CredentialScope(value),
 			},
 			Attachment: req.Attachment.CredentialAttachment(),
 			Revision: &table.CredentialRevision{
@@ -90,7 +91,7 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCr
 		credentialScope := &table.CredentialScope{
 			ID: value.Id,
 			Spec: &table.CredentialScopeSpec{
-				CredentialScope: value.Scope,
+				CredentialScope: credential.CredentialScope(value.Scope),
 			},
 			Attachment: req.Attachment.CredentialAttachment(),
 			Revision: &table.CredentialRevision{

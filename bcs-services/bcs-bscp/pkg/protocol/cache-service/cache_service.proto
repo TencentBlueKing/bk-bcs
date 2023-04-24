@@ -77,6 +77,13 @@ service Cache {
         };
     }
 
+    rpc ListCredentialMatchedCI(ListCredentialMatchedCIReq) returns (JsonRawResp) {
+        // list credential matched config items with filter
+        option (google.api.http) = {
+            get: "/api/v1/cache/credentials/{credential}/config_items"
+        };
+    }
+
     // only stress test use.
     rpc BenchAppMeta(BenchAppMetaReq) returns (BenchAppMetaResp) {}
     rpc BenchAppCRIMeta(BenchAppCRIMetaReq) returns (BenchAppCRIMetaResp) {}
@@ -212,4 +219,9 @@ message EventMeta {
     uint32 id                          = 1;
     pbevent.EventSpec spec             = 2;
     pbevent.EventAttachment attachment = 3;
+}
+
+message ListCredentialMatchedCIReq {
+    uint32 biz_id     = 1;
+    string credential = 2;
 }

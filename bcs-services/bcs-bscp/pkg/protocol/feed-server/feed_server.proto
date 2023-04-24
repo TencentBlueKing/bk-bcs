@@ -14,6 +14,7 @@ service Upstream {
     rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
     rpc Messaging(MessagingMeta) returns (MessagingResp) {}
     rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
+    rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
 }
 
 // HandshakeMessage defines the handshake message from sidecar to feed server.
@@ -72,6 +73,19 @@ message PullAppFileMetaResp {
     repeated FileMeta file_metas = 3;
 }
 
+message GetDownloadURLReq {
+    // version defines message's protocol version from sidecar
+    pbbase.Versioning api_version = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
+    FileMeta file_meta = 4;
+    string token = 5;
+}
+
+message GetDownloadURLResp {
+    string url = 1;
+}
+
 message Repository {
     string root = 1;
 }
@@ -82,7 +96,6 @@ message FileMeta {
     pbcommit.CommitSpec commit_spec = 3;
     pbci.ConfigItemSpec config_item_spec = 4;
     RepositorySpec repository_spec = 5;
-
 }
 
 message RepositorySpec {

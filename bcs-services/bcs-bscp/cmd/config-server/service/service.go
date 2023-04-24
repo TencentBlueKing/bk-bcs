@@ -115,8 +115,7 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 		return nil, errf.New(errf.Unknown, fmt.Sprintf("dial data service failed, err: %v", err))
 	}
 
-	repoSetting := cc.ConfigServer().Repo
-	repoCli, err := repo.NewClient(&repoSetting, metrics.Register())
+	repoCli, err := repo.NewClient(cc.ConfigServer().Repo, metrics.Register())
 	if err != nil {
 		return nil, err
 	}

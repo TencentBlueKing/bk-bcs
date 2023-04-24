@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"bscp.io/pkg/criteria/enumor"
+	"bscp.io/pkg/runtime/credential"
 )
 
 // CredentialColumns defines credential's columns
@@ -42,6 +43,10 @@ func (s CredentialScope) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
+	if err := s.Spec.CredentialScope.Validate(); err != nil {
+		return err
+	}
+
 	if s.Attachment == nil {
 		return errors.New("attachment not set")
 	}
@@ -67,7 +72,7 @@ var CredentialScopeSpecColumnDescriptor = ColumnDescriptors{
 
 // CredentialScopeSpec defines credential scope's Spec
 type CredentialScopeSpec struct {
-	CredentialScope string `db:"credential_scope" json:"credential_scope"`
+	CredentialScope credential.CredentialScope `db:"credential_scope" json:"credential_scope"`
 }
 
 // CredentialScopeAttachmentColumnDescriptor defines credential scope's ColumnDescriptors
@@ -104,6 +109,10 @@ func (s CredentialScope) ValidateUpdate() error {
 
 	if s.Spec == nil {
 		return errors.New("spec not set")
+	}
+
+	if err := s.Spec.CredentialScope.Validate(); err != nil {
+		return err
 	}
 
 	if s.Attachment == nil {

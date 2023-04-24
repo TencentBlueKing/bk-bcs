@@ -25,4 +25,7 @@ var (
 
 	// ErrPermissionDenied
 	ErrPermissionDenied = errors.New("no permission")
+
+	// ErrCredentialInvalid is error when the credential not found in db.
+	ErrCredentialInvalid = errors.New("invalid credential")
 )

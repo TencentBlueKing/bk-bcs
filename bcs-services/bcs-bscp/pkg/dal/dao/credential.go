@@ -6,6 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
@@ -14,11 +15,14 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/filter"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
 // Credential supplies all the Credential related operations.
 type Credential interface {
+	// GetByCredentialString get credential by credential string
+	GetByCredentialString(kit *kit.Kit, bizID uint32, str string) (*table.Credential, error)
 	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
@@ -36,6 +40,36 @@ type credentialDao struct {
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// Get Credential by encoded credential string.
+func (dao *credentialDao) GetByCredentialString(kit *kit.Kit, bizID uint32, str string) (*table.Credential, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID is empty")
+	}
+	if str == "" {
+		return nil, errf.New(errf.InvalidParameter, "credential string is empty")
+	}
+
+	// decode credential string
+	encryptionAlgorithm := cc.ConfigServer().Credential.EncryptionAlgorithm
+	masterKey := cc.ConfigServer().Credential.MasterKey
+	decrypted, err := tools.DecryptCredential(str, masterKey, encryptionAlgorithm)
+	if err != nil {
+		return nil, errf.ErrCredentialInvalid
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialColumns.NamedExpr(), " FROM ",
+		table.CredentialTable.Name(), " WHERE enc_credential = ", decrypted, " AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
+
+	one := new(table.Credential)
+	if err := dao.orm.Do(dao.sd.MustSharding(bizID)).Get(kit.Ctx, one, sql); err != nil {
+		return nil, fmt.Errorf("get credential failed, err: %v", err)
+	}
+
+	return one, nil
 }
 
 // Create create credential

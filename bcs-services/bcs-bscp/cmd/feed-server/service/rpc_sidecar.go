@@ -14,20 +14,28 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"bscp.io/cmd/feed-server/bll/types"
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/jsoni"
 	sfs "bscp.io/pkg/sf-share"
+	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/tools"
 
 	prm "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+var (
+	// TempDownloadURLExpireSeconds is the expire seconds for the temp download url.
+	TempDownloadURLExpireSeconds = 3600
 )
 
 // Handshake received handshake from sidecar to validate the app instance's authorization and legality.
@@ -44,12 +52,12 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 
 	// check if the sidecar's version can be accepted.
 	if !sfs.IsAPIVersionMatch(hm.ApiVersion) {
-		return nil, status.Error(codes.InvalidArgument, "sidecar's api version is too low, should be upgraded")
+		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
 	}
 
 	// check if the sidecar's version can be accepted.
 	if !sfs.IsSidecarVersionMatch(hm.Spec.Version) {
-		return nil, status.Error(codes.InvalidArgument, "sidecar's version is too low, should be upgraded")
+		return nil, status.Error(codes.InvalidArgument, "sdk's version is too low, should be upgraded")
 	}
 
 	ra := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Sidecar, Action: meta.Access}, BizID: hm.Spec.BizId}
@@ -254,4 +262,51 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 	}
 
 	return resp, nil
+}
+
+// GetDownloadURL get the download url of the file.
+func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLReq) (
+	*pbfs.GetDownloadURLResp, error) {
+	// check if the sidecar's version can be accepted.
+	if !sfs.IsAPIVersionMatch(req.ApiVersion) {
+		return nil, status.Error(codes.InvalidArgument, "sdk's api version is too low, should be upgraded")
+	}
+
+	im, err := sfs.ParseFeedIncomingContext(ctx)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	// validate can file be downloaded by credential.
+	if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.Token, req.FileMeta.Id); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
+	} else if !match {
+		return nil, status.Error(codes.PermissionDenied, "no permission to download file")
+	}
+
+	switch cc.FeedServer().Repository.StorageType {
+	case cc.BkRepo:
+	case cc.S3:
+		return nil, errors.New("unimplemented storage type: s3")
+	default:
+		return nil, errors.New("unknown storage type")
+	}
+	// get file download url.
+	url, err := s.repoCli.GenerateTempDownloadURL(im.Kit.Ctx, &repo.GenerateTempDownloadURLReq{
+		ProjectID:     cc.FeedServer().Repository.BkRepo.Project,
+		RepoName:      s.uriDecorator.Init(req.BizId).RepoName(),
+		FullPathSet:   []string{s.uriDecorator.Init(req.BizId).RelativePath(req.FileMeta.CommitSpec.Content.Signature)},
+		ExpireSeconds: uint32(TempDownloadURLExpireSeconds),
+		// range download swap buffer size is 2MB, so we need to set the permits to byteSize / 2MB,
+		// and then set permits to twice to left space for retry.
+		Permits: uint32(req.FileMeta.CommitSpec.Content.ByteSize / 1024),
+		Type:    "DOWNLOAD",
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "generate temp download url failed, %s", err.Error())
+	}
+	return &pbfs.GetDownloadURLResp{
+		Url: url,
+	}, nil
+
 }
