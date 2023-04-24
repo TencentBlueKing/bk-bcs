@@ -3,6 +3,7 @@
   import { InfoBox } from "bkui-vue/lib";
   import { publishVersion } from '../../../../../../../api/config'
   import { IGroupTreeItem } from '../../../../../../../../types/group';
+  import RuleTag from '../../../../../../groups/components/rule-tag.vue'
 
   interface IFormData {
     groups: number[];
@@ -94,12 +95,14 @@
             <!-- <CategoryGroupSelect :app-id="props.appId" :multiple="true" :value="localVal.groups" @change="handleGroupChange" /> -->
             <div v-for="group in props.groups" class="group-item" :key="group.id">
               <div class="name">{{ group.label }}</div>
-              <span class="rules">
-                <span v-for="(rule, index) in group.rules" :key="index" class="rule-item">
-                  {{ `${rule.key} ${rule.opName} ${rule.value}` }}
-                  <span v-if="index < groups.length - 1"> ; </span>
-                </span>
-              </span>
+              <div class="rules">
+                <bk-overflow-title type="tips">
+                  <span v-for="(rule, index) in group.rules" :key="index" class="rule">
+                    <span v-if="index > 0 "> & </span>
+                    <rule-tag class="tag-item" :rule="rule"/>
+                  </span>
+                </bk-overflow-title>
+              </div>
             </div>
           </bk-form-item>
           <bk-form-item label="上线说明" property="memo">
@@ -125,6 +128,8 @@
     display: flex;
     align-items: center;
     margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
     .name {
       padding: 0 10px;
       height: 22px;

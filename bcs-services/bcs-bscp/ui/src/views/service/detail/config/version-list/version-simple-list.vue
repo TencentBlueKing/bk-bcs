@@ -31,6 +31,10 @@
     spec: {
       name: '未命名版本',
       memo: ''
+    },
+    status: {
+      publish_status: 'editing',
+      released_groups: []
     }
   }
   const versionListLoading = ref(false)
@@ -113,7 +117,7 @@
           :key="version.id"
           :class="['version-item', { active: versionData.id === version.id }]"
           @click="handleSelectVersion(version)">
-          <div class="dot"></div>
+          <div :class="['dot', version.status.publish_status]"></div>
           <div class="version-name">{{ version.spec.name }}</div>
           <bk-dropdown class="action-area">
             <Ellipsis class="action-more-icon" />
@@ -174,6 +178,15 @@
       border-radius: 50%;
       border: 1px solid #c4c6cc;
       background: #f0f1f5;
+      &.not_released {
+        border: 1px solid #ff9c01;
+        background: #ffe8c3;
+      }
+      &.full_released,
+      &.partial_released {
+        border: 1px solid #3fc06d;
+        background: #e5f6ea;
+      }
     }
   }
   .version-name {
