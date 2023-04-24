@@ -25,4 +25,13 @@ const (
 	CanViewClusterOperation = "CanViewCluster"
 	// CanDeleteClusterOperation deleteCluster perm
 	CanDeleteClusterOperation = "CanDeleteCluster"
+
+	// CanCreateClusterScopedResourceOperation createClusterScopedResource perm
+	CanCreateClusterScopedResourceOperation = "CanCreateClusterScopedResource"
+	// CanUpdateClusterScopedResourceOperation updateClusterScopedResource perm
+	CanUpdateClusterScopedResourceOperation = "CanUpdateClusterScopedResource"
+	// CanViewClusterScopedResourceOperation viewClusterScopedResource perm
+	CanViewClusterScopedResourceOperation = "CanViewClusterScopedResource"
+	// CanDeleteClusterScopedResourceOperation deleteClusterScopedResource perm
+	CanDeleteClusterScopedResourceOperation = "CanDeleteClusterScopedResource"
 )

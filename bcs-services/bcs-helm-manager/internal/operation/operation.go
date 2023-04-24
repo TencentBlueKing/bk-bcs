@@ -144,16 +144,16 @@ func (o *operator) dispatch(op Operation, timeout time.Duration, done chan struc
 			cancel()
 			done <- struct{}{}
 		}()
-		if err := op.Validate(); err != nil {
-			metrics.ReportOperationMetric(op.Action(), operateFail, start)
-			blog.Errorf("operation %s validate error, %s", op.Name(), err.Error())
-			op.Done(fmt.Errorf("validate error, %s", err))
-			return
-		}
 		if err := op.Prepare(ctx); err != nil {
 			metrics.ReportOperationMetric(op.Action(), operateFail, start)
 			blog.Errorf("operation %s prepare error, %s", op.Name(), err.Error())
 			op.Done(fmt.Errorf("prepare error, %s", err.Error()))
+			return
+		}
+		if err := op.Validate(); err != nil {
+			metrics.ReportOperationMetric(op.Action(), operateFail, start)
+			blog.Errorf("operation %s validate error, %s", op.Name(), err.Error())
+			op.Done(fmt.Errorf("validate error, %s", err))
 			return
 		}
 		if err := op.Execute(ctx); err != nil {

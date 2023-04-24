@@ -89,7 +89,7 @@ func (u *UpgradeReleaseAction) upgrade() error {
 		return nil
 	}
 
-	result, err := upgradeRelease(u.releaseHandler, contextx.GetProjectIDFromCtx(u.ctx), projectID, clusterID,
+	result, err := release.UpgradeRelease(u.releaseHandler, contextx.GetProjectIDFromCtx(u.ctx), projectID, clusterID,
 		releaseName, releaseNamespace, chartName, chartVersion, username, username, u.req.GetArgs(),
 		u.req.GetBcsSysVar(), contents, values, false)
 	if err != nil {

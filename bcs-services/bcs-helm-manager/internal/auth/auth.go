@@ -75,6 +75,12 @@ func GetUserFromCtx(ctx context.Context) string {
 	return authUser.GetUsername()
 }
 
+// IsUserFromCtx 通过 ctx 判断当前用户是否是真实用户
+func IsUserFromCtx(ctx context.Context) bool {
+	authUser, _ := middleauth.GetUserFromContext(ctx)
+	return authUser.Username != ""
+}
+
 func getJWTOpt(c JWTClientConfig) (*jwt.JWTOptions, error) {
 	jwtOpt := &jwt.JWTOptions{
 		VerifyKeyFile: c.PublicKeyFile,

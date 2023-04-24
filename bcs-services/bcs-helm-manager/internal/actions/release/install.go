@@ -90,7 +90,7 @@ func (i *InstallReleaseAction) install() error {
 	}
 
 	// 执行install操作
-	result, err := installRelease(i.releaseHandler, contextx.GetProjectIDFromCtx(i.ctx), projectID, clusterID,
+	result, err := release.InstallRelease(i.releaseHandler, contextx.GetProjectIDFromCtx(i.ctx), projectID, clusterID,
 		releaseName, releaseNamespace, chartName, chartVersion, username, username, i.req.GetArgs(),
 		i.req.GetBcsSysVar(), contents, values, false, false, false)
 	if err != nil {

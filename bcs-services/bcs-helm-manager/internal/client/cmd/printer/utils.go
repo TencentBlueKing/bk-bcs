@@ -12,18 +12,6 @@
 
 package printer
 
-import (
-	"github.com/ugorji/go/codec"
-)
-
-func encodeJsonWithIndent(indent int8, v interface{}, s *[]byte) error {
-	enc := codec.NewEncoderBytes(s, &codec.JsonHandle{
-		MapKeyAsString: true,
-		Indent:         indent,
-	})
-	return enc.Encode(v)
-}
-
 func cut(s string, length int) string {
 	if len(s) <= length {
 		return s
