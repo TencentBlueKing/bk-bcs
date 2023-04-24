@@ -190,7 +190,7 @@
   }
 
   const goToIAM = () => {
-    window.open((<any>window).BK_IAM_HOST, '__blank')
+    window.open((<any>window).BK_IAM_HOST + '/apply-join-user-group', '__blank')
   }
 
 </script>
