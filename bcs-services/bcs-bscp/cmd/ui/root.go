@@ -18,12 +18,9 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -32,6 +29,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/config"
+	"bscp.io/pkg/version"
 	"bscp.io/pkg/web"
 )
 
@@ -39,93 +37,81 @@ var (
 	// Used for flags.
 	cfgFile       string
 	httpAddress   string
-	appName       = "bcs-bscp-ui"
+	appName       = "bscp-ui"
 	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
 	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
 	outConfInfo   bool
 
 	rootCmd = &cobra.Command{
 		Use:   appName,
-		Short: "bcs bscp ui server",
+		Short: "bscp ui server",
+		Run: func(c *cobra.Command, args []string) {
+			// 输出初始化配置
+			if outConfInfo {
+				encoder := yaml.NewEncoder(os.Stdout)
+				encoder.SetIndent(2)
+				if err := encoder.Encode(config.G); err != nil {
+					klog.ErrorS(err, "output init confinfo failed")
+					os.Exit(1)
+				}
+				os.Exit(0)
+			}
+
+			if err := RunCmd(); err != nil {
+				klog.ErrorS(err, "run cmd failed")
+				os.Exit(1)
+			}
+		},
 	}
 )
 
-// Execute 执行
-func Execute() {
-	rootCmd.Run = func(cmd *cobra.Command, args []string) {
-		// 输出初始化配置
-		if outConfInfo {
-			encoder := yaml.NewEncoder(os.Stdout)
-			encoder.SetIndent(2)
-			if err := encoder.Encode(config.G); err != nil {
-				klog.ErrorS(err, "output init confinfo failed")
-				os.Exit(1)
-			}
-			os.Exit(0)
-		}
-
-		// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
-		// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
-		if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { klog.Infof(template, args) })); err != nil {
-			klog.InfoS("Failed to set GOMAXPROCS automatically", "err", err)
-		}
-
-		initConfig()
-		var g run.Group
-
-		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-		defer stop()
-
-		g.Add(func() error {
-			<-ctx.Done()
-			return ctx.Err()
-		}, func(error) {
-			stop()
-		})
-
-		addrIPv6 := getIPv6AddrFromEnv(httpAddress)
-		svr, err := web.NewWebServer(ctx, httpAddress, addrIPv6)
-		if err != nil {
-			klog.Errorf("init web server err: %s, exited", err)
-			os.Exit(1)
-		}
-
-		klog.InfoS("listening for requests and metrics", "address", httpAddress)
-
-		g.Add(svr.Run, func(err error) { svr.Close() })
-
-		if err := g.Run(); err != nil && err != ctx.Err() {
-			klog.Errorf("run command err: %s", err)
-			os.Exit(1)
-		}
+// RunCmd
+func RunCmd() error {
+	// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
+	// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
+	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { klog.Infof(template, args) })); err != nil {
+		klog.InfoS("Failed to set GOMAXPROCS automatically", "err", err)
 	}
-	rootCmd.Version = printVersion()
 
-	err := rootCmd.Execute()
+	var g run.Group
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	g.Add(func() error {
+		<-ctx.Done()
+		return ctx.Err()
+	}, func(error) {
+		stop()
+	})
+
+	addrIPv6 := getIPv6AddrFromEnv(httpAddress)
+	svr, err := web.NewWebServer(ctx, httpAddress, addrIPv6)
 	if err != nil {
-		klog.Errorf("run bcs ui err: %s, exited", err)
+		klog.Errorf("init web server err: %s, exited", err)
 		os.Exit(1)
 	}
+
+	klog.InfoS("listening for requests and metrics", "address", httpAddress)
+
+	g.Add(svr.Run, func(err error) { svr.Close() })
+
+	return g.Run()
 }
 
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// 不开启 自动排序
-	cobra.EnableCommandSorting = false
-
 	// 不开启 completion 子命令
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/bcs-ui.yml)")
-	rootCmd.PersistentFlags().StringVar(&httpAddress, "http-address", "127.0.0.1:8080", `listen http address`)
+	rootCmd.Flags().StringVar(&cfgFile, "config", "", "config file path")
+	rootCmd.Flags().StringVar(&httpAddress, "http-address", "127.0.0.1:8080", `listen http address`)
 	rootCmd.Flags().BoolVarP(&outConfInfo, "confinfo", "o", false, "print init confinfo to stdout")
 
-	// rootCmd.SilenceErrors = true
-	// rootCmd.SilenceUsage = true
-	rootCmd.Version = printVersion()
-
-	// rootCmd.SetVersionTemplate(`{{printf "%s" .Version}}`)
+	// 添加版本
+	rootCmd.SetVersionTemplate(`{{println .Version}}`)
+	rootCmd.Version = version.FormatVersion("", version.Row)
 }
 
 func initConfig() {
@@ -135,26 +121,13 @@ func initConfig() {
 		return
 	}
 
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		cobra.CheckErr(err)
-
-		cwd, err := os.Getwd()
-		cobra.CheckErr(err)
-
-		// Search config in home directory with name (without extension).
-		viper.AddConfigPath("/etc")
-		viper.AddConfigPath(".")
-		viper.AddConfigPath(home)
-		viper.AddConfigPath(filepath.Join(cwd, "etc"))
-
-		viper.SetConfigName("bcs-bscp")
-		viper.SetConfigType("yml")
+	if cfgFile == "" {
+		klog.Errorf("config file path is required")
+		os.Exit(1)
 	}
+
+	viper.SetConfigType("yaml")
+	viper.SetConfigFile(cfgFile)
 
 	if err := viper.ReadInConfig(); err != nil {
 		cobra.CheckErr(err)
@@ -166,11 +139,6 @@ func initConfig() {
 
 	// 日志配置已经Ready, 后面都需要使用日志
 	klog.Infof("Using config file:%s", viper.ConfigFileUsed())
-}
-
-func printVersion() string {
-	v := appName + ", " + version.GetVersion()
-	return v
 }
 
 // getIPv6AddrFromEnv 解析ipv6
