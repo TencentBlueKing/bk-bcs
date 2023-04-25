@@ -123,7 +123,7 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .cluster-select {
-    min-width: 254px;
+    width: 254px;
     max-width: 600px;
     &:not(.is-disabled) {
       background-color: #fff;

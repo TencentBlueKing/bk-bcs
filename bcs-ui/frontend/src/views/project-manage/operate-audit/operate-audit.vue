@@ -1,7 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div class="biz-content">
-    <Header hide-back :title="$t('操作审计')" />
+    <Header hide-back :title="$t('操作记录')" />
     <div class="biz-content-wrapper" style="padding: 0;" v-bkloading="{ isLoading: isInitLoading, opacity: 0.1 }">
       <template v-if="!isInitLoading">
         <div class="biz-panel-header biz-operate-audit-query">
