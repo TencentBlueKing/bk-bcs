@@ -35,7 +35,7 @@ func GenerateStaticActions() []client.ResourceAction {
 	resourceActionList := make([]client.ResourceAction, 0)
 
 	resourceActionList = append(resourceActionList, genBusinessActions()...)
-	resourceActionList = append(resourceActionList, genApplicationActions()...)
+	// resourceActionList = append(resourceActionList, genApplicationActions()...)
 	// resourceActionList = append(resourceActionList, genGroupActions()...)
 	// resourceActionList = append(resourceActionList, genStrategySetActions()...)
 	// resourceActionList = append(resourceActionList, genStrategyActions()...)
