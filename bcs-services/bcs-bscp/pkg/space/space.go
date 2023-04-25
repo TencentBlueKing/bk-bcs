@@ -18,8 +18,8 @@ import (
 	"strconv"
 	"strings"
 
+	"bscp.io/pkg/logs"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
-	"k8s.io/klog/v2"
 )
 
 // SpaceType 空间类型
@@ -79,7 +79,7 @@ func ListUserSpace(ctx context.Context, client esbcli.Client, username string) (
 
 	spaces, err := listBKCMDB(ctx, client, username, []int{})
 	if err != nil {
-		klog.Warningf("list bk_cmdb space failed. err: %s", err)
+		logs.Warnf("list bk_cmdb space failed. err: %s", err)
 		return nil, err
 	}
 
@@ -107,7 +107,7 @@ func QuerySpace(ctx context.Context, client esbcli.Client, spaceUidList []string
 	for _, id := range idList {
 		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			klog.Warningf("%s not integer", id)
+			logs.Warnf("%s not integer", id)
 			continue
 		}
 		idIntList = append(idIntList, idInt)
@@ -115,7 +115,7 @@ func QuerySpace(ctx context.Context, client esbcli.Client, spaceUidList []string
 
 	spaces, err := listBKCMDB(ctx, client, "", idIntList)
 	if err != nil {
-		klog.Warningf("list bk_cmdb space failed. err: %s", err)
+		logs.Warnf("list bk_cmdb space failed. err: %s", err)
 		return nil, err
 	}
 
