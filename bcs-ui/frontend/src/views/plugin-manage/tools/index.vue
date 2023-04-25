@@ -7,7 +7,7 @@
       <template>
         <div class="biz-panel-header">
           <div class="right">
-            <ClusterSearch
+            <ClusterSelectComb
               :search.sync="searchKeyword"
               :cluster-id.sync="searchScope"
               :show-search="false"
@@ -372,13 +372,13 @@
 import { catchErrorHandler } from '@/common/util';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import Header from '@/components/layout/Header.vue';
-import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 
 export default {
   components: {
     MonacoEditor,
     Header,
-    ClusterSearch,
+    ClusterSelectComb,
   },
   data() {
     return {

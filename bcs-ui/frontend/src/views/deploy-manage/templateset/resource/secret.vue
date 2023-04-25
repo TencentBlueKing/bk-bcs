@@ -12,7 +12,7 @@
           </bk-button>
         </div>
         <div class="right">
-          <ClusterSearch
+          <ClusterSelectComb
             :placeholder="$t('输入名称或命名空间，按Enter搜索')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
@@ -282,10 +282,10 @@
 <script>
 import { catchErrorHandler, formatDate } from '@/common/util';
 import Header from '@/components/layout/Header.vue';
-import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 
 export default {
-  components: { Header, ClusterSearch },
+  components: { Header, ClusterSelectComb },
   data() {
     return {
       formatDate,

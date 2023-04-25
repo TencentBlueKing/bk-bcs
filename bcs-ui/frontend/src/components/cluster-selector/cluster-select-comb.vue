@@ -29,7 +29,7 @@ import { defineComponent } from '@vue/composition-api';
 import ClusterSelect from './cluster-select.vue';
 
 export default defineComponent({
-  name: 'ClusterSearch',
+  name: 'ClusterSelectComb',
   components: { ClusterSelect },
   props: {
     showClusterSelect: {
@@ -45,7 +45,7 @@ export default defineComponent({
     search: String,
     clusterType: {
       type: String,
-      default: 'normal',
+      default: 'independent',
     },
   },
   emits: ['cluster-change', 'search-change', 'search-enter', 'refresh'],
