@@ -18,6 +18,10 @@ export const useConfigStore = defineStore('config', () => {
     spec: {
       name: '',
       memo: ''
+    },
+    status: {
+      publish_status: 'editing',
+      released_groups: []
     }
   })
 

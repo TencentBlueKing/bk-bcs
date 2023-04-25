@@ -20,6 +20,8 @@ import (
 	"github.com/google/uuid"
 	"go-micro.dev/v4/metadata"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 )
 
 // ContextWithRequestID returns a copy of parent with requestID set as the current Span.
@@ -37,8 +39,12 @@ func ContextWithRequestID(parent context.Context, requestID string) context.Cont
 }
 
 // GetOrCreateReqID 尝试读取 X-Request-Id，若不存在则随机生成
-func GetOrCreateReqID(md metadata.Metadata) string {
-	if reqID, ok := md.Get("x-request-id"); ok {
+func GetOrCreateReqID(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return uuid.New().String()
+	}
+	if reqID, ok := md.Get(constants.RequestIDHeaderKey); ok {
 		return reqID
 	}
 	return uuid.New().String()

@@ -395,16 +395,17 @@ binary-extensions@^2.0.0:
   resolved "https://mirrors.tencent.com/npm/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
 
-bkui-vue@0.0.1-beta.367:
-  version "0.0.1-beta.367"
-  resolved "https://mirrors.tencent.com/npm/bkui-vue/-/bkui-vue-0.0.1-beta.367.tgz#6456e346e2e3d499f9a1dd8c699a205f58c51a2d"
-  integrity sha512-Lu7sjLMEkE27MkLYJc/r/MV41X4Up9LSwztVIBE/x95p2sEo3yRnAI4TXD7HFM4/T+9vIB5aYXkJNQYx/QM3FA==
+bkui-vue@0.0.1-beta.403:
+  version "0.0.1-beta.403"
+  resolved "https://mirrors.tencent.com/npm/bkui-vue/-/bkui-vue-0.0.1-beta.403.tgz#8ec9c14efb4bafd5bb254e15748ffacc9f815341"
+  integrity sha512-SRWLuFYgcg8nYXQqYg06l07jT5PEHlnsMygjCouAgghvYD7pYx1yv01bSu6Z98EvRN1Ii5TfAAa6/VgK+RmjRQ==
   dependencies:
     "@floating-ui/dom" "~0.5.2"
     "@popperjs/core" "~2.11.5"
     date-fns "~2.28.0"
     js-calendar "~1.2.3"
     lodash "~4.17.21"
+    lodash-es "~4.17.21"
     tinycolor2 "~1.4.1"
     vue-types "~4.1.1"
 
@@ -1080,6 +1081,11 @@ locate-path@^6.0.0:
   integrity sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==
   dependencies:
     p-locate "^5.0.0"
+
+lodash-es@~4.17.21:
+  version "4.17.21"
+  resolved "https://mirrors.tencent.com/npm/lodash-es/-/lodash-es-4.17.21.tgz#43e626c46e6591b7750beb2b50117390c609e3ee"
+  integrity sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==
 
 lodash.merge@^4.6.2:
   version "4.6.2"

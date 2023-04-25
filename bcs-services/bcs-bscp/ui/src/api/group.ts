@@ -81,3 +81,14 @@ export const updateGroup = (biz_id: string, group_id: number, params: IGroupEdit
 export const deleteGroup = (biz_id: string, group_id: number) => {
   return http.delete(`/config/biz/${biz_id}/groups/${group_id}`)
 }
+
+/**
+ * 获取分组已上线服务
+ * @param biz_id 空间ID
+ * @param group_id 分组ID
+ * @param params 查询参数
+ * @returns 
+ */
+export const getGroupReleasedApps = (biz_id: string, group_id: number, params: { start: number; limit: number; }) => {
+  return http.get(`/config/biz/${biz_id}/groups/${group_id}/released_apps`, { params }).then(res => res.data)
+}

@@ -16,12 +16,10 @@ package micro
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -38,13 +36,9 @@ func NewTracingWrapper() server.HandlerWrapper {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 			// 开始时间
 			startTime := time.Now()
-			md, ok := metadata.FromContext(ctx)
-			if !ok {
-				return errors.New("failed to get micro's metadata")
-			}
 
 			// 获取或生成 request id 注入到 context
-			requestID := utils.GetOrCreateReqID(md)
+			requestID := utils.GetOrCreateReqID(ctx)
 			ctx = context.WithValue(ctx, constants.RequestIDKey, requestID)
 			ctx = utils.ContextWithRequestID(ctx, requestID)
 

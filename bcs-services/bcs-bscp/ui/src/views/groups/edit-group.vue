@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
-  import { useRoute } from 'vue-router'
-  import { cloneDeep } from 'lodash'
-  import { IGroupEditing, ECategoryType, EGroupRuleType, ICategoryItem, IGroupEditArg, IGroupRuleItem, IAllCategoryGroupItem, IGroupItem } from '../../../types/group'
-  import { createGroup, updateGroup } from '../../api/group'
+  import { ref, computed, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useGlobalStore } from '../../store/global'
+  import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupItem, IGroupToService } from '../../../types/group'
+  import { updateGroup, getGroupReleasedApps } from '../../api/group'
   import groupEditForm from './components/group-edit-form.vue';
 
-  const route = useRoute()
+  const { spaceId } = storeToRefs(useGlobalStore())
 
   const props = defineProps<{
     show: boolean,
@@ -24,38 +24,54 @@
     rules: [{ key: '', op: <EGroupRuleType>'', value: '' }]
   })
   const groupFormRef = ref()
+  const releasedServicesLoading = ref(false)
+  const releasedServices = ref<IGroupToService[]>([])
   const pending = ref(false)
 
   watch(() => props.show, (val) => {
-    const { id, name, public: isPublic, bind_apps, selector } = props.group
-    groupData.value = {
-      id,
-      name,
-      bind_apps,
-      public: isPublic,
-      rule_logic: selector.labels_and ? 'AND' : 'OR',
-      rules: (selector.labels_and || selector.labels_or) as IGroupRuleItem[]
+    if (val) {
+      const { id, name, public: isPublic, bind_apps, selector } = props.group
+      groupData.value = {
+        id,
+        name,
+        bind_apps,
+        public: isPublic,
+        rule_logic: selector.labels_and ? 'AND' : 'OR',
+        rules: (selector.labels_and || selector.labels_or) as IGroupRuleItem[]
+      }
+      loadServicesList()
     }
   })
 
+  const loadServicesList = async () => {
+    releasedServicesLoading.value = true
+    const params = {
+      start: 0,
+      limit: 100 // @todo 需要确认接口拉全量数据的参数
+    }
+    const res = await getGroupReleasedApps(spaceId.value, props.group.id, params)
+    releasedServices.value = res.details
+    releasedServicesLoading.value = false
+  }
+
+  // 修改分组信息
   const updateData = (data: IGroupEditing) => {
     groupData.value = data
   }
 
+  // 保存
   const handleConfirm = async() => {
     await groupFormRef.value.validate()
     pending.value = true
     try {
       const { id, name, public: isPublic, bind_apps, rule_logic, rules } = groupData.value
       const params = {
-        biz_id: route.params.spaceId,
         name,
         public: isPublic,
         bind_apps: isPublic ? [] : bind_apps,
-        mode: ECategoryType.Custom,
         selector: rule_logic === 'AND' ? { labels_and: rules } : { labels_or: rules }
       }
-      await updateGroup(<string>route.params.spaceId, <number>id, params)
+      await updateGroup(spaceId.value, <number>id, params)
       handleClose()
       emits('reload')
     } catch (e) {
@@ -74,7 +90,7 @@
   <bk-dialog
     ext-cls="edit-group-dialog"
     confirm-text="提交"
-    :width="952"
+    :width="640"
     :is-show="props.show"
     :esc-close="false"
     :quick-close="false"
@@ -86,13 +102,7 @@
       <section class="group-form-wrapper">
         <div class="dialog-title">编辑分组</div>
         <div class="group-edit-form">
-          <group-edit-form v-if="props.show" ref="groupFormRef" :group="groupData" @change="updateData"></group-edit-form>
-        </div>
-      </section>
-      <section class="rule-detail-wrapper">
-        <div class="rule-preview-title">分组规则预览</div>
-        <div class="rule-list">
-          <div class="rule-item rule-logic">逻辑关系：{{ groupData.rule_logic }}</div>
+          <group-edit-form ref="groupFormRef" :group="groupData" :released="releasedServices" @change="updateData"></group-edit-form>
         </div>
       </section>
     </div>
@@ -100,15 +110,8 @@
 </template>
 <style lang="scss" scoped>
   .group-edit-content {
-    display: flex;
-    align-items: stretch;
-    justify-content: space-between;
-    .group-form-wrapper {
-      width: 632px;
-      border-right: 1px solid #dcdee5;
-    }
     .group-edit-form {
-      padding: 0 16px 0 24px;
+      padding: 0 24px;
       min-height: 268px;
       max-height: 386px;
       overflow: auto;
@@ -123,25 +126,6 @@
       font-size: 20px;
       line-height: 28px;
       color: #313238;
-    }
-    .rule-preview-title {
-      padding: 12px 24px 16px;
-      font-size: 14px;
-      line-height: 22px;
-      color: #313238;
-    }
-    .rule-list {
-      padding: 0 24px;
-      .rule-item {
-        padding: 6px 8px;
-        line-height: 20px;
-        font-size: 12px;
-        color: #63656e;
-        background: #ffffff;
-        &.rule-logic {
-          background: #eaebf0;
-        }
-      }
     }
   }
 </style>

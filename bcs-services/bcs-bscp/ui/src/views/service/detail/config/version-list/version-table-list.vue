@@ -5,6 +5,7 @@
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../store/config'
   import { getConfigVersionList } from '../../../../../api/config';
+  import { VERSION_STATUS_MAP } from '../../../../../constants/index'
   import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../types/config';
   import VersionDiff from '../components/version-diff/index.vue';
 
@@ -31,6 +32,10 @@
     spec: {
       name: '未命名版本',
       memo: ''
+    },
+    status: {
+      publish_status: 'editing',
+      released_groups: []
     }
   }
 
@@ -171,13 +176,28 @@
             </template>
           </bk-table-column>
           <bk-table-column label="状态">
-            <div class="status-tag unpublished">未上线</div>
-            <!-- <div class="status-tag published">已上线上线</div> -->
+            <template v-slot="{ row }">
+              <template v-if="row.status">
+                <template v-if="!VERSION_STATUS_MAP[row.status.publish_status as keyof typeof VERSION_STATUS_MAP]">
+                  --
+                </template>
+                <div v-else :class="['status-tag', row.status.publish_status]">
+                  {{ VERSION_STATUS_MAP[row.status.publish_status as keyof typeof VERSION_STATUS_MAP] }}
+                </div>
+              </template>
+            </template>
           </bk-table-column>
           <bk-table-column label="操作">
             <template v-slot="{ row }">
-              <bk-button text theme="primary" @click.stop="handleOpenDiff(row)">版本对比</bk-button>
-              <bk-button style="margin-left: 16px;" text theme="primary" @click.stop="handleDeprecate(row.id)">废弃</bk-button>
+              <bk-button
+                v-if="row.status?.publish_status !== 'editing'"
+                style="margin-right: 16px;"
+                text
+                theme="primary"
+                @click.stop="handleOpenDiff(row)">
+                版本对比
+              </bk-button>
+              <bk-button text theme="primary" @click.stop="handleDeprecate(row.id)">废弃</bk-button>
             </template>
           </bk-table-column>
         </bk-table>
@@ -255,12 +275,13 @@
     border: 1px solid #cccccc;
     border-radius: 11px;
     text-align: center;
-    &.unpublished {
+    &.not_released {
       color: #fe9000;
       background: #ffe8c3;
       border-color: rgba(254, 156, 0, 0.3);
-    }
-    &.published {
+      }
+    &.full_released,
+    &.partial_released {
       color: #14a568;
       background: #e4faf0;
       border-color: rgba(20, 165, 104, 0.3);
