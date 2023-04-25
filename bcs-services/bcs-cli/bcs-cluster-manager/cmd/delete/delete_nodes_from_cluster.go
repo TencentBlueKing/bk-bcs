@@ -56,5 +56,5 @@ func deleteNodesFromCluster(cmd *cobra.Command, args []string) {
 		klog.Fatalf("delete nodes to cluster failed: %v", err)
 	}
 
-	fmt.Printf("delete nodes to cluster succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("delete nodes to cluster succeed: taskID: %v\n", resp.TaskID)
 }

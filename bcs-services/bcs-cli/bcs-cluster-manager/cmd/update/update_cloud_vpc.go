@@ -61,5 +61,5 @@ func updateCloudVPC(cmd *cobra.Command, args []string) {
 		klog.Fatalf("update cloud vpc failed: %v", err)
 	}
 
-	fmt.Printf("update cloud vpc succeed")
+	fmt.Println("update cloud vpc succeed")
 }

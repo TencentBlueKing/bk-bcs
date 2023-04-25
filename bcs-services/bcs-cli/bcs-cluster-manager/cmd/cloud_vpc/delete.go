@@ -47,5 +47,5 @@ func delete(cmd *cobra.Command, args []string) {
 		klog.Fatalf("delete cloud vpc failed: %v", err)
 	}
 
-	fmt.Printf("delete cloud vpc succeed")
+	fmt.Println("delete cloud vpc succeed")
 }

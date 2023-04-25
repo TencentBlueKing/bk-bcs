@@ -64,5 +64,5 @@ func create(cmd *cobra.Command, args []string) {
 		klog.Fatalf("create node group failed: %v", err)
 	}
 
-	fmt.Printf("create node group succeed: nodeGroupID: %v, taskID: %v", resp.NodeGroupID, resp.TaskID)
+	fmt.Printf("create node group succeed: nodeGroupID: %v, taskID: %v\n", resp.NodeGroupID, resp.TaskID)
 }

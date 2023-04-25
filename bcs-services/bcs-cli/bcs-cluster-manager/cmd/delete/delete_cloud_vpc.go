@@ -40,7 +40,7 @@ func newDeleteCloudVPCCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&cloudID, "cloudID", "c", "", `cloud ID (required)`)
 	cmd.MarkFlagRequired("cloudID")
-	cmd.Flags().StringVarP(&vpcID, "vpcID", "v", "", `VPC ID (required)`)
+	cmd.Flags().StringVarP(&vpcID, "vpcID", "", "", `VPC ID (required)`)
 	cmd.MarkFlagRequired("vpcID")
 
 	return cmd
@@ -55,5 +55,5 @@ func deleteCloudVPC(cmd *cobra.Command, args []string) {
 		klog.Fatalf("delete cloud vpc failed: %v", err)
 	}
 
-	fmt.Printf("delete cloud vpc succeed")
+	fmt.Println("delete cloud vpc succeed")
 }

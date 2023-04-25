@@ -55,5 +55,5 @@ func update(cmd *cobra.Command, args []string) {
 		klog.Fatalf("update task failed: %v", err)
 	}
 
-	fmt.Printf("update task succeed")
+	fmt.Println("update task succeed")
 }

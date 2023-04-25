@@ -50,5 +50,5 @@ func cleanNodesV2(cmd *cobra.Command, args []string) {
 		klog.Fatalf("clean nodes v2 to group failed: %v", err)
 	}
 
-	fmt.Printf("clean nodes v2 to group succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("clean nodes v2 to group succeed: taskID: %v\n", resp.TaskID)
 }

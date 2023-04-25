@@ -50,5 +50,5 @@ func removeNodes(cmd *cobra.Command, args []string) {
 		klog.Fatalf("remove nodes to group failed: %v", err)
 	}
 
-	fmt.Printf("remove nodes to group succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("remove nodes to group succeed: taskID: %v\n", resp.TaskID)
 }

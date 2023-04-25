@@ -59,5 +59,5 @@ func create(cmd *cobra.Command, args []string) {
 		klog.Fatalf("create cluster failed: %v", err)
 	}
 
-	fmt.Printf("create cluster succeed: clusterID: %v, taskID: %v", resp.ClusterID, resp.TaskID)
+	fmt.Printf("create cluster succeed: clusterID: %v, taskID: %v\n", resp.ClusterID, resp.TaskID)
 }

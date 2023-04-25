@@ -69,5 +69,5 @@ func create(cmd *cobra.Command, args []string) {
 		klog.Fatalf("create task failed: %v", err)
 	}
 
-	fmt.Printf("create task succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("create task succeed: taskID: %v\n", resp.TaskID)
 }

@@ -44,5 +44,5 @@ func disableAutoScale(cmd *cobra.Command, args []string) {
 		klog.Fatalf("disable group auto scale failed: %v", err)
 	}
 
-	fmt.Printf("disable group auto scale succeed")
+	fmt.Println("disable group auto scale succeed")
 }

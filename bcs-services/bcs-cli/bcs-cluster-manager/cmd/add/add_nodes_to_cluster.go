@@ -59,5 +59,5 @@ func addNodesToCluster(cmd *cobra.Command, args []string) {
 		klog.Fatalf("add nodes to cluster failed: %v", err)
 	}
 
-	fmt.Printf("add nodes to cluster succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("add nodes to cluster succeed: taskID: %v\n", resp.TaskID)
 }

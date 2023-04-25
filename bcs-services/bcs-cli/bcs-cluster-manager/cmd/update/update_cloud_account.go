@@ -62,5 +62,5 @@ func updateCloudAccount(cmd *cobra.Command, args []string) {
 		klog.Fatalf("update cloud account failed: %v", err)
 	}
 
-	fmt.Printf("update cloud account succeed")
+	fmt.Println("update cloud account succeed")
 }

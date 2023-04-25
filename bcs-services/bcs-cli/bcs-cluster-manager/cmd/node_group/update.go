@@ -76,5 +76,5 @@ func update(cmd *cobra.Command, args []string) {
 		klog.Fatalf("update node group failed: %v", err)
 	}
 
-	fmt.Printf("update node group succeed")
+	fmt.Println("update node group succeed")
 }

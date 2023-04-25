@@ -59,5 +59,5 @@ func updateNode(cmd *cobra.Command, args []string) {
 		klog.Fatalf("get node failed: %v", err)
 	}
 
-	fmt.Printf("update node succeed")
+	fmt.Println("update node succeed")
 }

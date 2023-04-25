@@ -64,5 +64,5 @@ func updateCluster(cmd *cobra.Command, args []string) {
 		klog.Fatalf("update cluster failed: %v", err)
 	}
 
-	fmt.Printf("update cluster succeed")
+	fmt.Println("update cluster succeed")
 }

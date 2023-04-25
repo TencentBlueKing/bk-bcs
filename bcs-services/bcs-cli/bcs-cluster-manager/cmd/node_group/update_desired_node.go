@@ -47,5 +47,5 @@ func updateDesiredNode(cmd *cobra.Command, args []string) {
 		klog.Fatalf("update group desired node failed: %v", err)
 	}
 
-	fmt.Printf("update group desired node succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("update group desired node succeed: taskID: %v\n", resp.TaskID)
 }

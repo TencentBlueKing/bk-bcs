@@ -44,5 +44,5 @@ func delete(cmd *cobra.Command, args []string) {
 		klog.Fatalf("delete node group failed: %v", err)
 	}
 
-	fmt.Printf("delete node group succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("delete node group succeed: taskID: %v\n", resp.TaskID)
 }

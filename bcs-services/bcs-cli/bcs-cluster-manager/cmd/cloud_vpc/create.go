@@ -56,5 +56,5 @@ func create(cmd *cobra.Command, args []string) {
 		klog.Fatalf("create cloud vpc failed: %v", err)
 	}
 
-	fmt.Printf("create cloud vpc succeed")
+	fmt.Println("create cloud vpc succeed")
 }

@@ -50,5 +50,5 @@ func moveNodes(cmd *cobra.Command, args []string) {
 		klog.Fatalf("move nodes to group failed: %v", err)
 	}
 
-	fmt.Printf("move nodes to group succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("move nodes to group succeed: taskID: %v\n", resp.TaskID)
 }

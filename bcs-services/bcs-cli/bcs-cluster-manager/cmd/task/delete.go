@@ -44,5 +44,5 @@ func delete(cmd *cobra.Command, args []string) {
 		klog.Fatalf("delete task failed: %v", err)
 	}
 
-	fmt.Printf("delete task succeed")
+	fmt.Println("delete task succeed")
 }
