@@ -2,8 +2,6 @@ module bscp.io
 
 go 1.17
 
-replace github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
-
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230408005843-4c33cd3fa67f
 	github.com/TencentBlueKing/iam-go-sdk v0.0.9
@@ -52,7 +50,6 @@ require (
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/TencentBlueKing/gopkg v1.0.8 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
@@ -117,4 +114,9 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
+)
+
+replace (
+	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.0.8
+	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 )
