@@ -14,12 +14,12 @@ package bkrepo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"helm.sh/helm/v3/pkg/registry"
 )
@@ -58,7 +58,7 @@ func (ch *chartHandler) listOCIChartVersion(ctx context.Context, option repo.Lis
 	}
 
 	var r listPackVersionResp
-	if err = codec.DecJson(resp.Reply, &r); err != nil {
+	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf(
 			"list helm chart version from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
@@ -95,7 +95,7 @@ func (ch *chartHandler) listHelmChartVersion(ctx context.Context, option repo.Li
 	}
 
 	var r listPackVersionResp
-	if err = codec.DecJson(resp.Reply, &r); err != nil {
+	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf(
 			"list helm chart version from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
@@ -230,7 +230,7 @@ func (ch *chartHandler) downloadHelmChartVersionOrigin(ctx context.Context, vers
 		return nil, err
 	}
 	var r downloadChartVersionResp
-	if err := codec.DecJson(resp.Reply, &r); err == nil && r.Code != respCodeOK {
+	if err := json.Unmarshal(resp.Reply, &r); err == nil && r.Code != respCodeOK {
 		blog.Errorf("download helm chart version origin from bk-repo get resp with "+
 			"error code %d, message %s, traceID %s",
 			r.Code, r.Message, r.TraceID)

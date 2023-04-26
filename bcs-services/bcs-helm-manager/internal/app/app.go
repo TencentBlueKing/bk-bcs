@@ -14,6 +14,9 @@
 package app
 
 import (
+	// pprof
+	_ "net/http/pprof"
+
 	"context"
 	"crypto/tls"
 	"fmt"

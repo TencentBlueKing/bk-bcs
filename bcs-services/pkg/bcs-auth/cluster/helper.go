@@ -90,3 +90,24 @@ func (crn ClusterResourceNode) BuildResourceNodes() []iam.ResourceNode {
 		},
 	}
 }
+
+// ClusterScopedResourceNode build cluster scoped resourceNode
+type ClusterScopedResourceNode struct {
+	SystemID  string
+	ProjectID string
+	ClusterID string
+}
+
+// BuildResourceNodes build namespace scoped iam.ResourceNode
+func (csr ClusterScopedResourceNode) BuildResourceNodes() []iam.ResourceNode {
+	return []iam.ResourceNode{
+		iam.ResourceNode{
+			System:    csr.SystemID,
+			RType:     string(SysCluster),
+			RInstance: csr.ClusterID,
+			Rp: ClusterScopedResourcePath{
+				ProjectID: csr.ProjectID,
+			},
+		},
+	}
+}

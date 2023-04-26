@@ -16,6 +16,17 @@ export function useConfig() {
 }
 
 
+export interface IProject {
+  name: string
+  businessID: string
+  businessName: string
+  projectID: string
+  projectCode: string
+  description: string
+  kind: string
+  project_name: string // 兼容旧版数据
+  project_id: string // 兼容旧版数据
+}
 /**
  * 获取项目相关配置
  */
@@ -41,12 +52,37 @@ export function useCluster() {
   const curCluster = computed(() => $store.state.curCluster || {});
   const curClusterId = computed<string>(() => $store.getters.curClusterId);
   const isSharedCluster = computed<boolean>(() => $store.state.curCluster?.is_shared);
-  const clusterList = computed<any[]>(() => ($store.state as any).cluster.clusterList || []);
+  const clusterList = computed<any[]>(() => $store.state.cluster.clusterList || []);
+
+
+  const { projectID } = useProject();
+  const terminalWins = ref<Window | null>(null);
+  const handleGotoConsole = ({ clusterID, clusterName }: {
+    clusterID: string
+    clusterName?: string
+  }) => {
+    const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectID.value}/mgr/#cluster=${clusterID}`;
+    // 缓存当前窗口，再次打开时重新进入
+    if (terminalWins.value) {
+      if (!terminalWins.value.closed) {
+        terminalWins.value.postMessage({
+          clusterId: clusterID,
+          clusterName,
+        }, location.origin);
+        terminalWins.value.focus();
+      } else {
+        terminalWins.value = window.open(url, '');
+      }
+    } else {
+      terminalWins.value = window.open(url, '');
+    }
+  };
 
   return {
     curCluster,
     curClusterId,
     isSharedCluster,
     clusterList,
+    handleGotoConsole,
   };
 }

@@ -5,26 +5,65 @@
     :clearable="false"
     :searchable="searchable"
     :disabled="disabled"
+    :popover-min-width="320"
+    :remote-method="remoteMethod"
+    :search-placeholder="$t('输入集群名或ID搜索')"
     @change="handleClusterChange">
-    <bcs-option
-      v-for="item in clusterData"
-      :key="item.clusterID"
-      :id="item.clusterID"
-      :name="item.clusterName">
-      <div class="flex flex-col justify-center h-[46px]">
-        <span class="leading-none bcs-ellipsis">{{ item.clusterName }}</span>
-        <span class="leading-none mt-[8px]">{{ item.clusterID }}</span>
-      </div>
-    </bcs-option>
+    <!-- 独立集群 -->
+    <bcs-option-group
+      :name="$t('独立集群')"
+      :is-collapse="independentCollapse"
+      class="mt-[8px]">
+      <template #group-name>
+        <CollapseTitle
+          :title="`${$t('独立集群')} (${independentClusterList.length})`"
+          :collapse="independentCollapse"
+          @click="independentCollapse = !independentCollapse" />
+      </template>
+      <bcs-option
+        v-for="item in independentClusterList"
+        :key="item.clusterID"
+        :id="item.clusterID"
+        :name="item.clusterName">
+        <div class="flex flex-col justify-center h-[50px] px-[12px]">
+          <span class="leading-none bcs-ellipsis">{{ item.clusterName }}</span>
+          <span class="leading-none mt-[8px] text-[#979BA5]">{{ item.clusterID }}</span>
+        </div>
+      </bcs-option>
+    </bcs-option-group>
+    <!-- 共享集群 -->
+    <bcs-option-group
+      :name="$t('共享集群')"
+      :is-collapse="sharedCollapse"
+      class="mb-[8px]"
+      v-if="clusterType !== 'independent'">
+      <template #group-name>
+        <CollapseTitle
+          :title="`${$t('共享集群')} (${sharedClusterList.length})`"
+          :collapse="sharedCollapse"
+          @click="sharedCollapse = !sharedCollapse" />
+      </template>
+      <bcs-option
+        v-for="item in sharedClusterList"
+        :key="item.clusterID"
+        :id="item.clusterID"
+        :name="item.clusterName">
+        <div class="flex flex-col justify-center h-[50px] px-[12px]">
+          <span class="leading-none bcs-ellipsis">{{ item.clusterName }}</span>
+          <span class="leading-none mt-[8px] text-[#979BA5]">{{ item.clusterID }}</span>
+        </div>
+      </bcs-option>
+    </bcs-option-group>
   </bcs-select>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref, watch, toRefs, onBeforeMount } from '@vue/composition-api';
-import $store from '@/store';
-import { useCluster } from '@/composables/use-app';
+import { defineComponent, watch, toRefs, PropType } from '@vue/composition-api';
+import CollapseTitle from './collapse-title.vue';
+import useClusterSelector, { ClusterType } from './use-cluster-selector';
 
 export default defineComponent({
   name: 'ClusterSelect',
+  components: { CollapseTitle },
   model: {
     prop: 'value',
     event: 'change',
@@ -36,52 +75,47 @@ export default defineComponent({
     },
     searchable: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     disabled: {
       type: Boolean,
       default: false,
     },
     clusterType: {
-      type: String,
-      default: 'normal',
+      type: String as PropType<ClusterType>,
+      default: 'independent', // 默认只展示独立集群
     },
   },
   emits: ['change'],
   setup(props, ctx) {
     const { value, clusterType } = toRefs(props);
 
+    const {
+      localValue,
+      keyword,
+      sharedClusterList,
+      independentClusterList,
+      sharedCollapse,
+      independentCollapse,
+      handleClusterChange,
+    } = useClusterSelector(ctx.emit, value.value, clusterType.value);
+
     watch(value, (v) => {
       localValue.value = v;
     });
 
-    const { clusterList } = useCluster();
-    const clusterData = computed(() => {
-      if (clusterType.value === 'normal') {
-        return clusterList.value.filter(item => !item.is_shared);
-      }
-      return clusterList.value;
-    });
-    const localValue = ref<string>(props.value || $store.getters.curClusterId);
-
-    const handleClusterChange = (clusterId) => {
-      localValue.value = clusterId;
-      $store.commit('updateCurCluster', clusterData.value.find(item => item.clusterID === clusterId));
-      ctx.emit('change', clusterId);
+    // 远程搜索
+    const remoteMethod = (searhcKey) => {
+      keyword.value = searhcKey;
     };
-
-    onBeforeMount(() => {
-      const data = clusterData.value.find(item => item.clusterID === localValue.value);
-      if (!data) {
-        handleClusterChange(clusterData.value[0]?.clusterID);
-      } else if (localValue.value !== props.value) {
-        handleClusterChange(localValue.value);
-      }
-    });
 
     return {
       localValue,
-      clusterData,
+      sharedClusterList,
+      independentClusterList,
+      sharedCollapse,
+      independentCollapse,
+      remoteMethod,
       handleClusterChange,
     };
   },
@@ -89,10 +123,19 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .cluster-select {
-    min-width: 254px;
+    width: 254px;
     max-width: 600px;
     &:not(.is-disabled) {
       background-color: #fff;
     }
+}
+/deep/ .bk-option-group-name {
+  border-bottom: 0 !important;
+}
+.bk-options .bk-option:first-child {
+  margin-top: 0;
+}
+.bk-options .bk-option:last-child {
+  margin-bottom: 0;
 }
 </style>

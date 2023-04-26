@@ -13,6 +13,7 @@
 package printer
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -71,8 +72,7 @@ func PrintRepositoryInJSON(repository []*helmmanager.Repository) {
 	}
 
 	for _, repo := range repository {
-		var data []byte
-		_ = encodeJsonWithIndent(4, repo, &data)
+		data, _ := json.Marshal(repo)
 
 		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
 	}

@@ -13,6 +13,7 @@
 package printer
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -80,8 +81,7 @@ func PrintReleaseInJson(release *helmmanager.ReleaseListData) {
 	}
 
 	for _, ct := range release.Data {
-		var data []byte
-		_ = encodeJsonWithIndent(4, ct, &data)
+		data, _ := json.Marshal(ct)
 
 		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
 	}

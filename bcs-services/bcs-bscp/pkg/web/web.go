@@ -125,7 +125,7 @@ func (w *WebServer) newRouter() http.Handler {
 	r.Get("/healthz", HealthzHandler)
 	// r.Mount("/", handler.RegisterCommonHandler())
 
-	if config.G.Web.RoutePrefix != "/" {
+	if config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != "" {
 		r.With(w.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
 			httpSwagger.URL(config.G.Web.RoutePrefix+"/swagger/doc.json"),
 		))

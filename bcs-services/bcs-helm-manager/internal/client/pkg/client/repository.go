@@ -14,9 +14,8 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -51,8 +50,7 @@ func (rp *repository) Create(ctx context.Context, req *helmmanager.CreateReposit
 		return fmt.Errorf("repository projectCode can not be empty")
 	}
 
-	var data []byte
-	_ = codec.EncJson(req, &data)
+	data, _ := json.Marshal(req)
 
 	resp, err := rp.post(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectCode), nil, data)
 	if err != nil {
@@ -86,8 +84,7 @@ func (rp *repository) Update(ctx context.Context, req *helmmanager.UpdateReposit
 		return fmt.Errorf("repository projectCode can not be empty")
 	}
 
-	var data []byte
-	_ = codec.EncJson(req, &data)
+	data, _ := json.Marshal(req)
 
 	resp, err := rp.put(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectCode)+"/"+name, nil, data)
 	if err != nil {
@@ -121,8 +118,7 @@ func (rp *repository) Delete(ctx context.Context, req *helmmanager.DeleteReposit
 		return fmt.Errorf("repository projectCode can not be empty")
 	}
 
-	var data []byte
-	_ = codec.EncJson(req, &data)
+	data, _ := json.Marshal(req)
 
 	resp, err := rp.delete(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectCode, name), nil, data)
 	if err != nil {

@@ -15,7 +15,7 @@
           </bk-button>
         </div>
         <div class="right">
-          <ClusterSearch
+          <ClusterSelectComb
             :placeholder="$t('输入关键字，按Enter搜索')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
@@ -611,10 +611,10 @@ import mixin from './mixin';
 import { catchErrorHandler, formatDate } from '@/common/util';
 import useFormLabel from '@/composables/use-form-label';
 import Header from '@/components/layout/Header.vue';
-import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 
 export default {
-  components: { Header, ClusterSearch },
+  components: { Header, ClusterSelectComb },
   mixins: [mixin],
   data() {
     return {

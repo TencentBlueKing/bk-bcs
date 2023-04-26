@@ -14,11 +14,11 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -174,9 +174,7 @@ func (rl *release) Install(ctx context.Context, req *helmmanager.InstallReleaseV
 		return fmt.Errorf("install release name can not be empty")
 	}
 
-	var data []byte
-	_ = codec.EncJson(req, &data)
-
+	data, _ := json.Marshal(req)
 	resp, err := rl.post(
 		ctx,
 		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Install, projectCode, clusterID, namespace, name),
@@ -221,8 +219,7 @@ func (rl *release) Uninstall(ctx context.Context, req *helmmanager.UninstallRele
 		return fmt.Errorf("uninstall release name can not be empty")
 	}
 
-	var data []byte
-	_ = codec.EncJson(req, &data)
+	data, _ := json.Marshal(req)
 
 	resp, err := rl.post(
 		ctx,
@@ -270,8 +267,7 @@ func (rl *release) Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseV
 		return fmt.Errorf("upgrade release name can not be empty")
 	}
 
-	var data []byte
-	_ = codec.EncJson(req, &data)
+	data, _ := json.Marshal(req)
 
 	resp, err := rl.post(
 		ctx,
@@ -318,8 +314,7 @@ func (rl *release) Rollback(ctx context.Context, req *helmmanager.RollbackReleas
 		return fmt.Errorf("rollback release name can not be empty")
 	}
 
-	var data []byte
-	_ = codec.EncJson(req, &data)
+	data, _ := json.Marshal(req)
 
 	resp, err := rl.post(
 		ctx,

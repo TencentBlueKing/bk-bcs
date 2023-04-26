@@ -11,7 +11,7 @@
           </bk-button>
         </div>
         <div class="right">
-          <ClusterSearch
+          <ClusterSelectComb
             :placeholder="$t('输入集群名称搜索')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
@@ -191,7 +191,7 @@ import yamljs from 'js-yaml';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import nodeSelector from '@/components/node-selector';
 import Header from '@/components/layout/Header.vue';
-import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import { catchErrorHandler, formatDate } from '@/common/util';
 
 export default {
@@ -199,7 +199,7 @@ export default {
     CodeEditor,
     nodeSelector,
     Header,
-    ClusterSearch,
+    ClusterSelectComb,
   },
   data() {
     return {

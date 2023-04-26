@@ -32,6 +32,7 @@ module.exports = {
       devServer: {
         hot: true,
         host: process.env.BK_LOCAL_HOST,
+        https: true,
         client: {
           webSocketURL: {
             port: process.env.BK_PORT || 8004

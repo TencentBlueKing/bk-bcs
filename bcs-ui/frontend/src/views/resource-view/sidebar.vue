@@ -1,6 +1,5 @@
 <template>
   <div class="cursor-default">
-    <!-- 集群切换 -->
     <div class="cluster-view">
       <span :class="['cluster-view-type', { 'shared': isSharedCluster }]">
         {{ isSharedCluster ? $t('共享') : $t('专用') }}
@@ -9,32 +8,65 @@
         <span class="mb-[4px] bcs-ellipsis">{{ curCluster.clusterName }}</span>
         <span class="text-[#979ba5] bcs-ellipsis">{{ curCluster.clusterID }}</span>
       </span>
-      <span class="ml-[5px] cursor-pointer">
-        <i class="biz-conf-btn bcs-icon bcs-icon-qiehuan f12" @click="showClusterSelector = true"></i>
-      </span>
-      <ClusterSelector v-model="showClusterSelector" />
+      <!-- 集群切换 -->
+      <PopoverSelector trigger="click" placement="right-start" offset="0, 12" ref="popoverSelectRef">
+        <span
+          class="ml-[5px] cursor-pointer w-[24px] h-[24px] flex items-center justify-center">
+          <i class="biz-conf-btn bcs-icon bcs-icon-qiehuan f12"></i>
+        </span>
+        <template #content>
+          <!-- 监听change事件会多次触发，这里监听click事件 -->
+          <ClusterSelectPopover cluster-type="all" @click="handleClusterClick" />
+        </template>
+      </PopoverSelector>
     </div>
     <!-- 资源视图菜单 -->
     <div class="side-menu-wrapper"><SideMenu /></div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from '@vue/composition-api';
+import { defineComponent, ref, computed, toRef, reactive } from '@vue/composition-api';
 import SideMenu from '@/views/app/side-menu.vue';
-import ClusterSelector from '@/components/cluster-selector/index.vue';
+import ClusterSelectPopover from '@/components/cluster-selector/cluster-select-popover.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
 import { useCluster } from '@/composables/use-app';
+import useMenu from '../app/use-menu';
+import $router from '@/router';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'DashboardSideBar',
-  components: { SideMenu, ClusterSelector },
+  components: { SideMenu, PopoverSelector, ClusterSelectPopover },
   setup() {
+    const popoverSelectRef = ref<any>(null);
     const { curCluster, isSharedCluster } = useCluster();
-    const showClusterSelector = ref(false);
+    const { disabledMenuIDs } = useMenu();
+    const curSideMenu = computed(() => $store.state.curSideMenu);
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
+
+    const handleClusterClick = (clusterID: string) => {
+      if (!clusterID) return;
+
+      let routeName = '';
+      if (disabledMenuIDs.value.includes(curSideMenu.value?.id)) {
+        routeName = 'dashboardNamespace';
+      } else {
+        routeName = curSideMenu.value?.route || $route.value.name;
+      }
+      $router.replace({
+        name: routeName,
+        params: {
+          clusterId: clusterID,
+        },
+      });
+      popoverSelectRef.value?.hide();
+    };
 
     return {
+      popoverSelectRef,
       curCluster,
       isSharedCluster,
-      showClusterSelector,
+      handleClusterClick,
     };
   },
 });

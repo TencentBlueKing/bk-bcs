@@ -13,37 +13,6 @@
 
 package main
 
-import (
-	"os"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/version"
-)
-
-// isPrintVersion 是否是--version, -v命令
-func isPrintVersion() bool {
-	if len(os.Args) < 2 {
-		return false
-	}
-	arg := os.Args[1]
-	for _, name := range []string{"version", "v"} {
-		if arg == "-"+name || arg == "--"+name {
-			return true
-		}
-	}
-	return false
-}
-
 func main() {
-	// metrics 配置
-	metrics := prometheus.NewRegistry()
-	metrics.MustRegister(version.NewCollector("bscp_ui"))
-
-	prometheus.DefaultRegisterer = metrics
-
-	if isPrintVersion() {
-		os.Exit(0)
-	}
-
-	Execute()
+	rootCmd.Execute()
 }
