@@ -13,6 +13,7 @@
 package printer
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -85,7 +86,6 @@ func PrintChartDetailInJson(chart *helmmanager.ChartDetail) {
 		return
 	}
 
-	var data []byte
-	_ = encodeJsonWithIndent(4, chart, &data)
+	data, _ := json.Marshal(chart)
 	fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
 }

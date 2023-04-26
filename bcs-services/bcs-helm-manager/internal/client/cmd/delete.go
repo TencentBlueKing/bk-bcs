@@ -35,6 +35,20 @@ var (
 		Long:    "delete repository",
 		Run:     DeleteRepository,
 	}
+	deleteChartCMD = &cobra.Command{
+		Use:     "chart",
+		Aliases: []string{"chart", "ch"},
+		Short:   "delete chart",
+		Long:    "delete chart",
+		Run:     DeleteChart,
+	}
+	deleteChartVersionCMD = &cobra.Command{
+		Use:     "chart version",
+		Aliases: []string{"chart-version", "chv"},
+		Short:   "delete chart version",
+		Long:    "delete chart version",
+		Run:     DeleteChartVersion,
+	}
 )
 
 // DeleteRepository provide the actions to do deleteRepositoryCMD
@@ -60,8 +74,60 @@ func DeleteRepository(cmd *cobra.Command, args []string) {
 
 func init() {
 	deleteCMD.AddCommand(deleteRepositoryCMD)
+	deleteCMD.AddCommand(deleteChartCMD)
+	deleteCMD.AddCommand(deleteChartVersionCMD)
 	deleteCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project id for operation")
+	deleteCMD.PersistentFlags().StringVarP(
+		&flagRepository, "repository", "r", "", "repository name for operation")
 	deleteCMD.PersistentFlags().StringVarP(&jsonData, "data", "d", "", "resource json data")
 	deleteCMD.PersistentFlags().StringVarP(&jsonFile, "file", "f", "", "resource json file")
+}
+
+// DeleteChart provide the actions to do deleteChartCMD
+func DeleteChart(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		fmt.Printf("delete chart need specific chart name\n")
+		os.Exit(1)
+	}
+
+	req := &helmmanager.DeleteChartReq{
+		ProjectCode: &flagProject,
+		RepoName:    &flagRepository,
+		Name:        common.GetStringP(args[0]),
+	}
+
+	c := newClientWithConfiguration()
+	if err := c.Chart().DeleteChart(cmd.Context(), req); err != nil {
+		fmt.Printf("delete chart failed, %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	fmt.Printf("success to delete chart %s under project %s repository %s\n", req.GetName(), req.GetProjectCode(), req.GetRepoName())
+}
+
+// DeleteChartVersion provide the actions to do deleteChartVersionCMD
+func DeleteChartVersion(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		fmt.Printf("delete chart version need specific chart name\n")
+		os.Exit(1)
+	}
+	if len(args) == 1 {
+		fmt.Printf("delete chart version need specific chart version\n")
+		os.Exit(1)
+	}
+	req := &helmmanager.DeleteChartVersionReq{
+		ProjectCode: &flagProject,
+		RepoName:    &flagRepository,
+		Name:        common.GetStringP(args[0]),
+		Version:     common.GetStringP(args[1]),
+	}
+
+	c := newClientWithConfiguration()
+	if err := c.Chart().DeleteChartVersion(cmd.Context(), req); err != nil {
+		fmt.Printf("delete chart version failed, %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	fmt.Printf("success to delete chart version %s under project %s repository %s chart %s \n", req.GetVersion(), req.GetProjectCode(), req.GetRepoName(), req.GetName())
 }

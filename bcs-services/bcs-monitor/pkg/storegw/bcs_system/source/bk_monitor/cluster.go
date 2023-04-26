@@ -14,13 +14,14 @@ package bkmonitor
 
 import (
 	"context"
-	"github.com/prometheus/common/model"
 	"sync"
 	"time"
 
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/prompb"
+
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
-	"github.com/prometheus/prometheus/prompb"
 )
 
 const (
@@ -47,6 +48,9 @@ func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterI
 	nodeSlice, err := base.GetNodeMatchWithScale(ctx, clusterId, scale)
 	if err != nil {
 		return nil, err
+	}
+	if len(nodeSlice) == 0 {
+		return nil, nil
 	}
 	matrixs := make([]model.Matrix, 0)
 	var mtx sync.Mutex

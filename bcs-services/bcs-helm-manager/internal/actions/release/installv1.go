@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -97,6 +98,11 @@ func (i *InstallReleaseV1Action) install() error {
 		return fmt.Errorf("db error, %s", err.Error())
 	}
 
+	cls, err := clustermanager.GetCluster(i.req.GetClusterID())
+	if err != nil {
+		return err
+	}
+
 	// dispatch release
 	options := &actions.ReleaseInstallActionOption{
 		Model:          i.model,
@@ -113,6 +119,8 @@ func (i *InstallReleaseV1Action) install() error {
 		Values:         i.req.GetValues(),
 		Args:           i.req.GetArgs(),
 		Username:       auth.GetUserFromCtx(i.ctx),
+		IsUser:         auth.IsUserFromCtx(i.ctx),
+		IsShardCluster: cls.IsShared,
 	}
 	action := actions.NewReleaseInstallAction(options)
 	_, err = operation.GlobalOperator.Dispatch(action, releaseDefaultTimeout)

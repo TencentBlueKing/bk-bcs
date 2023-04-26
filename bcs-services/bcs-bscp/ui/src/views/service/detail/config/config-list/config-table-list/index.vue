@@ -4,8 +4,9 @@
   import { useServiceStore } from '../../../../../../store/service'
   import { useConfigStore } from '../../../../../../store/config'
   import { InfoBox } from "bkui-vue/lib";
+  import { InfoLine, Search } from 'bkui-vue/lib/icon';
   import { IConfigItem, IConfigListQueryParams } from '../../../../../../../types/config'
-  import { CONFIG_STATUS_MAP } from '../../../../../../constants/index'
+  import { CONFIG_STATUS_MAP, VERSION_STATUS_MAP } from '../../../../../../constants/index'
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../utils/config'
   import EditConfig from './edit-config.vue'
@@ -60,7 +61,7 @@
       const res = await getConfigList(props.appId, params)
       // @ts-ignore
       configList.value = res.details
-      pagination.value.count = 4
+      pagination.value.count = res.count
     } catch (e) {
       console.error(e)
     } finally {
@@ -116,16 +117,25 @@
   <section class="config-list-wrapper">
     <section class="config-content-header">
       <section class="summary-wrapper">
-        <div class="status-tag">编辑中</div>
-        <div class="version-name">未命名版本</div>
+        <div :class="['status-tag', versionData.status.publish_status]">{{ VERSION_STATUS_MAP[versionData.status.publish_status as keyof typeof VERSION_STATUS_MAP] || '编辑中' }}</div>
+        <div class="version-name">{{ versionData.spec.name }}</div>
+        <InfoLine
+          v-if="versionData.spec.memo"
+          v-bk-tooltips="{
+            content: versionData.spec.memo,
+            placement: 'right',
+            theme: 'light'
+          }"
+          class="version-desc" />
       </section>
-      <section class="actions-wrapper">
+      <section class="version-operations">
         <ReleaseVersion
-          v-if="versionData.id === 0"
+          v-if="versionData.status.publish_status === 'editing'"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           @confirm="handleUpdateStatus" />
         <PublishVersion
+          v-if="versionData.status.publish_status === 'not_released'"
           style="margin-left: 8px"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
@@ -135,6 +145,7 @@
           :config-list="configList"
           @confirm="handleUpdateStatus" />
         <ModifyGroup
+          v-if="versionData.status.publish_status === 'partial_released'"
           style="margin-left: 8px"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
@@ -142,7 +153,19 @@
           @confirm="handleUpdateStatus" />
       </section>
     </section>
-    <CreateConfig v-if="versionData.id === 0" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
+    <div class="operate-area">
+      <CreateConfig v-if="versionData.status.publish_status === 'editing'" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
+      <div class="groups-info" v-if="versionData.status.released_groups.length > 0">
+        <div v-for="group in versionData.status.released_groups" class="group-item" :key="group.id">
+          {{ group.name }}
+        </div>
+      </div>
+      <bk-input class="search-config-input" placeholder="配置项名称/创建人/修改人">
+        <template #suffix>
+            <Search class="search-input-icon" />
+        </template>
+      </bk-input>
+    </div>
     <section class="config-list-table">
       <bk-loading :loading="loading">
         <bk-table v-if="!loading" :border="['outer']" :data="configList">
@@ -166,7 +189,7 @@
             <template #default="{ row }">
               <div class="operate-action-btns">
                 <bk-button text theme="primary" @click="handleEdit(row)">{{ versionData.id === 0 ? '编辑' : '查看' }}</bk-button>
-                <bk-button text theme="primary" @click="handleDiff(row)">对比</bk-button>
+                <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleDiff(row)">对比</bk-button>
                 <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">删除</bk-button>
               </div>
             </template>
@@ -204,10 +227,39 @@
     align-items: center;
     justify-content: space-between;
     height: 64px;
-    border-bottom: 1px solid #dcdee5;
-    .actions-wrapper {
+    .version-operations {
       display: flex;
       align-items: center;
+    }
+  }
+  .operate-area {
+    display: flex;
+    align-items: center;
+    padding: 16px 0;
+    border-top: 1px solid #dcdee5;
+    .groups-info {
+      display: flex;
+      align-items: center;
+      .group-item {
+        padding: 0 8px;
+        line-height: 22px;
+        color: #63656e;
+        font-size: 12px;
+        background: #f0f1f5;
+        border-radius: 2px;
+        &:not(:last-of-type) {
+          margin-right: 8px;
+        }
+      }
+    }
+    .search-config-input {
+      margin-left: auto;
+      width: 280px;
+    }
+    .search-input-icon {
+      padding-right: 10px;
+      color: #979ba5;
+      background: #ffffff;
     }
   }
   .summary-wrapper {
@@ -223,11 +275,28 @@
       color: #63656e;
       border: 1px solid rgba(151,155,165,0.30);
       border-radius: 11px;
+      &.not_released {
+      color: #fe9000;
+      background: #ffe8c3;
+      border-color: rgba(254, 156, 0, 0.3);
+      }
+    &.full_released,
+    &.partial_released {
+      color: #14a568;
+      background: #e4faf0;
+      border-color: rgba(20, 165, 104, 0.3);
+    }
     }
     .version-name {
       color: #63656e;
       font-size: 14px;
       font-weight: bold;
+    }
+    .version-desc {
+      margin-left: 8px;
+      font-size: 15px;
+      color: #979ba5;
+      cursor: pointer;
     }
   }
   .config-list-table {

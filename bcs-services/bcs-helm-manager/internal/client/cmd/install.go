@@ -21,94 +21,18 @@ import (
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 var (
 	flagValueFile []string
 	flagArgs      string
-	sysVarFile    string
-
-	installCMD = &cobra.Command{
+	installCMD    = &cobra.Command{
 		Use:   "install",
 		Short: "install",
 		Long:  "install chart release",
 		Run:   Install,
 	}
 )
-
-// Install provide the actions to do installCMD
-func Install(cmd *cobra.Command, args []string) {
-	req := &helmmanager.InstallReleaseReq{}
-
-	if len(args) < 3 {
-		fmt.Printf("install args need at least 3, install [name] [chart] [version]\n")
-		os.Exit(1)
-	}
-	values, err := getValues()
-	if err != nil {
-		fmt.Printf("read values file failed, %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	req.Name = common.GetStringP(args[0])
-	req.Namespace = &flagNamespace
-	req.ClusterID = &flagCluster
-	req.ProjectID = &flagProject
-	req.Repository = &flagRepository
-	req.Chart = common.GetStringP(args[1])
-	req.Version = common.GetStringP(args[2])
-	req.Values = values
-	req.BcsSysVar = getSysVar()
-	if flagArgs != "" {
-		req.Args = strings.Split(flagArgs, " ")
-	}
-
-	c := newClientWithConfiguration()
-	data, err := c.Release().Install(cmd.Context(), req)
-	if err != nil {
-		fmt.Printf("install release failed, %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	fmt.Printf("success to install release %s in version %s namespace %s cluster %s "+
-		"with appVersion %s revision %d\n",
-		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID(),
-		data.GetAppVersion(), data.GetRevision())
-}
-
-func getValues() ([]string, error) {
-	values := make([]string, 0, 10)
-	for _, vf := range flagValueFile {
-		content, err := os.ReadFile(vf)
-		if err != nil {
-			return nil, err
-		}
-		values = append(values, string(content))
-	}
-
-	return values, nil
-}
-
-func getSysVar() map[string]string {
-	if sysVarFile == "" {
-		return nil
-	}
-
-	f, err := os.Open(sysVarFile)
-	if err != nil {
-		fmt.Printf("open sys var file from %s failed, %s\n", sysVarFile, err.Error())
-		os.Exit(1)
-	}
-
-	var r map[string]string
-	if err = yaml.NewYAMLOrJSONDecoder(f, 20).Decode(&r); err != nil {
-		fmt.Printf("load sys var file from %s failed, %s\n", sysVarFile, err.Error())
-		os.Exit(1)
-	}
-
-	return r
-}
 
 func init() {
 	installCMD.PersistentFlags().StringVarP(
@@ -123,6 +47,56 @@ func init() {
 		&flagValueFile, "file", "f", nil, "value file for installation")
 	installCMD.PersistentFlags().StringVarP(
 		&flagArgs, "args", "", "", "args to append to helm command")
-	installCMD.PersistentFlags().StringVarP(
-		&sysVarFile, "sysvar", "", "", "sys var file")
+}
+
+// Install provide the actions to do installCMD
+func Install(cmd *cobra.Command, args []string) {
+	req := &helmmanager.InstallReleaseV1Req{}
+
+	if len(args) < 3 {
+		fmt.Printf("install args need at least 3, install [name] [chart] [version]\n")
+		os.Exit(1)
+	}
+	values, err := getValues()
+	if err != nil {
+		fmt.Printf("read values file failed, %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	req.Name = common.GetStringP(args[0])
+	req.Namespace = &flagNamespace
+	req.ClusterID = &flagCluster
+	req.ProjectCode = &flagProject
+	req.Repository = &flagRepository
+	req.Chart = common.GetStringP(args[1])
+	req.Version = common.GetStringP(args[2])
+	req.Values = values
+	req.ValueFile = &flagValueFile[0]
+	if flagArgs != "" {
+		req.Args = strings.Split(flagArgs, " ")
+	}
+
+	c := newClientWithConfiguration()
+	err = c.Release().Install(cmd.Context(), req)
+	if err != nil {
+		fmt.Printf("install release failed, %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	fmt.Printf("success to install release %s in version %s namespace %s cluster %s "+
+		"with appVersion %s revision %d\n",
+		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID())
+}
+
+func getValues() ([]string, error) {
+	values := make([]string, 0, 10)
+	for _, vf := range flagValueFile {
+		content, err := os.ReadFile(vf)
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, string(content))
+	}
+
+	return values, nil
 }

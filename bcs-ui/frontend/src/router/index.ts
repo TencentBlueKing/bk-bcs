@@ -55,6 +55,18 @@ const router = new VueRouter({
         },
       },
     },
+    // 403和user-token路由优先级比 ${SITE_URL}/:projectCode 高
+    {
+      path: `${SITE_URL}/403`,
+      name: '403',
+      props: route => ({ ...route.params, ...route.query }),
+      component: Forbidden,
+    },
+    {
+      path: `${SITE_URL}/user-token`,
+      name: 'token',
+      component: Token,
+    },
     {
       path: `${SITE_URL}/:projectCode`,
       redirect: {
@@ -88,17 +100,6 @@ const router = new VueRouter({
       children: [
         ...ResourceView,
       ],
-    },
-    {
-      path: `${SITE_URL}/403`,
-      name: '403',
-      props: route => ({ ...route.params, ...route.query }),
-      component: Forbidden,
-    },
-    {
-      path: `${SITE_URL}/user-token`,
-      name: 'token',
-      component: Token,
     },
     // 404
     {

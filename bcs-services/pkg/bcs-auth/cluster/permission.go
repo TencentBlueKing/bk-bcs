@@ -335,3 +335,283 @@ func (bcp *BCSClusterPerm) GetMultiClusterMultiActionPermission(user, projectID 
 		SystemID: iam.SystemIDBKBCS,
 		UserName: user}, resourceNodes)
 }
+
+// CanCreateClusterScopedResource check user createClusterScopedResource perm
+func (bcp *BCSClusterPerm) CanCreateClusterScopedResource(user, projectID, clusterID string) (bool,
+	string, []utils.ResourceAction, error) {
+	// related actions
+	resources := []utils.ResourceAction{
+		{Resource: projectID, Action: project.ProjectView.String()},
+		{Resource: clusterID, Action: ClusterView.String()},
+		{Resource: clusterID, Action: ClusterScopedCreate.String()},
+	}
+
+	// build request iam.request resourceNodes
+	req := iam.PermissionRequest{
+		SystemID: iam.SystemIDBKBCS,
+		UserName: user,
+	}
+	relatedActionIDs := []string{project.ProjectView.String(), ClusterView.String(), ClusterScopedCreate.String()}
+	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
+		BuildResourceNodes()
+	clusterNode := ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
+		BuildResourceNodes()
+	clusterScopedNode := ClusterScopedResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID,
+		ClusterID: clusterID}.
+		BuildResourceNodes()
+
+	// get namespace permission by iam
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
+		projectNode, clusterNode, clusterScopedNode})
+	if err != nil {
+		return false, "", nil, err
+	}
+	blog.V(4).Infof("BCSClusterPerm CanCreateClusterScopedResource user[%s] %+v", user, perms)
+
+	// check namespace resource perms
+	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
+		Module:    BCSClusterModule,
+		Operation: CanCreateClusterScopedResourceOperation,
+		User:      user,
+	}, resources, perms)
+	if err != nil {
+		return false, "", nil, err
+	}
+
+	if allow {
+		return allow, "", nil, nil
+	}
+
+	// generate apply url if namespace perm notAllow
+	projectApp := project.BuildProjectApplicationInstance(project.ProjectApplicationAction{
+		ActionID: project.ProjectView.String(),
+		Data:     []string{projectID},
+	})
+	clusterApp := BuildClusterApplicationInstance(ClusterApplicationAction{
+		ActionID: ClusterView.String(),
+		Data: []ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
+	})
+	csApp := BuildClusterScopedApplicationInstance(ClusterScopedApplicationAction{
+		ActionID: ClusterScopedCreate.String(),
+		Data: []ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
+	})
+
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
+		clusterApp, projectApp, csApp,
+	})
+	return allow, url, resources, nil
+}
+
+// CanViewClusterScopedResource check user viewClusterScopedResource perm
+func (bcp *BCSClusterPerm) CanViewClusterScopedResource(user, projectID, clusterID string) (bool,
+	string, []utils.ResourceAction, error) {
+	// related actions
+	resources := []utils.ResourceAction{
+		{Resource: projectID, Action: project.ProjectView.String()},
+		{Resource: clusterID, Action: ClusterView.String()},
+		{Resource: clusterID, Action: ClusterScopedView.String()},
+	}
+
+	// build request iam.request resourceNodes
+	req := iam.PermissionRequest{
+		SystemID: iam.SystemIDBKBCS,
+		UserName: user,
+	}
+	relatedActionIDs := []string{project.ProjectView.String(), ClusterView.String(), ClusterScopedView.String()}
+	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
+		BuildResourceNodes()
+	clusterNode := ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
+		BuildResourceNodes()
+	clusterScopedNode := ClusterScopedResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID,
+		ClusterID: clusterID}.
+		BuildResourceNodes()
+
+	// get namespace permission by iam
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
+		projectNode, clusterNode, clusterScopedNode})
+	if err != nil {
+		return false, "", nil, err
+	}
+	blog.V(4).Infof("BCSClusterPerm CanViewClusterScopedResource user[%s] %+v", user, perms)
+
+	// check namespace resource perms
+	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
+		Module:    BCSClusterModule,
+		Operation: CanViewClusterScopedResourceOperation,
+		User:      user,
+	}, resources, perms)
+	if err != nil {
+		return false, "", nil, err
+	}
+
+	if allow {
+		return allow, "", nil, nil
+	}
+
+	// generate apply url if namespace perm notAllow
+	projectApp := project.BuildProjectApplicationInstance(project.ProjectApplicationAction{
+		ActionID: project.ProjectView.String(),
+		Data:     []string{projectID},
+	})
+	clusterApp := BuildClusterApplicationInstance(ClusterApplicationAction{
+		ActionID: ClusterView.String(),
+		Data: []ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
+	})
+	csApp := BuildClusterScopedApplicationInstance(ClusterScopedApplicationAction{
+		ActionID: ClusterScopedView.String(),
+		Data: []ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
+	})
+
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
+		clusterApp, projectApp, csApp,
+	})
+	return allow, url, resources, nil
+}
+
+// CanUpdateClusterScopedResource check user updateClusterScopedResource perm
+func (bcp *BCSClusterPerm) CanUpdateClusterScopedResource(user, projectID, clusterID string) (bool,
+	string, []utils.ResourceAction, error) {
+	// related actions
+	resources := []utils.ResourceAction{
+		{Resource: projectID, Action: project.ProjectView.String()},
+		{Resource: clusterID, Action: ClusterView.String()},
+		{Resource: clusterID, Action: ClusterScopedUpdate.String()},
+	}
+
+	// build request iam.request resourceNodes
+	req := iam.PermissionRequest{
+		SystemID: iam.SystemIDBKBCS,
+		UserName: user,
+	}
+	relatedActionIDs := []string{project.ProjectView.String(), ClusterView.String(), ClusterScopedUpdate.String()}
+	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
+		BuildResourceNodes()
+	clusterNode := ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
+		BuildResourceNodes()
+	clusterScopedNode := ClusterScopedResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID,
+		ClusterID: clusterID}.
+		BuildResourceNodes()
+
+	// get namespace permission by iam
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
+		projectNode, clusterNode, clusterScopedNode})
+	if err != nil {
+		return false, "", nil, err
+	}
+	blog.V(4).Infof("BCSClusterPerm CanUpdateClusterScopedResource user[%s] %+v", user, perms)
+
+	// check namespace resource perms
+	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
+		Module:    BCSClusterModule,
+		Operation: CanUpdateClusterScopedResourceOperation,
+		User:      user,
+	}, resources, perms)
+	if err != nil {
+		return false, "", nil, err
+	}
+
+	if allow {
+		return allow, "", nil, nil
+	}
+
+	// generate apply url if namespace perm notAllow
+	projectApp := project.BuildProjectApplicationInstance(project.ProjectApplicationAction{
+		ActionID: project.ProjectView.String(),
+		Data:     []string{projectID},
+	})
+	clusterApp := BuildClusterApplicationInstance(ClusterApplicationAction{
+		ActionID: ClusterView.String(),
+		Data: []ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
+	})
+	csApp := BuildClusterScopedApplicationInstance(ClusterScopedApplicationAction{
+		ActionID: ClusterScopedUpdate.String(),
+		Data: []ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
+	})
+
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
+		clusterApp, projectApp, csApp,
+	})
+	return allow, url, resources, nil
+}
+
+// CanDeleteClusterScopedResource check user deleteClusterScopedResource perm
+func (bcp *BCSClusterPerm) CanDeleteClusterScopedResource(user, projectID, clusterID string) (bool,
+	string, []utils.ResourceAction, error) {
+	// related actions
+	resources := []utils.ResourceAction{
+		{Resource: projectID, Action: project.ProjectView.String()},
+		{Resource: clusterID, Action: ClusterView.String()},
+		{Resource: clusterID, Action: ClusterScopedDelete.String()},
+	}
+
+	// build request iam.request resourceNodes
+	req := iam.PermissionRequest{
+		SystemID: iam.SystemIDBKBCS,
+		UserName: user,
+	}
+	relatedActionIDs := []string{project.ProjectView.String(), ClusterView.String(), ClusterScopedDelete.String()}
+	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
+		BuildResourceNodes()
+	clusterNode := ClusterResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID, ClusterID: clusterID}.
+		BuildResourceNodes()
+	clusterScopedNode := ClusterScopedResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID,
+		ClusterID: clusterID}.
+		BuildResourceNodes()
+
+	// get namespace permission by iam
+	perms, err := bcp.iamClient.BatchResourceMultiActionsAllowed(relatedActionIDs, req, [][]iam.ResourceNode{
+		projectNode, clusterNode, clusterScopedNode})
+	if err != nil {
+		return false, "", nil, err
+	}
+	blog.V(4).Infof("BCSClusterPerm CanDeleteClusterScopedResource user[%s] %+v", user, perms)
+
+	// check namespace resource perms
+	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
+		Module:    BCSClusterModule,
+		Operation: CanDeleteClusterScopedResourceOperation,
+		User:      user,
+	}, resources, perms)
+	if err != nil {
+		return false, "", nil, err
+	}
+
+	if allow {
+		return allow, "", nil, nil
+	}
+
+	// generate apply url if namespace perm notAllow
+	projectApp := project.BuildProjectApplicationInstance(project.ProjectApplicationAction{
+		ActionID: project.ProjectView.String(),
+		Data:     []string{projectID},
+	})
+	clusterApp := BuildClusterApplicationInstance(ClusterApplicationAction{
+		ActionID: ClusterView.String(),
+		Data: []ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
+	})
+	csApp := BuildClusterScopedApplicationInstance(ClusterScopedApplicationAction{
+		ActionID: ClusterScopedDelete.String(),
+		Data: []ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
+	})
+
+	url, _ := bcp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
+		clusterApp, projectApp, csApp,
+	})
+	return allow, url, resources, nil
+}

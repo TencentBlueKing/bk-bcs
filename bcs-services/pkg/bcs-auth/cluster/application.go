@@ -64,6 +64,31 @@ func (cls ClusterInstances) BuildInstances() [][]iam.Instance {
 	return iamInstances
 }
 
+// ClusterScopedInstances build clusterScopedInstances
+type ClusterScopedInstances struct {
+	Data []ProjectClusterData
+}
+
+// BuildInstances for cluster scoped resource
+func (cls ClusterScopedInstances) BuildInstances() [][]iam.Instance {
+	iamInstances := make([][]iam.Instance, 0)
+
+	for i := range cls.Data {
+		iamInstances = append(iamInstances, []iam.Instance{
+			iam.Instance{
+				ResourceType: string(project.SysProject),
+				ResourceID:   cls.Data[i].Project,
+			},
+			iam.Instance{
+				ResourceType: string(SysCluster),
+				ResourceID:   cls.Data[i].Cluster,
+			},
+		})
+	}
+
+	return iamInstances
+}
+
 // ClusterApplicationAction struct for clusterApplication
 type ClusterApplicationAction struct {
 	IsCreateCluster bool
@@ -103,4 +128,24 @@ func BuildClusterSameInstanceApplication(isCreate bool, actionIDs []string,
 	}
 
 	return applications
+}
+
+// ClusterScopedApplicationAction struct for clusterApplication
+type ClusterScopedApplicationAction struct {
+	ActionID string
+	Data     []ProjectClusterData
+}
+
+// BuildClusterScopedApplicationInstance build cluster scoped resource application
+func BuildClusterScopedApplicationInstance(clsAppAction ClusterScopedApplicationAction) iam.ApplicationAction {
+	nsApp := utils.ClusterApplication{ActionID: clsAppAction.ActionID}
+	// cluster resource support one system, need to build multi instances if use extra system resource
+	instances := ClusterScopedInstances{
+		Data: clsAppAction.Data,
+	}.BuildInstances()
+
+	resourceType := SysCluster
+
+	relatedResource := utils.BuildRelatedSystemResource(iam.SystemIDBKBCS, string(resourceType), instances)
+	return utils.BuildIAMApplication(nsApp, []bkiam.ApplicationRelatedResourceType{relatedResource})
 }

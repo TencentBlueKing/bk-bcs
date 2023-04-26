@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
-  import { IGroupEditing, ECategoryType, EGroupRuleType, ICategoryItem, IGroupEditArg, IGroupRuleItem, IAllCategoryGroupItem } from '../../../types/group'
+  import { IGroupEditing, ECategoryType, EGroupRuleType } from '../../../types/group'
   import { createGroup } from '../../api/group'
   import groupEditForm from './components/group-edit-form.vue';
 
@@ -24,23 +24,23 @@
   const pending = ref(false)
 
   watch(() => props.show, (val) => {
-    groupData.value = {
-      name: '',
-      public: true,
-      bind_apps: [],
-      rule_logic: 'AND',
-      rules: [{ key: '', op: <EGroupRuleType>'', value: '' }]
+    if (val) {
+      groupData.value = {
+        name: '',
+        public: true,
+        bind_apps: [],
+        rule_logic: 'AND',
+        rules: [{ key: '', op: <EGroupRuleType>'', value: '' }]
+      }
     }
   })
 
   const updateData = (data: IGroupEditing) => {
-    console.log(data)
     groupData.value = data
   }
 
   const handleConfirm = async() => {
     await groupFormRef.value.validate()
-    debugger
     try {
       const { name, public: isPublic, bind_apps, rule_logic, rules } = groupData.value
       const params = {

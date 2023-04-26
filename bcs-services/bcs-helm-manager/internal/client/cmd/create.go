@@ -13,10 +13,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/spf13/cobra"
@@ -46,7 +46,7 @@ func CreateRepository(cmd *cobra.Command, _ []string) {
 	}
 
 	var req helmmanager.CreateRepositoryReq
-	if err = codec.DecJson(data, &req); err != nil {
+	if err = json.Unmarshal(data, &req); err != nil {
 		fmt.Printf("create repository failed, parse data failed, %s\n", err.Error())
 		os.Exit(1)
 	}

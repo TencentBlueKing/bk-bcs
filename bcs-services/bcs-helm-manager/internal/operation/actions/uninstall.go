@@ -74,13 +74,13 @@ func (r *ReleaseUninstallAction) Name() string {
 	return fmt.Sprintf("uninstall-%s", r.name)
 }
 
-// Validate xxx
-func (r *ReleaseUninstallAction) Validate() error {
+// Prepare xxx
+func (r *ReleaseUninstallAction) Prepare(ctx context.Context) error {
 	return nil
 }
 
-// Prepare xxx
-func (r *ReleaseUninstallAction) Prepare(ctx context.Context) error {
+// Validate xxx
+func (r *ReleaseUninstallAction) Validate() error {
 	return nil
 }
 

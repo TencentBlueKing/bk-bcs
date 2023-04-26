@@ -14,12 +14,9 @@ package release
 
 import (
 	"context"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -54,78 +51,6 @@ func getChartContent(model store.HelmManagerModel, platform repo.Platform,
 		return nil, err
 	}
 	return contents, nil
-}
-
-func installRelease(releaseHandler release.Handler, projectID, projectCode, clusterID, releaseName,
-	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
-	contents []byte, values []string, dryRun, replace, clientOnly bool) (*release.HelmInstallResult, error) {
-	vls := make([]*release.File, 0, len(values))
-	for index, v := range values {
-		vls = append(vls, &release.File{
-			Name:    "values-" + strconv.Itoa(index) + ".yaml",
-			Content: []byte(v),
-		})
-	}
-	return releaseHandler.Cluster(clusterID).Install(
-		context.Background(),
-		release.HelmInstallConfig{
-			DryRun:      dryRun,
-			Replace:     replace,
-			ClientOnly:  clientOnly,
-			ProjectCode: projectCode,
-			Name:        releaseName,
-			Namespace:   releaseNamespace,
-			Chart: &release.File{
-				Name:    chartName + "-" + version + ".tgz",
-				Content: contents,
-			},
-			Args:   args,
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: projectID,
-				common.PTKClusterID: clusterID,
-				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   creator,
-				common.PTKUpdator:   updator,
-				common.PTKVersion:   version,
-				common.PTKName:      releaseName,
-			},
-		})
-}
-
-func upgradeRelease(releaseHandler release.Handler, projectID, projectCode, clusterID, releaseName,
-	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
-	contents []byte, values []string, dryRun bool) (*release.HelmUpgradeResult, error) {
-	vls := make([]*release.File, 0, len(values))
-	for index, v := range values {
-		vls = append(vls, &release.File{
-			Name:    "values-" + strconv.Itoa(index) + ".yaml",
-			Content: []byte(v),
-		})
-	}
-	return releaseHandler.Cluster(clusterID).Upgrade(
-		context.Background(),
-		release.HelmUpgradeConfig{
-			DryRun:      dryRun,
-			ProjectCode: projectCode,
-			Name:        releaseName,
-			Namespace:   releaseNamespace,
-			Chart: &release.File{
-				Name:    chartName + "-" + version + ".tgz",
-				Content: contents,
-			},
-			Args:   args,
-			Values: vls,
-			PatchTemplateValues: map[string]string{
-				common.PTKProjectID: projectID,
-				common.PTKClusterID: clusterID,
-				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   creator,
-				common.PTKUpdator:   updator,
-				common.PTKVersion:   version,
-				common.PTKName:      releaseName,
-			},
-		})
 }
 
 // ReleasesSortByUpdateTime sort releases by update time

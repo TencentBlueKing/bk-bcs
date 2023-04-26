@@ -112,7 +112,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	if err != nil {
 		return nil, fmt.Errorf("get release preview, get contents failed, %s", err.Error())
 	}
-	result, err := installRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), projectCode,
+	result, err := release.InstallRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), projectCode,
 		r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
 		r.createBy, username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true, true, true)
 	if err != nil {

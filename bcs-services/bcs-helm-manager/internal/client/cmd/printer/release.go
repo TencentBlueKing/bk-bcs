@@ -13,6 +13,7 @@
 package printer
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -80,6 +81,133 @@ func PrintReleaseInJson(release *helmmanager.ReleaseListData) {
 	}
 
 	for _, ct := range release.Data {
+		data, _ := json.Marshal(ct)
+
+		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
+	}
+}
+
+// PrintReleaseDetailInTable print release detail data in table format
+func PrintReleaseDetailInTable(wide bool, release []*helmmanager.ReleaseDetail) {
+	if release == nil {
+		return
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader(func() []string {
+		r := []string{"NAME", "NAMESPACE", "REVISION", "UPDATED", "STATUS", "CHART", "CHART_VERSION", "APP_VERSION"}
+		if wide {
+			// nothing to do
+		}
+
+		return r
+	}())
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(true)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetTablePadding("    ")
+	table.SetNoWhiteSpace(true)
+
+	for _, rl := range release {
+		table.Append(func() []string {
+			r := []string{
+				rl.GetName(),
+				rl.GetNamespace(),
+				strconv.Itoa(int(rl.GetRevision())),
+				rl.GetUpdateTime(),
+				rl.GetStatus(),
+				rl.GetChart(),
+				rl.GetChartVersion(),
+				rl.GetAppVersion(),
+			}
+
+			if wide {
+				// nothing to do
+			}
+
+			return r
+		}())
+	}
+	table.Render()
+}
+
+// PrintReleaseDetailInJson print release detail data in json format
+func PrintReleaseDetailInJson(release []*helmmanager.ReleaseDetail) {
+	if release == nil {
+		return
+	}
+
+	for _, ct := range release {
+		var data []byte
+		_ = encodeJsonWithIndent(4, ct, &data)
+
+		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
+	}
+}
+
+// PrintReleaseHistoryInTable print release history data in table format
+func PrintReleaseHistoryInTable(wide bool, release []*helmmanager.ReleaseHistory) {
+	if release == nil {
+		return
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader(func() []string {
+		r := []string{"NAME", "NAMESPACE", "REVISION", "UPDATED", "STATUS", "CHART", "CHART_VERSION", "APP_VERSION"}
+		if wide {
+			// nothing to do
+		}
+
+		return r
+	}())
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(true)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetTablePadding("    ")
+	table.SetNoWhiteSpace(true)
+
+	for _, rl := range release {
+		table.Append(func() []string {
+			r := []string{
+				rl.GetName(),
+				rl.GetNamespace(),
+				strconv.Itoa(int(rl.GetRevision())),
+				rl.GetUpdateTime(),
+				rl.GetStatus(),
+				rl.GetChart(),
+				rl.GetChartVersion(),
+				rl.GetAppVersion(),
+			}
+
+			if wide {
+				// nothing to do
+			}
+
+			return r
+		}())
+	}
+	table.Render()
+}
+
+// PrintReleaseHistoryInJson print release history data in json format
+func PrintReleaseHistoryInJson(releaseHistory []*helmmanager.ReleaseHistory) {
+	if releaseHistory == nil {
+		return
+	}
+
+	for _, ct := range releaseHistory {
 		var data []byte
 		_ = encodeJsonWithIndent(4, ct, &data)
 

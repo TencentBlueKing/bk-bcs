@@ -17,11 +17,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 
-	"bscp.io/pkg/components/bcs"
+	"bscp.io/pkg/logs"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
-	"k8s.io/klog/v2"
 )
 
 // SpaceType 空间类型
@@ -75,138 +73,54 @@ func listBKCMDB(ctx context.Context, client esbcli.Client, username string, bizI
 	return spaceList, nil
 }
 
-func listBCSProject(ctx context.Context, username string, projectCodeList []string) ([]*Space, error) {
-	var (
-		projects []*bcs.Project
-		err      error
-	)
-
-	if username != "" {
-		projects, err = bcs.ListAuthorizedProjects(ctx, username)
-	} else {
-		projects, err = bcs.ListProjects(ctx, projectCodeList)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	spaceList := make([]*Space, 0, len(projects))
-	for _, project := range projects {
-		spaceList = append(spaceList, &Space{
-			SpaceId:       project.Code,
-			SpaceName:     project.Name,
-			SpaceTypeID:   BCS.ID,
-			SpaceTypeName: BCS.Name,
-			SpaceUid:      BuildSpaceUid(BCS, project.Code),
-		})
-	}
-	return spaceList, nil
-}
-
 // ListUserSpace 并发获取cmdb的业务, bcs的项目列表
 func ListUserSpace(ctx context.Context, client esbcli.Client, username string) ([]*Space, error) {
-	var (
-		spaceList = []*Space{}
-		mtx       sync.Mutex
-		wg        sync.WaitGroup
-	)
+	var spaceList = []*Space{}
 
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
+	spaces, err := listBKCMDB(ctx, client, username, []int{})
+	if err != nil {
+		logs.Warnf("list bk_cmdb space failed. err: %s", err)
+		return nil, err
+	}
 
-		spaces, err := listBCSProject(ctx, username, []string{})
-		if err != nil {
-			klog.Warningf("list bcs space failed. err: %s", err)
-			return
-		}
-		mtx.Lock()
-		defer mtx.Unlock()
+	spaceList = append(spaceList, spaces...)
 
-		spaceList = append(spaceList, spaces...)
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		spaces, err := listBKCMDB(ctx, client, username, []int{})
-		if err != nil {
-			klog.Warningf("list bk_cmdb space failed. err: %s", err)
-			return
-		}
-		mtx.Lock()
-		defer mtx.Unlock()
-
-		spaceList = append(spaceList, spaces...)
-	}()
-
-	wg.Wait()
 	return spaceList, nil
 }
 
+// QuerySpace 通过ID查询空间信息
 func QuerySpace(ctx context.Context, client esbcli.Client, spaceUidList []string) ([]*Space, error) {
-	var (
-		spaceList = []*Space{}
-		mtx       sync.Mutex
-		wg        sync.WaitGroup
-	)
+	var spaceList = []*Space{}
 
 	spaceMap, err := BuildSpaceMap(spaceUidList)
 	if err != nil {
 		return nil, err
 	}
 
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
+	idList := spaceMap[BK_CMDB.ID]
+	if len(idList) == 0 {
+		return nil, fmt.Errorf("%s have no valid", spaceUidList)
+	}
 
-		idList := spaceMap[BCS.ID]
-		if len(idList) == 0 {
-			return
-		}
-
-		spaces, err := listBCSProject(ctx, "", idList)
+	// cmdb bk_biz_id 需要 int 类型
+	idIntList := make([]int, 0, len(idList))
+	for _, id := range idList {
+		idInt, err := strconv.Atoi(id)
 		if err != nil {
-			klog.Warningf("list bcs space failed. err: %s", err)
-			return
+			logs.Warnf("%s not integer", id)
+			continue
 		}
-		mtx.Lock()
-		defer mtx.Unlock()
+		idIntList = append(idIntList, idInt)
+	}
 
-		spaceList = append(spaceList, spaces...)
-	}()
+	spaces, err := listBKCMDB(ctx, client, "", idIntList)
+	if err != nil {
+		logs.Warnf("list bk_cmdb space failed. err: %s", err)
+		return nil, err
+	}
 
-	go func() {
-		defer wg.Done()
+	spaceList = append(spaceList, spaces...)
 
-		idList := spaceMap[BK_CMDB.ID]
-		if len(idList) == 0 {
-			return
-		}
-
-		// cmdb bk_biz_id 需要 int 类型
-		idIntList := make([]int, 0, len(idList))
-		for _, id := range idList {
-			idInt, err := strconv.Atoi(id)
-			if err != nil {
-				klog.Warningf("%s not integer", id)
-				continue
-			}
-			idIntList = append(idIntList, idInt)
-		}
-
-		spaces, err := listBKCMDB(ctx, client, "", idIntList)
-		if err != nil {
-			klog.Warningf("list bk_cmdb space failed. err: %s", err)
-			return
-		}
-		mtx.Lock()
-		defer mtx.Unlock()
-
-		spaceList = append(spaceList, spaces...)
-	}()
-
-	wg.Wait()
 	return spaceList, nil
 }
 

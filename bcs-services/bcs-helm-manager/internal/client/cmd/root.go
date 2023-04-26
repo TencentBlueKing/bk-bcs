@@ -66,6 +66,7 @@ func init() {
 	rootCMD.AddCommand(uninstallCMD)
 	rootCMD.AddCommand(upgradeCMD)
 	rootCMD.AddCommand(rollbackCMD)
+	rootCMD.AddCommand(listCMD)
 	rootCMD.PersistentFlags().StringVarP(
 		&cfgFile, "config", "c", defaultCfgFile, "config file")
 }

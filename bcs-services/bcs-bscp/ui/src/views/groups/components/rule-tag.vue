@@ -12,17 +12,21 @@
     return op?.name
   })
 
+  const valueText = computed(() => {
+    if (['in', 'nin'].includes(props.rule.op)) {
+      return `(${(<string[]>props.rule.value).join(', ')})`
+    }
+    return props.rule.value
+  })
+
 </script>
 <template>
-  <span class="rule-tag">{{ `${props.rule.key} ${opName} ${props.rule.value}` }}</span>
+  <span class="rule-tag">{{ `${props.rule.key} ${opName} ${valueText}` }}</span>
 </template>
 <style lang="scss" scoped>
   .rule-tag {
     display: inline-block;
-    padding: 0 10px;
     line-height: 22px;
     font-size: 12px;
-    background: #f0f1f5;
-    border-radius: 2px;
   }
 </style>

@@ -20,3 +20,9 @@ export const CONFIG_STATUS_MAP = {
   'REVISE': '修改',
   'UNCHANGE': '--'
 }
+
+export const VERSION_STATUS_MAP = {
+  'not_released': '未上线',
+  'partial_released': '灰度中',
+  'full_released': '已上线'
+}

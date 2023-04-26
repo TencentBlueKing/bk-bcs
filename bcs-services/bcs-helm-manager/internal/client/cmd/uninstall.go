@@ -36,7 +36,8 @@ func Uninstall(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	req := &helmmanager.UninstallReleaseReq{}
+	req := &helmmanager.UninstallReleaseV1Req{}
+	req.ProjectCode = &flagProject
 	req.ClusterID = &flagCluster
 	req.Namespace = &flagNamespace
 	req.Name = common.GetStringP(args[0])
@@ -52,6 +53,8 @@ func Uninstall(cmd *cobra.Command, args []string) {
 }
 
 func init() {
+	uninstallCMD.PersistentFlags().StringVarP(
+		&flagProject, "project", "p", "", "release project for operation")
 	uninstallCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace for operation")
 	uninstallCMD.PersistentFlags().StringVarP(
