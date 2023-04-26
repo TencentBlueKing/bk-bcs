@@ -19,10 +19,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bluele/gcache"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/uuid"
-	"bscp.io/pkg/dal/cache"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/thirdparty/esb/types"
 )
@@ -42,11 +43,13 @@ func NewClient(client rest.ClientInterface, config *cc.Esb) Client {
 	return &cmdb{
 		client: client,
 		config: config,
+		cache:  gcache.New(1000).Expiration(time.Hour * 24).EvictType(gcache.TYPE_LRU).Build(),
 	}
 }
 
 // cmdb is an esb client to request cmdb.
 type cmdb struct {
+	cache  gcache.Cache
 	config *cc.Esb
 	// http client instance
 	client rest.ClientInterface
@@ -94,8 +97,7 @@ func (c *cmdb) ListAllBusiness(ctx context.Context) (*SearchBizResult, error) {
 
 // GeBusinessbyID 读取单个biz
 func (c *cmdb) GeBusinessbyID(ctx context.Context, bizID uint32) (*Biz, error) {
-	key := fmt.Sprintf("cmdb.GeBusinessbyID:%d", bizID)
-	if cacheResult, ok := cache.LocalCache.Slot.Get(key); ok {
+	if cacheResult, err := c.cache.Get(bizID); err == nil {
 		return cacheResult.(*Biz), nil
 	}
 
@@ -120,7 +122,7 @@ func (c *cmdb) GeBusinessbyID(ctx context.Context, bizID uint32) (*Biz, error) {
 		return nil, fmt.Errorf("biz %d not found", bizID)
 	}
 
-	cache.LocalCache.Slot.Set(key, &resp.Info[0], time.Hour*24)
+	c.cache.Set(bizID, &resp.Info[0])
 
 	return &resp.Info[0], nil
 }
