@@ -36,6 +36,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/thirdparty/esb/cmdb"
 )
 
 // Auth related operate.
@@ -234,7 +235,7 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 }
 
 // CheckPermission
-func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
+func (a *Auth) CheckPermission(ctx context.Context, biz *cmdb.Biz, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	log := &logrus.Logger{
@@ -278,7 +279,7 @@ func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *met
 					ResourceId:   strconv.FormatInt(int64(req.ResourceID), 10),
 					TypeName:     "业务",
 					ActionName:   "业务访问",
-					ResourceName: "蓝鲸",
+					ResourceName: biz.BizName,
 				},
 			},
 		}
