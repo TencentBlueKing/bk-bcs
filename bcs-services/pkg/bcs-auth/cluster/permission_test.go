@@ -110,7 +110,7 @@ func TestBCSClusterPerm_CanDeleteCluster(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestBCSClusterPerm_GetClusterMultiActionPermission(t *testing.T) {
+func TestGetClusterMultiActionPermission(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -126,7 +126,7 @@ func TestBCSClusterPerm_GetClusterMultiActionPermission(t *testing.T) {
 	t.Log(allow)
 }
 
-func TestBCSClusterPerm_GetMultiClusterMultiActionPermission(t *testing.T) {
+func TestGetMultiClusterMultiActionPerm(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -143,7 +143,7 @@ func TestBCSClusterPerm_GetMultiClusterMultiActionPermission(t *testing.T) {
 	t.Log(allow)
 }
 
-func TestBCSClusterPerm_CanCreateClusterScopedResource(t *testing.T) {
+func TestCanCreateClusterScopedResource(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -162,7 +162,7 @@ func TestBCSClusterPerm_CanCreateClusterScopedResource(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestBCSClusterPerm_CanViewClusterScopedResource(t *testing.T) {
+func TestCanViewClusterScopedResource(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -181,7 +181,7 @@ func TestBCSClusterPerm_CanViewClusterScopedResource(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestBCSClusterPerm_CanUpdateClusterScopedResource(t *testing.T) {
+func TestCanUpdateClusterScopedResource(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -200,7 +200,7 @@ func TestBCSClusterPerm_CanUpdateClusterScopedResource(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestBCSClusterPerm_CanDeleteClusterScopedResource(t *testing.T) {
+func TestCanDeleteClusterScopedResource(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)

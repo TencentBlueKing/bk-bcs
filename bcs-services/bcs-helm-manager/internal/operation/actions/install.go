@@ -46,7 +46,7 @@ type ReleaseInstallAction struct {
 	values         []string
 	args           []string
 	username       string
-	IsUser         bool
+	AuthUser       string
 	IsShardCluster bool
 
 	contents []byte
@@ -70,7 +70,7 @@ type ReleaseInstallActionOption struct {
 	Values         []string
 	Args           []string
 	Username       string
-	IsUser         bool
+	AuthUser       string
 	IsShardCluster bool
 }
 
@@ -91,7 +91,7 @@ func NewReleaseInstallAction(o *ReleaseInstallActionOption) *ReleaseInstallActio
 		values:         o.Values,
 		args:           o.Args,
 		username:       o.Username,
-		IsUser:         o.IsUser,
+		AuthUser:       o.AuthUser,
 		IsShardCluster: o.IsShardCluster,
 	}
 }
@@ -142,7 +142,7 @@ func (r *ReleaseInstallAction) Prepare(ctx context.Context) error {
 func (r *ReleaseInstallAction) Validate() error {
 	blog.V(5).Infof("start to validate release %s/%s install", r.namespace, r.name)
 	// 非真实用户无法在权限中心鉴权，跳过检测
-	if !r.IsUser {
+	if len(r.AuthUser) == 0 {
 		return nil
 	}
 	// get manifest from helm dry run
@@ -174,7 +174,8 @@ func (r *ReleaseInstallAction) Validate() error {
 	blog.V(5).Infof("cluster %s has %d api-resources", r.clusterID, len(resources))
 
 	permInfo := basePermInfo{
-		username:       r.username,
+		username:       r.AuthUser,
+		projectCode:    r.projectCode,
 		projectID:      r.projectID,
 		clusterID:      r.clusterID,
 		isShardCluster: r.IsShardCluster,

@@ -111,7 +111,7 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 		Args:           u.req.GetArgs(),
 		CreateBy:       u.createBy,
 		UpdateBy:       u.updateBy,
-		IsUser:         auth.IsUserFromCtx(u.ctx),
+		AuthUser:       auth.GetRealUserFromCtx(u.ctx),
 		IsShardCluster: cls.IsShared,
 	}
 	action := actions.NewReleaseUpgradeAction(options)

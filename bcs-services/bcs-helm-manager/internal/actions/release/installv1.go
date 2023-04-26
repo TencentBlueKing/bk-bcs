@@ -119,7 +119,7 @@ func (i *InstallReleaseV1Action) install() error {
 		Values:         i.req.GetValues(),
 		Args:           i.req.GetArgs(),
 		Username:       auth.GetUserFromCtx(i.ctx),
-		IsUser:         auth.IsUserFromCtx(i.ctx),
+		AuthUser:       auth.GetRealUserFromCtx(i.ctx),
 		IsShardCluster: cls.IsShared,
 	}
 	action := actions.NewReleaseInstallAction(options)

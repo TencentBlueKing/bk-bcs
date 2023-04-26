@@ -13,14 +13,18 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -32,6 +36,9 @@ var (
 	ClusterIamClient *cluster.BCSClusterPerm
 	// NamespaceIamClient namespace iam client
 	NamespaceIamClient *namespace.BCSNamespacePerm
+
+	// ProjCodeAnnoKey 项目 Code 在命名空间 Annotations 中的 Key
+	ProjCodeAnnoKey = "io.tencent.bcs.projectcode"
 )
 
 // InitPermClient new a perm client
@@ -76,10 +83,34 @@ func GetUserNamespacePermList(username, projectID, clusterID string, namespaces 
 }
 
 // ReleaseResourcePermCheck 检测用户是否有 release 中资源的创建、更新权限
-func ReleaseResourcePermCheck(username, projectID, clusterID string, namespaceCreated, clusterScope bool,
+func ReleaseResourcePermCheck(username, projectCode, projectID, clusterID string, namespaceCreated, clusterScope bool,
 	namespaces []string, isShardCluster bool) (bool, string, []utils.ResourceAction, error) {
-	if namespaceCreated && isShardCluster {
-		return false, "", nil, fmt.Errorf("共享集群不支持通过 Helm 创建命名空间")
+	// 如果是共享集群，且集群不属于该项目，说明是用户使用共享集群，需要单独鉴权
+	cls, err := clustermanager.GetCluster(clusterID)
+	if err != nil {
+		return false, "", nil, err
+	}
+	if isShardCluster && cls.ProjectID != projectID {
+		if namespaceCreated {
+			return false, "", nil, fmt.Errorf("共享集群不支持通过 Helm 创建命名空间")
+		}
+		if clusterScope {
+			return false, "", nil, fmt.Errorf("共享集群不支持通过 Helm 创建集群域资源")
+		}
+		// 检测命名空间是否属于该项目
+		client, err := component.GetK8SClientByClusterID(clusterID)
+		if err != nil {
+			return false, "", nil, err
+		}
+		for _, v := range namespaces {
+			ns, err := client.CoreV1().Namespaces().Get(context.TODO(), v, v1.GetOptions{})
+			if err != nil {
+				return false, "", nil, err
+			}
+			if ns.Annotations[ProjCodeAnnoKey] != projectCode {
+				return false, "", nil, fmt.Errorf("命名空间 %s 在该共享集群中不属于指定项目", v)
+			}
+		}
 	}
 	// related actions
 	resources := getPermResources(projectID, clusterID, namespaceCreated, clusterScope, namespaces)

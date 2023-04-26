@@ -47,7 +47,7 @@ type ReleaseUpgradeAction struct {
 	args           []string
 	createBy       string
 	updateBy       string
-	IsUser         bool
+	AuthUser       string
 	IsShardCluster bool
 
 	contents []byte
@@ -72,7 +72,7 @@ type ReleaseUpgradeActionOption struct {
 	Args           []string
 	CreateBy       string
 	UpdateBy       string
-	IsUser         bool
+	AuthUser       string
 	IsShardCluster bool
 }
 
@@ -94,7 +94,7 @@ func NewReleaseUpgradeAction(o *ReleaseUpgradeActionOption) *ReleaseUpgradeActio
 		args:           o.Args,
 		createBy:       o.CreateBy,
 		updateBy:       o.UpdateBy,
-		IsUser:         o.IsUser,
+		AuthUser:       o.AuthUser,
 		IsShardCluster: o.IsShardCluster,
 	}
 }
@@ -145,13 +145,12 @@ func (r *ReleaseUpgradeAction) Prepare(ctx context.Context) error {
 func (r *ReleaseUpgradeAction) Validate() error {
 	blog.V(5).Infof("start to validate release %s/%s upgrade", r.namespace, r.name)
 	// 非真实用户无法在权限中心鉴权，跳过检测
-	if !r.IsUser {
+	if len(r.AuthUser) == 0 {
 		return nil
 	}
 	// get manifest from helm dry run
-	result, err := release.InstallRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
-		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values,
-		true, true, true)
+	result, err := release.UpgradeRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
+		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true)
 	if err != nil {
 		return err
 	}
@@ -163,7 +162,7 @@ func (r *ReleaseUpgradeAction) Validate() error {
 	if err != nil {
 		return err
 	}
-	blog.V(5).Infof("release %s/%s has %d manifest, %v", r.namespace, r.name, len(manifest))
+	blog.V(5).Infof("release %s/%s has %d manifest", r.namespace, r.name, len(manifest))
 
 	// get server resources
 	client, err := component.GetK8SClientByClusterID(r.clusterID)
@@ -174,10 +173,11 @@ func (r *ReleaseUpgradeAction) Validate() error {
 	if err != nil {
 		return err
 	}
-	blog.V(5).Infof("cluster %s has %d api-resources, %v", r.clusterID, len(resources))
+	blog.V(5).Infof("cluster %s has %d api-resources", r.clusterID, len(resources))
 
 	permInfo := basePermInfo{
-		username:       r.updateBy,
+		username:       r.AuthUser,
+		projectCode:    r.projectCode,
 		projectID:      r.projectID,
 		clusterID:      r.clusterID,
 		isShardCluster: r.IsShardCluster,

@@ -24,6 +24,7 @@ import (
 
 type basePermInfo struct {
 	username       string
+	projectCode    string
 	projectID      string
 	clusterID      string
 	isShardCluster bool
@@ -59,7 +60,8 @@ func checkReleaseAccess(manifest []release.SimpleHead, resources []*metav1.APIRe
 		}
 	}
 	namespaceScope = stringx.RemoveDuplicateValues(namespaceScope)
-	allow, url, _, err := auth.ReleaseResourcePermCheck(basePermInfo.username, basePermInfo.projectID, basePermInfo.clusterID,
+	allow, url, _, err := auth.ReleaseResourcePermCheck(basePermInfo.username, basePermInfo.projectCode,
+		basePermInfo.projectID, basePermInfo.clusterID,
 		createNamespace, clusterScope, namespaceScope, basePermInfo.isShardCluster)
 	if err != nil {
 		return err
