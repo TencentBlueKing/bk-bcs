@@ -202,8 +202,8 @@ func UnauthorizedErr(err error) render.Renderer {
 }
 
 // PermissionDenied 无数据返回
-func PermissionDenied(err error) render.Renderer {
-	payload := &ErrorPayload{Code: "PERMISSION_DENIED", Message: err.Error()}
+func PermissionDenied(err error, data interface{}) render.Renderer {
+	payload := &ErrorPayload{Code: "PERMISSION_DENIED", Message: err.Error(), Data: data}
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusForbidden}
 }
 

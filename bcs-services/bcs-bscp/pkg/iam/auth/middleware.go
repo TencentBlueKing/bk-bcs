@@ -27,6 +27,7 @@ import (
 	"bscp.io/pkg/components"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/constant"
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/sys"
 	"bscp.io/pkg/kit"
 	pbas "bscp.io/pkg/protocol/auth-server"
@@ -188,8 +189,14 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			GenApplyUrl: true,
 		}
 
-		if _, err := a.authClient.CheckPermission(kt.RpcCtx(), req); err != nil {
-			render.Render(w, r, rest.GRPCErr(err))
+		resp, err := a.authClient.CheckPermission(kt.RpcCtx(), req)
+		if err != nil {
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		if !resp.IsAllowed {
+			render.Render(w, r, rest.PermissionDenied(errf.ErrPermissionDenied, resp))
 			return
 		}
 

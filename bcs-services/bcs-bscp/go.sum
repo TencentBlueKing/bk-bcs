@@ -47,10 +47,8 @@ github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWX
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230424025302-1a6fd25f4b45 h1:pKWr/XdjSh/K6ssqprB1z0vkaA2w3jkjO8N+GU2T4Rs=
 github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230424025302-1a6fd25f4b45/go.mod h1:+32OYNYCnDkA13jdX1Z2SAlEoG5rKyhGJxYM8l8xy8k=
-github.com/TencentBlueKing/gopkg v1.0.8 h1:yo0Od1SVXRmrH3XTaN2/viijbSGgrGIsHOyAcT8m068=
-github.com/TencentBlueKing/gopkg v1.0.8/go.mod h1:C8xV79ap0bF2pR10YfhsxO5w5LtJlPakrRunkRbl2yw=
-github.com/TencentBlueKing/iam-go-sdk v0.0.9 h1:B9V1/y7X47Yv+VbKEufb0WQBxsymZVBZGNjr5s4WoUc=
-github.com/TencentBlueKing/iam-go-sdk v0.0.9/go.mod h1:DOI6sq611zyIsDJPPaiDwUo9UGckfxlhnpVmC1r/iQU=
+github.com/TencentBlueKing/iam-go-sdk v0.0.8 h1:7EkG18XDXSL88HaLr3V+V2Nw25Ndt4yH4xDrqwmapy8=
+github.com/TencentBlueKing/iam-go-sdk v0.0.8/go.mod h1:5Z5YMclIZBokfgT9dTJFUcywygZXY9nhloX8rj+zFEc=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
 github.com/acomagu/bufpipe v1.0.3 h1:fxAGrHZTgQ9w5QqVItgzwj235/uYZYgbXitB+dLupOk=
 github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5/go.mod h1:SkGFH1ia65gfNATL8TAiHDNxPzPdmEL5uirI2Uyuz6c=
@@ -188,8 +186,8 @@ github.com/go-redis/redis/v8 v8.11.5 h1:AcZZR7igkdvfVmQTPnu9WE37LRrO/YrBH5zWyjDC
 github.com/go-redis/redis/v8 v8.11.5/go.mod h1:gREzHqY1hg6oD9ngVRbLStwAWKhA0FEgq8Jd4h5lpwo=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
-github.com/go-sql-driver/mysql v1.7.0 h1:ueSltNNllEqE3qcWBTD0iQd3IpL/6U+mJxLkazJ7YPc=
-github.com/go-sql-driver/mysql v1.7.0/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
+github.com/go-sql-driver/mysql v1.7.1 h1:lUIinVbN1DY0xBg0eMOzmmtGoHwWBbvnWubQUrtU8EI=
+github.com/go-sql-driver/mysql v1.7.1/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg7847qk6SyHyPtNmDHnmrv/HOrqktSC+C9fM+CJOE=
 github.com/gobwas/glob v0.2.3 h1:A4xDbljILXROh+kObIiy5kIaPYD8e96x1tgBhUI5J+Y=
@@ -978,8 +976,8 @@ google.golang.org/grpc v1.34.0/go.mod h1:WotjhfgOW/POjDeRt8vscBtXq+2VjORFy659qA5
 google.golang.org/grpc v1.35.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAGRRjU=
 google.golang.org/grpc v1.54.0 h1:EhTqbhiYeixwWQtAEZAxmV9MGqcjEU2mFx52xCzNyag=
 google.golang.org/grpc v1.54.0/go.mod h1:PUSEXI6iWghWaB6lXM4knEgpJNu2qUcKfDtNci3EC2g=
-google.golang.org/grpc/examples v0.0.0-20230421184811-83c460b8de09 h1:Az1gEqMIQcV1MkHJChN0LRDCj2JSWHJuPCTrxBl9byY=
-google.golang.org/grpc/examples v0.0.0-20230421184811-83c460b8de09/go.mod h1:5av8LiY5jU2KRcrX+SHtvLHnaOpPJ7gzWStBurgHlqY=
+google.golang.org/grpc/examples v0.0.0-20230426024715-eff0942e95d9 h1:LRHOI224X+OhrlhSdaNgceWtDZJev/W21frXewIobzc=
+google.golang.org/grpc/examples v0.0.0-20230426024715-eff0942e95d9/go.mod h1:5av8LiY5jU2KRcrX+SHtvLHnaOpPJ7gzWStBurgHlqY=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
 google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=
 google.golang.org/protobuf v0.0.0-20200228230310-ab0ca4ff8a60/go.mod h1:cfTl7dwQJ+fmap5saPgwCLgHXTUD7jkjRqWcaiX5VyM=
