@@ -40,8 +40,8 @@ build: tidy
 	cp ./proto/bcs-helm-manager/bcs-helm-manager.swagger.json ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/swagger/helmmanager.swagger.json
 	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
 
-client: proto
-	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-client internal/client/main.go
+helmctl:
+	GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o ../../${INNER_PACKAGEPATH}/bcs-services/bcs-helm-manager/helmctl internal/client/main.go
 
 test:
 	go test -v ./internal/... -cover -count=1

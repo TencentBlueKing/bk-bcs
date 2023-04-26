@@ -13,14 +13,11 @@
 package printer
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
 
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/tidwall/pretty"
 )
 
 // PrintChartVersionInTable print chart version data in table format
@@ -31,9 +28,9 @@ func PrintChartVersionInTable(wide bool, chartVersion *helmmanager.ChartVersionL
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"VERSION", "APP_VERSION", "DESCRIPTION"}
+		r := []string{"VERSION", "APP_VERSION", "UPDATE_TIME"}
 		if wide {
-			r = append(r, "CREATE_BY", "CREATE_TIME", "UPDATE_BY", "UPDATE_TIME")
+			r = append(r, "URL")
 		}
 		return r
 	}())
@@ -52,28 +49,15 @@ func PrintChartVersionInTable(wide bool, chartVersion *helmmanager.ChartVersionL
 	for _, cv := range chartVersion.Data {
 		table.Append(func() []string {
 			r := []string{
-				cv.GetVersion(), cv.GetAppVersion(), cut(cv.GetDescription(), 50),
+				cv.GetVersion(), cv.GetAppVersion(), cv.GetUpdateTime(),
 			}
 
 			if wide {
-				r = append(r, cv.GetCreateBy(), cv.GetCreateTime(), cv.GetUpdateBy(), cv.GetUpdateTime())
+				r = append(r, cv.GetUrl())
 			}
 
 			return r
 		}())
 	}
 	table.Render()
-}
-
-// PrintChartVersionInJson print chart version data in json format
-func PrintChartVersionInJson(chart *helmmanager.ChartVersionListData) {
-	if chart == nil {
-		return
-	}
-
-	for _, cv := range chart.Data {
-		data, _ := json.Marshal(cv)
-
-		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
-	}
 }

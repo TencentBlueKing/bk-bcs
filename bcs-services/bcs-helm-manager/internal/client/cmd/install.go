@@ -15,7 +15,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -25,28 +24,33 @@ import (
 
 var (
 	flagValueFile []string
-	flagArgs      string
+	flagArgs      []string
 	installCMD    = &cobra.Command{
 		Use:   "install",
 		Short: "install",
 		Long:  "install chart release",
 		Run:   Install,
+		Example: "helmctl install -p <project_code> -c <cluster_id> -n <namespace> <release_name> <chart_name> " +
+			"<version> -f values.yaml",
 	}
 )
 
 func init() {
 	installCMD.PersistentFlags().StringVarP(
-		&flagProject, "project", "p", "", "project id for operation")
+		&flagProject, "project", "p", "", "project code")
 	installCMD.PersistentFlags().StringVarP(
-		&flagRepository, "repository", "r", "", "repository name for operation")
+		&flagRepository, "repo", "r", "", "repository name")
 	installCMD.PersistentFlags().StringVarP(
-		&flagNamespace, "namespace", "n", "", "release namespace for operation")
+		&flagCluster, "cluster", "c", "", "release cluster id")
 	installCMD.PersistentFlags().StringVarP(
-		&flagCluster, "cluster", "", "", "release cluster id for operation")
+		&flagNamespace, "namespace", "n", "", "release namespace")
 	installCMD.PersistentFlags().StringSliceVarP(
-		&flagValueFile, "file", "f", nil, "value file for installation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagArgs, "args", "", "", "args to append to helm command")
+		&flagValueFile, "file", "f", nil, "value file for installation, -f values.yaml")
+	installCMD.PersistentFlags().StringSliceVarP(
+		&flagArgs, "args", "", nil, "--args=--wait=true --args=--timeout=600s")
+	installCMD.MarkPersistentFlagRequired("project")
+	installCMD.MarkPersistentFlagRequired("cluster")
+	installCMD.MarkPersistentFlagRequired("namespace")
 }
 
 // Install provide the actions to do installCMD
@@ -67,14 +71,14 @@ func Install(cmd *cobra.Command, args []string) {
 	req.Namespace = &flagNamespace
 	req.ClusterID = &flagCluster
 	req.ProjectCode = &flagProject
+	if flagRepository == "" {
+		flagRepository = flagProject
+	}
 	req.Repository = &flagRepository
 	req.Chart = common.GetStringP(args[1])
 	req.Version = common.GetStringP(args[2])
 	req.Values = values
-	req.ValueFile = &flagValueFile[0]
-	if flagArgs != "" {
-		req.Args = strings.Split(flagArgs, " ")
-	}
+	req.Args = flagArgs
 
 	c := newClientWithConfiguration()
 	err = c.Release().Install(cmd.Context(), req)
@@ -83,9 +87,7 @@ func Install(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to install release %s in version %s namespace %s cluster %s "+
-		"with appVersion %s revision %d\n",
-		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID())
+	fmt.Printf("success to install release %s", req.GetName())
 }
 
 func getValues() ([]string, error) {

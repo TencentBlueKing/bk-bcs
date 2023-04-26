@@ -13,14 +13,11 @@
 package printer
 
 import (
-	"encoding/json"
-	"fmt"
 	"os"
 
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/tidwall/pretty"
 )
 
 // PrintRepositoryInTable print repository data in table format
@@ -31,9 +28,9 @@ func PrintRepositoryInTable(wide bool, repository []*helmmanager.Repository) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"NAME", "PROJECT_ID", "TYPE", "REMOTE"}
+		r := []string{"NAME", "PROJECT_CODE", "TYPE", "REPO_URL"}
 		if wide {
-			r = append(r, "CREATE_BY", "CREATE_TIME", "UPDATE_BY", "UPDATE_TIME")
+			r = append(r, "USERNAME", "PASSWORD")
 		}
 		return r
 	}())
@@ -52,28 +49,15 @@ func PrintRepositoryInTable(wide bool, repository []*helmmanager.Repository) {
 	for _, repo := range repository {
 		table.Append(func() []string {
 			r := []string{
-				repo.GetName(), repo.GetProjectCode(), repo.GetType(), fmt.Sprintf("%t", repo.GetRemote()),
+				repo.GetName(), repo.GetProjectCode(), repo.GetType(), repo.GetRepoURL(),
 			}
 
 			if wide {
-				r = append(r, repo.GetCreateBy(), repo.GetCreateTime(), repo.GetUpdateBy(), repo.GetUpdateTime())
+				r = append(r, repo.GetUsername(), repo.GetPassword())
 			}
 
 			return r
 		}())
 	}
 	table.Render()
-}
-
-// PrintRepositoryInJSON print repository data in json format
-func PrintRepositoryInJSON(repository []*helmmanager.Repository) {
-	if repository == nil {
-		return
-	}
-
-	for _, repo := range repository {
-		data, _ := json.Marshal(repo)
-
-		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
-	}
 }

@@ -20,23 +20,22 @@ import (
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 const (
-	urlReleaseList              = "/helmmanager/v1/release/%s"
-	urlReleaseListV1            = "/helmmanager/v1/projects/%s/clusters/%s/releases"
-	urlReleaseInstall           = "/helmmanager/v1/release/%s/%s/%s/install"
-	urlReleaseUninstall         = "/helmmanager/v1/release/%s/%s/%s/uninstall"
-	urlReleaseUpgrade           = "/helmmanager/v1/release/%s/%s/%s/upgrade"
-	urlReleaseRollback          = "/helmmanager/v1/release/%s/%s/%s/rollback"
-	urlReleaseDetailV1Get       = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s"
-	urlReleaseDetailV1Install   = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s"
-	urlReleaseDetailV1Uninstall = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s"
-	urlReleaseDetailV1Upgrade   = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s"
-	urlReleaseDetailV1Rollback  = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s/rollback"
-	urlReleaseHistoryGet        = "/helmmanager/v1/projects/%s/clusters/%s/namespaces/%s/releases/%s/history"
+	urlReleaseList              = "/release/%s"
+	urlReleaseListV1            = "/projects/%s/clusters/%s/releases"
+	urlReleaseInstall           = "/release/%s/%s/%s/install"
+	urlReleaseUninstall         = "/release/%s/%s/%s/uninstall"
+	urlReleaseUpgrade           = "/release/%s/%s/%s/upgrade"
+	urlReleaseRollback          = "/release/%s/%s/%s/rollback"
+	urlReleaseDetailV1Get       = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	urlReleaseDetailV1Install   = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	urlReleaseDetailV1Uninstall = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	urlReleaseDetailV1Upgrade   = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	urlReleaseDetailV1Rollback  = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/rollback"
+	urlReleaseHistoryGet        = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/history"
 )
 
 // Release return a pkg.ReleaseClient instance
@@ -156,7 +155,6 @@ func (rl *release) Install(ctx context.Context, req *helmmanager.InstallReleaseV
 		return fmt.Errorf("install release request is empty")
 	}
 
-	req.Operator = common.GetStringP(rl.conf.Operator)
 	projectCode := req.GetProjectCode()
 	if projectCode == "" {
 		return fmt.Errorf("install release projectCode can not be empty")
@@ -221,7 +219,7 @@ func (rl *release) Uninstall(ctx context.Context, req *helmmanager.UninstallRele
 
 	data, _ := json.Marshal(req)
 
-	resp, err := rl.post(
+	resp, err := rl.delete(
 		ctx,
 		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Uninstall, projectCode, clusterID, namespace, name),
 		nil,
@@ -249,7 +247,6 @@ func (rl *release) Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseV
 		return fmt.Errorf("upgrade release request is empty")
 	}
 
-	req.Operator = common.GetStringP(rl.conf.Operator)
 	projectCode := req.GetProjectCode()
 	if projectCode == "" {
 		return fmt.Errorf("upgrade release projectCode can not be empty")
@@ -269,7 +266,7 @@ func (rl *release) Upgrade(ctx context.Context, req *helmmanager.UpgradeReleaseV
 
 	data, _ := json.Marshal(req)
 
-	resp, err := rl.post(
+	resp, err := rl.put(
 		ctx,
 		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Upgrade, projectCode, clusterID, namespace, name),
 		nil,
@@ -316,7 +313,7 @@ func (rl *release) Rollback(ctx context.Context, req *helmmanager.RollbackReleas
 
 	data, _ := json.Marshal(req)
 
-	resp, err := rl.post(
+	resp, err := rl.put(
 		ctx,
 		urlPrefix+fmt.Sprintf(urlReleaseDetailV1Rollback, projectCode, clusterID, namespace, name),
 		nil,
@@ -362,7 +359,7 @@ func (rl *release) GetReleaseHistory(ctx context.Context, req *helmmanager.GetRe
 	}
 
 	var data []byte
-	_ = codec.EncJson(req, &data)
+	data, _ = json.Marshal(req)
 
 	resp, err := rl.get(
 		ctx,

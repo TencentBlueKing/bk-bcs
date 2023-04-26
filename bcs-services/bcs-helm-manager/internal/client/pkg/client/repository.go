@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	urlRepository    = "/helmmanager/v1/projects/%s/repos"
-	urlGetRepository = "/helmmanager/v1/projects/%s/repos/%s"
+	urlRepository    = "/projects/%s/repos"
+	urlGetRepository = "/projects/%s/repos/%s"
 )
 
 // Repository return a pkg.RepositoryClient instance

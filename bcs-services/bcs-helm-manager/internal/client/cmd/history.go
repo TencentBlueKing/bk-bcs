@@ -16,51 +16,58 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/spf13/cobra"
 )
 
-var uninstallCMD = &cobra.Command{
-	Use:     "uninstall",
-	Aliases: []string{"un"},
-	Short:   "uninstall chart release",
-	Long:    "uninstall chart release",
-	Run:     Uninstall,
-	Example: "helmctl uninstall -p <project_code> -c <cluster_id> -n <namespace> <release_name>",
-}
+var (
+	historyCMD = &cobra.Command{
+		Use:   "history",
+		Short: "get release history",
+		Run:   GetReleaseHistory,
+	}
+)
 
-// Uninstall provide the actions to do uninstallCMD
-func Uninstall(cmd *cobra.Command, args []string) {
-	if len(args) < 1 {
-		fmt.Printf("uninstall release need specific release name\n")
+// GetReleaseHistory provide the actions to do getReleaseHistoryCMD
+func GetReleaseHistory(cmd *cobra.Command, args []string) {
+	req := &helmmanager.GetReleaseHistoryReq{}
+
+	if len(args) != 1 {
+		fmt.Printf("get release history need release name\nExample: helmctl history -p " +
+			"<project_code> -c <cluster_id> -n <namespace> <release_name>\n")
 		os.Exit(1)
 	}
 
-	req := &helmmanager.UninstallReleaseV1Req{}
 	req.ProjectCode = &flagProject
-	req.ClusterID = &flagCluster
-	req.Namespace = &flagNamespace
 	req.Name = common.GetStringP(args[0])
+	req.Namespace = &flagNamespace
+	req.ClusterID = &flagCluster
 
 	c := newClientWithConfiguration()
-	if err := c.Release().Uninstall(cmd.Context(), req); err != nil {
-		fmt.Printf("uninstall release failed, %s\n", err.Error())
+	r, err := c.Release().GetReleaseHistory(cmd.Context(), req)
+	if err != nil {
+		fmt.Printf("get release history failed, %s\n", err.Error())
 		os.Exit(1)
 	}
+	if flagOutput == outputTypeJSON {
+		printer.PrintResultInJSON(r)
+		return
+	}
 
-	fmt.Printf("success to uninstall release %s\n", req.GetName())
+	printer.PrintReleaseHistoryInTable(flagOutput == outputTypeWide, r)
 }
 
 func init() {
-	uninstallCMD.PersistentFlags().StringVarP(
+	historyCMD.PersistentFlags().StringVarP(
 		&flagProject, "project", "p", "", "project code")
-	uninstallCMD.PersistentFlags().StringVarP(
+	historyCMD.PersistentFlags().StringVarP(
 		&flagCluster, "cluster", "c", "", "release cluster id")
-	uninstallCMD.PersistentFlags().StringVarP(
+	historyCMD.PersistentFlags().StringVarP(
 		&flagNamespace, "namespace", "n", "", "release namespace")
-	uninstallCMD.MarkPersistentFlagRequired("project")
-	uninstallCMD.MarkPersistentFlagRequired("cluster")
-	uninstallCMD.MarkPersistentFlagRequired("namespace")
+	historyCMD.MarkPersistentFlagRequired("project")
+	historyCMD.MarkPersistentFlagRequired("cluster")
+	historyCMD.MarkPersistentFlagRequired("namespace")
 }

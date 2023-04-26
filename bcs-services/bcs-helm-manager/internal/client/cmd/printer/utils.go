@@ -12,10 +12,23 @@
 
 package printer
 
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/tidwall/pretty"
+)
+
 func cut(s string, length int) string {
 	if len(s) <= length {
 		return s
 	}
 
 	return s[:length] + "..."
+}
+
+// PrintResultInJSON print data in json format
+func PrintResultInJSON(result interface{}) {
+	data, _ := json.Marshal(result)
+	fmt.Print(string(pretty.Color(pretty.Pretty(data), nil)))
 }

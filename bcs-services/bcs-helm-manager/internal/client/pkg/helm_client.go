@@ -38,10 +38,9 @@ type RepositoryClient interface {
 // ChartClient define the chart operation handler
 type ChartClient interface {
 	List(ctx context.Context, req *helmmanager.ListChartV1Req) (*helmmanager.ChartListData, error)
-	Versions(ctx context.Context, req *helmmanager.ListChartVersionReq) (*helmmanager.ChartVersionListData, error)
-	Detail(ctx context.Context, req *helmmanager.GetVersionDetailReq) (*helmmanager.ChartDetail, error)
-	GetChartDetailV1(ctx context.Context, req *helmmanager.GetChartDetailV1Req) (*helmmanager.Chart, error)
-	GetVersionDetailV1(ctx context.Context, req *helmmanager.GetVersionDetailV1Req) (*helmmanager.ChartDetail, error)
+	GetChartDetail(ctx context.Context, req *helmmanager.GetChartDetailV1Req) (*helmmanager.Chart, error)
+	Versions(ctx context.Context, req *helmmanager.ListChartVersionV1Req) (*helmmanager.ChartVersionListData, error)
+	GetVersionDetail(ctx context.Context, req *helmmanager.GetVersionDetailV1Req) (*helmmanager.ChartDetail, error)
 	DeleteChart(ctx context.Context, req *helmmanager.DeleteChartReq) error
 	DeleteChartVersion(ctx context.Context, req *helmmanager.DeleteChartVersionReq) error
 }

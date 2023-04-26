@@ -1,449 +1,101 @@
-# bcs-helm-client 命令行工具
+# helmctl
+
+bcs helm 命令行工具
+
+## 安装
+
+```bash
+git clone https://github.com/TencentBlueKing/bk-bcs
+cd bcs-services/bcs-helm-manager
+make helmctl
+```
+根据编译信息找到 `helmctl` 可执行文件所在目录。
 
 ## 配置文件
 
-配置文件默认放在 `/etc/bcs/helmctl.yaml` 文件：
+配置文件默认读取 `/etc/bcs/helmctl.yaml`，也可以通过 `--config=config.yaml` 指定配置文件。
+示例：
 ```yaml
 config:
   apiserver: ""
-  bcs_token: ""
-  operator: ""
+  token: ""
 ```
 
 ## 使用文档
 
-### 检查连通性 - Available
+### 1. 检查连通性
 
 ```bash
-bcs-helm-client available --help
+$ helmctl available
+ok
 ```
 
-参数详情:
-
-```yaml 
-无参
-```
-
-示例:
-
-```
-bcs-helm-client available
-```
-
-
-
-### 获取仓库列表 - ListRepository
+### 2. 获取仓库
 
 ```bash
-bcs-helm-client list rp --help 
-```
-参数详情:
-```yaml 
-  -A, --all                 list all records
-      --cluster string      release cluster id for operation
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-      --name string         release name for operation
-  -n, --namespace string    release namespace for operation
-      --num int             list records num (default 20)
-  -o, --output string       output format, one of json|wide
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-
+$ helmctl get repo -p <project_code>
 ```
 
-示例:
-
-```
-bcs-helm-client list rp -p [projectname to query]
-```
-
-
-
-### 获取仓库明细 - GetRepository
+### 3. 获取 Chart
 
 ```bash
-bcs-helm-client get repo --help
+$ helmctl get chart -p <project_code> 
+$ helmctl get chart -p <project_code> <chart_name>
 ```
 
-参数详情:
-
-```yaml 
-      --cluster string      release cluster id for operation
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-      --name string         release name for operation
-  -n, --namespace string    release namespace for operation
-  -o, --output string       output format, one of json|wide
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-
-```
-
-示例:
-
-```
-bcs-helm-client get repo -p [projectname to query] -r [repositoryname to query]
-```
-
-
-
-### 获取Chart列表V1版 - ListChartV1
+### 4. 获取 Chart 版本
 
 ```bash
-bcs-helm-client list ch --help
+$ helmctl get chartVersion -p <project_code> <chart_name>
+$ helmctl get chartVersion -p <project_code> <chart_name> <version>
 ```
 
-参数详情:
-
-```yaml 
-  -A, --all                 list all records
-      --cluster string      release cluster id for operation
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-      --name string         release name for operation
-  -n, --namespace string    release namespace for operation
-      --num int             list records num (default 20)
-  -o, --output string       output format, one of json|wide
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-
-```
-
-示例:
-
-```
-list ch -p [projectname to query] -r [repositoryname to query] --name [name to query]
-```
-
-
-
-
-
-### 获取Chart明细V1版 - GetChartDetailV1
+### 5. 删除 Chart
 
 ```bash
-bcs-helm-client get detail --help
+$ helmctl delete chart -p <project_code> <chart_name>
 ```
 
-参数详情:
-
-```yaml 
-      --cluster string      release cluster id for operation
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-      --name string         release name for operation
-  -n, --namespace string    release namespace for operation
-  -o, --output string       output format, one of json|wide
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-
-```
-
-示例:
-
-```
-bcs-helm-client get detail [chartname to query] -p [projectname to query] -r [repositoryname to query]
-```
-
-
-
-
-
-### 获取ChartVersion明细V1版 - GetVersionDetailV1
-
-### 
+### 6. 删除 Chart 版本
 
 ```bash
-bcs-helm-client get vdv1  --help
+$ helmctl delete chartVersion -p <project_code> <chart_name> <version>
 ```
 
-参数详情:
-
-```yaml 
-      --cluster string      release cluster id for operation
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-      --name string         release name for operation
-  -n, --namespace string    release namespace for operation
-  -o, --output string       output format, one of json|wide
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-
-```
-
-示例:
+### 7. 获取 Release
 
 ```bash
-bcs-helm-client get vdv1 [chartname to query] [version to query] -p [projectname to query] -r [repositoryname to query]
+$ helmctl get release -p <project_code> -c <cluster_id> -n <namespace>
+$ helmctl get release -p <project_code> -c <cluster_id> -n <namespace> <name>
+$ helmctl get release -p <project_code> -c <cluster_id> -A
 ```
 
-
-
-### 删除Chart - DeleteChart
+### 8. 获取 Release 历史版本
 
 ```bash
-bcs-helm-client delete chart --help
+$ helmctl history -p <project_code> -c <cluster_id> -n <namespace> <release_name>
 ```
 
-参数详情:
-
-```yaml 
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-  -d, --data string         resource json data
-  -f, --file string         resource json file
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-```
-
-示例:
+### 9. 安装 Release
 
 ```bash
-bcs-helm-client delete [chartname to delete] -p [projectname to query] -r [repositoryname to query]
+$ helmctl install -p <project_code> -c <cluster_id> -n <namespace> <release_name> <chart_name> <version> -f values.yaml --args=--wait=true --args=--timeout=600s
 ```
 
-
-
-
-
-### 删除ChartVersion - DeleteChartVersion
-
-### 
+### 10. 更新 Release
 
 ```bash
-bcs-helm-client delete chv --help
+$ helmctl upgrade -p <project_code> -c <cluster_id> -n <namespace> <release_name> <chart_name> <version> -f values.yaml --args=--wait=true --args=--timeout=600s
 ```
 
-参数详情:
-
-```yaml 
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-  -d, --data string         resource json data
-  -f, --file string         resource json file
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-```
-
-示例:
+### 11. 回滚 Release
 
 ```bash
-bcs-helm-client delete [chartname to delete] [chartversion to delete] -p [projectname to query] -r [repositoryname to query]
+$ helmctl rollback -p <project_code> -c <cluster_id> -n <namespace> <release_name> <revision>
 ```
 
-
-
-
-
-
-
-
-
-### 获取ChartRelease列表V1版 - ListReleaseV1
-
-### 
+### 12. 卸载 Release
 
 ```bash
-bcs-helm-client list rl --help
-```
-
-参数详情:
-
-```yaml 
-  -A, --all                 list all records
-      --cluster string      release cluster id for operation
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-      --name string         release name for operation
-  -n, --namespace string    release namespace for operation
-      --num int             list records num (default 20)
-  -o, --output string       output format, one of json|wide
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-```
-
-示例:
-
-```bash
-bcs-helm-client list rl -p [projectname to query] -r [repositoryname to query] --name [releasename to query] -n [namespace to query] --cluster [cluster to query]
-bcs-helm-client list rl -p project -r repo --name releasename -n default --cluster BCS-K8S-00000
-```
-
-
-
-### 获取ChartRelease明细V1版 - GetReleaseDetailV1
-
-### 
-
-```bash
-bcs-helm-client get release --help
-```
-
-子命令Aliases:
-
-```bash
-release, rl
-```
-
-参数详情:
-
-```yaml 
-      --cluster string      release cluster id for operation
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-      --name string         release name for operation
-  -n, --namespace string    release namespace for operation
-  -o, --output string       output format, one of json|wide
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-
-```
-
-示例:
-
-```bash
-bcs-helm-client get release  --name [releasename to query] -p [projectname to query]  -n [namespace to query] --cluster [cluster to query]
-```
-
-
-
-### 安装ChartRelease明细V1版 - InstallReleaseV1
-
-### 
-
-```bash
-bcs-helm-client install  --help
-```
-
-参数详情:
-
-```yaml 
-      --args string         args to append to helm command
-      --cluster string      release cluster id for operation
-  -f, --file strings        value file for installation
-  -h, --help                help for installv1
-  -n, --namespace string    release namespace for operation
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-      --sysvar string       sys var file
-
-```
-
-示例:
-
-```bash
-bcs-helm-client  install [releasename to install] [chartname to install] [version to install] -n [namespace to install] -p [projectname to install]  -r [repositoryname to install] --cluster [cluster to install] -f [value file for installation]
-```
-
-
-
-### 卸载ChartRelease明细V1版 - UninstallReleaseV1
-
-### 
-
-```bash
-bcs-helm-client uninstall --help
-```
-
-参数详情:
-
-```yaml 
-      --cluster string     release cluster id for operation
-  -h, --help               help for uninstallv1
-  -n, --namespace string   release namespace for operation
-  -p, --project string     release project for operation
-```
-
-示例:
-
-```bash
-bcs-helm-client uninstall [releasename to uninstall] -n [namespace to install] -p [projectname to install]  --cluster [cluster to uninstall]
-```
-
-
-
-### 升级ChartRelease明细V1版 - UpgradeReleaseV1
-
-### 
-
-```bash
-bcs-helm-client upgrade --help
-```
-
-参数详情:
-
-```yaml 
-      --args string         args to append to helm command
-      --cluster string      release cluster id for operation
-  -f, --file strings        value file for installation
-  -h, --help                help for upgradev1
-  -n, --namespace string    release namespace for operation
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-      --sysvar string       sys var file
-
-```
-
-示例:
-
-```bash
-bcs-helm-client upgrade   [releasename to upgrade] [chartname to upgrade] [version to upgrade]  -n [namespace to upgrade] -p [projectname to upgrade]  -r [repositoryname to upgrade] --cluster [cluster to upgrade] -f [value file for upgrade]
-```
-
-
-
-### 回滚ChartRelease明细V1版 - RollbackReleaseV1
-
-### 
-
-```bash
-bcs-helm-client rollback --help
-```
-
-参数详情:
-
-```yaml 
-      --cluster string     release cluster id for operation
-  -h, --help               help for rollbackv1
-  -n, --namespace string   release namespace for operation
-  -p, --project string     project id for operation
-```
-
-示例:
-
-```bash
-bcs-helm-client  rollback  [releasename to upgrade] [releasename to upgrade(类型为正整数)] -n [namespace to upgrade] -p [projectname to upgrade] --cluster [cluster to upgrade] 
-```
-
-
-
-
-
-### 获取Release历史信息 - GetReleaseHistory
-
-### 
-
-```bash
-bcs-helm-client get rlh --help
-```
-
-参数详情:
-
-```yaml 
-      --cluster string      release cluster id for operation
-  -c, --config string       config file (default "./etc/bcs/helmctl.yaml")
-      --name string         release name for operation
-  -n, --namespace string    release namespace for operation
-  -o, --output string       output format, one of json|wide
-  -p, --project string      project id for operation
-  -r, --repository string   repository name for operation
-```
-
-示例:
-
-```bash
-bcs-helm-client get rlh [releasename to query] -n [namespace to upgrade] -p [projectname to upgrade] --cluster [cluster to upgrade] 
-```
-
-
-
-
-
-## 如何编译
-
-找到bcs-helm-manager makefile文件,执行下述命令编译 Client 工具
-```
-make client
+$ helmctl uninstall -p <project_code> -c <cluster_id> -n <namespace> <release_name>
 ```

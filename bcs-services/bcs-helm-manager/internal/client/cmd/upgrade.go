@@ -15,7 +15,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
@@ -28,14 +27,16 @@ var upgradeCMD = &cobra.Command{
 	Short: "upgrade",
 	Long:  "upgrade chart release",
 	Run:   Upgrade,
+	Example: "helmctl upgrade -p <project_code> -c <cluster_id> -n <namespace> <release_name> <chart_name> " +
+		"<version> -f values.yaml",
 }
 
-// UpgradeV1 provide the actions to do upgradeCMD
+// Upgrade provide the actions to do upgradeCMD
 func Upgrade(cmd *cobra.Command, args []string) {
 	req := &helmmanager.UpgradeReleaseV1Req{}
 
 	if len(args) < 3 {
-		fmt.Printf("upgradev1 args need at least 3, install [name] [chart] [version]\n")
+		fmt.Printf("upgrade args need at least 3, upgrade [name] [chart] [version]\n")
 		os.Exit(1)
 	}
 	values, err := getValues()
@@ -48,14 +49,14 @@ func Upgrade(cmd *cobra.Command, args []string) {
 	req.Namespace = &flagNamespace
 	req.ClusterID = &flagCluster
 	req.ProjectCode = &flagProject
+	if flagRepository == "" {
+		flagRepository = flagProject
+	}
 	req.Repository = &flagRepository
 	req.Chart = common.GetStringP(args[1])
 	req.Version = common.GetStringP(args[2])
 	req.Values = values
-	req.ValueFile = &flagValueFile[0]
-	if flagArgs != "" {
-		req.Args = strings.Split(flagArgs, " ")
-	}
+	req.Args = flagArgs
 
 	c := newClientWithConfiguration()
 	err = c.Release().Upgrade(cmd.Context(), req)
@@ -64,22 +65,23 @@ func Upgrade(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to upgrade release %s in version %s namespace %s cluster %s "+
-		"with appVersion %s revision %d\n",
-		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID())
+	fmt.Printf("success to upgrade release %s", req.GetName())
 }
 
 func init() {
 	upgradeCMD.PersistentFlags().StringVarP(
-		&flagProject, "project", "p", "", "project id for operation")
+		&flagProject, "project", "p", "", "project code")
 	upgradeCMD.PersistentFlags().StringVarP(
-		&flagRepository, "repository", "r", "", "repository name for operation")
+		&flagRepository, "repo", "r", "", "repository name")
 	upgradeCMD.PersistentFlags().StringVarP(
-		&flagNamespace, "namespace", "n", "", "release namespace for operation")
+		&flagCluster, "cluster", "c", "", "release cluster id")
 	upgradeCMD.PersistentFlags().StringVarP(
-		&flagCluster, "cluster", "", "", "release cluster id for operation")
+		&flagNamespace, "namespace", "n", "", "release namespace")
 	upgradeCMD.PersistentFlags().StringSliceVarP(
-		&flagValueFile, "file", "f", nil, "value file for installation")
-	upgradeCMD.PersistentFlags().StringVarP(
-		&flagArgs, "args", "", "", "args to append to helm command")
+		&flagValueFile, "file", "f", nil, "value file for installation, -f values.yaml")
+	upgradeCMD.PersistentFlags().StringSliceVarP(
+		&flagArgs, "args", "", nil, "--args=--wait=true --args=--timeout=600s")
+	upgradeCMD.MarkPersistentFlagRequired("project")
+	upgradeCMD.MarkPersistentFlagRequired("cluster")
+	upgradeCMD.MarkPersistentFlagRequired("namespace")
 }

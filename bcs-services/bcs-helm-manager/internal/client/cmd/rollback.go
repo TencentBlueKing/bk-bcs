@@ -24,10 +24,11 @@ import (
 )
 
 var rollbackCMD = &cobra.Command{
-	Use:   "rollback",
-	Short: "rollback",
-	Long:  "rollback chart release",
-	Run:   Rollback,
+	Use:     "rollback",
+	Short:   "rollback",
+	Long:    "rollback chart release",
+	Run:     Rollback,
+	Example: "helmctl rollback -p <project_code> -c <cluster_id> -n <namespace> <release_name> <revision>",
 }
 
 // Rollback provide the actions to do rollbackCMD
@@ -35,16 +36,16 @@ func Rollback(cmd *cobra.Command, args []string) {
 	req := &helmmanager.RollbackReleaseV1Req{}
 
 	if len(args) < 2 {
-		fmt.Printf("rollback  args need at least 2, install [name] [revision]\n")
+		fmt.Printf("rollback args need at least 2, rollback [name] [revision]\n")
 		os.Exit(1)
 	}
 	revision, err := strconv.Atoi(args[1])
 	if err != nil {
-		fmt.Printf("rollback  get invalid revision %s, %s\n", args[1], err.Error())
+		fmt.Printf("rollback get invalid revision %s, %s\n", args[1], err.Error())
 		os.Exit(1)
 	}
 	if revision <= 0 {
-		fmt.Printf("rollback  get invalid revision %s, revision should be positive\n", args[1])
+		fmt.Printf("rollback get invalid revision %s, revision should be positive\n", args[1])
 		os.Exit(1)
 	}
 
@@ -60,15 +61,17 @@ func Rollback(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to rollback release %s namespace %s cluster %s to revision %d\n",
-		req.GetName(), req.GetNamespace(), req.GetClusterID(), revision)
+	fmt.Printf("success to rollback release %s to revision %d\n", req.GetName(), revision)
 }
 
 func init() {
 	rollbackCMD.PersistentFlags().StringVarP(
-		&flagProject, "project", "p", "", "project id for operation")
+		&flagProject, "project", "p", "", "project code")
 	rollbackCMD.PersistentFlags().StringVarP(
-		&flagNamespace, "namespace", "n", "", "release namespace for operation")
+		&flagCluster, "cluster", "c", "", "release cluster id")
 	rollbackCMD.PersistentFlags().StringVarP(
-		&flagCluster, "cluster", "", "", "release cluster id for operation")
+		&flagNamespace, "namespace", "n", "", "release namespace")
+	rollbackCMD.MarkPersistentFlagRequired("project")
+	rollbackCMD.MarkPersistentFlagRequired("cluster")
+	rollbackCMD.MarkPersistentFlagRequired("namespace")
 }
