@@ -812,7 +812,7 @@ func local_request_Config_DeleteConfigItem_0(ctx context.Context, marshaler runt
 }
 
 var (
-	filter_Config_GetConfigItem_0 = &utilities.DoubleArray{Encoding: map[string]int{"app_id": 0, "appId": 1, "config_item_id": 2, "configItemId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
+	filter_Config_GetConfigItem_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3, "config_item_id": 4, "configItemId": 5}, Base: []int{1, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7}}
 )
 
 func request_Config_GetConfigItem_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -825,6 +825,16 @@ func request_Config_GetConfigItem_0(ctx context.Context, marshaler runtime.Marsh
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -869,6 +879,16 @@ func local_request_Config_GetConfigItem_0(ctx context.Context, marshaler runtime
 		_   = err
 	)
 
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
 	val, ok = pathParams["app_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
@@ -902,7 +922,7 @@ func local_request_Config_GetConfigItem_0(ctx context.Context, marshaler runtime
 }
 
 var (
-	filter_Config_ListConfigItems_0 = &utilities.DoubleArray{Encoding: map[string]int{"app_id": 0, "appId": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_Config_ListConfigItems_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
 )
 
 func request_Config_ListConfigItems_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -915,6 +935,16 @@ func request_Config_ListConfigItems_0(ctx context.Context, marshaler runtime.Mar
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -948,6 +978,16 @@ func local_request_Config_ListConfigItems_0(ctx context.Context, marshaler runti
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -1520,7 +1560,7 @@ func local_request_Config_CreateRelease_0(ctx context.Context, marshaler runtime
 }
 
 var (
-	filter_Config_ListReleases_0 = &utilities.DoubleArray{Encoding: map[string]int{"app_id": 0, "appId": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_Config_ListReleases_0 = &utilities.DoubleArray{Encoding: map[string]int{"biz_id": 0, "bizId": 1, "app_id": 2, "appId": 3}, Base: []int{1, 1, 2, 3, 4, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 2, 3, 4, 5}}
 )
 
 func request_Config_ListReleases_0(ctx context.Context, marshaler runtime.Marshaler, client ConfigClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -1533,6 +1573,16 @@ func request_Config_ListReleases_0(ctx context.Context, marshaler runtime.Marsha
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -1566,6 +1616,16 @@ func local_request_Config_ListReleases_0(ctx context.Context, marshaler runtime.
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -2468,6 +2528,16 @@ func request_Config_CreateHook_0(ctx context.Context, marshaler runtime.Marshale
 		_   = err
 	)
 
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
 	val, ok = pathParams["app_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
@@ -2502,6 +2572,16 @@ func local_request_Config_CreateHook_0(ctx context.Context, marshaler runtime.Ma
 		_   = err
 	)
 
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
 	val, ok = pathParams["app_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
@@ -2527,6 +2607,16 @@ func request_Config_DeleteHook_0(ctx context.Context, marshaler runtime.Marshale
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -2563,6 +2653,16 @@ func local_request_Config_DeleteHook_0(ctx context.Context, marshaler runtime.Ma
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -2608,6 +2708,16 @@ func request_Config_UpdateHook_0(ctx context.Context, marshaler runtime.Marshale
 		_   = err
 	)
 
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
 	val, ok = pathParams["app_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
@@ -2651,6 +2761,16 @@ func local_request_Config_UpdateHook_0(ctx context.Context, marshaler runtime.Ma
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -2696,6 +2816,16 @@ func request_Config_ListHooks_0(ctx context.Context, marshaler runtime.Marshaler
 		_   = err
 	)
 
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
 	val, ok = pathParams["app_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_id")
@@ -2729,6 +2859,16 @@ func local_request_Config_ListHooks_0(ctx context.Context, marshaler runtime.Mar
 		err error
 		_   = err
 	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
 
 	val, ok = pathParams["app_id"]
 	if !ok {
@@ -4464,7 +4604,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetConfigItem", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/config_items/{config_item_id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/GetConfigItem", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -4489,7 +4629,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListConfigItems", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/config_items"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListConfigItems", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -4664,7 +4804,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListReleases", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/releases"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListReleases", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -4914,7 +5054,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/CreateHook", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/hooks"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/CreateHook", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -4939,7 +5079,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/DeleteHook", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/hooks/{hook_id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/DeleteHook", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -4964,7 +5104,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UpdateHook", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/hooks/{hook_id}"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/UpdateHook", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -4989,7 +5129,7 @@ func RegisterConfigHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListHooks", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/hooks/list"))
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Config/ListHooks", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/list"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -5745,7 +5885,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetConfigItem", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/config_items/{config_item_id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/GetConfigItem", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -5767,7 +5907,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListConfigItems", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/config_items"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListConfigItems", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -5921,7 +6061,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListReleases", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/releases"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListReleases", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/releases"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6141,7 +6281,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/CreateHook", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/hooks"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/CreateHook", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6163,7 +6303,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/DeleteHook", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/hooks/{hook_id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/DeleteHook", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6185,7 +6325,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UpdateHook", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/hooks/{hook_id}"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/UpdateHook", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6207,7 +6347,7 @@ func RegisterConfigHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		var err error
 		var annotatedContext context.Context
-		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListHooks", runtime.WithHTTPPathPattern("/api/v1/config/apps/{app_id}/hooks/list"))
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Config/ListHooks", runtime.WithHTTPPathPattern("/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/list"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -6645,9 +6785,9 @@ var (
 
 	pattern_Config_DeleteConfigItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "delete", "config_item", "config_item_id", "id", "app_id", "biz_id"}, ""))
 
-	pattern_Config_GetConfigItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "v1", "config", "apps", "app_id", "config_items", "config_item_id"}, ""))
+	pattern_Config_GetConfigItem_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "config_items", "config_item_id"}, ""))
 
-	pattern_Config_ListConfigItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "config", "apps", "app_id", "config_items"}, ""))
+	pattern_Config_ListConfigItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "config_items"}, ""))
 
 	pattern_Config_ListConfigItemCount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 4}, []string{"api", "v1", "config", "config_item_count", "biz_id"}, ""))
 
@@ -6661,7 +6801,7 @@ var (
 
 	pattern_Config_CreateRelease_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 4, 2, 5, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 6}, []string{"api", "v1", "config", "create", "release", "app_id", "biz_id"}, ""))
 
-	pattern_Config_ListReleases_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "config", "apps", "app_id", "releases"}, ""))
+	pattern_Config_ListReleases_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "releases"}, ""))
 
 	pattern_Config_ListReleasedConfigItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5, 2, 6, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7}, []string{"api", "v1", "config", "list", "release", "config_item", "release_id", "biz_id"}, ""))
 
@@ -6681,13 +6821,13 @@ var (
 
 	pattern_Config_ListStrategies_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 4, 2, 5, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 6}, []string{"api", "v1", "config", "list", "strategy", "app_id", "biz_id"}, ""))
 
-	pattern_Config_CreateHook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "config", "apps", "app_id", "hooks"}, ""))
+	pattern_Config_CreateHook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "hooks"}, ""))
 
-	pattern_Config_DeleteHook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "v1", "config", "apps", "app_id", "hooks", "hook_id"}, ""))
+	pattern_Config_DeleteHook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "hooks", "hook_id"}, ""))
 
-	pattern_Config_UpdateHook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"api", "v1", "config", "apps", "app_id", "hooks", "hook_id"}, ""))
+	pattern_Config_UpdateHook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "hooks", "hook_id"}, ""))
 
-	pattern_Config_ListHooks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 2, 6}, []string{"api", "v1", "config", "apps", "app_id", "hooks", "list"}, ""))
+	pattern_Config_ListHooks_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7, 2, 8}, []string{"api", "v1", "config", "biz", "biz_id", "apps", "app_id", "hooks", "list"}, ""))
 
 	pattern_Config_CreateGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "config", "biz", "biz_id", "groups"}, ""))
 
