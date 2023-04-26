@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"strings"
 
+	"bscp.io/pkg/tools"
 	"github.com/gobwas/glob"
 )
 
@@ -51,7 +52,5 @@ func (cs CredentialScope) MatchConfigItem(path, name string) (bool, error) {
 		return false, err
 	}
 	configItemPattern := strings.SplitN(string(cs), "/", 2)[1]
-	path = strings.Trim(path, "/")
-	fullPath := strings.Trim(path+"/"+name, "/")
-	return glob.MustCompile(configItemPattern, '/').Match(fullPath), nil
+	return tools.MatchConfigItem(configItemPattern, path, name), nil
 }

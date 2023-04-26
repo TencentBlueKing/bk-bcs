@@ -150,13 +150,21 @@ func (s *Service) Watch(swm *pbfs.SideWatchMeta, fws pbfs.Upstream_WatchServer) 
 		return status.Errorf(codes.Aborted, "parse request payload failed, %s", err.Error())
 	}
 
+	for i := range payload.Applications {
+		appID, err := s.bll.AppCache().GetAppID(im.Kit, payload.BizID, payload.Applications[i].App)
+		if err != nil {
+			return status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+		}
+		payload.Applications[i].AppID = appID
+	}
+
 	if err := payload.Validate(); err != nil {
 		return status.Errorf(codes.Aborted, "invalid payload, err: %s", err.Error())
 	}
 
 	var msg string
 	for _, one := range payload.Applications {
-		msg += fmt.Sprintf("app: %d, uid: %s, ", one.AppID, one.Uid)
+		msg += fmt.Sprintf("biz: %d, app: %s, uid: %s, ", payload.BizID, one.App, one.Uid)
 	}
 
 	logs.Infof("received sidecar watch request, biz: %d, %s fingerprint: %s, rid: %s.", im.Meta.BizID, msg,
@@ -226,9 +234,14 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		return nil, status.Error(codes.InvalidArgument, "app meta is empty")
 	}
 
+	appID, err := s.bll.AppCache().GetAppID(im.Kit, req.BizId, req.AppMeta.App)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
 	meta := &types.AppInstanceMeta{
 		BizID:  req.BizId,
-		AppID:  req.AppMeta.AppId,
+		App:    req.AppMeta.App,
+		AppID:  appID,
 		Uid:    req.AppMeta.Uid,
 		Labels: req.AppMeta.Labels,
 	}
@@ -241,9 +254,15 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		return nil, err
 	}
 
-	fileMetas := make([]*pbfs.FileMeta, len(metas.ConfigItems))
-	for idx, ci := range metas.ConfigItems {
-		fileMetas[idx] = &pbfs.FileMeta{
+	fileMetas := make([]*pbfs.FileMeta, 0, len(metas.ConfigItems))
+	for _, ci := range metas.ConfigItems {
+		if req.Key != "" && !tools.MatchConfigItem(req.Key, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name) {
+			continue
+		}
+		if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.Token, ci.RciId); err != nil || !match {
+			return nil, status.Errorf(codes.PermissionDenied, "no permission to access config item %d", ci.RciId)
+		}
+		fileMetas = append(fileMetas, &pbfs.FileMeta{
 			Id:             ci.RciId,
 			CommitId:       ci.CommitID,
 			CommitSpec:     ci.CommitSpec,
@@ -251,7 +270,7 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 			RepositorySpec: &pbfs.RepositorySpec{
 				Path: ci.RepositorySpec.Path,
 			},
-		}
+		})
 	}
 	resp := &pbfs.PullAppFileMetaResp{
 		ReleaseId: metas.ReleaseId,
@@ -299,7 +318,7 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 		ExpireSeconds: uint32(TempDownloadURLExpireSeconds),
 		// range download swap buffer size is 2MB, so we need to set the permits to byteSize / 2MB,
 		// and then set permits to twice to left space for retry.
-		Permits: uint32(req.FileMeta.CommitSpec.Content.ByteSize / 1024),
+		Permits: uint32(req.FileMeta.CommitSpec.Content.ByteSize/1024) + 1,
 		Type:    "DOWNLOAD",
 	})
 	if err != nil {

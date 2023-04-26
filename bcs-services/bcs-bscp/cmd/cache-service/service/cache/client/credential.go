@@ -130,6 +130,9 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string) 
 	if errors.Is(err, errf.ErrCredentialInvalid) {
 		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", str)
 	}
+	if !credential.Spec.Enable {
+		return "", 0, errf.Newf(errf.InvalidParameter, "credential: %s is disabled", str)
+	}
 
 	// list credential scopes
 	scopes, err := c.op.CredentialScope().Get(kt, credential.ID, bizID)
@@ -186,7 +189,7 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string) 
 				return "", 0, err
 			}
 			if match {
-				cis = append(cis, ci.ConfigItemID)
+				cis = append(cis, ci.ID)
 			}
 		}
 	}

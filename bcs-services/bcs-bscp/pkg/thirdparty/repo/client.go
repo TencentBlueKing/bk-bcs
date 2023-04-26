@@ -304,6 +304,7 @@ func (c *Client) GenerateTempDownloadURL(ctx context.Context, req *GenerateTempD
 		WithContext(ctx).
 		SubResourcef("/generic/temporary/url/create").
 		WithHeaders(c.basicHeader).
+		Body(req).
 		Do()
 	if resp.Err != nil {
 		return "", resp.Err

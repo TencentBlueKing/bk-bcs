@@ -44,6 +44,7 @@ const (
 	releasedGroup       namespace = "released-group"
 	credentialMatchedCI namespace = "credential-matched-ci"
 	appMeta             namespace = "app-meta"
+	appID               namespace = "app-id"
 )
 
 type keyGenerator struct {
@@ -141,6 +142,15 @@ func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 	}
 
 	return k.releasedCITTLRange[1]
+}
+
+// AppMeta generate the app id cache key.
+func (k keyGenerator) AppID(bizID uint32, appName string) string {
+	return element{
+		biz: bizID,
+		ns:  appID,
+		key: appName,
+	}.String()
 }
 
 // AppMeta generate the app meta cache key.

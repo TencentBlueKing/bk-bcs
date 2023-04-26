@@ -13,6 +13,11 @@ package pbcs;
 option go_package = "bscp.io/pkg/protocol/cache-service;pbcs";
 
 service Cache {
+    rpc GetAppID(GetAppIDReq) returns (GetAppIDResp) {
+        option (google.api.http) = {
+            get: "/api/v1/cache/biz/{biz_id}/apps/{app_name}/app_id"
+        };
+    }
     rpc GetAppMeta(GetAppMetaReq) returns (JsonRawResp) {
         // response data reference pkg/types/cache.go/AppCacheMeta
         option (google.api.http) = {
@@ -93,6 +98,15 @@ service Cache {
 
 message JsonRawResp {
     string json_raw = 1;
+}
+
+message GetAppIDReq {
+    uint32 biz_id = 1;
+    string app_name = 2;
+}
+
+message GetAppIDResp {
+    uint32 app_id = 2;
 }
 
 message GetAppMetaReq {

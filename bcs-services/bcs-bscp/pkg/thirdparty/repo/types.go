@@ -192,7 +192,7 @@ type GenerateTempDownloadURLData struct {
 	// AuthorizedIpList is authorized ip list.
 	AuthorizedIpList []string `json:"authorizedIpList"`
 	// ExpireDate is expire date.
-	ExpireDate uint32 `json:"expireDate"`
+	ExpireDate string `json:"expireDate"`
 	// Permits is count limit for download.
 	Permits uint32 `json:"permits"`
 	// Type is download type.

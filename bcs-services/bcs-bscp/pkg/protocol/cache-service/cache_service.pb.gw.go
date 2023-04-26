@@ -32,6 +32,78 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = metadata.Join
 
+func request_Cache_GetAppID_0(ctx context.Context, marshaler runtime.Marshaler, client CacheClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetAppIDReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	val, ok = pathParams["app_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_name")
+	}
+
+	protoReq.AppName, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_name", err)
+	}
+
+	msg, err := client.GetAppID(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Cache_GetAppID_0(ctx context.Context, marshaler runtime.Marshaler, server CacheServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetAppIDReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["biz_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "biz_id")
+	}
+
+	protoReq.BizId, err = runtime.Uint32(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "biz_id", err)
+	}
+
+	val, ok = pathParams["app_name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "app_name")
+	}
+
+	protoReq.AppName, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "app_name", err)
+	}
+
+	msg, err := server.GetAppID(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Cache_GetAppMeta_0(ctx context.Context, marshaler runtime.Marshaler, client CacheClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetAppMetaReq
 	var metadata runtime.ServerMetadata
@@ -588,6 +660,31 @@ func local_request_Cache_ListCredentialMatchedCI_0(ctx context.Context, marshale
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterCacheHandlerFromEndpoint instead.
 func RegisterCacheHandlerServer(ctx context.Context, mux *runtime.ServeMux, server CacheServer) error {
 
+	mux.Handle("GET", pattern_Cache_GetAppID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/pbcs.Cache/GetAppID", runtime.WithHTTPPathPattern("/api/v1/cache/biz/{biz_id}/apps/{app_name}/app_id"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Cache_GetAppID_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Cache_GetAppID_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_Cache_GetAppMeta_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -854,6 +951,28 @@ func RegisterCacheHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc
 // "CacheClient" to call the correct interceptors.
 func RegisterCacheHandlerClient(ctx context.Context, mux *runtime.ServeMux, client CacheClient) error {
 
+	mux.Handle("GET", pattern_Cache_GetAppID_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		var err error
+		var annotatedContext context.Context
+		annotatedContext, err = runtime.AnnotateContext(ctx, mux, req, "/pbcs.Cache/GetAppID", runtime.WithHTTPPathPattern("/api/v1/cache/biz/{biz_id}/apps/{app_name}/app_id"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Cache_GetAppID_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Cache_GetAppID_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_Cache_GetAppMeta_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -1056,6 +1175,8 @@ func RegisterCacheHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
+	pattern_Cache_GetAppID_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6, 2, 7}, []string{"api", "v1", "cache", "biz", "biz_id", "apps", "app_name", "app_id"}, ""))
+
 	pattern_Cache_GetAppMeta_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "cache", "app", "meta", "biz_id"}, ""))
 
 	pattern_Cache_GetReleasedCI_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 5}, []string{"api", "v1", "cache", "ci", "released", "biz_id"}, ""))
@@ -1076,6 +1197,8 @@ var (
 )
 
 var (
+	forward_Cache_GetAppID_0 = runtime.ForwardResponseMessage
+
 	forward_Cache_GetAppMeta_0 = runtime.ForwardResponseMessage
 
 	forward_Cache_GetReleasedCI_0 = runtime.ForwardResponseMessage

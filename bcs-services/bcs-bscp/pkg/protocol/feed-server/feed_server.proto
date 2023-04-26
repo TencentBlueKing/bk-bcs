@@ -59,11 +59,13 @@ message PullAppFileMetaReq {
     // refer to sfs.SideWatchPayload.
     uint32 biz_id = 2;
     AppMeta app_meta = 3;
+    string token = 4;
+    string key = 5;
 }
 
 message AppMeta {
-    uint32 app_id = 1;
-    string uid    = 2;
+    string app                 = 1;
+    string uid                 = 2;
     map<string, string> labels = 3;
 }
 
@@ -77,9 +79,8 @@ message GetDownloadURLReq {
     // version defines message's protocol version from sidecar
     pbbase.Versioning api_version = 1;
     uint32 biz_id = 2;
-    uint32 app_id = 3;
-    FileMeta file_meta = 4;
-    string token = 5;
+    FileMeta file_meta = 3;
+    string token = 4;
 }
 
 message GetDownloadURLResp {

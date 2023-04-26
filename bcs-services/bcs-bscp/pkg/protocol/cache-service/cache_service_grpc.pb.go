@@ -20,6 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Cache_GetAppID_FullMethodName                 = "/pbcs.Cache/GetAppID"
 	Cache_GetAppMeta_FullMethodName               = "/pbcs.Cache/GetAppMeta"
 	Cache_GetReleasedCI_FullMethodName            = "/pbcs.Cache/GetReleasedCI"
 	Cache_GetAppInstanceRelease_FullMethodName    = "/pbcs.Cache/GetAppInstanceRelease"
@@ -39,6 +40,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CacheClient interface {
+	GetAppID(ctx context.Context, in *GetAppIDReq, opts ...grpc.CallOption) (*GetAppIDResp, error)
 	GetAppMeta(ctx context.Context, in *GetAppMetaReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetReleasedCI(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetAppInstanceRelease(ctx context.Context, in *GetAppInstanceReleaseReq, opts ...grpc.CallOption) (*GetAppInstanceReleaseResp, error)
@@ -61,6 +63,15 @@ type cacheClient struct {
 
 func NewCacheClient(cc grpc.ClientConnInterface) CacheClient {
 	return &cacheClient{cc}
+}
+
+func (c *cacheClient) GetAppID(ctx context.Context, in *GetAppIDReq, opts ...grpc.CallOption) (*GetAppIDResp, error) {
+	out := new(GetAppIDResp)
+	err := c.cc.Invoke(ctx, Cache_GetAppID_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *cacheClient) GetAppMeta(ctx context.Context, in *GetAppMetaReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
@@ -184,6 +195,7 @@ func (c *cacheClient) BenchAppCPS(ctx context.Context, in *BenchAppCPSReq, opts 
 // All implementations should embed UnimplementedCacheServer
 // for forward compatibility
 type CacheServer interface {
+	GetAppID(context.Context, *GetAppIDReq) (*GetAppIDResp, error)
 	GetAppMeta(context.Context, *GetAppMetaReq) (*JsonRawResp, error)
 	GetReleasedCI(context.Context, *GetReleasedCIReq) (*JsonRawResp, error)
 	GetAppInstanceRelease(context.Context, *GetAppInstanceReleaseReq) (*GetAppInstanceReleaseResp, error)
@@ -204,6 +216,9 @@ type CacheServer interface {
 type UnimplementedCacheServer struct {
 }
 
+func (UnimplementedCacheServer) GetAppID(context.Context, *GetAppIDReq) (*GetAppIDResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAppID not implemented")
+}
 func (UnimplementedCacheServer) GetAppMeta(context.Context, *GetAppMetaReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppMeta not implemented")
 }
@@ -253,6 +268,24 @@ type UnsafeCacheServer interface {
 
 func RegisterCacheServer(s grpc.ServiceRegistrar, srv CacheServer) {
 	s.RegisterService(&Cache_ServiceDesc, srv)
+}
+
+func _Cache_GetAppID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAppIDReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).GetAppID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_GetAppID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).GetAppID(ctx, req.(*GetAppIDReq))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Cache_GetAppMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -496,6 +529,10 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "pbcs.Cache",
 	HandlerType: (*CacheServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetAppID",
+			Handler:    _Cache_GetAppID_Handler,
+		},
 		{
 			MethodName: "GetAppMeta",
 			Handler:    _Cache_GetAppMeta_Handler,

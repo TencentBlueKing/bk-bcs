@@ -19,6 +19,11 @@ var ResKind = resKind("resource-kind")
 
 type resKind string
 
+// AppID return the app id's resource kind
+func (rk resKind) AppID(bizID uint32, appName string) string {
+	return fmt.Sprintf("app-id-%d-%s", bizID, appName)
+}
+
 // AppMeta return the app meta's resource kind
 func (rk resKind) AppMeta(appID uint32) string {
 	return fmt.Sprintf("apm-%d", appID)
