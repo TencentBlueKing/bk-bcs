@@ -30,6 +30,7 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
+	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
 	view "bscp.io/pkg/rest/view"
 	"bscp.io/pkg/runtime/handler"
@@ -46,6 +47,7 @@ type Service struct {
 	authorizer auth.Authorizer
 	serve      *http.Server
 	state      serviced.State
+	repoCli    *repo.Client
 	// name feed server instance name.
 	name string
 	// dsSetting down stream related setting.
@@ -83,8 +85,14 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("new repository uri decorator failed, err: %v", err)
 	}
 
+	repoCli, err := repo.NewClient(cc.FeedServer().Repository, metrics.Register())
+	if err != nil {
+		return nil, err
+	}
+
 	return &Service{
 		bll:          bl,
+		repoCli:      repoCli,
 		authorizer:   authorizer,
 		state:        state,
 		name:         name,

@@ -32,7 +32,7 @@ import (
 
 // Client is repo client.
 type Client struct {
-	config *cc.Repository
+	config cc.Repository
 	// http client instance
 	client rest.ClientInterface
 	// http header info
@@ -40,7 +40,7 @@ type Client struct {
 }
 
 // NewClient new repo client.
-func NewClient(repoSetting *cc.Repository, reg prometheus.Registerer) (*Client, error) {
+func NewClient(repoSetting cc.Repository, reg prometheus.Registerer) (*Client, error) {
 	tls := &tools.TLSConfig{
 		InsecureSkipVerify: repoSetting.BkRepo.TLS.InsecureSkipVerify,
 		CertFile:           repoSetting.BkRepo.TLS.CertFile,
@@ -296,6 +296,37 @@ func (c *Client) FileMetadataHead(ctx context.Context, nodePath string) (*FileMe
 type FileMetadataValue struct {
 	ByteSize int64  `json:"byte_size"`
 	Sha256   string `json:"sha256"`
+}
+
+// GenerateTempDownloadURL generate temp download url.
+func (c *Client) GenerateTempDownloadURL(ctx context.Context, req *GenerateTempDownloadURLReq) (string, error) {
+	resp := c.client.Post().
+		WithContext(ctx).
+		SubResourcef("/generic/temporary/url/create").
+		WithHeaders(c.basicHeader).
+		Body(req).
+		Do()
+	if resp.Err != nil {
+		return "", resp.Err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("response status code: %d", resp.StatusCode)
+	}
+	respBody := new(GenerateTempDownloadURLResp)
+	if err := resp.Into(respBody); err != nil {
+		return "", err
+	}
+
+	if respBody.Code != 0 {
+		return "", fmt.Errorf("code: %d, message: %s", respBody.Code, respBody.Message)
+	}
+
+	if len(respBody.Data) != 1 {
+		return "", fmt.Errorf("invalid response data")
+	}
+
+	return respBody.Data[0].URL, nil
 }
 
 // Client is s3 client.

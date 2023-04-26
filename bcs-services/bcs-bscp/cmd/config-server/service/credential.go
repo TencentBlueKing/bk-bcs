@@ -102,15 +102,11 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 
 	if req.SearchKey != "" {
 		ft.Rules = append(ft.Rules, &filter.AtomRule{
-			Field: "enable",
-			Op:    filter.ContainsInsensitive.Factory(),
-			Value: req.SearchKey,
-		}, &filter.AtomRule{
 			Field: "memo",
 			Op:    filter.ContainsInsensitive.Factory(),
 			Value: req.SearchKey,
 		}, &filter.AtomRule{
-			Field: "creator",
+			Field: "reviser",
 			Op:    filter.ContainsInsensitive.Factory(),
 			Value: req.SearchKey,
 		})

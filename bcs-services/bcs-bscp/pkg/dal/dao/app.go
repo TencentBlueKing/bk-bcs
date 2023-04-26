@@ -42,6 +42,8 @@ type App interface {
 	Get(kit *kit.Kit, BizID, AppID uint32) (*table.App, error)
 	// get app only with id.
 	GetByID(kit *kit.Kit, AppID uint32) (*table.App, error)
+	// get app by name.
+	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.App, error)
 	// List apps with options.
 	List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListAppDetails, error)
 	// ListAppsByGroupID list apps by group id.
@@ -414,6 +416,21 @@ func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(appID)))
+	expr := filter.SqlJoint(sqlSentence)
+	one := new(table.App)
+	err := ap.orm.Do(ap.sd.Admin().DB()).Get(kit.Ctx, one, expr)
+	if err != nil {
+		return nil, fmt.Errorf("get app details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+// GetByName 通过 name 查询
+func (ap *appDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.App, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
+		" WHERE name = '", name, "' AND biz_id = ", strconv.Itoa(int(bizID)))
 	expr := filter.SqlJoint(sqlSentence)
 	one := new(table.App)
 	err := ap.orm.Do(ap.sd.Admin().DB()).Get(kit.Ctx, one, expr)

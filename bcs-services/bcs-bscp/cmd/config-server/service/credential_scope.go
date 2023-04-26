@@ -101,8 +101,11 @@ func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCre
 
 	// update credential
 	rc := &pbds.UpdateCredentialReq{
-		Id:   req.CredentialId,
-		Spec: &pbcredential.CredentialSpec{},
+		Id: req.CredentialId,
+		Spec: &pbcredential.CredentialSpec{
+			Enable: req.Enable,
+			Memo:   req.Memo,
+		},
 		Attachment: &pbcredential.CredentialAttachment{
 			BizId: bizID,
 		},

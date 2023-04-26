@@ -26,6 +26,51 @@ import (
 	prm "github.com/prometheus/client_golang/prometheus"
 )
 
+// GetAppID get app's id by app name.
+func (c *client) GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error) {
+	// try read from cache at first.
+	appID, hit, err := c.getAppIDFromCache(kt, bizID, appName)
+	if err != nil {
+		return 0, err
+	}
+	if hit {
+		c.mc.hitCounter.With(prm.Labels{"rsc": aiRes, "biz": tools.Itoa(bizID)}).Inc()
+		return appID, nil
+	}
+
+	// do not find app in the cache, then try get from db directly.
+	state := c.rLock.Acquire(keys.ResKind.AppID(bizID, appName))
+	if state.Acquired || (!state.Acquired && state.WithLimit) {
+		start := time.Now()
+		appID, err = c.refreshAppIDCache(kt, bizID, appName)
+		if err != nil {
+			state.Release(true)
+			return 0, err
+		}
+
+		state.Release(false)
+
+		c.mc.refreshLagMS.With(prm.Labels{"rsc": aiRes, "biz": tools.Itoa(bizID)}).Observe(tools.SinceMS(start))
+
+		return appID, nil
+	}
+
+	// do not acquire the lock, but the cache have already been refreshed,
+	// so retry to get app id from cache again.
+	appID, hit, err = c.getAppIDFromCache(kt, bizID, appName)
+	if err != nil {
+		return 0, err
+	}
+
+	if !hit {
+		return 0, errf.New(errf.RecordNotFound, fmt.Sprintf("app %d-%s cache not found", bizID, appName))
+	}
+
+	c.mc.hitCounter.With(prm.Labels{"rsc": aiRes, "biz": tools.Itoa(bizID)}).Inc()
+
+	return appID, nil
+}
+
 // GetAppMeta get app's basic meta info.
 // return with json string: AppCacheMeta
 func (c *client) GetAppMeta(kt *kit.Kit, bizID uint32, appID uint32) (string, error) {
@@ -75,6 +120,28 @@ func (c *client) GetAppMeta(kt *kit.Kit, bizID uint32, appID uint32) (string, er
 	return meta, nil
 }
 
+// getAppIDFromCache get app id from cache
+func (c *client) getAppIDFromCache(kt *kit.Kit, bizID uint32, appName string) (uint32, bool, error) {
+
+	val, err := c.bds.Get(kt.Ctx, keys.Key.AppID(bizID, appName))
+	if err != nil {
+		return 0, false, err
+	}
+
+	if len(val) == 0 {
+		return 0, false, nil
+	}
+
+	if val == keys.Key.NullValue() {
+		return 0, false, errf.New(errf.RecordNotFound, fmt.Sprintf("app %d-%s not found", bizID, appName))
+	}
+
+	var id uint32
+	jsoni.UnmarshalFromString(val, &id)
+
+	return id, true, nil
+}
+
 // getAppMetaFromCache get app meta from cache, and return the meta's json string
 func (c *client) getAppMetaFromCache(kt *kit.Kit, bizID uint32, appID uint32) (string, bool, error) {
 
@@ -92,6 +159,32 @@ func (c *client) getAppMetaFromCache(kt *kit.Kit, bizID uint32, appID uint32) (s
 	}
 
 	return val, true, nil
+}
+
+// refreshAppIDCache get the app id from db and try to refresh to the cache.
+func (c *client) refreshAppIDCache(kt *kit.Kit, bizID uint32, appName string) (uint32, error) {
+
+	cancel := kt.CtxWithTimeoutMS(200)
+	defer cancel()
+
+	app, err := c.op.App().GetByName(kt, bizID, appName)
+	if err != nil {
+		return 0, err
+	}
+
+	b, err := jsoni.Marshal(app.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	// update the app meta to cache.
+	err = c.bds.Set(kt.Ctx, keys.Key.AppID(bizID, appName), string(b), keys.Key.AppMetaTtlSec(false))
+	if err != nil {
+		logs.Errorf("set app: %d-%s cache failed, err: %v, rid: %s", bizID, appName, err, kt.Rid)
+		return 0, err
+	}
+
+	return app.ID, nil
 }
 
 // refreshAppMetaCache get the app meta's from db and try to refresh to the cache.

@@ -23,7 +23,7 @@ func (opt *ListCredentialsOption) Validate(po *PageOption) error {
 		return errf.New(errf.InvalidParameter, "page is null")
 	}
 	exprOpt := &filter.ExprOption{
-		RuleFields: table.CommitsColumns.WithoutColumn("biz_id"),
+		RuleFields: table.CredentialColumns.WithoutColumn("biz_id"),
 	}
 	if err := opt.Filter.Validate(exprOpt); err != nil {
 		return err

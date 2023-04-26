@@ -209,7 +209,7 @@ func (as SidecarAppSpec) Validate() error {
 
 	for _, one := range as.Applications {
 		if err := one.Validate(); err != nil {
-			return fmt.Errorf("invalidate application information for app: %d, err: %v", one.AppID, err)
+			return fmt.Errorf("invalidate application information for app: %s, err: %v", one.App, err)
 		}
 	}
 
@@ -218,7 +218,7 @@ func (as SidecarAppSpec) Validate() error {
 
 // AppMetadata defines the app's metadata managed by sidecar.
 type AppMetadata struct {
-	AppID     uint32            `json:"appID" yaml:"appID"`
+	App       string            `json:"app" yaml:"app"`
 	Namespace string            `json:"namespace" yaml:"namespace"`
 	Uid       string            `json:"uid" yaml:"uid"`
 	Labels    map[string]string `json:"labels" yaml:"labels"`
@@ -226,12 +226,12 @@ type AppMetadata struct {
 
 // Validate the app metadata is valid or not
 func (am AppMetadata) Validate() error {
-	if am.AppID <= 0 {
-		return errors.New("invalid app id")
+	if am.App == "" {
+		return errors.New("invalid app")
 	}
 
 	if err := validator.ValidateUid(am.Uid); err != nil {
-		return fmt.Errorf("invalid app: %d uid: %s, err: %v", am.AppID, am.Uid, err)
+		return fmt.Errorf("invalid app: %s uid: %s, err: %v", am.App, am.Uid, err)
 	}
 
 	return nil
