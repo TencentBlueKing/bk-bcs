@@ -13,6 +13,8 @@
 | add_scope | []string | 否 | 增加的规则 |
 | del_id | []uint32 | 否 | 删除规则的id |
 | alter_scope | []alterScope | 否 | 更新规则 |
+| enable | bool | 是 | 是否启用 |
+| memo | string | 是 | 凭证说明 |
 
 #### alterScope
 | 参数名称     | 参数类型     | 必选   | 描述             |
@@ -30,7 +32,9 @@
   "del_id":[9,10],
   "alter_scope":[
     {"id":1,"scope":"BBBBB"}
-  ]
+  ],
+  "enable":true,
+  "memo":""
 }
 ```
 
