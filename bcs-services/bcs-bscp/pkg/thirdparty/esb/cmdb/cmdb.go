@@ -17,10 +17,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/uuid"
+	"bscp.io/pkg/dal/cache"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/thirdparty/esb/types"
 )
@@ -31,6 +33,8 @@ type Client interface {
 	SearchBusiness(ctx context.Context, params *SearchBizParams) (*SearchBizResp, error)
 	// ListAllBusiness 读取全部业务列表
 	ListAllBusiness(ctx context.Context) (*SearchBizResult, error)
+	// GeBusinessbyID
+	GeBusinessbyID(ctx context.Context, bizID uint32) (*Biz, error)
 }
 
 // NewClient initialize a new cmdb client
@@ -86,4 +90,37 @@ func (c *cmdb) ListAllBusiness(ctx context.Context) (*SearchBizResult, error) {
 	}
 
 	return &resp.SearchBizResult, nil
+}
+
+// GeBusinessbyID 读取单个biz
+func (c *cmdb) GeBusinessbyID(ctx context.Context, bizID uint32) (*Biz, error) {
+	key := fmt.Sprintf("cmdb.GeBusinessbyID:%d", bizID)
+	if cacheResult, ok := cache.LocalCache.Slot.Get(key); ok {
+		return cacheResult.(*Biz), nil
+	}
+
+	params := &SearchBizParams{
+		Page: BasePage{Limit: 1},
+		BizPropertyFilter: &QueryFilter{
+			Rule: CombinedRule{
+				Condition: ConditionAnd,
+				Rules: []Rule{
+					AtomRule{
+						Field:    BizIDField,
+						Operator: OperatorEqual,
+						Value:    bizID,
+					}},
+			}},
+	}
+	resp, err := c.SearchBusiness(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Info) == 0 {
+		return nil, fmt.Errorf("biz %d not found", bizID)
+	}
+
+	cache.LocalCache.Slot.Set(key, &resp.Info[0], time.Hour*24)
+
+	return &resp.Info[0], nil
 }

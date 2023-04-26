@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
@@ -26,6 +27,7 @@ import (
 	"bscp.io/pkg/components"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/constant"
+	"bscp.io/pkg/iam/sys"
 	"bscp.io/pkg/kit"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	"bscp.io/pkg/rest"
@@ -138,6 +140,59 @@ func (a authorizer) AppVerified(next http.Handler) http.Handler {
 
 		kt.SpaceID = space.SpaceId
 		kt.SpaceTypeID = space.SpaceTypeId
+		ctx := kit.WithKit(r.Context(), kt)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+	return http.HandlerFunc(fn)
+}
+
+func getBizID(r *http.Request) string {
+	bizIDStr := chi.URLParam(r, "biz_id")
+	if bizIDStr != "" {
+		return bizIDStr
+	}
+
+	parts := strings.Split(r.URL.Path, "/")
+	for idx, v := range parts {
+		if v == "biz_id" && len(parts) > idx+1 {
+			return parts[idx+1]
+		}
+		if v == "biz" && len(parts) > idx+1 {
+			return parts[idx+1]
+		}
+	}
+
+	return ""
+}
+
+// BizVerified 业务ID鉴权, url必须满足/{biz_id}; /biz_id/{n} 或者 /biz/{n}
+func (a authorizer) BizVerified(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		kt := kit.MustGetKit(r.Context())
+		bizIDStr := getBizID(r)
+		if bizIDStr == "" {
+			err := errors.New("biz_id is required in url params")
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		bizID, err := strconv.Atoi(bizIDStr)
+		if err != nil {
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		req := &pbas.ResourceAttribute{
+			BizId:       uint32(bizID),
+			Basic:       &pbas.Basic{Type: string(sys.Business), Action: string(sys.BusinessViewResource), ResourceId: uint32(bizID)},
+			GenApplyUrl: true,
+		}
+
+		if _, err := a.authClient.CheckPermission(kt.RpcCtx(), req); err != nil {
+			render.Render(w, r, rest.GRPCErr(err))
+			return
+		}
+
 		ctx := kit.WithKit(r.Context(), kt)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

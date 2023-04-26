@@ -2,8 +2,6 @@ module bscp.io
 
 go 1.17
 
-replace github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
-
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230424025302-1a6fd25f4b45
 	github.com/TencentBlueKing/iam-go-sdk v0.0.9
@@ -25,6 +23,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/minio/minio-go/v7 v7.0.52
 	github.com/oklog/run v1.1.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.15.0
@@ -53,7 +52,6 @@ require (
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/TencentBlueKing/gopkg v1.0.8 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
@@ -90,7 +88,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/parnurzeal/gorequest v0.2.16 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
@@ -118,4 +115,9 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
+)
+
+replace (
+	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.0.8
+	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 )

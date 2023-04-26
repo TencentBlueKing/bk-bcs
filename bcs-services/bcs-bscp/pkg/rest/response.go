@@ -18,10 +18,54 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/logs"
+)
+
+var (
+	// grpcCodeMap 蓝鲸 Code 映射
+	grpcCodeMap = map[codes.Code]string{
+		codes.Canceled:           "CANCELLED",
+		codes.Unknown:            "UNKNOWN",
+		codes.InvalidArgument:    "INVALID_ARGUMENT",
+		codes.DeadlineExceeded:   "DEADLINE_EXCEEDED",
+		codes.NotFound:           "NOT_FOUND",
+		codes.AlreadyExists:      "ALREADY_EXISTS",
+		codes.PermissionDenied:   "PERMISSION_DENIED",
+		codes.ResourceExhausted:  "RESOURCE_EXHAUSTED",
+		codes.FailedPrecondition: "FAILED_PRECONDITION",
+		codes.Aborted:            "ABORTED",
+		codes.OutOfRange:         "OUT_OF_RANGE",
+		codes.Unimplemented:      "UNIMPLEMENTED",
+		codes.Internal:           "INTERNAL",
+		codes.Unavailable:        "UNAVAILABLE",
+		codes.DataLoss:           "DATA_LOSS",
+		codes.Unauthenticated:    "UNAUTHENTICATED",
+	}
+
+	// grpcCodeMap 蓝鲸 status 映射
+	grpcHttpStatusMap = map[codes.Code]int{
+		codes.Canceled:           http.StatusBadRequest,
+		codes.Unknown:            http.StatusBadRequest,
+		codes.InvalidArgument:    http.StatusBadRequest,
+		codes.DeadlineExceeded:   http.StatusBadRequest,
+		codes.NotFound:           http.StatusNotFound,
+		codes.AlreadyExists:      http.StatusBadRequest,
+		codes.PermissionDenied:   http.StatusForbidden,
+		codes.ResourceExhausted:  http.StatusBadRequest,
+		codes.FailedPrecondition: http.StatusBadRequest,
+		codes.Aborted:            http.StatusBadRequest,
+		codes.OutOfRange:         http.StatusBadRequest,
+		codes.Unimplemented:      http.StatusBadRequest,
+		codes.Internal:           http.StatusBadRequest,
+		codes.Unavailable:        http.StatusBadRequest,
+		codes.DataLoss:           http.StatusBadRequest,
+		codes.Unauthenticated:    http.StatusUnauthorized,
+	}
 )
 
 // BaseResp http response.
@@ -167,4 +211,21 @@ func PermissionDenied(err error) render.Renderer {
 func BadRequest(err error) render.Renderer {
 	payload := &ErrorPayload{Code: "INVALID_REQUEST", Message: err.Error()}
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusBadRequest}
+}
+
+// GRPCErr GRPC-Gateway 错误
+func GRPCErr(err error) render.Renderer {
+	s := status.Convert(err)
+	code := grpcCodeMap[s.Code()]
+	if code == "" {
+		code = "INVALID_REQUEST"
+	}
+
+	status := grpcHttpStatusMap[s.Code()]
+	if status == 0 {
+		status = http.StatusBadRequest
+	}
+
+	payload := &ErrorPayload{Code: code, Message: s.Message(), Details: s.Details()}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: status}
 }
