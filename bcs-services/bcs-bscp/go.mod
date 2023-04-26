@@ -2,6 +2,11 @@ module bscp.io
 
 go 1.17
 
+replace (
+	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.0.8
+	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
+)
+
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230424025302-1a6fd25f4b45
 	github.com/TencentBlueKing/iam-go-sdk v0.0.9
@@ -11,7 +16,7 @@ require (
 	github.com/go-chi/render v1.0.2
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-resty/resty/v2 v2.0.0-00010101000000-000000000000
-	github.com/go-sql-driver/mysql v1.7.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gobwas/glob v0.2.3
 	github.com/gofrs/flock v0.8.1
 	github.com/golang-jwt/jwt/v4 v4.5.0
@@ -111,13 +116,8 @@ require (
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
-	google.golang.org/grpc/examples v0.0.0-20230421184811-83c460b8de09 // indirect
+	google.golang.org/grpc/examples v0.0.0-20230426024715-eff0942e95d9 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
-)
-
-replace (
-	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.0.8
-	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 )

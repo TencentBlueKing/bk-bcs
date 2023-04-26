@@ -35,7 +35,7 @@ func (h GenericFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if errors.Is(err, errf.ErrPermissionDenied) {
-			render.Render(w, r, rest.PermissionDenied(err))
+			render.Render(w, r, rest.PermissionDenied(err, nil))
 		} else {
 			render.Render(w, r, rest.BadRequest(err))
 		}

@@ -76,7 +76,9 @@ message PullResourceResp {
 }
 
 message CheckPermissionResp {
-    bool is_allowed = 1;
+    bool is_allowed                = 1;
+    string apply_url               = 2;
+    repeated BasicDetail resources = 3;
 }
 
 message Page {
