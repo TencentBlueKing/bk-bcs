@@ -135,7 +135,8 @@ func (w *WebScaler) GetResponses(context *contextinternal.Context,
 	// get response
 	faResp.Request = req
 	klog.Infof("Get webhook response from web: %+v", faResp.Response)
-	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd, newPriorities)
+	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd, newPriorities,
+		context.MaxNodeProvisionTime)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -19,9 +19,11 @@ import (
 	"time"
 
 	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	testprovider "k8s.io/autoscaler/cluster-autoscaler/cloudprovider/test"
@@ -224,9 +226,13 @@ func TestHandleResponse(t *testing.T) {
 	n1 := BuildTestNode("n1", 1000, 1000)
 	SetNodeReadyState(n1, true, time.Now())
 	injectNodeIP(n1, "n1")
+	n1.CreationTimestamp = metav1.Now()
+	tn1 := schedulernodeinfo.NewNodeInfo()
+	_ = tn1.SetNode(n1)
 	n2 := BuildTestNode("n2", 1000, 1000)
 	SetNodeReadyState(n2, true, time.Now())
 	injectNodeIP(n2, "n2")
+	n2.CreationTimestamp = metav1.Now()
 	n2.ObjectMeta.Annotations = map[string]string{
 		"io.tencent.bcs.dev/node-deletion-cost": "200",
 	}
@@ -234,6 +240,7 @@ func TestHandleResponse(t *testing.T) {
 	_ = tn2.SetNode(n2)
 	n3 := BuildTestNode("n3", 1000, 1000)
 	injectNodeIP(n3, "n3")
+	n3.CreationTimestamp = metav1.Now()
 	n3.ObjectMeta.Annotations = map[string]string{
 		"io.tencent.bcs.dev/node-deletion-cost": "30",
 	}
@@ -242,12 +249,33 @@ func TestHandleResponse(t *testing.T) {
 	_ = tn3.SetNode(n3)
 	n4 := BuildTestNode("n4", 1000, 1000)
 	injectNodeIP(n4, "n4")
+	n4.CreationTimestamp = metav1.Now()
 	n4.ObjectMeta.Annotations = map[string]string{
-		"io.tencent.bcs.dev/node-deletion-cost": "200",
+		"io.tencent.bcs.dev/node-deletion-cost": "100",
 	}
 	SetNodeReadyState(n4, true, time.Now())
 	tn4 := schedulernodeinfo.NewNodeInfo()
 	_ = tn4.SetNode(n4)
+
+	n5 := BuildTestNode("n5", 1000, 1000)
+	injectNodeIP(n5, "n5")
+	n5.CreationTimestamp = metav1.Now()
+	SetNodeReadyState(n5, true, time.Now())
+	n5.Spec.Taints = []corev1.Taint{
+		{
+			Key:    "node.kubernetes.io/unschedulable",
+			Effect: corev1.TaintEffectNoSchedule,
+		},
+	}
+	tn5 := schedulernodeinfo.NewNodeInfo()
+	_ = tn5.SetNode(n5)
+
+	n6 := BuildTestNode("n6", 1000, 1000)
+	injectNodeIP(n6, "n6")
+	n6.CreationTimestamp = metav1.Now()
+	SetNodeReadyState(n6, true, time.Now())
+	tn6 := schedulernodeinfo.NewNodeInfo()
+	_ = tn6.SetNode(n6)
 
 	tn := BuildTestNode("tn", 1000, 1000)
 	tni := schedulernodeinfo.NewNodeInfo()
@@ -263,6 +291,13 @@ func TestHandleResponse(t *testing.T) {
 		nil, map[string]*schedulernodeinfo.NodeInfo{"ng1": tni, "ng2": tni})
 	provider.AddNodeGroup("ng1", 1, 10, 1)
 	provider.AddNode("ng1", n1)
+	provider.AddNodeGroup("ng2", 0, 10, 4)
+	provider.AddNode("ng2", n2)
+	provider.AddNode("ng2", n3)
+	provider.AddNode("ng2", n4)
+	provider.AddNodeGroup("ng3", 0, 10, 2)
+	provider.AddNode("ng3", n5)
+	provider.AddNode("ng3", n6)
 
 	// Create context with mocked lister registry.
 	options := config.AutoscalingOptions{
@@ -323,6 +358,21 @@ func TestHandleResponse(t *testing.T) {
 				NodeIPs:  []string{"n2", "n3", "n4"},
 				Priority: 1,
 			},
+			"ng3": {
+				NodeGroupID:  "ng3",
+				MaxSize:      10,
+				MinSize:      0,
+				DesiredSize:  2,
+				UpcomingSize: 0,
+				NodeTemplate: Template{
+					CPU:    1,
+					Mem:    1000,
+					GPU:    0,
+					Labels: map[string]string{},
+				},
+				NodeIPs:  []string{"n5", "n6"},
+				Priority: 0,
+			},
 		},
 	}
 
@@ -332,6 +382,7 @@ func TestHandleResponse(t *testing.T) {
 		nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo
 		sd                 *ScaleDown
 		newPriorities      priorities
+		scaleDownDelay     time.Duration
 	}
 	tests := []struct {
 		name    string
@@ -357,6 +408,7 @@ func TestHandleResponse(t *testing.T) {
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
 				newPriorities:      nil,
+				scaleDownDelay:     20 * time.Minute,
 			},
 			want:    ScaleUpOptions{"ng1": 5},
 			want1:   nil,
@@ -378,6 +430,7 @@ func TestHandleResponse(t *testing.T) {
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
 				newPriorities:      nil,
+				scaleDownDelay:     20 * time.Minute,
 			},
 			want:    ScaleUpOptions{"ng1": 5},
 			want1:   nil,
@@ -399,6 +452,7 @@ func TestHandleResponse(t *testing.T) {
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
 				newPriorities:      nil,
+				scaleDownDelay:     20 * time.Minute,
 			},
 			want:    ScaleUpOptions{"ng1": 10, "ng2": 5},
 			want1:   nil,
@@ -420,6 +474,7 @@ func TestHandleResponse(t *testing.T) {
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
 				newPriorities:      nil,
+				scaleDownDelay:     20 * time.Minute,
 			},
 			want:    nil,
 			want1:   nil,
@@ -441,6 +496,7 @@ func TestHandleResponse(t *testing.T) {
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
 				newPriorities:      nil,
+				scaleDownDelay:     20 * time.Minute,
 			},
 			want:    ScaleUpOptions{"ng1": 10, "ng2": 10},
 			want1:   nil,
@@ -462,6 +518,7 @@ func TestHandleResponse(t *testing.T) {
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
 				newPriorities:      nil,
+				scaleDownDelay:     20 * time.Minute,
 			},
 			want:    nil,
 			want1:   nil,
@@ -486,6 +543,7 @@ func TestHandleResponse(t *testing.T) {
 				nodes:              []*corev1.Node{n1, n2},
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
+				scaleDownDelay:     20 * time.Minute,
 			},
 			want:    nil,
 			want1:   ScaleDownCandidates{"n2"},
@@ -510,6 +568,7 @@ func TestHandleResponse(t *testing.T) {
 				nodes:              []*corev1.Node{n1, n2},
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{},
 				sd:                 sd,
+				scaleDownDelay:     20 * time.Minute,
 			},
 			want:    nil,
 			want1:   ScaleDownCandidates{},
@@ -533,11 +592,13 @@ func TestHandleResponse(t *testing.T) {
 				},
 				nodes: []*corev1.Node{n1, n2, n3, n4},
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{
+					"n1": tn1,
 					"n2": tn2,
 					"n3": tn3,
 					"n4": tn4,
 				},
-				sd: sd,
+				sd:             sd,
+				scaleDownDelay: 20 * time.Minute,
 			},
 			want:    nil,
 			want1:   ScaleDownCandidates{"n3", "n4"},
@@ -561,11 +622,13 @@ func TestHandleResponse(t *testing.T) {
 				},
 				nodes: []*corev1.Node{n1, n2, n3, n4},
 				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{
+					"n1": tn1,
 					"n2": tn2,
 					"n3": tn3,
 					"n4": tn4,
 				},
-				sd: sd,
+				sd:             sd,
+				scaleDownDelay: 20 * time.Minute,
 			},
 			want:    nil,
 			want1:   ScaleDownCandidates{},
@@ -593,7 +656,68 @@ func TestHandleResponse(t *testing.T) {
 					"n3": tn3,
 					"n4": tn4,
 				},
-				sd: sd,
+				sd:             sd,
+				scaleDownDelay: 20 * time.Minute,
+			},
+			want:    nil,
+			want1:   ScaleDownCandidates{},
+			wantErr: false,
+		},
+		{
+			name: "normal case, scale down num with initializing node",
+			args: args{
+				review: ClusterAutoscalerReview{
+					Request: request,
+					Response: &AutoscalerResponse{
+						UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
+						ScaleDowns: []*ScaleDownPolicy{
+							{
+								NodeGroupID: "ng3",
+								Type:        NodeNumScaleDownType,
+								NodeNum:     1,
+							},
+						},
+					},
+				},
+				nodes: []*corev1.Node{n1, n2, n3, n4, n5, n6},
+				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{
+					"n1": tn1,
+					"n2": tn2,
+					"n3": tn3,
+					"n4": tn4,
+					"n5": tn5,
+					"n6": tn6,
+				},
+				sd:             sd,
+				scaleDownDelay: 20 * time.Minute,
+			},
+			want:    nil,
+			want1:   ScaleDownCandidates{"n6"},
+			wantErr: false,
+		},
+		{
+			name: "normal case, scale down IP with initializing node",
+			args: args{
+				review: ClusterAutoscalerReview{
+					Request: request,
+					Response: &AutoscalerResponse{
+						UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
+						ScaleDowns: []*ScaleDownPolicy{
+							{
+								NodeGroupID: "ng3",
+								Type:        NodeIPsScaleDownType,
+								NodeIPs:     []string{"n5"},
+							},
+						},
+					},
+				},
+				nodes: []*corev1.Node{n3, n4, n5, n6},
+				nodeNameToNodeInfo: map[string]*schedulernodeinfo.NodeInfo{
+					"n5": tn5,
+					"n6": tn6,
+				},
+				sd:             sd,
+				scaleDownDelay: 20 * time.Minute,
 			},
 			want:    nil,
 			want1:   ScaleDownCandidates{},
@@ -603,7 +727,7 @@ func TestHandleResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1, err := HandleResponse(tt.args.review, tt.args.nodes, tt.args.nodeNameToNodeInfo,
-				tt.args.sd, tt.args.newPriorities)
+				tt.args.sd, tt.args.newPriorities, tt.args.scaleDownDelay)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("HandleResponse() error = %v, wantErr %v", err, tt.wantErr)
 				return

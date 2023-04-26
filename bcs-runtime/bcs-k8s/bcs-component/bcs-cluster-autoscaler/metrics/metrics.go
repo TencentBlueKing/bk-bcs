@@ -68,15 +68,6 @@ var (
 		[]string{"node_group"},
 	)
 
-	webhookScaleDownFailed = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: caNamespace,
-			Name:      "webhook_scale_down_failed",
-			Help:      "Scale down failed of webhook mode of CA",
-		},
-		[]string{"node"},
-	)
-
 	scaleTask = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: caNamespace,
@@ -102,7 +93,6 @@ func RegisterLocal() {
 	prometheus.MustRegister(webhookScaleUpResponse)
 	prometheus.MustRegister(webhookScaleDownIPResponse)
 	prometheus.MustRegister(webhookScaleDownNumResponse)
-	prometheus.MustRegister(webhookScaleDownFailed)
 	prometheus.MustRegister(failedScaleDownCount)
 }
 
@@ -130,11 +120,6 @@ func UpdateWebhookScaleDownIPResponse(nodeGroup, ips string) {
 // UpdateWebhookScaleDownNumResponse updates scale down response(type of NodeNum) of webhook mode
 func UpdateWebhookScaleDownNumResponse(nodeGroup string, num int) {
 	webhookScaleDownNumResponse.WithLabelValues(nodeGroup).Set(float64(num))
-}
-
-// RecordWebhookScaleDownFailed records scale down failed of webhook mode
-func RecordWebhookScaleDownFailed(node string) {
-	webhookScaleDownFailed.WithLabelValues(node).Set(1)
 }
 
 // RegisterScaleTask registers scale task metrics

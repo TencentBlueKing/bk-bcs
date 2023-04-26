@@ -36,6 +36,7 @@ import (
 	simulatorinternal "k8s.io/autoscaler/cluster-autoscaler/simulator"
 	"k8s.io/autoscaler/cluster-autoscaler/utils"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
+	"k8s.io/autoscaler/cluster-autoscaler/utils/drain"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
@@ -633,6 +634,10 @@ func (sd *ScaleDown) UpdateUnneededNodes(
 
 // isNodeBelowUtilzationThreshold determintes if a given node utilization is blow threshold.
 func (sd *ScaleDown) isNodeBelowUtilzationThreshold(node *apiv1.Node, utilInfo simulatorinternal.UtilizationInfo) bool {
+	// 如果使用率为0，直接返回 true，避免 threshold 为 0 时返回 false
+	if math.Abs(utilInfo.Utilization) < 1e-6 {
+		return true
+	}
 	if gpu.NodeHasGpu(sd.context.CloudProvider.GPULabel(), node) {
 		if utilInfo.Utilization >= sd.context.ScaleDownGpuUtilizationThreshold {
 			return false
@@ -1497,13 +1502,13 @@ func filterOutMasters(nodes []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
 
 func hasGameServer(pods []*apiv1.Pod) bool {
 	for _, pod := range pods {
+		if pod.GetAnnotations()[drain.PodSafeToEvictKey] == "true" {
+			continue
+		}
 		ctlRef := metav1.GetControllerOf(pod)
 		refKind := ""
 		if ctlRef != nil {
 			refKind = ctlRef.Kind
-		}
-		if refKind == "GameServer" {
-			return true
 		}
 		if refKind == "GameDeployment" {
 			return true

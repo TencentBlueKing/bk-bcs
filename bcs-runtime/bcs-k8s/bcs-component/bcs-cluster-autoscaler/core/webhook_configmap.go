@@ -156,7 +156,8 @@ func (c *ConfigMapScaler) GetResponses(context *contextinternal.Context,
 		Response: &res,
 	}
 	klog.Infof("Get webhook response from configmap: %+v", res)
-	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd, newPriorities)
+	options, candidates, err := HandleResponse(faResp, nodes, nodeNameToNodeInfo, sd, newPriorities,
+		context.MaxNodeProvisionTime)
 	if err != nil {
 		return nil, nil, err
 	}
