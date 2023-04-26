@@ -282,6 +282,7 @@ func (s *set) Credential() Credential {
 		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+		event:    s.event,
 	}
 }
 

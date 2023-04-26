@@ -80,6 +80,7 @@ func (wh *watchHandler) subscribe() error {
 		spec := &eventc.SubscribeSpec{
 			InstSpec: &sfs.InstanceSpec{
 				BizID:  wh.sidePayload.BizID,
+				App:    one.App,
 				AppID:  one.AppID,
 				Uid:    one.Uid,
 				Labels: one.Labels,

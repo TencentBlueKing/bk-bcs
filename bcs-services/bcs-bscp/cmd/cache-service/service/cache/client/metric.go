@@ -92,6 +92,7 @@ type metric struct {
 }
 
 const (
+	aiRes            = "app-id"
 	amRes            = "app-meta"
 	instRes          = "instance"
 	releasedCIRes    = "release-ci"

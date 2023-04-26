@@ -159,6 +159,7 @@ type CacheServiceSetting struct {
 	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
+	Credential   Credential   `yaml:"credential"`
 	Sharding     Sharding     `yaml:"sharding"`
 	RedisCluster RedisCluster `yaml:"redisCluster"`
 }

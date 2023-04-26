@@ -32,6 +32,7 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 		ReleasedCI:    newReleasedCI(mc, cs),
 		Strategy:      newStrategy(mc, cs),
 		ReleasedGroup: newReleasedGroup(mc, cs),
+		Credential:    newCredential(mc, cs),
 		Auth:          newAuth(mc, cs.Authorizer()),
 	}, nil
 }
@@ -42,6 +43,7 @@ type Cache struct {
 	ReleasedCI    *ReleasedCI
 	Strategy      *Strategy
 	ReleasedGroup *ReleasedGroup
+	Credential    *Credential
 	Auth          *Auth
 }
 
@@ -79,6 +81,15 @@ func (c *Cache) Purge(kt *kit.Kit, es []*types.EventMeta) {
 				c.App.delete(one.Attachment.AppID)
 			default:
 				logs.V(1).Infof("skip app event op, %s, rid: %s", formatEvent(one), kt.Rid)
+				continue
+			}
+
+		case table.EventResource(table.CredentialTable):
+			switch one.Spec.OpType {
+			case table.UpdateOp, table.DeleteOp:
+				c.Auth.client.Purge()
+			default:
+				logs.V(1).Infof("skip credential event op, %s, rid: %s", formatEvent(one), kt.Rid)
 				continue
 			}
 

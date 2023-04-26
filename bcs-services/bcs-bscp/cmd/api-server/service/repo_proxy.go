@@ -456,7 +456,7 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 }
 
 func NewRepoService(settings cc.Repository, authorizer auth.Authorizer) (repository.FileApiType, error) {
-	repoCli, err := repo.NewClient(&settings, metrics.Register())
+	repoCli, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err
 	}

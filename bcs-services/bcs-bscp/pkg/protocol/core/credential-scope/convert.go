@@ -61,7 +61,7 @@ func PbCredentialScopeSpec(spec *table.CredentialScopeSpec) (*CredentialScopeSpe
 	}
 
 	return &CredentialScopeSpec{
-		CredentialScope: spec.CredentialScope,
+		CredentialScope: string(spec.CredentialScope),
 	}, nil
 }
 
