@@ -192,8 +192,14 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Credential).PrepareUpdate(g)
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
-		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
+	// 解决空值无法更新
+	if g.Spec.Memo == "" {
+		sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(), " SET ", expr, ", memo = ''", " WHERE id = ", strconv.Itoa(int(g.ID)),
+			" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
+	} else {
+		sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
+			" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
+	}
 	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,

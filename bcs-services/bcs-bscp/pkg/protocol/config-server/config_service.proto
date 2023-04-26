@@ -330,6 +330,8 @@ message UpdateCredentialScopeReq {
     uint32   biz_id                            = 3;
     uint32   credential_id                     = 4;
     repeated pbcrs.UpdateScopeSpec alter_scope = 5;
+    bool     enable                            = 6;
+    string   memo                              = 7;
 }
 
 message UpdateCredentialScopeResp{}
