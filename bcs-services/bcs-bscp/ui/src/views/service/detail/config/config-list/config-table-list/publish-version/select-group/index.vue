@@ -6,7 +6,7 @@
   import { IConfigVersion } from '../../../../../../../../../types/config'
   import { getServiceGroupList } from '../../../../../../../../api/group'
   import { getConfigVersionList } from '../../../../../../../../api/config'
-  import { IGroupTreeItem, IGroupItemInService, IGroupItem } from '../../../../../../../../../types/group'
+  import { IGroupToPublish, IGroupItemInService } from '../../../../../../../../../types/group'
   import Group from './group.vue'
   import Preview from './preview.vue'
 
@@ -15,14 +15,15 @@
 
 
   const props = defineProps<{
-    groups: IGroupTreeItem[]
+    groups: IGroupToPublish[]
   }>()
-  const emits = defineEmits(['change'])
+  const emits = defineEmits(['openPreviewVersionDiff', 'change'])
 
   const groupListLoading = ref(true)
-  const groupList = ref<IGroupItemInService[]>([])
+  const groupList = ref<IGroupToPublish[]>([])
   const versionListLoading = ref(true)
   const versionList = ref<IConfigVersion[]>([])
+  const allowPreviewDelete = ref(true)
 
   onMounted(() => {
     getAllGroupData()
@@ -33,7 +34,12 @@
   const getAllGroupData = async() => {
     groupListLoading.value = true
     const res = await getServiceGroupList(spaceId.value, <number>appData.value.id)
-    groupList.value = res.details
+    groupList.value = res.details.map((group: IGroupItemInService) => {
+      const { group_id, group_name, release_id, release_name } = group
+      const selector = group.new_selector
+      const rules = selector.labels_and || selector.labels_or || []
+      return { id: group_id, name: group_name, release_id, release_name, rules: rules }
+    })
     groupListLoading.value = false
   }
 
@@ -54,13 +60,17 @@
 <template>
   <div class="select-group-wrapper">
     <div class="group-tree-area">
-      <Group
-        :group-list="groupList"
-        :group-list-loading="groupListLoading"
-        :version-list="versionList"
-        :version-list-loading="versionListLoading"
-        :groups="props.groups"
-        @change="emits('change', $event)" />
+      <bk-loading style="height: 100%;" :loading="groupListLoading">
+        <Group
+          v-if="!groupListLoading"
+          :group-list="groupList"
+          :group-list-loading="groupListLoading"
+          :version-list="versionList"
+          :version-list-loading="versionListLoading"
+          :value="props.groups"
+          @togglePreviewDelete="allowPreviewDelete = $event"
+          @change="emits('change', $event)" />
+      </bk-loading>
     </div>
     <div class="preview-area">
       <Preview
@@ -68,7 +78,10 @@
         :group-list-loading="groupListLoading"
         :version-list="versionList"
         :version-list-loading="versionListLoading"
-        :value="props.groups" />
+        :allow-preview-delete="allowPreviewDelete"
+        :value="props.groups"
+        @diff="emits('openPreviewVersionDiff', $event)"
+        @change="emits('change', $event)"  />
     </div>
   </div>
 </template>
@@ -76,6 +89,7 @@
   .select-group-wrapper {
     display: flex;
     align-items: center;
+    min-width: 1366px;
     height: 100%;
     background: #ffffff;
   }
@@ -87,7 +101,7 @@
   }
   .preview-area {
     flex: 1;
-    padding: 24px;
+    padding: 24px 0;
     height: 100%;
     background: #f5f7fa;
   }

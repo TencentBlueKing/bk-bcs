@@ -2,7 +2,7 @@
   import { ref, computed, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../store/global'
-  import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupItem, IGroupToService } from '../../../types/group'
+  import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupItem, IGroupBindService } from '../../../types/group'
   import { updateGroup, getGroupReleasedApps } from '../../api/group'
   import groupEditForm from './components/group-edit-form.vue';
 
@@ -24,8 +24,6 @@
     rules: [{ key: '', op: <EGroupRuleType>'', value: '' }]
   })
   const groupFormRef = ref()
-  const releasedServicesLoading = ref(false)
-  const releasedServices = ref<IGroupToService[]>([])
   const pending = ref(false)
 
   watch(() => props.show, (val) => {
@@ -39,20 +37,8 @@
         rule_logic: selector.labels_and ? 'AND' : 'OR',
         rules: (selector.labels_and || selector.labels_or) as IGroupRuleItem[]
       }
-      loadServicesList()
     }
   })
-
-  const loadServicesList = async () => {
-    releasedServicesLoading.value = true
-    const params = {
-      start: 0,
-      limit: 100 // @todo 需要确认接口拉全量数据的参数
-    }
-    const res = await getGroupReleasedApps(spaceId.value, props.group.id, params)
-    releasedServices.value = res.details
-    releasedServicesLoading.value = false
-  }
 
   // 修改分组信息
   const updateData = (data: IGroupEditing) => {
@@ -102,7 +88,7 @@
       <section class="group-form-wrapper">
         <div class="dialog-title">编辑分组</div>
         <div class="group-edit-form">
-          <group-edit-form ref="groupFormRef" :group="groupData" :released="releasedServices" @change="updateData"></group-edit-form>
+          <group-edit-form ref="groupFormRef" :group="groupData" @change="updateData"></group-edit-form>
         </div>
       </section>
     </div>

@@ -4,7 +4,7 @@
   import { storeToRefs } from 'pinia'
   import { cloneDeep } from 'lodash'
   import { useUserStore } from '../../../store/user'
-  import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupToService } from '../../../../types/group'
+  import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupBindService } from '../../../../types/group'
   import { GROUP_RULE_OPS } from '../../../constants'
   import { getAppList } from '../../../api/index'
   import { IAppItem } from '../../../../types/app'
@@ -16,12 +16,9 @@
   const route = useRoute()
   const { userInfo } = storeToRefs(useUserStore())
 
-  const props = withDefaults(defineProps<{
-    group: IGroupEditing,
-    released: IGroupToService[]
-  }>(), {
-    released: () => []
-  })
+  const props = defineProps<{
+    group: IGroupEditing
+  }>()
 
   const emits = defineEmits(['change'])
 
@@ -140,17 +137,6 @@
         @change="change">
         <bk-option v-for="service in serviceList" :key="service.id" :label="service.spec.name" :value="service.id"></bk-option>
       </bk-select>
-    </bk-form-item>
-    <bk-form-item v-if="formData.id" label="当前上线版本">
-      <div class="published-version">
-        <template v-if="props.released.length > 0">
-          <div v-for="(item, index) in props.released" class="released-item">
-            <template v-if="index > 0"> ; </template>
-            {{ `${item.app_name}-${item.release_name}` }}
-          </div>
-        </template>
-        <template v-else>--</template>
-      </div>
     </bk-form-item>
     <bk-form-item class="radio-group-form" label="分组规则" required property="rule_logic"> 
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">

@@ -13,7 +13,7 @@
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
   import ReleaseVersion from './release-version/index.vue'
-  import ModifyGroup from './modify-group.vue'
+  import ModifyGroupPublish from './modify-group-publish.vue'
   import VersionDiff from '../../components/version-diff/index.vue'
 
   const serviceStore = useServiceStore()
@@ -136,7 +136,6 @@
           @confirm="handleUpdateStatus" />
         <PublishVersion
           v-if="versionData.status.publish_status === 'not_released'"
-          style="margin-left: 8px"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :release-id="versionData.id"
@@ -144,12 +143,14 @@
           :version-name="versionData.spec.name"
           :config-list="configList"
           @confirm="handleUpdateStatus" />
-        <ModifyGroup
+        <ModifyGroupPublish
           v-if="versionData.status.publish_status === 'partial_released'"
-          style="margin-left: 8px"
-          :bk-biz-id="props.bkBizId"
+          bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :release-id="versionData.id"
+          :app-name="appData.spec.name"
+          :version-name="versionData.spec.name"
+          :config-list="configList"
           @confirm="handleUpdateStatus" />
       </section>
     </section>

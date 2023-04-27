@@ -118,18 +118,18 @@ export interface IGroupEditArg {
 }
 
 
-// 分组选择树分组节点单个详情
-export interface IGroupTreeItem {
-  __uuid?: string;
+// 选择上线的分组
+export interface IGroupToPublish {
   id: number;
-  release_id?: number;
-  release_name?: string;
   name: string;
+  release_id: number;
+  release_name: string;
+  published?: boolean;
   rules: IGroupRuleItem[];
 }
 
-// 分组上线服务
-export interface IGroupToService {
+// 分组绑定的已上线服务
+export interface IGroupBindService {
   app_id: number;
   app_name: string;
   release_id: number;
@@ -152,4 +152,12 @@ export interface IGroupItemInService {
     labels_and?: IGroupRuleItem[];
   },
   edited: boolean;
+}
+
+// 上线预览分组按照版本聚合
+export interface IGroupPreviewItem {
+  id: number;
+  name: string;
+  type: String;
+  children: IGroupToPublish[]
 }

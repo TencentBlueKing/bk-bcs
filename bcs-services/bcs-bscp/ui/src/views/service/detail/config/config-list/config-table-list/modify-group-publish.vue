@@ -4,14 +4,14 @@
   import InfoBox from 'bkui-vue/lib/info-box';
   import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia'
-  import { useServiceStore } from '../../../../../../../store/service'
-  import { useConfigStore } from '../../../../../../../store/config'
-  import VersionLayout from '../../../components/version-layout.vue'
-  import ConfirmDialog from './confirm-dialog.vue'
-  import { IConfigItem } from '../../../../../../../../types/config'
-  import { IGroupToPublish } from '../../../../../../../../types/group';
-  import SelectGroup from './select-group/index.vue'
-  import VersionDiff from '../../../components/version-diff/index.vue';
+  import { useServiceStore } from '../../../../../../store/service'
+  import { useConfigStore } from '../../../../../../store/config'
+  import VersionLayout from '../../components/version-layout.vue'
+  import ConfirmDialog from './publish-version/confirm-dialog.vue'
+  import { IConfigItem } from '../../../../../../../types/config'
+  import { IGroupToPublish } from '../../../../../../../types/group';
+  import SelectGroup from './publish-version/select-group/index.vue'
+  import VersionDiff from '../../components/version-diff/index.vue';
 
   const serviceStore = useServiceStore()
   const versionStore = useConfigStore()
@@ -32,6 +32,25 @@
   const groups = ref<IGroupToPublish[]>([])
   const baseVersionId = ref(0)
 
+// 打开选择分组面板
+  const handleOpenSelectGroupPanel = () => {
+    openSelectGroupPanel.value = true
+    groups.value = versionData.value.status.released_groups.map(group => {
+      const { id, name} = group
+      const selector = group.new_selector
+      const rules = selector.labels_and || []
+      return {
+        id,
+        name,
+        release_id: versionData.value.id,
+        release_name: versionData.value.spec.name,
+        disabled: true,
+        rules: rules
+      }
+    })
+  }
+
+  // 打开上线版本确认弹窗
   const handleOpenPublishDialog = () => {
     if (groups.value.length === 0) {
       BkMessage({ theme: 'error', message: '请选择上线分组' })
@@ -46,6 +65,7 @@
     isDiffSliderShow.value = true
   }
 
+  // 上线确认
   const handleConfirm = () => {
     isDiffSliderShow.value = false
     handlePanelClose()
@@ -60,6 +80,7 @@
     })
   }
 
+  // 关闭选择分组面板
   const handlePanelClose = () => {
     openSelectGroupPanel.value = false
     groups.value = []
@@ -68,7 +89,7 @@
 </script>
 <template>
     <section class="create-version">
-        <bk-button theme="primary" @click="openSelectGroupPanel = true">上线版本</bk-button>
+        <bk-button theme="primary" @click="handleOpenSelectGroupPanel">调整分组上线</bk-button>
         <VersionLayout v-if="openSelectGroupPanel">
             <template #header>
                 <section class="header-wrapper">
@@ -77,7 +98,7 @@
                         <span class="service-name">{{ appData.spec.name }}</span>
                     </span>
                     <AngleRight class="arrow-right" />
-                    上线版本：{{ versionData.spec.name }}
+                    调整分组上线：{{ versionData.spec.name }}
                 </section>
             </template>
             <select-group :groups="groups" @openPreviewVersionDiff="openPreviewVersionDiff" @change="groups = $event"></select-group>

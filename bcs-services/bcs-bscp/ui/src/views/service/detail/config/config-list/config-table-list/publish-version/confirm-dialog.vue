@@ -2,7 +2,7 @@
   import { ref, watch } from 'vue'
   import { InfoBox } from "bkui-vue/lib";
   import { publishVersion } from '../../../../../../../api/config'
-  import { IGroupTreeItem } from '../../../../../../../../types/group';
+  import { IGroupToPublish } from '../../../../../../../../types/group';
   import RuleTag from '../../../../../../groups/components/rule-tag.vue'
 
   interface IFormData {
@@ -16,7 +16,7 @@
     bkBizId: string,
     appId: number,
     releaseId: number|null,
-    groups: IGroupTreeItem[]
+    groups: IGroupToPublish[]
   }>()
 
   const emits = defineEmits(['confirm', 'update:show'])
@@ -27,7 +27,6 @@
     memo: ''
   })
   const pending = ref(false)
-  const publishGroups = ref<IGroupTreeItem[]>([])
   const formRef = ref()
   const rules = {
     memo: [
@@ -39,15 +38,7 @@
   }
 
   watch(() => props.groups, (val) => {
-    const ids: number[] = []
-    const groups: IGroupTreeItem[] = []
-    val.forEach(item => {
-      if (!groups.find(group => group.id === item.id)) {
-        groups.push(item)
-      }
-    })
-    localVal.value.groups = groups.map(item => item.id)
-    publishGroups.value = groups
+    localVal.value.groups = props.groups.map(item => item.id)
   }, { immediate: true })
 
   const handleClose = () => {
@@ -96,7 +87,7 @@
     @confirm="handleConfirm">
       <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="localVal">
           <bk-form-item label="上线分组">
-            <div v-for="group in publishGroups" class="group-item" :key="group.id">
+            <div v-for="group in props.groups" class="group-item" :key="group.id">
               <div class="name">{{ group.name }}</div>
               <div class="rules">
                 <bk-overflow-title type="tips">

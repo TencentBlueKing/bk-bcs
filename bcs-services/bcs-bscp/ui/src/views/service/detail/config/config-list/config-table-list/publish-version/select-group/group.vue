@@ -1,30 +1,50 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
-  import { IGroupTreeItem, IGroupItemInService } from '../../../../../../../../../types/group'
+  import { ref, computed } from 'vue'
+  import { IGroupToPublish } from '../../../../../../../../../types/group'
   import { IConfigVersion } from '../../../../../../../../../types/config'
   import GroupTree from './tree.vue'
 
   const props = withDefaults(defineProps<{
     groupListLoading: boolean;
-    groupList: IGroupItemInService[];
+    groupList: IGroupToPublish[];
     versionListLoading: boolean;
     versionList: IConfigVersion[];
-    groups: IGroupTreeItem[];
+    value: IGroupToPublish[];
   }>(), {
     groupList: () => [],
     versionList: () => []
   })
 
-  const emits = defineEmits(['change'])
+  const emits = defineEmits(['togglePreviewDelete', 'change'])
 
   const type = ref('select')
 
+  // 选择上线的分组，排除分组需要做取反操作
+  const selectedGroup = computed(() => {
+    if (type.value === 'exclude') {
+      return props.groupList.filter(group => props.value.findIndex(item => item.id === group.id) === -1)
+    }
+    return props.value
+  })
+
+  // 切换选择分组类型
   const handleTypeChange = (val: string) => {
     type.value = val
+    if (val === 'all') {
+      handleSelectGroup(props.groupList)
+    } else {
+      handleSelectGroup([])
+    }
+    emits('togglePreviewDelete', type.value === 'select')
   }
 
-  const handleSelectGroup = (val: IGroupTreeItem[]) => {
-    emits('change', val)
+  const handleSelectGroup = (val: IGroupToPublish[]) => {
+    if (type.value === 'exclude') {
+      const list: IGroupToPublish[] = props.groupList.filter(group => val.findIndex(item => item.id === group.id) === -1)
+      emits('change', list)
+    } else {
+      emits('change', val)
+    }
   }
 
 </script>
@@ -44,7 +64,7 @@
             :group-list-loading="props.groupListLoading"
             :version-list="props.versionList"
             :version-list-loading="props.versionListLoading"
-            :value="props.groups"
+            :value="selectedGroup"
             @change="handleSelectGroup">
           </GroupTree>
         </bk-radio>
@@ -56,7 +76,7 @@
             :group-list-loading="groupListLoading"
             :version-list="versionList"
             :version-list-loading="versionListLoading"
-            :value="props.groups"
+            :value="selectedGroup"
             @change="handleSelectGroup">
           </GroupTree>
         </bk-radio>
