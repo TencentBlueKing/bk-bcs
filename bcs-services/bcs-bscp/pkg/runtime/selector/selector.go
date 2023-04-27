@@ -81,6 +81,10 @@ func (s *Selector) Value() (driver.Value, error) {
 
 // Unmarshal json to Selector.
 func (s *Selector) Unmarshal(bytes []byte) error {
+	if err := ValidateBeforeUnmarshal(bytes); err != nil {
+		return err
+	}
+
 	if err := jsoni.Unmarshal(bytes, &s); err != nil {
 		return err
 	}
