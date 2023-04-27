@@ -7,12 +7,12 @@
   import { getServiceGroupList } from '../../../../../../../../api/group'
   import { getConfigVersionList } from '../../../../../../../../api/config'
   import { IGroupTreeItem, IGroupItemInService, IGroupItem } from '../../../../../../../../../types/group'
+  import Group from './group.vue'
+  import Preview from './preview.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const { appData } = storeToRefs(useServiceStore())
 
-  import Group from './group.vue'
-  import Preview from './preview.vue'
 
   const props = defineProps<{
     groups: IGroupTreeItem[]
