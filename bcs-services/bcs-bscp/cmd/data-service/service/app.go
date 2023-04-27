@@ -46,6 +46,10 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 		}
 	}
 
+	if _, err := s.dao.App().GetByName(kt, req.BizId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("app name %s already exists", req.Spec.Name)
+	}
+
 	now := time.Now()
 	app := &table.App{
 		BizID: req.BizId,

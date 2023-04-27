@@ -36,6 +36,10 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 	kt := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateAppResp)
 
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
+
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Create}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
 	if err != nil {
