@@ -16,6 +16,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/pkg/errors"
+
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
@@ -32,6 +34,8 @@ type Release interface {
 	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *table.Release) (uint32, error)
 	// List releases with options.
 	List(kit *kit.Kit, opts *types.ListReleasesOption) (*types.ListReleaseDetails, error)
+	// GetByName
+	GetByName(kit *kit.Kit, bizID uint32, appID uint32, name string) (*table.Release, error)
 }
 
 var _ Release = new(releaseDao)
@@ -80,6 +84,18 @@ func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *tabl
 	}
 
 	return id, nil
+}
+
+// GetByName 通过名称获取, 可以做唯一性校验
+func (dao *releaseDao) GetByName(kit *kit.Kit, bizID uint32, appID uint32, name string) (*table.Release, error) {
+	one := new(table.Release)
+	sql := table.SelectSQL(table.ReleaseColumns, one, "biz_id = ? AND app_id = ? AND name = ?")
+	err := dao.orm.Do(dao.sd.Admin().DB()).Get(kit.Ctx, one, sql, bizID, appID, name)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get release name")
+	}
+
+	return one, nil
 }
 
 // List releases with options.
