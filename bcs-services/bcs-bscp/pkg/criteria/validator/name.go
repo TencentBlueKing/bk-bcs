@@ -35,8 +35,41 @@ func validResNamePrefix(name string) error {
 	return nil
 }
 
+// qualifiedAppNameRegexp bscp resource's name regexp.
+var qualifiedAppNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9][\w\-]*[a-zA-Z0-9]$`)
+
+// ValidateAppName validate bscp app name's length and format.
+func ValidateAppName(name string) error {
+	if len(name) < 1 {
+		return errors.New("invalid name, length should >= 1")
+	}
+
+	if len(name) > 128 {
+		return errors.New("invalid name, length should <= 128")
+	}
+
+	if err := validResNamePrefix(name); err != nil {
+		return err
+	}
+
+	if !qualifiedAppNameRegexp.MatchString(name) {
+		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
+			"、hyphen (-), and must start and end with an english、numbers", name)
+	}
+
+	return nil
+}
+
+const (
+	// qualifiedNameFmt bscp resource's name format.
+	// '.' And '/' as reserved characters, users are absolutely not allowed to create
+	qualifiedNameFmt string = "(" + qnameNameFmt + qnameExtNameFmt + "*)?" + qnameNameFmt
+	qnameNameFmt     string = "[\u4E00-\u9FA5A-Za-z0-9]"
+	qnameExtNameFmt  string = "[\u4E00-\u9FA5A-Za-z0-9-_]"
+)
+
 // qualifiedNameRegexp bscp resource's name regexp.
-var qualifiedNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9][\w\-]*[a-zA-Z0-9]$`)
+var qualifiedNameRegexp = regexp.MustCompile("^" + qualifiedNameFmt + "$")
 
 // ValidateName validate bscp resource name's length and format.
 func ValidateName(name string) error {
@@ -53,8 +86,8 @@ func ValidateName(name string) error {
 	}
 
 	if !qualifiedNameRegexp.MatchString(name) {
-		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
-			"、hyphen (-), and must start and end with an english、numbers", name)
+		return fmt.Errorf("invalid name: %s, only allows to include chinese、english、numbers、underscore (_)"+
+			"、hyphen (-), and must start and end with an chinese、english、numbers", name)
 	}
 
 	return nil

@@ -36,7 +36,7 @@ func (r *DeleteStrategySetReq) Validate() error {
 
 // Validate 新建服务校验
 func (r *CreateAppReq) Validate() error {
-	if err := validator.ValidateName(r.Name); err != nil {
+	if err := validator.ValidateAppName(r.Name); err != nil {
 		return err
 	}
 	return nil
