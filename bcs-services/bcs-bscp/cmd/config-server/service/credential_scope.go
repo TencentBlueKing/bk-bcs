@@ -7,8 +7,6 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	pbcredential "bscp.io/pkg/protocol/core/credential"
-	pbcrs "bscp.io/pkg/protocol/core/credential-scope"
 	pbds "bscp.io/pkg/protocol/data-service"
 )
 
@@ -54,65 +52,26 @@ func (s *Service) UpdateCredentialScope(ctx context.Context, req *pbcs.UpdateCre
 		return nil, err
 	}
 
-	// delete Credential_scopes
-	r := &pbds.DeleteCredentialScopesReq{
-		Id: req.DelId,
-		Attachment: &pbcrs.CredentialScopeAttachment{
-			BizId:        bizID,
-			CredentialId: req.CredentialId,
-		},
+	r := &pbds.UpdateCredentialScopesReq{
+		BizId: req.BizId,
+		CredentialId: req.CredentialId,
 	}
 
-	_, err = s.client.DS.DeleteCredentialScopes(grpcKit.RpcCtx(), r)
-	if err != nil {
-		logs.Errorf("create credential scope failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+	for _, add := range req.AddScope {
+		r.Created = append(r.Created, add)
 	}
 
-	// create Credential_scopes
-	rcs := &pbds.CreateCredentialScopeReq{
-		Spec: req.AddScope,
-		Attachment: &pbcrs.CredentialScopeAttachment{
-			BizId:        bizID,
-			CredentialId: req.CredentialId,
-		},
+	for _, updated := range req.AlterScope {
+		r.Updated = append(r.Updated, updated)
 	}
 
-	_, err = s.client.DS.CreateCredentialScope(grpcKit.RpcCtx(), rcs)
-	if err != nil {
-		logs.Errorf("create credential scope failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+	for _, del := range req.DelId {
+		r.Deleted = append(r.Deleted, del)
 	}
 
-	// update credential scope
-	rus := &pbds.UpdateCredentialScopesReq{
-		AlterScope: req.AlterScope,
-		Attachment: &pbcrs.CredentialScopeAttachment{
-			BizId:        bizID,
-			CredentialId: req.CredentialId,
-		},
-	}
-
-	_, err = s.client.DS.UpdateCredentialScopes(grpcKit.RpcCtx(), rus)
+	_, err = s.client.DS.UpdateCredentialScopes(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("update credential scope failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	// update credential
-	rc := &pbds.UpdateCredentialReq{
-		Id: req.CredentialId,
-		Spec: &pbcredential.CredentialSpec{
-			Enable: req.Enable,
-			Memo:   req.Memo,
-		},
-		Attachment: &pbcredential.CredentialAttachment{
-			BizId: bizID,
-		},
-	}
-	_, err = s.client.DS.UpdateCredential(grpcKit.RpcCtx(), rc)
-	if err != nil {
-		logs.Errorf("update credential failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

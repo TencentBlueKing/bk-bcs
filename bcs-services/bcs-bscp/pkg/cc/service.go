@@ -254,8 +254,9 @@ type DataServiceSetting struct {
 	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
-	Sharding Sharding `yaml:"sharding"`
-	Esb      Esb      `yaml:"esb"`
+	Credential Credential `yaml:"credential"`
+	Sharding   Sharding   `yaml:"sharding"`
+	Esb        Esb        `yaml:"esb"`
 }
 
 // trySetFlagBindIP try set flag bind ip.

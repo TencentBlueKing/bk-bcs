@@ -24,7 +24,7 @@ type CredentialScope struct {
 	ID         uint32                     `db:"id" json:"id"`
 	Spec       *CredentialScopeSpec       `db:"spec" json:"spec"`
 	Attachment *CredentialScopeAttachment `db:"attachment" json:"attachment"`
-	Revision   *CredentialRevision        `db:"revision" json:"revision"`
+	Revision   *Revision                  `db:"revision" json:"revision"`
 }
 
 // TableName is the CredentialScope's database table name.

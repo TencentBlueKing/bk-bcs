@@ -1,8 +1,8 @@
 package pbcredential
 
 import (
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
+	pbbase "bscp.io/pkg/protocol/core/base"
 )
 
 // CredentialSpec  convert pb CredentialSpec to table CredentialSpec
@@ -64,7 +64,7 @@ func PbCredential(s *table.Credential) (*CredentialList, error) {
 		Id:         s.ID,
 		Spec:       spec,
 		Attachment: PbCredentialAttachment(s.Attachment),
-		Revision:   PbCredentialRevision(s.Revision),
+		Revision:   pbbase.PbRevision(s.Revision),
 	}, nil
 }
 
@@ -91,20 +91,5 @@ func PbCredentialAttachment(at *table.CredentialAttachment) *CredentialAttachmen
 
 	return &CredentialAttachment{
 		BizId: at.BizID,
-	}
-}
-
-// PbCredentialRevision convert table CredentialRevision to pb CredentialRevision
-func PbCredentialRevision(r *table.CredentialRevision) *CredentialRevision {
-	if r == nil {
-		return nil
-	}
-
-	return &CredentialRevision{
-		Creator:   r.Creator,
-		Reviser:   r.Reviser,
-		CreateAt:  r.CreatedAt.Format(constant.TimeStdFormat),
-		UpdateAt:  r.UpdatedAt.Format(constant.TimeStdFormat),
-		ExpiredAt: r.ExpiredAt.Format(constant.TimeStdFormat),
 	}
 }
