@@ -16,7 +16,7 @@ var CredentialColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
 	mergeColumnDescriptors("spec", CredentialSpecColumnDescriptor),
 	mergeColumnDescriptors("attachment", CredentialAttachmentColumnDescriptor),
-	mergeColumnDescriptors("revision", CredentialRevisionColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor),
 )
 
 // Credential defines a hook for an app to publish.
@@ -78,6 +78,7 @@ var CredentialSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "enc_algorithm", NamedC: "enc_algorithm", Type: enumor.String},
 	{Column: "memo", NamedC: "memo", Type: enumor.String},
 	{Column: "enable", NamedC: "enable", Type: enumor.Boolean},
+	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
 }
 
 // CredentialSpec defines all the specifics for credential set by user.

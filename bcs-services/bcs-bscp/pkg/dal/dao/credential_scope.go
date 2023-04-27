@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/jmoiron/sqlx"
-
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
@@ -63,25 +61,15 @@ func (dao *credentialScopeDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, c *ta
 
 	sql := filter.SqlJoint(sqlSentence)
 
-	err = dao.sd.ShardingOne(c.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, c); err != nil {
-				return err
-			}
+	if err := dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, c); err != nil {
+		return 0, err
+	}
 
-			//
-			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err = dao.auditDao.Decorator(kit, c.Attachment.BizID,
-				enumor.CredentialScope).AuditCreate(c, au); err != nil {
-				return fmt.Errorf("audit create credential scope failed, err: %v", err)
-			}
-
-			return nil
-		})
-
-	if err != nil {
-		logs.Errorf("create credential scope, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
-		return 0, fmt.Errorf("create credential scope, but auto run txn failed, err: %v", err)
+	//
+	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
+	if err = dao.auditDao.Decorator(kit, c.Attachment.BizID,
+		enumor.CredentialScope).AuditCreate(c, au); err != nil {
+		return 0, fmt.Errorf("audit create credential scope failed, err: %v", err)
 	}
 
 	return id, nil

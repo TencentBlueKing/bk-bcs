@@ -97,8 +97,10 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCr
 			ID: updated.Id,
 			Spec: &table.CredentialScopeSpec{
 				CredentialScope: credential.CredentialScope(updated.Scope),
+				ExpiredAt:       time.Now(),
 			},
 			Attachment: &table.CredentialScopeAttachment{
+				BizID:        req.BizId,
 				CredentialId: updated.Id,
 			},
 			Revision: &table.Revision{
@@ -124,8 +126,10 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCr
 		credentialScope := &table.CredentialScope{
 			Spec: &table.CredentialScopeSpec{
 				CredentialScope: credential.CredentialScope(created),
+				ExpiredAt:       time.Now(),
 			},
 			Attachment: &table.CredentialScopeAttachment{
+				BizID:        req.BizId,
 				CredentialId: req.CredentialId,
 			},
 			Revision: &table.Revision{
@@ -142,7 +146,12 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCr
 		}
 	}
 
-	s.dao.Credential().UpdateRevisionWithTx(kt, tx, req.BizId, req.CredentialId)
+	if err := s.dao.Credential().UpdateRevisionWithTx(kt, tx, req.BizId, req.CredentialId); err != nil {
+		logs.Errorf("update credential revision failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback(kt)
+		return nil, err
+	}
+	tx.Commit(kt)
 	resp := &pbds.UpdateCredentialScopesResp{}
 	return resp, nil
 }

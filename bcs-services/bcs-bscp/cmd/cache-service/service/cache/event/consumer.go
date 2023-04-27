@@ -94,6 +94,7 @@ func (c *consumer) consume(kt *kit.Kit, es []*table.Event) (needRetry bool) {
 func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error {
 	publishEvent := make([]*table.Event, 0)
 	insertAppEvent := make([]*table.Event, 0)
+	credentialEvent := make([]*table.Event, 0)
 
 	for _, event := range events {
 		switch event.Spec.Resource {
@@ -101,6 +102,8 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 			publishEvent = append(publishEvent, event)
 		case table.Application:
 			insertAppEvent = append(insertAppEvent, event)
+		case table.CredentialEvent:
+			credentialEvent = append(credentialEvent, event)
 		default:
 			logs.Errorf("unsupported insert event resource: %s, id: %s, rid: %s", event.Spec.Resource, event.ID, kt.Rid)
 			continue
@@ -117,6 +120,13 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 	if len(insertAppEvent) != 0 {
 		if err := c.refreshAppMetaCache(kt, insertAppEvent); err != nil {
 			logs.Errorf("refresh app meta cache failed, err: %v, rid: %s", err, kt.Rid)
+			return err
+		}
+	}
+
+	if len(credentialEvent) != 0 {
+		if err := c.refreshCredentialMatchedCI(kt, credentialEvent); err != nil {
+			logs.Errorf("refresh credential cache failed, err: %v, rid: %s", err, kt.Rid)
 			return err
 		}
 	}

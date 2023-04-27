@@ -2,6 +2,7 @@ package table
 
 import (
 	"errors"
+	"time"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/runtime/credential"
@@ -15,7 +16,7 @@ var CredentialScopeColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
 	mergeColumnDescriptors("spec", CredentialScopeSpecColumnDescriptor),
 	mergeColumnDescriptors("attachment", CredentialScopeAttachmentColumnDescriptor),
-	mergeColumnDescriptors("revision", CredentialRevisionColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor),
 )
 
 // CredentialScope defines CredentialScope's columns
@@ -68,11 +69,13 @@ var CredentialScopeSpecColumns = mergeColumns(CredentialScopeSpecColumnDescripto
 // CredentialScopeSpecColumnDescriptor defines credential scope's descriptor
 var CredentialScopeSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "credential_scope", NamedC: "credential_scope", Type: enumor.String},
+	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
 }
 
 // CredentialScopeSpec defines credential scope's Spec
 type CredentialScopeSpec struct {
 	CredentialScope credential.CredentialScope `db:"credential_scope" json:"credential_scope"`
+	ExpiredAt       time.Time                  `db:"expired_at" json:"expired_at"`
 }
 
 // CredentialScopeAttachmentColumnDescriptor defines credential scope's ColumnDescriptors
