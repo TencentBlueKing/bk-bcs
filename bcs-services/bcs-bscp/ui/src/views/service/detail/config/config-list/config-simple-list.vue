@@ -39,7 +39,7 @@
       if (versionData.value.id !== 0) {
         params.release_id = <number>versionData.value.id
       }
-      const res = await getConfigList(props.appId, params)
+      const res = await getConfigList(props.bkBizId, props.appId, params)
       configList.value = res.details
     } catch (e) {
       console.error(e)

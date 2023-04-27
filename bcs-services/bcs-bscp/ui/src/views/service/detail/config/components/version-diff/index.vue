@@ -79,7 +79,7 @@
   const getVersionList = async() => {
     try {
       versionListLoading.value = true
-      const res = await getConfigVersionList(appId, { start: 0, all: true })
+      const res = await getConfigVersionList(bkBizId, appId, { start: 0, all: true })
       versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== props.currentVersion.id)
     } catch (e) {
       console.error(e)
@@ -98,7 +98,7 @@
       params.release_id = releaseId
     }
 
-    const res = await getConfigList(appId, params)
+    const res = await getConfigList(bkBizId, appId, params)
     return res.details
   }
 
@@ -108,7 +108,7 @@
     if (version) {
       params.release_id = version
     }
-    return Promise.all(list.map(item => getConfigItemDetail(item.id, appId, params)))
+    return Promise.all(list.map(item => getConfigItemDetail(bkBizId, item.id, appId, params)))
   }
 
   // 选择对比基准版本

@@ -35,11 +35,10 @@ export const delCategory = (app_id: number, group_category_id: number) => {
  * 获取服务下分组列表
  * @param biz_id 空间ID
  * @param app_id 应用ID
- * @param params 查询参数
  * @returns 
  */
-export const getCategoryGroupList = (biz_id: string, app_id: number, params: IGroupCategoriesQuery) => {
-  return http.get(`/config/biz/${biz_id}/apps/${app_id}/groups`, { params }).then(res => res.data)
+export const getServiceGroupList = (biz_id: string, app_id: number) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/groups`).then(res => res.data)
 }
 
 /**

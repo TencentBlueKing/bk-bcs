@@ -25,7 +25,7 @@ watch(() => userStore.showLoginModal, (val) => {
   if (val) {
     const topWindow = isCrossOriginIFrame() ? window : window.top
     // @ts-ignore
-    topWindow.BLUEKING.corefunc.open_login_dialog(store.loginUrl)
+    topWindow.BLUEKING.corefunc.open_login_dialog(userStore.loginUrl)
   }
 })
 

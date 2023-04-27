@@ -58,7 +58,7 @@
       if (versionData.value.id !== 0) {
         params.release_id = versionData.value.id
       }
-      const res = await getConfigList(props.appId, params)
+      const res = await getConfigList(props.bkBizId, props.appId, params)
       // @ts-ignore
       configList.value = res.details
       pagination.value.count = res.count

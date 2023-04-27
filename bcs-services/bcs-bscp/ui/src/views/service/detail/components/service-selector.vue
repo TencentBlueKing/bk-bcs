@@ -1,8 +1,10 @@
 <script setup lang="ts">
-  import { ref, Ref, watch ,onMounted } from 'vue'
+  import { ref, watch ,onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { storeToRefs } from 'pinia'
+  import { useUserStore } from '../../../../store/user'
   import { IAppItem } from '../../../../../types/app'
-  import { getAllApp } from "../../../../api";
+  import { getAppList } from "../../../../api";
 
   interface IServiceGroupItem {
     space_id: number;
@@ -15,13 +17,17 @@
   const route = useRoute()
   const router = useRouter()
 
+  const { userInfo } = storeToRefs(useUserStore())
+
+  const bizId = <string>route.params.spaceId
+
   const props = defineProps<{
     value: number
   }>()
 
   defineEmits(['change'])
 
-  const serviceList = ref([]) as Ref<IServiceGroupItem[]>
+  const serviceList = ref<IAppItem[]>([])
   const loading = ref(false)
   const localVal = ref(props.value)
 
@@ -36,25 +42,13 @@
   const loadServiceList = async() => {
     loading.value = true;
     try {
-      const resp = await getAllApp();
-      const groupedList: Array<IServiceGroupItem> = []
-      // @ts-ignore
-      resp.details.forEach(service => {
-        const group = groupedList.find(item => item.space_id === service.space_id)
-        if (group) {
-          group.children.push(service)
-        } else {
-          const {space_id, space_name, space_type_id, space_type_name  } = service
-          groupedList.push({
-            space_id,
-            space_name,
-            space_type_id,
-            space_type_name,
-            children: [{ ...service }]
-          })
-        }
-      })
-      serviceList.value = groupedList
+      const query = {
+        start: 0,
+        limit: 100,
+        operator: userInfo.value.username
+      }
+      const resp = await getAppList(bizId, query);
+      serviceList.value = resp.details
     } catch (e) {
       console.error(e);
     } finally {
@@ -63,11 +57,9 @@
   };
 
   const handleAppChange = (id: number) => {
-    const group = serviceList.value.find(group => {
-      return group.children.find(item => item.id === id)
-    })
-    if (group) {
-      router.push({ name: <string>route.name, params: { spaceId: group.space_id, appId: id } })
+    const service = serviceList.value.find(service => service.id === id)
+    if (service) {
+      router.push({ name: <string>route.name, params: { spaceId: service.space_id, appId: id } })
     }
   }
 </script>
@@ -79,18 +71,12 @@
     :clearable="false"
     :loading="loading"
     @change="handleAppChange">
-    <bk-option-group
-      v-for="group in serviceList"
-      collapsible
-      :key="group.space_id"
-      :label="group.space_name">
-      <bk-option
-        v-for="item in group.children"
-        :key="item.id"
-        :value="item.id"
-        :label="item.spec.name">
-      </bk-option>
-    </bk-option-group>
+    <bk-option
+      v-for="item in serviceList"
+      :key="item.id"
+      :value="item.id"
+      :label="item.spec.name">
+    </bk-option>
     <div class="selector-extensition" slot="extension">
       <div class="content" @click="router.push({ name: 'service-mine' })">
         <i class="bk-bscp-icon icon-app-store app-icon"></i>

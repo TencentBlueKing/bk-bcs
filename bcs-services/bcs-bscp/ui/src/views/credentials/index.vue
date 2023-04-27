@@ -215,10 +215,10 @@
       </div>
       <bk-loading style="min-height: 300px;" :loading="listLoading">
         <bk-table class="credential-table" :data="credentialList" :border="['outer']" :row-class="getRowCls">
-          <bk-table-column label="密钥" width="300">
+          <bk-table-column label="密钥" width="340">
             <template #default="{ row }">
               <div v-if="row.spec" class="credential-text">
-                <div class="text"><bk-overflow-title type="tips">{{ row.visible ? row.spec.enc_credential : '********************************' }}</bk-overflow-title></div>
+                <div class="text">{{ row.visible ? row.spec.enc_credential : '********************************' }}</div>
                 <div class="actions">
                   <Eye v-if="!row.visible" class="view-icon" @click="row.visible = true"/>
                   <Unvisible v-else class="view-icon" @click="row.visible = false" />
@@ -344,7 +344,7 @@
     align-items: center;
     justify-content: space-between;
     .text {
-      width: 200px
+      width: calc(100% - 80px);
     }
     .actions {
       display: flex;
