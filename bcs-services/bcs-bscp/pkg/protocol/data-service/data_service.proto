@@ -103,8 +103,6 @@ service Data {
     rpc UpdateCredential(UpdateCredentialReq) returns (pbbase.EmptyResp) {}
 
     // credential scope related interface
-    // rpc CreateCredentialScope(CreateCredentialScopeReq) returns (CreateResp) {}
-    // rpc DeleteCredentialScopes(DeleteCredentialScopesReq) returns (DeleteCredentialScopesResp) {}
     rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
     rpc UpdateCredentialScopes(UpdateCredentialScopesReq) returns (UpdateCredentialScopesResp) {}
 

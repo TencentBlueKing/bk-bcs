@@ -154,8 +154,6 @@ type DataClient interface {
 	DeleteCredential(ctx context.Context, in *DeleteCredentialReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UpdateCredential(ctx context.Context, in *UpdateCredentialReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// credential scope related interface
-	// rpc CreateCredentialScope(CreateCredentialScopeReq) returns (CreateResp) {}
-	// rpc DeleteCredentialScopes(DeleteCredentialScopesReq) returns (DeleteCredentialScopesResp) {}
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
@@ -747,8 +745,6 @@ type DataServer interface {
 	DeleteCredential(context.Context, *DeleteCredentialReq) (*base.EmptyResp, error)
 	UpdateCredential(context.Context, *UpdateCredentialReq) (*base.EmptyResp, error)
 	// credential scope related interface
-	// rpc CreateCredentialScope(CreateCredentialScopeReq) returns (CreateResp) {}
-	// rpc DeleteCredentialScopes(DeleteCredentialScopesReq) returns (DeleteCredentialScopesResp) {}
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
 	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.

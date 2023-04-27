@@ -12,53 +12,6 @@ import (
 	"bscp.io/pkg/runtime/credential"
 )
 
-// // CreateCredentialScope create credential scope
-// func (s *Service) CreateCredentialScope(ctx context.Context, req *pbds.CreateCredentialScopeReq) (*pbds.CreateResp, error) {
-// 	kt := kit.FromGrpcContext(ctx)
-
-// 	now := time.Now()
-// 	for _, value := range req.Spec {
-// 		credentialScope := &table.CredentialScope{
-// 			Spec: &table.CredentialScopeSpec{
-// 				CredentialScope: credential.CredentialScope(value),
-// 			},
-// 			Attachment: req.Attachment.CredentialAttachment(),
-// 			Revision: &table.Revision{
-// 				Creator:   kt.User,
-// 				Reviser:   kt.User,
-// 				CreatedAt: now,
-// 				UpdatedAt: now,
-// 			},
-// 		}
-// 		_, err := s.dao.CredentialScope().Create(kt, credentialScope)
-// 		if err != nil {
-// 			logs.Errorf("create credential scope failed, err: %v, rid: %s", err, kt.Rid)
-// 			return nil, err
-// 		}
-// 	}
-// 	resp := &pbds.CreateResp{}
-// 	return resp, nil
-// }
-
-// // DeleteCredentialScopes delete credential scopes
-// func (s *Service) DeleteCredentialScopes(ctx context.Context, req *pbds.DeleteCredentialScopesReq) (*pbds.DeleteCredentialScopesResp, error) {
-// 	kt := kit.FromGrpcContext(ctx)
-
-// 	for _, value := range req.Id {
-// 		credentialScope := &table.CredentialScope{
-// 			ID:         value,
-// 			Attachment: req.Attachment.CredentialAttachment(),
-// 		}
-// 		err := s.dao.CredentialScope().DeleteWithTx(kt, req.Attachment.BizId, req.Id[0])
-// 		if err != nil {
-// 			logs.Errorf("delete credential scope failed, err: %v, rid: %s", err, kt.Rid)
-// 			return nil, err
-// 		}
-// 	}
-// 	resp := &pbds.DeleteCredentialScopesResp{}
-// 	return resp, nil
-// }
-
 // ListCredentialScopes  get credential scopes
 func (s *Service) ListCredentialScopes(ctx context.Context, req *pbds.ListCredentialScopesReq) (*pbds.ListCredentialScopesResp, error) {
 	kt := kit.FromGrpcContext(ctx)

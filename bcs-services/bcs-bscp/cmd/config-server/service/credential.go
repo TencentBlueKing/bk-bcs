@@ -57,20 +57,6 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 		return nil, err
 	}
 
-	// // create Credential_scopes
-	// rs := &pbds.CreateCredentialScopeReq{
-	// 	Spec: req.Scope,
-	// 	Attachment: &pbcrs.CredentialScopeAttachment{
-	// 		BizId:        bizID,
-	// 		CredentialId: rp.Id,
-	// 	},
-	// }
-	// _, err = s.client.DS.CreateCredentialScope(grpcKit.RpcCtx(), rs)
-	// if err != nil {
-	// 	logs.Errorf("create credential scope failed, err: %v, rid: %s", err, grpcKit.Rid)
-	// 	return nil, err
-	// }
-
 	resp = &pbcs.CreateCredentialResp{
 		Id: rp.Id,
 	}
