@@ -122,7 +122,9 @@ export interface IGroupEditArg {
 export interface IGroupTreeItem {
   __uuid?: string;
   id: number;
-  label: string;
+  release_id?: number;
+  release_name?: string;
+  name: string;
   rules: IGroupRuleItem[];
 }
 
@@ -132,5 +134,22 @@ export interface IGroupToService {
   app_name: string;
   release_id: number;
   release_name: string;
+  edited: boolean;
+}
+
+// 服务下的分组数据
+export interface IGroupItemInService {
+  group_id: number;
+  group_name: string;
+  release_id: number;
+  release_name: string;
+  old_selector: {
+    labels_or?: IGroupRuleItem[];
+    labels_and?: IGroupRuleItem[];
+  },
+  new_selector: {
+    labels_or?: IGroupRuleItem[];
+    labels_and?: IGroupRuleItem[];
+  },
   edited: boolean;
 }

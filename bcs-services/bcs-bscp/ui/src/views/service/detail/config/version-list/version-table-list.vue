@@ -73,7 +73,7 @@
     if (searchStr.value) {
       params.searchKey = searchStr.value
     }
-    const res = await getConfigVersionList(props.appId, params)
+    const res = await getConfigVersionList(props.bkBizId, props.appId, params)
     const count = isAvaliableView.value ? res.data.count + 1 : res.data.count
     if (isAvaliableView.value && pagination.value.current === 1) {
       versionList.value = [UN_NAMED_VERSION, ...res.data.details]

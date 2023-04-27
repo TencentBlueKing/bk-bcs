@@ -40,6 +40,8 @@
   }
 
   const handleConfirm = () => {
+    isDiffSliderShow.value = false
+    handlePanelClose()
     InfoBox({
     // @ts-ignore
       infoType: "success",
@@ -47,8 +49,6 @@
       dialogType: 'confirm',
       onConfirm () {
         emit('confirm')
-        handlePanelClose()
-        isDiffSliderShow.value = false
       }
     })
   }
@@ -72,7 +72,7 @@
                     上线版本：{{ versionData.spec.name }}
                 </section>
             </template>
-            <select-group @change="groups = $event"></select-group>
+            <select-group :groups="groups" @change="groups = $event"></select-group>
             <template #footer>
                 <section class="actions-wrapper">
                     <bk-button class="publish-btn" theme="primary" @click="isDiffSliderShow = true">对比并上线</bk-button>

@@ -74,7 +74,7 @@
       const bizId = <string>route.params.spaceId
       const query = {
         start: 0,
-        limit: 100,
+        limit: 1000, // @todo 确认拉全量列表参数
         operator: userInfo.value.username
       }
       const resp = await getAppList(bizId, query)

@@ -60,7 +60,7 @@
         start: pagination.value.current === 1 ? 0 : (pagination.value.current - 1) * pagination.value.limit - 1,
         limit: pagination.value.current === 1 ? pagination.value.limit - 1 : pagination.value.limit,
       }
-      const res = await getConfigVersionList(props.appId, params)
+      const res = await getConfigVersionList(props.bkBizId, props.appId, params)
       if (pagination.value.current === 1) {
         versionList.value = [currentConfig, ...res.data.details]
       } else {

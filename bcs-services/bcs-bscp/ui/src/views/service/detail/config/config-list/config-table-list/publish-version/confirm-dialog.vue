@@ -27,6 +27,7 @@
     memo: ''
   })
   const pending = ref(false)
+  const publishGroups = ref<IGroupTreeItem[]>([])
   const formRef = ref()
   const rules = {
     memo: [
@@ -38,13 +39,16 @@
   }
 
   watch(() => props.groups, (val) => {
-    localVal.value.groups = val.map(item => item.id)
+    const ids: number[] = []
+    const groups: IGroupTreeItem[] = []
+    val.forEach(item => {
+      if (!groups.find(group => group.id === item.id)) {
+        groups.push(item)
+      }
+    })
+    localVal.value.groups = groups.map(item => item.id)
+    publishGroups.value = groups
   }, { immediate: true })
-
-  // 选择分组
-  const handleGroupChange = (group: number[]) => {
-    localVal.value.groups = group
-  }
 
   const handleClose = () => {
     emits('update:show', false)
@@ -92,9 +96,8 @@
     @confirm="handleConfirm">
       <bk-form class="form-wrapper" form-type="vertical" ref="formRef" :rules="rules" :model="localVal">
           <bk-form-item label="上线分组">
-            <!-- <CategoryGroupSelect :app-id="props.appId" :multiple="true" :value="localVal.groups" @change="handleGroupChange" /> -->
-            <div v-for="group in props.groups" class="group-item" :key="group.id">
-              <div class="name">{{ group.label }}</div>
+            <div v-for="group in publishGroups" class="group-item" :key="group.id">
+              <div class="name">{{ group.name }}</div>
               <div class="rules">
                 <bk-overflow-title type="tips">
                   <span v-for="(rule, index) in group.rules" :key="index" class="rule">

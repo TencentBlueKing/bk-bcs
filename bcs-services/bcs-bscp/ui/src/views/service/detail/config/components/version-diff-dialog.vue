@@ -80,7 +80,7 @@
   const getVersionList = async() => {
     try {
       versionListLoading.value = true
-      const res = await getConfigVersionList(props.appId, { start: 0, all: true })
+      const res = await getConfigVersionList(props.bkBizId, props.appId, { start: 0, all: true })
       versionList.value = res.data.details.filter((item: IConfigVersion) => item.id !== props.releaseId)
     } catch (e) {
       console.error(e)
@@ -99,7 +99,7 @@
           limit: 200 // @todo 分页条数待确认
       }
 
-      const res = await getConfigList(props.appId, params)
+      const res = await getConfigList(props.bkBizId, props.appId, params)
       const baseConfig = res.details.find((item: IConfigItem) => item.id === props.config.id)
       if (baseConfig) {
         const detailData = await getConfigDetail(props.config.id, <number>selectedVersion.value)
@@ -124,7 +124,7 @@
       params.release_id = version
     }
 
-    return getConfigItemDetail(id, props.appId, params)
+    return getConfigItemDetail(props.bkBizId, id, props.appId, params)
   }
 
   const handleSelectVersion = (val: number) => {
