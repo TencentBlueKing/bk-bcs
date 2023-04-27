@@ -88,13 +88,9 @@ func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *tabl
 
 // GetByName 通过名称获取, 可以做唯一性校验
 func (dao *releaseDao) GetByName(kit *kit.Kit, bizID uint32, appID uint32, name string) (*table.Release, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ReleaseColumns.NamedExpr(), " FROM ", table.ReleaseTable.Name(),
-		" WHERE name = '", name, "' AND biz_id = ", strconv.Itoa(int(bizID)), " AND app_id = ", strconv.Itoa(int(appID)))
-	expr := filter.SqlJoint(sqlSentence)
-
 	one := new(table.Release)
-	err := dao.orm.Do(dao.sd.Admin().DB()).Get(kit.Ctx, one, expr)
+	sql := table.SelectSQL(table.ReleaseColumns, one, "biz_id = ? AND app_id = ? AND name = ?")
+	err := dao.orm.Do(dao.sd.Admin().DB()).Get(kit.Ctx, one, sql, bizID, appID, name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get release name")
 	}
