@@ -77,9 +77,7 @@ const (
 	Data_ListCredentials_FullMethodName                = "/pbds.Data/ListCredentials"
 	Data_DeleteCredential_FullMethodName               = "/pbds.Data/DeleteCredential"
 	Data_UpdateCredential_FullMethodName               = "/pbds.Data/UpdateCredential"
-	Data_CreateCredentialScope_FullMethodName          = "/pbds.Data/CreateCredentialScope"
 	Data_ListCredentialScopes_FullMethodName           = "/pbds.Data/ListCredentialScopes"
-	Data_DeleteCredentialScopes_FullMethodName         = "/pbds.Data/DeleteCredentialScopes"
 	Data_UpdateCredentialScopes_FullMethodName         = "/pbds.Data/UpdateCredentialScopes"
 	Data_ListInstances_FullMethodName                  = "/pbds.Data/ListInstances"
 	Data_Ping_FullMethodName                           = "/pbds.Data/Ping"
@@ -156,9 +154,7 @@ type DataClient interface {
 	DeleteCredential(ctx context.Context, in *DeleteCredentialReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UpdateCredential(ctx context.Context, in *UpdateCredentialReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// credential scope related interface
-	CreateCredentialScope(ctx context.Context, in *CreateCredentialScopeReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error)
-	DeleteCredentialScopes(ctx context.Context, in *DeleteCredentialScopesReq, opts ...grpc.CallOption) (*DeleteCredentialScopesResp, error)
 	UpdateCredentialScopes(ctx context.Context, in *UpdateCredentialScopesReq, opts ...grpc.CallOption) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
@@ -642,27 +638,9 @@ func (c *dataClient) UpdateCredential(ctx context.Context, in *UpdateCredentialR
 	return out, nil
 }
 
-func (c *dataClient) CreateCredentialScope(ctx context.Context, in *CreateCredentialScopeReq, opts ...grpc.CallOption) (*CreateResp, error) {
-	out := new(CreateResp)
-	err := c.cc.Invoke(ctx, Data_CreateCredentialScope_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *dataClient) ListCredentialScopes(ctx context.Context, in *ListCredentialScopesReq, opts ...grpc.CallOption) (*ListCredentialScopesResp, error) {
 	out := new(ListCredentialScopesResp)
 	err := c.cc.Invoke(ctx, Data_ListCredentialScopes_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataClient) DeleteCredentialScopes(ctx context.Context, in *DeleteCredentialScopesReq, opts ...grpc.CallOption) (*DeleteCredentialScopesResp, error) {
-	out := new(DeleteCredentialScopesResp)
-	err := c.cc.Invoke(ctx, Data_DeleteCredentialScopes_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -767,9 +745,7 @@ type DataServer interface {
 	DeleteCredential(context.Context, *DeleteCredentialReq) (*base.EmptyResp, error)
 	UpdateCredential(context.Context, *UpdateCredentialReq) (*base.EmptyResp, error)
 	// credential scope related interface
-	CreateCredentialScope(context.Context, *CreateCredentialScopeReq) (*CreateResp, error)
 	ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error)
-	DeleteCredentialScopes(context.Context, *DeleteCredentialScopesReq) (*DeleteCredentialScopesResp, error)
 	UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
@@ -937,14 +913,8 @@ func (UnimplementedDataServer) DeleteCredential(context.Context, *DeleteCredenti
 func (UnimplementedDataServer) UpdateCredential(context.Context, *UpdateCredentialReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredential not implemented")
 }
-func (UnimplementedDataServer) CreateCredentialScope(context.Context, *CreateCredentialScopeReq) (*CreateResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateCredentialScope not implemented")
-}
 func (UnimplementedDataServer) ListCredentialScopes(context.Context, *ListCredentialScopesReq) (*ListCredentialScopesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCredentialScopes not implemented")
-}
-func (UnimplementedDataServer) DeleteCredentialScopes(context.Context, *DeleteCredentialScopesReq) (*DeleteCredentialScopesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteCredentialScopes not implemented")
 }
 func (UnimplementedDataServer) UpdateCredentialScopes(context.Context, *UpdateCredentialScopesReq) (*UpdateCredentialScopesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCredentialScopes not implemented")
@@ -1903,24 +1873,6 @@ func _Data_UpdateCredential_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_CreateCredentialScope_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateCredentialScopeReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServer).CreateCredentialScope(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Data_CreateCredentialScope_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).CreateCredentialScope(ctx, req.(*CreateCredentialScopeReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Data_ListCredentialScopes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListCredentialScopesReq)
 	if err := dec(in); err != nil {
@@ -1935,24 +1887,6 @@ func _Data_ListCredentialScopes_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListCredentialScopes(ctx, req.(*ListCredentialScopesReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Data_DeleteCredentialScopes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteCredentialScopesReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServer).DeleteCredentialScopes(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Data_DeleteCredentialScopes_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).DeleteCredentialScopes(ctx, req.(*DeleteCredentialScopesReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2227,16 +2161,8 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_UpdateCredential_Handler,
 		},
 		{
-			MethodName: "CreateCredentialScope",
-			Handler:    _Data_CreateCredentialScope_Handler,
-		},
-		{
 			MethodName: "ListCredentialScopes",
 			Handler:    _Data_ListCredentialScopes_Handler,
-		},
-		{
-			MethodName: "DeleteCredentialScopes",
-			Handler:    _Data_DeleteCredentialScopes_Handler,
 		},
 		{
 			MethodName: "UpdateCredentialScopes",

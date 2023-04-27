@@ -16,7 +16,7 @@ var CredentialColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
 	mergeColumnDescriptors("spec", CredentialSpecColumnDescriptor),
 	mergeColumnDescriptors("attachment", CredentialAttachmentColumnDescriptor),
-	mergeColumnDescriptors("revision", CredentialRevisionColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor),
 )
 
 // Credential defines a hook for an app to publish.
@@ -26,7 +26,7 @@ type Credential struct {
 	ID         uint32                `db:"id" json:"id"`
 	Spec       *CredentialSpec       `db:"spec" json:"spec"`
 	Attachment *CredentialAttachment `db:"attachment" json:"attachment"`
-	Revision   *CredentialRevision   `db:"revision" json:"revision"`
+	Revision   *Revision             `db:"revision" json:"revision"`
 }
 
 // TableName  is the Credential's database table name.
@@ -78,6 +78,7 @@ var CredentialSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "enc_algorithm", NamedC: "enc_algorithm", Type: enumor.String},
 	{Column: "memo", NamedC: "memo", Type: enumor.String},
 	{Column: "enable", NamedC: "enable", Type: enumor.Boolean},
+	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
 }
 
 // CredentialSpec defines all the specifics for credential set by user.
@@ -87,6 +88,7 @@ type CredentialSpec struct {
 	EncAlgorithm   string         `db:"enc_algorithm" json:"enc_algorithm"`
 	Memo           string         `db:"memo" json:"memo"`
 	Enable         bool           `db:"enable"  json:"enable"`
+	ExpiredAt      time.Time      `db:"expired_at" json:"expired_at"`
 }
 
 const (
@@ -124,7 +126,7 @@ func (c CredentialSpec) ValidateCreate() error {
 	return nil
 }
 
-//CredentialAttachment defines the credential attachments.
+// CredentialAttachment defines the credential attachments.
 type CredentialAttachment struct {
 	BizID uint32 `db:"biz_id" json:"biz_id"`
 }
@@ -158,50 +160,6 @@ var CredentialRevisionColumnDescriptor = ColumnDescriptors{
 	{Column: "created_at", NamedC: "created_at", Type: enumor.Time},
 	{Column: "updated_at", NamedC: "updated_at", Type: enumor.Time},
 	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
-}
-
-// CredentialRevision credential revision
-type CredentialRevision struct {
-	Creator   string    `db:"creator" json:"creator"`
-	Reviser   string    `db:"reviser" json:"reviser"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
-	ExpiredAt time.Time `db:"expired_at" json:"expired_at"`
-}
-
-// ValidateCreate validate revision when created
-func (r CredentialRevision) ValidateCreate() error {
-
-	if len(r.Creator) == 0 {
-		return errors.New("creator can not be empty")
-	}
-
-	return nil
-}
-
-// IsEmpty test whether a revision is empty or not.
-func (r CredentialRevision) IsEmpty() bool {
-	if len(r.Creator) != 0 {
-		return false
-	}
-
-	if len(r.Reviser) != 0 {
-		return false
-	}
-
-	if !r.CreatedAt.IsZero() {
-		return false
-	}
-
-	if !r.UpdatedAt.IsZero() {
-		return false
-	}
-
-	if !r.ExpiredAt.IsZero() {
-		return false
-	}
-
-	return true
 }
 
 // ValidateDelete validate the credential's info when delete it.

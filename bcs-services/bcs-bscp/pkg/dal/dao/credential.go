@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
@@ -22,6 +23,8 @@ import (
 
 // Credential supplies all the Credential related operations.
 type Credential interface {
+	// Get get credential
+	Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error)
 	// GetByCredentialString get credential by credential string
 	GetByCredentialString(kit *kit.Kit, bizID uint32, str string) (*table.Credential, error)
 	// Create one credential instance.
@@ -32,6 +35,8 @@ type Credential interface {
 	Delete(kit *kit.Kit, strategy *table.Credential) error
 	// Update update credential
 	Update(kit *kit.Kit, credential *table.Credential) error
+	// UpdateRevisionWithTx update credential revision with transaction
+	UpdateRevisionWithTx(kit *kit.Kit, tx *sharding.Tx, bizID, id uint32) error
 }
 
 var _ Credential = new(credentialDao)
@@ -42,6 +47,26 @@ type credentialDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	event    Event
+}
+
+func (dao *credentialDao) Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID is empty")
+	}
+	if id == 0 {
+		return nil, errf.New(errf.InvalidParameter, "credential id is empty")
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialColumns.NamedExpr(), " FROM ",
+		table.CredentialTable.Name(), " WHERE id = '", strconv.Itoa(int(id)), "' AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
+
+	one := new(table.Credential)
+	if err := dao.orm.Do(dao.sd.MustSharding(bizID)).Get(kit.Ctx, one, sql); err != nil {
+		return nil, fmt.Errorf("get credential failed, err: %v", err)
+	}
+	return one, nil
 }
 
 // Get Credential by encoded credential string.
@@ -110,11 +135,18 @@ func (dao *credentialDao) Create(kit *kit.Kit, c *table.Credential) (uint32, err
 				return fmt.Errorf("audit create credential failed, err: %v", err)
 			}
 
+			encryptionAlgorithm := cc.DataService().Credential.EncryptionAlgorithm
+			masterKey := cc.DataService().Credential.MasterKey
+			decrypted, err := tools.DecryptCredential(c.Spec.EncCredential, masterKey, encryptionAlgorithm)
+			if err != nil {
+				return fmt.Errorf("decrypt credential failed, err: %v", err)
+			}
+
 			e := types.Event{
 				Spec: &table.EventSpec{
 					Resource:    table.CredentialEvent,
 					ResourceID:  c.ID,
-					ResourceUid: c.Spec.EncCredential,
+					ResourceUid: decrypted,
 					OpType:      table.InsertOp,
 				},
 				Attachment: &table.EventAttachment{BizID: c.Attachment.BizID},
@@ -244,14 +276,8 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 
 	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Credential).PrepareUpdate(g)
 	var sqlSentence []string
-	// 解决空值无法更新
-	if g.Spec.Memo == "" {
-		sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(), " SET ", expr, ", memo = ''", " WHERE id = ", strconv.Itoa(int(g.ID)),
-			" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
-	} else {
-		sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
-			" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
-	}
+	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
+		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	eDecorator := dao.event.Eventf(kit)
@@ -280,12 +306,20 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 				return fmt.Errorf("do credential update audit failed, err: %v", err)
 			}
 
+			encryptionAlgorithm := cc.DataService().Credential.EncryptionAlgorithm
+			masterKey := cc.DataService().Credential.MasterKey
+			decrypted, err := tools.DecryptCredential(g.Spec.EncCredential, masterKey, encryptionAlgorithm)
+			if err != nil {
+				return fmt.Errorf("decrypt credential failed, err: %v", err)
+			}
+
 			// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
 			e := types.Event{
 				Spec: &table.EventSpec{
-					Resource:   table.CredentialEvent,
-					ResourceID: g.ID,
-					OpType:     table.UpdateOp,
+					Resource:    table.CredentialEvent,
+					ResourceID:  g.ID,
+					ResourceUid: decrypted,
+					OpType:      table.UpdateOp,
 				},
 				Attachment: &table.EventAttachment{BizID: g.Attachment.BizID},
 				Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
@@ -303,5 +337,60 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	}
 
 	return nil
+}
 
+// UpdateRevisionWithTx update credential revision with transaction
+func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *sharding.Tx, bizID uint32, id uint32) error {
+	if bizID == 0 || id == 0 {
+		return errf.New(errf.InvalidParameter, "credential bizID or id is zero")
+	}
+
+	eDecorator := dao.event.Eventf(kit)
+
+	var sqlSentence []string
+	now := time.Now().Format(constant.TimeStdFormat)
+	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(),
+		" SET updated_at = :updated_at, reviser = :reviser",
+		fmt.Sprintf(" WHERE id = %d AND biz_id = %d", id, bizID))
+	sql := filter.SqlJoint(sqlSentence)
+
+	toUpdate := map[string]interface{}{
+		"updated_at": now,
+		"reviser":    kit.User,
+	}
+
+	_, err := dao.orm.Txn(tx.Tx()).Update(kit.Ctx, sql, toUpdate)
+	if err != nil {
+		logs.Errorf("update credential %d revision failed, err: %v, rid: %v", id, err, kit.Rid)
+		return err
+	}
+
+	credential, err := dao.Get(kit, bizID, id)
+	if err != nil {
+		logs.Errorf("get credential %d failed, err: %v, rid: %v", id, err, kit.Rid)
+		return err
+	}
+
+	encryptionAlgorithm := cc.DataService().Credential.EncryptionAlgorithm
+	masterKey := cc.DataService().Credential.MasterKey
+	decrypted, err := tools.DecryptCredential(credential.Spec.EncCredential, masterKey, encryptionAlgorithm)
+	if err != nil {
+		return fmt.Errorf("decrypt credential failed, err: %v", err)
+	}
+
+	// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
+	e := types.Event{
+		Spec: &table.EventSpec{
+			Resource:    table.CredentialEvent,
+			ResourceID:  id,
+			ResourceUid: decrypted,
+			OpType:      table.UpdateOp,
+		},
+		Attachment: &table.EventAttachment{BizID: bizID},
+		Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
+	}
+
+	eDecorator.Fire(e)
+
+	return nil
 }
