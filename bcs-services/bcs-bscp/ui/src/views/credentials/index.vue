@@ -16,6 +16,7 @@
   const listLoading = ref(false)
   const createPending = ref(false)
   const newCredentials = ref<number[]>([]) // 记录新增加的密钥id，实现表格标记效果
+  const searchStr = ref('')
   const editingMemoId = ref(0) // 记录当前正在编辑说明的密钥id
   const memoInputRef = ref()
   const isAssociateSliderShow = ref(false)
@@ -32,9 +33,12 @@
 
   // 加载密钥列表
   const loadCredentialList = async () => {
-    const query = {
+    const query: { limit: number, start: number, searchKey?: string } = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit
+    }
+    if (searchStr.value) {
+      query.searchKey = searchStr.value
     }
     const res = await getCredentialList(spaceId.value, query)
     res.details.forEach((item: ICredentialItem) => item.visible = false)
@@ -43,12 +47,13 @@
   }
 
   // 更新列表数据，带loading效果
-  const refreshListWithLoading = async () => {
+  const refreshListWithLoading = async (current: number = 1) => {
     // 创建新密钥时，页码会切换会首页，此时不另外发请求
     if (createPending.value) {
       return
     }
     listLoading.value = true
+    pagination.value.current = 1
     await loadCredentialList()
     listLoading.value = false
   }
@@ -93,6 +98,13 @@
     }
   }
 
+  // 搜索框输入事件处理，内容为空时触发一次搜索
+  const handleSearchInputChange = (val: string) => {
+    if (!val) {
+      refreshListWithLoading()
+    }
+  }
+
   // 密钥说明编辑
   const handleEditMemo = (id: number) => {
     editingMemoId.value = id
@@ -113,6 +125,7 @@
 
     const params = {
       id: credential.id,
+      enable: credential.spec.enable,
       memo
     }
     await updateCredential(spaceId.value, params)
@@ -134,6 +147,7 @@
         onConfirm: async () => {
           const params = {
             id: credential.id,
+            memo: credential.spec.memo,
             enable: false
           }
           await updateCredential(spaceId.value, params)
@@ -143,6 +157,7 @@
     } else {
       const params = {
         id: credential.id,
+        memo: credential.spec.memo,
         enable: true
       }
       await updateCredential(spaceId.value, params)
@@ -206,7 +221,14 @@
       <div class="operate-area">
         <bk-button theme="primary" :loading="createPending" @click="handleCreateCredential"><Plus class="button-icon" />新建密钥</bk-button>
         <div class="filter-actions">
-          <bk-input class="search-group-input" placeholder="状态/说明/更新人/更新时间">
+          <bk-input
+            v-model="searchStr"
+            class="search-group-input"
+            placeholder="状态/说明/更新人/更新时间"
+            :clearable="true"
+            @enter="refreshListWithLoading"
+            @clear="refreshListWithLoading"
+            @change="handleSearchInputChange">
             <template #suffix>
                 <Search class="search-input-icon" />
             </template>

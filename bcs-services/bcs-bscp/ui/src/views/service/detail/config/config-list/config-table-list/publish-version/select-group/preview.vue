@@ -3,7 +3,6 @@
   import { IGroupTreeItem, IGroupItemInService } from '../../../../../../../../../types/group'
   import { IConfigVersion } from '../../../../../../../../../types/config'
   import RuleTag from '../../../../../../../groups/components/rule-tag.vue';
-import { versionMajorMinor } from 'typescript';
 
   interface IGroupPreviewItem {
     id: number;
@@ -80,7 +79,7 @@ import { versionMajorMinor } from 'typescript';
         class="version-callapse-item"
         :key="version.id">
         <div class="version-header">
-          <div :class="['version-type-marking', version.type]">【{{ TYPE_MAP[version.type] }}】</div>
+          <div :class="['version-type-marking', version.type]">【{{ TYPE_MAP[version.type as keyof typeof TYPE_MAP] }}】</div>
           <span v-if="version.type === 'modify'" class="name"> - {{ version.name }}</span>
           <span class="group-count-wrapper">共 <span class="count">{{ version.children.length }}</span> 个分组</span>
         </div>
