@@ -200,6 +200,7 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			return
 		}
 
+		kt.BizID = uint32(bizID)
 		ctx := kit.WithKit(r.Context(), kt)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

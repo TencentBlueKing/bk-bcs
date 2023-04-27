@@ -14,7 +14,6 @@ package service
 
 import (
 	"context"
-	"strconv"
 
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -236,21 +235,16 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.GetConfigItemResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
-	if err != nil {
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes); err != nil {
 		return nil, err
 	}
 
 	if req.ReleaseId == 0 {
-		return s.getEditingConfigItem(grpcKit, req.ConfigItemId, uint32(bizID), req.AppId)
+		return s.getEditingConfigItem(grpcKit, req.ConfigItemId, grpcKit.BizID, req.AppId)
 	}
 
-	return s.getReleasedConfigItem(grpcKit, req.ConfigItemId, uint32(bizID), req.AppId, req.ReleaseId)
+	return s.getReleasedConfigItem(grpcKit, req.ConfigItemId, grpcKit.BizID, req.AppId, req.ReleaseId)
 
 }
 
@@ -334,18 +328,14 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemsResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes); err != nil {
 		return nil, err
 	}
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
-	if err != nil {
-		return nil, err
-	}
+
 	// TODO: list latest release and compare each config item exists and latest commit id to get changing status
 	r := &pbds.ListConfigItemsReq{
-		BizId:     uint32(bizID),
+		BizId:     grpcKit.BizID,
 		AppId:     req.AppId,
 		ReleaseId: req.ReleaseId,
 		Start:     req.Start,

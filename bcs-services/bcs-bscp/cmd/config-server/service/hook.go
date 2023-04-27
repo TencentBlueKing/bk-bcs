@@ -14,7 +14,6 @@ package service
 
 import (
 	"context"
-	"strconv"
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
@@ -31,20 +30,15 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateHookResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Create,
-		ResourceID: req.AppId}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+		ResourceID: req.AppId}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
 	r := &pbds.CreateHookReq{
 		Attachment: &pbhook.HookAttachment{
-			BizId:     uint32(bizID),
+			BizId:     grpcKit.BizID,
 			AppId:     req.AppId,
 			ReleaseId: req.ReleaseId,
 		},
@@ -73,26 +67,20 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbc
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteHookResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Delete,
-		ResourceID: req.AppId}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+		ResourceID: req.AppId}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
 	r := &pbds.DeleteHookReq{
 		Id: req.HookId,
 		Attachment: &pbhook.HookAttachment{
-			BizId: uint32(bizID),
+			BizId: grpcKit.BizID,
 			AppId: req.AppId,
 		},
 	}
-	_, err = s.client.DS.DeleteHook(grpcKit.RpcCtx(), r)
-	if err != nil {
+	if _, err := s.client.DS.DeleteHook(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("delete hook failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
@@ -105,21 +93,16 @@ func (s *Service) UpdateHook(ctx context.Context, req *pbcs.UpdateHookReq) (*pbc
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateHookResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Update,
-		ResourceID: req.AppId}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+		ResourceID: req.AppId}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
 	r := &pbds.UpdateHookReq{
 		Id: req.HookId,
 		Attachment: &pbhook.HookAttachment{
-			BizId:     uint32(bizID),
+			BizId:     grpcKit.BizID,
 			AppId:     req.AppId,
 			ReleaseId: req.ReleaseId,
 		},
@@ -131,8 +114,7 @@ func (s *Service) UpdateHook(ctx context.Context, req *pbcs.UpdateHookReq) (*pbc
 			PostHook: req.PostHook,
 		},
 	}
-	_, err = s.client.DS.UpdateHook(grpcKit.RpcCtx(), r)
-	if err != nil {
+	if _, err := s.client.DS.UpdateHook(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update hook failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
@@ -145,13 +127,8 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListHooksResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Find}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
@@ -159,12 +136,12 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 		return nil, errf.New(errf.InvalidParameter, "page is null")
 	}
 
-	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+	if err := req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
 	r := &pbds.ListHooksReq{
-		BizId:  uint32(bizID),
+		BizId:  grpcKit.BizID,
 		AppId:  req.AppId,
 		Filter: req.Filter,
 		Page:   req.Page,

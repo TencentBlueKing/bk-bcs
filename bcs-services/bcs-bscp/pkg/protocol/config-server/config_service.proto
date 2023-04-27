@@ -21,12 +21,6 @@ package pbcs;
 option go_package = "bscp.io/pkg/protocol/config-server;pbcs";
 
 service Config {
-    rpc ListBiz(ListBizReq) returns (ListBizResp) {
-        option (google.api.http) = {
-            get: "/api/v1/user/biz"
-        };
-    }
-
     rpc CreateApp(CreateAppReq) returns (CreateAppResp) {
         option (google.api.http) = {
             post: "/api/v1/config/create/app/app/biz_id/{biz_id}"
@@ -59,7 +53,7 @@ service Config {
     // 获取用户有权限的 spaces 所有的 apps
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {
         option (google.api.http) = {
-            get: "/api/v1/config/apps"
+            get: "/api/v1/config/biz/{biz_id}/apps"
         };
     }
     // 按 space 查询 app 信息
@@ -391,19 +385,6 @@ message CreateCredentialResp {
     uint32 id = 1;
 }
 
-message ListBizReq {
-}
-
-message ListBizResp {
-    message BizData {
-        uint32 biz_id                  = 1;
-        string biz_name                = 2;
-        repeated string biz_maintainer = 3;
-    }
-
-    repeated BizData biz_list = 1;
-}
-
 message CreateAppReq {
     uint32 biz_id           = 1;
     string name             = 2;
@@ -448,6 +429,7 @@ message ListAppsReq {
 }
 
 message ListAppsRestReq {
+    uint32 biz_id   = 1;
     uint32 start    = 2;
     uint32 limit    = 3;
     string operator = 4;
