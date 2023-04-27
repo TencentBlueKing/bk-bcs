@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { Plus, Search, DownShape } from 'bkui-vue/lib/icon'
   import { InfoBox } from 'bkui-vue/lib'
@@ -18,6 +18,7 @@
   const categorizedGroupList = ref<IGroupCategory[]>([])
   const tableData = ref<IGroupItem[]|IGroupCategoryItem[]>([])
   const isCategorizedView = ref(false) // 按规则分类查看
+  const changeViewPending = ref(false)
   const pagination = ref({
     current: 1,
     count: 0,
@@ -121,8 +122,12 @@
 
   // 切换分类查看视图
   const handleChangeView = () => {
+    changeViewPending.value = true
     pagination.value.current = 1
     refreshTableData()
+    nextTick(() => {
+      changeViewPending.value = false
+    })
   }
 
   // 搜索
@@ -184,6 +189,7 @@
           size="small"
           :true-label="true"
           :false-label="false"
+          :disabled="changeViewPending"
           @change="handleChangeView">
           按规则分类查看
         </bk-checkbox>
@@ -231,6 +237,14 @@
                 </template>
               </template>
             </bk-table-column>
+            <bk-table-column label="分组状态" :width="100">
+              <template #default="{ row }">
+                <span class="group-status">
+                  <div :class="['dot', { 'published': row.released_apps_num > 0 }]"></div>
+                  {{ row.released_apps_num > 0 ? '已上线': '未上线' }}
+                </span>
+              </template>
+            </bk-table-column>
             <bk-table-column label="上线服务数" :width="110">
               <template #default="{ row }">
                 <template v-if="!row.IS_CATEORY_ROW">
@@ -242,7 +256,7 @@
             <bk-table-column label="操作" :width="120">
               <template #default="{ row }">
                 <div v-if="!row.IS_CATEORY_ROW" class="action-btns">
-                  <bk-button text theme="primary" @click="openEditGroupDialog(row)">编辑分组</bk-button>
+                  <bk-button text theme="primary" :disabled="row.released_apps_num > 0" @click="openEditGroupDialog(row)">编辑分组</bk-button>
                   <bk-button text theme="primary" :disabled="row.released_apps_num > 0" @click="handleDeleteGroup(row)">删除</bk-button>
                 </div>
               </template>
@@ -332,6 +346,22 @@
     padding: 0 10px;
     background: #f0f1f5;
     border-radius: 2px;
+  }
+  .group-status {
+    display: flex;
+    align-items: center;
+    .dot {
+      margin-right: 10px;
+      width: 8px;
+      height: 8px;
+      background: #f0f1f5;
+      border: 1px solid #c4c6cc;
+      border-radius: 50%;
+      &.published {
+        background: #e5f6ea;
+        border: 1px solid #3fc06d;
+      }
+    }
   }
   .group-data-empty {
     margin-top: 90px;

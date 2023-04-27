@@ -4,7 +4,7 @@
   import { storeToRefs } from 'pinia'
   import { Search } from 'bkui-vue/lib/icon'
   import { useGlobalStore } from '../../store/global'
-  import { IGroupToService } from '../../../types/group'
+  import { IGroupBindService } from '../../../types/group'
   import { getGroupReleasedApps } from '../../api/group'
 
   const router = useRouter()
@@ -20,7 +20,7 @@
   const emits = defineEmits(['update:show'])
 
   const loading = ref(true)
-  const list = ref<IGroupToService[]>([])
+  const list = ref<IGroupBindService[]>([])
   const pagination = ref({
     count: 0,
     limit: 10,
@@ -45,7 +45,7 @@
     loading.value = false
   }
 
-  const goToConfigPage = (service: IGroupToService) => {
+  const goToConfigPage = (service: IGroupBindService) => {
     const route = router.resolve({ name: 'service-config', params: { spaceId: spaceId.value, appId: service.app_id } })
     window.open(route.href, '__blank')
   }

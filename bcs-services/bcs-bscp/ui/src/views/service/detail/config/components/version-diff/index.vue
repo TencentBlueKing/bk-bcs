@@ -1,17 +1,17 @@
 <script setup lang="ts">
-  import { ref, watch, computed } from 'vue'
+  import { guardReactiveProps, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
   import { PlayShape } from 'bkui-vue/lib/icon'
-  import { IRequestFilter, IPageFilter, FilterOp, RuleOp } from '../../../../../../types'
   import { IConfigVersion, IConfigListQueryParams, IConfigDiffDetail, IConfigDetail, IConfigItem } from '../../../../../../../types/config'
   import { getConfigVersionList, getConfigList, getConfigItemDetail } from '../../../../../../api/config'
   import Diff from '../../../../../../components/diff/index.vue'
 
   const props = defineProps<{
-    show: boolean,
-    showPublishBtn?: boolean,
-    currentVersion: IConfigVersion,
-    currentConfig?: number,
+    show: boolean;
+    showPublishBtn?: boolean;
+    currentVersion: IConfigVersion;
+    currentConfig?: number;
+    baseVersionId?: number; // 默认选中的基准版本id
   }>()
 
   const emits = defineEmits(['update:show', 'publish'])
@@ -19,7 +19,6 @@
   const route = useRoute()
   const bkBizId = String(route.params.spaceId)
   const appId = Number(route.params.appId)
-  const isPanelShow = ref(props.show)
   const versionList = ref<IConfigVersion[]>([])
   const versionListLoading = ref(false)
   const selectedVersion = ref(0)
@@ -32,14 +31,6 @@
   // 汇总的配置项列表，包含未修改、增加、删除、修改的所有配置项
   const aggregatedList = ref<IConfigDiffDetail[]>([])
   const diffCount = ref(0)
-  const filter = ref<IRequestFilter>({
-    op: FilterOp.AND,
-    rules: [{
-      field: 'deprecated',
-      op: RuleOp.eq,
-      value: false
-    }]
-  })
   const selectedConfig = ref<IConfigDiffDetail>({
     id: 0,
     name: '',
@@ -56,23 +47,19 @@
     }
   })
 
-  const page = computed(():IPageFilter => {
-    return {
-      count: false,
-      start: 0,
-      limit: 200, // @todo 需要确认拉取全量数据时的参数
-    }
-  })
-
   watch(() => props.show, async(val) => {
-    currentConfigLoading.value = true
-    isPanelShow.value = val
-    getVersionList()
-    const list = await getConfigsForVersion(props.currentVersion.id)
-    currentList.value = await getConfigDetails(list, props.currentVersion.id)
-    calcDiff()
-    setSelectedConfig(props.currentConfig)
-    currentConfigLoading.value = false
+    if (val) {
+      currentConfigLoading.value = true
+      if (props.baseVersionId) {
+        selectedVersion.value = props.baseVersionId
+      }
+      getVersionList()
+      const list = await getConfigsForVersion(props.currentVersion.id)
+      currentList.value = await getConfigDetails(list, props.currentVersion.id)
+      calcDiff()
+      setSelectedConfig(props.currentConfig)
+      currentConfigLoading.value = false
+    }
   })
 
   // 获取所有对比基准版本
@@ -204,7 +191,6 @@
   }
 
   const handleClose = () => {
-    isPanelShow.value = false
     selectedVersion.value = 0
     versionList.value = []
     emits('update:show', false)
@@ -213,7 +199,7 @@
 </script>
 <template>
   <bk-sideslider
-    :is-show="isPanelShow"
+    :is-show="props.show"
     title="版本对比"
     :width="1200"
     @closed="handleClose">

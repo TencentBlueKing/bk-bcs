@@ -1,56 +1,41 @@
 <script setup lang="ts">
   import { ref, watch } from 'vue';
-  import { IGroupTreeItem, IGroupItemInService } from '../../../../../../../../../types/group'
-  import { IConfigVersion } from '../../../../../../../../../types/config'
-  import RuleTag from '../../../../../../../groups/components/rule-tag.vue';
-
-  interface IGroupPreviewItem {
-    id: number;
-    name: string;
-    type: String;
-    children: IGroupTreeItem[]
-  }
+  import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../../../types/group'
+  import PreviewVersionGroup from './preview-version-group.vue';
 
   // 将分组按照版本聚合
-    const aggregateGroup = (groups: IGroupTreeItem[]) => {
-      const list: IGroupPreviewItem[] = []
-      const modifyVersions: IGroupPreviewItem[] = []
-      const noVersions: IGroupPreviewItem[] = [{ id: 0, name: '无版本', type: 'plain', children: [] }]
-      groups.forEach((group) => {
-        const { release_id, release_name } = group
-        if (release_id) {
-          const version = modifyVersions.find(item => item.id === release_id)
-          if (version) {
-            if (!version.children.find(item => item.id === group.id)) {
-              version.children.push(group)
-            }
-          } else {
-            modifyVersions.push({ id: release_id, name: <string>release_name, type: 'modify', children: [group] })
-          }
+  const aggregateGroup = (groups: IGroupToPublish[]) => {
+    const list: IGroupPreviewItem[] = []
+    const modifyVersions: IGroupPreviewItem[] = []
+    const noVersions: IGroupPreviewItem[] = [{ id: 0, name: '无版本', type: 'plain', children: [] }]
+    groups.forEach((group) => {
+      const { release_id, release_name } = group
+      if (release_id) {
+        const version = modifyVersions.find(item => item.id === release_id)
+        if (version) {
+          version.children.push(group)
         } else {
-          noVersions[0].children.push(group)
+          modifyVersions.push({ id: release_id, name: <string>release_name, type: 'modify', children: [group] })
         }
-      })
-      list.push(...modifyVersions)
-      if (noVersions[0].children.length > 0) {
-        list.push(...noVersions)
+      } else {
+        noVersions[0].children.push(group)
       }
-      return list
+    })
+    list.push(...modifyVersions)
+    if (noVersions[0].children.length > 0) {
+      list.push(...noVersions)
     }
+    return list
+  }
 
   const props = defineProps<{
     groupListLoading: boolean;
-    groupList: IGroupItemInService[];
-    versionListLoading: boolean;
-    versionList: IConfigVersion[];
-    value: IGroupTreeItem[];
+    groupList: IGroupToPublish[];
+    allowPreviewDelete: boolean;
+    value: IGroupToPublish[];
   }>()
 
-  const TYPE_MAP = {
-    'current': '当前版本',
-    'modify': '变更版本',
-    'plain': '无版本'
-  }
+  const emits = defineEmits(['diff', 'change'])
 
   const previewData = ref<IGroupPreviewItem[]>([])
 
@@ -58,6 +43,9 @@
     previewData.value = aggregateGroup(val)
   }, { immediate: true })
 
+  const handleDelete = (id: number) => {
+    emits('change', props.value.filter(group => group.id !== id))
+  }
 
 </script>
 <template>
@@ -73,29 +61,16 @@
           <p>请先从左侧选择待上线的分组范围</p>
         </div>
       </bk-exception>
-      <div
-        v-else
-        v-for="version in previewData"
-        class="version-callapse-item"
-        :key="version.id">
-        <div class="version-header">
-          <div :class="['version-type-marking', version.type]">【{{ TYPE_MAP[version.type as keyof typeof TYPE_MAP] }}】</div>
-          <span v-if="version.type === 'modify'" class="name"> - {{ version.name }}</span>
-          <span class="group-count-wrapper">共 <span class="count">{{ version.children.length }}</span> 个分组</span>
-        </div>
-        <div class="group-list">
-          <div v-for="group in version.children" class="group-item" :key="group.id">
-            <span class="node-name">{{ group.name }}</span>
-            <span class="split-line">|</span>
-            <div class="rules">
-              <template v-for="(rule, index) in group.rules" :key="index">
-                <template v-if="index > 0"> ； </template>
-                <rule-tag class="tag-item" :rule="rule"/>
-              </template>
-            </div>
-          </div>
-        </div>
-      </div>
+      <template v-else>
+        <preview-version-group
+          v-for="previewGroup in previewData"
+          :key="previewGroup.id"
+          :preview-group="previewGroup"
+          :allow-preview-delete="allowPreviewDelete"
+          @diff="emits('diff', $event)"
+          @delete="handleDelete">
+        </preview-version-group>
+      </template>
     </div>
   </div>
 </template>
@@ -109,6 +84,7 @@
   }
   .title {
     margin: 0 0 16px;
+    padding: 0 24px;
     line-height: 19px;
     font-size: 14px;
     font-weight: 700;
@@ -128,59 +104,6 @@
       margin: 8px 0 0;
       color: #979ba5;
       font-size: 12px;
-    }
-  }
-  .version-callapse-item {
-    margin-bottom: 16px;
-    .version-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 4px;
-      line-height: 24px;
-      font-size: 12px;
-      color: #63656e;
-      .version-type-marking {
-        &.modify {
-          color: #ff9c01;
-        }
-      }
-    }
-    .group-count-wrapper {
-      margin-left: 16px;
-      color: #979ba5;
-      .count {
-        color: #3a84ff;
-        font-weight: 700;
-      }
-    }
-    .group-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 2px;
-      padding: 8px 16px;
-      background: #ffffff;
-      border-radius: 2px;
-      &:hover {
-        background: #e1ecff;
-      }
-      .node-name {
-        font-size: 12px;
-        line-height: 20px;
-        color: #63656e;
-      }
-      .split-line {
-        margin: 0 4px 0 16px;
-        line-height: 16px;
-        font-size: 12px;
-        color: #979ba5;
-      }
-      .rules {
-        display: flex;
-        align-items: center;
-        line-height: 16px;
-        font-size: 12px;
-        color: #979ba5;
-      }
     }
   }
 </style>

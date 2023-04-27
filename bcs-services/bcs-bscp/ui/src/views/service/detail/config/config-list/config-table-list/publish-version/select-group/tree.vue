@@ -1,40 +1,57 @@
 <script setup lang="ts">
-  import { computed, ref, watch, withDefaults } from 'vue'
+  import { computed, onMounted, ref, watch, withDefaults } from 'vue'
   import { Search, AngleDown, AngleUp } from 'bkui-vue/lib/icon'
-  import { IGroupTreeItem, IGroupItemInService } from '../../../../../../../../../types/group'
+  import { IGroupToPublish } from '../../../../../../../../../types/group'
   import { IConfigVersion } from '../../../../../../../../../types/config'
   import RuleTag from '../../../../../../../groups/components/rule-tag.vue'
 
-  // 将全量分组数据按照规则key分组
-    const categorizingData = (data: IGroupItemInService[]) => {
-    const treeData: { name: string; count: number; children: IGroupTreeItem[] }[] = []
+  interface treeParentNodeData {
+    node_id: string;
+    name: string;
+    count: number;
+    children: IGroupNodeData[];
+  }
+  
+  interface IGroupNodeData extends IGroupToPublish {
+    node_id: string;
+  }
+
+  // 将全量分组数据按照规则key分组，并记录所有分组节点数据
+  const categorizingData = (data: IGroupToPublish[]) => {
+    const nodeItemList: IGroupNodeData[] = []
+    const treeNodeData: treeParentNodeData[] = []
     data.forEach(group => {
-      const selector = group.new_selector // @todo 待确认上线版本时，分组规则取哪个
-      const rules = selector.labels_and || selector.labels_or
-      const { group_id, group_name, release_id, release_name } = group
-      rules?.forEach(rule => {
-        const data = treeData.find(item => item.name === rule.key)
+      if (group.id === 0) { // id为0表示默认分组，在分组节点树中不可选
+        return
+      }
+      group.rules.forEach(rule => {
+        const nodeId = `${rule.key}_${group.id}` // 用在节点树上做唯一标识
+        const data = treeNodeData.find(item => item.node_id === rule.key)
+        const nodeData = { ...group, node_id: nodeId}
         if (data) {
           data.count++
-          data.children.push({ id: group_id, name: group_name, release_id, release_name, rules: rules })
+          data.children.push(nodeData)
         } else {
-          treeData.push({
+          treeNodeData.push({
+            node_id: rule.key,
             name: rule.key,
             count: 1,
-            children: [{ id: group_id, name: group_name, release_id, release_name, rules: rules }]
+            children: [nodeData]
           })
         }
+        nodeItemList.push({ ...nodeData })
       })
     })
-    return treeData
+    treeData.value = treeNodeData
+    allGroupNode.value = nodeItemList
   }
 
   const props = withDefaults(defineProps<{
     groupListLoading: boolean;
-    groupList: IGroupItemInService[];
+    groupList: IGroupToPublish[];
     versionListLoading: boolean;
     versionList: IConfigVersion[];
-    value: IGroupTreeItem[];
+    value: IGroupToPublish[];
   }>(), {
     groupList: () => [],
     versionList: () => []
@@ -42,9 +59,8 @@
 
   const emits = defineEmits(['change'])
 
-  const categorizedData = ref<{ name: string; count: number; children: IGroupTreeItem[] }[]>([])
-  const treeData = ref<{ name: string; count: number; children: IGroupTreeItem[] }[]>([])
-  const groups = ref<IGroupTreeItem[]>([]) // 选中的分组
+  const treeData = ref<{ name: string; count: number; children: IGroupNodeData[] }[]>([])
+  const allGroupNode = ref<IGroupNodeData[]>([]) // 树中所有的分组叶子节点
   const versionSelectorOpen = ref(false)
   const searchStr = ref('')
   const treeRef = ref()
@@ -56,42 +72,70 @@
     }
   })
 
+  // 分组列表变更
   watch(() => props.groupList, (val) => {
-    treeData.value = categorizingData(val)
-    categorizedData.value = categorizingData(val)
+    categorizingData(val)
   }, { immediate: true })
 
-  watch(() => props.value, (val) => {
-    console.log('value: ', val)
+  // 选中小组变更
+  watch(() => props.value, (newVal, oldVal) => {
+    console.log('newVal: ', newVal.map(item => item.id))
+    if (oldVal) {
+      console.log('oldVal: ',  oldVal.map(item => item.id))
+    }
+    
+    // tree组件UI上选中节点
+    newVal.forEach(checkedGroupItem => {
+      const groupNodes = allGroupNode.value.filter(node => node.id === checkedGroupItem.id)
+      groupNodes.forEach(node => {
+        treeRef.value.setChecked(node.node_id, true)
+      })
+    })
+    // tree组件UI上取消选中节点
+    if (oldVal) {
+      oldVal.forEach(group => {
+        if (!newVal.find(item => item.id === group.id)) {
+          const groupNodes = allGroupNode.value.filter(node => node.id === group.id)
+          groupNodes.forEach(node => {
+            treeRef.value.setChecked(node.node_id, false)
+          })
+        }
+      })
+    }
+  })
+
+  onMounted(() => {
+    if (props.value.length > 0) {
+      // tree组件UI上选中节点
+      props.value.forEach(group => {
+        const groupNodes = allGroupNode.value.filter(node => node.id === group.id)
+        groupNodes.forEach(node => {
+          treeRef.value.setChecked(node.node_id, true)
+        })
+      })
+    }
   })
 
   // 全选
   const handleSelectAll = () => {
-    const allGroupNodes = getAllGroupNodes()
-    groups.value = allGroupNodes
-    treeRef.value.setChecked(allGroupNodes, true)
-    emits('change', groups.value)
+    const groupList: IGroupToPublish[] = []
+    allGroupNode.value.forEach(node => {
+      if (!groupList.find(group => group.id === node.id)) {
+        groupList.push(node)
+      }
+    })
+    emits('change', groupList)
   }
 
   // 全不选
   const handleClearAll = () => {
-    treeRef.value.setChecked(getAllGroupNodes(), false)
-    groups.value = []
-    emits('change', groups.value)
-  }
-
-  // 获取所有分组节点
-  const getAllGroupNodes = () => {
-    const allGroupNode: IGroupTreeItem[] = []
-    treeData.value.forEach(item => allGroupNode.push(...item.children))
-    return allGroupNode
+    emits('change', [])
   }
 
   // 按版本选择
   const handleSelectVersion = (versions: number[]) => {
-    console.log(versions)
-    const groupNodes: IGroupTreeItem[] = []
     const selectedVersion: IConfigVersion[] = []
+    const list: IGroupToPublish[] = []
     if (versions.includes(0)) { // 全选
       selectedVersion.push(...props.versionList)
     } else { // 选择部分
@@ -102,47 +146,37 @@
         }
       })
     }
-    const selectedGroups: number[] = []
     selectedVersion.forEach(version => {
-      version.status.released_groups.forEach(group => {
-        selectedGroups.push(group.id)
+      version.status.released_groups.forEach(releaseItem => {
+        if (!list.find(item => releaseItem.id === item.id)) {
+          const group = allGroupNode.value.find(groupItem => groupItem.id === releaseItem.id)
+          if (group) {
+            list.push(group)
+          }
+        }
       })
     })
-    const allGroupNode = getAllGroupNodes()
-    selectedGroups.forEach(id => {
-      const nodes = allGroupNode.filter(item => item.id === id)
-      groupNodes.push(...nodes)
-    })
-    groups.value = groupNodes
-    treeRef.value.setChecked(allGroupNode, false)
-    treeRef.value.setChecked(groupNodes, true)
-    emits('change', groupNodes)
+
+    emits('change', list)
   }
 
-  // const handleSearch = () => {
-  //   if (searchStr.value) {
-
-  //   } else {
-      
-  //   }
-  // }
+  // 节点搜索
   const handleSearch = (val: string, itemValue: string, item: any) => {
     console.log(val, itemValue, item)
     searchStr.value = val
   }
 
+  // 选中节点
   const handleNodeChecked = (selected: string[]) => {
-    const allGroupList: IGroupTreeItem[] = []
-    const list: IGroupTreeItem[] = []
-    treeData.value.forEach(item => allGroupList.push(...item.children))
-    selected.forEach(item => {
-      const group = allGroupList.find(group => group.__uuid === item)
-      if (group) {
+    console.log(selected)
+    const list: IGroupToPublish[] = []
+    selected.forEach(id => {
+      const group = allGroupNode.value.find(group => group.node_id === id)
+      if (group && !list.find(item => item.id === group.id)) { // 相同分组的节点去重
         list.push(group)
       }
     })
-    groups.value = list
-    emits('change', groups.value)
+    emits('change', list)
   }
 
 </script>
@@ -186,6 +220,7 @@
       <bk-tree
         ref="treeRef"
         label="name"
+        node-key="node_id"
         :data="treeData"
         :show-checkbox="true"
         :expand-all="false"
