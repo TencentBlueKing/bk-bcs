@@ -542,6 +542,15 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.ResourceID = ss.ID
 		ab.prev = ss
 
+	case enumor.Group:
+		group, err := ab.getGroup(resID)
+		if err != nil {
+			ab.hitErr = err
+			return ab
+		}
+		ab.toAudit.ResourceID = group.ID
+		ab.prev = group
+
 	case enumor.Hook:
 		hook, err := ab.getHook(resID)
 		if err != nil {
