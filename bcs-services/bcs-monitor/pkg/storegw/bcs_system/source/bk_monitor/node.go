@@ -64,6 +64,12 @@ func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectId, clusterId, nodeN
 		"provider":   PROVIDER,
 	}
 
+	// 获取容器运行时的版本
+	version, err := base.GetNodeContainerRuntimeVersionByName(ctx, clusterId, nodeName)
+	if err != nil {
+		return nil, err
+	}
+
 	info := &base.NodeInfo{}
 
 	// 节点信息
@@ -72,11 +78,13 @@ func (m *BKMonitor) GetNodeInfo(ctx context.Context, projectId, clusterId, nodeN
 	if err != nil {
 		return nil, err
 	}
+
 	info.DockerVersion = infoLabelSet["dockerVersion"]
 	info.Release = infoLabelSet["kernelVersion"]
 	info.Sysname = infoLabelSet["osVersion"]
 	info.Provider = provider
 	info.IP = ips
+	info.ContainerRuntimeVersion = version
 
 	promqlMap := map[string]string{
 		"coreCount": `sum by (instance) (count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", mode="idle", bk_instance=~"%<ip>s", %<provider>s}))`,
