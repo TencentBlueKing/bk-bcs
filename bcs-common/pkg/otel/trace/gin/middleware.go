@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 	"github.com/dustin/go-humanize"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel"
@@ -30,6 +28,9 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 )
 
 // Middleware returns middleware that will trace incoming requests.
