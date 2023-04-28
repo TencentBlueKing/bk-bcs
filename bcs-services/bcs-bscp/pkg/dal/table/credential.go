@@ -126,6 +126,20 @@ func (c CredentialSpec) ValidateCreate() error {
 	return nil
 }
 
+// ValidateUpdate validate credential spec when it is updated.
+func (c CredentialSpec) ValidateUpdate() error {
+	if c.CredentialType != "" {
+		return errors.New("credential type cannot be updated once created")
+	}
+	if c.EncAlgorithm != "" {
+		return errors.New("enc algorithm cannot be updated once created")
+	}
+	if c.EncCredential != "" {
+		return errors.New("enc credential cannot be updated once created")
+	}
+	return nil
+}
+
 // CredentialAttachment defines the credential attachments.
 type CredentialAttachment struct {
 	BizID uint32 `db:"biz_id" json:"biz_id"`
@@ -180,6 +194,14 @@ func (s Credential) ValidateUpdate() error {
 
 	if s.ID <= 0 {
 		return errors.New("id should be set")
+	}
+
+	if s.Spec == nil {
+		return errors.New("spec should be set")
+	}
+
+	if err := s.Spec.ValidateUpdate(); err != nil {
+		return err
 	}
 
 	if s.Attachment == nil {

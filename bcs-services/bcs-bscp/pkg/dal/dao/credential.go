@@ -261,6 +261,7 @@ func (dao *credentialDao) Delete(kit *kit.Kit, g *table.Credential) error {
 }
 
 // Update update credential
+// Note: only update name, description, enable
 func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	if g == nil {
 		return errf.New(errf.InvalidParameter, "credential is nil")
@@ -270,8 +271,8 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	opts := orm.NewFieldOptions().AddIgnoredFields(
-		"id", "biz_id").AddBlankedFields("enable")
+	opts := orm.NewFieldOptions().AddBlankedFields("enable", "memo").
+		AddIgnoredFields("id", "biz_id", "enc_algorithm", "enc_credential", "credential_type")
 	expr, toUpdate, err := orm.RearrangeSQLDataWithOption(g, opts)
 	if err != nil {
 		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)
@@ -309,9 +310,13 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 				return fmt.Errorf("do credential update audit failed, err: %v", err)
 			}
 
+			old, err := dao.Get(kit, g.Attachment.BizID, g.ID)
+			if err != nil {
+				return fmt.Errorf("get old credential: %d failed, err: %v", g.ID, err)
+			}
 			encryptionAlgorithm := cc.DataService().Credential.EncryptionAlgorithm
 			masterKey := cc.DataService().Credential.MasterKey
-			decrypted, err := tools.DecryptCredential(g.Spec.EncCredential, masterKey, encryptionAlgorithm)
+			decrypted, err := tools.DecryptCredential(old.Spec.EncCredential, masterKey, encryptionAlgorithm)
 			if err != nil {
 				return fmt.Errorf("decrypt credential failed, err: %v", err)
 			}
