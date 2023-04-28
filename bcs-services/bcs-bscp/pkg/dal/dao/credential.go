@@ -42,11 +42,12 @@ type Credential interface {
 var _ Credential = new(credentialDao)
 
 type credentialDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
-	idGen    IDGenInterface
-	auditDao AuditDao
-	event    Event
+	orm               orm.Interface
+	sd                *sharding.Sharding
+	credentialSetting cc.Credential
+	idGen             IDGenInterface
+	auditDao          AuditDao
+	event             Event
 }
 
 func (dao *credentialDao) Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error) {
@@ -79,8 +80,8 @@ func (dao *credentialDao) GetByCredentialString(kit *kit.Kit, bizID uint32, str 
 	}
 
 	// encode credential string
-	encryptionAlgorithm := cc.CacheService().Credential.EncryptionAlgorithm
-	masterKey := cc.CacheService().Credential.MasterKey
+	encryptionAlgorithm := dao.credentialSetting.EncryptionAlgorithm
+	masterKey := dao.credentialSetting.MasterKey
 	encrypted, err := tools.EncryptCredential(str, masterKey, encryptionAlgorithm)
 	if err != nil {
 		return nil, errf.ErrCredentialInvalid
@@ -159,6 +160,8 @@ func (dao *credentialDao) Create(kit *kit.Kit, c *table.Credential) (uint32, err
 
 			return nil
 		})
+
+	eDecorator.Finalizer(err)
 
 	if err != nil {
 		logs.Errorf("create credential, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
@@ -332,6 +335,8 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 			return nil
 		})
 
+	eDecorator.Finalizer(err)
+
 	if err != nil {
 		return err
 	}
@@ -390,7 +395,7 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *sharding.Tx, bi
 		Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
 	}
 
-	eDecorator.Fire(e)
+	eDecorator.FireWithTx(tx, e)
 
 	return nil
 }

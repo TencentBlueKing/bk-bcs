@@ -35,6 +35,9 @@ func CreateCredential(masterKey, encryptionAlgorithm string) (string, error) {
 
 // EncryptCredential encrypt credential
 func EncryptCredential(credential, masterKey, encryptionAlgorithm string) (string, error) {
+	if credential == "" {
+		return "", fmt.Errorf("credential is null")
+	}
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
 	}
@@ -48,6 +51,9 @@ func EncryptCredential(credential, masterKey, encryptionAlgorithm string) (strin
 
 // DecryptCredential Decrypt credential
 func DecryptCredential(credential, masterKey, encryptionAlgorithm string) (string, error) {
+	if credential == "" {
+		return "", fmt.Errorf("credential is null")
+	}
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
 	}

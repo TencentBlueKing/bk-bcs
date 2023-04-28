@@ -344,8 +344,7 @@ func (pd *pubDao) upsertReleasedGroups(kit *kit.Kit, txn *sqlx.Tx,
 		expr, toUpdate, err := orm.RearrangeSQLDataWithOption(gcr, opts)
 		var sqlSentence []string
 		sqlSentence = append(sqlSentence, "UPDATE ", table.ReleasedGroupTable.Name(), " SET ", expr,
-			fmt.Sprintf(" WHERE biz_id = %d AND group_id = %d AND app_id = %d AND release_id = %d",
-				opt.BizID, group.ID, opt.AppID, opt.ReleaseID))
+			fmt.Sprintf(" WHERE biz_id = %d AND group_id = %d AND app_id = %d", opt.BizID, group.ID, opt.AppID))
 		sql := filter.SqlJoint(sqlSentence)
 		result, err := txn.NamedExecContext(kit.Ctx, sql, toUpdate)
 		if err != nil {

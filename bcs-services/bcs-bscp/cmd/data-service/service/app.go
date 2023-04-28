@@ -115,7 +115,7 @@ func (s *Service) GetApp(ctx context.Context, req *pbds.GetAppReq) (*pbapp.App, 
 
 	app, err := s.dao.App().Get(grpcKit, req.BizId, req.AppId)
 	if err != nil {
-		logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
