@@ -28,8 +28,8 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/jaeger"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/zipkin"
 )
@@ -82,7 +82,7 @@ func InitTracerProvider(serviceName string, opt ...Option) (*sdktrace.TracerProv
 
 	err := validateTracingOptions(defaultOptions)
 	if err != nil {
-		blog.Errorf("validateTracingOptions failed: %v", err)
+		klog.Errorf("validateTracingOptions failed: %v", err)
 		return nil, err
 	}
 

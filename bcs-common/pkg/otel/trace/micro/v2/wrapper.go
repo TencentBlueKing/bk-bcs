@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 )
 
+// NewTracingWrapper :
 func NewTracingWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 		// 开始时间
