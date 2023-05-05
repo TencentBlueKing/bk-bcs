@@ -400,6 +400,11 @@ func (c *consumer) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string
 		}
 	}
 
+	if len(appIDs) == 0 {
+		// return early to avoid querying db with empty appIDs which will cause error.
+		return "[]", 2, nil
+	}
+	cis := make([]uint32, 0)
 	listReleasedCIopt := &types.ListReleasedCIsOption{
 		BizID: bizID,
 		Filter: &filter.Expression{
@@ -418,7 +423,6 @@ func (c *consumer) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string
 	if err != nil {
 		return "", 0, err
 	}
-	cis := make([]uint32, 0, len(CIDetails.Details))
 	for _, ci := range CIDetails.Details {
 		for _, scope := range scopes.Details {
 			match, err := scope.Spec.CredentialScope.MatchConfigItem(ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
