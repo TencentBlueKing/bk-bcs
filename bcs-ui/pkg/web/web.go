@@ -16,6 +16,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/metrics"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -112,11 +113,11 @@ func (w *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
-	r.Get("/release_note", w.ReleaseNoteHandler)
+	r.Get("/release_note", metrics.RequestCollect("ReleaseNoteHandler", w.ReleaseNoteHandler))
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 
 	// vue 模版渲染
-	r.Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
+	r.Get("/", metrics.RequestCollect("IndexHandler", w.embedWebServer.IndexHandler().ServeHTTP))
 	r.NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
 
 	return r
