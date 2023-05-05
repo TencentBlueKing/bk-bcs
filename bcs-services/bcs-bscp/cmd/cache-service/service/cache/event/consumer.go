@@ -400,33 +400,35 @@ func (c *consumer) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string
 		}
 	}
 
-	listReleasedCIopt := &types.ListReleasedCIsOption{
-		BizID: bizID,
-		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "app_id",
-					Op:    filter.In.Factory(),
-					Value: appIDs,
+	cis := make([]uint32, 0)
+	if len(appIDs) != 0 {
+		listReleasedCIopt := &types.ListReleasedCIsOption{
+			BizID: bizID,
+			Filter: &filter.Expression{
+				Op: filter.And,
+				Rules: []filter.RuleFactory{
+					&filter.AtomRule{
+						Field: "app_id",
+						Op:    filter.In.Factory(),
+						Value: appIDs,
+					},
 				},
 			},
-		},
-		Page: &types.BasePage{},
-	}
-	CIDetails, err := c.op.ReleasedCI().List(kt, listReleasedCIopt)
-	if err != nil {
-		return "", 0, err
-	}
-	cis := make([]uint32, 0, len(CIDetails.Details))
-	for _, ci := range CIDetails.Details {
-		for _, scope := range scopes.Details {
-			match, err := scope.Spec.CredentialScope.MatchConfigItem(ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
-			if err != nil {
-				return "", 0, err
-			}
-			if match {
-				cis = append(cis, ci.ID)
+			Page: &types.BasePage{},
+		}
+		CIDetails, err := c.op.ReleasedCI().List(kt, listReleasedCIopt)
+		if err != nil {
+			return "", 0, err
+		}
+		for _, ci := range CIDetails.Details {
+			for _, scope := range scopes.Details {
+				match, err := scope.Spec.CredentialScope.MatchConfigItem(ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
+				if err != nil {
+					return "", 0, err
+				}
+				if match {
+					cis = append(cis, ci.ID)
+				}
 			}
 		}
 	}
