@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { computed } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../store/global'
@@ -12,18 +11,11 @@
   const { userInfo } = storeToRefs(useUserStore())
 
   const navList = [
-    { id: 'service', name: '服务管理'},
-    { id: 'groups-management', name: '分组管理'},
-    // { id: 'scripts-management', name: '脚本管理'},
-    { id: 'credentials-management', name: '服务密钥'}
+    { id: 'service-mine', module: 'service', name: '服务管理'},
+    { id: 'groups-management', module: 'groups', name: '分组管理'},
+    // { id: 'scripts-management', module: 'scripts', name: '脚本管理'},
+    { id: 'credentials-management', module: 'credentials', name: '服务密钥'}
   ]
-
-  const activedRootRoute = computed(() => {
-    if (['service-config', 'service-mine', 'service-all'].includes(<string>route.name)) {
-      return 'service'
-    }
-    return route.matched[0]?.name
-  })
 
   const handleSelectSpace = (id: string) => {
     const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id)
@@ -42,9 +34,7 @@
         showApplyPermDialog.value = true
         return
       }
-      spaceId.value = id
-      const { query, params } = route
-      router.push({ name: <string>route.name, query, params: { ...params, spaceId: id } })
+      router.push({ name: 'service-mine', params: { spaceId: id } })
     }
   }
 
@@ -60,9 +50,9 @@
       <div class="head-routes">
         <router-link
           v-for="nav in navList"
-          :class="['nav-item', { actived: activedRootRoute === nav.id }]"
+          :class="['nav-item', { actived: route.meta.navModule === nav.module }]"
           :key="nav.id"
-          :to="{ name: nav.id, params: { spaceId } }">
+          :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }">
           {{ nav.name }}
         </router-link>
       </div>

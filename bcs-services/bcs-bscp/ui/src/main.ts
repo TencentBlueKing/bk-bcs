@@ -9,18 +9,20 @@ import './utils/login';
 import i18n from './i18n/index';
 import cursor from './components/permission/cursor'
 import './components/permission/cursor.css'
+import auth from './common/auth'
 
-const app = createApp(App)
+auth().then(() => {
+  const app = createApp(App)
+  app.directive('bkTooltips', bkTooltips)
+  app.directive('bkEllipsis', bkEllipsis)
+  app.directive('bkOverflowTitle', overflowTitle)
+  app.directive('cursor', cursor)
+  
+  app
+  .use(pinia)
+  .use(i18n)
+  .use(router)
+  .use(bkui)
+  .mount('#app')
+})
 
-app.directive('bkTooltips', bkTooltips)
-app.directive('bkEllipsis', bkEllipsis)
-app.directive('bkOverflowTitle', overflowTitle)
-
-app
-.use(pinia)
-.use(i18n)
-.use(router)
-.use(bkui)
-.mount('#app')
-
-app.directive('cursor', cursor)
