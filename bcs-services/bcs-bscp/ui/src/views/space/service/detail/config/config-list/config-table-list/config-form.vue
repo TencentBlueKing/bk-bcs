@@ -2,15 +2,15 @@
   import { ref, withDefaults, computed, watch } from 'vue'
   import SHA256 from 'crypto-js/sha256'
   import WordArray from 'crypto-js/lib-typedarrays'
-  import { TextFill, InfoLine, Upload, Done, FilliscreenLine } from 'bkui-vue/lib/icon'
+  import { TextFill, Done } from 'bkui-vue/lib/icon'
   import BkMessage from 'bkui-vue/lib/message'
-  import CodeEditor from '../../../../../../../components/code-editor/index.vue'
   import { IAppEditParams } from '../../../../../../../../types/app'
   import { IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { updateConfigContent, getConfigContent } from '../../../../../../../api/config'
   import { stringLengthInBytes } from '../../../../../../../utils/index'
   import { transFileToObject, fileDownload } from '../../../../../../../utils/file'
   import { CONFIG_FILE_TYPE } from '../../../../../../../constants/index'
+  import ConfigContentEditor from '../../components/config-content-editor.vue'
 
   const props = withDefaults(defineProps<{
     config: IAppEditParams,
@@ -151,6 +151,9 @@
     fileDownload(res, `${name}.bin`)
   }
 
+  // 打开全屏
+  const handleOpenFullScreen = () => {}
+
   const cancel = () => {
     emit('cancel')
   }
@@ -199,19 +202,10 @@
           </bk-upload>
         </bk-form-item>
         <bk-form-item v-else label="配置内容" :required="true">
-        <div class="code-editor-content">
-            <div class="editor-operate-area">
-              <div class="tip">
-                  <InfoLine />
-                  仅支持大小不超过 100M
-              </div>
-              <div v-if="editable" class="btns">
-                  <Upload style="font-size: 14px; margin-right: 10px;" />
-                  <FilliscreenLine />
-              </div>
-            </div>
-            <CodeEditor v-model="stringContent" :editable="editable" />
-        </div>
+          <ConfigContentEditor
+            :content="stringContent"
+            :editable="editable"
+            @change="stringContent = $event" />
         </bk-form-item>
     </bk-form>
     <section class="actions-wrapper">
@@ -257,29 +251,6 @@
         &:hover {
           color: #3a84ff;
           text-decoration: underline;
-        }
-      }
-    }
-  }
-  .editor-operate-area {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
-    height: 40px;
-    color: #979ba5;
-    background: #2e2e2e;
-    border-radius: 2px 2px 0 0;
-    .tip {
-      font-size: 12px;
-    }
-    .btns {
-      display: flex;
-      align-items: center;
-      & > span{
-        cursor: pointer;
-        &:hover {
-          color: #3a84ff;
         }
       }
     }
