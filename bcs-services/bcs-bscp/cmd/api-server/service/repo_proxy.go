@@ -14,6 +14,7 @@ package service
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -373,13 +374,15 @@ func newRepoDirector(cli *repo.Client) func(req *http.Request) {
 			return
 		}
 
+		authStr := base64.RawStdEncoding.EncodeToString(
+			[]byte(config.BkRepo.Username + ":" + config.BkRepo.Password))
+
 		// set rid, this is the rid for internal positioning requests.
 		// this field is not supported by repo and will not be used.
 		req.Header.Set(constant.RidKey, kt.Rid)
 
 		// set repo header.
-		req.Header.Set("Authorization", "Platform "+config.BkRepo.Token)
-		req.Header.Set(repo.HeaderKeyUID, config.BkRepo.User)
+		req.Header.Set("Authorization", fmt.Sprintf("Basic %s", authStr))
 		req.Header.Set(repo.HeaderKeySHA256, sha256)
 
 		// if it is an upload request, you need to set the upload node metadata.

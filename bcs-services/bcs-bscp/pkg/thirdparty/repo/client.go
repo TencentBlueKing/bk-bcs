@@ -14,6 +14,7 @@ package repo
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -61,11 +62,14 @@ func NewClient(repoSetting cc.Repository, reg prometheus.Registerer) (*Client, e
 		MetricOpts: client.MetricOption{Register: reg},
 	}
 
+	authStr := base64.RawStdEncoding.EncodeToString(
+		[]byte(repoSetting.BkRepo.Username + ":" + repoSetting.BkRepo.Password))
+
 	header := http.Header{}
 	header.Set("Content-Type", "application/json")
 	header.Set("Accept", "application/json")
-	header.Set("Authorization", fmt.Sprintf("Platform %s", repoSetting.BkRepo.Token))
-	header.Set(HeaderKeyUID, repoSetting.BkRepo.User)
+	// set bkrepo basic auth header, use basic auth rather than platform auth.
+	header.Set("Authorization", fmt.Sprintf("Basic %s", authStr))
 
 	return &Client{
 		config:      repoSetting,
