@@ -1,5 +1,7 @@
 # BSCP 快速上手
 
+介绍通过在 BSCP 产品上传，管理配置；版本管理；灰度发布；并且使用init container和sidecar模拟消费数据等一整套流程
+
 ## 一. 创建服务
 访问地址： https://bscp.{host}/ （默认进去无权限，可以切换业务申请)
 ![Alt text](img/image2023-05-06_16-49-55.png)
