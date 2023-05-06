@@ -448,6 +448,8 @@ func (o *OfflinePayload) Encode() ([]byte, error) {
 
 // HeartbeatPayload defines sidecar heartbeat to send payload to feed server.
 type HeartbeatPayload struct {
+	FingerPrint  string        `json:"fingerprint"`
+	Applications []SideAppMeta `json:"applications"`
 }
 
 // MessagingType return the payload related sidecar message type.
