@@ -211,7 +211,7 @@
         :config-id="activeConfig"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
-        @confirm="refreshConfigList" />
+        @confirm="getListData" />
     </section>
     <VersionDiff
       v-model:show="isDiffPanelShow"

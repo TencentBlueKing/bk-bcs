@@ -30,14 +30,18 @@
   const rules = {
     name: [
       {
-        validator: (value: string) => value.length <= 128,
-        message: '最大长度128个字符'
+        validator: (value: string) => value.length >= 2,
+        message: '最小长度2个字符'
+      },
+      {
+        validator: (value: string) => value.length <= 32,
+        message: '最大长度32个字符'
       },
       {
         validator: (value: string) => {
-          return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value)
+          return /^[a-zA-Z0-9][a-zA-Z0-9_\-]*[a-zA-Z0-9]?$/.test(value)
         },
-        message: '服务名称需以中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾'
+        message: '服务名称由英文、数字、下划线、中划线组成且以英文、数字开头和结尾'
       }
     ]
   }
@@ -46,7 +50,6 @@
 
   watch(() => props.show, (val) => {
     if (val) {
-      formData.value.biz_id = <string>route.params.spaceId
       formData.value.name = ''
       formData.value.memo = ''
     }
@@ -98,23 +101,9 @@
     :before-close="handleClose">
     <div class="create-app-form">
       <bk-form form-type="vertical" ref="formRef" :model="formData" :rules="rules">
-        <bk-form-item :label="t('所属业务')" property="biz_id" required>
-          <bk-select
-            v-model="formData.biz_id"
-            class="bk-select"
-            display-key="space_name"
-            filterable>
-            <bk-option v-for="item in spaceList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
-              <div class="biz-option-item">
-                <div class="name">{{ item.space_name }}</div>
-                <span class="tag">{{ item.space_type_name }}</span>
-              </div>
-            </bk-option>
-          </bk-select>
-        </bk-form-item>
         <bk-form-item :label="t('服务名称')" property="name" required>
           <bk-input
-            placeholder="服务名称需以中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾"
+            placeholder="请输入2~32字符，只允许英文、数字、下划线、中划线且必须以英文、数字开头和结尾"
             v-model="formData.name"
           ></bk-input>
         </bk-form-item>
