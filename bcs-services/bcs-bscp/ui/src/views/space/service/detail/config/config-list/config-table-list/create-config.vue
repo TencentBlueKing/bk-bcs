@@ -59,7 +59,7 @@
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :submit-fn="submitConfig"
-        @submit="$emit('confirm')"
+        @confirm="$emit('confirm')"
         @cancel="close" />
     </bk-sideslider>
   </section>

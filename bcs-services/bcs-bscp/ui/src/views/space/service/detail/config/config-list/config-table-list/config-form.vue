@@ -23,7 +23,7 @@
     editable: true
   })
 
-  const emit = defineEmits(['submit', 'cancel'])
+  const emit = defineEmits(['confirm', 'cancel'])
 
   const localVal = ref({ ...props.config })
   const stringContent = ref('')
@@ -108,7 +108,7 @@
       if (typeof props.submitFn === 'function') {
         await props.submitFn(params)
       }
-      emit('submit')
+      emit('confirm')
       cancel()
     } catch (e) {
       console.error(e)
