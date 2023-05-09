@@ -21,8 +21,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/logs"
 )
 
@@ -161,6 +159,8 @@ type ErrorResponse struct {
 	Err            error         `json:"-"` // low-level runtime error
 	HTTPStatusCode int           `json:"-"` // http response status code
 	Error          *ErrorPayload `json:"error"`
+	loginURL       string        `json:"-"` // login plain url
+	loginPlainURL  string        `json:"-"` // login url
 }
 
 // Render
@@ -170,18 +170,11 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 		statusCode = http.StatusBadRequest
 	}
 
-	if res.Error.Code == "UNAUTHENTICATED" {
-		res.Error.Data = &UnauthorizedData{
-			LoginURL:      bkpaas.BuildLoginURL(r, cc.ApiServer().LoginAuth.Host),
-			LoginPlainURL: bkpaas.BuildLoginPlainURL(r, cc.ApiServer().LoginAuth.Host),
-		}
-	}
-
 	switch res.Error.Code {
 	case "UNAUTHENTICATED":
 		res.Error.Data = &UnauthorizedData{
-			LoginURL:      bkpaas.BuildLoginURL(r, cc.ApiServer().LoginAuth.Host),
-			LoginPlainURL: bkpaas.BuildLoginPlainURL(r, cc.ApiServer().LoginAuth.Host),
+			LoginURL:      res.loginURL,
+			LoginPlainURL: res.loginPlainURL,
 		}
 	case "PERMISSION_DENIED":
 		// 把 detail 中拿出来做鉴权详情
@@ -196,9 +189,9 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 // UnauthorizedErr rest 未登入返回
-func UnauthorizedErr(err error) render.Renderer {
+func UnauthorizedErr(err error, loginAuthHost, loginAuthPlainHost string) render.Renderer {
 	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error()}
-	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized, loginURL: loginAuthHost, loginPlainURL: loginAuthHost}
 }
 
 // PermissionDenied 无数据返回

@@ -65,11 +65,10 @@ type Setting interface {
 
 // ApiServerSetting defines api server used setting options.
 type ApiServerSetting struct {
-	Network   Network           `yaml:"network"`
-	Service   Service           `yaml:"service"`
-	Log       LogOption         `yaml:"log"`
-	LoginAuth LoginAuthSettings `yaml:"loginAuth"`
-	Repo      Repository        `yaml:"repository"`
+	Network Network    `yaml:"network"`
+	Service Service    `yaml:"service"`
+	Log     LogOption  `yaml:"log"`
+	Repo    Repository `yaml:"repository"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
