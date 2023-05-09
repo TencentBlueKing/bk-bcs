@@ -51,13 +51,6 @@ func (c *BaseConf) Init() error {
 	return nil
 }
 
-// LoginConf
-type LoginConf struct {
-	Host      string `yaml:"host"`
-	Provider  string `yaml:"provider"`
-	InnerHost string `yaml:"innerHost"`
-}
-
 // EtcdConf defines etcd related runtime
 type EtcdConf struct {
 	Endpoints string `yaml:"endpoints"`

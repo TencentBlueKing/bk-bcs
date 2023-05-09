@@ -34,7 +34,6 @@ type Configuration struct {
 	Base  *BaseConf    `yaml:"base_conf"`
 	Web   *WebConf     `yaml:"web"`
 	Etcd  *EtcdConf    `yaml:"etcd"`
-	Login *LoginConf   `yaml:"login_conf"`
 	UI    *UIConf      `yaml:"ui_conf"`
 }
 
@@ -59,8 +58,6 @@ func newConfiguration() (*Configuration, error) {
 	c.Web = defaultWebConf()
 	c.UI = defaultUIConf()
 	c.Etcd = defaultEtcdConf()
-
-	c.Login = &LoginConf{}
 
 	return c, nil
 }

@@ -58,7 +58,7 @@ func NewService(sd serviced.Discover) (*Service, error) {
 		return nil, fmt.Errorf("new gateway failed, err: %v", err)
 	}
 
-	authorizer, err := auth.NewAuthorizer(sd, cc.ConfigServer().Network.TLS, nil)
+	authorizer, err := auth.NewAuthorizer(sd, cc.ConfigServer().Network.TLS)
 	if err != nil {
 		return nil, fmt.Errorf("new authorizer failed, err: %v", err)
 	}

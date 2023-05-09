@@ -64,7 +64,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, errors.New("discover convert state failed")
 	}
 
-	authorizer, err := auth.NewAuthorizer(sd, cc.FeedServer().Network.TLS, nil)
+	authorizer, err := auth.NewAuthorizer(sd, cc.FeedServer().Network.TLS)
 	if err != nil {
 		return nil, fmt.Errorf("new authorizer failed, err: %v", err)
 	}
