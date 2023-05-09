@@ -16,7 +16,8 @@ package config
 
 // HostConf :
 type HostConf struct {
-	BKIAMHost string `yaml:"bk_iam_host"` // 权限中心
+	BKIAMHost  string `yaml:"bk_iam_host"`  // 权限中心
+	BSCPAPIURL string `yaml:"bscp_api_url"` // bscp api地址
 }
 
 // FrontendConf

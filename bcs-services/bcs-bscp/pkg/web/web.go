@@ -151,9 +151,9 @@ func (w *WebServer) subRouter() http.Handler {
 	conf := &bscp.IndexConfig{
 		StaticURL: path.Join(config.G.Web.RoutePrefix, "/web"),
 		RunEnv:    config.G.Base.RunEnv,
-		APIURL:    config.G.Web.Host + "/bscp",
 		ProxyAPI:  shouldProxyAPI,
 		SiteURL:   config.G.Web.RoutePrefix,
+		APIURL:    config.G.Frontend.Host.BSCPAPIURL,
 		IAMHost:   config.G.Frontend.Host.BKIAMHost,
 	}
 
