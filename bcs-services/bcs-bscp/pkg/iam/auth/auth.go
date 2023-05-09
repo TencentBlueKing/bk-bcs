@@ -14,13 +14,16 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
@@ -52,7 +55,7 @@ type Authorizer interface {
 }
 
 // NewAuthorizer create an authorizer for iam authorize related operation.
-func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig, conf *cc.LoginAuthSettings) (Authorizer, error) {
+func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 	opts := make([]grpc.DialOption, 0)
 
 	// add dial load balancer.
@@ -79,11 +82,24 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig, conf *cc.LoginAuthSet
 		logs.Errorf("dial auth server failed, err: %v", err)
 		return nil, errf.New(errf.Unknown, fmt.Sprintf("dial auth server failed, err: %v", err))
 	}
+
 	authClient := pbas.NewAuthClient(asConn)
+	resp, err := authClient.GetAuthLoginConf(context.Background(), &pbas.GetAuthLoginConfReq{})
+	if err != nil {
+		return nil, errors.Wrap(err, "get authlogin conf")
+	}
+
+	conf := &cc.LoginAuthSettings{
+		Host:      resp.Host,
+		InnerHost: resp.InnerHost,
+		Provider:  resp.Provider,
+	}
+	authLoginClient := bkpaas.NewAuthLoginClient(conf)
+	klog.InfoS("init authlogin client done", "host", conf.Host, "inner_host", conf.InnerHost, "provider", conf.Provider)
 
 	return &authorizer{
 		authClient:      authClient,
-		authLoginClient: bkpaas.NewAuthLoginClient(conf),
+		authLoginClient: authLoginClient,
 	}, nil
 }
 

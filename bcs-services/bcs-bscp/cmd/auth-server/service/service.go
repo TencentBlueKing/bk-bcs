@@ -218,6 +218,16 @@ func (s *Service) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterRe
 	return s.initial.InitAuthCenter(ctx, req)
 }
 
+// GetAuthLoginConf get auth login conf
+func (s *Service) GetAuthLoginConf(ctx context.Context, req *pbas.GetAuthLoginConfReq) (*pbas.GetAuthLoginConfResp, error) {
+	resp := &pbas.GetAuthLoginConfResp{
+		Host:      cc.AuthServer().LoginAuth.Host,
+		InnerHost: cc.AuthServer().LoginAuth.InnerHost,
+		Provider:  cc.AuthServer().LoginAuth.Provider,
+	}
+	return resp, nil
+}
+
 // AuthorizeBatch authorize resource batch.
 func (s *Service) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) (*pbas.AuthorizeBatchResp, error) {
 	return s.auth.AuthorizeBatch(ctx, req)

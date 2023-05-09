@@ -66,7 +66,7 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 	}
 
 	// 鉴权器
-	authorizer, err := auth.NewAuthorizer(dis, cc.TLSConfig{}, cc.MustGetLoginAuthSettings())
+	authorizer, err := auth.NewAuthorizer(dis, cc.TLSConfig{})
 	if err != nil {
 		return nil, fmt.Errorf("new authorizer failed, err: %v", err)
 	}

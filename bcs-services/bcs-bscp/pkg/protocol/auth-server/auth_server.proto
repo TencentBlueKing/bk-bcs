@@ -56,6 +56,9 @@ service Auth {
     rpc GetPermissionToApply(GetPermissionToApplyReq) returns (GetPermissionToApplyResp) {}
 
     rpc QuerySpace(QuerySpaceReq) returns (QuerySpaceResp) {}
+
+    // auth login conf
+    rpc GetAuthLoginConf(GetAuthLoginConfReq) returns (GetAuthLoginConfResp) {}
 }
 
 message InitAuthCenterReq {
@@ -63,6 +66,14 @@ message InitAuthCenterReq {
 }
 
 message InitAuthCenterResp {}
+
+message GetAuthLoginConfReq {}
+
+message GetAuthLoginConfResp {
+    string host       = 1;
+    string inner_host = 2;
+    string provider   = 3;
+}
 
 message PullResourceReq {
     string type                   = 1;

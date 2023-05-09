@@ -35,11 +35,6 @@ type AuthLoginClient interface {
 
 // NewAuthLoginClient init client
 func NewAuthLoginClient(conf *cc.LoginAuthSettings) AuthLoginClient {
-	// 部分场景 conf 可为空
-	if conf == nil {
-		return nil
-	}
-
 	if conf.Provider == "BK_LOGIN" {
 		return &bkLoginAuthClient{conf: conf}
 	}
