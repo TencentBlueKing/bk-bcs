@@ -37,9 +37,11 @@ import (
 // HTTP API 鉴权, 异常返回json信息
 func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
 		loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
 		if err != nil {
-			render.Render(w, r, rest.UnauthorizedErr(err))
+
+			render.Render(w, r, rest.UnauthorizedErr(err, loginURL, loginPlainURL))
 			return
 		}
 		var username string
@@ -50,7 +52,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 			resp, err := a.authClient.GetUserInfo(r.Context(), req)
 			if err != nil {
 				s := status.Convert(err)
-				render.Render(w, r, rest.UnauthorizedErr(errors.New(s.Message())))
+				render.Render(w, r, rest.UnauthorizedErr(errors.New(s.Message()), loginURL, loginPlainURL))
 				return
 			}
 			username = resp.Username

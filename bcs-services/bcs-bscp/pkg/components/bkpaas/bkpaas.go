@@ -20,7 +20,7 @@ import (
 	"bscp.io/pkg/cc"
 )
 
-// UserCredential
+// LoginCredential
 type LoginCredential struct {
 	UID   string
 	Token string
@@ -31,6 +31,7 @@ type AuthLoginClient interface {
 	GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error)
 	GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error)
 	BuildLoginRedirectURL(r *http.Request, webHost string) string
+	BuildLoginURL(r *http.Request) (string, string)
 }
 
 // NewAuthLoginClient init client
@@ -52,13 +53,13 @@ func buildAbsoluteUri(webHost string, r *http.Request) string {
 }
 
 // BuildLoginURL 返回前端的URL
-func BuildLoginURL(r *http.Request, Loginhost string) string {
+func buildLoginURL(r *http.Request, Loginhost string) string {
 	u := fmt.Sprintf("%s/login/?c_url=", Loginhost)
 	return u
 }
 
 // BuildLoginPlainURL 返回前端的URL
-func BuildLoginPlainURL(r *http.Request, Loginhost string) string {
+func buildLoginPlainURL(r *http.Request, Loginhost string) string {
 	u := fmt.Sprintf("%s/login/plain/?c_url=", Loginhost)
 	return u
 }

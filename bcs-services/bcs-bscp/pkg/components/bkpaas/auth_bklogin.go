@@ -34,6 +34,21 @@ type bkLoginAuthClient struct {
 	conf *cc.LoginAuthSettings
 }
 
+// GetLoginCredentialFromCookies 从 cookie 获取 LoginCredential
+func (b *bkLoginAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error) {
+	uid, err := r.Cookie("bk_uid")
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := r.Cookie("bk_ticket")
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginCredential{UID: uid.Value, Token: token.Value}, nil
+}
+
 // GetUserInfoByToken BK_LIGIN 统一登入服务 bk_ticket 统一鉴权
 func (b *bkLoginAuthClient) GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error) {
 	url := fmt.Sprintf("%s/user/is_login/", host)
@@ -68,17 +83,7 @@ func (b *bkLoginAuthClient) BuildLoginRedirectURL(r *http.Request, webHost strin
 	return redirectURL
 }
 
-// GetLoginCredentialFromCookies 从 cookie 获取 LoginCredential
-func (b *bkLoginAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error) {
-	uid, err := r.Cookie("bk_uid")
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := r.Cookie("bk_ticket")
-	if err != nil {
-		return nil, err
-	}
-
-	return &LoginCredential{UID: uid.Value, Token: token.Value}, nil
+// BuildLoginURL API未登入访问URL
+func (b *bkLoginAuthClient) BuildLoginURL(r *http.Request) (string, string) {
+	return buildLoginURL(r, b.conf.Host), buildLoginPlainURL(r, b.conf.Host)
 }

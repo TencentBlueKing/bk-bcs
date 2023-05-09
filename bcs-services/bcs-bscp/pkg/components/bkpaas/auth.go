@@ -32,6 +32,16 @@ type bkPaaSAuthClient struct {
 	conf *cc.LoginAuthSettings
 }
 
+// GetLoginCredentialFromCookies 从 cookie 获取 LoginCredential
+func (b *bkPaaSAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error) {
+	token, err := r.Cookie("bk_token")
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginCredential{UID: "", Token: token.Value}, nil
+}
+
 // GetUserInfoByToken BK_PAAS 服务 bk_token 鉴权
 func (b *bkPaaSAuthClient) GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error) {
 	url := fmt.Sprintf("%s/login/accounts/is_login/", host)
@@ -62,12 +72,7 @@ func (b *bkPaaSAuthClient) BuildLoginRedirectURL(r *http.Request, webHost string
 	return redirectURL
 }
 
-// GetLoginCredentialFromCookies 从 cookie 获取 LoginCredential
-func (b *bkPaaSAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error) {
-	token, err := r.Cookie("bk_token")
-	if err != nil {
-		return nil, err
-	}
-
-	return &LoginCredential{UID: "", Token: token.Value}, nil
+// BuildLoginURL API未登入访问URL
+func (b *bkPaaSAuthClient) BuildLoginURL(r *http.Request) (string, string) {
+	return buildLoginURL(r, b.conf.Host), buildLoginPlainURL(r, b.conf.Host)
 }
