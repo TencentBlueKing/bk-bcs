@@ -446,8 +446,12 @@ func (o *OfflinePayload) Encode() ([]byte, error) {
 	return jsoni.Marshal(o)
 }
 
-// HeartbeatPayload defines sidecar heartbeat to send payload to feed server.
+// HeartbeatPayload defines sdk heartbeat to send payload to feed server.
 type HeartbeatPayload struct {
+	// FingerPrint sdk instance fingerprint, reference: pkg/dal/sf-share/fingerprint.go
+	FingerPrint string `json:"fingerprint"`
+	// Applications sdk instance bind app meta info,include app,namespace,uid,labels and app current release id.
+	Applications []SideAppMeta `json:"applications"`
 }
 
 // MessagingType return the payload related sidecar message type.
