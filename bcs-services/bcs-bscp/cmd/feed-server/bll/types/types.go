@@ -26,6 +26,7 @@ import (
 type AppInstanceMeta struct {
 	BizID     uint32            `json:"bizID"`
 	AppID     uint32            `json:"appID"`
+	App       string            `json:"app"`
 	Namespace string            `json:"namespace"`
 	Uid       string            `json:"uid"`
 	Labels    map[string]string `json:"labels"`

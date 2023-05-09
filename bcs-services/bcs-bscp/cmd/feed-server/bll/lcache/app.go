@@ -37,13 +37,20 @@ func newApp(mc *metric, cs *clientset.ClientSet) *App {
 	app := new(App)
 	app.mc = mc
 	opt := cc.FeedServer().FSLocalCache
-	client := gcache.New(int(opt.AppCacheSize)).
+	metaClient := gcache.New(int(opt.AppCacheSize)).
 		LRU().
 		EvictedFunc(app.evictRecorder).
 		Expiration(time.Duration(opt.AppCacheTTLSec) * time.Second).
 		Build()
 
-	app.client = client
+	idClient := gcache.New(int(opt.AppCacheSize)).
+		LRU().
+		EvictedFunc(app.evictRecorder).
+		Expiration(time.Duration(opt.AppCacheTTLSec) * time.Second).
+		Build()
+
+	app.metaClient = metaClient
+	app.idClient = idClient
 	app.cs = cs
 	app.collectHitRate()
 
@@ -52,9 +59,10 @@ func newApp(mc *metric, cs *clientset.ClientSet) *App {
 
 // App is the instance of the app cache.
 type App struct {
-	mc     *metric
-	client gcache.Cache
-	cs     *clientset.ClientSet
+	mc         *metric
+	metaClient gcache.Cache
+	idClient   gcache.Cache
+	cs         *clientset.ClientSet
 }
 
 // IsAppExist validate app if exist.
@@ -77,10 +85,56 @@ func (ap *App) IsAppExist(kt *kit.Kit, bizID uint32, appIDs ...uint32) (bool, er
 	return true, nil
 }
 
+// GetAppID get app id by app name.
+func (ap *App) GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error) {
+	key := fmt.Sprintf("%d-%s", bizID, appName)
+	val, err := ap.idClient.GetIFPresent(key)
+	if err == nil {
+		ap.mc.hitCounter.With(prm.Labels{"resource": "app_id", "biz": tools.Itoa(bizID)}).Inc()
+
+		// hit from cache.
+		appID, yes := val.(uint32)
+		if !yes {
+			return 0, fmt.Errorf("unsupported app id cache value type: %v", reflect.TypeOf(val).String())
+		}
+		return appID, nil
+	}
+
+	if err != gcache.KeyNotFoundError {
+		// this is not a not found error, log it.
+		logs.Errorf("get biz: %d, appName: %d app id from local cache failed, err: %v, rid: %s", bizID, appName,
+			err, kt.Rid)
+		// do not return here, try to refresh cache for now.
+	}
+
+	start := time.Now()
+	// get the cache from cache service directly.
+	opt := &pbcs.GetAppIDReq{
+		BizId:   bizID,
+		AppName: appName,
+	}
+
+	resp, err := ap.cs.CS().GetAppID(kt.RpcCtx(), opt)
+	if err != nil {
+		ap.mc.errCounter.With(prm.Labels{"resource": "app_id", "biz": tools.Itoa(bizID)}).Inc()
+		return 0, err
+	}
+
+	err = ap.idClient.Set(key, resp.AppId)
+	if err != nil {
+		logs.Errorf("update biz: %d, appName: %s app id cache failed, err: %v, rid: %s", bizID, appName, err, kt.Rid)
+		// do not return, ignore the error directly.
+	}
+
+	ap.mc.refreshLagMS.With(prm.Labels{"resource": "app_id", "biz": tools.Itoa(bizID)}).Observe(tools.SinceMS(start))
+
+	return resp.AppId, nil
+}
+
 // GetMeta the app meta cache.
 func (ap *App) GetMeta(kt *kit.Kit, bizID uint32, appID uint32) (*types.AppCacheMeta, error) {
 
-	val, err := ap.client.GetIFPresent(appID)
+	val, err := ap.metaClient.GetIFPresent(appID)
 	if err == nil {
 		ap.mc.hitCounter.With(prm.Labels{"resource": "app_meta", "biz": tools.Itoa(bizID)}).Inc()
 
@@ -118,7 +172,7 @@ func (ap *App) GetMeta(kt *kit.Kit, bizID uint32, appID uint32) (*types.AppCache
 		return nil, err
 	}
 
-	err = ap.client.Set(appID, meta)
+	err = ap.metaClient.Set(appID, meta)
 	if err != nil {
 		logs.Errorf("update biz: %d, app: %d cache failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
 		// do not return, ignore the error directly.
@@ -130,7 +184,7 @@ func (ap *App) GetMeta(kt *kit.Kit, bizID uint32, appID uint32) (*types.AppCache
 }
 
 func (ap *App) delete(appID uint32) {
-	ap.client.Remove(appID)
+	ap.metaClient.Remove(appID)
 }
 
 func (ap *App) evictRecorder(key interface{}, _ interface{}) {
@@ -150,7 +204,7 @@ func (ap *App) collectHitRate() {
 	go func() {
 		for {
 			time.Sleep(5 * time.Second)
-			ap.mc.hitRate.With(prm.Labels{"resource": "app_meta"}).Set(ap.client.HitRate())
+			ap.mc.hitRate.With(prm.Labels{"resource": "app_meta"}).Set(ap.metaClient.HitRate())
 		}
 	}()
 }

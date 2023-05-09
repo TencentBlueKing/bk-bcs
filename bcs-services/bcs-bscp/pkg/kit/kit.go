@@ -17,13 +17,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"google.golang.org/grpc/metadata"
+	"k8s.io/klog/v2"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/uuid"
-
-	"google.golang.org/grpc/metadata"
 )
 
 // New initial a kit with rid and context.
@@ -41,6 +43,7 @@ var (
 	lowACKey          = strings.ToLower(constant.AppCodeKey)
 	lowSpaceIDKey     = strings.ToLower(constant.SpaceIDKey)
 	lowSpaceTypeIDKey = strings.ToLower(constant.SpaceTypeIDKey)
+	lowBizIDKey       = strings.ToLower(constant.BizIDKey)
 )
 
 // FromGrpcContext used only to obtain Kit through grpc context.
@@ -72,9 +75,19 @@ func FromGrpcContext(ctx context.Context) *Kit {
 		kit.SpaceID = spaceID[0]
 	}
 
-	lowSpaceTypeIDKey := md[lowSpaceTypeIDKey]
-	if len(lowSpaceTypeIDKey) != 0 {
-		kit.SpaceTypeID = lowSpaceTypeIDKey[0]
+	spaceTypeID := md[lowSpaceTypeIDKey]
+	if len(spaceTypeID) != 0 {
+		kit.SpaceTypeID = spaceTypeID[0]
+	}
+
+	bizIDs := md[lowBizIDKey]
+	if len(bizIDs) != 0 {
+		bizID, err := strconv.ParseUint(bizIDs[0], 10, 64)
+		if err != nil {
+			klog.ErrorS(err, "parse lowBizID %s", bizIDs[0])
+		} else {
+			kit.BizID = uint32(bizID)
+		}
 	}
 
 	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid)
@@ -103,6 +116,7 @@ type Kit struct {
 	// AppCode is app code.
 	AppCode     string
 	AppId       string // 对应的应用ID
+	BizID       uint32 // 对应的业务ID
 	SpaceID     string // 应用对应的SpaceID
 	SpaceTypeID string // 应用对应的SpaceTypeID
 }
@@ -114,13 +128,16 @@ func (c *Kit) ContextWithRid() context.Context {
 
 // RPCMetaData
 func (c *Kit) RPCMetaData() metadata.MD {
-	md := metadata.Pairs(
-		constant.RidKey, c.Rid,
-		constant.UserKey, c.User,
-		constant.AppCodeKey, c.AppCode,
-		constant.SpaceIDKey, c.SpaceID,
-		constant.SpaceTypeIDKey, c.SpaceTypeID,
-	)
+	m := map[string]string{
+		constant.RidKey:         c.Rid,
+		constant.UserKey:        c.User,
+		constant.AppCodeKey:     c.AppCode,
+		constant.SpaceIDKey:     c.SpaceID,
+		constant.SpaceTypeIDKey: c.SpaceTypeID,
+		constant.BizIDKey:       strconv.FormatUint(uint64(c.BizID), 10),
+	}
+
+	md := metadata.New(m)
 	return md
 }
 

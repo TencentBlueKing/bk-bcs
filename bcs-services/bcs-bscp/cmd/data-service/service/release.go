@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
@@ -58,6 +59,10 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 			Attachment:     item.Attachment,
 			Revision:       item.Revision,
 		})
+	}
+
+	if _, err := s.dao.Release().GetByName(grpcKit, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("release name %s already exists", req.Spec.Name)
 	}
 
 	// step3: begin transaction to create release and released config item.

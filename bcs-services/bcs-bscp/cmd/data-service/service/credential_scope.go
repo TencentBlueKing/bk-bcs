@@ -9,36 +9,8 @@ import (
 	"bscp.io/pkg/logs"
 	pbcrs "bscp.io/pkg/protocol/core/credential-scope"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/credential"
 )
-
-// CreateCredentialScope create credential scope
-func (s *Service) CreateCredentialScope(ctx context.Context, req *pbds.CreateCredentialScopeReq) (*pbds.CreateResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	now := time.Now()
-	for _, value := range req.Spec {
-		credentialScope := &table.CredentialScope{
-			Spec: &table.CredentialScopeSpec{
-				CredentialScope: value,
-			},
-			Attachment: req.Attachment.CredentialAttachment(),
-			Revision: &table.CredentialRevision{
-				Creator:   kt.User,
-				Reviser:   kt.User,
-				CreatedAt: now,
-				UpdatedAt: now,
-				ExpiredAt: now,
-			},
-		}
-		_, err := s.dao.CredentialScope().Create(kt, credentialScope)
-		if err != nil {
-			logs.Errorf("create credential scope failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
-		}
-	}
-	resp := &pbds.CreateResp{}
-	return resp, nil
-}
 
 // ListCredentialScopes  get credential scopes
 func (s *Service) ListCredentialScopes(ctx context.Context, req *pbds.ListCredentialScopesReq) (*pbds.ListCredentialScopesResp, error) {
@@ -62,48 +34,77 @@ func (s *Service) ListCredentialScopes(ctx context.Context, req *pbds.ListCreden
 	return resp, nil
 }
 
-// DeleteCredentialScopes delete credential scopes
-func (s *Service) DeleteCredentialScopes(ctx context.Context, req *pbds.DeleteCredentialScopesReq) (*pbds.DeleteCredentialScopesResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	for _, value := range req.Id {
-		credentialScope := &table.CredentialScope{
-			ID:         value,
-			Attachment: req.Attachment.CredentialAttachment(),
-		}
-		err := s.dao.CredentialScope().Delete(kt, credentialScope)
-		if err != nil {
-			logs.Errorf("delete credential scope failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
-		}
-	}
-	resp := &pbds.DeleteCredentialScopesResp{}
-	return resp, nil
-}
-
 // UpdateCredentialScopes update credential scopes
 func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCredentialScopesReq) (*pbds.UpdateCredentialScopesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	tx, err := s.dao.BeginTx(kt, req.BizId)
+	if err != nil {
+		logs.Errorf("begin transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
 	now := time.Now()
-	for _, value := range req.AlterScope {
+	for _, updated := range req.Updated {
 		credentialScope := &table.CredentialScope{
-			ID: value.Id,
+			ID: updated.Id,
 			Spec: &table.CredentialScopeSpec{
-				CredentialScope: value.Scope,
+				CredentialScope: credential.CredentialScope(updated.Scope),
+				ExpiredAt:       time.Now(),
 			},
-			Attachment: req.Attachment.CredentialAttachment(),
-			Revision: &table.CredentialRevision{
+			Attachment: &table.CredentialScopeAttachment{
+				BizID:        req.BizId,
+				CredentialId: updated.Id,
+			},
+			Revision: &table.Revision{
 				Reviser:   kt.User,
 				UpdatedAt: now,
 			},
 		}
-		err := s.dao.CredentialScope().Update(kt, credentialScope)
-		if err != nil {
+		if err = s.dao.CredentialScope().UpdateWithTx(kt, tx, credentialScope); err != nil {
 			logs.Errorf("update credential scope failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback(kt)
 			return nil, err
 		}
 	}
+	for _, deleted := range req.Deleted {
+		if err = s.dao.CredentialScope().DeleteWithTx(kt, tx, req.BizId, deleted); err != nil {
+			logs.Errorf("delete credential scope failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback(kt)
+			return nil, err
+		}
+	}
+
+	for _, created := range req.Created {
+		credentialScope := &table.CredentialScope{
+			Spec: &table.CredentialScopeSpec{
+				CredentialScope: credential.CredentialScope(created),
+				ExpiredAt:       time.Now(),
+			},
+			Attachment: &table.CredentialScopeAttachment{
+				BizID:        req.BizId,
+				CredentialId: req.CredentialId,
+			},
+			Revision: &table.Revision{
+				Creator:   kt.User,
+				Reviser:   kt.User,
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
+		}
+		if _, err = s.dao.CredentialScope().CreateWithTx(kt, tx, credentialScope); err != nil {
+			logs.Errorf("create credential scope failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback(kt)
+			return nil, err
+		}
+	}
+
+	if err := s.dao.Credential().UpdateRevisionWithTx(kt, tx, req.BizId, req.CredentialId); err != nil {
+		logs.Errorf("update credential revision failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback(kt)
+		return nil, err
+	}
+	tx.Commit(kt)
 	resp := &pbds.UpdateCredentialScopesResp{}
 	return resp, nil
 }

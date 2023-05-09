@@ -58,3 +58,9 @@ func (t *BcsUser) IsClient() bool {
 func (t *BcsUser) IsAdmin() bool {
 	return t.UserType == AdminUser
 }
+
+// Userinfo response user info
+type Userinfo struct {
+	UserName  string `json:"username"`
+	AvatarUrl string `json:"avatar_url"`
+}

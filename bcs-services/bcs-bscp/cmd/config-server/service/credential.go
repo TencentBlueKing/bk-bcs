@@ -11,7 +11,6 @@ import (
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbcredential "bscp.io/pkg/protocol/core/credential"
-	pbcrs "bscp.io/pkg/protocol/core/credential-scope"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/tools"
@@ -58,20 +57,6 @@ func (s *Service) CreateCredentials(ctx context.Context, req *pbcs.CreateCredent
 		return nil, err
 	}
 
-	// create Credential_scopes
-	rs := &pbds.CreateCredentialScopeReq{
-		Spec: req.Scope,
-		Attachment: &pbcrs.CredentialScopeAttachment{
-			BizId:        bizID,
-			CredentialId: rp.Id,
-		},
-	}
-	_, err = s.client.DS.CreateCredentialScope(grpcKit.RpcCtx(), rs)
-	if err != nil {
-		logs.Errorf("create credential scope failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
 	resp = &pbcs.CreateCredentialResp{
 		Id: rp.Id,
 	}
@@ -102,15 +87,11 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 
 	if req.SearchKey != "" {
 		ft.Rules = append(ft.Rules, &filter.AtomRule{
-			Field: "enable",
-			Op:    filter.ContainsInsensitive.Factory(),
-			Value: req.SearchKey,
-		}, &filter.AtomRule{
 			Field: "memo",
 			Op:    filter.ContainsInsensitive.Factory(),
 			Value: req.SearchKey,
 		}, &filter.AtomRule{
-			Field: "creator",
+			Field: "reviser",
 			Op:    filter.ContainsInsensitive.Factory(),
 			Value: req.SearchKey,
 		})

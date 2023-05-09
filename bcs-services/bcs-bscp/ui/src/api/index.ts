@@ -25,8 +25,8 @@ export const getSpaceList = () => {
  * 获取所有业务下的服务列表
  * @returns 
  */
-export const getAllApp = () => {
-  return http.get('config/apps').then(resp => resp.data);
+export const getAllApp = (bizId: string) => {
+  return http.get(`config/biz/${bizId}/apps`).then(resp => resp.data);
 }
 
 /**

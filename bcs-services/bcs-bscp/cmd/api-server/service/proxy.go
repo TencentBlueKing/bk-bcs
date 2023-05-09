@@ -117,8 +117,9 @@ func (p *proxy) handler() http.Handler {
 	})
 
 	// 规范后的路由，url 需要包含 {app_id} 变量, 使用 AppVerified 中间件校验和初始化 kit.SpaceID 变量
-	r.Route("/api/v1/config/apps/{app_id}", func(r chi.Router) {
+	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
 		r.Use(p.authorizer.AppVerified)
 		r.Use(view.Generic(p.authorizer))
 		r.Mount("/", p.cfgSvrMux)
@@ -126,6 +127,7 @@ func (p *proxy) handler() http.Handler {
 
 	r.Route("/api/v1/config/", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
 		r.Use(view.Generic(p.authorizer))
 		r.Mount("/", p.cfgSvrMux)
 	})
@@ -133,19 +135,19 @@ func (p *proxy) handler() http.Handler {
 	// repo 上传 API
 	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.AppVerified).Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.UploadFile)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.UploadFile)
 	})
 
 	// repo 下载 API
 	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.DownloadFile)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.DownloadFile)
 	})
 
 	// repo 获取二进制元数据 API
 	r.Route("/api/v1/api/get/content/metadata", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.FileMetadata)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.FileMetadata)
 	})
 
 	return r

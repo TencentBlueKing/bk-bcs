@@ -97,6 +97,8 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbds.ListGroupsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	resp := new(pbds.ListGroupsResp)
+
 	// parse pb struct filter to filter.Expression.
 	lgft, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
@@ -114,6 +116,10 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 	if err != nil {
 		logs.Errorf("list group failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
+	}
+
+	if details.Count == 0 {
+		return resp, nil
 	}
 
 	groups, err := pbgroup.PbGroups(details.Details)
@@ -154,10 +160,8 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 		}
 	}
 
-	resp := &pbds.ListGroupsResp{
-		Count:   details.Count,
-		Details: groups,
-	}
+	resp.Count = details.Count
+	resp.Details = groups
 	return resp, nil
 }
 

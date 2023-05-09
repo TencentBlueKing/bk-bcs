@@ -14,7 +14,6 @@ package service
 
 import (
 	"context"
-	"strconv"
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
@@ -67,14 +66,9 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListReleasesResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find,
-		ResourceID: req.AppId}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
+		ResourceID: req.AppId}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
@@ -125,7 +119,7 @@ func (s *Service) ListReleases(ctx context.Context, req *pbcs.ListReleasesReq) (
 	}
 
 	r := &pbds.ListReleasesReq{
-		BizId:      uint32(bizID),
+		BizId:      grpcKit.BizID,
 		AppId:      req.AppId,
 		Filter:     ftpb,
 		Page:       page,

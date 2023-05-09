@@ -26,14 +26,15 @@ import (
 
 // NodeInfo 节点信息
 type NodeInfo struct {
-	CPUCount      string `json:"cpu_count"`     // CPU
-	Memory        string `json:"memory"`        // 内存, 单位 Byte
-	Disk          string `json:"disk"`          // 存储, 单位 Byte
-	Provider      string `json:"provider"`      // IP来源, BKMonitor / Prometheus
-	Release       string `json:"release"`       // 内核, 3.10.107-1-tlinux2_kvm_guest-0052
-	DockerVersion string `json:"dockerVersion"` // Docker, 18.6.3-ce-tke.1
-	Sysname       string `json:"sysname"`       // 操作系统, linux
-	IP            string `json:"ip"`            // ip，多个使用 , 分隔
+	CPUCount                string `json:"cpu_count"`                 // CPU
+	Memory                  string `json:"memory"`                    // 内存, 单位 Byte
+	Disk                    string `json:"disk"`                      // 存储, 单位 Byte
+	Provider                string `json:"provider"`                  // IP来源, BKMonitor / Prometheus
+	Release                 string `json:"release"`                   // 内核, 3.10.107-1-tlinux2_kvm_guest-0052
+	DockerVersion           string `json:"dockerVersion"`             // Docker, 18.6.3-ce-tke.1
+	Sysname                 string `json:"sysname"`                   // 操作系统, linux
+	IP                      string `json:"ip"`                        // ip，多个使用 , 分隔
+	ContainerRuntimeVersion string `json:"container_runtime_version"` // 容器运行时版本
 }
 
 // PromSeries 给 series
@@ -47,6 +48,7 @@ func (n *NodeInfo) PromSeries(t time.Time) []*prompb.TimeSeries {
 		{Name: "dockerVersion", Value: n.DockerVersion},
 		{Name: "sysname", Value: n.Sysname},
 		{Name: "ip", Value: n.IP},
+		{Name: "container_runtime_version", Value: n.ContainerRuntimeVersion},
 	}
 
 	sample := []prompb.Sample{
@@ -157,6 +159,15 @@ func GetNodeMatchByName(ctx context.Context, clusterId, nodeName string) (string
 		return "", "", err
 	}
 	return utils.StringJoinIPWithRegex(nodeIPList, "|", ".*"), strings.Join(nodeIPList, ","), nil
+}
+
+// GetNodeContainerRuntimeVersionByName 通过节点名称获取容器运行时版本
+func GetNodeContainerRuntimeVersionByName(ctx context.Context, clusterId, nodeName string) (string, error) {
+	version, err := k8sclient.GetNodeContainerRuntimeVersionByName(ctx, clusterId, nodeName)
+	if err != nil {
+		return "", err
+	}
+	return version, nil
 }
 
 func sampleStreamToSeries(m *model.SampleStream) *prompb.TimeSeries {

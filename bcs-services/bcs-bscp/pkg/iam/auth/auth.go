@@ -46,6 +46,8 @@ type Authorizer interface {
 	WebAuthentication(webHost, loginHost string) func(http.Handler) http.Handler
 	// AppVerified App校验中间件, 需要放到 UnifiedAuthentication 后面, url 需要添加 {app_id} 变量
 	AppVerified(next http.Handler) http.Handler
+	// BizVerified 业务鉴权
+	BizVerified(next http.Handler) http.Handler
 }
 
 // NewAuthorizer create an authorizer for iam authorize related operation.

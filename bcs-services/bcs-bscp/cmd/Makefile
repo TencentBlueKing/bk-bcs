@@ -5,7 +5,6 @@ all:
 	@cd feed-server && make
 	@cd auth-server && make
 	@cd cache-service && make
-	@cd sidecar && make
 
 server:
 	@cd api-server && make package
@@ -22,4 +21,3 @@ clean:
 	@cd feed-server && make clean
 	@cd auth-server && make clean
 	@cd cache-service && make clean
-	@cd sidecar && make clean

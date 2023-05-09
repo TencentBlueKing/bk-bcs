@@ -23,8 +23,10 @@ import (
 	"bscp.io/pkg/criteria/validator"
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
+	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/jsoni"
 )
 
@@ -120,6 +122,7 @@ func (s SideWatchPayload) Validate() error {
 // SideAppMeta defines an app's metadata within the sidecar.
 type SideAppMeta struct {
 	AppID     uint32            `json:"appID"`
+	App       string            `json:"app"`
 	Namespace string            `json:"namespace"`
 	Uid       string            `json:"uid"`
 	Labels    map[string]string `json:"labels"`
@@ -158,10 +161,24 @@ type ConfigItemMetaV1 struct {
 	RepositoryPath string                 `json:"repositoryPath"`
 }
 
+func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
+	return &pbfs.FileMeta{
+		Id:       cim.ID,
+		CommitId: cim.CommitID,
+		CommitSpec: &pbcommit.CommitSpec{
+			Content: &pbcontent.ContentSpec{
+				Signature: cim.ContentSpec.Signature,
+				ByteSize:  cim.ContentSpec.ByteSize,
+			},
+		},
+	}
+}
+
 // ReleaseEventMetaV1 defines the event details when the sidecar watch the feed server to
 // get the latest release.
 type ReleaseEventMetaV1 struct {
 	AppID      uint32              `json:"appID"`
+	App        string              `json:"app"`
 	ReleaseID  uint32              `json:"releaseID"`
 	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
 	Repository *RepositoryV1       `json:"repository"`
@@ -171,6 +188,7 @@ type ReleaseEventMetaV1 struct {
 type InstanceSpec struct {
 	BizID  uint32            `json:"bizID"`
 	AppID  uint32            `json:"appID"`
+	App    string            `json:"app"`
 	Uid    string            `json:"uid"`
 	Labels map[string]string `json:"labels"`
 }
@@ -181,8 +199,8 @@ func (is InstanceSpec) Validate() error {
 		return errors.New("invalid biz id")
 	}
 
-	if is.AppID <= 0 {
-		return errors.New("invalid app id")
+	if is.App == "" {
+		return errors.New("invalid app")
 	}
 
 	if len(is.Uid) == 0 {
@@ -198,7 +216,7 @@ func (is InstanceSpec) Validate() error {
 
 // Format the instance spec's basic info to string.
 func (is *InstanceSpec) Format() string {
-	return fmt.Sprintf("biz: %d, app: %d, uid: %s", is.BizID, is.AppID, is.Uid)
+	return fmt.Sprintf("biz: %d, app: %s, uid: %s", is.BizID, is.App, is.Uid)
 }
 
 // RepositoryV1 defines repository related metas.
@@ -403,7 +421,7 @@ type OfflinePayload struct {
 
 // AppMeta start sidecar bind app meta info.
 type AppMeta struct {
-	AppID     uint32            `json:"appID"`
+	App       string            `json:"app"`
 	Namespace string            `json:"namespace"`
 	Uid       string            `json:"uid"`
 	Labels    map[string]string `json:"labels"`
@@ -428,8 +446,12 @@ func (o *OfflinePayload) Encode() ([]byte, error) {
 	return jsoni.Marshal(o)
 }
 
-// HeartbeatPayload defines sidecar heartbeat to send payload to feed server.
+// HeartbeatPayload defines sdk heartbeat to send payload to feed server.
 type HeartbeatPayload struct {
+	// FingerPrint sdk instance fingerprint, reference: pkg/dal/sf-share/fingerprint.go
+	FingerPrint string `json:"fingerprint"`
+	// Applications sdk instance bind app meta info,include app,namespace,uid,labels and app current release id.
+	Applications []SideAppMeta `json:"applications"`
 }
 
 // MessagingType return the payload related sidecar message type.

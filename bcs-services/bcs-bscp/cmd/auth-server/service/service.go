@@ -232,7 +232,12 @@ func (s *Service) GetPermissionToApply(ctx context.Context, req *pbas.GetPermiss
 
 // CheckPermission
 func (s *Service) CheckPermission(ctx context.Context, req *pbas.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
-	resp, err := s.auth.CheckPermission(ctx, s.iamSettings, req.ResourceAttribute())
+	biz, err := s.client.Esb.Cmdb().GeBusinessbyID(ctx, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.auth.CheckPermission(ctx, biz, s.iamSettings, req.ResourceAttribute())
 	return resp, err
 }
 

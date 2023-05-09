@@ -1,59 +1,83 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useGlobalStore } from './store/global';
+import { ISpaceDetail } from '../types/index';
+
 const routes = [
-  { path: '/', name:'home', component: () => import('./views/home.vue') },
   {
-    path: '/space/:spaceId/service',
-    name: 'service',
-    component: () => import('./views/service/list/index.vue'),
+    path: '/',
+    name: 'home',
+    redirect: () => { // 访问首页，默认调到服务管理列表页
+      const { spaceList } = useGlobalStore()
+      const firstHasPermSpace = spaceList.find((item: ISpaceDetail) => item.permission)
+      const spaceId = firstHasPermSpace ? firstHasPermSpace.space_id : spaceList[0]?.space_id
+      return ({ name: 'service-mine', params: { spaceId } })
+    }
+  },
+  {
+    path: '/space/:spaceId',
+    name: 'space',
+    component: () => import('./views/space/index.vue'),
     children: [
       {
-        path: 'mine/',
-        name: 'service-mine',
-        component: () => import('./views/service/list/mine.vue'),
+        path: 'service',
+        children: [
+          {
+            path: 'mine',
+            name: 'service-mine',
+            meta: {
+              navModule: 'service'
+            },
+            component: () => import('./views/space/service/list/index.vue'),
+          },
+          {
+            path: 'all',
+            name: 'service-all',
+            meta: {
+              navModule: 'service'
+            },
+            component: () => import('./views/space/service/list/index.vue'),
+          },
+          {
+            path: ':appId(\\d+)',
+            component: () => import('./views/space/service/detail/index.vue'),
+            children: [
+              {
+                path: 'config',
+                name: 'service-config',
+                meta: {
+                  navModule: 'service'
+                },
+                component: () => import('./views/space/service/detail/config/index.vue')
+              }
+            ]
+          },
+        ]
       },
       {
-        path: 'all/',
-        name: 'service-all',
-        component: () => import('./views/service/list/all.vue'),
+        path: 'groups',
+        name: 'groups-management',
+        meta: {
+          navModule: 'groups'
+        },
+        component: () => import('./views/space/groups/index.vue')
       },
-    ]
-  },
-  {
-    path: '/space/:spaceId/service/:appId',
-    name: 'service-detail',
-    component: () => import('./views/service/detail/index.vue'),
-    children: [
       {
-        path: 'config/',
-        name: 'service-config',
-        component: () => import('./views/service/detail/config/index.vue')
+        path: 'scripts',
+        name: 'scripts-management',
+        meta: {
+          navModule: 'scripts'
+        },
+        component: () => import('./views/space/scripts/index.vue')
       },
-      // {
-      //   path: 'group/',
-      //   name: 'service-group',
-      //   component: () => import('./views/service/detail/group/index.vue')
-      // },
-      // {
-      //   path: 'client/',
-      //   name: 'service-client',
-      //   component: () => import('./views/service/detail/client/index.vue')
-      // }
+      {
+        path: 'credentials',
+        name: 'credentials-management',
+        meta: {
+          navModule: 'credentials'
+        },
+        component: () => import('./views/space/credentials/index.vue')
+      },
     ]
-  },
-  {
-    path: '/space/:spaceId/groups/',
-    name: 'groups-management',
-    component: () => import('./views/groups/index.vue')
-  },
-  {
-    path: '/space/:spaceId/scripts/',
-    name: 'scripts-management',
-    component: () => import('./views/scripts/index.vue')
-  },
-  {
-    path: '/space/:spaceId/credentials/',
-    name: 'credentials-management',
-    component: () => import('./views/credentials/index.vue')
   },
   {
     path: '/:pathMatch(.*)*',
@@ -64,7 +88,7 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory((<any>window).SITE_URL),
-  routes, // `routes: routes` 的缩写
+  routes,
 });
 
 export default router;

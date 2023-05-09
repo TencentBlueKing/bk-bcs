@@ -10,8 +10,8 @@
 | ------------ | ------------ | ------ | ---------------- |
 | biz_id    | uint32       | 是     | 业务ID |
 | id | uint32 | 是 | credential的ID |
-| memo | string | 否 | credential的描述 |
-| enable | bool | 否 | credential的是否启用 |
+| memo | string | 是 | credential的描述 |
+| enable | bool | 是 | credential的是否启用 |
 
 #### 调用示例
 

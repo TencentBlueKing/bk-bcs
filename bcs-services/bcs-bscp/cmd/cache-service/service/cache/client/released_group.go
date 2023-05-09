@@ -41,7 +41,6 @@ func (c *client) ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) 
 	}
 
 	if hit {
-		fmt.Println(" ================ cache hit ================== ")
 		c.mc.hitCounter.With(prm.Labels{"rsc": releasedGroupRes, "biz": tools.Itoa(bizID)}).Inc()
 		return list, nil
 	}

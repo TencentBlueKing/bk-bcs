@@ -103,9 +103,7 @@ service Data {
     rpc UpdateCredential(UpdateCredentialReq) returns (pbbase.EmptyResp) {}
 
     // credential scope related interface
-    rpc CreateCredentialScope(CreateCredentialScopeReq) returns (CreateResp) {}
     rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
-    rpc DeleteCredentialScopes(DeleteCredentialScopesReq) returns (DeleteCredentialScopesResp) {}
     rpc UpdateCredentialScopes(UpdateCredentialScopesReq) returns (UpdateCredentialScopesResp) {}
 
     // used iam pull resource callback.
@@ -120,8 +118,11 @@ service Data {
     }
 }
 message UpdateCredentialScopesReq {
-    repeated  pbcrs.UpdateScopeSpec      alter_scope = 1;
-    pbcrs.CredentialScopeAttachment      attachment  = 2;
+    uint32 biz_id                          = 1;
+    uint32 credential_id                   = 2;
+    repeated pbcrs.UpdateScopeSpec updated = 3;
+    repeated string                created = 4;
+    repeated uint32                deleted = 5;
 }
 message UpdateCredentialScopesResp{}
 

@@ -19,6 +19,11 @@ var ResKind = resKind("resource-kind")
 
 type resKind string
 
+// AppID return the app id's resource kind
+func (rk resKind) AppID(bizID uint32, appName string) string {
+	return fmt.Sprintf("app-id-%d-%s", bizID, appName)
+}
+
 // AppMeta return the app meta's resource kind
 func (rk resKind) AppMeta(appID uint32) string {
 	return fmt.Sprintf("apm-%d", appID)
@@ -47,4 +52,9 @@ func (rk resKind) ReleasedGroup(appID uint32) string {
 // ReleasedInstance return the released instance resource kind.
 func (rk resKind) ReleasedInstance(appID uint32) string {
 	return fmt.Sprintf("released-inst-%d", appID)
+}
+
+// ReleasedGroup return the credential matched ci resource kind.
+func (rk resKind) CredentialMatchedCI(bizID uint32) string {
+	return fmt.Sprintf("credential-matched-ci-%d", bizID)
 }

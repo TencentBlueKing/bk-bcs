@@ -35,3 +35,7 @@ type AuthService struct {
 func (as *AuthService) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool, error) {
 	return as.cache.Auth.Authorize(kt, res)
 }
+
+func (as *AuthService)CanMatchCI(kt *kit.Kit, bizID uint32, credential string, rciID uint32) (bool, error) {
+	return as.cache.Credential.CanMatchCI(kt, bizID, credential, rciID)
+}
