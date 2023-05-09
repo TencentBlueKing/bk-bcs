@@ -119,6 +119,7 @@ type AuthServerSetting struct {
 type LoginAuthSettings struct {
 	Host      string `yaml:"host"`
 	InnerHost string `yaml:"innerHost"`
+	Provider  string `yaml:"provider"`
 }
 
 // trySetFlagBindIP try set flag bind ip.

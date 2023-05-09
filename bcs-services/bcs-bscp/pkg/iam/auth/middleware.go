@@ -25,7 +25,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/components"
-	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/sys"
@@ -38,12 +37,13 @@ import (
 // HTTP API 鉴权, 异常返回json信息
 func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		req, err := getUserCredentialFromCookies(r)
+		loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
 		if err != nil {
 			render.Render(w, r, rest.UnauthorizedErr(err))
 			return
 		}
 		var username string
+		req := &pbas.UserCredentialReq{Uid: loginCred.UID, Token: loginCred.Token}
 		if req.Token == constant.BKTokenForTest {
 			username = r.Header.Get(constant.UserKey)
 		} else {
@@ -78,7 +78,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 
 // WebAuthentication
 // HTTP 前端鉴权, 异常调整302到登入页面
-func (a authorizer) WebAuthentication(webHost, loginHost string) func(http.Handler) http.Handler {
+func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Handler {
 	ignoreExtMap := map[string]struct{}{
 		".js":  {},
 		".css": {},
@@ -94,15 +94,16 @@ func (a authorizer) WebAuthentication(webHost, loginHost string) func(http.Handl
 				return
 			}
 
-			req, err := getUserCredentialFromCookies(r)
+			loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
 			if err != nil {
-				http.Redirect(w, r, bkpaas.BuildLoginRedirectURL(r, webHost, loginHost), http.StatusFound)
+				http.Redirect(w, r, a.authLoginClient.BuildLoginRedirectURL(r, webHost), http.StatusFound)
 				return
 			}
 
+			req := &pbas.UserCredentialReq{Uid: loginCred.UID, Token: loginCred.Token}
 			resp, err := a.authClient.GetUserInfo(r.Context(), req)
 			if err != nil {
-				http.Redirect(w, r, bkpaas.BuildLoginRedirectURL(r, webHost, loginHost), http.StatusFound)
+				http.Redirect(w, r, a.authLoginClient.BuildLoginRedirectURL(r, webHost), http.StatusFound)
 				return
 			}
 

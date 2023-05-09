@@ -32,9 +32,10 @@ import (
 type Configuration struct {
 	Viper *viper.Viper `yaml:"-"`
 	Base  *BaseConf    `yaml:"base_conf"`
-	BCS   *BCSConf     `yaml:"bcs_conf"`
 	Web   *WebConf     `yaml:"web"`
-	IAM   *IAMConf     `yaml:"iam"`
+	Etcd  *EtcdConf    `yaml:"etcd"`
+	Login *LoginConf   `yaml:"login_conf"`
+	UI    *UIConf      `yaml:"ui_conf"`
 }
 
 // init 初始化
@@ -56,13 +57,10 @@ func newConfiguration() (*Configuration, error) {
 	}
 
 	c.Web = defaultWebConf()
+	c.UI = defaultUIConf()
+	c.Etcd = defaultEtcdConf()
 
-	// BCS Config
-	c.BCS = &BCSConf{}
-	c.BCS.Init()
-
-	c.IAM = &IAMConf{}
-	c.IAM.Init()
+	c.Login = &LoginConf{}
 
 	return c, nil
 }
@@ -112,38 +110,24 @@ func (c *Configuration) ReadFromViper(v *viper.Viper) error {
 
 // EtcdConf etcd配置
 func (c *Configuration) EtcdConf() (*etcd3.Config, error) {
-	endpoints := c.Viper.GetString("etcd.endpoints")
-
-	if endpoints == "" {
+	if c.Etcd.Endpoints == "" {
 		return nil, errors.New("etcd.endpoints is empty")
 	}
 
 	var tlsC *tls.Config
-	ca := c.Viper.GetString("etcd.ca")
-	cert := c.Viper.GetString("etcd.cert")
-	key := c.Viper.GetString("etcd.key")
-	if ca != "" && cert != "" && key != "" {
+	if c.Etcd.CA != "" && c.Etcd.Cert != "" && c.Etcd.Key != "" {
 		var err error
-		tlsC, err = tools.ClientTLSConfVerify(true, ca, cert, key, "")
+		tlsC, err = tools.ClientTLSConfVerify(true, c.Etcd.CA, c.Etcd.Cert, c.Etcd.Key, "")
 		if err != nil {
 			return nil, fmt.Errorf("init etcd tls config failed, err: %v", err)
 		}
 	}
 
 	etcdConf := etcd3.Config{
-		Endpoints:   strings.Split(endpoints, ","),
+		Endpoints:   strings.Split(c.Etcd.Endpoints, ","),
 		TLS:         tlsC,
 		DialTimeout: time.Duration(200) * time.Millisecond,
 	}
 
 	return &etcdConf, nil
-}
-
-// LoginAuthHost
-func (c *Configuration) LoginAuthHost() string {
-	loginAuthHost := c.Viper.GetString("loginAuth.host")
-	if loginAuthHost == "" {
-		panic("loginAuth.host config is empty")
-	}
-	return loginAuthHost
 }

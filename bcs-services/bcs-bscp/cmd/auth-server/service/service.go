@@ -276,7 +276,10 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 		host = cc.AuthServer().LoginAuth.InnerHost
 	}
 
-	username, err := bkpaas.GetUserInfoByToken(ctx, host, req.GetUid(), token)
+	conf := cc.AuthServer().LoginAuth
+	authLoginClient := bkpaas.NewAuthLoginClient(&conf)
+
+	username, err := authLoginClient.GetUserInfoByToken(ctx, host, req.GetUid(), token)
 	if err != nil {
 		return nil, err
 	}
