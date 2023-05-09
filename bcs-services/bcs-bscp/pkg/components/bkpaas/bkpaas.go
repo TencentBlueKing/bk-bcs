@@ -20,10 +20,6 @@ import (
 	"bscp.io/pkg/cc"
 )
 
-type userInfo struct {
-	Username string `json:"username"`
-}
-
 // UserCredential
 type LoginCredential struct {
 	UID   string
