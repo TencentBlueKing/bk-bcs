@@ -130,3 +130,13 @@ func initGlobalConf(filenames []string) error {
 
 	return config.G.ReadFromViper(v)
 }
+
+// MustGetLoginAuthSettings 从全局配置中初始化 LoginAuthSettings 配置
+func MustGetLoginAuthSettings() *LoginAuthSettings {
+	conf := new(LoginAuthSettings)
+	if err := config.G.Viper.UnmarshalKey("login_conf", conf); err != nil {
+		panic("loginAuth config is empty")
+	}
+
+	return conf
+}

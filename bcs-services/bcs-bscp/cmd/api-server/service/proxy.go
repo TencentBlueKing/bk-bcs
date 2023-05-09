@@ -64,7 +64,7 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
-	authorizer, err := auth.NewAuthorizer(dis, cc.ApiServer().Network.TLS)
+	authorizer, err := auth.NewAuthorizer(dis, cc.ApiServer().Network.TLS, cc.MustGetLoginAuthSettings())
 	if err != nil {
 		return nil, fmt.Errorf("new authorizer failed, err: %v", err)
 	}

@@ -13,12 +13,41 @@ limitations under the License.
 package bkpaas
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+
+	"bscp.io/pkg/cc"
 )
 
 type userInfo struct {
 	Username string `json:"username"`
+}
+
+// UserCredential
+type LoginCredential struct {
+	UID   string
+	Token string
+}
+
+// AuthLoginClient 登入鉴权
+type AuthLoginClient interface {
+	GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error)
+	GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error)
+	BuildLoginRedirectURL(r *http.Request, webHost string) string
+}
+
+// NewAuthLoginClient init client
+func NewAuthLoginClient(conf *cc.LoginAuthSettings) AuthLoginClient {
+	// 部分场景 conf 可为空
+	if conf == nil {
+		return nil
+	}
+
+	if conf.Provider == "BK_LOGIN" {
+		return &bkLoginAuthClient{conf: conf}
+	}
+	return &bkPaaSAuthClient{conf: conf}
 }
 
 // BuildAbsoluteUri
