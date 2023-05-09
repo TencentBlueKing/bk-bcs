@@ -313,7 +313,7 @@ bscp:pre
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-configserver ./cmd/config-server
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-dataservice ./cmd/data-service
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-feedserver ./cmd/feed-server
-	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-cacheservices ./cmd/cache-service
+	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-cacheservice ./cmd/cache-service
 	ls -la ${PACKAGEPATH}/bcs-services/bcs-bscp
 
 k8s-watch:pre
