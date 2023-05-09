@@ -154,7 +154,7 @@ func (w *WebServer) subRouter() http.Handler {
 		APIURL:    config.G.Web.Host + "/bscp",
 		ProxyAPI:  shouldProxyAPI,
 		SiteURL:   config.G.Web.RoutePrefix,
-		IAMHost:   config.G.UI.Host.BKIAMHost,
+		IAMHost:   config.G.Frontend.Host.BKIAMHost,
 	}
 
 	if shouldProxyAPI {

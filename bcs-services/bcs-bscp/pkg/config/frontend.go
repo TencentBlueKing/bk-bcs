@@ -19,15 +19,15 @@ type HostConf struct {
 	BKIAMHost string `yaml:"bk_iam_host"` // 权限中心
 }
 
-// UIConf
-type UIConf struct {
+// FrontendConf
+type FrontendConf struct {
 	Docs map[string]string `yaml:"docs"`
 	Host *HostConf         `yaml:"hosts"`
 }
 
-// defaultUIConf 默认配置
-func defaultUIConf() *UIConf {
-	c := &UIConf{
+// defaultFrontendConf 默认配置
+func defaultUIConf() *FrontendConf {
+	c := &FrontendConf{
 		Docs: map[string]string{},
 		Host: &HostConf{},
 	}

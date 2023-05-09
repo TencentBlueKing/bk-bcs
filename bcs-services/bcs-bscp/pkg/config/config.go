@@ -30,11 +30,11 @@ import (
 
 // Configuration 配置
 type Configuration struct {
-	Viper *viper.Viper `yaml:"-"`
-	Base  *BaseConf    `yaml:"base_conf"`
-	Web   *WebConf     `yaml:"web"`
-	Etcd  *EtcdConf    `yaml:"etcd"`
-	UI    *UIConf      `yaml:"ui_conf"`
+	Viper    *viper.Viper  `yaml:"-"`
+	Base     *BaseConf     `yaml:"base_conf"`
+	Web      *WebConf      `yaml:"web"`
+	Etcd     *EtcdConf     `yaml:"etcd"`
+	Frontend *FrontendConf `yaml:"frontend_conf"`
 }
 
 // init 初始化
@@ -56,7 +56,7 @@ func newConfiguration() (*Configuration, error) {
 	}
 
 	c.Web = defaultWebConf()
-	c.UI = defaultUIConf()
+	c.Frontend = defaultUIConf()
 	c.Etcd = defaultEtcdConf()
 
 	return c, nil
