@@ -24,6 +24,10 @@ import (
 	"bscp.io/pkg/components"
 )
 
+type userInfo struct {
+	Username string `json:"username"`
+}
+
 type bkPaaSAuthClient struct {
 	conf *cc.LoginAuthSettings
 }

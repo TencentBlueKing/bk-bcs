@@ -14,6 +14,7 @@ package bkpaas
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,6 +24,11 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components"
 )
+
+type bkLoginResult struct {
+	Msg  string `json:"msg"`
+	Code int    `json:"ret"`
+}
 
 type bkLoginAuthClient struct {
 	conf *cc.LoginAuthSettings
@@ -44,12 +50,16 @@ func (b *bkLoginAuthClient) GetUserInfoByToken(ctx context.Context, host, uid, t
 		return "", errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
 	}
 
-	user := new(userInfo)
-	if err := components.UnmarshalBKResult(resp, user); err != nil {
+	result := new(bkLoginResult)
+	if err := json.Unmarshal(resp.Body(), result); err != nil {
 		return "", err
 	}
 
-	return user.Username, nil
+	if result.Code != 0 {
+		return "", errors.Errorf("ret code %d != 0, body: %s", result.Code, resp.Body())
+	}
+
+	return uid, nil
 }
 
 // BuildLoginRedirectURL 登入跳转URL
