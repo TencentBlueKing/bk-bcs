@@ -72,7 +72,7 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 	}
 
 	// 鉴权中间件
-	webAuthentication := authorizer.WebAuthentication(config.G.Web.Host, config.G.LoginAuthHost())
+	webAuthentication := authorizer.WebAuthentication(config.G.Web.Host)
 
 	s := &WebServer{
 		ctx:               ctx,
@@ -151,14 +151,14 @@ func (w *WebServer) subRouter() http.Handler {
 	conf := &bscp.IndexConfig{
 		StaticURL: path.Join(config.G.Web.RoutePrefix, "/web"),
 		RunEnv:    config.G.Base.RunEnv,
-		APIURL:    config.G.BCS.Host + "/bscp",
 		ProxyAPI:  shouldProxyAPI,
 		SiteURL:   config.G.Web.RoutePrefix,
-		IAMHost:   config.G.IAM.Host,
+		APIURL:    config.G.Frontend.Host.BSCPAPIURL,
+		IAMHost:   config.G.Frontend.Host.BKIAMHost,
 	}
 
 	if shouldProxyAPI {
-		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.BCS.Host))
+		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.Web.Host))
 	}
 
 	// vue 模版渲染

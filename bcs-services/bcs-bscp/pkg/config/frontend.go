@@ -1,5 +1,3 @@
-//go:build !bk_login
-
 /*
  * Tencent is pleased to support the open source community by making Blueking Container Service available.
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -12,21 +10,27 @@
  * limitations under the License.
  *
  */
-package auth
 
-import (
-	"net/http"
+// Package config xxx
+package config
 
-	pbas "bscp.io/pkg/protocol/auth-server"
-)
+// HostConf :
+type HostConf struct {
+	BKIAMHost  string `yaml:"bk_iam_host"`  // 权限中心
+	BSCPAPIURL string `yaml:"bscp_api_url"` // bscp api地址
+}
 
-func getUserCredentialFromCookies(r *http.Request) (*pbas.UserCredentialReq, error) {
-	token, err := r.Cookie("bk_token")
-	if err != nil {
-		return nil, err
+// FrontendConf
+type FrontendConf struct {
+	Docs map[string]string `yaml:"docs"`
+	Host *HostConf         `yaml:"hosts"`
+}
+
+// defaultFrontendConf 默认配置
+func defaultUIConf() *FrontendConf {
+	c := &FrontendConf{
+		Docs: map[string]string{},
+		Host: &HostConf{},
 	}
-
-	req := &pbas.UserCredentialReq{Uid: "", Token: token.Value}
-
-	return req, nil
+	return c
 }

@@ -15,6 +15,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net"
 	"os"
 	"os/signal"
@@ -57,7 +58,7 @@ var (
 				os.Exit(0)
 			}
 
-			if err := RunCmd(); err != nil {
+			if err := RunCmd(); err != nil && !errors.Is(err, context.Canceled) {
 				klog.ErrorS(err, "run cmd failed")
 				os.Exit(1)
 			}

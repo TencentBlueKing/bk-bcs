@@ -50,3 +50,21 @@ func (c *BaseConf) Init() error {
 	}
 	return nil
 }
+
+// EtcdConf defines etcd related runtime
+type EtcdConf struct {
+	Endpoints string `yaml:"endpoints"`
+	CA        string `yaml:"ca"`
+	Cert      string `yaml:"cert"`
+	Key       string `yaml:"key"`
+}
+
+// defaultEtcdConf
+func defaultEtcdConf() *EtcdConf {
+	return &EtcdConf{
+		Endpoints: "127.0.0.1:2379",
+		CA:        "",
+		Cert:      "",
+		Key:       "",
+	}
+}

@@ -19,6 +19,12 @@ import (
 	"net/http"
 	"strconv"
 
+	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
+	etcd3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
+
 	"bscp.io/cmd/feed-server/options"
 	"bscp.io/cmd/feed-server/service"
 	"bscp.io/pkg/cc"
@@ -32,11 +38,6 @@ import (
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // Run start the feed server
@@ -154,6 +155,8 @@ func (fs *feedServer) listenAndServe() error {
 
 	serve := grpc.NewServer(opts...)
 	pbfs.RegisterUpstreamServer(serve, fs.service)
+	// Register reflection service on gRPC server.
+	reflection.Register(serve)
 
 	// initialize and register standard grpc server grpcMetrics.
 	grpcMetrics.InitializeMetrics(serve)

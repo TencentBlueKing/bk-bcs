@@ -14,15 +14,19 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -43,7 +47,7 @@ type Authorizer interface {
 	// UnifiedAuthentication API 鉴权中间件
 	UnifiedAuthentication(next http.Handler) http.Handler
 	// WebAuthentication 网页鉴权中间件
-	WebAuthentication(webHost, loginHost string) func(http.Handler) http.Handler
+	WebAuthentication(webHost string) func(http.Handler) http.Handler
 	// AppVerified App校验中间件, 需要放到 UnifiedAuthentication 后面, url 需要添加 {app_id} 变量
 	AppVerified(next http.Handler) http.Handler
 	// BizVerified 业务鉴权
@@ -78,16 +82,31 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 		logs.Errorf("dial auth server failed, err: %v", err)
 		return nil, errf.New(errf.Unknown, fmt.Sprintf("dial auth server failed, err: %v", err))
 	}
+
 	authClient := pbas.NewAuthClient(asConn)
+	resp, err := authClient.GetAuthLoginConf(context.Background(), &pbas.GetAuthLoginConfReq{})
+	if err != nil {
+		return nil, errors.Wrap(err, "get authlogin conf")
+	}
+
+	conf := &cc.LoginAuthSettings{
+		Host:      resp.Host,
+		InnerHost: resp.InnerHost,
+		Provider:  resp.Provider,
+	}
+	authLoginClient := bkpaas.NewAuthLoginClient(conf)
+	klog.InfoS("init authlogin client done", "host", conf.Host, "inner_host", conf.InnerHost, "provider", conf.Provider)
 
 	return &authorizer{
-		authClient: authClient,
+		authClient:      authClient,
+		authLoginClient: authLoginClient,
 	}, nil
 }
 
 type authorizer struct {
 	// authClient auth server's client api
-	authClient pbas.AuthClient
+	authClient      pbas.AuthClient
+	authLoginClient bkpaas.AuthLoginClient
 }
 
 // Authorize if user has permission to the resources, returns auth status per resource and for all.
