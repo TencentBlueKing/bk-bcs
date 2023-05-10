@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/bluele/gcache"
+	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
@@ -43,7 +44,7 @@ func NewClient(client rest.ClientInterface, config *cc.Esb) Client {
 	return &cmdb{
 		client: client,
 		config: config,
-		cache:  gcache.New(1000).Expiration(time.Hour * 24).EvictType(gcache.TYPE_LRU).Build(),
+		cache:  gcache.New(2000).Expiration(time.Hour * 24).EvictType(gcache.TYPE_LRU).Build(),
 	}
 }
 
@@ -86,13 +87,28 @@ func (c *cmdb) SearchBusiness(ctx context.Context, params *SearchBizParams) (*Se
 
 // ListAllBusiness 读取全部业务列表
 func (c *cmdb) ListAllBusiness(ctx context.Context) (*SearchBizResult, error) {
+	st := time.Now()
+
+	key := "cmdb.ListAllBusiness"
+	if cacheResult, err := c.cache.Get(key); err == nil {
+		return cacheResult.(*SearchBizResult), nil
+	}
+
 	params := &SearchBizParams{}
 	resp, err := c.SearchBusiness(ctx, params)
 	if err != nil {
 		return nil, err
 	}
 
-	return &resp.SearchBizResult, nil
+	result := &resp.SearchBizResult
+	// 有数据时才缓存
+	if len(result.Info) > 0 {
+		c.cache.SetWithExpire(key, result, time.Hour)
+	}
+
+	klog.InfoS("list all business success", "count", len(result.Info), "duration", time.Since(st))
+
+	return result, nil
 }
 
 // GeBusinessbyID 读取单个biz
