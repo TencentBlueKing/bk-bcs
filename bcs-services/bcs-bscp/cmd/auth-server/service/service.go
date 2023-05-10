@@ -15,11 +15,11 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/protobuf/proto"
@@ -62,7 +62,8 @@ type Service struct {
 	// initial logic module.
 	initial *initial.Initial
 	// auth logic module.
-	auth *auth.Auth
+	auth     *auth.Auth
+	spaceMgr *space.SpaceMgr
 }
 
 // NewService create a service instance.
@@ -83,12 +84,18 @@ func NewService(sd serviced.Discover, iamSettings cc.IAM, disableAuth bool,
 		return nil, fmt.Errorf("new gateway failed, err: %v", err)
 	}
 
+	spaceMgr, err := space.NewSpaceMgr(context.Background(), client.Esb)
+	if err != nil {
+		return nil, errors.Wrap(err, "init space mgr")
+	}
+
 	s := &Service{
 		client:          client,
 		gateway:         gateway,
 		disableAuth:     disableAuth,
 		disableWriteOpt: disableWriteOpt,
 		iamSettings:     iamSettings,
+		spaceMgr:        spaceMgr,
 	}
 
 	if err = s.initLogicModule(); err != nil {
@@ -342,10 +349,8 @@ func (s *Service) ListUserSpace(ctx context.Context, req *pbas.ListUserSpaceReq)
 		return nil, err
 	}
 
-	spaceList, err := space.ListUserSpace(ctx, s.client.Esb, kt.User)
-	if err != nil {
-		return nil, err
-	}
+	// 定期同步
+	spaceList := s.spaceMgr.AllSpaces()
 
 	items := make([]*pbas.Space, 0, len(spaceList))
 	for _, space := range spaceList {
@@ -368,7 +373,7 @@ func (s *Service) QuerySpace(ctx context.Context, req *pbas.QuerySpaceReq) (*pba
 		return &pbas.QuerySpaceResp{}, nil
 	}
 
-	spaceList, err := space.QuerySpace(ctx, s.client.Esb, uidList)
+	spaceList, err := s.spaceMgr.QuerySpace(uidList)
 	if err != nil {
 		return nil, err
 	}
