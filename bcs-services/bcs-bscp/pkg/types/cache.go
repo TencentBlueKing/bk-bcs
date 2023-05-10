@@ -21,6 +21,7 @@ import (
 
 // AppCacheMeta defines app's basic meta info
 type AppCacheMeta struct {
+	Name       string           `json:"name"`
 	ConfigType table.ConfigType `json:"cft"`
 	// the current effected strategy set's type under this app.
 	// only one strategy set is effected at one time.
@@ -105,6 +106,12 @@ type FilePermissionCache struct {
 	User      string `json:"user"`
 	UserGroup string `json:"group"`
 	Privilege string `json:"priv"`
+}
+
+// CredentialCache cache struct.
+type CredentialCache struct {
+	Enabled bool     `json:"enabled"`
+	Scope   []string `json:"scope"`
 }
 
 // ReleaseCICaches convert ReleasedConfigItem to ReleaseCICache.

@@ -94,7 +94,7 @@ func (c *consumer) consume(kt *kit.Kit, es []*table.Event) (needRetry bool) {
 func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error {
 	publishEvent := make([]*table.Event, 0)
 	insertAppEvent := make([]*table.Event, 0)
-	credentialEvent := make([]*table.Event, 0)
+	// credentialEvent := make([]*table.Event, 0)
 
 	for _, event := range events {
 		switch event.Spec.Resource {
@@ -102,8 +102,8 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 			publishEvent = append(publishEvent, event)
 		case table.Application:
 			insertAppEvent = append(insertAppEvent, event)
-		case table.CredentialEvent:
-			credentialEvent = append(credentialEvent, event)
+		// case table.CredentialEvent:
+		// 	credentialEvent = append(credentialEvent, event)
 		default:
 			logs.Errorf("unsupported insert event resource: %s, id: %s, rid: %s", event.Spec.Resource, event.ID, kt.Rid)
 			continue
@@ -124,12 +124,12 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 		}
 	}
 
-	if len(credentialEvent) != 0 {
-		if err := c.refreshCredentialMatchedCI(kt, credentialEvent); err != nil {
-			logs.Errorf("refresh credential cache failed, err: %v, rid: %s", err, kt.Rid)
-			return err
-		}
-	}
+	// if len(credentialEvent) != 0 {
+	// 	if err := c.refreshCredentialMatchedCI(kt, credentialEvent); err != nil {
+	// 		logs.Errorf("refresh credential cache failed, err: %v, rid: %s", err, kt.Rid)
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
@@ -199,13 +199,13 @@ func (c *consumer) queryInstReleaseID(kt *kit.Kit, appBizID map[uint32]uint32) (
 // consumeUpdateEvent consume update event.
 func (c *consumer) consumeUpdateEvent(kt *kit.Kit, events []*table.Event) error {
 	updateAppEvents := make([]*table.Event, 0)
-	updateCredentialEvents := make([]*table.Event, 0)
+	// updateCredentialEvents := make([]*table.Event, 0)
 	for _, event := range events {
 		switch event.Spec.Resource {
 		case table.Application:
 			updateAppEvents = append(updateAppEvents, event)
-		case table.CredentialEvent:
-			updateCredentialEvents = append(updateCredentialEvents, event)
+		// case table.CredentialEvent:
+		// 	updateCredentialEvents = append(updateCredentialEvents, event)
 		default:
 			logs.Errorf("unsupported update event resource: %s, id: %s, rid: %s", event.Spec.Resource, event.ID, kt.Rid)
 			continue
@@ -219,12 +219,12 @@ func (c *consumer) consumeUpdateEvent(kt *kit.Kit, events []*table.Event) error 
 		}
 	}
 
-	if len(updateCredentialEvents) != 0 {
-		if err := c.refreshCredentialMatchedCI(kt, updateCredentialEvents); err != nil {
-			logs.Errorf("refresh credential cache failed, err: %v, rid: %s", err, kt.Rid)
-			return err
-		}
-	}
+	// if len(updateCredentialEvents) != 0 {
+	// 	if err := c.refreshCredentialMatchedCI(kt, updateCredentialEvents); err != nil {
+	// 		logs.Errorf("refresh credential cache failed, err: %v, rid: %s", err, kt.Rid)
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }

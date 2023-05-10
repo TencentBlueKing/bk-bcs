@@ -28,6 +28,7 @@ var Key = &keyGenerator{
 	cpStrategyTTLRange:          [2]int{30 * 60, 60 * 60},
 	releasedGroupTTLRange:       [2]int{30 * 60, 60 * 60},
 	credentialMatchedCITTLRange: [2]int{30 * 60, 60 * 60},
+	credentialTTLRange:          [2]int{1, 5},
 	releasedCITTLRange:          [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	releasedInstTTLRange:        [2]int{15 * 60, 30 * 60},
 	appMetaTTLRange:             [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
@@ -43,6 +44,7 @@ const (
 	releasedConfigItem  namespace = "released-ci"
 	releasedGroup       namespace = "released-group"
 	credentialMatchedCI namespace = "credential-matched-ci"
+	credential          namespace = "credential"
 	appMeta             namespace = "app-meta"
 	appID               namespace = "app-id"
 )
@@ -52,6 +54,7 @@ type keyGenerator struct {
 	cpStrategyTTLRange          [2]int
 	releasedGroupTTLRange       [2]int
 	credentialMatchedCITTLRange [2]int
+	credentialTTLRange          [2]int
 	releasedCITTLRange          [2]int
 	releasedInstTTLRange        [2]int
 	appMetaTTLRange             [2]int
@@ -120,6 +123,28 @@ func (k keyGenerator) CredentialMatchedCITtlSec(withRange bool) int {
 	}
 
 	return k.credentialMatchedCITTLRange[1]
+}
+
+// Credential generate a biz's credential key to save the credential
+func (k keyGenerator) Credential(bizID uint32, str string) string {
+	return element{
+		biz: bizID,
+		ns:  credential,
+		key: str,
+	}.String()
+}
+
+// CredentialTtlSec generate the credential's TTL seconds
+func (k keyGenerator) CredentialTtlSec(withRange bool) int {
+
+	if withRange {
+		rand.Seed(time.Now().UnixNano())
+		seconds := rand.Intn(k.credentialTTLRange[1]-
+			k.credentialTTLRange[0]) + k.credentialTTLRange[0]
+		return seconds
+	}
+
+	return k.credentialTTLRange[0]
 }
 
 // ReleasedCI generate a release's CI cache key to save all the CIs under

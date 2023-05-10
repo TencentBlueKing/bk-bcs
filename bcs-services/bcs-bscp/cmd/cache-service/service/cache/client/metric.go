@@ -89,6 +89,9 @@ type metric struct {
 
 	// record the total size of an app's all the configure-items of one release with bytes.
 	releasedCIByteSize *prometheus.HistogramVec
+
+	// record the total size of an biz's credentials with bytes.
+	credentialByteSize *prometheus.HistogramVec
 }
 
 const (

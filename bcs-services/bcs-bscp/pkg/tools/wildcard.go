@@ -25,3 +25,17 @@ func MatchConfigItem(scope, path, name string) bool {
 	fullPath := strings.Trim(path+"/"+name, "/")
 	return glob.MustCompile(scope, '/').Match(fullPath)
 }
+
+// MatchAppConfigItem checks if the scope string matches the app and config item.
+func MatchAppConfigItem(scope, app, path, name string) bool {
+	arr := strings.Split(string(scope), "/")
+	if len(arr) < 2 {
+		return false
+	}
+	appPattern := arr[0]
+	ciPattern := arr[1]
+	if !glob.MustCompile(appPattern).Match(app) {
+		return false
+	}
+	return MatchConfigItem(ciPattern, path, name)
+}

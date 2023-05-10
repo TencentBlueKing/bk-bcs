@@ -17,6 +17,7 @@ import (
 	"bscp.io/cmd/feed-server/bll/lcache"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
+	pbci "bscp.io/pkg/protocol/core/config-item"
 )
 
 // New initialize the auth service instance.
@@ -36,6 +37,6 @@ func (as *AuthService) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool
 	return as.cache.Auth.Authorize(kt, res)
 }
 
-func (as *AuthService)CanMatchCI(kt *kit.Kit, bizID uint32, credential string, rciID uint32) (bool, error) {
-	return as.cache.Credential.CanMatchCI(kt, bizID, credential, rciID)
+func (as *AuthService) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string, ci *pbci.ConfigItemSpec) (bool, error) {
+	return as.cache.Credential.CanMatchCI(kt, bizID, app, credential, ci)
 }
