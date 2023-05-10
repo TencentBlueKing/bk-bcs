@@ -40,7 +40,7 @@ func newCleanNodesInGroupCmd() *cobra.Command {
 
 	cmd.Flags().StringVarP(&clusterID, "clusterID", "c", "", "cluster ID")
 	cmd.Flags().StringVarP(&nodeGroupID, "nodeGroupID", "n", "", "node group ID")
-	cmd.Flags().StringSliceVarP(&nodes, "nodes", "i", []string{}, "node inner ip, for example: -i 47.43.47.103 -i 244.87.232.48")
+	cmd.Flags().StringSliceVarP(&nodes, "nodes", "i", []string{}, "node inner ip, for example: -i xxx.xxx.xxx.xxx -i xxx.xxx.xxx.xxx")
 
 	return cmd
 }

@@ -33,7 +33,7 @@ var (
 	"clusterType":"single","creator":"bcs","manageType":"INDEPENDENT_CLUSTER","clusterName":"test001",
 	"environment":"prod","provider":"bluekingCloud","description":"创建测试集群","clusterBasicSettings":
 	{"version":"v1.20.11"},"networkType":"overlay","region":"default","vpcID":"","networkSettings":{},
-	"master":["11.144.254.xx","11.144.254.xx"]}.
+	"master":["xxx.xxx.xxx.xxx","xxx.xxx.xxx.xxx"]}.
 
 	create virtual cluster json template: 
 	{"clusterID":"","clusterName":"test-xxx","provider":"tencentCloud","region":"ap-xxx","vpcID":

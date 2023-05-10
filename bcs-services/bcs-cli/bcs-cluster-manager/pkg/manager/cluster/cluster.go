@@ -41,7 +41,7 @@ func New(ctx context.Context) types.ClusterMgr {
 	}
 }
 
-// New 返回http client实例
+// NewHttpClient 返回http client实例
 func NewHttpClient(ctx context.Context) *pkg.HttpClient {
 	return pkg.NewHttpClientWithConfiguration(ctx)
 }

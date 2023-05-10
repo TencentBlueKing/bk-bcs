@@ -41,9 +41,9 @@ var (
 	"executionTime":0,"status":"NOTSTARTED","message":"","lastUpdate":"","taskMethod":
 	"blueking-UpdateAddNodeDBInfoTask","taskName":"更新任务状态","skipOnFailed":false}},"clusterID":"BCS-K8S-40003",
 	"projectID":"b363e23b1b354928a0f3exxxxxx","creator":"frodomei","lastUpdate":"2022-11-11T18:24:03+08:00",
-	"updater":"frodomei","forceTerminate":false,"commonParams":{"jobType":"add-node","nodeIPs":"182.17.0.xx",
+	"updater":"frodomei","forceTerminate":false,"commonParams":{"jobType":"add-node","nodeIPs":"xxx.xxx.xxx.xxx",
 	"operator":"frodomei","taskName":"blueking-add nodes: BCS-K8S-40003","user":"frodomei"},
-	"taskName":"集群添加节点任务","nodeIPList":["182.17.0.xxx"],"nodeGroupID":""}`))
+	"taskName":"集群添加节点任务","nodeIPList":["xxx.xxx.xxx.xxx"],"nodeGroupID":""}`))
 )
 
 func newCreateTaskCmd() *cobra.Command {

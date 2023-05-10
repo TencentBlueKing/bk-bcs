@@ -33,7 +33,7 @@ func newDeleteNodesCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&clusterID, "clusterID", "c", "", "cluster ID (required)")
 	cmd.MarkFlagRequired("clusterID")
 
-	cmd.Flags().StringSliceVarP(&nodes, "node", "n", []string{}, "node ip, for example: -n 47.43.47.103 -n 244.87.232.48")
+	cmd.Flags().StringSliceVarP(&nodes, "node", "n", []string{}, "node ip, for example: -n xxx.xxx.xxx.xxx -n xxx.xxx.xxx.xxx")
 	cmd.MarkFlagRequired("node")
 
 	return cmd

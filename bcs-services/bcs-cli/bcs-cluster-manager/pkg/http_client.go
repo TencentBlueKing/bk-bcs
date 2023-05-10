@@ -25,22 +25,27 @@ import (
 	"github.com/spf13/viper"
 )
 
+// HttpClient http client
 type HttpClient struct {
 	*http.Client
 }
 
+// Get http client get function
 func (c *HttpClient) Get(url string, result interface{}) (err error) {
 	return c.do(http.MethodGet, url, nil, result)
 }
 
+// Post http client post function
 func (c *HttpClient) Post(url string, data, result interface{}) (err error) {
 	return c.do(http.MethodPost, url, data, result)
 }
 
+// Put http client put function
 func (c *HttpClient) Put(url string, data, result interface{}) (err error) {
 	return c.do(http.MethodPut, url, data, result)
 }
 
+// Delete http client delete function
 func (c *HttpClient) Delete(url string, result interface{}) (err error) {
 	return c.do(http.MethodDelete, url, nil, result)
 }
@@ -89,11 +94,15 @@ func (c *HttpClient) do(method, url string, data, result interface{}) (err error
 		return
 	}
 
-	defer resp.Body.Close()
+	err = resp.Body.Close()
+	if err != nil {
+		return
+	}
 
 	return json.Unmarshal(body, result)
 }
 
+// NewHttpClientWithConfiguration new http client with config
 func NewHttpClientWithConfiguration(ctx context.Context) *HttpClient {
 	return &HttpClient{
 		&http.Client{

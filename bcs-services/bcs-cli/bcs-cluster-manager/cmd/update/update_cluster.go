@@ -33,7 +33,7 @@ var (
 	"engineType":"k8s","isExclusive":true,"clusterType":"single","creator":"bcs","manageType":"INDEPENDENT_CLUSTER",
 	"clusterName":"test002","environment":"prod","provider":"bluekingCloud","description":"update创建测试集群",
 	"clusterBasicSettings":{"version":"v1.20.11"},"networkType":"overlay","region":"default","vpcID":"",
-	"networkSettings":{},"master":["11.143.254.xx","11.143.254.xx"]}`))
+	"networkSettings":{},"master":["xxx.xxx.xxx.xxx","xxx.xxx.xxx.xxx"]}`))
 )
 
 func newUpdateClusterCmd() *cobra.Command {
