@@ -314,7 +314,8 @@ bscp:pre
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-dataservice ./cmd/data-service
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-feedserver ./cmd/feed-server
 	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-cacheservice ./cmd/cache-service
-	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp && ls -la ${PACKAGEPATH}/bcs-services/bcs-bscp
+	# alias docker image name to bk-bscp-hyper
+	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && ls -la ${PACKAGEPATH}/bcs-services/bcs-bscp
 
 k8s-watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
