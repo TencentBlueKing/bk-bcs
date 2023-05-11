@@ -35,6 +35,7 @@ type Interface interface {
 	GetAppReleasedStrategies(kt *kit.Kit, bizID uint32, appID uint32, cpsID []uint32) ([]string, error)
 	ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
 	ListCredentialMatchedCI(kt *kit.Kit, bizID uint32, credential string) (string, error)
+	GetCredential(kt *kit.Kit, bizID uint32, credential string) (string, error)
 	RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error
 }
 

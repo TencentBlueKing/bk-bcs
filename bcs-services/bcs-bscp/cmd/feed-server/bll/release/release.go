@@ -85,7 +85,7 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 	ciList := make([]*types.ReleasedCIMeta, len(rci))
 	for idx, one := range rci {
 		ciList[idx] = &types.ReleasedCIMeta{
-			RciId: one.ID,
+			RciId:    one.ID,
 			CommitID: one.CommitID,
 			CommitSpec: &pbcommit.CommitSpec{
 				ContentId: one.CommitSpec.ContentID,
@@ -104,6 +104,10 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 					UserGroup: one.ConfigItemSpec.Permission.UserGroup,
 					Privilege: one.ConfigItemSpec.Permission.Privilege,
 				},
+			},
+			ConfigItemAttachment: &pbci.ConfigItemAttachment{
+				BizId: one.Attachment.AppID,
+				AppId: one.Attachment.AppID,
 			},
 			RepositorySpec: &types.RepositorySpec{Path: uriDec.Path(one.CommitSpec.Signature)},
 		}

@@ -31,6 +31,7 @@ func PbAppMetaMap(m map[ /*appID*/ uint32]*types.AppCacheMeta) map[ /*appID*/ ui
 
 	for key, val := range m {
 		meta[key] = &AppMeta{
+			Name:   val.Name,
 			Cft:    string(val.ConfigType),
 			Mod:    string(val.Mode),
 			Reload: pbapp.PbReload(val.Reload),

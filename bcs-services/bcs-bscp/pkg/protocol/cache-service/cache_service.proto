@@ -82,6 +82,13 @@ service Cache {
         };
     }
 
+    rpc GetCredential(GetCredentialReq) returns (JsonRawResp) {
+        // get credential with filter
+        option (google.api.http) = {
+            get: "/api/v1/cache/biz/{biz_id}/credential/{credential}"
+        };
+    }
+
     rpc ListCredentialMatchedCI(ListCredentialMatchedCIReq) returns (JsonRawResp) {
         // list credential matched config items with filter
         option (google.api.http) = {
@@ -167,10 +174,11 @@ message BenchAppMetaResp {
 }
 
 message AppMeta {
-    string cft          = 1;
-    string dpt          = 2;
-    string mod          = 3;
-    pbapp.Reload reload = 4;
+    string name         = 1;
+    string cft          = 2;
+    string dpt          = 3;
+    string mod          = 4;
+    pbapp.Reload reload = 5;
 }
 
 message BenchAppCRIMetaReq {
@@ -236,6 +244,11 @@ message EventMeta {
 }
 
 message ListCredentialMatchedCIReq {
+    uint32 biz_id     = 1;
+    string credential = 2;
+}
+
+message GetCredentialReq {
     uint32 biz_id     = 1;
     string credential = 2;
 }

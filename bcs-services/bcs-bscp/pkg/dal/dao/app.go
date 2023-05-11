@@ -496,7 +496,7 @@ func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32
 
 	appIDList := tools.JoinUint32(appIDs, ",")
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT id, config_type AS 'spec.config_type', mode AS 'spec.mode', reload_type AS ",
+	sqlSentence = append(sqlSentence, "SELECT id, name AS 'spec.name', config_type AS 'spec.config_type', mode AS 'spec.mode', reload_type AS ",
 		"'spec.reload.reload_type', reload_file_path AS 'spec.reload.file_reload_spec.reload_file_path' ",
 		"FROM ", table.AppTable.Name(), " WHERE id IN (", appIDList, ") AND biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
@@ -508,6 +508,7 @@ func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32
 	meta := make(map[uint32]*types.AppCacheMeta)
 	for _, one := range appList {
 		meta[one.ID] = &types.AppCacheMeta{
+			Name:       one.Spec.Name,
 			ConfigType: one.Spec.ConfigType,
 			Mode:       one.Spec.Mode,
 			Reload:     one.Spec.Reload,

@@ -26,7 +26,7 @@ type Credential interface {
 	// Get get credential
 	Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error)
 	// GetByCredentialString get credential by credential string
-	GetByCredentialString(kit *kit.Kit, bizID uint32, str string) (*table.Credential, error)
+	GetByCredentialString(kit *kit.Kit, bizID uint32, credential string) (*table.Credential, error)
 	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
@@ -122,8 +122,6 @@ func (dao *credentialDao) Create(kit *kit.Kit, c *table.Credential) (uint32, err
 	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CredentialTable.Name(), " (", table.CredentialColumns.ColumnExpr(), ")  VALUES(", table.CredentialColumns.ColonNameExpr(), ")")
 
 	sql := filter.SqlJoint(sqlSentence)
-	eDecorator := dao.event.Eventf(kit)
-
 	err = dao.sd.ShardingOne(c.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, c); err != nil {
@@ -136,32 +134,8 @@ func (dao *credentialDao) Create(kit *kit.Kit, c *table.Credential) (uint32, err
 				return fmt.Errorf("audit create credential failed, err: %v", err)
 			}
 
-			encryptionAlgorithm := cc.DataService().Credential.EncryptionAlgorithm
-			masterKey := cc.DataService().Credential.MasterKey
-			decrypted, err := tools.DecryptCredential(c.Spec.EncCredential, masterKey, encryptionAlgorithm)
-			if err != nil {
-				return fmt.Errorf("decrypt credential failed, err: %v", err)
-			}
-
-			e := types.Event{
-				Spec: &table.EventSpec{
-					Resource:    table.CredentialEvent,
-					ResourceID:  c.ID,
-					ResourceUid: decrypted,
-					OpType:      table.InsertOp,
-				},
-				Attachment: &table.EventAttachment{BizID: c.Attachment.BizID},
-				Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
-			}
-			if err = eDecorator.Fire(e); err != nil {
-				logs.Errorf("fire create credential: %s event failed, err: %v, rid: %s", c.ID, err, kit.Rid)
-				return errf.New(errf.DBOpFailed, "fire event failed, "+err.Error())
-			}
-
 			return nil
 		})
-
-	eDecorator.Finalizer(err)
 
 	if err != nil {
 		logs.Errorf("create credential, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
@@ -283,8 +257,6 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
 		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
-
-	eDecorator := dao.event.Eventf(kit)
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 			var effected int64
@@ -309,38 +281,8 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 			if err := ab.Do(&AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}); err != nil {
 				return fmt.Errorf("do credential update audit failed, err: %v", err)
 			}
-
-			old, err := dao.Get(kit, g.Attachment.BizID, g.ID)
-			if err != nil {
-				return fmt.Errorf("get old credential: %d failed, err: %v", g.ID, err)
-			}
-			encryptionAlgorithm := cc.DataService().Credential.EncryptionAlgorithm
-			masterKey := cc.DataService().Credential.MasterKey
-			decrypted, err := tools.DecryptCredential(old.Spec.EncCredential, masterKey, encryptionAlgorithm)
-			if err != nil {
-				return fmt.Errorf("decrypt credential failed, err: %v", err)
-			}
-
-			// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
-			e := types.Event{
-				Spec: &table.EventSpec{
-					Resource:    table.CredentialEvent,
-					ResourceID:  g.ID,
-					ResourceUid: decrypted,
-					OpType:      table.UpdateOp,
-				},
-				Attachment: &table.EventAttachment{BizID: g.Attachment.BizID},
-				Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
-			}
-			if err := eDecorator.Fire(e); err != nil {
-				logs.Errorf("fire update credential: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
-				return errf.New(errf.DBOpFailed, "fire event failed, "+err.Error())
-			}
-
 			return nil
 		})
-
-	eDecorator.Finalizer(err)
 
 	if err != nil {
 		return err
@@ -354,8 +296,6 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *sharding.Tx, bi
 	if bizID == 0 || id == 0 {
 		return errf.New(errf.InvalidParameter, "credential bizID or id is zero")
 	}
-
-	eDecorator := dao.event.Eventf(kit)
 
 	var sqlSentence []string
 	now := time.Now().Format(constant.TimeStdFormat)
@@ -374,33 +314,6 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *sharding.Tx, bi
 		logs.Errorf("update credential %d revision failed, err: %v, rid: %v", id, err, kit.Rid)
 		return err
 	}
-
-	credential, err := dao.Get(kit, bizID, id)
-	if err != nil {
-		logs.Errorf("get credential %d failed, err: %v, rid: %v", id, err, kit.Rid)
-		return err
-	}
-
-	encryptionAlgorithm := cc.DataService().Credential.EncryptionAlgorithm
-	masterKey := cc.DataService().Credential.MasterKey
-	decrypted, err := tools.DecryptCredential(credential.Spec.EncCredential, masterKey, encryptionAlgorithm)
-	if err != nil {
-		return fmt.Errorf("decrypt credential failed, err: %v", err)
-	}
-
-	// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
-	e := types.Event{
-		Spec: &table.EventSpec{
-			Resource:    table.CredentialEvent,
-			ResourceID:  id,
-			ResourceUid: decrypted,
-			OpType:      table.UpdateOp,
-		},
-		Attachment: &table.EventAttachment{BizID: bizID},
-		Revision:   &table.CreatedRevision{Creator: kit.User, CreatedAt: time.Now()},
-	}
-
-	eDecorator.FireWithTx(tx, e)
 
 	return nil
 }

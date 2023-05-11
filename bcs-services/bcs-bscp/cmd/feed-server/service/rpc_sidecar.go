@@ -259,14 +259,20 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 		if req.Key != "" && !tools.MatchConfigItem(req.Key, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name) {
 			continue
 		}
-		if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.Token, ci.RciId); err != nil || !match {
+		app, err := s.bll.AppCache().GetMeta(im.Kit, req.BizId, ci.ConfigItemAttachment.AppId)
+		if err != nil {
+			return nil, status.Errorf(codes.Aborted, "get app meta failed, %s", err.Error())
+		}
+		if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token, ci.ConfigItemSpec); err != nil || !match {
+			logs.Errorf("no permission to access config item %d, err: %v", ci.RciId, err)
 			return nil, status.Errorf(codes.PermissionDenied, "no permission to access config item %d", ci.RciId)
 		}
 		fileMetas = append(fileMetas, &pbfs.FileMeta{
-			Id:             ci.RciId,
-			CommitId:       ci.CommitID,
-			CommitSpec:     ci.CommitSpec,
-			ConfigItemSpec: ci.ConfigItemSpec,
+			Id:                   ci.RciId,
+			CommitId:             ci.CommitID,
+			CommitSpec:           ci.CommitSpec,
+			ConfigItemSpec:       ci.ConfigItemSpec,
+			ConfigItemAttachment: ci.ConfigItemAttachment,
 			RepositorySpec: &pbfs.RepositorySpec{
 				Path: ci.RepositorySpec.Path,
 			},
@@ -295,9 +301,13 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
+	app, err := s.bll.AppCache().GetMeta(im.Kit, req.BizId, req.FileMeta.ConfigItemAttachment.AppId)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app meta failed, %s", err.Error())
+	}
 
 	// validate can file be downloaded by credential.
-	if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, req.Token, req.FileMeta.Id); err != nil {
+	if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
 	} else if !match {
 		return nil, status.Error(codes.PermissionDenied, "no permission to download file")
