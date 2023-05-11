@@ -94,7 +94,6 @@ func (c *consumer) consume(kt *kit.Kit, es []*table.Event) (needRetry bool) {
 func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error {
 	publishEvent := make([]*table.Event, 0)
 	insertAppEvent := make([]*table.Event, 0)
-	// credentialEvent := make([]*table.Event, 0)
 
 	for _, event := range events {
 		switch event.Spec.Resource {
@@ -102,8 +101,6 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 			publishEvent = append(publishEvent, event)
 		case table.Application:
 			insertAppEvent = append(insertAppEvent, event)
-		// case table.CredentialEvent:
-		// 	credentialEvent = append(credentialEvent, event)
 		default:
 			logs.Errorf("unsupported insert event resource: %s, id: %s, rid: %s", event.Spec.Resource, event.ID, kt.Rid)
 			continue
@@ -123,13 +120,6 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 			return err
 		}
 	}
-
-	// if len(credentialEvent) != 0 {
-	// 	if err := c.refreshCredentialMatchedCI(kt, credentialEvent); err != nil {
-	// 		logs.Errorf("refresh credential cache failed, err: %v, rid: %s", err, kt.Rid)
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }
@@ -199,13 +189,10 @@ func (c *consumer) queryInstReleaseID(kt *kit.Kit, appBizID map[uint32]uint32) (
 // consumeUpdateEvent consume update event.
 func (c *consumer) consumeUpdateEvent(kt *kit.Kit, events []*table.Event) error {
 	updateAppEvents := make([]*table.Event, 0)
-	// updateCredentialEvents := make([]*table.Event, 0)
 	for _, event := range events {
 		switch event.Spec.Resource {
 		case table.Application:
 			updateAppEvents = append(updateAppEvents, event)
-		// case table.CredentialEvent:
-		// 	updateCredentialEvents = append(updateCredentialEvents, event)
 		default:
 			logs.Errorf("unsupported update event resource: %s, id: %s, rid: %s", event.Spec.Resource, event.ID, kt.Rid)
 			continue
@@ -218,13 +205,6 @@ func (c *consumer) consumeUpdateEvent(kt *kit.Kit, events []*table.Event) error 
 			return err
 		}
 	}
-
-	// if len(updateCredentialEvents) != 0 {
-	// 	if err := c.refreshCredentialMatchedCI(kt, updateCredentialEvents); err != nil {
-	// 		logs.Errorf("refresh credential cache failed, err: %v, rid: %s", err, kt.Rid)
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }
@@ -332,117 +312,6 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 	logs.Infof("event cache released ci success detail: biz[release_id]: %v , rid: %s", reminder, kt.Rid)
 
 	return nil
-}
-
-// refreshCredentialMatchedCI refresh credential matched ci cache.
-func (c *consumer) refreshCredentialMatchedCI(kt *kit.Kit, events []*table.Event) error {
-
-	for _, e := range events {
-		list, _, err := c.queryMatchedCIFromCache(kt, e.Attachment.BizID, e.Spec.ResourceUid)
-		if err != nil {
-			return err
-		}
-
-		// refresh app credential matched ci cache.
-		if err := c.bds.Set(kt.Ctx, keys.Key.CredentialMatchedCI(e.Attachment.BizID, e.Spec.ResourceUid),
-			list, keys.Key.CredentialMatchedCITtlSec(false)); err != nil {
-			return fmt.Errorf("set biz: %d, credential: %s, matched ci cache failed, err: %v",
-				e.Attachment.BizID, e.Spec.ResourceUid, err)
-		}
-	}
-
-	return nil
-}
-
-// queryMatchedCIFromCache query credential matched ci ids from cache.
-// return params:
-// 1. credential matched ci ids list.
-// 2. credential matched ci ids cache size.
-func (c *consumer) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential string) (string, int, error) {
-
-	cred, err := c.op.Credential().GetByCredentialString(kt, bizID, credential)
-	if err != nil {
-		return "", 0, err
-	}
-	if errors.Is(err, errf.ErrCredentialInvalid) {
-		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", credential)
-	}
-	if !cred.Spec.Enable {
-		return "", 0, errf.Newf(errf.InvalidParameter, "credential: %s is disabled", credential)
-	}
-
-	// list credential scopes
-	scopes, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
-
-	// list all apps which can be matched by credential.
-	appDetails, err := c.op.App().List(kt, &types.ListAppsOption{
-		BizID: bizID,
-		Filter: &filter.Expression{
-			Op:    filter.And,
-			Rules: []filter.RuleFactory{},
-		},
-		Page: &types.BasePage{},
-	})
-	if err != nil {
-		return "", 0, err
-	}
-
-	appIDs := make([]uint32, 0, len(appDetails.Details))
-	for _, app := range appDetails.Details {
-		for _, scope := range scopes.Details {
-			match, err := scope.Spec.CredentialScope.MatchApp(app.Spec.Name)
-			if err != nil {
-				return "", 0, err
-			}
-			if match {
-				appIDs = append(appIDs, app.ID)
-			}
-		}
-	}
-
-	if len(appIDs) == 0 {
-		// return early to avoid querying db with empty appIDs which will cause error.
-		return "[]", 2, nil
-	}
-	cis := make([]uint32, 0)
-	listReleasedCIopt := &types.ListReleasedCIsOption{
-		BizID: bizID,
-		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "app_id",
-					Op:    filter.In.Factory(),
-					Value: appIDs,
-				},
-			},
-		},
-		Page: &types.BasePage{},
-	}
-	CIDetails, err := c.op.ReleasedCI().List(kt, listReleasedCIopt)
-	if err != nil {
-		return "", 0, err
-	}
-	for _, ci := range CIDetails.Details {
-		for _, scope := range scopes.Details {
-			match, err := scope.Spec.CredentialScope.MatchConfigItem(ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
-			if err != nil {
-				return "", 0, err
-			}
-			if match {
-				cis = append(cis, ci.ID)
-			}
-		}
-	}
-
-	// query all config item ids which can be matched by credential.
-
-	b, err := jsoni.Marshal(cis)
-	if err != nil {
-		logs.Errorf("marshal credential: %s, matched released config item ids failed, err: %v", credential, err)
-		return "", 0, err
-	}
-	return string(b), len(b), nil
 }
 
 // cacheReleasedGroup cache the all released's group.

@@ -136,14 +136,11 @@ func (k keyGenerator) Credential(bizID uint32, str string) string {
 
 // CredentialTtlSec generate the credential's TTL seconds
 func (k keyGenerator) CredentialTtlSec(withRange bool) int {
-
 	if withRange {
 		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.credentialTTLRange[1]-
-			k.credentialTTLRange[0]) + k.credentialTTLRange[0]
+		seconds := rand.Intn(k.credentialTTLRange[1]-k.credentialTTLRange[0]) + k.credentialTTLRange[0]
 		return seconds
 	}
-
 	return k.credentialTTLRange[0]
 }
 
