@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, withDefaults, computed, watch } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import SHA256 from 'crypto-js/sha256'
   import WordArray from 'crypto-js/lib-typedarrays'
   import { TextFill, Done } from 'bkui-vue/lib/icon'
@@ -186,7 +186,8 @@
             class="config-uploader"
             url=""
             theme="button"
-            tip="支持扩展名：.bin"
+            tip="支持扩展名：.bin，文件大小100M以内"
+            :size="100"
             :disabled="!editable"
             :multiple="false"
             :files="fileList"
