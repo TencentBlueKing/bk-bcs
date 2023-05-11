@@ -358,21 +358,21 @@ func (c *consumer) refreshCredentialMatchedCI(kt *kit.Kit, events []*table.Event
 // return params:
 // 1. credential matched ci ids list.
 // 2. credential matched ci ids cache size.
-func (c *consumer) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string) (string, int, error) {
+func (c *consumer) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential string) (string, int, error) {
 
-	credential, err := c.op.Credential().GetByCredentialString(kt, bizID, str)
+	cred, err := c.op.Credential().GetByCredentialString(kt, bizID, credential)
 	if err != nil {
 		return "", 0, err
 	}
 	if errors.Is(err, errf.ErrCredentialInvalid) {
-		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", str)
+		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", credential)
 	}
-	if !credential.Spec.Enable {
-		return "", 0, errf.Newf(errf.InvalidParameter, "credential: %s is disabled", str)
+	if !cred.Spec.Enable {
+		return "", 0, errf.Newf(errf.InvalidParameter, "credential: %s is disabled", credential)
 	}
 
 	// list credential scopes
-	scopes, err := c.op.CredentialScope().Get(kt, credential.ID, bizID)
+	scopes, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
 
 	// list all apps which can be matched by credential.
 	appDetails, err := c.op.App().List(kt, &types.ListAppsOption{
@@ -439,7 +439,7 @@ func (c *consumer) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string
 
 	b, err := jsoni.Marshal(cis)
 	if err != nil {
-		logs.Errorf("marshal credential: %s, matched released config item ids failed, err: %v", str, err)
+		logs.Errorf("marshal credential: %s, matched released config item ids failed, err: %v", credential, err)
 		return "", 0, err
 	}
 	return string(b), len(b), nil

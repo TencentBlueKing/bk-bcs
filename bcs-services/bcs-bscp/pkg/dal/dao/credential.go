@@ -26,7 +26,7 @@ type Credential interface {
 	// Get get credential
 	Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error)
 	// GetByCredentialString get credential by credential string
-	GetByCredentialString(kit *kit.Kit, bizID uint32, str string) (*table.Credential, error)
+	GetByCredentialString(kit *kit.Kit, bizID uint32, credential string) (*table.Credential, error)
 	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials

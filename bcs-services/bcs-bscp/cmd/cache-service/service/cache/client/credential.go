@@ -121,21 +121,21 @@ func (c *client) refreshMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential
 // return params:
 // 1. credential matched ci ids list.
 // 2. credential matched ci ids cache size.
-func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string) (string, int, error) {
+func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential string) (string, int, error) {
 
-	credential, err := c.op.Credential().GetByCredentialString(kt, bizID, str)
+	cred, err := c.op.Credential().GetByCredentialString(kt, bizID, credential)
 	if err != nil {
 		return "", 0, err
 	}
 	if errors.Is(err, errf.ErrCredentialInvalid) {
-		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", str)
+		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", credential)
 	}
-	if !credential.Spec.Enable {
-		return "", 0, errf.Newf(errf.InvalidParameter, "credential: %s is disabled", str)
+	if !cred.Spec.Enable {
+		return "", 0, errf.Newf(errf.InvalidParameter, "credential: %s is disabled", credential)
 	}
 
 	// list credential scopes
-	scopes, err := c.op.CredentialScope().Get(kt, credential.ID, bizID)
+	scopes, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
 
 	// list all apps which can be matched by credential.
 	appDetails, err := c.op.App().List(kt, &types.ListAppsOption{
@@ -202,33 +202,33 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, str string) 
 
 	b, err := jsoni.Marshal(cis)
 	if err != nil {
-		logs.Errorf("marshal credential: %s, matched released config item ids failed, err: %v", str, err)
+		logs.Errorf("marshal credential: %s, matched released config item ids failed, err: %v", credential, err)
 		return "", 0, err
 	}
 	return string(b), len(b), nil
 }
 
-func (c *client) GetCredential(kt *kit.Kit, bizID uint32, str string) (string, error) {
+func (c *client) GetCredential(kt *kit.Kit, bizID uint32, credential string) (string, error) {
 	start := time.Now()
 	defer func() {
-		c.mc.refreshLagMS.With(prm.Labels{"rsc": str, "biz": tools.Itoa(bizID)}).Observe(tools.SinceMS(start))
+		c.mc.refreshLagMS.With(prm.Labels{"rsc": credential, "biz": tools.Itoa(bizID)}).Observe(tools.SinceMS(start))
 	}()
 
-	credential, hit, err := c.getCredentialFromCache(kt, bizID, str)
+	cred, hit, err := c.getCredentialFromCache(kt, bizID, credential)
 	if err != nil {
 		return "", err
 	}
 
 	if !hit {
-		credential, err = c.refreshCredentialFromCache(kt, bizID, str)
+		cred, err = c.refreshCredentialFromCache(kt, bizID, credential)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	c.mc.hitCounter.With(prm.Labels{"rsc": str, "biz": tools.Itoa(bizID)}).Inc()
+	c.mc.hitCounter.With(prm.Labels{"rsc": credential, "biz": tools.Itoa(bizID)}).Inc()
 
-	return credential, nil
+	return cred, nil
 }
 
 func (c *client) getCredentialFromCache(kt *kit.Kit, bizID uint32, credential string) (string, bool, error) {
@@ -250,35 +250,35 @@ func (c *client) getCredentialFromCache(kt *kit.Kit, bizID uint32, credential st
 }
 
 // refreshCredentialFromCache get the credential from db and try to refresh to the cache.
-func (c *client) refreshCredentialFromCache(kt *kit.Kit, bizID uint32, str string) (string, error) {
+func (c *client) refreshCredentialFromCache(kt *kit.Kit, bizID uint32, credential string) (string, error) {
 	cancel := kt.CtxWithTimeoutMS(200)
 	defer cancel()
 
-	credential, size, err := c.queryCredentialFromCahce(kt, bizID, str)
+	cred, size, err := c.queryCredentialFromCahce(kt, bizID, credential)
 	if err != nil {
 		return "", err
 	}
 
 	// refresh app credential cache.
-	if err := c.bds.Set(kt.Ctx, keys.Key.Credential(bizID, str),
-		credential, keys.Key.CredentialTtlSec(false)); err != nil {
-		return "", fmt.Errorf("set biz: %d, credential: %s, cache failed, err: %v", bizID, str, err)
+	if err := c.bds.Set(kt.Ctx, keys.Key.Credential(bizID, credential),
+		cred, keys.Key.CredentialTtlSec(false)); err != nil {
+		return "", fmt.Errorf("set biz: %d, credential: %s, cache failed, err: %v", bizID, credential, err)
 	}
 
-	c.mc.credentialByteSize.With(prm.Labels{"rsc": str, "biz": tools.Itoa(bizID)}).Observe(float64(size))
+	c.mc.credentialByteSize.With(prm.Labels{"rsc": credential, "biz": tools.Itoa(bizID)}).Observe(float64(size))
 
-	return credential, nil
+	return cred, nil
 }
 
-func (c *client) queryCredentialFromCahce(kt *kit.Kit, bizID uint32, str string) (string, int, error) {
-	credential, err := c.op.Credential().GetByCredentialString(kt, bizID, str)
+func (c *client) queryCredentialFromCahce(kt *kit.Kit, bizID uint32, credential string) (string, int, error) {
+	cred, err := c.op.Credential().GetByCredentialString(kt, bizID, credential)
 	if err != nil {
 		return "", 0, err
 	}
 	if errors.Is(err, errf.ErrCredentialInvalid) {
-		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", str)
+		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", credential)
 	}
-	details, err := c.op.CredentialScope().Get(kt, credential.ID, bizID)
+	details, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
 	if err != nil {
 		return "", 0, err
 	}
@@ -287,12 +287,12 @@ func (c *client) queryCredentialFromCahce(kt *kit.Kit, bizID uint32, str string)
 		scope = append(scope, string(detail.Spec.CredentialScope))
 	}
 	credentialCache := &types.CredentialCache{
-		Enabled: credential.Spec.Enable,
+		Enabled: cred.Spec.Enable,
 		Scope:   scope,
 	}
 	b, err := jsoni.Marshal(credentialCache)
 	if err != nil {
-		logs.Errorf("marshal credential: %d-%s,failed, err: %v", bizID, str, err)
+		logs.Errorf("marshal credential: %d-%s,failed, err: %v", bizID, credential, err)
 		return "", 0, err
 	}
 	return string(b), len(b), nil

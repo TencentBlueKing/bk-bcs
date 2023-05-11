@@ -37,10 +37,10 @@ func newCredential(mc *metric, cs *clientset.ClientSet) *Credential {
 	stg.cs = cs
 	opt := cc.FeedServer().FSLocalCache
 
-	stg.client = gcache.New(int(opt.AuthCacheSize)).
+	stg.client = gcache.New(int(opt.CredentialCacheSize)).
 		LRU().
 		EvictedFunc(stg.evictRecorder).
-		Expiration(time.Duration(opt.AuthCacheTTLSec) * time.Second).
+		Expiration(time.Duration(opt.CredentialCacheTTLSec) * time.Second).
 		Build()
 	stg.mc = mc
 	stg.collectHitRate()
@@ -102,7 +102,7 @@ func (s *Credential) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credentia
 		return false, err
 	}
 
-	if err := s.client.Set(fmt.Sprintf("%d-%s", bizID, credential), c); err != nil {
+	if err := s.client.SetWithExpire(fmt.Sprintf("%d-%s", bizID, credential), c, time.Second); err != nil {
 		logs.Errorf("refresh credential %d-%s cache failed, %s", bizID, credential, err.Error())
 		// do not return, ignore th error directly.
 	}
