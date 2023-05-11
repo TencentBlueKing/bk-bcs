@@ -14,12 +14,10 @@ package event
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"sync"
 
 	"bscp.io/cmd/cache-service/service/cache/keys"
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/bedis"
 	"bscp.io/pkg/dal/dao"
 	"bscp.io/pkg/dal/table"
