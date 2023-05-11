@@ -6,7 +6,7 @@ package pbhook;
 
 option go_package = "bscp.io/pkg/protocol/core/hook;pbhook";
 
-// Group source resource reference: pkg/dal/table/hook.go
+// Hook source resource reference: pkg/dal/table/hook.go
 message Hook {
     uint32          id         = 1;
     HookSpec        spec       = 2;

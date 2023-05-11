@@ -186,21 +186,24 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			return
 		}
 
-		req := &pbas.ResourceAttribute{
-			BizId:       uint32(bizID),
-			Basic:       &pbas.Basic{Type: string(sys.Business), Action: string(sys.BusinessViewResource), ResourceId: uint32(bizID)},
-			GenApplyUrl: true,
-		}
+		// validate biz permission when user is not for test
+		if !strings.HasPrefix(kt.User, constant.BKUserForTestPrefix) {
+			req := &pbas.ResourceAttribute{
+				BizId:       uint32(bizID),
+				Basic:       &pbas.Basic{Type: string(sys.Business), Action: string(sys.BusinessViewResource), ResourceId: uint32(bizID)},
+				GenApplyUrl: true,
+			}
 
-		resp, err := a.authClient.CheckPermission(kt.RpcCtx(), req)
-		if err != nil {
-			render.Render(w, r, rest.BadRequest(err))
-			return
-		}
+			resp, err := a.authClient.CheckPermission(kt.RpcCtx(), req)
+			if err != nil {
+				render.Render(w, r, rest.BadRequest(err))
+				return
+			}
 
-		if !resp.IsAllowed {
-			render.Render(w, r, rest.PermissionDenied(errf.ErrPermissionDenied, resp))
-			return
+			if !resp.IsAllowed {
+				render.Render(w, r, rest.PermissionDenied(errf.ErrPermissionDenied, resp))
+				return
+			}
 		}
 
 		kt.BizID = uint32(bizID)
