@@ -69,11 +69,12 @@ func (op *ListFileAppLatestReleaseMetaReq) Validate() error {
 
 // ReleasedCIMeta defines a release's released config item metadata
 type ReleasedCIMeta struct {
-	RciId          uint32               `json:"rci_id,omitempty"`
-	CommitID       uint32               `json:"commit_id,omitempty"`
-	CommitSpec     *pbcommit.CommitSpec `json:"commit_spec,omitempty"`
-	ConfigItemSpec *pbci.ConfigItemSpec `json:"config_item_spec,omitempty"`
-	RepositorySpec *RepositorySpec      `json:"repository_spec,omitempty"`
+	RciId                uint32                     `json:"rci_id,omitempty"`
+	CommitID             uint32                     `json:"commit_id,omitempty"`
+	CommitSpec           *pbcommit.CommitSpec       `json:"commit_spec,omitempty"`
+	ConfigItemSpec       *pbci.ConfigItemSpec       `json:"config_item_spec,omitempty"`
+	ConfigItemAttachment *pbci.ConfigItemAttachment `json:"config_item_attachment,omitempty"`
+	RepositorySpec       *RepositorySpec            `json:"repository_spec,omitempty"`
 }
 
 // RepositorySpec repository spec.

@@ -314,6 +314,10 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 					Privilege: cis.Permission.Privilege,
 				},
 			},
+			ConfigItemAttachment: &pbci.ConfigItemAttachment{
+				BizId: one.Attachment.BizID,
+				AppId: one.Attachment.AppID,
+			},
 			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
 		}
 	}

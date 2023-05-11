@@ -173,6 +173,25 @@ func (s *Service) ListCredentialMatchedCI(ctx context.Context, req *pbcs.ListCre
 	return &pbcs.JsonRawResp{JsonRaw: list}, nil
 }
 
+// GetCredential get credential by credential string.
+func (s *Service) GetCredential(ctx context.Context, req *pbcs.GetCredentialReq) (*pbcs.JsonRawResp, error) {
+	if req.BizId <= 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz id can't be empty")
+	}
+
+	if req.Credential == "" {
+		return nil, errf.New(errf.InvalidParameter, "credential can't be empty")
+	}
+
+	kt := kit.FromGrpcContext(ctx)
+	credential, err := s.op.GetCredential(kt, req.BizId, req.Credential)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.JsonRawResp{JsonRaw: credential}, nil
+}
+
 // GetCurrentCursorReminder get the current consumed event's id, which is the cursor reminder's resource id.
 func (s *Service) GetCurrentCursorReminder(ctx context.Context, _ *pbbase.EmptyReq) (*pbcs.CurrentCursorReminderResp,
 	error) {

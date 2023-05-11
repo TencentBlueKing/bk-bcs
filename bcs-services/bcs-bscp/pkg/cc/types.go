@@ -739,6 +739,11 @@ type FSLocalCache struct {
 	AuthCacheSize uint `yaml:"authCacheSize"`
 	// AuthCacheTTLSec defines how long this auth result with permission can be cached in seconds.
 	AuthCacheTTLSec uint `yaml:"authCacheTTLSec"`
+
+	// CredentialCacheSize defines how many credentials can be cached.
+	CredentialCacheSize uint `yaml:"credentialCacheSize"`
+	// CredentialCacheTTLSec defines how long this credential can be cached in seconds.
+	CredentialCacheTTLSec uint `yaml:"credentialCacheTTLSec"`
 }
 
 // validate if the feed server's local cache runtime is valid or not.
@@ -803,6 +808,14 @@ func (fc *FSLocalCache) trySetDefault() {
 
 	if fc.AuthCacheTTLSec == 0 {
 		fc.AuthCacheTTLSec = 300
+	}
+
+	if fc.CredentialCacheSize == 0 {
+		fc.AuthCacheSize = 5000
+	}
+
+	if fc.CredentialCacheTTLSec == 0 {
+		fc.AuthCacheTTLSec = 1
 	}
 
 	return

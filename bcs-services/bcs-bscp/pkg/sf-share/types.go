@@ -154,11 +154,12 @@ func (s SideAppMeta) Validate() error {
 // ConfigItemMetaV1 defines the released configure item's metadata.
 type ConfigItemMetaV1 struct {
 	// ID is released configuration item identity id.
-	ID             uint32                 `json:"id"`
-	CommitID       uint32                 `json:"commentID"`
-	ContentSpec    *pbcontent.ContentSpec `json:"contentSpec"`
-	ConfigItemSpec *pbci.ConfigItemSpec   `json:"configItemSpec"`
-	RepositoryPath string                 `json:"repositoryPath"`
+	ID                   uint32                     `json:"id"`
+	CommitID             uint32                     `json:"commentID"`
+	ContentSpec          *pbcontent.ContentSpec     `json:"contentSpec"`
+	ConfigItemSpec       *pbci.ConfigItemSpec       `json:"configItemSpec"`
+	ConfigItemAttachment *pbci.ConfigItemAttachment `json:"configItemAttachment"`
+	RepositoryPath       string                     `json:"repositoryPath"`
 }
 
 func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
@@ -171,6 +172,8 @@ func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
 				ByteSize:  cim.ContentSpec.ByteSize,
 			},
 		},
+		ConfigItemSpec:       cim.ConfigItemSpec,
+		ConfigItemAttachment: cim.ConfigItemAttachment,
 	}
 }
 
