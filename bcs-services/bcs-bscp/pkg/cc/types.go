@@ -811,11 +811,11 @@ func (fc *FSLocalCache) trySetDefault() {
 	}
 
 	if fc.CredentialCacheSize == 0 {
-		fc.AuthCacheSize = 5000
+		fc.CredentialCacheSize = 5000
 	}
 
 	if fc.CredentialCacheTTLSec == 0 {
-		fc.AuthCacheTTLSec = 1
+		fc.CredentialCacheTTLSec = 1
 	}
 
 	return
