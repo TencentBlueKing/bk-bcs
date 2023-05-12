@@ -36,9 +36,9 @@ type FrontendConf struct {
 // defaultFrontendConf 默认配置
 func defaultFrontendConf() *FrontendConf {
 	c := &FrontendConf{
-		Docs:     map[string]string{},
-		Host:     &HostConf{},
-		Features: map[string]string{"zh_cn": ""},
+		Docs: map[string]string{},
+		Host: &HostConf{},
+		//Features: map[string]string{"zh_cn": ""},
 	}
 	return c
 }

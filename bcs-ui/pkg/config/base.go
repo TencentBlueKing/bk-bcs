@@ -14,6 +14,8 @@
 package config
 
 import (
+	"errors"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/i18n"
 	"time"
 	_ "time/tzdata" // tzdata TODO
 )
@@ -40,12 +42,19 @@ type BaseConf struct {
 func (c *BaseConf) Init() error {
 	var err error
 	c.TimeZone = "Asia/Shanghai"
-	c.LanguageCode = "en-us"
 	c.RunEnv = DevEnv
 	c.Region = "ce"
 	c.Location, err = time.LoadLocation(c.TimeZone)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *BaseConf) InitBaseConf() error {
+	// if the configuration is incorrect, panic
+	if !i18n.IsAvailableLanguage(c.LanguageCode) {
+		return errors.New("invalid language configuration")
 	}
 	return nil
 }

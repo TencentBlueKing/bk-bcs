@@ -100,6 +100,10 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	if err := c.init(); err != nil {
 		return err
 	}
+
+	if err := c.Base.InitBaseConf(); err != nil {
+		return err
+	}
 	return nil
 }
 

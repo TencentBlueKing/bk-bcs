@@ -37,7 +37,7 @@ type WebServer struct {
 	srv            *http.Server
 	addrIPv6       string
 	embedWebServer bcsui.EmbedWebServer
-	releaseNote    *ReleaseNote
+	releaseNote    ReleaseNoteLang
 }
 
 // NewWebServer :
