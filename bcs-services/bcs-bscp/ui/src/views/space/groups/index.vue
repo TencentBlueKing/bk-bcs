@@ -100,13 +100,18 @@
     const list: IGroupCategoryItem[] = []
     categorizedGroupList.value.forEach(category => {
       if (category.show) {
-        list.push({ IS_CATEORY_ROW: true, CATEGORY_NAME: category.name, fold: category.fold })
+        list.push({ IS_CATEORY_ROW: true, CATEGORY_NAME: category.name, fold: category.fold, bind_apps: [] })
         if (!category.fold) {
           list.push(...category.children)
         }
       }
     })
     return list
+  }
+
+  // 获取服务可见范围值
+  const getBindAppsName = (apps: { id: number; name: string }[] = []) => {
+    return apps.map(item => item && item.name).join('; ')
   }
 
   // 创建分组
@@ -233,7 +238,7 @@
               <template #default="{ row }">
                 <template v-if="!row.IS_CATEORY_ROW">
                   <span v-if="row.public">公开</span>
-                  <span v-else>{{ row.bind_apps && row.bind_apps.join('; ') }}</span>
+                  <span v-else>{{ getBindAppsName(row.bind_apps) }}</span>
                 </template>
               </template>
             </bk-table-column>
