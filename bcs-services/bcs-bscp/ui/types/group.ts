@@ -52,7 +52,7 @@ export interface IGroupItem {
   id: number;
   name: string;
   public: boolean;
-  bind_apps: number[];
+  bind_apps: { name: string; id: number }[];
   released_apps_num: number;
   mode?: string;
   uid?: string;
@@ -78,7 +78,7 @@ export interface IGroupCategoryItem {
   id?: number;
   name?: string;
   public?: boolean;
-  bind_apps?: number[];
+  bind_apps: { name: string; id: number }[];
   released_apps_num?: number;
   selector?: {
     labels_and?: IGroupRuleItem[];
