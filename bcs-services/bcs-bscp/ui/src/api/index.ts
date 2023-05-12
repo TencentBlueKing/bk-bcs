@@ -12,11 +12,19 @@ import { IPermissionQuery } from '../../types/index'
 
 export const getSpaceList = () => {
   return http.get('auth/user/spaces').then(resp => {
+    const permissioned: ISpaceDetail[] = []
+    const noPermissions: ISpaceDetail[] = []
     resp.data.items.forEach((item: ISpaceDetail) => {
       const { space_id } = item
       // @ts-ignore
       item.permission = resp.web_annotations.perms[space_id].find_business_resource
+      if (item.permission) {
+        permissioned.push(item)
+      } else {
+        noPermissions.push(item)
+      }
     })
+    resp.data.items = [...permissioned, ...noPermissions]
     return resp.data
   });
 }
