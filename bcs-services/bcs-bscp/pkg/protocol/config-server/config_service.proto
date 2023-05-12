@@ -792,10 +792,14 @@ message ListAllGroupsReq {
 
 message ListAllGroupsResp {
     message ListAllGroupsData {
+        message BindApp {
+            uint32 id   = 1;
+            string name = 2;
+        }
         uint32 id                       = 1;
         string name                     = 2;
         bool public                     = 3;
-        repeated string bind_apps       = 4;
+        repeated BindApp bind_apps      = 4;
         google.protobuf.Struct selector = 5;
         uint32 released_apps_num        = 6;
         bool edited                     = 7;

@@ -217,10 +217,13 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 
 	respData := make([]*pbcs.ListAllGroupsResp_ListAllGroupsData, 0, len(lgResp.Details))
 	for _, group := range lgResp.Details {
-		apps := make([]string, 0, len(group.Spec.BindApps))
+		apps := make([]*pbcs.ListAllGroupsResp_ListAllGroupsData_BindApp, 0, len(group.Spec.BindApps))
 		for _, appID := range group.Spec.BindApps {
 			if app, ok := appMap[appID]; ok && app != nil {
-				apps = append(apps, app.Spec.Name)
+				apps = append(apps, &pbcs.ListAllGroupsResp_ListAllGroupsData_BindApp{
+					Id:   app.Id,
+					Name: app.Spec.Name,
+				})
 			}
 		}
 		data := &pbcs.ListAllGroupsResp_ListAllGroupsData{
