@@ -125,7 +125,7 @@ func ValidateReleaseName(name string) error {
 }
 
 const (
-	qualifiedCfgItemNameFmt string = "[A-Za-z0-9-_.]*"
+	qualifiedCfgItemNameFmt string = "^[A-Za-z0-9-_.]+$"
 )
 
 // qualifiedCfgItemNameRegexp config item name regexp.
@@ -143,6 +143,10 @@ func ValidateCfgItemName(name string) error {
 
 	if err := validResNamePrefix(name); err != nil {
 		return err
+	}
+
+	if name == "." || name == ".." {
+		return fmt.Errorf("invalid name: %s, not allows to be '.' or '..'", name)
 	}
 
 	if !qualifiedCfgItemNameRegexp.MatchString(name) {
