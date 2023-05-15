@@ -13,19 +13,20 @@
 
 package config
 
-import "os"
+// MongoConf mongo config
+type MongoConf struct {
+	Address        string `yaml:"address"`
+	AuthDatabase   string `yaml:"authdatabase"`
+	Database       string `yaml:"database"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	ConnectTimeout uint   `yaml:"connecttimeout"`
+	MaxPoolSize    uint   `yaml:"maxpoolsize"`
+	MinPoolSize    uint   `yaml:"minpoolsize"`
+}
 
-var (
-	BK_SYSTEM_ID         = os.Getenv("BK_SYSTEM_ID")
-	BK_APP_CODE          = os.Getenv("BK_APP_CODE")
-	BK_APP_SECRET        = os.Getenv("BK_APP_SECRET")
-	BK_PAAS_HOST         = os.Getenv("BK_PAAS_HOST")
-	REDIS_PASSWORD       = os.Getenv("REDIS_PASSWORD")
-	BCS_APIGW_TOKEN      = os.Getenv("BCS_APIGW_TOKEN")
-	BCS_APIGW_PUBLIC_KEY = os.Getenv("BCS_APIGW_PUBLIC_KEY")
-	BCS_ETCD_HOST        = os.Getenv("bcsEtcdHost")
-	BKIAM_GATEWAY_SERVER = os.Getenv("BKIAM_GATEWAY_SERVER")
-	MONGO_ADDRESS        = os.Getenv("MONGO_ADDRESS")
-	MONGO_USERNAME       = os.Getenv("MONGO_USERNAME")
-	MONGO_PASSWORD       = os.Getenv("MONGO_PASSWORD")
-)
+// DefaultMongoConf :
+func DefaultMongoConf() *MongoConf {
+	// only for development
+	return &MongoConf{}
+}

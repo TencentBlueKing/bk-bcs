@@ -11,21 +11,13 @@
  *
  */
 
-package config
+package entity
 
-import "os"
-
-var (
-	BK_SYSTEM_ID         = os.Getenv("BK_SYSTEM_ID")
-	BK_APP_CODE          = os.Getenv("BK_APP_CODE")
-	BK_APP_SECRET        = os.Getenv("BK_APP_SECRET")
-	BK_PAAS_HOST         = os.Getenv("BK_PAAS_HOST")
-	REDIS_PASSWORD       = os.Getenv("REDIS_PASSWORD")
-	BCS_APIGW_TOKEN      = os.Getenv("BCS_APIGW_TOKEN")
-	BCS_APIGW_PUBLIC_KEY = os.Getenv("BCS_APIGW_PUBLIC_KEY")
-	BCS_ETCD_HOST        = os.Getenv("bcsEtcdHost")
-	BKIAM_GATEWAY_SERVER = os.Getenv("BKIAM_GATEWAY_SERVER")
-	MONGO_ADDRESS        = os.Getenv("MONGO_ADDRESS")
-	MONGO_USERNAME       = os.Getenv("MONGO_USERNAME")
-	MONGO_PASSWORD       = os.Getenv("MONGO_PASSWORD")
-)
+// LogIndex for log index
+type LogIndex struct {
+	ProjectID      string `json:"project_id" bson:"project_id"`
+	STDDataID      int    `json:"std_data_id" bson:"std_data_id"`
+	FileDataID     int    `json:"file_data_id" bson:"file_data_id"`
+	STDIndexSetID  int    `json:"std_index_set_id" bson:"std_index_set_id"`
+	FileIndexSetID int    `json:"file_index_set_id" bson:"file_index_set_id"`
+}

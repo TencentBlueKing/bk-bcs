@@ -30,6 +30,7 @@ import (
 	"github.com/thanos-io/thanos/pkg/store"
 	"k8s.io/klog/v2"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
@@ -42,8 +43,9 @@ const (
 
 var (
 	maskKeys = map[string]struct{}{
-		"bk_app_secret": {},
-		"Authorization": {},
+		"bk_app_secret":         {},
+		"X-Bkapi-Authorization": {},
+		"Authorization":         {},
 	}
 	clientOnce   sync.Once
 	globalClient *resty.Client
@@ -151,6 +153,29 @@ func GetClient() *resty.Client {
 		})
 	}
 	return globalClient
+}
+
+// AuthInfo auth info
+type AuthInfo struct {
+	BkAppCode   string `json:"bk_app_code"`
+	BkAppSecret string `json:"bk_app_secret"`
+	BkUserName  string `json:"bk_username"`
+}
+
+// GetBKAPIAuthorization generate bk api auth header, X-Bkapi-Authorization
+func GetBKAPIAuthorization() (string, error) {
+	auth := &AuthInfo{
+		BkAppCode:   config.G.Base.AppCode,
+		BkAppSecret: config.G.Base.AppSecret,
+		BkUserName:  config.G.Base.BKUsername,
+	}
+
+	userAuth, err := json.Marshal(auth)
+	if err != nil {
+		return "", err
+	}
+
+	return string(userAuth), nil
 }
 
 // BKResult 蓝鲸返回规范的结构体

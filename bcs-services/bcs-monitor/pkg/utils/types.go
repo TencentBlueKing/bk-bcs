@@ -11,21 +11,34 @@
  *
  */
 
-package config
+package utils
 
-import "os"
-
-var (
-	BK_SYSTEM_ID         = os.Getenv("BK_SYSTEM_ID")
-	BK_APP_CODE          = os.Getenv("BK_APP_CODE")
-	BK_APP_SECRET        = os.Getenv("BK_APP_SECRET")
-	BK_PAAS_HOST         = os.Getenv("BK_PAAS_HOST")
-	REDIS_PASSWORD       = os.Getenv("REDIS_PASSWORD")
-	BCS_APIGW_TOKEN      = os.Getenv("BCS_APIGW_TOKEN")
-	BCS_APIGW_PUBLIC_KEY = os.Getenv("BCS_APIGW_PUBLIC_KEY")
-	BCS_ETCD_HOST        = os.Getenv("bcsEtcdHost")
-	BKIAM_GATEWAY_SERVER = os.Getenv("BKIAM_GATEWAY_SERVER")
-	MONGO_ADDRESS        = os.Getenv("MONGO_ADDRESS")
-	MONGO_USERNAME       = os.Getenv("MONGO_USERNAME")
-	MONGO_PASSWORD       = os.Getenv("MONGO_PASSWORD")
+import (
+	"fmt"
+	"strings"
+	"time"
 )
+
+// JSONTime format time in json marshal
+type JSONTime struct {
+	time.Time
+}
+
+const timeLayout = "2006-01-02 15:04:05"
+
+// MarshalJSON marshal json
+func (t *JSONTime) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("\"%s\"", t.Time.Format(timeLayout))), nil
+}
+
+// UnmarshalJSON unmarshal json
+func (t *JSONTime) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\"")
+	if s == "null" {
+		t.Time = time.Time{}
+		return nil
+	}
+	var err error
+	t.Time, err = time.Parse(timeLayout, s)
+	return err
+}

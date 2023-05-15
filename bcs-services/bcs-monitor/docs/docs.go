@@ -80,6 +80,108 @@ const docTemplate = `{
                 }
             }
         },
+        "/log_collector/entrypoints": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "获取日志采集规则列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/logcollector.Entrypoint"
+                        }
+                    }
+                }
+            }
+        },
+        "/log_collector/rules": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "获取日志采集规则列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.LogCollector"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "创建日志采集规则",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/log_collector/rules/:name": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "获取日志采集规则详情",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.LogCollector"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "更新日志采集规则",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "删除日志采集规则",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
         "/memory_request_usage": {
             "get": {
                 "tags": [
@@ -401,7 +503,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/cpu_request_usage": {
+        "/nodes/:node/cpu_request_usage": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -417,7 +519,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/cpu_usage": {
+        "/nodes/:node/cpu_usage": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -433,7 +535,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/disk_usage": {
+        "/nodes/:node/disk_usage": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -449,7 +551,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/diskio_usage": {
+        "/nodes/:node/diskio_usage": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -465,7 +567,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/info": {
+        "/nodes/:node/info": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -481,7 +583,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/memory_request_usage": {
+        "/nodes/:node/memory_request_usage": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -497,7 +599,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/memory_usage": {
+        "/nodes/:node/memory_usage": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -513,7 +615,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/network_receive": {
+        "/nodes/:node/network_receive": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -529,7 +631,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/network_transmit": {
+        "/nodes/:node/network_transmit": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -545,7 +647,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/nodes/:ip/overview": {
+        "/nodes/:node/overview": {
             "get": {
                 "tags": [
                     "Metrics"
@@ -579,6 +681,179 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "entity.Expression": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "operator": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.LogCollector": {
+            "type": "object",
+            "properties": {
+                "add_pod_label": {
+                    "type": "boolean"
+                },
+                "cluster_id": {
+                    "type": "string"
+                },
+                "config": {
+                    "$ref": "#/definitions/entity.LogCollectorConfig"
+                },
+                "config_selected": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "$ref": "#/definitions/utils.JSONTime"
+                },
+                "creator": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "extra_labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "file_index_set_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "project_code": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "rule_id": {
+                    "type": "integer"
+                },
+                "std_index_set_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/utils.JSONTime"
+                },
+                "updator": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.LogCollectorConfig": {
+            "type": "object",
+            "properties": {
+                "all_containers": {
+                    "$ref": "#/definitions/entity.LogCollectorConfigAllContainers"
+                },
+                "label_selector": {
+                    "$ref": "#/definitions/entity.LogCollectorConfigSelector"
+                },
+                "workload": {
+                    "$ref": "#/definitions/entity.LogCollectorConfigWorkload"
+                }
+            }
+        },
+        "entity.LogCollectorConfigAllContainers": {
+            "type": "object",
+            "properties": {
+                "data_encoding": {
+                    "type": "string"
+                },
+                "enable_stdout": {
+                    "type": "boolean"
+                },
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "entity.LogCollectorConfigContainer": {
+            "type": "object",
+            "properties": {
+                "container_name": {
+                    "type": "string"
+                },
+                "data_encoding": {
+                    "type": "string"
+                },
+                "enable_stdout": {
+                    "type": "boolean"
+                },
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "entity.LogCollectorConfigSelector": {
+            "type": "object",
+            "properties": {
+                "data_encoding": {
+                    "type": "string"
+                },
+                "enable_stdout": {
+                    "type": "boolean"
+                },
+                "match_expressions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Expression"
+                    }
+                },
+                "match_labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "entity.LogCollectorConfigWorkload": {
+            "type": "object",
+            "properties": {
+                "containers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.LogCollectorConfigContainer"
+                    }
+                },
+                "kind": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "k8sclient.Container": {
             "type": "object",
             "properties": {
@@ -594,6 +869,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "logcollector.Entrypoint": {
+            "type": "object",
+            "properties": {
+                "file_log_url": {
+                    "type": "string"
+                },
+                "std_log_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.JSONTime": {
+            "type": "object",
+            "properties": {
+                "time.Time": {
                     "type": "string"
                 }
             }
