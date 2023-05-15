@@ -40,9 +40,9 @@
       },
       {
         validator: (value: string) => {
-          return /^[a-zA-Z0-9][a-zA-Z0-9_\-\.]*[a-zA-Z0-9]?$/.test(value)
+          return /^[a-zA-Z0-9_\-\.]+$/.test(value)
         },
-        message: '请使用英文、数字、下划线、中划线、点，且必须以英文、数字开头和结尾'
+        message: '请使用英文、数字、下划线、中划线或点'
       }
     ],
     path: [
