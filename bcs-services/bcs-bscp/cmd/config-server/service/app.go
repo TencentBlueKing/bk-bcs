@@ -250,7 +250,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 	return resp, nil
 }
 
-// ListAppsRest list apps with rest filter
+// ListAppsBySpaceRest list apps with rest filter
 func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsBySpaceRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppsResp)
