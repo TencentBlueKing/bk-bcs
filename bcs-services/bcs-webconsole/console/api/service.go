@@ -234,20 +234,20 @@ func (s *service) UploadHandler(c *gin.Context) {
 			writer.Close()
 			close(errChan)
 		}()
-		err := tarWriter.WriteHeader(&tar.Header{
+		e := tarWriter.WriteHeader(&tar.Header{
 			Name: file.Filename,
 			Size: file.Size,
 			Mode: 0644,
 		})
-		if err != nil {
-			logger.Errorf("writer tar header failed, err: %s", err.Error())
-			errChan <- err
+		if e != nil {
+			logger.Errorf("writer tar header failed, err: %s", e.Error())
+			errChan <- e
 			return
 		}
-		_, err = io.Copy(tarWriter, opened)
-		if err != nil {
-			logger.Errorf("writer tar from opened file failed, err: %s", err.Error())
-			errChan <- err
+		_, e = io.Copy(tarWriter, opened)
+		if e != nil {
+			logger.Errorf("writer tar from opened file failed, err: %s", e.Error())
+			errChan <- e
 			return
 		}
 		errChan <- nil

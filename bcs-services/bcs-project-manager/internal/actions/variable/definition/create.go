@@ -88,7 +88,7 @@ func (ca *CreateAction) createVariable() error {
 		Category:    vdm.VariableCategoryCustom,
 		CreateTime:  time.Now().Format(time.RFC3339),
 	}
-	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
+	if authUser, e := middleware.GetUserFromContext(ca.ctx); e == nil {
 		vd.Creator = authUser.GetUsername()
 	}
 	err = ca.tryGenerateIDAndDoCreate(vd)
