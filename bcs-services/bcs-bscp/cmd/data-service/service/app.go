@@ -135,6 +135,19 @@ func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pba
 	return pbapp.PbApp(app), nil
 }
 
+// GetAppByName get app by app name.
+func (s *Service) GetAppByName(ctx context.Context, req *pbds.GetAppByNameReq) (*pbapp.App, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	app, err := s.dao.App().GetByName(grpcKit, req.GetBizId(), req.GetAppName())
+	if err != nil {
+		logs.Errorf("get app by name failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errors.Wrapf(err, "query app by name %d", req.GetAppName())
+	}
+
+	return pbapp.PbApp(app), nil
+}
+
 // ListApps list apps by query condition.
 func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.ListAppsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)

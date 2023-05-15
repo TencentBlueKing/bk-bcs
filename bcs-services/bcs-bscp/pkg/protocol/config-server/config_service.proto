@@ -43,6 +43,11 @@ service Config {
             get: "/api/v1/config/get/app/app/app_id/{app_id}/biz_id/{biz_id}"
         };
     }
+    rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {
+        option (google.api.http) = {
+            get: "/api/v1/config/get/app/app/app_name/{app_name}/biz_id/{biz_id}"
+        };
+    }
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {
         option (google.api.http) = {
             post: "/api/v1/config/list/app/app/biz_id/{biz_id}"
@@ -418,6 +423,11 @@ message DeleteAppResp {}
 message GetAppReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
+}
+
+message GetAppByNameReq {
+    uint32 biz_id = 1;
+    string app_name = 2;
 }
 
 message ListAppsReq {

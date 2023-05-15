@@ -24,6 +24,7 @@ const (
 	Config_UpdateApp_FullMethodName                      = "/pbcs.Config/UpdateApp"
 	Config_DeleteApp_FullMethodName                      = "/pbcs.Config/DeleteApp"
 	Config_GetApp_FullMethodName                         = "/pbcs.Config/GetApp"
+	Config_GetAppByName_FullMethodName                   = "/pbcs.Config/GetAppByName"
 	Config_ListApps_FullMethodName                       = "/pbcs.Config/ListApps"
 	Config_ListAppsRest_FullMethodName                   = "/pbcs.Config/ListAppsRest"
 	Config_ListAppsBySpaceRest_FullMethodName            = "/pbcs.Config/ListAppsBySpaceRest"
@@ -80,6 +81,7 @@ type ConfigClient interface {
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
+	GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
@@ -168,6 +170,15 @@ func (c *configClient) DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...
 func (c *configClient) GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error) {
 	out := new(app.App)
 	err := c.cc.Invoke(ctx, Config_GetApp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
+	err := c.cc.Invoke(ctx, Config_GetAppByName_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -596,6 +607,7 @@ type ConfigServer interface {
 	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
+	GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
@@ -661,6 +673,9 @@ func (UnimplementedConfigServer) DeleteApp(context.Context, *DeleteAppReq) (*Del
 }
 func (UnimplementedConfigServer) GetApp(context.Context, *GetAppReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetApp not implemented")
+}
+func (UnimplementedConfigServer) GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAppByName not implemented")
 }
 func (UnimplementedConfigServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
@@ -880,6 +895,24 @@ func _Config_GetApp_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).GetApp(ctx, req.(*GetAppReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetAppByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAppByNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetAppByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetAppByName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetAppByName(ctx, req.(*GetAppByNameReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1734,6 +1767,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetApp",
 			Handler:    _Config_GetApp_Handler,
+		},
+		{
+			MethodName: "GetAppByName",
+			Handler:    _Config_GetAppByName_Handler,
 		},
 		{
 			MethodName: "ListApps",
