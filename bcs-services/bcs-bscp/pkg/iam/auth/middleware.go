@@ -185,28 +185,31 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			render.Render(w, r, rest.BadRequest(err))
 			return
 		}
+		kt.BizID = uint32(bizID)
 
-		// validate biz permission when user is not for test
-		if !strings.HasPrefix(kt.User, constant.BKUserForTestPrefix) {
-			req := &pbas.ResourceAttribute{
-				BizId:       uint32(bizID),
-				Basic:       &pbas.Basic{Type: string(sys.Business), Action: string(sys.BusinessViewResource), ResourceId: uint32(bizID)},
-				GenApplyUrl: true,
-			}
-
-			resp, err := a.authClient.CheckPermission(kt.RpcCtx(), req)
-			if err != nil {
-				render.Render(w, r, rest.BadRequest(err))
-				return
-			}
-
-			if !resp.IsAllowed {
-				render.Render(w, r, rest.PermissionDenied(errf.ErrPermissionDenied, resp))
-				return
-			}
+		// skip validate biz permission when user is for test
+		if strings.HasPrefix(kt.User, constant.BKUserForTestPrefix) {
+			ctx := kit.WithKit(r.Context(), kt)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
 		}
 
-		kt.BizID = uint32(bizID)
+		req := &pbas.ResourceAttribute{
+			BizId:       uint32(bizID),
+			Basic:       &pbas.Basic{Type: string(sys.Business), Action: string(sys.BusinessViewResource), ResourceId: uint32(bizID)},
+			GenApplyUrl: true,
+		}
+
+		resp, err := a.authClient.CheckPermission(kt.RpcCtx(), req)
+		if err != nil {
+			render.Render(w, r, rest.BadRequest(err))
+			return
+		}
+
+		if !resp.IsAllowed {
+			render.Render(w, r, rest.PermissionDenied(errf.ErrPermissionDenied, resp))
+			return
+		}
 		ctx := kit.WithKit(r.Context(), kt)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

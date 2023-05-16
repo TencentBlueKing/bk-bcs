@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"bscp.io/pkg/dal/table"
@@ -29,6 +30,10 @@ import (
 // CreateTemplateSpace create TemplateSpace.
 func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTemplateSpaceReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+
+	if _, err := s.dao.TemplateSpace().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("templateSpace name %s already exists", req.Spec.Name)
+	}
 
 	spec, err := req.Spec.TemplateSpaceSpec()
 	if err != nil {

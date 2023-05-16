@@ -39,6 +39,8 @@ type TemplateSpace interface {
 	List(kit *kit.Kit, opts *types.ListTemplateSpacesOption) (*types.ListTemplateSpaceDetails, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.TemplateSpace) error
+	// GetByName get templateSpace by name.
+	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error)
 }
 
 var _ TemplateSpace = new(templateSpaceDao)
@@ -253,4 +255,19 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 	}
 
 	return nil
+}
+
+// GetByName get by name
+func (dao *templateSpaceDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(),
+		" WHERE name = '", name, "' AND biz_id = ", strconv.Itoa(int(bizID)))
+	expr := filter.SqlJoint(sqlSentence)
+	one := new(table.TemplateSpace)
+	err := dao.orm.Do(dao.sd.Admin().DB()).Get(kit.Ctx, one, expr)
+	if err != nil {
+		return nil, fmt.Errorf("get app details failed, err: %v", err)
+	}
+
+	return one, nil
 }
