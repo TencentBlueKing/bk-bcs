@@ -182,19 +182,19 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 				Value: appIDs,
 			}},
 		}
-		laftpb, err := laft.MarshalPB()
-		if err != nil {
-			return nil, err
+		laftpb, e := laft.MarshalPB()
+		if e != nil {
+			return nil, e
 		}
 		laReq := &pbds.ListAppsReq{
 			BizId:  req.BizId,
 			Filter: laftpb,
 			Page:   &pbbase.BasePage{},
 		}
-		laResp, err := s.client.DS.ListApps(grpcKit.RpcCtx(), laReq)
-		if err != nil {
-			logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		laResp, e := s.client.DS.ListApps(grpcKit.RpcCtx(), laReq)
+		if e != nil {
+			logs.Errorf("list apps failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
 		}
 		for _, app := range laResp.Details {
 			appMap[app.Id] = app

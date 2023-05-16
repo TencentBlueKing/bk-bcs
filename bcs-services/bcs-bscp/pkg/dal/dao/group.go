@@ -276,8 +276,9 @@ func (dao *groupDao) ListAppGroups(kit *kit.Kit, bizID, appID uint32) ([]*table.
 
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(),
-		fmt.Sprintf(" WHERE biz_id = %d AND (public = true OR id IN (SELECT group_id FROM group_app_binds WHERE biz_id = %d AND app_id = %d))",
-			bizID, bizID, appID))
+		" WHERE biz_id = ", strconv.Itoa(int(bizID)), " AND (public = true OR id IN ",
+		"(SELECT group_id FROM group_app_binds WHERE biz_id = ", strconv.Itoa(int(bizID)),
+		" AND app_id =", strconv.Itoa(int(appID)), "))")
 	sql := filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Group, 0)
@@ -302,8 +303,9 @@ func (dao *groupDao) ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRl
 	var countSqlSentence []string
 	countSqlSentence = append(countSqlSentence, "SELECT COUNT(*) FROM ", table.AppTable.Name(), " a JOIN ",
 		table.ReleaseTable.Name(), " r ON a.id = r.app_id JOIN ", table.ReleasedGroupTable.Name(),
-		" g ON r.id = g.release_id AND a.id = g.app_id ", fmt.Sprintf(" WHERE g.group_id = %d ", opts.GroupID),
-		fmt.Sprintf(" AND a.biz_id = %d AND r.biz_id = %d AND g.biz_id = %d", opts.BizID, opts.BizID, opts.BizID),
+		" g ON r.id = g.release_id AND a.id = g.app_id ", " WHERE g.group_id = ", strconv.Itoa(int(opts.GroupID)),
+		" AND a.biz_id = ", strconv.Itoa(int(opts.BizID)), " AND r.biz_id = ", strconv.Itoa(int(opts.BizID)),
+		" AND g.biz_id = ", strconv.Itoa(int(opts.BizID)),
 	)
 	countSql := filter.SqlJoint(countSqlSentence)
 	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql)
@@ -315,9 +317,10 @@ func (dao *groupDao) ListGroupRleasesdApps(kit *kit.Kit, opts *types.ListGroupRl
 	sqlSentence = append(sqlSentence, "SELECT a.id AS app_id, a.name AS app_name, r.id AS release_id, ",
 		"r.name AS release_name, g.edited as edited ", " FROM ", table.AppTable.Name(), " a JOIN ",
 		table.ReleaseTable.Name(), " r ON a.id = r.app_id JOIN ", table.ReleasedGroupTable.Name(),
-		" g ON r.id = g.release_id AND a.id = g.app_id ", fmt.Sprintf(" WHERE g.group_id = %d ", opts.GroupID),
-		fmt.Sprintf(" AND a.biz_id = %d AND r.biz_id = %d AND g.biz_id = %d", opts.BizID, opts.BizID, opts.BizID),
-		fmt.Sprintf(" LIMIT %d, %d", opts.Start, opts.Limit),
+		" g ON r.id = g.release_id AND a.id = g.app_id ", " WHERE g.group_id = ", strconv.Itoa(int(opts.GroupID)),
+		" AND a.biz_id = ", strconv.Itoa(int(opts.BizID)), " AND r.biz_id = ", strconv.Itoa(int(opts.BizID)),
+		" AND g.biz_id = ", strconv.Itoa(int(opts.BizID)),
+		" LIMIT ", strconv.Itoa(int(opts.Start)), ", ", strconv.Itoa(int(opts.Limit)),
 	)
 	sql := filter.SqlJoint(sqlSentence)
 
