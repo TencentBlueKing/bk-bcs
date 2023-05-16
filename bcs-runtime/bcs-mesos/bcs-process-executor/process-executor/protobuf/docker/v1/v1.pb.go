@@ -6,9 +6,11 @@
 Package docker_spec_v1 is a generated protocol buffer package.
 
 It is generated from these files:
+
 	mesos/docker/v1.proto
 
 It has these top-level messages:
+
 	Label
 	ImageManifest
 */
