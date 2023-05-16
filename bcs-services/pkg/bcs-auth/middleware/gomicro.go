@@ -72,12 +72,6 @@ func (g *GoMicroAuth) AuthenticationFunc(fn server.HandlerFunc) server.HandlerFu
 			authUser.InnerClient = clientName
 		}
 
-		// parse username from header
-		username, ok := md.Get(CustomUsernameHeaderKey)
-		if ok {
-			authUser.Username = username
-		}
-
 		// parse jwt token from header
 		jwtToken, ok := md.Get(AuthorizationHeaderKey)
 		if ok {
@@ -85,6 +79,7 @@ func (g *GoMicroAuth) AuthenticationFunc(fn server.HandlerFunc) server.HandlerFu
 			if err != nil {
 				return err
 			}
+			// !NOTO: bk-apigw would set SubType to "user" even if use client's app code and secret
 			if u.SubType == jwt.User.String() {
 				authUser.Username = u.UserName
 			}
@@ -93,6 +88,14 @@ func (g *GoMicroAuth) AuthenticationFunc(fn server.HandlerFunc) server.HandlerFu
 			}
 			if len(u.BKAppCode) != 0 {
 				authUser.ClientName = u.BKAppCode
+			}
+		}
+
+		// If and only if client name from jwt token is not empty, we will check username in header
+		if authUser.ClientName != "" {
+			username, ok := md.Get(CustomUsernameHeaderKey)
+			if ok && username != "" {
+				authUser.Username = username
 			}
 		}
 
