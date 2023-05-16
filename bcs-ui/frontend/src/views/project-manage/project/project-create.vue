@@ -43,10 +43,13 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
+import { computed, defineComponent, ref, toRefs, watch } from 'vue';
 import useFormLabel from '@/composables/use-form-label';
 import useProjects from '@/views/project-manage/project/use-project';
 import { SPECIAL_REGEXP } from '@/common/constant';
+import $store from '@/store';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'ProjectCreate',
@@ -64,10 +67,9 @@ export default defineComponent({
       default: () => ({}),
     },
   },
-  setup: (props, ctx) => {
+  setup(props, ctx) {
     const { projectData, value } = toRefs(props);
     const { emit } = ctx;
-    const { $bkMessage, $i18n, $store } = ctx.root;
     const { updateProject, createProject } = useProjects();
     const bkFormRef = ref<any>(null);
     const formData = ref({
@@ -83,7 +85,7 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('请输入2-64字符，不能包含`~!@#$%^&*()_+<>?:"{},./;\'[]字符和空格'),
+          message: $i18n.t('项目名称校验提示语'),
           trigger: 'blur',
           validator(value) {
             return /^[\w\W]{2,64}$/g.test(value) && !SPECIAL_REGEXP.test(value);

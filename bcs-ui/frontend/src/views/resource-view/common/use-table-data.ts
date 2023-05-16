@@ -1,20 +1,19 @@
-import { SetupContext, ref } from '@vue/composition-api';
+import { ref } from 'vue';
 import { ISubscribeData } from './use-subscribe';
+import $store from '@/store';
 
 /**
  * 加载表格数据
  * @param ctx
  * @returns
  */
-export default function useTableData(ctx: SetupContext) {
+export default function useTableData() {
   const isLoading = ref(false);
   const data = ref<ISubscribeData>({
     manifestExt: {},
     manifest: {},
   });
   const webAnnotations = ref<any>({});
-
-  const { $store } = ctx.root;
 
   const fetchList = async (type: string, category: string, namespaceId: string, clusterId: string) => {
     const action = namespaceId ? 'dashboard/getTableData' : 'dashboard/getTableDataWithoutNamespace';

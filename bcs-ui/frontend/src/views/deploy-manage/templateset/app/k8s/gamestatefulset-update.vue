@@ -26,7 +26,7 @@
         <div class="tip">
           <i class="bcs-icon bcs-icon-alarm-insufficient" style="font-size: 16px;"></i>
           <span>
-            {{$t('此操作相当于kubectl patch gamestatefulset {name} -n {namespace} --type=\'json\' -p=\'\{文本中的内容\}\'',
+            {{$t('此操作相当于kubectl patch gamestatefulset {name} -n {namespace} --type=json -p={文本中的内容}',
                  { name: renderItem.name, namespace: renderItem.namespace })}}</span>
         </div>
       </div>

@@ -55,7 +55,7 @@ module.exports = {
               secure: false
           },
           '/bcsadmin/cvmcapacity': {
-            target: process.env.BK_BKSRE_HOST,
+            target: process.env.BK_SRE_HOST,
             changeOrigin: true,
             secure: false
           }

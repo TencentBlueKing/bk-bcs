@@ -14,7 +14,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import BcsContent from '@/components/layout/Content.vue';
 import { useProject } from '@/composables/use-app';
 

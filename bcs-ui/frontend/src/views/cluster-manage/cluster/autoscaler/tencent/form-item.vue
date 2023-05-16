@@ -36,7 +36,7 @@
         </template>
       </template>
       <span v-else-if="typeof autoscalerData[item.prop] === 'boolean'">
-        {{autoscalerData[item.prop] ? $t('是') : $t('否')}}
+        {{(item.invert ? !autoscalerData[item.prop] : autoscalerData[item.prop]) ? $t('是') : $t('否')}}
       </span>
       <span v-else>
         {{`${autoscalerData[item.prop]} ${item.unit || ''}`}}
@@ -47,7 +47,7 @@
   </bcs-form>
 </template>
 <script lang="ts">
-import { defineComponent, PropType } from '@vue/composition-api';
+import { defineComponent, PropType } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 import StatusIcon from '@/components/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';

@@ -35,7 +35,7 @@
   </bcs-navigation-menu>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch, computed, toRef, reactive } from '@vue/composition-api';
+import { defineComponent, ref, watch, computed, toRef, reactive } from 'vue';
 import $router from '@/router';
 import $store from '@/store';
 import { useProject } from '@/composables/use-app';

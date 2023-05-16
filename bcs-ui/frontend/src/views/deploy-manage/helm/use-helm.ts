@@ -20,9 +20,8 @@ import {
   chartReleases,
 } from '@/api/modules/helm';
 import { parseUrl } from '@/api/request';
-import { ref } from '@vue/composition-api';
+import Vue, { ref } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
-import Vue from 'vue';
 
 const { $bkMessage } = Vue.prototype;
 

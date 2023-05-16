@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <BcsContent>
     <template #header>
@@ -151,7 +152,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from '@vue/composition-api';
+import { defineComponent, computed, ref, onMounted } from 'vue';
 import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
@@ -181,8 +182,8 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props, ctx) {
-    const { clusterList } = useClusterList(ctx);
+  setup(props) {
+    const { clusterList } = useClusterList();
     const showLabels = ref(false);
     const showTaints = ref(false);
     const showUserScript = ref(false);
@@ -228,7 +229,7 @@ export default defineComponent({
         link: {
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         },
       },

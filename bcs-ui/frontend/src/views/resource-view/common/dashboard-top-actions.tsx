@@ -1,14 +1,14 @@
-import { defineComponent, computed } from '@vue/composition-api';
-
+import { defineComponent, computed, toRef, reactive } from 'vue';
+import $router from '@/router';
 import './dashboard-top-actions.css';
 
 export default defineComponent({
   name: 'DashboardTopActions',
-  setup(props, ctx) {
-    const { $router, $route } = ctx.root;
+  setup() {
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
-    const projectId = computed(() => $route.params.projectId).value;
-    const projectCode = computed(() => $route.params.projectCode).value;
+    const projectId = computed(() => $route.value.params.projectId).value;
+    const projectCode = computed(() => $route.value.params.projectCode).value;
 
     const goBCS = () => {
       $router.push({

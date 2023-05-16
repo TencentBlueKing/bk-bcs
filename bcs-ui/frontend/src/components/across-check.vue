@@ -52,7 +52,8 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
+import { computed, defineComponent, ref, toRefs, watch } from 'vue';
+import $i18n from '@/i18n/i18n-setup';
 export enum CheckType {
   Uncheck, // 0 未选
   HalfChecked, // 1 当前页半选
@@ -81,7 +82,6 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $i18n } = ctx.root;
     const isDropDownShow = ref(false);
     const { value } = toRefs(props);
     watch(value, () => {

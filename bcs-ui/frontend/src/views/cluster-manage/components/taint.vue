@@ -36,7 +36,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs, PropType } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, toRefs, PropType, watch } from 'vue';
 import useNode from '../node-list/use-node';
 import BcsTaints from './new-taints.vue';
 
@@ -81,6 +81,9 @@ export default defineComponent({
     const values = ref<IValueItem[]>([]);
     const taintRef = ref<any>(null);
 
+    watch(values, () => {
+      ctx.emit('data-change', values);
+    }, { deep: true });
     const { setNodeTaints } = useNode();
     // 提交数据
     const handleSubmit = async () => {

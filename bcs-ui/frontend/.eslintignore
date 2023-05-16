@@ -4,3 +4,5 @@ webpack_cache/
 node_modules/
 ip-selector.js
 bk.config.js
+vue-i18n-extract.js
+.eslintrc.js

@@ -1,4 +1,4 @@
-import { Ref, computed, ComputedRef, ref } from '@vue/composition-api';
+import { Ref, computed, ComputedRef, ref } from 'vue';
 import { padIPv6, validateIPv6 } from '@/common/util';
 
 export interface ITableSeachResult {
@@ -12,7 +12,7 @@ export interface ITableSeachResult {
  * @param keys
  * @returns
  */
-export default function useTableSearch(data: Ref<any[]>, keys: Ref<any[]>): ITableSeachResult {
+export default function useTableSearch(data: Ref<any[]>, keys: Ref<string[]>): ITableSeachResult {
   const searchValue = ref('');
   const tableDataMatchSearch = computed(() => {
     if (!searchValue.value) return data.value;

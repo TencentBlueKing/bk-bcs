@@ -1,5 +1,5 @@
 import { useCluster } from '@/composables/use-app';
-import { ref, computed, onBeforeMount } from '@vue/composition-api';
+import { ref, computed, onBeforeMount } from 'vue';
 import $store from '@/store';
 
 export type ClusterType = 'independent' | 'all';

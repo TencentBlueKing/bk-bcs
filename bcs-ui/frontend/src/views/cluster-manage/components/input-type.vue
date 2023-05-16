@@ -47,7 +47,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, getCurrentInstance } from 'vue';
 
 export default defineComponent({
   model: {
@@ -85,14 +85,17 @@ export default defineComponent({
     const handleEnter = () => {
       ctx.emit('enter');
     };
+    const { proxy } = getCurrentInstance() || { proxy: null };
     const focus = () => {
+      const $refs = proxy?.$refs || {};
       setTimeout(() => {
-        ctx.refs.inputRef && (ctx.refs.inputRef as any).focus();
+        $refs.inputRef && ($refs.inputRef as any).focus();
       }, 0);
     };
 
     onMounted(() => {
-      const popper = (ctx.refs.selectRef as any)?.$refs?.selectDropdown?.instance?.popper;
+      const $refs = proxy?.$refs || {};
+      const popper = ($refs.selectRef as any)?.$refs?.selectDropdown?.instance?.popper;
       popup.value = popper;
     });
 

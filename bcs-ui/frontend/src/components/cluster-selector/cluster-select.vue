@@ -26,8 +26,8 @@
         :id="item.clusterID"
         :name="item.clusterName">
         <div class="flex flex-col justify-center h-[50px] px-[12px]">
-          <span class="leading-none bcs-ellipsis">{{ item.clusterName }}</span>
-          <span class="leading-none mt-[8px] text-[#979BA5]">{{ item.clusterID }}</span>
+          <span class="leading-6 bcs-ellipsis" v-bk-overflow-tips>{{ item.clusterName }}</span>
+          <span class="leading-4 text-[#979BA5]">{{ item.clusterID }}</span>
         </div>
       </bcs-option>
     </bcs-option-group>
@@ -49,7 +49,7 @@
         :id="item.clusterID"
         :name="item.clusterName">
         <div class="flex flex-col justify-center h-[50px] px-[12px]">
-          <span class="leading-none bcs-ellipsis">{{ item.clusterName }}</span>
+          <span class="leading-none bcs-ellipsis" v-bk-overflow-tips>{{ item.clusterName }}</span>
           <span class="leading-none mt-[8px] text-[#979BA5]">{{ item.clusterID }}</span>
         </div>
       </bcs-option>
@@ -57,7 +57,7 @@
   </bcs-select>
 </template>
 <script lang="ts">
-import { defineComponent, watch, toRefs, PropType } from '@vue/composition-api';
+import {  defineComponent, watch, toRefs, PropType } from 'vue';
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
 
@@ -124,7 +124,6 @@ export default defineComponent({
 <style lang="postcss" scoped>
 .cluster-select {
     width: 254px;
-    max-width: 600px;
     &:not(.is-disabled) {
       background-color: #fff;
     }

@@ -161,7 +161,7 @@ export default {
         .layout-left {
             flex: 0 0 180px;
             position: relative;
-            padding: 40px 0;
+            padding: 20px 0;
             background: #fafbfd;
             &::after {
                 position: absolute;
@@ -175,7 +175,7 @@ export default {
         }
         .layout-right {
             flex: 1;
-            padding: 45px;
+            padding: 20px 30px 50px 45px;
         }
         .version-wraper {
             overflow-y: hidden;

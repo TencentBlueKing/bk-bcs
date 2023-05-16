@@ -28,6 +28,14 @@ export const clusterNodeOverview = request('get', '/nodes/$nodeIP/overview');
 export const clusterPodMetric = request('post', '/namespaces/$namespaceId/pods/$metric');
 export const clusterContainersMetric = request('get', '/namespaces/$namespaceId/pods/$podId/containers/$containerId/$metric');
 
+// service monitor
+export const getServiceMonitor = request('get', '/service_monitors');
+export const getServiceMonitorDetail = request('get', '/namespaces/$namespaceId/service_monitors/$name');
+export const createServiceMonitor = request('post', '/namespaces/$namespaceId/service_monitors');
+export const updateServiceMonitor = request('put', '/namespaces/$namespaceId/service_monitors/$name');
+export const deleteServiceMonitor = request('delete', '/namespaces/$namespaceId/service_monitors/$name');
+export const batchDeleteServiceMonitor = request('post', '/service_monitors/batchdelete');
+
 const LOG_API_URL = '/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId';
 const request2 = createRequest({
   domain: window.BCS_API_HOST,

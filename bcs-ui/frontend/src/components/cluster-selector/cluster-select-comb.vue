@@ -25,8 +25,9 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { PropType, defineComponent } from 'vue';
 import ClusterSelect from './cluster-select.vue';
+import { ClusterType } from './use-cluster-selector';
 
 export default defineComponent({
   name: 'ClusterSelectComb',
@@ -44,11 +45,11 @@ export default defineComponent({
     clusterId: String,
     search: String,
     clusterType: {
-      type: String,
+      type: String as PropType<ClusterType>,
       default: 'independent',
     },
   },
-  emits: ['cluster-change', 'search-change', 'search-enter', 'refresh'],
+  emits: ['cluster-change', 'search-change', 'search-enter', 'refresh', 'update:clusterId', 'update:search'],
   setup(props, ctx) {
     const handleClusterChange = (clusterID) => {
       ctx.emit('update:clusterId', clusterID);

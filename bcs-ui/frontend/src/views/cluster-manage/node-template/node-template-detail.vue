@@ -82,10 +82,12 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 import $store from '@/store/index';
 import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   props: {
@@ -100,7 +102,6 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $bkInfo, $bkMessage } = ctx.root;
     const loading = ref(false);
     const curProject = computed(() => $store.state.curProject);
     const user = computed(() => $store.state.user);

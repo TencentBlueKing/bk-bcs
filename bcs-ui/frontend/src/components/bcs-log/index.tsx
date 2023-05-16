@@ -1,8 +1,9 @@
 /* eslint-disable no-unused-expressions */
-import { defineComponent, reactive, toRefs, ref, watch, onBeforeUnmount } from '@vue/composition-api';
+import { defineComponent, reactive, toRefs, ref, watch, onBeforeUnmount } from 'vue';
 import LogHeader from './layout/log-header';
 import LogContent, { ILogData } from './layout/log-content';
 import './style/log.css';
+import $store from '@/store';
 
 interface IState {
   log: ILogData[]; // 日志内容
@@ -55,7 +56,7 @@ export default defineComponent({
       default: false,
     },
   },
-  setup(props, ctx) {
+  setup(props) {
     const contentRef = ref<any>(null);
     const state = reactive<IState>({
       log: [], // 日志内容
@@ -67,8 +68,6 @@ export default defineComponent({
       step: 4,
       showLastContainer: false,
     });
-
-    const { $store } = ctx.root;
 
     const getParams = () => ({
       $projectId: props.projectId,

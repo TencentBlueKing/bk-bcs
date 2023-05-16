@@ -84,7 +84,7 @@
     <!-- 独立集群使用案例 -->
     <div class="user-token-example" v-if="data.length">
       <div class="example-item">
-        <div class="title total-title">{{$t('独立集群kubectl与BCS API使用示例')}}:</div>
+        <div class="title total-title">{{$t('独立集群/托管集群 kubectl 与 BCS API 使用示例')}}:</div>
         <div class="code-wrapper">
           <p>kubectl:</p>
           <br>
@@ -181,6 +181,7 @@
           <bcs-input
             type="number"
             :min="1"
+            :max="1000"
             :precision="0"
             :show-controls="false"
             class="custom-input"
@@ -223,13 +224,17 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from '@vue/composition-api';
+import { defineComponent, ref, computed, onMounted, toRef, reactive } from 'vue';
 import StatusIcon from '@/components/status-icon';
 import { copyText, renderTemplate } from '@/common/util';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import clusterDemoConfig from 'text-loader?modules!./cluster-demo.yaml';
 import shareClusterDemoConfig from 'text-loader?modules!./share-cluster-demo.yaml';
+import $store from '@/store';
+import $router from '@/router';
+import $bkMessage from '@/common/bkmagic';
+import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
   name: 'UserToken',
@@ -237,8 +242,8 @@ export default defineComponent({
   directives: {
     'full-screen': fullScreen,
   },
-  setup(props, ctx) {
-    const { $router, $i18n, $store, $bkMessage, $route } = ctx.root;
+  setup() {
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
     const goBack = () => {
       $router.back();
     };
@@ -252,8 +257,8 @@ export default defineComponent({
     const user = computed(() => $store.state.user);
     // 使用案例
     const projectID = computed(() => {
-      const list = $store.state.projectList || [];
-      const { projectCode } = $route.params;
+      const list: any[] = $store.state.projectList || [];
+      const { projectCode } = $route.value.params;
       // eslint-disable-next-line camelcase
       return list.find(item => item.project_code === projectCode)?.project_id;
     });
@@ -520,7 +525,7 @@ export default defineComponent({
         min-width: 80px;
     }
     .custom-input {
-        width: 80px;
+        width: 100px;
         margin-left: -1px;
         >>> input {
             padding: 0 4px !important;

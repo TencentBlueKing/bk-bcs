@@ -86,11 +86,14 @@
   </section>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed, watch } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, computed, watch } from 'vue';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import KeyValue from '@/components/key-value.vue';
 import useFormLabel from '@/composables/use-form-label';
 import $router from '@/router';
+import $store from '@/store';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'CreateFormCluster',
@@ -98,8 +101,7 @@ export default defineComponent({
     IpSelector,
     KeyValue,
   },
-  setup(props, ctx) {
-    const { $i18n, $bkMessage, $store } = ctx.root;
+  setup() {
     const basicFormRef = ref<any>(null);
     const basicInfo = ref<{
       clusterName: string;

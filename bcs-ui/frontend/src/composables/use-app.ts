@@ -1,4 +1,4 @@
-import { computed, ref } from '@vue/composition-api';
+import { computed, ref } from 'vue';
 import $store from '@/store';
 /**
  * 获取项目文档配置信息
@@ -15,7 +15,7 @@ export function useConfig() {
   };
 }
 
-
+// todo 完善类型
 export interface IProject {
   name: string
   businessID: string
@@ -24,20 +24,37 @@ export interface IProject {
   projectCode: string
   description: string
   kind: string
-  project_name: string // 兼容旧版数据
+  project_name: string // 兼容旧版数据（不要再使用）
   project_id: string // 兼容旧版数据
+}
+// todo 完善类型
+export interface ICluster {
+  clusterID: string
+  clusterName: string
+  status: 'INITIALIZATION' | 'DELETING'
+  clusterCategory: string
+  providerType: string
+  networkSettings: any
+  master: any
+  clusterBasicSettings: any
+  manageType: 'INDEPENDENT_CLUSTER' | 'MANAGED_CLUSTER'
+  is_shared: boolean
+  cluster_id: string // 兼容旧版数据（不要再使用）
 }
 /**
  * 获取项目相关配置
  */
 export function useProject() {
-  const curProject = computed(() => $store.state.curProject);
-  const projectID = computed<string>(() => curProject.value?.project_id);
+  const curProject = computed<IProject>(() => $store.state.curProject as any);
+  const projectID = computed<string>(() => curProject.value?.projectID);
   // todo 详情接口会丢失project_code
-  const projectCode = computed<string>(() => curProject.value?.project_code || $store.getters.curProjectCode);
+  const projectCode = computed<string>(() => curProject.value?.projectCode || $store.getters.curProjectCode);
   const projectList = computed<any[]>(() => $store.state.projectList || []);
+  const isMaintainer = computed(() => ($store.state.cluster.maintainers as string[])
+    .includes($store.state.user.username));
 
   return {
+    isMaintainer,
     curProject,
     projectID,
     projectCode,
@@ -49,11 +66,10 @@ export function useProject() {
  * 获取集群相关信息
  */
 export function useCluster() {
-  const curCluster = computed(() => $store.state.curCluster || {});
+  const curCluster = computed<Partial<ICluster>>(() => $store.state.curCluster || {});
   const curClusterId = computed<string>(() => $store.getters.curClusterId);
   const isSharedCluster = computed<boolean>(() => $store.state.curCluster?.is_shared);
-  const clusterList = computed<any[]>(() => $store.state.cluster.clusterList || []);
-
+  const clusterList = computed<Partial<ICluster>[]>(() => $store.state.cluster.clusterList || []);
 
   const { projectID } = useProject();
   const terminalWins = ref<Window | null>(null);

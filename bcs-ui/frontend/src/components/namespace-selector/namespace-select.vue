@@ -17,7 +17,7 @@
   </bcs-select>
 </template>
 <script lang="ts">
-import { defineComponent, watch, toRefs, computed } from '@vue/composition-api';
+import { defineComponent, watch, toRefs, computed } from 'vue';
 import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 import $store from '@/store';
 

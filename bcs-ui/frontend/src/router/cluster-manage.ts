@@ -2,9 +2,9 @@ import { RouteConfig } from 'vue-router';
 // 集群首页
 const Cluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/index.vue');
 // 创建集群
-const ClusterCreate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-cluster.vue');
+const ClusterCreate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/cluster-type.vue');
 // 表单模式
-const CreateFormCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-form-cluster.vue');
+const CreateFormCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/add-cluster.vue');
 // ee版本创建集群流程
 const CreateFormClusterEE = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-form-cluster-ee.vue');
 // import模式
@@ -40,7 +40,7 @@ export default [
     component: ClusterCreate,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('新建集群'),
+      title: window.i18n.t('添加集群'),
     },
   },
   // 创建集群 - 表单模式
@@ -50,7 +50,6 @@ export default [
     component: window.REGION === 'ieod' ? CreateFormCluster : CreateFormClusterEE,
     meta: {
       menuId: 'CLUSTER',
-      title: window.i18n.t('自建集群'),
     },
   },
   // 创建集群 - import导入模式
