@@ -162,6 +162,7 @@ type ConfigItemMetaV1 struct {
 	RepositoryPath       string                     `json:"repositoryPath"`
 }
 
+// PbFileMeta returns the pb file meta.
 func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
 	return &pbfs.FileMeta{
 		Id:       cim.ID,

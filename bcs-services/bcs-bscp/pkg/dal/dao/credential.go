@@ -300,8 +300,8 @@ func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *sharding.Tx, bi
 	var sqlSentence []string
 	now := time.Now().Format(constant.TimeStdFormat)
 	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(),
-		" SET updated_at = :updated_at, reviser = :reviser",
-		fmt.Sprintf(" WHERE id = %d AND biz_id = %d", id, bizID))
+		" SET updated_at = :updated_at, reviser = :reviser"+
+			" WHERE id = ", strconv.Itoa(int(id)), " AND biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	toUpdate := map[string]interface{}{
