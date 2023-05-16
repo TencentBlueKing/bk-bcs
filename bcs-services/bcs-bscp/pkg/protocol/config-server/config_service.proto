@@ -1,0 +1,906 @@
+syntax = "proto3";
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
+import "bscp.io/pkg/protocol/core/app/app.proto";
+import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
+import "bscp.io/pkg/protocol/core/content/content.proto";
+import "bscp.io/pkg/protocol/core/commit/commit.proto";
+import "bscp.io/pkg/protocol/core/release/release.proto";
+import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
+import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
+import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
+import "bscp.io/pkg/protocol/core/hook/hook.proto";
+import "bscp.io/pkg/protocol/core/instance/instance.proto";
+import "bscp.io/pkg/protocol/core/credential/credential.proto";
+import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+package pbcs;
+
+option go_package = "bscp.io/pkg/protocol/config-server;pbcs";
+
+service Config {
+    rpc CreateApp(CreateAppReq) returns (CreateAppResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/app/app/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc UpdateApp(UpdateAppReq) returns (UpdateAppResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc DeleteApp(DeleteAppReq) returns (DeleteAppResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/delete/app/app/app_id/{id}/biz_id/{biz_id}"
+        };
+    }
+    rpc GetApp(GetAppReq) returns (pbapp.App) {
+        option (google.api.http) = {
+            get: "/api/v1/config/get/app/app/app_id/{app_id}/biz_id/{biz_id}"
+        };
+    }
+    rpc ListApps(ListAppsReq) returns (ListAppsResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/app/app/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    // 获取用户有权限的 spaces 所有的 apps
+    rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/apps"
+        };
+    }
+    // 按 space 查询 app 信息
+    rpc ListAppsBySpaceRest(ListAppsBySpaceRestReq) returns (ListAppsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/list/app/app/biz_id/{biz_id}"
+        };
+    }
+
+    rpc CreateConfigItem(CreateConfigItemReq) returns (CreateConfigItemResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc UpdateConfigItem(UpdateConfigItemReq) returns (UpdateConfigItemResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/update/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc DeleteConfigItem(DeleteConfigItemReq) returns (DeleteConfigItemResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+        };
+    }
+    rpc GetConfigItem(GetConfigItemReq) returns (GetConfigItemResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items/{config_item_id}"
+        };
+    }
+    rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"
+        };
+    }
+    rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/config_item_count/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc CreateContent(CreateContentReq) returns (CreateContentResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/content/content/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc ListContents(ListContentsReq) returns (ListContentsResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/content/content/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc CreateCommit(CreateCommitReq) returns (CreateCommitResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/commit/commit/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc ListCommits(ListCommitsReq) returns (ListCommitsResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/commit/commit/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc CreateRelease(CreateReleaseReq) returns (CreateReleaseResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases"
+        };
+    }
+    rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/release/config_item/release_id/{release_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc CreateStrategySet(CreateStrategySetReq) returns (CreateStrategySetResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/strategy_set/strategy_set/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc UpdateStrategySet(UpdateStrategySetReq) returns (UpdateStrategySetResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/update/strategy_set/strategy_set/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc DeleteStrategySet(DeleteStrategySetReq) returns (DeleteStrategySetResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/delete/strategy_set/strategy_set/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+        };
+    }
+    rpc ListStrategySets(ListStrategySetsReq) returns (ListStrategySetsResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/strategy_set/strategy_set/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc CreateStrategy(CreateStrategyReq) returns (CreateStrategyResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/strategy/strategy/strategy_set_id/{strategy_set_id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc UpdateStrategy(UpdateStrategyReq) returns (UpdateStrategyResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/update/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc DeleteStrategy(DeleteStrategyReq) returns (DeleteStrategyResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/delete/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+        };
+    }
+    rpc ListStrategies(ListStrategiesReq) returns (ListStrategiesResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/strategy/strategy/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks"
+            body: "*"
+        };
+    }
+    rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"
+        };
+    }
+    rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"
+            body: "*"
+        };
+    }
+    rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/list"
+            body: "*"
+        };
+    }
+
+    rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/biz/{biz_id}/groups"
+            body: "*"
+        };
+    }
+    rpc DeleteGroup(DeleteGroupReq) returns (DeleteGroupResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
+        };
+    }
+    rpc UpdateGroup(UpdateGroupReq) returns (UpdateGroupResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/biz/{biz_id}/groups/{group_id}"
+            body: "*"
+        };
+    }
+    rpc ListAllGroups(ListAllGroupsReq) returns (ListAllGroupsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/groups"
+        };
+    }
+    rpc ListAppGroups(ListAppGroupsReq) returns (ListAppGroupsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/groups"
+        };
+    }
+    rpc ListGroupReleasedApps(ListGroupReleasedAppsReq) returns (ListGroupReleasedAppsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/groups/{group_id}/released_apps"
+        };
+    }
+
+    rpc Publish(PublishReq) returns (PublishResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/update/strategy/publish/publish/release_id/{release_id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc FinishPublish(FinishPublishReq) returns (FinishPublishResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/update/strategy/publish/finish/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc ListPublishedStrategyHistories(ListPubStrategyHistoriesReq) returns (ListPubStrategyHistoriesResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/strategy/publish/history/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc PublishInstance(PublishInstanceReq) returns (PublishInstanceResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/create/instance/publish/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc DeletePublishedInstance(DeletePublishedInstanceReq) returns (DeletePublishedInstanceResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/delete/instance/publish/id/{id}/app_id/{app_id}/biz_id/{biz_id}"
+        };
+    }
+    rpc ListPublishedInstance(ListPublishedInstanceReq) returns (ListPublishedInstanceResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/list/instance/publish/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
+    rpc CreateCredentials(CreateCredentialReq) returns (CreateCredentialResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/biz_id/{biz_id}/credentials"
+            body: "*"
+        };
+    }
+    rpc ListCredentials(ListCredentialsReq) returns (ListCredentialsResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz_id/{biz_id}/credentials"
+        };
+    }
+    rpc DeleteCredential(DeleteCredentialsReq) returns (DeleteCredentialsResp) {
+        option (google.api.http) = {
+            delete: "/api/v1/config/biz_id/{biz_id}/credential"
+        };
+    }
+    rpc UpdateCredential(UpdateCredentialsReq) returns (UpdateCredentialsResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/biz_id/{biz_id}/credential"
+            body: "*"
+        };
+    }
+
+    rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scopes"
+        };
+    }
+    rpc UpdateCredentialScope(UpdateCredentialScopeReq) returns (UpdateCredentialScopeResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope"
+            body: "*"
+        };
+    }
+}
+
+message UpdateCredentialScopeReq {
+    repeated uint32 del_id                     = 1;
+    repeated string add_scope                  = 2;
+    uint32 biz_id                              = 3;
+    uint32 credential_id                       = 4;
+    repeated pbcrs.UpdateScopeSpec alter_scope = 5;
+}
+
+message UpdateCredentialScopeResp {}
+
+message ListCredentialScopesReq {
+    uint32 biz_id        = 1;
+    uint32 credential_id = 2;
+}
+
+message ListCredentialScopesResp {
+    uint32 count                               = 1;
+    repeated pbcrs.CredentialScopeList details = 2;
+}
+
+message EnableCredentialsReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    bool enable   = 3;
+}
+
+message EnableCredentialsResp {}
+
+message DeleteCredentialsReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+}
+
+message DeleteCredentialsResp {}
+message UpdateCredentialsReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    bool enable   = 3;
+    string memo   = 4;
+}
+
+message UpdateCredentialsResp {}
+
+message ListCredentialsReq {
+    uint32 biz_id    = 1;
+    string searchKey = 2;
+    uint32 start     = 3;
+    uint32 limit     = 4;
+}
+
+message ListCredentialsResp {
+    uint32 count                                 = 1;
+    repeated pbcredential.CredentialList details = 2;
+}
+
+message CreateCredentialReq {
+    string memo           = 1;
+    uint32 biz_id         = 2;
+    repeated string scope = 3;
+}
+
+message CreateCredentialResp {
+    uint32 id = 1;
+}
+
+message CreateAppReq {
+    uint32 biz_id           = 1;
+    string name             = 2;
+    string config_type      = 3;  // config_type is enum type, source resource reference: pkg/dal/table/app.go
+    string mode             = 4;  // deploy_type is enum type, source resource reference: pkg/dal/table/app.go
+    string memo             = 5;
+    string reload_type      = 6;
+    string reload_file_path = 7;
+}
+
+message CreateAppResp {
+    uint32 id = 1;
+}
+
+message UpdateAppReq {
+    uint32 id               = 1;
+    uint32 biz_id           = 2;
+    string name             = 3;
+    string memo             = 4;
+    string reload_type      = 5;
+    string reload_file_path = 6;
+}
+
+message UpdateAppResp {}
+
+message DeleteAppReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+}
+
+message DeleteAppResp {}
+
+message GetAppReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ListAppsReq {
+    uint32 biz_id                 = 1;
+    google.protobuf.Struct filter = 2;
+    pbbase.BasePage page          = 3;
+}
+
+message ListAppsRestReq {
+    uint32 biz_id   = 1;
+    uint32 start    = 2;
+    uint32 limit    = 3;
+    string operator = 4;
+    string name     = 5;
+}
+
+message ListAppsBySpaceRestReq {
+    uint32 biz_id   = 1;
+    uint32 start    = 2;
+    uint32 limit    = 3;
+    string operator = 4;
+    string name     = 5;
+}
+
+message ListAppsResp {
+    uint32 count               = 1;
+    repeated pbapp.App details = 2;
+}
+
+message CreateConfigItemReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    string name       = 3;
+    string path       = 4;
+    string file_type  = 5;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
+    string file_mode  = 6;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+    string memo       = 7;
+    string user       = 8;
+    string user_group = 9;
+    string privilege  = 10;
+    string sign       = 11;
+    uint64 byte_size  = 12;
+}
+
+message CreateConfigItemResp {
+    uint32 id = 1;
+}
+
+message UpdateConfigItemReq {
+    uint32 id         = 1;
+    uint32 biz_id     = 2;
+    uint32 app_id     = 3;
+    string name       = 4;
+    string path       = 5;
+    string file_type  = 6;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
+    string file_mode  = 7;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+    string memo       = 8;
+    string user       = 9;
+    string user_group = 10;
+    string privilege  = 11;
+    string sign       = 12;
+    uint64 byte_size  = 13;
+}
+
+message UpdateConfigItemResp {}
+
+message DeleteConfigItemReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
+}
+
+message DeleteConfigItemResp {}
+
+message GetConfigItemReq {
+    uint32 biz_id         = 1;
+    uint32 config_item_id = 2;
+    uint32 app_id         = 3;
+    uint32 release_id     = 4;
+}
+
+message GetConfigItemResp {
+    pbci.ConfigItem config_item   = 1;
+    pbcontent.ContentSpec content = 2;
+}
+
+message ListConfigItemsReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+    uint32 start      = 4;
+    uint32 limit      = 5;
+}
+
+message ListConfigItemsResp {
+    uint32 count                     = 1;
+    repeated pbci.ConfigItem details = 2;
+}
+
+message ListConfigItemCountReq {
+    uint32 biz_id          = 1;
+    repeated uint32 app_id = 2;
+}
+
+message ListConfigItemCountResp {
+    repeated pbci.ListConfigItemCounts details = 1;
+}
+
+message CreateContentReq {
+    uint32 biz_id         = 1;
+    uint32 app_id         = 2;
+    uint32 config_item_id = 3;
+    string sign           = 4;
+    uint64 byte_size      = 5;
+}
+
+message CreateContentResp {
+    uint32 id = 1;
+}
+
+message ListContentsReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListContentsResp {
+    uint32 count                       = 1;
+    repeated pbcontent.Content details = 2;
+}
+
+message CreateCommitReq {
+    uint32 biz_id         = 1;
+    uint32 app_id         = 2;
+    uint32 config_item_id = 3;
+    uint32 content_id     = 4;
+    string memo           = 5;
+}
+
+message CreateCommitResp {
+    uint32 id = 1;
+}
+
+message ListCommitsReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListCommitsResp {
+    uint32 count                     = 1;
+    repeated pbcommit.Commit details = 2;
+}
+
+message CreateReleaseReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    string name   = 3;
+    string memo   = 4;
+}
+
+message CreateReleaseResp {
+    uint32 id = 1;
+}
+
+message ListReleasesReq {
+    uint32 biz_id    = 1;
+    uint32 app_id    = 2;
+    string searchKey = 3;
+    uint32 start     = 4;
+    uint32 limit     = 5;
+    bool all         = 6;
+    bool deprecated  = 7;
+}
+
+message ListReleasesResp {
+    uint32 count                       = 1;
+    repeated pbrelease.Release details = 2;
+}
+
+message ListReleasedConfigItemsReq {
+    uint32 biz_id     = 1;
+    uint32 release_id = 2;
+    // serial number 3 is reserved for later added filter fields
+    pbbase.BasePage page = 4;
+}
+
+message ListReleasedConfigItemsResp {
+    uint32 count                              = 1;
+    repeated pbrci.ReleasedConfigItem details = 2;
+}
+
+message CreateStrategySetReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    string name   = 3;
+    string memo   = 4;
+}
+
+message CreateStrategySetResp {
+    uint32 id = 1;
+}
+
+message UpdateStrategySetReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    uint32 id     = 3;
+    string name   = 4;
+    string memo   = 5;
+}
+
+message UpdateStrategySetResp {}
+
+message DeleteStrategySetReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
+}
+
+message DeleteStrategySetResp {}
+
+message ListStrategySetsReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListStrategySetsResp {
+    uint32 count                      = 1;
+    repeated pbss.StrategySet details = 2;
+}
+
+message CreateStrategyReq {
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 strategy_set_id = 3;
+    uint32 release_id      = 4;
+    bool as_default        = 5;
+    string name            = 6;
+    repeated uint32 groups = 7;
+    string namespace       = 8;
+    string memo            = 9;
+}
+
+message CreateStrategyResp {
+    uint32 id = 1;
+}
+
+message UpdateStrategyReq {
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 id              = 3;
+    uint32 release_id      = 4;
+    bool as_default        = 5;
+    string name            = 6;
+    repeated uint32 groups = 7;
+    string memo            = 8;
+}
+
+message UpdateStrategyResp {}
+
+message DeleteStrategyReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
+}
+
+message DeleteStrategyResp {}
+
+message ListStrategiesReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListStrategiesResp {
+    uint32 count                         = 1;
+    repeated pbstrategy.Strategy details = 2;
+}
+
+message CreateHookReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+    string name       = 4;
+    string pre_type   = 5;
+    string pre_hook   = 6;
+    string post_type  = 7;
+    string post_hook  = 8;
+}
+
+message CreateHookResp {
+    uint32 id = 1;
+}
+
+message UpdateHookReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 hook_id    = 3;
+    uint32 release_id = 4;
+    string name       = 5;
+    string pre_type   = 6;
+    string pre_hook   = 7;
+    string post_type  = 8;
+    string post_hook  = 9;
+}
+
+message UpdateHookResp {
+}
+
+message DeleteHookReq {
+    uint32 biz_id  = 1;
+    uint32 app_id  = 2;
+    uint32 hook_id = 3;
+}
+
+message DeleteHookResp {}
+
+message ListHooksReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListHooksResp {
+    uint32 count                 = 1;
+    repeated pbhook.Hook details = 2;
+}
+
+message CreateGroupReq {
+    uint32 biz_id                   = 1;
+    string name                     = 2;
+    bool public                     = 3;
+    repeated uint32 bind_apps       = 4;
+    string mode                     = 5;
+    google.protobuf.Struct selector = 6;
+    string uid                      = 7;
+}
+
+message CreateGroupResp {
+    uint32 id = 1;
+}
+
+message UpdateGroupReq {
+    uint32 biz_id                   = 1;
+    uint32 group_id                 = 2;
+    string name                     = 3;
+    bool public                     = 4;
+    repeated uint32 bind_apps       = 5;
+    string mode                     = 6;
+    google.protobuf.Struct selector = 7;
+    string uid                      = 8;
+}
+
+message UpdateGroupResp {}
+
+message DeleteGroupReq {
+    uint32 biz_id   = 1;
+    uint32 group_id = 2;
+}
+
+message DeleteGroupResp {}
+
+message ListAllGroupsReq {
+    uint32 biz_id = 1;
+}
+
+message ListAllGroupsResp {
+    message ListAllGroupsData {
+        uint32 id                       = 1;
+        string name                     = 2;
+        bool public                     = 3;
+        repeated string bind_apps       = 4;
+        google.protobuf.Struct selector = 5;
+        uint32 released_apps_num        = 6;
+        bool edited                     = 7;
+    }
+    repeated ListAllGroupsData details = 1;
+}
+
+message ListAppGroupsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ListAppGroupsResp {
+    message ListAppGroupsData {
+        uint32 group_id                     = 1;
+        string group_name                   = 2;
+        uint32 release_id                   = 3;
+        string release_name                 = 4;
+        google.protobuf.Struct old_selector = 5;
+        google.protobuf.Struct new_selector = 6;
+        bool edited                         = 7;
+    }
+    repeated ListAppGroupsData details = 1;
+}
+
+message ListGroupReleasedAppsReq {
+    uint32 biz_id   = 1;
+    uint32 group_id = 2;
+    uint32 start    = 3;
+    uint32 limit    = 4;
+}
+
+message ListGroupReleasedAppsResp {
+    message ListGroupReleasedAppsData {
+        uint32 app_id       = 1;
+        string app_name     = 2;
+        uint32 release_id   = 3;
+        string release_name = 4;
+        bool edited         = 5;
+    }
+    uint32 count                               = 1;
+    repeated ListGroupReleasedAppsData details = 2;
+}
+
+message PublishReq {
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 release_id      = 3;
+    string memo            = 4;
+    bool all               = 5;
+    bool default           = 6;
+    repeated uint32 groups = 7;
+}
+
+message PublishResp {
+    uint32 id = 1;
+}
+
+message FinishPublishReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    uint32 id     = 3;
+}
+
+message FinishPublishResp {}
+
+message ListPubStrategyHistoriesReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
+}
+
+message ListPubStrategyHistoriesResp {
+    uint32 count                                         = 1;
+    repeated pbstrategy.PublishedStrategyHistory details = 2;
+}
+
+message PublishInstanceReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    string uid        = 3;
+    uint32 release_id = 4;
+    string memo       = 5;
+}
+
+message PublishInstanceResp {
+    uint32 id = 1;
+}
+
+message DeletePublishedInstanceReq {
+    uint32 id     = 1;
+    uint32 biz_id = 2;
+    uint32 app_id = 3;
+}
+
+message DeletePublishedInstanceResp {}
+
+message ListPublishedInstanceReq {
+    uint32 biz_id                 = 1;
+    google.protobuf.Struct filter = 2;
+    pbbase.BasePage page          = 3;
+}
+
+message ListPublishedInstanceResp {
+    uint32 count                                        = 1;
+    repeated pbinstance.CurrentReleasedInstance details = 2;
+}

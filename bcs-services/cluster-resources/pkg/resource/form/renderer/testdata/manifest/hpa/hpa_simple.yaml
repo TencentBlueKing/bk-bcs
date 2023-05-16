@@ -1,0 +1,26 @@
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-simple-i9tpsvk1pm
+  namespace: default
+  labels:
+    label-key-1: label-val-1
+  annotations:
+    anno-key-1: anno-val-1
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    apiVersion: apps/v1
+    name: deployment-6byc8q0oyc
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: "cpu"
+        target:
+          type: AverageValue
+          averageValue: 500m

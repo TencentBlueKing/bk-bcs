@@ -18,7 +18,14 @@ import (
 	"fmt"
 	"time"
 
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
+	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
+
+	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
@@ -34,12 +41,9 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
+	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-	estimatorinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/estimator"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
 )
 
 // BufferedAutoscaler is an autoscaler which has all the core functionality of a CA
@@ -58,9 +62,13 @@ type BufferedAutoscaler struct {
 	processorCallbacks      *bufferedAutoscalerProcessorCallbacks
 	initialized             bool
 	// Caches nodeInfo computed for previously seen nodes
-	nodeInfoCache map[string]*schedulernodeinfo.NodeInfo
-	ignoredTaints taintKeySet
-	ratio         float64
+	nodeInfoCache       map[string]*schedulernodeinfo.NodeInfo
+	ignoredTaints       taintKeySet
+	CPURatio            float64
+	MemRatio            float64
+	ratio               float64
+	webhook             Webhook
+	maxBulkScaleUpCount int
 }
 
 type bufferedAutoscalerProcessorCallbacks struct {
@@ -74,14 +82,17 @@ func newBufferedAutoscalerProcessorCallbacks() *bufferedAutoscalerProcessorCallb
 	return callbacks
 }
 
+// DisableScaleDownForLoop xxx
 func (callbacks *bufferedAutoscalerProcessorCallbacks) DisableScaleDownForLoop() {
 	callbacks.disableScaleDownForLoop = true
 }
 
+// SetExtraValue xxx
 func (callbacks *bufferedAutoscalerProcessorCallbacks) SetExtraValue(key string, value interface{}) {
 	callbacks.extraValues[key] = value
 }
 
+// GetExtraValue xxx
 func (callbacks *bufferedAutoscalerProcessorCallbacks) GetExtraValue(key string) (value interface{}, found bool) {
 	value, found = callbacks.extraValues[key]
 	return
@@ -101,7 +112,8 @@ func NewBufferedAutoscaler(
 	cloudProvider cloudprovider.CloudProvider,
 	expanderStrategy expander.Strategy,
 	estimatorBuilder estimatorinternal.ExtendedEstimatorBuilder,
-	backoff backoff.Backoff, ratio float64) core.Autoscaler {
+	backoff backoff.Backoff, cpuRatio, memRatio, ratio float64,
+	client kubeclient.Interface) core.Autoscaler {
 
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
 	autoscalingContext := contextinternal.NewAutoscalingContext(opts, predicateChecker, autoscalingKubeClients,
@@ -111,6 +123,8 @@ func NewBufferedAutoscaler(
 		MaxTotalUnreadyPercentage: opts.MaxTotalUnreadyPercentage,
 		OkTotalUnreadyCount:       opts.OkTotalUnreadyCount,
 		MaxNodeProvisionTime:      opts.MaxNodeProvisionTime,
+		MaxNodeStartupTime:        opts.MaxNodeStartupTime,
+		MaxNodeStartScheduleTime:  opts.MaxNodeStartScheduleTime,
 	}
 
 	ignoredTaints := make(taintKeySet)
@@ -122,21 +136,43 @@ func NewBufferedAutoscaler(
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(autoscalingContext.CloudProvider, clusterStateConfig,
 		autoscalingContext.LogRecorder, backoff)
 
-	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, ratio)
+	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, cpuRatio, memRatio, ratio)
+
+	var webhook Webhook
+	switch opts.WebhookMode {
+	case WebMode:
+		webhook = NewWebScaler(client, opts.ConfigNamespace,
+			opts.WebhookModeConfig, opts.WebhookModeToken, opts.MaxBulkScaleUpCount)
+		metricsinternal.RegisterWebhookParams("Web", opts.WebhookModeConfig)
+	case ConfigMapMode:
+		webhook = NewConfigMapScaler(client, opts.ConfigNamespace,
+			opts.WebhookModeConfig, opts.MaxBulkScaleUpCount)
+		metricsinternal.RegisterWebhookParams("ConfigMap", opts.WebhookModeConfig)
+	default:
+		webhook = nil
+	}
+
+	// Set the initial scale times to be less than the start time so as to
+	// not start in cooldown mode.
+	initialScaleTime := time.Now().Add(-time.Hour)
 
 	return &BufferedAutoscaler{
 		Context:                 autoscalingContext,
 		startTime:               time.Now(),
-		lastScaleUpTime:         time.Now(),
-		lastScaleDownDeleteTime: time.Now(),
-		lastScaleDownFailTime:   time.Now(),
+		lastScaleUpTime:         initialScaleTime,
+		lastScaleDownDeleteTime: initialScaleTime,
+		lastScaleDownFailTime:   initialScaleTime,
 		scaleDown:               scaleDown,
 		processors:              processors,
 		processorCallbacks:      processorCallbacks,
 		clusterStateRegistry:    clusterStateRegistry,
 		nodeInfoCache:           make(map[string]*schedulernodeinfo.NodeInfo),
 		ignoredTaints:           ignoredTaints,
+		CPURatio:                cpuRatio,
+		MemRatio:                memRatio,
 		ratio:                   ratio,
+		webhook:                 webhook,
+		maxBulkScaleUpCount:     opts.MaxBulkScaleUpCount,
 	}
 }
 
@@ -232,6 +268,21 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 	}
 	metrics.UpdateLastTime(metrics.Autoscaling, time.Now())
 
+	if b.webhook != nil {
+		originalScheduledPods, listErr := b.ScheduledPodLister().List()
+		if listErr != nil {
+			klog.Errorf("Failed to list scheduled pods: %v", listErr)
+			return errors.ToAutoscalerError(errors.ApiCallError, listErr)
+		}
+		return b.webhook.DoWebhook(contexts, b.clusterStateRegistry, b.scaleDown, allNodes, originalScheduledPods)
+	}
+
+	// set minSize of nodegroups in cron mode
+	err = b.doCron(contexts, b.clusterStateRegistry, currentTime)
+	if err != nil {
+		klog.Errorf("Failed in cron mode: %v", err)
+	}
+
 	originalScheduledPods, err := b.ScheduledPodLister().List()
 	if err != nil {
 		klog.Errorf("Failed to list scheduled pods: %v", err)
@@ -268,12 +319,30 @@ func (b *BufferedAutoscaler) preRun(currentTime time.Time) ([]*corev1.Node, []*c
 		return nil, nil, nil
 	}
 
+	coresTotal, memoryTotal := calculateScaleDownCoresMemoryTotal(allNodes, currentTime)
+	metrics.UpdateClusterCPUCurrentCores(coresTotal)
+	metrics.UpdateClusterMemoryCurrentBytes(memoryTotal)
+
 	// Call CloudProvider.Refresh before any other calls to cloud provider.
+	refreshStart := time.Now()
 	err := b.AutoscalingContext.CloudProvider.Refresh()
+	metrics.UpdateDurationFromStart(metrics.CloudProviderRefresh, refreshStart)
 	if err != nil {
 		klog.Errorf("Failed to refresh cloud provider config: %v", err)
 		return nil, nil, errors.ToAutoscalerError(errors.CloudProviderError, err)
 	}
+
+	// Update node groups min/max/current after cloud provider refresh
+	for _, nodeGroup := range b.AutoscalingContext.CloudProvider.NodeGroups() {
+		metrics.UpdateNodeGroupMin(nodeGroup.Id(), nodeGroup.MinSize())
+		metrics.UpdateNodeGroupMax(nodeGroup.Id(), nodeGroup.MaxSize())
+		if cur, err := nodeGroup.TargetSize(); err == nil {
+			metrics.UpdateNodeGroupCurrent(nodeGroup.Id(), cur)
+		}
+	}
+	// reset unremovable node metrics
+	metrics.ResetUnremovableNodes()
+
 	return allNodes, readyNodes, nil
 }
 
@@ -475,7 +544,6 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 		klog.Errorf("Failed to list unscheduled pods: %v", err)
 		return scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, nil, errors.ToAutoscalerError(errors.ApiCallError, err)
 	}
-	metrics.UpdateUnschedulablePodsCount(len(unschedulablePods))
 
 	// scheduledPods will be mutated over this method. We keep original list of pods on originalScheduledPods.
 	scheduledPods := append([]*corev1.Pod{}, originalScheduledPods...)
@@ -488,11 +556,32 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 	unschedulablePods, unschedulableWaitingForLowerPriorityPreemption := filterOutExpendableAndSplit(unschedulablePods,
 		b.ExpendablePodsPriorityCutoff)
 
+	metrics.UpdateUnschedulablePodsCount(len(unschedulablePods))
+
 	// we tread pods with nominated node-name as scheduled for sake of scale-up considerations
 	scheduledPods = append(scheduledPods, unschedulableWaitingForLowerPriorityPreemption...)
 
+	// 过滤特殊资源
+	prunedUnschedulablePods := make([]*apiv1.Pod, 0)
+	for i := range unschedulablePods {
+		pod := unschedulablePods[i].DeepCopy()
+		for j := range pod.Spec.Containers {
+			delete(pod.Spec.Containers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
+			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
+			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
+			delete(pod.Spec.Containers[j].Resources.Requests, "ephemeral-storage")
+		}
+		for j := range pod.Spec.InitContainers {
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "ephemeral-storage")
+		}
+		prunedUnschedulablePods = append(prunedUnschedulablePods, pod)
+	}
+
 	unschedulablePodsToHelp, scheduledPods, err := b.processors.PodListProcessor.Process(
-		b.AutoscalingContext, unschedulablePods, scheduledPods, allNodes, readyNodes,
+		b.AutoscalingContext, prunedUnschedulablePods, scheduledPods, allNodes, readyNodes,
 		getUpcomingNodeInfos(b.clusterStateRegistry, nodeInfosForGroups))
 	if err != nil {
 		klog.Error(err)
@@ -507,7 +596,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 		klog.Error(typedErr)
 		return scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, scheduledPods, typedErr
 	}
-	bufferNotEnough := checkResourceNotEnough(nodeInfos, b.ratio)
+	bufferNotEnough := checkResourceNotEnough(nodeInfos, nil, b.CPURatio, b.MemRatio, b.ratio)
 	shouldScaleUp := false
 
 	if len(unschedulablePodsToHelp) == 0 {
@@ -534,7 +623,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 
 		scaleUpStatus, typedErr = ScaleUp(autoscalingContext, b.processors, b.clusterStateRegistry, unschedulablePodsToHelp,
 			readyNodes, daemonsets,
-			nodeInfosForGroups, b.ignoredTaints, nodeInfos, bufferNotEnough)
+			nodeInfosForGroups, b.ignoredTaints, nodeInfos, bufferNotEnough, b.maxBulkScaleUpCount)
 
 		metrics.UpdateDurationFromStart(metrics.ScaleUp, scaleUpStart)
 
@@ -563,7 +652,7 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors() {
 		if err != nil {
 			id := "<nil>"
 			if node != nil {
-				id = node.Spec.ProviderID
+				id = node.Name
 			}
 			klog.Warningf("Cannot determine nodeGroup for node %v; %v", id, err)
 			continue
@@ -579,11 +668,31 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors() {
 		if nodeGroup == nil {
 			err = fmt.Errorf("node group %s not found", nodeGroupsID)
 		} else {
-			err = nodeGroup.DeleteNodes(nodesToBeDeleted)
+			// 扩容失败节点的缩容也需走 Pod 驱逐流程，防止意外情况
+			for i := range nodesToBeDeleted {
+				go func(node *apiv1.Node) {
+					var result status.NodeDeleteResult
+					defer func() { b.scaleDown.nodeDeletionTracker.AddNodeDeleteResult(node.Name, result) }()
+					defer b.scaleDown.nodeDeletionTracker.SetNonEmptyNodeDeleteInProgress(false)
+					freshNode, getErr := b.ClientSet.CoreV1().Nodes().Get(node.Name, metav1.GetOptions{})
+					if err != nil || freshNode == nil {
+						klog.Warningf("Error while get fresh node %v: %v", node.Name, getErr)
+						return
+					}
+					// deleteNode 中会重新获取需驱逐 Pod 列表，此处直接传入 nil
+					result = b.scaleDown.deleteNode(freshNode, nil, nodeGroup)
+					if result.ResultType != status.NodeDeleteOk {
+						klog.Errorf("Failed to delete %s: %v", node.Name, result.Err)
+						return
+					}
+				}(nodesToBeDeleted[i])
+			}
 		}
 
 		if err != nil {
 			klog.Warningf("Error while trying to delete nodes from %v: %v", nodeGroupsID, err)
+		} else {
+			b.clusterStateRegistry.InvalidateNodeInstancesCacheEntry(nodeGroup)
 		}
 	}
 }
@@ -596,6 +705,7 @@ func (b *BufferedAutoscaler) nodeGroupsByID() map[string]cloudprovider.NodeGroup
 	return nodeGroups
 }
 
+// filterOutYoungPods xxx
 // don't consider pods newer than newPodScaleUpDelay seconds old as unschedulable
 func (b *BufferedAutoscaler) filterOutYoungPods(allUnschedulablePods []*corev1.Pod,
 	currentTime time.Time) []*corev1.Pod {
@@ -678,6 +788,12 @@ func (b *BufferedAutoscaler) updateClusterState(allNodes []*corev1.Node,
 		return errors.ToAutoscalerError(errors.CloudProviderError, err)
 	}
 	UpdateClusterStateMetrics(b.clusterStateRegistry)
+
+	// Update node groups upcoming after cluster registry refresh
+	upcoming := b.clusterStateRegistry.GetUpcomingNodes()
+	for _, nodeGroup := range b.AutoscalingContext.CloudProvider.NodeGroups() {
+		metrics.UpdateNodeGroupUpcoming(nodeGroup.Id(), upcoming[nodeGroup.Id()])
+	}
 
 	return nil
 }

@@ -11,13 +11,14 @@
  *
  */
 
+// Package mysqlclient xxx
 package mysqlclient
 
 import (
 	"database/sql"
 	"strconv"
 
-	//mysql driver
+	// mysql driver
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -32,6 +33,7 @@ type MySql struct {
 	db         *sql.DB
 }
 
+// NewMySql xxx
 func NewMySql() (*MySql, error) {
 	mysql := new(MySql)
 	mysql.db = nil
@@ -39,6 +41,7 @@ func NewMySql() (*MySql, error) {
 	return mysql, nil
 }
 
+// Open xxx
 func (m *MySql) Open(host, usr, pwd, database string, port, maxOpenConns, maxIdleConns int) error {
 	m.host = host
 	m.port = port
@@ -46,7 +49,7 @@ func (m *MySql) Open(host, usr, pwd, database string, port, maxOpenConns, maxIdl
 	m.pwd = pwd
 	m.databese = database
 
-	//driver: usr:pwd@tcp(host:port)/database
+	// driver: usr:pwd@tcp(host:port)/database
 	m.driverName = m.usr + ":" + m.pwd + "@tcp(" + m.host + ":" + strconv.Itoa(m.port) + ")/" + m.databese
 
 	db, err := sql.Open("mysql", m.driverName)
@@ -70,12 +73,14 @@ func (m *MySql) Open(host, usr, pwd, database string, port, maxOpenConns, maxIdl
 	return m.db.Ping()
 }
 
+// Close xxx
 func (m *MySql) Close() {
 	if m.db != nil {
 		m.db.Close()
 	}
 }
 
+// Query xxx
 func (m *MySql) Query(sql string) (map[string]map[string]string, error) {
 	rows, err := m.db.Query(sql)
 	if err != nil {
@@ -111,6 +116,7 @@ func (m *MySql) Query(sql string) (map[string]map[string]string, error) {
 	return results, nil
 }
 
+// Insert xxx
 func (m *MySql) Insert(sql string, data []interface{}) (int64, error) {
 	stmt, err := m.db.Prepare(sql)
 	if err != nil {
@@ -130,6 +136,7 @@ func (m *MySql) Insert(sql string, data []interface{}) (int64, error) {
 	return id, nil
 }
 
+// Update xxx
 func (m *MySql) Update(sql string, data []interface{}) (int64, error) {
 	stmt, err := m.db.Prepare(sql)
 	if err != nil {
@@ -150,6 +157,7 @@ func (m *MySql) Update(sql string, data []interface{}) (int64, error) {
 	return num, nil
 }
 
+// Remove xxx
 func (m *MySql) Remove(sql string, data []interface{}) (int64, error) {
 	stmt, err := m.db.Prepare(sql)
 	if err != nil {

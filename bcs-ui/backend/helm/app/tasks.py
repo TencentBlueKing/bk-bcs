@@ -12,10 +12,16 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from celery import shared_task
+import logging
+
+from celery import shared_task, current_task
+
+from backend.utils.local import local
 from django.conf import settings
 
 from .models import App
+
+logger = logging.getLogger(__name__)
 
 
 @shared_task
@@ -30,16 +36,35 @@ def rollback_app(app_id, access_token, username, release_id):
 
 @shared_task
 def upgrade_app(app_id, **kwargs):
-    App.objects.get(id=app_id).upgrade_app_task(**kwargs)
+    access_token = kwargs['access_token']
+    local.new_dummy_request(access_token, "")
+
+    app = App.objects.get(id=app_id)
+    logger.info(
+        "upgrading app task id %s, release detail: cluster_id: %s, namespace: %s name: %s",
+        current_task.request.id,
+        app.cluster_id,
+        app.namespace,
+        app.name,
+    )
+    app.upgrade_app_task(**kwargs)
+
+    # 需要手动释放
+    local.release()
 
 
 @shared_task
 def first_deploy(app_id, access_token, activity_log_id, deploy_options):
+    local.new_dummy_request(access_token, "")
+
     App.objects.get(id=app_id).first_deploy_task(
         access_token=access_token,
         deploy_options=deploy_options,
         activity_log_id=activity_log_id,
     )
+
+    # 需要手动释放
+    local.release()
 
 
 def sync_or_async(task_method):

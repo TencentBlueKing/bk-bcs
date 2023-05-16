@@ -24,6 +24,7 @@ import (
 var deploymentLocks map[string]*sync.Mutex
 var deploymentRWlock sync.RWMutex
 
+// InitDeploymentLockPool xxx
 func (store *managerStore) InitDeploymentLockPool() {
 	if deploymentLocks == nil {
 		blog.Info("init deployment lock pool")
@@ -31,6 +32,7 @@ func (store *managerStore) InitDeploymentLockPool() {
 	}
 }
 
+// LockDeployment xxx
 func (store *managerStore) LockDeployment(deploymentName string) {
 	deploymentRWlock.RLock()
 	myLock, ok := deploymentLocks[deploymentName]
@@ -53,6 +55,7 @@ func (store *managerStore) LockDeployment(deploymentName string) {
 	return
 }
 
+// UnLockDeployment xxx
 func (store *managerStore) UnLockDeployment(deploymentName string) {
 	deploymentRWlock.RLock()
 	myLock, ok := deploymentLocks[deploymentName]
@@ -69,6 +72,7 @@ func getDeploymentRootPath() string {
 	return "/" + bcsRootNode + "/" + deploymentNode + "/"
 }
 
+// SaveDeployment xxx
 func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 
 	data, err := json.Marshal(deployment)
@@ -80,6 +84,7 @@ func (store *managerStore) SaveDeployment(deployment *types.Deployment) error {
 	return store.Db.Insert(path, string(data))
 }
 
+// FetchDeployment xxx
 func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, error) {
 	path := getDeploymentRootPath() + ns + "/" + name
 	data, err := store.Db.Fetch(path)
@@ -95,6 +100,7 @@ func (store *managerStore) FetchDeployment(ns, name string) (*types.Deployment, 
 	return deployment, nil
 }
 
+// ListDeployments xxx
 func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, error) {
 	path := getDeploymentRootPath() + ns
 	deploymentNodes, err := store.Db.List(path)
@@ -122,6 +128,7 @@ func (store *managerStore) ListDeployments(ns string) ([]*types.Deployment, erro
 	return deployments, nil
 }
 
+// DeleteDeployment xxx
 func (store *managerStore) DeleteDeployment(ns, name string) error {
 
 	path := getDeploymentRootPath() + ns + "/" + name
@@ -134,6 +141,7 @@ func (store *managerStore) DeleteDeployment(ns, name string) error {
 	return nil
 }
 
+// ListDeploymentRunAs xxx
 func (store *managerStore) ListDeploymentRunAs() ([]string, error) {
 
 	rootPath := "/" + bcsRootNode + "/" + deploymentNode
@@ -150,6 +158,7 @@ func (store *managerStore) ListDeploymentRunAs() ([]string, error) {
 	return runAses, nil
 }
 
+// ListDeploymentNodes xxx
 func (store *managerStore) ListDeploymentNodes(runAs string) ([]string, error) {
 
 	path := getDeploymentRootPath() + runAs
@@ -163,6 +172,7 @@ func (store *managerStore) ListDeploymentNodes(runAs string) ([]string, error) {
 	return IDs, nil
 }
 
+// ListAllDeployments xxx
 func (store *managerStore) ListAllDeployments() ([]*types.Deployment, error) {
 	nss, err := store.ListObjectNamespaces(deploymentNode)
 	if err != nil {

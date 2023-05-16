@@ -1,0 +1,19 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: PersistentVolumeClaim
+{{ include "common.metadata" .metadata }}
+spec:
+  {{- if and (eq .spec.claimType "useExistPV") .spec.pvName }}
+  volumeName: {{ .spec.pvName }}
+  {{- end }}
+  {{- if and (eq .spec.claimType "createBySC") .spec.scName }}
+  storageClassName: {{ .spec.scName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .spec.storageSize | default 1 }}Gi
+  {{- if .spec.accessModes }}
+  accessModes:
+    {{- range .spec.accessModes }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}

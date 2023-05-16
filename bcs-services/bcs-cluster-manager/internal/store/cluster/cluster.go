@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cluster xxx
 package cluster
 
 import (
@@ -19,15 +20,19 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
+	// ! we don't setting bson tag in proto file,
+	// ! all struct key in mongo is lowcase in default
+	clusterKeyName           = "clusterid"
 	clusterTableName         = "cluster"
-	defaultClusterListLength = 1000
+	defaultClusterListLength = 2000
 )
 
 var (
@@ -35,7 +40,7 @@ var (
 		{
 			Name: clusterTableName + "_idx",
 			Key: bson.D{
-				bson.E{Key: "clusterID", Value: 1},
+				bson.E{Key: clusterKeyName, Value: 1},
 			},
 			Unique: true,
 		},
@@ -60,6 +65,7 @@ func New(db drivers.DB) *ModelCluster {
 	}
 }
 
+// ensureTable xxx
 // ensure table
 func (m *ModelCluster) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -100,7 +106,7 @@ func (m *ModelCluster) UpdateCluster(ctx context.Context, cluster *types.Cluster
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"clusterID": cluster.ClusterID,
+		clusterKeyName: cluster.ClusterID,
 	})
 	oldCluster := &types.Cluster{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, oldCluster); err != nil {
@@ -115,14 +121,11 @@ func (m *ModelCluster) DeleteCluster(ctx context.Context, clusterID string) erro
 		return err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"clusterID": clusterID,
+		clusterKeyName: clusterID,
 	})
-	deleteCounter, err := m.db.Table(m.tableName).Delete(ctx, cond)
+	_, err := m.db.Table(m.tableName).Delete(ctx, cond)
 	if err != nil {
 		return err
-	}
-	if deleteCounter == 0 {
-		return fmt.Errorf("no cluster delete with clusterID %s", clusterID)
 	}
 	return nil
 }
@@ -133,7 +136,7 @@ func (m *ModelCluster) GetCluster(ctx context.Context, clusterID string) (*types
 		return nil, err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"clusterID": clusterID,
+		clusterKeyName: clusterID,
 	})
 	retCluster := &types.Cluster{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, retCluster); err != nil {
@@ -158,6 +161,11 @@ func (m *ModelCluster) ListCluster(ctx context.Context, cond *operator.Condition
 	} else {
 		finder = finder.WithLimit(opt.Limit)
 	}
+
+	if opt.All {
+		finder = finder.WithLimit(0)
+	}
+
 	if err := finder.All(ctx, &retClusterList); err != nil {
 		return nil, err
 	}

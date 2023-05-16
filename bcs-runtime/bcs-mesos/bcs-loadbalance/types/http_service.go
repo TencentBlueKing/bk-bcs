@@ -15,16 +15,17 @@ package types
 
 import "sort"
 
-//HTTPBackend hold Backend info for load balance
+// HTTPBackend hold Backend info for load balance
 type HTTPBackend struct {
 	Path         string
 	UpstreamName string
 	BackendList
 }
 
-//HTTPBackendList to ho
+// HTTPBackendList to ho
 type HTTPBackendList []HTTPBackend
 
+// Len 用于排序
 func (hbl HTTPBackendList) Len() int {
 	return len(hbl)
 }
@@ -49,12 +50,12 @@ func NewHTTPServiceInfo(s ServiceInfo, host string) HTTPServiceInfo {
 	}
 }
 
-//HTTPServiceInfo http service info
+// HTTPServiceInfo http service info
 type HTTPServiceInfo struct {
 	ServiceInfo
 	Backends HTTPBackendList
-	BCSVHost string //virtual host name, only use for http/hhtps
-	ACL      string //ACL match rules, reserved
+	BCSVHost string // virtual host name, only use for http/hhtps
+	ACL      string // ACL match rules, reserved
 	// If SessionAffinity is set and without CookieStickySession, requests are routed to
 	// a backend based on client ip. If both SessionAffinity and CookieStickSession are
 	// set, a SERVERID cookie is inserted by the loadbalancer and used to route subsequent
@@ -63,25 +64,25 @@ type HTTPServiceInfo struct {
 	// The name of the cookie is SERVERID
 	// This only can be used in http services
 	CookieSession bool
-	//Path          string //location nginx to transport specified uri
+	// Path          string //location nginx to transport specified uri
 	SSLFlag bool
 }
 
-//AddBackend add backend to list
+// AddBackend add backend to list
 func (hsi *HTTPServiceInfo) AddBackend(b HTTPBackend) {
 	hsi.Backends = append(hsi.Backends, b)
 }
 
-//SortBackends sort backend list
+// SortBackends sort backend list
 func (hsi *HTTPServiceInfo) SortBackends() {
 	sort.Sort(hsi.Backends)
 }
 
-//HTTPServiceInfoList to hold http service info list
+// HTTPServiceInfoList to hold http service info list
 type HTTPServiceInfoList []HTTPServiceInfo
 
-//SortBackends sort https backends by path,
-//no need to sort HTTPBackend.BackendList because sort before assgin
+// SortBackends sort https backends by path,
+// no need to sort HTTPBackend.BackendList because sort before assgin
 func (hil *HTTPServiceInfoList) SortBackends() {
 	for i, item := range *hil {
 		sort.Sort(item.Backends)
@@ -89,7 +90,7 @@ func (hil *HTTPServiceInfoList) SortBackends() {
 	}
 }
 
-//AddItem for add HTTPServiceInfoItem to HTTPServiceInfoList
+// AddItem for add HTTPServiceInfoItem to HTTPServiceInfoList
 func (hil *HTTPServiceInfoList) AddItem(h HTTPServiceInfo) {
 	for i, item := range *hil {
 		if h.BCSVHost == item.BCSVHost && h.ServicePort == item.ServicePort {
@@ -99,7 +100,7 @@ func (hil *HTTPServiceInfoList) AddItem(h HTTPServiceInfo) {
 		}
 	}
 
-	//not match data already exist
+	// not match data already exist
 	*hil = append(*hil, h)
 }
 

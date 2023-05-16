@@ -1,0 +1,121 @@
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-complex-w3uvctq3v3
+  namespace: default
+  labels:
+    label-key-1: label-val-1
+  annotations:
+    anno-key-1: anno-val-1
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    apiVersion: apps/v1
+    name: deployment-xxx1
+  minReplicas: 3
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: "cpu"
+        target:
+          type: AverageValue
+          averageValue: 500m
+    - type: Resource
+      resource:
+        name: "gpu"
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: "memory"
+        target:
+          type: AverageValue
+          averageValue: 512Mi
+    - type: External
+      external:
+        metric:
+          name: "ext1"
+          selector:
+            matchExpressions:
+              - key: "exp1"
+                operator: In
+                values:
+                  - "value1"
+              - key: "exp2"
+                operator: NotIn
+                values:
+                  - "value2"
+                  - "value2-1"
+              - key: "exp3"
+                operator: Exists
+            matchLabels:
+              "key1": "val1"
+              "key2": "val2"
+        target:
+          type: Value
+          value: 10
+    - type: Object
+      object:
+        describedObject:
+          apiVersion: apps/v1
+          kind: Deployment
+          name: "deploy-aaa"
+        metric:
+          name: "object1"
+          selector:
+            matchExpressions:
+              - key: "exp1"
+                operator: In
+                values:
+                  - "val1"
+                  - "val2"
+              - key: "exp2"
+                operator: Exists
+            matchLabels:
+              "key1": "val1"
+        target:
+          type: AverageValue
+          averageValue: 10
+    - type: Object
+      object:
+        describedObject:
+          apiVersion: tkex.tencent.com/v1alpha1
+          kind: GameDeployment
+          name: "gdeploy-xx"
+        metric:
+          name: "object2"
+          selector:
+            matchExpressions:
+              - key: "exp1"
+                operator: NotIn
+                values:
+                  - "val1"
+                  - "val2"
+            matchLabels:
+              "key2": "val2"
+        target:
+          type: Value
+          value: 20
+    - type: Pods
+      pods:
+        metric:
+          name: "pod1"
+          selector:
+            matchExpressions:
+              - key: "exp1"
+                operator: Exists
+              - key: "exp2"
+                operator: In
+                values:
+                  - "val1"
+                  - "val2"
+            matchLabels:
+              "key11": "val22"
+        target:
+          type: AverageValue
+          averageValue: 10

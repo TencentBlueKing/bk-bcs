@@ -1,0 +1,29 @@
+{{ include "common.metadata" . }}
+- - group:
+      - - group:
+            - [ "type", ".", ".", "." ]
+            - - group:
+                  - [ "useType", ".", ".", "." ]
+                prop: lb
+            - - group:
+                  - [ "name", "port", "protocol", "targetPort", "nodePort", "." ]
+                container:
+                  grid-template-columns: "1fr 1fr 1fr 1fr 1fr auto"
+                prop: ports
+          prop: portConf
+      - - group:
+            - - group:
+                  - [ "key", "value", "." ]
+                container:
+                  grid-template-columns: "1fr 1fr auto"
+                prop: labels
+          prop: selector
+      - - group:
+            - [ "type", "." ]
+            - [ "stickyTime", "." ]
+          prop: sessionAffinity
+      - - group:
+            - [ "address", "." ]
+            - [ "external", "." ]
+          prop: ip
+    prop: spec

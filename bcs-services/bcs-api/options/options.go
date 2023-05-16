@@ -11,13 +11,14 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//ServerOption is option in flags
+// ServerOption is option in flags
 type ServerOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -58,7 +59,7 @@ type BKEOptions struct {
 	RbacDatas []RbacData `json:"rbac_data"`
 }
 
-//TKEOptions tke api operation operation
+// TKEOptions tke api operation operation
 type TKEOptions struct {
 	SecretId  string `json:"secret_id" value:"" usage:"tke user account secret id"`
 	SecretKey string `json:"secret_key" value:"" usage:"tke user account secret key"`
@@ -73,7 +74,7 @@ type RbacData struct {
 	Roles     []string `json:"roles"`
 }
 
-//CredentialsFixturesOptions option for enable cluster specified token, deprecated
+// CredentialsFixturesOptions option for enable cluster specified token, deprecated
 type CredentialsFixturesOptions struct {
 	Enabled     bool         `json:"is_enabled_fixtures_credentials"`
 	Credentials []Credential `json:"credentials"`
@@ -88,14 +89,14 @@ type Credential struct {
 	Token     string `json:"token"`
 }
 
-//BootStrapUser user for system start up
+// BootStrapUser user for system start up
 type BootStrapUser struct {
 	Name        string   `json:"name"`
 	IsSuperUser bool     `json:"is_super_user"`
 	Tokens      []string `json:"tokens"`
 }
 
-//AuthOption bkiam auth options
+// AuthOption bkiam auth options
 type AuthOption struct {
 	Auth          bool `json:"auth" value:"false" usage:"use auth mode or not" mapstructure:"auth"`
 	RemoteCheck   bool `json:"remote_check" value:"false" usage:"check auth in remote host or not" mapstructure:"remote_check"`
@@ -129,13 +130,13 @@ type AuthWLCluster struct {
 	Namespace []string `json:"namespace"`
 }
 
-//NewServerOption create a ServerOption object
+// NewServerOption create a ServerOption object
 func NewServerOption() *ServerOption {
 	s := ServerOption{}
 	return &s
 }
 
-//Parse configuration item parsed
+// Parse configuration item parsed
 func Parse(ops *ServerOption) error {
 	conf.Parse(ops)
 	return nil

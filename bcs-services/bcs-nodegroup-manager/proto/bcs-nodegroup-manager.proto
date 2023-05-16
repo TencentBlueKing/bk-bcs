@@ -1,0 +1,732 @@
+syntax = "proto3";
+
+package nodegroupmanager;
+
+option go_package = "./proto;nodegroupmanager";
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+
+service NodegroupManager {
+  rpc GetClusterAutoscalerReview(ClusterAutoscalerReview) returns (ClusterAutoscalerReview) {
+    option (google.api.http) = {
+      post : "/nodegroupmanager/v1/autoscaler/review"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询cluster autoscaler review"
+      summary : "查询cluster autoscaler review"
+    };
+  }
+  rpc CreateNodePoolMgrStrategy(CreateNodePoolMgrStrategyReq) returns (CreateNodePoolMgrStrategyRsp) {
+    option (google.api.http) = {
+      post : "/nodegroupmanager/v1/nodegroupstrategy"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建node group strategy"
+      summary : "创建node group strategy"
+    };
+  }
+  rpc UpdateNodePoolMgrStrategy(UpdateNodePoolMgrStrategyReq) returns (CreateNodePoolMgrStrategyRsp) {
+    option (google.api.http) = {
+      put : "/nodegroupmanager/v1/nodegroupstrategy"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新node group strategy"
+      summary : "更新node group strategy"
+    };
+  }
+  rpc GetNodePoolMgrStrategy(GetNodePoolMgrStrategyReq) returns (GetNodePoolMgrStrategyRsp) {
+    option (google.api.http) = {
+      get : "/nodegroupmanager/v1/nodegroupstrategy"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询node group strategy"
+      summary : "查询node group strategy"
+    };
+  }
+  rpc ListNodePoolMgrStrategies(ListNodePoolMgrStrategyReq) returns (ListNodePoolMgrStrategyRsp) {
+    option (google.api.http) = {
+      get : "/nodegroupmanager/v1/nodegroupstrategies"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询node group strategy 列表"
+      summary : "查询node group strategy 列表"
+    };
+  }
+  rpc DeleteNodePoolMgrStrategy(DeleteNodePoolMgrStrategyReq) returns (DeleteNodePoolMgrStrategyRsp) {
+    option (google.api.http) = {
+      delete : "/nodegroupmanager/v1/nodegroupstrategy"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除node group strategy"
+      summary : "删除node group strategy"
+    };
+  }
+}
+
+message ClusterAutoscalerReview {
+  AutoscalerReviewRequest request = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "request",
+      description : "the request from ca"
+    }
+  ];
+  AutoscalerReviewResponse response = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "response",
+      description : "the AutoscalerReviewResponse to ca"
+    }
+  ];
+}
+
+message AutoscalerReviewRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetAutoscalerReviewRequest"
+      description : "获取cluster autoscaler review请求"
+    }
+  };
+
+  string uid = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "uid",
+      description : "UID is used for tracing the request and response."
+    }
+  ];
+  map<string, NodeGroup> nodeGroups = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeGroups",
+      description : "NodeGroups contain information of node groups. Key is node group ID."
+    }
+  ];
+}
+
+message AutoscalerReviewResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetAutoscalerReviewResponse"
+      description : "获取cluster autoscaler review响应"
+    }
+  };
+
+  string uid = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "uid",
+      description : "UID is used for tracing the request and response."
+    }
+  ];
+  repeated NodeScaleUpPolicy scaleUps = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleUps",
+      description : "ScaleUps are the policy of scale up."
+    }
+  ];
+
+  repeated NodeScaleDownPolicy scaleDowns = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleDowns",
+      description : "ScaleDowns are the polocy of scale down."
+    }
+  ];
+
+}
+
+message NodeGroup {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NodeGroup"
+      description : "NodeGroup is the information of node group"
+    }
+  };
+
+  string nodeGroupID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeGroupID",
+      description : "NodeGroupID is the ID of the node group"
+    }
+  ];
+
+  int32 maxSize = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "maxSize",
+      description : "MaxSize is the upper limit of the node group"
+    }
+  ];
+
+  int32 minSize = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "minSize",
+      description : "MinSize is the lower limit of the node group"
+    }
+  ];
+
+  int32 desiredSize = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "desiredSize",
+      description : " DesiredSize is the current size of the node group. It is possible that the number is different from the number of nodes registered in Kuberentes."
+    }
+  ];
+
+  int32 upcomingSize = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "upcomingSize",
+      description : "UpcomingSize is the number that indicates how many nodes have not registered in Kubernetes or have not been ready to be used."
+    }
+  ];
+
+  NodeTemplate nodeTemplate = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeTemplate",
+      description : "NodeTemplate is the template information of node in the node group"
+    }
+  ];
+
+  repeated string nodeIPs = 7[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeIPs",
+      description : "NodeIPs are the IP of nodes which belongs to the node group"
+    }
+  ];
+}
+
+message NodeTemplate {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NodeTemplate"
+      description : "NodeTemplate is the information of node"
+    }
+  };
+  int32 cpu = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "cpu",
+      description : "CPU is the CPU resource of node. The unit is core."
+    }
+  ];
+
+  double mem = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "mem",
+      description : "Mem is the memory resource of node. The unit is Gi."
+    }
+  ];
+
+  int32 gpu = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "gpu",
+      description : "GPU is the GPU resource of node."
+    }
+  ];
+
+  map<string, string> labels = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "labels",
+      description : "Labels is the Labels of node."
+    }
+  ];
+
+  repeated NodeTaint taints = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "taints",
+      description : "Taint is the taints of node."
+    }
+  ];
+}
+
+message NodeTaint {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NodeTaint"
+      description : "NodeTaint is the taints of node"
+    }
+  };
+  string key = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "key",
+      description : "The taint key to be applied to a node."
+    }
+  ];
+  string value = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "value",
+      description : "The taint value corresponding to the taint key."
+    }
+  ];
+  string effect = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "effect",
+      description : " The effect of the taint on pods that do not tolerate the taint."
+    }
+  ];
+  string timeAdded = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "timeAdded",
+      description : "TimeAdded represents the time at which the taint was added.It is only written for NoExecute taints."
+    }
+  ];
+
+}
+
+message NodeScaleUpPolicy {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NodeScaleUpPolicy"
+      description : "NodeScaleUpPolicy defines the details of scaling up a node group"
+    }
+  };
+  string nodeGroupID = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeGroupID",
+      description : "NodeGroupID is the ID of node group"
+    }
+  ];
+  int32 desiredSize = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "desiredSize",
+      description : "DesiredSize is the desired size of node group"
+    }
+  ];
+}
+
+message NodeScaleDownPolicy{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NodeScaleDownPolicy"
+      description : "NodeScaleDownPolicy defines the details of scaling down a node group"
+    }
+  };
+  string nodeGroupID = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeGroupID",
+      description : "NodeGroupID is the ID of node group"
+    }
+  ];
+
+  string type = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "type",
+      description : "Type describes the way to scale down nodes. Available values: [NodeNum, NodeIPs]"
+    }
+  ];
+
+  repeated string nodeIPs = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeIPs",
+      description : "NodeIPs are the ip of nodes that should be scale down"
+    }
+  ];
+
+  int32 nodeNum = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeNum",
+      description : "NodeNum is the number of nodes that should be scaled down"
+    }
+  ];
+}
+
+message CreateNodePoolMgrStrategyReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateNodePoolMgrStrategyReq"
+      description : "创建节点池策略请求"
+      required : ["option", "strategy"]
+    }
+  };
+  CreateOptions option = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "option",
+      description : "create options"
+    }
+  ];
+  NodeGroupStrategy strategy = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "strategy",
+      description : "策略"
+    }
+  ];
+}
+
+
+message UpdateNodePoolMgrStrategyReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateNodePoolMgrStrategyReq"
+      description : "更新节点池策略请求"
+      required : ["option", "strategy"]
+    }
+  };
+  UpdateOptions option = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "option",
+      description : "update options"
+    }
+  ];
+  NodeGroupStrategy strategy = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "strategy",
+      description : "策略"
+    }
+  ];
+}
+
+message CreateNodePoolMgrStrategyRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateNodePoolMgrStrategyRsp"
+      description : "创建节点池策略响应"
+      required : ["code", "message"]
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  bool result = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "result",
+      description : "创建是否成功"
+    }];
+}
+
+message GetNodePoolMgrStrategyReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNodePoolMgrStrategyReq"
+      description : "查询策略请求"
+      required : ["name"]
+    }
+  };
+  string name = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "name",
+      description : "strategy name"
+    }
+  ];
+}
+
+message GetNodePoolMgrStrategyRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNodePoolMgrStrategyRsp"
+      description : "查询策略响应"
+      required : ["code", "message"]
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  NodeGroupStrategy data = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "strategy信息"
+    }];
+}
+
+message ListNodePoolMgrStrategyReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNodePoolMgrStrategyReq"
+      description : "查询策略列表请求"
+      required : []
+    }
+  };
+  uint32 limit = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "limit",
+      description : "页面大小"
+    },
+    (validate.rules) .uint32.gte = 0
+  ];
+  uint32 page = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页数"
+    },
+    (validate.rules) .uint32.gte = 0
+  ];
+}
+
+message ListNodePoolMgrStrategyRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNodePoolMgrStrategyRsp"
+      description : "查询策略列表响应"
+      required : []
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  uint32 total = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "total",
+      description : "strategy总数"
+    }];
+  repeated NodeGroupStrategy data = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "data",
+      description : "strategy列表"
+    }];
+}
+
+message DeleteNodePoolMgrStrategyReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteNodePoolMgrStrategyReq"
+      description : "删除节点池策略请求"
+      required : ["operator", "name"]
+    }
+  };
+  string name = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "name",
+      description : "策略名称"
+    }
+  ];
+  string operator = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "operator",
+      description : "操作人"
+    }
+  ];
+}
+
+message DeleteNodePoolMgrStrategyRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteNodePoolMgrStrategyRsp"
+      description : "删除节点池策略响应"
+      required : ["code", "message"]
+    }
+  };
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+  {title : "code", description : "返回错误码"}];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  bool result = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "result",
+      description : "删除是否成功"
+    }];
+}
+
+message NodeGroupStrategy {
+  string kind = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "kind",
+      description : "类型"
+    }
+  ];
+  string name = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "name",
+      description : "策略名称"
+    }
+  ];
+  map<string, string> labels = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "name",
+      description : "标签"
+    }
+  ];
+  string resourcePool = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "resourcePool",
+      description : "来自于bcs-resource-manager的resource pool ID，用于管理资源设备信息"
+    }
+  ];
+  ReservedNodeGroup reservedNodeGroup = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "reservedNodeGroup",
+      description : ""
+    }
+  ];
+  repeated ElasticNodeGroup elasticNodeGroups = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "elasticNodeGroups",
+      description : ""
+    }
+  ];
+  Strategy strategy = 7[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "strategy",
+      description : "策略控制"
+    }
+  ];
+}
+
+message ReservedNodeGroup {
+  string clusterId = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterId",
+      description : "集群id"
+    }
+  ];
+  string nodeGroup = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeGroup",
+      description : "nodeGroup id"
+    }
+  ];
+  string consumerId = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "consumerId",
+      description : "consumer id"
+    }
+  ];
+}
+
+message ElasticNodeGroup {
+  string clusterId = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterId",
+      description : "集群id"
+    }
+  ];
+  string nodeGroup = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodeGroup",
+      description : "nodeGroup id"
+    }
+  ];
+  string consumerId = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "consumerId",
+      description : "consumer id"
+    }
+  ];
+  int32 weight = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "weight",
+      description : "权重"
+    }
+  ];
+}
+
+message Strategy {
+  string type = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "type",
+      description : "类型，buffer或者后续扩展的其他模式，"
+    }
+  ];
+  int32 scaleUpCoolDown = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleUpCoolDown",
+      description : "elasticNodeGroup扩容的冷却时间，单位minut"
+    }
+  ];
+  int32 scaleUpDelay = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleUpDelay",
+      description : "elasticNodeGroup扩容任务延时时间，单位分钟"
+    }
+  ];
+  int32 minScaleUpSize = 4[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "minScaleUpSize",
+      description : "elasticNodeGroup最小扩容数量，为保障稳定并不是随意扩容"
+    }
+  ];
+  int32 scaleDownDelay = 5[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleDownDelay",
+      description : "elasticNodeGroup缩容任务最大延迟时间，单位分钟，如果超期未完成则可以重新发起"
+    }
+  ];
+  int32 maxIdleDelay = 6[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "maxIdleDelay",
+      description : "ResourcePool最大空闲时间，对于elasticNodeGroup而言就是下降数量在预期内的时间，单位分钟"
+    }
+  ];
+  string reservedTimeRange = 7[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "reservedTimeRange",
+      description : "指定时间段，用于保护resource pool稳定，准备给reservedNodeGroup预留资源"
+    }
+  ];
+  Buffer buffer = 8[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "buffer",
+      description : "预留水位详细定义"
+    }
+  ];
+  int32 scaleDownBeforeDDL = 9[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "scaleDownBeforeDDL",
+      description : "在ddl多少分钟之前执行策略，用于分级资源池"
+    }
+  ];
+}
+
+message Buffer {
+  int32 low = 1[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "low",
+      description : "定义resource pool中可容忍的最低空闲资源水位，主要用于预警用途"
+    }
+  ];
+  int32 high = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "high",
+      description : "定义resource pool中空闲资源的最高水位"
+    }
+  ];
+  int32 reservedDays =3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "reservedDays",
+      description : "定义资源池保留天数"
+    }
+  ];
+}
+
+message CreateOptions {
+  bool overWriteIfExist = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "overWriteIfExist",
+      description : "是否返"
+    }];
+  string operator = 2[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "operator",
+      description : "操作人"
+    }
+  ];
+}
+
+message UpdateOptions {
+  bool createIfNotExist = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "createIfNotExist",
+      description : "如果不存在是否创建"
+    }];
+  bool overwriteZeroOrEmptyStr = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "overwriteZeroOrEmptyStr",
+      description : "零值或空字符串是否覆盖"
+    }];
+  string operator = 3[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "operator",
+      description : "操作人"
+    }
+  ];
+}

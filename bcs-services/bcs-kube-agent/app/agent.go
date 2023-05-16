@@ -44,7 +44,6 @@ func Run() error {
 			return fmt.Errorf("error getting the BearerToken: %s", err.Error())
 		}
 		cfg.BearerToken = string(token)
-
 		if err := populateCAData(cfg); err != nil {
 			return fmt.Errorf("error populating ca data: %s", err.Error())
 		}

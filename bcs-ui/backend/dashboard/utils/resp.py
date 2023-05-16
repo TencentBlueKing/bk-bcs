@@ -24,7 +24,7 @@ from backend.resources.utils.format import ResourceFormatter
 
 
 class ListApiRespBuilder:
-    """ 构造 Dashboard 资源列表 Api 响应内容逻辑 """
+    """构造 Dashboard 资源列表 Api 响应内容逻辑"""
 
     def __init__(
         self,
@@ -56,18 +56,20 @@ class ListApiRespBuilder:
             self.resources = self.resources.data.to_dict()
 
     def build(self) -> Dict:
-        """ 组装 Dashboard Api 响应内容 """
-        result = {
-            'manifest': self.resources,
-            'manifest_ext': {
-                item['metadata']['uid']: self.formatter.format_dict(item) for item in self.resources['items']
-            },
+        """组装 Dashboard Api 响应内容"""
+        result = {'manifest': {}, 'manifest_ext': {}}
+        if not self.resources:
+            return result
+
+        result['manifest'] = self.resources
+        result['manifest_ext'] = {
+            item['metadata']['uid']: self.formatter.format_dict(item) for item in self.resources['items']
         }
         return result
 
 
 class RetrieveApiRespBuilder:
-    """ 构造 Dashboard 资源详情 Api 响应内容逻辑 """
+    """构造 Dashboard 资源详情 Api 响应内容逻辑"""
 
     def __init__(
         self,
@@ -93,7 +95,7 @@ class RetrieveApiRespBuilder:
         self.resource = raw_resource.data.to_dict()
 
     def build(self) -> Dict:
-        """ 组装 Dashboard Api 响应内容 """
+        """组装 Dashboard Api 响应内容"""
         return {
             'manifest': self.resource,
             'manifest_ext': self.formatter.format_dict(self.resource),

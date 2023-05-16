@@ -11,6 +11,7 @@
  *
  */
 
+// Package logs xxx
 package logs
 
 import (
@@ -25,7 +26,7 @@ var once sync.Once
 
 func init() {
 	once.Do(func() {
-		//init conLogger only once
+		// init conLogger only once
 		errLogger = log.New(os.Stderr, "", log.LstdFlags)
 		stdLogger = log.New(os.Stdout, "", log.LstdFlags)
 	})

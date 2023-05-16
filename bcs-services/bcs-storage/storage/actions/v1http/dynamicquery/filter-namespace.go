@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
+// NameSpaceFilter xxx
 // Filter of namespace
 type NameSpaceFilter struct {
 	ClusterId       string `json:"clusterId" filter:"clusterId"`
@@ -26,8 +27,8 @@ type NameSpaceFilter struct {
 	CreateTimeEnd   string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
-const nameSpaceNestedTimeLayout = nestedTimeLayout
+const nameSpaceNestedTimeLayout = NestedTimeLayout
 
-func (t NameSpaceFilter) getCondition() *operator.Condition {
+func (t NameSpaceFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, nameSpaceNestedTimeLayout)
 }

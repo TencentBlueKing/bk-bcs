@@ -38,6 +38,7 @@ type managerStore struct {
 	clusterId string
 }
 
+// NewManagerStore xxx
 // Create a store manager by a db driver
 func NewManagerStore(dbDriver store.Dbdrvier, pm *pluginManager.PluginManager, clusterId string) store.Store {
 	s := &managerStore{
@@ -49,6 +50,7 @@ func NewManagerStore(dbDriver store.Dbdrvier, pm *pluginManager.PluginManager, c
 	return s
 }
 
+// StopStoreMetrics xxx
 func (s *managerStore) StopStoreMetrics() {
 	if s.cancel == nil {
 		return
@@ -57,6 +59,7 @@ func (s *managerStore) StopStoreMetrics() {
 	time.Sleep(time.Second)
 }
 
+// StartStoreObjectMetrics xxx
 func (s *managerStore) StartStoreObjectMetrics() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 
@@ -76,10 +79,12 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		store.StorageOperatorFailedTotal.Reset()
 		store.StorageOperatorLatencyMs.Reset()
 		store.StorageOperatorTotal.Reset()
-		store.ClusterMemoryResouceRemain.Reset()
-		store.ClusterCpuResouceRemain.Reset()
-		store.ClusterMemoryResouceTotal.Reset()
-		store.ClusterCpuResouceTotal.Reset()
+		store.ClusterMemoryResourceRemain.Reset()
+		store.ClusterCpuResourceRemain.Reset()
+		store.ClusterMemoryResourceTotal.Reset()
+		store.ClusterCpuResourceTotal.Reset()
+		store.ClusterCpuResourceAvailable.Reset()
+		store.ClusterMemoryResourceAvailable.Reset()
 
 		// handle service metrics
 		services, err := s.ListAllServices()
@@ -114,7 +119,8 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			blog.Errorf("list all deployment error %s", err.Error())
 		}
 		for _, deployment := range deployments {
-			store.ReportObjectResourceInfoMetrics(store.ObjectResourceDeployment, deployment.ObjectMeta.NameSpace, deployment.ObjectMeta.Name, "")
+			store.ReportObjectResourceInfoMetrics(store.ObjectResourceDeployment, deployment.ObjectMeta.NameSpace,
+				deployment.ObjectMeta.Name, "")
 		}
 
 		// handle configmap metrics
@@ -136,11 +142,24 @@ func (s *managerStore) StartStoreObjectMetrics() {
 		}
 
 		var (
-			clusterCpu float64
-			clusterMem float64
-			remainCpu  float64
-			remainMem  float64
+			clusterCpu   float64
+			clusterMem   float64
+			remainCpu    float64
+			remainMem    float64
+			availableCpu float64
+			availableMem float64
 		)
+
+		// handle agentSettings
+		agentSettingsMap := make(map[string]bool)
+		agentSettings, err := s.ListAgentsettings()
+		if err != nil {
+			blog.Error("list all agent settings error %s", err.Error())
+		}
+		for _, setting := range agentSettings {
+			agentSettingsMap[setting.InnerIP] = setting.Disabled
+		}
+
 		// handle agents metrics
 		agents, err := s.ListAllAgents()
 		if err != nil {
@@ -184,12 +203,22 @@ func (s *managerStore) StartStoreObjectMetrics() {
 
 			// if ip-resources is zero, then ignore it
 			if s.pm == nil || ipValue > 0 {
+				agentDisabled, ok := agentSettingsMap[info.IP]
 				if schedInfo != nil {
 					remainCpu += float2Float(info.CpuTotal - info.CpuUsed - schedInfo.DeltaCPU)
 					remainMem += float2Float(info.MemTotal - info.MemUsed - schedInfo.DeltaMem)
+					// no need to add remain cpu if agent is disabled
+					if ok && !agentDisabled {
+						availableCpu += float2Float(info.CpuTotal - info.CpuUsed - schedInfo.DeltaCPU)
+						availableMem += float2Float(info.MemTotal - info.MemUsed - schedInfo.DeltaMem)
+					}
 				} else {
 					remainCpu += float2Float(info.CpuTotal - info.CpuUsed)
 					remainMem += float2Float(info.MemTotal - info.MemUsed)
+					if ok && !agentDisabled {
+						availableCpu += float2Float(info.CpuTotal - info.CpuUsed)
+						availableMem += float2Float(info.MemTotal - info.MemUsed)
+					}
 				}
 			}
 			clusterCpu += float2Float(info.CpuTotal)
@@ -198,15 +227,17 @@ func (s *managerStore) StartStoreObjectMetrics() {
 			store.ReportAgentInfoMetrics(info.IP, s.clusterId, info.CpuTotal, info.CpuTotal-info.CpuUsed,
 				info.MemTotal, info.MemTotal-info.MemUsed, ipValue)
 		}
-		store.ReportClusterInfoMetrics(s.clusterId, remainCpu, clusterCpu, remainMem, clusterMem)
+		store.ReportClusterInfoMetrics(s.clusterId, remainCpu, availableCpu, clusterCpu, remainMem,
+			availableMem, clusterMem)
 	}
 }
 
 func float2Float(num float64) float64 {
-	float_num, _ := strconv.ParseFloat(fmt.Sprintf("%.1f", num), 64)
+	float_num, _ := strconv.ParseFloat(fmt.Sprintf("%.2f", num), 64)
 	return float_num
 }
 
+// ListObjectNamespaces xxx
 func (store *managerStore) ListObjectNamespaces(objectNode string) ([]string, error) {
 
 	rootPath := "/" + bcsRootNode + "/" + objectNode
@@ -253,11 +284,12 @@ const (
 	deploymentNode string = "deployment"
 	// crr zk node
 	crrNode string = "crr"
-	//crd zk node
+	// crd zk node
 	crdNode string = "crd"
-	//command zk node
+	// command zk node
 	commandNode string = "command"
-	//admission webhook zk node
+	// AdmissionWebhookNode xxx
+	// admission webhook zk node
 	AdmissionWebhookNode string = "admissionwebhook"
 	// Transaction zk node
 	transactionNode string = "transaction"

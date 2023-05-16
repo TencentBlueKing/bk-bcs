@@ -37,7 +37,8 @@ type LogManagerServerImpl struct {
 }
 
 // ObtainDataID ObtainDataid
-func (l *LogManagerServerImpl) ObtainDataID(ctx context.Context, req *proto.ObtainDataidReq, resp *proto.ObtainDataidResp) error {
+func (l *LogManagerServerImpl) ObtainDataID(ctx context.Context, req *proto.ObtainDataidReq,
+	resp *proto.ObtainDataidResp) error {
 	// bkdata api esb client
 	client := l.bkdataClientCreator.NewClientFromConfig(bkdata.BKDataClientConfig{
 		BkAppCode:                  req.AppCode,
@@ -83,7 +84,8 @@ func (l *LogManagerServerImpl) ObtainDataID(ctx context.Context, req *proto.Obta
 }
 
 // CreateCleanStrategy CreateCleanStrategy
-func (l *LogManagerServerImpl) CreateCleanStrategy(ctx context.Context, req *proto.CreateCleanStrategyReq, resp *proto.CommonResp) error {
+func (l *LogManagerServerImpl) CreateCleanStrategy(ctx context.Context, req *proto.CreateCleanStrategyReq,
+	resp *proto.CommonResp) error {
 	client := l.bkdataClientCreator.NewClientFromConfig(bkdata.BKDataClientConfig{
 		BkAppCode:                  req.AppCode,
 		BkUsername:                 req.UserName,
@@ -136,7 +138,8 @@ func (l *LogManagerServerImpl) CreateCleanStrategy(ctx context.Context, req *pro
 }
 
 // ListLogCollectionTask ListLogCollectionTask
-func (l *LogManagerServerImpl) ListLogCollectionTask(ctx context.Context, req *proto.ListLogCollectionTaskReq, resp *proto.ListLogCollectionTaskResp) error {
+func (l *LogManagerServerImpl) ListLogCollectionTask(ctx context.Context, req *proto.ListLogCollectionTaskReq,
+	resp *proto.ListLogCollectionTaskResp) error {
 	blog.Infof("reqest: %+v", req)
 	filter := &config.CollectionFilterConfig{
 		ClusterIDs:      strings.ToLower(req.ClusterIDs),
@@ -192,7 +195,8 @@ func (l *LogManagerServerImpl) ListLogCollectionTask(ctx context.Context, req *p
 }
 
 // CreateLogCollectionTask CreateLogCollectionTask
-func (l *LogManagerServerImpl) CreateLogCollectionTask(ctx context.Context, req *proto.CreateLogCollectionTaskReq, resp *proto.CollectionTaskCommonResp) error {
+func (l *LogManagerServerImpl) CreateLogCollectionTask(ctx context.Context, req *proto.CreateLogCollectionTaskReq,
+	resp *proto.CollectionTaskCommonResp) error {
 	blog.Infof("reqest: %+v", req)
 	config := l.buildLogCollectionTaskConfig(req)
 	if config == nil {
@@ -247,7 +251,8 @@ func (l *LogManagerServerImpl) CreateLogCollectionTask(ctx context.Context, req 
 }
 
 // DeleteLogCollectionTask DeleteLogCollectionTask
-func (l *LogManagerServerImpl) DeleteLogCollectionTask(ctx context.Context, req *proto.DeleteLogCollectionTaskReq, resp *proto.CollectionTaskCommonResp) error {
+func (l *LogManagerServerImpl) DeleteLogCollectionTask(ctx context.Context, req *proto.DeleteLogCollectionTaskReq,
+	resp *proto.CollectionTaskCommonResp) error {
 	blog.Infof("reqest: %+v", req)
 	filter := &config.CollectionFilterConfig{
 		ClusterIDs:      strings.ToLower(req.ClusterIDs),
@@ -299,7 +304,8 @@ func (l *LogManagerServerImpl) DeleteLogCollectionTask(ctx context.Context, req 
 }
 
 // buildProtoLogCollectionTaskConfig convert log config message from CollectionConfig to protobuf struct type
-func (l *LogManagerServerImpl) buildProtoLogCollectionTaskConfig(conf config.CollectionConfig) *proto.LogCollectionTaskConfig {
+func (l *LogManagerServerImpl) buildProtoLogCollectionTaskConfig(
+	conf config.CollectionConfig) *proto.LogCollectionTaskConfig {
 	ret := &proto.LogCollectionTaskConfig{
 		ConfigName:      conf.ConfigName,
 		ConfigNamespace: conf.ConfigNamespace,
@@ -353,7 +359,8 @@ func (l *LogManagerServerImpl) buildProtoLogCollectionTaskConfig(conf config.Col
 }
 
 // buildLogCollectionTaskConfig convert log config message from protobuf struct type to CollectionConfig
-func (l *LogManagerServerImpl) buildLogCollectionTaskConfig(conf *proto.CreateLogCollectionTaskReq) *config.CollectionConfig {
+func (l *LogManagerServerImpl) buildLogCollectionTaskConfig(
+	conf *proto.CreateLogCollectionTaskReq) *config.CollectionConfig {
 	if conf.Config == nil || conf.Config.Config == nil {
 		return nil
 	}

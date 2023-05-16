@@ -16,41 +16,41 @@ package register
 import "fmt"
 
 const (
-	//ProtocolHTTP for http
+	// ProtocolHTTP for http
 	ProtocolHTTP = "http"
-	//ProtocolHTTPS for http
+	// ProtocolHTTPS for http
 	ProtocolHTTPS = "https"
-	//ProtocolTCP for tcp
+	// ProtocolTCP for tcp
 	ProtocolTCP = "tcp"
-	//ProtocolUDP for udp
+	// ProtocolUDP for udp
 	ProtocolUDP = "udp"
-	//ProtocolGrpc for grpc
+	// ProtocolGrpc for grpc
 	ProtocolGrpc = "grpc"
 )
 
-//Route inner data structure for traffics transffer.
+// Route inner data structure for traffics transffer.
 // this model is used for frontend listenning or register
 type Route struct {
-	//Name for route
+	// Name for route
 	Name string
-	//Prototol for frontend listenning, such as tcp, udp, http(s)
+	// Prototol for frontend listenning, such as tcp, udp, http(s)
 	Protocol string
-	//Port for listen, if port is 0, use specified default tcp/udp/http port
+	// Port for listen, if port is 0, use specified default tcp/udp/http port
 	Port uint
-	//Paths filter when protocol is http(s)
+	// Paths filter when protocol is http(s)
 	Paths []string
-	//PathRewrite rewrite path for http traffic
+	// PathRewrite rewrite path for http traffic
 	PathRewrite bool
-	//Header filter when using http(s)
+	// Header filter when using http(s)
 	Header map[string]string
-	//plugin Option for http modification
+	// plugin Option for http modification
 	Plugin *Plugins
-	//Service relative svc name
+	// Service relative svc name
 	Service string
 	Labels  map[string]string
 }
 
-//Service inner data structure for backend service
+// Service inner data structure for backend service
 type Service struct {
 	Name      string
 	Protocol  string
@@ -59,15 +59,15 @@ type Service struct {
 	Retries   int
 	Path      string
 	Algorithm string
-	//Option for plugin
+	// Option for plugin
 	Plugin *Plugins
-	//Routes several route can redirect traffics to same service
+	// Routes several route can redirect traffics to same service
 	Routes   []Route
 	Backends []Backend
 	Labels   map[string]string
 }
 
-//Valid check service information
+// Valid check service information
 func (s *Service) Valid() error {
 	if len(s.Name) == 0 {
 		return fmt.Errorf("service name required")
@@ -87,31 +87,41 @@ func (s *Service) Valid() error {
 	return nil
 }
 
-//Plugins holder for all gateway plugins
+// Plugins holder for all gateway plugins
 type Plugins struct {
-	HeadOption *HeaderOption
-	AuthOption *BCSAuthOption
+	HeadOption       *HeaderOption
+	AuthOption       *BCSAuthOption
+	FileLoggerOption *FileLoggerOption
 }
 
-//HeaderOption for proxy rules that change http header
+// HeaderOption for proxy rules that change http header
 type HeaderOption struct {
-	//clean specified header
+	// clean specified header
 	Clean []string
-	//Add more values
+	// Add more values
 	Add map[string]string
-	//Replace specified header
+	// Replace specified header
 	Replace map[string]string
 }
 
-//BCSAuthOption for bkbcs-auth plugin
+// FileLoggerOption for file-logger plugin in apisix
+type FileLoggerOption struct {
+	Path string
+}
+
+// BCSAuthOption for bkbcs-auth plugin
 type BCSAuthOption struct {
 	Name          string
 	AuthEndpoints string
 	AuthToken     string
 	Module        string
+	RedisHost     *string
+	RedisPassword *string
+	RedisPort     *int
+	RedisDatabase *int
 }
 
-//Backend inner data structure for application instance
+// Backend inner data structure for application instance
 type Backend struct {
 	Target string
 	Weight int

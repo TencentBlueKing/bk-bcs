@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bscp xxx
 package bscp
 
 import (
@@ -105,6 +106,7 @@ func (h *Hooker) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	return &reviewResponse
 }
 
+// injectRequired xxx
 // check if pod injection needed
 func (h *Hooker) injectRequired(pod *corev1.Pod) bool {
 	if value, ok := pod.Annotations[AnnotationKey]; !ok || value != AnnotationValue {
@@ -198,6 +200,7 @@ func (h *Hooker) retrieveEnvFromPod(pod *corev1.Pod) (map[string]string, []types
 	return envMap, patches, nil
 }
 
+// injectToPod xxx
 // inject inject env and volume mounts into template containers
 func (h *Hooker) injectToPod(pod *corev1.Pod, envs map[string]string) []types.PatchOperation {
 	var patches []types.PatchOperation

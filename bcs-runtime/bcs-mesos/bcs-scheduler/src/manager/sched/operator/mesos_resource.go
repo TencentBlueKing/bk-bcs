@@ -26,7 +26,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-//GetMesosResource Get cluster current resource information from mesos master
+// GetMesosResource Get cluster current resource information from mesos master
 func GetMesosResource(mesosClient *client.Client) (*commtypes.BcsClusterResource, error) {
 	clusterRes := new(commtypes.BcsClusterResource)
 	blog.Info("get cluster resource from mesos master")
@@ -75,7 +75,7 @@ func GetMesosResource(mesosClient *client.Client) (*commtypes.BcsClusterResource
 	diskUsed := 0.0
 	agent := new(commtypes.BcsClusterAgentInfo)
 	for _, oneAgent := range agentInfo.Agents {
-		//blog.V(3).Infof("get agents: ===>agent[%d]: %+v", index, oneAgent)
+		// blog.V(3).Infof("get agents: ===>agent[%d]: %+v", index, oneAgent)
 		agent.HostName = oneAgent.GetAgentInfo().GetHostname()
 		agent.IP = oneAgent.GetPid()
 		totalRes := oneAgent.GetTotalResources()

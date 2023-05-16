@@ -15,18 +15,12 @@ import logging
 
 from django.conf import settings
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
 from kubernetes import client
 from kubernetes.client.rest import ApiException
-from rest_framework.exceptions import ValidationError
 
-from backend.components import paas_cc
 from backend.components.bcs import BCSClientBase
+from backend.components.cluster_manager import get_shared_clusters
 from backend.components.utils import http_delete, http_get, http_patch, http_post
-from backend.utils import FancyDict, cache, exceptions
-from backend.utils.cache import region
-from backend.utils.errcodes import ErrorCode
-from backend.utils.error_codes import error_codes
 
 from . import resources
 from .k8s_client import K8SProxyClient
@@ -45,25 +39,26 @@ class K8SClient(BCSClientBase):
 
     @cached_property
     def _context(self):
-        context = {}
-        cluster_info = self.query_cluster()
-        context.update(cluster_info)
-        credentials = self.get_client_credentials(cluster_info["id"])
-        context.update(credentials)
-        context["host"] = f"{self._bcs_server_host}{context['server_address_path']}".rstrip("/")
-        return context
+        server_address_path = f'/clusters/{self.cluster_id}'
+        return {
+            'server_address': f'{self._bcs_server_host}{server_address_path}',
+            'server_address_path': server_address_path,
+            'identifier': self.cluster_id,
+            'user_token': settings.BCS_APIGW_TOKEN,
+            'host': f'{self._bcs_server_host}{server_address_path}',
+        }
 
     @cached_property
     def _context_for_shared_cluster(self):
         return {
-            "host": f"{settings.BCS_API_GW_DOMAIN}/{self._bcs_server_stag}/v4/clusters/{self.cluster_id}",
-            "user_token": settings.BCS_API_GW_AUTH_TOKEN,
+            "host": f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/clusters/{self.cluster_id}",
+            "user_token": settings.BCS_APIGW_TOKEN,
         }
 
     @cached_property
     def context(self):
         # 因为webcosole现在不能切换，所以先保留两个入口
-        if self.cluster_id in [cluster["cluster_id"] for cluster in settings.SHARED_CLUSTERS]:
+        if self.cluster_id in [cluster["cluster_id"] for cluster in get_shared_clusters()]:
             return self._context_for_shared_cluster
         return self._context
 
@@ -332,9 +327,32 @@ class K8SClient(BCSClientBase):
 
     def get_events(self, params):
         # storage可以获取比较长的event信息，因此，通过storage查询event
-        url = f"{settings.BCS_API_SERVER_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
-        resp = http_get(url, params=params, headers=self.headers)
+        url = f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/storage/events"
+        resp = http_post(url, data=params, headers=self.headers)
         return resp
+
+    @property
+    def vars_api_prefix(self):
+        """变量管理API"""
+        return f"{settings.BCS_APIGW_DOMAIN[self._bcs_server_stag]}/bcsapi/v4/bcsproject/v1"
+
+    def vars_api_headers(self, username):
+        """变量管理API"""
+        headers = self.headers.copy()
+        headers["X-Project-Username"] = username
+        return headers
+
+    def render_vars(self, project_code, cluster_id, namespace, username, keys):
+        """变量渲染, keys=None 会获取全部自定义变量值"""
+        url = f"{self.vars_api_prefix}/projects/{project_code}/clusters/{cluster_id}/namespaces/{namespace}/variables/render"  # noqa
+        params = {}
+        if keys:
+            params['keyList'] = keys
+        resp = http_get(url, params=params, headers=self.vars_api_headers(username))
+        vars_map = {}
+        for item in resp.get("data") or []:
+            vars_map[item['key']] = {"key": item["key"], "name": item["name"], "value": item["value"]}
+        return vars_map
 
     def get_used_namespace(self):
         """获取已经使用的命名空间名称"""
@@ -343,7 +361,10 @@ class K8SClient(BCSClientBase):
 
     @property
     def _headers_for_bcs_agent_api(self):
-        return {"Authorization": getattr(settings, "BCS_AUTH_TOKEN", ""), "Content-Type": "application/json"}
+        return {
+            "Authorization": f'Bearer {getattr(settings, "BCS_APIGW_TOKEN", "")}',
+            "Content-Type": "application/json",
+        }
 
     def query_cluster(self):
         """获取bke_cluster_id, identifier"""

@@ -26,8 +26,10 @@ import (
 	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 )
 
+// MemoryOption xxx
 type MemoryOption bool
 
+// NewMeterProvider xxx
 func NewMeterProvider(mo MemoryOption, opts ...controller.Option) (metric.MeterProvider, *prometheus.Exporter, error) {
 	config := prometheus.Config{}
 	c := controller.New(processor.NewFactory(

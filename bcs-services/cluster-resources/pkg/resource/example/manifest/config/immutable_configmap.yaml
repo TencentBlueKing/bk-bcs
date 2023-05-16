@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-immutable
+  namespace: default
+immutable: true
+data:
+  special.how: very
+  special.type: charm

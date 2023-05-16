@@ -31,7 +31,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-//NewFakeConnection return Connection
+// NewFakeConnection return Connection
 func NewFakeConnection() Connection {
 	c := NewConnection()
 	return &FakeConnection{
@@ -43,45 +43,45 @@ func NewFakeConnection() Connection {
 	}
 }
 
-//FakeConnection is a proxy Connection for testing
-//Executor message register, runTaskGroup, shutdown
+// FakeConnection is a proxy Connection for testing
+// Executor message register, runTaskGroup, shutdown
 type FakeConnection struct {
-	con        *HTTPConnection //connection for HTTPConenction
-	stopCh     chan struct{}   //stop channel for data loop
-	dataReader *io.PipeReader  //reader for http.Response
-	dataWriter *io.PipeWriter  //writer for reader
-	dataCh     chan *exe.Call  //data channel for handling message sent by Executor
+	con        *HTTPConnection // connection for HTTPConenction
+	stopCh     chan struct{}   // stop channel for data loop
+	dataReader *io.PipeReader  // reader for http.Response
+	dataWriter *io.PipeWriter  // writer for reader
+	dataCh     chan *exe.Call  // data channel for handling message sent by Executor
 }
 
-//Install mount an handler based on incoming message name.
+// Install mount an handler based on incoming message name.
 func (httpConn *FakeConnection) Install(eventType exe.Event_Type, dispatch DispatchFunc) error {
 	return httpConn.con.Install(eventType, dispatch)
 }
 
-//TLSConfig setting TLS Connection to remote server
+// TLSConfig setting TLS Connection to remote server
 func (httpConn *FakeConnection) TLSConfig(config *tls.Config, handshakeTimeout time.Duration) {
-	//https transport
+	// https transport
 	httpConn.con.TLSConfig(config, handshakeTimeout)
 }
 
-//Start starts the Connection to remote server.
-//endpoint: remote endpoint url info, like mesos-slave:8080, mesos-slave:8080
-//path: remote, like /v1/executor
+// Start starts the Connection to remote server.
+// endpoint: remote endpoint url info, like mesos-slave:8080, mesos-slave:8080
+// path: remote, like /v1/executor
 func (httpConn *FakeConnection) Start(endpoint string, path string) error {
 	httpConn.con.Start(endpoint, path)
-	//start event message simulation
+	// start event message simulation
 	go httpConn.messageSimulation()
-	//active test message sending
+	// active test message sending
 	go httpConn.slaveSimulation()
 	return nil
 }
 
 func (httpConn *FakeConnection) slaveSimulation() {
-	//simulate slave, sending message like TaskGroupInfo,
-	//Shutdown, KillTask to Executor
-	//send TaskGroupInfo in 1 second
-	//send Shutdown in 10 second
-	//send KillTask in 10 second ?
+	// simulate slave, sending message like TaskGroupInfo,
+	// Shutdown, KillTask to Executor
+	// send TaskGroupInfo in 1 second
+	// send Shutdown in 10 second
+	// send KillTask in 10 second ?
 	tick := time.NewTicker(1 * time.Second)
 	defer tick.Stop()
 	fmt.Fprintln(os.Stdout, "enter slave message sending loop")
@@ -114,7 +114,7 @@ func (httpConn *FakeConnection) messageSimulation() {
 			fmt.Fprintln(os.Stdout, "FakeConnection message simulation exit")
 			return
 		case event := <-httpConn.dataCh:
-			//handle message according EventType
+			// handle message according EventType
 			var response *http.Response
 			switch event.GetType() {
 			case exe.Call_SUBSCRIBE:
@@ -130,8 +130,8 @@ func (httpConn *FakeConnection) messageSimulation() {
 }
 
 func (httpConn *FakeConnection) getRegisteredResponse(call *exe.Call) *http.Response {
-	//response registered event
-	//create data for json
+	// response registered event
+	// create data for json
 	event := &exe.Event{
 		Type: exe.Event_SUBSCRIBED.Enum(),
 		Subscribed: &exe.Event_Subscribed{
@@ -173,7 +173,7 @@ func (httpConn *FakeConnection) getRegisteredResponse(call *exe.Call) *http.Resp
 func (httpConn *FakeConnection) getTaskGroupInfoResponse() *http.Response {
 	fmt.Fprintln(os.Stdout, "ready to create task group info send to driver")
 	var tasks []*mesos.TaskInfo
-	//create task for tasks
+	// create task for tasks
 	task := &mesos.TaskInfo{
 		Name:    proto.String("developerJimTestTaskBox"),
 		TaskId:  &mesos.TaskID{Value: proto.String("d40f3f3e-bbe3-44af-a230-4cb1eae72f67")},
@@ -290,16 +290,16 @@ func (httpConn *FakeConnection) getMessageResponse(call *exe.Call) *http.Respons
 	return nil
 }
 
-//Stop kills the transporter.
+// Stop kills the transporter.
 func (httpConn *FakeConnection) Stop(graceful bool) {
 	fmt.Fprintln(os.Stdout, "FakeConnection stop is Called")
 	httpConn.con.Stop(graceful)
 	close(httpConn.stopCh)
 }
 
-//Send sends message to remote process. Will stop sending when Connection is stopped.
-//if aliveLoop is true, keep connection alive for incomming package,
-//when new message coming, dispatch message to installed callback handlerFunc
+// Send sends message to remote process. Will stop sending when Connection is stopped.
+// if aliveLoop is true, keep connection alive for incomming package,
+// when new message coming, dispatch message to installed callback handlerFunc
 func (httpConn *FakeConnection) Send(call *exe.Call, keepAlive bool) error {
 	if call != nil {
 		httpConn.dataCh <- call
@@ -307,28 +307,28 @@ func (httpConn *FakeConnection) Send(call *exe.Call, keepAlive bool) error {
 	return nil
 }
 
-//Recv receives message initialtively
+// Recv receives message initialtively
 func (httpConn *FakeConnection) Recv() (*exe.Event, error) {
 	return nil, fmt.Errorf("NotImplement")
 }
 
-//GetConnStatus return connection status
+// GetConnStatus return connection status
 func (httpConn *FakeConnection) GetConnStatus() Status {
 	return httpConn.con.status
 }
 
-//reconnect if connection to mesos slave down, reconnect to slave
+// reconnect if connection to mesos slave down, reconnect to slave
 func (httpConn *FakeConnection) reconnect() error {
 	return fmt.Errorf("NotImplement")
 }
 
-//recvLoop recv message from mesos & post to HandleFunc
+// recvLoop recv message from mesos & post to HandleFunc
 func (httpConn *FakeConnection) recvLoop(response *http.Response) {
 	if response == nil {
 		fmt.Fprintln(os.Stdout, "Get Nil Response")
 		return
 	}
-	//setting connected before handle response
+	// setting connected before handle response
 	httpConn.con.status = CONNECTED
 	go httpConn.con.recvLoop(response)
 }

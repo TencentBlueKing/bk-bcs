@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-monitor.fullname" . }}-storegw
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-monitor-storegw
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-monitor-storegw
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-monitor.fullname" . }}-storegw-sd
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-monitor-storegw-sd
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 10902
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-monitor-storegw

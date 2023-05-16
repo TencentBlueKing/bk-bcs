@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -26,6 +27,7 @@ const (
 )
 
 const (
+	// BkBcsClusterManager for prometheus namespace
 	BkBcsClusterManager = "bkbcs_clustermanager"
 )
 

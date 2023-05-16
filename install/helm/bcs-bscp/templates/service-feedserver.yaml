@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bcs-bscp.fullname" . }}-feedserver
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-bscp-feedserver
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9510
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/name: bcs-bscp-feedserver

@@ -1,0 +1,266 @@
+@import '@/css/variable.css';
+@import '@/css/mixins/ellipsis.css';
+
+.biz-app-instance {
+    padding: 20px;
+}
+
+.biz-app-instance-title {
+    display: inline-block;
+    height: 60px;
+    line-height: 60px;
+    font-size: 16px;
+    margin-left: 20px;
+    cursor: pointer;
+
+    .back {
+        font-size: 16px;
+        font-weight: 700;
+        position: relative;
+        top: 1px;
+        color: $iconPrimaryColor;
+    }
+}
+
+.biz-app-instance-wrapper {
+    background-color: $bgHoverColor;
+    display: inline-block;
+    width: 100%;
+}
+
+.biz-app-instance-header {
+    display: flex;
+    border: 1px solid $borderWeightColor;
+    border-radius: 2px;
+
+    .header-item {
+        font-size: 14px;
+        flex: 1;
+        height: 75px;
+        border-right: 1px solid $borderWeightColor;
+        padding-left: 20px;
+        background-color: #fff;
+
+        &:last-child {
+            border-right: none;
+        }
+
+        .key-label {
+            font-weight: 700;
+            padding-top: 13px;
+            padding-bottom: 5px;
+        }
+
+        .value-label {
+            @mixin ellipsis 180px;
+            padding-top: 4px;
+        }
+    }
+}
+
+.biz-app-instance-chart-wrapper {
+    margin-top: 20px;
+    background-color: #fff;
+    box-shadow: 1px 0 2px rgba(0, 0, 0, 0.1);
+    border: 1px solid $borderWeightColor;
+    font-size: 0;
+    border-radius: 2px;
+
+    .biz-dropdown-button {
+        vertical-align: bottom;
+        /deep/ .bcs-icon {
+            top: -1px;
+        }
+    }
+
+    .biz-app-instance-chart-k8s {
+        display: flex;
+        width: 100%;
+        .part {
+            flex: 1;
+            height: 250px;
+            &.top-left {
+                border-right: 1px solid $borderWeightColor;
+                border-bottom: 1px solid $borderWeightColor;
+            }
+
+            &.top-right {
+                border-bottom: 1px solid $borderWeightColor;
+            }
+
+            .info {
+                font-size: 14px;
+                display: flex;
+                padding: 20px 30px;
+
+                .left,
+                .right {
+                    flex: 1;
+                }
+
+                .left {
+                    font-weight: 700;
+                }
+
+                .right {
+                    text-align: right;
+                }
+            }
+        }
+    }
+
+    .biz-app-instance-chart {
+        display: inline-block;
+        width: 100%;
+
+        .part {
+            width: 50%;
+            float: left;
+            height: 250px;
+
+            &.top-left {
+                border-right: 1px solid $borderWeightColor;
+                border-bottom: 1px solid $borderWeightColor;
+            }
+
+            &.top-right {
+                border-bottom: 1px solid $borderWeightColor;
+            }
+
+            &.bottom-left {
+                border-right: 1px solid $borderWeightColor;
+            }
+
+            .info {
+                font-size: 14px;
+                display: flex;
+                padding: 20px 30px;
+
+                .left,
+                .right {
+                    flex: 1;
+                }
+
+                .left {
+                    font-weight: 700;
+                }
+
+                .right {
+                    text-align: right;
+                }
+            }
+
+            .right {
+
+                .system,
+                .user {
+                    display: inline-block;
+                    font-size: 14px;
+
+                    .circle {
+                        display: inline-block;
+                        width: 14px;
+                        height: 14px;
+                        border-radius: 50%;
+                        position: relative;
+                        top: 2px;
+                    }
+                }
+
+                .system {
+                    .circle {
+                        border: 3px solid $primaryColor;
+                    }
+                }
+
+                .user {
+                    margin-left: 30px;
+
+                    .circle {
+                        border: 3px solid #30d873;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.echarts {
+    width: 100%;
+    height: 160px;
+    z-index: 100;
+}
+
+.biz-app-container-table-wrapper {
+    margin-top: 20px;
+}
+
+.biz-app-container-ports-table,
+.biz-app-container-commands-table,
+.biz-app-container-volumes-table,
+.biz-app-container-health-table,
+.biz-app-container-env-table,
+.biz-app-container-label-table,
+.biz-app-container-resource-table {
+    border-bottom: none;
+
+    .no-data {
+        min-height: 180px;
+
+        .empty-message {
+            margin-top: 50px;
+        }
+    }
+}
+
+.biz-app-container-ports-table {
+    .port-name {
+        @mixin ellipsis 300px;
+    }
+
+    .port-protocol {
+        @mixin ellipsis 100px;
+    }
+}
+
+.biz-app-container-commands-table {
+    .command-name {
+        @mixin ellipsis 300px;
+    }
+
+    .command-args {
+        @mixin ellipsis 200px;
+    }
+}
+
+.biz-app-container-volumes-table {
+    .volume-host {
+        @mixin ellipsis 250px;
+    }
+
+    .volume-mount {
+        @mixin ellipsis 250px;
+    }
+}
+
+.biz-app-container-health-table {
+    .health-type {
+        @mixin ellipsis 150px;
+    }
+
+    .health-message {
+        @mixin ellipsis 350px;
+    }
+}
+
+@media screen and (max-width: $mediaWidth) {
+    .biz-app-instance-header {
+        .header-item {
+            div {
+                &:last-child {
+                    width: 120px;
+                }
+            }
+        }
+    }
+}

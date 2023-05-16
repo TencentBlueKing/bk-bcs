@@ -23,6 +23,7 @@ import (
 	metricTypes "github.com/Tencent/bk-bcs/bcs-services/bcs-metricservice/pkg/types"
 )
 
+// Metric xxx
 type Metric interface {
 	List(clusterID string) (MetricList, error)
 	Inspect(clusterID, namespace, name string) (*metricTypes.Metric, error)
@@ -36,15 +37,21 @@ type Metric interface {
 }
 
 const (
-	BcsMetricListURI   = "%s/bcsapi/v4/metric/metrics"
+	// BcsMetricListURI xxx
+	BcsMetricListURI = "%s/bcsapi/v4/metric/metrics"
+	// BcsMetricDeleteURI xxx
 	BcsMetricDeleteURI = "%s/bcsapi/v4/metric/clustertype/%s/clusters/%s/namespaces/%s/metrics?name=%s"
+	// BcsMetricUpsertURI xxx
 	BcsMetricUpsertURI = "%s/bcsapi/v4/metric/clustertype/%s/metrics"
 
-	BcsMetricTaskListURI     = "%s/bcsapi/v4/metric/tasks/clusters/%s"
+	// BcsMetricTaskListURI xxx
+	BcsMetricTaskListURI = "%s/bcsapi/v4/metric/tasks/clusters/%s"
+	// BcsMetricTaskResourceURI xxx
 	BcsMetricTaskResourceURI = "%s/bcsapi/v4/metric/tasks/clusters/%s/namespaces/%s/name/%s"
 )
 
 var (
+	// MetricNotFound xxx
 	MetricNotFound = fmt.Errorf("metric no found")
 )
 
@@ -53,6 +60,7 @@ type bcsMetric struct {
 	requester     utils.ApiRequester
 }
 
+// NewBcsMetric xxx
 func NewBcsMetric(options types.ClientOptions) Metric {
 	return &bcsMetric{
 		bcsApiAddress: options.BcsApiAddress,
@@ -60,34 +68,42 @@ func NewBcsMetric(options types.ClientOptions) Metric {
 	}
 }
 
+// List xxx
 func (bm *bcsMetric) List(clusterID string) (MetricList, error) {
 	return bm.list(clusterID)
 }
 
+// Inspect xxx
 func (bm *bcsMetric) Inspect(clusterID, namespace, name string) (*metricTypes.Metric, error) {
 	return bm.inspect(clusterID, namespace, name)
 }
 
+// Delete xxx
 func (bm *bcsMetric) Delete(clusterType, clusterID, namespace, name string) error {
 	return bm.delete(clusterType, clusterID, namespace, name)
 }
 
+// Upsert xxx
 func (bm *bcsMetric) Upsert(clusterType string, data []byte) error {
 	return bm.upsert(clusterType, data)
 }
 
+// ListTask xxx
 func (bm *bcsMetric) ListTask(clusterID string) (MetricTaskList, error) {
 	return bm.listTask(clusterID)
 }
 
+// InspectTask xxx
 func (bm *bcsMetric) InspectTask(clusterID, namespace, name string) (*metricTypes.MetricTask, error) {
 	return bm.inspectTask(clusterID, namespace, name)
 }
 
+// DeleteTask xxx
 func (bm *bcsMetric) DeleteTask(clusterID, namespace, name string) error {
 	return bm.deleteTask(clusterID, namespace, name)
 }
 
+// UpsertTask xxx
 func (bm *bcsMetric) UpsertTask(clusterID string, data []byte) error {
 	return bm.upsertTask(clusterID, data)
 }

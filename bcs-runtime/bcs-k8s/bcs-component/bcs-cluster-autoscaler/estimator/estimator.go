@@ -11,6 +11,7 @@
  *
  */
 
+// Package estimator xxx
 package estimator
 
 import (
@@ -38,7 +39,8 @@ const (
 type ExtendedEstimatorBuilder func(*simulator.PredicateChecker, map[string]*nodeinfo.NodeInfo) estimator.Estimator
 
 // NewEstimatorBuilder creates a new estimator object from flag.
-func NewEstimatorBuilder(name string, ratio float64) (ExtendedEstimatorBuilder, error) {
+func NewEstimatorBuilder(name string,
+	cpuRatio, memRatio, resourceRatio float64) (ExtendedEstimatorBuilder, error) {
 	switch name {
 	case BinpackingEstimatorName:
 		return func(predicateChecker *simulator.PredicateChecker,
@@ -48,7 +50,8 @@ func NewEstimatorBuilder(name string, ratio float64) (ExtendedEstimatorBuilder, 
 	case ResourceEstimatorName:
 		return func(predicateChecker *simulator.PredicateChecker,
 			nodeInfos map[string]*nodeinfo.NodeInfo) estimator.Estimator {
-			return NewClusterResourceEstimator(predicateChecker, ratio, nodeInfos)
+			return NewClusterResourceEstimator(predicateChecker, nodeInfos,
+				cpuRatio, memRatio, resourceRatio)
 		}, nil
 	// Deprecated.
 	case OldBinpackingEstimatorName:

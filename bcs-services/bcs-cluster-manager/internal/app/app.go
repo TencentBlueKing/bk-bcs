@@ -10,12 +10,17 @@
  * limitations under the License.
  */
 
+// Package app xxx
 package app
 
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -31,8 +36,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
@@ -40,20 +54,29 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tkehandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnel"
 	k8stunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/k8s"
 	mesostunnel "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesos"
 	mesoswebconsole "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/tunnelhandler/mesoswebconsole"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	restful "github.com/emicklei/go-restful"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/micro/go-micro/v2/registry"
 	"github.com/micro/go-micro/v2/registry/etcd"
+	microgrpcserver "github.com/micro/go-micro/v2/server/grpc"
 	microsvc "github.com/micro/go-micro/v2/service"
 	microgrpcsvc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -65,6 +88,9 @@ import (
 type ClusterManager struct {
 	// options for cluster manager
 	opt *options.ClusterManagerOptions
+
+	// mongo DB options
+	mongoOptions *mongo.Options
 
 	// tls config for cluster manager server
 	tlsConfig *tls.Config
@@ -79,13 +105,16 @@ type ClusterManager struct {
 	mux *http.ServeMux
 
 	// http server
-	httpServer *http.Server
+	httpServer *ipv6server.IPv6Server
 
 	// extra module server, [pprof, metrics, swagger]
-	extraServer *http.Server
+	extraServer *ipv6server.IPv6Server
 
 	// discovery
 	disc *discovery.ModuleDiscovery
+
+	// IAM client
+	iamClient iam.PermClient
 
 	// locker
 	locker lock.DistributedLock
@@ -114,6 +143,7 @@ type ClusterManager struct {
 // NewClusterManager create cluster manager
 func NewClusterManager(opt *options.ClusterManagerOptions) *ClusterManager {
 	ctx, cancel := context.WithCancel(context.Background())
+	options.SetGlobalCMOptions(opt)
 	return &ClusterManager{
 		opt:           opt,
 		ctx:           ctx,
@@ -122,6 +152,7 @@ func NewClusterManager(opt *options.ClusterManagerOptions) *ClusterManager {
 	}
 }
 
+// initTLSConfig xxx
 // init server and client tls config
 func (cm *ClusterManager) initTLSConfig() error {
 	if len(cm.opt.ServerCert) != 0 && len(cm.opt.ServerKey) != 0 && len(cm.opt.ServerCa) != 0 {
@@ -148,6 +179,7 @@ func (cm *ClusterManager) initTLSConfig() error {
 	return nil
 }
 
+// initLocker xxx
 // init lock
 func (cm *ClusterManager) initLocker() error {
 	etcdEndpoints := utils.SplitAddrString(cm.opt.Etcd.EtcdEndpoints)
@@ -170,11 +202,12 @@ func (cm *ClusterManager) initLocker() error {
 		blog.Errorf("init locker failed, err %s", err.Error())
 		return err
 	}
-	blog.Infof("init locker successful")
+	blog.Infof("init locker successfullly")
 	cm.locker = locker
 	return nil
 }
 
+// initModel xxx
 // init mongo client
 func (cm *ClusterManager) initModel() error {
 	if len(cm.opt.Mongo.Address) == 0 {
@@ -197,6 +230,8 @@ func (cm *ClusterManager) initModel() error {
 		MaxPoolSize:           uint64(cm.opt.Mongo.MaxPoolSize),
 		MinPoolSize:           uint64(cm.opt.Mongo.MinPoolSize),
 	}
+	cm.mongoOptions = mongoOptions
+
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {
 		blog.Errorf("init mongo db failed, err %s", err.Error())
@@ -213,6 +248,295 @@ func (cm *ClusterManager) initModel() error {
 	return nil
 }
 
+// initTaskServer xxx
+// init task server
+func (cm *ClusterManager) initTaskServer() error {
+	cloudprovider.InitStorageModel(cm.model)
+	// get taskserver and init
+	taskMgr := taskserver.GetTaskServer()
+
+	if err := taskMgr.Init(&cm.opt.Broker, cm.mongoOptions); err != nil {
+		blog.Errorf("cluster-manager init task server failed, %s", err.Error())
+		return err
+	}
+	blog.Infof("cluster-manager init task server successfully")
+	return nil
+}
+
+// initRemoteClient xxx
+// init remote client for cloud dependent data client, client may be disable or empty
+func (cm *ClusterManager) initRemoteClient() error {
+	// init tags client
+	err := cmdb.SetCmdbClient(cmdb.Options{
+		Enable:     cm.opt.Cmdb.Enable,
+		AppCode:    cm.opt.Cmdb.AppCode,
+		BKUserName: cm.opt.Cmdb.BkUserName,
+		AppSecret:  cm.opt.Cmdb.AppSecret,
+		Server:     cm.opt.Cmdb.Server,
+		Debug:      cm.opt.Cmdb.Debug,
+	})
+	if err != nil {
+		return err
+	}
+	// init ssm client
+	err = ssmAuth.SetSSMClient(ssmAuth.Options{
+		Server:    cm.opt.Ssm.Server,
+		AppCode:   cm.opt.Ssm.AppCode,
+		AppSecret: cm.opt.Ssm.AppSecret,
+		Enable:    cm.opt.Ssm.Enable,
+		Debug:     cm.opt.Ssm.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
+	// init pass-cc client
+	err = passcc.SetCCClient(passcc.Options{
+		Server:    cm.opt.Passcc.Server,
+		AppCode:   cm.opt.BKOps.AppCode,
+		AppSecret: cm.opt.BKOps.AppSecret,
+		Enable:    cm.opt.Passcc.Enable,
+		Debug:     cm.opt.Passcc.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
+	// init user-manager config
+	user.SetUserManagerClient(&user.Options{
+		Enable:          cm.opt.UserManager.Enable,
+		GateWay:         cm.opt.UserManager.GateWay,
+		IsVerifyTLS:     cm.opt.UserManager.IsVerifyTLS,
+		Token:           cm.opt.UserManager.Token,
+		EtcdRegistry:    cm.microRegistry,
+		ClientTLSConfig: cm.clientTLSConfig,
+	})
+
+	// init nodeman client
+	err = nodeman.SetNodeManClient(nodeman.Options{
+		Enable:     cm.opt.NodeMan.Enable,
+		AppCode:    cm.opt.NodeMan.AppCode,
+		BKUserName: cm.opt.NodeMan.BkUserName,
+		AppSecret:  cm.opt.NodeMan.AppSecret,
+		Server:     cm.opt.NodeMan.Server,
+		Debug:      cm.opt.NodeMan.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
+	// init gse client
+	if err := gse.SetGseClient(gse.Options{
+		Enable:     cm.opt.Gse.Enable,
+		AppCode:    cm.opt.Gse.AppCode,
+		AppSecret:  cm.opt.Gse.AppSecret,
+		BKUserName: cm.opt.Gse.BkUserName,
+		Server:     cm.opt.Gse.Server,
+		Debug:      cm.opt.Gse.Debug,
+	}); err != nil {
+		return err
+	}
+
+	// init helm client
+	err = helm.SetHelmManagerClient(&helm.Options{
+		Enable:          cm.opt.Helm.Enable,
+		GateWay:         cm.opt.Helm.GateWay,
+		Token:           cm.opt.Helm.Token,
+		Module:          cm.opt.Helm.Module,
+		EtcdRegistry:    cm.microRegistry,
+		ClientTLSConfig: cm.clientTLSConfig,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// initBKOpsClient xxx
+// init bk-ops client
+func (cm *ClusterManager) initBKOpsClient() error {
+	err := common.SetBKOpsClient(common.Options{
+		AppCode:       cm.opt.BKOps.AppCode,
+		AppSecret:     cm.opt.BKOps.AppSecret,
+		Debug:         cm.opt.BKOps.Debug,
+		External:      cm.opt.BKOps.External,
+		CreateTaskURL: cm.opt.BKOps.CreateTaskURL,
+		TaskStatusURL: cm.opt.BKOps.TaskStatusURL,
+		StartTaskURL:  cm.opt.BKOps.StartTaskURL,
+	})
+	if err != nil {
+		blog.Errorf("initBKOpsClient failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// initIAMClient xxx
+// init iam client for perm
+func (cm *ClusterManager) initIAMClient() error {
+	var err error
+	cm.iamClient, err = iam.NewIamClient(&iam.Options{
+		SystemID:    cm.opt.IAM.SystemID,
+		AppCode:     cm.opt.IAM.AppCode,
+		AppSecret:   cm.opt.IAM.AppSecret,
+		External:    cm.opt.IAM.External,
+		GateWayHost: cm.opt.IAM.GatewayServer,
+		IAMHost:     cm.opt.IAM.IAMServer,
+		BkiIAMHost:  cm.opt.IAM.BkiIAMServer,
+		Metric:      cm.opt.IAM.Metric,
+		Debug:       cm.opt.IAM.Debug,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	auth.InitPermClient(cm.iamClient)
+
+	return nil
+}
+
+// init jwt client for perm
+func (cm *ClusterManager) initJWTClient() error {
+	return auth.InitJWTClient(cm.opt)
+}
+
+// init client permissions
+func (cm *ClusterManager) initClientPermissions() error {
+	auth.ClientPermissions = make(map[string][]string, 0)
+	if len(cm.opt.Auth.ClientPermissions) == 0 {
+		return nil
+	}
+
+	err := json.Unmarshal([]byte(cm.opt.Auth.ClientPermissions), &auth.ClientPermissions)
+	if err != nil {
+		return fmt.Errorf("parse ClientPermissions error: %s", err.Error())
+	}
+	return nil
+}
+
+// init no auth method
+func (cm *ClusterManager) initNoAuthMethod() error {
+	if len(cm.opt.Auth.NoAuthMethod) == 0 {
+		return nil
+	}
+
+	methods := strings.Split(cm.opt.Auth.NoAuthMethod, ",")
+	auth.NoAuthMethod = append(auth.NoAuthMethod, methods...)
+	return nil
+}
+
+func (cm *ClusterManager) initCloudTemplateConfig() error {
+	if cm.opt.CloudTemplatePath == "" {
+		return fmt.Errorf("cloud template path empty, please manual build cloud")
+	}
+
+	cloudList := &options.CloudTemplateList{}
+	cloudBytes, err := ioutil.ReadFile(cm.opt.CloudTemplatePath)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(cloudBytes, cloudList)
+	if err != nil {
+		blog.Errorf("initCloudTemplateConfig Unmarshal err: %v", err)
+		return err
+	}
+
+	// init cloud config
+	for i := range cloudList.CloudList {
+		err = cm.updateCloudConfig(cloudList.CloudList[i])
+		if err != nil {
+			blog.Errorf("initCloudTemplateConfig[%s] failed %v", cloudList.CloudList[i].CloudID, err)
+		}
+	}
+
+	return nil
+}
+
+func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
+	timeStr := time.Now().Format(time.RFC3339)
+	cloud.UpdateTime = timeStr
+
+	destCloud, err := cm.model.GetCloud(cm.ctx, cloud.CloudID)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+
+	// generate new cloud config
+	if destCloud == nil {
+		cloud.CreatTime = timeStr
+		err = cm.model.CreateCloud(cm.ctx, cloud)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// update existed cloud config
+	destCloud.UpdateTime = timeStr
+	destCloud.Editable = cloud.Editable
+	if cloud.Name != "" {
+		destCloud.Name = cloud.Name
+	}
+	if cloud.OpsPlugins != nil {
+		destCloud.OpsPlugins = cloud.OpsPlugins
+	}
+	if cloud.ExtraPlugins != nil {
+		destCloud.ExtraPlugins = cloud.ExtraPlugins
+	}
+	if cloud.CloudCredential != nil {
+		destCloud.CloudCredential = cloud.CloudCredential
+	}
+	if cloud.OsManagement != nil {
+		destCloud.OsManagement = cloud.OsManagement
+	}
+	if cloud.ClusterManagement != nil {
+		destCloud.ClusterManagement = cloud.ClusterManagement
+	}
+	if cloud.NodeGroupManagement != nil {
+		destCloud.NodeGroupManagement = cloud.NodeGroupManagement
+	}
+	if len(cloud.CloudProvider) > 0 {
+		destCloud.CloudProvider = cloud.CloudProvider
+	}
+	if len(cloud.Config) > 0 {
+		destCloud.Config = cloud.Config
+	}
+	if len(cloud.Updater) > 0 {
+		destCloud.Updater = cloud.Updater
+	}
+	if len(cloud.EngineType) > 0 {
+		destCloud.EngineType = cloud.EngineType
+	}
+	if len(cloud.Enable) > 0 {
+		destCloud.Enable = cloud.Enable
+	}
+	if len(cloud.Description) > 0 {
+		destCloud.Description = cloud.Description
+	}
+	if cloud.NetworkInfo != nil {
+		destCloud.NetworkInfo = cloud.NetworkInfo
+	}
+	if cloud.ConfInfo != nil {
+		destCloud.ConfInfo = cloud.ConfInfo
+	}
+	if cloud.PlatformInfo != nil {
+		destCloud.PlatformInfo = cloud.PlatformInfo
+	}
+
+	err = cm.model.UpdateCloud(cm.ctx, destCloud)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// initK8SOperator xxx
 // init k8s operator
 func (cm *ClusterManager) initK8SOperator() {
 	cm.k8sops = clusterops.NewK8SOperator(cm.opt, cm.model)
@@ -243,7 +567,7 @@ func (cm *ClusterManager) initRegistry() error {
 }
 
 func (cm *ClusterManager) initDiscovery() {
-	cm.disc = discovery.NewModuleDiscovery(types.ServiceDomain, cm.microRegistry)
+	cm.disc = discovery.NewModuleDiscovery(cmcommon.ClusterManagerServiceDomain, cm.microRegistry)
 	blog.Infof("init discovery for cluster manager successfully")
 }
 
@@ -317,11 +641,16 @@ func CustomMatcher(key string) (string, bool) {
 	switch key {
 	case "X-Request-Id":
 		return "X-Request-Id", true
+	case middleware.CustomUsernameHeaderKey:
+		return middleware.CustomUsernameHeaderKey, true
+	case middleware.InnerClientHeaderKey:
+		return middleware.InnerClientHeaderKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}
 }
 
+// initHTTPGateway xxx
 // init http grpc gateway
 func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
@@ -331,7 +660,7 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 			EmitDefaults: true,
 		}),
 	)
-	grpcDialOpts := []grpc.DialOption{}
+	grpcDialOpts := make([]grpc.DialOption, 0)
 	if cm.tlsConfig != nil && cm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(grpccred.NewTLS(cm.clientTLSConfig)))
 	} else {
@@ -340,8 +669,9 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	err := cmproto.RegisterClusterManagerGwFromEndpoint(
 		context.TODO(),
 		gwmux,
-		cm.opt.Address+":"+strconv.Itoa(int(cm.opt.Port)),
-		grpcDialOpts)
+		net.JoinHostPort(cm.opt.Address, strconv.Itoa(int(cm.opt.Port))),
+		grpcDialOpts,
+	)
 	if err != nil {
 		blog.Errorf("register http gateway failed, err %s", err.Error())
 		return fmt.Errorf("register http gateway failed, err %s", err.Error())
@@ -366,18 +696,20 @@ func (cm *ClusterManager) initHTTPService() error {
 		return err
 	}
 
-	mux := http.NewServeMux()
-	mux.Handle("/", router)
-	cm.initSwagger(mux)
+	muxServe := http.NewServeMux()
+	muxServe.Handle("/", router)
+	cm.initSwagger(muxServe)
 
-	httpAddr := cm.opt.Address + ":" + strconv.Itoa(int(cm.opt.HTTPPort))
-	cm.httpServer = &http.Server{
-		Addr:    httpAddr,
-		Handler: mux,
+	// server address
+	addresses := []string{cm.opt.Address}
+	if len(cm.opt.Ipv6Address) > 0 && (cm.opt.Ipv6Address != cm.opt.Address) {
+		addresses = append(addresses, cm.opt.Ipv6Address)
 	}
+	cm.httpServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(cm.opt.HTTPPort)), "", muxServe)
+
 	go func() {
 		var err error
-		blog.Infof("start http gateway server on address %s", httpAddr)
+		blog.Infof("start http gateway server on address %+v", addresses)
 		if cm.tlsConfig != nil {
 			cm.httpServer.TLSConfig = cm.tlsConfig
 			err = cm.httpServer.ListenAndServeTLS("", "")
@@ -424,15 +756,16 @@ func (cm *ClusterManager) initExtraModules() {
 	extraMux := http.NewServeMux()
 	cm.initPProf(extraMux)
 	cm.initMetric(extraMux)
-	extraServerEndpoint := cm.opt.Address + ":" + strconv.Itoa(int(cm.opt.MetricPort))
-	cm.extraServer = &http.Server{
-		Addr:    extraServerEndpoint,
-		Handler: extraMux,
+
+	ips := []string{cm.opt.Address}
+	if len(cm.opt.Ipv6Address) > 0 && (cm.opt.Ipv6Address != cm.opt.Address) {
+		ips = append(ips, cm.opt.Ipv6Address)
 	}
+	cm.extraServer = ipv6server.NewIPv6Server(ips, strconv.Itoa(int(cm.opt.MetricPort)), "", extraMux)
 
 	go func() {
 		var err error
-		blog.Infof("start extra modules [pprof, metric] server %s", extraServerEndpoint)
+		blog.Infof("start extra modules [pprof, metric] server %+v", ips)
 		err = cm.extraServer.ListenAndServe()
 		if err != nil {
 			blog.Errorf("extra modules server listen failed, err %s", err.Error())
@@ -442,14 +775,30 @@ func (cm *ClusterManager) initExtraModules() {
 }
 
 func (cm *ClusterManager) initMicro() error {
+	// server listen ip
+	ipv4 := cm.opt.Address
+	ipv6 := cm.opt.Ipv6Address
+	port := strconv.Itoa(int(cm.opt.Port))
+
+	// service inject metadata to discovery center
+	metadata := make(map[string]string)
+	metadata[cmcommon.MicroMetaKeyHTTPPort] = strconv.Itoa(int(cm.opt.HTTPPort))
+
+	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
+	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
+		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
+	}
+
+	authWrapper := middleware.NewGoMicroAuth(auth.GetJWTClient()).
+		EnableSkipHandler(auth.SkipHandler).
+		EnableSkipClient(auth.SkipClient).
+		SetCheckUserPerm(auth.CheckUserPerm)
 	// New Service
 	microService := microgrpcsvc.NewService(
-		microsvc.Name(types.ServiceDomain),
-		microsvc.Metadata(map[string]string{
-			cmcommon.MicroMetaKeyHTTPPort: strconv.Itoa(int(cm.opt.HTTPPort)),
-		}),
+		microsvc.Name(cmcommon.ClusterManagerServiceDomain),
+		microsvc.Metadata(metadata),
 		microgrpcsvc.WithTLS(cm.tlsConfig),
-		microsvc.Address(cm.opt.Address+":"+strconv.Itoa(int(cm.opt.Port))),
+		microsvc.Address(net.JoinHostPort(ipv4, port)),
 		microsvc.Registry(cm.microRegistry),
 		microsvc.Version(version.BcsVersion),
 		microsvc.RegisterTTL(30*time.Second),
@@ -465,18 +814,46 @@ func (cm *ClusterManager) initMicro() error {
 			cm.disc.Stop()
 			return nil
 		}),
+		microsvc.WrapHandler(
+			utils.RequestLogWarpper,
+			utils.ResponseWrapper,
+			authWrapper.AuthenticationFunc,
+			authWrapper.AuthorizationFunc,
+		),
 	)
 	microService.Init()
 
 	// create cluster manager server handler
-	cm.serverHandler = handler.NewClusterManager(cm.model, cm.k8sops)
+	cm.serverHandler = handler.NewClusterManager(&handler.ControllerOptions{
+		Model:      cm.model,
+		KubeClient: cm.k8sops,
+		Locker:     cm.locker,
+		IAMClient:  cm.iamClient,
+		CmOptions:  cm.opt,
+	})
+	// 创建双栈监听
+	dualStackListener := listener.NewDualStackListener()
+	if err := dualStackListener.AddListener(ipv4, port); err != nil { // 添加主地址监听
+		return err
+	}
+	if ipv6 != ipv4 {
+		if err := dualStackListener.AddListener(ipv6, port); err != nil { // 添加副地址监听
+			return err
+		}
+	}
+
+	// grpc server
+	grpcServer := microService.Server()
+	if err := grpcServer.Init(microgrpcserver.Listener(dualStackListener)); err != nil {
+		return err
+	}
 	// Register handler
-	cmproto.RegisterClusterManagerHandler(microService.Server(), cm.serverHandler)
+	cmproto.RegisterClusterManagerHandler(grpcServer, cm.serverHandler)
 	cm.microService = microService
 	return nil
 }
 
-func (cm *ClusterManager) initSigalHandler() {
+func (cm *ClusterManager) initSignalHandler() {
 	// listen system signal
 	// to run in the container, should not trap SIGTERM
 	interupt := make(chan os.Signal, 10)
@@ -521,20 +898,62 @@ func (cm *ClusterManager) Init() error {
 	if err := cm.initRegistry(); err != nil {
 		return err
 	}
+	// init IAM client
+	if err := cm.initIAMClient(); err != nil {
+		return err
+	}
+
+	// init jwt client
+	if err := cm.initJWTClient(); err != nil {
+		return err
+	}
+
+	// init client permissions
+	if err := cm.initClientPermissions(); err != nil {
+		return err
+	}
+
+	// init no auth methods
+	if err := cm.initNoAuthMethod(); err != nil {
+		return err
+	}
+
 	// init core micro service
 	if err := cm.initMicro(); err != nil {
 		return err
 	}
+
 	// init discovery
 	cm.initDiscovery()
 	// init http service
 	if err := cm.initHTTPService(); err != nil {
 		return err
 	}
+	// init task server
+	err := cm.initTaskServer()
+	if err != nil {
+		return err
+	}
+	// init bk-ops client
+	err = cm.initBKOpsClient()
+	if err != nil {
+		return err
+	}
+	// init remote cloud depend client
+	err = cm.initRemoteClient()
+	if err != nil {
+		return err
+	}
+	// init cloud template config
+	err = cm.initCloudTemplateConfig()
+	if err != nil {
+		blog.Errorf("initCloudTemplateConfig failed: %v", err)
+	}
+
 	// init metric, pprof
 	cm.initExtraModules()
-	// init system signale handler
-	cm.initSigalHandler()
+	// init system signal handler
+	cm.initSignalHandler()
 
 	return nil
 }

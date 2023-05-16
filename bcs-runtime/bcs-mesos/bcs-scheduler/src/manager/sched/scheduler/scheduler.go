@@ -11,6 +11,7 @@
  *
  */
 
+// Package scheduler xxx
 package scheduler
 
 import (
@@ -38,6 +39,7 @@ import (
 	master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/sched"
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/remote/alertmanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/sched/client"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/sched/misc"
@@ -71,8 +73,10 @@ const MESOS_HEARTBEAT_TIMEOUT = 120
 const MAX_STAGING_UPDATE_INTERVAL = 180
 
 const (
+	// SchedulerRoleMaster xxx
 	SchedulerRoleMaster = "master"
-	SchedulerRoleSlave  = "slave"
+	// SchedulerRoleSlave xxx
+	SchedulerRoleSlave = "slave"
 )
 
 // Scheduler represents a Mesos scheduler
@@ -130,7 +134,7 @@ type Scheduler struct {
 
 	// alert interface
 	alertManager alertmanager.AlertManageInterface
-	//stop daemonset signal
+	// stop daemonset signal
 	stopDaemonset chan struct{}
 
 	// queue for scheduler transaction
@@ -156,7 +160,7 @@ func NewScheduler(config util.Scheduler, store store.Store, alert alertmanager.A
 		CertPasswd: static.ClientCertPwd,
 	}
 
-	//init executor info
+	// init executor info
 	task.InitExecutorInfo(s.config.ContainerExecutor, s.config.ProcessExecutor, s.config.CniDir, s.config.NetImage)
 
 	s.eventManager.Run()
@@ -227,6 +231,7 @@ func (s *Scheduler) runMetric() {
 	blog.Infof("run metric ok")
 }
 
+// lockService xxx
 // for mesos master and scheduler changing
 func (s *Scheduler) lockService() {
 	s.serviceLock.Lock()
@@ -264,7 +269,7 @@ func (s *Scheduler) Start() error {
 	blog.Info("scheduler run address(%s:%d)", s.IP, s.Port)
 
 	s.runPrometheusMetrics()
-	//s.runMetric()
+	// s.runMetric()
 
 	s.Role = "unknown"
 	s.currMesosMaster = ""
@@ -281,11 +286,12 @@ func (s *Scheduler) Start() error {
 	return nil
 }
 
+// createOrLoadFrameworkInfo xxx
 // create frameworkInfo on initial start
 // OR load preexisting frameworkId make mesos believe it's a RESTART of framework
 func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos.FrameworkInfo, error) {
 	fw := &mesos.FrameworkInfo{
-		//User:            proto.String(config.MesosFrameworkUser),
+		// User:            proto.String(config.MesosFrameworkUser),
 		User:            proto.String(""),
 		Name:            proto.String("bcs"),
 		Hostname:        proto.String(config.Hostname),
@@ -300,21 +306,16 @@ func createOrLoadFrameworkInfo(config util.Scheduler, store store.Store) (*mesos
 
 	frameworkID, err := store.FetchFrameworkID()
 	if err != nil {
-		if strings.ToLower(err.Error()) != "zk: node does not exist" && !strings.Contains(err.Error(), "not found") {
-			blog.Error("Fetch framework id failed: %s", err.Error())
-			return nil, err
-		}
-
-		blog.Warn("Fetch framework id failed: %s, will create a new framework", err.Error())
+		blog.Errorf("fetch framework id from zk failed(ignore the error for now, we'll create it below), "+
+			"err: %s", err.Error())
 		frameworkID = ""
 	}
-	blog.Info("fetch frameworkId %s from DB", frameworkID)
 	if frameworkID != "" {
+		blog.Infof("fetch framework id success: %s", frameworkID)
 		fw.Id = &mesos.FrameworkID{
 			Value: proto.String(frameworkID),
 		}
 	}
-
 	return fw, nil
 }
 
@@ -356,10 +357,10 @@ func (s *Scheduler) discvMesos() {
 	defer tick.Stop()
 	for {
 		select {
-		//case <-rdCxt.Done():
-		//blog.Warn("scheduler worker to exit")
-		//regDiscv.Stop()
-		//return	nil
+		// case <-rdCxt.Done():
+		// blog.Warn("scheduler worker to exit")
+		// regDiscv.Stop()
+		// return	nil
 		case <-tick.C:
 			blog.Info("mesos discove(%s:%s), curr mesos master:%s", MesosDiscv, discvPath, s.currMesosMaster)
 			// add mesos heartbeat check
@@ -404,7 +405,7 @@ func (s *Scheduler) discvMesos() {
 				masterInfo.ServerInfo.IP = serverInfo.Address.IP
 				masterInfo.ServerInfo.Port = uint(serverInfo.Address.Port)
 				masterInfo.ServerInfo.HostName = serverInfo.Hostname
-				//masterInfo.ServerInfo.Pid = serverInfo.Pid
+				// masterInfo.ServerInfo.Pid = serverInfo.Pid
 				masterInfo.ServerInfo.Scheme = "http"
 				masterInfo.ServerInfo.Version = serverInfo.Version
 				s.Memsoses = append(s.Memsoses, masterInfo)
@@ -788,27 +789,27 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 			s.dataChecker.SendMsg(&msg)
 			blog.Info("after close data check goroutine")
 		}
-		//s.store.StopStoreMetrics()
+		// s.store.StopStoreMetrics()
 		s.store.UnInitCacheMgr()
-		//stop check and build daemonset
+		// stop check and build daemonset
 		s.stopBuildDaemonset()
 		// stop transaction loop
 		s.stopTransactionLoop()
 		return nil
 	}
-	//init cache
+	// init cache
 	err := s.store.InitCacheMgr(s.config.UseCache)
 	if err != nil {
 		blog.Errorf("InitCacheMgr failed: %s, and exit", err.Error())
 		os.Exit(1)
 	}
-	//sync agent pods index
+	// sync agent pods index
 	err = s.syncAgentsettingPods()
 	if err != nil {
 		blog.Errorf("syncAgentsettingPods failed: %s, and exit", err.Error())
 		os.Exit(1)
 	}
-	//current role is master
+	// current role is master
 	s.Role = currRole
 	go s.store.StartStoreObjectMetrics()
 	go s.startCheckDeployments()
@@ -873,7 +874,7 @@ func (s *Scheduler) checkRoleChange(currRole string) error {
 		s.dataChecker.SendMsg(&msg)
 		blog.Info("after open data checker")
 	}
-	//start check and build daemonset
+	// start check and build daemonset
 	go s.startBuildDaemonsets()
 	// start transaction loop
 	s.startTransactionLoop()
@@ -899,14 +900,15 @@ func (s *Scheduler) UpdateMesosAgents() {
 	s.oprMgr.UpdateMesosAgents()
 }
 
-//for build pod index in agent
+// syncAgentsettingPods xxx
+// for build pod index in agent
 func (s *Scheduler) syncAgentsettingPods() error {
 	taskg, err := s.store.ListClusterTaskgroups()
 	if err != nil {
 		blog.Infof("ListClusterTaskgroups failed: %s", err.Error())
 		return err
 	}
-	//empty agentsetting pods
+	// empty agentsetting pods
 	settings, err := s.store.ListAgentsettings()
 	if err != nil {
 		blog.Errorf("ListAgentsettings failed: %s", err.Error())
@@ -921,7 +923,7 @@ func (s *Scheduler) syncAgentsettingPods() error {
 		}
 	}
 
-	//save agentsetting pods
+	// save agentsetting pods
 	for _, taskgroup := range taskg {
 		nodeIP := taskgroup.GetAgentIp()
 		if nodeIP == "" {
@@ -930,7 +932,7 @@ func (s *Scheduler) syncAgentsettingPods() error {
 		}
 
 		setting, err := s.store.FetchAgentSetting(nodeIP)
-		if err != nil {
+		if err != nil && !errors.Is(err, store.ErrNoFound) {
 			blog.Errorf("FetchAgentSetting %s failed: %s", nodeIP, err.Error())
 			return err
 		}
@@ -961,11 +963,11 @@ func (s *Scheduler) send(call *sched.Call) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	//blog.V(3).Infof("send pkg to master: %s", string(payload))
+	// blog.V(3).Infof("send pkg to master: %s", string(payload))
 	return s.client.Send(payload)
 }
 
-// Subscribe subscribes the scheduler to the Mesos cluster.
+// subscribe subscribes the scheduler to the Mesos cluster.
 // It keeps the http connection opens with the Master to stream
 // subsequent events.
 func (s *Scheduler) subscribe() error {
@@ -995,9 +997,29 @@ func (s *Scheduler) subscribe() error {
 	s.currMesosResp = resp
 	go s.handleEvents(resp)
 
-	return nil
+	return s.checkFrameworkId()
 }
 
+func (s *Scheduler) checkFrameworkId() error {
+	checkTicker := time.NewTicker(6 * time.Second)
+	checkTimeout := time.NewTimer(60 * time.Second)
+	defer checkTicker.Stop()
+	defer checkTimeout.Stop()
+	for {
+		select {
+		case <-checkTicker.C:
+			if s.framework.Id != nil {
+				blog.Infof("Check framework id is existed, value: %s", s.framework.Id.GetValue())
+				return nil
+			}
+			blog.Warnf("Check framework id not exist.")
+		case <-checkTimeout.C:
+			return fmt.Errorf("check framework id timeout")
+		}
+	}
+}
+
+// handleEvents xxx
 // main loop of a scheduler module
 // if error, maybe need resubsribe in scheduler master state
 func (s *Scheduler) handleEvents(resp *http.Response) {
@@ -1070,7 +1092,7 @@ func (s *Scheduler) handleEvents(resp *http.Response) {
 			}
 
 		case sched.Event_FAILURE:
-			//blog.Warn("Received failure event")
+			// blog.Warn("Received failure event")
 			fail := event.GetFailure()
 			if fail.ExecutorId != nil {
 				blog.Info("Executor(%s) terminated with status(%d) on agent(%s)",
@@ -1210,6 +1232,7 @@ func (s *Scheduler) newTaskEvent(task *types.Task) *commtype.BcsStorageEventIf {
 	return event
 }
 
+// PushEventQueue xxx
 // PushTransaction push transaction into queue
 func (s *Scheduler) PushEventQueue(transaction *types.Transaction) {
 	if s.transactionQueue != nil {
@@ -1274,7 +1297,8 @@ func (s *Scheduler) OfferedResources(offer *mesos.Offer) (cpus, mem, disk float6
 }
 
 // GetHostAttributes Get agent attributes
-func (s *Scheduler) GetHostAttributes(para *typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes, error) {
+func (s *Scheduler) GetHostAttributes(para *typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes,
+	error) {
 	if s.pluginManager == nil {
 		return nil, fmt.Errorf("pluginManager is nil")
 	}
@@ -1446,7 +1470,7 @@ func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.Bc
 	diskUsed := 0.0
 	for _, oneAgent := range agentInfo.Agents {
 		agent := new(commtype.BcsClusterAgentInfo)
-		//blog.V(3).Infof("get agents: ===>agent[%d]: %+v", index, oneAgent)
+		// blog.V(3).Infof("get agents: ===>agent[%d]: %+v", index, oneAgent)
 		agent.HostName = oneAgent.GetAgentInfo().GetHostname()
 
 		szSplit := strings.Split(oneAgent.GetPid(), "@")
@@ -1475,7 +1499,7 @@ func (s *Scheduler) GetMesosResourceIn(mesosClient *client.Client) (*commtype.Bc
 			}
 		}
 
-		//get delta resources for this agent
+		// get delta resources for this agent
 		agentDeltaCPU := 0.0
 		agentDeltaMem := 0.0
 		agentDeltaDisk := 0.0
@@ -1584,7 +1608,8 @@ func (s *Scheduler) GetCurrentOffers() []*types.OfferWithDelta {
 	return inOffers
 }
 
-//convert mesos.Attribute to commtype.BcsAgentAttribute
+// mesosAttribute2commonAttribute xxx
+// convert mesos.Attribute to commtype.BcsAgentAttribute
 func mesosAttribute2commonAttribute(oldAttributeList []*mesos.Attribute) []*commtype.BcsAgentAttribute {
 	if oldAttributeList == nil {
 		return nil
@@ -1651,7 +1676,7 @@ func (s *Scheduler) FetchTaskGroup(taskGroupID string) (*types.TaskGroup, error)
 	return s.store.FetchTaskGroup(taskGroupID)
 }
 
-//CheckPodBelongDaemonset check taskgroup whether belongs to daemonset
+// CheckPodBelongDaemonset check taskgroup whether belongs to daemonset
 func (s *Scheduler) CheckPodBelongDaemonset(taskgroupID string) bool {
 	namespace, name := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupID)
 	version, err := s.store.GetVersion(namespace, name)

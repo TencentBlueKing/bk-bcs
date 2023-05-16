@@ -26,13 +26,6 @@ const (
 	AdminSaasUserExpiredTime = 10 * 365 * 24 * time.Hour
 )
 
-const (
-	// AdminUser definition
-	AdminUser = iota + 1
-	SaasUser
-	PlainUser
-)
-
 // GetUserByCondition Query user by condition
 func GetUserByCondition(cond *models.BcsUser) *models.BcsUser {
 	user := models.BcsUser{}

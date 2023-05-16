@@ -11,6 +11,7 @@
  *
  */
 
+// Package check xxx
 package check
 
 import (

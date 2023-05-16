@@ -1,12 +1,6 @@
-mock/
-build/
 dist/
 static/
-static/archive-worker/
 webpack_cache/
-src/components/diff/diffview.js
-src/components/diff/index.vue
-src/components/ace-editor
-src/components/bk-diff
-src/components/bk-magic/bk-magic*
 node_modules/
+ip-selector.js
+bk.config.js

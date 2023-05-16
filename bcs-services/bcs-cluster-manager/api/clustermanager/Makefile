@@ -6,9 +6,12 @@ SWAGGEROBJ:=$(patsubst %.proto, %.swagger.json, $(PROTO))
 
 GOENVPATH = $(shell go env GOPATH)
 
+DIRECTORY := $(PWD)
+PROTO_IMAGE := "proto"
+
 .PHONY: all clean
 
-all:$(OBJ) $(GWOBJ) $(SWAGGEROBJ)
+all:docker $(OBJ) $(GWOBJ) $(SWAGGEROBJ)
 
 $(OBJ):$(PROTO)
 
@@ -17,16 +20,37 @@ $(GWOBJ):$(PROTO)
 $(SWAGGEROBJ):$(PROTO)
 
 %.pb.go: %.proto
-	@protoc -I../../third_party --proto_path=. --go_out=plugins=grpc:. --validate_out=lang=go:. $<
+	docker run --rm \
+		-v $(DIRECTORY)/../../third_party:/third_party \
+		-v $(DIRECTORY):/proto \
+		${PROTO_IMAGE} \
+		protoc -I/third_party \
+		--proto_path=/proto \
+		--go_out=plugins=grpc:/proto \
+		--validate_out=lang=go:/proto $<
+	sed -i '' 's/json:"-"/json:"-" bson:"-"/g' clustermanager.pb.go
 
 %.pb.gw.go: %.proto
-	@protoc -I../../third_party --proto_path=. \
-	--micro_out=. \
-	--grpc-gateway_out=logtostderr=true,register_func_suffix=Gw:. $<
+	docker run --rm \
+		-v $(DIRECTORY)/../../third_party:/third_party \
+		-v $(DIRECTORY):/proto \
+		${PROTO_IMAGE} \
+		protoc -I/third_party \
+		--proto_path=/proto \
+		--micro_out=/proto \
+		--grpc-gateway_out=allow_delete_body=true,logtostderr=true,register_func_suffix=Gw:/proto $<
 
 %.swagger.json: %.proto
-	@protoc -I../../third_party --proto_path=. --swagger_out=logtostderr=true:. $<
+	docker run --rm \
+		-v $(DIRECTORY)/../../third_party:/third_party \
+		-v $(DIRECTORY):/proto \
+		${PROTO_IMAGE} \
+		protoc -I/third_party \
+		--proto_path=/proto \
+		--swagger_out=allow_delete_body=true,logtostderr=true:/proto $<
 
+docker:
+	@docker build -t ${PROTO_IMAGE} .
 
 clean:
-	@rm -f $(OBJ) $(GWOBJ) $(SWAGGEROBJ)
+	rm -f $(OBJ) $(GWOBJ) $(SWAGGEROBJ)

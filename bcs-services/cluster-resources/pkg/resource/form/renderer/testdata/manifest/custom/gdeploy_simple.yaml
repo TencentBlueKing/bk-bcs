@@ -1,0 +1,32 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: GameDeployment
+metadata:
+  name: gdeploy-simple-ioe1uufguy
+  namespace: default
+  labels:
+    label-key-1: label-val-1
+    io.tencent.bcs.dev/deletion-allow: Always
+  annotations:
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
+spec:
+  minReadySeconds: 0
+  selector:
+    matchLabels:
+      "label-key-1": "label-val-1"
+  replicas: 2
+  updateStrategy:
+    type: RollingUpdate
+    partition: 0
+    maxUnavailable: 0
+    maxSurge: 1
+  template:
+    metadata:
+      labels:
+        "label-key-1": "label-val-1"
+    spec:
+      containers:
+        - name: busybox
+          image: busybox:latest
+          imagePullPolicy: IfNotPresent

@@ -23,6 +23,7 @@ func StringInSlice(s string, l []string) bool {
 	return false
 }
 
+// IntInSlice xxx
 func IntInSlice(i int, l []int) bool {
 	for _, obj := range l {
 		if i == obj {

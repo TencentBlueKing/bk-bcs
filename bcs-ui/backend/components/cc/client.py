@@ -34,7 +34,7 @@ class PageData:
 
 
 class BkCCConfig:
-    """ 蓝鲸配置平台配置信息，提供后续使用的host， url等 """
+    """蓝鲸配置平台配置信息，提供后续使用的host， url等"""
 
     def __init__(self, host: str):
         # 请求域名
@@ -76,7 +76,7 @@ class BkCCAuth(AuthBase):
 
 
 class BkCCClient(BkApiClient):
-    """ CMDB API SDK """
+    """CMDB API SDK"""
 
     def __init__(self, username: str, bk_supplier_account: Optional[str] = settings.BKCC_DEFAULT_SUPPLIER_ACCOUNT):
         self._config = BkCCConfig(host=settings.COMPONENT_HOST)
@@ -121,7 +121,7 @@ class BkCCClient(BkApiClient):
         return self._client.request_json('POST', url, json=params)
 
     @response_handler(default=dict)
-    def get_biz_internal_module(self, bk_biz_id: int) -> Dict:
+    def get_biz_internal_module(self, bk_biz_id: int, lang: str = settings.LANGUAGE_CODE) -> Dict:
         """
         查询内部模块拓扑
 
@@ -130,7 +130,8 @@ class BkCCClient(BkApiClient):
         """
         url = self._config.get_biz_internal_module_url
         params = {'bk_biz_id': bk_biz_id}
-        return self._client.request_json('POST', url, json=params)
+        headers = {settings.LANGUAGE_HEADER_NAME: lang}
+        return self._client.request_json('POST', url, json=params, headers=headers)
 
     @response_handler(default=dict)
     def list_biz_hosts(

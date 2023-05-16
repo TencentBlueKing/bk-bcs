@@ -11,6 +11,7 @@
  *
  */
 
+// Package manager xxx
 package manager
 
 import (
@@ -31,7 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/util"
 )
 
-// Mananger main body of scheduler
+// Manager main body of scheduler
 type Manager struct {
 	sched        *sched.Sched
 	schedContext *schedcontext.SchedContext

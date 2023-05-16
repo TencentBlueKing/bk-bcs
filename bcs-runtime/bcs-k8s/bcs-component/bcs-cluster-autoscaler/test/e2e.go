@@ -104,6 +104,7 @@ func (tc *testConfig) produceName() {
 	tc.podTemplateSpec.ObjectMeta.Labels = map[string]string{"ca-test": name}
 }
 
+// ScaleUpWorkLoad xxx
 func (tc *testConfig) ScaleUpWorkLoad(deploy *appsv1.Deployment, lister v12.PodLister) error {
 	klog.Infof("E2E start scale up workload %v", tc.name)
 	var failed bool

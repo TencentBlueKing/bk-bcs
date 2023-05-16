@@ -1,0 +1,48 @@
+apiVersion: tkex.tencent.com/v1alpha1
+kind: HookTemplate
+metadata:
+  name: hook-tmpl-complex-upa94chrxk
+  namespace: default
+  labels:
+    io.tencent.bcs.dev/deletion-allow: Always
+  annotations:
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
+spec:
+  policy: Ordered
+  args:
+    - name: "customArg1"
+      value: "value1"
+    - name: "customArg2"
+      value: ""
+  metrics:
+    - name: "web"
+      interval: 1s
+      count: 2
+      successCondition: "asInt(result) == 1"
+      consecutiveSuccessfulLimit: 1
+      provider:
+        web:
+          url: "http://1.1.1.1:80"
+          jsonPath: "{$.result}"
+          timeoutSeconds: 10
+    - name: "prom"
+      interval: 1s
+      count: 0
+      successCondition: "asInt(result) == 2"
+      successfulLimit: 1
+      provider:
+        prometheus:
+          query: "query_test"
+          address: "http://prometheus.com"
+    - name: "k8s"
+      interval: 2s
+      count: 0
+      consecutiveSuccessfulLimit: 3
+      provider:
+        kubernetes:
+          function: patch
+          fields:
+            - path: "metadata.name"
+              value: "resName-xx"

@@ -25,14 +25,15 @@ import (
 )
 
 const (
+	// DefaultRescheduleDelayTime TODO
 	DefaultRescheduleDelayTime = 5 // seconds
 )
 
-//RescheduleTaskgroup is used to reschedule taskgroup.
+// RescheduleTaskgroup is used to reschedule taskgroup.
 func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) error {
 	blog.Infof("reschedule taskgroup(%s)", taskgroupId)
 	runAs, appID := types.GetRunAsAndAppIDbyTaskGroupID(taskgroupId)
-	//check taskgroup whether belongs to daemonset
+	// check taskgroup whether belongs to daemonset
 	if b.sched.CheckPodBelongDaemonset(taskgroupId) {
 		util.Lock.Lock(types.BcsDaemonset{}, runAs+"."+appID)
 		defer util.Lock.UnLock(types.BcsDaemonset{}, runAs+"."+appID)
@@ -48,12 +49,14 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 	// here kill taskGroup
 	resp, err := b.sched.KillTaskGroup(taskgroup)
 	if err != nil {
-		blog.Warn("taskgroup(%s) reschedule under status(%s) but do kill failed: %s", taskgroup.ID, taskgroup.Status, err.Error())
+		blog.Warn("taskgroup(%s) reschedule under status(%s) but do kill failed: %s", taskgroup.ID, taskgroup.Status,
+			err.Error())
 	}
 	if resp == nil {
 		blog.Warn("taskgroup(%s) reschedule under status(%s) but kill resp == nil", taskgroup.ID, taskgroup.Status)
 	} else if resp.StatusCode != http.StatusAccepted {
-		blog.Warn("taskgroup(%s) reschedule under status(%s) but kill return code %d", taskgroup.ID, taskgroup.Status, resp.StatusCode)
+		blog.Warn("taskgroup(%s) reschedule under status(%s) but kill return code %d", taskgroup.ID, taskgroup.Status,
+			resp.StatusCode)
 	}
 
 	// set LOST to FAIL to release resource for new taskgroup
@@ -66,12 +69,12 @@ func (b *backend) RescheduleTaskgroup(taskgroupId string, hostRetainTime int64) 
 			return err
 		}
 	}
-	//if taskgroup belongs to daemonsets, then don't trigger reschedule transaction
+	// if taskgroup belongs to daemonsets, then don't trigger reschedule transaction
 	if b.sched.CheckPodBelongDaemonset(taskgroupId) {
 		return nil
 	}
 
-	//trigger taskgroup reschedule
+	// trigger taskgroup reschedule
 	version, _ := b.store.GetVersion(runAs, appID)
 	if version == nil {
 		blog.Error("reschedule taskgroup(%s) fail, no version for application(%s.%s)", taskgroupId, runAs, appID)
@@ -137,7 +140,8 @@ func (b *backend) RestartTaskGroup(taskGroupID string) (*types.BcsMessage, error
 	}
 
 	if app.Kind != commtypes.BcsDataType_PROCESS {
-		blog.Errorf("restart taskgroup(%s), application(%s.%s), type is %s, restart only for process", taskGroupID, app.RunAs, app.Name, app.Kind)
+		blog.Errorf("restart taskgroup(%s), application(%s.%s), type is %s, restart only for process", taskGroupID, app.RunAs,
+			app.Name, app.Kind)
 		return nil, errors.New("application type is not process")
 	}
 
@@ -180,7 +184,8 @@ func (b *backend) ReloadTaskGroup(taskGroupID string) (*types.BcsMessage, error)
 	}
 
 	if app.Kind != commtypes.BcsDataType_PROCESS {
-		blog.Errorf("reload taskgroup(%s), application(%s.%s), type is %s, restart only for process", taskGroupID, app.RunAs, app.Name, app.Kind)
+		blog.Errorf("reload taskgroup(%s), application(%s.%s), type is %s, restart only for process", taskGroupID, app.RunAs,
+			app.Name, app.Kind)
 		return nil, errors.New("application type is not process")
 	}
 

@@ -140,3 +140,18 @@ class TestNode:
         node_taints = client.filter_nodes_field_data("taints", filter_node_names=[fake_node_name])
         taints = node_taints[fake_inner_ip]
         assert expected in taints
+
+    @pytest.mark.parametrize(
+        "unschedulable, expected_unschedulable",
+        [(True, True), (False, None)],
+    )
+    def test_set_nodes_schedule_status(self, unschedulable, expected_unschedulable, client, create_and_delete_node):
+        client.set_nodes_schedule_status(unschedulable, [fake_node_name])
+        nodes = client.list(is_format=False)
+        # 查询节点所处的调度状态
+        node_unschedulable = None
+        for node in nodes.items:
+            if node.name not in [fake_node_name]:
+                continue
+            node_unschedulable = node.data.spec.unschedulable
+        assert node_unschedulable == expected_unschedulable

@@ -1,4 +1,4 @@
-
+ct
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -53,6 +53,8 @@ spec:
                       type: object
                     endIndex:
                       type: integer
+                    hostPort:
+                      type: boolean
                     ignoreSegment:
                       type: boolean
                     isRsPortFixed:
@@ -60,12 +62,31 @@ spec:
                     listenerAttribute:
                       description: IngressListenerAttribute attribute for listener
                       properties:
+                        awsAttributes:
+                          description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                          items:
+                            description: AWSAttribute define aws target group attribute
+                            properties:
+                              key:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                          type: array
+                        backendInsecure:
+                          description: BackendInsecure specifies whether to enable
+                            insecure access to the backend.
+                          type: boolean
                         healthCheck:
                           description: ListenerHealthCheck health check setting for
                             listener
                           properties:
                             enabled:
                               type: boolean
+                            healthCheckPort:
+                              type: integer
+                            healthCheckProtocol:
+                              type: string
                             healthNum:
                               type: integer
                             httpCheckMethod:
@@ -74,6 +95,12 @@ spec:
                               type: string
                             httpCode:
                               type: integer
+                            httpCodeValues:
+                              description: HTTPCodeValues specifies a set of HTTP
+                                response status codes of health check. You can specify
+                                multiple values (for example, "200,202") or a range
+                                of values (for example, "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                              type: string
                             intervalTime:
                               type: integer
                             timeout:
@@ -83,7 +110,13 @@ spec:
                           type: object
                         lbPolicy:
                           type: string
+                        maxRate:
+                          description: MaxRate specifies the maximum number of connections
+                            per second allowed for every target instance.
+                          type: integer
                         sessionTime:
+                          type: integer
+                        sniSwitch:
                           type: integer
                       type: object
                     protocol:
@@ -98,12 +131,32 @@ spec:
                           listenerAttribute:
                             description: IngressListenerAttribute attribute for listener
                             properties:
+                              awsAttributes:
+                                description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                                items:
+                                  description: AWSAttribute define aws target group
+                                    attribute
+                                  properties:
+                                    key:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                type: array
+                              backendInsecure:
+                                description: BackendInsecure specifies whether to
+                                  enable insecure access to the backend.
+                                type: boolean
                               healthCheck:
                                 description: ListenerHealthCheck health check setting
                                   for listener
                                 properties:
                                   enabled:
                                     type: boolean
+                                  healthCheckPort:
+                                    type: integer
+                                  healthCheckProtocol:
+                                    type: string
                                   healthNum:
                                     type: integer
                                   httpCheckMethod:
@@ -112,6 +165,13 @@ spec:
                                     type: string
                                   httpCode:
                                     type: integer
+                                  httpCodeValues:
+                                    description: HTTPCodeValues specifies a set of
+                                      HTTP response status codes of health check.
+                                      You can specify multiple values (for example,
+                                      "200,202") or a range of values (for example,
+                                      "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                                    type: string
                                   intervalTime:
                                     type: integer
                                   timeout:
@@ -121,7 +181,14 @@ spec:
                                 type: object
                               lbPolicy:
                                 type: string
+                              maxRate:
+                                description: MaxRate specifies the maximum number
+                                  of connections per second allowed for every target
+                                  instance.
+                                type: integer
                               sessionTime:
+                                type: integer
+                              sniSwitch:
                                 type: integer
                             type: object
                           path:
@@ -173,17 +240,52 @@ spec:
                       items:
                         description: Layer7Route 7 layer route config
                         properties:
+                          certificate:
+                            description: IngressListenerCertificate certificate configs
+                              for listener
+                            properties:
+                              certCaID:
+                                type: string
+                              certID:
+                                type: string
+                              mode:
+                                type: string
+                            type: object
                           domain:
+                            type: string
+                          forwardType:
+                            description: ForwardType Forwarding protocol between load
+                              balancing and backend services
                             type: string
                           listenerAttribute:
                             description: IngressListenerAttribute attribute for listener
                             properties:
+                              awsAttributes:
+                                description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                                items:
+                                  description: AWSAttribute define aws target group
+                                    attribute
+                                  properties:
+                                    key:
+                                      type: string
+                                    value:
+                                      type: string
+                                  type: object
+                                type: array
+                              backendInsecure:
+                                description: BackendInsecure specifies whether to
+                                  enable insecure access to the backend.
+                                type: boolean
                               healthCheck:
                                 description: ListenerHealthCheck health check setting
                                   for listener
                                 properties:
                                   enabled:
                                     type: boolean
+                                  healthCheckPort:
+                                    type: integer
+                                  healthCheckProtocol:
+                                    type: string
                                   healthNum:
                                     type: integer
                                   httpCheckMethod:
@@ -192,6 +294,13 @@ spec:
                                     type: string
                                   httpCode:
                                     type: integer
+                                  httpCodeValues:
+                                    description: HTTPCodeValues specifies a set of
+                                      HTTP response status codes of health check.
+                                      You can specify multiple values (for example,
+                                      "200,202") or a range of values (for example,
+                                      "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                                    type: string
                                   intervalTime:
                                     type: integer
                                   timeout:
@@ -201,7 +310,14 @@ spec:
                                 type: object
                               lbPolicy:
                                 type: string
+                              maxRate:
+                                description: MaxRate specifies the maximum number
+                                  of connections per second allowed for every target
+                                  instance.
+                                type: integer
                               sessionTime:
+                                type: integer
+                              sniSwitch:
                                 type: integer
                             type: object
                           path:
@@ -210,6 +326,10 @@ spec:
                             items:
                               description: ServiceRoute service info
                               properties:
+                                hostPort:
+                                  description: If specified, will use the hostport
+                                    as backend's port
+                                  type: boolean
                                 isDirectConnect:
                                   type: boolean
                                 serviceName:
@@ -260,12 +380,31 @@ spec:
                     listenerAttribute:
                       description: IngressListenerAttribute attribute for listener
                       properties:
+                        awsAttributes:
+                          description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                          items:
+                            description: AWSAttribute define aws target group attribute
+                            properties:
+                              key:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                          type: array
+                        backendInsecure:
+                          description: BackendInsecure specifies whether to enable
+                            insecure access to the backend.
+                          type: boolean
                         healthCheck:
                           description: ListenerHealthCheck health check setting for
                             listener
                           properties:
                             enabled:
                               type: boolean
+                            healthCheckPort:
+                              type: integer
+                            healthCheckProtocol:
+                              type: string
                             healthNum:
                               type: integer
                             httpCheckMethod:
@@ -274,6 +413,12 @@ spec:
                               type: string
                             httpCode:
                               type: integer
+                            httpCodeValues:
+                              description: HTTPCodeValues specifies a set of HTTP
+                                response status codes of health check. You can specify
+                                multiple values (for example, "200,202") or a range
+                                of values (for example, "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                              type: string
                             intervalTime:
                               type: integer
                             timeout:
@@ -283,7 +428,13 @@ spec:
                           type: object
                         lbPolicy:
                           type: string
+                        maxRate:
+                          description: MaxRate specifies the maximum number of connections
+                            per second allowed for every target instance.
+                          type: integer
                         sessionTime:
+                          type: integer
+                        sniSwitch:
                           type: integer
                       type: object
                     port:
@@ -294,6 +445,10 @@ spec:
                       items:
                         description: ServiceRoute service info
                         properties:
+                          hostPort:
+                            description: If specified, will use the hostport as backend's
+                              port
+                            type: boolean
                           isDirectConnect:
                             type: boolean
                           serviceName:
@@ -352,6 +507,10 @@ spec:
                 items:
                   description: IngressLoadBalancer loadbalancer for ingress
                   properties:
+                    awsLBType:
+                      type: string
+                    dnsName:
+                      type: string
                     ips:
                       items:
                         type: string
@@ -361,6 +520,8 @@ spec:
                     loadbalancerName:
                       type: string
                     region:
+                      type: string
+                    scheme:
                       type: string
                     type:
                       type: string

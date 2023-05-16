@@ -24,6 +24,7 @@ import (
 var appLocks map[string]*sync.Mutex
 var appRWlock sync.RWMutex
 
+// InitLockPool xxx
 func (store *managerStore) InitLockPool() {
 	if appLocks == nil {
 		blog.Info("init application lock pool")
@@ -31,6 +32,7 @@ func (store *managerStore) InitLockPool() {
 	}
 }
 
+// LockApplication xxx
 func (store *managerStore) LockApplication(appID string) {
 
 	appRWlock.RLock()
@@ -54,6 +56,7 @@ func (store *managerStore) LockApplication(appID string) {
 	return
 }
 
+// UnLockApplication xxx
 func (store *managerStore) UnLockApplication(appID string) {
 	appRWlock.RLock()
 	myLock, ok := appLocks[appID]
@@ -70,7 +73,7 @@ func getApplicationRootPath() string {
 	return "/" + bcsRootNode + "/" + applicationNode + "/"
 }
 
-//SaveApplication save application data into db.
+// SaveApplication save application data into db.
 func (store *managerStore) SaveApplication(application *types.Application) error {
 
 	data, err := json.Marshal(application)
@@ -82,9 +85,10 @@ func (store *managerStore) SaveApplication(application *types.Application) error
 	return store.Db.Insert(path, string(data))
 }
 
+// ListRunAs xxx
 func (store *managerStore) ListRunAs() ([]string, error) {
 
-	//rootPath := getApplicationRootPath()
+	// rootPath := getApplicationRootPath()
 	rootPath := "/" + bcsRootNode + "/" + applicationNode
 
 	runAses, err := store.Db.List(rootPath)
@@ -100,6 +104,7 @@ func (store *managerStore) ListRunAs() ([]string, error) {
 	return runAses, nil
 }
 
+// ListApplicationNodes xxx
 func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) {
 
 	path := getApplicationRootPath() + runAs
@@ -113,7 +118,7 @@ func (store *managerStore) ListApplicationNodes(runAs string) ([]string, error) 
 	return appIDs, nil
 }
 
-//FetchApplication is used to fetch application by appID
+// FetchApplication is used to fetch application by appID
 func (store *managerStore) FetchApplication(runAs, appID string) (*types.Application, error) {
 
 	path := getApplicationRootPath() + runAs + "/" + appID
@@ -132,10 +137,10 @@ func (store *managerStore) FetchApplication(runAs, appID string) (*types.Applica
 	return app, nil
 }
 
-//ListApplications is used to get all applications
+// ListApplications is used to get all applications
 func (store *managerStore) ListApplications(runAs string) ([]*types.Application, error) {
 
-	path := getApplicationRootPath() + runAs //defaultRunAs
+	path := getApplicationRootPath() + runAs // defaultRunAs
 
 	appIDs, err := store.Db.List(path)
 	if err != nil {
@@ -163,7 +168,7 @@ func (store *managerStore) ListApplications(runAs string) ([]*types.Application,
 	return apps, nil
 }
 
-//DeleteApplication remove the application from db by appID
+// DeleteApplication remove the application from db by appID
 func (store *managerStore) DeleteApplication(runAs, appID string) error {
 
 	path := getApplicationRootPath() + runAs + "/" + appID
@@ -178,6 +183,7 @@ func (store *managerStore) DeleteApplication(runAs, appID string) error {
 	return nil
 }
 
+// ListAllApplications xxx
 func (store *managerStore) ListAllApplications() ([]*types.Application, error) {
 	nss, err := store.ListObjectNamespaces(applicationNode)
 	if err != nil {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package bind xxx
 package bind
 
 import (
@@ -28,6 +29,7 @@ import (
 )
 
 const (
+	// BindPrefix xxx
 	BindPrefix = "bind"
 )
 

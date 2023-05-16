@@ -1,0 +1,1448 @@
+{
+  "components": {
+    "requestBodies": {
+      "NodegroupManagerCreateNodePoolMgrStrategyRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateNodePoolMgrStrategyReq"
+            }
+          }
+        },
+        "description": "NodegroupManagerCreateNodePoolMgrStrategyRequest"
+      },
+      "NodegroupManagerDeleteNodePoolMgrStrategyRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DeleteNodePoolMgrStrategyReq"
+            }
+          }
+        },
+        "description": "NodegroupManagerDeleteNodePoolMgrStrategyRequest"
+      },
+      "NodegroupManagerGetClusterAutoscalerReviewRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ClusterAutoscalerReview"
+            }
+          }
+        },
+        "description": "NodegroupManagerGetClusterAutoscalerReviewRequest"
+      },
+      "NodegroupManagerGetNodePoolMgrStrategyRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/GetNodePoolMgrStrategyReq"
+            }
+          }
+        },
+        "description": "NodegroupManagerGetNodePoolMgrStrategyRequest"
+      },
+      "NodegroupManagerListNodePoolMgrStrategiesRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ListNodePoolMgrStrategyReq"
+            }
+          }
+        },
+        "description": "NodegroupManagerListNodePoolMgrStrategiesRequest"
+      },
+      "NodegroupManagerUpdateNodePoolMgrStrategyRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateNodePoolMgrStrategyReq"
+            }
+          }
+        },
+        "description": "NodegroupManagerUpdateNodePoolMgrStrategyRequest"
+      }
+    },
+    "responses": {
+      "MicroAPIError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "Code": {
+                  "description": "Error code",
+                  "example": 500,
+                  "type": "number"
+                },
+                "Detail": {
+                  "description": "Error detail",
+                  "example": "service not found",
+                  "type": "string"
+                },
+                "Id": {
+                  "description": "Error ID",
+                  "type": "string"
+                },
+                "Status": {
+                  "description": "Error status message",
+                  "example": "Internal Server Error",
+                  "type": "string"
+                }
+              },
+              "title": "MicroAPIError",
+              "type": "object"
+            }
+          }
+        },
+        "description": "Error from the Micro API"
+      },
+      "NodegroupManagerCreateNodePoolMgrStrategyResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateNodePoolMgrStrategyRsp"
+            }
+          }
+        },
+        "description": "NodegroupManagerCreateNodePoolMgrStrategyResponse"
+      },
+      "NodegroupManagerDeleteNodePoolMgrStrategyResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DeleteNodePoolMgrStrategyRsp"
+            }
+          }
+        },
+        "description": "NodegroupManagerDeleteNodePoolMgrStrategyResponse"
+      },
+      "NodegroupManagerGetClusterAutoscalerReviewResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ClusterAutoscalerReview"
+            }
+          }
+        },
+        "description": "NodegroupManagerGetClusterAutoscalerReviewResponse"
+      },
+      "NodegroupManagerGetNodePoolMgrStrategyResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/GetNodePoolMgrStrategyRsp"
+            }
+          }
+        },
+        "description": "NodegroupManagerGetNodePoolMgrStrategyResponse"
+      },
+      "NodegroupManagerListNodePoolMgrStrategiesResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ListNodePoolMgrStrategyRsp"
+            }
+          }
+        },
+        "description": "NodegroupManagerListNodePoolMgrStrategiesResponse"
+      },
+      "NodegroupManagerUpdateNodePoolMgrStrategyResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CreateNodePoolMgrStrategyRsp"
+            }
+          }
+        },
+        "description": "NodegroupManagerUpdateNodePoolMgrStrategyResponse"
+      }
+    },
+    "schemas": {
+      "AutoscalerReviewRequest": {
+        "properties": {
+          "nodeGroups": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "title": "AutoscalerReviewRequest",
+        "type": "object"
+      },
+      "AutoscalerReviewResponse": {
+        "properties": {
+          "scaleDowns": {
+            "properties": {
+              "nodeGroupID": {
+                "type": "string"
+              },
+              "nodeIPs": {
+                "type": "string"
+              },
+              "nodeNum": {
+                "format": "int32",
+                "type": "number"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "scaleUps": {
+            "properties": {
+              "desiredSize": {
+                "format": "int32",
+                "type": "number"
+              },
+              "nodeGroupID": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "title": "AutoscalerReviewResponse",
+        "type": "object"
+      },
+      "Buffer": {
+        "properties": {
+          "high": {
+            "format": "int32",
+            "type": "number"
+          },
+          "low": {
+            "format": "int32",
+            "type": "number"
+          },
+          "reservedDays": {
+            "format": "int32",
+            "type": "number"
+          }
+        },
+        "title": "Buffer",
+        "type": "object"
+      },
+      "ClusterAutoscalerReview": {
+        "properties": {
+          "request": {
+            "properties": {
+              "nodeGroups": {
+                "additionalProperties": {
+                  "type": "object"
+                },
+                "type": "object"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "response": {
+            "properties": {
+              "scaleDowns": {
+                "properties": {
+                  "nodeGroupID": {
+                    "type": "string"
+                  },
+                  "nodeIPs": {
+                    "type": "string"
+                  },
+                  "nodeNum": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "scaleUps": {
+                "properties": {
+                  "desiredSize": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "nodeGroupID": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "title": "ClusterAutoscalerReview",
+        "type": "object"
+      },
+      "CreateNodePoolMgrStrategyReq": {
+        "properties": {
+          "option": {
+            "properties": {
+              "operator": {
+                "type": "string"
+              },
+              "overWriteIfExist": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "strategy": {
+            "properties": {
+              "elasticNodeGroups": {
+                "properties": {
+                  "clusterId": {
+                    "type": "string"
+                  },
+                  "consumerId": {
+                    "type": "string"
+                  },
+                  "nodeGroup": {
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "labels": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "name": {
+                "type": "string"
+              },
+              "reservedNodeGroup": {
+                "properties": {
+                  "clusterId": {
+                    "type": "string"
+                  },
+                  "consumerId": {
+                    "type": "string"
+                  },
+                  "nodeGroup": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "resourcePool": {
+                "type": "string"
+              },
+              "strategy": {
+                "properties": {
+                  "buffer": {
+                    "properties": {
+                      "high": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "low": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "reservedDays": {
+                        "format": "int32",
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "maxIdleDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "minScaleUpSize": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "reservedTimeRange": {
+                    "type": "string"
+                  },
+                  "scaleDownBeforeDDL": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleDownDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleUpCoolDown": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleUpDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "title": "CreateNodePoolMgrStrategyReq",
+        "type": "object"
+      },
+      "CreateNodePoolMgrStrategyRsp": {
+        "properties": {
+          "code": {
+            "format": "int32",
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "boolean"
+          }
+        },
+        "title": "CreateNodePoolMgrStrategyRsp",
+        "type": "object"
+      },
+      "CreateOptions": {
+        "properties": {
+          "operator": {
+            "type": "string"
+          },
+          "overWriteIfExist": {
+            "type": "boolean"
+          }
+        },
+        "title": "CreateOptions",
+        "type": "object"
+      },
+      "DeleteNodePoolMgrStrategyReq": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string"
+          }
+        },
+        "title": "DeleteNodePoolMgrStrategyReq",
+        "type": "object"
+      },
+      "DeleteNodePoolMgrStrategyRsp": {
+        "properties": {
+          "code": {
+            "format": "int32",
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "boolean"
+          }
+        },
+        "title": "DeleteNodePoolMgrStrategyRsp",
+        "type": "object"
+      },
+      "ElasticNodeGroup": {
+        "properties": {
+          "clusterId": {
+            "type": "string"
+          },
+          "consumerId": {
+            "type": "string"
+          },
+          "nodeGroup": {
+            "type": "string"
+          },
+          "weight": {
+            "format": "int32",
+            "type": "number"
+          }
+        },
+        "title": "ElasticNodeGroup",
+        "type": "object"
+      },
+      "GetNodePoolMgrStrategyReq": {
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "title": "GetNodePoolMgrStrategyReq",
+        "type": "object"
+      },
+      "GetNodePoolMgrStrategyRsp": {
+        "properties": {
+          "code": {
+            "format": "int32",
+            "type": "number"
+          },
+          "data": {
+            "properties": {
+              "elasticNodeGroups": {
+                "properties": {
+                  "clusterId": {
+                    "type": "string"
+                  },
+                  "consumerId": {
+                    "type": "string"
+                  },
+                  "nodeGroup": {
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "labels": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "name": {
+                "type": "string"
+              },
+              "reservedNodeGroup": {
+                "properties": {
+                  "clusterId": {
+                    "type": "string"
+                  },
+                  "consumerId": {
+                    "type": "string"
+                  },
+                  "nodeGroup": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "resourcePool": {
+                "type": "string"
+              },
+              "strategy": {
+                "properties": {
+                  "buffer": {
+                    "properties": {
+                      "high": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "low": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "reservedDays": {
+                        "format": "int32",
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "maxIdleDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "minScaleUpSize": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "reservedTimeRange": {
+                    "type": "string"
+                  },
+                  "scaleDownBeforeDDL": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleDownDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleUpCoolDown": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleUpDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "title": "GetNodePoolMgrStrategyRsp",
+        "type": "object"
+      },
+      "ListNodePoolMgrStrategyReq": {
+        "properties": {
+          "limit": {
+            "format": "int32",
+            "type": "number"
+          },
+          "page": {
+            "format": "int32",
+            "type": "number"
+          }
+        },
+        "title": "ListNodePoolMgrStrategyReq",
+        "type": "object"
+      },
+      "ListNodePoolMgrStrategyRsp": {
+        "properties": {
+          "code": {
+            "format": "int32",
+            "type": "number"
+          },
+          "data": {
+            "items": {
+              "properties": {
+                "elasticNodeGroups": {
+                  "properties": {
+                    "clusterId": {
+                      "type": "string"
+                    },
+                    "consumerId": {
+                      "type": "string"
+                    },
+                    "nodeGroup": {
+                      "type": "string"
+                    },
+                    "weight": {
+                      "format": "int32",
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "labels": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "reservedNodeGroup": {
+                  "properties": {
+                    "clusterId": {
+                      "type": "string"
+                    },
+                    "consumerId": {
+                      "type": "string"
+                    },
+                    "nodeGroup": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "resourcePool": {
+                  "type": "string"
+                },
+                "strategy": {
+                  "properties": {
+                    "buffer": {
+                      "properties": {
+                        "high": {
+                          "format": "int32",
+                          "type": "number"
+                        },
+                        "low": {
+                          "format": "int32",
+                          "type": "number"
+                        },
+                        "reservedDays": {
+                          "format": "int32",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "maxIdleDelay": {
+                      "format": "int32",
+                      "type": "number"
+                    },
+                    "minScaleUpSize": {
+                      "format": "int32",
+                      "type": "number"
+                    },
+                    "reservedTimeRange": {
+                      "type": "string"
+                    },
+                    "scaleDownBeforeDDL": {
+                      "format": "int32",
+                      "type": "number"
+                    },
+                    "scaleDownDelay": {
+                      "format": "int32",
+                      "type": "number"
+                    },
+                    "scaleUpCoolDown": {
+                      "format": "int32",
+                      "type": "number"
+                    },
+                    "scaleUpDelay": {
+                      "format": "int32",
+                      "type": "number"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "message": {
+            "type": "string"
+          },
+          "total": {
+            "format": "int32",
+            "type": "number"
+          }
+        },
+        "title": "ListNodePoolMgrStrategyRsp",
+        "type": "object"
+      },
+      "NodeGroup": {
+        "properties": {
+          "desiredSize": {
+            "format": "int32",
+            "type": "number"
+          },
+          "maxSize": {
+            "format": "int32",
+            "type": "number"
+          },
+          "minSize": {
+            "format": "int32",
+            "type": "number"
+          },
+          "nodeGroupID": {
+            "type": "string"
+          },
+          "nodeIPs": {
+            "type": "string"
+          },
+          "nodeTemplate": {
+            "properties": {
+              "cpu": {
+                "format": "int32",
+                "type": "number"
+              },
+              "gpu": {
+                "format": "int32",
+                "type": "number"
+              },
+              "labels": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "mem": {
+                "format": "double",
+                "type": "number"
+              },
+              "taints": {
+                "items": {
+                  "properties": {
+                    "effect": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    },
+                    "timeAdded": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "upcomingSize": {
+            "format": "int32",
+            "type": "number"
+          }
+        },
+        "title": "NodeGroup",
+        "type": "object"
+      },
+      "NodeGroupStrategy": {
+        "properties": {
+          "elasticNodeGroups": {
+            "properties": {
+              "clusterId": {
+                "type": "string"
+              },
+              "consumerId": {
+                "type": "string"
+              },
+              "nodeGroup": {
+                "type": "string"
+              },
+              "weight": {
+                "format": "int32",
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reservedNodeGroup": {
+            "properties": {
+              "clusterId": {
+                "type": "string"
+              },
+              "consumerId": {
+                "type": "string"
+              },
+              "nodeGroup": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "resourcePool": {
+            "type": "string"
+          },
+          "strategy": {
+            "properties": {
+              "buffer": {
+                "properties": {
+                  "high": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "low": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "reservedDays": {
+                    "format": "int32",
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "maxIdleDelay": {
+                "format": "int32",
+                "type": "number"
+              },
+              "minScaleUpSize": {
+                "format": "int32",
+                "type": "number"
+              },
+              "reservedTimeRange": {
+                "type": "string"
+              },
+              "scaleDownBeforeDDL": {
+                "format": "int32",
+                "type": "number"
+              },
+              "scaleDownDelay": {
+                "format": "int32",
+                "type": "number"
+              },
+              "scaleUpCoolDown": {
+                "format": "int32",
+                "type": "number"
+              },
+              "scaleUpDelay": {
+                "format": "int32",
+                "type": "number"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "title": "NodeGroupStrategy",
+        "type": "object"
+      },
+      "NodeScaleDownPolicy": {
+        "properties": {
+          "nodeGroupID": {
+            "type": "string"
+          },
+          "nodeIPs": {
+            "type": "string"
+          },
+          "nodeNum": {
+            "format": "int32",
+            "type": "number"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "title": "NodeScaleDownPolicy",
+        "type": "object"
+      },
+      "NodeScaleUpPolicy": {
+        "properties": {
+          "desiredSize": {
+            "format": "int32",
+            "type": "number"
+          },
+          "nodeGroupID": {
+            "type": "string"
+          }
+        },
+        "title": "NodeScaleUpPolicy",
+        "type": "object"
+      },
+      "NodeTaint": {
+        "properties": {
+          "effect": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "timeAdded": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "title": "NodeTaint",
+        "type": "object"
+      },
+      "NodeTemplate": {
+        "properties": {
+          "cpu": {
+            "format": "int32",
+            "type": "number"
+          },
+          "gpu": {
+            "format": "int32",
+            "type": "number"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "mem": {
+            "format": "double",
+            "type": "number"
+          },
+          "taints": {
+            "items": {
+              "properties": {
+                "effect": {
+                  "type": "string"
+                },
+                "key": {
+                  "type": "string"
+                },
+                "timeAdded": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "title": "NodeTemplate",
+        "type": "object"
+      },
+      "ReservedNodeGroup": {
+        "properties": {
+          "clusterId": {
+            "type": "string"
+          },
+          "consumerId": {
+            "type": "string"
+          },
+          "nodeGroup": {
+            "type": "string"
+          }
+        },
+        "title": "ReservedNodeGroup",
+        "type": "object"
+      },
+      "Strategy": {
+        "properties": {
+          "buffer": {
+            "properties": {
+              "high": {
+                "format": "int32",
+                "type": "number"
+              },
+              "low": {
+                "format": "int32",
+                "type": "number"
+              },
+              "reservedDays": {
+                "format": "int32",
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          "maxIdleDelay": {
+            "format": "int32",
+            "type": "number"
+          },
+          "minScaleUpSize": {
+            "format": "int32",
+            "type": "number"
+          },
+          "reservedTimeRange": {
+            "type": "string"
+          },
+          "scaleDownBeforeDDL": {
+            "format": "int32",
+            "type": "number"
+          },
+          "scaleDownDelay": {
+            "format": "int32",
+            "type": "number"
+          },
+          "scaleUpCoolDown": {
+            "format": "int32",
+            "type": "number"
+          },
+          "scaleUpDelay": {
+            "format": "int32",
+            "type": "number"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "title": "Strategy",
+        "type": "object"
+      },
+      "UpdateNodePoolMgrStrategyReq": {
+        "properties": {
+          "option": {
+            "properties": {
+              "createIfNotExist": {
+                "type": "boolean"
+              },
+              "operator": {
+                "type": "string"
+              },
+              "overwriteZeroOrEmptyStr": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "strategy": {
+            "properties": {
+              "elasticNodeGroups": {
+                "properties": {
+                  "clusterId": {
+                    "type": "string"
+                  },
+                  "consumerId": {
+                    "type": "string"
+                  },
+                  "nodeGroup": {
+                    "type": "string"
+                  },
+                  "weight": {
+                    "format": "int32",
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "labels": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "name": {
+                "type": "string"
+              },
+              "reservedNodeGroup": {
+                "properties": {
+                  "clusterId": {
+                    "type": "string"
+                  },
+                  "consumerId": {
+                    "type": "string"
+                  },
+                  "nodeGroup": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "resourcePool": {
+                "type": "string"
+              },
+              "strategy": {
+                "properties": {
+                  "buffer": {
+                    "properties": {
+                      "high": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "low": {
+                        "format": "int32",
+                        "type": "number"
+                      },
+                      "reservedDays": {
+                        "format": "int32",
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "maxIdleDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "minScaleUpSize": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "reservedTimeRange": {
+                    "type": "string"
+                  },
+                  "scaleDownBeforeDDL": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleDownDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleUpCoolDown": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "scaleUpDelay": {
+                    "format": "int32",
+                    "type": "number"
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "title": "UpdateNodePoolMgrStrategyReq",
+        "type": "object"
+      },
+      "UpdateOptions": {
+        "properties": {
+          "createIfNotExist": {
+            "type": "boolean"
+          },
+          "operator": {
+            "type": "string"
+          },
+          "overwriteZeroOrEmptyStr": {
+            "type": "boolean"
+          }
+        },
+        "title": "UpdateOptions",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "MicroAPIToken": {
+        "bearerFormat": "JWT",
+        "description": "Micro API token",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Generated by protoc-gen-openapi",
+    "title": "Nodegroupmanager",
+    "version": "1",
+    "x-logo": {
+      "altText": "Micro logo",
+      "backgroundColor": "#FFFFFF",
+      "url": "https://micro.dev/images/brand.png"
+    }
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/nodegroupmanager/NodegroupManager/CreateNodePoolMgrStrategy": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NodegroupManagerCreateNodePoolMgrStrategyRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NodegroupManagerCreateNodePoolMgrStrategyResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "NodegroupManager.CreateNodePoolMgrStrategy(CreateNodePoolMgrStrategyReq)"
+      }
+    },
+    "/nodegroupmanager/NodegroupManager/DeleteNodePoolMgrStrategy": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NodegroupManagerDeleteNodePoolMgrStrategyRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NodegroupManagerDeleteNodePoolMgrStrategyResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "NodegroupManager.DeleteNodePoolMgrStrategy(DeleteNodePoolMgrStrategyReq)"
+      }
+    },
+    "/nodegroupmanager/NodegroupManager/GetClusterAutoscalerReview": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NodegroupManagerGetClusterAutoscalerReviewRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NodegroupManagerGetClusterAutoscalerReviewResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "NodegroupManager.GetClusterAutoscalerReview(ClusterAutoscalerReview)"
+      }
+    },
+    "/nodegroupmanager/NodegroupManager/GetNodePoolMgrStrategy": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NodegroupManagerGetNodePoolMgrStrategyRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NodegroupManagerGetNodePoolMgrStrategyResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "NodegroupManager.GetNodePoolMgrStrategy(GetNodePoolMgrStrategyReq)"
+      }
+    },
+    "/nodegroupmanager/NodegroupManager/ListNodePoolMgrStrategies": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NodegroupManagerListNodePoolMgrStrategiesRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NodegroupManagerListNodePoolMgrStrategiesResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "NodegroupManager.ListNodePoolMgrStrategies(ListNodePoolMgrStrategyReq)"
+      }
+    },
+    "/nodegroupmanager/NodegroupManager/UpdateNodePoolMgrStrategy": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Micro-Namespace",
+          "required": true,
+          "schema": {
+            "default": "micro",
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NodegroupManagerUpdateNodePoolMgrStrategyRequest"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NodegroupManagerUpdateNodePoolMgrStrategyResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/MicroAPIError"
+          }
+        },
+        "security": [
+          {
+            "MicroAPIToken": []
+          }
+        ],
+        "summary": "NodegroupManager.UpdateNodePoolMgrStrategy(UpdateNodePoolMgrStrategyReq)"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Micro dev environment"
+    }
+  ]
+}

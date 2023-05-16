@@ -87,7 +87,7 @@ func runMetric(cfg *types.CmdConfig) {
 	blog.Infof("run metric ok")
 }
 
-//Run running watch
+// Run running watch
 func Run(cfg *types.CmdConfig) error {
 
 	if cfg.ClusterID == "" {
@@ -96,7 +96,7 @@ func Run(cfg *types.CmdConfig) error {
 	}
 	blog.Info("datawatcher run for cluster %s", cfg.ClusterID)
 
-	//create root context for exit
+	// create root context for exit
 	rootCxt, rootCancel := context.WithCancel(context.Background())
 	interrupt := make(chan os.Signal, 10)
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
@@ -105,14 +105,14 @@ func Run(cfg *types.CmdConfig) error {
 
 	runMetric(cfg)
 
-	//create storage
+	// create storage
 	ccStorage, ccErr := storage.NewCCStorage(cfg)
 	if ccErr != nil {
 		blog.Error("Create CCStorage Err: %s", ccErr.Error())
 		return ccErr
 	}
 	ccStorage.SetDCAddress(cfg.StorageAddresses)
-	//servermetric.SetDCStatus(false)
+	// servermetric.SetDCStatus(false)
 	clusterState.Set(stateErr)
 	ccCxt, _ := context.WithCancel(rootCxt)
 
@@ -142,7 +142,7 @@ func Run(cfg *types.CmdConfig) error {
 			blog.Errorf("get tls config from etcd options failed, err %s", err.Error())
 			return fmt.Errorf("get tls config from etcd options failed, err %s", err.Error())
 		}
-		//get cluster id for registry
+		// get cluster id for registry
 		clusterID := strings.Split(cfg.ClusterID, "-")
 		if len(clusterID) == 0 {
 			blog.Errorf("cluster ID formation error, detail in config: %s", cfg.ClusterID)
@@ -211,7 +211,8 @@ func handleSysSignal(exitCxt context.Context, signalChan <-chan os.Signal, cance
 	}
 }
 
-func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Storage, netservice *service.InnerService) (bool, error) {
+func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Storage,
+	netservice *service.InnerService) (bool, error) {
 
 	// servermetric.SetClusterStatus(false, "begin run server")
 	// servermetric.SetRole(metric.SlaveRole)
@@ -259,7 +260,7 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 	err = regDiscv.RegisterService(key, []byte(data))
 	if err != nil {
 		blog.Error("RegisterService(%s) error(%s)", key, err.Error())
-		//servermetric.SetClusterStatus(false, "register error:"+err.Error())
+		// servermetric.SetClusterStatus(false, "register error:"+err.Error())
 		clusterState.Set(stateRegisteErr)
 		regDiscv.Stop()
 		return true, err
@@ -269,7 +270,7 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 	discvEvent, err := regDiscv.DiscoverService(discvPath)
 	if err != nil {
 		blog.Error("DiscoverService(%s) error(%s)", discvPath, err.Error())
-		//servermetric.SetClusterStatus(false, "discove error:"+err.Error())
+		// servermetric.SetClusterStatus(false, "discove error:"+err.Error())
 		clusterState.Set(stateDiscvErr)
 		regDiscv.Stop()
 		return true, err
@@ -360,7 +361,7 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 				if clusterCancel != nil {
 					clusterCancel()
 				}
-				//servermetric.SetClusterStatus(false, "role error")
+				// servermetric.SetClusterStatus(false, "role error")
 				clusterState.Set(stateRoleErr)
 
 				return true, fmt.Errorf("currRole is nil")
@@ -383,7 +384,7 @@ func runServer(rdCxt context.Context, cfg *types.CmdConfig, storage storage.Stor
 					if cluster == nil {
 						blog.Error("Create Cluster Error.")
 						regDiscv.Stop()
-						//servermetric.SetClusterStatus(false, "master create cluster error")
+						// servermetric.SetClusterStatus(false, "master create cluster error")
 						clusterState.Set(stateRoleErr)
 						return true, fmt.Errorf("cluster create failed")
 					}

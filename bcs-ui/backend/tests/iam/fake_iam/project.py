@@ -14,10 +14,9 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict, List
 
-from iam import Request
+from iam import Request, Resource
 
 from backend.iam.permissions.perm import Permission
-from backend.iam.permissions.request import ResourceRequest
 from backend.iam.permissions.resources.project import ProjectAction
 
 from ..permissions import roles
@@ -48,7 +47,7 @@ class FakeProjectPermission(Permission):
     iam = FakeProjectIAM()
 
     def resource_inst_multi_actions_allowed(
-        self, username: str, action_ids: List[str], res_request: ResourceRequest
+        self, username: str, action_ids: List[str], resources: List[Resource]
     ) -> Dict[str, bool]:
         if username in [
             roles.ADMIN_USER,

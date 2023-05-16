@@ -44,7 +44,7 @@ func NewDriver() (resource.IPDriver, error) {
 	driver := &NetDriver{
 		netClient: client,
 	}
-	//client get bcs-netservice info
+	// client get bcs-netservice info
 	conf.ZkHost = strings.Replace(conf.ZkHost, ",", ";", -1)
 	hosts := strings.Split(conf.ZkHost, ";")
 	if err := client.GetNetService(hosts); err != nil {
@@ -53,14 +53,14 @@ func NewDriver() (resource.IPDriver, error) {
 	return driver, nil
 }
 
-//NetDriver driver for bcs-netservice
+// NetDriver driver for bcs-netservice
 type NetDriver struct {
 	netClient bcsapi.Netservice
 }
 
-//GetIPAddr get available ip resource for contaienr
+// GetIPAddr get available ip resource for contaienr
 func (driver *NetDriver) GetIPAddr(host, containerID, requestIP string) (*types.IPInfo, error) {
-	//construct types.IPLean
+	// construct types.IPLean
 	if host == "" || containerID == "" {
 		return nil, fmt.Errorf("host/container info lost")
 	}
@@ -76,7 +76,7 @@ func (driver *NetDriver) GetIPAddr(host, containerID, requestIP string) (*types.
 	return ipInfo, nil
 }
 
-//ReleaseIPAddr release ip address for container
+// ReleaseIPAddr release ip address for container
 func (driver *NetDriver) ReleaseIPAddr(host string, containerID string, ipInfo *types.IPInfo) error {
 	if host == "" || containerID == "" {
 		return fmt.Errorf("host/container info lost")
@@ -105,7 +105,7 @@ func (driver *NetDriver) ReleaseIPAddr(host string, containerID string, ipInfo *
 	return nil
 }
 
-//GetHostInfo Get host info from driver
+// GetHostInfo Get host info from driver
 func (driver *NetDriver) GetHostInfo(host string) (*types.HostInfo, error) {
 	if len(host) == 0 {
 		return nil, fmt.Errorf("host ip address lost")

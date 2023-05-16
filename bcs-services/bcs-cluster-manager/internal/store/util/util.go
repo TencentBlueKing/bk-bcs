@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package util xxx
 package util
 
 import (
@@ -20,7 +21,7 @@ import (
 
 const (
 	// DataTableNamePrefix is prefix of data table name
-	DataTableNamePrefix = "bcsclustermanager_"
+	DataTableNamePrefix = "bcsclustermanagerv2_"
 )
 
 // EnsureTable ensure object database table and table indexes

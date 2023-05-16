@@ -1,156 +1,187 @@
 {
-    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-    "operations": [
-        {
-            "operation": "upsert_resource_type",
-            "data": {
-                "id": "cluster",
-                "name": "集群",
-                "name_en": "cluster",
-                "description": "集群",
-                "description_en": "cluster",
-                "provider_config": {
-                    "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/clusters/"
-                },
-                "version": 1
-            }
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cluster",
+        "name": "集群",
+        "name_en": "cluster",
+        "description": "集群",
+        "description_en": "cluster",
+        "provider_config": {
+          "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/clusters/"
         },
-        {
-            "operation": "upsert_instance_selection",
-            "data": {
-                "id": "cluster_list",
-                "name": "集群",
-                "name_en": "cluster",
-                "resource_type_chain": [
-                  {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "project"},
-                  {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "cluster"}
-                ]
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "cluster_create",
-                "name": "集群创建",
-                "name_en": "create cluster",
-                "description": "用户创建集群",
-                "description_en": "user create cluster",
-                "type": "create",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "project",
-                    "related_instance_selections": [{
-                        "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                        "id": "project_list"
-                    }]
-                }],
-                "related_actions": ["project_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "cluster_view",
-                "name": "集群查看",
-                "name_en": "view cluster",
-                "description": "用户查看集群",
-                "description_en": "user view cluster",
-                "type": "view",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "cluster",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "cluster_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "cluster_manage",
-                "name": "集群管理",
-                "name_en": "manage cluster",
-                "description": "用户管理集群(包括添加/删除节点)",
-                "description_en": "user manage cluster(include add/delete node)",
-                "type": "manage",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "cluster",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "cluster_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "cluster_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "cluster_delete",
-                "name": "集群删除",
-                "name_en": "delete cluster",
-                "description": "用户删除集群",
-                "description_en": "user delete cluster",
-                "type": "delete",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "cluster",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "cluster_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "cluster_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "cluster_use",
-                "name": "集群使用",
-                "name_en": "use cluster",
-                "description": "用户使用集群(如创建命名空间等)",
-                "description_en": "user use cluster(e.g. create namespace)",
-                "type": "use",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "cluster",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "cluster_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "cluster_view"],
-                "version": 1
-            }
-        }
-    ]
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "cluster_list",
+        "name": "集群",
+        "name_en": "cluster",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          },
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_create",
+        "name": "集群创建",
+        "name_en": "create cluster",
+        "description": "用户创建集群",
+        "description_en": "user create cluster",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_view",
+        "name": "集群查看",
+        "name_en": "view cluster",
+        "description": "用户查看集群",
+        "description_en": "user view cluster",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_manage",
+        "name": "集群管理",
+        "name_en": "manage cluster",
+        "description": "用户管理集群(包括添加/删除节点)",
+        "description_en": "user manage cluster(include add/delete node)",
+        "type": "manage",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_delete",
+        "name": "集群删除",
+        "name_en": "delete cluster",
+        "description": "用户删除集群",
+        "description_en": "user delete cluster",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_use",
+        "name": "集群使用",
+        "name_en": "use cluster",
+        "description": "用户使用集群(如创建命名空间等)",
+        "description_en": "user use cluster(e.g. create namespace)",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    }
+  ]
 }

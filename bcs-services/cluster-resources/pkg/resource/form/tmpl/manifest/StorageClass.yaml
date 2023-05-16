@@ -1,0 +1,37 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: StorageClass
+metadata:
+  name: {{ .metadata.name }}
+  {{- if .metadata.labels }}
+  labels:
+    {{- include "common.labelSlice2Map" .metadata.labels | indent 4 }}
+  {{- end }}
+  {{- if or .metadata.annotations .spec.setAsDefault }}
+  annotations:
+    {{- range .metadata.annotations }}
+    {{- if ne .key "storageclass.kubernetes.io/is-default-class" }}
+    {{ .key | quote }}: {{ .value | default "" | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .spec.setAsDefault }}
+    storageclass.kubernetes.io/is-default-class: "true"
+    {{- end }}
+  {{- end }}
+  {{- if .metadata.resVersion }}
+  resourceVersion: {{ .metadata.resVersion | quote }}
+  {{- end }}
+{{- if .spec.provisioner }}
+provisioner: {{ .spec.provisioner }}
+{{- end }}
+volumeBindingMode: {{ .spec.volumeBindingMode }}
+reclaimPolicy: {{ .spec.reclaimPolicy }}
+{{- if .spec.params }}
+parameters:
+  {{- include "common.labelSlice2Map" .spec.params | indent 4 }}
+{{- end }}
+{{- if .spec.mountOpts }}
+mountOptions:
+  {{- range .spec.mountOpts }}
+  - {{ . }}
+  {{- end }}
+{{- end }}

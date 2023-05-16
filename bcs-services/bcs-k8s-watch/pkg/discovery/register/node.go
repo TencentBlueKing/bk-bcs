@@ -13,10 +13,12 @@
 
 package register
 
+// Node interface
 type Node interface {
 	PrimaryKey() string
 	Payload() []byte
 
+	// OwnsPayload TODO
 	// It knows if given payload was genereate from node
 	OwnsPayload([]byte) bool
 }
@@ -26,15 +28,18 @@ type DummyNode struct {
 	Id string
 }
 
+// PrimaryKey returns the primary key of the node
 func (n *DummyNode) PrimaryKey() string {
 	return n.Id
 }
 
+// Payload returns the payload of the node
 func (n *DummyNode) Payload() []byte {
 	result, _ := json.Marshal(n)
 	return result
 }
 
+// OwnsPayload returns if the given payload was generated from this node
 func (n *DummyNode) OwnsPayload(payload []byte) bool {
 	var result DummyNode
 	err := json.Unmarshal(payload, &result)

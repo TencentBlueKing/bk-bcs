@@ -25,15 +25,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/util"
 )
 
-//launch daemonset
+// LaunchDaemonset xxx
+// launch daemonset
 func (b *backend) LaunchDaemonset(def *types.BcsDaemonsetDef) error {
 	by, _ := json.Marshal(def.Version)
 	blog.Infof("launch daemonset(%s.%s) version(%s)", def.NameSpace, def.Name, string(by))
-	//lock
+	// lock
 	util.Lock.Lock(types.BcsDaemonset{}, def.NameSpace+"."+def.Name)
 	defer util.Lock.UnLock(types.BcsDaemonset{}, def.NameSpace+"."+def.Name)
 
-	//check daemonset whether exists
+	// check daemonset whether exists
 	daemonset, err := b.store.FetchDaemonset(def.NameSpace, def.Name)
 	if err != nil && err != store.ErrNoFound {
 		blog.Errorf("Launch Daemonset(%s.%s), but FetchDaemonset failed: %s", def.NameSpace, def.Name, err.Error())
@@ -44,14 +45,14 @@ func (b *backend) LaunchDaemonset(def *types.BcsDaemonsetDef) error {
 		blog.Warnf(err.Error())
 		return err
 	}
-	//save version
+	// save version
 	err = b.store.SaveVersion(def.Version)
 	if err != nil {
 		blog.Errorf("Launch Daemonset(%s.%s), but SaveVersion failed: %s", def.NameSpace, def.Name, err.Error())
 		return err
 	}
 	blog.Infof("Launch Daemonset(%s.%s), and SaveVersion success", def.NameSpace, def.Name)
-	//launch new daemonset
+	// launch new daemonset
 	daemonset = &types.BcsDaemonset{
 		ObjectMeta: commtypes.ObjectMeta{
 			Name:      def.Name,
@@ -70,13 +71,14 @@ func (b *backend) LaunchDaemonset(def *types.BcsDaemonsetDef) error {
 	return nil
 }
 
-//delete daemonset
+// DeleteDaemonset xxx
+// delete daemonset
 func (b *backend) DeleteDaemonset(namespace, name string, force bool) error {
-	//lock
+	// lock
 	util.Lock.Lock(types.BcsDaemonset{}, namespace+"."+name)
 	defer util.Lock.UnLock(types.BcsDaemonset{}, namespace+"."+name)
 
-	//check daemonset whether exists
+	// check daemonset whether exists
 	daemonset, err := b.store.FetchDaemonset(namespace, name)
 	if err != nil && err != store.ErrNoFound {
 		blog.Errorf("delete Daemonset(%s.%s), but FetchDaemonset failed: %s", namespace, name, err.Error())
@@ -95,7 +97,7 @@ func (b *backend) DeleteDaemonset(namespace, name string, force bool) error {
 		if pod.Status == types.TASKGROUP_STATUS_FINISH || pod.Status == types.TASKGROUP_STATUS_FAIL {
 			continue
 		}
-		//kill taskgroup in mesos cluster
+		// kill taskgroup in mesos cluster
 		b.sched.KillTaskGroup(pod)
 	}
 

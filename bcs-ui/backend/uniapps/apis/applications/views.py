@@ -17,20 +17,22 @@ import logging
 import re
 from datetime import datetime
 
-import yaml
 from django.conf import settings
 from django.db.models import Q
 from django.http import JsonResponse
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log import client
 from backend.components import paas_cc
 from backend.components.bcs.k8s import K8SClient
+from backend.utils import requests
 from backend.container_service.projects.base.constants import ProjectKindID
+from backend.container_service.projects.base.utils import is_k8s_project
+from backend.iam.permissions.resources.templateset import TemplatesetAction, TemplatesetPermCtx, TemplatesetPermission
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT, ShowVersion, Template, VersionedEntity
 from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config
 from backend.templatesets.legacy_apps.instance import utils as inst_utils
 from backend.templatesets.legacy_apps.instance.constants import InsState
+from backend.helm.helm import bcs_variable
 from backend.templatesets.legacy_apps.instance.models import InstanceConfig, VersionInstance
 from backend.templatesets.legacy_apps.instance.serializers import (
     VariableNamespaceSLZ,
@@ -50,10 +52,11 @@ from backend.uniapps.apis.utils import check_user_project, skip_authentication
 from backend.uniapps.application import constants as app_constants
 from backend.uniapps.application import utils
 from backend.uniapps.application import views as app_views
-from backend.uniapps.application.constants import FUNC_MAP, NORMAL_STATUS, REVERSE_CATEGORY_MAP, UNNORMAL_STATUS
+from backend.uniapps.application.constants import FUNC_MAP, REVERSE_CATEGORY_MAP
 from backend.utils import FancyDict
 from backend.utils.errcodes import ErrorCode
 from backend.utils.error_codes import error_codes
+from backend.helm.app.utils import ruamel_yaml_dump
 
 logger = logging.getLogger(__name__)
 PIPELINE_DEFAULT_USER = settings.PIPELINE_DEFAULT_USER
@@ -190,34 +193,8 @@ class ProjectApplicationInfo(app_views.BaseAPI, BaseAPIViews):
                 key_list.extend(search_list)
 
         key_list = list(set(key_list))
-        variable_dict = {}
-        if key_list:
-            # 验证变量名是否符合规范，不符合抛出异常，否则后续用 django 模板渲染变量也会抛出异常
-
-            var_objects = Variable.objects.filter(Q(project_id=project_id) | Q(project_id=0))
-
-            # access_token = request.user.token.access_token
-            # namespace_res = paas_cc.get_namespace_list(
-            #     access_token, project_id, desire_all_data=True)
-            namespace_data = namespace_res.get("data", {}).get("results") or []
-            namespace_dict = {str(i["id"]): i["cluster_id"] for i in namespace_data}
-
-            ns_list = slz_data["namespaces"].split(",") if slz_data["namespaces"] else []
-            for ns_id in ns_list:
-                _v_list = []
-                for _key in key_list:
-                    key_obj = var_objects.filter(key=_key)
-                    if key_obj.exists():
-                        _obj = key_obj.first()
-                        # 只显示自定义变量
-                        if _obj.category == "custom":
-                            cluster_id = namespace_dict.get(ns_id, 0)
-                            _v_list.append(
-                                {"key": _obj.key, "name": _obj.name, "value": _obj.get_show_value(cluster_id, ns_id)}
-                            )
-                    else:
-                        _v_list.append({"key": _key, "name": _key, "value": ""})
-                variable_dict[ns_id] = _v_list
+        ns_list = slz_data["namespaces"].split(",") if slz_data["namespaces"] else []
+        variable_dict = bcs_variable.get_multi_ns_variables(project_id, "", ns_list, key_list)
         return variable_dict, lb_services
 
     def compose_ns_vars(self, req_vars, default_vars):
@@ -286,9 +263,15 @@ class ProjectApplicationInfo(app_views.BaseAPI, BaseAPIViews):
         params_slz = serializers.ProjectTemplateSetParamsSLZ(data=params)
         params_slz.is_valid(raise_exception=True)
         params_slz = params_slz.data
+
+        # 兼容流水线操作, 上面的project_kind已经被设置为固定值
+        if not is_k8s_project(params_slz["access_token"], project_id):
+            return JsonResponse(requests.relay_request_to_mesos(request))
+
         project_kind, app_code, english_name = check_user_project(
             params_slz["access_token"], project_id, cc_app_id, self.jwt_info(request), project_code_flag=True
         )
+
         # 获取用户
         self.get_request_user(request, params_slz["access_token"], project_id)
         # 参数验证
@@ -510,12 +493,7 @@ class InstanceNamespace(BaseAPIViews, app_views.BaseAPI):
         if not (len(set(project_id_list)) == 1 and project_id_list[0] == project_id):
             raise error_codes.CheckFailed.f("实例不属于项目，请确认")
         ret_data = list(namespace_data.values())
-
-        ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        ns_ret_instance_list = ns_perm_client.hook_perms(
-            ret_data, filter_use=False, ns_id_flag="namespace_id", ns_name_flag="namespace"
-        )
-        return JsonResponse({"code": 0, "data": ns_ret_instance_list})
+        return JsonResponse({"code": 0, "data": ret_data})
 
 
 class InstanceStatus(BaseAPIViews):
@@ -633,22 +611,7 @@ class BaseBatchHandleInstance(BaseAPIViews):
         return {str(info.id): info for info in inst_info}
 
     def get_ns_variables(self, project_id, ns_id_data):
-        default_variables = {}
-        project_var = NameSpaceVariable.get_project_ns_vars(project_id)
-        for ns_id in ns_id_data:
-            ns_vars = []
-            for _var in project_var:
-                _ns_values = _var["ns_values"]
-                _ns_value_ids = _ns_values.keys()
-                ns_vars.append(
-                    {
-                        "id": _var["id"],
-                        "key": _var["key"],
-                        "name": _var["name"],
-                        "value": _ns_values.get(ns_id) if ns_id in _ns_value_ids else _var["default_value"],
-                    }
-                )
-            default_variables[ns_id] = ns_vars
+        default_variables = bcs_variable.get_multi_ns_variables(project_id, "", ns_id_data, None)
         return default_variables
 
     def category_map(self, kind, category):
@@ -958,6 +921,10 @@ class BatchUpdateInstance(BaseBatchHandleInstance, app_views.BaseAPI):
             raise error_codes.DBOperError.f("更新实例配置异常!")
 
     def api_put(self, request, cc_app_id, project_id):
+        # 兼容流水线操作, 上面的project_kind已经被设置为固定值
+        if not is_k8s_project(request.query_params.get('access_token'), project_id):
+            return JsonResponse(requests.relay_request_to_mesos(request))
+
         self.init_handler(request, cc_app_id, project_id, serializers.BatchUpdateInstanceParamsSLZ)
         all_category_list = ["Deployment", "DaemonSet", "Job", "StatefulSet"]
         req_category = request.GET.get("category")
@@ -1000,7 +967,7 @@ class BatchUpdateInstance(BaseBatchHandleInstance, app_views.BaseAPI):
                 version_id = show_version_info[0].id
             namespace = metadata.get("namespace")
             pre_instance_num = 0
-            if category in ["Deployment", "StatefulSet"]:
+            if category in ["K8sDeployment", "K8sStatefulSet", "Deployment", "StatefulSet"]:
                 pre_instance_num = inst_conf["spec"]["replicas"]
             else:
                 pre_instance_num = inst_conf["spec"]["instance"]
@@ -1309,7 +1276,7 @@ class GetInstanceVersions(BaseAPIViews):
 class GetInstanceVersionConf(BaseAPIViews):
     def json2yaml(self, conf):
         """json转yaml"""
-        yaml_profile = yaml.safe_dump(conf)
+        yaml_profile = ruamel_yaml_dump(conf)
         return yaml_profile
 
     def get_show_version_info(self, show_version_id):
@@ -1337,63 +1304,14 @@ class GetInstanceVersionConf(BaseAPIViews):
         """获取变量"""
         key_list = check_var_by_config(config)
         key_list = list(set(key_list))
-        v_list = []
-        if key_list:
-            # 验证变量名是否符合规范，不符合抛出异常，否则后续用 django 模板渲染变量也会抛出异常
-
-            var_objects = Variable.objects.filter(Q(project_id=project_id) | Q(project_id=0))
-
-            for _key in key_list:
-                key_obj = var_objects.filter(key=_key)
-                if key_obj.exists():
-                    _obj = key_obj.first()
-                    # 只显示自定义变量
-                    if _obj.category == "custom":
-                        v_list.append(
-                            {
-                                "key": _obj.key,
-                                # "name": _obj.name,
-                                "value": _obj.get_show_value(cluster_id, ns_id),
-                            }
-                        )
-                else:
-                    v_list.append(
-                        {
-                            "key": _key,
-                            # "name": _key,
-                            "value": "",
-                        }
-                    )
+        v_list = bcs_variable.get_ns_variables(project_id, cluster_id, ns_id, key_list)
         return v_list
 
     def get_variables_new(self, request, project_id, config, cluster_id, ns_id_list):
         """根据命名空间获取变量"""
         key_list = check_var_by_config(config)
         key_list = list(set(key_list))
-        variable_dict = {}
-        if key_list:
-            # 验证变量名是否符合规范，不符合抛出异常，否则后续用 django 模板渲染变量也会抛出异常
-
-            var_objects = Variable.objects.filter(Q(project_id=project_id) | Q(project_id=0))
-
-            access_token = request.user.token.access_token
-            namespace_res = paas_cc.get_namespace_list(access_token, project_id, limit=10000)
-            namespace_data = namespace_res.get("data", {}).get("results") or []
-            namespace_dict = {str(i["id"]): i["cluster_id"] for i in namespace_data}
-            ns_list = ns_id_list
-            for ns_id in ns_list:
-                _v_list = []
-                for _key in key_list:
-                    key_obj = var_objects.filter(key=_key)
-                    if key_obj.exists():
-                        _obj = key_obj.first()
-                        # 只显示自定义变量
-                        if _obj.category == "custom":
-                            cluster_id = namespace_dict.get(ns_id, 0)
-                            _v_list.append({"key": _obj.key, "value": _obj.get_show_value(cluster_id, ns_id)})
-                    else:
-                        _v_list.append({"key": _key, "value": ""})
-                variable_dict[ns_id] = _v_list
+        variable_dict = bcs_variable.get_bcs_multi_variables(project_id, cluster_id, ns_id_list, key_list)
         return variable_dict
 
     def get_default_instance_value(self, variable_list, key):
@@ -1535,9 +1453,30 @@ class ProjectMuster(BaseProjectMuster):
         self.get_request_user(request, request.GET.get("access_token"), project_id)
 
         ret_data = list(self.get_project_tmpl_set(project_id))
-        tmpl_perm_client = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-        tmpl_ret_list = tmpl_perm_client.hook_perms(ret_data, id_flag="id", filter_use=False)
-        return JsonResponse({"code": 0, "data": tmpl_ret_list})
+        # TODO 调整为带 web_annotations 的新协议
+        resources_actions_allowed = TemplatesetPermission().resources_actions_allowed(
+            res=[tpl['id'] for tpl in ret_data],
+            action_ids=[
+                TemplatesetAction.CREATE,
+                TemplatesetAction.DELETE,
+                TemplatesetAction.VIEW,
+                TemplatesetAction.UPDATE,
+                TemplatesetAction.INSTANTIATE,
+            ],
+            perm_ctx=TemplatesetPermCtx(username=request.user.username, project_id=project_id),
+        )
+
+        for tpl in ret_data:
+            action_allowed = resources_actions_allowed[tpl['id']]
+            tpl['permissions'] = {
+                'create': action_allowed[TemplatesetAction.CREATE],
+                'delete': action_allowed[TemplatesetAction.DELETE],
+                'view': action_allowed[TemplatesetAction.VIEW],
+                'edit': action_allowed[TemplatesetAction.UPDATE],
+                'use': action_allowed[TemplatesetAction.INSTANTIATE],
+            }
+
+        return JsonResponse({"code": 0, "data": ret_data})
 
 
 class ProjectMusterVersion(BaseProjectMuster):
@@ -1633,8 +1572,4 @@ class ProjectNamespace(BaseProjectMuster, app_views.BaseAPI):
                 ns_data_new.append(i)
 
         self.compose_cluster_env(request, project_id, ns_data_new)
-        ns_perm_client = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        ns_ret_list = ns_perm_client.hook_perms(
-            ns_data_new, filter_use=False, ns_id_flag="namespace_id", ns_name_flag="namespace"
-        )
-        return JsonResponse({"code": 0, "data": ns_ret_list})
+        return JsonResponse({"code": 0, "data": ns_data_new})

@@ -1,0 +1,13 @@
+{
+  "kind": "CronJob",
+  "class": "workload",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_cronjob",
+      "alias": "CronJob Simple Demo",
+      "description": "A simple cronjob demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

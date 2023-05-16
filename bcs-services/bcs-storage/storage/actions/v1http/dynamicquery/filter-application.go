@@ -35,8 +35,8 @@ type ApplicationFilter struct {
 	LastUpdateTimeEnd   string `json:"lastUpdateTimeEnd,omitempty" filter:"data.lastUpdateTime,timeR"`
 }
 
-const applicationNestedTimeLayout = nestedTimeLayout
+const applicationNestedTimeLayout = NestedTimeLayout
 
-func (t ApplicationFilter) getCondition() *operator.Condition {
+func (t ApplicationFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, applicationNestedTimeLayout)
 }

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package common xxx
 package common
 
 // MergeMap merge additions map into src map

@@ -1,0 +1,32 @@
+@import './detail-info.css';
+@import './pod-log.css';
+.workload-detail {
+    width: 100%;
+    /deep/ .bk-sideslider .bk-sideslider-content {
+        height: 100%;
+    }
+    &-info {
+        @mixin detail-info 3;
+    }
+    &-body {
+        background: #FAFBFD;
+        padding: 0 24px;
+        .workload-metric {
+            display: flex;
+            background: #fff;
+            margin-top: 16px;
+            height: 230px;
+        }
+        .workload-tab {
+            margin-top: 16px;
+        }
+        .pod-info-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          .search-input {
+            width: 350px;
+          }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+dependencies:
+- name: etcd
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  version: 6.2.11
+- name: mariadb
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  version: 9.4.4
+- name: redis
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  version: 14.8.11
+digest: sha256:d115a7e73cb035f44a21789ae3a4805d6ecf3e740e69fd93caa72c06de5577c5
+generated: "2023-01-18T16:35:53.024197292+08:00"

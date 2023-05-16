@@ -1,0 +1,17 @@
+{{- if .Values.bkLogCollection.enabled }}
+apiVersion: bk.tencent.com/v1alpha1
+kind: BkLogConfig
+metadata:
+  name: {{ include "bcs-cluster-resources.fullname" . }}-container-log
+spec:
+  dataId: {{ .Values.bkLogCollection.dataId }}
+  logConfigType: "container_log_config"
+  namespace: {{ .Release.Namespace | quote }}
+  workloadType: "deployment"
+  workloadName: {{ include "bcs-cluster-resources.fullname" . }}
+  containerNameMatch:
+    - main
+  path:
+    - {{ .Values.svcConf.log.path }}/{{ .Values.svcConf.log.name }}
+  encoding: "utf-8"
+{{- end }}

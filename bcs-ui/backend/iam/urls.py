@@ -22,4 +22,8 @@ urlpatterns = [
         r'^user_perms/actions/(?P<action_id>[\w]+)/$',
         views.UserPermsViewSet.as_view({'post': 'get_perm_by_action_id'}),
     ),
+    url(
+        r'^user_perms/actions/(?P<action_id>[\w]+)/apply_url/$',
+        views.UserPermsViewSet.as_view({'get': 'generate_apply_url'}),
+    ),
 ]

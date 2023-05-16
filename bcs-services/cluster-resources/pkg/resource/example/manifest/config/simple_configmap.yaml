@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-simple
+  namespace: default
+data:
+  special.how: very
+  special.type: charm

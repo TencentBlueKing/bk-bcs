@@ -1,21 +1,10 @@
-/**
- * Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
- * Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- */
+
 
 @charset 'utf-8';
 @import './variable.css';
 @import './mixins/clearfix.css';
 @import './mixins/ellipsis.css';
-@import './cc-icon/style.css';
 @import './bk-patch.css';
-@import './animation.css';
 
 html,
 body {
@@ -40,6 +29,7 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 }
 
 .biz-confignation-wrapper {
+    max-height: auto !important;
     .bk-loading-box .bk-loading-wrapper,
     .bk-loading .bk-loading-wrapper {
         top: 250px;
@@ -75,61 +65,40 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
     margin: 17px 20px;
 }
 
-.biz-copyright {
-    font-size: 12px;
-    color: #b7c0ca;
-    width: 100%;
-    position: absolute;
-    bottom: 25px;
-    text-align: center;
-    line-height: 20px;
-    padding: 0 15px;
-}
-
 .biz-container {
     width: 100%;
     display: flex;
-    min-height: 100%;
+    height: 100%;
     .biz-side-bar {
         width: 261px;
         min-width: 261px;
         max-width: 261px;
         border-right: 1px solid #dde4eb;
         background: #fff;
-        padding-bottom: 100px;
         position: relative;
+        display: flex;
+        flex-direction: column;
     }
     .biz-content-wrapper {
+        width: 100%;
         min-height: 400px;
+        max-height: calc(100vh - 104px);
+        overflow: auto;
     }
     > section {
         position: relative;
         align-items: stretch;
         flex: 1;
         overflow: hidden;
-        .biz-top-bar {
-            height: 60px;
-            border-bottom: 1px solid $borderWeightColor;
-            background: #fff;
-            box-shadow: 4px 0 3px rgba(0, 0, 0, 0.1);
-        }
     }
     .biz-content {
         position: relative;
         align-items: stretch;
         flex: 1;
-        padding-bottom: 35px;
-        .biz-top-bar {
-            height: 60px;
-            border-bottom: 1px solid #dde4eb;
-            background: #fff;
-            box-shadow: 4px 0 3px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
     }
     .biz-panel-header {
         @mixin clearfix;
-        padding: 17px 20px 17px 20px;
+        padding: 16px 20px 16px 20px;
         .left {
             float: left;
         }
@@ -141,12 +110,6 @@ input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
 
 .biz-action-box {
     padding: 20px;
-}
-
-biz-actions {
-    float: right;
-    margin: 14px 20px;
-    line-height: 30px;
 }
 
 .biz-tip-box {
@@ -574,7 +537,7 @@ biz-actions {
         width: 7px;
         height: 12px;
         display: inline-block;
-        background: url(../images/sort.png) 0 0 no-repeat;
+        background: url(@/images/sort.png) 0 0 no-repeat;
         cursor: pointer;
         &.asc {
             background-position: -38px 0;
@@ -654,8 +617,10 @@ biz-actions {
 .biz-tab-content {
     background-color: #fff;
     font-size: 14px;
-    padding: 20px 20px 100px 20px;
+    padding: 20px 20px 0 20px;
     color: $fontColor;
+    max-height: calc(100vh - 150px);
+    overflow: auto;
 }
 
 .biz-tip {
@@ -727,28 +692,6 @@ biz-actions {
     color: $iconPrimaryColor;
     cursor: pointer;
     margin-left: 20px;
-}
-
-.biz-templateset-title {
-    display: inline-block;
-    height: 60px;
-    line-height: 60px;
-    font-size: 16px;
-    vertical-align: middle;
-    .bk-form-input {
-        margin-top: -2px;
-        width: 220px;
-    }
-    .bcs-icon {
-        font-size: 12px;
-        margin-left: 5px;
-        visibility: hidden;
-    }
-    &:hover {
-        .bcs-icon {
-            visibility: visible;
-        }
-    }
 }
 
 .biz-guard-tip {
@@ -938,7 +881,6 @@ biz-actions {
         padding: 10px 5px 0;
     }
     .code-content {
-        @mixin scroller;
         height: 480px;
         width: 100%;
         margin: 0;
@@ -1029,9 +971,6 @@ biz-actions {
     .content {
         padding: 20px 30px 30px 30px;
     }
-    .footer {
-
-    }
 }
 
 .biz-namespace-wrapper {
@@ -1044,7 +983,6 @@ biz-actions {
 
     @mixin clearfix;
     .namespace-inner {
-        @mixin scroller;
         /*max-height: 178px;
         overflow: auto;*/
         padding: 10px 0 0;
@@ -1131,10 +1069,10 @@ biz-actions {
 
 .biz-topbar-title {
     display: inline-block;
-    height: 60px;
-    line-height: 60px;
+    height: 52px;
+    line-height: 52px;
     font-size: 16px;
-    margin-left: 20px;
+    margin-left: 24px;
 }
 
  /* 覆盖bk-dropdown的错误样式 */
@@ -1925,7 +1863,9 @@ div.jsoneditor {
         font-size: 14px;
     }
 }
-
+.bk-dialog-header.header-on-left {
+    line-height: 25px;
+}
 /* .biz-remove-dialog,
 .biz-confirm-dialog {
     .bk-dialog-header {
@@ -2057,8 +1997,6 @@ div.jsoneditor {
                 overflow: hidden;
 
                 .namespace-inner {
-                    @mixin scroller $borderWeightColor,
-                    0;
                     max-height: 178px;
                     overflow: auto;
                     padding-top: 10px;
@@ -2364,27 +2302,6 @@ div.jsoneditor {
     }
 }
 
-/* 设置默认滚动条样式 */
-div::-webkit-scrollbar {
-    width: 5px;
-    height: 6px;
-    background-color: #e6e6e6;
-}
-div::-webkit-scrollbar-thumb {
-    height: 6px;
-    border-radius: 4px;
-    background-color: #ccc;
-}
-.ace_scrollbar-v::-webkit-scrollbar {
-    width: 6px;
-    background-color: #272822;
-}
-.ace_scrollbar-v::-webkit-scrollbar-thumb {
-    height: 6px;
-    border-radius: 4px;
-    background-color: #666;
-}
-
 .biz-resize-textarea {
     resize: vertical;
 }
@@ -2558,7 +2475,7 @@ div::-webkit-scrollbar-thumb {
     left: 0;
     height: 100% !important;
     width: 100% !important;
-    z-index: 100;
+    z-index: 9999;
 }
 
 .lh20 {
@@ -2566,11 +2483,11 @@ div::-webkit-scrollbar-thumb {
 }
 
 .bcs-button-ellipsis span {
-    @mixin bcs-ellipsis
+    @mixin bcs-ellipsis;
 }
 
 .bcs-ellipsis {
-    @mixin bcs-ellipsis
+    @mixin bcs-ellipsis;
 }
 .ace_search_options {
     display: none !important;
@@ -2605,6 +2522,7 @@ div::-webkit-scrollbar-thumb {
         .bk-dialog-type-header {
             .header {
                 font-size: 20px;
+                white-space: inherit;
             }
         }
         .bk-dialog-type-sub-header {
@@ -2616,7 +2534,7 @@ div::-webkit-scrollbar-thumb {
     }
 }
 .bcs-cursor-element {
-    background: url("../images/lock.svg");
+    background: url("@/images/lock.svg");
     height: 16px;
     width: 12px;
 }
@@ -2653,13 +2571,32 @@ div::-webkit-scrollbar-thumb {
 }
 .navigation-message-theme {
     position: relative;
-    top: -20px;
+    top: -10px;
     padding: 0 !important;
-}
-.bk-select-extension:hover {
-    background-color: unset;
 }
 
 .content-loading {
     z-index: 999 !important;
+}
+
+.bcs-content-wrapper {
+    max-height: calc(100vh - 104px);
+    overflow: auto;
+}
+.bcs-flex {
+    display: flex;
+    align-items: center;
+}
+.bcs-flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.bcs-flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.mw88 {
+    min-width: 88px;
 }

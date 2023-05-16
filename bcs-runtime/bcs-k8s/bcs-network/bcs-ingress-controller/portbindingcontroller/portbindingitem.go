@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8scorev1 "k8s.io/api/core/v1"
@@ -70,21 +71,25 @@ func (pbih *portBindingItemHandler) ensureItem(
 		}
 
 		// tmpTargetGroup is use to build listener.spec.status or check listener whether changed when listener has targetGroup
+		backend := networkextensionv1.ListenerBackend{
+			IP:     pod.Status.PodIP,
+			Port:   item.RsStartPort,
+			Weight: networkextensionv1.DefaultWeight,
+		}
+		if hostPort := generator.GetPodHostPortByPort(pod, int32(item.RsStartPort)); item.HostPort &&
+			hostPort != 0 {
+			backend.IP = pod.Status.HostIP
+			backend.Port = int(hostPort)
+		}
 		tmpTargetGroup := &networkextensionv1.ListenerTargetGroup{
 			TargetGroupProtocol: item.Protocol,
-			Backends: []networkextensionv1.ListenerBackend{
-				{
-					IP:     pod.Status.PodIP,
-					Port:   item.RsStartPort,
-					Weight: networkextensionv1.DefaultWeight,
-				},
-			},
+			Backends:            []networkextensionv1.ListenerBackend{backend},
 		}
 		// listener has targetGroup
 		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
 			// listener has not synced
 			if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
-				blog.Warnf("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
+				blog.V(4).Infof("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
 				return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
 			}
 			// listener has targetGroup and targetGroup(include pod ip) has no changed
@@ -92,9 +97,9 @@ func (pbih *portBindingItemHandler) ensureItem(
 				countReady++
 				continue
 			}
-			//listener has targetGroup but targetGroup(include pod ip) has changed
+			// listener has targetGroup but targetGroup(include pod ip) has changed
 		}
-		//listener has no targetGroup or ip has changed
+		// listener has no targetGroup or ip has changed
 		listener.Spec.ListenerAttribute = portPool.Spec.ListenerAttribute
 		if item.ListenerAttribute != nil {
 			listener.Spec.ListenerAttribute = item.ListenerAttribute
@@ -108,7 +113,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 		}
 		blog.V(3).Infof("update listener %s/%s successfully", listenerName, item.PoolNamespace)
 	}
-	if countReady == len(item.PoolItemLoadBalancers) {
+	if countReady == len(item.PoolItemLoadBalancers) && countReady != 0 {
 		return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
 	}
 	return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
@@ -130,7 +135,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 	// 		return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
 	// 	}
 	// }
-	//return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
+	// return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
 }
 
 func (pbih *portBindingItemHandler) generateStatus(
@@ -171,6 +176,7 @@ func (pbih *portBindingItemHandler) deleteItem(
 			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)
 		}
 		listener.Spec.TargetGroup = nil
+		listener.Status.Status = networkextensionv1.ListenerStatusNotSynced
 		if err := pbih.k8sClient.Update(context.Background(), listener, &client.UpdateOptions{}); err != nil {
 			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
 			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package server xxx
 package server
 
 import (
@@ -25,7 +26,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
+	_ "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics" // metrics xxx
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/options"
 
@@ -37,7 +38,7 @@ type WebhookServer struct {
 	Opt        *options.ServerOption
 	Server     *http.Server
 	PluginMgr  *pluginmanager.Manager
-	EngineType string //kubernetes or mesos
+	EngineType string // kubernetes or mesos
 	PluginDir  string
 }
 

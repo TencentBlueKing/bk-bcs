@@ -142,6 +142,7 @@ func (store *managerStore) DeleteCommand(ID string) error {
 	return nil
 }
 
+// listAllCommands xxx
 // list all commands from etcd
 func (store *managerStore) listAllCommands() ([]*commtypes.BcsCommandInfo, error) {
 	client := store.BkbcsClient.BcsCommandInfos("")

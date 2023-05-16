@@ -11,6 +11,7 @@
  *
  */
 
+// Package nginx xxx
 package nginx
 
 import (
@@ -30,7 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-loadbalance/util"
 )
 
-//NewManager create haproxy config file manager
+// NewManager create haproxy config file manager
 func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string) conf.Manager {
 	return &Manager{
 		nginxBin:     binPath,
@@ -46,21 +47,21 @@ func NewManager(binPath, cfgPath, generatePath, backupPath, templatePath string)
 	}
 }
 
-//Manager implements TemplateManager interface, control
-//nginx config file generating, validation, backup and reloading
+// Manager implements TemplateManager interface, control
+// nginx config file generating, validation, backup and reloading
 type Manager struct {
-	nginxBin     string            //absolute path for haproxy executable binary
-	cfgFile      string            //absolute path for haproxy cfg file
-	backupDir    string            //absolute path for cfg file backup storage
-	tmpDir       string            //temperary file for create new file
-	templateFile string            //template file
-	healthInfo   metric.HealthMeta //Health information
+	nginxBin     string            // absolute path for haproxy executable binary
+	cfgFile      string            // absolute path for haproxy cfg file
+	backupDir    string            // absolute path for cfg file backup storage
+	tmpDir       string            // temperary file for create new file
+	templateFile string            // template file
+	healthInfo   metric.HealthMeta // Health information
 	healthLock   sync.RWMutex
 }
 
-//Start point, do not block
+// Start point, do not block
 func (m *Manager) Start() error {
-	//check template exist
+	// check template exist
 	if !conf.IsFileExist(m.nginxBin) {
 		blog.Error("nginx executable file lost")
 		return fmt.Errorf("nginx executable file lost")
@@ -69,7 +70,7 @@ func (m *Manager) Start() error {
 		blog.Error("nginx.conf.template do not exist")
 		return fmt.Errorf("nginx.conf.template do not exist")
 	}
-	//create other file directory
+	// create other file directory
 	err := os.MkdirAll(m.backupDir, os.ModePerm)
 	if err != nil {
 		blog.Warnf("mkdir %s failed, err %s", m.backupDir, err.Error())
@@ -81,20 +82,20 @@ func (m *Manager) Start() error {
 	return nil
 }
 
-//Stop stop
+// Stop stop
 func (m *Manager) Stop() {
 
 }
 
-//Create config file with tmpData,
+// Create config file with tmpData,
 func (m *Manager) Create(tmpData *types.TemplateData) (string, error) {
-	//loading template file
+	// loading template file
 	t, err := template.ParseFiles(m.templateFile)
 	if err != nil {
 		blog.Errorf("Parse template file %s failed: %s", m.templateFile, err.Error())
 		return "", err
 	}
-	//create new config file
+	// create new config file
 	fileName := "nginx." + strconv.Itoa(rand.Int()) + ".conf"
 	absName := filepath.Join(m.tmpDir, fileName)
 	writer, wErr := os.Create(absName)
@@ -102,7 +103,7 @@ func (m *Manager) Create(tmpData *types.TemplateData) (string, error) {
 		blog.Errorf("Create tempory new config file %s failed: %s", absName, wErr.Error())
 		return "", wErr
 	}
-	//fix nginx vhost bug, 2018-09-26 12:12:41
+	// fix nginx vhost bug, 2018-09-26 12:12:41
 	for i := range tmpData.HTTP {
 		if len(tmpData.HTTP[i].BCSVHost) == 0 {
 			blog.Warnf("nginx got empty http vhost info, %s", tmpData.HTTP[i].Name)
@@ -120,7 +121,7 @@ func (m *Manager) Create(tmpData *types.TemplateData) (string, error) {
 	return absName, nil
 }
 
-//CheckDifference two file are difference, true is difference
+// CheckDifference two file are difference, true is difference
 func (m *Manager) CheckDifference(oldFile, curFile string) bool {
 	var err error
 	if !conf.IsFileExist(oldFile) {
@@ -131,19 +132,19 @@ func (m *Manager) CheckDifference(oldFile, curFile string) bool {
 		blog.Errorf("Current nginx.conf %s Do not exist", oldFile)
 		return false
 	}
-	//calculate oldFile md5
+	// calculate oldFile md5
 	oldMd5, err := util.Md5SumForFile(oldFile)
 	if err != nil {
 		blog.Errorf("calculate old nginx file %s md5sum failed, err %s", oldFile, err.Error())
 		return false
 	}
-	//calculate curFile md5
+	// calculate curFile md5
 	newMd5, err := util.Md5SumForFile(curFile)
 	if err != nil {
 		blog.Errorf("calculate cur nginx file %s md5sum failed, err %s", curFile, err.Error())
 		return false
 	}
-	//compare
+	// compare
 	if oldMd5 != newMd5 {
 		blog.Info("New and old nginx.conf MD5 is difference")
 		return true
@@ -151,7 +152,7 @@ func (m *Manager) CheckDifference(oldFile, curFile string) bool {
 	return false
 }
 
-//Validate new cfg file grammar is OK
+// Validate new cfg file grammar is OK
 func (m *Manager) Validate(newFile string) bool {
 	command := m.nginxBin + " -t -c " + newFile
 	output, ok := util.ExeCommand(command)
@@ -163,12 +164,12 @@ func (m *Manager) Validate(newFile string) bool {
 	return true
 }
 
-//Replace old cfg file with cur one, return old file backup
+// Replace old cfg file with cur one, return old file backup
 func (m *Manager) Replace(oldFile, curFile string) error {
 	return util.ReplaceFile(oldFile, curFile)
 }
 
-//Reload haproxy with new config file
+// Reload haproxy with new config file
 func (m *Manager) Reload(cfgFile string) error {
 	command := m.nginxBin + " -s reload"
 	output, ok := util.ExeCommand(command)

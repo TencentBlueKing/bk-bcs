@@ -1,5 +1,6 @@
 {
   "address": "${localIp}",
+  "ipv6_address": "${localIpv6}",
   "port": ${bcsStoragePort},
   "metric_port": ${bcsStorageMetricPort},
   "log_dir": "${log_dir}",
@@ -16,6 +17,8 @@
   "ca_file": "${caFile}",
   "server_cert_file": "${serverCertFile}",
   "server_key_file": "${serverKeyFile}",
+  "client_cert_file": "${clientCertFile}",
+  "client_key_file": "${clientKeyFile}",
   "etcdRegistry": {
     "etcd_feature": ${bcsEtcdFeature},
     "etcd_address": "${bcsEtcdHost}",

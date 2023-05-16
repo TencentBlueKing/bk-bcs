@@ -14,6 +14,8 @@ specific language governing permissions and limitations under the License.
 """
 from dataclasses import asdict
 
+from backend.metrics import Result, counter_inc
+
 from ..constants import ActivityStatus, ActivityType, ResourceType
 from ..models import UserActivityLog
 from .context import AuditContext
@@ -27,12 +29,18 @@ class Auditor:
 
     def log_raw(self):
         UserActivityLog.objects.create(**asdict(self.audit_ctx))
+        if self.audit_ctx.activity_status == ActivityStatus.Succeed:
+            counter_inc(self.audit_ctx.resource_type, self.audit_ctx.activity_type, Result.Success.value)
+        elif self.audit_ctx.activity_status == ActivityStatus.Failed:
+            counter_inc(self.audit_ctx.resource_type, self.audit_ctx.activity_type, Result.Failure.value)
 
     def log_succeed(self):
         self._log(ActivityStatus.Succeed)
+        counter_inc(self.audit_ctx.resource_type, self.audit_ctx.activity_type, Result.Success.value)
 
     def log_failed(self, err_msg: str = ''):
         self._log(ActivityStatus.Failed, err_msg)
+        counter_inc(self.audit_ctx.resource_type, self.audit_ctx.activity_type, Result.Failure.value)
 
     def _log(self, activity_status: str, err_msg: str = ''):
         self._complete_description(activity_status, err_msg)

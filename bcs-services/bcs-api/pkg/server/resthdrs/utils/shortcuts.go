@@ -29,8 +29,17 @@ func WriteFuncFactory(statusCode int) func(response *restful.Response, codeName,
 	}
 }
 
+// WriteClientError xxx
 var WriteClientError = WriteFuncFactory(400)
+
+// WriteUnauthorizedError xxx
 var WriteUnauthorizedError = WriteFuncFactory(401)
+
+// WriteForbiddenError xxx
 var WriteForbiddenError = WriteFuncFactory(403)
+
+// WriteNotFoundError xxx
 var WriteNotFoundError = WriteFuncFactory(404)
+
+// WriteServerError xxx
 var WriteServerError = WriteFuncFactory(500)

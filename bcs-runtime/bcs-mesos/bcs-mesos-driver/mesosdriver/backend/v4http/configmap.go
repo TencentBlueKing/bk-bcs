@@ -19,6 +19,7 @@ import (
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
 )
 
+// CreateConfigMap xxx
 func (s *Scheduler) CreateConfigMap(body []byte) (string, error) {
 
 	blog.Info("create configmap data(%s)", string(body))
@@ -42,6 +43,7 @@ func (s *Scheduler) CreateConfigMap(body []byte) (string, error) {
 	return string(reply), nil
 }
 
+// UpdateConfigMap xxx
 func (s *Scheduler) UpdateConfigMap(body []byte) (string, error) {
 
 	blog.Info("update configmap data(%s)", string(body))
@@ -65,6 +67,7 @@ func (s *Scheduler) UpdateConfigMap(body []byte) (string, error) {
 	return string(reply), nil
 }
 
+// DeleteConfigMap xxx
 func (s *Scheduler) DeleteConfigMap(ns string, name string) (string, error) {
 	blog.Info("delete configmap(%s, %s)", ns, name)
 

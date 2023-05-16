@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 import os
+from typing import Optional
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -44,6 +45,7 @@ from backend.components.base import (
 )
 from backend.container_service.projects.base.constants import ProjectKindID
 from backend.dashboard.exceptions import DashboardBaseError
+from backend.iam.permissions.exceptions import PermissionDeniedError
 from backend.packages.blue_krill.web.std_error import APIError
 from backend.utils import cache
 from backend.utils import exceptions as backend_exceptions
@@ -139,6 +141,12 @@ def custom_exception_handler(exc: Exception, context):
     # 对 Dashboard 类异常做特殊处理
     elif isinstance(exc, DashboardBaseError):
         data = {"code": exc.code, "message": exc.message, "data": None, "request_id": local.request_id}
+        set_rollback()
+        return Response(data, status=200)
+
+    # iam 权限校验
+    elif isinstance(exc, PermissionDeniedError):
+        data = {"code": exc.code, "message": "%s" % exc, "data": exc.data, "request_id": local.request_id}
         set_rollback()
         return Response(data, status=200)
 
@@ -269,6 +277,10 @@ class CodeJSONRenderer(JSONRenderer):
             else:
                 response_data = data
 
+        if renderer_context:
+            if renderer_context.get('web_annotations'):
+                response_data['web_annotations'] = renderer_context.get('web_annotations')
+
         response = super(CodeJSONRenderer, self).render(response_data, accepted_media_type, renderer_context)
         return response
 
@@ -283,7 +295,7 @@ class VueTemplateView(APIView):
     # TODO 重构优化逻辑
     """
 
-    template_name = f"{settings.REGION}/index.html"
+    template_name = f"{settings.EDITION}/index.html"
 
     container_orchestration = ""
     request_url_suffix = ""
@@ -342,51 +354,74 @@ class VueTemplateView(APIView):
 
         return redirect_url
 
+    def get_project_kind(self, project: dict) -> str:
+        """获取项目类型"""
+        if not project:
+            return ""
+
+        # 未开启容器服务
+        if project['kind'] == 0:
+            return ""
+
+        # mesos
+        if project['kind'] != ProjectKindID:
+            return "mesos"
+
+        # 包含 k8s, tke
+        return "k8s"
+
     @xframe_options_exempt
     @method_decorator(login_required(redirect_field_name="c_url"))
-    def get(self, request, project_code: str):
+    def get(self, request, project_code: Optional[str] = None):
 
         # 缓存项目类型
         @cache.region.cache_on_arguments(expiration_time=60 * 60)
-        def cached_project_kind(project_code):
+        def cached_project_info(project_code):
             """缓存项目类型"""
             result = paas_cc.get_project(request.user.token.access_token, project_code)
             if result['code'] != 0:
-                return ""
+                return {}
 
-            # 未开启容器服务
-            if result['data']['kind'] == 0:
-                return ""
-            # mesos
-            if result['data']['kind'] != ProjectKindID:
-                return "mesos"
-            # 包含 k8s, tke
-            return "k8s"
+            return result['data']
 
-        kind = cached_project_kind(project_code)
+        project = cached_project_info(project_code)
+        kind = self.get_project_kind(project)
 
         if not self.is_orchestration_match(kind):
             return HttpResponseRedirect(redirect_to=self.make_redirect_url(project_code, kind))
 
         request_domain = request.get_host().split(':')[0]
         session_cookie_domain = get_cookie_domain_by_host(settings.SESSION_COOKIE_DOMAIN, request_domain)
+
+        # 蓝鲸监控域名
+        # 前端拼接地址 url规则: {BKMONITOR_HOST}/?bizId={cc_app_id}#/k8s"
+        bkmonitor_host = getattr(settings, 'BKMONITOR_HOST', '')
+
+        # 日志平台域名
+        # 前端拼接地址 url规则: {BKLOG_HOST}/#/retrieve/?bizId={cc_app_id}"
+        bklog_host = getattr(settings, 'BKLOG_HOST', '')
+
         context = {
             "DEVOPS_HOST": settings.DEVOPS_HOST,
             "DEVOPS_BCS_HOST": settings.DEVOPS_BCS_HOST,
             "DEVOPS_BCS_API_URL": settings.DEVOPS_BCS_API_URL,
             "DEVOPS_ARTIFACTORY_HOST": settings.DEVOPS_ARTIFACTORY_HOST,
+            "BKMONITOR_HOST": bkmonitor_host,
+            "BKLOG_HOST": bklog_host,
             "LOGIN_FULL": settings.LOGIN_FULL,
             "RUN_ENV": settings.RUN_ENV,
             # 去除末尾的 /, 前端约定
             "STATIC_URL": settings.SITE_STATIC_URL,
             # 去除开头的 . document.domain需要
             "SESSION_COOKIE_DOMAIN": session_cookie_domain.lstrip("."),
-            "REGION": settings.REGION,
+            "REGION": settings.EDITION,
             "BK_CC_HOST": settings.BK_CC_HOST,
             "SITE_URL": settings.SITE_URL[:-1],
             "BK_IAM_APP_URL": settings.BK_IAM_APP_URL,
-            "SUPPORT_MESOS": str2bool(os.environ.get("BKAPP_SUPPORT_MESOS", "false")),
+            "SUPPORT_MESOS": str2bool(settings.SUPPORT_MESOS),
             "CONTAINER_ORCHESTRATION": "",  # 前端路由, 默认地址不变
+            "BCS_API_HOST": settings.BCS_API_HOST,
+            "PREFERRED_DOMAINS": settings.PREFERRED_DOMAINS,
         }
 
         # mesos 需要修改 API 和静态资源路径
@@ -394,6 +429,11 @@ class VueTemplateView(APIView):
             context["DEVOPS_BCS_API_URL"] = os.path.join(context["DEVOPS_BCS_API_URL"], "mesos")
             context["STATIC_URL"] = os.path.join(context["STATIC_URL"], "mesos")
             context["CONTAINER_ORCHESTRATION"] = kind
+
+        # 临时变量, 支持 storage 存储
+        context["BCS_DEBUG_API_HOST"] = settings.BCS_API_HOST
+        if 'prod-bcs-api' in settings.BCS_API_HOST:
+            context["BCS_DEBUG_API_HOST"] = settings.BCS_API_HOST.replace("prod-bcs-api", "debug-bcs-api")
 
         # 特定版本多域名的支持
         try:
@@ -419,7 +459,7 @@ class VueTemplateView(APIView):
 
 
 class LoginSuccessView(APIView):
-    template_name = f"{settings.REGION}/login_success.html"
+    template_name = f"{settings.EDITION}/login_success.html"
     renderer_classes = [TemplateHTMLRenderer]
     # 去掉权限控制
     permission_classes = ()

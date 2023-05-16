@@ -1,0 +1,194 @@
+
+
+@import '@/css/variable.css';
+@import '@/css/mixins/clearfix.css';
+
+.biz-resource-table>thead>tr>th:first-child,
+.biz-resource-table>tbody>tr>td:first-child {
+    padding-left: 20px;
+}
+
+.biz-resource-table {
+    .biz-operate {
+        margin-right: 15px;
+        color: #3a84ff;
+        cursor: pointer;
+    }
+
+    .biz-not-operate {
+        margin-right: 15px;
+        color: #C7CAD2;
+        cursor: not-allowed;
+    }
+}
+
+.data-title {
+    font-size: 14px;
+    color: #333948;
+    margin-bottom: 10px;
+}
+
+.biz-data-table {
+    border: 1px solid #dde4eb;
+    border-bottom: none;
+    margin-bottom: 25px;
+}
+
+.biz-data-table>thead>tr>th {
+    background: #fafbfd;
+}
+
+.biz-data-table>thead>tr>th,
+.biz-data-table>thead>tr>td,
+.biz-data-table>tbody>tr>th,
+.biz-data-table>tbody>tr>td {
+    height: 42px;
+    padding: 10px 20px;
+}
+
+.point-box {
+    border: 1px solid $borderWeightColor;
+    margin: 8px 0 0 0;
+    padding: 15px 15px 10px 15px;
+    position: relative;
+    border-radius: 2px;
+
+    &:after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        display: inline-block;
+        border-top: 1px solid #dde4eb;
+        border-right: 1px solid #dde4eb;
+        transform: rotate(-45deg);
+        position: absolute;
+        top: -6px;
+        left: 39px;
+        background: #fff;
+    }
+}
+
+.key-list {
+    @mixin clearfix;
+
+    li {
+        float: left;
+        display: flex;
+        margin: 0 5px 5px 0;
+        border: 1px solid $borderWeightColor;
+        border-radius: 2px;
+        background: #fff;
+
+        &.bk-primary {
+            border-color: $primaryColor;
+
+            .key {
+                background: #ebf4ff;
+                color: $primaryColor;
+            }
+
+            .value {
+                border-left: 1px solid $primaryColor;
+                background-color: $primaryColor;
+                color: #fff;
+            }
+        }
+    }
+
+    .key,
+    .value {
+        float: left;
+        line-height: 22px;
+        text-align: left;
+        padding: 0 10px;
+        font-size: 12px;
+        color: #737987;
+        white-space: nowrap;
+    }
+
+    .value {
+        border-left: 1px solid $borderWeightColor;
+        background-color: #fafbfd;
+    }
+}
+
+.display-text-btn {
+    font-weight: normal;
+    float: right;
+}
+
+.show-labels-btn {
+    cursor: default;
+
+    &:hover {
+        background: $primaryColor;
+    }
+}
+
+.key-text {
+    width: 400px;
+    overflow: hidden;
+    display: block;
+    text-overflow: ellipsis;
+}
+
+.key-box-wrapper {
+    width: 320px;
+    position: relative;
+    padding-right: 20px;
+
+    .expand-btn {
+        position: absolute;
+        right: -6px;
+        bottom: 4px;
+        font-size: 12px;
+        color: #3a84ff;
+    }
+}
+
+.key-box {
+    width: 300px;
+    overflow: hidden;
+    white-space: nowrap;
+    min-height: auto;
+    text-overflow: ellipsis;
+    padding: 6px;
+    word-break: break-all;
+
+    &.expanded {
+        overflow: visible;
+        white-space: normal;
+        max-height: 200px;
+        overflow: auto;
+    }
+}
+
+.bk-label {
+    width: 105px;
+    position: absolute;
+    left: 0;
+    font-size: 14px;
+    color: #737987;
+    text-align: right;
+    padding-right: 30px;
+}
+
+.biz-resource {
+    .already-selected-nums {
+        font-size: 14px;
+        height: 40px;
+        line-height: 40px;
+        display: inline-block;
+        float: left;
+        margin-left: 15px;
+        color: #737987;
+    }
+    .biz-table-wrapper {
+        overflow-x: auto;
+    }
+}
+
+.bcs-icon-edit {
+    position: absolute;
+    right: 15px !important;
+}

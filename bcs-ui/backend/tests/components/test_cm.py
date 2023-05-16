@@ -12,7 +12,6 @@ specific language governing permissions and limitations under the License.
 """
 from requests_mock import ANY
 
-from backend.components.base import ComponentAuth
 from backend.components.cluster_manager import ClusterManagerClient
 
 
@@ -21,6 +20,6 @@ class TestClusterManagerClient:
         expected_data = [{"innerIP": "127.0.0.1"}]
         requests_mock.get(ANY, json={"code": 0, "data": expected_data})
 
-        client = ClusterManagerClient(ComponentAuth(request_user.token.access_token))
+        client = ClusterManagerClient(request_user.token.access_token)
         data = client.get_nodes(cluster_id)
         assert data == expected_data

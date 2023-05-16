@@ -18,13 +18,17 @@ import (
 	"strings"
 	"time"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	k8scorev1 "k8s.io/api/core/v1"
 )
 
 // Clb client to operate clb instance
@@ -65,8 +69,34 @@ func NewClbWithSecretIDKey(id, key string) (*Clb, error) {
 	}, nil
 }
 
+// NewClbWithSecret create clb client with k8s secret
+func NewClbWithSecret(secret *k8scorev1.Secret, _ client.Client, _ eventer.WatchEventInterface) (cloud.LoadBalance, error) {
+	secretIDBytes, ok := secret.Data[EnvNameTencentCloudAccessKeyID]
+	if !ok {
+		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameTencentCloudAccessKeyID,
+			secret.Namespace, secret.Name)
+	}
+	secretKeyBytes, ok := secret.Data[EnvNameTencentCloudAccessKey]
+	if !ok {
+		return nil, fmt.Errorf("lost %s in secret %s/%s", EnvNameTencentCloudAccessKey,
+			secret.Namespace, secret.Name)
+	}
+	sdkWrapper, err := NewSdkWrapperWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
+	if err != nil {
+		return nil, err
+	}
+	apiWrapper, err := NewAPIWrapperWithSecretIDKey(string(secretIDBytes), string(secretKeyBytes))
+	if err != nil {
+		return nil, err
+	}
+	return &Clb{
+		sdkWrapper: sdkWrapper,
+		apiWrapper: apiWrapper,
+	}, nil
+}
+
 // DescribeLoadBalancer get loadbalancer object by id
-func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanceObject, error) {
+func (c *Clb) DescribeLoadBalancer(region, lbID, name, protocolLayer string) (*cloud.LoadBalanceObject, error) {
 	req := tclb.NewDescribeLoadBalancersRequest()
 	if len(lbID) != 0 {
 		req.LoadBalancerIds = tcommon.StringPtrs([]string{lbID})
@@ -115,13 +145,16 @@ func (c *Clb) DescribeLoadBalancer(region, lbID, name string) (*cloud.LoadBalanc
 	if resplb.LoadBalancerName != nil {
 		retlb.Name = *resplb.LoadBalancerName
 	}
+	if resplb.Domain != nil {
+		retlb.DNSName = *resplb.Domain
+	}
 	retlb.IPs = tcommon.StringValues(resplb.LoadBalancerVips)
 	return retlb, nil
 }
 
 // DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
-func (c *Clb) DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*cloud.LoadBalanceObject, error) {
-	return c.DescribeLoadBalancer(region, lbID, name)
+func (c *Clb) DescribeLoadBalancerWithNs(ns, region, lbID, name, protocolLayer string) (*cloud.LoadBalanceObject, error) {
+	return c.DescribeLoadBalancer(region, lbID, name, protocolLayer)
 }
 
 // IsNamespaced if client is namespaced
@@ -173,7 +206,7 @@ func (c *Clb) DeleteListener(region string, listener *networkextensionv1.Listene
 
 // EnsureMultiListeners ensure multiple listeners to cloud
 func (c *Clb) EnsureMultiListeners(
-	region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
+	region, lbID string, listeners []*networkextensionv1.Listener) (map[string]cloud.Result, error) {
 	var portList []int
 	for _, li := range listeners {
 		portList = append(portList, li.Spec.Port)
@@ -212,7 +245,7 @@ func (c *Clb) EnsureMultiListeners(
 		}
 	}
 
-	retMap := make(map[string]string)
+	retMap := make(map[string]cloud.Result)
 	addListenerGroups := splitListenersToDiffProtocol(addListeners)
 	for _, group := range addListenerGroups {
 		if len(group) != 0 {
@@ -223,19 +256,25 @@ func (c *Clb) EnsureMultiListeners(
 					liIDMap, err := c.batchCreate7LayerListener(region, batch)
 					if err != nil {
 						blog.Warnf("batch create 7 layer listener failed, err %s", err.Error())
+						for _, listener := range batch {
+							retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+						}
 						continue
 					}
-					for liName, liID := range liIDMap {
-						retMap[liName] = liID
+					for liName, res := range liIDMap {
+						retMap[liName] = res
 					}
 				case ClbProtocolTCP, ClbProtocolUDP:
 					liIDMap, err := c.batchCreate4LayerListener(region, batch)
 					if err != nil {
 						blog.Warnf("batch create 4 layer listener failed, err %s", err.Error())
+						for _, listener := range batch {
+							retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+						}
 						continue
 					}
-					for liName, liID := range liIDMap {
-						retMap[liName] = liID
+					for liName, res := range liIDMap {
+						retMap[liName] = res
 					}
 				default:
 					blog.Warnf("invalid batch protocol %s", group[0].Spec.Protocol)
@@ -258,25 +297,36 @@ func (c *Clb) EnsureMultiListeners(
 				isErrArr, err := c.batchUpdate7LayerListeners(region, group, cloudListenerGroup)
 				if err != nil {
 					blog.Warnf("batch update 7 layer listeners %s failed, err %s", getListenerNames(group), err.Error())
+					for _, listener := range group {
+						retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+					}
 					continue
 				}
-				for index, isErr := range isErrArr {
-					if !isErr {
-						retMap[group[index].GetName()] = cloudListenerGroup[index].Status.ListenerID
+				for index, err := range isErrArr {
+					if err == nil {
+						retMap[group[index].GetName()] = cloud.Result{
+							IsError: false,
+							Res:     cloudListenerGroup[index].Status.ListenerID}
 					} else {
-						blog.Warnf("update 7 layer listener %s failed in batch", group[index].GetName())
+						retMap[group[index].GetName()] = cloud.Result{IsError: true, Err: err}
+						blog.Warnf("update 7 layer listener %s failed in batch, err: %+v", group[index].GetName(), err)
 					}
 				}
 			case ClbProtocolTCP, ClbProtocolUDP:
 				isErrArr, err := c.batchUpdate4LayerListener(region, group, cloudListenerGroup)
 				if err != nil {
 					blog.Infof("batch update 4 layer listeners %s failed, err %s", getListenerNames(group), err.Error())
+					for _, listener := range group {
+						retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+					}
 					continue
 				}
-				for index, isErr := range isErrArr {
-					if !isErr {
-						retMap[group[index].GetName()] = cloudListenerGroup[index].Status.ListenerID
+				for index, err := range isErrArr {
+					if err == nil {
+						retMap[group[index].GetName()] = cloud.Result{IsError: false,
+							Res: cloudListenerGroup[index].Status.ListenerID}
 					} else {
+						retMap[group[index].GetName()] = cloud.Result{IsError: true, Err: err}
 						blog.Warnf("update 4 layer listener %s failed in batch", group[index].GetName())
 					}
 				}
@@ -372,7 +422,7 @@ func (c *Clb) EnsureSegmentListener(region string, listener *networkextensionv1.
 
 // EnsureMultiSegmentListeners ensure multi segment listeners
 func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
-	map[string]string, error) {
+	map[string]cloud.Result, error) {
 	var portList []int
 	for _, li := range listeners {
 		portList = append(portList, li.Spec.Port)
@@ -413,11 +463,14 @@ func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*netw
 		}
 	}
 
-	retMap := make(map[string]string)
+	retMap := make(map[string]cloud.Result)
 	if len(addListeners) != 0 {
 		liIDMap, err := c.batchCreateSegment4LayerListener(region, addListeners)
 		if err != nil {
 			blog.Warnf("batch create 4 layer listener segment failed, err %s", err.Error())
+			for _, listener := range addListeners {
+				retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+			}
 		} else {
 			for liName, liID := range liIDMap {
 				retMap[liName] = liID
@@ -428,10 +481,15 @@ func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*netw
 		isErrArr, err := c.batchUpdate4LayerListener(region, updatedListeners, existedListeners)
 		if err != nil {
 			blog.Warnf("batch update 4 layer listener segment failed, err %s", err.Error())
+			for _, listener := range updatedListeners {
+				retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+			}
 		}
 		for index, li := range updatedListeners {
-			if !isErrArr[index] {
-				retMap[li.GetName()] = existedListeners[index].Status.ListenerID
+			if isErrArr[index] == nil {
+				retMap[li.GetName()] = cloud.Result{IsError: false, Res: existedListeners[index].Status.ListenerID}
+			} else {
+				retMap[li.GetName()] = cloud.Result{IsError: true, Err: isErrArr[index]}
 			}
 		}
 	}

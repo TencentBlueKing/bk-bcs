@@ -14,12 +14,16 @@ package scalercore
 
 import autoscalingv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 
+// ScalerName xxx
 type ScalerName string
 
 const (
+	// Webhook xxx
 	Webhook = "Webhook"
-	Event   = "Event"
-	Cron    = "Cron"
+	// Event xxx
+	Event = "Event"
+	// Cron xxx
+	Cron = "Cron"
 )
 
 // Scaler scaler

@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/websocketDialer"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
 func testAuthorize(req *http.Request) (string, bool, error) {

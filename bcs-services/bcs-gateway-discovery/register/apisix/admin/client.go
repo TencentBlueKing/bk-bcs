@@ -19,11 +19,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	restclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 )
 
-//NewClient create apisix admin api client
+// NewClient create apisix admin api client
 func NewClient(option *Option) Client {
 	c := &client{
 		option: option,
@@ -92,10 +93,25 @@ func (c *client) GetUpstream(id string) (*Upstream, error) {
 	if len(upstream.ID) == 0 {
 		return nil, fmt.Errorf("upstream data err")
 	}
+	nodesOK := false
+	mapStructedNodes := make(map[string]int)
+	var upstreamNodes []UpstreamNode
+	if err = json.Unmarshal(upstream.Nodes, &upstreamNodes); err == nil {
+		upstream.UpstreamNodes = &upstreamNodes
+		nodesOK = true
+	} else if err = json.Unmarshal(upstream.Nodes, &mapStructedNodes); err == nil {
+		upstream.MapStructedNodes = &mapStructedNodes
+		nodesOK = true
+	}
+	if !nodesOK {
+		nodestr, _ := upstream.Nodes.MarshalJSON()
+		blog.Errorf("upstream %s nodes decode failed, nodes value: %s", upstream.Name, nodestr)
+		return nil, fmt.Errorf("upstream %s nodes decode failed, nodes value: %s", upstream.Name, nodestr)
+	}
 	return upstream, nil
 }
 
-// GetUpstream implementation
+// CreateUpstream implementation
 func (c *client) CreateUpstream(upstr *Upstream) error {
 	if upstr == nil || len(upstr.Nodes) == 0 {
 		return fmt.Errorf("upstream nodes is empty")
@@ -164,12 +180,12 @@ func (c *client) ListUpstream() ([]*Upstream, error) {
 		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
-	if response.Count == "1" || response.Data == nil ||
+	if response.Count == 0 || response.Data == nil ||
 		!response.Data.Directory || response.Data.Nodes == nil {
 		// no exact data
 		return nil, nil
 	}
-	//Unmarshal response.Data.Nodes to slice
+	// Unmarshal response.Data.Nodes to slice
 	var dataNodes []*Node
 	if err := json.Unmarshal(response.Data.Nodes, &dataNodes); err != nil {
 		return nil, fmt.Errorf("Nodes data is not slice")
@@ -183,12 +199,27 @@ func (c *client) ListUpstream() ([]*Upstream, error) {
 		if len(upstream.ID) == 0 {
 			return nil, fmt.Errorf("upstream data err")
 		}
+		nodesOK := false
+		mapStructedNodes := make(map[string]int)
+		var upstreamNodes []UpstreamNode
+		if err = json.Unmarshal(upstream.Nodes, &upstreamNodes); err == nil {
+			upstream.UpstreamNodes = &upstreamNodes
+			nodesOK = true
+		} else if err = json.Unmarshal(upstream.Nodes, &mapStructedNodes); err == nil {
+			upstream.MapStructedNodes = &mapStructedNodes
+			nodesOK = true
+		}
+		if !nodesOK {
+			nodestr, _ := upstream.Nodes.MarshalJSON()
+			blog.Errorf("upstream %s nodes decode failed, nodes value: %s", upstream.Name, nodestr)
+			continue
+		}
 		ups = append(ups, upstream)
 	}
 	return ups, nil
 }
 
-// GetUpstream implementation
+// UpdateUpstream implementation
 func (c *client) UpdateUpstream(upstr *Upstream) error {
 	if upstr == nil || len(upstr.Nodes) == 0 {
 		return fmt.Errorf("upstream nodes is empty")
@@ -233,7 +264,7 @@ func (c *client) UpdateUpstream(upstr *Upstream) error {
 	return nil
 }
 
-// GetUpstream implementation
+// DeleteUpstream implementation
 func (c *client) DeleteUpstream(id string) error {
 	if len(id) == 0 {
 		return fmt.Errorf("upstream id required")
@@ -262,7 +293,7 @@ func (c *client) DeleteUpstream(id string) error {
 	}
 	if len(response.Err) != 0 {
 		metricData.Status = utils.ErrStatus
-		//logic error
+		// logic error
 		return fmt.Errorf(response.Err)
 	}
 	return nil
@@ -334,12 +365,12 @@ func (c *client) ListService() ([]*Service, error) {
 		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
-	if response.Count == "1" || response.Data == nil ||
+	if response.Count == 0 || response.Data == nil ||
 		!response.Data.Directory || response.Data.Nodes == nil {
 		// no exact data
 		return nil, nil
 	}
-	//Unmarshal response.Data.Nodes to slice
+	// Unmarshal response.Data.Nodes to slice
 	var dataNodes []*Node
 	if err := json.Unmarshal(response.Data.Nodes, &dataNodes); err != nil {
 		return nil, fmt.Errorf("Nodes data is not slice")
@@ -466,7 +497,7 @@ func (c *client) DeleteService(id string) error {
 	}
 	if len(response.Err) != 0 {
 		metricData.Status = utils.ErrStatus
-		//logic error
+		// logic error
 		return fmt.Errorf(response.Err)
 	}
 	return nil
@@ -538,12 +569,12 @@ func (c *client) ListRoute() ([]*Route, error) {
 		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
-	if response.Count == "1" || response.Data == nil ||
+	if response.Count == 0 || response.Data == nil ||
 		!response.Data.Directory || response.Data.Nodes == nil {
 		// no exact data
 		return nil, nil
 	}
-	//Unmarshal response.Data.Nodes to slice
+	// Unmarshal response.Data.Nodes to slice
 	var dataNodes []*Node
 	if err := json.Unmarshal(response.Data.Nodes, &dataNodes); err != nil {
 		return nil, fmt.Errorf("Nodes data is not slice")
@@ -674,7 +705,7 @@ func (c *client) DeleteRoute(id string) error {
 	}
 	if len(response.Err) != 0 {
 		metricData.Status = utils.ErrStatus
-		//logic error
+		// logic error
 		return fmt.Errorf(response.Err)
 	}
 	return nil

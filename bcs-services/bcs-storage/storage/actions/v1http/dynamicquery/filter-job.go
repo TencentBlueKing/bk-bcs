@@ -28,8 +28,8 @@ type JobFilter struct {
 	Uid             string `json:"uid,omitempty" filter:"data.metadata.uid"`
 }
 
-const jobNestedTimeLayout = nestedTimeLayout
+const jobNestedTimeLayout = NestedTimeLayout
 
-func (t JobFilter) getCondition() *operator.Condition {
+func (t JobFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, jobNestedTimeLayout)
 }

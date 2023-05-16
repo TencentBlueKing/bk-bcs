@@ -131,3 +131,8 @@ bcs-ui/support-files/iam/
 .kube/
 .husky
 .codecc
+
+**/build.yml
+build.yml
+# bscp 软连接
+bcs-services/bscp.io

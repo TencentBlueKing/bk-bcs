@@ -14,14 +14,16 @@
 package zipkin
 
 import (
-	resource2 "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/resource"
 	"log"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/zipkin"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/resource"
 )
 
+// NewTracerProvider xxx
 func NewTracerProvider(exporterURL, serviceName string) (*sdktrace.TracerProvider, error) {
 	// Create Zipkin Exporter and install it as a global tracer.
 	//
@@ -35,7 +37,7 @@ func NewTracerProvider(exporterURL, serviceName string) (*sdktrace.TracerProvide
 
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(resource2.New(serviceName)),
+		sdktrace.WithResource(resource.New(serviceName)),
 	)
 	otel.SetTracerProvider(tp)
 	return tp, nil

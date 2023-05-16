@@ -151,6 +151,7 @@ func (bcs *BcsScheduler) dealCommonResolve(zone string, state request.Request) (
 	return
 }
 
+// validateRequest xxx
 // this function must be called after tryReviseRequest() is called.
 func (bcs *BcsScheduler) validateRequest(state request.Request) error {
 	segs := dns.SplitDomainName(state.Name())
@@ -203,7 +204,7 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 	}
 
 	zone := plugin.Zones(bcs.conf.Zones).Matches(state.Name())
-	//log.Printf("[DEBUG] zones: %v, zone: %s, name: %s", bcs.conf.Zones, zone, state.Name())
+	// log.Printf("[DEBUG] zones: %v, zone: %s, name: %s", bcs.conf.Zones, zone, state.Name())
 	if zone != "" && bcs.inBcsZone(zone) {
 		if bcs.inCurrentZone(state.Name()) {
 			// request is in current zone.
@@ -243,7 +244,8 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 				}
 				metrics.RequestCount.WithLabelValues(metrics.Failure).Inc()
 				metrics.RequestLatency.WithLabelValues(metrics.Failure).Observe(time.Since(start).Seconds())
-				return plugin.BackendError(bcs, zone, dns.RcodeServerFailure, state, fmt.Errorf("got no endpoints"), plugin.Options{})
+				return plugin.BackendError(bcs, zone, dns.RcodeServerFailure, state, fmt.Errorf("got no endpoints"),
+					plugin.Options{})
 			}
 
 			writeBackMsg(records, extra)
@@ -269,7 +271,8 @@ func (bcs *BcsScheduler) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *
 	return bcs.routeToNextOrFailure(ctx, w, state)
 }
 
-func (bcs *BcsScheduler) routeToNextOrFailure(ctx context.Context, w dns.ResponseWriter, req request.Request) (int, error) {
+func (bcs *BcsScheduler) routeToNextOrFailure(ctx context.Context, w dns.ResponseWriter, req request.Request) (int,
+	error) {
 	// clear request name first, in case the question name is not same with name.
 	req.Clear()
 

@@ -14,20 +14,31 @@ package k8s
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
+	apiextensionsV1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	crdClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/apiextensions-apiserver/pkg/client/informers/externalversions"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
+
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/capabilities"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/k8s/resources"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output/action"
-	apiextensionsV1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	crdClientSet "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apiextensions-apiserver/pkg/client/informers/externalversions"
-	k8sruntime "k8s.io/apimachinery/pkg/runtime"
-	clientGoCache "k8s.io/client-go/tools/cache"
+)
+
+const (
+	// CRDVersionSupportV1 is cluster capabilities for CustomResourceVersion V1
+	CRDVersionSupportV1 = "v1"
+	// CRDVersionSupportV1 is cluster capabilities for CustomResourceVersion V1Beta1
+	CRDVersionSupportV1Beta1 = "v1beta1"
 )
 
 // WatcherManager is resource watcher manager.
@@ -57,7 +68,8 @@ type WatcherManager struct {
 }
 
 // NewWatcherManager creates a new WatcherManager instance.
-func NewWatcherManager(clusterID string, watchResource *options.WatchResource, writer *output.Writer, k8sConfig *options.K8sConfig,
+func NewWatcherManager(clusterID string, watchResource *options.WatchResource, filterConfig *options.FilterConfig, writer *output.Writer,
+	k8sConfig *options.K8sConfig,
 	storageService, netservice *bcs.InnerService, sc <-chan struct{}) (*WatcherManager, error) {
 
 	mgr := &WatcherManager{
@@ -69,14 +81,15 @@ func NewWatcherManager(clusterID string, watchResource *options.WatchResource, w
 		storageService: storageService,
 		watchResource:  watchResource,
 	}
-	mgr.initWatchers(clusterID, k8sConfig, storageService, netservice)
+	mgr.initWatchers(clusterID, k8sConfig, filterConfig, storageService, netservice)
 
-	mgr.synchronizer = NewSynchronizer(clusterID, watchResource.Namespace, mgr.watchers, mgr.crdWatchers, storageService)
+	mgr.synchronizer = NewSynchronizer(clusterID, watchResource.Namespace, watchResource.LabelSelectors,
+		mgr.watchers, mgr.crdWatchers, storageService)
 	return mgr, nil
 }
 
 func (mgr *WatcherManager) initWatchers(clusterID string,
-	k8sconfig *options.K8sConfig, storageService, netservice *bcs.InnerService) {
+	k8sconfig *options.K8sConfig, filterConfig *options.FilterConfig, storageService, netservice *bcs.InnerService) {
 
 	restConfig, err := resources.GetRestConfig(k8sconfig)
 	if err != nil {
@@ -84,32 +97,58 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 	}
 
 	// init k8s normal resource watchers
-	for name, resourceObjType := range resources.WatcherConfigList {
-		watcher := NewWatcher(resourceObjType.Client, mgr.watchResource.Namespace, name, resourceObjType.ResourceName, resourceObjType.ObjType, mgr.writer, mgr.watchers, resourceObjType.Namespaced) // nolint
+	for name, resourceObjType := range resources.K8sWatcherConfigList {
+		labelSelector := ""
+		// get labelSelector for the resourceType
+		if val, ok := mgr.watchResource.LabelSelectors[name]; ok {
+			labelSelector = val
+		}
+		watcher, err := NewWatcher(&WatcherOptions{
+			DynamicClient:    resourceObjType.Client,
+			Namespace:        mgr.watchResource.Namespace,
+			ResourceType:     name,
+			GroupVersion:     resourceObjType.GroupVersion,
+			ResourceName:     resourceObjType.ResourceName,
+			ObjType:          resourceObjType.ObjType,
+			Writer:           mgr.writer,
+			SharedWatchers:   mgr.watchers,
+			IsNameSpaced:     resourceObjType.Namespaced,
+			LabelSelector:    labelSelector,
+			NamespaceFilters: filterConfig.NamespaceFilters,
+			NameFilters:      filterConfig.NameFilters,
+		})
+		if err != nil {
+			panic(err)
+		}
 		mgr.watchers[name] = watcher
 	}
 
 	if !mgr.watchResource.DisableCRD {
-		// begin to watch kubefed to init kubefed watchers
+		// begin to watch crd to init crd watchers
 		crdClient, err := crdClientSet.NewForConfig(restConfig)
 		if err != nil {
 			panic(err)
 		}
 		crdInformerFactory := externalversions.NewSharedInformerFactory(crdClient, time.Second*30)
-		crdInformer := crdInformerFactory.Apiextensions().V1beta1().CustomResourceDefinitions()
-		crdInformer.Lister()
 
-		crdInformer.Informer().AddEventHandler(clientGoCache.ResourceEventHandlerFuncs{
-			AddFunc:    mgr.AddEvent,
-			UpdateFunc: mgr.UpdateEvent,
-			DeleteFunc: mgr.DeleteEvent,
-		})
+		// check crd version supported in cluster
+		crdVersion, err := mgr.capabilities(restConfig)
+		if err != nil {
+			if filterConfig.CrdVersionSupport == "" {
+				glog.Errorf("get crd version from cluster failed and not set crd version supported in cluster, err: %s", err)
+				panic(err)
+			}
+			glog.Warnf("get crd version from cluster failed, use config from file")
+			crdVersion = filterConfig.CrdVersionSupport
+		}
+
+		hasSyncedFunc := mgr.addCrdInformer(crdVersion, crdInformerFactory, restConfig)
 
 		go crdInformerFactory.Start(mgr.stopChan)
 
 		glog.Infof("Waiting for informer caches to sync")
-		if ok := clientGoCache.WaitForCacheSync(mgr.stopChan, crdInformer.Informer().HasSynced); !ok {
-			err := fmt.Errorf("failed to wait for kubefed caches to sync")
+		if ok := cache.WaitForCacheSync(mgr.stopChan, hasSyncedFunc); !ok {
+			err := fmt.Errorf("failed to wait for crd caches to sync")
 			panic(err)
 		}
 	}
@@ -120,70 +159,217 @@ func (mgr *WatcherManager) initWatchers(clusterID string,
 	}
 }
 
-func (mgr *WatcherManager) AddEvent(obj interface{}) {
+func (mgr *WatcherManager) capabilities(restConfig *rest.Config) (string, error) {
+	discoveryClient, err := apiextensionsclient.NewForConfig(restConfig)
+	if err != nil {
+		return "", err
+	}
+
+	capabilities, err := capabilities.GetCapabilities(discoveryClient.Discovery())
+	if err != nil {
+		return "", fmt.Errorf("get kubernetes capabilities failed, err %s", err.Error())
+	}
+
+	glog.Infof("kubernetes capabilities %+v", capabilities.APIVersions)
+
+	if !capabilities.APIVersions.Has("apiextensions.k8s.io/v1beta1") {
+		glog.Infof("capabilities does not has apiextensions.k8s.io/v1beta1, create v1 version")
+		return CRDVersionSupportV1, nil
+	} else {
+		glog.Infof("capabilities has apiextensions.k8s.io/v1beta1, create v1 beta version")
+		return CRDVersionSupportV1Beta1, nil
+	}
+}
+
+func (mgr *WatcherManager) addCrdInformer(crdVersion string,
+	crdInformerFactory externalversions.SharedInformerFactory, restConfig *rest.Config) cache.InformerSynced {
+	glog.Infof("add crd informer with crd version: %s", crdVersion)
+	// CustomResourceDefinition V1Beta1
+	if crdVersion == CRDVersionSupportV1Beta1 {
+		crdInformer := crdInformerFactory.Apiextensions().V1beta1().CustomResourceDefinitions()
+		crdInformer.Lister()
+
+		crdInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+			AddFunc:    mgr.AddEventV1beta1,
+			UpdateFunc: mgr.UpdateEventV1beta1,
+			DeleteFunc: mgr.DeleteEventV1beta1,
+		})
+		return crdInformer.Informer().HasSynced
+	}
+
+	// CustomResourceDefinition V1
+	crdInformer := crdInformerFactory.Apiextensions().V1().CustomResourceDefinitions()
+	crdInformer.Lister()
+
+	crdInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    mgr.AddEventV1,
+		UpdateFunc: mgr.UpdateEventV1,
+		DeleteFunc: mgr.DeleteEventV1,
+	})
+	return crdInformer.Informer().HasSynced
+}
+
+// AddEventV1beta1 handles add event.
+func (mgr *WatcherManager) AddEventV1beta1(obj interface{}) {
 	crdObj, ok := obj.(*apiextensionsV1beta1.CustomResourceDefinition)
 	if !ok {
 		return
 	}
 
-	if strings.HasSuffix(crdObj.Spec.Group, ".kubefed.io") || crdObj.Spec.Group == resources.BkbcsGroupName {
-		mgr.runCrdWatcher(crdObj)
-		return
+	crdObjCore := &CustomResourceDefinitionCore{
+		TypeMeta:   crdObj.TypeMeta,
+		ObjectMeta: crdObj.ObjectMeta,
+		Spec: CustomResourceDefinitionCoreSpec{
+			Group:       crdObj.Spec.Group,
+			Version:     crdObj.Spec.Version,
+			NamesPlural: crdObj.Spec.Names.Plural,
+			NamesKind:   crdObj.Spec.Names.Kind,
+			Scope:       ResourceScope(crdObj.Spec.Scope),
+		},
 	}
 
+	glog.Infof("run watcher for crd: %s", crdObjCore.Name)
+	mgr.runCrdWatcher(crdObjCore)
+
 }
 
-func (mgr *WatcherManager) UpdateEvent(oldObj, newObj interface{}) {
-	return
-}
-
-func (mgr *WatcherManager) DeleteEvent(obj interface{}) {
-	crdObj, ok := obj.(*apiextensionsV1beta1.CustomResourceDefinition)
+// AddEvent handles add event.
+func (mgr *WatcherManager) AddEventV1(obj interface{}) {
+	crdObj, ok := obj.(*apiextensionsV1.CustomResourceDefinition)
 	if !ok {
 		return
 	}
 
-	mgr.stopCrdWatcher(crdObj)
+	if len(crdObj.Spec.Versions) < 1 {
+		glog.Warnf("crdObj %s/%s , len(obj.Spec.Versions) is less than 1, obj: %+v\n", crdObj.Namespace, crdObj.Name, crdObj)
+		return
+	}
+
+	for _, version := range crdObj.Spec.Versions {
+		if version.Storage == true {
+			crdObjCore := &CustomResourceDefinitionCore{
+				TypeMeta:   crdObj.TypeMeta,
+				ObjectMeta: crdObj.ObjectMeta,
+				Spec: CustomResourceDefinitionCoreSpec{
+					Group:       crdObj.Spec.Group,
+					Version:     version.Name,
+					NamesPlural: crdObj.Spec.Names.Plural,
+					NamesKind:   crdObj.Spec.Names.Kind,
+					Scope:       ResourceScope(crdObj.Spec.Scope),
+				},
+			}
+
+			glog.Infof("run watcher for crd: %s", crdObjCore.Name)
+			mgr.runCrdWatcher(crdObjCore)
+		}
+	}
+
+}
+
+// UpdateEventV1beta1 handles update event.
+func (mgr *WatcherManager) UpdateEventV1beta1(oldObj, newObj interface{}) {
+}
+
+// UpdateEvent handles update event.
+func (mgr *WatcherManager) UpdateEventV1(oldObj, newObj interface{}) {
+}
+
+// DeleteEventV1beta1 handles delete event.
+func (mgr *WatcherManager) DeleteEventV1beta1(obj interface{}) {
+	crdObj, ok := obj.(*apiextensionsV1beta1.CustomResourceDefinition)
+	if !ok {
+		return
+	}
+	key := mgr.getCrdWatcherKey(crdObj.Spec.Group, crdObj.Spec.Version, crdObj.Spec.Names.Kind)
+	mgr.stopCrdWatcher(key)
+}
+
+// DeleteEvent handles delete event.
+func (mgr *WatcherManager) DeleteEventV1(obj interface{}) {
+	crdObj, ok := obj.(*apiextensionsV1.CustomResourceDefinition)
+	if !ok {
+		return
+	}
+	for _, version := range crdObj.Spec.Versions {
+		if version.Storage == true {
+			key := mgr.getCrdWatcherKey(crdObj.Spec.Group, version.Name, crdObj.Spec.Names.Kind)
+			mgr.stopCrdWatcher(key)
+		}
+	}
 }
 
 // runCrdWatcher run a crd watcher and writer handler
-func (mgr *WatcherManager) runCrdWatcher(obj *apiextensionsV1beta1.CustomResourceDefinition) {
+func (mgr *WatcherManager) runCrdWatcher(obj *CustomResourceDefinitionCore) {
 	groupVersion := obj.Spec.Group + "/" + obj.Spec.Version
-	if kubefedClient, ok := resources.CrdClientList[groupVersion]; ok {
-		var runtimeObject k8sruntime.Object
-		var namespaced bool
-		if obj.Spec.Scope == "Cluster" {
-			namespaced = false
-		} else if obj.Spec.Scope == "Namespaced" {
-			namespaced = true
-		}
+	kind := obj.Spec.NamesKind
+	crdName := obj.Name
 
-		// init and run writer handler
-		action := action.NewStorageAction(mgr.clusterID, obj.Spec.Names.Kind, mgr.storageService)
-		mgr.writer.Handlers[obj.Spec.Names.Kind] = output.NewHandler(mgr.clusterID, obj.Spec.Names.Kind, action)
-		stopChan := make(chan struct{})
-		mgr.writer.Handlers[obj.Spec.Names.Kind].Run(stopChan)
-
-		// init and run watcher
-		watcher := NewWatcher(&kubefedClient, mgr.watchResource.Namespace, obj.Spec.Names.Kind, obj.Spec.Names.Plural, runtimeObject, mgr.writer, mgr.watchers, namespaced) // nolint
-		watcher.stopChan = stopChan
-		mgr.crdWatchers[obj.Spec.Names.Kind] = watcher
-		glog.Infof("watcher manager, start list-watcher[%+v]", obj.Spec.Names.Kind)
-		go watcher.Run(watcher.stopChan)
+	crdClient, ok := resources.CrdClientList[groupVersion]
+	if !ok {
+		glog.Infof("can not get client for CRD: %s, GVK: %s/%s", crdName, groupVersion, kind)
+		return
 	}
+	glog.Infof("create watcher for CRD: %s, GVK: %s/%s", crdName, groupVersion, kind)
+
+	var runtimeObject k8sruntime.Unstructured
+	var namespaced bool
+	if obj.Spec.Scope == "Cluster" {
+		namespaced = false
+	} else if obj.Spec.Scope == "Namespaced" {
+		namespaced = true
+	}
+
+	// init and run writer handler
+	if _, ok := mgr.writer.Handlers[obj.Spec.NamesKind]; !ok {
+		// not close handler once create , to support multi groupversion but same kind
+		action := action.NewStorageAction(mgr.clusterID, obj.Spec.NamesKind, mgr.storageService)
+		mgr.writer.Handlers[obj.Spec.NamesKind] = output.NewHandler(mgr.clusterID, obj.Spec.NamesKind, action)
+		mgr.writer.Handlers[obj.Spec.NamesKind].Run(make(chan struct{}))
+	}
+
+	labelSelector := ""
+	// get labelSelector for the resourceType
+	if val, ok := mgr.watchResource.LabelSelectors[obj.Spec.NamesKind]; ok {
+		labelSelector = val
+	}
+	// init and run watcher
+	gv := fmt.Sprintf("%s/%s", obj.Spec.Group, obj.Spec.Version)
+	watcher, err := NewWatcher(&WatcherOptions{
+		DynamicClient:    crdClient,
+		Namespace:        mgr.watchResource.Namespace,
+		ResourceType:     obj.Spec.NamesKind,
+		GroupVersion:     gv,
+		ResourceName:     obj.Spec.NamesPlural,
+		ObjType:          runtimeObject,
+		Writer:           mgr.writer,
+		SharedWatchers:   mgr.watchers,
+		IsNameSpaced:     namespaced,
+		LabelSelector:    labelSelector,
+		NamespaceFilters: []string{},
+		NameFilters:      []string{},
+	})
+	if err != nil {
+		panic(err)
+	}
+	stopChan := make(chan struct{})
+	watcher.stopChan = stopChan
+	key := mgr.getCrdWatcherKey(obj.Spec.Group, obj.Spec.Version, obj.Spec.NamesKind)
+	mgr.crdWatchers[key] = watcher
+	glog.Infof("watcher manager, start list-watcher[%+v]", obj.Spec.NamesKind)
+	go watcher.Run(watcher.stopChan)
+
 }
 
 // stopCrdWatcher stop watcher and writer handler
-func (mgr *WatcherManager) stopCrdWatcher(obj *apiextensionsV1beta1.CustomResourceDefinition) {
-
-	if wc, ok := mgr.crdWatchers[obj.Spec.Names.Kind]; ok {
+func (mgr *WatcherManager) stopCrdWatcher(watcherKey string) {
+	if wc, ok := mgr.crdWatchers[watcherKey]; ok {
 		watcher := wc.(*Watcher)
-		glog.Infof("watcher manager, stop list-watcher[%+v]", obj.Spec.Names.Kind)
+		glog.Infof("watcher manager, stop list-watcher[%+v]", watcherKey)
 		close(watcher.stopChan)
-		delete(mgr.crdWatchers, obj.Spec.Names.Kind)
-		delete(mgr.writer.Handlers, obj.Spec.Names.Kind)
+		delete(mgr.crdWatchers, watcherKey)
+		// multi groupversion but same kind, should not delete writer.Handlers by kind when crd is deleted
+		// delete(mgr.writer.Handlers, kind)
 	}
-
 }
 
 // Run starts the watcher manager, and runs all watchers.
@@ -198,8 +384,22 @@ func (mgr *WatcherManager) Run(stopCh <-chan struct{}) {
 		// run netservice watcher.
 		go mgr.netserviceWatcher.Run(stopCh)
 	}
-	// run synchronizer.
-	go mgr.synchronizer.Run(stopCh)
+
+	// synchronizer run once
+	var count = 0
+	for {
+		if count >= 5 {
+			panic("synchronizer run failed")
+		}
+		if err := mgr.synchronizer.RunOnce(); err != nil {
+			glog.Errorf("synchronizer sync failed: %v", err)
+			time.Sleep(5 * time.Minute)
+		} else {
+			glog.Infof("synchronizer sync done.")
+			break
+		}
+		count++
+	}
 }
 
 // StopCrdWatchers stop all crd watcher and writer handler
@@ -208,4 +408,8 @@ func (mgr *WatcherManager) StopCrdWatchers() {
 		watcher := wc.(*Watcher)
 		close(watcher.stopChan)
 	}
+}
+
+func (mgr *WatcherManager) getCrdWatcherKey(group, version, kind string) string {
+	return group + "/" + version + "/" + kind
 }

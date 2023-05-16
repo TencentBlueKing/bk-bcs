@@ -11,10 +11,12 @@
  *
  */
 
+// Package apisix xxx
 package apisix
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -24,27 +26,35 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/utils"
 )
 
-//New create Register implementation for apisix
+// New create Register implementation for apisix
 // return empty
-func New(addr []string, config *tls.Config, token string) (register.Register, error) {
+func New(addr []string, config *tls.Config, token string, metricsEnabled bool) (register.Register, error) {
 	opt := &admin.Option{
 		AdminToken: token,
 		Addrs:      addr,
-		//TLSConfig:  config,
+		// TLSConfig:  config,
 	}
 	blog.Infof("apisix config details: %+v", opt)
 	reg := &apiRegister{
-		apisixClient: admin.NewClient(opt),
+		apisixClient:   admin.NewClient(opt),
+		metricsEnabled: metricsEnabled,
+		upstreamCache:  utils.NewResourceCache(time.Second * 30),
+		serviceCache:   utils.NewResourceCache(time.Second * 30),
+		routesCache:    utils.NewResourceCache(time.Second * 30),
 	}
 	return reg, nil
 }
 
-//apiRegister apisix register implementation
+// apiRegister apisix register implementation
 type apiRegister struct {
-	apisixClient admin.Client
+	apisixClient   admin.Client
+	metricsEnabled bool
+	upstreamCache  utils.Cache
+	serviceCache   utils.Cache
+	routesCache    utils.Cache
 }
 
-//CreateService create Service interface, if service already exists, return error
+// CreateService create Service interface, if service already exists, return error
 // create service include three operations:
 // 1. create specified service information, including plugins
 // 2. create service relative route rules, including plugins
@@ -65,19 +75,19 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 		return err
 	}
 
-	//create specified upstream information
+	// create specified upstream information
 	upstream := apisixUpstreamConversion(svc)
 	if err = r.apisixClient.CreateUpstream(upstream); err != nil {
 		blog.Errorf("apisix register create service %s Upstream failed, %s. upstream details: %+v",
 			svc.Name, err.Error(), upstream)
 		return err
 	}
-	//create specified service information
+	// create specified service information
 	service := apisixServiceConversion(svc)
 	if err = r.apisixClient.CreateService(service); err != nil {
 		blog.Errorf("apisix register create Service %s failed, %s. service details: %+v",
 			svc.Name, err.Error(), service)
-		//create service failed, ready to clean dirty upstream data
+		// create service failed, ready to clean dirty upstream data
 		if streamErr := r.apisixClient.DeleteUpstream(upstream.ID); streamErr != nil {
 			blog.Errorf("apisix register clean service %s dirty Upstream data failed, %s", svc.Name, streamErr.Error())
 		}
@@ -87,7 +97,7 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 	var routes []*admin.Route
 	failed := false
 	for _, innerroute := range svc.Routes {
-		route := apisixRouteConversion(svc, &innerroute)
+		route := apisixRouteConversion(svc, &innerroute, r.metricsEnabled)
 		if err = r.apisixClient.CreateRoute(route); err != nil {
 			blog.Errorf("apisix register create service %s route failed, %s. route details: %+v",
 				svc.Name, err.Error(), route)
@@ -97,17 +107,17 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 		routes = append(routes, route)
 	}
 	if failed {
-		//clean relative dirty data
+		// clean relative dirty data
 		for _, route := range routes {
 			if err := r.apisixClient.DeleteRoute(route.ID); err != nil {
 				blog.Errorf("apisix clean service %s dirty route failed, %s", svc.Name, err.Error())
 			}
 		}
-		//create service failed, ready to clean dirty upstream data
+		// create service failed, ready to clean dirty upstream data
 		if err := r.apisixClient.DeleteService(service.ID); err != nil {
 			blog.Errorf("apisix register clean dirty service %s data failed, %s", service.ID, err.Error())
 		}
-		//create service failed, ready to clean dirty upstream data
+		// create service failed, ready to clean dirty upstream data
 		if err := r.apisixClient.DeleteUpstream(upstream.ID); err != nil {
 			blog.Errorf("apisix register clean service %s dirty Upstream data failed, %s", service.ID, err.Error())
 		}
@@ -116,12 +126,134 @@ func (r *apiRegister) CreateService(svc *register.Service) error {
 	return nil
 }
 
-//UpdateService update specified Service, if service does not exist, return error
+// UpdateService update specified Service, if service does not exist, create it
 func (r *apiRegister) UpdateService(svc *register.Service) error {
-	return fmt.Errorf("Not Implemented")
+	var (
+		started = time.Now()
+		err     error
+	)
+	defer reportRegisterAPISixMetrics("UpdateService", err, started)
+
+	if err = svc.Valid(); err != nil {
+		blog.Errorf("service %s is invalid, %s", svc.Name, err.Error())
+		return err
+	}
+
+	// create specified upstream information
+	upstream := apisixUpstreamConversion(svc)
+	if r.upstreamCache.GetData() == nil {
+		remoteUpstreams := make(map[string]*admin.Upstream)
+		upstreams, err := r.apisixClient.ListUpstream()
+		if err != nil {
+			blog.Errorf("apisix register list Upstream failed, %s", err.Error())
+			return err
+		}
+		for _, v := range upstreams {
+			remoteUpstreams[v.ID] = v
+		}
+		r.upstreamCache.SetData(remoteUpstreams)
+	}
+	remoteUpstreams := r.upstreamCache.GetData().(map[string]*admin.Upstream)
+	existedUpstream, ok := remoteUpstreams[upstream.ID]
+	if !ok {
+		blog.Errorf("apisix register get service %s Upstream failed",
+			svc.Name)
+		return fmt.Errorf("Upstream %s NotFound", upstream.ID)
+	}
+	if existedUpstream == nil {
+		blog.Infof("apisix register get service %s Upstream not found, create one", svc.Name)
+		err = r.apisixClient.CreateUpstream(upstream)
+	} else {
+		if !upstream.NodesEuqal(existedUpstream) {
+			blog.V(3).Infof("upstream (%s) nodes not equal. remote: (%s) , local: (%s)", upstream.ID,
+				string(utils.IgnoreErr(existedUpstream.Nodes.MarshalJSON()).([]byte)), string(utils.IgnoreErr(upstream.Nodes.MarshalJSON()).([]byte)))
+			err = r.apisixClient.UpdateUpstream(upstream)
+		} else {
+			blog.V(3).Infof("upstream (%s) nodes equal, skipped update", upstream.ID)
+		}
+	}
+	if err != nil {
+		blog.Errorf("apisix register create/update service %s Upstream failed, %s. upstream details: %+v",
+			svc.Name, err.Error(), upstream)
+		return err
+	}
+	// create specified service information
+	service := apisixServiceConversion(svc)
+	if r.serviceCache.GetData() == nil {
+		remoteServices := make(map[string]*admin.Service)
+		services, err := r.apisixClient.ListService()
+		if err != nil {
+			blog.Errorf("apisix register list Service failed, %s", err.Error())
+			return err
+		}
+		for _, v := range services {
+			remoteServices[v.ID] = v
+		}
+		r.serviceCache.SetData(remoteServices)
+	}
+	remoteServices := r.serviceCache.GetData().(map[string]*admin.Service)
+	existedService, ok := remoteServices[service.ID]
+	if !ok {
+		blog.Errorf("apisix register get service %s failed",
+			svc.Name)
+		return fmt.Errorf("Service %s NotFound", service.ID)
+	}
+	if existedService == nil {
+		blog.Infof("apisix register get service %s Service not found, create one", svc.Name)
+		err = r.apisixClient.CreateService(service)
+	} else {
+		if !service.DeepEqual(existedService) {
+			blog.V(3).Infof("service (%s) not equal. remote: (%s) , local: (%s)", svc.Name,
+				string(utils.IgnoreErr(json.Marshal(existedService)).([]byte)), string(utils.IgnoreErr(json.Marshal(service)).([]byte)))
+			err = r.apisixClient.UpdateService(service)
+		} else {
+			blog.V(3).Infof("service (%s) equal, skipped update", svc.Name)
+		}
+	}
+	if err != nil {
+		blog.Errorf("apisix register create/update Service %s failed, %s. service details: %+v",
+			svc.Name, err.Error(), service)
+		return err
+	}
+	// 2. create service relative route rules
+	var localRoutes []*admin.Route
+	if r.routesCache.GetData() == nil {
+		remoteRoutes := make(map[string]*admin.Route)
+		routes, err := r.apisixClient.ListRoute()
+		if err != nil {
+			blog.Errorf("apisix register list Service failed, %s", err.Error())
+			return err
+		}
+		for _, v := range routes {
+			remoteRoutes[v.ID] = v
+		}
+		r.routesCache.SetData(remoteRoutes)
+	}
+	remoteRoutes := r.routesCache.GetData().(map[string]*admin.Route)
+	for _, innerroute := range svc.Routes {
+		route := apisixRouteConversion(svc, &innerroute, r.metricsEnabled)
+		if _, ok := remoteRoutes[route.ID]; !ok {
+			blog.Infof("apisix register get service %s Route %s not found, create one", svc.Name, route.Name)
+			err = r.apisixClient.CreateRoute(route)
+		} else {
+			if !route.DeepEqual(remoteRoutes[route.ID]) {
+				blog.V(3).Infof("route (%s) not equal. remote: (%s) , local: (%s)", route.Name,
+					string(utils.IgnoreErr(json.Marshal(remoteRoutes[route.ID])).([]byte)), string(utils.IgnoreErr(json.Marshal(route)).([]byte)))
+				err = r.apisixClient.UpdateRoute(route)
+			} else {
+				blog.V(3).Infof("route (%s) equal, skipped update", route.Name)
+			}
+		}
+		if err != nil {
+			blog.Errorf("apisix register create/update service %s route failed, %s. route details: %+v",
+				svc.Name, err.Error(), route)
+		}
+		localRoutes = append(localRoutes, route)
+	}
+	return nil
 }
 
-//GetService get specified service by name, if no service, return nil
+// GetService get specified service by name, if no service, return nil
 func (r *apiRegister) GetService(svc string) (*register.Service, error) {
 	var (
 		started = time.Now()
@@ -161,17 +293,17 @@ func (r *apiRegister) GetService(svc string) (*register.Service, error) {
 		blog.Errorf("apisix register get service %s err, Route Not Found", svc)
 		return nil, fmt.Errorf("Route Not Found")
 	}
-	//convert data structure
+	// convert data structure
 	return innerServiceConvert(service, route, upstream), nil
 }
 
-//DeleteService delete specified service, success even if no such service
+// DeleteService delete specified service, success even if no such service
 // @param service: at least setting Name & Host for deletion
 func (r *apiRegister) DeleteService(svc *register.Service) error {
 	return fmt.Errorf("Not Implemented")
 }
 
-//ListServices get all existence services
+// ListServices get all existence services
 func (r *apiRegister) ListServices() ([]*register.Service, error) {
 	var (
 		started = time.Now()
@@ -196,7 +328,7 @@ func (r *apiRegister) ListServices() ([]*register.Service, error) {
 	return services, nil
 }
 
-//GetTargetByService get service relative backends
+// GetTargetByService get service relative backends
 func (r *apiRegister) GetTargetByService(svc *register.Service) ([]register.Backend, error) {
 	if svc == nil || len(svc.Name) == 0 {
 		return nil, fmt.Errorf("necessary service info lost")
@@ -220,20 +352,27 @@ func (r *apiRegister) GetTargetByService(svc *register.Service) ([]register.Back
 	}
 
 	var backends []register.Backend
-	for target, weight := range upstream.Nodes {
+	if upstream.UpstreamNodes == nil {
+		upstream.UpstreamNodes = admin.NodesMap2UpstreamNodes(upstream.MapStructedNodes)
+	}
+	for _, node := range *upstream.UpstreamNodes {
 		backend := register.Backend{
-			Target: target,
-			Weight: weight,
+			Weight: node.Weight,
+		}
+		if node.Port != nil {
+			backend.Target = fmt.Sprintf("%s:%d", node.Host, *node.Port)
+		} else {
+			backend.Target = node.Host
 		}
 		backends = append(backends, backend)
 	}
 	return backends, nil
 }
 
-//ReplaceTargetByService replace specified service backend list
+// ReplaceTargetByService replace specified service backend list
 // so we don't care what original backend list are
 func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []register.Backend) error {
-	//get original targets
+	// get original targets
 	if svc.Name == "" {
 		return fmt.Errorf("service info lost Name or Host")
 	}
@@ -259,21 +398,25 @@ func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []r
 	}
 	destBackends := make(map[string]int)
 	newBackends := make(map[string]int)
+	if upstream.MapStructedNodes == nil {
+		upstream.MapStructedNodes = admin.UpstreamNodes2NodesMap(upstream.UpstreamNodes)
+	}
 	for _, backend := range backends {
 		destBackends[backend.Target] = backend.Weight
-		oldWeight, ok := upstream.Nodes[backend.Target]
+		oldWeight, ok := (*upstream.MapStructedNodes)[backend.Target]
 		if ok && oldWeight == backend.Weight {
-			delete(upstream.Nodes, backend.Target)
+			delete(*upstream.MapStructedNodes, backend.Target)
 			continue
 		}
 		newBackends[backend.Target] = backend.Weight
 	}
-	if len(upstream.Nodes) == 0 && len(newBackends) == 0 {
+	if len(*upstream.MapStructedNodes) == 0 && len(newBackends) == 0 {
 		blog.Infof("service %s upstream no changed", svc.Name)
 		return nil
 	}
-	blog.Infof("apisix register service %s operation: delete node %+v, add node %+v", svc.Name, upstream.Nodes, newBackends)
-	upstream.Nodes = destBackends
+	blog.Infof("apisix register service %s operation: delete node %+v, add node %+v", svc.Name, *upstream.MapStructedNodes,
+		newBackends)
+	upstream.Nodes, _ = json.Marshal(admin.NodesMap2UpstreamNodes(&destBackends))
 	if err = r.apisixClient.UpdateUpstream(upstream); err != nil {
 		blog.Errorf("apisix register update stream %+v, failed, %s", upstream, err.Error())
 		return err
@@ -281,7 +424,7 @@ func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []r
 	return nil
 }
 
-//DeleteTargetByService clean all backend list for service
+// DeleteTargetByService clean all backend list for service
 func (r *apiRegister) DeleteTargetByService(svc *register.Service) error {
 	return fmt.Errorf("Not Implemented")
 }
@@ -296,19 +439,26 @@ func simpleInnerServiceConversion(svc *admin.Service) *register.Service {
 	return innerService
 }
 
-//innerServiceConvert convert apisix service/route/upstream to inner service definition
+// innerServiceConvert convert apisix service/route/upstream to inner service definition
 func innerServiceConvert(svc *admin.Service, route *admin.Route, upstream *admin.Upstream) *register.Service {
 	innerService := &register.Service{
 		Name:      svc.ID,
-		Protocol:  route.ServiceProtocol,
+		Protocol:  upstream.Scheme,
 		Retries:   upstream.Retries,
 		Algorithm: upstream.Type,
 	}
-	//complicated conversion begin
-	for target, weight := range upstream.Nodes {
+	if upstream.UpstreamNodes == nil {
+		upstream.UpstreamNodes = admin.NodesMap2UpstreamNodes(upstream.MapStructedNodes)
+	}
+	// complicated conversion begin
+	for _, node := range *upstream.UpstreamNodes {
 		backend := register.Backend{
-			Target: target,
-			Weight: weight,
+			Weight: node.Weight,
+		}
+		if node.Port != nil {
+			backend.Target = fmt.Sprintf("%s:%d", node.Host, *node.Port)
+		} else {
+			backend.Target = node.Host
 		}
 		innerService.Backends = append(innerService.Backends, backend)
 	}
@@ -323,15 +473,18 @@ func apisixUpstreamConversion(svc *register.Service) *admin.Upstream {
 		Name:    svc.Name,
 		Type:    admin.BalanceTypeRoundrobin,
 		Retries: svc.Retries,
-		Nodes:   make(map[string]int),
+		Scheme:  svc.Protocol,
 	}
+	nodes := make(map[string]int)
 	for _, backend := range svc.Backends {
-		up.Nodes[backend.Target] = backend.Weight
+		nodes[backend.Target] = backend.Weight
 	}
+	up.UpstreamNodes = admin.NodesMap2UpstreamNodes(&nodes)
+	up.Nodes, _ = json.Marshal(up.UpstreamNodes)
 	return up
 }
 
-//apisixServiceConversion convert inner service to kong service
+// apisixServiceConversion convert inner service to kong service
 func apisixServiceConversion(svc *register.Service) *admin.Service {
 	service := &admin.Service{
 		ID:         svc.Name,
@@ -344,46 +497,52 @@ func apisixServiceConversion(svc *register.Service) *admin.Service {
 	return service
 }
 
-//apisixRouteConversion convert inner service to apisix Route, tls feature supported in default.
-func apisixRouteConversion(svc *register.Service, route *register.Route) *admin.Route {
+// apisixRouteConversion convert inner service to apisix Route, tls feature supported in default.
+func apisixRouteConversion(svc *register.Service, route *register.Route, metricsEnabled bool) *admin.Route {
 	r := &admin.Route{
-		ID:              route.Name,
-		Name:            route.Name,
-		Websocket:       true,
-		ServiceProtocol: "http",
-		ServiceID:       svc.Name,
-		Plugins:         make(map[string]interface{}),
+		ID:        route.Name,
+		Name:      route.Name,
+		Websocket: true,
+		ServiceID: svc.Name,
+		Plugins:   make(map[string]interface{}),
 	}
-	if route.Protocol == "grpc" {
-		r.ServiceProtocol = route.Protocol
+	if metricsEnabled {
+		r.Plugins["prometheus"] = map[string]interface{}{
+			"prefer_name": false,
+		}
 	}
 	if route.Plugin != nil && route.Plugin.AuthOption != nil {
 		bcsAuth, authPlugin := apisixBKBCSAuthConversion(route.Plugin.AuthOption)
 		r.Plugins[bcsAuth] = authPlugin
 	}
+	if route.Plugin != nil && route.Plugin.FileLoggerOption != nil {
+		r.Plugins["file-logger"] = map[string]interface{}{
+			"path": route.Plugin.FileLoggerOption.Path,
+		}
+	}
 	reqID, reqPlugin := apisixRequestIDPlugin()
 	r.Plugins[reqID] = reqPlugin
-	//setting route path, end with * means wildcard
+	// setting route path, end with * means wildcard
 	r.URI = route.Paths[0] + "*"
 	proxyPlugin := make(map[string]interface{})
 	r.Plugins["proxy-rewrite"] = proxyPlugin
 	proxyPlugin["scheme"] = register.ProtocolHTTPS
 	proxyPlugin["host"] = svc.Host
 	if route.PathRewrite {
-		var regexURI []string
+		var regexURI []interface{}
 		regexURI = append(regexURI, route.Paths[0]+"(.*)")
 		regexURI = append(regexURI, svc.Path+"$1")
 		proxyPlugin["regex_uri"] = regexURI
 	}
 	if svc.Plugin != nil && svc.Plugin.HeadOption != nil {
-		//setting header authorization
-		header := make(map[string]string)
+		// setting header authorization
+		header := make(map[string]interface{})
 		for key, value := range svc.Plugin.HeadOption.Add {
 			header[key] = value
 		}
 		proxyPlugin["headers"] = header
 	}
-	//header filter
+	// header filter
 	for key, value := range route.Header {
 		var filter []string
 		filter = append(filter, "http_"+key)
@@ -396,26 +555,45 @@ func apisixRouteConversion(svc *register.Service, route *register.Route) *admin.
 
 func apisixLimitRequestPlugin() (string, map[string]interface{}) {
 	plgn := make(map[string]interface{})
-	plgn["conn"] = 1000
-	plgn["burst"] = 500
-	plgn["rejected_code"] = 429
+	plgn["conn"] = float64(1000)
+	plgn["burst"] = float64(500)
+	plgn["rejected_code"] = float64(429)
 	plgn["key"] = "remote_addr"
-	plgn["default_conn_delay"] = 0.1
+	plgn["default_conn_delay"] = float64(0.1)
+	plgn["allow_degradation"] = false
+	plgn["key_type"] = "var"
+	plgn["only_use_default_delay"] = false
 	return "limit-conn", plgn
 }
 
 func apisixRequestIDPlugin() (string, map[string]interface{}) {
 	plgn := make(map[string]interface{})
 	plgn["include_in_response"] = true
+	plgn["algorithm"] = "uuid"
+	plgn["header_name"] = "X-Request-Id"
 	return "request-id", plgn
 }
 
-//apisixBKBCSAuthConvert convert inner service request plugin to request-transformer
+// apisixBKBCSAuthConversion convert inner service request plugin to request-transformer
 func apisixBKBCSAuthConversion(option *register.BCSAuthOption) (string, map[string]interface{}) {
 	auth := make(map[string]interface{})
 	auth["token"] = option.AuthToken
 	auth["bkbcs_auth_endpoints"] = option.AuthEndpoints
 	auth["module"] = option.Module
+	auth["keepalive"] = float64(60)
+	auth["timeout"] = float64(10)
+	if option.RedisHost != nil {
+		auth["redis_host"] = option.RedisHost
+	}
+	if option.RedisPassword != nil {
+		auth["redis_password"] = option.RedisPassword
+	}
+	if option.RedisPort != nil {
+		auth["redis_port"] = option.RedisPort
+	}
+	if option.RedisDatabase != nil {
+		auth["redis_database"] = option.RedisDatabase
+	}
 	return option.Name, auth
 }
 

@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
+import "bscp.io/pkg/protocol/core/group/group.proto";
+import "google/protobuf/struct.proto";
+
+package pbstrategy;
+
+option go_package = "bscp.io/pkg/protocol/core/strategy;pbstrategy";
+
+// Strategy source resource reference: pkg/dal/table/strategy.go
+message Strategy {
+    uint32 id                     = 1;
+    StrategySpec spec             = 2;
+    StrategyState state           = 3;
+    StrategyAttachment attachment = 4;
+    pbbase.Revision revision      = 5;
+}
+
+// StrategySpec source resource reference: pkg/dal/table/strategy.go
+message StrategySpec {
+    string name         = 1;
+    uint32 release_id   = 2;
+    bool as_default     = 3;
+    Scope scope         = 4;
+    string mode         = 5;
+    string namespace    = 6;
+    string memo         = 7;
+}
+
+// StrategyState source resource reference: pkg/dal/table/strategy.go
+message StrategyState {
+    string pub_state = 1;
+}
+
+// StrategyAttachment source resource reference: pkg/dal/table/strategy.go
+message StrategyAttachment {
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 strategy_set_id = 3;
+}
+
+// Scope source resource reference: pkg/dal/table/strategy.go
+message Scope {
+    repeated pbgroup.Group groups = 1;
+}
+
+// SubStrategy source resource reference: pkg/dal/table/strategy.go
+message SubStrategy {
+    SubStrategySpec spec     = 1;
+    pbbase.Revision revision = 2;
+}
+
+// SubStrategySpec source resource reference: pkg/dal/table/strategy.go
+message SubStrategySpec {
+    string name            = 1;
+    uint32 release_id      = 2;
+    SubScopeSelector scope = 3;
+    string memo            = 4;
+}
+
+// SubScopeSelector source resource reference: pkg/dal/table/strategy.go
+message SubScopeSelector {
+    google.protobuf.Struct selector = 1;
+}
+
+// CurrentPublishedStrategy source resource reference: pkg/dal/table/strategy.go
+message CurrentPublishedStrategy {
+    uint32 id                       = 1;
+    uint32 strategy_id              = 2;
+    StrategySpec spec               = 3;
+    StrategyState state             = 4;
+    StrategyAttachment attachment   = 5;
+    pbbase.CreatedRevision revision = 6;
+}
+
+// PublishedStrategyHistory source resource reference: pkg/dal/table/strategy.go
+message PublishedStrategyHistory {
+    uint32 id                       = 1;
+    uint32 strategy_id              = 2;
+    StrategySpec spec               = 3;
+    StrategyState state             = 4;
+    StrategyAttachment attachment   = 5;
+    pbbase.CreatedRevision revision = 6;
+}

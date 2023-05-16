@@ -20,10 +20,10 @@ from backend.utils.basic import getitems
 
 
 class PersistentVolumeFormatter(StorageFormatter):
-    """ PersistentVolume 格式化 """
+    """PersistentVolume 格式化"""
 
     def parse_access_modes(self, resource_dict: Dict) -> List:
-        """ access modes 转 缩写用于展示 """
+        """access modes 转 缩写用于展示"""
         return [PersistentVolumeAccessMode(m).shortname for m in getitems(resource_dict, 'spec.accessModes', [])]
 
     def parse_claim(self, resource_dict: Dict) -> Union[str, None]:

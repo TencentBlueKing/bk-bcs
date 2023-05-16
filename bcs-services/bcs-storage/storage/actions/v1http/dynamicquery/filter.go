@@ -23,8 +23,8 @@ import (
 )
 
 type qFilter interface {
-	// get the condition for querying
-	getCondition() *operator.Condition
+	// GetCondition get the condition for querying
+	GetCondition() *operator.Condition
 }
 
 func qGenerate(q qFilter, timeLayout string) *operator.Condition {

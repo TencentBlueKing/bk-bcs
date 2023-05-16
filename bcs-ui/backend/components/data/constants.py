@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 IS_DATA_OPEN = False
 
 # 接入ESB后，走ESB访问，确认访问路径
-DATA_API_V3_PREFIX = f"{settings.BK_PAAS_INNER_HOST}/api/c/compapi/data/v3"
+DATA_API_V3_PREFIX = f"{settings.COMPONENT_HOST}/api/c/compapi/data/v3"
 # 测试阶段，绕过用户登录态验证
 DATA_TOKEN = ""
 
@@ -32,7 +32,8 @@ APP_SECRET = settings.APP_TOKEN
 EXPIRE_TIME = "7d"
 
 # eslog不再支持新增, 按照数据平台要求切换至sz4集群
-STORAGE_CLUSTER = "eslog-sz4"
+# sz4 集群满, 临时切换至 sz3
+STORAGE_CLUSTER = 'eslog-sz3'
 
 DockerMetricFields = {
     "cpu_summary": ["cpuusage", "id", "container_name"],  # 使用率 cpuusage

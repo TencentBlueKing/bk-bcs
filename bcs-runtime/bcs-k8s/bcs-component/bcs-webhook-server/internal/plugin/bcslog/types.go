@@ -15,7 +15,7 @@ package bcslog
 import (
 	"strings"
 
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -95,13 +95,15 @@ func FindK8sMatchedConfigType(pod *corev1.Pod, bcsLogConfs []*bcsv1.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
 		if logConf.Spec.ConfigType == CustomConfigType {
 			if pod.OwnerReferences[0].Kind == "ReplicaSet" {
-				if strings.ToLower(logConf.Spec.WorkloadType) == strings.ToLower("Deployment") && strings.HasPrefix(pod.OwnerReferences[0].Name, logConf.Spec.WorkloadName) { // nolint
+				if strings.ToLower(logConf.Spec.WorkloadType) == strings.ToLower("Deployment") &&
+					strings.HasPrefix(pod.OwnerReferences[0].Name, logConf.Spec.WorkloadName) { // nolint
 					matchedLogConf = logConf
 					break
 				}
 				continue
 			}
-			if strings.ToLower(pod.OwnerReferences[0].Kind) == strings.ToLower(logConf.Spec.WorkloadType) && pod.OwnerReferences[0].Name == logConf.Spec.WorkloadName { // nolint
+			if strings.ToLower(pod.OwnerReferences[0].Kind) == strings.ToLower(logConf.Spec.WorkloadType) &&
+				pod.OwnerReferences[0].Name == logConf.Spec.WorkloadName { // nolint
 				matchedLogConf = logConf
 				break
 			}
@@ -111,11 +113,13 @@ func FindK8sMatchedConfigType(pod *corev1.Pod, bcsLogConfs []*bcsv1.BcsLogConfig
 }
 
 // FindMesosMatchedConfigType get the matched BcsLogConfig
-func FindMesosMatchedConfigType(workloadType, workloadName string, bcsLogConfs []*bcsv1.BcsLogConfig) *bcsv1.BcsLogConfig { // nolint
+func FindMesosMatchedConfigType(workloadType, workloadName string,
+	bcsLogConfs []*bcsv1.BcsLogConfig) *bcsv1.BcsLogConfig { // nolint
 	var matchedLogConf *bcsv1.BcsLogConfig
 	for _, logConf := range bcsLogConfs {
 		if logConf.Spec.ConfigType == CustomConfigType {
-			if strings.ToLower(logConf.Spec.WorkloadType) == workloadType && logConf.Spec.WorkloadName == workloadName { // nolint
+			if strings.ToLower(logConf.Spec.WorkloadType) == workloadType && logConf.Spec.WorkloadName == workloadName {
+				// nolint
 				matchedLogConf = logConf
 				break
 			}

@@ -30,6 +30,7 @@ type PortPoolItem struct {
 	// +kubebuilder:validation:MinLength=1
 	ItemName        string   `json:"itemName"`
 	LoadBalancerIDs []string `json:"loadBalancerIDs"`
+	Protocol        string   `json:"protocol,omitempty"`
 	// +kubebuilder:validation:Maximum=65535
 	// +kubebuilder:validation:Minimum=1
 	StartPort uint32 `json:"startPort"`
@@ -37,17 +38,15 @@ type PortPoolItem struct {
 	// +kubebuilder:validation:Minimum=1
 	EndPort       uint32 `json:"endPort"`
 	SegmentLength uint32 `json:"segmentLength,omitempty"`
+	External      string `json:"external,omitempty"`
 }
 
 // GetKey get port pool item key
 func (ppi *PortPoolItem) GetKey() string {
-	tmpIDs := make([]string, len(ppi.LoadBalancerIDs))
-	copy(tmpIDs, ppi.LoadBalancerIDs)
-	sort.Strings(tmpIDs)
-	return strings.Join(tmpIDs, ",")
+	return ppi.ItemName
 }
 
-// Valiate do validation
+// Validate do validation
 func (ppi *PortPoolItem) Validate() error {
 	if ppi == nil {
 		return fmt.Errorf("port pool item cannot be empty")
@@ -80,14 +79,21 @@ type PortPoolItemStatus struct {
 	PoolItemLoadBalancers []*IngressLoadBalancer `json:"poolItemLoadBalancers,omitempty"`
 	Status                string                 `json:"status"`
 	Message               string                 `json:"message"`
+	Protocol              []string               `json:"protocol"`
+	External              string                 `json:"external,omitempty"`
 }
 
 // GetKey get port pool item key
 func (ppis *PortPoolItemStatus) GetKey() string {
-	tmpIDs := make([]string, len(ppis.LoadBalancerIDs))
-	copy(tmpIDs, ppis.LoadBalancerIDs)
+	return ppis.ItemName
+}
+
+// GetPoolItemKey get port pool item key
+func GetPoolItemKey(itemName string, loadBalancerIDs []string) string {
+	tmpIDs := make([]string, len(loadBalancerIDs))
+	copy(tmpIDs, loadBalancerIDs)
 	sort.Strings(tmpIDs)
-	return strings.Join(tmpIDs, ",")
+	return itemName + "-" + strings.Join(tmpIDs, ",")
 }
 
 // PortPoolStatus defines the observed state of PortPool
@@ -96,12 +102,14 @@ type PortPoolStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	PoolItemStatuses []*PortPoolItemStatus `json:"poolItems,omitempty"`
+	Status           string                `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="status",type=string,JSONPath=`.status.status`
 
 // PortPool is the Schema for the portpools API
 type PortPool struct {

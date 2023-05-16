@@ -1,0 +1,9 @@
+{{ include "common.metadata" . }}
+- - group:
+      - [ "immutable" ]
+      - - group:
+            - [ "key", "value", "." ]
+          prop: items
+          container:
+            grid-template-columns: "1fr 1fr 60px"
+    prop: data

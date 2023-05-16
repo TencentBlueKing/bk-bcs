@@ -92,10 +92,21 @@ func toMSTimestamp(t time.Time) int64 {
 type LoadBalanceObject struct {
 	LbID   string   `json:"lbID"`
 	Region string   `json:"region"`
-	Type   string   `json:"type"`
 	Name   string   `json:"name"`
 	IPs    []string `json:"ips"`
-	VIPs   []string `json:"vips,omitempty"`
+	// LoadBalancerType OPEN or INTERNAL https://cloud.tencent.com/document/api/214/30694#LoadBalancer
+	Type string `json:"type,omitempty"`
+	// dns for lb
+	DNSName string   `json:"dnsName,omitempty"`
+	VIPs    []string `json:"vips,omitempty"`
+	// LoadBalancerScheme define Internet-facing or Internal. An internet-facing load balancer routes
+	// requests from clients to targets over the internet.
+	// An internal load balancer routes requests to targets using private IP addresses.
+	Scheme string `json:"scheme,omitempty"`
+	// AWSLBType define aws lb type, application, network, or gateway
+	AWSLBType string `json:"awsLBType,omitempty"`
+	// AzureLBType define azure lb type, e.g. loadbalancer, applicationgateway
+	AzureLBType string `json:"azureLBType,omitempty"`
 }
 
 // BackendHealthStatus health status of cloud loadbalancer backend
@@ -111,13 +122,20 @@ type BackendHealthStatus struct {
 	Status       string
 }
 
+// Result work failed if isError == true
+type Result struct {
+	IsError bool
+	Err     error
+	Res     string
+}
+
 // LoadBalance interface for clb loadbalancer
 type LoadBalance interface {
 	// DescribeLoadBalancer get loadbalancer object by id or name
-	DescribeLoadBalancer(region, lbID, name string) (*LoadBalanceObject, error)
+	DescribeLoadBalancer(region, lbID, name, protocolLayer string) (*LoadBalanceObject, error)
 
 	// DescribeLoadBalancerWithNs get loadbalancer object by id or name with namespace specified
-	DescribeLoadBalancerWithNs(ns, region, lbID, name string) (*LoadBalanceObject, error)
+	DescribeLoadBalancerWithNs(ns, region, lbID, name, protocolLayer string) (*LoadBalanceObject, error)
 
 	// IsNamespaced if client is namespaced
 	IsNamespaced() bool
@@ -129,7 +147,10 @@ type LoadBalance interface {
 	DeleteListener(region string, listener *networkextensionv1.Listener) error
 
 	// EnsureMultiListeners ensure multiple listeners to cloud
-	EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error)
+	// 当返回error不为空时，意味着这批listener ensure过程全部失败，
+	// 否则， 根据map确认listener ensure是否成功。返回map的key值为listener.name，当map中未包含listener或返回Result中IsError=true
+	// 时，说明该listener ensure过程中出现错误。
+	EnsureMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) (map[string]Result, error)
 
 	// DeleteMultiListeners delete multiple listeners
 	DeleteMultiListeners(region, lbID string, listeners []*networkextensionv1.Listener) error
@@ -139,7 +160,7 @@ type LoadBalance interface {
 
 	// EnsureMultiSegmentListeners ensure multi segment listener
 	EnsureMultiSegmentListeners(
-		region, lbID string, listeners []*networkextensionv1.Listener) (map[string]string, error)
+		region, lbID string, listeners []*networkextensionv1.Listener) (map[string]Result, error)
 
 	// DeleteSegmentListener delete segment listener
 	DeleteSegmentListener(region string, listener *networkextensionv1.Listener) error

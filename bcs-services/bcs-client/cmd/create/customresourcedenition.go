@@ -65,7 +65,7 @@ func createCustomResource(c *utils.ClientContext) error {
 		return err
 	}
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
-	//validate command line option type
+	// validate command line option type
 	plural, err := utils.ValidateCustomResourceType(scheduler, c.ClusterID(), version, kind, c.String(utils.OptionType))
 	if err != nil {
 		return err

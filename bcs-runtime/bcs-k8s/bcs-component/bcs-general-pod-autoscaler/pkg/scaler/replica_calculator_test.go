@@ -432,7 +432,7 @@ func (tc *replicaCalcTestCase) runTest(t *testing.T) {
 	assert.True(t, tc.timestamp.Equal(outTimestamp), "timestamp should be as expected")
 }
 
-//TestReplicaCalcDRM 原方法名 TestReplicaCalcDisjointResourcesMetrics
+// TestReplicaCalcDRM 原方法名 TestReplicaCalcDisjointResourcesMetrics
 func TestReplicaCalcDRM(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas: 1,
@@ -513,7 +513,7 @@ func coolCpuCreationTime() metav1.Time {
 	return metav1.Time{Time: time.Now().Add(-3 * time.Minute)}
 }
 
-//TestReplicaCalcSUUNS 原方法名 TestReplicaCalcScaleUpUnreadyNoScale
+// TestReplicaCalcSUUNS 原方法名 TestReplicaCalcScaleUpUnreadyNoScale
 func TestReplicaCalcSUUNS(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
@@ -776,7 +776,7 @@ func TestReplicaCSUCMENL(t *testing.T) {
 	tc.runTest(t)
 }
 
-//TestReplicaCSUPPCMEx 原方法名 TestReplicaCalcScaleUpPerPodCMExternal
+// TestReplicaCSUPPCMEx 原方法名 TestReplicaCalcScaleUpPerPodCMExternal
 func TestReplicaCSUPPCMEx(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
@@ -825,7 +825,7 @@ func TestReplicaCalcScaleDownCM(t *testing.T) {
 	tc.runTest(t)
 }
 
-//TestReplicaCalcSDPPCMO 原方法名 TestReplicaCalcScaleDownPerPodCMObject
+// TestReplicaCalcSDPPCMO 原方法名 TestReplicaCalcScaleDownPerPodCMObject
 func TestReplicaCalcSDPPCMO(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  5,
@@ -956,7 +956,7 @@ func TestReplicaCalcSDHCP(t *testing.T) {
 	tc.runTest(t)
 }
 
-//TestReplicaCalcScaleDFP 原方法名 TestReplicaCalcScaleDownIgnoresFailedPods
+// TestReplicaCalcScaleDFP 原方法名 TestReplicaCalcScaleDownIgnoresFailedPods
 func TestReplicaCalcScaleDFP(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  5,
@@ -1106,7 +1106,7 @@ func TestReplicaCalcToleranceCMExternal(t *testing.T) {
 	tc.runTest(t)
 }
 
-//TestReplicaCalcTPPCME 原方法名 TestReplicaCalcTolerancePerPodCMExternal
+// TestReplicaCalcTPPCME 原方法名 TestReplicaCalcTolerancePerPodCMExternal
 func TestReplicaCalcTPPCME(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,
@@ -1297,7 +1297,7 @@ func TestReplicaCalcMissingMUSU(t *testing.T) {
 	tc.runTest(t)
 }
 
-//TestReplicaCalcMissingMHCSU 原方法名 TestReplicaCalcMissingMetricsHotCpuScaleUp
+// TestReplicaCalcMissingMHCSU 原方法名 TestReplicaCalcMissingMetricsHotCpuScaleUp
 func TestReplicaCalcMissingMHCSU(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:  3,

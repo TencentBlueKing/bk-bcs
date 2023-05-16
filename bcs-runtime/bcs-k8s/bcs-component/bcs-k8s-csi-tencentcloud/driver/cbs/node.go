@@ -30,7 +30,9 @@ import (
 )
 
 var (
-	DiskByIdDevicePath       = "/dev/disk/by-id"
+	// DiskByIdDevicePath xxx
+	DiskByIdDevicePath = "/dev/disk/by-id"
+	// DiskByIdDeviceNamePrefix xxx
 	DiskByIdDeviceNamePrefix = "virtio-"
 )
 
@@ -57,7 +59,9 @@ func newCbsNode(secretId, secretKey, region string) (*cbsNode, error) {
 	return &node, nil
 }
 
-func (node *cbsNode) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
+// NodeStageVolume xxx
+func (node *cbsNode) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (
+	*csi.NodeStageVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume id is empty")
 	}
@@ -98,7 +102,9 @@ func (node *cbsNode) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolu
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
-func (node *cbsNode) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
+// NodeUnstageVolume xxx
+func (node *cbsNode) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (
+	*csi.NodeUnstageVolumeResponse, error) {
 	if req.StagingTargetPath == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume staging target path is empty")
 	}
@@ -112,7 +118,9 @@ func (node *cbsNode) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstage
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
-func (node *cbsNode) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
+// NodePublishVolume xxx
+func (node *cbsNode) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (
+	*csi.NodePublishVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume id is empty")
 	}
@@ -164,7 +172,9 @@ func (node *cbsNode) NodePublishVolume(ctx context.Context, req *csi.NodePublish
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
-func (node *cbsNode) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (*csi.NodeUnpublishVolumeResponse, error) {
+// NodeUnpublishVolume xxx
+func (node *cbsNode) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpublishVolumeRequest) (
+	*csi.NodeUnpublishVolumeResponse, error) {
 	if req.TargetPath == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume target path is empty")
 	}
@@ -178,6 +188,7 @@ func (node *cbsNode) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpub
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
 
+// NodeGetId xxx
 func (node *cbsNode) NodeGetId(context.Context, *csi.NodeGetIdRequest) (*csi.NodeGetIdResponse, error) {
 	nodeId, err := node.metadataClient.InstanceID()
 	if err != nil {
@@ -188,7 +199,9 @@ func (node *cbsNode) NodeGetId(context.Context, *csi.NodeGetIdRequest) (*csi.Nod
 	}, nil
 }
 
-func (node *cbsNode) NodeGetCapabilities(context.Context, *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
+// NodeGetCapabilities xxx
+func (node *cbsNode) NodeGetCapabilities(context.Context, *csi.NodeGetCapabilitiesRequest) (
+	*csi.NodeGetCapabilitiesResponse, error) {
 	return &csi.NodeGetCapabilitiesResponse{Capabilities: []*csi.NodeServiceCapability{{
 		Type: &csi.NodeServiceCapability_Rpc{
 			Rpc: &csi.NodeServiceCapability_RPC{
@@ -198,6 +211,7 @@ func (node *cbsNode) NodeGetCapabilities(context.Context, *csi.NodeGetCapabiliti
 	}}}, nil
 }
 
+// NodeGetInfo xxx
 func (node *cbsNode) NodeGetInfo(context.Context, *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }

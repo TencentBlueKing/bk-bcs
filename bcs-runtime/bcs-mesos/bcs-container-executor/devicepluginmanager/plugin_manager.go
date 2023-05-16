@@ -30,15 +30,17 @@ import (
 type DevicePluginManager struct {
 }
 
-//new DevicePluginManager function
+// NewDevicePluginManager xxx
+// new DevicePluginManager function
 func NewDevicePluginManager() *DevicePluginManager {
 	return &DevicePluginManager{}
 }
 
-//request device plugin to listandwatch device list ids
-//return deviceIds, examples: ["cpuset0","cpuset1","cpuset2"...]
+// ListAndWatch xxx
+// request device plugin to listandwatch device list ids
+// return deviceIds, examples: ["cpuset0","cpuset1","cpuset2"...]
 func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource) ([]*pluginapi.Device, error) {
-	//connect grpc socket
+	// connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
 		blog.Errorf("connect extended resource %s socket %s failed: %s", ex.Name, ex.Socket, err.Error())
@@ -61,10 +63,11 @@ func (m *DevicePluginManager) ListAndWatch(ex *comtypes.ExtendedResource) ([]*pl
 	return response.Devices, nil
 }
 
-//request deviceplugin to allocate extended resources
-//before create container call the function
+// Allocate xxx
+// request deviceplugin to allocate extended resources
+// before create container call the function
 func (m *DevicePluginManager) Allocate(ex *comtypes.ExtendedResource, deviceIds []string) (map[string]string, error) {
-	//connect grpc socket
+	// connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
 		blog.Errorf("connect extended resource %s socket %s failed: %s", ex.Name, ex.Socket, err.Error())
@@ -89,16 +92,17 @@ func (m *DevicePluginManager) Allocate(ex *comtypes.ExtendedResource, deviceIds 
 		return nil, err
 	}
 
-	//the envs are appended when the container is created
-	//Some Settings of device plugin are done according to these docker envs
+	// the envs are appended when the container is created
+	// Some Settings of device plugin are done according to these docker envs
 	blog.Infof("extended resource %s Allocate success, envs(%v)", ex.Name, response.ContainerResponses[0].Envs)
 	return response.ContainerResponses[0].Envs, nil
 }
 
-//request deviceplugin to allocate extended resources
-//before create container call the function
+// PreStartContainer xxx
+// request deviceplugin to allocate extended resources
+// before create container call the function
 func (m *DevicePluginManager) PreStartContainer(ex *comtypes.ExtendedResource, deviceIds []string) error {
-	//connect grpc socket
+	// connect grpc socket
 	conn, err := m.dial(ex.Socket, 5*time.Second)
 	if err != nil {
 		blog.Errorf("connect extended resource %s socket %s failed: %s", ex.Name, ex.Socket, err.Error())

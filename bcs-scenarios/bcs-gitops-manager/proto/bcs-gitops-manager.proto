@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package bcsgitopsmanager;
+
+option go_package = "./proto;bcsgitopsmanager";
+
+import "protoc-gen-swagger/options/annotations.proto";
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info : {title : "BK-BCS GitOps Manager API Doc";
+version : "1.28.0";
+}
+;
+schemes : HTTP;
+consumes : "application/json";
+produces : "application/json";
+}
+;
+
+service BcsGitopsManager {
+  rpc Ping(GitOpsRequest) returns (GitOpsResponse) {
+    option (google.api.http) = {
+      get : "/gitopsmanager/v1/ping"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      summary : "Ping检测"
+      description : "Ping检测，用于网络基础测试"
+    };
+  }
+  rpc StartupProject(ProjectSyncRequest) returns (GitOpsResponse) {
+    option (google.api.http) = {
+      post : "/gitopsmanager/v1/project"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      summary : "启动项目"
+      description : "启动项目进入同步状态，保障从project-"
+                    "manager同步项目数据到本地"
+    };
+  }
+
+  rpc SyncCluster(ClusterSyncRequest) returns (GitOpsResponse) {
+    option (google.api.http) = {
+      post : "/gitopsmanager/v1/cluster/sync"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      summary : "强制同步项目下的集群信息"
+      description : "强制同步指定项目下的集群数据，用于保障集群数据的一致性。"
+                    "功能需要依赖cluster-manager"
+    };
+  }
+}
+
+// ProjectSyncRequest is request for project
+// synchronization from project-manager to local storage
+message ProjectSyncRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ProjectSyncRequest"
+      description : "启动项目同步请求"
+      required : [ "projectCode"]
+    }
+  };
+  // bcs project code, human readable information
+  string projectCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "ProjectCode",
+        description : "必填。bk-bcs项目Code，易读的英文短词，来源于project-manager"
+      }, (validate.rules).string = {
+        min_len : 2, max_len : 64
+      }];
+}
+
+// ClusterSyncRequest force sync specified project cluster information
+message ClusterSyncRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ClusterSyncRequest",
+      description : "集群强制同步请求",
+      required : [ "projectCode" ]
+    }
+  };
+  // bcs project code, human readable information
+  string projectCode = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "ProjectCode",
+        description : "必填。bk-bcs项目Code，易读的英文短词，来源于project-manager"
+      }, (validate.rules).string = {
+        min_len : 2, max_len : 64
+      } ];
+  // bcs project code, human readable information
+  string clusterID = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "ClusterID",
+        description : "可选。指定集群ID，如果不指定默认同步项目下所有集群信息"
+      } ];
+}
+
+
+// GitOpsResponse for common use
+message GitOpsResponse {
+  int32 code = 1;
+  string message = 2;
+  string error = 3;
+}
+
+// GitOpsResponse for common use
+message GitOpsRequest {
+}

@@ -19,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-driver/mesosdriver"
 )
 
-//Run the mesos driver
+// Run the mesos driver
 func Run(op *options.MesosDriverOption) error {
 
 	blog.Info("config: %+v", op)

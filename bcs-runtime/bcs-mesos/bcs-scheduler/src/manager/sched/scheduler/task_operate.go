@@ -206,6 +206,7 @@ func (s *Scheduler) DeleteTaskGroup(app *types.Application, taskGroup *types.Tas
 	return s.deleteTaskGroup(taskGroup)
 }
 
+// deleteTaskGroup xxx
 // Delete a taskgroup:
 // the taskgroup will delete from DB
 func (s *Scheduler) deleteTaskGroup(taskGroup *types.TaskGroup) error {

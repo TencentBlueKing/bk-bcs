@@ -11,6 +11,7 @@
  *
  */
 
+// Package mesosdriver xxx
 package mesosdriver
 
 import (
@@ -39,7 +40,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-//MesosDriver is data struct of mesos driver
+// MesosDriver is data struct of mesos driver
 type MesosDriver struct {
 	config        *config.MesosDriverConfig
 	etcdRegistry  registry.Registry
@@ -70,7 +71,7 @@ func (m *MesosDriver) IsHealthy() (bool, string) {
 }
 
 // RunMetric run metric feaature
-//deprecated, change to promethus collector
+// deprecated, change to promethus collector
 func (m *MesosDriver) RunMetric() {
 
 	conf := metric.Config{
@@ -110,18 +111,19 @@ func NewMesosDriverServer(conf *config.MesosDriverConfig) (*MesosDriver, error) 
 
 	m := &MesosDriver{}
 
-	//config
+	// config
 	m.config = conf
 
-	//http server
+	// http server
 	m.httpServ = httpserver.NewHttpServer(m.config.Port, m.config.Address, "")
 	if m.config.ServCert.IsSSL {
 		blog.Info("mesos driver server is SSL: CA:%s, Cert:%s, Key:%s",
 			m.config.ServCert.CAFile, m.config.ServCert.CertFile, m.config.ServCert.KeyFile)
-		m.httpServ.SetSsl(m.config.ServCert.CAFile, m.config.ServCert.CertFile, m.config.ServCert.KeyFile, m.config.ServCert.CertPasswd)
+		m.httpServ.SetSsl(m.config.ServCert.CAFile, m.config.ServCert.CertFile, m.config.ServCert.KeyFile,
+			m.config.ServCert.CertPasswd)
 	}
 
-	//v4 scheduler
+	// v4 scheduler
 	m.v4Scheduler = v4http.NewScheduler()
 	m.v4Scheduler.InitConfig(m.config)
 
@@ -164,7 +166,7 @@ func (m *MesosDriver) Start() error {
 	chErr := make(chan error, 1)
 
 	generalFilter := filter.NewFilter()
-	//admission webhook filter
+	// admission webhook filter
 	if m.config.AdmissionWebhook {
 		admissionFilter, err := filter.NewAdmissionWebhookFilter(m.v4Scheduler, m.config.KubeConfig)
 		if err != nil {
@@ -174,7 +176,7 @@ func (m *MesosDriver) Start() error {
 		generalFilter.AppendFilter(admissionFilter)
 		blog.Infof("mesosdriver add admission webhook filter")
 	}
-	//check http head valid filter
+	// check http head valid filter
 	generalFilter.AppendFilter(filter.NewHeaderValidFilter(m.config))
 	blog.Infof("mesosdriver add header valid filter")
 
@@ -182,7 +184,7 @@ func (m *MesosDriver) Start() error {
 	filters := []restful.FilterFunction{}
 	filters = append(filters, generalFilter.Filter)
 
-	//register actions
+	// register actions
 	blog.Info("mesos driver begin register v4 api")
 	m.httpServ.RegisterWebServer("/mesosdriver/v4", filters, m.v4Scheduler.Actions())
 
@@ -223,7 +225,8 @@ func (m *MesosDriver) etcdRegistryFeature() error {
 		}
 		clusterID := strings.Split(m.config.Cluster, "-")
 		if len(clusterID) != 3 {
-			blog.Errorf("clusterID in configuration is not formation expected! expect: BCS-MESOS-XXXXX, actual: %s", m.config.Cluster)
+			blog.Errorf("clusterID in configuration is not formation expected! expect: BCS-MESOS-XXXXX, actual: %s",
+				m.config.Cluster)
 			return fmt.Errorf("error clusterID formation")
 		}
 		// init go-micro registry
@@ -302,7 +305,8 @@ func (m *MesosDriver) RegDiscover() {
 		regInfo.ServerInfo.Scheme = "https"
 	}
 
-	key := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDRIVER + "/" + regInfo.Cluster + "/" + m.config.Address
+	key := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_MESOSDRIVER + "/" + regInfo.Cluster + "/" +
+		m.config.Address
 	data, err := json.Marshal(regInfo)
 	if err != nil {
 		blog.Error("json Marshal error(%s)", err.Error())
@@ -365,7 +369,8 @@ func (m *MesosDriver) RegDiscover() {
 
 // DiscvScheduler discovery scheduler master
 func (m *MesosDriver) DiscvScheduler() {
-	blog.Infof("begin to discover scheduler from (%s), curr goroutine num(%d)", m.config.SchedDiscvSvr, runtime.NumGoroutine())
+	blog.Infof("begin to discover scheduler from (%s), curr goroutine num(%d)", m.config.SchedDiscvSvr,
+		runtime.NumGoroutine())
 	MesosDiscv := m.config.SchedDiscvSvr
 	regDiscv := rd.NewRegDiscover(MesosDiscv)
 	if regDiscv == nil {
@@ -384,7 +389,7 @@ func (m *MesosDriver) DiscvScheduler() {
 		return
 	}
 	blog.Infof("scheduler discover start succ, current goroutine num(%d)", runtime.NumGoroutine())
-	//defer regDiscv.Stop()
+	// defer regDiscv.Stop()
 
 	discvPath := commtype.BCS_SERV_BASEPATH + "/" + commtype.BCS_MODULE_SCHEDULER
 	discvMesosEvent, err := regDiscv.DiscoverService(discvPath)
@@ -421,7 +426,8 @@ func (m *MesosDriver) DiscvScheduler() {
 					blog.Errorf("fail to unmarshal scheduler(%s), err:%s", string(server), err.Error())
 				}
 				if i == 0 {
-					currSched = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
+					currSched = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(
+						serverInfo.ServerInfo.Port))
 				}
 			}
 			if currSched != m.CurrScheduler {

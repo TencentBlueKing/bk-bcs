@@ -18,10 +18,14 @@ import (
 	"sort"
 	"strings"
 
+	"k8s.io/client-go/util/retry"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	netextv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,11 +59,16 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 			StartPort:       item.StartPort,
 			EndPort:         item.EndPort,
 			SegmentLength:   item.SegmentLength,
+			Protocol:        common.GetPortPoolItemProtocols(item.Protocol),
+			External:        item.External,
 		}
 	} else {
 		// endport can be increased
 		retItemStatus = itemStatus.DeepCopy()
 		retItemStatus.EndPort = item.EndPort
+		retItemStatus.External = item.External
+		retItemStatus.LoadBalancerIDs = item.LoadBalancerIDs
+		retItemStatus.Protocol = common.GetPortPoolItemProtocols(item.Protocol)
 	}
 	// check loadbalanceIDs
 	lbIDs := make([]string, len(item.LoadBalancerIDs))
@@ -68,7 +77,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 
 	lbObjList, err := ppih.getCloudListenersByRegionIDs(lbIDs)
 	if err != nil {
-		blog.Infof("port pool item %s become %s, get loadbalancer info of %v failed, err %s",
+		blog.Warnf("port pool item %s become %s, get loadbalancer info of %v failed, err %s",
 			item.ItemName, constant.PortPoolItemStatusNotReady, lbIDs, err.Error())
 		retItemStatus.Status = constant.PortPoolItemStatusNotReady
 		retItemStatus.Message = fmt.Sprintf("get loadbalancer info of %v failed, err %s", lbIDs, err.Error())
@@ -84,7 +93,7 @@ func (ppih *PortPoolItemHandler) ensurePortPoolItem(
 			segmentLen = 1
 		}
 		if err := ppih.ensureListeners(
-			lbObj.Region, lbObj.LoadbalancerID, item.StartPort, item.EndPort, segmentLen); err != nil {
+			lbObj.Region, lbObj.LoadbalancerID, item.ItemName, item.StartPort, item.EndPort, segmentLen, item.Protocol); err != nil {
 			blog.Warnf("listeners of loadbalance %s not all ready, err %s", lbObj.LoadbalancerID, err.Error())
 			errMsgs = append(errMsgs, fmt.Sprintf("lb %s: %s", lbObj.LoadbalancerID, err.Error()))
 		}
@@ -127,7 +136,7 @@ func (ppih *PortPoolItemHandler) checkPortPoolItemDeletion(itemStatus *netextv1.
 	found := false
 	// check whether there is listener related to this port pool item
 	for _, lbObj := range itemStatus.PoolItemLoadBalancers {
-		listenerList, err := ppih.getListenerList(lbObj.LoadbalancerID)
+		listenerList, err := ppih.getListenerListWithItemName(lbObj.LoadbalancerID, ppih.PortPoolName, itemStatus.ItemName)
 		if err != nil {
 			return err
 		}
@@ -159,22 +168,21 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 		var tmpID string
 		var lbObj *cloud.LoadBalanceObject
 		var err error
-		if strings.Contains(lbID, constant.DelimiterForLbID) {
-			tmpRegion, tmpID, err = common.GetLbRegionAndName(lbID)
-			if err != nil {
-				return nil, err
-			}
-		} else {
+		tmpRegion, tmpID, err = common.GetLbRegionAndName(lbID)
+		if err != nil {
+			return nil, err
+		}
+		if len(tmpRegion) == 0 {
 			tmpRegion = ppih.DefaultRegion
 			tmpID = lbID
 		}
 		if ppih.LbClient.IsNamespaced() {
-			lbObj, err = ppih.LbClient.DescribeLoadBalancerWithNs(ppih.Namespace, tmpRegion, tmpID, "")
+			lbObj, err = ppih.LbClient.DescribeLoadBalancerWithNs(ppih.Namespace, tmpRegion, tmpID, "", constant.ProtocolLayerTransport)
 		} else {
-			lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "")
+			lbObj, err = ppih.LbClient.DescribeLoadBalancer(tmpRegion, tmpID, "", constant.ProtocolLayerTransport)
 		}
 		if err != nil {
-			return nil, fmt.Errorf("describe lb %s info failed, err %s", lbID, err.Error())
+			return nil, fmt.Errorf("describe lb '%s/%s' info failed, err %s", tmpRegion, lbID, err.Error())
 		}
 
 		retLbs = append(retLbs, &netextv1.IngressLoadBalancer{
@@ -183,23 +191,42 @@ func (ppih *PortPoolItemHandler) getCloudListenersByRegionIDs(regionIDs []string
 			Region:           lbObj.Region,
 			Type:             lbObj.Type,
 			IPs:              lbObj.IPs,
+			DNSName:          lbObj.DNSName,
+			Scheme:           lbObj.Scheme,
+			AWSLBType:        lbObj.AWSLBType,
 		})
 	}
 	return retLbs, nil
 }
 
-// get listener from k8s apiserver
-func (ppih *PortPoolItemHandler) getListenerList(lbID string) (*netextv1.ListenerList, error) {
+// get lb's all listener, contains all portpool's listener with same lb
+func (ppih *PortPoolItemHandler) getLBListenerList(lbID string) (*netextv1.ListenerList, error) {
 	set := k8slabels.Set(map[string]string{
 		netextv1.LabelKeyForPortPoolListener: netextv1.LabelValueTrue,
-		netextv1.LabelKeyForLoadbalanceID:    lbID,
+		netextv1.LabelKeyForLoadbalanceID:    generator.GetLabelLBId(lbID),
 	})
+	return ppih.getListenerList(set)
+}
+
+// get portpool item's listener
+func (ppih *PortPoolItemHandler) getListenerListWithItemName(lbID, portpoolName, itemName string) (*netextv1.ListenerList, error) {
+	set := k8slabels.Set(map[string]string{
+		netextv1.LabelKeyForPortPoolListener:                       netextv1.LabelValueTrue,
+		netextv1.LabelKeyForLoadbalanceID:                          generator.GetLabelLBId(lbID),
+		common.GetPortPoolListenerLabelKey(portpoolName, itemName): netextv1.LabelValueForPortPoolItemName,
+	})
+	return ppih.getListenerList(set)
+}
+
+// get listener from k8s apiserver by labelSelector
+func (ppih *PortPoolItemHandler) getListenerList(set k8slabels.Set) (*netextv1.ListenerList, error) {
 	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(set))
 	if err != nil {
 		return nil, fmt.Errorf("get selector from set %v failed, err %s", set, err.Error())
 	}
 	listenerList := &netextv1.ListenerList{}
 	if err := ppih.K8sClient.List(context.Background(), listenerList, &client.ListOptions{
+		Namespace:     ppih.Namespace,
 		LabelSelector: selector,
 	}); err != nil {
 		return nil, fmt.Errorf("get listener by labelSelector %s failed, err %s", selector.String(), err.Error())
@@ -208,8 +235,9 @@ func (ppih *PortPoolItemHandler) getListenerList(lbID string) (*netextv1.Listene
 }
 
 // ensure listeners about this port pool item
-func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort, endPort, segment uint32) error {
-	listenerList, err := ppih.getListenerList(lbID)
+func (ppih *PortPoolItemHandler) ensureListeners(region, lbID, itemName string, startPort, endPort,
+	segment uint32, protocol string) error {
+	listenerList, err := ppih.getLBListenerList(lbID)
 	if err != nil {
 		return err
 	}
@@ -223,7 +251,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort,
 
 	notReady := false
 	for p := startPort; p < endPort; p += segment {
-		protocolList := []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+		protocolList := common.GetPortPoolItemProtocols(protocol)
 		for _, protocol := range protocolList {
 			tmpStartPort := p
 			tmpEndPort := 0
@@ -235,14 +263,29 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort,
 			if !ok {
 				notReady = true
 				if err := ppih.K8sClient.Create(context.Background(), ppih.generateListener(
-					region, lbID, protocol, tmpStartPort, uint32(tmpEndPort),
+					region, lbID, protocol, itemName, tmpStartPort, uint32(tmpEndPort),
 				), &client.CreateOptions{}); err != nil {
 					blog.Warnf("create listener %s failed, err %s", tmpName, err.Error())
 				}
 			} else {
+				// 部分旧版本监听器labels不全需要补齐
+				if !checkListenerLabels(listener.Labels, ppih.PortPoolName, itemName) {
+					poolNameLabel := common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName)
+					listener.Labels[poolNameLabel] = netextv1.LabelValueForPortPoolItemName
+					listener.Labels[netextv1.LabelKeyForOwnerKind] = constant.KindPortPool
+					listener.Labels[netextv1.LabelKeyForOwnerName] = ppih.PortPoolName
+					if err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+						return ppih.K8sClient.Update(context.Background(), listener,
+							&client.UpdateOptions{},
+						)
+					}); err != nil {
+						blog.Warnf("update listener %s failed, err %s", tmpName, err.Error())
+					}
+				}
+
 				if len(listener.Status.ListenerID) == 0 {
 					notReady = true
-					blog.Warnf("listener %s is not ready", tmpName)
+					blog.V(4).Infof("listener %s is not ready", tmpName)
 				}
 			}
 		}
@@ -255,7 +298,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, startPort,
 }
 
 func (ppih *PortPoolItemHandler) generateListener(
-	region, lbID, protocol string, startPort, endPort uint32) *netextv1.Listener {
+	region, lbID, protocol, itemName string, startPort, endPort uint32) *netextv1.Listener {
 	li := &netextv1.Listener{}
 	segLabelValue := netextv1.LabelValueTrue
 	listenerName := common.GetListenerNameWithProtocol(lbID, protocol, int(startPort), int(endPort))
@@ -265,11 +308,15 @@ func (ppih *PortPoolItemHandler) generateListener(
 	li.SetName(listenerName)
 	li.SetNamespace(ppih.Namespace)
 	li.SetLabels(map[string]string{
-		netextv1.LabelKeyForPortPoolListener:  netextv1.LabelValueTrue,
-		netextv1.LabelKeyForIsSegmentListener: segLabelValue,
-		netextv1.LabelKeyForLoadbalanceID:     lbID,
-		netextv1.LabelKeyForLoadbalanceRegion: region,
+		netextv1.LabelKeyForPortPoolListener:                            netextv1.LabelValueTrue,
+		netextv1.LabelKeyForIsSegmentListener:                           segLabelValue,
+		netextv1.LabelKeyForLoadbalanceID:                               generator.GetLabelLBId(lbID),
+		netextv1.LabelKeyForLoadbalanceRegion:                           region,
+		common.GetPortPoolListenerLabelKey(ppih.PortPoolName, itemName): netextv1.LabelValueForPortPoolItemName,
+		netextv1.LabelKeyForOwnerKind:                                   constant.KindPortPool,
+		netextv1.LabelKeyForOwnerName:                                   ppih.PortPoolName,
 	})
+	li.Status.PortPool = ppih.PortPoolName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = int(startPort)
 	li.Spec.EndPort = int(endPort)

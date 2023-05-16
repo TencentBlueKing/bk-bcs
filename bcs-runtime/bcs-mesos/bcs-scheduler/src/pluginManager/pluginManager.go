@@ -11,6 +11,7 @@
  *
  */
 
+// Package pluginManager xxx
 package pluginManager
 
 import (
@@ -26,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/pluginManager/plugin/dynamicPlugin"
 )
 
-//PluginManager plugin manager
+// PluginManager plugin manager
 type PluginManager struct {
 	lock sync.RWMutex
 
@@ -136,7 +137,8 @@ func (p *PluginManager) initPlugins() {
 }
 
 // GetHostAttributes get mesos slave dynamic attributes
-func (p *PluginManager) GetHostAttributes(para *typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes, error) {
+func (p *PluginManager) GetHostAttributes(para *typesplugin.HostPluginParameter) (
+	map[string]*typesplugin.HostAttributes, error) {
 
 	hosts := make(map[string]*typesplugin.HostAttributes)
 

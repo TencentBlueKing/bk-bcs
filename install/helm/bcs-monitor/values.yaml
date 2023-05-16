@@ -1,0 +1,202 @@
+# Default values for bcs-monitor.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imageRegistry: ""
+  # etcd 依赖配置
+  storage:
+    etcd:
+      endpoints: []
+    redis:
+      password: ""
+  secret:
+    autoGenerate: true
+    #bcs server cert
+    bcsServerCerts: bcs-server-certs
+    #bcs client cert
+    bcsClientCerts: bcs-client-certs
+    #bcs client cert without encrypted
+    bcsClientCertsWithoutEncrypted: bcs-client-certs-without-encrypted
+    #etcd registry cert
+    etcdCerts: bcs-etcd-certs
+    #gateway https cert
+    bcsGatewayCerts: bcs-gateway-certs
+  bkAPP:
+    systemID: ""
+    appCode: ""
+    appSecret: ""
+  bkIAM:
+    gateWayHost: ""
+    iamHost: ""
+    bkiamHost: ""
+  env:
+    BK_BCS_gatewayToken: ""
+    BK_BCS_jwtPublicKey: ""
+
+# etcd 依赖配置
+storage:
+  etcd:
+    endpoints: []
+
+secret:
+  #bcs server cert
+  bcsServerCerts: bcs-server-certs
+  #bcs client cert
+  bcsClientCerts: bcs-client-certs
+  #bcs client cert without encrypted
+  bcsClientCertsWithoutEncrypted: bcs-client-certs-without-encrypted
+  #etcd registry cert
+  etcdCerts: bcs-etcd-certs
+  #gateway https cert
+  bcsGatewayCerts: bcs-gateway-certs
+
+# 蓝鲸App凭证配置
+config_credentials:
+  credentials: []
+
+# 管理员凭证配置
+config_credentials_manager:
+  credentials: []
+
+# webconsole 配置
+config:
+  base_conf:
+    system_id: ""
+    app_code: ""
+    app_secret: ""
+    time_zone: Asia/Shanghai
+    language_code: zh-hans
+    run_env: prod
+
+  logging:
+    level: info
+    file: ""
+    stderr: true
+
+  etcd:
+    endpoints: bcs-etcd:2379
+    ca: /data/bcs/cert/etcd/etcd-ca.pem
+    cert: /data/bcs/cert/etcd/etcd.pem
+    key: /data/bcs/cert/etcd/etcd-key.pem
+
+  redis:
+    host: bcs-redis-master:6379
+    password: ""
+    port: 6379
+    db: 0
+
+  bcs_conf:
+    host: http://bcs-api-gateway.bcs-system.svc.cluster.local
+    jwt_public_key:
+    token:
+
+  bcs_env_conf:
+    - cluster_env: prod
+      host: http://bcs-api-gateway.bcs-system.svc.cluster.local
+      token:
+  
+  iam_conf:
+    gateway_server: ""
+
+  bk_monitor_conf:
+    url: http://bk-monitor-unify-query-http.default.svc.cluster.local:10205
+    metadata_url: ""
+
+  web:
+    route_prefix: /bcsapi/v4/monitor
+    host: ""
+
+  storegw:
+    - type: BCS_SYSTEM
+      config: {}
+    - type: BK_MONITOR
+
+# api 模块独立配置
+api:
+  replicaCount: 1
+
+# query 模块独立配置
+query:
+  replicaCount: 1
+
+# storegw 模块独立配置
+storegw:
+  replicaCount: 1
+
+image:
+  registry: hub.bktencent.com
+  repository: blueking/bcs-monitor
+  tag: v1.28.0-alpha.75
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-monitor"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+# 资源限制
+resources:
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -46,9 +46,14 @@ class GenericMixin:
         if init_params is None:
             # 获取 Django request 对象
             _request = self.request
-            if _request.method in ['GET']:
+            if _request.method in ['GET', 'DELETE']:
                 req_data = copy.deepcopy(_request.query_params)
             else:
+                req_data = _request.data.copy()
+
+            # NOTE 兼容措施，确保未切换的老接口 Delete 请求还可以从 request.body 中获取请求参数
+            # 新接口 Delete 请求参数应从 query_params 中获取，复杂参数如批量删除的 list，该用 Post 请求
+            if _request.method == 'DELETE' and not req_data:
                 req_data = _request.data.copy()
         else:
             req_data = init_params

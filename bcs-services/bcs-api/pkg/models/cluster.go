@@ -19,14 +19,20 @@ import (
 )
 
 const (
+	// ClusterProviderPlain xxx
 	ClusterProviderPlain = iota + 1
+	// ClusterProviderBCS xxx
 	ClusterProviderBCS
+	// ClusterProviderFixture xxx
 	ClusterProviderFixture
 
+	// ClusterIdPrefixPlain xxx
 	ClusterIdPrefixPlain = "plain-"
-	ClusterIdPrefixBCS   = "bcs-"
+	// ClusterIdPrefixBCS xxx
+	ClusterIdPrefixBCS = "bcs-"
 )
 
+// Cluster xxx
 type Cluster struct {
 	ID string `json:"id" gorm:"primary_key"`
 	// Provider field shows that which provider did this cluster belongs to, provider will determine the authorization
@@ -42,6 +48,7 @@ type Cluster struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
+// ClusterCredentials xxx
 type ClusterCredentials struct {
 	ID        uint   `gorm:"primary_key"`
 	ClusterId string `gorm:"unique;not null"`
@@ -70,6 +77,7 @@ type RegisterToken struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// WsClusterCredentials xxx
 type WsClusterCredentials struct {
 	ID            uint   `gorm:"primary_key"`
 	ServerKey     string `gorm:"unique;not null"`

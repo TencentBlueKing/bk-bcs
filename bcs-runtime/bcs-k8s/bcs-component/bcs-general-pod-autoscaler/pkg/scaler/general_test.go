@@ -692,6 +692,7 @@ func (tc *testCase) setupController(t *testing.T) (*GeneralController, informers
 		defaultTestingTolerance,
 		defaultTestingCPUInitializationPeriod,
 		defaultTestingDelayOfInitialReadinessStatus,
+		1,
 	)
 	gpaController.gpaListerSynced = alwaysReady
 	if tc.recommendations != nil {
@@ -1015,7 +1016,7 @@ func TestScaleUpCMUnreadyandCpuHot(t *testing.T) {
 
 // TestScaleUpHotCpuNoScaleWouldSD 原方法名TestScaleUpHotCpuNoScaleWouldScaleDown
 //
-//TestScaleUpHotCpuNoScaleWouldSD Test Scale Up Hot Cpu No Scale Would Scale Down
+// TestScaleUpHotCpuNoScaleWouldSD Test Scale Up Hot Cpu No Scale Would Scale Down
 func TestScaleUpHotCpuNoScaleWouldSD(t *testing.T) {
 	averageValue := resource.MustParse("15.0")
 	tc := testCase{
@@ -1122,7 +1123,7 @@ func TestScaleUpFromZeroCMObject(t *testing.T) {
 
 // TestScaleUpFromZeroIgnoresTCMO 原方法名TestScaleUpFromZeroIgnoresToleranceCMObject
 //
-//TestScaleUpFromZeroIgnoresTCMO Test Scale Up From Zero Ignores Tolerance CM Object
+// TestScaleUpFromZeroIgnoresTCMO Test Scale Up From Zero Ignores Tolerance CM Object
 func TestScaleUpFromZeroIgnoresTCMO(t *testing.T) {
 	targetValue := resource.MustParse("1.0")
 	tc := testCase{
@@ -2228,7 +2229,7 @@ func TestUpscaleCap(t *testing.T) {
 
 // TestUpscaleCapGreaterTMR 原方法名TestUpscaleCapGreaterThanMaxReplicas
 //
-//TestUpscaleCapGreaterTMR Test Up scale Cap Greater Than Max Replicas
+// TestUpscaleCapGreaterTMR Test Up scale Cap Greater Than Max Replicas
 func TestUpscaleCapGreaterTMR(t *testing.T) {
 	tc := testCase{
 		minReplicas:    1,
@@ -2324,7 +2325,7 @@ func TestConditionInvalidSelectorMissing(t *testing.T) {
 
 // TestConditionInvalidSU 原方法名TestConditionInvalidSelectorUnparsable
 //
-//TestConditionInvalidSU Test Condition Invalid Selector Unparsable
+// TestConditionInvalidSU Test Condition Invalid Selector Unparsable
 func TestConditionInvalidSU(t *testing.T) {
 	tc := testCase{
 		minReplicas:             1,
@@ -2363,7 +2364,7 @@ func TestConditionInvalidSU(t *testing.T) {
 			},
 			Status: autoscalinginternal.ScaleStatus{
 				Replicas: tc.specReplicas,
-				Selector: "cheddar cheese",
+				Selector: "cheddar=cheese",
 			},
 		}
 		return true, obj, nil
@@ -2604,7 +2605,7 @@ func TestNoBackoffUpscaleCM(t *testing.T) {
 		},
 		reportedLevels:      []uint64{20000, 10000, 30000},
 		reportedCPURequests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
-		//useMetricsAPI:       true,
+		// useMetricsAPI:       true,
 		lastScaleTime: &time2,
 		expectedConditions: statusOkWithOverrides(autoscalingv1alpha1.GeneralPodAutoscalerCondition{
 			Type:   autoscalingv1alpha1.AbleToScale,

@@ -20,6 +20,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
+// AccessTokenRequestBody xxx
 type AccessTokenRequestBody struct {
 	EnvName    string `json:"env_name"`
 	AppCode    string `json:"app_code"`
@@ -28,10 +29,12 @@ type AccessTokenRequestBody struct {
 	GrantType  string `json:"grant_type"`
 }
 
+// APIGWAuthHeaders xxx
 type APIGWAuthHeaders struct {
 	AccessToken string `json:"access_token"`
 }
 
+// GetClusterID xxx
 func GetClusterID(o *options.KubeDriverServerOptions) (clusterID string, err error) {
 	if o.Environment == "develop" {
 		return "driver-debug-clusterID", nil

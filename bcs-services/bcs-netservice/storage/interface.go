@@ -13,30 +13,30 @@
 
 package storage
 
-//Event for callback register
+// Event for callback register
 type Event interface {
 	AddEvent(key string, value []byte)
 	UpdateEvent(key string, oldData, curData []byte)
 	DeleteEvent(key string, value []byte)
 }
 
-//Locker for storage, basic use
-//for pool Delete & IP lease/release
+// Locker for storage, basic use
+// for pool Delete & IP lease/release
 type Locker interface {
 	Lock() error
 	Unlock() error
 }
 
-//Storage interface for key/value storage
+// Storage interface for key/value storage
 type Storage interface {
-	GetLocker(path string) (Locker, error)           //get locker with new connection
-	Register(path string, data []byte) error         //register self node
-	RegisterAndWatch(path string, data []byte) error //register and watch self node
-	Add(key string, value []byte) error              //add new node data
-	Delete(key string) ([]byte, error)               //delete node
-	Update(key string, data []byte) error            //update node data
-	Get(key string) ([]byte, error)                  //get node data
-	List(key string) ([]string, error)               //list all children nodes
-	Exist(key string) (bool, error)                  //check node exist
-	Stop()                                           //close connection
+	GetLocker(path string) (Locker, error)           // get locker with new connection
+	Register(path string, data []byte) error         // register self node
+	RegisterAndWatch(path string, data []byte) error // register and watch self node
+	Add(key string, value []byte) error              // add new node data
+	Delete(key string) ([]byte, error)               // delete node
+	Update(key string, data []byte) error            // update node data
+	Get(key string) ([]byte, error)                  // get node data
+	List(key string) ([]string, error)               // list all children nodes
+	Exist(key string) (bool, error)                  // check node exist
+	Stop()                                           // close connection
 }

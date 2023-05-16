@@ -8,38 +8,34 @@
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 
 package main
 
 import (
-	"runtime"
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	logger "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 )
 
 func main() {
+	// Create context that listens for the interrupt signal from the OS.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	op := options.NewConsoleOption()
-	conf.Parse(op)
-
-	blog.InitLogs(op.LogConfig)
-	defer blog.CloseLogs()
-
-	manager := app.NewConsoleManager(op)
-	if err := manager.Init(); err != nil {
-		blog.Fatalf("init console failed, err : %v", err)
+	mgr := app.NewWebConsoleManager(ctx, nil)
+	if err := mgr.Init(); err != nil {
+		logger.Errorf("init webconsole error: %s", err)
+		os.Exit(1)
 	}
-	if err := manager.Run(); err != nil {
-		blog.Fatalf("run console failed, err : %v", err)
+
+	if err := mgr.Run(); err != nil {
+		logger.Errorf("run webconsole error: %s", err)
+		os.Exit(1)
 	}
-	blog.Infof("console is running")
-	ch := make(chan bool)
-	<-ch
 }

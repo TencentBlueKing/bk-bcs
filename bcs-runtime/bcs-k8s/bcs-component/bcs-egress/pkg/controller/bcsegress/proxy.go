@@ -34,16 +34,18 @@ const (
 	defaultGenerateDirectory = "./generate/"
 )
 
-//Proxy interface for http/tcp network flow controlle
+// Proxy interface for http/tcp network flow controlle
 type Proxy interface {
-	//http server operation part
+	// GetHTTPRule TODO
+	// http server operation part
 	GetHTTPRule(key string) (*HTTPConfig, error)
 	ListHTTPRules() ([]*HTTPConfig, error)
 	ListHTTPRulesByLabel(labels map[string]string) ([]*HTTPConfig, error)
 	DeleteHTTPRule(key string) error
 	UpdateHTTPRule(cfg *HTTPConfig) error
 
-	//upstream tcp operation part
+	// GetTCPRule TODO
+	// upstream tcp operation part
 	GetTCPRule(key string) (*TCPConfig, error)
 	GetTCPRuleByPort(port uint) (*TCPConfig, error)
 	ListTCPRules() ([]*TCPConfig, error)
@@ -52,19 +54,19 @@ type Proxy interface {
 	UpdateTCPRule(cfg *TCPConfig) error
 
 	// Reload proxy for new configuration. egress is the rule referrence why proxy
-	//need to reload, proxy stores error information relative to this egress rule
-	//it's convenience for user to check egress last error for decision of reloading again
+	// need to reload, proxy stores error information relative to this egress rule
+	// it's convenience for user to check egress last error for decision of reloading again
 	Reload(egress string) error
 	// LastError get last reload error information according to egress rule
 	LastError(egress string) error
 }
 
-//generator data for template creation
+// generator data for template creation
 type generator struct {
 	TCPServer TCPList
 }
 
-//NewNginx create nginx instance as proxy implementation
+// NewNginx create nginx instance as proxy implementation
 func NewNginx(option *EgressOption) (Proxy, error) {
 	if len(option.ProxyExecutable) == 0 {
 		option.ProxyExecutable = nginxExecutable
@@ -85,7 +87,7 @@ func NewNginx(option *EgressOption) (Proxy, error) {
 		httpConfigs:    make(map[string]*HTTPConfig),
 		lastError:      make(map[string]error),
 	}
-	//ensure workspace directory existence
+	// ensure workspace directory existence
 	exist, err := fileExists(option.ProxyExecutable)
 	if err != nil || !exist {
 		klog.Errorf("Nginx proxy Executable %s is Lost", option.ProxyExecutable)
@@ -114,25 +116,25 @@ const (
 	nginxConfig     = "/usr/local/nginx/conf/nginx.conf"
 )
 
-//Nginx implementations for proxy interface
+// Nginx implementations for proxy interface
 type Nginx struct {
 	option *EgressOption
-	//tcpLock for follow cachedata
+	// tcpLock for follow cachedata
 	tcpLock sync.RWMutex
-	//Key is indexer
+	// Key is indexer
 	tcpKeyConfigs map[string]*TCPConfig
-	//Port is indexer
+	// Port is indexer
 	tcpPortConfigs map[uint]*TCPConfig
-	//http data support
+	// http data support
 	httpLock sync.RWMutex
-	//domain & port is indexer
+	// domain & port is indexer
 	httpConfigs map[string]*HTTPConfig
-	//egress rule error for last update
+	// egress rule error for last update
 	errorLock sync.RWMutex
 	lastError map[string]error
 }
 
-//GetHTTPRule get specified http rule implementation
+// GetHTTPRule get specified http rule implementation
 func (ngx *Nginx) GetHTTPRule(key string) (*HTTPConfig, error) {
 	ngx.httpLock.RLock()
 	defer ngx.httpLock.Unlock()
@@ -143,7 +145,7 @@ func (ngx *Nginx) GetHTTPRule(key string) (*HTTPConfig, error) {
 	return nil, nil
 }
 
-//ListHTTPRules list all http rules implementation
+// ListHTTPRules list all http rules implementation
 func (ngx *Nginx) ListHTTPRules() ([]*HTTPConfig, error) {
 	if len(ngx.httpConfigs) == 0 {
 		return nil, nil
@@ -155,7 +157,7 @@ func (ngx *Nginx) ListHTTPRules() ([]*HTTPConfig, error) {
 	return l, nil
 }
 
-//ListHTTPRulesByLabel http operation implementation
+// ListHTTPRulesByLabel http operation implementation
 func (ngx *Nginx) ListHTTPRulesByLabel(labels map[string]string) ([]*HTTPConfig, error) {
 	ngx.httpLock.RLock()
 	defer ngx.httpLock.Unlock()
@@ -171,7 +173,7 @@ func (ngx *Nginx) ListHTTPRulesByLabel(labels map[string]string) ([]*HTTPConfig,
 	return l, nil
 }
 
-//DeleteHTTPRule delete specified http rule implementation
+// DeleteHTTPRule delete specified http rule implementation
 func (ngx *Nginx) DeleteHTTPRule(key string) error {
 	ngx.httpLock.Lock()
 	defer ngx.httpLock.Unlock()
@@ -179,7 +181,7 @@ func (ngx *Nginx) DeleteHTTPRule(key string) error {
 	return nil
 }
 
-//UpdateHTTPRule update specified http rule implementation
+// UpdateHTTPRule update specified http rule implementation
 func (ngx *Nginx) UpdateHTTPRule(cfg *HTTPConfig) error {
 	ngx.httpLock.Lock()
 	defer ngx.httpLock.Unlock()
@@ -187,7 +189,7 @@ func (ngx *Nginx) UpdateHTTPRule(cfg *HTTPConfig) error {
 	return nil
 }
 
-//GetTCPRule tcp operation implementation
+// GetTCPRule tcp operation implementation
 func (ngx *Nginx) GetTCPRule(key string) (*TCPConfig, error) {
 	ngx.tcpLock.RLock()
 	defer ngx.tcpLock.Unlock()
@@ -198,7 +200,7 @@ func (ngx *Nginx) GetTCPRule(key string) (*TCPConfig, error) {
 	return nil, nil
 }
 
-//GetTCPRuleByPort tcp operation implementation
+// GetTCPRuleByPort tcp operation implementation
 func (ngx *Nginx) GetTCPRuleByPort(port uint) (*TCPConfig, error) {
 	ngx.tcpLock.RLock()
 	defer ngx.tcpLock.Unlock()
@@ -209,7 +211,7 @@ func (ngx *Nginx) GetTCPRuleByPort(port uint) (*TCPConfig, error) {
 	return nil, nil
 }
 
-//ListTCPRules tcp operation implementation
+// ListTCPRules tcp operation implementation
 func (ngx *Nginx) ListTCPRules() ([]*TCPConfig, error) {
 	ngx.tcpLock.RLock()
 	defer ngx.tcpLock.Unlock()
@@ -223,7 +225,7 @@ func (ngx *Nginx) ListTCPRules() ([]*TCPConfig, error) {
 	return l, nil
 }
 
-//ListTCPRulesByLabel tcp operation implementation
+// ListTCPRulesByLabel tcp operation implementation
 func (ngx *Nginx) ListTCPRulesByLabel(labels map[string]string) ([]*TCPConfig, error) {
 	ngx.tcpLock.RLock()
 	defer ngx.tcpLock.Unlock()
@@ -239,7 +241,7 @@ func (ngx *Nginx) ListTCPRulesByLabel(labels map[string]string) ([]*TCPConfig, e
 	return l, nil
 }
 
-//DeleteTCPRule tcp operation implementation
+// DeleteTCPRule tcp operation implementation
 func (ngx *Nginx) DeleteTCPRule(key string) error {
 	ngx.tcpLock.Lock()
 	defer ngx.tcpLock.Unlock()
@@ -257,17 +259,17 @@ func (ngx *Nginx) DeleteTCPRule(key string) error {
 	return nil
 }
 
-//UpdateTCPRule tcp operation implementation
+// UpdateTCPRule tcp operation implementation
 func (ngx *Nginx) UpdateTCPRule(cfg *TCPConfig) error {
 	ngx.tcpLock.Lock()
 	defer ngx.tcpLock.Unlock()
-	//upate port reference
+	// upate port reference
 	ngx.tcpKeyConfigs[cfg.Key()] = cfg
 	ngx.tcpPortConfigs[cfg.ProxyPort] = cfg
 	return nil
 }
 
-//Reload reload proxy for new configuration
+// Reload reload proxy for new configuration
 func (ngx *Nginx) Reload(egress string) error {
 	ngx.tcpLock.Lock()
 	defer ngx.tcpLock.Unlock()
@@ -275,14 +277,14 @@ func (ngx *Nginx) Reload(egress string) error {
 	defer ngx.httpLock.Unlock()
 	ngx.errorLock.Lock()
 	defer ngx.errorLock.Unlock()
-	//ready to generate nginx configuration from template
+	// ready to generate nginx configuration from template
 	output, err := ngx.configGeneration()
 	if err != nil {
 		klog.Errorf("proxy nginx config for egress [%s] generated %s failed, %s", egress, output, err.Error())
 		ngx.lastError[egress] = err
 		return err
 	}
-	//configuration validation
+	// configuration validation
 	if err := ngx.configValidation(output); err != nil {
 		klog.Errorf("proxy nginx check egress %s new configuration %s failed, %s", egress, output, err.Error())
 		ngx.lastError[egress] = err
@@ -295,17 +297,18 @@ func (ngx *Nginx) Reload(egress string) error {
 		return err
 	}
 	if !changed {
-		klog.Warningf("proxy nginx new configuration %s for %s nothing changed with original one, skip reloading", output, egress)
+		klog.Warningf("proxy nginx new configuration %s for %s nothing changed with original one, skip reloading", output,
+			egress)
 		delete(ngx.lastError, egress)
 		return nil
 	}
 	if err := ngx.reloadNginx(output); err != nil {
-		//reload failed, recording last error message for decision of reloading again
+		// reload failed, recording last error message for decision of reloading again
 		klog.Errorf("proxy nginx reload configuration %s for egress %s failed, %s", output, egress, err.Error())
 		ngx.lastError[egress] = err
 		return err
 	}
-	//reload successfully, clean relative last error
+	// reload successfully, clean relative last error
 	ngx.lastError = make(map[string]error)
 	return nil
 }
@@ -316,7 +319,7 @@ func (ngx *Nginx) configGeneration() (string, error) {
 		klog.Errorf("proxy nginx read configuration template %s failed, %s", ngx.option.TemplateFile, err.Error())
 		return "", err
 	}
-	//create output file
+	// create output file
 	stamp := strconv.Itoa(int(time.Now().Unix()))
 	filename := "nginx." + stamp + ".conf"
 	output := path.Join(ngx.option.GenerateDir, filename)
@@ -356,7 +359,7 @@ func (ngx *Nginx) configValidation(filename string) error {
 }
 
 func (ngx *Nginx) isConfigChanged(filename string) (bool, error) {
-	//new file
+	// new file
 	newmd5, err := md5sum(filename)
 	if err != nil {
 		return false, err
@@ -389,7 +392,7 @@ func md5sum(filename string) (string, error) {
 }
 
 func (ngx *Nginx) reloadNginx(config string) error {
-	//open all configuration files for replace
+	// open all configuration files for replace
 	src, sErr := os.Open(config)
 	if sErr != nil {
 		klog.Errorf("Read new config file [%s] failed: %s", config, sErr.Error())
@@ -402,14 +405,14 @@ func (ngx *Nginx) reloadNginx(config string) error {
 		return dErr
 	}
 	defer dst.Close()
-	//mv file
+	// mv file
 	_, err := io.Copy(dst, src)
 	if err != nil {
 		klog.Errorf("Copy new configurtion %s failed: %s", config, err.Error())
 		return err
 	}
 	klog.V(3).Infof("Replace config file %s success", config)
-	//ready to reload
+	// ready to reload
 	command := fmt.Sprintf("%s -s reload", ngx.option.ProxyExecutable)
 	cmd := exec.Command("/bin/sh", "-c", command)
 	output, err := cmd.CombinedOutput()
@@ -432,7 +435,7 @@ func (ngx *Nginx) LastError(egress string) error {
 	return nil
 }
 
-//FileExists check file exists
+// fileExists check file exists
 func fileExists(filename string) (bool, error) {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return false, nil

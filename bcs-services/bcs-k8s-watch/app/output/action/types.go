@@ -13,6 +13,10 @@
 
 package action
 
+import (
+	"k8s.io/client-go/util/workqueue"
+)
+
 const (
 	// SyncDataActionAdd is add action on SyncData.
 	SyncDataActionAdd = "Add"
@@ -40,4 +44,7 @@ type SyncData struct {
 
 	// OwnerUID is resource owner id.
 	OwnerUID string
+
+	// RequeueQ queue for requeue object
+	RequeueQ workqueue.RateLimitingInterface
 }

@@ -1,17 +1,7 @@
-/**
- * Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版 (BlueKing PaaS Community Edition) available.
- * Copyright (C) 2017-2019 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- */
+
 
 @charset 'utf-8';
 @import './variable.css';
-@import './mixins/scroller.css';
 @import './mixins/ellipsis.css';
 
 .bk-table {
@@ -30,7 +20,6 @@
                 vertical-align: middle;
                 border-color: #E9EDF2;
                 color: $fontColor;
-                font-size: 13px;
                 padding: 0 10px;
             }
         }
@@ -45,7 +34,6 @@
         vertical-align: bottom;
         border-bottom: 1px solid $borderLightColor;
         color: #666;
-        font-size: 13px;
         font-weight: 400;
         color: #313238;
     }
@@ -207,7 +195,7 @@
 }
 
 .bk-button+.bk-button {
-    margin-left: 5px;
+    margin-left: 8px;
 }
 
 .bk-button-group {
@@ -278,12 +266,6 @@
     transform: rotate(180deg);
 }
 
-.bk-selector .bk-selector-list>ul::-webkit-scrollbar,
-.textarea::-webkit-scrollbar {
-    width: 4px;
-    background-color: #fff;
-}
-
 .bk-selector {
     display: inline-block;
     .bk-selector-input {
@@ -308,13 +290,6 @@
             color: #ff5656;
         }
     }
-}
-
-.bk-selector .bk-selector-list>ul::-webkit-scrollbar-thumb,
-.textarea::-webkit-scrollbar-thumb {
-    height: 5px;
-    border-radius: 2px;
-    background-color: #e6e9ea;
 }
 
 .bk-form-input[readonly],
@@ -508,9 +483,8 @@
 }
 
 .bk-dropdown-menu {
+    height: 32px !important;
     .bk-dropdown-list {
-        overflow: auto;
-
         >li {
             display: block !important;
             a {
@@ -550,7 +524,6 @@
 }
 
 .bk-dropdown-menu .bk-dropdown-content {
-    @mixin scroller;
     text-align: left;
     max-height: inherit;
 
@@ -574,7 +547,6 @@
 }
 
 .bk-sideslider-wrapper {
-    @mixin scroller;
     top: 0;
 }
 
@@ -751,13 +723,6 @@
     }
 }
 
-.biz-app-list-wrapper {
-    .bk-loading {
-        margin-top: 107px;
-        background-color: rgb(250, 251, 253) !important;
-    }
-}
-
 .bk-searcher-dropdown-list {
     .bk-loading {
         background-color: rgba(255, 255, 255, 1);
@@ -803,7 +768,7 @@
 
 
 .bk-dropdown-menu .bk-dropdown-content.is-show {
-    overflow: visible;
+    overflow: auto;
 }
 
 .biz-templateset-wrapper {
@@ -1134,11 +1099,6 @@
     word-wrap: break-word;
 }
 
-[class^="bcs-icon"],
-[class*="bcs-icon"] {
-    margin-top: -1px;
-}
-
 .bk-form-input-group .input-group-addon.is-left {
     margin-right: -1px;
     border-left: 1px solid #c3cdd7;
@@ -1175,11 +1135,6 @@
 }
 
 .english {
-    .bk-form .bk-label {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-    }
 
     .bk-form.bk-form-vertical .bk-label {
         width: auto;
@@ -1296,10 +1251,6 @@
     }
 }
 
-.bk-table {
-    overflow: auto;
-}
-
 .bk-dialog-outer {
     padding: 0 24px 12px;
     background-color: #fafbfd;
@@ -1332,7 +1283,7 @@
 
 .bk-form-radio {
     & + .bk-form-radio {
-        margin-left: 40px;
+        margin-left: 30px;
     }
 }
 
@@ -1481,11 +1432,6 @@
     }
 }
 
-.bk-tag {
-    margin-left: 0;
-    transform: scale(0.85);
-}
-
 .bk-dialog-wrapper .bk-info-box .bk-dialog-sub-header .bk-dialog-header-inner {
     text-align: left;
 }
@@ -1502,15 +1448,6 @@
 
 .bk-button.bk-default.is-disabled, .bk-button.bk-default[disabled] {
     background-color: #f4f6fa;
-}
-
-/* 统一字体为13px */
-.bk-table .cell {
-    font-size: 13px;
-}
-
-.bk-dropdown-menu .bk-dropdown-list >li a {
-    font-size: 13px;
 }
 
 .bk-has-border-tree li:before {

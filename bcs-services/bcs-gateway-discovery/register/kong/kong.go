@@ -11,6 +11,7 @@
  *
  */
 
+// Package kong xxx
 package kong
 
 import (
@@ -37,7 +38,7 @@ const (
 	kongAdmin = "kong_admin"
 )
 
-//New create Register implementation for kong
+// New create Register implementation for kong
 // return empty
 func New(addr []string, config *tls.Config) (register.Register, error) {
 	kcfg := &gokong.Config{
@@ -51,13 +52,13 @@ func New(addr []string, config *tls.Config) (register.Register, error) {
 	return reg, nil
 }
 
-//kRegister kong register implementation
+// kRegister kong register implementation
 type kRegister struct {
 	kAddrs  []string
 	kClient *gokong.KongAdminClient
 }
 
-//CreateService create Service interface, if service already exists, return error
+// CreateService create Service interface, if service already exists, return error
 // create service include three operations:
 // 1. create specified service information, including plugins
 // 2. create service relative route rules, including plugins
@@ -93,12 +94,13 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 			splugin, err = r.kClient.Plugins().Create(pluReq)
 			if err != nil {
 				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, startedCreate)
-				//todo(DeveloperJim): shall we clean created service, that we can retry in next data synchronization
+				// todo(DeveloperJim): shall we clean created service, that we can retry in next data synchronization
 				blog.Errorf("kong register create plugin %s for Service %s failed, %s", pluReq.Name, svc.Name, err.Error())
 				return err
 			}
 			reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.SucStatus, startedCreate)
-			blog.Infof("kong register create plugin for service %s successfully, plugin ID: %s/%s", svc.Name, splugin.Id, splugin.Name)
+			blog.Infof("kong register create plugin for service %s successfully, plugin ID: %s/%s", svc.Name, splugin.Id,
+				splugin.Name)
 		}
 	}
 	// 2. create service relative route rules
@@ -122,12 +124,13 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 				rplugin, err = r.kClient.Plugins().Create(pluReq)
 				if err != nil {
 					reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, startedPluginsCreate)
-					//todo(DeveloperJim): roll back discussion
+					// todo(DeveloperJim): roll back discussion
 					blog.Errorf("kong register create plugin %s for route %s failed, %s", pluReq.Name, route.Name, err.Error())
 					return err
 				}
 				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.SucStatus, startedPluginsCreate)
-				blog.Infof("kong register create plugins for route %s successfully, pluginID: %s/%s", route.Name, rplugin.Id, rplugin.Name)
+				blog.Infof("kong register create plugins for route %s successfully, pluginID: %s/%s", route.Name, rplugin.Id,
+					rplugin.Name)
 			}
 		}
 	}
@@ -135,7 +138,7 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 	kupstrreq := &gokong.UpstreamRequest{
 		Name: svc.Host,
 	}
-	//setting tags
+	// setting tags
 	if len(svc.Labels) != 0 {
 		for _, v := range svc.Labels {
 			kupstrreq.Tags = append(kupstrreq.Tags, gokong.String(v))
@@ -150,7 +153,7 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 	}
 	reportKongAPIMetrics("CreateUpstreams", http.MethodPost, utils.SucStatus, started)
 	blog.Infof("kong register create upstream %s [%s] successfully", kUpstream.Name, kUpstream.Id)
-	//create targets for upstream
+	// create targets for upstream
 	for _, backend := range svc.Backends {
 		targetReq := &gokong.TargetRequest{
 			Target: backend.Target,
@@ -161,21 +164,23 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 		ktarget, err = r.kClient.Targets().CreateFromUpstreamName(kUpstream.Name, targetReq)
 		if err != nil {
 			reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.ErrStatus, startedCreateUpstream)
-			blog.Errorf("kong register create target %s for upstream %s failed, %s. try next one ", targetReq.Target, kUpstream.Name, err.Error())
+			blog.Errorf("kong register create target %s for upstream %s failed, %s. try next one ", targetReq.Target,
+				kUpstream.Name, err.Error())
 			continue
 		}
 		reportKongAPIMetrics("CreateTargets", http.MethodPost, utils.SucStatus, startedCreateUpstream)
-		blog.Infof("kong register create target %s[%s] for upstream %s successfully", targetReq.Target, *ktarget.Id, kUpstream.Name)
+		blog.Infof("kong register create target %s[%s] for upstream %s successfully", targetReq.Target, *ktarget.Id,
+			kUpstream.Name)
 	}
 	return nil
 }
 
-//UpdateService update specified Service, if service does not exist, return error
+// UpdateService update specified Service, if service does not exist, return error
 func (r *kRegister) UpdateService(svc *register.Service) error {
-	return fmt.Errorf("not implemented")
+	return r.ReplaceTargetByService(svc, svc.Backends)
 }
 
-//GetService get specified service by name, if no service, return nil
+// GetService get specified service by name, if no service, return nil
 func (r *kRegister) GetService(svc string) (*register.Service, error) {
 	var (
 		err     error
@@ -195,13 +200,13 @@ func (r *kRegister) GetService(svc string) (*register.Service, error) {
 		blog.Warnf("kong register get no Service named %s", svc)
 		return nil, nil
 	}
-	//convert data structure
+	// convert data structure
 	registryService := innerServiceConvert(kSvc)
 	reportKongAPIMetrics("GetServices", http.MethodGet, utils.SucStatus, started)
 	return registryService, nil
 }
 
-//DeleteService delete specified service, success even if no such service
+// DeleteService delete specified service, success even if no such service
 // @param service: at least setting Name & Host for deletion
 func (r *kRegister) DeleteService(svc *register.Service) error {
 	if svc.Host == "" || svc.Name == "" {
@@ -214,7 +219,7 @@ func (r *kRegister) DeleteService(svc *register.Service) error {
 	defer reportRegisterKongMetrics("DeleteService", err, startedAll)
 
 	started := time.Now()
-	//clean route, route name is same with service
+	// clean route, route name is same with service
 	if err = r.kClient.Routes().DeleteByName(svc.Name); err != nil {
 		reportKongAPIMetrics("DeleteRoutes", http.MethodDelete, utils.ErrStatus, started)
 		blog.Errorf("kong register delete service %s relative route failed, %s", svc, err.Error())
@@ -234,7 +239,7 @@ func (r *kRegister) DeleteService(svc *register.Service) error {
 	blog.V(3).Infof("kong register delete service %s success", svc.Name)
 
 	started = time.Now()
-	//* clean upstream
+	// * clean upstream
 	if err = r.kClient.Upstreams().DeleteByName(svc.Host); err != nil {
 		reportKongAPIMetrics("DeleteUpstreams", http.MethodDelete, utils.ErrStatus, started)
 		blog.Errorf("kong register delete service %s relative Upstream %s failed, %s", svc.Name, svc.Host, err.Error())
@@ -245,7 +250,7 @@ func (r *kRegister) DeleteService(svc *register.Service) error {
 	return nil
 }
 
-//ListServices get all existence services
+// ListServices get all existence services
 func (r *kRegister) ListServices() ([]*register.Service, error) {
 	query := &gokong.ServiceQueryString{
 		Size: 200,
@@ -278,7 +283,7 @@ func (r *kRegister) ListServices() ([]*register.Service, error) {
 	return inDatas, nil
 }
 
-//GetTargetByService get service relative backends
+// GetTargetByService get service relative backends
 func (r *kRegister) GetTargetByService(svc *register.Service) ([]register.Backend, error) {
 	if svc == nil || len(svc.Host) == 0 {
 		return nil, fmt.Errorf("necessary service info lost")
@@ -310,10 +315,10 @@ func (r *kRegister) GetTargetByService(svc *register.Service) ([]register.Backen
 	return backends, nil
 }
 
-//ReplaceTargetByService replace specified service backend list
+// ReplaceTargetByService replace specified service backend list
 // so we don't care what original backend list are
 func (r *kRegister) ReplaceTargetByService(svc *register.Service, backends []register.Backend) error {
-	//get original targets
+	// get original targets
 	if svc.Name == "" || svc.Host == "" {
 		return fmt.Errorf("service info lost Name or Host")
 	}
@@ -347,7 +352,7 @@ func (r *kRegister) ReplaceTargetByService(svc *register.Service, backends []reg
 			delete(cleanTargets, backend.Target)
 			continue
 		}
-		//this is new Target we need to add
+		// this is new Target we need to add
 		addTargets[backend.Target] = &gokong.TargetRequest{
 			Target: backend.Target,
 			Weight: backend.Weight,
@@ -382,7 +387,7 @@ func (r *kRegister) ReplaceTargetByService(svc *register.Service, backends []reg
 	return nil
 }
 
-//DeleteTargetByService clean all backend list for service
+// DeleteTargetByService clean all backend list for service
 func (r *kRegister) DeleteTargetByService(svc *register.Service) error {
 	return fmt.Errorf("not implemented")
 }
@@ -390,7 +395,8 @@ func (r *kRegister) DeleteTargetByService(svc *register.Service) error {
 func (r *kRegister) deletePlugins(resource string, plugins []*gokong.Plugin) error {
 	for _, plugin := range plugins {
 		if err := r.kClient.Plugins().DeleteById(plugin.Id); err != nil {
-			blog.Errorf("kong register delete resource %s plugin %s[%s] failed, %s", resource, plugin.Name, plugin.Id, err.Error())
+			blog.Errorf("kong register delete resource %s plugin %s[%s] failed, %s", resource, plugin.Name, plugin.Id,
+				err.Error())
 			return err
 		}
 	}
@@ -398,7 +404,7 @@ func (r *kRegister) deletePlugins(resource string, plugins []*gokong.Plugin) err
 	return nil
 }
 
-//innerServiceConvert convert kong service to inner service definition
+// innerServiceConvert convert kong service to inner service definition
 func innerServiceConvert(ksvc *gokong.Service) *register.Service {
 	svc := &register.Service{
 		Name:     *ksvc.Name,
@@ -406,14 +412,14 @@ func innerServiceConvert(ksvc *gokong.Service) *register.Service {
 		Host:     *ksvc.Host,
 		Port:     uint(*ksvc.Port),
 	}
-	//path will be empty when rewrite feature turns off
+	// path will be empty when rewrite feature turns off
 	if ksvc.Path != nil {
 		svc.Path = *ksvc.Path
 	}
 	return svc
 }
 
-//kongServiceConvert convert inner service to kong service
+// kongServiceRequestConvert convert inner service to kong service
 func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 	ksvc := &gokong.ServiceRequest{
 		Name:     &svc.Name,
@@ -432,12 +438,12 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 	return ksvc
 }
 
-//kongRouteConvert convert inner service to kong Route, tls feature supported in default.
-//args: inner route definition; kong service Id
+// kongRouteConvert convert inner service to kong Route, tls feature supported in default.
+// args: inner route definition; kong service Id
 func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
 	var protocols []*string
-	//no matter what protocol it is, service only support tls
-	//route supports double protocols
+	// no matter what protocol it is, service only support tls
+	// route supports double protocols
 	if route.Protocol == protocolHTTP || route.Protocol == protocolHTTPS {
 		protocols = []*string{gokong.String(protocolHTTP), gokong.String(protocolHTTPS)}
 	} else if route.Protocol == protocolGRPC || route.Protocol == protocolGRPCS {
@@ -450,14 +456,14 @@ func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
 		StripPath: gokong.Bool(route.PathRewrite),
 	}
 	if len(route.Header) != 0 {
-		//setting header filter
+		// setting header filter
 		kr.Header = make(map[string][]*string)
 		for k, v := range route.Header {
 			kr.Header[k] = []*string{gokong.String(v)}
 		}
 	}
 	if len(route.Labels) != 0 {
-		//setting route tags
+		// setting route tags
 		for _, v := range route.Labels {
 			kr.Tags = append(kr.Tags, gokong.String(v))
 		}
@@ -466,7 +472,7 @@ func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
 	return kr
 }
 
-//kongPluginConvert convert inner service request plugin to request-transformer
+// kongPluginConvert convert inner service request plugin to request-transformer
 func kongPluginConvert(plugin *register.Plugins, ID *string, tys string) []*gokong.PluginRequest {
 	var plugins []*gokong.PluginRequest
 	if plugin.HeadOption != nil {
@@ -480,7 +486,7 @@ func kongPluginConvert(plugin *register.Plugins, ID *string, tys string) []*goko
 	return plugins
 }
 
-//kongReqTransformerConvert convert inner service request plugin to request-transformer
+// kongReqTransformerConvert convert inner service request plugin to request-transformer
 func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys string) *gokong.PluginRequest {
 	pr := &gokong.PluginRequest{
 		Name: "request-transformer",
@@ -490,7 +496,7 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 	} else {
 		pr.RouteId = gokong.ToId(ID)
 	}
-	//setting clean operation
+	// setting clean operation
 	pr.Config = make(map[string]interface{})
 	if len(option.Clean) != 0 {
 		pr.Config["remove"] = &httpTransformer{
@@ -499,7 +505,7 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 			QueryStr: []*string{},
 		}
 	}
-	//add operation
+	// add operation
 	if len(option.Add) != 0 {
 		var values []string
 		for k, v := range option.Add {
@@ -512,7 +518,7 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 			QueryStr: []*string{},
 		}
 	}
-	//replace operation
+	// replace operation
 	if len(option.Replace) != 0 {
 		var values []string
 		for k, v := range option.Replace {
@@ -528,7 +534,7 @@ func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys str
 	return pr
 }
 
-//kongBKBCSAuthConvert convert inner service request plugin to request-transformer
+// kongBKBCSAuthConvert convert inner service request plugin to request-transformer
 func kongBKBCSAuthConvert(option *register.BCSAuthOption, id string, tys string) *gokong.PluginRequest {
 	pr := &gokong.PluginRequest{
 		Name: option.Name,
@@ -539,7 +545,7 @@ func kongBKBCSAuthConvert(option *register.BCSAuthOption, id string, tys string)
 		pr.RouteId = gokong.ToId(id)
 	}
 	pr.Config = make(map[string]interface{})
-	//setting clean operation
+	// setting clean operation
 	pr.Config["bkbcs_auth_endpoints"] = option.AuthEndpoints
 	pr.Config["module"] = option.Module
 	pr.Config["token"] = option.AuthToken

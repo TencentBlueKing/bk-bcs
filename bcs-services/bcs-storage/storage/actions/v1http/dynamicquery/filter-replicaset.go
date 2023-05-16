@@ -29,8 +29,8 @@ type ReplicaSetFilter struct {
 	CreateTimeEnd     string `json:"createTimeEnd,omitempty" filter:"data.metadata.creationTimestamp,timeR"`
 }
 
-const rsNestedTimeLayout = nestedTimeLayout
+const rsNestedTimeLayout = NestedTimeLayout
 
-func (t ReplicaSetFilter) getCondition() *operator.Condition {
+func (t ReplicaSetFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, rsNestedTimeLayout)
 }

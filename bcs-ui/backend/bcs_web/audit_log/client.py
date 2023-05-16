@@ -16,6 +16,9 @@ import copy
 import logging
 from contextlib import contextmanager
 
+from backend.metrics import Result, counter_inc
+
+from .constants import ActivityType
 from .models import UserActivityLog
 
 logger = logging.getLogger(__name__)
@@ -68,11 +71,14 @@ class UserActivityLogClient(object):
         try:
             yield self
         except Exception as err:
+            counter_inc(self.activity_log.resource_type, self.activity_log.activity_type, Result.Failure.value)
             activity_status = "error"
             description = str(err)
             if not self.update_log(activity_status=activity_status, description=description):
                 self.log_note(user="system", activity_status=activity_status, description=description)
             raise err
+        else:
+            counter_inc(self.activity_log.resource_type, self.activity_log.activity_type, Result.Success.value)
 
     def get_params(self, params):
         params = self.remove_undefined(params)
@@ -155,6 +161,52 @@ class UserActivityLogClient(object):
     ):
         return self.log(
             activity_type="modify",
+            user=user,
+            project_id=project_id,
+            resource=resource,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            activity_status=activity_status,
+            description=description,
+            **kw
+        )
+
+    def log_scale(
+        self,
+        user=undefined,
+        project_id=undefined,
+        resource=undefined,
+        resource_type=undefined,
+        resource_id=undefined,
+        activity_status="completed",
+        description=undefined,
+        **kw
+    ):
+        return self.log(
+            activity_type=ActivityType.Scale.value,
+            user=user,
+            project_id=project_id,
+            resource=resource,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            activity_status=activity_status,
+            description=description,
+            **kw
+        )
+
+    def log_recreate(
+        self,
+        user=undefined,
+        project_id=undefined,
+        resource=undefined,
+        resource_type=undefined,
+        resource_id=undefined,
+        activity_status="completed",
+        description=undefined,
+        **kw
+    ):
+        return self.log(
+            activity_type=ActivityType.Recreate.value,
             user=user,
             project_id=project_id,
             resource=resource,

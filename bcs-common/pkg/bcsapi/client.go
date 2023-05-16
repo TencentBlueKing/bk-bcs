@@ -14,14 +14,17 @@
 package bcsapi
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
 
-//! v4 version binding~
+// ! v4 version binding~
 
 const (
 	gatewayPrefix   = "/bcsapi/v4/"
@@ -42,6 +45,10 @@ type Config struct {
 	Gateway bool
 	// etcd registry config for bcs modules
 	Etcd registry.CMDOptions
+	// Header for request header
+	Header map[string]string
+	// InnerClientName for bcs inner auth, like bcs-cluster-manager
+	InnerClientName string
 }
 
 // BasicResponse basic http response for bkbcs
@@ -50,6 +57,50 @@ type BasicResponse struct {
 	Result  bool            `json:"result"`
 	Message string          `json:"message"`
 	Data    json.RawMessage `json:"data"`
+}
+
+// Authentication defines the common interface for the credentials which need to
+// attach auth info to every RPC
+type Authentication struct {
+	InnerClientName string
+	Insecure        bool
+}
+
+// GetRequestMetadata gets the current request metadata
+func (a *Authentication) GetRequestMetadata(context.Context, ...string) (
+	map[string]string, error,
+) {
+	return map[string]string{middleware.InnerClientHeaderKey: a.InnerClientName}, nil
+}
+
+// RequireTransportSecurity indicates whether the credentials requires
+// transport security.
+func (a *Authentication) RequireTransportSecurity() bool {
+	return !a.Insecure
+}
+
+// NewTokenAuth impelmentation of grpc credentials interface
+func NewTokenAuth(t string) *GrpcTokenAuth {
+	return &GrpcTokenAuth{
+		Token: t,
+	}
+}
+
+// GrpcTokenAuth grpc token
+type GrpcTokenAuth struct {
+	Token string
+}
+
+// GetRequestMetadata convert http Authorization for grpc key
+func (t GrpcTokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
+	return map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", t.Token),
+	}, nil
+}
+
+// RequireTransportSecurity RequireTransportSecurity
+func (t GrpcTokenAuth) RequireTransportSecurity() bool {
+	return false
 }
 
 // NewClient create new bcsapi instance
@@ -77,9 +128,4 @@ func (c *Client) UserManager() UserManager {
 // Storage client interface
 func (c *Client) Storage() Storage {
 	return NewStorage(c.config)
-}
-
-// ClusterManager grpc cluster manager client
-func (c *Client) ClusterManager() cm.ClusterManagerClient {
-	return NewClusterManager(c.config)
 }

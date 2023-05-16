@@ -1,0 +1,104 @@
+### 描述
+该接口提供版本：v1.0.0+
+ 
+
+获取配置项的属性信息。
+
+### 输入参数
+| 参数名称     | 参数类型     | 必选   | 描述             |
+| ------------ | ------------ | ------ | ---------------- |
+| biz_id         | uint32       | 是     | 业务ID     |
+| app_id         | uint32       | 是     | 应用ID     |
+| release_id     | uint32       | 是     | 版本ID     |
+| id         | uint32       | 是     | 配置项ID     |
+
+### 响应示例
+```json
+{
+    "code": 0,
+    "message": "",
+    "data": {
+        "config_item": {
+            "id": 31,
+            "spec": {
+                "name": "bscp-config.json",
+                "path": "/etc",
+                "file_type": "json",
+                "file_mode": "unix",
+                "memo": "bscp dev config",
+                "permission": {
+                    "user": "root",
+                    "user_group": "root",
+                    "privilege": "755"
+                }
+            },
+            "attachment": {
+                "biz_id": 2,
+                "app_id": 1
+            },
+            "revision": {
+                "creator": "admin",
+                "reviser": "admin",
+                "create_at": "2023-02-02 21:01:31",
+                "update_at": "2023-02-02 21:01:31"
+            }
+        },
+        "content": {
+            "signature": "11e3a57c479ebfce651c5871ee70bf61dca74b8e4590b79954126c497a3bfe6b",
+            "byte_size": 1675
+        }
+    }
+}
+```
+
+### 响应参数说明
+| 参数名称     | 参数类型   | 描述                           |
+| ------------ | ---------- | ------------------------------ |
+|      code        |      int32      |            错误码                   |
+|      message        |      string      |             请求信息                  |
+|       data       |      object      |            响应数据                  |
+
+#### data
+| 参数名称     | 参数类型   | 描述                           |
+| ------------ | ---------- | ------------------------------ |
+|      config_item        |      object      |            配置项信息                  |
+|      content        |      object      |             配置项元数据信息                  |
+
+#### config_item
+| 参数名称     | 参数类型   | 描述                           |
+| ------------ | ---------- | ------------------------------ |
+|      id        |      uint32      |            配置项ID                    |
+|      spec        |      object      |            资源信息                    |
+|      attachment        |      object      |            配置项关联信息                  |
+|      revision        |      object      |            修改信息                    |
+
+#### config_item.spec
+| 参数名称     | 参数类型   | 描述                           |
+| ------------ | ---------- | ------------------------------ |
+|name	|string	|	配置项名称 |
+|path	|string	|	配置项路径 |
+|file_type	|string	|	文件格式 |
+|file_mode	|string	|	文件模式 |
+|      memo        |      string      |            备注                   |
+|      permission        |      object      |            配置项权限信息                   |
+
+#### config_item.spec.permission
+| 参数名称     | 参数类型   | 描述                           |
+| ------------ | ---------- | ------------------------------ |
+|user	|string	|	归属用户信息, 例如root |
+|user_group|	string	|	归属用户组信息, 例如root |
+|privilege|	string	|	文件权限，例如755 |
+
+#### config_item.attachment
+| 参数名称     | 参数类型   | 描述                           |
+| ------------ | ---------- | ------------------------------ |
+|      biz_id        |      uint32      |            业务ID                    |
+|      app_id        |      uint32      |            应用ID                    |
+
+{% include '_revision.md.j2' %}
+
+#### content
+| 参数名称     | 参数类型   | 描述                           |
+| ------------ | ---------- | ------------------------------ |
+| signature         | string          | 配置内容的SHA256     |
+| byte_size         | uint64           | 配置内容的大小，单位：字节     |

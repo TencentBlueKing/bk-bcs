@@ -1,0 +1,1009 @@
+@import '@/css/variable.css';
+@import '@/css/mixins/ellipsis.css';
+
+.biz-app-title {
+    display: inline-block;
+    height: 52px;
+    line-height: 52px;
+    font-size: 16px;
+    margin-left: 24px;
+}
+
+.biz-app-query {
+    .left {
+        margin-right: 10px;
+        float: left;
+
+        /deep/ .dropdown-trigger-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #c4c6cc;
+            height: 32px;
+            min-width: 68px;
+            border-radius: 2px;
+            padding: 0 10px 0 15px;
+            color: #63656e;
+            &:hover {
+                cursor: pointer;
+                border-color: #979ba5;
+            }
+            .bcs-icon {
+                margin-left: 4px;
+                font-size: 10px;
+            }
+        }
+
+        .cluster-search-warpper {
+            font-size: 0;
+            .label {
+                position: relative;
+                border: 1px solid #c4c6cc;
+                border-radius: 2px;
+                line-height: 30px;
+                color: #63656e;
+                font-size: 12px;
+                display: inline-block;
+                width: 60px;
+                vertical-align: top;
+                border-right: 0;
+                margin-right: -3px;
+                padding-left: 10px;
+                &.is-focus {
+                    border-color: #3a84ff;
+                }
+            }
+            .cluster-search-select {
+                width: 180px;
+                display: inline-block;
+                border-left: 0;
+                border-radius: 0 2px 2px 0;
+                &.is-focus {
+                    box-shadow: none;
+                }
+            }
+        }
+    }
+
+    .right {
+        width: calc(100% - 500px);
+        &.mesos {
+            width: calc(100% - 140px);
+        }
+        position: relative;
+
+        .biz-search-input {
+            width: calc(100% - 50px);
+            margin-right: 5px;
+
+            input {
+                border: 1px solid $borderWeightColor;
+                border-radius: 0 2px 2px 0;
+            }
+        }
+
+        .bk-form-input {
+            padding-right: 35px;
+        }
+
+        a.bk-text-button {
+            font-size: 14px;
+        }
+
+        .refresh-wrapper {
+            cursor: pointer;
+            display: inline-block;
+            position: absolute;
+
+            .refresh {
+                color: $iconPrimaryColor;
+            }
+
+            button {
+                border-color: $borderWeightColor;
+            }
+        }
+    }
+}
+
+.biz-app-list {
+    background-color: $bgHoverColor;
+    margin-bottom: 30px;
+
+    .list-item-tplset {
+        border-top: 1px solid $borderColor;
+        border-bottom: 1px solid $borderColor;
+        font-size: 14px;
+        position: relative;
+
+        &~.list-item-tplset {
+            border-top: none;
+        }
+
+        &.expand {
+            background-color: #fff;
+        }
+
+        .list-item-tplset-inner {
+            display: flex;
+            width: 100%;
+            height: 70px;
+            line-height: 70px;
+            cursor: pointer;
+            padding: 0 20px 0 25px;
+
+            &:hover {
+                background-color: #fff;
+                color: $primaryColor;
+            }
+        }
+
+        .list-item-tpl-wrapper {
+            padding: 0 20px 0 25px;
+        }
+
+        .no-data-list-item-tpl-inner {
+            text-align: center;
+            font-size: 16px;
+            height: 60px;
+            line-height: 60px;
+            color: #999;
+        }
+
+        .list-item-tpl {
+            background-color: #fff;
+            border-top: 1px solid #dfe0e5;
+
+            .list-item-tpl-inner {
+                height: 60px;
+                line-height: 60px;
+                font-weight: 700;
+
+                i.toggle {
+                    border: 2px solid #dfe0e5;
+                    border-radius: 2px;
+                    color: $fnMinorColor;
+                    font-size: 10px;
+                    margin-right: 10px;
+                    padding: 1px;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+
+                .ver {
+                    font-size: 12px;
+                    color: $fnMinorColor;
+                    border: 1px solid $fnMinorColor;
+                    font-weight: 400;
+                    padding: 0px 5px;
+                    border-radius: 2px;
+                    margin-left: 5px;
+                }
+
+                .status {
+                    font-size: 12px;
+                    color: $fnMinorColor;
+                    border: 1px solid $fnMinorColor;
+                    font-weight: 400;
+                    padding: 0px 5px;
+                    border-radius: 2px;
+                    margin-left: 5px;
+                    border: 1px solid $warningColor;
+                    background-color: #fff3da;
+                    color: $warningColor;
+
+                    &.normal {
+                        border-color: $successColor;
+                        color: $successColor;
+                        background-color: #e2f6e7;
+                    }
+                }
+
+                .act {
+                    float: right;
+                    font-size: 14px;
+                    font-weight: 400;
+                    padding-right: 20px;
+                }
+            }
+
+            .list-item-tpl-table {
+                padding: 0 0 0 15px;
+
+                &.loading {
+                    height: 200px;
+                }
+
+                .bk-table {
+                    border-bottom: none;
+                    overflow: auto;
+                }
+
+                table {
+                    &:before {
+                        background-color: transparent;
+                    }
+
+                    tbody,
+                    thead {
+                        tr {
+
+                            th,
+                            td {
+                                height: 42px;
+                                font-size: 12px;
+                                padding: 0 10px;
+                            }
+
+                            .tip {
+                                font-size: 14px;
+                                vertical-align: text-bottom;
+                                margin-left: 3px;
+                                cursor: pointer;
+                            }
+                        }
+                    }
+                }
+
+                .bk-message-box {
+                    min-height: 150px;
+
+                    .empty-message {
+                        margin-top: 40px;
+                    }
+                }
+
+                td.act {
+                    text-align: right;
+                    padding-right: 20px;
+                    white-space: nowrap;
+
+                    .dropdown-menu {
+                        margin-left: 15px;
+                        position: absolute;
+                        right: 20px;
+                        top: 13px;
+
+                        &.only {
+                            transform: translateY(-50%);
+                        }
+                    }
+
+                    .dropdown-menu-angle-down {
+                        font-weight: 700;
+                        font-size: 10px;
+                        margin-right: 0;
+                        width: 12px;
+                        min-width: 12px;
+                    }
+                }
+
+                a.instance-name {
+                    @mixin ellipsis 130px;
+                    vertical-align: bottom;
+                }
+
+                p.instance-namespace {
+                    @mixin ellipsis 130px;
+                    vertical-align: bottom;
+                }
+
+                p.instance-version {
+                    @mixin ellipsis 300px;
+                    vertical-align: bottom;
+                }
+
+                p.instance-createat {
+                    width: 125px;
+                    white-space: nowrap;
+                }
+            }
+        }
+
+        .warning {
+            color: $warningColor;
+            font-weight: 700;
+        }
+
+        .app-name {
+            flex: 3;
+            font-weight: 700;
+            margin-right: 20px;
+
+            .update-indicator {
+                width: 6px;
+                height: 24px;
+                position: absolute;
+                border: 1px solid $warningColor;
+                border-radius: 3px;
+                background-color: #fff3da;
+                left: 15px;
+                top: 22px;
+            }
+        }
+
+        .app-desc {
+            flex: 2;
+        }
+        .app-toggle {
+            padding-right: 20px;
+            font-size: 14px;
+        }
+
+        .has-update {
+            flex: none;
+            width: 110px;
+
+            button {
+                position: absolute;
+                top: 16px;
+            }
+        }
+    }
+}
+
+.biz-app-namespace-list {
+    background-color: $bgHoverColor;
+    margin-bottom: 30px;
+
+    .list-item-tplset {
+        border-top: 1px solid $borderColor;
+        border-bottom: 1px solid $borderColor;
+        font-size: 14px;
+        position: relative;
+
+        &~.list-item-tplset {
+            border-top: none;
+        }
+
+        &.expand {
+            background-color: #fff;
+        }
+
+        .app-env {
+            font-size: 0;
+            color: $fnMinorColor;
+            border: 1px solid $fnMinorColor;
+            font-weight: 400;
+            border-radius: 2px;
+            margin-left: 13px;
+            line-height: 19px;
+            height: 20px;
+            position: absolute;
+            transform: translateY(-50%);
+            top: 50%;
+
+            .left,
+            .right {
+                font-size: 12px;
+                padding: 0 5px;
+                vertical-align: text-bottom;
+            }
+
+            .left {
+                @mixin ellipsis 350px;
+            }
+
+            .right {
+                border-left: 1px solid $fnMinorColor;
+            }
+        }
+
+        .app-name {
+            flex: 3;
+            font-weight: 700;
+            margin-right: 20px;
+
+            .name {
+                @mixin ellipsis 480px;
+            }
+
+            .update-indicator {
+                width: 6px;
+                height: 24px;
+                position: absolute;
+                border: 1px solid $warningColor;
+                border-radius: 3px;
+                background-color: #fff3da;
+                left: 15px;
+                top: 22px;
+            }
+        }
+
+        .app-desc {
+            flex: 2;
+        }
+
+        .app-act {
+            flex: 1
+        }
+
+        .app-toggle {
+            font-size: 14px;
+        }
+
+        .has-update {
+            flex: none;
+            width: 110px;
+
+            button {
+                position: absolute;
+                top: 16px;
+            }
+        }
+
+        .list-item-tplset-inner {
+            display: flex;
+            width: 100%;
+            height: 70px;
+            line-height: 70px;
+            cursor: pointer;
+            padding: 0 40px 0 35px;
+            position: relative;
+
+            &:hover {
+                background-color: #fff;
+                color: $primaryColor;
+            }
+        }
+
+        .list-item-tpl {
+            background-color: #fff;
+            padding: 0 0 0 10px;
+
+            .list-item-tpl-inner {
+                height: 60px;
+                line-height: 60px;
+                font-weight: 700;
+
+                i.toggle {
+                    border: 2px solid $borderWeightColor;
+                    border-radius: 2px;
+                    color: $fnMinorColor;
+                    font-size: 10px;
+                    margin-right: 10px;
+                    padding: 1px;
+                    font-weight: 700;
+                    cursor: pointer;
+                }
+
+                .ver {
+                    font-size: 12px;
+                    color: $fnMinorColor;
+                    border: 1px solid $fnMinorColor;
+                    font-weight: 400;
+                    padding: 0px 5px;
+                    border-radius: 2px;
+                    margin-left: 5px;
+                }
+
+                .status {
+                    font-size: 12px;
+                    color: $fnMinorColor;
+                    border: 1px solid $fnMinorColor;
+                    font-weight: 400;
+                    padding: 0px 5px;
+                    border-radius: 2px;
+                    margin-left: 5px;
+                    border: 1px solid $warningColor;
+                    background-color: #fff3da;
+                    color: $warningColor;
+
+                    &.normal {
+                        border-color: $successColor;
+                        color: $successColor;
+                        background-color: #e2f6e7;
+                    }
+                }
+
+                .act {
+                    float: right;
+                    font-size: 14px;
+                    font-weight: 400;
+                    padding-right: 20px;
+                }
+            }
+
+            .list-item-tpl-table {
+                padding: 0 20px;
+
+                &.loading {
+                    height: 200px;
+                }
+
+                .bk-table {
+                    border-bottom: none;
+                    overflow: auto;
+                }
+
+                table {
+                    &:before {
+                        background-color: transparent;
+                    }
+                    tbody,
+                    thead {
+                        tr {
+
+                            th,
+                            td {
+                                height: 42px;
+                                font-size: 12px;
+                                padding: 0 10px;
+                            }
+
+                            .tip {
+                                font-size: 14px;
+                                vertical-align: text-bottom;
+                                margin-left: 3px;
+                                cursor: pointer;
+                            }
+                        }
+                    }
+                }
+
+                .bk-message-box {
+                    min-height: 150px;
+
+                    .empty-message {
+                        margin-top: 40px;
+                    }
+                }
+
+                td.act {
+                    text-align: right;
+                    padding-right: 20px;
+                    white-space: nowrap;
+
+                    .dropdown-menu {
+                        margin-left: 15px;
+                        position: absolute;
+                        right: 25px;
+                    }
+
+                    .dropdown-menu-angle-down {
+                        font-weight: 700;
+                        font-size: 10px;
+                        margin-right: 0;
+                        width: 12px;
+                        min-width: 12px;
+                    }
+                }
+            }
+        }
+
+        .warning {
+            color: $warningColor;
+            font-weight: 700;
+        }
+
+        a.instance-name {
+            /* @mixin ellipsis 160px; */
+            @mixin ellipsis 420px;
+            vertical-align: bottom;
+        }
+
+        p.instance-version {
+            @mixin ellipsis 300px;
+            vertical-align: bottom;
+        }
+
+        p.instance-createat {
+            width: 80px;
+            white-space: nowrap;
+        }
+    }
+
+    &.k8s {
+        .list-item-tplset {
+            a.instance-name {
+                @mixin ellipsis 420px;
+            }
+        }
+    }
+}
+
+.biz-rolling-update-dialog {
+    .toggle-diff-edit {
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 14px;
+        z-index: 1;
+    }
+    .no-diff-msg {
+        display: inline-block;
+        color: #ff5656;
+        font-size: 14px;
+        margin-right: 10px;
+    }
+    .rolling-update-in-not-platform-tip {
+        color: #737987;
+        font-size: 14px;
+        margin-bottom: 5px;
+        i {
+            position: relative;
+            margin-right: 5px;
+            top: -1px;
+        }
+    }
+    .title-wrapper {
+        display: flex;
+        height: 40px;
+        margin-bottom: 10px;
+
+        .left,
+        .right {
+            height: 40px;
+            line-height: 36px;
+            flex: 1;
+        }
+        .right {
+            flex-basis: 50px;
+        }
+
+        .dropdown {
+            display: inline-block;
+            margin-left: 2px;
+            margin-right: 5px;
+        }
+    }
+
+    .variable-wrapper {
+        box-shadow: 0 0 1px #aaa;
+        padding: 10px 20px;
+        margin-bottom: 15px;
+        position: relative;
+        display: flex;
+        max-height: 150px;
+        overflow: scroll;
+
+        &:before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            width: 0;
+            height: 0;
+            border-bottom: 10px solid $borderWeightColor;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+        }
+
+        &:after {
+            content: '';
+            position: absolute;
+            top: -9px;
+            right: 21px;
+            width: 0;
+            height: 0;
+            border-bottom: 9px solid #fff;
+            border-left: 9px solid transparent;
+            border-right: 9px solid transparent;
+        }
+
+        .left,
+        .right {
+            flex: 1;
+        }
+
+        .right {
+            .biz-key-value-wrapper {
+                border-left: 1px dashed $borderWeightColor;
+                margin-left: -2px;
+                padding-left: 13px;
+            }
+        }
+
+        .biz-key-value-wrapper {
+            .biz-key-value-item {
+                position: relative;
+                margin-bottom: 10px;
+
+                input.right {
+                    margin-left: 20px;
+                }
+
+                .equals-sign {
+                    color: $fnMinorColor;
+                    position: absolute;
+                    top: 6px;
+                    display: inline-block;
+                    left: 217px;
+                }
+            }
+
+            .bk-form-input {
+                width: 210px;
+            }
+        }
+    }
+
+    .diff-wrapper {
+        width: 100%;
+        margin-top: 10px;
+        max-height: 500px;
+        overflow: auto;
+        position: relative;
+        border: 1px solid #ddd;
+        border-radius: 2px;
+    }
+
+    .biz-code-wrapper {
+        display: flex;
+
+        .left,
+        .right {
+            position: relative;
+            flex: 1;
+        }
+
+        .left {
+            .disabled {
+                opacity: .8;
+                cursor: not-allowed;
+            }
+        }
+
+        .ace-full-screen {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1111;
+
+            &.disabled {
+                opacity: 1;
+            }
+        }
+    }
+
+    .build-code-fullscreen {
+        padding: 7px;
+        cursor: pointer;
+        position: absolute;
+        right: 10px;
+        color: $bgHoverColor;
+        z-index: 10;
+        font-size: 16px;
+
+        i.icon-full-screen {
+            font-weight: 700;
+        }
+    }
+}
+
+.biz-rollback-previous-dialog {
+    .title-wrapper {
+        display: flex;
+        height: 30px;
+        margin-bottom: 10px;
+
+        .left,
+        .right {
+            height: 30px;
+            line-height: 36px;
+            flex: 1;
+        }
+    }
+}
+
+.adjust-instance-dialog {
+    .title-tip {
+        font-size: 14px;
+        color: #c3cdd7;
+    }
+    .ace-disabled {
+        opacity: .8;
+        cursor: not-allowed;
+    }
+    .rebuild-tip {
+        color: #ff5656;
+        font-size: 14px;
+        text-align: center;
+        width: 100%;
+        margin-top: -10px;
+        margin-bottom: 10px;
+    }
+    button.disabled {
+        background-color: #fafafa;
+        border-color: $borderLightColor;
+        color: #ccc;
+        cursor: not-allowed;
+
+        &:hover {
+            background-color: #fafafa;
+            border-color: $borderLightColor;
+        }
+    }
+
+    .bk-dialog-title {
+        font-size: 24px;
+    }
+
+    .bk-form-radio {
+        padding: 0 0 7px 0;
+    }
+
+    .biz-rolling-update-form,
+    .biz-instance-num-form {
+        padding: 10px 48px 30px 48px;
+    }
+
+    .del-count {
+        min-width: 36px;
+        height: 36px;
+        text-align: center;
+        line-height: 34px;
+        display: inline-block;
+        vertical-align: bottom;
+        background: $bgHoverColor;
+        border: 1px solid $fnMinorColor;
+        color: $fontWeightColor;
+        font-size: 14px;
+        border-radius: 2px 0 0 2px;
+        padding: 0 10px 0 15px;
+        font-size: 14px;
+        border-right: none;
+    }
+
+    .del-count-input {
+        width: 358px;
+        font-size: 14px;
+        border-radius: 0 2px 2px 0;
+        margin-right: 7px;
+    }
+
+    .del-count-dropdown-menu {
+        float: left;
+    }
+
+    .del-count-icon-angle-down {
+        padding-left: 12px;
+        font-weight: 700;
+        font-size: 10px;
+        width: 12px;
+        min-width: 12px;
+        color: $fnMinorColor;
+    }
+
+    .del-count-icon-info {
+        font-size: 18px;
+        color: $fnMinorColor;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    .flex-item {
+        display: flex;
+
+        .left,
+        .right {
+            flex: 1;
+        }
+
+        .right {
+            margin-left: 40px;
+        }
+    }
+
+    .update-interval {
+        min-width: 36px;
+        height: 36px;
+        text-align: center;
+        line-height: 34px;
+        display: inline-block;
+        background: $bgHoverColor;
+        border: 1px solid $fnMinorColor;
+        color: $fontWeightColor;
+        font-size: 14px;
+        border-radius: 0 2px 2px 0;
+        font-size: 14px;
+        border-left: none;
+        margin-right: 7px;
+    }
+
+    .update-interval-input {
+        width: 134px;
+        font-size: 14px;
+        border-radius: 2px 0 0 2px;
+        float: left;
+    }
+
+    .update-interval-icon-info {
+        font-size: 18px;
+        color: $fnMinorColor;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    .scroll-order-form-item {
+        padding-top: 7px;
+
+        .bk-form-radio {
+            margin-right: 39px;
+        }
+    }
+
+    .scroll-order-icon-info {
+        font-size: 18px;
+        color: $fnMinorColor;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+}
+
+.biz-configuration-instantiation-cancel-fullscreen {
+    position: fixed;
+    top: 10px;
+    right: 20px;
+    z-index: 5000;
+    font-size: 16px;
+    padding: 7px;
+    color: #fff;
+    cursor: pointer;
+
+    i.icon-close {
+        font-weight: 700;
+    }
+}
+
+@media screen and (max-width: 1680px) {
+    .biz-app-namespace-list {
+        .list-item-tplset {
+            a.instance-name {
+                @mixin ellipsis 360px;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 1620px) {
+    .biz-app-namespace-list {
+        .list-item-tplset {
+            a.instance-name {
+                @mixin ellipsis 220px;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 1500px) {
+    .biz-app-list {
+        .list-item-tplset {
+            .list-item-tpl {
+                .list-item-tpl-table {
+                    a.instance-name {
+                        @mixin ellipsis 80px;
+                    }
+
+                    p.instance-namespace {
+                        @mixin ellipsis 70px;
+                    }
+
+                    p.instance-version {
+                        @mixin ellipsis 200px;
+                    }
+                }
+            }
+        }
+    }
+
+    .biz-app-namespace-list {
+        .list-item-tplset {
+            a.instance-name {
+                @mixin ellipsis 120px;
+            }
+        }
+
+        &.k8s {
+            .list-item-tplset {
+                a.instance-name {
+                    @mixin ellipsis 220px;
+                }
+            }
+        }
+    }
+}

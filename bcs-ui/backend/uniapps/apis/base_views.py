@@ -69,6 +69,10 @@ class BaseAPIViews(viewsets.ViewSet):
         cluster_ns_map = {}
         cluster_id_ns_map = {}
         for info in results:
+            # 共享集群命名空间过滤
+            if info['name'].startswith(settings.SHARED_CLUSTER_NS_PREFIX):
+                continue
+
             curr_cluster_name = cluster_name_id_map.get(info["cluster_id"])
             if not curr_cluster_name:
                 raise error_codes.CheckFailed.f("没有查询到集群ID对应的集群名称，请联系管理员处理!")

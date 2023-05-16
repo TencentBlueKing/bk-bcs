@@ -219,6 +219,7 @@ func (mg *MappingConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 				startPort:        startPort,
 				endPort:          endPort,
 				rsStartPort:      rsStartPort,
+				hostPort:         mg.mapping.HostPort,
 				ignoreSegment:    mg.mapping.IgnoreSegment,
 				segmentLength:    mg.mapping.SegmentLength,
 				pod:              pod,
@@ -246,6 +247,7 @@ type segmentListenerConverter struct {
 	startPort        int
 	endPort          int
 	rsStartPort      int
+	hostPort         bool
 	ignoreSegment    bool
 	segmentLength    int
 	pod              *k8scorev1.Pod
@@ -294,9 +296,12 @@ func (slc *segmentListenerConverter) generateListener(start, end, rsStart int) (
 	li.SetLabels(map[string]string{
 		slc.ingressName: networkextensionv1.LabelValueForIngressName,
 		networkextensionv1.LabelKeyForIsSegmentListener: segLabelValue,
-		networkextensionv1.LabelKeyForLoadbalanceID:     slc.lbID,
+		networkextensionv1.LabelKeyForLoadbalanceID:     GetLabelLBId(slc.lbID),
 		networkextensionv1.LabelKeyForLoadbalanceRegion: slc.region,
+		networkextensionv1.LabelKeyForOwnerKind:         constant.KindIngress,
+		networkextensionv1.LabelKeyForOwnerName:         slc.ingressName,
 	})
+	li.Status.Ingress = slc.ingressName
 	li.Finalizers = append(li.Finalizers, constant.FinalizerNameBcsIngressController)
 	li.Spec.Port = start
 	li.Spec.EndPort = end
@@ -335,10 +340,17 @@ func (slc *segmentListenerConverter) generateListenerTargetGroup(rsPort int) *ne
 	if slc.pod == nil || len(slc.pod.Status.PodIP) == 0 {
 		return targetGroup
 	}
-	targetGroup.Backends = append(targetGroup.Backends, networkextensionv1.ListenerBackend{
+	backend := networkextensionv1.ListenerBackend{
 		IP:     slc.pod.Status.PodIP,
 		Port:   rsPort,
 		Weight: networkextensionv1.DefaultWeight,
-	})
+	}
+	// if hostPort is specified, use hostPort as backend port
+	if hostPort := GetPodHostPortByPort(slc.pod, int32(rsPort)); slc.hostPort &&
+		hostPort != 0 {
+		backend.IP = slc.pod.Status.HostIP
+		backend.Port = int(hostPort)
+	}
+	targetGroup.Backends = append(targetGroup.Backends, backend)
 	return targetGroup
 }

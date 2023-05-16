@@ -28,11 +28,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/tunnel"
 )
 
+// Processor xxx
 type Processor struct {
 	config   *config.ApiServConfig
 	httpServ *httpserver.HttpServer
 }
 
+// NewProcessor xxx
 func NewProcessor(conf *config.ApiServConfig) *Processor {
 	proc := &Processor{
 		config:   conf,
@@ -48,11 +50,12 @@ func NewProcessor(conf *config.ApiServConfig) *Processor {
 	return proc
 }
 
+// Start xxx
 func (p *Processor) Start() error {
 	server.Setup(p.config)
 	server.StartRbacSync(p.config)
 
-	//handler http service
+	// handler http service
 	generalFilter, err := filter.NewFilter(p.config)
 	if err != nil {
 		blog.Errorf("new filter failed: %v", err)
@@ -73,9 +76,9 @@ func (p *Processor) Start() error {
 	webContainer := p.httpServ.GetWebContainer()
 	router.Handle("/bcsapi/v1/websocket/connect", tunnelServer)
 	router.Handle("/bcsapi/v1/webconsole/{sub_path:.*}", webconsole.NewWebconsoleProxy(p.config.ClientCert))
-	//mesos clueter api forwarding
+	// mesos clueter api forwarding
 	router.Handle("/bcsapi/{sub_path:.*}", webContainer)
-	//kubernetes cluster api forwarding
+	// kubernetes cluster api forwarding
 	router.Handle("/rest/{sub_path:.*}", resthdrs.CreateRestContainer("/rest"))
 	router.Handle("/tunnels/clusters/{cluster_identifier}/{sub_path:.*}", proxier.DefaultReverseProxyDispatcher)
 	if err := p.httpServ.ListenAndServeMux(p.config.VerifyClientTLS); err != nil {

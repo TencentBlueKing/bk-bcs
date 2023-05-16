@@ -1,0 +1,38 @@
+{{ include "common.metadata" . }}
+- - group:
+      - - group:
+            - [ "kind", "apiVersion"]
+            - [ "resName", "." ]
+            - [ "minReplicas", "maxReplicas" ]
+          prop: ref
+      - - group:
+            - - group:
+                  - [ "name", "type", "." ]
+                prop: items
+          prop: resource
+      - - group:
+            - - group:
+                  - [ "name", "." ]
+                  - [ "type", "value" ]
+                  - [ "selector" ]
+                prop: items
+          prop: external
+      - - group:
+            - - container:
+                  grid-template-columns: "1fr 1fr"
+                group:
+                  # apiVersion 不需要用户关注，因此放在最后一列并隐藏（visible == false）
+                  - [ "name", "apiVersion" ]
+                  - [ "kind", "resName" ]
+                  - [ "type", "value" ]
+                  - [ "selector" ]
+                prop: items
+          prop: object
+      - - group:
+            - - group:
+                  - [ "name", "." ]
+                  - [ "type", "value" ]
+                  - [ "selector" ]
+                prop: items
+          prop: pod
+    prop: spec

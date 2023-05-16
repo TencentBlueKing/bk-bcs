@@ -98,7 +98,7 @@ func (lc *ListenerReconciler) getListenerEventHandler(listener *networkextension
 		go newHandler.RunQueueRecving()
 		go newHandler.Run()
 		lc.WorkerMap[listener.Spec.LoadbalancerID] = newHandler
-		workerTotal.WithLabelValues(listener.Spec.LoadbalancerID).Set(1)
+		metrics.WorkerTotal.WithLabelValues(listener.Spec.LoadbalancerID).Set(1)
 		ehandler = newHandler
 	}
 	return ehandler, nil

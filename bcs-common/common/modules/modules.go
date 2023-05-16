@@ -11,6 +11,7 @@
  *
  */
 
+// Package modules xxx
 package modules
 
 const (
@@ -38,11 +39,11 @@ const (
 	BCSModuleMetricService = "metricservice"
 	// BCSModuleMetricCollector for bcs-metriccollector
 	BCSModuleMetricCollector = "metriccollector"
-	//end of bcs-services module list
+	// end of bcs-services module list
 
-	//bcs mesos module list
+	// bcs mesos module list
 
-	//BCSModuleMesosdriver for bcs-mesos-driver
+	// BCSModuleMesosdriver for bcs-mesos-driver
 	BCSModuleMesosdriver = "mesosdriver"
 	// BCSModuleMesoswatch for bcs-mesos-watch
 	BCSModuleMesoswatch = "mesosdatawatch"
@@ -50,14 +51,14 @@ const (
 	BCSModuleMesosWebconsole = "mesoswebconsole"
 	// BCSModuleScheduler for bcs-scheduler
 	BCSModuleScheduler = "scheduler"
-	//end of bcs mesos module list
+	// end of bcs mesos module list
 
 	// BCSModuleKubeagent for bcs-kube-agent
 	BCSModuleKubeagent = "kubeagent"
 	// BCSModuleKubewatch for bcs-k8s-watch
 	BCSModuleKubewatch = "kubedatawatch"
 
-	//mode for mesosdriver & kubeagent
+	// mode for mesosdriver & kubeagent
 
 	// BCSConnectModeTunnel mode for tunnel
 	BCSConnectModeTunnel = "websockettunnel"

@@ -34,22 +34,23 @@ import (
 // 	defaultWatchCheckPeriod = 60
 // )
 
-//PushWatchEventFn function to dispath event
-//param EventType: zk event type
-//param string: event path, especially for delete event
-//param []byte: detail data for object, nil when it's deletion
+// PushWatchEventFn function to dispath event
+// param EventType: zk event type
+// param string: event path, especially for delete event
+// param []byte: detail data for object, nil when it's deletion
 type PushWatchEventFn func(watch.EventType, string, []byte)
 
-//NodeWatch interface for watch definition
+// NodeWatch interface for watch definition
 type NodeWatch interface {
-	GetSelfPath() string            //get self node path
-	DeleteNextWatch(next NodeWatch) //delete children watch
-	Run()                           //ready to start up watch
-	Stop()                          //stop watch, only parent watch to stop
+	GetSelfPath() string            // get self node path
+	DeleteNextWatch(next NodeWatch) // delete children watch
+	Run()                           // ready to start up watch
+	Stop()                          // stop watch, only parent watch to stop
 }
 
-//NewNodeWatch create one nodewatch from configuration
-func NewNodeWatch(index int, selfpath string, parent NodeWatch, c *zkclient.ZkClient, configs map[int]*Layer) (NodeWatch, error) {
+// NewNodeWatch create one nodewatch from configuration
+func NewNodeWatch(index int, selfpath string, parent NodeWatch, c *zkclient.ZkClient,
+	configs map[int]*Layer) (NodeWatch, error) {
 	config, ok := configs[index]
 	if !ok {
 		return nil, fmt.Errorf("Lost layer config for node %s", selfpath)
@@ -71,44 +72,44 @@ func NewNodeWatch(index int, selfpath string, parent NodeWatch, c *zkclient.ZkCl
 	return n, nil
 }
 
-//Layer info
+// Layer info
 type Layer struct {
-	Index           int              //layer index from path
-	IsData          bool             //flag to present this layer store data
-	IsWatchChildren bool             //flag for watch children if not
-	Name            string           //data type for this layer
-	PushEventFunc   PushWatchEventFn //event dispatch function
+	Index           int              // layer index from path
+	IsData          bool             // flag to present this layer store data
+	IsWatchChildren bool             // flag for watch children if not
+	Name            string           // data type for this layer
+	PushEventFunc   PushWatchEventFn // event dispatch function
 }
 
-//Node for zookeeper every node
+// Node for zookeeper every node
 type Node struct {
-	selfpath          string               //node absolute path
-	config            *Layer               //node config
-	allConfig         map[int]*Layer       //next layer configuration
-	parent            NodeWatch            //parent node for refference
-	client            *zkclient.ZkClient   //zookeeper client
-	childrenLock      sync.Mutex           //lock for map
-	children          map[string]NodeWatch //all children's watch
-	watchCxt          context.Context      //root context for self
-	stopFn            context.CancelFunc   //stop func to stop all backgroup context
-	isStopped         bool                 //flag for stop
-	underSelfloop     bool                 //flag for selfLoop
-	underChildrenloop bool                 //flag for childrenLoop
+	selfpath          string               // node absolute path
+	config            *Layer               // node config
+	allConfig         map[int]*Layer       // next layer configuration
+	parent            NodeWatch            // parent node for refference
+	client            *zkclient.ZkClient   // zookeeper client
+	childrenLock      sync.Mutex           // lock for map
+	children          map[string]NodeWatch // all children's watch
+	watchCxt          context.Context      // root context for self
+	stopFn            context.CancelFunc   // stop func to stop all backgroup context
+	isStopped         bool                 // flag for stop
+	underSelfloop     bool                 // flag for selfLoop
+	underChildrenloop bool                 // flag for childrenLoop
 }
 
-//GetSelfPath get self node path
+// GetSelfPath get self node path
 func (n *Node) GetSelfPath() string {
 	return n.selfpath
 }
 
-//DeleteNextWatch clen next watch when child node deletion
+// DeleteNextWatch clen next watch when child node deletion
 func (n *Node) DeleteNextWatch(next NodeWatch) {
 	n.childrenLock.Lock()
 	defer n.childrenLock.Unlock()
 	delete(n.children, next.GetSelfPath())
 }
 
-//Run start to run all inner event loop
+// Run start to run all inner event loop
 func (n *Node) Run() {
 	go n.selfLoop()
 	if n.config.IsWatchChildren {
@@ -137,7 +138,7 @@ func (n *Node) Run() {
 	}
 }
 
-//Stop all events & clean sub node events
+// Stop all events & clean sub node events
 func (n *Node) Stop() {
 	n.childrenLock.Lock()
 	defer n.childrenLock.Unlock()
@@ -154,22 +155,22 @@ func (n *Node) Stop() {
 	}
 }
 
-//SelfLoop check self node & ends
-//for zookeeper, it's not easy to iterate all data when Synchronization,
-//so after watch data nodes, we decide to force sync datas every 45 seconds
+// selfLoop check self node & ends
+// for zookeeper, it's not easy to iterate all data when Synchronization,
+// so after watch data nodes, we decide to force sync datas every 45 seconds
 func (n *Node) selfLoop() {
 	if n.isStopped {
 		return
 	}
 	blog.V(5).Infof("node %s is under watch", n.selfpath)
 	n.underSelfloop = true
-	//check node existence
+	// check node existence
 	exist, err := n.client.Exist(n.selfpath)
 	if err != nil {
 		blog.Errorf("zk node %s Exist failed, %s", n.selfpath, err)
 		if n.parent != nil {
-			//this Node is parent, we can not Stop
-			//and must recovery from next tick
+			// this Node is parent, we can not Stop
+			// and must recovery from next tick
 			n.Stop()
 			blog.V(3).Infof("zk node %s notify parent node clean reference", n.selfpath)
 			n.parent.DeleteNextWatch(n)
@@ -180,8 +181,8 @@ func (n *Node) selfLoop() {
 	if !exist {
 		blog.V(3).Infof("zk node %s do not exist", n.selfpath)
 		if n.parent != nil {
-			//this Node is parent, we can not Stop
-			//and must recovery from next tick
+			// this Node is parent, we can not Stop
+			// and must recovery from next tick
 			n.Stop()
 			blog.V(3).Infof("zk node %s notify parent node clean reference", n.selfpath)
 			n.parent.DeleteNextWatch(n)
@@ -189,13 +190,13 @@ func (n *Node) selfLoop() {
 		n.underSelfloop = false
 		return
 	}
-	//get watch
+	// get watch
 	rawBytes, _, eventCh, err := n.client.GetW(n.selfpath)
 	if err != nil {
 		blog.V(3).Infof("zk client node watch %s failed, %s.", n.selfpath, err)
 		if n.parent != nil {
-			//this Node is parent, we can not Stop
-			//and must recovery from next tick
+			// this Node is parent, we can not Stop
+			// and must recovery from next tick
 			n.Stop()
 			blog.V(3).Infof("zk node %s notify parent node clean reference", n.selfpath)
 			n.parent.DeleteNextWatch(n)
@@ -203,27 +204,27 @@ func (n *Node) selfLoop() {
 		n.underSelfloop = false
 		return
 	}
-	//format to object datas
+	// format to object datas
 	if len(rawBytes) > 23 && n.config.IsData {
 		n.config.PushEventFunc(watch.EventUpdated, n.selfpath, rawBytes)
 	}
-	//wait for next event
+	// wait for next event
 	forceTick := time.NewTicker(time.Second * 300)
 	defer forceTick.Stop()
 	for {
 		select {
 		case <-n.watchCxt.Done():
 			blog.V(3).Infof("zk client node %s watch is asked to exit", n.selfpath)
-			//n.underSelfloop = false
+			// n.underSelfloop = false
 			return
 		case event := <-eventCh:
-			//here we need to focus on deletion & changed
+			// here we need to focus on deletion & changed
 			if event.Type == zkclient.EventNodeDeleted {
 				blog.V(3).Infof("zk client got node %s deletion, clean watch", n.selfpath)
 				if n.config.IsData {
 					n.config.PushEventFunc(watch.EventDeleted, n.selfpath, nil)
 				}
-				//self node deletion, clean all sub watch
+				// self node deletion, clean all sub watch
 				n.Stop()
 				if n.parent != nil {
 					n.parent.DeleteNextWatch(n)
@@ -236,7 +237,7 @@ func (n *Node) selfLoop() {
 				go n.selfLoop()
 				return
 			}
-			//Creation event can not happen here
+			// Creation event can not happen here
 		case <-forceTick.C:
 			if !n.config.IsData {
 				continue
@@ -250,8 +251,8 @@ func (n *Node) selfLoop() {
 			if !exist {
 				blog.V(3).Infof("zk node %s force synchronization found no data, clean watch", n.selfpath)
 				if n.parent != nil {
-					//this Node is parent, we can not Stop
-					//and must recovery from next tick
+					// this Node is parent, we can not Stop
+					// and must recovery from next tick
 					n.Stop()
 					blog.V(3).Infof("zk node %s notify parent node clean reference", n.selfpath)
 					n.parent.DeleteNextWatch(n)
@@ -259,7 +260,7 @@ func (n *Node) selfLoop() {
 				n.underSelfloop = false
 				return
 			}
-			//get watch
+			// get watch
 			rawBytes, _, err := n.client.GetEx(n.selfpath)
 			if err != nil {
 				blog.Errorf("zk client node watch %s forceSync get failed, %s.", n.selfpath, err)
@@ -270,13 +271,13 @@ func (n *Node) selfLoop() {
 	}
 }
 
-//childrenLoop check self node & ends
+// childrenLoop check self node & ends
 func (n *Node) childrenLoop() {
 	if n.isStopped {
 		return
 	}
 	n.underChildrenloop = true
-	//check node existence
+	// check node existence
 	children, evCh, err := n.client.WatchChildren(n.selfpath)
 	if err != nil {
 		blog.Errorf("zk node %s childrenLoop failed, %s", n.selfpath, err)
@@ -288,12 +289,12 @@ func (n *Node) childrenLoop() {
 		return
 	}
 	n.childrenLock.Lock()
-	//get all node from local children map
+	// get all node from local children map
 	localChildren := make(map[string]bool)
 	for key := range n.children {
 		localChildren[key] = true
 	}
-	//find out new children, create watch for it
+	// find out new children, create watch for it
 	for _, child := range children {
 		node := path.Join(n.selfpath, child)
 		if _, ok := n.children[node]; !ok {
@@ -303,14 +304,14 @@ func (n *Node) childrenLoop() {
 				continue
 			}
 			n.children[node] = nodeWatch
-			//starting children node watch
+			// starting children node watch
 			go nodeWatch.Run()
 		} else {
-			//clean exist key for searching lost key in zookeeper
+			// clean exist key for searching lost key in zookeeper
 			delete(localChildren, node)
 		}
 	}
-	//clean keys that lost in zookeeper but exist in local children map
+	// clean keys that lost in zookeeper but exist in local children map
 	for key := range localChildren {
 		nodeWatch := n.children[key]
 		delete(n.children, key)
@@ -327,9 +328,9 @@ func (n *Node) childrenLoop() {
 			go n.childrenLoop()
 			return
 		}
-		//we do not sure that zookeeper client will report other events.
-		//so we consider children loop here will exit. we will recovery
-		//children loop by time ticker under Run()
+		// we do not sure that zookeeper client will report other events.
+		// so we consider children loop here will exit. we will recovery
+		// children loop by time ticker under Run()
 		blog.V(3).Infof("zk %s NodeWatch detects children loop exit, eventType: %d, state: %d, "+
 			"Err: %s, server: %s, path: %s", n.selfpath, event.Type, event.State, event.Err, event.Server, event.Path)
 		n.underChildrenloop = false

@@ -1,0 +1,43 @@
+{
+  "kind": "Deployment",
+  "class": "workload",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_deployment",
+      "alias": "Deployment Simple Demo",
+      "description": "A simple deployment demo with only basic configuration",
+      "manifest": null
+    },
+    {
+      "name": "deploy_with_res_quota",
+      "alias": "Deployment with resource quotas",
+      "description": "Configuring resources.requests for containers in Deployment can ensure that Pods are scheduled to nodes with sufficient resources; configuring resources.limits for containers can ensure that Pods are stopped in time after they occupy too many resources to avoid affecting the other pods on same node",
+      "manifest": null
+    },
+    {
+      "name": "deploy_with_image_pull_secrets",
+      "alias": "Deployments with imagePullSecrets",
+      "description": "When your container image is stored in a private repository, you need to configure imagePullSecrets to ensure that the image can be pulled smoothly; in addition, it should be noted that the configured Secrets must be of type dockerconfigjson",
+      "manifest": null
+    },
+    {
+      "name": "deploy_with_mount_volume",
+      "alias": "Deployment with mount volumes",
+      "description": "Mounting data volumes for containers separates data from running containers, avoid data lost after pod rescheduling. Common data volume types are PersistentVolumeClaim, NFS, HostPath, etc.",
+      "manifest": null
+    },
+    {
+      "name": "deploy_with_node_selector",
+      "alias": "Deployment with node selector",
+      "description": "In some scenarios, you may want the Pod to run on a certain type of node (for example, during AI model training, the Pod runs on a high-performance GPU node), which can be achieved through the node selector (ensure that on the GPU node with labels like 'beta.amd.com/gpu.family.AI': '1')",
+      "manifest": null
+    },
+    {
+      "name": "k8s_wait_for_deploy",
+      "alias": "Deployment using k8sWaitFor",
+      "description": "Using the initContainer mirrored by k8s-wait-for can ensure that other k8s resources it depends on are ready before the standard container is started (which can be used by the API container to wait for the job to execute database migrate to complete)",
+      "manifest": null
+    }
+  ]
+}

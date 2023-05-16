@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -18,9 +19,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 )
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile   string
 	CertFile string
@@ -29,7 +31,7 @@ type CertConfig struct {
 	IsSSL    bool
 }
 
-//UpgraderOptions is options in flags
+// UpgraderOptions is options in flags
 type UpgraderOptions struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -37,9 +39,10 @@ type UpgraderOptions struct {
 	conf.LogConfig
 	conf.ProcessConfig
 	MongoConfig
-	HttpCliRequestConfig
+	HttpCliConfig
 	ServerCert *CertConfig
-	DebugMode  bool `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
+
+	DebugMode bool `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
 }
 
 // MongoConfig option for mongo
@@ -54,14 +57,16 @@ type MongoConfig struct {
 	MongoMinPoolSize    uint   `json:"mongo_minpoolsize" value:"0" usage:"mongo client connection pool min size"`
 }
 
-// HttpCliRequestConfig option for HttpCliRequestConfig
-type HttpCliRequestConfig struct {
-	CcHOST             string `json:"cc_host" value:"" usage:"request bcs saas cc host"`
-	BkAppSecret        string `json:"bk_app_secret" value:"" usage:"request ssm for http header"`
-	SsmHost            string `json:"ssm_host" value:"" usage:"request ssm host"`
-	SsmAccessToken     string `json:"ssm_access_token" value:"" usage:"ssm access token"`
-	ClusterManagerHost string `json:"cluster_manager_host"  value:"" usage:"request cluster manager host"`
-	BcsApiGatewayToken string `json:"bcs_api_gateway_token" value:"" usage:"bcs api gateway token"`
+// HttpCliConfig option for HttpCliConfig
+type HttpCliConfig struct {
+	CcHOST                   string `json:"cc_host" value:"" usage:"request bcs saas cc host"`
+	BkAppSecret              string `json:"bk_app_secret" value:"" usage:"request ssm for http header"`
+	SsmHost                  string `json:"ssm_host" value:"" usage:"request ssm host"`
+	SsmAccessToken           string `json:"ssm_access_token" value:"" usage:"ssm access token"`
+	CmHost                   string `json:"cm_host"  value:"" usage:"request cluster manager host"`
+	GatewayToken             string `json:"gateway_token" value:"" usage:"bcs api gateway token"`
+	HttpCliCertConfig        *commtypes.CertConfig
+	ClusterManagerCertConfig *commtypes.CertConfig
 }
 
 // AddFlags add cmdline flags
@@ -76,7 +81,7 @@ func AddFlags() {
 	flag.Uint("mongo_minpoolsize", 0, "mongo client connection pool min size, 0 means not set")
 }
 
-//NewUpgraderOptions create UpgraderOptions object
+// NewUpgraderOptions create UpgraderOptions object
 func NewUpgraderOptions() *UpgraderOptions {
 	return &UpgraderOptions{
 		ServerCert: &CertConfig{

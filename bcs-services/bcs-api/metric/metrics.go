@@ -55,6 +55,7 @@ var (
 	}, []string{"type", "method"})
 )
 
+// RunMetric xxx
 func RunMetric(conf *config.ApiServConfig, err error) {
 
 	blog.Infof("run metric: port(%d)", conf.MetricPort)

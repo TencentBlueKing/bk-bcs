@@ -48,7 +48,7 @@ func (s *Scheduler) RunUpdateApplication(transaction *types.Transaction) bool {
 		return true
 	}
 
-	//check doing
+	// check doing
 	opData := transaction.CurOp.OpUpdateData
 	version := opData.Version
 	offerOut := s.GetFirstOffer()
@@ -90,6 +90,7 @@ func (s *Scheduler) RunUpdateApplication(transaction *types.Transaction) bool {
 	return true
 }
 
+// doUpdateTrans xxx
 // the return value indicates whether the transaction need to continue
 func (s *Scheduler) doUpdateTrans(trans *types.Transaction, outOffer *offer.Offer, started time.Time) bool {
 
@@ -213,9 +214,9 @@ func (s *Scheduler) doUpdateTrans(trans *types.Transaction, outOffer *offer.Offe
 		taskGroupInfos = append(taskGroupInfos, newTaskGroupInfo)
 		oldTaskGroups = append(oldTaskGroups, taskGroup)
 
-		//lock agentsetting
+		// lock agentsetting
 		util.Lock.Lock(commtypes.BcsClusterAgentSetting{}, newTaskGroup.GetAgentIp())
-		//update agentsettings taskgroup index info
+		// update agentsettings taskgroup index info
 		agentsetting, _ := s.store.FetchAgentSetting(newTaskGroup.GetAgentIp())
 		if agentsetting != nil {
 			agentsetting.Pods = append(agentsetting.Pods, newTaskGroup.ID)

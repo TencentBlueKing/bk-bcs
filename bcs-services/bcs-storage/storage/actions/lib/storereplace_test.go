@@ -21,7 +21,7 @@ import (
 
 // Test dollar replace
 func TestDollarReplace(t *testing.T) {
-	str := `{"$aaa":{"$aa":"$aaa"}}`
+	str := `{"$a.aa":{"$aa":"$aaa"}}`
 	m := make(operator.M)
 	err := json.Unmarshal([]byte(str), &m)
 	if err != nil {

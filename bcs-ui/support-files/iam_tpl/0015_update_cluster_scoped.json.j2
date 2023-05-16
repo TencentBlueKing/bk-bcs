@@ -1,0 +1,131 @@
+{
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_scoped_create",
+        "name": "资源创建(集群域)",
+        "name_en": "create resource",
+        "description": "用户创建集群域资源(不包括命名空间创建)",
+        "description_en": "user create cluster-scoped resource(e.g. create clusterrolebinding, exclude namespace)",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_scoped_view",
+        "name": "资源查看(集群域)",
+        "name_en": "view resource",
+        "description": "用户查看集群域资源(不包括命名空间查看)",
+        "description_en": "user view cluster-scoped resource(e.g. view clusterrolebinding, exclude namespace)",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_scoped_update",
+        "name": "资源更新(集群域)",
+        "name_en": "update resource",
+        "description": "用户更新集群域资源(不包括命名空间更新)",
+        "description_en": "user update cluster-scoped resource(e.g. update clusterrolebinding, exclude namespace)",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_scoped_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cluster_scoped_delete",
+        "name": "资源删除(集群域)",
+        "name_en": "delete resource",
+        "description": "用户删除集群域资源(不包括命名空间更新)",
+        "description_en": "user delete cluster-scoped resource(e.g. update clusterrolebinding, exclude namespace)",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_scoped_view"
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

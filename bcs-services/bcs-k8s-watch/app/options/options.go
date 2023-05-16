@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -78,10 +79,11 @@ type K8sConfig struct {
 
 // WatchResource 指定监听的资源
 type WatchResource struct {
-	//监听指定的namespace，暂时支持一个
-	Namespace         string `json:"namespace"`
-	DisableCRD        bool   `json:"disable_crd"`
-	DisableNetservice bool   `json:"disable_netservice"`
+	// 监听指定的namespace，暂时支持一个
+	Namespace         string            `json:"namespace"`
+	DisableCRD        bool              `json:"disable_crd"`
+	DisableNetservice bool              `json:"disable_netservice"`
+	LabelSelectors    map[string]string `json:"label_selectors"` // map[resourceType]LabelSelector
 }
 
 // WatchConfig k8s-watch config
@@ -106,15 +108,28 @@ func NewWatchOptions() *WatchConfig {
 	return &WatchConfig{}
 }
 
+var IsWatchManagedFields bool
+
+// FilterConfig the file config
 type FilterConfig struct {
-	APIResourceException []APIResourceException `json:"apiResourceException"`
+	APIResourceSpecification []APIResourceFilter `json:"apiResourceSpecification"`
+	APIResourceException     []APIResourceFilter `json:"apiResourceException"`
+	K8sGroupVersionWhiteList []string            `json:"k8sResourceWhiteList"`
+	CrdGroupVersionWhiteList []string            `json:"crdResourceWhiteList"`
+	CrdVersionSupport        string              `json:"crdVersionSupport"`
+	NamespaceFilters         []string            `json:"resourceNamespaceFilters"`
+	NameFilters              []string            `json:"resourceNameFilters"`
+	APIResourceLists         []ApiResourceList   `json:"apiResourceLists"`
+	IsWatchManagedFields     bool                `json:"isFilterManagedFields"`
 }
 
-type APIResourceException struct {
+// APIResourceFilter api resource exception
+type APIResourceFilter struct {
 	GroupVersion  string   `json:"groupVersion"`
 	ResourceKinds []string `json:"resourceKinds"`
 }
 
+// ParseFilter parse filter config from file
 func (wc *WatchConfig) ParseFilter() *FilterConfig {
 	filter := &FilterConfig{}
 	bytes, err := ioutil.ReadFile(wc.FilterConfigPath)
@@ -126,5 +141,6 @@ func (wc *WatchConfig) ParseFilter() *FilterConfig {
 		glog.Warnf("unmarshal config file (%s) failed: %s, will not use resource filter", wc.FilterConfigPath, err.Error())
 		return nil
 	}
+	IsWatchManagedFields = filter.IsWatchManagedFields
 	return filter
 }

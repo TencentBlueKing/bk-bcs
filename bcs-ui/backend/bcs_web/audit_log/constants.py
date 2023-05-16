@@ -18,7 +18,7 @@ from backend.packages.blue_krill.data_types.enum import EnumField, StructuredEnu
 
 
 class ActivityType(str, StructuredEnum):
-    """ 操作类型 """
+    """操作类型"""
 
     Add = EnumField('add', _('创建'))
     Modify = EnumField('modify', _('更新'))
@@ -33,10 +33,13 @@ class ActivityType(str, StructuredEnum):
     Restart = EnumField('restart', _('重启'))
     Retrieve = EnumField('retrieve', _('查询'))
     Reschedule = EnumField('reschedule', _('重新调度'))
+    Instantiate = EnumField('instantiate', _('实例化'))
+    Scale = EnumField('scale', _('扩缩容'))
+    Recreate = EnumField('recreate', _('重建'))
 
 
 class ActivityStatus(str, StructuredEnum):
-    """ 操作状态 """
+    """操作状态"""
 
     Completed = EnumField('completed', _('完成'))
     Error = EnumField('error', _('错误'))
@@ -45,7 +48,7 @@ class ActivityStatus(str, StructuredEnum):
 
 
 class ResourceType(str, StructuredEnum):
-    """ 资源类型 """
+    """资源类型"""
 
     Project = EnumField('project', _('项目'))
     Cluster = EnumField('cluster', _('集群'))
@@ -82,6 +85,7 @@ class ResourceType(str, StructuredEnum):
     # CustomResource
     CRD = EnumField('crd', _('自定义资源定义'))
     CustomObject = EnumField('customobject', _('自定义对象'))
+    ResourceQuota = EnumField('resourcequota', 'resourcequota')
 
 
 ResourceTypes = dict(ResourceType.get_choices())

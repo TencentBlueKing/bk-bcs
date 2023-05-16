@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ing-v1beta1-w3uvctq3v3
+  namespace: default
+  labels:
+    label-key-1: label-val-1
+  annotations:
+    anno-key-1: anno-val-1
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
+spec:
+  defaultBackend:
+    serviceName: svc-2
+    servicePort: 8080
+  tls:
+    - secretName: secret-test-54321
+      hosts:
+        - "1.1.1.1"
+        - "2.2.2.2"
+  rules:
+    - http:
+        paths:
+          - backend:
+              serviceName: svc-1
+              servicePort: 82
+            path: "/api"
+      host: "example1.com"

@@ -20,7 +20,7 @@ import (
 	"strconv"
 )
 
-//NewPtrExportService create default ExportService
+// NewPtrExportService create default ExportService
 func NewPtrExportService() *ExportService {
 	svr := new(ExportService)
 	svr.Balance = "roundrobin"
@@ -29,7 +29,7 @@ func NewPtrExportService() *ExportService {
 	return svr
 }
 
-//NewExportService return ExportService default object
+// NewExportService return ExportService default object
 func NewExportService() ExportService {
 	return ExportService{
 		Balance: "roundrobin",
@@ -38,7 +38,7 @@ func NewExportService() ExportService {
 	}
 }
 
-//ExportPort hold port reflection info
+// ExportPort hold port reflection info
 type ExportPort struct {
 	Name        string      `json:"name,omitempty"`
 	BCSVHost    string      `json:"BCSVHost"`
@@ -48,19 +48,19 @@ type ExportPort struct {
 	Backends    BackendList `json:"backends"`
 }
 
-//AddBackend add single backend to service Backends list
+// AddBackend add single backend to service Backends list
 func (ep *ExportPort) AddBackend(b Backend) {
 	ep.Backends = append(ep.Backends, b)
 }
 
-//Backend target backend service info
+// Backend target backend service info
 type Backend struct {
 	TargetIP   string   `json:"targetIP"`
 	TargetPort int      `json:"targetPort"`
 	Label      []string `json:"label,omitempty"`
 }
 
-//BackendList list for backend sort
+// BackendList list for backend sort
 type BackendList []Backend
 
 // Len is the number of elements in the collection.
@@ -82,11 +82,12 @@ func (bl BackendList) Less(i, j int) bool {
 
 // Swap swaps the elements with indexes i and j.
 func (bl BackendList) Swap(i, j int) {
-	//el[i], el[j] = el[j], el[i]
+	// el[i], el[j] = el[j], el[i]
 
 	bl[i], bl[j] = bl[j], bl[i]
 }
 
+// ExportPortList xxx
 type ExportPortList []ExportPort
 
 // Len is the number of elements in the collection.
@@ -128,27 +129,27 @@ func (epl ExportPortList) Swap(i, j int) {
 	epl[i], epl[j] = epl[j], epl[i]
 }
 
-//DeepCopy copy src to dst by json
+// DeepCopy copy src to dst by json
 func DeepCopy(src, dst *ExportService) {
 	dataBytes, _ := json.Marshal(src)
 	json.Unmarshal(dataBytes, dst)
 }
 
-//ExportService info to hold export service
+// ExportService info to hold export service
 type ExportService struct {
 	ObjectMeta    commtypes.ObjectMeta `json:"metadata"`
-	Cluster       string               `json:"cluster"`       //cluster info
-	Namespace     string               `json:"namespace"`     //namespace info, for business
-	ServiceName   string               `json:"serviceName"`   //service name
-	ServiceWeight map[string]int       `json:"serviceWeight"` //weight for different service
-	ServicePort   []ExportPort         `json:"ports"`         //export ports info
-	BCSGroup      []string             `json:"BCSGroup"`      //service export group
-	SSLCert       bool                 `json:"sslcert"`       //SSL certificate for ser
-	Balance       string               `json:"balance"`       //loadbalance algorithm, default source
-	MaxConn       int                  `json:"maxconn"`       //max connection setting
+	Cluster       string               `json:"cluster"`       // cluster info
+	Namespace     string               `json:"namespace"`     // namespace info, for business
+	ServiceName   string               `json:"serviceName"`   // service name
+	ServiceWeight map[string]int       `json:"serviceWeight"` // weight for different service
+	ServicePort   []ExportPort         `json:"ports"`         // export ports info
+	BCSGroup      []string             `json:"BCSGroup"`      // service export group
+	SSLCert       bool                 `json:"sslcert"`       // SSL certificate for ser
+	Balance       string               `json:"balance"`       // loadbalance algorithm, default source
+	MaxConn       int                  `json:"maxconn"`       // max connection setting
 }
 
-//EptServiceList define ExportService list implementing sorter interface
+// EptServiceList define ExportService list implementing sorter interface
 type EptServiceList []ExportService
 
 // Len is the number of elements in the collection.

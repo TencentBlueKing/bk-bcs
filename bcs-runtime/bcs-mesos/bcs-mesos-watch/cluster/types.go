@@ -14,20 +14,29 @@
 package cluster
 
 const (
-	//syncStorageErr = "ZOOKEEPERErr"
+	// SyncSuccess TODO
+	// syncStorageErr = "ZOOKEEPERErr"
 	SyncSuccess = "success"
+	// SyncFailure TODO
 	SyncFailure = "failure"
 
-	//actionGetData = "GetData"
-	//actionWatch = "Watch"
+	// actionGetData = "GetData"
+	// actionWatch = "Watch"
 
-	DataTypeApp       = "Application"
+	// DataTypeApp TODO
+	DataTypeApp = "Application"
+	// DataTypeTaskGroup TODO
 	DataTypeTaskGroup = "TaskGroup"
-	DataTypeCfg       = "Configmap"
-	//DataTypeSecret    = "Secret"
-	DataTypeDeploy             = "Deployment"
-	DataTypeSvr                = "Service"
-	DataTypeExpSVR             = "ExportService"
-	DataTypeIPPoolStatic       = "IPPoolStatic"
+	// DataTypeCfg TODO
+	DataTypeCfg = "Configmap"
+	// DataTypeDeploy    = "Secret"
+	DataTypeDeploy = "Deployment"
+	// DataTypeSvr TODO
+	DataTypeSvr = "Service"
+	// DataTypeExpSVR TODO
+	DataTypeExpSVR = "ExportService"
+	// DataTypeIPPoolStatic TODO
+	DataTypeIPPoolStatic = "IPPoolStatic"
+	// DataTypeIPPoolStaticDetail TODO
 	DataTypeIPPoolStaticDetail = "IPPoolStaticDetail"
 )

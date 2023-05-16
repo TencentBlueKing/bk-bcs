@@ -1,0 +1,38 @@
+{
+  "log_dir": "${log_dir}",
+  "v": ${bcsNodeGroupManagerVerbosity},
+  "alsologtostderr": true,
+  "log_max_size": 500,
+  "log_max_num": 10,
+  "logtostderr": false,
+  "stderrthreshold": "2",
+  "storage":{
+    "endpoints":"${bcsNodeGroupManagerMongo}",
+    "database":"${bcsNodeGroupManagerMongoDB}",
+    "username":"${bcsNodeGroupManagerMongoUser}",
+    "password":"${bcsNodeGroupManagerMongoPassword}"
+  },
+  "registry": {
+    "endpoints": "${bcsEtcdHost}",
+    "cert": "${bcsEtcdCertFile}",
+    "key": "${bcsEtcdKeyFile}",
+    "ca": "${bcsEtcdCAFile}"
+  },
+  "gateway": {
+      "endpoint": "${bcsGatewayEndpoint}",
+      "token": "${bcsGatewayToken}"
+  },
+  "address": "${localIp}",
+  "port": ${bcsNodeGroupManagerPort},
+  "httpport": ${bcsNodeGroupManagerHTTPPort},
+  "metricport": ${bcsNodeGroupManagerMetricPort},
+  "serverca": "${caFile}",
+  "servercert": "${serverCertFile}",
+  "serverkey": "${serverKeyFile}",
+  "clientca": "${caFile}",
+  "clientcert": "${clientCertFile}",
+  "clientkey": "${clientKeyFile}",
+  "debug": ${bcsNodeGroupManagerDebug},
+  "resourcemanager": "${bcsNodeGroupManagerResourceService}",
+  "controllerloop": ${bcsNodeGroupManagerControllerLoop}
+}

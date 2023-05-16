@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="{{ .BK_STATIC_URL }}/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BSCP</title>
+    <script>
+      var BK_BCS_BSCP_API = '{{ .BK_BCS_BSCP_API }}'
+      var SITE_URL = '{{ .SITE_URL }}'
+      var BK_IAM_HOST = '{{ .BK_IAM_HOST }}'
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

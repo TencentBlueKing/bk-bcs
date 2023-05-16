@@ -37,17 +37,17 @@ import (
  * frameworkMessageSignalExecute
 **/
 
-//frameworkMessageEnvironmentUpdate update Environment info in Container Runtime
+// frameworkMessageEnvironmentUpdate update Environment info in Container Runtime
 func (executor *BcsExecutor) frameworkMessageEnvironmentUpdate(taskID string, env *bcstype.Msg_Env) error {
-	//todo(developerJim): Env can not update after container started.
+	// todo(developerJim): Env can not update after container started.
 	//             this function must delete after bcs-scheduler clean this feature.
 	executor.exeLock.Lock()
 	defer executor.exeLock.Unlock()
-	//get containerID list from local cache
+	// get containerID list from local cache
 	var containerList []string
 	var err error
 	if taskID == "" {
-		//get all container
+		// get all container
 		containerList = executor.tasks.GetAllContainerID()
 	} else {
 		containerInfo := executor.tasks.GetContainerByTaskID(taskID)
@@ -61,7 +61,7 @@ func (executor *BcsExecutor) frameworkMessageEnvironmentUpdate(taskID string, en
 		err = fmt.Errorf("container list is empty")
 		return err
 	}
-	//create Environment update shell command
+	// create Environment update shell command
 	command := []string{"/bin/sh", "-c"}
 	envshell := "\"export " + *env.Name + "=" + *env.Value + "\""
 	command = append(command, envshell)
@@ -75,16 +75,16 @@ func (executor *BcsExecutor) frameworkMessageEnvironmentUpdate(taskID string, en
 	return err
 }
 
-//frameworkMessageFileUpload upload file to Running Container
+// frameworkMessageFileUpload upload file to Running Container
 func (executor *BcsExecutor) frameworkMessageFileUpload(taskID string, fileInfo *bcstype.Msg_LocalFile) error {
 	executor.exeLock.Lock()
 	defer executor.exeLock.Unlock()
 	logs.Infof("Executor Get FrameworkMessage LocalFile. File: %s", *fileInfo.To)
-	//get container
+	// get container
 	var containerList []string
 	var err error
 	if taskID == "" {
-		//get all container
+		// get all container
 		containerList = executor.tasks.GetAllContainerID()
 	} else {
 		containerInfo := executor.tasks.GetContainerByTaskID(taskID)
@@ -100,7 +100,7 @@ func (executor *BcsExecutor) frameworkMessageFileUpload(taskID string, fileInfo 
 		return err
 	}
 
-	//Upload file to Container
+	// Upload file to Container
 	for _, ID := range containerList {
 		if copyErr := executor.copyFileToContainer(ID, fileInfo); copyErr != nil {
 			err = fmt.Errorf("FrameworkMessage LocalFile copy err: %s", copyErr.Error())
@@ -123,16 +123,16 @@ func (executor *BcsExecutor) frameworkMessageRemoteFile(taskID string, remote *b
 	return executor.frameworkMessageFileUpload(taskID, local)
 }
 
-//frameworkMessageSignalExecute send signal to process in Container
+// frameworkMessageSignalExecute send signal to process in Container
 func (executor *BcsExecutor) frameworkMessageSignalExecute(taskID string, singalInfo *bcstype.Msg_Signal) error {
 	executor.exeLock.Lock()
 	defer executor.exeLock.Unlock()
 	logs.Infof(fmt.Sprintf("Executor get framework signal %d for %v", singalInfo.Signal, singalInfo.ProcessName))
-	//get containerID list from local cache
+	// get containerID list from local cache
 	var containerList []string
 	var err error
 	if taskID == "" {
-		//get all container
+		// get all container
 		containerList = executor.tasks.GetAllContainerID()
 	} else {
 		containerInfo := executor.tasks.GetContainerByTaskID(taskID)
@@ -146,7 +146,7 @@ func (executor *BcsExecutor) frameworkMessageSignalExecute(taskID string, singal
 		err = fmt.Errorf("container list is empty")
 		return err
 	}
-	//create Environment update shell command
+	// create Environment update shell command
 	command := []string{"/bin/sh", "-c"}
 	killSignal := strconv.Itoa(int(*singalInfo.Signal))
 	kill := "\"killall -" + killSignal + *singalInfo.ProcessName + "\""
@@ -168,7 +168,8 @@ func (executor *BcsExecutor) frameworkMessageUpdateResources(msg *bcstype.Msg_Up
 
 	var err error
 	for _, update := range msg.Resources {
-		logs.Infof("Executor get framework update taskid  %s resources cpu %f mem %f", *update.TaskId, *update.Cpu, *update.Mem)
+		logs.Infof("Executor get framework update taskid  %s resources cpu %f mem %f", *update.TaskId, *update.Cpu,
+			*update.Mem)
 
 		container := executor.tasks.GetContainerByTaskID(*update.TaskId)
 		if container == nil {
@@ -257,7 +258,7 @@ const (
 	defaultHTTPRequestTimeout = 120
 )
 
-//dataClassRemote handle bcs_remote message, download data from remote http url, push to created container
+// dataClassRemote handle bcs_remote message, download data from remote http url, push to created container
 func (executor *BcsExecutor) dataClassRemote(taskInfo *container.BcsContainerTask, remote *bcstype.Msg_Remote) error {
 	logs.Infof("BcsExecutor download %s from remote", *remote.From)
 	local, err := executor.downloadRemoteFile(remote)
@@ -271,11 +272,12 @@ func (executor *BcsExecutor) dataClassRemote(taskInfo *container.BcsContainerTas
 	return nil
 }
 
-//dataClassRemoteEnv handle Msg_EnvRemote message, download data from remote http url, push to created container
-func (executor *BcsExecutor) dataClassRemoteEnv(taskInfo *container.BcsContainerTask, remote *bcstype.Msg_EnvRemote) error {
+// dataClassRemoteEnv handle Msg_EnvRemote message, download data from remote http url, push to created container
+func (executor *BcsExecutor) dataClassRemoteEnv(taskInfo *container.BcsContainerTask,
+	remote *bcstype.Msg_EnvRemote) error {
 	logs.Infof("BcsExecutor download Environment %s from %s", *remote.Name, *remote.From)
 
-	//download content from remote http url.
+	// download content from remote http url.
 	client := http.Client{
 		Timeout: time.Duration(3 * time.Second),
 	}
@@ -294,7 +296,7 @@ func (executor *BcsExecutor) dataClassRemoteEnv(taskInfo *container.BcsContainer
 		logs.Errorf("BcsExecutor read %s reqeust err: %s", *remote.From, readErr.Error())
 		return readErr
 	}
-	//convert data to base64
+	// convert data to base64
 	item := container.BcsKV{
 		Key:   *remote.Name,
 		Value: string(data),
@@ -303,14 +305,14 @@ func (executor *BcsExecutor) dataClassRemoteEnv(taskInfo *container.BcsContainer
 	return nil
 }
 
-//downloadRemoteFile download remote file, change to local one
+// downloadRemoteFile download remote file, change to local one
 func (executor *BcsExecutor) downloadRemoteFile(remote *bcstype.Msg_Remote) (*bcstype.Msg_LocalFile, error) {
 	local := new(bcstype.Msg_LocalFile)
 	local.To = proto.String(*remote.To)
 	local.User = proto.String(*remote.User)
 	local.Right = proto.String(*remote.Right)
 
-	//download content from remote http url.
+	// download content from remote http url.
 	client := http.Client{
 		Timeout: time.Duration(defaultHTTPRequestTimeout * time.Second),
 	}
@@ -337,7 +339,7 @@ func (executor *BcsExecutor) downloadRemoteFile(remote *bcstype.Msg_Remote) (*bc
 		logs.Errorf("BcsExecutor read %s reqeust err: %s", *remote.From, readErr.Error())
 		return nil, readErr
 	}
-	//convert data to base64
+	// convert data to base64
 	local.Base64 = proto.String(base64.StdEncoding.EncodeToString(data))
 	logs.Infof("BcsExecutor download %s success", *remote.From)
 	return local, nil

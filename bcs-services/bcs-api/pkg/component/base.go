@@ -82,7 +82,7 @@ func HTTPGet(url string, params map[string]string) (Response, error) {
 	return result, nil
 }
 
-//HTTPPostToBkIamAuth bk iam post
+// HTTPPostToBkIamAuth bk iam post
 func HTTPPostToBkIamAuth(url string, data map[string]interface{}, header map[string]string) (QueryResp, error) {
 	var result QueryResp
 

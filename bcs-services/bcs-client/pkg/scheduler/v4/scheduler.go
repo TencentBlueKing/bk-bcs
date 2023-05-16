@@ -25,7 +25,7 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
-//Scheduler mesos scheduler interface for bcs-api
+// Scheduler mesos scheduler interface for bcs-api
 type Scheduler interface {
 	CreateApplication(clusterID, namespace string, data []byte) error
 	CreateProcess(clusterID, namespace string, data []byte) error
@@ -75,34 +75,36 @@ type Scheduler interface {
 	GetApplicationDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error)
 	GetProcessDefinition(clusterID, namespace, name string) (*commonTypes.ReplicaController, error)
 	GetDeploymentDefinition(clusterID, namespace, name string) (*commonTypes.BcsDeployment, error)
-	//GetOffer get specified mesos cluster resources list by agents
+	// GetOffer get specified mesos cluster resources list by agents
 	GetOffer(clusterID string) ([]*schetypes.OfferWithDelta, error)
 
+	// CreateCustomResourceDefinition TODO
 	/*
 		CustomResourceDefinition section
 	*/
-	//CreateResourceDefinition create CRD by definition file
+	// CreateResourceDefinition create CRD by definition file
 	CreateCustomResourceDefinition(clusterID string, data []byte) error
-	//UpdateResourceDefinition replace specified CRD
+	// UpdateCustomResourceDefinition replace specified CRD
 	UpdateCustomResourceDefinition(clusterID, name string, data []byte) error
-	//ListCustomResourceDefinition list all created CRD
+	// ListCustomResourceDefinition list all created CRD
 	ListCustomResourceDefinition(clusterID string) (*v1beta1.CustomResourceDefinitionList, error)
-	//GetCustomResourceDefinition get specified CRD
+	// GetCustomResourceDefinition get specified CRD
 	GetCustomResourceDefinition(clusterID string, name string) (*v1beta1.CustomResourceDefinition, error)
-	//DeleteCustomResourceDefinition delete specified CRD
+	// DeleteCustomResourceDefinition delete specified CRD
 	DeleteCustomResourceDefinition(clusterID, name string) error
+	// CreateCustomResource TODO
 	/*
 		CustomResource section, depend on ListCustomResourceDefinition for validation
 	*/
-	//CreateResource create CRD by definition file
+	// CreateResource create CRD by definition file
 	CreateCustomResource(clusterID, apiVersion, plural, namespace string, data []byte) error
-	//UpdateResource replace specified CRD
+	// UpdateCustomResource replace specified CRD
 	UpdateCustomResource(clusterID, apiVersion, plural, namespace, name string, data []byte) error
-	//ListCustomResource list all created CRD
+	// ListCustomResource list all created CRD
 	ListCustomResource(clusterID, apiVersion, plural, namespace string) ([]byte, error)
-	//GetCustomResource get specified CRD
+	// GetCustomResource get specified CRD
 	GetCustomResource(clusterID, apiVersion, plural, namespace, name string) ([]byte, error)
-	//DeleteCustomResource delete specified CRD
+	// DeleteCustomResource delete specified CRD
 	DeleteCustomResource(clusterID, apiVersion, plural, namespace, name string) error
 
 	CreateContainerExec(clusterId, containerId, hostIp string, command []string) (string, error)
@@ -145,7 +147,7 @@ type bcsScheduler struct {
 	requester     utils.ApiRequester
 }
 
-//NewBcsScheduler create mesos scheduler api implemenation
+// NewBcsScheduler create mesos scheduler api implemenation
 func NewBcsScheduler(options types.ClientOptions) Scheduler {
 	return &bcsScheduler{
 		bcsAPIAddress: options.BcsApiAddress,

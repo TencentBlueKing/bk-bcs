@@ -14,9 +14,12 @@ specific language governing permissions and limitations under the License.
 """
 import json
 import logging
+from django.conf import settings
 
 from backend.components import paas_cc
 from backend.helm.app.utils import yaml_dump, yaml_load
+from backend.components.bcs import k8s
+from backend.utils.local import local
 from backend.templatesets.var_mgmt.constants import VariableScope
 from backend.templatesets.var_mgmt.models import ClusterVariable, NameSpaceVariable, Variable
 
@@ -127,12 +130,67 @@ def get_bcs_variables(project_id, cluster_id, namespace_id):
     - 集群变量
     - 命名空间变量
     """
-    bcs_vars = get_global_variables(project_id)
-    cluster_vars = get_cluster_variables(project_id, cluster_id)
-    ns_vars = get_namespace_variables(project_id, namespace_id)
+    project_code = paas_cc.get_project_code(local.request.user.token.access_token, project_id)
+    namespace = paas_cc.get_namespace_name(local.request.user.token.access_token, project_id, namespace_id)
 
-    bcs_vars.update(cluster_vars, **ns_vars)
+    client = k8s.K8SClient("", project_id, "", settings.DEFAULT_BCS_API_ENV)
+    bcs_vars_map = client.render_vars(project_code, cluster_id, namespace, local.request.user.username, None)
+    bcs_vars = {k: v['value'] for k, v in bcs_vars_map.items()}
     return bcs_vars
+
+
+def get_ns_variables(project_id, cluster_id, ns_id, key_list):
+    """获取多个变量值
+    返回格式: {ns_id: ["key": "key", "name": "name"}]}
+    如果key不存在, 返回空字符串(兼容老的逻辑)
+    """
+    if not key_list:
+        return []
+
+    ns_var_map = get_bcs_variables(project_id, cluster_id, ns_id)
+    variable_list = []
+    for key in key_list:
+        value = ns_var_map.get(key, "")
+        variable_list.append({"key": key, "name": key, "value": value})
+
+    return variable_list
+
+
+def get_multi_ns_variables(project_id, cluster_id, ns_list, key_list):
+    """获取多个变量值
+    返回格式: {ns_id: ["key": "key", "name": "name"}]}
+    如果key不存在, 返回空字符串(兼容老的逻辑)
+    """
+    variable_dict = {}
+
+    if not ns_list:
+        return variable_dict
+
+    keyList = ",".join(key_list)
+
+    project_code = paas_cc.get_project_code(local.request.user.token.access_token, project_id)
+    namespace_res = paas_cc.get_namespace_list(local.request.user.token.access_token, project_id, limit=10000)
+    namespace_data = namespace_res.get("data", {}).get("results") or []
+    namespace_dict = {str(i["id"]): i for i in namespace_data}
+
+    client = k8s.K8SClient("", project_id, "", settings.DEFAULT_BCS_API_ENV)
+
+    for ns_id in ns_list:
+        ns_info = namespace_dict.get(ns_id)
+        if not ns_info:
+            continue
+        ns_name = ns_info['name']
+        ns_var_map = client.render_vars(
+            project_code, ns_info['cluster_id'], ns_name, local.request.user.username, keyList
+        )
+        _v_list = []
+        for _key in key_list:
+            if _key in ns_var_map:
+                _v_list.append(ns_var_map[_key])
+            else:
+                _v_list.append({"key": _key, "name": _key, "value": ""})
+        variable_dict[ns_id] = _v_list
+    return variable_dict
 
 
 def merge_valuefile_with_bcs_variables(valuefile, bcs_variables, sys_variables):

@@ -1,0 +1,5 @@
+title: configmap
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  {{- include "config.cmData" . | indent 2 }}

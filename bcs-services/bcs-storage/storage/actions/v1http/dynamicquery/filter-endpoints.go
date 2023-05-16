@@ -25,8 +25,8 @@ type EndpointsFilter struct {
 	APIVersion string `json:"apiVersion,omitempty" filter:"data.apiVersion"`
 }
 
-const endpointsNestedTimeLayout = nestedTimeLayout
+const endpointsNestedTimeLayout = NestedTimeLayout
 
-func (t EndpointsFilter) getCondition() *operator.Condition {
+func (t EndpointsFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, endpointsNestedTimeLayout)
 }

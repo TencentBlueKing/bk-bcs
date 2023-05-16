@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ing-v1-w3uvctq3v3
+  namespace: default
+  labels:
+    label-key-1: label-val-1
+  annotations:
+    anno-key-1: anno-val-1
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
+    kubernetes.io/ingress.class: qcloud
+    kubernetes.io/ingress.existLbId: lb-abcd
+    ingress.cloud.tencent.com/auto-rewrite: "true"
+    ingress.cloud.tencent.com/pass-to-target: "true"
+spec:
+  tls:
+    - secretName: secret-test-12345
+      hosts:
+        - "1.1.1.1"
+        - "2.2.2.2"
+  rules:
+    - http:
+        paths:
+          - backend:
+              service:
+                name: svc-1
+                port:
+                  number: 80
+            path: "/api"
+            pathType: Prefix
+          - backend:
+              service:
+                name: svc-2
+                port:
+                  number: 8080
+            path: "/api/v1"
+            pathType: Exact
+          - backend:
+              service:
+                name: svc-3
+                port:
+                  number: 8090
+            path: "/api/v2"
+            pathType: ImplementationSpecific
+      host: "example1.com"

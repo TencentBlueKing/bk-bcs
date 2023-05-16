@@ -11,6 +11,7 @@
  *
  */
 
+// Package manager xxx
 package manager
 
 import (
@@ -25,8 +26,8 @@ var (
 	defaultContainerSock = "unix:///var/run/docker.sock"
 )
 
-//DirtyCheck check container existence, if container lost in record,
-//releasing ip address from database for other container reuse.
+// DirtyCheck check container existence, if container lost in record,
+// releasing ip address from database for other container reuse.
 func DirtyCheck() {
 	driver, err := GetIPDriver()
 	if err != nil {
@@ -48,13 +49,13 @@ func DirtyCheck() {
 		blog.Errorf("Create docker container client err, %s", err.Error())
 		return
 	}
-	//Get all running container info from Container Runtime
+	// Get all running container info from Container Runtime
 	containers, err := client.ListContainers(dockerclient.ListContainersOptions{All: false})
 	if err != nil {
 		blog.Errorf("List all docker container err, %s", err.Error())
 		return
 	}
-	//ready to clean map in HostInfo
+	// ready to clean map in HostInfo
 	for _, container := range containers {
 		if con, ok := hostInfo.Containers[container.ID]; ok {
 			blog.Infof("Container %s is running with ip %s in host %s, skip.", container.ID, con.IPAddr, hostInfo.IPAddr)
@@ -65,8 +66,8 @@ func DirtyCheck() {
 		blog.Infof("No dirty Container data in storage, bcs-ipam check mode process finish.")
 		return
 	}
-	//Now all left in HostInfo.Containers is dirty data
-	//in database, ready to release ip address with Driver
+	// Now all left in HostInfo.Containers is dirty data
+	// in database, ready to release ip address with Driver
 	for containerID, ipInst := range hostInfo.Containers {
 		if ipInst.Container != containerID {
 			blog.Warnf("##container info mismatch warnning, host: %s, ip inst: %s", containerID, ipInst.Container)

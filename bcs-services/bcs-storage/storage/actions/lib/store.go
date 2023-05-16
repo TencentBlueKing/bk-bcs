@@ -23,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/bson"
+	mopt "go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
@@ -46,12 +47,13 @@ const (
 
 // StoreGetOption option for get action
 type StoreGetOption struct {
-	Fields         []string
-	Sort           map[string]int
-	Cond           *operator.Condition
-	Offset         int64
-	Limit          int64
-	IsAllDocuments bool
+	Fields          []string
+	Sort            map[string]int
+	Cond            *operator.Condition
+	Offset          int64
+	Limit           int64
+	IsAllDocuments  bool
+	DatabaseOptions *mopt.DatabaseOptions
 }
 
 // StorePutOption option for put action
@@ -128,10 +130,18 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	mList := make([]operator.M, 0)
 
 	findCond := opt.Cond
-	if a.doSoftDelete {
+	getDeletionFlag := false
+
+	if v, ok := ctx.Value("getDeletionFlag").(bool); ok {
+		getDeletionFlag = v
+	}
+
+	if a.doSoftDelete && !getDeletionFlag {
 		// search for data which is not marked deleted
 		delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
 		findCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
+	} else {
+		findCond = operator.NewBranchCondition(operator.And, opt.Cond)
 	}
 	finder := a.mDriver.Table(resourceType).Find(findCond)
 	if len(projection) != 0 {
@@ -150,6 +160,9 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 			finder = finder.WithLimit(storeActionDefaultLimit)
 		}
 	}
+	if opt.DatabaseOptions != nil {
+		finder = finder.WithDatabaseOptions(opt.DatabaseOptions)
+	}
 
 	if err := finder.All(ctx, &mList); err != nil {
 		blog.Errorf("failed to query, err %s", err.Error())
@@ -160,7 +173,7 @@ func (a *Store) Get(ctx context.Context, resourceType string, opt *StoreGetOptio
 	for _, m := range mList {
 		tmpM := dollarRecover(m)
 		// remove delete flag in returned result
-		if a.doSoftDelete {
+		if a.doSoftDelete && !getDeletionFlag {
 			if _, found := tmpM[databaseFieldNameForDeletionFlag]; found {
 				delete(tmpM, databaseFieldNameForDeletionFlag)
 			}
@@ -248,6 +261,7 @@ func (a *Store) DeleteIndex(ctx context.Context, resourceType string, indexName 
 	return nil
 }
 
+// Count xxx
 // Get get something from db according to request
 func (a *Store) Count(ctx context.Context, resourceType string, opt *StoreGetOption) (int64, error) {
 	const (
@@ -273,6 +287,8 @@ func (a *Store) Count(ctx context.Context, resourceType string, opt *StoreGetOpt
 		// search for data which is not marked deleted
 		delFlagCond := operator.NewLeafCondition(operator.Ne, operator.M{databaseFieldNameForDeletionFlag: true})
 		countCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
+	} else {
+		countCond = operator.NewBranchCondition(operator.And, opt.Cond)
 	}
 	projection := fieldsToProjection(opt.Fields)
 	finder := a.mDriver.Table(resourceType).Find(countCond)
@@ -408,6 +424,8 @@ func (a *Store) Put(ctx context.Context, resourceType string, data operator.M, o
 		countCond = operator.NewBranchCondition(operator.And, opt.Cond, delFlagCond)
 		// overriding the deletion flag value
 		data[databaseFieldNameForDeletionFlag] = false
+	} else {
+		countCond = operator.NewBranchCondition(operator.And, opt.Cond)
 	}
 	counter, err := a.mDriver.Table(resourceType).Find(countCond).Count(ctx)
 	if err != nil {

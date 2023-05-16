@@ -34,27 +34,27 @@ import (
 )
 
 const (
-	//http api default prefix
+	// http api default prefix
 	defaultAPIPrefix = "apis"
 )
 
 var (
-	//PrevDataErr this error means operation success, but got previous data failed
+	// PrevDataErr this error means operation success, but got previous data failed
 	PrevDataErr = errors.New("Previous data err")
 )
 
-//Config etcd storage config
+// Config etcd storage config
 type Config struct {
-	Hosts          []string             //http api host link, http://ip:host
-	User           string               //user name for http basic authentication
-	Passwd         string               //password relative to user
-	Codec          meta.Codec           //Codec for encoder & decoder
-	ObjectNewFunc  meta.ObjectNewFn     //object pointer for serialization
-	ObjectListFunc meta.ObjectListNewFn //decode raw json data to object list
-	TLS            *tls.Config          //tls config for https
+	Hosts          []string             // http api host link, http://ip:host
+	User           string               // user name for http basic authentication
+	Passwd         string               // password relative to user
+	Codec          meta.Codec           // Codec for encoder & decoder
+	ObjectNewFunc  meta.ObjectNewFn     // object pointer for serialization
+	ObjectListFunc meta.ObjectListNewFn // decode raw json data to object list
+	TLS            *tls.Config          // tls config for https
 }
 
-//NewStorage create etcd accessor implemented storage interface
+// NewStorage create etcd accessor implemented storage interface
 func NewStorage(config *Config) (storage.Storage, error) {
 	if config == nil {
 		return nil, fmt.Errorf("lost client configuration")
@@ -62,7 +62,7 @@ func NewStorage(config *Config) (storage.Storage, error) {
 	return NewClient(config)
 }
 
-//NewClient create new client for http event apis
+// NewClient create new client for http event apis
 func NewClient(config *Config) (*Client, error) {
 	if len(config.Hosts) == 0 {
 		return nil, fmt.Errorf("Lost http api hosts info")
@@ -84,21 +84,21 @@ func NewClient(config *Config) (*Client, error) {
 	return s, nil
 }
 
-//Client implementation storage interface with etcd client
+// Client implementation storage interface with etcd client
 type Client struct {
-	client       *syshttp.Client      //http client
-	codec        meta.Codec           //json Codec for object
-	objectNewFn  meta.ObjectNewFn     //create new object for json Decode
-	objectListFn meta.ObjectListNewFn //decode json list objects
-	servers      []string             //server http api prefix
+	client       *syshttp.Client      // http client
+	codec        meta.Codec           // json Codec for object
+	objectNewFn  meta.ObjectNewFn     // create new object for json Decode
+	objectListFn meta.ObjectListNewFn // decode json list objects
+	servers      []string             // server http api prefix
 }
 
-//Create implements storage interface
-//param cxt: context for use decline Creation, not used
-//param key: http full api path
-//param obj: object for creation
-//param ttl: second for time-to-live, not used
-//return out: exist object data
+// Create implements storage interface
+// param cxt: context for use decline Creation, not used
+// param key: http full api path
+// param obj: object for creation
+// param ttl: second for time-to-live, not used
+// return out: exist object data
 func (s *Client) Create(cxt context.Context, key string, obj meta.Object, ttl int) (meta.Object, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("http client lost object key")
@@ -107,17 +107,17 @@ func (s *Client) Create(cxt context.Context, key string, obj meta.Object, ttl in
 		blog.V(3).Infof("http storage client lost object data for %s", key)
 		return nil, fmt.Errorf("lost object data")
 	}
-	//serialize object
+	// serialize object
 	data, err := s.codec.Encode(obj)
 	if err != nil {
 		blog.V(3).Infof("http storage client encode %s/%s for %s failed, %s", obj.GetNamespace(), obj.GetName(), key, err)
 		return nil, fmt.Errorf("encode %s/%s: %s", obj.GetNamespace(), obj.GetName(), err)
 	}
 	fullPath := fmt.Sprintf("%s/%s/%s", s.selectServers(), defaultAPIPrefix, key)
-	//check path for http method
+	// check path for http method
 	method := "POST"
 	if strings.Contains(key, "namespace") {
-		//this means updating with detail url
+		// this means updating with detail url
 		method = "PUT"
 	}
 	blog.V(3).Infof("obj encoded data %s", string(data))
@@ -129,30 +129,34 @@ func (s *Client) Create(cxt context.Context, key string, obj meta.Object, ttl in
 	request.Header.Set("Content-type", "application/json")
 	response, err := s.client.Do(request)
 	if err != nil {
-		blog.V(3).Infof("http storage client %s with %s for %s/%s failed, %s", method, fullPath, obj.GetNamespace(), obj.GetName(), err)
+		blog.V(3).Infof("http storage client %s with %s for %s/%s failed, %s", method, fullPath, obj.GetNamespace(),
+			obj.GetName(), err)
 		return nil, err
 	}
 	defer response.Body.Close()
 	if response.StatusCode != syshttp.StatusOK {
-		blog.V(3).Infof("http storage %s with %s failed, http response code: %d, status: %s", method, fullPath, response.StatusCode, response.Status)
+		blog.V(3).Infof("http storage %s with %s failed, http response code: %d, status: %s", method, fullPath,
+			response.StatusCode, response.Status)
 		return nil, fmt.Errorf("response: %d, message: %s", response.StatusCode, response.Status)
 	}
 	rawData, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		blog.V(3).Infof("http storage client read %s %s response body failed, %s. Operation status unknown.", method, fullPath, err)
+		blog.V(3).Infof("http storage client read %s %s response body failed, %s. Operation status unknown.", method,
+			fullPath, err)
 		return nil, err
 	}
-	//format data
+	// format data
 	standarResponse := &Response{}
 	if err := json.Unmarshal(rawData, standarResponse); err != nil {
-		blog.V(3).Infof("http storage client parse %s %s response failed, %s. Operation status unknown", method, fullPath, err)
+		blog.V(3).Infof("http storage client parse %s %s response failed, %s. Operation status unknown", method, fullPath,
+			err)
 		return nil, err
 	}
 	if standarResponse.Code != 0 {
 		blog.V(3).Infof("http storage %s %s failed, %s", method, fullPath, standarResponse.Message)
 		return nil, fmt.Errorf("%s", standarResponse.Message)
 	}
-	//check exist data
+	// check exist data
 	if len(standarResponse.Data) == 0 {
 		blog.V(5).Infof("http storage %s %s got no response data", method, fullPath)
 		return nil, nil
@@ -160,19 +164,19 @@ func (s *Client) Create(cxt context.Context, key string, obj meta.Object, ttl in
 	target := s.objectNewFn()
 	if err := s.codec.Decode(standarResponse.Data, target); err != nil {
 		blog.V(3).Infof("http storage decode %s %s Previous value failed, %s", method, fullPath, err)
-		//even got previous data failed, we still consider Create successfully
+		// even got previous data failed, we still consider Create successfully
 		return nil, PrevDataErr
 	}
 	blog.V(3).Infof("etcd storage %s %s & got previous kv success", method, fullPath)
 	return target, nil
 }
 
-//Delete implements storage interface
-//for http api operation, there are three situations for key
-//* if key likes apis/v1/dns, clean all dns data under version v1
-//* if key likes apis/v1/dns/cluster/$clustername, delete all data under cluster
-//* if key likes apis/v1/dns/cluster/$clustername/namespace/bmsf-system, delete all data under namespace
-//* if key likes apis/v1/dns/cluster/$clustername/namespace/bmsf-system/data, delete detail data
+// Delete implements storage interface
+// for http api operation, there are three situations for key
+// * if key likes apis/v1/dns, clean all dns data under version v1
+// * if key likes apis/v1/dns/cluster/$clustername, delete all data under cluster
+// * if key likes apis/v1/dns/cluster/$clustername/namespace/bmsf-system, delete all data under namespace
+// * if key likes apis/v1/dns/cluster/$clustername/namespace/bmsf-system/data, delete detail data
 // in this version, no delete objects reply
 func (s *Client) Delete(ctx context.Context, key string) (obj meta.Object, err error) {
 	if len(key) == 0 {
@@ -195,7 +199,8 @@ func (s *Client) Delete(ctx context.Context, key string) (obj meta.Object, err e
 	}
 	defer response.Body.Close()
 	if response.StatusCode < syshttp.StatusOK || response.StatusCode >= syshttp.StatusMultipleChoices {
-		blog.V(3).Infof("http storage client delete to %s failed, code: %d, message: %s", fullPath, response.StatusCode, response.Status)
+		blog.V(3).Infof("http storage client delete to %s failed, code: %d, message: %s", fullPath, response.StatusCode,
+			response.Status)
 		return nil, fmt.Errorf("delete response failed, code: %d, status: %s", response.StatusCode, response.Status)
 	}
 	rawByets, err := ioutil.ReadAll(response.Body)
@@ -203,7 +208,7 @@ func (s *Client) Delete(ctx context.Context, key string) (obj meta.Object, err e
 		blog.V(3).Infof("http storage delete %s http status success, but read response body failed, %s", fullPath, err)
 		return nil, err
 	}
-	//format http response
+	// format http response
 	standarResponse := &Response{}
 	if err := json.Unmarshal(rawByets, standarResponse); err != nil {
 		blog.V(3).Infof("http storage decode %s http response failed, %s", fullPath, err)
@@ -217,15 +222,15 @@ func (s *Client) Delete(ctx context.Context, key string) (obj meta.Object, err e
 	return nil, nil
 }
 
-//Watch implements storage interface
-//* if key empty, watch all data
-//* if key is namespace, watch all data under namespace
-//* if key is namespace/name, watch detail data
-//watch is Stopped when any error occure, close event channel immediatly
-//param cxt: context for background running, not used, only reserved now
-//param version: data version, not used, reserved
-//param selector: labels selector
-//return:
+// Watch implements storage interface
+// * if key empty, watch all data
+// * if key is namespace, watch all data under namespace
+// * if key is namespace/name, watch detail data
+// watch is Stopped when any error occure, close event channel immediatly
+// param cxt: context for background running, not used, only reserved now
+// param version: data version, not used, reserved
+// param selector: labels selector
+// return:
 //  watch: watch implementation for changing event, need to Stop manually
 func (s *Client) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
 	if len(key) == 0 || strings.HasSuffix(key, "/") {
@@ -249,7 +254,7 @@ func (s *Client) Watch(cxt context.Context, key, version string, selector storag
 		blog.V(3).Infof("http storage do watch request %s failed, %s", fullPath, err)
 		return nil, err
 	}
-	//defer response.Body.Close()
+	// defer response.Body.Close()
 	proxy := newHTTPWatch(fullPath, response, s.objectNewFn)
 	go proxy.eventProxy()
 	if selector != nil {
@@ -260,16 +265,17 @@ func (s *Client) Watch(cxt context.Context, key, version string, selector storag
 	return proxy, nil
 }
 
-//WatchList implements storage interface
-//Watch & WatchList are the same for http api
-func (s *Client) WatchList(ctx context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
+// WatchList implements storage interface
+// Watch & WatchList are the same for http api
+func (s *Client) WatchList(ctx context.Context, key, version string, selector storage.Selector) (watch.Interface,
+	error) {
 	return s.Watch(ctx, key, version, selector)
 }
 
-//Get implements storage interface
-//get exactly data object from http event storage. so key must be resource fullpath
-//param cxt: not used
-//param version: reserved for future
+// Get implements storage interface
+// get exactly data object from http event storage. so key must be resource fullpath
+// param cxt: not used
+// param version: reserved for future
 func (s *Client) Get(cxt context.Context, key, version string, ignoreNotFound bool) (meta.Object, error) {
 	if len(key) == 0 {
 		return nil, fmt.Errorf("lost object key")
@@ -305,7 +311,7 @@ func (s *Client) Get(cxt context.Context, key, version string, ignoreNotFound bo
 		blog.V(3).Infof("http storage get %s http status success, but read response body failed, %s", fullPath, err)
 		return nil, err
 	}
-	//format http response
+	// format http response
 	standarResponse := &Response{}
 	if err := json.Unmarshal(rawData, standarResponse); err != nil {
 		blog.V(3).Infof("http storage decode GET %s http response failed, %s", fullPath, err)
@@ -331,8 +337,8 @@ func (s *Client) Get(cxt context.Context, key, version string, ignoreNotFound bo
 	return target, nil
 }
 
-//List implements storage interface
-//list namespace-based data or all data
+// List implements storage interface
+// list namespace-based data or all data
 func (s *Client) List(cxt context.Context, key string, selector storage.Selector) ([]meta.Object, error) {
 	if len(key) == 0 || strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key format")
@@ -383,7 +389,7 @@ func (s *Client) List(cxt context.Context, key string, selector storage.Selector
 	return objs, nil
 }
 
-//Close storage conenction, clean resource
+// Close storage conenction, clean resource
 func (s *Client) Close() {
 	blog.V(3).Infof("http api event storage %v exit.", s.servers)
 }
@@ -393,7 +399,7 @@ func (s *Client) selectServers() string {
 	return s.servers[index]
 }
 
-//newHTTPWatch create http watch
+// newHTTPWatch create http watch
 func newHTTPWatch(url string, response *syshttp.Response, objectFn meta.ObjectNewFn) *Watch {
 	proxy := &Watch{
 		url:           url,
@@ -405,7 +411,7 @@ func newHTTPWatch(url string, response *syshttp.Response, objectFn meta.ObjectNe
 	return proxy
 }
 
-//Watch wrapper for http chunk response
+// Watch wrapper for http chunk response
 type Watch struct {
 	url           string
 	response      *syshttp.Response
@@ -414,21 +420,21 @@ type Watch struct {
 	isStop        bool
 }
 
-//Stop watch channel
+// Stop watch channel
 func (e *Watch) Stop() {
 	e.response.Body.Close()
 	e.isStop = true
 }
 
-//WatchEvent get watch events, if watch stopped/error, watch must close
+// WatchEvent get watch events, if watch stopped/error, watch must close
 // channel and exit, watch user must read channel like
 // e, ok := <-channel
 func (e *Watch) WatchEvent() <-chan watch.Event {
 	return e.filterChannel
 }
 
-//eventProxy read all event json data from http response
-//end then dispatch to use by Watch.Interface channel
+// eventProxy read all event json data from http response
+// end then dispatch to use by Watch.Interface channel
 func (e *Watch) eventProxy() {
 	defer func() {
 		close(e.filterChannel)
@@ -439,20 +445,20 @@ func (e *Watch) eventProxy() {
 			blog.V(3).Infof("http watch is asked stopped")
 			return
 		}
-		//reading all data from repsonse connection
+		// reading all data from repsonse connection
 		rawStr, err := buf.ReadSlice('\n')
 		if err != nil {
 			blog.V(3).Infof("http watch %s read continue response failed, %s", e.url, err)
 			return
 		}
-		//parse data
+		// parse data
 		watchRes := &WatchResponse{}
 		if err := json.Unmarshal(rawStr, watchRes); err != nil {
 			blog.V(3).Infof("http watch %s parse json %s failed, %s", string(rawStr), e.url, err)
 			return
 		}
 		if watchRes.Code != 0 {
-			//todo(DeveloperJim): error code classification for recovery
+			// todo(DeveloperJim): error code classification for recovery
 			blog.V(3).Infof("http watch %s failed, code: %d, message: %s", e.url, watchRes.Code, watchRes.Message)
 			return
 		}

@@ -5,8 +5,9 @@
 
 [中文文档](./readme.md)
 
-> **Important Note**: The `master` branch may be in an unstable or unavailable state during development*.
-> Please use [releases] (https://github.com/Tencent/bk-bcs/releases) instead of `master` to get stable binaries.
+> **Important Note**:
+> - This repository will be migrated to [TencentBlueking] (https://github.com/TencentBlueking/bk-bcs) in mid-February 2023, if you have **package references** in your code, please pay attention to the migration progress and fix accordingly.
+> - The `master` branch may be in an unstable or unavailable state during development*, Please use [releases] (https://github.com/Tencent/bk-bcs/releases) instead of `master` to get stable binaries.
 
 BlueKing Container Service (BCS, same below) is a container management and orchestration platform for the micro-services under the BlueKing ecosystem.
 
@@ -85,9 +86,9 @@ If you are interested in this project and want to contribute and improve the pro
 
 ## Blueking Community
 
-* [BCS-SAAS](https://github.com/Tencent/bk-bcs-saas): BlueKing container SAAS is UI facility for Blueking Container Service, providing convenient container operation.
 * [BK-CI](https://github.com/Tencent/bk-ci):BlueKing Continuous Integration Platform is an open source, continuous integration and continuous delivery system that makes it easy to present your development process to you.
 * [BK-CMDB](https://github.com/Tencent/bk-cmdb):BlueKing Configuration Platform (Blue Whale CMDB) is an enterprise-level configuration management platform for assets and applications.
+* [BK-JOB](https://github.com/Tencent/bk-job):BlueKing JOB is a set of operation and maintenance script management platform with the ability to handle a large number of tasks concurrently.
 * [BK-PaaS](https://github.com/Tencent/bk-PaaS):BlueKing PaaS platform is an open development platform that allows developers to create, develop, deploy and manage SaaS applications quickly and easily.
 * [BK-SOPS](https://github.com/Tencent/bk-sops):Standard Operations (SOPS) is a system for task scheduling and execution through a visual graphical interface. It is a lightweight in the BlueKing system scheduling SaaS products.
 

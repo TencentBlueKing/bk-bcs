@@ -14,36 +14,45 @@
 package k8s
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/parnurzeal/gorequest"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/workqueue"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	netservicetypes "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output/action"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/pkg/metrics"
-
-	"github.com/parnurzeal/gorequest"
-	"github.com/sheerun/queue"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 )
 
 const (
 	// defaultWatcherQueueTime for watcher queue metrics collect
-	defaultWatcherQueueTime = 3 * time.Second
+	// defaultWatcherQueueTime = 3 * time.Second
+	eventQueueBackoffBaseDuration = 1 * time.Second
+	eventQueueBackoffMaxDuration  = 32 * time.Second
 
 	// defaultSyncInterval is default sync interval.
 	defaultSyncInterval = 30 * time.Second
@@ -56,6 +65,9 @@ const (
 
 	// defaultHTTPRetryerTime is default http request retry time.
 	defaultHTTPRetryerTime = time.Second
+
+	// defaultQueueTimeout is default timeout of queue.
+	defaultQueueTimeout = 1 * time.Second
 )
 
 // Watcher watchs target type resource metadata from k8s cluster,
@@ -63,30 +75,129 @@ const (
 type Watcher struct {
 	resourceType       string
 	resourceNamespaced bool
-	queue              *queue.Queue
-	controller         cache.Controller
-	store              cache.Store
-	writer             *output.Writer
-	sharedWatchers     map[string]WatcherInterface
-	stopChan           chan struct{}
-	namespace          string
+	// queue              *queue.Queue
+	eventQueue       workqueue.RateLimitingInterface
+	controller       cache.Controller
+	store            cache.Store
+	writer           *output.Writer
+	sharedWatchers   map[string]WatcherInterface
+	stopChan         chan struct{}
+	namespace        string
+	labelSelector    string
+	labelMap         map[string]string
+	namespaceFilters map[string]struct{}
+	nameFilters      map[string]struct{}
+}
+
+// WatcherOptions provide options for create Watcher
+type WatcherOptions struct {
+	DynamicClient    *dynamic.Interface
+	Namespace        string
+	ResourceType     string
+	GroupVersion     string
+	ResourceName     string
+	ObjType          runtime.Object
+	Writer           *output.Writer
+	SharedWatchers   map[string]WatcherInterface
+	IsNameSpaced     bool
+	LabelSelector    string
+	NamespaceFilters []string
+	NameFilters      []string
+}
+
+// Validate validate WatcherOptions
+func (wo *WatcherOptions) Validate() error {
+	if wo.DynamicClient == nil {
+		return fmt.Errorf("DynamicClient is nil in WatcherOptions")
+	}
+
+	if wo.Writer == nil {
+		return fmt.Errorf("Writer is nil in WatcherOptions")
+	}
+
+	if wo.SharedWatchers == nil {
+		return fmt.Errorf("SharedWatchers is nil in WatcherOptions")
+	}
+
+	return nil
 }
 
 // NewWatcher creates a new watcher of target type resource.
-func NewWatcher(client *rest.Interface, namespace string, resourceType string, resourceName string, objType runtime.Object,
-	writer *output.Writer, sharedWatchers map[string]WatcherInterface, resourceNamespaced bool) *Watcher {
-
-	watcher := &Watcher{
-		resourceType:       resourceType,
-		writer:             writer,
-		sharedWatchers:     sharedWatchers,
-		resourceNamespaced: resourceNamespaced,
-		queue:              queue.New(),
-		namespace:          namespace,
+func NewWatcher(wo *WatcherOptions) (*Watcher, error) {
+	if wo == nil {
+		return nil, fmt.Errorf("WatcherOptions can not be nil pointer")
 	}
 
-	// build list watch.
-	listWatch := cache.NewListWatchFromClient(*client, resourceName, namespace, fields.Everything())
+	if err := wo.Validate(); err != nil {
+		return nil, err
+	}
+
+	labelSet, err := labels.ConvertSelectorToLabelsMap(wo.LabelSelector)
+	if err != nil {
+		return nil, err
+	}
+	watcher := &Watcher{
+		resourceType:       wo.ResourceType,
+		writer:             wo.Writer,
+		sharedWatchers:     wo.SharedWatchers,
+		resourceNamespaced: wo.IsNameSpaced,
+		// queue:              queue.New(),
+		eventQueue: workqueue.NewRateLimitingQueue(
+			workqueue.NewItemExponentialFailureRateLimiter(
+				eventQueueBackoffBaseDuration,
+				eventQueueBackoffMaxDuration)),
+		namespace:        wo.Namespace,
+		labelSelector:    wo.LabelSelector,
+		labelMap:         labelSet,
+		namespaceFilters: map[string]struct{}{},
+		nameFilters:      map[string]struct{}{},
+	}
+	for _, ns := range wo.NamespaceFilters {
+		watcher.namespaceFilters[ns] = struct{}{}
+	}
+	for _, name := range wo.NameFilters {
+		watcher.nameFilters[name] = struct{}{}
+	}
+
+	glog.Infof("NewWatcher with resource type: %s, resource name: %s, namespace: %s, labelSelector: %s", wo.ResourceType,
+		wo.ResourceName, wo.Namespace, wo.LabelSelector)
+
+	gv, err := schema.ParseGroupVersion(wo.GroupVersion)
+	if err != nil {
+		return nil, err
+	}
+	gvr := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: wo.ResourceName}
+
+	var listWatch *cache.ListWatch
+	if !wo.IsNameSpaced {
+		// unnamespaced resource
+		listWatch = &cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				options.LabelSelector = watcher.labelSelector
+				return (*wo.DynamicClient).Resource(gvr).List(context.TODO(), options)
+			},
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				options.LabelSelector = watcher.labelSelector
+				timeoutSeconds := int64(5 * time.Minute.Seconds() * (rand.Float64() + 1.0))
+				options.TimeoutSeconds = &timeoutSeconds
+				return (*wo.DynamicClient).Resource(gvr).Watch(context.TODO(), options)
+			},
+		}
+	} else {
+		// wo.Namespace specified namespace, if "" watch all namespace
+		listWatch = &cache.ListWatch{
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
+				options.LabelSelector = watcher.labelSelector
+				return (*wo.DynamicClient).Resource(gvr).Namespace(wo.Namespace).List(context.TODO(), options)
+			},
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
+				options.LabelSelector = watcher.labelSelector
+				timeoutSeconds := int64(5 * time.Minute.Seconds() * (rand.Float64() + 1.0))
+				options.TimeoutSeconds = &timeoutSeconds
+				return (*wo.DynamicClient).Resource(gvr).Namespace(wo.Namespace).Watch(context.TODO(), options)
+			},
+		}
+	}
 
 	// register event handler.
 	eventHandler := cache.ResourceEventHandlerFuncs{
@@ -96,11 +207,16 @@ func NewWatcher(client *rest.Interface, namespace string, resourceType string, r
 	}
 
 	// build informer.
-	store, controller := cache.NewInformer(listWatch, objType, 0, eventHandler)
+	store, controller := cache.NewInformer(listWatch, wo.ObjType, 0, eventHandler)
 	watcher.store = store
 	watcher.controller = controller
 
-	return watcher
+	return watcher, nil
+}
+
+// GetTriggerQueue returns queue for requeue retry object
+func (w *Watcher) GetTriggerQueue() workqueue.RateLimitingInterface {
+	return w.eventQueue
 }
 
 // GetByKey returns object data by target key.
@@ -116,11 +232,11 @@ func (w *Watcher) ListKeys() []string {
 // Run starts the watcher.
 func (w *Watcher) Run(stopCh <-chan struct{}) {
 	// do with handler data
-	go w.handleQueueData(stopCh)
+	//go w.handleQueueData(stopCh)
 
 	// metrics collect watcher fifo queue length
 	go wait.NonSlidingUntil(func() {
-		metrics.ReportK8sWatcherQueueLength(w.resourceType, float64(w.queue.Length()))
+		metrics.ReportK8sWatcherQueueLength(w.resourceType, float64(w.eventQueue.Len()))
 	}, time.Second*1, stopCh)
 
 	// metrics collect watcher cache keys length
@@ -128,104 +244,234 @@ func (w *Watcher) Run(stopCh <-chan struct{}) {
 		metrics.ReportK8sWatcherCacheKeys(w.resourceType, float64(len(w.ListKeys())))
 	}, time.Second*1, stopCh)
 
+	wg := &sync.WaitGroup{}
+	wg.Add(5)
+	for i := 0; i < 5; i++ {
+		go func() {
+			defer wg.Done()
+			// Run a worker thread that just dequeues items, processes them, and marks them done.
+			// It enforces that the reconcileHandler is never invoked concurrently with the same object.
+			for w.processNextWorkItem() {
+			}
+		}()
+	}
+	go func() {
+		<-stopCh
+		w.eventQueue.ShutDown()
+		glog.Warnf("event queue shut downed")
+	}()
+
 	// run controller.
 	w.controller.Run(stopCh)
 }
 
-func (w *Watcher) handleQueueData(stopCh <-chan struct{}) {
-	glog.Infof("watcher %s handleQueueData", w.resourceType)
+// distributeDataToHandler xxx
+// distribute data to handler at watcher handlers.
+func (w *Watcher) distributeDataToHandler(data *action.SyncData) {
+	handlerKey := w.writer.GetHandlerKeyBySyncData(data)
+	if handlerKey == "" {
+		glog.Errorf("get handler key failed, resource: %s, namespace: %s, name: %s", data.Kind, data.Namespace, data.Name)
+		return
+	}
 
-	for {
-		select {
-		case <-stopCh:
-			glog.Infof("receive stop signal, quit watcher: %s", w.resourceType)
-			return
-		default:
-		}
-
-		data := w.queue.Pop()
-		sData, ok := data.(*action.SyncData)
-		if !ok {
-			glog.Errorf("queue data trans to *action.SyncData failed")
-			continue
-		}
-
-		glog.V(4).Infof("queue length[%s:%d] resource[%s:%s:%s]", w.resourceType, w.queue.Length(), sData.Action, sData.Namespace, sData.Name)
-		w.writer.Sync(sData)
+	if handler, ok := w.writer.Handlers[handlerKey]; ok {
+		handler.HandleWithTimeout(data, defaultQueueTimeout)
+	} else {
+		glog.Errorf("can't distribute the normal metadata, unknown DataType[%+v]", data.Kind)
 	}
 }
 
 // AddEvent is event handler for add resource event.
 func (w *Watcher) AddEvent(obj interface{}) {
-	data := w.genSyncData(obj, action.SyncDataActionAdd)
-	if data == nil {
+	dMeta, isObj := obj.(metav1.Object)
+	if !isObj {
+		glog.Errorf("Error casting to k8s metav1 object, new obj: %+v", obj)
 		return
 	}
-	w.queue.Append(data)
+
+	// ignore managedFields field
+	if !options.IsWatchManagedFields {
+		dMeta.SetManagedFields(nil)
+	}
+
+	item := types.NamespacedName{
+		Name:      dMeta.GetName(),
+		Namespace: dMeta.GetNamespace(),
+	}
+	w.eventQueue.Forget(item)
+	w.eventQueue.Add(item)
 }
 
 // DeleteEvent is event handler for delete resource event.
 func (w *Watcher) DeleteEvent(obj interface{}) {
-	data := w.genSyncData(obj, action.SyncDataActionDelete)
-	if data == nil {
+	// Deal with tombstone events by pulling the object out.  Tombstone events wrap the object in a
+	// DeleteFinalStateUnknown struct, so the object needs to be pulled out.
+	// Copied from sample-controller
+	// This should never happen if we aren't missing events, which we have concluded that we are not
+	// and made decisions off of this belief.  Maybe this shouldn't be here?
+	var ok bool
+	if _, ok = obj.(metav1.Object); !ok {
+		// If the object doesn't have Metadata, assume it is a tombstone object of type DeletedFinalStateUnknown
+		tombstone, ok := obj.(cache.DeletedFinalStateUnknown)
+		if !ok {
+			glog.Errorf("Error decoding objects. Expected cache.DeletedFinalStateUnknown, obj type %s, obj %v",
+				fmt.Sprintf("%T", obj), obj)
+			return
+		}
+		// Set obj to the tombstone obj
+		obj = tombstone.Obj
+	}
+	dMeta, isObj := obj.(metav1.Object)
+	if !isObj {
+		glog.Errorf("Error casting to k8s metav1 object, new obj: %+v", obj)
 		return
 	}
-	w.queue.Append(data)
+
+	// ignore managedFields field
+	if !options.IsWatchManagedFields {
+		dMeta.SetManagedFields(nil)
+	}
+
+	item := types.NamespacedName{
+		Name:      dMeta.GetName(),
+		Namespace: dMeta.GetNamespace(),
+	}
+	w.eventQueue.Forget(item)
+	w.eventQueue.Add(item)
 }
 
 // UpdateEvent is event handler for update resource event.
 func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
+	nMeta, ok := newObj.(metav1.Object)
+	if !ok {
+		glog.Errorf("Error casting to k8s metav1 object, new obj: %+v", newObj)
+		return
+	}
+	oMeta, ok := oldObj.(metav1.Object)
+	if !ok {
+		glog.Errorf("Error casting to k8s metav1 object, old obj: %+v", oldObj)
+		return
+	}
+
+	// ignore managedFields field
+	if !options.IsWatchManagedFields {
+		nMeta.SetManagedFields(nil)
+		oMeta.SetManagedFields(nil)
+	}
+
 	// compare the object changes for update.
 	if reflect.DeepEqual(oldObj, newObj) {
-		newObjMetadata := newObj.(metav1.Object)
-
 		// there is no changes, no need to update.
 		glog.V(2).Infof("watcher got the same ResourceType[%s]: %s/%s",
-			w.resourceType, newObjMetadata.GetNamespace(), newObjMetadata.GetName())
+			w.resourceType, nMeta.GetNamespace(), nMeta.GetName())
 		return
 	}
 
 	// skip unnecessary node update event to reduce writer-queues pressure.
 	if w.resourceType == "Node" {
-		oldNode := oldObj.(*v1.Node)
-		newNode := newObj.(*v1.Node)
-
-		// NOTE: a best way is to use deepcopy function, save the common fields,
-		// update the change fields.
-
-		var tempLastTimes = make([]metav1.Time, 5)
-		tempVersion := newNode.ResourceVersion
-		newNode.ResourceVersion = oldNode.ResourceVersion
-
-		for i := range newNode.Status.Conditions {
-			tempLastTimes[i] = newNode.Status.Conditions[i].LastHeartbeatTime
-			newNode.Status.Conditions[i].LastHeartbeatTime = oldNode.Status.Conditions[i].LastHeartbeatTime
-		}
-
-		// the first DeepEqual skips in obj level, the second DeepEqual skips
-		// the node data after save common fields.
-		if reflect.DeepEqual(oldNode, newNode) {
-			glog.V(2).Infof("skip unnecessary node update event")
+		// convert to unstructured object
+		oldNodeUnstructured, oOk := oldObj.(*unstructured.Unstructured)
+		newNodeUnstructured, nOk := newObj.(*unstructured.Unstructured)
+		if !oOk || !nOk {
+			glog.Errorf("Error casting to k8s metav1 unstructured object, new obj: %+v", newObj)
 			return
 		}
 
-		// recover new node metadata after DeepEqual finally.
-		newNode.ResourceVersion = tempVersion
-		for i := range newNode.Status.Conditions {
-			newNode.Status.Conditions[i].LastHeartbeatTime = tempLastTimes[i]
+		// convert to corev1 object
+		oldNode, newNode := &v1.Node{}, &v1.Node{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(oldNodeUnstructured.UnstructuredContent(), oldNode); err != nil {
+			glog.Errorf("Error casting to k8s corev1 object, old obj: %+v", oldObj)
+			return
+		}
+
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(newNodeUnstructured.UnstructuredContent(), newNode); err != nil {
+			glog.Errorf("Error casting to k8s corev1 object, new obj: %+v", newObj)
+			return
+		}
+
+		if len(newNode.Status.Conditions) == len(oldNode.Status.Conditions) {
+			// NOTE: a best way is to use deepcopy function, save the common fields,
+			// update the change fields.
+			var tempLastTimes = make([]metav1.Time, len(newNode.Status.Conditions))
+			tempVersion := newNode.ResourceVersion
+			newNode.ResourceVersion = oldNode.ResourceVersion
+
+			for i := range newNode.Status.Conditions {
+				tempLastTimes[i] = newNode.Status.Conditions[i].LastHeartbeatTime
+				newNode.Status.Conditions[i].LastHeartbeatTime = oldNode.Status.Conditions[i].LastHeartbeatTime
+			}
+
+			// the first DeepEqual skips in obj level, the second DeepEqual skips
+			// the node data after save common fields.
+			if reflect.DeepEqual(oldNode, newNode) {
+				glog.V(2).Infof("skip unnecessary node %s update event", newNode.GetName())
+				return
+			}
+			// recover new node metadata after DeepEqual finally.
+			newNode.ResourceVersion = tempVersion
+			for i := range newNode.Status.Conditions {
+				newNode.Status.Conditions[i].LastHeartbeatTime = tempLastTimes[i]
+			}
 		}
 	}
-
-	// it's need to update finally, sync metadata now.
-	data := w.genSyncData(newObj, action.SyncDataActionUpdate)
-	if data == nil {
-		return
+	item := types.NamespacedName{
+		Name:      nMeta.GetName(),
+		Namespace: nMeta.GetNamespace(),
 	}
-	w.queue.Append(data)
+	w.eventQueue.Forget(item)
+	w.eventQueue.Add(item)
+}
+
+// processNextWorkItem will read a single work item off the workqueue and
+// attempt to process it, by calling the reconcileHandler.
+func (w *Watcher) processNextWorkItem() bool {
+	obj, shutdown := w.eventQueue.Get()
+	if shutdown {
+		// Stop working
+		return false
+	}
+
+	// We call Done here so the workqueue knows we have finished
+	// processing this item. We also must remember to call Forget if we
+	// do not want this work item being re-queued. For example, we do
+	// not call Forget if a transient error occurs, instead the item is
+	// put back on the workqueue and attempted again after a back-off
+	// period.
+	defer w.eventQueue.Done(obj)
+
+	tObj := obj.(types.NamespacedName)
+	key := tObj.Name
+	if len(tObj.Namespace) > 0 {
+		key = tObj.Namespace + "/" + tObj.Name
+	}
+	storeObj, isExisted, err := w.store.GetByKey(key)
+	if err != nil {
+		glog.Errorf("get store obj by key %s failed, requeue, err %s", key, err.Error())
+		w.eventQueue.AddRateLimited(obj)
+		return true
+	}
+	if !isExisted {
+		data := w.genSyncData(tObj, nil, action.SyncDataActionDelete)
+		if data == nil {
+			// event should be filterd
+			return true
+		}
+		w.distributeDataToHandler(data)
+		w.eventQueue.Forget(obj)
+		return true
+	}
+	data := w.genSyncData(tObj, storeObj, action.SyncDataActionUpdate)
+	if data == nil {
+		// event should be filterd
+		return true
+	}
+	w.distributeDataToHandler(data)
+	w.eventQueue.Forget(obj)
+	return true
 }
 
 // isEventShouldFilter filters k8s system events.
-func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bool {
+func (w *Watcher) isEventShouldFilter(meta types.NamespacedName, eventAction string) bool {
 	// NOTE: event not support delete
 	// bugfix here: must in top of this func, in case of Name or Namespace return true.
 	if eventAction == action.SyncDataActionDelete && w.resourceType == ResourceTypeEvent {
@@ -233,9 +479,9 @@ func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bo
 		return true
 	}
 
-	if meta.GetNamespace() == "kube-system" && w.resourceType == ResourceTypeEvent {
+	if meta.Namespace == "kube-system" && w.resourceType == ResourceTypeEvent {
 		// kubeops start pod with those prefix.
-		name := meta.GetName()
+		name := meta.Name
 		if strings.HasPrefix(name, "kube-") ||
 			strings.HasPrefix(name, "kubedns-") ||
 			strings.HasPrefix(name, "nginx-proxy") ||
@@ -245,26 +491,43 @@ func (w *Watcher) isEventShouldFilter(meta metav1.Object, eventAction string) bo
 		return true
 	}
 
-	if meta.GetNamespace() == "kube-system" {
+	if _, isFilter := w.namespaceFilters[meta.Namespace]; isFilter {
 		return true
 	}
-
-	if meta.GetName() == "kubernetes" {
+	if _, isFilter := w.nameFilters[meta.Name]; isFilter {
 		return true
 	}
 	return false
 }
 
-func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncData {
+func (w *Watcher) genSyncData(nsedName types.NamespacedName, obj interface{}, eventAction string) *action.SyncData {
+	namespace := nsedName.Namespace
+	name := nsedName.Name
 
-	// construct and send
-	dMeta := obj.(metav1.Object)
-	namespace := dMeta.GetNamespace()
-	name := dMeta.GetName()
-
-	if w.isEventShouldFilter(dMeta, eventAction) {
+	if w.isEventShouldFilter(nsedName, eventAction) {
 		glog.V(2).Infof("watcher metadata is filtered %s %s: %s/%s", eventAction, w.resourceType, namespace, name)
 		return nil
+	}
+
+	if obj != nil {
+		dMeta, isObj := obj.(metav1.Object)
+		if !isObj {
+			glog.Errorf("Error casting to metav1 Object, obj: %+v", obj)
+			return nil
+		}
+		// don't remove this code
+		// in a specific scenario, when using label selector to watch multiple sub-clusters of a karmada federated cluster,
+		// returned data may not carry the label selector, so we add label selector into object returned.
+		if len(w.labelMap) != 0 {
+			tmpLabels := dMeta.GetLabels()
+			if tmpLabels == nil {
+				tmpLabels = make(map[string]string)
+			}
+			for k, v := range w.labelMap {
+				tmpLabels[k] = v
+			}
+			dMeta.SetLabels(tmpLabels)
+		}
 	}
 
 	ownerUID := ""
@@ -276,6 +539,7 @@ func (w *Watcher) genSyncData(obj interface{}, eventAction string) *action.SyncD
 		Action:    eventAction,
 		Data:      obj,
 		OwnerUID:  ownerUID,
+		RequeueQ:  w.GetTriggerQueue(),
 	}
 
 	return syncData

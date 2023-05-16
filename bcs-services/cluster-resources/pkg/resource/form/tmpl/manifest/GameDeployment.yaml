@@ -1,0 +1,7 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: GameDeployment
+{{ include "custom.gWorkloadMetadata" . }}
+spec:
+  minReadySeconds: {{ .spec.replicas.minReadySecs | default 0 }}
+  {{- include "custom.gworkloadCommonSpec" . | nindent 2 }}
+  {{- include "workload.podTemplate" . | nindent 2 }}

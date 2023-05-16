@@ -17,8 +17,11 @@ specific language governing permissions and limitations under the License.
 import uuid
 
 from django.conf import settings
+from django.http import HttpRequest
 from werkzeug.local import Local as _Local
 from werkzeug.local import release_local
+
+from backend.utils import FancyDict
 
 _local = _Local()
 
@@ -53,6 +56,17 @@ class Local(Singleton):
     def request(self, value):
         """设置全局request对象"""
         _local.request = value
+
+    def new_dummy_request(self, access_token, username):
+        """celery 后台任务等主动设置"""
+        if self.request is not None:
+            return
+
+        request = HttpRequest()
+        token = FancyDict({"access_token": access_token})
+        request.user = FancyDict({"token": token, "username": username})
+        request.request_id = new_request_id()
+        _local.request = request
 
     @property
     def request_id(self):

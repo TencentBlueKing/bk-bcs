@@ -1,0 +1,25 @@
+{
+  "kind": "ConfigMap",
+  "class": "config",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_configmap",
+      "alias": "ConfigMap Simple Demo",
+      "description": "A simple configmap demo with only basic configuration",
+      "manifest": null
+    },
+    {
+      "name": "immutable_configmap",
+      "alias": "Immutable ConfigMap",
+      "description": "[k8s v1.19+] Set immutable field as true to ensures that data stored in the ConfigMap cannot be updated (only object metadata can be modified).",
+      "manifest": null
+    },
+    {
+      "name": "binary_data_configmap",
+      "alias": "ConfigMap Use BinaryData Example",
+      "description": "BinaryData can contain byte sequences that are not in the UTF-8 range. The keys stored in BinaryData must not overlap with the ones in the Data field, this is enforced during validation process.",
+      "manifest": null
+    }
+  ]
+}

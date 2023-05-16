@@ -74,6 +74,7 @@ func NewAPIServer(ctx context.Context, conf *config.APIServerConfig, logManager 
 	}
 }
 
+// startGateway xxx
 // init http gateway(with TLS) of grpc server(with TLS)
 func (s *Server) startGateway() error {
 	var opts []grpc.DialOption
@@ -84,7 +85,8 @@ func (s *Server) startGateway() error {
 		opts = append(opts, grpc.WithInsecure())
 	}
 	// init http gateway
-	s.gwmux = runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}))
+	s.gwmux = runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true,
+		EmitDefaults: true}))
 	err = proto.RegisterLogManagerGwFromEndpoint(s.ctx, s.gwmux, s.grpcEndpoint, opts)
 	if err != nil {
 		blog.Errorf("register logmanager gateway failed, err %s", err.Error())
@@ -181,17 +183,20 @@ func (s *Server) Run() error {
 	var err error
 	s.grpcEndpoint = fmt.Sprintf("%s:%d", s.conf.Host, s.conf.Port)
 	s.httpEndpoint = fmt.Sprintf("%s:%d", s.conf.Host, s.conf.Port-1)
-	s.clientTLS, err = ssl.ClientTslConfVerity(s.conf.APICerts.CAFile, s.conf.APICerts.ClientCertFile, s.conf.APICerts.ClientKeyFile, static.ClientCertPwd)
+	s.clientTLS, err = ssl.ClientTslConfVerity(s.conf.APICerts.CAFile, s.conf.APICerts.ClientCertFile,
+		s.conf.APICerts.ClientKeyFile, static.ClientCertPwd)
 	if err != nil {
 		blog.Warnf("parse client TLS config failed: %s", err.Error())
 		s.clientTLS = nil
 	}
-	s.serverTLS, err = ssl.ServerTslConf(s.conf.APICerts.CAFile, s.conf.APICerts.ServerCertFile, s.conf.APICerts.ServerKeyFile, static.ServerCertPwd)
+	s.serverTLS, err = ssl.ServerTslConf(s.conf.APICerts.CAFile, s.conf.APICerts.ServerCertFile,
+		s.conf.APICerts.ServerKeyFile, static.ServerCertPwd)
 	if err != nil {
 		blog.Warnf("parse server TLS config failed: %s", err.Error())
 		s.serverTLS = nil
 	}
-	s.etcdTLS, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile, s.conf.EtcdCerts.ClientKeyFile, "")
+	s.etcdTLS, err = ssl.ClientTslConfVerity(s.conf.EtcdCerts.CAFile, s.conf.EtcdCerts.ClientCertFile,
+		s.conf.EtcdCerts.ClientKeyFile, "")
 	if err != nil {
 		blog.Warnf("parse etcd client TLS config failed: %s", err.Error())
 		s.etcdTLS = nil

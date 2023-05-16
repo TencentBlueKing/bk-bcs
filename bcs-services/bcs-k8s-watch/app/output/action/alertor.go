@@ -17,7 +17,9 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/bcs-health/api"
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -25,12 +27,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/options"
 )
 
+// Alertor struct
 type Alertor struct {
 	ClusterID string
 	Module    string
 	ModuleIP  string
 }
 
+// NewAlertor create a new Alertor
 func NewAlertor(clusterID, moduleIP string, zkHosts string, tls options.TLS) (*Alertor, error) {
 	var alertor = &Alertor{
 		ClusterID: clusterID,
@@ -53,6 +57,7 @@ func NewAlertor(clusterID, moduleIP string, zkHosts string, tls options.TLS) (*A
 	return alertor, err
 }
 
+// DoAlarm do alarm
 func (alertor *Alertor) DoAlarm(syncData *SyncData) {
 	healthInfo := alertor.genHealthInfo(syncData)
 	// do alarm
@@ -61,16 +66,26 @@ func (alertor *Alertor) DoAlarm(syncData *SyncData) {
 	}
 }
 
+// genHealthInfo generate health info
 func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 	data := syncData.Data
-	event, ok := data.(*v1.Event)
+	// convert to unstructured object
+	dataUnstructured, ok := data.(*unstructured.Unstructured)
 	if !ok {
-		glog.Errorf("Event Convert object to v1.Event fail! object is %v", data)
+		glog.Errorf("Event Convert object to unstructured event fail! object is %v", data)
+		return nil
+	}
+
+	// convert to corev1 object
+	event := &v1.Event{}
+	err := runtime.DefaultUnstructuredConverter.FromUnstructured(dataUnstructured.UnstructuredContent(), event)
+	if err != nil {
+		glog.Errorf("Event Convert object to v1.Event fail! object is %v", dataUnstructured)
 		return nil
 	}
 
 	// 2018-07-11: change IP from event source IP to module IP
-	//IP:        event.Source.Host,
+	// IP:        event.Source.Host,
 	message := fmt.Sprintf("[%s %s]%s:%s", event.InvolvedObject.Kind,
 		event.InvolvedObject.Name, event.Reason, event.Message)
 	seconds := uint16(60)
@@ -78,7 +93,7 @@ func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 		AlarmName: "podEventWarnning",
 		Kind:      api.WarnKind,
 		Message:   message,
-		//AlarmID:            string(event.InvolvedObject.UID),
+		// AlarmID:            string(event.InvolvedObject.UID),
 		AlarmID:            syncData.OwnerUID,
 		ConvergenceSeconds: &seconds,
 		ResourceType:       event.InvolvedObject.Kind,
@@ -88,6 +103,7 @@ func (alertor *Alertor) genHealthInfo(syncData *SyncData) *api.HealthInfo {
 
 }
 
+// sendAlarm send alarm
 func (alertor *Alertor) sendAlarm(healthInfo *api.HealthInfo) bool {
 	healthInfo.Module = alertor.Module
 	healthInfo.IP = alertor.ModuleIP
@@ -100,7 +116,7 @@ func (alertor *Alertor) sendAlarm(healthInfo *api.HealthInfo) bool {
 
 	glog.Errorf("Add Event Pod Warnning: %v", healthInfo)
 
-	//return true
+	// return true
 
 	if err := api.SendHealthInfo(healthInfo); err != nil {
 		glog.Errorf("SendHealthInfo failed:%s", err.Error())

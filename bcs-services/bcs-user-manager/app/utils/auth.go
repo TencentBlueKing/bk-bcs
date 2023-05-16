@@ -45,7 +45,7 @@ func Authenticate(req *http.Request) bool {
 	}
 
 	// only authenticate admin user
-	if user.UserType == sqlstore.AdminUser && !user.HasExpired() {
+	if user.UserType == models.AdminUser && !user.HasExpired() {
 		return true
 	}
 	return false

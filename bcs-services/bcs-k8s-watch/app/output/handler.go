@@ -14,8 +14,11 @@
 package output
 
 import (
+	"math/rand"
+	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -25,25 +28,28 @@ import (
 
 const (
 	// defaultHandlerQueueSize is default queue size of Handler.
-	defaultHandlerQueueSize = 1024
+	defaultHandlerQueueSize = 102400
 
 	// defaultHandleInterval is default interval of handle.
 	defaultHandleInterval = 500 * time.Millisecond
 
 	// defaultHandlerReportPeriod report queue length for handler dataType
 	defaultHandlerReportPeriod = 5 * time.Second
+
+	// defaultMaxRetryMillisecond millisecond for retry
+	defaultMaxRetryMillisecond = 5000
 )
 
 // Action handles the metadata in ADD/DEL/UPDATE methods.
 type Action interface {
 	// Add adds new resource metadata.
-	Add(syncData *action.SyncData)
+	Add(syncData *action.SyncData) error
 
 	// Delete deletes target resource metadata.
-	Delete(syncData *action.SyncData)
+	Delete(syncData *action.SyncData) error
 
 	// Update updates target resource metadata.
-	Update(syncData *action.SyncData)
+	Update(syncData *action.SyncData) error
 }
 
 // Handler is resource handler, consumes metadata distributed from
@@ -88,15 +94,7 @@ func (h *Handler) HandleWithTimeout(data *action.SyncData, timeout time.Duration
 	}
 }
 
-// debugs here.
-func (h *Handler) debug() {
-	for {
-		time.Sleep(debugInterval)
-		glog.Infof("Handler[%+v] debug: QueueLen[%d]", h.dataType, len(h.queue))
-	}
-}
-
-// reportQueueLength report datatype length to prometheus metrics
+// reportHandlerQueueLength report datatype length to prometheus metrics
 func (h *Handler) reportHandlerQueueLength() {
 	metrics.ReportK8sWatchHandlerQueueLength(h.clusterID, h.dataType, float64(len(h.queue)))
 }
@@ -108,19 +106,32 @@ func (h *Handler) handle() {
 	for {
 		select {
 		case data := <-h.queue:
+			var err error
 			metrics.ReportK8sWatchHandlerQueueLengthDec(h.clusterID, h.dataType)
 			switch data.Action {
 			case action.SyncDataActionAdd:
-				h.act.Add(data)
+				err = h.act.Add(data)
 
 			case action.SyncDataActionDelete:
-				h.act.Delete(data)
+				err = h.act.Delete(data)
 
 			case action.SyncDataActionUpdate:
-				h.act.Update(data)
+				err = h.act.Update(data)
 
 			default:
 				glog.Errorf("can't handle metadata, unknown action type[%+v]", data.Action)
+			}
+			if err != nil {
+				if strings.HasPrefix(h.dataType, "Event") {
+					return
+				}
+				requeueMs := rand.Int31n(defaultMaxRetryMillisecond)
+				glog.Errorf("requeue %s/%s/%s/%s after %d ms",
+					data.Name, data.Namespace, data.Kind, data.Action, requeueMs)
+				data.RequeueQ.AddAfter(types.NamespacedName{
+					Name:      data.Name,
+					Namespace: data.Namespace,
+				}, time.Duration(requeueMs)*time.Millisecond)
 			}
 
 		case <-time.After(defaultQueueTimeout):
@@ -135,7 +146,4 @@ func (h *Handler) Run(stopCh <-chan struct{}) {
 	glog.Infof("%+v resource handler is starting now", h.dataType)
 	go wait.NonSlidingUntil(h.handle, defaultHandleInterval, stopCh)
 	go wait.Until(h.reportHandlerQueueLength, defaultHandlerReportPeriod, stopCh)
-
-	// setup debug.
-	//go h.debug()
 }

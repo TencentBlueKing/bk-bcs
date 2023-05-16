@@ -11,6 +11,7 @@
  *
  */
 
+// Package queue xxx
 package queue
 
 import (

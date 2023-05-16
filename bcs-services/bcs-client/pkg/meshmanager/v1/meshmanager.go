@@ -33,7 +33,7 @@ type meshManager struct {
 	conn              *grpc.ClientConn
 }
 
-//NewMeshManager create client for bcs-mesh-manager
+// NewMeshManager create client for bcs-mesh-manager
 func NewMeshManager(options types.ClientOptions) clientmeshmanager.MeshManager {
 	m := &meshManager{
 		clientOption: options,
@@ -43,7 +43,7 @@ func NewMeshManager(options types.ClientOptions) clientmeshmanager.MeshManager {
 
 func (m *meshManager) dialGrpc() error {
 	var err error
-	//https://127.0.0.1:80 -> 127.0.0.1:80
+	// https://127.0.0.1:80 -> 127.0.0.1:80
 	re := regexp.MustCompile("https?://")
 	s := re.Split(m.clientOption.BcsApiAddress, 2)
 	addr := s[len(s)-1]
@@ -72,7 +72,8 @@ func (m *meshManager) closeGrpc() {
 }
 
 // CreateMeshCluster create meshcluster crd and install istio service
-func (m *meshManager) CreateMeshCluster(req *meshmanager.CreateMeshClusterReq) (*meshmanager.CreateMeshClusterResp, error) {
+func (m *meshManager) CreateMeshCluster(req *meshmanager.CreateMeshClusterReq) (*meshmanager.CreateMeshClusterResp,
+	error) {
 	err := m.dialGrpc()
 	if err != nil {
 		return nil, err
@@ -83,7 +84,8 @@ func (m *meshManager) CreateMeshCluster(req *meshmanager.CreateMeshClusterReq) (
 }
 
 // DeleteMeshCluster delete meshcluster crd and uninstall istio service
-func (m *meshManager) DeleteMeshCluster(req *meshmanager.DeleteMeshClusterReq) (*meshmanager.DeleteMeshClusterResp, error) {
+func (m *meshManager) DeleteMeshCluster(req *meshmanager.DeleteMeshClusterReq) (*meshmanager.DeleteMeshClusterResp,
+	error) {
 	err := m.dialGrpc()
 	if err != nil {
 		return nil, err
@@ -93,7 +95,7 @@ func (m *meshManager) DeleteMeshCluster(req *meshmanager.DeleteMeshClusterReq) (
 	return m.meshManagerClient.DeleteMeshCluster(context.TODO(), req)
 }
 
-//ListMeshCluster list meshcluster crds, contains istio components service status
+// ListMeshCluster list meshcluster crds, contains istio components service status
 func (m *meshManager) ListMeshCluster(req *meshmanager.ListMeshClusterReq) (*meshmanager.ListMeshClusterResp, error) {
 	err := m.dialGrpc()
 	if err != nil {

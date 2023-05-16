@@ -1,0 +1,656 @@
+- msgID: "查看/操作自定义资源 %s 需要指定命名空间"
+  en: "namespace is required when view or operate custom resource %s"
+- msgID: "共享集群中不支持查看 CRD %s 信息"
+  en: "get crd info is disabled in shared cluster"
+- msgID: "Pod %s/%s 不存在父级资源，不允许重新调度"
+  en: "reschedule pod %s/%s is not allowed because has not ownerRef"
+- msgID: "Pod %s/%s 父级资源存在 Job，不允许重新调度"
+  en: "reschedule pod %s/%s is not allowed because ownerRef exists Job"
+- msgID: "获取容器环境变量失败，请确认容器处于 Running 状态"
+  en: "failed to get container environment variables, please make sure the container is in Running state"
+- msgID: 预览表单渲染结果失败，请检查您填写的表单配置；错误信息：%w
+  en: "failed to preview the rendering result of the form, please check the form configuration you filled in; error: %w"
+- msgID: "获取项目 %s 信息失败：%v"
+  en: "failed to get project %s info: %v"
+- msgID: "获取集群 %s 信息失败：%v"
+  en: "failed to get cluster %s info: %v"
+- msgID: "集群 %s 不属于指定项目!"
+  en: "cluster %s no belong to project!"
+- msgID: "当资源类型为自定义对象时，需要指定 ApiVersion & CRDName"
+  en: "apiVersion & CRDName are required when resource kind is custom object"
+- msgID: "CRD %s 的 kind 与 %s 不匹配"
+  en: "CRD %s's kind not match %s"
+- msgID: "查询当前自定义资源事件需要指定 Namespace"
+  en: "namespace is required when fetch current custom resource's events"
+- msgID: "查询当前资源事件需要指定 Namespace"
+  en: "namespace is required when fetch current resource's events"
+- msgID: 需要指定命名空间
+  en: "namespace is required"
+- msgID: "当前资源类型 %s 不受支持"
+  en: "resource kind %s is unsupported"
+- msgID: 无指定操作权限
+  en: "no operate permission!"
+- msgID: "资源类型 `%s` 不支持表单化"
+  en: "form edit mode is unsupported for resource kind %s"
+- msgID: 在共享集群中，只有指定的数类资源可以执行订阅功能
+  en: "only several resources allow subscribe events in shared cluster"
+- msgID: 共享集群暂时只支持查询部分自定义资源
+  en: "only several custom resources available in shared cluster"
+- msgID: 当前资源已设置为不可变更状态，无法编辑
+  en: "current resource has been set to an immutable state and cannot be edited"
+- msgID: 配置信息->删除保护策略->总是允许删除
+  en: "Spec -> Deletion Protect Policy -> Always"
+- msgID: "标签字段 %s: %s"
+  en: "label field %s: %s"
+- msgID: "或确保实例数量为 0"
+  en: "or make sure the number of instances is 0"
+- msgID: 当前实例已添加删除保护功能，若确认要删除，请修改实例
+  en: "the deletion protect function has been added to the current instance. If you want to delete it, please modify the instance"
+- msgID: "无法删除 PersistentVolumeClaim，原因："
+  en: "unable to delete PersistentVolumeClaim, reason:"
+- msgID: "已被 Pods %v 挂载"
+  en: "mounted by Pods %v"
+- msgID: "已经被 %s 等共计 %d 个 Pod 挂载"
+  en: "already mounted by a total of %d Pods such as %s"
+- msgID: "非 Available 状态，无法绑定"
+  en: "Non-Available status, unable to bind"
+- msgID: "仅可使用 NodePort，LoadBalancer 类型的 Service"
+  en: "Only NodePort, LoadBalancer type Service can be used"
+- msgID: "仅可使用 tls 证书或 Opaque 类型的 Secret"
+  en: "Only TLS cert or Opaque type secret available"
+- msgID: "仅可使用 dockerconfigjson 类型的 Secret"
+  en: "Only dockerconfigjson type secret available"
+- msgID: 不受支持的生成器格式：%s
+  en: "unsupported generator form: %s"
+- msgID: 不受支持的转换器格式：%s
+  en: "unsupported transformer form: %s"
+- msgID: "资源类型 %s 不支持扩缩容"
+  en: "scale resource %s is unsupported"
+- msgID: "资源类型 %s 不支持重新调度下属 Pod"
+  en: "reschedule resource %s is unsupported"
+- msgID: "该请求资源类型 %s 在共享集群中不可用"
+  en: "current resource %s unavailable in shared cluster"
+- msgID: 清理集群资源缓存时间间隔过短，请稍后再试
+  en: "the interval for clearing the cluster resource cache is too short, please try again later"
+- msgID: "获取资源 APIVersion 信息失败：%v"
+  en: "failed to get resource apiVersion: %v"
+- msgID: 数据清洗零值结果为空集合
+  en: "cleaning zero-valued data results in an empty collection"
+- msgID: 渲染模板失败：%v
+  en: "failed to render template: %v"
+- msgID: 加载模板失败：%v
+  en: "failed to load template: %v"
+- msgID: 值不能为空
+  en: "value required"
+- msgID: "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"
+  en: "only lowercase letters, numbers and '-' are supported and must start and end with an alphanumeric"
+- msgID: 仅可包含数字字符与小数点
+  en: "can only contain numeric characters and decimal points"
+- msgID: 超过长度限制（64）
+  en: "exceeds length limit (64)"
+- msgID: 超过长度限制（128）
+  en: "exceeds length limit (128)"
+- msgID: 超过长度限制（250）
+  en: "exceeds length limit (250)"
+- msgID: "仅支持字母，数字，'-'，'_' 及 '/' 且需以字母数字开头和结尾"
+  en: "only letters, numbers, '-', '_' and '/' are supported and must start and end with alphanumeric"
+- msgID: "需以字母数字开头和结尾，可包含 '-'，'_'，'.' 和字母数字"
+  en: "must start and end with alphanumeric, can contain '-', '_', '.' and alphanumeric"
+- msgID: 名称
+  en: Name
+- msgID: 只读
+  en: ReadOnly
+- msgID: 路径或节点
+  en: Path
+- msgID: 类型
+  en: Type
+- msgID: 默认模式
+  en: DefaultMode
+- msgID: 八进制数字（0000-0777）或十进制数字（0-511）
+  en: "Octal numbers (0000-0777) or decimal numbers (0-511)"
+- msgID: 键
+  en: Key
+- msgID: 映射目标路径
+  en: Path
+- msgID: 路径
+  en: Path
+- msgID: 配置信息
+  en: Spec
+- msgID: 参数定义
+  en: HookArgs
+- msgID: "metrics 中引用自定义参数的方式为 {{ args.自定参数键 }}<br>除了支持引用自定义参数，还支持引用内置参数，具体内置参数如下：<br>当前 Pod IP：{{ args.PodIP }}<br>当前 Pod 名称：{{ args.PodName }}<br>Pod 所在命名空间：{{ args.PodNamespace }}<br>第 idx 个容器名称：{{ args.PodContainer[idx] }}（首个容器 idx 值为 0）<br>第 idx 个修改容器名称：{{ args.ModifiedContainer[idx] }}（原地更新模式）<br>Pod HostIP：{{ args.HostIP }}"
+  en: "The way to refer to custom parameters in metrics is {{ args. Custom parameter key}}<br>In addition to supporting custom parameters, it also supports referencing built-in parameters. The specific built-in parameters are as follows:<br>Current Pod IP: {{ args .PodIP }}<br>Current Pod Name: {{ args.PodName }}<br>Pod Namespace: {{ args.PodNamespace }}<br>idx-th Container Name: {{ args.PodContainer[idx] }} (the first container idx value is 0)<br>idx-th modified container name: {{ args.ModifiedContainer[idx] }} (in-place update mode)<br>Pod HostIP: {{ args.HostIP }}"
+- msgID: 值
+  en: Value
+- msgID: "值，可为空（由创建 HookRun 时传入）"
+  en: "values, optional (passed in when the HookRun was created)"
+- msgID: "Metric 执行策略"
+  en: MetricExecPolicy
+- msgID: "并行执行：在执行时会并行执行所有 metrics；顺序执行（BcsHook-Operator 1.27.0+ 支持）：执行时顺序执行所有metrics，只有上个 metric 执行结束后才会继续执行下个 metric"
+  en: "Parallel execution: all metrics will be executed in parallel during execution; sequential execution (supported by BcsHook-Operator 1.27.0+): <br>all metrics will be executed sequentially during execution, and the next metric will be executed only after the execution of the previous metric is completed"
+- msgID: 并行执行
+  en: Parallel
+- msgID: 顺序执行
+  en: Ordered
+- msgID: 删除保护策略
+  en: DeletionProtectPolicy
+- msgID: 总是允许删除
+  en: AlwaysAllow
+- msgID: 不允许删除
+  en: NotAllow
+- msgID: "Metric 定义"
+  en: Metrics
+- msgID: "Hook 类型"
+  en: HookType
+- msgID: "webhook 调用的地址，目前只支持 get 请求，返回值必须是 json 格式"
+  en: "The address of the webhook call, currently only supports get requests, the return value must be in json format"
+- msgID: 请求超时时间
+  en: RequestTimeout
+- msgID: "提取返回 json 中的某个字段"
+  en: "Extract returns a field in json"
+- msgID: "Patch 执行成功即成功，Get 到的值于 value 一致即成功"
+  en: "Patch is successful if it is executed successfully, and if the value obtained from Get is consistent with the value, it is successful"
+- msgID: "至少包含一对 fields"
+  en: "Contains at least one pair of fields"
+- msgID: "count 表示该 metric 需要完成 hook 调用的次数，若 count 为 0，将会无限制地一直进行 hook 调用，直到满足统计策略后才会返回 OK；若 count 不为 0，则无视成功条件与统计策略，即运行达到 count 次数后直接返回 OK"
+  en: "Indicates the number of times the metric needs to complete hook calls. <br>If count is 0, hook calls will be made indefinitely, and OK will be returned until the statistical policy is met; <br>if count is not 0, the success conditions and statistical policies will be ignored. That is, after running count times, return OK directly"
+- msgID: "interval 表示两次 hook 调用的时间间隔，取值范围为 1-86400 秒。"
+  en: "The time interval between two hook calls, the value range is 1-86400 seconds."
+- msgID: 成功条件表达式
+  en: SuccessCondition
+- msgID: 统计策略
+  en: SuccessPolicy
+- msgID: 累计成功次数
+  en: SuccessfulLimit
+- msgID: 连续成功次数
+  en: ConsecutiveSuccessfulLimit
+- msgID: 次数
+  en: Count
+- msgID: 副本管理
+  en: Replicas
+- msgID: 副本数量
+  en: Replicas
+- msgID: 服务名称
+  en: ServiceName
+- msgID: "Pod 管理策略"
+  en: PodManagePolicy
+- msgID: 升级策略
+  en: UpdateStrategy
+- msgID: "原地升级策略只支持以原地重启容器的方式更新 image 字段，或以不重启不重建的方式更新 labels/annotations 字段；若更改除此之外的其它字段，则此次原地更新会卡住！"
+  en: "The in-place update strategy only supports updating the image field by restarting the container in place, or updating the labels/annotations field by not restarting and not rebuilding; <br>if you change other fields, the in-place update will be stuck!"
+- msgID: 滚动升级
+  en: RollingUpdate
+- msgID: 原地升级
+  en: InplaceUpdate
+- msgID: 手动删除
+  en: OnDelete
+- msgID: "最大调度 Pod 数量"
+  en: MaxSurge
+- msgID: "最大调度 Pod 数量 与最大不可用数量不可均为 0"
+  en: "The MaxSurge and MaxUnavailable cannot both be 0"
+- msgID: "最大调度 Pod 数量 与最大不可用数量不可均为 0，且最大不可用数量不可超过 100%"
+  en: "The MaxSurge and MaxUnavailable cannot both be 0, and MaxUnavailable cannot greate than 100%"
+- msgID: 单位
+  en: Unit
+- msgID: 个
+  en: Cnt
+- msgID: 最大不可用数量
+  en: MaxUnavailable
+- msgID: 最小就绪时间
+  en: MinReadySecs
+- msgID: 保留旧版本实例数量
+  en: Partition
+- msgID: 优雅更新时间
+  en: GracePeriodSeconds
+- msgID: 优雅删除/更新
+  en: GracefulManage
+- msgID: 启用
+  en: Enabled
+- msgID: "Hook 传入参数"
+  en: "Hook Call Args"
+- msgID: 删除保护
+  en: DeletionProtect
+- msgID: 策略
+  en: Policy
+- msgID: "实例数为 0 时可删除"
+  en: Cascading
+- msgID: "Pod 规则"
+  en: "Pod Rules"
+- msgID: 命名空间
+  en: Namespace
+- msgID: 优先级
+  en: Priority
+- msgID: 优先
+  en: Preferred
+- msgID: 必须
+  en: Required
+- msgID: 值（多个值请以英文逗号分隔）
+  en: "values (Multiple values should be separated by commas)"
+- msgID: 拓扑键
+  en: TopologyKey
+- msgID: 亲和性
+  en: Affinity
+- msgID: 反亲和性
+  en: AntiAffinity
+- msgID: 权重
+  en: Weight
+- msgID: "Node 规则"
+  en: "Node Rules"
+- msgID: 重新创建
+  en: Recreate
+- msgID: 进程截止时间
+  en: ProgressDeadlineSecs
+- msgID: 进程截止时间必须大于最小就绪时间
+  en: "ProgressDeadlineSecs must be greater than MinReadySecs"
+- msgID: "OrderedReady：顺序启动或停止 Pod，若前一个 Pod 启动或停止未完成，则不会操作下一个 Pod<br>Parallel：启动或停止 Pod 前，不会检查 Pod 状态，直接进行并发操作<br>注意：此选项只会影响扩缩容操作，对更新操作无效！"
+  en: "OrderedReady: Start or stop Pods sequentially. If the previous Pod is not started or stopped, the next Pod will not be operated.<br>Parallel: Before starting or stopping a Pod, the Pod status will not be checked, and concurrent operations will be performed directly<br>Note : This option only affects scale operation, not for update operation!"
+- msgID: 分区滚动更新
+  en: Partition
+- msgID: "更新策略可以实现分区，所有序号大于该值的 Pod 都会被更新<br>例如：存在 Pod web-0 至 web-9，这里设置为 5，则只会更新 web-5 至 web-9，其他 Pod 不会被更新"
+  en: "The update strategy can implement partitioning, and all Pods with a sequence number greater than this value will be updated<br>For example: if there are pods web-0 to web-9, if set to 5 here, only web-5 to web-9 will be updated, and other pods will not be updated"
+- msgID: 存储卷声明模板
+  en: VolumeClaimTemplate
+- msgID: 卷声明
+  en: Claims
+- msgID: 持久卷声明名称
+  en: "PersistentVolumeClaim Name"
+- msgID: 卷声明类型
+  en: ClaimType
+- msgID: 指定存储类以创建持久卷
+  en: "Use storage class to create persistent volume"
+- msgID: 使用已存在的持久卷
+  en: "Use existing persistent volume"
+- msgID: 持久卷名称
+  en: PersistentVolume
+- msgID: 存储类名称
+  en: StorageClass
+- msgID: 容量
+  en: Size
+- msgID: 值不能为零
+  en: "no zero value required"
+- msgID: 访问模式
+  en: AccessModes
+- msgID: 任务管理
+  en: JobManage
+- msgID: 调度规则
+  en: ScheduleRules
+- msgID: "CronTab 表达式，形如：*/10 * * * *"
+  en: "CronTab expression like */10 * * * *"
+- msgID: 并发策略
+  en: ConcurrencyPolicy
+- msgID: "允许多个 Job 同时运行"
+  en: Allow
+- msgID: "若 Job 未结束，则跳过"
+  en: Forbid
+- msgID: "若 Job 未结束，则替换"
+  en: Replace
+- msgID: 暂停
+  en: Suspend
+- msgID: 需完成数
+  en: Completions
+- msgID: 并发数
+  en: Parallelism
+- msgID: 重试次数
+  en: BackoffLimit
+- msgID: 活跃终止时间
+  en: ActiveDDLSecs
+- msgID: 历史累计成功数
+  en: SuccessfulJobsHistoryLimit
+- msgID: 历史累计失败数
+  en: FailedJobsHistoryLimit
+- msgID: 运行截止时间
+  en: StartingDDLSecs
+- msgID: 节点选择
+  en: NodeSelect
+- msgID: 节点类型
+  en: NodeType
+- msgID: 任意可用节点
+  en: AnyAvailable
+- msgID: 指定节点
+  en: SpecificNode
+- msgID: 调度规则匹配
+  en: SchedulingRule
+- msgID: 节点名称
+  en: NodeName
+- msgID: 至少包含一条调度规则
+  en: "At least contains one scheduling rule"
+- msgID: 亲和性/反亲和性
+  en: "Affinity / Anit"
+- msgID: 污点/容忍
+  en: Tolerations
+- msgID: 运算符
+  en: Operator
+- msgID: 影响
+  en: Effect
+- msgID: 不调度（NoSchedule）
+  en: NoSchedule
+- msgID: 倾向不调度（PreferNoSchedule）
+  en: PreferNoSchedule
+- msgID: 不执行（NoExecute）
+  en: NoExecute
+- msgID: 容忍时间
+  en: TolerationSecs
+- msgID: 网络
+  en: Networking
+- msgID: "DNS 策略"
+  en: "DNS Policy"
+- msgID: "主机 IPC"
+  en: HostIPC
+- msgID: 主机网络
+  en: HostNetwork
+- msgID: "主机 PID"
+  en: HostPID
+- msgID: "主机 PID 与共享进程命名空间不可同时启用"
+  en: "HostPID and ShareProcessNamespace cannot both be true"
+- msgID: 共享进程命名空间
+  en: ShareProcessNamespace
+- msgID: 主机名称
+  en: HostName
+- msgID: 子域名
+  en: Subdomain
+- msgID: 服务器地址
+  en: NameServers
+- msgID: 至少包含一个服务器地址
+  en: "At least contains one name server"
+- msgID: 搜索域
+  en: Searches
+- msgID: "DNS 解析"
+  en: DNSResolverOptions
+- msgID: 主机别名
+  en: HostAliases
+- msgID: 别名
+  en: Aliases
+- msgID: 别名（多个值请以英文逗号分隔）
+  en: "aliases (Multiple values should be separated by commas)"
+- msgID: "IP 地址"
+  en: IPAddress
+- msgID: 安全
+  en: Security
+- msgID: 用户
+  en: RunAsUser
+- msgID: "以非 Root 运行"
+  en: RunAsNonRoot
+- msgID: 用户组
+  en: RunAsGroup
+- msgID: "SELinux 选项"
+  en: SELinuxOptions
+- msgID: 其他
+  en: Other
+- msgID: 镜像拉取密钥
+  en: ImagePullSecrets
+- msgID: 重启策略
+  en: RestartPolicy
+- msgID: 服务账号
+  en: ServiceAccount
+- msgID: 终止容忍期
+  en: TerminationGracePeriodSecs
+- msgID: 数据卷
+  en: Volume
+- msgID: 容器组
+  en: ContainerGroup
+- msgID: 初始容器
+  en: InitContainer
+- msgID: 标准容器
+  en: Container
+- msgID: 基础信息
+  en: BasicInfo
+- msgID: 容器名称
+  en: ContainerName
+- msgID: 容器镜像
+  en: Image
+- msgID: 拉取策略
+  en: PullPolicy
+- msgID: 命令
+  en: Command
+- msgID: 工作目录
+  en: WorkingDir
+- msgID: 标准输入
+  en: Stdin
+- msgID: 仅一次
+  en: StdinOnce
+- msgID: 参数
+  en: Args
+- msgID: 服务端口
+  en: Ports
+- msgID: 容器端口
+  en: ContainerPort
+- msgID: 协议
+  en: Protocol
+- msgID: 主机端口
+  en: HostPort
+- msgID: 环境变量
+  en: EnvVars
+- msgID: 内容（Name/Prefix）
+  en: Name/Prefix
+- msgID: 来源
+  en: Source
+- msgID: 健康检查
+  en: Healthz
+- msgID: 就绪探针
+  en: ReadinessProbe
+- msgID: 存活探针
+  en: LivenessProbe
+- msgID: 检查类型
+  en: Type
+- msgID: 端口
+  en: Ports
+- msgID: 请求路径
+  en: RequestPath
+- msgID: 至少包含一条命令
+  en: "At least contains one command"
+- msgID: 初始延时
+  en: InitialDelaySecs
+- msgID: 检查间隔
+  en: PeriodSecs
+- msgID: 超时时间
+  en: TimeoutSecs
+- msgID: 成功阈值
+  en: SuccessThreshold
+- msgID: 失败阈值
+  en: FailureThreshold
+- msgID: 资源
+  en: Resources
+- msgID: "CPU 预留"
+  en: "CPU Requests"
+- msgID: 内存预留
+  en: "Memory Requests"
+- msgID: 自定义资源预留
+  en: "Custom Resource Requests"
+- msgID: 资源类型
+  en: ResourceKind
+- msgID: 共享网卡（eip）
+  en: eip
+- msgID: 独立网卡（eni-ip）
+  en: eni-ip
+- msgID: 算力-GPU
+  en: Fgpu
+- msgID: 同类资源不可重复设置配额
+  en: "quotas cannot be set repeatedly for the same resources"
+- msgID: "CPU 限制"
+  en: "CPU Limits"
+- msgID: 内存限制
+  en: "Memory Limits"
+- msgID: 自定义资源限制
+  en: "Custom Resource Limits"
+- msgID: 特权模式
+  en: Privileged
+- msgID: 允许提权
+  en: AllowPrivilegeEscalation
+- msgID: "只读 Root 文件系统"
+  en: ReadOnlyRootFilesystem
+- msgID: 掩码挂载
+  en: ProcMount
+- msgID: 新增权限
+  en: "Added Permissions"
+- msgID: 消减权限
+  en: "Dropped Permissions"
+- msgID: 挂载点
+  en: Mount
+- msgID: 卷
+  en: Volume
+- msgID: 数据卷名称
+  en: VolumeName
+- msgID: 挂载路径
+  en: MountPath
+- msgID: 卷内子路径
+  en: "SubPath In Volume"
+- msgID: 设置为默认类
+  en: "Set as default class"
+- msgID: "<a href='https://kubernetes.io/zh-cn/docs/concepts/storage/storage-classes/#parameters' style='color:#1E90FF;' target='view_frame'>参数配置参考文档</a>"
+  en: "<a href='https://kubernetes.io/docs/concepts/storage/storage-classes/#parameters' style='color:#1E90FF;' target='view_frame'>Parameters Docs</a>"
+- msgID: "至少选择一个 AccessMode"
+  en: "At lease select an AccessMode"
+- msgID: 控制器
+  en: Controller
+- msgID: 控制器类
+  en: "Controller Class"
+- msgID: 暂时不支持该控制器
+  en: "this ingress controller is unsupported currently"
+- msgID: 数据
+  en: Data
+- msgID: 不可变更
+  en: Immutable
+- msgID: "（k8s 1.19+） 保护应用，使之免受意外更新所带来的负面影响;<br>降低对 kube-apiserver 的性能压力，系统会关闭对已标记为不可变更的资源的监视操作"
+  en: "(k8s 1.19+) Protect applications from the negative impact of unexpected updates;<br>Reduce performance pressure on kube-apiserver, the system will turn off monitoring operations for resources marked as immutable"
+- msgID: 值（支持多行文本）
+  en: "value (multi-line text supported)"
+- msgID: "值（明文即可，提交后会自动转换为 base64 编码）"
+  en: "Value (clear text is fine, it will be automatically converted to base64 encoding after submission)"
+- msgID: 仓库地址
+  en: Registry
+- msgID: 用户名
+  en: Username
+- msgID: 密码
+  en: Password
+- msgID: 公钥
+  en: PublicKey
+- msgID: 私钥
+  en: PrivateKey
+- msgID: 证书
+  en: Cert
+- msgID: "证书由 kubernetes 生成，不允许编辑"
+  en: "The certificate is generated by kubernetes, editing is not allowed"
+- msgID: 关联对象
+  en: ScaleTargetRef
+- msgID: 资源名称
+  en: ResourceName
+- msgID: 最小副本数
+  en: minReplicas
+- msgID: 最大副本数
+  en: maxReplicas
+- msgID: 最大副本数必须大于最小副本数
+  en: "The maxReplicas must be greater than the minReplicas"
+- msgID: "Resource 指标"
+  en: ResourceMetric
+- msgID: 指标类型
+  en: MetricType
+- msgID: 工作负载资源使用绝对数值
+  en: "workload absolute resource usage value"
+- msgID: "工作负载所有 Pod 资源实际使用值 / 资源 Request 值"
+  en: "resource usage value of all workload's pod / request value"
+- msgID: 值不能为零或空
+  en: "value can't be zero or empty"
+- msgID: "ContainerResource 指标"
+  en: ContainerResourceMetric
+- msgID: 指标名称
+  en: MetricName
+- msgID: "External 指标"
+  en: ExternalMetric
+- msgID: 选择器
+  en: Selector
+- msgID: "Object 指标"
+  en: ObjectMetric
+- msgID: "Pod 指标"
+  en: PodMetric
+- msgID: 基本信息
+  en: Metadata
+- msgID: 标签
+  en: Labels
+- msgID: "将作为 Pod & Selector 标签"
+  en: "Will be used as pod & selector label"
+- msgID: 注解
+  en: Annotations
+- msgID: "留空将使用默认 StorageClass"
+  en: "Leave blank to use the default StorageClass"
+- msgID: 规则
+  en: Rule
+- msgID: 域名
+  en: Domain
+- msgID: 需要为绝对路径
+  en: "must be an absolute path"
+- msgID: "目标 Service"
+  en: TargetService
+- msgID: "CLB 使用方式"
+  en: "CLB Use Type"
+- msgID: "已存在的 CLB 实例：需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例不会被删除，重建 Ingress 实例后 VIP 不会发生变化<br>自动新建 CLB 实例：无需先手工创建 CLB 实例，Ingress 实例删除时 CLB 实例会随之删除，重建 Ingress 实例后 VIP 会发生变化；出于安全原因，自动新建 CLB 实例只支持内网，外网 CLB 请使用 “已存在的 CLB 实例”方案，内网子网 ID 请找资源管理员确认"
+  en: "Use existing CLB: You need to manually create a CLB instance first, the CLB instance will not be deleted when the Ingress instance is deleted, and the VIP will not change after the Ingress instance is rebuilt<br>Auto create new CLB: No need to manually create a CLB instance first, Ingress When the instance is deleted, the CLB instance will be deleted, and the VIP will change after the Ingress instance is rebuilt; for security reasons, the automatic new CLB instance only supports the intranet, and the extranet CLB should use the 'use existing CLB' scheme, please ask the administrator to confirm the intranet subnet ID"
+- msgID: "已存在的 CLB 实例"
+  en: "Use existing CLB"
+- msgID: "自动创建 CLB 实例"
+  en: "Auto create new CLB"
+- msgID: "共享集群暂不支持自动创建 CLB 实例"
+  en: "auto create new clb is unsupported in shared cluster"
+- msgID: 例如：lb-c5xxxxd6
+  en: "example: lb-c5xxxxd6"
+- msgID: "子网 ID"
+  en: "SubNet ID"
+- msgID: 例如：subnet-a3xxxxb4
+  en: "example: subnet-a3xxxxb4"
+- msgID: 默认后端
+  en: DefaultBackend
+- msgID: "控制器类型 qcloud 暂时不支持配置默认后端"
+  en: "controller type qcloud does not currently support configuring the default backend"
+- msgID: 开启自动重定向
+  en: "Enable automatic redirection"
+- msgID: "自动重定向：用户需要先创建出一个 HTTPS:443 监听器，并在其下创建转发规则。通过调用该接口，系统会自动创建出一个 HTTP:80 监听器（如果之前不存在），并在其下创建转发规则，与 HTTPS:443 监听器下的域名等各种配置对应。"
+  en: "Automatic redirection: The user needs to create an HTTPS:443 listener first, and create a forwarding rule under it. By calling this interface, the system will automatically create an HTTP:80 listener (if it does not exist before), and create a forwarding rule under it, corresponding to various configurations such as the domain name under the HTTPS:443 listener."
+- msgID: 端口配置
+  en: PortConfig
+- msgID: 负载均衡器
+  en: LoadBalancer
+- msgID: "使用已有：仅支持使用当前未被 TKE 使用的应用型 CLB 以用于公网/内网访问 Service，请勿手动修改由 TKE 创建的 CLB 监听器<br>自动创建：自动创建内网 CLB 以提供内网访问入口，将提供一个可以被集群所有 VPC 下的其他资源访问的入口，支持 TCP/UDP 协议。需要被同一 VPC 下其他集群、云服务器等访问的服务可以选择 VPC 内网访问的形式，因安全原因，暂不支持公网 CLB 自动创建，内网子网 ID 请找资源管理员确认"
+  en: "Use Exists: Only the application-type CLB that is not currently used by TKE is supported to access the Service on the public network/intranet. Do not manually modify the CLB listener created by TKE<br>Auto reate: Automatically create an intranet CLB to Provides an intranet access entry, which will provide an entry that can be accessed by other resources under all VPCs in the cluster, and supports TCP/UDP protocols. Services that need to be accessed by other clusters, cloud servers, etc. under the same VPC can choose the form of VPC intranet access. Due to security reasons, the automatic creation of public network CLBs is not supported, please ask the administrator to confirm the intranet subnet ID"
+- msgID: 使用已有
+  en: "Use Exists"
+- msgID: 自动创建
+  en: "Auto Create"
+- msgID: 监听端口
+  en: Port
+- msgID: 目标端口
+  en: TargetPort
+- msgID: 节点端口
+  en: NodePort
+- msgID: 标签选择器
+  en: LabelSelector
+- msgID: "若没有设置选择器，则不会自动创建 Endpoints，需要手动创建"
+  en: "if no set label selector, endpoints will not be created automatically and need to be created manually"
+- msgID: "Session 亲和性"
+  en: SessionAffinity
+- msgID: 最大会话停留时间
+  en: StickyTime
+- msgID: "外部 IP"
+  en: ExternalIP
+- msgID: "资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化"
+  en: "resource kind %s apiVersion %s not in the list of supported versions %v, please use yaml rather than form edit mode"
+- msgID: 标签有重复的键，请检查
+  en: "labels has a duplicate Key"
+- msgID: 注解有重复的键，请检查
+  en: "annotations has a duplicate key"
+- msgID: 无集群查看权限
+  en: "no cluster view permission"
+- msgID: 检查共享集群命名空间权限失败
+  en: "checking shared cluster namespace permissions failed"
+- msgID: "命名空间 %s 在该共享集群中不属于指定项目"
+  en: "namespace %s not belong to project in this shared cluster"
+- msgID: "无查看指定节点上运行的 Pod 的权限"
+  en: "no permission to view Pods running on the specified node"
+- msgID: "创建 %s 需要指定 metadata.namespace"
+  en: "metadata.name is required when create %s"
+- msgID: "metadata.name 必须指定且与准备编辑的资源名保持一致"
+  en: "metadata.name is required and must as same as resource name to be edited"
+- msgID: "由 Context 获取项目信息失败"
+  en: "failed to get project info from context"
+- msgID: "由 Context 获取集群信息失败"
+  en: "failed to get cluster info from context"
+- msgID: 检测到集群资源变动，尝试同步资源信息中。若近期有升级集群行为，请稍后重试，若依旧失败，请联系容器助手
+  en: "cluster resource changes are detected, and try to synchronize resource information. If you have recently upgraded the cluster, please try again later. If it still fails, please contact the container assistant."

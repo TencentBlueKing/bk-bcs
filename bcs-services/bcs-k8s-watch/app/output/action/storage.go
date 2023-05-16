@@ -14,6 +14,8 @@
 package action
 
 import (
+	"fmt"
+
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app/output/http"
@@ -36,28 +38,28 @@ func NewStorageAction(clusterID, name string, storageService *bcs.InnerService) 
 }
 
 // Add adds new resource data by http PUT.
-func (act *StorageAction) Add(syncData *SyncData) {
-	act.request("PUT", syncData)
+func (act *StorageAction) Add(syncData *SyncData) error {
+	return act.request("PUT", syncData)
 }
 
 // Delete deletes target resource data by http DELETE.
-func (act *StorageAction) Delete(syncData *SyncData) {
-	act.request("DELETE", syncData)
+func (act *StorageAction) Delete(syncData *SyncData) error {
+	return act.request("DELETE", syncData)
 }
 
 // Update updates old resource data by http PUT.
-func (act *StorageAction) Update(syncData *SyncData) {
-	act.request("PUT", syncData)
+func (act *StorageAction) Update(syncData *SyncData) error {
+	return act.request("PUT", syncData)
 }
 
-func (act *StorageAction) request(method string, syncData *SyncData) {
+func (act *StorageAction) request(method string, syncData *SyncData) error {
 	glog.Infof("calling request: %s %s %s/%s", method, syncData.Kind, syncData.Namespace, syncData.Name)
 
 	targets := act.storageService.Servers()
 
 	if len(targets) == 0 {
-		glog.Errorf("storage server list is empty, got no address yet!")
-		return
+		glog.Errorf("storage server list is empty, got no address yet")
+		return fmt.Errorf("storage server list is empty, got no address yet")
 	}
 
 	var client http.StorageClient
@@ -91,9 +93,9 @@ func (act *StorageAction) request(method string, syncData *SyncData) {
 
 	if !resp.Result {
 		glog.Errorf("%s %s ERROR[%s]: [%s/%s]", method, syncData.Kind, resp.Message, syncData.Namespace, syncData.Name)
-		return
+		return fmt.Errorf("%s %s ERROR[%s]: [%s/%s]", method, syncData.Kind, resp.Message, syncData.Namespace, syncData.Name)
 	}
 
 	glog.V(2).Infof("%s %s SUCCESS: [%s/%s]", method, syncData.Kind, syncData.Namespace, syncData.Name)
-	return
+	return nil
 }

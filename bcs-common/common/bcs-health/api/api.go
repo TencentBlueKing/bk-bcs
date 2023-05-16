@@ -11,6 +11,7 @@
  *
  */
 
+// Package api xxx
 package api
 
 import (
@@ -92,7 +93,8 @@ func NewBcsHealth(zkSvr string, tls TLSConfig) error {
 // SendHealthInfo sending health info to server
 func SendHealthInfo(health *HealthInfo) error {
 	if nil == statusController || nil == healthinfoTemplate {
-		return errors.New("no status controller or healthinfo template can be used. please call function NewBcsHealth first. ")
+		return errors.New(
+			"no status controller or healthinfo template can be used. please call function NewBcsHealth first. ")
 	}
 
 	w := Writer{}
@@ -148,7 +150,8 @@ func SendHealthInfo(health *HealthInfo) error {
 	}
 
 	if typer.IsSMS() {
-		alarm.SmsMsg = fmt.Sprintf("BCS Alarm\n%s\n%s\n%s\n%s\nMsg:%s", health.Module, health.Kind, health.IP, health.ClusterID, health.Message)
+		alarm.SmsMsg = fmt.Sprintf("BCS Alarm\n%s\n%s\n%s\n%s\nMsg:%s", health.Module, health.Kind, health.IP,
+			health.ClusterID, health.Message)
 	}
 	alarmjs, err := json.Marshal(alarm)
 	if nil != err {

@@ -1,0 +1,17 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: sc-complex-6byc8q0oyc
+  annotations:
+    io.tencent.bcs.editFormat: form
+    io.tencent.paas.creator: anonymous
+    io.tencent.paas.updator: anonymous
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: k8s.io/minikube-hostpath
+volumeBindingMode: Immediate
+reclaimPolicy: Delete
+parameters:
+  "type": "io1"
+mountOptions:
+  - ro
+  - soft

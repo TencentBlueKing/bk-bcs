@@ -72,20 +72,22 @@ func PostAlarm(req *restful.Request, resp *restful.Response) {
 			Message: common.BcsErrStoragePutResourceFailStr})
 	}
 
+	// data
 	data, err := getReqData(req)
 	if err != nil {
 		errFunc(err)
 		return
 	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	if err := store.Put(req.Request.Context(), tableName, data, &lib.StorePutOption{
+	// option
+	opt := &lib.StorePutOption{
 		CreateTimeKey: createTimeTag,
-	}); err != nil {
+	}
+
+	if err = PutData(req.Request.Context(), data, opt); err != nil {
 		errFunc(err)
 		return
 	}
+
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
@@ -106,20 +108,21 @@ func ListAlarm(req *restful.Request, resp *restful.Response) {
 			ErrCode: common.BcsErrStorageListResourceFail,
 			Message: common.BcsErrStorageListResourceFailStr})
 	}
+	// option
 	opt, err := getStoreGetOption(req)
 	if err != nil {
 		errFunc(err)
 		return
 	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	r, err := store.Get(req.Request.Context(), tableName, opt)
-	extra := map[string]interface{}{"total": len(r)}
+
+	// get data list
+	r, err := GetData(req.Request.Context(), opt)
 	if err != nil {
 		errFunc(err)
 		return
 	}
+
+	extra := map[string]interface{}{"total": len(r)}
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
 }
 
@@ -135,8 +138,10 @@ func CleanAlarm() {
 
 func init() {
 	alarmPath := "/alarms"
-	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: alarmPath, Params: nil, Handler: lib.MarkProcess(PostAlarm)})
-	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: alarmPath, Params: nil, Handler: lib.MarkProcess(ListAlarm)})
+	actions.RegisterV1Action(actions.Action{Verb: "POST", Path: alarmPath, Params: nil,
+		Handler: lib.MarkProcess(PostAlarm)})
+	actions.RegisterV1Action(actions.Action{Verb: "GET", Path: alarmPath, Params: nil,
+		Handler: lib.MarkProcess(ListAlarm)})
 
 	actions.RegisterDaemonFunc(CleanAlarm)
 }

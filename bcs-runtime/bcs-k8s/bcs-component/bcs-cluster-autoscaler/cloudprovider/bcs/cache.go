@@ -34,6 +34,7 @@ type NodeGroupCache struct {
 	cacheMutex             sync.Mutex
 	lastUpdateTime         time.Time
 	getNodes               GetNodes
+	allGroups              []*NodeGroup
 }
 
 const (
@@ -51,12 +52,14 @@ const (
 // CreationType is the type of node creation
 type CreationType string
 
-func newNodeGroupCache(getNodes GetNodes) *NodeGroupCache {
+// NewNodeGroupCache news node group cache
+func NewNodeGroupCache(getNodes GetNodes) *NodeGroupCache {
 	registry := &NodeGroupCache{
 		registeredGroups:       make([]*NodeGroup, 0),
 		instanceToGroup:        make(map[InstanceRef]*NodeGroup),
 		instanceToCreationType: make(map[InstanceRef]CreationType),
 		getNodes:               getNodes,
+		allGroups:              make([]*NodeGroup, 0),
 	}
 
 	return registry
@@ -68,6 +71,7 @@ func (m *NodeGroupCache) Register(group *NodeGroup) {
 	defer m.cacheMutex.Unlock()
 
 	m.registeredGroups = append(m.registeredGroups, group)
+	m.allGroups = append(m.allGroups, group)
 }
 
 // GetRegisteredNodeGroups get all the registered node group in node group cache
@@ -117,6 +121,17 @@ func (m *NodeGroupCache) regenerateCache() error {
 }
 
 func (m *NodeGroupCache) regenerateCacheForInternal() error {
+	registeredGroups := make([]*NodeGroup, 0)
+	for i := range m.allGroups {
+		apigroup, err := m.allGroups[i].GetNodeGroup()
+		if err != nil {
+			return err
+		}
+		if apigroup.EnableAutoscale {
+			registeredGroups = append(registeredGroups, m.allGroups[i])
+		}
+	}
+	m.registeredGroups = registeredGroups
 
 	now := time.Now()
 	if m.lastUpdateTime.Add(3 * time.Minute).After(time.Now()) {
@@ -127,12 +142,12 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 
 	newCache := make(map[InstanceRef]*NodeGroup)
 	newTypeCache := make(map[InstanceRef]CreationType)
-	//groupIds := make([]*string, 0)
+	// groupIds := make([]*string, 0)
 
 	for _, group := range m.registeredGroups {
 		klog.V(4).Infof("Refresh Regenerating NodeGroup information for %s", group.nodeGroupID)
 		groupID := group.nodeGroupID
-		//groupIds = append(groupIds, &groupID)
+		// groupIds = append(groupIds, &groupID)
 
 		ins, err := m.getNodes(groupID)
 		if err != nil {
@@ -144,7 +159,8 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 			if instance.NodeGroupID != groupID {
 				continue
 			}
-			ref := InstanceRef{Name: instance.NodeID}
+			// ref := InstanceRef{Name: instance.NodeID}
+			ref := InstanceRef{IP: instance.InnerIP}
 			newCache[ref] = group
 			newTypeCache[ref] = CreationType(CreationTypeAuto)
 		}
@@ -177,5 +193,23 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 	m.lastUpdateTime = time.Now()
 	klog.V(4).Infof("Refresh RegenerateCache set latest updateTime %s", m.lastUpdateTime.Format("2006-01-02 15:04:05"))
 
+	return nil
+}
+
+// SetNodeGroupMinSize sets minsize of the nodegroup
+func (m *NodeGroupCache) SetNodeGroupMinSize(groupID string, num int) error {
+	m.cacheMutex.Lock()
+	defer m.cacheMutex.Unlock()
+	changed := false
+	for i, ng := range m.registeredGroups {
+		if ng.nodeGroupID == groupID {
+			m.registeredGroups[i].minSize = num
+			changed = true
+			break
+		}
+	}
+	if !changed {
+		return fmt.Errorf("Cannot find the nodegroup %s in cache", groupID)
+	}
 	return nil
 }

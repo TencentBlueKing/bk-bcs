@@ -14,8 +14,6 @@ specific language governing permissions and limitations under the License.
 """
 from rest_framework import serializers
 
-from backend.container_service.clusters.constants import ClusterNetworkType
-
 from .models import HostApplyTaskLog
 
 
@@ -25,6 +23,8 @@ class ApplyHostDataSLZ(serializers.Serializer):
     cvm_type = serializers.CharField()
     disk_size = serializers.IntegerField()
     replicas = serializers.IntegerField(min_value=1)
+    zone_id = serializers.CharField()
+    disk_type = serializers.CharField()
 
 
 class TaskLogSLZ(serializers.ModelSerializer):

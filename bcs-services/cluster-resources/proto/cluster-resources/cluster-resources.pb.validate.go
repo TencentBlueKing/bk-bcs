@@ -475,6 +475,10 @@ func (m *HealthzReq) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for RaiseErr
+
+	// no validation rules for Token
+
 	if len(errors) > 0 {
 		return HealthzReqMultiError(errors)
 	}
@@ -573,7 +577,11 @@ func (m *HealthzResp) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for CallTime
+
 	// no validation rules for Status
+
+	// no validation rules for Redis
 
 	if len(errors) > 0 {
 		return HealthzRespMultiError(errors)
@@ -650,3 +658,5032 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = HealthzRespValidationError{}
+
+// Validate checks the field values on VersionReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *VersionReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on VersionReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in VersionReqMultiError, or
+// nil if none found.
+func (m *VersionReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *VersionReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return VersionReqMultiError(errors)
+	}
+	return nil
+}
+
+// VersionReqMultiError is an error wrapping multiple validation errors
+// returned by VersionReq.ValidateAll() if the designated constraints aren't met.
+type VersionReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m VersionReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m VersionReqMultiError) AllErrors() []error { return m }
+
+// VersionReqValidationError is the validation error returned by
+// VersionReq.Validate if the designated constraints aren't met.
+type VersionReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e VersionReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e VersionReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e VersionReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e VersionReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e VersionReqValidationError) ErrorName() string { return "VersionReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e VersionReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sVersionReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = VersionReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = VersionReqValidationError{}
+
+// Validate checks the field values on VersionResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *VersionResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on VersionResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in VersionRespMultiError, or
+// nil if none found.
+func (m *VersionResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *VersionResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Version
+
+	// no validation rules for GitCommit
+
+	// no validation rules for BuildTime
+
+	// no validation rules for GoVersion
+
+	// no validation rules for RunMode
+
+	// no validation rules for CallTime
+
+	if len(errors) > 0 {
+		return VersionRespMultiError(errors)
+	}
+	return nil
+}
+
+// VersionRespMultiError is an error wrapping multiple validation errors
+// returned by VersionResp.ValidateAll() if the designated constraints aren't met.
+type VersionRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m VersionRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m VersionRespMultiError) AllErrors() []error { return m }
+
+// VersionRespValidationError is the validation error returned by
+// VersionResp.Validate if the designated constraints aren't met.
+type VersionRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e VersionRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e VersionRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e VersionRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e VersionRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e VersionRespValidationError) ErrorName() string { return "VersionRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e VersionRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sVersionResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = VersionRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = VersionRespValidationError{}
+
+// Validate checks the field values on ResListReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResListReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResListReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResListReqMultiError, or
+// nil if none found.
+func (m *ResListReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResListReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ResListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResListReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ResListReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ResListReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResListReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResListReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetLabelSelector()) > 2048 {
+		err := ResListReqValidationError{
+			field:  "LabelSelector",
+			reason: "value length must be at most 2048 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetApiVersion()) > 63 {
+		err := ResListReqValidationError{
+			field:  "ApiVersion",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetOwnerName()) > 256 {
+		err := ResListReqValidationError{
+			field:  "OwnerName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetOwnerKind()) > 64 {
+		err := ResListReqValidationError{
+			field:  "OwnerKind",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _ResListReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResListReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetScene()) > 32 {
+		err := ResListReqValidationError{
+			field:  "Scene",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ResListReqMultiError(errors)
+	}
+	return nil
+}
+
+// ResListReqMultiError is an error wrapping multiple validation errors
+// returned by ResListReq.ValidateAll() if the designated constraints aren't met.
+type ResListReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResListReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResListReqMultiError) AllErrors() []error { return m }
+
+// ResListReqValidationError is the validation error returned by
+// ResListReq.Validate if the designated constraints aren't met.
+type ResListReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResListReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResListReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResListReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResListReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResListReqValidationError) ErrorName() string { return "ResListReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ResListReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResListReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResListReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResListReqValidationError{}
+
+var _ResListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ResListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _ResListReq_Format_InLookup = map[string]struct{}{
+	"":            {},
+	"manifest":    {},
+	"selectItems": {},
+}
+
+// Validate checks the field values on ResGetReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResGetReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResGetReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResGetReqMultiError, or nil
+// if none found.
+func (m *ResGetReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResGetReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ResGetReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResGetReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ResGetReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ResGetReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResGetReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResGetReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetName()) > 253 {
+		err := ResGetReqValidationError{
+			field:  "Name",
+			reason: "value length must be at most 253 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResGetReq_Name_Pattern.MatchString(m.GetName()) {
+		err := ResGetReqValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetApiVersion()) > 63 {
+		err := ResGetReqValidationError{
+			field:  "ApiVersion",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _ResGetReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResGetReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ResGetReqMultiError(errors)
+	}
+	return nil
+}
+
+// ResGetReqMultiError is an error wrapping multiple validation errors returned
+// by ResGetReq.ValidateAll() if the designated constraints aren't met.
+type ResGetReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResGetReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResGetReqMultiError) AllErrors() []error { return m }
+
+// ResGetReqValidationError is the validation error returned by
+// ResGetReq.Validate if the designated constraints aren't met.
+type ResGetReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResGetReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResGetReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResGetReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResGetReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResGetReqValidationError) ErrorName() string { return "ResGetReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ResGetReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResGetReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResGetReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResGetReqValidationError{}
+
+var _ResGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ResGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _ResGetReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+var _ResGetReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+	"formData": {},
+}
+
+// Validate checks the field values on ResCreateReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResCreateReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResCreateReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResCreateReqMultiError, or
+// nil if none found.
+func (m *ResCreateReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResCreateReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ResCreateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResCreateReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ResCreateReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetRawData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResCreateReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResCreateReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResCreateReqValidationError{
+				field:  "RawData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if _, ok := _ResCreateReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResCreateReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ResCreateReqMultiError(errors)
+	}
+	return nil
+}
+
+// ResCreateReqMultiError is an error wrapping multiple validation errors
+// returned by ResCreateReq.ValidateAll() if the designated constraints aren't met.
+type ResCreateReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResCreateReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResCreateReqMultiError) AllErrors() []error { return m }
+
+// ResCreateReqValidationError is the validation error returned by
+// ResCreateReq.Validate if the designated constraints aren't met.
+type ResCreateReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResCreateReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResCreateReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResCreateReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResCreateReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResCreateReqValidationError) ErrorName() string { return "ResCreateReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ResCreateReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResCreateReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResCreateReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResCreateReqValidationError{}
+
+var _ResCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ResCreateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+	"formData": {},
+}
+
+// Validate checks the field values on ResUpdateReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResUpdateReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResUpdateReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResUpdateReqMultiError, or
+// nil if none found.
+func (m *ResUpdateReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResUpdateReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ResUpdateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResUpdateReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ResUpdateReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ResUpdateReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResUpdateReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResUpdateReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetName()) > 253 {
+		err := ResUpdateReqValidationError{
+			field:  "Name",
+			reason: "value length must be at most 253 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResUpdateReq_Name_Pattern.MatchString(m.GetName()) {
+		err := ResUpdateReqValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetRawData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ResUpdateReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ResUpdateReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ResUpdateReqValidationError{
+				field:  "RawData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if _, ok := _ResUpdateReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := ResUpdateReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ResUpdateReqMultiError(errors)
+	}
+	return nil
+}
+
+// ResUpdateReqMultiError is an error wrapping multiple validation errors
+// returned by ResUpdateReq.ValidateAll() if the designated constraints aren't met.
+type ResUpdateReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResUpdateReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResUpdateReqMultiError) AllErrors() []error { return m }
+
+// ResUpdateReqValidationError is the validation error returned by
+// ResUpdateReq.Validate if the designated constraints aren't met.
+type ResUpdateReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResUpdateReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResUpdateReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResUpdateReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResUpdateReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResUpdateReqValidationError) ErrorName() string { return "ResUpdateReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ResUpdateReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResUpdateReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResUpdateReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResUpdateReqValidationError{}
+
+var _ResUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ResUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _ResUpdateReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+var _ResUpdateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+	"formData": {},
+}
+
+// Validate checks the field values on ResScaleReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResScaleReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResScaleReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResScaleReqMultiError, or
+// nil if none found.
+func (m *ResScaleReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResScaleReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ResScaleReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResScaleReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ResScaleReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ResScaleReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResScaleReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResScaleReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetName()) > 253 {
+		err := ResScaleReqValidationError{
+			field:  "Name",
+			reason: "value length must be at most 253 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResScaleReq_Name_Pattern.MatchString(m.GetName()) {
+		err := ResScaleReqValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if val := m.GetReplicas(); val < 0 || val > 8192 {
+		err := ResScaleReqValidationError{
+			field:  "Replicas",
+			reason: "value must be inside range [0, 8192]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ResScaleReqMultiError(errors)
+	}
+	return nil
+}
+
+// ResScaleReqMultiError is an error wrapping multiple validation errors
+// returned by ResScaleReq.ValidateAll() if the designated constraints aren't met.
+type ResScaleReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResScaleReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResScaleReqMultiError) AllErrors() []error { return m }
+
+// ResScaleReqValidationError is the validation error returned by
+// ResScaleReq.Validate if the designated constraints aren't met.
+type ResScaleReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResScaleReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResScaleReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResScaleReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResScaleReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResScaleReqValidationError) ErrorName() string { return "ResScaleReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ResScaleReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResScaleReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResScaleReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResScaleReqValidationError{}
+
+var _ResScaleReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ResScaleReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _ResScaleReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+// Validate checks the field values on ResDeleteReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ResDeleteReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResDeleteReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ResDeleteReqMultiError, or
+// nil if none found.
+func (m *ResDeleteReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResDeleteReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ResDeleteReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResDeleteReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ResDeleteReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ResDeleteReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResDeleteReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResDeleteReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetName()) > 253 {
+		err := ResDeleteReqValidationError{
+			field:  "Name",
+			reason: "value length must be at most 253 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResDeleteReq_Name_Pattern.MatchString(m.GetName()) {
+		err := ResDeleteReqValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ResDeleteReqMultiError(errors)
+	}
+	return nil
+}
+
+// ResDeleteReqMultiError is an error wrapping multiple validation errors
+// returned by ResDeleteReq.ValidateAll() if the designated constraints aren't met.
+type ResDeleteReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResDeleteReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResDeleteReqMultiError) AllErrors() []error { return m }
+
+// ResDeleteReqValidationError is the validation error returned by
+// ResDeleteReq.Validate if the designated constraints aren't met.
+type ResDeleteReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResDeleteReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResDeleteReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResDeleteReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResDeleteReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResDeleteReqValidationError) ErrorName() string { return "ResDeleteReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ResDeleteReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResDeleteReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResDeleteReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResDeleteReqValidationError{}
+
+var _ResDeleteReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ResDeleteReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _ResDeleteReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+// Validate checks the field values on ResBatchRescheduleReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ResBatchRescheduleReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ResBatchRescheduleReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ResBatchRescheduleReqMultiError, or nil if none found.
+func (m *ResBatchRescheduleReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ResBatchRescheduleReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ResBatchRescheduleReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ResBatchRescheduleReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ResBatchRescheduleReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ResBatchRescheduleReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResBatchRescheduleReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ResBatchRescheduleReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetName()) > 253 {
+		err := ResBatchRescheduleReqValidationError{
+			field:  "Name",
+			reason: "value length must be at most 253 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ResBatchRescheduleReq_Name_Pattern.MatchString(m.GetName()) {
+		err := ResBatchRescheduleReqValidationError{
+			field:  "Name",
+			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetLabelSelector()) > 2048 {
+		err := ResBatchRescheduleReqValidationError{
+			field:  "LabelSelector",
+			reason: "value length must be at most 2048 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetPodNames()) < 1 {
+		err := ResBatchRescheduleReqValidationError{
+			field:  "PodNames",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	_ResBatchRescheduleReq_PodNames_Unique := make(map[string]struct{}, len(m.GetPodNames()))
+
+	for idx, item := range m.GetPodNames() {
+		_, _ = idx, item
+
+		if _, exists := _ResBatchRescheduleReq_PodNames_Unique[item]; exists {
+			err := ResBatchRescheduleReqValidationError{
+				field:  fmt.Sprintf("PodNames[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		} else {
+			_ResBatchRescheduleReq_PodNames_Unique[item] = struct{}{}
+		}
+
+		if utf8.RuneCountInString(item) > 253 {
+			err := ResBatchRescheduleReqValidationError{
+				field:  fmt.Sprintf("PodNames[%v]", idx),
+				reason: "value length must be at most 253 runes",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if !_ResBatchRescheduleReq_PodNames_Pattern.MatchString(item) {
+			err := ResBatchRescheduleReqValidationError{
+				field:  fmt.Sprintf("PodNames[%v]", idx),
+				reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ResBatchRescheduleReqMultiError(errors)
+	}
+	return nil
+}
+
+// ResBatchRescheduleReqMultiError is an error wrapping multiple validation
+// errors returned by ResBatchRescheduleReq.ValidateAll() if the designated
+// constraints aren't met.
+type ResBatchRescheduleReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ResBatchRescheduleReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ResBatchRescheduleReqMultiError) AllErrors() []error { return m }
+
+// ResBatchRescheduleReqValidationError is the validation error returned by
+// ResBatchRescheduleReq.Validate if the designated constraints aren't met.
+type ResBatchRescheduleReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ResBatchRescheduleReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ResBatchRescheduleReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ResBatchRescheduleReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ResBatchRescheduleReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ResBatchRescheduleReqValidationError) ErrorName() string {
+	return "ResBatchRescheduleReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ResBatchRescheduleReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sResBatchRescheduleReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ResBatchRescheduleReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ResBatchRescheduleReqValidationError{}
+
+var _ResBatchRescheduleReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ResBatchRescheduleReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _ResBatchRescheduleReq_Name_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+var _ResBatchRescheduleReq_PodNames_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+// Validate checks the field values on ListPoByNodeReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ListPoByNodeReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListPoByNodeReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListPoByNodeReqMultiError, or nil if none found.
+func (m *ListPoByNodeReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListPoByNodeReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ListPoByNodeReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ListPoByNodeReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ListPoByNodeReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNodeName()) > 256 {
+		err := ListPoByNodeReqValidationError{
+			field:  "NodeName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListPoByNodeReqMultiError(errors)
+	}
+	return nil
+}
+
+// ListPoByNodeReqMultiError is an error wrapping multiple validation errors
+// returned by ListPoByNodeReq.ValidateAll() if the designated constraints
+// aren't met.
+type ListPoByNodeReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListPoByNodeReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListPoByNodeReqMultiError) AllErrors() []error { return m }
+
+// ListPoByNodeReqValidationError is the validation error returned by
+// ListPoByNodeReq.Validate if the designated constraints aren't met.
+type ListPoByNodeReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListPoByNodeReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListPoByNodeReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListPoByNodeReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListPoByNodeReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListPoByNodeReqValidationError) ErrorName() string { return "ListPoByNodeReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListPoByNodeReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListPoByNodeReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListPoByNodeReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListPoByNodeReqValidationError{}
+
+var _ListPoByNodeReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on ContainerListReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ContainerListReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ContainerListReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ContainerListReqMultiError, or nil if none found.
+func (m *ContainerListReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ContainerListReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ContainerListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ContainerListReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ContainerListReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ContainerListReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ContainerListReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ContainerListReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetPodName()) > 253 {
+		err := ContainerListReqValidationError{
+			field:  "PodName",
+			reason: "value length must be at most 253 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ContainerListReq_PodName_Pattern.MatchString(m.GetPodName()) {
+		err := ContainerListReqValidationError{
+			field:  "PodName",
+			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ContainerListReqMultiError(errors)
+	}
+	return nil
+}
+
+// ContainerListReqMultiError is an error wrapping multiple validation errors
+// returned by ContainerListReq.ValidateAll() if the designated constraints
+// aren't met.
+type ContainerListReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ContainerListReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ContainerListReqMultiError) AllErrors() []error { return m }
+
+// ContainerListReqValidationError is the validation error returned by
+// ContainerListReq.Validate if the designated constraints aren't met.
+type ContainerListReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ContainerListReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ContainerListReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ContainerListReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ContainerListReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ContainerListReqValidationError) ErrorName() string { return "ContainerListReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ContainerListReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sContainerListReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ContainerListReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ContainerListReqValidationError{}
+
+var _ContainerListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ContainerListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _ContainerListReq_PodName_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+// Validate checks the field values on ContainerGetReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ContainerGetReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ContainerGetReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ContainerGetReqMultiError, or nil if none found.
+func (m *ContainerGetReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ContainerGetReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_ContainerGetReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := ContainerGetReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := ContainerGetReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := ContainerGetReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ContainerGetReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := ContainerGetReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetPodName()) > 253 {
+		err := ContainerGetReqValidationError{
+			field:  "PodName",
+			reason: "value length must be at most 253 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ContainerGetReq_PodName_Pattern.MatchString(m.GetPodName()) {
+		err := ContainerGetReqValidationError{
+			field:  "PodName",
+			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetContainerName()) > 63 {
+		err := ContainerGetReqValidationError{
+			field:  "ContainerName",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_ContainerGetReq_ContainerName_Pattern.MatchString(m.GetContainerName()) {
+		err := ContainerGetReqValidationError{
+			field:  "ContainerName",
+			reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ContainerGetReqMultiError(errors)
+	}
+	return nil
+}
+
+// ContainerGetReqMultiError is an error wrapping multiple validation errors
+// returned by ContainerGetReq.ValidateAll() if the designated constraints
+// aren't met.
+type ContainerGetReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ContainerGetReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ContainerGetReqMultiError) AllErrors() []error { return m }
+
+// ContainerGetReqValidationError is the validation error returned by
+// ContainerGetReq.Validate if the designated constraints aren't met.
+type ContainerGetReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ContainerGetReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ContainerGetReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ContainerGetReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ContainerGetReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ContainerGetReqValidationError) ErrorName() string { return "ContainerGetReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ContainerGetReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sContainerGetReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ContainerGetReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ContainerGetReqValidationError{}
+
+var _ContainerGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _ContainerGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+var _ContainerGetReq_PodName_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+var _ContainerGetReq_ContainerName_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?")
+
+// Validate checks the field values on GetK8SResTemplateReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetK8SResTemplateReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetK8SResTemplateReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetK8SResTemplateReqMultiError, or nil if none found.
+func (m *GetK8SResTemplateReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetK8SResTemplateReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_GetK8SResTemplateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetKind()); l < 3 || l > 64 {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "Kind",
+			reason: "value length must be between 3 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_GetK8SResTemplateReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := GetK8SResTemplateReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetK8SResTemplateReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetK8SResTemplateReqMultiError is an error wrapping multiple validation
+// errors returned by GetK8SResTemplateReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetK8SResTemplateReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetK8SResTemplateReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetK8SResTemplateReqMultiError) AllErrors() []error { return m }
+
+// GetK8SResTemplateReqValidationError is the validation error returned by
+// GetK8SResTemplateReq.Validate if the designated constraints aren't met.
+type GetK8SResTemplateReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetK8SResTemplateReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetK8SResTemplateReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetK8SResTemplateReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetK8SResTemplateReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetK8SResTemplateReqValidationError) ErrorName() string {
+	return "GetK8SResTemplateReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetK8SResTemplateReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetK8SResTemplateReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetK8SResTemplateReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetK8SResTemplateReqValidationError{}
+
+var _GetK8SResTemplateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _GetK8SResTemplateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+// Validate checks the field values on CObjListReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjListReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjListReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjListReqMultiError, or
+// nil if none found.
+func (m *CObjListReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjListReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjListReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjListReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjListReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjListReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjListReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjListReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjListReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _CObjListReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjListReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest selectItems]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetScene()) > 32 {
+		err := CObjListReqValidationError{
+			field:  "Scene",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjListReqMultiError(errors)
+	}
+	return nil
+}
+
+// CObjListReqMultiError is an error wrapping multiple validation errors
+// returned by CObjListReq.ValidateAll() if the designated constraints aren't met.
+type CObjListReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjListReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjListReqMultiError) AllErrors() []error { return m }
+
+// CObjListReqValidationError is the validation error returned by
+// CObjListReq.Validate if the designated constraints aren't met.
+type CObjListReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjListReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjListReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjListReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjListReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjListReqValidationError) ErrorName() string { return "CObjListReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjListReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjListReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjListReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjListReqValidationError{}
+
+var _CObjListReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjListReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _CObjListReq_Format_InLookup = map[string]struct{}{
+	"":            {},
+	"manifest":    {},
+	"selectItems": {},
+}
+
+// Validate checks the field values on CObjGetReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjGetReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjGetReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjGetReqMultiError, or
+// nil if none found.
+func (m *CObjGetReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjGetReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjGetReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjGetReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjGetReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjGetReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjGetReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjGetReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjGetReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjGetReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _CObjGetReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjGetReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjGetReqMultiError(errors)
+	}
+	return nil
+}
+
+// CObjGetReqMultiError is an error wrapping multiple validation errors
+// returned by CObjGetReq.ValidateAll() if the designated constraints aren't met.
+type CObjGetReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjGetReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjGetReqMultiError) AllErrors() []error { return m }
+
+// CObjGetReqValidationError is the validation error returned by
+// CObjGetReq.Validate if the designated constraints aren't met.
+type CObjGetReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjGetReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjGetReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjGetReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjGetReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjGetReqValidationError) ErrorName() string { return "CObjGetReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjGetReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjGetReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjGetReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjGetReqValidationError{}
+
+var _CObjGetReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjGetReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _CObjGetReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+	"formData": {},
+}
+
+// Validate checks the field values on CObjCreateReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjCreateReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjCreateReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjCreateReqMultiError, or
+// nil if none found.
+func (m *CObjCreateReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjCreateReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjCreateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjCreateReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjCreateReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjCreateReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetRawData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CObjCreateReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CObjCreateReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CObjCreateReqValidationError{
+				field:  "RawData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if _, ok := _CObjCreateReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjCreateReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjCreateReqMultiError(errors)
+	}
+	return nil
+}
+
+// CObjCreateReqMultiError is an error wrapping multiple validation errors
+// returned by CObjCreateReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjCreateReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjCreateReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjCreateReqMultiError) AllErrors() []error { return m }
+
+// CObjCreateReqValidationError is the validation error returned by
+// CObjCreateReq.Validate if the designated constraints aren't met.
+type CObjCreateReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjCreateReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjCreateReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjCreateReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjCreateReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjCreateReqValidationError) ErrorName() string { return "CObjCreateReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjCreateReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjCreateReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjCreateReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjCreateReqValidationError{}
+
+var _CObjCreateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjCreateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+	"formData": {},
+}
+
+// Validate checks the field values on CObjUpdateReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjUpdateReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjUpdateReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjUpdateReqMultiError, or
+// nil if none found.
+func (m *CObjUpdateReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjUpdateReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjUpdateReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjUpdateReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjUpdateReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjUpdateReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjUpdateReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjUpdateReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjUpdateReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjUpdateReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetRawData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CObjUpdateReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CObjUpdateReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CObjUpdateReqValidationError{
+				field:  "RawData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if _, ok := _CObjUpdateReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CObjUpdateReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjUpdateReqMultiError(errors)
+	}
+	return nil
+}
+
+// CObjUpdateReqMultiError is an error wrapping multiple validation errors
+// returned by CObjUpdateReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjUpdateReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjUpdateReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjUpdateReqMultiError) AllErrors() []error { return m }
+
+// CObjUpdateReqValidationError is the validation error returned by
+// CObjUpdateReq.Validate if the designated constraints aren't met.
+type CObjUpdateReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjUpdateReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjUpdateReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjUpdateReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjUpdateReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjUpdateReqValidationError) ErrorName() string { return "CObjUpdateReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjUpdateReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjUpdateReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjUpdateReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjUpdateReqValidationError{}
+
+var _CObjUpdateReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjUpdateReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _CObjUpdateReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+	"formData": {},
+}
+
+// Validate checks the field values on CObjScaleReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjScaleReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjScaleReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjScaleReqMultiError, or
+// nil if none found.
+func (m *CObjScaleReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjScaleReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjScaleReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjScaleReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjScaleReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjScaleReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjScaleReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjScaleReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjScaleReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjScaleReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if val := m.GetReplicas(); val < 0 || val > 8192 {
+		err := CObjScaleReqValidationError{
+			field:  "Replicas",
+			reason: "value must be inside range [0, 8192]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjScaleReqMultiError(errors)
+	}
+	return nil
+}
+
+// CObjScaleReqMultiError is an error wrapping multiple validation errors
+// returned by CObjScaleReq.ValidateAll() if the designated constraints aren't met.
+type CObjScaleReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjScaleReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjScaleReqMultiError) AllErrors() []error { return m }
+
+// CObjScaleReqValidationError is the validation error returned by
+// CObjScaleReq.Validate if the designated constraints aren't met.
+type CObjScaleReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjScaleReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjScaleReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjScaleReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjScaleReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjScaleReqValidationError) ErrorName() string { return "CObjScaleReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjScaleReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjScaleReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjScaleReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjScaleReqValidationError{}
+
+var _CObjScaleReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjScaleReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+// Validate checks the field values on CObjDeleteReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CObjDeleteReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjDeleteReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CObjDeleteReqMultiError, or
+// nil if none found.
+func (m *CObjDeleteReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjDeleteReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjDeleteReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjDeleteReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjDeleteReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjDeleteReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjDeleteReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjDeleteReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjDeleteReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjDeleteReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CObjDeleteReqMultiError(errors)
+	}
+	return nil
+}
+
+// CObjDeleteReqMultiError is an error wrapping multiple validation errors
+// returned by CObjDeleteReq.ValidateAll() if the designated constraints
+// aren't met.
+type CObjDeleteReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjDeleteReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjDeleteReqMultiError) AllErrors() []error { return m }
+
+// CObjDeleteReqValidationError is the validation error returned by
+// CObjDeleteReq.Validate if the designated constraints aren't met.
+type CObjDeleteReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjDeleteReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjDeleteReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjDeleteReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjDeleteReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjDeleteReqValidationError) ErrorName() string { return "CObjDeleteReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CObjDeleteReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjDeleteReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjDeleteReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjDeleteReqValidationError{}
+
+var _CObjDeleteReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjDeleteReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+// Validate checks the field values on CObjBatchRescheduleReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CObjBatchRescheduleReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CObjBatchRescheduleReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CObjBatchRescheduleReqMultiError, or nil if none found.
+func (m *CObjBatchRescheduleReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CObjBatchRescheduleReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_CObjBatchRescheduleReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := CObjBatchRescheduleReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CObjBatchRescheduleReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 63 {
+		err := CObjBatchRescheduleReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 63 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_CObjBatchRescheduleReq_Namespace_Pattern.MatchString(m.GetNamespace()) {
+		err := CObjBatchRescheduleReqValidationError{
+			field:  "Namespace",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]*$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 256 {
+		err := CObjBatchRescheduleReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCobjName()) > 256 {
+		err := CObjBatchRescheduleReqValidationError{
+			field:  "CobjName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetLabelSelector()) > 2048 {
+		err := CObjBatchRescheduleReqValidationError{
+			field:  "LabelSelector",
+			reason: "value length must be at most 2048 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetPodNames()) < 1 {
+		err := CObjBatchRescheduleReqValidationError{
+			field:  "PodNames",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	_CObjBatchRescheduleReq_PodNames_Unique := make(map[string]struct{}, len(m.GetPodNames()))
+
+	for idx, item := range m.GetPodNames() {
+		_, _ = idx, item
+
+		if _, exists := _CObjBatchRescheduleReq_PodNames_Unique[item]; exists {
+			err := CObjBatchRescheduleReqValidationError{
+				field:  fmt.Sprintf("PodNames[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		} else {
+			_CObjBatchRescheduleReq_PodNames_Unique[item] = struct{}{}
+		}
+
+		if utf8.RuneCountInString(item) > 253 {
+			err := CObjBatchRescheduleReqValidationError{
+				field:  fmt.Sprintf("PodNames[%v]", idx),
+				reason: "value length must be at most 253 runes",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if !_CObjBatchRescheduleReq_PodNames_Pattern.MatchString(item) {
+			err := CObjBatchRescheduleReqValidationError{
+				field:  fmt.Sprintf("PodNames[%v]", idx),
+				reason: "value does not match regex pattern \"[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\"",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return CObjBatchRescheduleReqMultiError(errors)
+	}
+	return nil
+}
+
+// CObjBatchRescheduleReqMultiError is an error wrapping multiple validation
+// errors returned by CObjBatchRescheduleReq.ValidateAll() if the designated
+// constraints aren't met.
+type CObjBatchRescheduleReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CObjBatchRescheduleReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CObjBatchRescheduleReqMultiError) AllErrors() []error { return m }
+
+// CObjBatchRescheduleReqValidationError is the validation error returned by
+// CObjBatchRescheduleReq.Validate if the designated constraints aren't met.
+type CObjBatchRescheduleReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CObjBatchRescheduleReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CObjBatchRescheduleReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CObjBatchRescheduleReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CObjBatchRescheduleReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CObjBatchRescheduleReqValidationError) ErrorName() string {
+	return "CObjBatchRescheduleReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CObjBatchRescheduleReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCObjBatchRescheduleReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CObjBatchRescheduleReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CObjBatchRescheduleReqValidationError{}
+
+var _CObjBatchRescheduleReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _CObjBatchRescheduleReq_Namespace_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]*$")
+
+var _CObjBatchRescheduleReq_PodNames_Pattern = regexp.MustCompile("[a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*")
+
+// Validate checks the field values on CommonResp with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CommonResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CommonResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CommonRespMultiError, or
+// nil if none found.
+func (m *CommonResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CommonResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CommonRespMultiError(errors)
+	}
+	return nil
+}
+
+// CommonRespMultiError is an error wrapping multiple validation errors
+// returned by CommonResp.ValidateAll() if the designated constraints aren't met.
+type CommonRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CommonRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CommonRespMultiError) AllErrors() []error { return m }
+
+// CommonRespValidationError is the validation error returned by
+// CommonResp.Validate if the designated constraints aren't met.
+type CommonRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CommonRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CommonRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CommonRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CommonRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CommonRespValidationError) ErrorName() string { return "CommonRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CommonRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCommonResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CommonRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CommonRespValidationError{}
+
+// Validate checks the field values on CommonListResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CommonListResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CommonListResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CommonListRespMultiError,
+// or nil if none found.
+func (m *CommonListResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CommonListResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonListRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonListRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CommonListRespMultiError(errors)
+	}
+	return nil
+}
+
+// CommonListRespMultiError is an error wrapping multiple validation errors
+// returned by CommonListResp.ValidateAll() if the designated constraints
+// aren't met.
+type CommonListRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CommonListRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CommonListRespMultiError) AllErrors() []error { return m }
+
+// CommonListRespValidationError is the validation error returned by
+// CommonListResp.Validate if the designated constraints aren't met.
+type CommonListRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CommonListRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CommonListRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CommonListRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CommonListRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CommonListRespValidationError) ErrorName() string { return "CommonListRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CommonListRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCommonListResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CommonListRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CommonListRespValidationError{}
+
+// Validate checks the field values on SubscribeReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SubscribeReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubscribeReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SubscribeReqMultiError, or
+// nil if none found.
+func (m *SubscribeReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubscribeReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_SubscribeReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := SubscribeReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := SubscribeReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetResourceVersion()) > 32 {
+		err := SubscribeReqValidationError{
+			field:  "ResourceVersion",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := SubscribeReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetCRDName()) > 128 {
+		err := SubscribeReqValidationError{
+			field:  "CRDName",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetApiVersion()) > 128 {
+		err := SubscribeReqValidationError{
+			field:  "ApiVersion",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 64 {
+		err := SubscribeReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return SubscribeReqMultiError(errors)
+	}
+	return nil
+}
+
+// SubscribeReqMultiError is an error wrapping multiple validation errors
+// returned by SubscribeReq.ValidateAll() if the designated constraints aren't met.
+type SubscribeReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubscribeReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubscribeReqMultiError) AllErrors() []error { return m }
+
+// SubscribeReqValidationError is the validation error returned by
+// SubscribeReq.Validate if the designated constraints aren't met.
+type SubscribeReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubscribeReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubscribeReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubscribeReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubscribeReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubscribeReqValidationError) ErrorName() string { return "SubscribeReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SubscribeReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubscribeReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubscribeReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubscribeReqValidationError{}
+
+var _SubscribeReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on SubscribeResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SubscribeResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SubscribeResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in SubscribeRespMultiError, or
+// nil if none found.
+func (m *SubscribeResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SubscribeResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Kind
+
+	// no validation rules for Type
+
+	// no validation rules for Uid
+
+	if all {
+		switch v := interface{}(m.GetManifest()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SubscribeRespValidationError{
+					field:  "Manifest",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SubscribeRespValidationError{
+					field:  "Manifest",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetManifest()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubscribeRespValidationError{
+				field:  "Manifest",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetManifestExt()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SubscribeRespValidationError{
+					field:  "ManifestExt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SubscribeRespValidationError{
+					field:  "ManifestExt",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetManifestExt()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SubscribeRespValidationError{
+				field:  "ManifestExt",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return SubscribeRespMultiError(errors)
+	}
+	return nil
+}
+
+// SubscribeRespMultiError is an error wrapping multiple validation errors
+// returned by SubscribeResp.ValidateAll() if the designated constraints
+// aren't met.
+type SubscribeRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SubscribeRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SubscribeRespMultiError) AllErrors() []error { return m }
+
+// SubscribeRespValidationError is the validation error returned by
+// SubscribeResp.Validate if the designated constraints aren't met.
+type SubscribeRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SubscribeRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SubscribeRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SubscribeRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SubscribeRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SubscribeRespValidationError) ErrorName() string { return "SubscribeRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e SubscribeRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSubscribeResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SubscribeRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SubscribeRespValidationError{}
+
+// Validate checks the field values on InvalidateDiscoveryCacheReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *InvalidateDiscoveryCacheReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InvalidateDiscoveryCacheReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// InvalidateDiscoveryCacheReqMultiError, or nil if none found.
+func (m *InvalidateDiscoveryCacheReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InvalidateDiscoveryCacheReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_InvalidateDiscoveryCacheReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := InvalidateDiscoveryCacheReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := InvalidateDiscoveryCacheReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for AuthToken
+
+	if len(errors) > 0 {
+		return InvalidateDiscoveryCacheReqMultiError(errors)
+	}
+	return nil
+}
+
+// InvalidateDiscoveryCacheReqMultiError is an error wrapping multiple
+// validation errors returned by InvalidateDiscoveryCacheReq.ValidateAll() if
+// the designated constraints aren't met.
+type InvalidateDiscoveryCacheReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InvalidateDiscoveryCacheReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InvalidateDiscoveryCacheReqMultiError) AllErrors() []error { return m }
+
+// InvalidateDiscoveryCacheReqValidationError is the validation error returned
+// by InvalidateDiscoveryCacheReq.Validate if the designated constraints
+// aren't met.
+type InvalidateDiscoveryCacheReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InvalidateDiscoveryCacheReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InvalidateDiscoveryCacheReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InvalidateDiscoveryCacheReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InvalidateDiscoveryCacheReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InvalidateDiscoveryCacheReqValidationError) ErrorName() string {
+	return "InvalidateDiscoveryCacheReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e InvalidateDiscoveryCacheReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInvalidateDiscoveryCacheReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InvalidateDiscoveryCacheReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InvalidateDiscoveryCacheReqValidationError{}
+
+var _InvalidateDiscoveryCacheReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on FormRenderPreviewReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *FormRenderPreviewReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FormRenderPreviewReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// FormRenderPreviewReqMultiError, or nil if none found.
+func (m *FormRenderPreviewReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FormRenderPreviewReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_FormRenderPreviewReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := FormRenderPreviewReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := FormRenderPreviewReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := FormRenderPreviewReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetFormData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FormRenderPreviewReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FormRenderPreviewReqValidationError{
+					field:  "FormData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetFormData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FormRenderPreviewReqValidationError{
+				field:  "FormData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return FormRenderPreviewReqMultiError(errors)
+	}
+	return nil
+}
+
+// FormRenderPreviewReqMultiError is an error wrapping multiple validation
+// errors returned by FormRenderPreviewReq.ValidateAll() if the designated
+// constraints aren't met.
+type FormRenderPreviewReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FormRenderPreviewReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FormRenderPreviewReqMultiError) AllErrors() []error { return m }
+
+// FormRenderPreviewReqValidationError is the validation error returned by
+// FormRenderPreviewReq.Validate if the designated constraints aren't met.
+type FormRenderPreviewReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FormRenderPreviewReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FormRenderPreviewReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FormRenderPreviewReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FormRenderPreviewReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FormRenderPreviewReqValidationError) ErrorName() string {
+	return "FormRenderPreviewReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FormRenderPreviewReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFormRenderPreviewReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FormRenderPreviewReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FormRenderPreviewReqValidationError{}
+
+var _FormRenderPreviewReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on GetResFormSchemaReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetResFormSchemaReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetResFormSchemaReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetResFormSchemaReqMultiError, or nil if none found.
+func (m *GetResFormSchemaReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetResFormSchemaReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_GetResFormSchemaReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetResFormSchemaReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetResFormSchemaReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := GetResFormSchemaReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 64 {
+		err := GetResFormSchemaReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _GetResFormSchemaReq_Action_InLookup[m.GetAction()]; !ok {
+		err := GetResFormSchemaReqValidationError{
+			field:  "Action",
+			reason: "value must be in list [ create update]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetResFormSchemaReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetResFormSchemaReqMultiError is an error wrapping multiple validation
+// errors returned by GetResFormSchemaReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetResFormSchemaReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetResFormSchemaReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetResFormSchemaReqMultiError) AllErrors() []error { return m }
+
+// GetResFormSchemaReqValidationError is the validation error returned by
+// GetResFormSchemaReq.Validate if the designated constraints aren't met.
+type GetResFormSchemaReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetResFormSchemaReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetResFormSchemaReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetResFormSchemaReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetResFormSchemaReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetResFormSchemaReqValidationError) ErrorName() string {
+	return "GetResFormSchemaReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetResFormSchemaReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetResFormSchemaReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetResFormSchemaReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetResFormSchemaReqValidationError{}
+
+var _GetResFormSchemaReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+var _GetResFormSchemaReq_Action_InLookup = map[string]struct{}{
+	"":       {},
+	"create": {},
+	"update": {},
+}
+
+// Validate checks the field values on GetFormSupportedApiVersionsReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetFormSupportedApiVersionsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetFormSupportedApiVersionsReq with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetFormSupportedApiVersionsReqMultiError, or nil if none found.
+func (m *GetFormSupportedApiVersionsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetFormSupportedApiVersionsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_GetFormSupportedApiVersionsReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetFormSupportedApiVersionsReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetFormSupportedApiVersionsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := GetFormSupportedApiVersionsReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetFormSupportedApiVersionsReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetFormSupportedApiVersionsReqMultiError is an error wrapping multiple
+// validation errors returned by GetFormSupportedApiVersionsReq.ValidateAll()
+// if the designated constraints aren't met.
+type GetFormSupportedApiVersionsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetFormSupportedApiVersionsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetFormSupportedApiVersionsReqMultiError) AllErrors() []error { return m }
+
+// GetFormSupportedApiVersionsReqValidationError is the validation error
+// returned by GetFormSupportedApiVersionsReq.Validate if the designated
+// constraints aren't met.
+type GetFormSupportedApiVersionsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetFormSupportedApiVersionsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetFormSupportedApiVersionsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetFormSupportedApiVersionsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetFormSupportedApiVersionsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetFormSupportedApiVersionsReqValidationError) ErrorName() string {
+	return "GetFormSupportedApiVersionsReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetFormSupportedApiVersionsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetFormSupportedApiVersionsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetFormSupportedApiVersionsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetFormSupportedApiVersionsReqValidationError{}
+
+var _GetFormSupportedApiVersionsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")
+
+// Validate checks the field values on GetResSelectItemsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetResSelectItemsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetResSelectItemsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetResSelectItemsReqMultiError, or nil if none found.
+func (m *GetResSelectItemsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetResSelectItemsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if !_GetResSelectItemsReq_ProjectID_Pattern.MatchString(m.GetProjectID()) {
+		err := GetResSelectItemsReqValidationError{
+			field:  "ProjectID",
+			reason: "value does not match regex pattern \"^[0-9a-f]{32}$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetResSelectItemsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := GetResSelectItemsReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 128 {
+		err := GetResSelectItemsReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be between 1 and 128 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetScene()) > 32 {
+		err := GetResSelectItemsReqValidationError{
+			field:  "Scene",
+			reason: "value length must be at most 32 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetResSelectItemsReqMultiError(errors)
+	}
+	return nil
+}
+
+// GetResSelectItemsReqMultiError is an error wrapping multiple validation
+// errors returned by GetResSelectItemsReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetResSelectItemsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetResSelectItemsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetResSelectItemsReqMultiError) AllErrors() []error { return m }
+
+// GetResSelectItemsReqValidationError is the validation error returned by
+// GetResSelectItemsReq.Validate if the designated constraints aren't met.
+type GetResSelectItemsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetResSelectItemsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetResSelectItemsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetResSelectItemsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetResSelectItemsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetResSelectItemsReqValidationError) ErrorName() string {
+	return "GetResSelectItemsReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetResSelectItemsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetResSelectItemsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetResSelectItemsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetResSelectItemsReqValidationError{}
+
+var _GetResSelectItemsReq_ProjectID_Pattern = regexp.MustCompile("^[0-9a-f]{32}$")

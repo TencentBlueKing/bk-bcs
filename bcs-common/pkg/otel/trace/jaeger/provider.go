@@ -14,13 +14,14 @@
 package jaeger
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/resource"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/resource"
 )
 
+// NewTracerProvider xxx
 func NewTracerProvider(exporterURL, serviceName string) (*sdktrace.TracerProvider, error) {
 	// Create the Jaeger exporter
 	traceExp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(exporterURL)))

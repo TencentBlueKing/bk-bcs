@@ -31,8 +31,8 @@ import (
 // 3. flow control.
 func MarkProcess(f restful.RouteFunction) restful.RouteFunction {
 	return func(req *restful.Request, resp *restful.Response) {
-		apiConf := apiserver.GetAPIResource().Conf
 		entranceTime := time.Now()
+		apiConf := apiserver.GetAPIResource().Conf
 		// print request body to log
 		var stringBody = "Not Parsed"
 		if apiConf.PrintBody {
@@ -41,13 +41,14 @@ func MarkProcess(f restful.RouteFunction) restful.RouteFunction {
 			req.Request.Body = ioutil.NopCloser(strings.NewReader(stringBody))
 		}
 		// print log when a request comes in and returns
-		blog.Infof("Receive %s %s?%s, body: %s",
-			req.Request.Method, req.Request.URL.Path, req.Request.URL.RawQuery, stringBody)
+		method := req.Request.Method
+		path := req.Request.URL.Path
+		blog.Infof("Receive %s %s?%s, body: %s", method, path, req.Request.URL.RawQuery, stringBody)
 		f(req, resp)
-		blog.Infof("Return [%d] %s %s", resp.StatusCode(), req.Request.Method, req.Request.URL.Path)
+		blog.Infof("Return [%d] %s %s", resp.StatusCode(), method, path)
 		if apiConf.PrintManager {
 			// Count request time
-			if req.Request.Method == "GET" {
+			if method == "GET" {
 				go managerGet.Add(time.Since(entranceTime))
 			} else {
 				go managerSet.Add(time.Since(entranceTime))

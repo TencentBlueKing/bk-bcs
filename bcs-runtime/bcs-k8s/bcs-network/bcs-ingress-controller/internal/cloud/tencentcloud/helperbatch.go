@@ -16,7 +16,11 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -54,6 +58,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 		return nil, nil
 	}
 	ruleIDAttrMap := make(map[string]*networkextensionv1.IngressListenerAttribute)
+	ruleIDCertMap := make(map[string]*networkextensionv1.IngressListenerCertificate)
 	for _, cloudLi := range resp.Response.Listeners {
 		// only care about listener with given ports
 		if _, ok := portMap[int(*cloudLi.Port)]; !ok {
@@ -74,6 +79,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 			for _, respRule := range cloudLi.Rules {
 				if respRule.LocationId != nil {
 					ruleIDAttrMap[*respRule.LocationId] = convertRuleAttribute(respRule)
+					ruleIDCertMap[*respRule.LocationId] = convertCertificate(respRule.Certificate)
 				}
 			}
 		}
@@ -112,6 +118,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 					Domain:      *retRule.Domain,
 					Path:        *retRule.Url,
 					TargetGroup: convertClbBackends(retRule.Targets),
+					Certificate: ruleIDCertMap[*retRule.LocationId],
 				})
 			}
 		case ClbProtocolTCP, ClbProtocolUDP:
@@ -151,7 +158,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 // in upper layer, already split listener into different batch, the attribute of listeners should be the same
 func (c *Clb) batchCreate4LayerListener(
 	region string, listeners []*networkextensionv1.Listener) (
-	map[string]string, error) {
+	map[string]cloud.Result, error) {
 	if len(listeners) == 0 {
 		return nil, fmt.Errorf("listeners cannot be empty when batch create 4 layer listener")
 	}
@@ -208,7 +215,7 @@ func (c *Clb) batchCreate4LayerListener(
 		}
 	}
 	// register all targets
-	failedListenerIDMap := make(map[string]struct{})
+	failedListenerIDMap := make(map[string]error)
 	if len(tgReq.Targets) != 0 {
 		ctime := time.Now()
 		failedListenerIDs := c.sdkWrapper.BatchRegisterTargets(region, tgReq)
@@ -217,15 +224,17 @@ func (c *Clb) batchCreate4LayerListener(
 		} else {
 			cloud.StatRequest("BatchRegisterTargets", cloud.MetricAPISuccess, ctime, time.Now())
 		}
-		for _, id := range failedListenerIDs {
-			failedListenerIDMap[id] = struct{}{}
+		for id, derr := range failedListenerIDs {
+			failedListenerIDMap[id] = derr
 		}
 	}
 	// collect listeners which is created successfully
-	retMap := make(map[string]string)
+	retMap := make(map[string]cloud.Result)
 	for index, id := range listenerIDs {
-		if _, ok := failedListenerIDMap[id]; !ok {
-			retMap[listeners[index].GetName()] = id
+		if derr, ok := failedListenerIDMap[id]; !ok {
+			retMap[listeners[index].GetName()] = cloud.Result{IsError: false, Res: id}
+		} else {
+			retMap[listeners[index].GetName()] = cloud.Result{IsError: true, Err: derr}
 		}
 	}
 	return retMap, nil
@@ -234,34 +243,48 @@ func (c *Clb) batchCreate4LayerListener(
 // create multiple 4 layer listener segment
 // on tencent cloud, listener segment only support tcp and udp
 func (c *Clb) batchCreateSegment4LayerListener(
-	region string, listeners []*networkextensionv1.Listener) (map[string]string, error) {
+	region string, listeners []*networkextensionv1.Listener) (map[string]cloud.Result, error) {
 	if len(listeners) == 0 {
 		return nil, fmt.Errorf("listeners cannot be empty when batch create 4 layer listener segment")
 	}
 
 	// on tencent cloud, api cannot create multiple listener segment in one time
-	failedListenerNameMap := make(map[string]struct{})
-	successListenerNameMap := make(map[string]string)
+	failedListenerNameMap := sync.Map{}
+	successListenerNameMap := sync.Map{}
+	ch := make(chan struct{}, MaxSegmentListenerCurrentCreateEachTime)
+	wg := sync.WaitGroup{}
+	wg.Add(len(listeners))
 	for _, li := range listeners {
-		listenerID, err := c.create4LayerListenerWithoutTargetGroup(region, li)
-		if err != nil {
-			blog.Warnf("create 4 layer listener %s/%s failed, err %s", li.GetName(), li.GetNamespace(), err.Error())
-			failedListenerNameMap[li.GetName()] = struct{}{}
-		}
-		successListenerNameMap[li.GetName()] = listenerID
+		ch <- struct{}{}
+		go func(li *networkextensionv1.Listener) {
+			defer func() {
+				wg.Done()
+				<-ch
+			}()
+			listenerID, err := c.create4LayerListenerWithoutTargetGroup(region, li)
+			if err != nil {
+				err = errors.Wrapf(err, "create 4 layer listener %s/%s failed", li.GetNamespace(), li.GetName())
+				blog.Warnf("%v", err)
+				failedListenerNameMap.Store(li.GetName(), err)
+				return
+			}
+			successListenerNameMap.Store(li.GetName(), listenerID)
+		}(li)
 	}
+	wg.Wait()
 
 	// collect all targets and register them in one time
 	tgReq := tclb.NewBatchRegisterTargetsRequest()
 	tgReq.LoadBalancerId = tcommon.StringPtr(listeners[0].Spec.LoadbalancerID)
 	for _, li := range listeners {
-		if _, ok := failedListenerNameMap[li.GetName()]; ok {
+		if _, ok := failedListenerNameMap.Load(li.GetName()); ok {
 			continue
 		}
 		if li.Spec.TargetGroup != nil && len(li.Spec.TargetGroup.Backends) != 0 {
 			for _, backend := range li.Spec.TargetGroup.Backends {
+				liName, _ := successListenerNameMap.Load(li.GetName())
 				tgReq.Targets = append(tgReq.Targets, &tclb.BatchTarget{
-					ListenerId: tcommon.StringPtr(successListenerNameMap[li.GetName()]),
+					ListenerId: tcommon.StringPtr(liName.(string)),
 					EniIp:      tcommon.StringPtr(backend.IP),
 					Port:       tcommon.Int64Ptr(int64(backend.Port)),
 					Weight:     tcommon.Int64Ptr(int64(backend.Weight)),
@@ -269,7 +292,7 @@ func (c *Clb) batchCreateSegment4LayerListener(
 			}
 		}
 	}
-	failedListenerIDMap := make(map[string]struct{})
+	failedListenerIDMap := make(map[string]error)
 	if len(tgReq.Targets) != 0 {
 		ctime := time.Now()
 		failedListenerIDs := c.sdkWrapper.BatchRegisterTargets(region, tgReq)
@@ -278,17 +301,24 @@ func (c *Clb) batchCreateSegment4LayerListener(
 		} else {
 			cloud.StatRequest("BatchRegisterTargets", cloud.MetricAPISuccess, ctime, time.Now())
 		}
-		for _, id := range failedListenerIDs {
-			failedListenerIDMap[id] = struct{}{}
+		for id, derr := range failedListenerIDs {
+			failedListenerIDMap[id] = derr
 		}
 	}
-	// collect all listener which is created successfully
-	retMap := make(map[string]string)
-	for liName, liID := range successListenerNameMap {
-		if _, ok := failedListenerIDMap[liID]; ok {
-			continue
+	// collect all listener
+	retMap := make(map[string]cloud.Result)
+	for _, li := range listeners {
+		if liID, ok := successListenerNameMap.Load(li.GetName()); ok {
+			liIDStr := liID.(string)
+			if err, ok := failedListenerIDMap[liID.(string)]; ok {
+				retMap[li.GetName()] = cloud.Result{IsError: true, Err: err}
+			} else {
+				retMap[li.GetName()] = cloud.Result{IsError: false, Res: liIDStr}
+			}
+		} else {
+			err, _ := failedListenerNameMap.Load(li.GetName())
+			retMap[li.GetName()] = cloud.Result{IsError: true, Err: err.(error)}
 		}
-		retMap[liName] = liID
 	}
 	return retMap, nil
 }
@@ -331,9 +361,9 @@ func (c *Clb) create4LayerListenerWithoutTargetGroup(
 // batchUpdate4LayerListener updates multiple 4 layer listener in one time
 func (c *Clb) batchUpdate4LayerListener(
 	region string, ingressListeners []*networkextensionv1.Listener,
-	cloudListeners []*networkextensionv1.Listener) ([]bool, error) {
+	cloudListeners []*networkextensionv1.Listener) ([]error, error) {
 
-	updateErrArr := make([]bool, len(ingressListeners))
+	updateErrArr := make([]error, len(ingressListeners))
 	backendRegMap := make(map[string][]networkextensionv1.ListenerBackend)
 	backendDeregMap := make(map[string][]networkextensionv1.ListenerBackend)
 	backendModMap := make(map[string][]networkextensionv1.ListenerBackend)
@@ -343,8 +373,9 @@ func (c *Clb) batchUpdate4LayerListener(
 			needUpdateAttribute(cloudListener.Spec.ListenerAttribute, ingressListener.Spec.ListenerAttribute) {
 			err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 			if err != nil {
-				blog.Warnf("updateListenerAttrAndCerts in update4LayerListener failed, err %s", err.Error())
-				updateErrArr[index] = true
+				err = errors.Wrapf(err, "updateListenerAttrAndCerts in update4LayerListener failed")
+				blog.Warnf(err.Error())
+				updateErrArr[index] = multierror.Append(updateErrArr[index], err)
 			}
 		}
 		// get different targets
@@ -361,7 +392,7 @@ func (c *Clb) batchUpdate4LayerListener(
 		}
 	}
 
-	failedListenerMap := map[string]struct{}{}
+	failedListenerMap := make(map[string]error)
 	// deregister backends of multiple listener
 	if len(backendDeregMap) != 0 {
 		failedListenerIDs, err := c.batchDeregisterListenerBackend(
@@ -370,7 +401,8 @@ func (c *Clb) batchUpdate4LayerListener(
 			return nil, err
 		}
 		for _, id := range failedListenerIDs {
-			failedListenerMap[id] = struct{}{}
+			failedListenerMap[id] = multierror.Append(failedListenerMap[id],
+				fmt.Errorf("batch deregister listener backend failed"))
 		}
 	}
 	// register backends of multiple listener
@@ -380,8 +412,8 @@ func (c *Clb) batchUpdate4LayerListener(
 		if err != nil {
 			return nil, err
 		}
-		for _, id := range failedListenerIDs {
-			failedListenerMap[id] = struct{}{}
+		for id, derr := range failedListenerIDs {
+			failedListenerMap[id] = multierror.Append(failedListenerMap[id], derr)
 		}
 	}
 	// modify backends weights of multiple listener
@@ -393,8 +425,8 @@ func (c *Clb) batchUpdate4LayerListener(
 	}
 	// collect register and de register err
 	for index, li := range cloudListeners {
-		if _, ok := failedListenerMap[li.Status.ListenerID]; ok {
-			updateErrArr[index] = true
+		if err, ok := failedListenerMap[li.Status.ListenerID]; ok {
+			updateErrArr[index] = multierror.Append(updateErrArr[index], err)
 		}
 	}
 	return updateErrArr, nil
@@ -402,9 +434,9 @@ func (c *Clb) batchUpdate4LayerListener(
 
 // batchCreate7LayerListener create multiple 4 layer listener
 func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkextensionv1.Listener) (
-	map[string]string, error) {
+	map[string]cloud.Result, error) {
 	if len(listeners) == 0 {
-		return nil, fmt.Errorf("listeners cannot be empty when batch create 4 layer listener")
+		return nil, fmt.Errorf("listeners cannot be empty when batch create 7 layer listener")
 	}
 	req := tclb.NewCreateListenerRequest()
 	req.LoadBalancerId = tcommon.StringPtr(listeners[0].Spec.LoadbalancerID)
@@ -419,6 +451,9 @@ func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkexten
 	listener := listeners[0]
 	req.Protocol = tcommon.StringPtr(listener.Spec.Protocol)
 	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
+	if listener.Spec.ListenerAttribute != nil {
+		req.SniSwitch = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.SniSwitch))
+	}
 
 	ctime := time.Now()
 	listenerIDs, err := c.sdkWrapper.CreateListener(region, req)
@@ -434,21 +469,25 @@ func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkexten
 			len(listenerIDs), len(listenerIDs))
 	}
 
-	failedListenerIDMap := make(map[string]struct{})
+	failedListenerIDMap := make(map[string]error)
 	for liIndex, listener := range listeners {
 		for _, rule := range listener.Spec.Rules {
-			err := c.addListenerRule(region, listener.Spec.LoadbalancerID, listenerIDs[liIndex], rule)
+			err := c.addListenerRule(region, listener.Spec.LoadbalancerID, listenerIDs[liIndex],
+				listener.Spec.ListenerAttribute, rule)
 			if err != nil {
-				blog.Warnf("add listener rule %v for listener %s/%s failed, err %s",
-					rule, listener.GetName(), listener.GetNamespace(), err.Error())
-				failedListenerIDMap[listenerIDs[liIndex]] = struct{}{}
+				err = errors.Wrapf(err, "add listener rule %v for listener %s/%s failed", rule, listener.GetName(),
+					listener.GetNamespace())
+				blog.Warnf(err.Error())
+				failedListenerIDMap[listenerIDs[liIndex]] = err
 			}
 		}
 	}
-	retMap := make(map[string]string)
+	retMap := make(map[string]cloud.Result)
 	for index, id := range listenerIDs {
-		if _, ok := failedListenerIDMap[id]; !ok {
-			retMap[listeners[index].GetName()] = id
+		if err, ok := failedListenerIDMap[id]; !ok {
+			retMap[listeners[index].GetName()] = cloud.Result{IsError: false, Res: id}
+		} else {
+			retMap[listeners[index].GetName()] = cloud.Result{IsError: true, Err: err}
 		}
 	}
 	return retMap, nil
@@ -477,7 +516,7 @@ func (c *Clb) batchDeleteListener(region, lbID string, listenerIDs []string) err
 
 // batchUpdate7LayerListeners update multiple 7 layer listeners
 func (c *Clb) batchUpdate7LayerListeners(region string, ingressListeners []*networkextensionv1.Listener,
-	cloudListeners []*networkextensionv1.Listener) ([]bool, error) {
+	cloudListeners []*networkextensionv1.Listener) ([]error, error) {
 	if len(ingressListeners) == 0 {
 		return nil, fmt.Errorf("length of listeners cannot be 0")
 	}
@@ -487,7 +526,7 @@ func (c *Clb) batchUpdate7LayerListeners(region string, ingressListeners []*netw
 			len(ingressListeners), len(cloudListeners))
 	}
 
-	listenerErrArr := make([]bool, len(ingressListeners))
+	listenerErrArr := make([]error, len(ingressListeners))
 	backendRegMap := make(map[string]map[string][]networkextensionv1.ListenerBackend)
 	backendDeregMap := make(map[string]map[string][]networkextensionv1.ListenerBackend)
 	backendModMap := make(map[string]map[string][]networkextensionv1.ListenerBackend)
@@ -506,7 +545,7 @@ func (c *Clb) batchUpdate7LayerListeners(region string, ingressListeners []*netw
 		listenerErrArr[index] = foundErr
 	}
 
-	failedListenerMap := map[string]struct{}{}
+	failedListenerMap := make(map[string]error)
 	if len(backendDeregMap) != 0 {
 		failedListenerIDs, err := c.batchDeregisterRuleBackend(
 			region, ingressListeners[0].Spec.LoadbalancerID, backendDeregMap)
@@ -514,7 +553,7 @@ func (c *Clb) batchUpdate7LayerListeners(region string, ingressListeners []*netw
 			return nil, err
 		}
 		for _, id := range failedListenerIDs {
-			failedListenerMap[id] = struct{}{}
+			failedListenerMap[id] = errors.New("batch deregister targets failed")
 		}
 	}
 	if len(backendRegMap) != 0 {
@@ -523,8 +562,8 @@ func (c *Clb) batchUpdate7LayerListeners(region string, ingressListeners []*netw
 		if err != nil {
 			return nil, err
 		}
-		for _, id := range failedListenerIDs {
-			failedListenerMap[id] = struct{}{}
+		for id, derr := range failedListenerIDs {
+			failedListenerMap[id] = derr
 		}
 	}
 	if len(backendModMap) != 0 {
@@ -535,8 +574,8 @@ func (c *Clb) batchUpdate7LayerListeners(region string, ingressListeners []*netw
 	}
 	// collect register and de register err
 	for index, li := range cloudListeners {
-		if _, ok := failedListenerMap[li.Status.ListenerID]; ok {
-			listenerErrArr[index] = true
+		if err, ok := failedListenerMap[li.Status.ListenerID]; ok {
+			listenerErrArr[index] = err
 		}
 	}
 	return listenerErrArr, nil
@@ -548,9 +587,9 @@ func (c *Clb) updateHTTPListenerAndCollectRsChanges(
 	region string, ingressListener, cloudListener *networkextensionv1.Listener) (
 	map[string][]networkextensionv1.ListenerBackend,
 	map[string][]networkextensionv1.ListenerBackend,
-	map[string][]networkextensionv1.ListenerBackend, bool) {
+	map[string][]networkextensionv1.ListenerBackend, error) {
 
-	foundErr := false
+	var resultErr error
 	batchRegTargets := make(map[string][]networkextensionv1.ListenerBackend)
 	batchDeregTargets := make(map[string][]networkextensionv1.ListenerBackend)
 	batchModWeightTargets := make(map[string][]networkextensionv1.ListenerBackend)
@@ -559,8 +598,9 @@ func (c *Clb) updateHTTPListenerAndCollectRsChanges(
 		!reflect.DeepEqual(ingressListener.Spec.Certificate, cloudListener.Spec.Certificate) {
 		err := c.updateListenerAttrAndCerts(region, cloudListener.Status.ListenerID, ingressListener)
 		if err != nil {
-			blog.Warnf("updateListenerAttrAndCerts in updateHTTPListener failed, err %s", err.Error())
-			foundErr = true
+			err = errors.Wrapf(err, "updateListenerAttrAndCerts in updateHTTPListener failed")
+			blog.Warnf(err.Error())
+			resultErr = multierror.Append(resultErr, err)
 		}
 	}
 	// get differet rules
@@ -569,18 +609,21 @@ func (c *Clb) updateHTTPListenerAndCollectRsChanges(
 	for _, rule := range delRules {
 		err := c.deleteListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, rule)
 		if err != nil {
-			blog.Warnf("delete listener rule %v of lb %s listener %s failed, err %s",
-				rule, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, err.Error())
-			foundErr = true
+			err = errors.Wrapf(err, "delete listener rule %v of lb %s listener %s failed", rule,
+				cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID)
+			blog.Warnf(err.Error())
+			resultErr = multierror.Append(resultErr, err)
 		}
 	}
 	// do add rules
 	for _, rule := range addRules {
-		err := c.addListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, rule)
+		err := c.addListenerRule(region, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID,
+			cloudListener.Spec.ListenerAttribute, rule)
 		if err != nil {
-			blog.Warnf("add listener rule %v of lb %s listener %s failed, err %s",
-				rule, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, err.Error())
-			foundErr = true
+			err = errors.Wrapf(err, "add listener rule %v of lb %s listener %s failed", rule,
+				cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID)
+			blog.Warnf(err.Error())
+			resultErr = multierror.Append(resultErr, err)
 		}
 	}
 	// do update rules
@@ -590,9 +633,20 @@ func (c *Clb) updateHTTPListenerAndCollectRsChanges(
 			err := c.updateRuleAttr(region, cloudListener.Spec.LoadbalancerID,
 				cloudListener.Status.ListenerID, existedRule.RuleID, rule)
 			if err != nil {
-				blog.Warnf("update rule %v of lb %s listener %s attribute failed, err %s",
-					rule, cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID, err.Error())
-				foundErr = true
+				err = errors.Wrapf(err, "update rule %v of lb %s listener %s attribute failed", rule,
+					cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID)
+				blog.Warnf(err.Error())
+				resultErr = multierror.Append(resultErr, err)
+			}
+		}
+		if !reflect.DeepEqual(rule.Certificate, existedRule.Certificate) {
+			err := c.updateDomainAttributes(region, cloudListener.Spec.LoadbalancerID,
+				cloudListener.Status.ListenerID, rule)
+			if err != nil {
+				err = errors.Wrapf(err, "update rule %v of lb %s listener %s domain attribute failed", rule,
+					cloudListener.Spec.LoadbalancerID, cloudListener.Status.ListenerID)
+				blog.Warnf(err.Error())
+				resultErr = multierror.Append(resultErr, err)
 			}
 		}
 		// get different targets
@@ -608,12 +662,12 @@ func (c *Clb) updateHTTPListenerAndCollectRsChanges(
 			batchModWeightTargets[existedRule.RuleID] = updateWeightBackends
 		}
 	}
-	return batchRegTargets, batchDeregTargets, batchModWeightTargets, foundErr
+	return batchRegTargets, batchDeregTargets, batchModWeightTargets, resultErr
 }
 
 // return failed listener id list
 func (c *Clb) batchRegisterRuleBackend(region, lbID string,
-	ruleBackendMap map[string]map[string][]networkextensionv1.ListenerBackend) ([]string, error) {
+	ruleBackendMap map[string]map[string][]networkextensionv1.ListenerBackend) (map[string]error, error) {
 	req := tclb.NewBatchRegisterTargetsRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	for listenerID, liRuleMap := range ruleBackendMap {
@@ -703,7 +757,7 @@ func (c *Clb) batchChangeRuleBackendWeight(region, lbID string,
 }
 
 func (c *Clb) batchRegisterListenerBackend(region, lbID string,
-	liBackendMap map[string][]networkextensionv1.ListenerBackend) ([]string, error) {
+	liBackendMap map[string][]networkextensionv1.ListenerBackend) (map[string]error, error) {
 	req := tclb.NewBatchRegisterTargetsRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
 	for listenerID, backendList := range liBackendMap {

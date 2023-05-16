@@ -1,0 +1,13 @@
+apiVersion: v2
+name: bcs-monitor
+description: A Helm chart for module bcs-monitor of BlueKing Container Service(BCS)
+type: application
+version: 1.28.0-alpha.75
+appVersion: v1.28.0-alpha.75
+dependencies:
+  - name: common
+    repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+    version: 1.4.2
+  - name: bcs-common
+    repository: file://../bcs-common
+    version: x.x.x

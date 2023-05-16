@@ -20,7 +20,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
-
 	"github.com/emicklei/go-restful"
 )
 
@@ -35,7 +34,7 @@ const (
 	usedTag          = "used"
 	timeLayout       = "2006-01-02 15:04:05"
 	timestampsLayout = "timestamps"
-	nestedTimeLayout = "2006-01-02T15:04:05-0700"
+	NestedTimeLayout = "2006-01-02T15:04:05-0700"
 	updateTimeTag    = "updateTime"
 	createTimeTag    = "createTime"
 )
@@ -47,10 +46,11 @@ const dbConfig = "mongodb/dynamic"
 
 func doQuery(req *restful.Request, resp *restful.Response, filter qFilter, name string) error {
 	request := newReqDynamic(req, filter, name)
-	r, err := request.queryDynamic()
+	r, err := request.QueryDynamic()
 	if err != nil {
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
+		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr})
 		return err
 	}
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
@@ -58,66 +58,17 @@ func doQuery(req *restful.Request, resp *restful.Response, filter qFilter, name 
 	return nil
 }
 
-func grepNamespace(req *restful.Request, filter qFilter, name string, origin []string) ([]string, error) {
-	request := newReqDynamic(req, filter, name)
-	r, err := request.queryDynamic()
-	if err != nil {
-		return nil, err
-	}
-	return fetchNamespace(r, origin), nil
-}
-
 // GetNameSpace get namespace
 func GetNameSpace(req *restful.Request, resp *restful.Response) {
-	// init Form
-	req.Request.FormValue("")
-	req.Request.Form[fieldTag] = []string{namespaceTag}
-	var err error
-	result := make([]string, 0)
+	const (
+		handler = "GetNameSpace"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
 
-	// grep application
-	if result, err = grepNamespace(req, &ApplicationFilter{Kind: ",application"}, "application", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
+	if err := getMesosNamespaceResource(req, resp); err != nil {
+		utils.SetSpanLogTagError(span, err)
 	}
-
-	// grep process
-	if result, err = grepNamespace(req, &ProcessFilter{Kind: "process"}, "application", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
-	}
-
-	// grep deployment
-	if result, err = grepNamespace(req, &DeploymentFilter{}, "deployment", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
-	}
-
-	// grep service
-	if result, err = grepNamespace(req, &ServiceFilter{}, "service", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
-	}
-
-	// grep configMap
-	if result, err = grepNamespace(req, &ConfigMapFilter{}, "configmap", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
-	}
-
-	// grep secret
-	if result, err = grepNamespace(req, &SecretFilter{}, "secret", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return
-	}
-
-	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: result})
 }
 
 // GetTaskGroup get taskgroup
@@ -246,100 +197,6 @@ func GetExportService(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetNameSpaceK8sUsed get namespace k8s used
-func GetNameSpaceK8sUsed(req *restful.Request, resp *restful.Response) error {
-	// init Form
-	req.Request.FormValue("")
-	req.Request.Form[fieldTag] = []string{namespaceTag}
-	var err error
-	result := make([]string, 0)
-
-	// grep replicaSet
-	if result, err = grepNamespace(req, &ReplicaSetFilter{}, "ReplicaSet", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	// grep deployment
-	if result, err = grepNamespace(req, &DeploymentK8sFilter{}, "Deployment", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	// grep service
-	if result, err = grepNamespace(req, &ServiceK8sFilter{}, "Service", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	// grep configMap
-	if result, err = grepNamespace(req, &ConfigMapK8sFilter{}, "ConfigMap", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	// grep secret
-	if result, err = grepNamespace(req, &SecretK8sFilter{}, "Secret", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	// grep ingress
-	if result, err = grepNamespace(req, &IngressFilter{}, "Ingress", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	// grep daemonSet
-	if result, err = grepNamespace(req, &DaemonSetFilter{}, "DaemonSet", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	// grep job
-	if result, err = grepNamespace(req, &JobFilter{}, "Job", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	// grep statefulSet
-	if result, err = grepNamespace(req, &StatefulSetFilter{}, "StatefulSet", result); err != nil {
-		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
-		lib.ReturnRest(&lib.RestResponse{
-			Resp: resp, Data: []string{},
-			ErrCode: common.BcsErrStorageListResourceFail, Message: common.BcsErrStorageListResourceFailStr})
-		return err
-	}
-
-	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: result})
-
-	return nil
-}
-
 // GetPod get pod
 func GetPod(req *restful.Request, resp *restful.Response) {
 	const (
@@ -432,7 +289,7 @@ func GetEndpointsK8s(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	err := doQuery(req, resp, &EndpointsK8sFilter{}, "EndPoints")
+	err := doQuery(req, resp, &EndpointsK8sFilter{}, "Endpoints")
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
 	}
@@ -461,7 +318,7 @@ func GetNameSpaceK8s(req *restful.Request, resp *restful.Response) {
 	defer span.Finish()
 
 	if req.QueryParameter(usedTag) == "1" {
-		err := GetNameSpaceK8sUsed(req, resp)
+		err := getK8sNamespaceResource(req, resp)
 		if err != nil {
 			utils.SetSpanLogTagError(span, err)
 		}
@@ -671,6 +528,9 @@ func init() {
 		Verb: "POST", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/exportservice"),
 		Params: nil, Handler: lib.MarkProcess(GetExportService)})
 	actions.RegisterV1Action(actions.Action{
+		Verb: "POST", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/namespace"),
+		Params: nil, Handler: lib.MarkProcess(GetNameSpace)})
+	actions.RegisterV1Action(actions.Action{
 		Verb: "POST", Path: urlPath("/mesos/dynamic/clusters/{clusterId}/ippoolstatic"),
 		Params: nil, Handler: lib.MarkProcess(GetIPPoolStatic)})
 	actions.RegisterV1Action(actions.Action{
@@ -703,7 +563,7 @@ func init() {
 		Params: nil, Handler: lib.MarkProcess(GetIngress)})
 	actions.RegisterV1Action(actions.Action{
 		Verb: "POST", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/namespace"),
-		Params: nil, Handler: lib.MarkProcess(GetNameSpace)})
+		Params: nil, Handler: lib.MarkProcess(GetNameSpaceK8s)})
 	actions.RegisterV1Action(actions.Action{
 		Verb: "POST", Path: urlPath("/k8s/dynamic/clusters/{clusterId}/node"),
 		Params: nil, Handler: lib.MarkProcess(GetNode)})

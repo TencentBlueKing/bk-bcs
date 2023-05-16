@@ -14,16 +14,23 @@
 package v4
 
 const (
+	// BcsSchedulerResourceApplication TODO
 	BcsSchedulerResourceApplication = "applications"
-	BcsSchedulerResourceProcess     = "processes"
-	BcsSchedulerResourceConfigMap   = "configmaps"
-	BcsSchedulerResourceSecret      = "secrets"
-	BcsSchedulerResourceService     = "services"
-	BcsSchedulerResourceDeployment  = "deployments"
-	BcsSchedulerResourceDaemonset   = "daemonset"
+	// BcsSchedulerResourceProcess TODO
+	BcsSchedulerResourceProcess = "processes"
+	// BcsSchedulerResourceConfigMap TODO
+	BcsSchedulerResourceConfigMap = "configmaps"
+	// BcsSchedulerResourceSecret TODO
+	BcsSchedulerResourceSecret = "secrets"
+	// BcsSchedulerResourceService TODO
+	BcsSchedulerResourceService = "services"
+	// BcsSchedulerResourceDeployment TODO
+	BcsSchedulerResourceDeployment = "deployments"
+	// BcsSchedulerResourceDaemonset TODO
+	BcsSchedulerResourceDaemonset = "daemonset"
 
-	//AllNamespace selector
+	// AllNamespace selector
 	AllNamespace = ""
-	//StatusKind for CRD error message
+	// StatusKind for CRD error message
 	StatusKind = "Status"
 )

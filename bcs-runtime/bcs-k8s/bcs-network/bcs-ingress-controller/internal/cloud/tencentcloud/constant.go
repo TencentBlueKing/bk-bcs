@@ -21,6 +21,8 @@ const (
 	ClbProtocolTCP = "TCP"
 	// ClbProtocolUDP clb udp protocol
 	ClbProtocolUDP = "UDP"
+	// ClbProtocolGRPC clb grpc protocol
+	ClbProtocolGRPC = "GRPC"
 
 	// just for v2 api
 
@@ -70,6 +72,9 @@ const (
 	MaxTargetForBatchRegisterEachTime = 250
 	// MaxLoadBalancersForDescribeHealthStatus max loadbalancers to describe health status
 	MaxLoadBalancersForDescribeHealthStatus = 5
+
+	// MaxSegmentListenerCurrentCreateEachTime max segment listener number to create each time,
+	MaxSegmentListenerCurrentCreateEachTime = 5
 
 	// ClbBackendAlive alive status of clb backend
 	ClbBackendAlive = "Alive"

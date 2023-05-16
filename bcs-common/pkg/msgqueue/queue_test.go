@@ -123,7 +123,7 @@ func TestMsgQueue_Subscribe(t *testing.T) {
 	qType, _ := q.String()
 	t.Log(qType)
 
-	//go pub(q)
+	// go pub(q)
 	sub, err := q.Subscribe(&testHandler{name: "hello world"}, []Filter{
 		&DefaultClusterFilter{
 			FilterKind: "clusterId",

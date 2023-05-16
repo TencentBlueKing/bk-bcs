@@ -1,0 +1,187 @@
+{
+  "cloudList": [
+    {
+      "cloudID": "tencentCloud",
+      "name": "TKE",
+      "editable": true,
+      "engineType": "tke",
+      "enable": "true",
+      "cloudCredential": {
+        "key": "${qcloudKey}",
+        "secret": "${qcloudSecret}"
+      },
+      "networkInfo": {
+        "cidrStep": [2048, 4096]
+      },
+      "confInfo": {
+        "cloudInternalEnable": false,
+        "disableCreateCluster": true,
+        "disableImportCluster": false,
+        "disableNodeGroup": false
+      },
+      "osManagement": {
+        "availableVersion": ["default"],
+        "instanceType": [],
+        "defaultSecurityGroups": [],
+        "regions": {}
+      },
+      "clusterManagement": {
+        "availableVersion": ["1.20.6", "1.18.4", "1.14.3-tk8s", "1.16.3"],
+        "createCluster": { },
+        "deleteCluster": { },
+        "addNodesToCluster": { },
+        "deleteNodesFromCluster": { }
+      },
+      "creator": "evanxinli",
+      "updater": "evanxinli",
+      "cloudProvider": "qcloud",
+      "description": "腾讯云容器服务（Tencent Kubernetes Engine，TKE）基于原生 kubernetes 提供以容器为核心的、高度可扩展的高性能容器管理服务",
+      "platformInfo": {
+        "image_register": "",
+        "storage_zookeeper": "",
+        "storage_url": "",
+        "bcs_api_host": ""
+      }
+    },
+    {
+      "cloudID": "azure",
+      "name": "AKS",
+      "editable": true,
+      "engineType": "aks",
+      "enable": "true",
+      "networkInfo": {
+        "cidrStep": [2048, 4096]
+      },
+      "confInfo": {
+        "cloudInternalEnable": false,
+        "disableCreateCluster": true,
+        "disableImportCluster": false,
+        "disableNodeGroup": true
+      },
+      "osManagement": {
+        "availableVersion": ["default"],
+        "instanceType": [],
+        "defaultSecurityGroups": [],
+        "regions": {}
+      },
+      "clusterManagement": {
+        "availableVersion": ["1.21.9", "1.21.14", "1.22.6", "1.22.11", "1.23.5", "1.23.8", "1.24.0"],
+        "createCluster": { },
+        "deleteCluster": { },
+        "addNodesToCluster": { },
+        "deleteNodesFromCluster": { }
+      },
+      "creator": "evanxinli",
+      "updater": "evanxinli",
+      "cloudProvider": "azure",
+      "description": "Azure Kubernetes Service (AKS) simplifies deploying a managed Kubernetes cluster in Azure by offloading the operational overhead to Azure",
+      "platformInfo": {
+        "image_register": "",
+        "storage_zookeeper": "",
+        "storage_url": "",
+        "bcs_api_host": ""
+      }
+    },
+    {
+      "cloudID": "bluekingCloud",
+      "name": "原生K8S集群",
+      "engineType": "k8s",
+      "editable": true,
+      "enable": "false",
+      "osManagement": {
+        "availableVersion": ["default"],
+        "instanceType": [],
+        "defaultSecurityGroups": [],
+        "regions": {}
+      },
+      "networkInfo": {
+        "cidrStep": [0, 0]
+      },
+      "confInfo": {
+        "cloudInternalEnable": false,
+        "disableCreateCluster": false,
+        "disableImportCluster": true,
+        "disableNodeGroup": true
+      },
+      "clusterManagement": {
+        "availableVersion": ["v1.14.3-tk8s-v1.1-1"],
+        "createCluster": {
+          "preActions": [ "createTask" ],
+          "plugins": {
+            "createTask": {
+              "system": "bksops",
+              "link": "http://xxx.com/api/c/compapi/v2/sops/create_task/",
+              "params": {
+                "template_biz_id": "CM.template.BusinessID",
+                "template_id": "10001",
+                "template_user": "CM.template.Operator",
+                "ctrl_ip_list": "CM.cluster.ClusterMasterIPs",
+                "cluster_id": "CM.cluster.ClusterID",
+                "extra_env": "CM.cluster.CreateClusterExtraEnv",
+                "bcs_env": "CM.bcs.CommonInfo"
+              }
+            }
+          }
+        },
+        "deleteCluster": {
+          "preActions": [ "createTask" ],
+          "plugins": {
+            "createTask": {
+              "system": "bksops",
+              "link": "http://xxx.com/api/c/compapi/v2/sops/create_task/",
+              "params": {
+                "template_biz_id": "CM.template.BusinessID",
+                "template_id": "10003",
+                "template_user": "CM.template.Operator",
+                "ctrl_ip_list": "CM.cluster.ClusterMasterIPs"
+              }
+            }
+          }
+        },
+        "addNodesToCluster": {
+          "preActions": [ "createTask" ],
+          "plugins": {
+            "createTask": {
+              "system": "bksops",
+              "link": "http://xxx.com/api/c/compapi/v2/sops/create_task/",
+              "params": {
+                "template_biz_id": "CM.template.BusinessID",
+                "template_id": "10001",
+                "template_user": "CM.template.Operator",
+                "ctrl_ip_list": "CM.cluster.ClusterMasterIPs",
+                "node_ip_list": "CM.node.NodeIPList",
+                "extra_env": "CM.cluster.AddNodesExtraEnv"
+               }
+            }
+          }
+        },
+        "deleteNodesFromCluster": {
+          "preActions": [ "createTask" ],
+          "plugins": {
+            "createTask": {
+              "system": "bksops",
+              "link": "http://xxx.com/api/c/compapi/v2/sops/create_task/",
+              "params": {
+                "template_id": "10002",
+                "template_biz_id": "CM.template.BusinessID",
+                "template_user": "CM.template.Operator",
+                "ctrl_ip_list": "CM.cluster.ClusterMasterIPs",
+                "node_ip_list": "CM.node.NodeIPList"
+              }
+            }
+          }
+        }
+      },
+      "creator": "admin",
+      "updater": "admin",
+      "cloudProvider": "blueking",
+      "description": "",
+      "platformInfo": {
+        "image_register": "",
+        "storage_zookeeper": "",
+        "storage_url": "",
+        "bcs_api_host": ""
+      }
+    }
+  ]
+}

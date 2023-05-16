@@ -11,6 +11,7 @@
  *
  */
 
+// Package zookeeper xxx
 package zookeeper
 
 import (
@@ -56,8 +57,8 @@ func reportMetrics(operator, status string, started time.Time) {
 	operatorLatency.WithLabelValues(operator, status).Observe(time.Since(started).Seconds())
 }
 
-//ZkClient interface to define zk operation
-//interface is only use for dependency injection
+// ZkClient interface to define zk operation
+// interface is only use for dependency injection
 type ZkClient interface {
 	Get(path string) ([]byte, *zkclient.Stat, error)
 	GetW(path string) ([]byte, *zkclient.Stat, <-chan zkclient.Event, error)
@@ -73,66 +74,78 @@ type ZkClient interface {
 	Close()
 }
 
-//wrapperClient wrapper for zk client in bcs-common.zkclient
+// wrapperClient wrapper for zk client in bcs-common.zkclient
 type wrapperClient struct {
 	client *zkclient.ZkClient
 }
 
+// Close xxx
 func (wrapper *wrapperClient) Close() {
 	wrapper.client.Close()
 }
 
+// Get xxx
 func (wrapper *wrapperClient) Get(path string) ([]byte, *zkclient.Stat, error) {
 	return wrapper.client.GetEx(path)
 }
 
+// GetW xxx
 func (wrapper *wrapperClient) GetW(path string) ([]byte, *zkclient.Stat, <-chan zkclient.Event, error) {
 	return wrapper.client.GetW(path)
 }
 
+// Children xxx
 func (wrapper *wrapperClient) Children(path string) ([]string, *zkclient.Stat, error) {
 	return wrapper.client.GetChildrenEx(path)
 }
 
+// ChildrenW xxx
 func (wrapper *wrapperClient) ChildrenW(path string) ([]string, *zkclient.Stat, <-chan zkclient.Event, error) {
 	return wrapper.client.ChildrenW(path)
 }
 
+// Exists xxx
 func (wrapper *wrapperClient) Exists(path string) (bool, error) {
 	return wrapper.client.Exist(path)
 }
 
+// ExistsW xxx
 func (wrapper *wrapperClient) ExistsW(path string) (bool, *zkclient.Stat, <-chan zkclient.Event, error) {
 	return wrapper.client.ExistW(path)
 }
 
+// Set xxx
 func (wrapper *wrapperClient) Set(path string, data []byte, version int32) error {
 	return wrapper.client.Set(path, string(data), version)
 }
 
+// Create xxx
 func (wrapper *wrapperClient) Create(path string, data []byte) (string, error) {
 	return path, wrapper.client.Update(path, string(data))
 }
 
+// CreateEphAndSeq xxx
 func (wrapper *wrapperClient) CreateEphAndSeq(path string, data []byte) (string, error) {
 	return path, wrapper.client.CreateEphAndSeq(path, data)
 }
 
+// CreateEphAndSeqEx xxx
 func (wrapper *wrapperClient) CreateEphAndSeqEx(path string, data []byte) (string, error) {
 	return wrapper.client.CreateEphAndSeqEx(path, data)
 }
 
+// Delete xxx
 func (wrapper *wrapperClient) Delete(path string, version int32) error {
 	return wrapper.client.Del(path, version)
 }
 
-//ConLocker wrapper lock for release connection
+// ConLocker wrapper lock for release connection
 type ConLocker struct {
-	path string           //path for lock
-	lock *zkclient.ZkLock //bcs common lock
+	path string           // path for lock
+	lock *zkclient.ZkLock // bcs common lock
 }
 
-//Lock try to Lock
+// Lock try to Lock
 func (cl *ConLocker) Lock() error {
 	started := time.Now()
 	err := cl.lock.LockEx(cl.path, time.Second*3)
@@ -144,7 +157,7 @@ func (cl *ConLocker) Lock() error {
 	return err
 }
 
-//Unlock release lock and connection
+// Unlock release lock and connection
 func (cl *ConLocker) Unlock() error {
 	started := time.Now()
 	if err := cl.lock.UnLock(); err != nil {
@@ -155,9 +168,9 @@ func (cl *ConLocker) Unlock() error {
 	return nil
 }
 
-//NewStorage create etcd storage
+// NewStorage create etcd storage
 func NewStorage(hosts string) storage.Storage {
-	//create zookeeper connection
+	// create zookeeper connection
 	host := strings.Split(hosts, ",")
 	blog.Info("Storage create zookeeper connection with %s", hosts)
 	// conn, _, conErr := zk.Connect(host, time.Second*5)
@@ -181,16 +194,18 @@ func NewStorage(hosts string) storage.Storage {
 	return s
 }
 
-//eStorage storage data in etcd
+// eStorage storage data in etcd
 type zkStorage struct {
-	zkHost   []string //zookeeper host info, for reconnection
-	zkClient ZkClient //zookeeper client for operation
+	zkHost   []string // zookeeper host info, for reconnection
+	zkClient ZkClient // zookeeper client for operation
 }
 
+// Stop xxx
 func (zks *zkStorage) Stop() {
 	zks.zkClient.Close()
 }
 
+// GetLocker xxx
 func (zks *zkStorage) GetLocker(key string) (storage.Locker, error) {
 	started := time.Now()
 	defer func() {
@@ -205,7 +220,7 @@ func (zks *zkStorage) GetLocker(key string) (storage.Locker, error) {
 	return wrap, nil
 }
 
-//Register register self node
+// Register register self node
 func (zks *zkStorage) Register(path string, data []byte) error {
 	started := time.Now()
 	_, err := zks.zkClient.CreateEphAndSeq(path, data)
@@ -218,7 +233,7 @@ func (zks *zkStorage) Register(path string, data []byte) error {
 	return nil
 }
 
-//RegisterAndWatch register and watch self node
+// RegisterAndWatch register and watch self node
 func (zks *zkStorage) RegisterAndWatch(path string, data []byte) error {
 	newPath, err := zks.zkClient.CreateEphAndSeqEx(path, data)
 	if err != nil {
@@ -261,7 +276,7 @@ func (zks *zkStorage) RegisterAndWatch(path string, data []byte) error {
 	return nil
 }
 
-//Add add data
+// Add add data
 func (zks *zkStorage) Add(key string, value []byte) error {
 	started := time.Now()
 	_, err := zks.zkClient.Create(key, value)
@@ -274,9 +289,9 @@ func (zks *zkStorage) Add(key string, value []byte) error {
 	return nil
 }
 
-//Delete delete node by key
+// Delete delete node by key
 func (zks *zkStorage) Delete(key string) ([]byte, error) {
-	//done(DeveloperJim): get data before delete
+	// done(DeveloperJim): get data before delete
 	started := time.Now()
 	data, err := zks.Get(key)
 	if err != nil {
@@ -294,7 +309,7 @@ func (zks *zkStorage) Delete(key string) ([]byte, error) {
 	return data, nil
 }
 
-//Update update node by value
+// Update update node by value
 func (zks *zkStorage) Update(key string, value []byte) error {
 	started := time.Now()
 	err := zks.zkClient.Set(key, value, -1)
@@ -306,7 +321,7 @@ func (zks *zkStorage) Update(key string, value []byte) error {
 	return err
 }
 
-//Get get data of path
+// Get get data of path
 func (zks *zkStorage) Get(key string) ([]byte, error) {
 	started := time.Now()
 	data, stat, err := zks.zkClient.Get(key)
@@ -321,7 +336,7 @@ func (zks *zkStorage) Get(key string) ([]byte, error) {
 	return data, nil
 }
 
-//List all children nodes
+// List all children nodes
 func (zks *zkStorage) List(key string) ([]string, error) {
 	started := time.Now()
 	list, stat, err := zks.zkClient.Children(key)
@@ -337,7 +352,7 @@ func (zks *zkStorage) List(key string) ([]string, error) {
 	return list, nil
 }
 
-//Exist check path exist
+// Exist check path exist
 func (zks *zkStorage) Exist(key string) (bool, error) {
 	started := time.Now()
 	e, err := zks.zkClient.Exists(key)

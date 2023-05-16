@@ -16,8 +16,8 @@ package task
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	//"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	//"github.com/golang/protobuf/proto"
+	// "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	// "github.com/golang/protobuf/proto"
 )
 
 func createScalarResource(name string, value float64) *mesos.Resource {

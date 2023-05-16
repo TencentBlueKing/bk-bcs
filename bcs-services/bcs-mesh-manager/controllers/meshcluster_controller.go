@@ -34,9 +34,9 @@ type MeshClusterReconciler struct {
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 
-	//meshClusters
+	// meshClusters
 	MeshClusters map[string]*MeshClusterManager
-	//config
+	// config
 	Conf config.Config
 }
 
@@ -80,38 +80,39 @@ func (r *MeshClusterReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error)
 	}
 
 	finalizer := "MeshCluster.finalizers.bkbcs.tencent.com"
-	//in deleting
+	// in deleting
 	if !MeshCluster.ObjectMeta.DeletionTimestamp.IsZero() {
-		klog.Infof("MeshCluster %s in deleting, and DeletionTimestamp %s", req.String(), MeshCluster.DeletionTimestamp.String())
+		klog.Infof("MeshCluster %s in deleting, and DeletionTimestamp %s", req.String(),
+			MeshCluster.DeletionTimestamp.String())
 		if containsString(MeshCluster.ObjectMeta.Finalizers, finalizer) {
-			//uninstall mesh in cluster
+			// uninstall mesh in cluster
 			if !meshManager.uninstallIstio() {
 				return ctrl.Result{RequeueAfter: time.Second * 3}, nil
 			}
-			//delete finalizers
+			// delete finalizers
 			MeshCluster.ObjectMeta.Finalizers = removeString(MeshCluster.ObjectMeta.Finalizers, finalizer)
 			if err := r.Update(context.Background(), MeshCluster); err != nil {
 				return ctrl.Result{RequeueAfter: time.Second * 3}, err
 			}
-			//stop meshManager
+			// stop meshManager
 			delete(r.MeshClusters, MeshCluster.GetUUID())
 			klog.Infof("Delete Cluster(%s) MeshManager success", MeshCluster.Spec.ClusterID)
 		}
 		return ctrl.Result{}, nil
 	}
 
-	//append finalizer
+	// append finalizer
 	if !containsString(MeshCluster.ObjectMeta.Finalizers, finalizer) {
 		MeshCluster.ObjectMeta.Finalizers = append(MeshCluster.ObjectMeta.Finalizers, finalizer)
 		r.Update(context.Background(), MeshCluster)
 	}
 
-	//if mesh installed
+	// if mesh installed
 	if meshManager.meshInstalled() {
 		klog.Infof("cluster(%s) mesh(%s) installed, then ignore", MeshCluster.Spec.ClusterID, MeshCluster.GetUUID())
 		return ctrl.Result{}, nil
 	}
-	//install mesh in cluster
+	// install mesh in cluster
 	if meshManager.installIstio() {
 		return ctrl.Result{}, nil
 	}

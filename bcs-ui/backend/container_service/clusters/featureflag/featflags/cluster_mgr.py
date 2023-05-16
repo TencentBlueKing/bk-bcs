@@ -16,40 +16,45 @@ from backend.packages.blue_krill.data_types.enum import FeatureFlag, FeatureFlag
 
 
 class BaseFeatureFlag(FeatureFlag):
-    """ 对应左侧菜单功能，默认都开启 """
+    """对应左侧菜单功能，默认都开启"""
 
     NAMESPACE = FeatureFlagField(name='NAMESPACE', label='命名空间', default=True)
-    TEMPLATESET = FeatureFlagField(name='TEMPLATESET', label='模板集', default=True)
-    VARIABLE = FeatureFlagField(name='VARIABLE', label='变量管理', default=True)
-    METRICS = FeatureFlagField(name='METRICS', label='Metric管理', default=True)
+    TEMPLATESET = FeatureFlagField(name='TEMPLATESET', label='模板集', default=False)
+    VARIABLE = FeatureFlagField(name='VARIABLE', label='变量管理', default=False)
     HELM = FeatureFlagField(name='HELM', label='helm', default=True)
 
 
 class GlobalClusterFeatureFlag(BaseFeatureFlag):
-    """ 集群管理 - 全部集群 """
+    """集群管理 - 全部集群"""
 
     CLUSTER = FeatureFlagField(name='CLUSTER', label='集群', default=True)
     NODE = FeatureFlagField(name='NODE', label='节点', default=True)
     WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
     NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
     CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
-    REPO = FeatureFlagField(name='REPO', label='仓库', default=True)
+    TOOLS = FeatureFlagField(name='TOOLS', label='组件库', default=True)
+    # 外部版本不支持此特性
+    # REPO = FeatureFlagField(name='REPO', label='仓库', default=True)
     AUDIT = FeatureFlagField(name='AUDIT', label='操作审计', default=True)
     EVENT = FeatureFlagField(name='EVENT', label='事件查询', default=True)
     MONITOR = FeatureFlagField(name='MONITOR', label='监控中心', default=True)
 
 
 class SingleClusterFeatureFlag(BaseFeatureFlag):
-    """ 集群管理 - 单个独有集群 """
+    """集群管理 - 单个独有集群"""
 
     OVERVIEW = FeatureFlagField(name='OVERVIEW', label='概览', default=True)
     NODE = FeatureFlagField(name='NODE', label='节点', default=True)
     WORKLOAD = FeatureFlagField(name='WORKLOAD', label='工作负载', default=True)
     NETWORK = FeatureFlagField(name='NETWORK', label='网络', default=True)
     CONFIGURATION = FeatureFlagField(name='CONFIGURATION', label='配置', default=True)
+    TOOLS = FeatureFlagField(name='TOOLS', label='组件库', default=True)
     EVENT = FeatureFlagField(name='EVENT', label='事件查询', default=True)
     MONITOR = FeatureFlagField(name='MONITOR', label='监控中心', default=True)
 
 
 class SharedClusterFeatureFlag(BaseFeatureFlag):
-    """ 集群管理 - 单个共享集群 """
+    """集群管理 - 单个共享集群"""
+
+    MONITOR = FeatureFlagField(name='MONITOR', label='监控中心', default=True)
+    LOG_COLLECTOR = FeatureFlagField(name='LOG_COLLECTOR', label='日志采集', default=True)

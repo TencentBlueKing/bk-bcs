@@ -23,8 +23,9 @@ import (
 	"golang.org/x/net/context"
 )
 
-//NewHTTPChecker create http checker
-func NewHTTPChecker(container, schema string, port int, path string, mechanism *TimeMechanism, notify FailureNotify) (Checker, error) {
+// NewHTTPChecker create http checker
+func NewHTTPChecker(container, schema string, port int, path string, mechanism *TimeMechanism,
+	notify FailureNotify) (Checker, error) {
 	if port <= 1 {
 		return nil, fmt.Errorf("http checker port is invalid")
 	}
@@ -49,38 +50,39 @@ func NewHTTPChecker(container, schema string, port int, path string, mechanism *
 		mechanism: mechanism,
 		notify:    notify,
 	}
-	//default schema
+	// default schema
 	if len(schema) == 0 {
 		checker.schema = "http"
 	}
 	return checker, nil
 }
 
-//HTTPChecker check for http protocol health check
+// HTTPChecker check for http protocol health check
 type HTTPChecker struct {
 	CheckerStat
-	container string             //container id
-	schema    string             //http or https
-	ipaddr    string             //ip address to check
-	port      int                //port to check
-	path      string             //path for http request
-	isPause   bool               //pause checker
-	cxt       context.Context    //context to control exit
-	canceler  context.CancelFunc //canceler
-	mechanism *TimeMechanism     //time config for checker
-	notify    FailureNotify      //failure callback
+	container string             // container id
+	schema    string             // http or https
+	ipaddr    string             // ip address to check
+	port      int                // port to check
+	path      string             // path for http request
+	isPause   bool               // pause checker
+	cxt       context.Context    // context to control exit
+	canceler  context.CancelFunc // canceler
+	mechanism *TimeMechanism     // time config for checker
+	notify    FailureNotify      // failure callback
 }
 
+// IsStarting xxx
 func (check *HTTPChecker) IsStarting() bool {
 	return check.Started
 }
 
-//SetHost setting host / ipaddress
+// SetHost setting host / ipaddress
 func (check *HTTPChecker) SetHost(host string) {
 	check.ipaddr = host
 }
 
-//Start start checker
+// Start start checker
 func (check *HTTPChecker) Start() {
 	check.Started = true
 	check.StartPoint = time.Now()
@@ -106,8 +108,8 @@ func (check *HTTPChecker) Start() {
 func (check *HTTPChecker) check() {
 	check.Ticks++
 	healthy := check.ReCheck()
-	//notGrace := int(check.LastCheck.Unix()-check.StartPoint.Unix()) > check.mechanism.GracePeriodSeconds
-	//if !healthy && notGrace {
+	// notGrace := int(check.LastCheck.Unix()-check.StartPoint.Unix()) > check.mechanism.GracePeriodSeconds
+	// if !healthy && notGrace {
 	if !healthy {
 		check.LastFailure = check.LastCheck
 		check.ConsecutiveFailures++
@@ -122,12 +124,12 @@ func (check *HTTPChecker) check() {
 	}
 }
 
-//Stop stop checker
+// Stop stop checker
 func (check *HTTPChecker) Stop() {
 	check.canceler()
 }
 
-//ReCheck ask checker to check
+// ReCheck ask checker to check
 func (check *HTTPChecker) ReCheck() bool {
 	client := &http.Client{
 		Timeout: time.Second * time.Duration(int64(check.mechanism.TimeoutSeconds)),
@@ -144,24 +146,24 @@ func (check *HTTPChecker) ReCheck() bool {
 	return false
 }
 
-//Pause pause check
+// Pause pause check
 func (check *HTTPChecker) Pause() error {
 	check.isPause = true
 	return nil
 }
 
-//Resume arouse checker
+// Resume arouse checker
 func (check *HTTPChecker) Resume() error {
 	check.isPause = false
 	return nil
 }
 
-//Name get check name
+// Name get check name
 func (check *HTTPChecker) Name() string {
 	return HttpHealthcheck
 }
 
-//Relation checker relative to container
+// Relation checker relative to container
 func (check *HTTPChecker) Relation() string {
 	return check.container
 }

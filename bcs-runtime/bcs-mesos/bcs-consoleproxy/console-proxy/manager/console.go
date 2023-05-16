@@ -54,6 +54,7 @@ func newWsConn(conn *websocket.Conn) *wsConn {
 	}
 }
 
+// Read 用于常见IO
 func (c *wsConn) Read(p []byte) (n int, err error) {
 	_, rc, err := c.conn.NextReader()
 	if err != nil {
@@ -62,6 +63,7 @@ func (c *wsConn) Read(p []byte) (n int, err error) {
 	return rc.Read(p)
 }
 
+// Write 用于常见IO
 func (c *wsConn) Write(p []byte) (n int, err error) {
 	wc, err := c.conn.NextWriter(websocket.BinaryMessage)
 	if err != nil {
@@ -139,11 +141,11 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 
 	ws.SetCloseHandler(nil)
 	ws.SetPingHandler(nil)
-	//ws.SetReadDeadline(time.Now().Add(pongWait))
-	//ws.SetPongHandler(func(string) error {
+	// ws.SetReadDeadline(time.Now().Add(pongWait))
+	// ws.SetPongHandler(func(string) error {
 	//	ws.SetReadDeadline(time.Now().Add(pongWait))
 	//	return nil
-	//})
+	// })
 
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
@@ -168,6 +170,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 	ResponseJSON(w, http.StatusSwitchingProtocols, nil)
 }
 
+// CreateExec xxx
 func (m *manager) CreateExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig) {
 	blog.Debug(fmt.Sprintf("start create exec for container %s", conf.ContainerID))
 	// 创建连接
@@ -206,6 +209,7 @@ func (m *manager) startExec(ws io.ReadWriter, conf *types.WebSocketConfig) error
 	return err
 }
 
+// ResizeExec xxx
 func (m *manager) ResizeExec(w http.ResponseWriter, r *http.Request, conf *types.WebSocketConfig) {
 	blog.Debug(fmt.Sprintf("start resize for container exec_id %s", conf.ExecID))
 	err := m.dockerClient.ResizeExecTTY(conf.ExecID, conf.Height, conf.Width)

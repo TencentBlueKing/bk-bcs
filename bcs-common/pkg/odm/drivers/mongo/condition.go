@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 )
 
+// leafNodeProcessor xxx
 // Handle leaf node of Condition while combining
 func leafNodeProcessor(op operator.Operator, value interface{}) interface{} {
 	v := bson.M{}
@@ -67,6 +68,7 @@ func leafNodeProcessor(op operator.Operator, value interface{}) interface{} {
 	return v
 }
 
+// branchNodeProcessor xxx
 // handle branch node of Condition while combining
 func branchNodeProcessor(op operator.Operator, cons []*operator.Condition) interface{} {
 	if len(cons) == 0 {
@@ -105,6 +107,7 @@ func branchNodeProcessor(op operator.Operator, cons []*operator.Condition) inter
 	return v
 }
 
+// convertOrigin2Bson xxx
 // Convert drivers.M of leafNode to bSon for mongodb
 func convertOrigin2Bson(symbol string, originValue operator.M) bson.M {
 	r := make(bson.M)
@@ -114,12 +117,18 @@ func convertOrigin2Bson(symbol string, originValue operator.M) bson.M {
 	return r
 }
 
+// convertContains2Bson xxx
 // Handle the contains condition
 func convertContains2Bson(originValue operator.M) bson.M {
 	r := make(bson.M)
 	for k, v := range originValue {
 		if s, ok := v.(string); ok {
 			r[k] = primitive.Regex{Pattern: fmt.Sprintf(".*%s.*", regexp.QuoteMeta(s))}
+			continue
+		}
+		// support primitive.Regex
+		if s, ok := v.(primitive.Regex); ok {
+			r[k] = s
 		}
 	}
 	return r

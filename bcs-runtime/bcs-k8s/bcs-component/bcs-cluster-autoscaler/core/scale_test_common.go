@@ -73,8 +73,8 @@ type scaleTestConfig struct {
 	expansionOptionToChoose groupSizeChange // this will be selected by assertingStrategy.BestOption
 
 	// we expect that all those options should be included in expansion options passed to expander strategy
-	//expectedScaleUpOptions []groupSizeChange
-	//expectedFinalScaleUp   groupSizeChange   // we expect this to be delivered via scale-up event
+	// expectedScaleUpOptions []groupSizeChange
+	// expectedFinalScaleUp   groupSizeChange   // we expect this to be delivered via scale-up event
 	expectedScaleDowns []string
 	tempNodeNames      []string
 }
@@ -98,7 +98,7 @@ func NewScaleTestAutoscalingContext(
 	// Ignoring error here is safe - if a test doesn't specify valid estimatorName,
 	// it either doesn't need one, or should fail when it turns out to be nil.
 	estimatorBuilder, _ := estimator.NewEstimatorBuilder(options.EstimatorName)
-	extendedEstimatorBuilder, _ := estimatorinternal.NewEstimatorBuilder(options.EstimatorName, 0)
+	extendedEstimatorBuilder, _ := estimatorinternal.NewEstimatorBuilder(options.EstimatorName, 0, 0, 0)
 	return contextinternal.Context{
 		AutoscalingContext: &context.AutoscalingContext{
 			AutoscalingOptions: options,
@@ -122,6 +122,7 @@ type mockAutoprovisioningNodeGroupManager struct {
 	t *testing.T
 }
 
+// CreateNodeGroup xxx
 func (p *mockAutoprovisioningNodeGroupManager) CreateNodeGroup(context *context.AutoscalingContext,
 	nodeGroup cloudprovider.NodeGroup) (nodegroups.CreateNodeGroupResult, errors.AutoscalerError) {
 	newNodeGroup, err := nodeGroup.Create()
@@ -133,6 +134,7 @@ func (p *mockAutoprovisioningNodeGroupManager) CreateNodeGroup(context *context.
 	return result, nil
 }
 
+// RemoveUnneededNodeGroups xxx
 func (p *mockAutoprovisioningNodeGroupManager) RemoveUnneededNodeGroups(context *context.AutoscalingContext) (
 	removedNodeGroups []cloudprovider.NodeGroup, err error) {
 	if !context.AutoscalingOptions.NodeAutoprovisioningEnabled {
@@ -161,6 +163,7 @@ func (p *mockAutoprovisioningNodeGroupManager) RemoveUnneededNodeGroups(context 
 	return removedNodeGroups, nil
 }
 
+// CleanUp xxx
 func (p *mockAutoprovisioningNodeGroupManager) CleanUp() {
 }
 
@@ -168,6 +171,7 @@ type mockAutoprovisioningNodeGroupListProcessor struct {
 	t *testing.T
 }
 
+// Process xxx
 func (p *mockAutoprovisioningNodeGroupListProcessor) Process(context *context.AutoscalingContext,
 	nodeGroups []cloudprovider.NodeGroup, nodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	unschedulablePods []*apiv1.Pod) ([]cloudprovider.NodeGroup, map[string]*schedulernodeinfo.NodeInfo, error) {
@@ -188,6 +192,7 @@ func (p *mockAutoprovisioningNodeGroupListProcessor) Process(context *context.Au
 	return nodeGroups, nodeInfos, nil
 }
 
+// CleanUp xxx
 func (p *mockAutoprovisioningNodeGroupListProcessor) CleanUp() {
 }
 

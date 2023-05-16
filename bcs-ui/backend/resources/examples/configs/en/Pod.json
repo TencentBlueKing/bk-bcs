@@ -1,0 +1,13 @@
+{
+  "kind": "Pod",
+  "class": "workloads",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_pod",
+      "alias": "Pod Simple Demo",
+      "description": "A simple pod demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	terrors "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
@@ -197,12 +198,14 @@ func (sw *SdkWrapper) getRegionClient(region string) (*tclb.Client, error) {
 }
 
 // checkErrCode common method for check tencent cloud sdk err
-func (sw *SdkWrapper) checkErrCode(err *terrors.TencentCloudSDKError) {
+func (sw *SdkWrapper) checkErrCode(err *terrors.TencentCloudSDKError, metricFunc func(ret string)) {
 	if err.Code == RequestLimitExceededCode {
 		blog.Warnf("request exceed limit, have a rest for %d second", waitPeriodLBDealing)
+		metricFunc(metrics.LibCallStatusExceedLimit)
 		time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 	} else if err.Code == WrongStatusCode {
 		blog.Warnf("clb is dealing another action, have a rest for %d second", waitPeriodLBDealing)
+		metricFunc(metrics.LibCallStatusLBLock)
 		time.Sleep(time.Duration(waitPeriodLBDealing) * time.Second)
 	}
 }
@@ -224,6 +227,15 @@ func (sw *SdkWrapper) waitTaskDone(region, taskID string) error {
 	request := tclb.NewDescribeTaskStatusRequest()
 	request.TaskId = tcommon.StringPtr(taskID)
 	blog.Infof("describe task status request:\n%s", request.ToJsonString())
+
+	startTime := time.Now()
+	mf := func(ret string) {
+		metrics.ReportLibRequestMetric(
+			SystemNameInMetricTencentCloud,
+			HandlerNameInMetricTencentCloudSDK,
+			"waitTaskDone", ret, startTime)
+	}
+
 	for counter := 0; counter < maxRetry; counter++ {
 		// it may exceed limit when describe task result
 		sw.tryThrottle()
@@ -234,7 +246,7 @@ func (sw *SdkWrapper) waitTaskDone(region, taskID string) error {
 		response, err := clbCli.DescribeTaskStatus(request)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -292,7 +304,7 @@ func (sw *SdkWrapper) DescribeLoadBalancers(region string, req *tclb.DescribeLoa
 		resp, err = clbCli.DescribeLoadBalancers(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -339,6 +351,7 @@ func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequ
 		newReq.Scheduler = req.Scheduler
 		newReq.HealthCheck = req.HealthCheck
 		newReq.Certificate = req.Certificate
+		newReq.SniSwitch = req.SniSwitch
 		if req.EndPort != nil {
 			newReq.EndPort = req.EndPort
 		}
@@ -378,7 +391,7 @@ func (sw *SdkWrapper) doCreateListener(region string, req *tclb.CreateListenerRe
 		resp, err = clbCli.CreateListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -485,7 +498,7 @@ func (sw *SdkWrapper) doDescribeListeners(region string, req *tclb.DescribeListe
 		resp, err = clbCli.DescribeListeners(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -579,7 +592,7 @@ func (sw *SdkWrapper) doDescribeTargets(region string, req *tclb.DescribeTargets
 		resp, err = clbCli.DescribeTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -627,7 +640,7 @@ func (sw *SdkWrapper) DeleteListener(region string, req *tclb.DeleteListenerRequ
 		resp, err = clbCli.DeleteListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -708,7 +721,7 @@ func (sw *SdkWrapper) doDeleteLoadbalanceListenners(region string, req *tclb.Del
 		resp, err = clbCli.DeleteLoadBalancerListeners(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -761,7 +774,7 @@ func (sw *SdkWrapper) CreateRule(region string, req *tclb.CreateRuleRequest) ([]
 		resp, err = clbCli.CreateRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -814,7 +827,7 @@ func (sw *SdkWrapper) DeleteRule(region string, req *tclb.DeleteRuleRequest) err
 		resp, err = clbCli.DeleteRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -867,7 +880,7 @@ func (sw *SdkWrapper) ModifyRule(region string, req *tclb.ModifyRuleRequest) err
 		resp, err = clbCli.ModifyRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -920,7 +933,7 @@ func (sw *SdkWrapper) ModifyListener(region string, req *tclb.ModifyListenerRequ
 		resp, err = clbCli.ModifyListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -936,6 +949,59 @@ func (sw *SdkWrapper) ModifyListener(region string, req *tclb.ModifyListenerRequ
 		mf(metrics.LibCallStatusErr)
 		blog.Errorf("ModifyListener out of maxRetry %d", maxRetry)
 		return fmt.Errorf("ModifyListener out of maxRetry %d", maxRetry)
+	}
+	err = sw.waitTaskDone(region, *resp.Response.RequestId)
+	if err != nil {
+		mf(metrics.LibCallStatusErr)
+		return err
+	}
+	mf(metrics.LibCallStatusOK)
+	return nil
+}
+
+// ModifyDomainAttributes wrap ModifyDomainAttributes
+func (sw *SdkWrapper) ModifyDomainAttributes(region string, req *tclb.ModifyDomainAttributesRequest) error {
+	blog.V(3).Infof("ModifyDomainAttributes request: %s", req.ToJsonString())
+	var err error
+	var resp *tclb.ModifyDomainAttributesResponse
+
+	startTime := time.Now()
+	mf := func(ret string) {
+		metrics.ReportLibRequestMetric(
+			SystemNameInMetricTencentCloud,
+			HandlerNameInMetricTencentCloudSDK,
+			"ModifyDomainAttributes", ret, startTime)
+	}
+
+	counter := 1
+	for ; counter <= maxRetry; counter++ {
+		blog.V(3).Infof("ModifyDomainAttributes try %d/%d", counter, maxRetry)
+		sw.tryThrottle()
+		// get client by region
+		clbCli, inErr := sw.getRegionClient(region)
+		if inErr != nil {
+			mf(metrics.LibCallStatusErr)
+			return inErr
+		}
+		resp, err = clbCli.ModifyDomainAttributes(req)
+		if err != nil {
+			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
+				sw.checkErrCode(terr, mf)
+				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+					continue
+				}
+			}
+			mf(metrics.LibCallStatusErr)
+			blog.Errorf("ModifyDomainAttributes failed, err %s", err.Error())
+			return fmt.Errorf("ModifyDomainAttributes failed, err %s", err.Error())
+		}
+		blog.V(3).Infof("ModifyDomainAttributes response: %s", resp.ToJsonString())
+		break
+	}
+	if counter > maxRetry {
+		mf(metrics.LibCallStatusErr)
+		blog.Errorf("ModifyDomainAttributes out of maxRetry %d", maxRetry)
+		return fmt.Errorf("ModifyDomainAttributes out of maxRetry %d", maxRetry)
 	}
 	err = sw.waitTaskDone(region, *resp.Response.RequestId)
 	if err != nil {
@@ -1004,7 +1070,7 @@ func (sw *SdkWrapper) doDeregisterTargets(region string, req *tclb.DeregisterTar
 		resp, err = clbCli.DeregisterTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -1087,7 +1153,7 @@ func (sw *SdkWrapper) doRegisterTargets(region string, req *tclb.RegisterTargets
 		resp, err = clbCli.RegisterTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -1139,7 +1205,7 @@ func (sw *SdkWrapper) ModifyTargetWeight(region string, req *tclb.ModifyTargetWe
 		resp, err = clbCli.ModifyTargetWeight(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -1166,11 +1232,11 @@ func (sw *SdkWrapper) ModifyTargetWeight(region string, req *tclb.ModifyTargetWe
 }
 
 // BatchRegisterTargets batch register clb targets
-func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegisterTargetsRequest) []string {
+func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegisterTargetsRequest) map[string]error {
 	rounds := len(req.Targets) / MaxTargetForBatchRegisterEachTime
 	remains := len(req.Targets) % MaxTargetForBatchRegisterEachTime
 
-	failedListenerIDMap := make(map[string]struct{})
+	failedListenerIDMap := make(map[string]error)
 	index := 0
 	for ; index <= rounds; index++ {
 		start := index * MaxTargetForBatchRegisterEachTime
@@ -1187,21 +1253,18 @@ func (sw *SdkWrapper) BatchRegisterTargets(region string, req *tclb.BatchRegiste
 		newReq.Targets = req.Targets[start:end]
 		tmpFailedIDs, err := sw.doBatchRegisterTargets(region, newReq)
 		if err != nil {
-			blog.Warnf("do batch register targets failed, err %s", err.Error())
+			err = errors.Wrapf(err, "do batch register targets failed, return err")
+			blog.Warnf(err.Error())
 			for _, tg := range newReq.Targets {
-				failedListenerIDMap[*tg.ListenerId] = struct{}{}
+				failedListenerIDMap[*tg.ListenerId] = err
 			}
 			continue
 		}
 		for _, id := range tmpFailedIDs {
-			failedListenerIDMap[id] = struct{}{}
+			failedListenerIDMap[id] = errors.New("do batch register targets failed, return failedID")
 		}
 	}
-	var retList []string
-	for id := range failedListenerIDMap {
-		retList = append(retList, id)
-	}
-	return retList
+	return failedListenerIDMap
 }
 
 // doBatchRegisterTargets batch register clb targets
@@ -1229,7 +1292,7 @@ func (sw *SdkWrapper) doBatchRegisterTargets(region string, req *tclb.BatchRegis
 		resp, err = clbCli.BatchRegisterTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -1321,7 +1384,7 @@ func (sw *SdkWrapper) doBatchDeregisterTargets(region string, req *tclb.BatchDer
 		resp, err = clbCli.BatchDeregisterTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -1403,7 +1466,7 @@ func (sw *SdkWrapper) doBatchModifyTargetWeight(region string, req *tclb.BatchMo
 		resp, err = clbCli.BatchModifyTargetWeight(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}
@@ -1492,7 +1555,7 @@ func (sw *SdkWrapper) doDescribeTargetHealth(region string,
 		resp, err = clbCli.DescribeTargetHealth(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr)
+				sw.checkErrCode(terr, mf)
 				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
 					continue
 				}

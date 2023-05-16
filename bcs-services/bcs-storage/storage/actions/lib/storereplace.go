@@ -23,14 +23,18 @@ import (
 const (
 	// "\uff04" is the unicode of "＄", which is the official recommend of Mongodb
 	dollarReplacement = "\uff04"
+	// "\uff0e" is the unicode of "．", which is the official recommend of Mongodb
+	dotReplacement = "\uff0e"
 )
+
+var replacer = strings.NewReplacer("$", dollarReplacement, ".", dotReplacement)
 
 // dollarHandler convert the "." in keys of raw to the dollarReplacement for
 // Mongodb does not support key with "."
 func dollarHandler(raw operator.M) operator.M {
 	for k, v := range raw {
 		delete(raw, k)
-		key := strings.Replace(k, "$", dollarReplacement, -1)
+		key := replacer.Replace(k)
 		raw[key] = dollarHandlerIf(v)
 	}
 	return raw
@@ -52,7 +56,7 @@ func dollarHandlerIf(raw interface{}) interface{} {
 
 	for k, v := range s {
 		delete(s, k)
-		key := strings.Replace(k, "$", dollarReplacement, -1)
+		key := replacer.Replace(k)
 		s[key] = dollarHandlerIf(v)
 	}
 	return s
@@ -66,6 +70,7 @@ func dollarRecover(s operator.M) operator.M {
 	}
 
 	tmp = bytes.Replace(tmp, []byte(dollarReplacement), []byte("$"), -1)
+	tmp = bytes.Replace(tmp, []byte(dotReplacement), []byte("."), -1)
 
 	out := make(operator.M)
 	if err := codec.DecJson(tmp, &out); err != nil {

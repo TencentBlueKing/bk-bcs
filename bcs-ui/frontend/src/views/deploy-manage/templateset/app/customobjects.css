@@ -1,0 +1,133 @@
+@import '@/css/variable.css';
+@import '@/css/mixins/ellipsis.css';
+
+.biz-app-title {
+    display: inline-block;
+    height: 52px;
+    line-height: 52px;
+    font-size: 16px;
+    margin-left: 24px;
+}
+
+.biz-event-query-query {
+    .left {
+        width: 170px;
+        margin-right: 10px;
+
+        button {
+            i {
+                font-size: 18px;
+                position: relative;
+                top: 3px;
+            }
+        }
+    }
+    .biz-search-input {
+        width: 170px;
+        margin-right: 20px;
+        .bk-form-input {
+            padding-right: 30px;
+        }
+
+        .biz-search-btn {
+            top: 6px;
+            color: #979ba5;
+            .icon-search-li {
+                color: #c3cdd7;
+            }
+        }
+    }
+}
+
+.gamestatefullset-table-wrapper {
+    overflow-x: scroll;
+    border-top: none;
+    &.hidden-scroll {
+        overflow-x: hidden;
+    }
+}
+
+.gamestatefullset-table > thead > tr {
+    border-top: 1px solid #dcdee5;
+    > th {
+        /* height: 40px; */
+        background-color: #fafbfd;
+        border-color: #dcdee5;
+        &:first-child {
+            padding-left: 20px;
+        }
+    }
+}
+
+.gamestatefullset-table > tbody > tr > td {
+    /* height: 40px; */
+    padding: 0 10px;
+    border-color: #dcdee5;
+    &:first-child {
+        padding-left: 20px;
+    }
+    .cell {
+        .bk-tooltip {
+            .bk-tooltip-rel {
+                @mixin ellipsis 200px;
+            }
+            .bk-tooltip-popper {
+                .bk-tooltip-inner {
+                    white-space: normal;
+                    word-break: break-all;
+                }
+            }
+        }
+    }
+}
+
+.gamestatefullset-table {
+    min-width: 1200px;
+    &.no-data {
+        min-width: auto;
+        .message.empty-message {
+            padding: 200px 0;
+            margin-top: 20px;
+        }
+    }
+
+    i.bcs-icon {
+        font-size: 16px;
+        vertical-align: middle;
+        position: relative;
+        top: -1px;
+        margin-right: 7px;
+
+        &.success {
+            color: $iconSuccessColor;
+        }
+
+        &.fail {
+            color: $iconFailColor;
+        }
+    }
+
+    p {
+        margin: 0;
+        &.extra-info {
+            @mixin ellipsis 200px, block;
+            span {
+                color: #c3cdd7;
+            }
+        }
+    }
+
+    tbody {
+        tr.no-hover {
+            background-color: #fff;
+        }
+    }
+
+    .cell {
+        display: inline-block;
+    }
+
+    .name-col {
+        @mixin ellipsis 300px;
+    }
+}

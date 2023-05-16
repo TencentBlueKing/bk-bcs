@@ -1,0 +1,7 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: HookTemplate
+{{ include "custom.hookTmplMetadata" . }}
+spec:
+  policy: {{ .spec.execPolicy }}
+  {{- include "custom.hookTmplArgs" .spec | indent 2 }}
+  {{- include "custom.hookTmplMetrics" .spec | indent 2 }}

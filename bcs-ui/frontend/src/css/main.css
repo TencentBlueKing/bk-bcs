@@ -1,0 +1,133 @@
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .bcs-sideslider-content {
+    padding: 20px 30px;
+  }
+
+  .bcs-icon-more-btn {
+    font-size: 18px;
+    font-weight: bold;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #979ba5;
+    position: relative;
+    top: 1px;
+    &:hover:not(.disabled) {
+      background: #ddd;
+      color: #3a84ff
+    }
+    &.disabled {
+      color: #dcdee5;
+      cursor: not-allowed;
+    }
+  }
+
+  .bcs-dropdown-item {
+      display: block;
+      height: 32px;
+      line-height: 33px;
+      padding: 0 16px;
+      color: #63656e;
+      font-size: 12px;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+      &:hover {
+          background-color: #eaf3ff;
+          color: #3a84ff;
+      }
+      &.disabled {
+          color: #dcdee5;
+          cursor: not-allowed;
+      }
+      &.active {
+        background-color: #eaf3ff;
+        color: #3a84ff;
+      }
+  }
+
+  .bcs-border {
+    border: 1px solid #dfe0e5;
+    border-radius: 2px;
+  }
+
+  .bcs-border-right {
+    border-right: 1px solid #dfe0e5;
+  }
+
+  .bcs-border-bottom {
+    border-bottom: 1px solid #dfe0e5;
+  }
+
+  .bcs-icon-btn {
+    font-size: 14px;
+    cursor: pointer;
+    &:hover {
+      color: #3a84ff;
+    }
+  }
+
+  .bcs-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+
+  .bcs-fixed-footer {
+    position: absolute;
+    bottom: 0px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    background-color: #fff;
+    border-top: 1px solid #dcdee5;
+    box-shadow: 0 -2px 4px 0 rgb(0 0 0 / 5%);
+    z-index: 100;
+    right: 0;
+    width: 100%;
+  }
+
+  .bcs-form-prefix {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border: 1px solid #c4c6cc;
+    margin-right: -1px;
+    font-size: 12px;
+    height: 32px;
+  }
+}
+
+.bcs-tippy-theme .tippy-content {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.tippy-content {
+  max-width: 600px;
+}
+
+.bk-dialog-wrapper .bk-dialog {
+  top: 10%;
+}
+
+.bk-button-text span {
+  text-align: left;
+}
+
+.bk-table .bk-loading {
+  transform: translate(-1px, -1px);
+}

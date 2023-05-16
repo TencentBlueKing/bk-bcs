@@ -1,96 +1,96 @@
 {
-    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-    "operations": [
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_action_groups",
+      "data": [
         {
-            "operation": "upsert_action_groups",
-            "data": [
+          "name": "项目",
+          "name_en": "Project",
+          "actions": [
+            {
+              "id": "project_create"
+            },
+            {
+              "id": "project_view"
+            },
+            {
+              "id": "project_edit"
+            },
+            {
+              "id": "project_delete"
+            }
+          ],
+          "sub_groups": [
+            {
+              "name": "集群",
+              "name_en": "Cluster",
+              "actions": [
                 {
-                    "name": "项目",
-                    "name_en": "Project",
-                    "actions": [
-                        {
-                            "id": "project_create"
-                        },
-                        {
-                            "id": "project_view"
-                        },
-                        {
-                            "id": "project_edit"
-                        },
-                        {
-                            "id": "project_delete"
-                        }
-                    ],
-                    "sub_groups": [
-                        {
-                            "name": "集群",
-                            "name_en": "Cluster",
-                            "actions": [
-                                {
-                                    "id": "cluster_create"
-                                },
-                                {
-                                    "id": "cluster_view"
-                                },
-                                {
-                                    "id": "cluster_manage"
-                                },
-                                {
-                                    "id": "cluster_delete"
-                                },
-                                {
-                                    "id": "cluster_use"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "命名空间",
-                            "name_en": "Namespace",
-                            "actions": [
-                                {
-                                    "id": "namespace_create"
-                                },
-                                {
-                                    "id": "namespace_view"
-                                },
-                                {
-                                    "id": "namespace_update"
-                                },
-                                {
-                                    "id": "namespace_delete"
-                                },
-                                {
-                                    "id": "namespace_use"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "模板集",
-                            "name_en": "Templateset",
-                            "actions": [
-                                {
-                                    "id": "templateset_create"
-                                },
-                                {
-                                    "id": "templateset_view"
-                                },
-                                {
-                                    "id": "templateset_copy"
-                                },
-                                {
-                                    "id": "templateset_update"
-                                },
-                                {
-                                    "id": "templateset_delete"
-                                },
-                                {
-                                    "id": "templateset_instantiate"
-                                }
-                            ]
-                        }
-                    ]
+                  "id": "cluster_create"
+                },
+                {
+                  "id": "cluster_view"
+                },
+                {
+                  "id": "cluster_manage"
+                },
+                {
+                  "id": "cluster_delete"
+                },
+                {
+                  "id": "cluster_use"
                 }
-            ]
+              ]
+            },
+            {
+              "name": "命名空间",
+              "name_en": "Namespace",
+              "actions": [
+                {
+                  "id": "namespace_create"
+                },
+                {
+                  "id": "namespace_view"
+                },
+                {
+                  "id": "namespace_update"
+                },
+                {
+                  "id": "namespace_delete"
+                },
+                {
+                  "id": "namespace_use"
+                }
+              ]
+            },
+            {
+              "name": "模板集",
+              "name_en": "Templateset",
+              "actions": [
+                {
+                  "id": "templateset_create"
+                },
+                {
+                  "id": "templateset_view"
+                },
+                {
+                  "id": "templateset_copy"
+                },
+                {
+                  "id": "templateset_update"
+                },
+                {
+                  "id": "templateset_delete"
+                },
+                {
+                  "id": "templateset_instantiate"
+                }
+              ]
+            }
+          ]
         }
-    ]
+      ]
+    }
+  ]
 }

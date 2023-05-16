@@ -1,0 +1,43 @@
+{
+  "kind": "Deployment",
+  "class": "workload",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_deployment",
+      "alias": "Deployment 简单示例",
+      "description": "简单的 Deployment 示例，仅包含基础配置",
+      "manifest": null
+    },
+    {
+      "name": "deploy_with_res_quota",
+      "alias": "设置资源配额的示例",
+      "description": "为 Deployment 中的容器配置资源预留（requests），能够确保 Pod 被调度到资源充足的节点上；为容器配置资源限制（limits），能够确保 Pod 占用过多资源后，及时被停止，避免影响同节点的其他 Pod",
+      "manifest": null
+    },
+    {
+      "name": "deploy_with_image_pull_secrets",
+      "alias": "配置镜像拉取密钥的示例",
+      "description": "当你的容器镜像存放于私有仓库时，你需要配置 imagePullSecrets 以确保镜像能够顺利拉取；另外需要注意的是，配置的 Secret 必须为 dockerconfigjson 类型",
+      "manifest": null
+    },
+    {
+      "name": "deploy_with_mount_volume",
+      "alias": "为容器挂载数据卷的示例",
+      "description": "为容器挂载数据卷能够将数据与运行中的容器分离，确保在 Pod 重新调度后，数据不会丢失。常见的数据卷类型有 PersistentVolumeClaim, NFS, HostPath 等",
+      "manifest": null
+    },
+    {
+      "name": "deploy_with_node_selector",
+      "alias": "使用节点选择器的示例",
+      "description": "在某些场景中，你可能会希望 Pod 能运行在某类节点上（比如在 AI 模型训练时，Pod 能运行在高性能的 GPU 节点上），这时候可以通过节点选择器来实现（需确保 GPU 节点上存在标签 'beta.amd.com/gpu.family.AI': '1'）",
+      "manifest": null
+    },
+    {
+      "name": "k8s_wait_for_deploy",
+      "alias": "使用 k8sWaitFor 的示例",
+      "description": "使用以 k8s-wait-for 为镜像的初始容器，能够确保在标准容器启动前，其依赖的其他 k8s 资源已经就绪（可用于 API 容器等待执行数据库 migrate 的 Job 执行完毕）",
+      "manifest": null
+    }
+  ]
+}

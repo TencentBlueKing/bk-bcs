@@ -11,20 +11,20 @@
  *
  */
 
+// Package manifest xxx
 package manifest
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/pkg/util"
 	appsapi "github.com/clusternet/clusternet/pkg/apis/apps/v1alpha1"
 	clusternetclientset "github.com/clusternet/clusternet/pkg/generated/clientset/versioned"
 	appinformers "github.com/clusternet/clusternet/pkg/generated/informers/externalversions/apps/v1alpha1"
 	applisters "github.com/clusternet/clusternet/pkg/generated/listers/apps/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -33,9 +33,15 @@ import (
 	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	coreinformers "k8s.io/client-go/informers/core/v1"
+	corelisters "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/pkg/nspolicy"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/pkg/util"
 )
 
 // Controller manifest controller
@@ -51,16 +57,21 @@ type Controller struct {
 
 	manifestLister applisters.ManifestLister
 	manifestSynced cache.InformerSynced
+	nsLister       corelisters.NamespaceLister
+	nsSynced       cache.InformerSynced
 }
 
-//NewController new controller
+// NewController new controller
 func NewController(clusternetClient clusternetclientset.Interface,
-	manifestInformer appinformers.ManifestInformer) (*Controller, error) {
+	manifestInformer appinformers.ManifestInformer,
+	nsInformer coreinformers.NamespaceInformer) (*Controller, error) {
 	c := &Controller{
 		clusternetClient: clusternetClient,
 		workqueue:        workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "manifest"),
 		manifestLister:   manifestInformer.Lister(),
 		manifestSynced:   manifestInformer.Informer().HasSynced,
+		nsLister:         nsInformer.Lister(),
+		nsSynced:         nsInformer.Informer().HasSynced,
 	}
 
 	// Manage the addition/update of Manifest
@@ -85,7 +96,7 @@ func (c *Controller) Run(workers int, stopCh <-chan struct{}) {
 	defer klog.Info("shutting down manifest controller")
 
 	// Wait for the caches to be synced before starting workers
-	if !cache.WaitForNamedCacheSync("manifest-controller", stopCh, c.manifestSynced) {
+	if !cache.WaitForNamedCacheSync("manifest-controller", stopCh, c.manifestSynced, c.nsSynced) {
 		return
 	}
 
@@ -101,56 +112,11 @@ func (c *Controller) Run(workers int, stopCh <-chan struct{}) {
 func (c *Controller) addManifest(obj interface{}) {
 	manifest := obj.(*appsapi.Manifest)
 	klog.V(4).Infof("adding Manifest %q", klog.KObj(manifest))
-	if manifest.Template.Raw == nil {
-		klog.Warning("manifest.Template.Raw is empty, %q", klog.KObj(manifest))
-		return
-	}
-	utd := &unstructured.Unstructured{}
-	err := json.Unmarshal(manifest.Template.Raw, &utd.Object)
-	if err != nil {
-		klog.Errorf("unmarshal error, %q, err=%v", klog.KObj(manifest), err)
-		return
-	}
-	//过滤没有annotation的
-	annotations := utd.GetAnnotations()
-	if ok := util.MatchAnnotationsKeyPrefix(annotations); !ok {
-		klog.V(5).Infof("addManifest but manifest %s:%s does not find match annotation", manifest.Namespace, manifest.Name)
-		return
-	}
 	c.enqueue(manifest)
 }
 
 func (c *Controller) updateManifest(old, cur interface{}) {
-	oldManifest := old.(*appsapi.Manifest)
 	newManifest := cur.(*appsapi.Manifest)
-
-	if newManifest.DeletionTimestamp != nil {
-		c.enqueue(newManifest)
-		return
-	}
-
-	if oldManifest.Template.Raw == nil || newManifest.Template.Raw == nil {
-		klog.Warning("old manifest.Template.Raw or newManifest.Template.Raw is empty, %q, %q", klog.KObj(oldManifest), klog.KObj(newManifest))
-		return
-	}
-	oldUtd := &unstructured.Unstructured{}
-	err := json.Unmarshal(oldManifest.Template.Raw, &oldUtd.Object)
-	if err != nil {
-		klog.Errorf("oldManifest.Template.Raw unmarshal error, %q, err=%v", klog.KObj(oldManifest), err)
-		return
-	}
-
-	newUtd := &unstructured.Unstructured{}
-	err = json.Unmarshal(newManifest.Template.Raw, &newUtd.Object)
-	if err != nil {
-		klog.Errorf("newManifest.Template.Raw unmarshal error, %q, err=%v", klog.KObj(newManifest), err)
-		return
-	}
-	if reflect.DeepEqual(newUtd.GetAnnotations(), oldUtd.GetAnnotations()) {
-		klog.V(5).Infof("updateManifest oldManifest annotation and newManifest annotation is equal, skip")
-		return
-	}
-	klog.V(4).Infof("updating Manifest %q", klog.KObj(oldManifest))
 	c.enqueue(newManifest)
 }
 
@@ -169,21 +135,6 @@ func (c *Controller) deleteManifest(obj interface{}) {
 		}
 	}
 	klog.V(4).Infof("deleting Manifest %q", klog.KObj(manifest))
-	//过滤没有指定annotation key的数据
-	if manifest.Template.Raw == nil {
-		klog.Warning("manifest.Template.Raw is empty, %q", klog.KObj(manifest))
-		return
-	}
-	utd := &unstructured.Unstructured{}
-	err := json.Unmarshal(manifest.Template.Raw, &utd.Object)
-	if err != nil {
-		klog.Errorf("unmarshal error, %q, err=%v", klog.KObj(manifest), err)
-		return
-	}
-	if ok := util.MatchAnnotationsKeyPrefix(utd.GetAnnotations()); !ok {
-		klog.V(5).Infof("deleteManifest , but manifest %s:%s does not find match annotation in annotation", manifest.Namespace, manifest.Name)
-		return
-	}
 	c.enqueue(manifest)
 }
 
@@ -291,10 +242,9 @@ func (c *Controller) syncHandler(key string) error {
 	resourceKind := utd.GroupVersionKind().Kind
 
 	matchAnnotations := util.FindAnnotationsMathKeyPrefix(utd.GetAnnotations())
-	//为空则表示在update时候进行过更新，清除过annotation
-	deleteSubscription := len(matchAnnotations) == 0
+	deleteSubscription := false
 	if manifest.DeletionTimestamp != nil {
-		//删除
+		// 删除
 		deleteSubscription = true
 	}
 	matchLabels := map[string]string{
@@ -303,21 +253,23 @@ func (c *Controller) syncHandler(key string) error {
 		"bkbcs.tencent.com/resource-name": utd.GetName(),
 	}
 	subscriptionName := c.genAutoCreateSubscriptionName(utd.GetName())
-
-	subscriptionList, err := c.clusternetClient.AppsV1alpha1().Subscriptions(utd.GetNamespace()).List(context.Background(), metav1.ListOptions{
-		LabelSelector: labels.Set(matchLabels).String(),
-	})
+	subscriptionList, err := c.clusternetClient.AppsV1alpha1().Subscriptions(utd.GetNamespace()).List(
+		context.Background(),
+		metav1.ListOptions{
+			LabelSelector: labels.Set(matchLabels).String(),
+		})
 	if err != nil {
 		return err
 	}
-	//只会存在0个或1个
+	// 只会存在0个或1个
 	if len(subscriptionList.Items) > 1 {
 		return fmt.Errorf("auto create sub matchLabels match %d", len(subscriptionList.Items))
 	}
 	if deleteSubscription {
 		klog.Infof("start delete subscription %s", subscriptionName)
-		//删除Subscription
-		err = c.clusternetClient.AppsV1alpha1().Subscriptions(utd.GetNamespace()).Delete(context.Background(), subscriptionList.Items[0].Name, metav1.DeleteOptions{})
+		// 删除Subscription
+		err = c.clusternetClient.AppsV1alpha1().Subscriptions(utd.GetNamespace()).Delete(
+			context.Background(), subscriptionList.Items[0].Name, metav1.DeleteOptions{})
 		if errors.IsNotFound(err) {
 			klog.V(2).Infof("Subscription %s:%s has been deleted", ns, name)
 			return nil
@@ -327,9 +279,18 @@ func (c *Controller) syncHandler(key string) error {
 		}
 		return nil
 	}
-	//更新或创建Subscription
+	nsObj, err := c.nsLister.Get(utd.GetNamespace())
+	if err != nil {
+		return err
+	}
+	labelSelector, err := c.genSubscriptionLabel(matchAnnotations, nsObj)
+	if err != nil {
+		return err
+	}
+	// 更新或创建Subscription
 	if len(subscriptionList.Items) == 0 {
-		//create
+
+		// create
 		subscription := &appsapi.Subscription{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      subscriptionName,
@@ -339,21 +300,24 @@ func (c *Controller) syncHandler(key string) error {
 				},
 				Labels: matchLabels,
 			},
-			Spec: c.genSubscriptionSpec(matchAnnotations, utd.GroupVersionKind(), utd.GetNamespace(), utd.GetName()),
+			Spec: c.genSubscriptionSpec(labelSelector, utd.GroupVersionKind(), utd.GetNamespace(), utd.GetName()),
 		}
 		klog.Infof("start create Subscriptions %q", klog.KObj(subscription))
-		_, err = c.clusternetClient.AppsV1alpha1().Subscriptions(utd.GetNamespace()).Create(context.Background(), subscription, metav1.CreateOptions{})
+		_, err = c.clusternetClient.AppsV1alpha1().Subscriptions(utd.GetNamespace()).Create(
+			context.Background(), subscription, metav1.CreateOptions{})
 		if err != nil {
 			klog.Errorf("create Subscriptions %q error, err=%+v", klog.KObj(subscription), err)
 			return err
 		}
 		return nil
 	}
-	//update
+	// update
 	matchSubscription := subscriptionList.Items[0]
-	matchSubscription.Spec = c.genSubscriptionSpec(matchAnnotations, utd.GroupVersionKind(), utd.GetNamespace(), utd.GetName())
+	matchSubscription.Spec = c.genSubscriptionSpec(
+		labelSelector, utd.GroupVersionKind(), utd.GetNamespace(), utd.GetName())
 	klog.Infof("start update Subscriptions %q", klog.KObj(&matchSubscription))
-	_, err = c.clusternetClient.AppsV1alpha1().Subscriptions(utd.GetNamespace()).Update(context.Background(), &matchSubscription, metav1.UpdateOptions{})
+	_, err = c.clusternetClient.AppsV1alpha1().Subscriptions(utd.GetNamespace()).Update(
+		context.Background(), &matchSubscription, metav1.UpdateOptions{})
 	if err != nil {
 		klog.Errorf("update subscriptions %q error, err=%v", klog.KObj(&matchSubscription), err)
 		return err
@@ -361,13 +325,43 @@ func (c *Controller) syncHandler(key string) error {
 	return nil
 }
 
-func (c *Controller) genSubscriptionSpec(matchAnnotations map[string]string, groupVersionKind schema.GroupVersionKind, ns, name string) appsapi.SubscriptionSpec {
+func (c *Controller) genSubscriptionLabel(
+	matchAnnotation map[string]string, namespace *corev1.Namespace) (*metav1.LabelSelector, error) {
+	nsPolicy := nspolicy.NewNamespacePolicy(namespace)
+	clusterIDs, err := nsPolicy.GetAvailableClusterIDs()
+	if err != nil {
+		return nil, err
+	}
+	requirements := make([]metav1.LabelSelectorRequirement, 0)
+	for k, v := range matchAnnotation {
+		tmpReq := metav1.LabelSelectorRequirement{
+			Key:      k,
+			Operator: metav1.LabelSelectorOpIn,
+			Values: []string{
+				v,
+			},
+		}
+		requirements = append(requirements, tmpReq)
+	}
+	clusterReq := metav1.LabelSelectorRequirement{
+		Key:      constant.AnnotationSubscriptionKeyPrefix + "clusterid",
+		Operator: metav1.LabelSelectorOpIn,
+		Values:   clusterIDs,
+	}
+	requirements = append(requirements, clusterReq)
+	return &metav1.LabelSelector{
+		MatchExpressions: requirements,
+	}, nil
+}
+
+func (c *Controller) genSubscriptionSpec(
+	labelSelector *metav1.LabelSelector,
+	groupVersionKind schema.GroupVersionKind,
+	ns, name string) appsapi.SubscriptionSpec {
 	return appsapi.SubscriptionSpec{
 		Subscribers: []appsapi.Subscriber{
 			{
-				ClusterAffinity: &metav1.LabelSelector{
-					MatchLabels: matchAnnotations,
-				},
+				ClusterAffinity: labelSelector,
 			},
 		},
 		Feeds: []appsapi.Feed{

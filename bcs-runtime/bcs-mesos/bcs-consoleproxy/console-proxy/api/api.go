@@ -11,6 +11,7 @@
  *
  */
 
+// Package api xxx
 package api
 
 import (
@@ -60,7 +61,7 @@ func NewRouter(b manager.Manager, conf *config.ConsoleProxyConfig) *Router {
 
 func (r *Router) initRoutes() {
 
-	//handler container web console
+	// handler container web console
 	mux := http.NewServeMux()
 	mux.HandleFunc("/bcsapi/v1/consoleproxy/create_exec", r.createExec)
 	mux.HandleFunc("/bcsapi/v1/consoleproxy/start_exec", r.startExec)
@@ -70,7 +71,8 @@ func (r *Router) initRoutes() {
 		Handler: mux,
 	}
 	if r.conf.ServCert.IsSSL {
-		tlsConf, err := ssl.ServerTslConf(r.conf.ServCert.CAFile, r.conf.ServCert.CertFile, r.conf.ServCert.KeyFile, r.conf.ServCert.CertPasswd)
+		tlsConf, err := ssl.ServerTslConf(r.conf.ServCert.CAFile, r.conf.ServCert.CertFile, r.conf.ServCert.KeyFile,
+			r.conf.ServCert.CertPasswd)
 		if err != nil {
 			blog.Error("fail to load certfile, err:%s", err.Error())
 			return

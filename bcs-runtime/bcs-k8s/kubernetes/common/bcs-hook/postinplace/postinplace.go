@@ -18,10 +18,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
 	hookclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/clientset/versioned"
 	hooklister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/client/listers/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/metrics"
 	commonhookutil "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/util/hook"
 
 	apps "k8s.io/api/apps/v1"
@@ -108,11 +110,15 @@ func (p *PostInplaceControl) CreatePostInplaceHook(obj PostInplaceHookObjectInte
 		return false, err
 	}
 	if len(existHookRuns) == 0 {
+		var ps metrics.PromServer
+		startTime := time.Now()
 		postInplaceHookRun, err := p.createHookRun(metaObj, runtimeObj,
 			postInplaceHook, pod, postInplaceLabels, podNameLabelKey)
 		if err != nil {
+			ps.CollectHRCreateDurations(namespace, name, "failure", "postinplace", objectKind, time.Since(startTime))
 			return false, err
 		}
+		ps.CollectHRCreateDurations(namespace, name, "success", "postinplace", objectKind, time.Since(startTime))
 
 		updatePostInplaceHookCondition(newStatus, pod.Name)
 		klog.Infof("Created PostInplace HookRun %s for pod %s of %s %s/%s",
@@ -222,10 +228,12 @@ func (p *PostInplaceControl) createHookRun(metaObj metav1.Object, runtimeObj run
 	arguments = append(arguments, podArgs...)
 
 	for i, value := range pod.Spec.Containers {
+		tmp := new(string)
+		*tmp = value.Name
 		imageArgs := []hookv1alpha1.Argument{
 			{
 				Name:  PodImageArgKey + "[" + strconv.Itoa(i) + "]",
-				Value: &value.Name,
+				Value: tmp,
 			},
 		}
 		arguments = append(arguments, imageArgs...)

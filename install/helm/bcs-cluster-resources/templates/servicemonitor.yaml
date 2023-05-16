@@ -1,0 +1,21 @@
+{{- if and .Values.metrics.enabled .Values.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "bcs-cluster-resources.fullname" . }}
+  labels:
+    {{- include "bcs-cluster-resources.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "bcs-cluster-resources.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: metric
+      path: "/metrics"
+      {{- if .Values.metrics.serviceMonitor.interval }}
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+      {{- end }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+{{- end }}

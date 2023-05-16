@@ -13,7 +13,6 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
-import re
 import time
 
 from django.db import transaction
@@ -24,15 +23,17 @@ from rest_framework import generics, views, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
+from django.conf import settings
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.decorators import log_audit, log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.components import paas_cc
+from backend.components.bcs import k8s
+from backend.helm.helm import bcs_variable
 from backend.container_service.clusters.constants import ClusterType
 from backend.container_service.projects.base.constants import LIMIT_FOR_ALL_DATA
 from backend.templatesets.legacy_apps.configuration.models import MODULE_DICT
-from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config, get_all_template_info_by_project
+from backend.templatesets.legacy_apps.configuration.utils import check_var_by_config
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
 from backend.utils.views import FinalizeResponseMixin
@@ -91,11 +92,7 @@ class ListCreateVariableView(generics.ListCreateAPIView):
 
         offset, limit = data['offset'], data['limit']
         variables = self.get_variables_by_search_params(data)
-        serializer = serializers.ListVariableSLZ(
-            variables[offset : limit + offset],
-            many=True,
-            context={'search_type': data['type'], 'project_id': project_id},
-        )
+        serializer = serializers.ListVariableSLZ(variables[offset : limit + offset], many=True)
         num_of_variables = variables.count()
         return Response(
             {
@@ -160,33 +157,11 @@ class ResourceVariableView(FinalizeResponseMixin, views.APIView):
                 key_list.extend(search_list)
 
         key_list = list(set(key_list))
-        variable_dict = {}
-        if key_list:
-            # 验证变量名是否符合规范，不符合抛出异常，否则后续用 django 模板渲染变量也会抛出异常
+        ns_list = slz_data['namespaces'].split(',') if slz_data['namespaces'] else []
+        if not key_list or not ns_list:
+            return Response({"code": 0, "message": "OK", "data": {"lb_services": lb_services, "variable_dict": {}}})
 
-            var_objects = Variable.objects.filter(Q(project_id=project_id) | Q(project_id=0))
-
-            access_token = request.user.token.access_token
-            namespace_res = paas_cc.get_namespace_list(access_token, project_id, limit=LIMIT_FOR_ALL_DATA)
-            namespace_data = namespace_res.get('data', {}).get('results') or []
-            namespace_dict = {str(i['id']): i['cluster_id'] for i in namespace_data}
-
-            ns_list = slz_data['namespaces'].split(',') if slz_data['namespaces'] else []
-            for ns_id in ns_list:
-                _v_list = []
-                for _key in key_list:
-                    key_obj = var_objects.filter(key=_key)
-                    if key_obj.exists():
-                        _obj = key_obj.first()
-                        # 只显示自定义变量
-                        if _obj.category == 'custom':
-                            cluster_id = namespace_dict.get(ns_id, 0)
-                            _v_list.append(
-                                {"key": _obj.key, "name": _obj.name, "value": _obj.get_show_value(cluster_id, ns_id)}
-                            )
-                    else:
-                        _v_list.append({"key": _key, "name": _key, "value": ""})
-                variable_dict[ns_id] = _v_list
+        variable_dict = bcs_variable.get_multi_ns_variables(project_id, "", ns_list, key_list)
         return Response(
             {"code": 0, "message": "OK", "data": {"lb_services": lb_services, "variable_dict": variable_dict}}
         )
@@ -221,58 +196,6 @@ class VariableOverView(viewsets.ViewSet):
         )
 
         return Response({"code": 0, "message": "OK", "data": {"deled_id_list": deled_id_list}})
-
-    def get_quote_info(self, request, project_id, pk):
-        qs = Variable.objects.filter((Q(project_id=project_id) | Q(project_id=0)), id=pk)
-        if not qs:
-            raise ValidationError(u"not found")
-        qs = qs.first()
-        quote_list = []
-        all_template_info = get_all_template_info_by_project(project_id)
-        for tem in all_template_info:
-            config = tem.get('config') or ''
-
-            key_pattern = re.compile(r'"([^"]+)":\s*"([^"]*{{%s}}[^"]*)"' % qs.key)
-            search_list = key_pattern.findall(config)
-
-            for _q in search_list:
-                quote_key = _q[0]
-                context = _q[1]
-                quote_list.append(
-                    {
-                        "context": context,
-                        "quote_location": "%s/%s/%s/%s/%s"
-                        % (
-                            tem['template_name'],
-                            tem['show_version_name'],
-                            tem['category_name'],
-                            tem['resource_name'],
-                            quote_key,
-                        ),
-                        "key": qs.key,
-                        'template_id': tem['template_id'],
-                        'template_name': tem['template_name'],
-                        'show_version_id': tem['show_version_id'],
-                        'category': tem['category'],
-                        'resource_id': tem['resource_id'],
-                    }
-                )
-        # 添加模板集的权限信息
-        if quote_list:
-            perm = bcs_perm.Templates(request, project_id, bcs_perm.NO_RES)
-            quote_list = perm.hook_perms(quote_list, id_flag='template_id')
-        return Response(
-            {
-                "code": 0,
-                "message": "OK",
-                "data": {
-                    'quote_list': quote_list,
-                    'project_kind': request.project.kind,
-                    'project_id': request.project.project_id,
-                    'project_code': request.project.english_name,
-                },
-            }
-        )
 
     def batch_import(self, request, project_id):
         try:
@@ -326,10 +249,6 @@ class NameSpaceVariableView(viewsets.ViewSet):
                 i['cluster_name'] = i['cluster_id']
                 i['environment'] = None
 
-        perm = bcs_perm.Namespace(request, project_id, bcs_perm.NO_RES)
-        # 只过滤有编辑权限
-        filter_parms = {'is_filter': True, 'filter_type': 'edit'}
-        ns_list = perm.hook_base_perms(ns_list, **filter_parms)
         return ns_list
 
     def get_var_obj(self, project_id, var_id):
@@ -392,15 +311,11 @@ class ClusterVariableView(viewsets.ViewSet):
         return qs
 
     def get_cluser_list_by_user_perm(self, request, project_id):
-        """获取用户所有有使用权限的命名空间"""
-        access_token = request.user.token.access_token
-
-        cluster_data = paas_cc.get_all_clusters(access_token, project_id).get('data') or {}
-        cluster_list = cluster_data.get('results') or []
-
-        perm = bcs_perm.Cluster(request, project_id, bcs_perm.NO_RES)
-        cluster_list = perm.hook_perms(request, project_id, cluster_list, filter_use=True)
-        return cluster_list
+        """
+        获取项目下所有集群(对接 iam v3 时去除了权限控制)
+        """
+        cluster_data = paas_cc.get_all_clusters(request.user.token.access_token, project_id).get('data') or {}
+        return cluster_data.get('results') or []
 
     def get_batch_variables(self, request, project_id, var_id):
         """查询变量在所有集群下的值"""

@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	pkgcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
@@ -90,6 +91,9 @@ func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	if portPool.DeletionTimestamp != nil {
 		retry, err := handler.deletePortPool(portPool)
 		if err != nil {
+			blog.Warnf("delete port pool '%s/%s' failed, err: %s", portPool.GetNamespace(), portPool.GetName(),
+				err.Error())
+			metrics.IncreaseFailMetric(metrics.ObjectPortPool, metrics.EventTypeDelete)
 			ppr.recordListenerEvent(portPool, k8scorev1.EventTypeWarning, "delete port pool failed", err.Error())
 			return ctrl.Result{
 				Requeue:      true,
@@ -117,6 +121,9 @@ func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	// do update
 	retry, err := handler.ensurePortPool(portPool)
 	if err != nil {
+		blog.Errorf("ensure portPool '%s/%s' failed, err: %s", portPool.GetNamespace(), portPool.GetName(),
+			err.Error())
+		metrics.IncreaseFailMetric(metrics.ObjectPortPool, metrics.EventTypeUnknown)
 		ppr.recordListenerEvent(portPool, k8scorev1.EventTypeWarning, "update port pool failed", err.Error())
 		return ctrl.Result{
 			Requeue:      true,
@@ -147,6 +154,21 @@ func (ppr *PortPoolReconciler) initPortPoolCache() error {
 		poolKey := ingresscommon.GetNamespacedNameKey(pool.GetName(), pool.GetNamespace())
 		for _, itemStatus := range pool.Status.PoolItemStatuses {
 			if !ppr.poolCache.IsItemExisted(poolKey, itemStatus.GetKey()) {
+				// 适配旧版本升级（1.28.0-alpha.55以下）
+				if len(itemStatus.Protocol) == 0 {
+					var protocol []string
+					for _, item := range pool.Spec.PoolItems {
+						if item.ItemName == itemStatus.ItemName {
+							protocol = ingresscommon.GetPortPoolItemProtocols(item.Protocol)
+							break
+						}
+					}
+					if len(protocol) == 0 {
+						itemStatus.Protocol = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+					} else {
+						itemStatus.Protocol = protocol
+					}
+				}
 				if err := ppr.poolCache.AddPortPoolItem(poolKey, itemStatus); err != nil {
 					blog.Warnf("failed to add port pool %s item %v to cache, err %s",
 						poolKey, itemStatus, err.Error())

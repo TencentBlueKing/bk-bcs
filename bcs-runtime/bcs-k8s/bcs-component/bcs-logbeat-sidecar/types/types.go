@@ -11,6 +11,7 @@
  *
  */
 
+// Package types xxx
 package types
 
 import (
@@ -37,14 +38,14 @@ type Local struct {
 	CloseTimeout string               `yaml:"close_timeout,omitempty"`
 	Multiline    *bcsv1.MultilineConf `yaml:"multiline,omitempty"`
 
-	//stdout dataid
+	// stdout dataid
 	StdoutDataid string `yaml:"-"`
-	//nonstandard log dataid
+	// nonstandard log dataid
 	NonstandardDataid string `yaml:"-"`
-	//nonstandard paths
+	// nonstandard paths
 	NonstandardPaths []string `yaml:"-"`
-	//host paths
+	// host paths
 	HostPaths []string `yaml:"-"`
-	//log tags
+	// log tags
 	LogTags map[string]string `yaml:"-"`
 }

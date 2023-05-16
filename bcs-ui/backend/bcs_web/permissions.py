@@ -14,16 +14,14 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Optional
 
-from django.conf import settings
 from rest_framework.permissions import BasePermission
 
-from backend.accounts import bcs_perm
 from backend.bcs_web.audit_log.audit.context import AuditContext
 from backend.components.base import ComponentAuth
 from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.container_service.projects.base.models import CtxProject
-from backend.iam import legacy_perms as permissions
+from backend.iam.permissions.resources.project import ProjectPermCtx, ProjectPermission
 from backend.utils import FancyDict
 from backend.utils.cache import region
 
@@ -42,22 +40,14 @@ class AccessProjectPermission(BasePermission):
             return True
 
         access_token = request.user.token.access_token
-        user_id = request.user.username
 
         project_id_or_code = view.kwargs.get('project_id') or view.kwargs.get('project_id_or_code')
         project_id = self._get_project_id(access_token, project_id_or_code)
         if not project_id:
             return False
 
-        if settings.REGION == 'ce':
-            # 私有化版本对接权限中心v3。如果用户有project的view权限，则返回True
-            perm = permissions.ProjectPermission()
-            return perm.can_view(user_id, project_id)
-        else:
-            # 实际调用paas_auth.verify_project(权限中心v0)
-            return bcs_perm.verify_project_by_user(
-                access_token=access_token, project_id=project_id, project_code="", user_id=user_id
-            )
+        perm_ctx = ProjectPermCtx(username=request.user.username, project_id=project_id)
+        return ProjectPermission().can_view(perm_ctx, raise_exception=False)
 
     def _get_project_id(self, access_token, project_id_or_code: str) -> str:
         cache_key = f'BK_DEVOPS_BCS:PROJECT_ID:{project_id_or_code}'
@@ -96,8 +86,9 @@ class ProjectEnableBCS(BasePermission):
         return False
 
     def _get_enabled_project(self, access_token, project_id_or_code: str) -> Optional[FancyDict]:
+        """开启后如果没有集群，也可以修改业务信息, 默认缓存30秒, bcs 1.29 版本后不强依赖这个接口"""
         cache_key = bcs_project_cache_key.format(project_id_or_code=project_id_or_code)
-        project = region.get(cache_key, expiration_time=EXPIRATION_TIME)
+        project = region.get(cache_key, expiration_time=30)
         if project and isinstance(project, FancyDict):
             return project
 

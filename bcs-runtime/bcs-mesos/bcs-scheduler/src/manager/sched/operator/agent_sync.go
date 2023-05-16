@@ -30,14 +30,17 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// AGENT_SYNC_INTERVAL xxx
 // interval for synchronize agents from mesos master, seconds
 const AGENT_SYNC_INTERVAL = 240
 
+// OperatorMsg xxx
 // Operate manager control message
 type OperatorMsg struct {
 	MsgType string
 }
 
+// OperatorMgr xxx
 // Operate manager
 type OperatorMgr struct {
 	store store.Store
@@ -49,6 +52,7 @@ type OperatorMgr struct {
 	openCheck bool
 }
 
+// CreateOperatorMgr xxx
 // Create operate manager
 func CreateOperatorMgr(store store.Store, client *client.Client) (*OperatorMgr, error) {
 
@@ -69,6 +73,7 @@ func (mgr *OperatorMgr) stop() {
 	close(mgr.OperatorMsgQueue)
 }
 
+// SendMsg xxx
 // Send control message to operate manager
 func (mgr *OperatorMgr) SendMsg(msg *OperatorMsg) error {
 
@@ -84,6 +89,7 @@ func (mgr *OperatorMgr) SendMsg(msg *OperatorMsg) error {
 	return nil
 }
 
+// OperatorManage xxx
 // the main loop for Operator manager
 func OperatorManage(mgr *OperatorMgr) {
 	blog.Info("update agents: goroutine start ...")
@@ -112,6 +118,7 @@ func OperatorManage(mgr *OperatorMgr) {
 	}
 }
 
+// UpdateMesosAgents xxx
 func (mgr *OperatorMgr) UpdateMesosAgents() {
 	blog.Info("update agents: begin")
 	call := &master.Call{

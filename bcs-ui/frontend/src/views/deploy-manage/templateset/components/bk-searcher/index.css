@@ -1,0 +1,266 @@
+
+
+@import '@/css/variable.css';
+@import '@/css/mixins/clearfix.css';
+@import '@/css/mixins/ellipsis.css';
+
+.bk-searcher-wrapper {
+    position: relative;
+    width: 100%;
+    border: 1px solid $borderWeightColor;
+    background-color: #fff;
+    border-radius: 2px;
+
+    .bk-searcher-dropdown-menu {
+        position: absolute;
+        z-index: 1;
+
+        .bk-searcher-dropdown-content {
+            min-width: 100%;
+            height: auto;
+            background-color: #fff;
+            padding: 0;
+            margin: 0;
+            position: absolute;
+            z-index: 50;
+            border-radius: 2px;
+            border: 1px solid $fnMinorColor;
+            box-sizing: border-box;
+            opacity: 0;
+            box-shadow: 0 2px 6px rgba(51, 60, 72, 0.1);
+
+            &.is-show {
+                z-index: 2;
+                opacity: 1;
+                display: inline-block;
+                height: auto;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+        }
+
+        .bk-searcher-dropdown-list {
+            width: 100%;
+            max-height: 320px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            >li {
+                min-width: 120px;
+
+                a {
+                    display: block;
+                    line-height: 41px;
+                    padding: 0 15px;
+                    color: $fontWeightColor;
+                    font-size: 14px;
+                    text-decoration: none;
+                    white-space: nowrap;
+                    @mixin ellipsis 350px;
+                }
+
+                .bcs-icon {
+                    margin-right: 5px;
+                }
+                &.active,
+                &:hover {
+                    background: $primaryLightColor;
+                    color: #3a84ff;
+                }
+            }
+        }
+    }
+
+    .bk-searcher-mask {
+        height: 30px;
+        border-radius: 2px;
+        background-color: #fff;
+        overflow: hidden;
+        overflow-x: scroll;
+        cursor: not-allowed;
+        position: absolute;
+        z-index: 3;
+        width: 100%;
+        opacity: 0.4;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            display: none;
+        }
+
+        &.disable {
+            cursor: not-allowed;
+        }
+    }
+
+    .bk-searcher {
+        height: 30px;
+        border-radius: 2px;
+        font-size: 14px;
+        position: relative;
+        z-index: 1;
+        background: #fff;
+        cursor: pointer;
+        white-space: nowrap;
+        margin: 0 4px;
+        overflow: hidden;
+        overflow-x: scroll;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            display: none;
+        }
+
+        &.disable {
+            cursor: not-allowed;
+        }
+
+        .selectable {
+            display: flex;
+            cursor: pointer;
+            border: 1px solid $borderWeightColor;
+            font-size: 12px;
+            border-radius: 2px;
+
+            .name {
+                background-color: #fff;
+                border-right: 1px solid $borderWeightColor;
+                padding: 6px 10px;
+            }
+
+            .value-container {
+                background-color: #fafbfd;
+                padding: 6px 8px 5px 0;
+
+                .value {
+                    display: inline-block;
+                    padding: 0px 5px 0 10px;
+                }
+
+                .remove-search-params {
+                    display: inline-block;
+                    padding: 0;
+                }
+
+                i {
+                    font-size: 10px;
+                    position: relative;
+                    top: -1px;
+                    transform: scale(0.8);
+                    display: inline-block;
+                }
+            }
+        }
+
+        .input {
+            padding: 0;
+            border: 0;
+            box-shadow: border-box;
+            outline: none;
+            height: 30px;
+            margin: 0;
+            &::placeholder {
+                color: #c4c6cc;
+            }
+        }
+
+        .search-params-wrapper {
+            @mixin clearfix;
+            height: 100%;
+            line-height: 1;
+
+            >li {
+                display: inline-block;
+                cursor: pointer;
+                position: relative;
+                top: -2px;
+                margin: 0;
+                margin-right: 5px;
+                &:nth-child(1) {
+                    margin-right: 0;
+                }
+            }
+
+            .key-node {
+                background: $primaryLightColor;
+                padding-right: 16px;
+
+                .remove-key {
+                    display: inline-block;
+                }
+            }
+
+            .remove-key {
+                position: absolute;
+                width: 16px;
+                height: 16px;
+                line-height: 16px;
+                bottom: 5px;
+                right: 3px;
+                display: inline-block;
+                font-size: 12px;
+                text-align: center;
+                color: $fontColor;
+                display: none;
+            }
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: $primaryLightColor;
+            color: $fontColor;
+            font-size: 12px;
+            border: none;
+            vertical-align: middle;
+            box-sizing: border-box;
+            overflow: hidden;
+            border-radius: 2px;
+            padding: 0 9px;
+            min-height: 21px;
+            line-height: 22px;
+            word-break: break-all;
+        }
+    }
+
+    .actions {
+        position: absolute;
+        right: 10px;
+        top: 2px;
+        color: #c4ced8;
+        z-index: 10;
+        height: 36px;
+        line-height: 36px;
+
+        .btn {
+            font-size: 16px;
+            color: #c4ced8;
+            margin-left: 3px;
+        }
+
+        .disable-btn {
+            cursor: not-allowed;
+        }
+    }
+
+    .ip-searcher-footer {
+        @mixin clearfix;
+        height: 36px;
+        line-height: 1;
+        position: relative;
+        font-size: 12px;
+
+        .placeholder {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: $fnMinorColor;
+        }
+    }
+}

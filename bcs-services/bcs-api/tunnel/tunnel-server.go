@@ -26,21 +26,30 @@ import (
 )
 
 const (
-	Module        = "BCS-API-Tunnel-Module"
+	// Module xxx
+	Module = "BCS-API-Tunnel-Module"
+	// RegisterToken xxx
 	RegisterToken = "BCS-API-Tunnel-Token"
-	Params        = "BCS-API-Tunnel-Params"
-	Cluster       = "BCS-API-Tunnel-ClusterId"
+	// Params xxx
+	Params = "BCS-API-Tunnel-Params"
+	// Cluster xxx
+	Cluster = "BCS-API-Tunnel-ClusterId"
 
-	KubeAgentModule   = "kube-agent"
-	K8sDriverModule   = "k8s-driver"
+	// KubeAgentModule xxx
+	KubeAgentModule = "kube-agent"
+	// K8sDriverModule xxx
+	K8sDriverModule = "k8s-driver"
+	// MesosDriverModule xxx
 	MesosDriverModule = "mesos-driver"
 )
 
 var (
+	// DefaultTunnelServer xxx
 	DefaultTunnelServer *websocketDialer.Server
 	errFailedAuth       = errors.New("failed authentication")
 )
 
+// RegisterCluster xxx
 type RegisterCluster struct {
 	Address   string `json:"address"`
 	UserToken string `json:"userToken"`

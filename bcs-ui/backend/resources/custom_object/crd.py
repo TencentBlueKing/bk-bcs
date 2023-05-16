@@ -19,14 +19,13 @@ from backend.resources.constants import K8sResourceKind
 from backend.utils.basic import getitems
 
 from ..resource import ResourceClient, ResourceObj
-from .constants import PREFERRED_CRD_API_VERSION
 from .formatter import CRDFormatter
 
 
 class CrdObj(ResourceObj):
     @property
     def additional_columns(self) -> List:
-        """ 获取 资源新增列 信息 """
+        """获取 资源新增列 信息"""
         manifest = self.data.to_dict()
         additional_columns = getitems(manifest, 'spec.additionalPrinterColumns', [])
         # 存在时间会统一处理，因此此处直接过滤掉
@@ -38,5 +37,5 @@ class CustomResourceDefinition(ResourceClient):
     result_type: Type['ResourceObj'] = CrdObj
     formatter = CRDFormatter()
 
-    def __init__(self, ctx_cluster: CtxCluster, api_version: Optional[str] = PREFERRED_CRD_API_VERSION):
+    def __init__(self, ctx_cluster: CtxCluster, api_version: Optional[str] = None):
         super().__init__(ctx_cluster, api_version)

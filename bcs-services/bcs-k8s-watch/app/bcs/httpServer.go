@@ -55,7 +55,7 @@ var (
 	ErrHTTPServerNotInit = errors.New("http server is nil")
 )
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile   string
 	CertFile string
@@ -226,7 +226,7 @@ func getRouteHandlerFunc(f http.Handler) restful.RouteFunction {
 	}
 }
 
-//runPrometheusMetrics starting prometheus metrics handler
+// RunPrometheusMetricsServer starting prometheus metrics handler
 func RunPrometheusMetricsServer(config *watchoptions.WatchConfig) {
 	http.Handle("/metrics", promhttp.Handler())
 	addr := config.Address + ":" + strconv.Itoa(int(config.MetricPort))

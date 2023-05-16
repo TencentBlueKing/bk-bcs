@@ -1,0 +1,27 @@
+{{ include "common.metadata" . }}
+- - group:
+      - - group:
+            - [ "key", "value", "." ]
+          prop: args
+          container:
+            grid-template-columns: "1fr 1fr auto"
+      - [ "execPolicy" ]
+      - [ "deletionProtectPolicy", "." ]
+      - - group:
+            - [ "name", "." ]
+            - [ "hookType", "." ]
+            - [ "url", "jsonPath", "timeoutSecs" ]
+            - [ "address", "query" ]
+            - [ "function", "." ]
+            - - group:
+                  - [ "key", "value", "." ]
+                container:
+                  grid-template-columns: "1fr 1fr auto"
+                prop: fields
+            - [ "count", "interval" ]
+            - [ "successCondition", "." ]
+            - [ "successPolicy", "successCnt" ]
+          prop: metrics
+          container:
+            grid-template-columns: "1fr 1fr 120px"
+    prop: spec

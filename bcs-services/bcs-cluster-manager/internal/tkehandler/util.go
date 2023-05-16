@@ -17,7 +17,7 @@ import (
 	"fmt"
 
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 
 	"github.com/emicklei/go-restful"
 	"gopkg.in/go-playground/validator.v9"

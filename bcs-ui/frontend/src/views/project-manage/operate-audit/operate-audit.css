@@ -1,0 +1,63 @@
+
+
+@import '@/css/variable.css';
+@import '@/css/mixins/ellipsis.css';
+
+.biz-operate-audit-title {
+    display: inline-block;
+    height: 52px;
+    line-height: 52px;
+    font-size: 16px;
+    margin-left: 24px;
+}
+
+.biz-operate-audit-query {
+    .left {
+        margin-right: 10px;
+
+        button {
+            i {
+                font-size: 18px;
+                position: relative;
+                top: 3px;
+            }
+        }
+    }
+}
+
+.biz-operate-audit-table {
+    width: auto;
+    margin: 0 20px;
+    i.bk-icon {
+        font-size: 16px;
+        margin-right: 4px;
+
+        &.success {
+            color: $iconSuccessColor;
+        }
+
+        &.fail {
+            color: $iconFailColor;
+        }
+    }
+
+    p {
+        margin: 0;
+        &.extra-info {
+            @mixin ellipsis 100%, block;
+        }
+    }
+}
+
+@media screen and (max-width: $mediaWidth) {
+    .biz-operate-audit-query {
+        .left {
+            width: 148px;
+
+            &.range-picker {
+                width: 220px;
+                margin-right: 140px;
+            }
+        }
+    }
+}

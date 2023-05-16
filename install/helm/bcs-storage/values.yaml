@@ -39,9 +39,11 @@ env:
   BK_BCS_caFile: "/data/bcs/cert/bcs/bcs-ca.crt"
   BK_BCS_serverCertFile: "/data/bcs/cert/bcs/bcs-server.crt"
   BK_BCS_serverKeyFile: "/data/bcs/cert/bcs/bcs-server.key"
+  BK_BCS_clientCertFile: "/data/bcs/cert/bcs/bcs-client.crt"
+  BK_BCS_clientKeyFile: "/data/bcs/cert/bcs/bcs-client.key"
   BK_BCS_CONFIG_TYPE: "render"
   BK_BCS_bcsEtcdFeature: "true"
-  BK_BCS_bcsEtcdHost: "127.0.0.1:2379"
+  BK_BCS_bcsEtcdHost: "127.0.0.1:2379,[::1]:2379"
   BK_BCS_bcsEtcdCAFile: /data/bcs/cert/etcd/etcd-ca.pem
   BK_BCS_bcsEtcdCertFile: /data/bcs/cert/etcd/etcd.pem
   BK_BCS_bcsEtcdKeyFile: /data/bcs/cert/etcd/etcd-key.pem

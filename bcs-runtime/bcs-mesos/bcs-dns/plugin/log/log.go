@@ -85,7 +85,7 @@ func (l Logger) Name() string { return "log" }
 type Rule struct {
 	NameScope string
 	Class     response.Class
-	//OutputFile file or directory for logs
+	// OutputFile file or directory for logs
 	OutputFile string
 	Format     string
 	Log        *log.Logger
@@ -95,7 +95,8 @@ const (
 	// DefaultLogFilename is the default log filename.
 	DefaultLogFilename = "/data/bcs/logs/bcs/"
 	// CommonLogFormat is the common log format.
-	CommonLogFormat = `{remote} ` + CommonLogEmptyValue + ` [{when}] {>id} "{type} {class} {name} {proto} {size} {>do} {>bufsize}" {rcode} {>rflags} {rsize} {duration}`
+	CommonLogFormat = `{remote} ` + CommonLogEmptyValue +
+		` [{when}] {>id} "{type} {class} {name} {proto} {size} {>do} {>bufsize}" {rcode} {>rflags} {rsize} {duration}`
 	// CommonLogEmptyValue is the common empty log value.
 	CommonLogEmptyValue = "-"
 	// CombinedLogFormat is the combined log format.

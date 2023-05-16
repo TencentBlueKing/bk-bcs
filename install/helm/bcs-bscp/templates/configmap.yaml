@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-bscp
+  labels:
+    app: bcs-bscp
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+data:
+  bcs_bscp.yaml: |-
+    {{- toYaml .Values.config | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bcs-bscp-ui
+  labels:
+    app: bcs-bscp-ui
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+data:
+  bcs_bscp_ui.yaml: |
+    {{- toYaml .Values.ui_config | nindent 4 }}

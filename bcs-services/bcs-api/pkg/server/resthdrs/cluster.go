@@ -53,7 +53,8 @@ func createCluster(cluster *m.Cluster) (*m.Cluster, error) {
 	return sqlstore.GetCluster(clusterId), nil
 }
 
-func createClusterWithExternalInfo(cluster *m.Cluster, externalClusterInfo *m.BCSClusterInfo, response *restful.Response) {
+func createClusterWithExternalInfo(cluster *m.Cluster, externalClusterInfo *m.BCSClusterInfo,
+	response *restful.Response) {
 	cluster, err := createCluster(cluster)
 	// convert type name to screaming snake
 	errorCode := strcase.ToScreamingSnake(fmt.Sprint(reflect.TypeOf(cluster)))
@@ -67,7 +68,8 @@ func createClusterWithExternalInfo(cluster *m.Cluster, externalClusterInfo *m.BC
 	err = sqlstore.CreateBCSClusterInfo(externalClusterInfo)
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", "POST").Inc()
-		message := fmt.Sprintf("errcode: %d, can not create external cluster info, error: %s", common.BcsErrApiInternalDbError, err)
+		message := fmt.Sprintf("errcode: %d, can not create external cluster info, error: %s",
+			common.BcsErrApiInternalDbError, err)
 		WriteServerError(response, "CANNOT_CREATE_EXTERNAL_CLUSTER_INFO", message)
 		return
 	}
@@ -77,6 +79,7 @@ func createClusterWithExternalInfo(cluster *m.Cluster, externalClusterInfo *m.BC
 
 // PlainCluster
 
+// CreatePlainClusterForm xxx
 type CreatePlainClusterForm struct {
 	ID string `json:"id" validate:"required"`
 }
@@ -119,7 +122,7 @@ func CreatePlainCluster(request *restful.Request, response *restful.Response) {
 
 // BCSCluster
 
-// CreateBCSClusterForm
+// CreateBCSClusterForm xxx
 type CreateBCSClusterForm struct {
 	ID               string `json:"id" validate:"required"`
 	ProjectID        string `json:"project_id" validate:"required"`

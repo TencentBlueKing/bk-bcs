@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
+// FetchApplication xxx
 func (b *backend) FetchApplication(runAs, appId string) (*types.Application, error) {
 	return b.store.FetchApplication(runAs, appId)
 }

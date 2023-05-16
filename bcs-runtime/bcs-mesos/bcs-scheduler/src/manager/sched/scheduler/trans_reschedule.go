@@ -161,6 +161,7 @@ func (s *Scheduler) passRescheduleCheck(trans *types.Transaction, app *types.App
 	return true
 }
 
+// doRescheduleTrans xxx
 // the return value indicates whether the transaction need to continue
 func (s *Scheduler) doRescheduleTrans(trans *types.Transaction, outOffer *offer.Offer) bool {
 	blog.Infof("do transaction %s begin", trans.TransactionID)

@@ -11,6 +11,7 @@
  *
  */
 
+// Package metrics xxx
 package metrics
 
 import (
@@ -19,10 +20,11 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 const (
@@ -38,7 +40,7 @@ const (
 )
 
 // TimeBuckets is based on Prometheus client_golang prometheus.DefBuckets
-var timeBuckets = prometheus.ExponentialBuckets(0.00025, 2, 16) // from 0.25ms to 8 seconds
+var timeBuckets = prometheus.ExponentialBuckets(0.00025, 2, 32) // from 0.25ms to 16 seconds
 
 // Metrics the bcs-user-manager exports.
 var (
@@ -65,14 +67,21 @@ func RunMetric(conf *config.UserMgrConfig) {
 	prometheus.MustRegister(requestLatency)
 
 	// prometheus metrics server
-	http.Handle("/metrics", promhttp.Handler())
-	addr := conf.Address + ":" + strconv.Itoa(int(conf.MetricPort))
-	go http.ListenAndServe(addr, nil)
+	metricMux := http.NewServeMux()
+	metricMux.Handle("/metrics", promhttp.Handler())
+
+	// server address
+	addresses := []string{conf.Address}
+	if len(conf.IPv6Address) > 0 {
+		addresses = append(addresses, conf.IPv6Address)
+	}
+	metricServer := ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(conf.MetricPort)), "", metricMux)
+	go metricServer.ListenAndServe()
 
 	blog.Infof("run metric ok")
 }
 
-//ReportRequestAPIMetrics report API request metrics
+// ReportRequestAPIMetrics report API request metrics
 func ReportRequestAPIMetrics(handler, method, status string, started time.Time) {
 	requestCount.WithLabelValues(handler, method, status).Inc()
 	requestLatency.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())

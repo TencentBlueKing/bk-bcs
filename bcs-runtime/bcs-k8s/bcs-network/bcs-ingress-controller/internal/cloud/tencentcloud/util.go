@@ -16,10 +16,11 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // convert clb health check info to crd fields
@@ -71,6 +72,9 @@ func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressLis
 	}
 	if lis.HealthCheck != nil {
 		attr.HealthCheck = convertHealthCheck(lis.HealthCheck)
+	}
+	if lis.SniSwitch != nil {
+		attr.SniSwitch = int(*lis.SniSwitch)
 	}
 	return attr
 }
@@ -362,7 +366,8 @@ func getDiffBetweenListenerRule(existedListener, newListener *networkextensionv1
 			existedRule.TargetGroup, rule.TargetGroup)
 		if len(addBackends) != 0 || len(delBackends) != 0 || len(updateWeightBackends) != 0 ||
 			(rule.ListenerAttribute != nil &&
-				needUpdateAttribute(existedRule.ListenerAttribute, rule.ListenerAttribute)) {
+				needUpdateAttribute(existedRule.ListenerAttribute, rule.ListenerAttribute)) ||
+			!reflect.DeepEqual(existedRule.Certificate, rule.Certificate) {
 			updateRule := networkextensionv1.ListenerRule{}
 			updateRule.Domain = rule.Domain
 			updateRule.Path = rule.Path
@@ -400,6 +405,7 @@ func splitListenersToDiffProtocol(listenerList []*networkextensionv1.Listener) [
 	return retList
 }
 
+// splitListenersToDiffBatch split listeners by its 'listenerAttribute' and 'certificate'
 func splitListenersToDiffBatch(listenerList []*networkextensionv1.Listener) [][]*networkextensionv1.Listener {
 	attrList := make([]struct {
 		attr *networkextensionv1.IngressListenerAttribute

@@ -13,6 +13,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 import json
+import yaml
 import logging
 
 from rest_framework import viewsets
@@ -20,8 +21,17 @@ from rest_framework.renderers import BrowsableAPIRenderer
 from rest_framework.response import Response
 
 from backend.components import paas_cc
+from backend.iam.permissions.decorators import response_perms
+from backend.iam.permissions.resources.namespace_scoped import NamespaceScopedPermCtx, NamespaceScopedPermission
+from backend.iam.permissions.resources.templateset import (
+    TemplatesetAction,
+    TemplatesetCreatorAction,
+    TemplatesetPermission,
+    TemplatesetRequest,
+)
 from backend.utils.error_codes import error_codes
 from backend.utils.renderers import BKAPIRenderer
+from backend.utils.response import PermsResponse
 
 from ..mixins import TemplatePermission
 from ..models import get_template_by_project_and_id
@@ -67,6 +77,15 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
         serializer = serializers.CreateTemplateSLZ(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         template = serializer.save()
+
+        self.iam_perm.grant_resource_creator_actions(
+            TemplatesetCreatorAction(
+                template_id=template.id,
+                name=template.name,
+                project_id=template.project_id,
+                creator=request.user.username,
+            )
+        )
         return Response({"template_id": template.id})
 
     def update_template(self, request, project_id, template_id):
@@ -87,10 +106,33 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
         """
         template = get_template_by_project_and_id(project_id, template_id)
         data = self._request_data(request, project_id=project_id)
+        try:
+            for temp_files in data.get("template_files"):
+                duplicate = self.check_duplicate_template_files(temp_files.get("files"))
+                if duplicate:
+                    return Response({'code': 400,'message': f'{temp_files.get("resource_name")} 包含同名资源 {duplicate}'})
+        except Exception as err: # yaml 解析错误，则不检测同名资源
+            logger.info('check_duplicate_template_files failed, skip check, project_id: %s, template_id: %s',project_id, template_id)
+
         serializer = serializers.UpdateTemplateSLZ(template, data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         template = serializer.save()
         return Response({"template_id": template.id})
+
+    def check_duplicate_template_files(self, files):
+        name_keys = {}
+        for f in files:
+            if f.get("action") == "delete":
+                continue
+            for doc in yaml.safe_load_all(f.get("content")):
+                metadata = doc.get("metadata")
+                name = metadata.get("name")
+                if not name:
+                    continue
+                if name_keys.get(name):
+                    return f.get("name")
+                name_keys[name] = True
+        return ""
 
     def get_template_by_show_version(self, request, project_id, template_id, show_version_id):
         serializer = GetShowVersionSLZ(data=self.kwargs)
@@ -106,6 +148,11 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
         serializer = serializers.GetTemplateFilesSLZ(validated_data, context={"with_file_content": with_file_content})
         return Response(serializer.data)
 
+    @response_perms(
+        action_ids=[TemplatesetAction.VIEW, TemplatesetAction.UPDATE, TemplatesetAction.INSTANTIATE],
+        permission_cls=TemplatesetPermission,
+        resource_id_key='id',
+    )
     def get_template(self, request, project_id, template_id):
         serializer = GetLatestShowVersionSLZ(data=self.kwargs)
         serializer.is_valid(raise_exception=True)
@@ -115,7 +162,7 @@ class YamlTemplateViewSet(viewsets.ViewSet, TemplatePermission):
         self.can_view_template(request, template)
 
         serializer = serializers.GetTemplateFilesSLZ(validated_data, context={"with_file_content": True})
-        return Response(serializer.data)
+        return PermsResponse(serializer.data, TemplatesetRequest(project_id=project_id))
 
 
 class TemplateReleaseViewSet(viewsets.ViewSet, TemplatePermission):
@@ -169,10 +216,28 @@ class TemplateReleaseViewSet(viewsets.ViewSet, TemplatePermission):
         template = validated_data["show_version"]["template"]
         self.can_use_template(request, template)
 
+        resp = paas_cc.get_namespace(request.user.token.access_token, project_id, validated_data["namespace_id"])
+        if resp.get('code') != 0:
+            return Response(
+                {
+                    'code': 400,
+                    'message': f"查询命名空间(namespace_id:{project_id}-{validated_data['namespace_id']})出错:{resp.get('message')}",
+                }
+            )
+
+        namespace_info = resp['data']
+        perm_ctx = NamespaceScopedPermCtx(
+            username=request.user.username,
+            project_id=project_id,
+            cluster_id=namespace_info['cluster_id'],
+            name=namespace_info['name'],
+        )
+        NamespaceScopedPermission().can_use(perm_ctx)
+
         processor = ReleaseDataProcessor(
             user=self.request.user, raw_release_data=self._raw_release_data(project_id, validated_data)
         )
-        release_data = processor.release_data()
+        release_data = processor.release_data(is_preview=validated_data["is_preview"])
 
         if validated_data["is_preview"]:
             return Response(release_data.template_files)

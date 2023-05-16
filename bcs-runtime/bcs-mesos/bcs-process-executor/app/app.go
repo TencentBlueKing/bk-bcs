@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -26,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
+// Run xxx
 func Run() {
 	cxt := context.Background()
 	bcsExecutor := executor.NewExecutor(cxt)

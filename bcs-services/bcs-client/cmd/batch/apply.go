@@ -32,7 +32,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewApplyCommand sub command apply registration
+// NewApplyCommand sub command apply registration
 func NewApplyCommand() cli.Command {
 	return cli.Command{
 		Name:  "apply",
@@ -78,16 +78,16 @@ type metaInfo struct {
 	rawJson    []byte
 }
 
-//apply multiple mesos json resources to bcs-scheduler
+// apply multiple mesos json resources to bcs-scheduler
 func apply(cxt *utils.ClientContext) error {
-	//step: check parameter from command line
+	// step: check parameter from command line
 	if err := cxt.MustSpecified(utils.OptionClusterID); err != nil {
 		return err
 	}
 	var data []byte
 	var err error
 	if !cxt.IsSet(utils.OptionFile) {
-		//reading all data from stdin
+		// reading all data from stdin
 		data, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		data, err = cxt.FileData()
@@ -98,20 +98,20 @@ func apply(cxt *utils.ClientContext) error {
 	if len(data) == 0 {
 		return fmt.Errorf("failed to apply: no available resource datas")
 	}
-	//step: reading json object from input(file or stdin)
+	// step: reading json object from input(file or stdin)
 	metaList := metastream.NewMetaStream(bytes.NewReader(data), cxt.String("format"))
 	if metaList.Length() == 0 {
 		return fmt.Errorf("failed to Apply: No correct format resource")
 	}
-	//step: initialize storage client & scheduler client
+	// step: initialize storage client & scheduler client
 	storage := v1.NewBcsStorage(utils.GetClientOption())
 	scheduler := v4.NewBcsScheduler(utils.GetClientOption())
 	userManager := userV1.NewBcsUserManager(utils.GetClientOption())
 
-	//step: create/update all resource according json list
+	// step: create/update all resource according json list
 	for metaList.HasNext() {
 		info := metaInfo{}
-		//step: check json object from parsing
+		// step: check json object from parsing
 		info.apiVersion, info.kind, err = metaList.GetResourceKind()
 		if err != nil {
 			fmt.Printf("apply partial failed, %s, continue...\n", err.Error())
@@ -125,7 +125,7 @@ func apply(cxt *utils.ClientContext) error {
 		info.rawJson = metaList.GetRawJSON()
 		utils.DebugPrintf("debugInfo: %s\n", string(info.rawJson))
 		info.clusterID = cxt.ClusterID()
-		//step: inspect resource object from storage
+		// step: inspect resource object from storage
 		//	if resource exist, update resource to bcs-scheduler, print object status from response
 		//	otherwise, create resources to bcs-scheduler and print object status from response
 		var inspectStatus error
@@ -170,7 +170,7 @@ func apply(cxt *utils.ClientContext) error {
 				return userManager.GrantOrRevokePermission(http.MethodPost, data)
 			}
 		default:
-			//unkown type, try custom resource
+			// unkown type, try custom resource
 			crdapiVersion, plural, crdErr := utils.GetCustomResourceTypeByKind(scheduler, cxt.ClusterID(), info.kind)
 			if err != nil {
 				fmt.Printf("resource %s/%s %s apply failed, %s\n", info.apiVersion, info.kind, info.name, crdErr.Error())
@@ -196,7 +196,7 @@ func isObjectNotExist(err error) bool {
 
 func applySpecifiedResource(inspectStatus error, create createFunc, update updateFunc, info *metaInfo) {
 	if inspectStatus == nil {
-		//update object
+		// update object
 		if err := update(info.clusterID, info.namespace, info.rawJson, nil); err != nil {
 			fmt.Printf("resource %s/%s %s update successfully\n", info.apiVersion, info.kind, info.name)
 		} else {
@@ -209,7 +209,7 @@ func applySpecifiedResource(inspectStatus error, create createFunc, update updat
 		fmt.Printf("resource %s/%s %s apply failed, %s\n", info.apiVersion, info.kind, info.name, inspectStatus.Error())
 		return
 	}
-	//create
+	// create
 	if err := create(info.clusterID, info.namespace, info.rawJson); err != nil {
 		fmt.Printf("resource %s/%s %s create failed, %s\n", info.apiVersion, info.kind, info.name, err.Error())
 	} else {

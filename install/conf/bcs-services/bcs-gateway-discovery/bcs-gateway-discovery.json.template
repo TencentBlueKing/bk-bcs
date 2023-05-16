@@ -15,7 +15,14 @@
   "amdin_token": "${adminToken}",
   "admin_api": "${adminAPI}",
   "auth_token": "${gatewayToken}",
+  "gateway_metrics_enabled": ${gatewayMetricsEnabled},
   "modules": "${zkModules}",
+  "redis": {
+    "redis_host": "${redisHost}",
+    "redis_port": ${redisPort},
+    "redis_password": "${redisPassword}",
+    "redis_database": ${redisDatabase}
+  },
   "etcdRegistry": {
     "etcd_feature": true,
     "etcd_address": "${bcsEtcdHost}",

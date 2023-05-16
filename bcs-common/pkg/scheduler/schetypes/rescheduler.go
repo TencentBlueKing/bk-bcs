@@ -13,13 +13,15 @@
 
 package types
 
-//mesos address
+// ReschedMesosAddress xxx
+// mesos address
 type ReschedMesosAddress struct {
 	Hostname string `json:"hostname"`
 	IP       string `json:"ip"`
 	Port     int    `json:"port"`
 }
 
+// ReschedMesosInfo xxx
 // mesos info
 type ReschedMesosInfo struct {
 	Address  ReschedMesosAddress `json:"address"`
@@ -31,6 +33,7 @@ type ReschedMesosInfo struct {
 	Version  string              `json:"version"`
 }
 
+// Framework xxx
 // mesos framework info
 type Framework struct {
 	ID string `json:"id"`

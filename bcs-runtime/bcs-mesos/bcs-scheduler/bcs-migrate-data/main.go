@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/manager/store/zk"
 )
 
+// Options xxx
 type Options struct {
 	conf.FileConfig
 	conf.ZkConfig
@@ -34,6 +35,7 @@ type Options struct {
 	KubeConfig string `json:"kubeconfig" value:"" usage:"kube config for custom resource feature and etcd storage"`
 }
 
+// main xxx
 // bcs version 1.15.x start support etcd store driver
 // this tool can migrate data from zk to etcd
 // and make sure the data is not lost
@@ -85,14 +87,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	//sync configmap
+	// sync configmap
 	err = syncConfigmap(zkStore, etcdStore)
 	if err != nil {
 		blog.Errorf("sync configmap failed: %s", err.Error())
 		os.Exit(1)
 	}
 
-	//sync secret
+	// sync secret
 	err = syncSecret(zkStore, etcdStore)
 	if err != nil {
 		blog.Errorf("sync secret failed: %s", err.Error())
@@ -150,6 +152,7 @@ func syncFramework(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
+// syncApplication xxx
 // Application
 // Version
 // Taskgroup
@@ -233,6 +236,7 @@ func syncApplication(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
+// syncAgent xxx
 // sync agent
 // Agents
 // AgentInfo
@@ -310,6 +314,7 @@ func syncAgent(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
+// syncConfigmap xxx
 // Configmap
 func syncConfigmap(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Configmap data start...")
@@ -336,6 +341,7 @@ func syncConfigmap(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
+// syncSecret xxx
 // Secret
 func syncSecret(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Secret data start...")
@@ -365,6 +371,7 @@ func syncSecret(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
+// syncService xxx
 // Service
 func syncService(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Service data start...")
@@ -409,6 +416,7 @@ func syncService(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
+// syncDeployment xxx
 // Deployment
 func syncDeployment(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Deployment data start...")
@@ -436,6 +444,7 @@ func syncDeployment(zkStore store.Store, etcdStore store.Store) error {
 	return nil
 }
 
+// syncAdmission xxx
 // AdminssionWebhooks
 func syncAdmission(zkStore store.Store, etcdStore store.Store) error {
 	blog.Infof("start sync Admission data start...")

@@ -17,26 +17,33 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
+// ProcDaemon xxx
 type ProcDaemon interface {
-	//create process object
+	// CreateProcess xxx
+	// create process object
 	CreateProcess(*types.ProcessInfo) error
 
-	//inspect process status
+	// InspectProcessStatus xxx
+	// inspect process status
 	InspectProcessStatus(procId string) (*types.ProcessStatusInfo, error)
 
-	//stop process
+	// StopProcess xxx
+	// stop process
 	StopProcess(procId string, timeout int) error
 
-	//Delete process
+	// DeleteProcess xxx
+	// Delete process
 	DeleteProcess(procId string) error
 
-	//set process envs
-	//types.BcsKV: key = env.key, value = env.value
-	//SetProcessEnvs([]types.BcsKV)error
+	// set process envs
+	// types.BcsKV: key = env.key, value = env.value
+	// SetProcessEnvs([]types.BcsKV)error
 
-	//reload process, exec reloadCmd
+	// ReloadProcess xxx
+	// reload process, exec reloadCmd
 	ReloadProcess(procId string) error
 
-	//restart process, exec restartCmd
+	// RestartProcess xxx
+	// restart process, exec restartCmd
 	RestartProcess(procId string) error
 }

@@ -22,20 +22,24 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
 
+// CredentialBackend xxx
 type CredentialBackend interface {
 	GetClusterByIdentifier(clusterIdentifier string) (*m.Cluster, error)
 	GetCredentials(clusterId string) (*m.ClusterCredentials, error)
 }
 
+// FixtureCredentialBackend xxx
 // A backend which loads cluster credentials from config file
 type FixtureCredentialBackend struct {
 	credentials map[string]*m.ClusterCredentials
 }
 
+// GFixtureCredentialBackend xxx
 var GFixtureCredentialBackend = &FixtureCredentialBackend{
 	credentials: make(map[string]*m.ClusterCredentials),
 }
 
+// ExtractCredentialsFixtures xxx
 func (l *FixtureCredentialBackend) ExtractCredentialsFixtures() error {
 	isEnabled := config.ClusterCredentialsFixtures.Enabled
 	if !isEnabled {
@@ -71,7 +75,7 @@ func (l *FixtureCredentialBackend) ExtractCredentialsFixtures() error {
 	return nil
 }
 
-// GetClusterByIdentifier, for fixture backend, it will only try to use the identifier as clusterId to find the
+// GetClusterByIdentifier , for fixture backend, it will only try to use the identifier as clusterId to find the
 // Cluster.
 func (l *FixtureCredentialBackend) GetClusterByIdentifier(clusterIdentifier string) (*m.Cluster, error) {
 	// Use Identifier as ID
@@ -94,12 +98,14 @@ func (l *FixtureCredentialBackend) GetCredentials(clusterId string) (*m.ClusterC
 	return result, nil
 }
 
+// DatabaseCrendentialBackend xxx
 // A backend which loads credentials from database
 type DatabaseCrendentialBackend struct{}
 
+// GDatabaseCrendentialBackend xxx
 var GDatabaseCrendentialBackend = &DatabaseCrendentialBackend{}
 
-// GetClusterByIdentifier, for database backend, it will query the database using given clusterIdenfier.
+// GetClusterByIdentifier , for database backend, it will query the database using given clusterIdenfier.
 func (l *DatabaseCrendentialBackend) GetClusterByIdentifier(clusterIdentifier string) (*m.Cluster, error) {
 	cluster := sqlstore.GetClusterByIdentifier(clusterIdentifier)
 	return cluster, nil

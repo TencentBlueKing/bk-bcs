@@ -11,6 +11,7 @@
  *
  */
 
+// Package statistic xxx
 package statistic
 
 import (
@@ -29,26 +30,32 @@ func init() {
 
 var stc *statistic
 
+// IncAccess xxx
 func IncAccess() {
 	stc.incAccess()
 }
 
+// GetTotalAccess xxx
 func GetTotalAccess() int64 {
 	return stc.getTotalAccess()
 }
 
+// Set xxx
 func Set(id string, err ...error) {
 	stc.set(id, err...)
 }
 
+// Reset xxx
 func Reset(id string) {
 	stc.reset(id)
 }
 
+// ResetAll xxx
 func ResetAll() {
 	stc.resetAll()
 }
 
+// Status xxx
 func Status() (string, bool) {
 	return stc.status()
 }

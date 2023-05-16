@@ -11,6 +11,7 @@
  *
  */
 
+// Package list xxx
 package list
 
 import (
@@ -19,7 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewListCommand sub list command
+// NewListCommand sub list command
 func NewListCommand() cli.Command {
 	return cli.Command{
 		Name:  "list",
@@ -88,7 +89,7 @@ func list(c *utils.ClientContext) error {
 	case "meshcluster":
 		return listMeshCluster(c)
 	default:
-		//unkown type, try custom resource
+		// unkown type, try custom resource
 		return listCustomResource(c)
 	}
 }

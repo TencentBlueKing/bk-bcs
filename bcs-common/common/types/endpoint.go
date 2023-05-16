@@ -13,14 +13,14 @@
 
 package types
 
-//BcsEndpoint endpoint definition
+// BcsEndpoint endpoint definition
 type BcsEndpoint struct {
 	TypeMeta   `json:",inline"`
 	ObjectMeta `json:"metadata,omitempty"`
 	Endpoints  []Endpoint `json:"eps"`
 }
 
-//Endpoint endpoint info for ip address
+// Endpoint endpoint info for ip address
 type Endpoint struct {
 	NetworkMode string          `json:"networkMode"`
 	NodeIP      string          `json:"nodeIP"`
@@ -29,13 +29,13 @@ type Endpoint struct {
 	Ports       []ContainerPort `json:"ports,omitempty"`
 }
 
-//TargetRef referrence for endpoint
+// TargetRef referrence for endpoint
 type TargetRef struct {
 	Kind      string `json:"kind"`
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
-	//container images
+	// container images
 	Image string `json:"image"`
 }
 

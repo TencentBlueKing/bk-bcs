@@ -20,6 +20,7 @@ from backend.utils import healthz
 from backend.utils.views import LoginSuccessView, VueTemplateView
 
 urlpatterns = [
+    url("", include("django_prometheus.urls")),
     url(r"^admin/", admin.site.urls),
     url(r"^api/healthz/", healthz.healthz_view),
     url(r"^api/test/sentry/", healthz.test_sentry),
@@ -52,13 +53,10 @@ urlpatterns = [
     url(r"^", include("backend.uniapps.application.urls")),
     url(r"^", include("backend.bcs_web.audit_log.urls")),
     # 权限验证
-    url(r"^", include("backend.bcs_web.legacy_verify.urls")),
     url(r"^api-auth/", include("rest_framework.urls")),
     # BCS K8S special urls
     url(r"^", include("backend.helm.helm.urls")),
     url(r"^", include("backend.helm.app.urls")),
-    # Ticket凭证管理
-    url(r"^", include("backend.apps.ticket.urls")),
     url(
         r"^api/hpa/projects/(?P<project_id>\w{32})/",
         include(
@@ -78,17 +76,23 @@ urlpatterns = [
         r"^api/metrics/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/",
         include("backend.container_service.observability.metric.urls"),
     ),
-    # 标准日志输出
-    path(
-        "api/logs/projects/<slug:project_id>/clusters/<slug:cluster_id>/",
-        include("backend.container_service.observability.log_stream.urls"),
-    ),
     re_path(r"^api/helm/projects/(?P<project_id>\w{32})/", include("backend.helm.urls")),
-    path(r"change_log/", include("backend.change_log.urls")),
-    # cluster manager的代理请求
+    # helm相关
+    url(r"^api/helm_chart/projects/(?P<project_id>\w{32})/", include("backend.helm.helm.chart_url")),
     url(
-        r"^{}".format(settings.CLUSTER_MANAGER_PROXY["PREFIX_PATH"]),
-        include("backend.container_service.clusters.mgr.proxy.urls"),
+        r"^api/helm_release/projects/(?P<project_id>\w{32})/clusters/(?P<cluster_id>[\w\-]+)/",
+        include("backend.helm.app.release_url"),
+    ),
+    path(r"change_log/", include("backend.change_log.urls")),
+    # 组件库
+    path(
+        'api/cluster_tools/projects/<slug:project_id>/clusters/<slug:cluster_id>/',
+        include('backend.container_service.cluster_tools.urls'),
+    ),
+    # 日志采集
+    path(
+        'api/log_collect/projects/<slug:project_id>/',
+        include('backend.container_service.observability.log_collect.urls'),
     ),
 ]
 
@@ -105,6 +109,6 @@ except ImportError:
 urlpatterns_vue = [
     # fallback to vue view
     url(r"^login_success.html", never_cache(LoginSuccessView.as_view())),
-    url(r"^(?P<project_code>[\w\-]+)", never_cache(VueTemplateView.as_view(container_orchestration="k8s"))),
+    url(r"^(?P<project_code>[\w\-]+)?", never_cache(VueTemplateView.as_view(container_orchestration="k8s"))),
 ]
 urlpatterns += urlpatterns_vue

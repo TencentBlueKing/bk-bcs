@@ -14,9 +14,6 @@
 package v1
 
 import (
-	"sort"
-	"strings"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -42,14 +39,14 @@ type PortBindingItem struct {
 	StartPort             int                       `json:"startPort"`
 	EndPort               int                       `json:"endPort"`
 	RsStartPort           int                       `json:"rsStartPort"`
+	// +optional
+	HostPort bool   `json:"hostPort,omitempty"`
+	External string `json:"external,omitempty"`
 }
 
 // GetKey get port pool item key
 func (pbi *PortBindingItem) GetKey() string {
-	tmpIDs := make([]string, len(pbi.LoadBalancerIDs))
-	copy(tmpIDs, pbi.LoadBalancerIDs)
-	sort.Strings(tmpIDs)
-	return strings.Join(tmpIDs, ",")
+	return pbi.PoolItemName
 }
 
 // PortBindingSpec defines the desired state of PortBinding
@@ -84,6 +81,7 @@ type PortBindingStatus struct {
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="status",type=string,JSONPath=`.status.status`
 
 // PortBinding is the Schema for the portbindings API
 type PortBinding struct {

@@ -19,10 +19,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"k8s.io/klog"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"k8s.io/klog"
 )
 
 // Client is common sdk client
@@ -30,17 +31,16 @@ type Client struct {
 	*http.Request
 	baseURL    string
 	header     http.Header
-	HttpClient *http.Client
+	httpClient *http.Client
 }
 
 // WithoutTLSClient init a non-tls client
 func WithoutTLSClient(header http.Header, url string) *Client {
 	c := &Client{
-		header:     nil,
-		HttpClient: &http.Client{},
+		baseURL:    url,
+		header:     header,
+		httpClient: http.DefaultClient,
 	}
-	c.baseURL = url
-	c.header = header
 	return c
 }
 
@@ -90,12 +90,11 @@ func (c *Client) AddHeader(header http.Header) *Client {
 		for k, values := range header {
 			for _, v := range values {
 				c.Request.Header.Add(k, v)
-
 			}
 		}
 		return c
 	}
-	return nil
+	return c
 }
 
 // Resource set the resource to format url, e.g. nodepools, nodes
@@ -106,12 +105,12 @@ func (c *Client) Resource(resource string) *Client {
 	if c.Request != nil {
 		urlPath := c.Request.URL
 		if urlPath == nil {
-			return nil
+			return c
 		}
-		url, err := url.Parse(strings.Join([]string{urlPath.String(), resource}, "/"))
+		url, err := url.Parse(urlPath.String() + "/" + resource)
 		if err != nil {
-			klog.Errorf("resourc: %v, %v", resource, err)
-			return nil
+			klog.Errorf("resource: %v, %v", resource, err)
+			return c
 		}
 		c.URL = url
 	}
@@ -126,12 +125,12 @@ func (c *Client) Name(name string) *Client {
 	if c.Request != nil {
 		urlPath := c.Request.URL
 		if urlPath == nil {
-			return nil
+			return c
 		}
-		url, err := url.Parse(strings.Join([]string{urlPath.String(), name}, "/"))
+		url, err := url.Parse(urlPath.String() + "/" + name)
 		if err != nil {
-			klog.Error(err)
-			return nil
+			klog.Errorf("name: %v, %v", name, err)
+			return c
 		}
 		c.URL = url
 	}
@@ -145,7 +144,7 @@ func (c *Client) Filter(parameters map[string]string) *Client {
 	}
 	if c.Request != nil {
 		if c.Form == nil {
-			c.Form = make(map[string][]string, 0)
+			c.Form = make(map[string][]string)
 		}
 		for k, v := range parameters {
 			c.Form.Add(k, v)
@@ -159,25 +158,23 @@ func (c *Client) Base(basePath string) *Client {
 	if c.Request != nil {
 		url, err := url.Parse(basePath)
 		if err != nil {
-			return nil
+			klog.Errorf("base: %v, %v", basePath, err)
+			return c
 		}
 		c.URL = url
 		return c
 	}
-	return nil
+	return c
 }
 
 // Body converts the body, it receives
 // *bytes.Buffer, *strings.Buffer and *bytes.Buffer
 func (c *Client) Body(body io.Reader) *Client {
-	if c == nil {
-		return nil
-	}
 	if c.Request == nil {
-		return nil
+		return c
 	}
 	if body == nil {
-		return nil
+		return c
 	}
 	rc, ok := body.(io.ReadCloser)
 	if !ok && body != nil {
@@ -231,24 +228,30 @@ func (c *Client) Body(body io.Reader) *Client {
 
 // WithContext set the context
 func (c *Client) WithContext(ctx context.Context) *Client {
-	c.Request.WithContext(ctx)
+	c.Request = c.Request.WithContext(ctx)
 	return c
 }
 
 // Do finishes the http request
 func (c *Client) Do() ([]byte, error) {
-	klog.V(4).Infof("Query %v, header: %+v, body: %+v", c.URL.String(), c.Request.Header, c.Request.Body)
-	resp, err := c.HttpClient.Do(c.Request)
-	if err != nil {
-		return nil, fmt.Errorf("failed to finish this request: %v", err)
+	// klog.V(4).Infof("Query %v, header: %+v, body: %+v", c.URL.String(), c.Request.Header, c.Request.Body)
+	resp, clientErr := c.httpClient.Do(c.Request)
+	if resp == nil && clientErr != nil {
+		return nil, fmt.Errorf("failed to finish this request: %v", clientErr)
 	}
 	defer resp.Body.Close()
+	if clientErr != nil {
+		return nil, fmt.Errorf("failed to finish this request: %v, err: %v",
+			resp.StatusCode, clientErr)
+	}
+
+	if resp.StatusCode/100 > 2 {
+		return nil, fmt.Errorf("failed to finish this request: %v, err: %v",
+			resp.StatusCode, clientErr)
+	}
 	contentsBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read body: %+v err: %v", resp, err)
-	}
-	if resp.StatusCode/100 > 2 {
-		return nil, fmt.Errorf("failed to finish this request: %v, body: %v", resp.StatusCode, string(contentsBytes))
 	}
 	return contentsBytes, nil
 }

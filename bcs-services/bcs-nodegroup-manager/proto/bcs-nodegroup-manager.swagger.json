@@ -1,0 +1,851 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "proto/bcs-nodegroup-manager.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/nodegroupmanager/v1/autoscaler/review": {
+      "post": {
+        "summary": "查询cluster autoscaler review",
+        "description": "查询cluster autoscaler review",
+        "operationId": "NodegroupManager_GetClusterAutoscalerReview",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerClusterAutoscalerReview"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerClusterAutoscalerReview"
+            }
+          }
+        ],
+        "tags": [
+          "NodegroupManager"
+        ]
+      }
+    },
+    "/nodegroupmanager/v1/nodegroupstrategies": {
+      "get": {
+        "summary": "查询node group strategy 列表",
+        "description": "查询node group strategy 列表",
+        "operationId": "NodegroupManager_ListNodePoolMgrStrategies",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerListNodePoolMgrStrategyRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "description": "limit. 页面大小",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "page",
+            "description": "page. 页数",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "NodegroupManager"
+        ]
+      }
+    },
+    "/nodegroupmanager/v1/nodegroupstrategy": {
+      "get": {
+        "summary": "查询node group strategy",
+        "description": "查询node group strategy",
+        "operationId": "NodegroupManager_GetNodePoolMgrStrategy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerGetNodePoolMgrStrategyRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "name. strategy name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NodegroupManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除node group strategy",
+        "description": "删除node group strategy",
+        "operationId": "NodegroupManager_DeleteNodePoolMgrStrategy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerDeleteNodePoolMgrStrategyRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "name. 策略名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 操作人",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NodegroupManager"
+        ]
+      },
+      "post": {
+        "summary": "创建node group strategy",
+        "description": "创建node group strategy",
+        "operationId": "NodegroupManager_CreateNodePoolMgrStrategy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerCreateNodePoolMgrStrategyRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerCreateNodePoolMgrStrategyReq"
+            }
+          }
+        ],
+        "tags": [
+          "NodegroupManager"
+        ]
+      },
+      "put": {
+        "summary": "更新node group strategy",
+        "description": "更新node group strategy",
+        "operationId": "NodegroupManager_UpdateNodePoolMgrStrategy",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerCreateNodePoolMgrStrategyRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/nodegroupmanagerUpdateNodePoolMgrStrategyReq"
+            }
+          }
+        ],
+        "tags": [
+          "NodegroupManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "nodegroupmanagerAutoscalerReviewRequest": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "UID is used for tracing the request and response.",
+          "title": "uid"
+        },
+        "nodeGroups": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/nodegroupmanagerNodeGroup"
+          }
+        }
+      },
+      "description": "获取cluster autoscaler review请求",
+      "title": "GetAutoscalerReviewRequest"
+    },
+    "nodegroupmanagerAutoscalerReviewResponse": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "UID is used for tracing the request and response.",
+          "title": "uid"
+        },
+        "scaleUps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/nodegroupmanagerNodeScaleUpPolicy"
+          },
+          "description": "ScaleUps are the policy of scale up.",
+          "title": "scaleUps"
+        },
+        "scaleDowns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/nodegroupmanagerNodeScaleDownPolicy"
+          },
+          "description": "ScaleDowns are the polocy of scale down.",
+          "title": "scaleDowns"
+        }
+      },
+      "description": "获取cluster autoscaler review响应",
+      "title": "GetAutoscalerReviewResponse"
+    },
+    "nodegroupmanagerBuffer": {
+      "type": "object",
+      "properties": {
+        "low": {
+          "type": "integer",
+          "format": "int32",
+          "description": "定义resource pool中可容忍的最低空闲资源水位，主要用于预警用途",
+          "title": "low"
+        },
+        "high": {
+          "type": "integer",
+          "format": "int32",
+          "description": "定义resource pool中空闲资源的最高水位",
+          "title": "high"
+        },
+        "reservedDays": {
+          "type": "integer",
+          "format": "int32",
+          "description": "定义资源池保留天数",
+          "title": "reservedDays"
+        }
+      }
+    },
+    "nodegroupmanagerClusterAutoscalerReview": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/nodegroupmanagerAutoscalerReviewRequest",
+          "description": "the request from ca",
+          "title": "request"
+        },
+        "response": {
+          "$ref": "#/definitions/nodegroupmanagerAutoscalerReviewResponse",
+          "description": "the AutoscalerReviewResponse to ca",
+          "title": "response"
+        }
+      }
+    },
+    "nodegroupmanagerCreateNodePoolMgrStrategyReq": {
+      "type": "object",
+      "properties": {
+        "option": {
+          "$ref": "#/definitions/nodegroupmanagerCreateOptions",
+          "description": "create options",
+          "title": "option"
+        },
+        "strategy": {
+          "$ref": "#/definitions/nodegroupmanagerNodeGroupStrategy",
+          "description": "策略",
+          "title": "strategy"
+        }
+      },
+      "description": "创建节点池策略请求",
+      "title": "CreateNodePoolMgrStrategyReq",
+      "required": [
+        "option",
+        "strategy"
+      ]
+    },
+    "nodegroupmanagerCreateNodePoolMgrStrategyRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "创建是否成功",
+          "title": "result"
+        }
+      },
+      "description": "创建节点池策略响应",
+      "title": "CreateNodePoolMgrStrategyRsp",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "nodegroupmanagerCreateOptions": {
+      "type": "object",
+      "properties": {
+        "overWriteIfExist": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否返",
+          "title": "overWriteIfExist"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      }
+    },
+    "nodegroupmanagerDeleteNodePoolMgrStrategyRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "删除是否成功",
+          "title": "result"
+        }
+      },
+      "description": "删除节点池策略响应",
+      "title": "DeleteNodePoolMgrStrategyRsp",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "nodegroupmanagerElasticNodeGroup": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "集群id",
+          "title": "clusterId"
+        },
+        "nodeGroup": {
+          "type": "string",
+          "description": "nodeGroup id",
+          "title": "nodeGroup"
+        },
+        "consumerId": {
+          "type": "string",
+          "description": "consumer id",
+          "title": "consumerId"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "int32",
+          "description": "权重",
+          "title": "weight"
+        }
+      }
+    },
+    "nodegroupmanagerGetNodePoolMgrStrategyRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/nodegroupmanagerNodeGroupStrategy",
+          "description": "strategy信息",
+          "title": "data"
+        }
+      },
+      "description": "查询策略响应",
+      "title": "GetNodePoolMgrStrategyRsp",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "nodegroupmanagerListNodePoolMgrStrategyRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "strategy总数",
+          "title": "total"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/nodegroupmanagerNodeGroupStrategy"
+          },
+          "description": "strategy列表",
+          "title": "data"
+        }
+      },
+      "description": "查询策略列表响应",
+      "title": "ListNodePoolMgrStrategyRsp"
+    },
+    "nodegroupmanagerNodeGroup": {
+      "type": "object",
+      "properties": {
+        "nodeGroupID": {
+          "type": "string",
+          "description": "NodeGroupID is the ID of the node group",
+          "title": "nodeGroupID"
+        },
+        "maxSize": {
+          "type": "integer",
+          "format": "int32",
+          "description": "MaxSize is the upper limit of the node group",
+          "title": "maxSize"
+        },
+        "minSize": {
+          "type": "integer",
+          "format": "int32",
+          "description": "MinSize is the lower limit of the node group",
+          "title": "minSize"
+        },
+        "desiredSize": {
+          "type": "integer",
+          "format": "int32",
+          "description": " DesiredSize is the current size of the node group. It is possible that the number is different from the number of nodes registered in Kuberentes.",
+          "title": "desiredSize"
+        },
+        "upcomingSize": {
+          "type": "integer",
+          "format": "int32",
+          "description": "UpcomingSize is the number that indicates how many nodes have not registered in Kubernetes or have not been ready to be used.",
+          "title": "upcomingSize"
+        },
+        "nodeTemplate": {
+          "$ref": "#/definitions/nodegroupmanagerNodeTemplate",
+          "description": "NodeTemplate is the template information of node in the node group",
+          "title": "nodeTemplate"
+        },
+        "nodeIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "NodeIPs are the IP of nodes which belongs to the node group",
+          "title": "nodeIPs"
+        }
+      },
+      "description": "NodeGroup is the information of node group",
+      "title": "NodeGroup"
+    },
+    "nodegroupmanagerNodeGroupStrategy": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "类型",
+          "title": "kind"
+        },
+        "name": {
+          "type": "string",
+          "description": "策略名称",
+          "title": "name"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "resourcePool": {
+          "type": "string",
+          "description": "来自于bcs-resource-manager的resource pool ID，用于管理资源设备信息",
+          "title": "resourcePool"
+        },
+        "reservedNodeGroup": {
+          "$ref": "#/definitions/nodegroupmanagerReservedNodeGroup",
+          "title": "reservedNodeGroup"
+        },
+        "elasticNodeGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/nodegroupmanagerElasticNodeGroup"
+          },
+          "title": "elasticNodeGroups"
+        },
+        "strategy": {
+          "$ref": "#/definitions/nodegroupmanagerStrategy",
+          "description": "策略控制",
+          "title": "strategy"
+        }
+      }
+    },
+    "nodegroupmanagerNodeScaleDownPolicy": {
+      "type": "object",
+      "properties": {
+        "nodeGroupID": {
+          "type": "string",
+          "description": "NodeGroupID is the ID of node group",
+          "title": "nodeGroupID"
+        },
+        "type": {
+          "type": "string",
+          "description": "Type describes the way to scale down nodes. Available values: [NodeNum, NodeIPs]",
+          "title": "type"
+        },
+        "nodeIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "NodeIPs are the ip of nodes that should be scale down",
+          "title": "nodeIPs"
+        },
+        "nodeNum": {
+          "type": "integer",
+          "format": "int32",
+          "description": "NodeNum is the number of nodes that should be scaled down",
+          "title": "nodeNum"
+        }
+      },
+      "description": "NodeScaleDownPolicy defines the details of scaling down a node group",
+      "title": "NodeScaleDownPolicy"
+    },
+    "nodegroupmanagerNodeScaleUpPolicy": {
+      "type": "object",
+      "properties": {
+        "nodeGroupID": {
+          "type": "string",
+          "description": "NodeGroupID is the ID of node group",
+          "title": "nodeGroupID"
+        },
+        "desiredSize": {
+          "type": "integer",
+          "format": "int32",
+          "description": "DesiredSize is the desired size of node group",
+          "title": "desiredSize"
+        }
+      },
+      "description": "NodeScaleUpPolicy defines the details of scaling up a node group",
+      "title": "NodeScaleUpPolicy"
+    },
+    "nodegroupmanagerNodeTaint": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "The taint key to be applied to a node.",
+          "title": "key"
+        },
+        "value": {
+          "type": "string",
+          "description": "The taint value corresponding to the taint key.",
+          "title": "value"
+        },
+        "effect": {
+          "type": "string",
+          "description": " The effect of the taint on pods that do not tolerate the taint.",
+          "title": "effect"
+        },
+        "timeAdded": {
+          "type": "string",
+          "description": "TimeAdded represents the time at which the taint was added.It is only written for NoExecute taints.",
+          "title": "timeAdded"
+        }
+      },
+      "description": "NodeTaint is the taints of node",
+      "title": "NodeTaint"
+    },
+    "nodegroupmanagerNodeTemplate": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "integer",
+          "format": "int32",
+          "description": "CPU is the CPU resource of node. The unit is core.",
+          "title": "cpu"
+        },
+        "mem": {
+          "type": "number",
+          "format": "double",
+          "description": "Mem is the memory resource of node. The unit is Gi.",
+          "title": "mem"
+        },
+        "gpu": {
+          "type": "integer",
+          "format": "int32",
+          "description": "GPU is the GPU resource of node.",
+          "title": "gpu"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "taints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/nodegroupmanagerNodeTaint"
+          },
+          "description": "Taint is the taints of node.",
+          "title": "taints"
+        }
+      },
+      "description": "NodeTemplate is the information of node",
+      "title": "NodeTemplate"
+    },
+    "nodegroupmanagerReservedNodeGroup": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "集群id",
+          "title": "clusterId"
+        },
+        "nodeGroup": {
+          "type": "string",
+          "description": "nodeGroup id",
+          "title": "nodeGroup"
+        },
+        "consumerId": {
+          "type": "string",
+          "description": "consumer id",
+          "title": "consumerId"
+        }
+      }
+    },
+    "nodegroupmanagerStrategy": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "类型，buffer或者后续扩展的其他模式，",
+          "title": "type"
+        },
+        "scaleUpCoolDown": {
+          "type": "integer",
+          "format": "int32",
+          "description": "elasticNodeGroup扩容的冷却时间，单位minut",
+          "title": "scaleUpCoolDown"
+        },
+        "scaleUpDelay": {
+          "type": "integer",
+          "format": "int32",
+          "description": "elasticNodeGroup扩容任务延时时间，单位分钟",
+          "title": "scaleUpDelay"
+        },
+        "minScaleUpSize": {
+          "type": "integer",
+          "format": "int32",
+          "description": "elasticNodeGroup最小扩容数量，为保障稳定并不是随意扩容",
+          "title": "minScaleUpSize"
+        },
+        "scaleDownDelay": {
+          "type": "integer",
+          "format": "int32",
+          "description": "elasticNodeGroup缩容任务最大延迟时间，单位分钟，如果超期未完成则可以重新发起",
+          "title": "scaleDownDelay"
+        },
+        "maxIdleDelay": {
+          "type": "integer",
+          "format": "int32",
+          "description": "ResourcePool最大空闲时间，对于elasticNodeGroup而言就是下降数量在预期内的时间，单位分钟",
+          "title": "maxIdleDelay"
+        },
+        "reservedTimeRange": {
+          "type": "string",
+          "description": "指定时间段，用于保护resource pool稳定，准备给reservedNodeGroup预留资源",
+          "title": "reservedTimeRange"
+        },
+        "buffer": {
+          "$ref": "#/definitions/nodegroupmanagerBuffer",
+          "description": "预留水位详细定义",
+          "title": "buffer"
+        },
+        "scaleDownBeforeDDL": {
+          "type": "integer",
+          "format": "int32",
+          "description": "在ddl多少分钟之前执行策略，用于分级资源池",
+          "title": "scaleDownBeforeDDL"
+        }
+      }
+    },
+    "nodegroupmanagerUpdateNodePoolMgrStrategyReq": {
+      "type": "object",
+      "properties": {
+        "option": {
+          "$ref": "#/definitions/nodegroupmanagerUpdateOptions",
+          "description": "update options",
+          "title": "option"
+        },
+        "strategy": {
+          "$ref": "#/definitions/nodegroupmanagerNodeGroupStrategy",
+          "description": "策略",
+          "title": "strategy"
+        }
+      },
+      "description": "更新节点池策略请求",
+      "title": "UpdateNodePoolMgrStrategyReq",
+      "required": [
+        "option",
+        "strategy"
+      ]
+    },
+    "nodegroupmanagerUpdateOptions": {
+      "type": "object",
+      "properties": {
+        "createIfNotExist": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "如果不存在是否创建",
+          "title": "createIfNotExist"
+        },
+        "overwriteZeroOrEmptyStr": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "零值或空字符串是否覆盖",
+          "title": "overwriteZeroOrEmptyStr"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

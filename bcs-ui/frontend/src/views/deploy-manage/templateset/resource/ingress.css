@@ -1,0 +1,258 @@
+
+
+ @import '@/css/variable.css';
+ @import '@/css/mixins/clearfix.css';
+ 
+ .biz-resource-table>thead>tr>th:first-child,
+ .biz-resource-table>tbody>tr>td:first-child {
+     padding-left: 20px;
+ }
+ 
+ .biz-resource-table {
+     .biz-operate {
+         margin-right: 15px;
+         color: #3a84ff;
+         cursor: pointer;
+     }
+ 
+     .biz-not-operate {
+         margin-right: 15px;
+         color: #C7CAD2;
+         cursor: not-allowed;
+     }
+ }
+ 
+ .data-title {
+     font-size: 14px;
+     color: #333948;
+     margin-bottom: 10px;
+ }
+ 
+ .biz-data-table {
+     border: 1px solid #dde4eb;
+     margin-bottom: 25px;
+ }
+ 
+ .biz-data-table>thead>tr>th {
+     background: #fafbfd;
+ }
+ 
+ .biz-data-table>thead>tr>th,
+ .biz-data-table>thead>tr>td,
+ .biz-data-table>tbody>tr>th,
+ .biz-data-table>tbody>tr>td {
+     height: 42px;
+     padding: 10px 20px;
+ }
+ 
+ .bix-no-data {
+     padding: 10px;
+     text-align: center;
+     font-size: 14px;
+ }
+ 
+ .point-box {
+     border: 1px solid $borderWeightColor;
+     margin: 8px 0 0 0;
+     padding: 15px 15px 10px 15px;
+     position: relative;
+     border-radius: 2px;
+ 
+     &:after {
+         content: '';
+         width: 8px;
+         height: 8px;
+         display: inline-block;
+         border-top: 1px solid #dde4eb;
+         border-right: 1px solid #dde4eb;
+         transform: rotate(-45deg);
+         position: absolute;
+         top: -6px;
+         left: 39px;
+         background: #fff;
+     }
+ }
+ 
+ .key-list {
+     @mixin clearfix;
+ 
+     li {
+         float: left;
+         display: flex;
+         margin: 0 5px 5px 0;
+         border: 1px solid $borderWeightColor;
+         border-radius: 2px;
+         background: #fff;
+ 
+         &.bk-primary {
+             border-color: $primaryColor;
+ 
+             .key {
+                 background: #ebf4ff;
+                 color: $primaryColor;
+             }
+ 
+             .value {
+                 border-left: 1px solid $primaryColor;
+                 background-color: $primaryColor;
+                 color: #fff;
+             }
+         }
+     }
+ 
+     .key,
+     .value {
+         float: left;
+         line-height: 22px;
+         text-align: left;
+         padding: 0 10px;
+         font-size: 12px;
+         color: #737987;
+         white-space: nowrap;
+     }
+ 
+     .value {
+         border-left: 1px solid $borderWeightColor;
+         background-color: #fafbfd;
+     }
+ }
+ 
+ .display-text-btn {
+     font-weight: normal;
+     float: right;
+ }
+ 
+ .show-labels-btn {
+     cursor: default;
+ 
+     &:hover {
+         background: $primaryColor;
+     }
+ }
+ 
+ .key-text {
+     width: 400px;
+     overflow: hidden;
+     display: block;
+     text-overflow: ellipsis;
+ }
+ 
+ .bk-form-textarea.key-box {
+     max-height: 60px;
+     min-height: auto;
+     padding: 6px;
+ }
+ 
+ .biz-title {
+     font-weight: bold;
+     font-size: 14px;
+     color: #737987;
+     padding: 10px 28px 10px 0;
+     display: block;
+ }
+ 
+ .biz-resource {
+     .already-selected-nums {
+         font-size: 14px;
+         height: 40px;
+         line-height: 40px;
+         display: inline-block;
+         float: left;
+         margin-left: 15px;
+         color: #737987;
+     }
+ }
+ 
+ .biz-configuration-form,
+ .biz-part-header {
+     width: 100%;
+     min-width: 1000px;
+     max-width: 1000px;
+ }
+ 
+ .ingress-block {
+     padding: 20px;
+     border: 1px solid #eee;
+     background: #fefefe;
+     border-radius: 2px;
+     margin-top: 10px;
+     width: 780px;
+ 
+     .bk-form-content {
+         margin-bottom: 15px;
+ 
+         &:last-child {
+             margin-bottom: 0;
+         }
+     }
+ }
+ 
+ .ingress-switcher-wrapper {
+     display: inline-block;
+     vertical-align: middle;
+ }
+ 
+ .biz-part-header {
+     min-width: 800px;
+     max-width: 800px;
+     margin-left: auto;
+     margin-right: auto;
+ 
+     .bk-button-group {
+         .bk-button {
+             float: left;
+         }
+     }
+ }
+ 
+ .biz-simple-table {
+     width: auto;
+ }
+ .action-btn {
+     height: 36px;
+     text-align: center;
+     display: inline-block;
+     border: none;
+     background: transparent;
+     outline: none;
+     float: left;
+     .bcs-icon {
+         width: 24px;
+         height: 24px;
+         line-height: 24px;
+         border-radius: 50%;
+         vertical-align: middle;
+         border: 1px solid #dde4eb;
+         color: #737987;
+         font-size: 14px;
+         display: inline-block;
+         &.icon-minus {
+             font-size: 15px;
+         }
+     }
+ }
+ .biz-part-header {
+     margin-top: 40px;
+     text-align: center;
+ }
+ .bk-text-button {
+     .bcs-icon {
+         transition: all ease 0.3s;
+     }
+     &.rotate {
+         .bcs-icon {
+             transform: rotate(180deg);
+         }
+     }
+ }
+
+ .bk-form .bk-form-content .bk-form-tip {
+     overflow: hidden;
+     padding: 0;
+     margin: 10px 0 0 0;
+     position: relative;
+     height: auto;
+     line-height: 1;
+     left: 0;
+ }
+ 

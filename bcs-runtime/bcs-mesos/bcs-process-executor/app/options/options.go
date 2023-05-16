@@ -11,13 +11,14 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//HealthCheckOption is option in flags
+// HealthCheckOption is option in flags
 type HealthCheckOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -29,7 +30,7 @@ type HealthCheckOption struct {
 	conf.ProcessConfig
 }
 
-//NewHealthCheckOption create HealthCheckOption object
+// NewHealthCheckOption create HealthCheckOption object
 func NewHealthCheckOption() *HealthCheckOption {
 	return &HealthCheckOption{}
 }

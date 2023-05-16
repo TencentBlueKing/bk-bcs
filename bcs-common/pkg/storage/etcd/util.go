@@ -13,4 +13,4 @@
 
 package etcd
 
-//util is tools collection for etcd client
+// util is tools collection for etcd client

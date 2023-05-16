@@ -34,22 +34,26 @@ import (
 )
 
 const (
-	//BcsApiPrefix prefix for mesos container scheduler
+	// BcsApiPrefix prefix for mesos container scheduler
 	BcsApiPrefix = "/bcsapi/v4/scheduler/mesos/"
 
-	//mediaHeader key for http media content type
+	// mediaHeader key for http media content type
 	medieTypeHeader = "Content-Type"
-	//mediaTypeApplicationJSON json payload for http body
+	// mediaTypeApplicationJSON json payload for http body
 	mediaTypeApplicationJSON = "application/json"
-	//mediaTypeApplicationYaml yaml payload for http body
+	// mediaTypeApplicationYaml yaml payload for http body
 	mediaTypeApplicationYaml = "application/x-yaml"
 )
 
 func init() {
-	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil, Handler: handlerPostActions})
-	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil, Handler: handlerPutActions})
-	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil, Handler: handlerGetActions})
-	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil, Handler: handlerDeleteActions})
+	actions.RegisterAction(actions.Action{Verb: "POST", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil,
+		Handler: handlerPostActions})
+	actions.RegisterAction(actions.Action{Verb: "PUT", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil,
+		Handler: handlerPutActions})
+	actions.RegisterAction(actions.Action{Verb: "GET", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil,
+		Handler: handlerGetActions})
+	actions.RegisterAction(actions.Action{Verb: "DELETE", Path: "/bcsapi/v4/scheduler/mesos/{uri:*}", Params: nil,
+		Handler: handlerDeleteActions})
 }
 
 func request2mesosapi(req *restful.Request, uri, method string) (string, error) {
@@ -63,7 +67,7 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 		err1 := bhttp.InternalError(common.BcsErrCommHttpReadBodyFail, common.BcsErrCommHttpReadBodyFailStr)
 		return err1.Error(), nil
 	}
-	//check application media type
+	// check application media type
 	if mediaTypeApplicationYaml == req.Request.Header.Get(medieTypeHeader) {
 		data, err = yamlTOJSON(data)
 		if err != nil {
@@ -129,14 +133,14 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 			return err1.Error(), nil
 		}
 
-		//host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
+		// host := servInfo.Scheme + "://" + servInfo.IP + ":" + strconv.Itoa(int(servInfo.Port))
 		var host string
 		if ser.ExternalIp != "" && ser.ExternalPort != 0 {
 			host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.ExternalIp, ser.ExternalPort)
 		} else {
 			host = fmt.Sprintf("%s://%s:%d", ser.Scheme, ser.IP, ser.Port)
 		}
-		//url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
+		// url := routeHost + "/api/v1/" + uri //a.Conf.BcsRoute
 		url = fmt.Sprintf("%s/mesosdriver/v4/%s", host, uri)
 		blog.V(3).Infof("do request to url(%s), method(%s)", url, method)
 
@@ -213,7 +217,7 @@ func handlerPutActions(req *restful.Request, resp *restful.Response) {
 	resp.Write([]byte(data))
 }
 
-//yamlTOJSON check if mesos request body is yaml,
+// yamlTOJSON check if mesos request body is yaml,
 // then convert yaml to json
 func yamlTOJSON(rawData []byte) ([]byte, error) {
 	if len(rawData) == 0 {

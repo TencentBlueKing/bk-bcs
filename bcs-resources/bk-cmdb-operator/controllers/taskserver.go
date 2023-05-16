@@ -106,7 +106,8 @@ func makeTaskServerContainers(z *bkcmdbv1.Bkcmdb) []v1.Container {
 			Image:           z.Spec.Image,
 			ImagePullPolicy: "IfNotPresent",
 			WorkingDir:      "/data/bin/bk-cmdb/cmdb_taskserver/",
-			Command:         []string{"./cmdb_taskserver", "--addrport=$(POD_IP):80", rediscv, "--log-dir", "./logs", "--v", "3"},
+			Command: []string{"./cmdb_taskserver", "--addrport=$(POD_IP):80", rediscv, "--log-dir", "./logs", "--v",
+				"3"},
 			LivenessProbe: &v1.Probe{
 				Handler: v1.Handler{
 					HTTPGet: &v1.HTTPGetAction{

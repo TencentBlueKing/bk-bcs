@@ -14,11 +14,13 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.container_service.projects import base as Project
 from backend.components import cc
 from backend.components.base import BaseCompError, CompParseBkCommonResponseError
 from backend.container_service.clusters.serializers import FetchCCHostSLZ
@@ -32,13 +34,15 @@ logger = logging.getLogger(__name__)
 
 
 class CCViewSet(SystemViewSet):
-    """ CMDB 主机查询相关接口 """
+    """CMDB 主机查询相关接口"""
 
     @action(methods=['GET'], url_path='topology', detail=False)
     def biz_inst_topo(self, request, project_id):
-        """ 查询业务实例拓扑 """
+        """查询业务实例拓扑"""
         try:
-            topo_info = cc.BizTopoQueryService(request.user.username, request.project.cc_app_id).fetch()
+            lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
+            project = Project.get_project(request.user.token.access_token, project_id)
+            topo_info = cc.BizTopoQueryService(request.user.username, project["cc_app_id"], lang).fetch()
         except CompParseBkCommonResponseError as e:
             raise error_codes.ComponentError(_('查询业务拓扑信息失败：{}').format(e))
         except BaseCompError as e:
@@ -48,7 +52,7 @@ class CCViewSet(SystemViewSet):
 
     @action(methods=['POST'], url_path='hosts', detail=False)
     def hosts(self, request, project_id):
-        """ 查询指定业务拓扑下主机列表 """
+        """查询指定业务拓扑下主机列表"""
         params = self.params_validate(FetchCCHostSLZ)
         username = request.user.username
         access_token = request.user.token.access_token

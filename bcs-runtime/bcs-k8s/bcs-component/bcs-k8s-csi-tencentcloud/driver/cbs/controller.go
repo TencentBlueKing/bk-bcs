@@ -30,59 +30,86 @@ import (
 )
 
 var (
+	// GB xxx
 	GB = 1 << (10 * 3)
 
+	// DiskTypeAttr xxx
 	// cbs disk type
 	DiskTypeAttr = "diskType"
 
+	// DiskNameAttr xxx
 	// cbs disk name
 	DiskNameAttr = "diskName"
+	// DiskTagsAttr xxx
 	// cbs disk tags
 	DiskTagsAttr = "diskTags"
 
+	// DiskTypeCloudBasic xxx
 	// tencentcloud cbs types, now support CLOUD_BASIC, CLOUD_PREMIUM, CLOUD_SSD
-	DiskTypeCloudBasic   = "CLOUD_BASIC"
+	DiskTypeCloudBasic = "CLOUD_BASIC"
+	// DiskTypeCloudPremium xxx
 	DiskTypeCloudPremium = "CLOUD_PREMIUM"
-	DiskTypeCloudSsd     = "CLOUD_SSD"
+	// DiskTypeCloudSsd xxx
+	DiskTypeCloudSsd = "CLOUD_SSD"
 
+	// DiskTypeDefault xxx
 	DiskTypeDefault = DiskTypeCloudBasic
 
+	// DiskChargeTypeAttr xxx
 	// cbs disk charge type
-	DiskChargeTypeAttr           = "diskChargeType"
-	DiskChargeTypePrePaid        = "PREPAID"
+	DiskChargeTypeAttr = "diskChargeType"
+	// DiskChargeTypePrePaid xxx
+	DiskChargeTypePrePaid = "PREPAID"
+	// DiskChargeTypePostPaidByHour xxx
 	DiskChargeTypePostPaidByHour = "POSTPAID_BY_HOUR"
 
+	// DiskChargeTypeDefault xxx
 	DiskChargeTypeDefault = DiskChargeTypePostPaidByHour
 
+	// DiskChargePrepaidPeriodAttr xxx
 	// cbs disk charge prepaid options
 	DiskChargePrepaidPeriodAttr = "diskChargeTypePrepaidPeriod"
 
+	// DiskChargePrepaidPeriodValidValues xxx
 	DiskChargePrepaidPeriodValidValues = []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 24, 36}
-	DiskChargePrepaidPeriodDefault     = 1
+	// DiskChargePrepaidPeriodDefault xxx
+	DiskChargePrepaidPeriodDefault = 1
 
+	// DiskChargePrepaidRenewFlagAttr xxx
 	DiskChargePrepaidRenewFlagAttr = "diskChargePrepaidRenewFlag"
 
-	DiskChargePrepaidRenewFlagNotifyAndAutoRenew          = "NOTIFY_AND_AUTO_RENEW"
-	DiskChargePrepaidRenewFlagNotifyAndManualRenewd       = "NOTIFY_AND_MANUAL_RENEW"
+	// DiskChargePrepaidRenewFlagNotifyAndAutoRenew xxx
+	DiskChargePrepaidRenewFlagNotifyAndAutoRenew = "NOTIFY_AND_AUTO_RENEW"
+	// DiskChargePrepaidRenewFlagNotifyAndManualRenewd xxx
+	DiskChargePrepaidRenewFlagNotifyAndManualRenewd = "NOTIFY_AND_MANUAL_RENEW"
+	// DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew xxx
 	DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew = "DISABLE_NOTIFY_AND_MANUAL_RENEW"
 
+	// DiskChargePrepaidRenewFlagDefault xxx
 	DiskChargePrepaidRenewFlagDefault = DiskChargePrepaidRenewFlagNotifyAndManualRenewd
 
+	// EncryptAttr xxx
 	// cbs disk encrypt
-	EncryptAttr   = "encrypt"
+	EncryptAttr = "encrypt"
+	// EncryptEnable xxx
 	EncryptEnable = "ENCRYPT"
 
-	//cbs disk zone
+	// DiskZone xxx
+	// cbs disk zone
 	DiskZone = "diskZone"
 
-	//cbs disk zones
+	// DiskZones xxx
+	// cbs disk zones
 	DiskZones = "diskZones"
 
-	//cbs disk asp Id
+	// AspId xxx
+	// cbs disk asp Id
 	AspId = "aspId"
+	// StatusUnattached xxx
 	// cbs status
 	StatusUnattached = "UNATTACHED"
-	StatusAttached   = "ATTACHED"
+	// StatusAttached xxx
+	StatusAttached = "ATTACHED"
 )
 
 type cbsController struct {
@@ -90,7 +117,7 @@ type cbsController struct {
 	zone      string
 }
 
-//newCbsController create cbsController object
+// newCbsController create cbsController object
 func newCbsController(secretId, secretKey, region, zone, cbsUrl string) (*cbsController, error) {
 	cpf := profile.NewClientProfile()
 	cpf.HttpProfile.Endpoint = cbsUrl
@@ -105,8 +132,9 @@ func newCbsController(secretId, secretKey, region, zone, cbsUrl string) (*cbsCon
 	}, nil
 }
 
-//CreateVolume implements the csi grpc interface to create volume with tencentcloud api
-func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+// CreateVolume implements the csi grpc interface to create volume with tencentcloud api
+func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse,
+	error) {
 	if req.Name == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume name is empty")
 	}
@@ -203,7 +231,8 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		if !ok {
 			volumeChargePrepaidRenewFlag = DiskChargePrepaidRenewFlagDefault
 		}
-		if volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndAutoRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndManualRenewd { // nolint
+		if volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagDisableNotifyAndManualRenew &&
+			volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndAutoRenew && volumeChargePrepaidRenewFlag != DiskChargePrepaidRenewFlagNotifyAndManualRenewd { // nolint
 			return nil, status.Error(codes.InvalidArgument, "invalid renew flag")
 		}
 
@@ -256,11 +285,12 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		createCbsReq.Encrypt = &EncryptEnable
 	}
 
-	//zone parameters
+	// zone parameters
 	volumeZone, ok1 := req.Parameters[DiskZone]
 	volumeZones, ok2 := req.Parameters[DiskZones]
 	if ok1 && ok2 {
-		return nil, status.Error(codes.InvalidArgument, "both zone and zones StorageClass parameters must not be used at the same time")
+		return nil, status.Error(codes.InvalidArgument,
+			"both zone and zones StorageClass parameters must not be used at the same time")
 	}
 	if !ok1 && !ok2 {
 		volumeZone = ctrl.zone
@@ -276,8 +306,8 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 		Zone: &volumeZone,
 	}
 
-	//aspId parameters
-	//zone parameters
+	// aspId parameters
+	// zone parameters
 	aspId, ok1 := req.Parameters[AspId]
 	if !ok {
 		aspId = ""
@@ -289,7 +319,8 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 	}
 
 	if len(createCbsResponse.Response.DiskIdSet) <= 0 {
-		return nil, status.Errorf(codes.Internal, "create disk failed, no disk id found in create disk response, request id %s", *createCbsResponse.Response.RequestId)
+		return nil, status.Errorf(codes.Internal,
+			"create disk failed, no disk id found in create disk response, request id %s", *createCbsResponse.Response.RequestId)
 	}
 
 	diskId := *createCbsResponse.Response.DiskIdSet[0]
@@ -342,8 +373,9 @@ func (ctrl *cbsController) CreateVolume(ctx context.Context, req *csi.CreateVolu
 	}
 }
 
-//DeleteVolume implements the csi grpc interface to delete volume with tencentcloud api
-func (ctrl *cbsController) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
+// DeleteVolume implements the csi grpc interface to delete volume with tencentcloud api
+func (ctrl *cbsController) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse,
+	error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume id is empty")
 	}
@@ -370,8 +402,9 @@ func (ctrl *cbsController) DeleteVolume(ctx context.Context, req *csi.DeleteVolu
 	return &csi.DeleteVolumeResponse{}, nil
 }
 
-//ControllerPublishVolume implements the csi grpc interface to attach volume with tencentcloud api
-func (ctrl *cbsController) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
+// ControllerPublishVolume implements the csi grpc interface to attach volume with tencentcloud api
+func (ctrl *cbsController) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (
+	*csi.ControllerPublishVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume id is empty")
 	}
@@ -448,8 +481,9 @@ func (ctrl *cbsController) ControllerPublishVolume(ctx context.Context, req *csi
 	}
 }
 
-//ControllerUnpublishVolume implements the csi grpc interface to detach volume with tencentcloud api
-func (ctrl *cbsController) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
+// ControllerUnpublishVolume implements the csi grpc interface to detach volume with tencentcloud api
+func (ctrl *cbsController) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (
+	*csi.ControllerUnpublishVolumeResponse, error) {
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "volume id is empty")
 	}
@@ -517,7 +551,9 @@ func (ctrl *cbsController) ControllerUnpublishVolume(ctx context.Context, req *c
 	}
 }
 
-func (ctrl *cbsController) ControllerGetCapabilities(ctx context.Context, req *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+// ControllerGetCapabilities xxx
+func (ctrl *cbsController) ControllerGetCapabilities(ctx context.Context, req *csi.ControllerGetCapabilitiesRequest) (
+	*csi.ControllerGetCapabilitiesResponse, error) {
 	return &csi.ControllerGetCapabilitiesResponse{
 		Capabilities: []*csi.ControllerServiceCapability{
 			{
@@ -538,26 +574,36 @@ func (ctrl *cbsController) ControllerGetCapabilities(ctx context.Context, req *c
 	}, nil
 }
 
-func (ctrl *cbsController) ValidateVolumeCapabilities(context.Context, *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
+// ValidateVolumeCapabilities xxx
+func (ctrl *cbsController) ValidateVolumeCapabilities(context.Context, *csi.ValidateVolumeCapabilitiesRequest) (
+	*csi.ValidateVolumeCapabilitiesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
+// ListVolumes xxx
 func (ctrl *cbsController) ListVolumes(context.Context, *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
+// GetCapacity xxx
 func (ctrl *cbsController) GetCapacity(context.Context, *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
-func (ctrl *cbsController) CreateSnapshot(context.Context, *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
+// CreateSnapshot xxx
+func (ctrl *cbsController) CreateSnapshot(context.Context, *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse,
+	error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
-func (ctrl *cbsController) DeleteSnapshot(context.Context, *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
+// DeleteSnapshot xxx
+func (ctrl *cbsController) DeleteSnapshot(context.Context, *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse,
+	error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }
 
-func (ctrl *cbsController) ListSnapshots(context.Context, *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
+// ListSnapshots xxx
+func (ctrl *cbsController) ListSnapshots(context.Context, *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse,
+	error) {
 	return nil, status.Error(codes.Unimplemented, "")
 }

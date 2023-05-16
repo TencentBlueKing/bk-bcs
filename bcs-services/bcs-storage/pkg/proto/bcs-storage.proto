@@ -1,0 +1,6942 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+syntax = "proto3";
+
+package storage;
+
+option go_package = "./;storage";
+
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/duration.proto";
+
+
+option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
+  info : {
+    title : "Storage API Doc"
+    version : "0.1.0"
+  };
+  schemes : HTTP
+  consumes : "application/json"
+  produces : "application/json"
+};
+
+service Storage{
+  // **** Alarm(告警) ****
+  rpc PostAlarm(PostAlarmRequest) returns(PostAlarmResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/alarms"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "接收告警数据，并保存到db中"
+      summary : "接收告警数据"
+    };
+  }
+  rpc ListAlarm(ListAlarmRequest) returns(ListAlarmResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/alarms"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据条件查询告警数据，并返回查询结果"
+      summary : "查询告警数据"
+    };
+  }
+
+  // ****  Cluster Config(集群配置) ****
+  rpc GetClusterConfig(GetClusterConfigRequest) returns(GetClusterConfigResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/cluster_config/clusters/{clusterId}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据指定的clusterId，查询集群配置"
+      summary : "查询集群配置"
+    };
+  }
+  rpc PutClusterConfig(PutClusterConfigRequest) returns(PutClusterConfigResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/cluster_config/clusters/{clusterId}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId 创建或修改集群配置"
+      summary : "创建或修改集群配置"
+    };
+  }
+  rpc GetServiceConfig(GetServiceConfigRequest) returns(GetServiceConfigResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/cluster_config/services/{service}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据服务查询配置"
+      summary : "查询服务配置"
+    };
+  }
+  rpc GetStableVersion(GetStableVersionRequest) returns(GetStableVersionResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/cluster_config/versions/{service}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据service，查询对应的稳定版本"
+      summary : "获取稳定版本"
+    };
+  }
+  rpc PutStableVersion(PutStableVersionRequest) returns(PutStableVersionResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/cluster_config/versions/{service}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据service创建稳定版本"
+      summary : "创建稳定版本"
+    };
+  }
+
+  // **** dynamic(动态) *****
+  /*
+     k8s namespace resources
+   */
+  rpc GetK8SNamespaceResources(GetNamespaceResourcesRequest) returns(GetNamespaceResourcesResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询命名空间，并返回查询结果"
+      summary : "查询命名空间资源"
+    };
+  }
+  rpc PutK8SNamespaceResources(PutNamespaceResourcesRequest) returns(PutNamespaceResourcesResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，修改或新增命名空间资源，并返回操作结果"
+      summary : "修改或新增命名空间资源"
+    };
+  }
+  rpc DeleteK8SNamespaceResources(DeleteNamespaceResourcesRequest) returns(DeleteNamespaceResourcesResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，删除命名空间资源，并返回操作结果"
+      summary : "删除命名空间资源"
+    };
+  }
+  rpc ListK8SNamespaceResources(ListNamespaceResourcesRequest) returns(ListNamespaceResourcesResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询命名空间，并返回list"
+      summary : "批量查询命名空间资源"
+    };
+  }
+  rpc DeleteBatchK8SNamespaceResource(DeleteBatchNamespaceResourceRequest) returns(DeleteBatchNamespaceResourceResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/k8s/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，批量删除命名空间资源，并返回操作结果"
+      summary : "批量删除命名空间资源"
+    };
+  }
+  // k8s cluster resources
+  rpc GetK8SClusterResources(GetClusterResourcesRequest) returns(GetClusterResourcesResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}/{resourceName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询集群资源，并返回查询结果"
+      summary : "查询集群资源"
+    };
+  }
+  rpc PutK8SClusterResources(PutClusterResourcesRequest) returns(PutClusterResourcesResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}/{resourceName}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，修改或新增集群资源信息，并返回操作结果"
+      summary : "修改或新增集群资源"
+    };
+  }
+  rpc DeleteK8SClusterResources(DeleteClusterResourcesRequest) returns(DeleteClusterResourcesResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}/{resourceName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，删除集群资源，并返回操作结果"
+      summary : "删除集群资源"
+    };
+  }
+  rpc ListK8SClusterResources(ListClusterResourcesRequest) returns(ListClusterResourcesResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询集群资源，并返回list"
+      summary : "批量查询集群资源"
+    };
+  }
+  rpc ListK8SClusterAllResources(ListClusterResourcesRequest) returns(ListClusterResourcesResponse){
+    option (google.api.http) = {
+      // k8s all resources
+      get: "/bcsstorage/v2/k8s/dynamic/all_resources/clusters/{clusterId}/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询集群资源，并返回list"
+      summary : "批量查询集群资源"
+    };
+  }
+  rpc DeleteBatchK8SClusterResource(DeleteBatchClusterResourceRequest) returns(DeleteBatchClusterResourceResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/k8s/dynamic/cluster_resources/clusters/{clusterId}/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，批量删除集群资源，并返回操作结果"
+      summary : "批量删除集群资源"
+    };
+  }
+  rpc DeleteBatchK8SClusterAllResource(DeleteBatchClusterResourceRequest) returns(DeleteBatchClusterResourceResponse){
+    option (google.api.http) = {
+      // k8s all resources
+      delete: "/bcsstorage/v2/k8s/dynamic/all_resources/clusters/{clusterId}/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，批量删除集群资源，并返回操作结果"
+      summary : "批量删除集群资源"
+    };
+  }
+  // Custom resources OPs
+  rpc GetCustomResources(GetCustomResourcesRequest) returns(GetCustomResourcesResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/dynamic/customresources/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据resourceType，查询自定义资源，并返回查询结果"
+      summary : "查询自定义资源"
+    };
+  }
+  rpc DeleteCustomResources(DeleteCustomResourcesRequest) returns(DeleteCustomResourcesResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/dynamic/customresources/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据resourceType，删除自定义资源，并返回操作结果"
+      summary : "删除自定义资源"
+    };
+  }
+  rpc PutCustomResources(PutCustomResourcesRequest) returns(PutCustomResourcesResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/dynamic/customresources/{resourceType}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据resourceType，修改或新增定义资源，并返回操作结果"
+      summary : "修改或新增自定义资源"
+    };
+  }
+  rpc CreateCustomResourcesIndex(CreateCustomResourcesIndexRequest) returns(CreateCustomResourcesIndexResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/dynamic/customresources/{resourceType}/index/{indexName}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据resourceType，创建自定义资源索引，并返回操作结果"
+      summary : "创建自定义资源索引"
+    };
+  }
+  rpc DeleteCustomResourcesIndex(DeleteCustomResourcesIndexRequest) returns(DeleteCustomResourcesIndexResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/dynamic/customresources/{resourceType}/index/{indexName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据resourceType，删除自定义资源索引，并返回操作结果"
+      summary : "删除自定义资源索引"
+    };
+  }
+
+  // **** dynamic-query(动态查询) ****
+  rpc GetK8SIPPoolStatic(IPPoolStaticRequest) returns(IPPoolStaticResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/ippoolstatic"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询静态IP池，并返回操作结果"
+      summary : "查询k8s静态IP池"
+    };
+  }
+  rpc PostK8SIPPoolStatic(IPPoolStaticRequest) returns(IPPoolStaticResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/ippoolstatic"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询k8s静态IP池，并返回操作结果"
+      summary : "查询k8s静态IP池"
+    };
+  }
+  rpc GetK8SIPPoolStaticDetail(IPPoolStaticDetailRequest) returns(IPPoolStaticDetailResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/ippoolstaticdetail"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询k8s详细静态IP池，并返回操作结果"
+      summary : "查询k8s详细静态IP池"
+    };
+  }
+  rpc PostK8SIPPoolStaticDetail(IPPoolStaticDetailRequest) returns(IPPoolStaticDetailResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/ippoolstaticdetail"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询k8s详细静态IP池，并返回操作结果"
+      summary : "查询k8s详细静态IP池"
+    };
+  }
+  /* k8s */
+  rpc GetPod(PodRequest) returns(PodResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/pod"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询pod，并返回操作结果"
+      summary : "查询pod"
+    };
+  }
+  rpc PostPod(PodRequest) returns(PodResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/pod"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询pod，并返回操作结果"
+      summary : "查询pod"
+    };
+  }
+  rpc GetReplicaSet(ReplicaSetRequest) returns(ReplicaSetResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/replicaset"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询ReplicaSet，并返回操作结果"
+      summary : "查询ReplicaSet"
+    };
+  }
+  rpc PostReplicaSet(ReplicaSetRequest) returns(ReplicaSetResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/replicaset"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询ReplicaSet，并返回操作结果"
+      summary : "查询ReplicaSet"
+    };
+  }
+  rpc GetDeploymentK8S(DeploymentK8SRequest) returns(DeploymentK8SResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/deployment"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询deployment，并返回操作结果"
+      summary : "查询deployment"
+    };
+  }
+  rpc PostDeploymentK8S(DeploymentK8SRequest) returns(DeploymentK8SResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/deployment"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询deployment，并返回操作结果"
+      summary : "查询deployment"
+    };
+  }
+  rpc GetServiceK8S(ServiceK8SRequest) returns(ServiceK8SResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/service"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询service，并返回操作结果"
+      summary : "查询service"
+    };
+  }
+  rpc PostServiceK8S(ServiceK8SRequest) returns(ServiceK8SResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/service"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询service，并返回操作结果"
+      summary : "查询service"
+    };
+  }
+  rpc GetConfigMapK8S(ConfigMapK8SRequest) returns(ConfigMapK8SResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/configmap"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询configMap，并返回操作结果"
+      summary : "查询configMap"
+    };
+  }
+  rpc PostConfigMapK8S(ConfigMapK8SRequest) returns(ConfigMapK8SResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/configmap"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询configMap，并返回操作结果"
+      summary : "查询configMap"
+    };
+  }
+  rpc GetSecretK8S(SecretK8SRequest) returns(SecretK8SResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/secret"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询secret，并返回操作结果"
+      summary : "查询secret"
+    };
+  }
+  rpc PostSecretK8S(SecretK8SRequest) returns(SecretK8SResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/secret"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询secret，并返回操作结果"
+      summary : "查询secret"
+    };
+  }
+  rpc GetEndpointsK8S(EndpointsK8SRequest) returns(EndpointsK8SResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/endpoints"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询endpoints，并返回操作结果"
+      summary : "查询endpoints"
+    };
+  }
+  rpc PostEndpointsK8S(EndpointsK8SRequest) returns(EndpointsK8SResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/endpoints"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询endpoints，并返回操作结果"
+      summary : "查询endpoints"
+    };
+  }
+  rpc GetIngress(IngressRequest) returns(IngressResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/ingress"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询ingress，并返回操作结果"
+      summary : "查询ingress"
+    };
+  }
+  rpc PostIngress(IngressRequest) returns(IngressResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/ingress"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询ingress，并返回操作结果"
+      summary : "查询ingress"
+    };
+  }
+  rpc GetNamespaceK8S(NamespaceK8SRequest) returns(NamespaceK8SResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/namespace"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询命名空间，并返回操作结果"
+      summary : "查询命名空间"
+    };
+  }
+  rpc PostNamespaceK8S(NamespaceK8SRequest) returns(NamespaceK8SResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/namespace"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询命名空间，并返回操作结果"
+      summary : "查询命名空间"
+    };
+  }
+  rpc GetNode(NodeRequest) returns(NodeResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/node"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询node，并返回操作结果"
+      summary : "查询node"
+    };
+  }
+  rpc PostNode(NodeRequest) returns(NodeResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/node"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询node，并返回操作结果"
+      summary : "查询node"
+    };
+  }
+  rpc GetDaemonSet(DaemonSetRequest) returns(DaemonSetResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/daemonset"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询daemonSet，并返回操作结果"
+      summary : "查询daemonSet"
+    };
+  }
+  rpc PostDaemonSet(DaemonSetRequest) returns(DaemonSetResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/daemonset"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询daemonSet，并返回操作结果"
+      summary : "查询daemonSet"
+    };
+  }
+  rpc GetJob(JobRequest) returns(JobResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/job"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询job，并返回操作结果"
+      summary : "查询job"
+    };
+  }
+  rpc PostJob(JobRequest) returns(JobResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/job"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询job，并返回操作结果"
+      summary : "查询job"
+    };
+  }
+  rpc GetStatefulSet(StatefulSetRequest) returns(StatefulSetResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/statefulset"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询statefulSet，并返回操作结果"
+      summary : "查询statefulSet"
+    };
+  }
+  rpc PostStatefulSet(StatefulSetRequest) returns(StatefulSetResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/query/k8s/dynamic/clusters/{clusterId}/statefulset"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询statefulSet，并返回操作结果"
+      summary : "查询statefulSet"
+    };
+  }
+
+  // **** dynamic-watch(watch) *****
+  rpc WatchDynamic(WatchDynamicRequest) returns(stream WatchDynamicResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/dynamic/watch/{clusterId}/{resourceType}"
+      body: "option"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，返回watch结果"
+      summary : "watch dynamic"
+    };
+  }
+  rpc WatchContainer(WatchContainerRequest) returns(stream WatchContainerResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/dynamic/watch/containers/{clusterId}"
+      body: "option"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，返回watch结果"
+      summary : "watch container"
+    };
+  }
+
+  // **** events(事件) *****
+  rpc PutEvent(PutEventRequest) returns(PutEventResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/events"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建事件，并返回操作结果"
+      summary : "创建事件"
+    };
+  }
+  rpc ListEvent(ListEventRequest) returns(ListEventResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/events"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询事件，并返回操作结果"
+      summary : "查询事件"
+    };
+  }
+  rpc WatchEvent(WatchEventRequest) returns(stream WatchEventResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/events/watch"
+      body: "option"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，watch事件，并返回操作结果"
+      summary : "watch事件"
+    };
+  }
+
+  // **** host config(主机配置) *****
+  rpc GetHost(GetHostRequest) returns(GetHostResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/host/{ip}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据ip，查询主机配置，并返回操作结果"
+      summary : "查询主机配置"
+    };
+  }
+  rpc PutHost(PutHostRequest) returns(PutHostResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/host/{ip}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据ip，创建主机配置，并返回操作结果"
+      summary : "创建主机配置"
+    };
+  }
+  rpc DeleteHost(DeleteHostRequest) returns(DeleteHostResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/host/{ip}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据ip，删除主机配置，并返回操作结果"
+      summary : "删除主机配置"
+    };
+  }
+  rpc ListHost(ListHostRequest) returns(ListHostResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/host/clusters/{clusterId}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询主机配置，并返回操作结果"
+      summary : "查询主机配置"
+    };
+  }
+  rpc PutClusterRelation(PutClusterRelationRequest) returns(PutClusterRelationResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/host/clusters/{clusterId}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，修改集群关系(先清除所有集群关系，再去把当前的关系写入db中)，并返回操作结果"
+      summary : "修改集群关系(覆盖)"
+    };
+  }
+  rpc PostClusterRelation(PostClusterRelationRequest) returns(PostClusterRelationResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/host/clusters/{clusterId}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，修改集群关系(直接新增，不会清除历史集群关系)，并返回操作结果"
+      summary : "修改集群关系(增量)"
+    };
+  }
+
+  // **** metric(指标) ****
+  rpc GetMetric(GetMetricRequest) returns(GetMetricResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/metric/clusters/{clusterId}/namespaces/{namespace}/{type}/{name}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询指标(路径)，并返回操作结果"
+      summary : "查询指标(路径)"
+    };
+  }
+  rpc PutMetric(PutMetricRequest) returns(PutMetricResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/metric/clusters/{clusterId}/namespaces/{namespace}/{type}/{name}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，修改指标，并返回操作结果"
+      summary : "修改指标"
+    };
+  }
+  rpc DeleteMetric(DeleteMetricRequest) returns(DeleteMetricResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/metric/clusters/{clusterId}/namespaces/{namespace}/{type}/{name}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，删除指标，并返回操作结果"
+      summary : "删除指标"
+    };
+  }
+  rpc QueryMetric(QueryMetricRequest) returns(QueryMetricResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/metric/clusters/{clusterId}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询指标(带参数)，并返回操作结果"
+      summary : "查询指标"
+    };
+  }
+  rpc ListMetricTables(ListMetricTablesRequest) returns(ListMetricTablesResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/metric/clusters"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指标表名，并返回操作结果(无条件查询)"
+      summary : "查询指标表名"
+    };
+  }
+
+  // **** metric watch ****
+  rpc WatchMetric(WatchMetricRequest) returns(stream WatchMetricResponse){
+    option (google.api.http) = {
+      post: "/bcsstorage/v2/metric/watch/{clusterId}/{type}"
+      body: "option"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，watch指标，并返回watch结果"
+      summary : "watch指标"
+    };
+  }
+
+  //**** watch k8s ****
+  // k8s
+  rpc K8SGetWatchResource(K8SGetWatchResourceRequest) returns(K8SGetWatchResourceResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，查询watch资源，并返回操作结果"
+      summary : "查询watch资源"
+    };
+  }
+  rpc K8SPutWatchResource(K8SPutWatchResourceRequest) returns(K8SPutWatchResourceResponse){
+    option (google.api.http) = {
+      put: "/bcsstorage/v2/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，修改watch资源，并返回操作结果"
+      summary : "修改watch资源"
+    };
+  }
+  rpc K8SDeleteWatchResource(K8SDeleteWatchResourceRequest) returns(K8SDeleteWatchResourceResponse){
+    option (google.api.http) = {
+      delete: "/bcsstorage/v2/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}/{resourceName}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，删除watch资源，并返回操作结果"
+      summary : "删除watch资源"
+    };
+  }
+  rpc K8SListWatchResource(K8SListWatchResourceRequest) returns(K8SListWatchResourceResponse){
+    option (google.api.http) = {
+      get: "/bcsstorage/v2/k8s/watch/clusters/{clusterId}/namespaces/{namespace}/{resourceType}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据clusterId，批量查询watch资源，并返回操作结果"
+      summary : "批量查询watch资源"
+    };
+  }
+}
+
+/*
+  alarm.proto
+*/
+
+message Alarm{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Alarm"
+      description : "告警数据"
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  }];
+
+  string message = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "告警信息"
+  }];
+
+  string source = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "source",
+    description: "告警来源"
+  }];
+
+  string module = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "module",
+    description: "告警模块"
+  }];
+
+  string type = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "type",
+    description: "告警类型"
+  }];
+
+  int64 receivedTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "receivedTime",
+    description: "告警时间"
+  }];
+
+  google.protobuf.Struct data = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "上报的数据"
+  }];
+}
+
+message PostAlarmRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PostAlarmRequest"
+      description : "接收告警数据请求，并保存到mongodb中"
+      required: [
+        "clusterId",
+        "namespace"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string message = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "告警信息"
+  }];
+
+  string source = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "source",
+    description: "告警来源"
+  }];
+
+  string module = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "module",
+    description: "告警模块"
+  }];
+
+  string type = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "type",
+    description: "告警类型"
+  }];
+
+  int64 receivedTime = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "receivedTime",
+    description: "告警时间"
+  }];
+
+  google.protobuf.Struct data = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "上报的数据"
+  }];
+}
+
+message PostAlarmResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PostAlarmResponse"
+      description : "返回alarm保存结果"
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ListAlarmRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListAlarmRequest"
+      description : "查询告警数据请求"
+      required: [
+        "clusterId",
+        "namespace"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string source = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "source",
+    description: "告警来源"
+  }];
+
+  string module = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "module",
+    description: "告警模块"
+  }];
+
+  string type = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "type",
+    description: "告警类型"
+  }];
+
+  repeated string fields = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "fields",
+    description: "额外字段"
+  }];
+
+  int64 timeBegin = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "timeBegin",
+    description: "开始时间"
+  }];
+
+  int64 timeEnd = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "timeEnd",
+    description: "结束时间"
+  }];
+
+  uint64 offset = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message ListAlarmResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListAlarmResponse"
+      description : "返回告警数据查询结果"
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  google.protobuf.Struct extra = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extra",
+    description : "扩展字段"
+  }];
+}
+
+/*
+cluster-config.proto
+*/
+
+message ClusterConfig {
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ClusterConfig"
+      description : "集群配置"
+      required: [
+      ]
+    }
+  };
+
+  string clusterId = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string service = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "service",
+    description : "服务"
+  }];
+}
+
+message GetClusterConfigRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterConfigRequest"
+      description : "查询集群配置请求"
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string service = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "service",
+    description : "服务"
+  }];
+}
+
+
+message ConfigSet{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ConfigSet"
+      description : "配置集合"
+      required: [
+      ]
+    }
+  };
+
+  google.protobuf.Struct common = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "common",
+    description : "common"
+  }];
+
+  google.protobuf.Struct conf = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "conf",
+    description : "conf"
+  }];
+}
+
+message ClusterSet{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ClusterSet"
+      description : "集群集合"
+      required: [
+      ]
+    }
+  };
+
+  string clusterId = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  ConfigSet clusterConfig = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterConfig",
+    description : "集群配置"
+  }];
+}
+
+message DeployConfig{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeployConfig"
+      description : "部署配置"
+      required: [
+      ]
+    }
+  };
+
+  string service = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "service",
+    description : "服务"
+  }];
+
+  ConfigSet serviceConfig = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "serviceConfig",
+    description : "服务配置"
+  }];
+
+  repeated ClusterSet clusters = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusters",
+    description : "clusters"
+  }];
+
+  string stableVersion = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "stableVersion",
+    description : "稳定版本"
+  }];
+
+}
+
+message GetClusterConfigResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterConfigResponse"
+      description : "返回查询集群配置结果"
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  DeployConfig data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message BcsStorageCluster{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "BcsStorageCluster",
+      description : "集群信息",
+      required: [
+      ]
+    }
+  };
+
+  string service = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "service",
+    description : "服务"
+  }];
+
+  repeated  string zkIP = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "zkIP",
+    description : "zk IP地址"
+  }];
+
+  repeated string masterIP = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "masterIP",
+    description : "master IP地址"
+  }];
+
+  repeated string dnsIP = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "dnsIP",
+    description : "dns IP地址"
+  }];
+
+  string city = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "city",
+    description : "城市"
+  }];
+
+  string jfrogUrl = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "jfrogUrl",
+    description : ""
+  }];
+
+  bool needNat = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "needNat",
+    description : ""
+  }];
+}
+
+message PutClusterConfigRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutClusterConfigRequest"
+      description : "创建或修改集群配置请求"
+      required: [
+        "clusterId",
+        "service"
+      ]
+    }
+  };
+
+  string clusterId = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string service = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "service",
+    description : "服务"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  repeated  string zkIP = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "zkIP",
+    description : "zk IP地址"
+  }];
+
+  repeated string masterIP = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "masterIP",
+    description : "master IP地址"
+  }];
+
+  repeated string dnsIP = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "dnsIP",
+    description : "dns IP地址"
+  }];
+
+  string city = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "city",
+    description : "城市"
+  }];
+
+  string jfrogUrl = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "jfrogUrl",
+    description : ""
+  }];
+
+  bool needNat = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "needNat",
+    description : ""
+  }];
+}
+
+message PutClusterConfigResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutClusterConfigResponse"
+      description : "返回集群配置创建或修改结果"
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  DeployConfig data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message GetServiceConfigRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetServiceConfigRequest"
+      description : "查询服务配置请求"
+      required: [
+        "service"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX(与clusterIdNot互斥，若，使用本字段请勿使用clusterIdNot)"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string clusterIdNot = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterIdNot",
+    description : "与clusterId互斥，若，使用本字段请勿使用clusterId"
+  }];
+
+  string service = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "service",
+    description : "服务"
+  }];
+}
+
+message GetServiceConfigResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetServiceConfigResponse"
+      description : "返回服务配置查询结果"
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  DeployConfig data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message GetStableVersionRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetStableVersionRequest"
+      description : "查询稳定版本请求头"
+      required: [
+        "service"
+      ]
+    }
+  };
+
+  string service = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "service",
+    description: "服务名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message GetStableVersionResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetStableVersionResponse"
+      description : "返回稳定版本查询结果"
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  string data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutStableVersionRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutStableVersionRequest",
+      description : "创建稳定版本请求头",
+      required: [
+        "service",
+        "version"
+      ]
+    }
+  };
+
+  string service = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "service",
+    description: "服务"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string version = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version",
+    description: "版本"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message PutStableVersionResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutStableVersionResponse",
+      description : "返回稳定版本创建结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  string data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+/*
+  dynamic.proto
+*/
+
+message Resources{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Resources",
+      description : "资源",
+      required: [
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "资源名称"
+  }];
+}
+
+message GetNamespaceResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceResourcesRequest",
+      description : "查询命名空间资源请求头",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string extra = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extra",
+    description: "扩展字段"
+  }];
+
+  string labelSelector = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labelSelector",
+    description: "选择器"
+  }];
+
+  int64 updateTimeBefore = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTimeBefore",
+    description: "更新时间之前"
+  }];
+
+  uint64 offset = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+
+  repeated string fields = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "fields",
+    description: "额外字段"
+  }];
+}
+
+message GetNamespaceResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetNamespaceResourcesResponse",
+      description : "返回命名空间资源查询结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutNamespaceResourcesRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutNamespaceResourcesRequest",
+      description : "修改或新增命名空间资源请求头",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string extra = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extra",
+    description: "扩展字段"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "动态数据"
+  }];
+}
+
+message PutNamespaceResourcesResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutNamespaceResourcesResponse",
+      description : "返回命名空间资源修改或新增结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DeleteNamespaceResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteNamespaceResourcesRequest",
+      description : "删除命名空间资源请求头",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message DeleteNamespaceResourcesResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteNamespaceResourcesResponse",
+      description : "返回命名空间资源删除结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ListNamespaceResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNamespaceResourcesRequest",
+      description : "批量查询命名空间资源请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string extra = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extra",
+    description: "扩展字段"
+  }];
+
+  string labelSelector = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labelSelector",
+    description: "选择器"
+  }];
+
+  int64 updateTimeBefore = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTimeBefore",
+    description: "更新时间之前"
+  }];
+
+  uint64 offset = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+
+  repeated string fields = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "fields",
+    description: "额外字段"
+  }];
+}
+
+message ListNamespaceResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNamespaceResourcesResponse",
+      description : "查询cluster命名空间响应头，返回查询结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DeleteBatchNamespaceResourceRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteBatchNamespaceResourceRequest",
+      description : "批量删除命名空间资源请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  int64 updateTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "updateTimeBegin",
+    description : "开始更新时间"
+  }];
+
+  int64  updateTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "updateTimeEnd",
+    description : "结束更新时间"
+  }];
+}
+
+message DeleteBatchNamespaceResourceResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteBatchNamespaceResourceResponse",
+      description : "返回命名空间资源批量删除结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message GetClusterResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterResourcesRequest",
+      description : "查询集群资源请求",
+      required: [
+        "clusterId",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceType = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string extra = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extra",
+    description: "扩展字段"
+  }];
+
+  string labelSelector = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labelSelector",
+    description: "选择器"
+  }];
+
+  int64 updateTimeBefore = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTimeBefore",
+    description: "更新时间之前"
+  }];
+
+  uint64 offset = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+
+  repeated string fields = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "fields",
+    description: "额外字段"
+  }];
+}
+
+message GetClusterResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterResourcesResponse",
+      description : "返回集群资源查询结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutClusterResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutClusterResourcesRequest",
+      description : "修改或新增集群资源请求",
+      required: [
+        "clusterId",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceType = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string extra = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extra",
+    description: "扩展字段"
+  }];
+
+  google.protobuf.Struct data = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "动态数据"
+  }];
+}
+
+message PutClusterResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutClusterResourcesResponse",
+      description : "返回集群资源修改或新增结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DeleteClusterResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteClusterResourcesRequest",
+      description : "删除集群资源请求",
+      required: [
+        "clusterId",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceType = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message DeleteClusterResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteClusterResourcesResponse",
+      description : "返回集群资源删除结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ListClusterResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterResourcesRequest",
+      description : "批量查询集群资源请求",
+      required: [
+        "clusterId",
+        "resourceType"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceType = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string extra = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extra",
+    description: "扩展字段"
+  }];
+
+  string labelSelector = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labelSelector",
+    description: "选择器"
+  }];
+
+  int64 updateTimeBefore = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTimeBefore",
+    description: "更新时间之前"
+  }];
+
+  uint64 offset = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+
+  repeated string fields = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "fields",
+    description: "额外字段"
+  }];
+}
+
+message ListClusterResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListClusterResourcesResponse",
+      description : "返回集群资源批量查询结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DeleteBatchClusterResourceRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteBatchClusterResourceRequest",
+      description : "批量删除集群资源请求",
+      required: [
+        "clusterId",
+        "resourceType"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceType = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  int64  updateTimeBegin = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "updateTimeBegin",
+    description : "开始更新时间"
+  }];
+
+  int64  updateTimeEnd = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "updateTimeEnd",
+    description : "结束更新时间"
+  }];
+}
+
+message DeleteBatchClusterResourceResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteBatchClusterResourceResponse",
+      description : "返回集群资源批量删除结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message GetCustomResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetCustomResourcesRequest",
+      description : "查询自定义资源请求",
+      required: [
+        "resourceType"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "命名空间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "资源名称"
+  }];
+
+  string extra = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extra",
+    description: "扩展字段"
+  }];
+
+  string labelSelector = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labelSelector",
+    description: "选择器"
+  }];
+
+  int64 updateTimeBefore = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTimeBefore",
+    description: "更新时间之前"
+  }];
+
+  uint64 offset = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+
+  repeated string fields = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "fields",
+    description: "额外字段"
+  }];
+}
+
+message GetCustomResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetCustomResourcesResponse",
+      description : "返回自定义资源查询结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  int64 total = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "total",
+    description : ""
+  }];
+
+  int64 pageSize = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "pageSize",
+    description : ""
+  }];
+
+  int64 offset = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description : ""
+  }];
+}
+
+message DeleteCustomResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteCustomResourcesRequest",
+      description : "删除自定义资源请求",
+      required: [
+        "resourceType"
+      ]
+    }
+  };
+
+  string resourceType = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message DeleteCustomResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteCustomResourcesResponse",
+      description : "返回自定义资源删除结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutCustomResourcesRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutCustomResourcesRequest",
+      description : "新增或修改自定义资源请求",
+      required: [
+        "resourceType"
+      ]
+    }
+  };
+
+  string resourceType = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  google.protobuf.Struct data = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "数据"
+  }];
+}
+
+message PutCustomResourcesResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutCustomResourcesResponse",
+      description : "返回自定义资源新增或修改结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message CreateCustomResourcesIndexRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateCustomResourcesIndexRequest",
+      description : "创建自定义资源索引请求",
+      required: [
+        "resourceType"
+      ]
+    }
+  };
+
+  string resourceType = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string indexName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "indexName",
+    description: "索引名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  google.protobuf.Struct data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "数据"
+  }];
+}
+
+message CreateCustomResourcesIndexResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateCustomResourcesIndexResponse",
+      description : "返回自定义资源索引创建结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DeleteCustomResourcesIndexRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteCustomResourcesIndexRequest",
+      description : "删除自定义资源索引请求",
+      required: [
+        "resourceType"
+      ]
+    }
+  };
+
+  string resourceType = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string indexName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "indexName",
+    description: "索引名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message DeleteCustomResourcesIndexResponse{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteCustomResourcesIndexResponse",
+      description : "返回自定义资源索引删除结果",
+      required: [
+        "code",
+        "message",
+        "data"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+/*
+  dynamic-query.proto
+*/
+message IPPoolStatic{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "IPPoolStatic",
+      description : "IP Pool Static",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message IPPoolStaticRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "IPPoolStaticRequest",
+      description : "查询静态IP池请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  repeated string field = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message IPPoolStaticResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "IPPoolStaticResponse",
+      description : "返回静态IP池查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message IPPoolStaticDetail{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "IPPoolStaticDetail",
+      description : "",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message IPPoolStaticDetailRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "IPPoolStaticDetailRequest",
+      description : "查询详细静态IP池请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  repeated string field = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message IPPoolStaticDetailResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "IPPoolStaticDetailResponse",
+      description : "返回详细静态IP池查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message Pod{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Pod",
+      description : "pod",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message PodRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PodRequest",
+      description : "查询pod请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string hostIP = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "hostIP",
+    description : "主机IP"
+  }];
+
+  string podIP = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "podIP",
+    description : "Pod IP"
+  }];
+
+  string status = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "status",
+    description : "状态"
+  }];
+
+  string startTimeBegin = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "startTimeBegin",
+    description : "开始启动时间"
+  }];
+
+  string startTimeEnd = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "startTimeEnd",
+    description : "结束启动时间"
+  }];
+
+  repeated string field = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message PodResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PodResponse",
+      description : "返回pod查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ReplicaSet{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ReplicaSet",
+      description : "replicaSet",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message ReplicaSetRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ReplicaSetRequest",
+      description : "查询ReplicaSet请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string replicas = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "replicas",
+    description : "实例数"
+  }];
+
+  string availableReplicas = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "availableReplicas",
+    description : "存活实例数"
+  }];
+
+  string readyReplicas = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "readyReplicas",
+    description : "准备状态实例数"
+  }];
+
+  string createTimeBegin = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  repeated string field = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message ReplicaSetResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ReplicaSetResponse",
+      description : "返回ReplicaSet查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DeploymentK8S{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeploymentK8S",
+      description : "DeploymentK8S",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message DeploymentK8SRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeploymentK8SRequest",
+      description : "查询deployment请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string replicas = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "replicas",
+    description : "实例个数"
+  }];
+
+  string availableReplicas = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "availableReplicas",
+    description : "存活实例个数"
+  }];
+
+  string updatedReplicas = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "updatedReplicas",
+    description : "已更新实例个数"
+  }];
+
+  string strategyType = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "strategyType",
+    description : "策略类型"
+  }];
+
+  string dnsPolicy = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "dnsPolicy",
+    description : "DNS策略"
+  }];
+
+  string restartPolicy = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "restartPolicy",
+    description : "重新拉起策略"
+  }];
+
+  string createTimeBegin = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  google.protobuf.Struct Data = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  repeated string field = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message DeploymentK8SResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeploymentK8SResponse",
+      description : "返回deployment查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ServiceK8S{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ServiceK8S",
+      description : "服务",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message ServiceK8SRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ServiceK8SRequest",
+      description : "查询service请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string clusterIP = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterIP",
+    description : "集群IP"
+  }];
+
+  string type = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  }];
+
+  string createTimeBegin = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  repeated string field = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message ServiceK8SResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ServiceK8SResponse",
+      description : "返回service查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ConfigMapK8S{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ConfigMapK8S",
+      description : "ConfigMapK8S",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message ConfigMapK8SRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ConfigMapK8SRequest",
+      description : "查询configMap请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string createTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  repeated string field = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message ConfigMapK8SResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ConfigMapK8SResponse",
+      description : "返回configMap查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message SecretK8S{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SecretK8S",
+      description : "secret",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message SecretK8SRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SecretK8SRequest",
+      description : "查询secret请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string createTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  string resourceName = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  repeated string field = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message SecretK8SResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SecretK8SResponse",
+      description : "返回secret查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message EndpointsK8S{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "EndpointsK8S",
+      description : "k8s endpoints",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message EndpointsK8SRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "EndpointsK8SRequest",
+      description : "查询endpoints请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  repeated string field = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message EndpointsK8SResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "EndpointsK8SResponse",
+      description : "返回endpoints查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message Ingress{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Ingress",
+      description : "ingress",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message IngressRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "IngressRequest",
+      description : "查询ingress请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string createTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  repeated string field = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message IngressResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "IngressResponse",
+      description : "返回ingress查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message Namespace {
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Namespace",
+      description : "命名空间",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message NamespaceK8SRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NamespaceK8SRequest",
+      description : "查询命名空间请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string status = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "status",
+    description : ""
+  }];
+
+  string createTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  repeated string field = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  string used = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "used",
+    description: "全量查询，当used=1，使用递归遍历所有资源，否则，仅查询命名空间下的资源"
+  }];
+
+  uint64 offset = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message NamespaceK8SResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NamespaceK8SResponse",
+      description : "返回命名空间查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message Node{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "node",
+      description : "节点",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message NodeRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NodeRequest",
+      description : "查询node请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string externalID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "externalID",
+    description : "外部ID"
+  }];
+
+  string createTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  repeated string field = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message NodeResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NodeResponse",
+      description : "返回node查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DaemonSet{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DaemonSet",
+      description : "daemonSet",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message DaemonSetRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DaemonSetRequest",
+      description : "查询daemonSet请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string createTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  string resourceVersion = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceVersion",
+    description : "资源版本"
+  }];
+
+  string uID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "uID",
+    description : "uuid"
+  }];
+
+  string generation = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "generation",
+    description : "generation"
+  }];
+
+  string templateGen = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "templateGen",
+    description : "模板"
+  }];
+
+  string strategyType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "strategyType",
+    description : "策略类型"
+  }];
+
+  repeated string field = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message DaemonSetResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DaemonSetResponse",
+      description : "返回daemonSet查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message Job{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Job",
+      description : "job",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message JobRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "JobRequest",
+      description : "查询job请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string createTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  string resourceVersion = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceVersion",
+    description : "资源版本"
+  }];
+
+  string uID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "uID",
+    description : "uuid"
+  }];
+
+  repeated string field = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message JobResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "JobResponse",
+      description : "返回job查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message StatefulSet{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "StatefulSet",
+      description : "statefulSet",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string resourceType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  }];
+
+  string createTime = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  string updateTime = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "创建时间"
+  }];
+
+  google.protobuf.Struct data = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string _id = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message StatefulSetRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "StatefulSetRequest",
+      description : "查询statefulSet",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string namespace = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string createTimeBegin = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeBegin",
+    description : "开始创建时间"
+  }];
+
+  string createTimeEnd = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTimeEnd",
+    description : "结束创建时间"
+  }];
+
+  string resourceVersion = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceVersion",
+    description : "资源版本"
+  }];
+
+  string uID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "uID",
+    description : "uuid"
+  }];
+
+  string generation = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "generation",
+    description : "generation"
+  }];
+
+  string podMPolicy = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "podMPolicy",
+    description : "Pod管理策略"
+  }];
+
+  string strategyType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "strategyType",
+    description : "策略类型"
+  }];
+
+  string serviceName = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "serviceName",
+    description : "服务名称"
+  }];
+
+  repeated string field = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message StatefulSetResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "StatefulSetResponse",
+      description : "返回statefulSet查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+/*
+  dynamic-watch.proto
+ */
+
+message WatchDynamicRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "WatchEventRequest",
+      description : "请求watch某个资源",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "集群ID(从哪个集群创建了该事件)"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string resourceType = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  StoreWatchOption option = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "option",
+    description : "option"
+  }];
+}
+
+message WatchDynamicResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "WatchEventResponse",
+      description : "返回watch结果",
+      required: [
+        "type"
+      ]
+    }
+  };
+
+  int32 type = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "type"
+  }];
+
+  google.protobuf.Struct value = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "value",
+    description : "value"
+  }];
+}
+
+message WatchContainerRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "WatchEventRequest",
+      description : "请求watch某个资源",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "集群ID(从哪个集群创建了该事件)"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  StoreWatchOption option = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "option",
+    description : "option"
+  }];
+}
+
+message WatchContainerResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "WatchEventResponse",
+      description : "返回watch结果",
+      required: [
+        "type"
+      ]
+    }
+  };
+
+  int32 type = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "type"
+  }];
+
+  google.protobuf.Struct value = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "value",
+    description : "value"
+  }];
+}
+
+/*
+  events.proto
+*/
+
+message EventExtraInfo{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "EventExtraInfo",
+      description : "事件的特定信息",
+      required: [
+      ]
+    }
+  };
+
+  string namespace = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string kind = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "kind",
+    description : "种类"
+  }];
+}
+
+message BcsStorageEvent {
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "BcsStorageEvent",
+      description : "事件",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "集群ID(从哪个集群创建了该事件)"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string kind = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "kind",
+    description : "资源，属于哪种资源(资源类型：pod、rc等)"
+  }];
+
+  EventExtraInfo extraInfo = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extraInfo",
+    description : "事件的特定信息"
+  }];
+
+  string createTime = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "createTime",
+    description : "事件时间(时间发生时间)"
+  }];
+
+  string env = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "env",
+    description : "环境(mesos or k8s)"
+  }];
+
+  string component = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "component",
+    description : "组件，哪个组件创建该事件(scheduler、controller等)"
+  }];
+
+  string type = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  }];
+
+  google.protobuf.Struct data = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string level = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "level",
+    description : "层级(normal、warning)"
+  }];
+
+  string eventTime = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "eventTime",
+    description : "事件时间(时间发生时间)"
+  }];
+
+  string describe = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "describe",
+    description : "事件细节"
+  }];
+
+  string _id = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "_id",
+    description : "mongodb id"
+  }];
+}
+
+message PutEventRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutEventRequest",
+      description : "创建事件请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string id = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "id",
+    description : "唯一标识"
+  }];
+
+  string env = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "env",
+    description : "环境(mesos or k8s)"
+  }];
+
+  string kind = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "kind",
+    description : "资源，属于哪种资源(资源类型：pod、rc等)"
+  }];
+
+  string level = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "level",
+    description : "层级(normal、warning)"
+  }];
+
+  string component = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "component",
+    description : "组件，哪个组件创建该事件(scheduler、controller等)"
+  }];
+
+  string type = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  }];
+
+  string describe = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "describe",
+    description : "事件细节"
+  }];
+
+  string clusterId = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "集群ID(从哪个集群创建了该事件)"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  int64 eventTime = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "eventTime",
+    description : "事件时间(时间发生时间)"
+  }];
+
+  EventExtraInfo extraInfo = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extraInfo",
+    description : "事件的特定信息"
+  }];
+
+  google.protobuf.Struct data = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  string field = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message PutEventResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutEventResponse",
+      description : "返回事件创建结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ListEventRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListEventRequest",
+      description : "查询事件请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string id = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "id",
+    description : "唯一标识"
+  }];
+
+  string env = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "env",
+    description : "环境(mesos or k8s)"
+  }];
+
+  string kind = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "kind",
+    description : "资源，属于哪种资源(资源类型：pod、rc等)"
+  }];
+
+  string level = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "level",
+    description : "层级(normal、warning)"
+  }];
+
+  string component = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "component",
+    description : "组件，哪个组件创建该事件(scheduler、controller等)"
+  }];
+
+  string type = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  }];
+
+  string clusterId = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "集群ID(从哪个集群创建了该事件)"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  EventExtraInfo extraInfo = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extraInfo",
+    description : "事件的特定信息"
+  }];
+
+  repeated string field = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "field",
+    description : "扩展字段"
+  }];
+
+  google.protobuf.Struct extra = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extra",
+    description : "辅助字段"
+  }];
+
+  google.protobuf.Struct extraContain = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extraContain",
+    description : "辅助字段条件"
+  }];
+
+  int64 timeBegin = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "timeBegin",
+    description : "开始时间"
+  }];
+
+  int64 timeEnd = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "timeEnd",
+    description : "结束时间"
+  }];
+
+  uint64 offset = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 length = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "length",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message ListEventResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListEventResponse",
+      description : "返回事件查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated BcsStorageEvent data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+
+  google.protobuf.Struct extra = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extra",
+    description : "扩展字段"
+  }];
+}
+
+message StoreWatchOption{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "StoreWatchOption",
+      description : "store watch参数",
+      required: [
+      ]
+    }
+  };
+
+  google.protobuf.Struct cond = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "selfOnly",
+    description : "selfOnly"
+  }];
+
+  bool selfOnly = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "selfOnly",
+    description : "selfOnly"
+  }];
+
+  uint64 maxEvents = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "maxEvents",
+    description : "maxEvents"
+  }];
+
+  google.protobuf.Duration timeout = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "timeout",
+    description : "timeout"
+  }];
+
+  string mustDiff = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "mustDiff",
+    description : "mustDiff"
+  }];
+}
+
+message WatchEventRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "WatchEventRequest",
+      description : "watch事件请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "集群ID(从哪个集群创建了该事件)"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  StoreWatchOption option = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "option",
+    description : "option"
+  }];
+}
+
+message WatchEventResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "WatchEventResponse",
+      description : "返回watch事件结果",
+      required: [
+        "type"
+      ]
+    }
+  };
+
+  int32 type = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "type"
+  }];
+
+  google.protobuf.Struct value = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "value",
+    description : "value"
+  }];
+}
+
+/*
+  host-config.proto
+*/
+
+message BcsStorageHost{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "BcsStorageHost",
+      description : "主机配置",
+      required: [
+        "ip",
+        "clusterId"
+      ]
+    }
+  };
+
+  string ip = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ip",
+    description : "IP地址"
+  }];
+
+  string  clusterId = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  google.protobuf.Struct data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message GetHostRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetHostRequest",
+      description : "查询主机配置请求",
+      required: [
+        "ip"
+      ]
+    }
+  };
+
+  string ip = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ip",
+    description : "IP地址"
+  },
+    (validate.rules).string = {ip : true}
+  ];
+}
+
+message GetHostResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetHostResponse",
+      description : "返回主机配置查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated BcsStorageHost data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutHostRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutHostRequest",
+      description : "创建主机配置请求",
+      required: [
+        "ip",
+        "clusterId"
+      ]
+    }
+  };
+
+  string ip = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ip",
+    description : "IP地址"
+  },
+    (validate.rules).string = {ip : true}
+  ];
+
+  string  clusterId = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  google.protobuf.Struct data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutHostResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutHostResponse",
+      description : "返回主机配置创建结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DeleteHostRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteHostRequest",
+      description : "删除主机配置请求",
+      required: [
+        "ip"
+      ]
+    }
+  };
+
+  string ip = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ip",
+    description : "主机IP地址"
+  },
+    (validate.rules).string = {ip : true}
+  ];
+}
+
+message DeleteHostResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteHostResponse",
+      description : "返回主机配置删除结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ListHostRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListHostRequest",
+      description : "查询主机配置请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+}
+
+message ListHostResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListHostResponse",
+      description : "返回主机配置查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated BcsStorageHost data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutClusterRelationRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutClusterRelationRequest",
+      description : "修改集群关系(覆盖)请求",
+      required: [
+        "clusterId",
+        "ips"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  repeated string ips = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ips",
+    description : "IP list"
+  },
+    (validate.rules).repeated = {min_items : 1}
+  ];
+}
+
+message PutClusterRelationResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutClusterRelationResponse",
+      description : "返回集群关系，覆盖修改结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PostClusterRelationRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PostClusterRelationRequest",
+      description : "修改集群关系(增量)请求",
+      required: [
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  repeated string ips = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ips",
+    description : "IP list"
+  },
+    (validate.rules).repeated = {min_items : 1}
+  ];
+}
+
+message PostClusterRelationResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PostClusterRelationResponse",
+      description : "返回集群关系，增量修改结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+/*
+  metric.proto
+*/
+
+message Metric{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Metric",
+      description : "指标",
+      required: [
+        "clusterId",
+        "namespace",
+        "type",
+        "name"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  }];
+
+  string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+}
+
+message GetMetricRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetMetricRequest",
+      description : "查询指标请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "type",
+        "name"
+      ]
+    }
+  };
+
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string extra = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extra",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message GetMetricResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetMetricResponse",
+      description : "返回指标查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated Metric data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutMetricRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutMetricRequest",
+      description : "修改指标请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "type",
+        "name"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string extra = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extra",
+    description : "额外字段"
+  }];
+
+  google.protobuf.Struct data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message PutMetricResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PutMetricResponse",
+      description : "返回指标修改结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message DeleteMetricRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteMetricRequest",
+      description : "删除指标请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "type",
+        "name"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message DeleteMetricResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteMetricResponse",
+      description : "返回指标删除结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message QueryMetricRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "QueryMetricRequest",
+      description : "查询指标请求",
+      required: [
+        "clusterId"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string type = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  }];
+
+  string name = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "名称"
+  }];
+
+  string extra = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "extra",
+    description : "扩展字段"
+  }];
+
+  uint64 offset = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "offset",
+    description: "查询偏移量"
+  },
+    (validate.rules).uint64.gte = 0
+  ];
+
+  uint64 limit = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "limit",
+    description: "查询限制数量"
+  },
+    (validate.rules).uint64.lte = 10
+  ];
+}
+
+message QueryMetricResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "QueryMetricResponse",
+      description : "返回指标查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated Metric data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message ListMetricTablesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListMetricTablesRequest",
+      description : "查询指标表名请求(无参数)",
+      required: [
+      ]
+    }
+  };
+}
+
+message ListMetricTablesResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListMetricTablesResponse",
+      description : "返回指标表名查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated string data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+/*
+  watch-metric.proto
+*/
+message WatchMetricRequest{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "WatchMetricRequest",
+      description : "watch metric",
+      required: [
+        "clusterId",
+        "type"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string type = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  StoreWatchOption option = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "option",
+    description : "option"
+  }];
+}
+
+message WatchMetricResponse{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "WatchMetricResponse",
+      description : "返回watch事件结果",
+      required: [
+        "type"
+      ]
+    }
+  };
+
+  int32 type = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "type",
+    description : "type"
+  }];
+
+  google.protobuf.Struct value = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "value",
+    description : "value"
+  }];
+}
+
+/*
+  watch-k8s.proto
+*/
+
+message WatchResource{
+
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SWatchResource",
+      description : "k8s的watch资源",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  }];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceType",
+    description : "资源类型"
+  }];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceName",
+    description : "资源名称"
+  }];
+}
+
+message K8SGetWatchResourceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SGetWatchResourceRequest",
+      description : "查询watch资源请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceType",
+    description : "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceName",
+    description : "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message K8SGetWatchResourceResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SGetWatchResourceResponse",
+      description : "返回watch资源查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message K8SPutWatchResourceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SPutWatchResourceRequest",
+      description : "修改watch资源请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceType",
+    description : "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceName",
+    description : "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  google.protobuf.Struct data = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message K8SPutWatchResourceResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SPutWatchResourceResponse",
+      description : "返回watch资源修改结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message K8SDeleteWatchResourceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SDeleteWatchResourceRequest",
+      description : "删除watch资源请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType",
+        "resourceName"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceType",
+    description : "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceName = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceName",
+    description : "资源名称"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message K8SDeleteWatchResourceResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SDeleteWatchResourceResponse",
+      description : "返回watch资源删除结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  google.protobuf.Struct data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}
+
+message K8SListWatchResourceRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SListWatchResourceRequest",
+      description : "批量查询watch资源请求",
+      required: [
+        "clusterId",
+        "namespace",
+        "resourceType"
+      ]
+    }
+  };
+
+  string  clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterId",
+    description : "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
+  },
+    (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+
+  string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "namespace",
+    description : "命名空间"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+
+  string resourceType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceType",
+    description : "资源类型"
+  },
+    (validate.rules).string = {min_len : 1}
+  ];
+}
+
+message K8SListWatchResourceResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "K8SListWatchResourceResponse",
+      description : "返回watch资源批量查询结果",
+      required: [
+        "code",
+        "result",
+        "message"
+      ]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description : "返回错误信息"
+  }];
+
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+
+  repeated string data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "数据"
+  }];
+}

@@ -14,36 +14,50 @@
 package store
 
 import (
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 	"github.com/prometheus/client_golang/prometheus"
-	"time"
 )
 
 const (
-	ObjectResourceService     = "service"
-	ObjectResourceDeployment  = "deployment"
+	// ObjectResourceService xxx
+	ObjectResourceService = "service"
+	// ObjectResourceDeployment xxx
+	ObjectResourceDeployment = "deployment"
+	// ObjectResourceApplication xxx
 	ObjectResourceApplication = "application"
-	ObjectResourceConfigmap   = "configmap"
-	ObjectResourceSecret      = "secret"
+	// ObjectResourceConfigmap xxx
+	ObjectResourceConfigmap = "configmap"
+	// ObjectResourceSecret xxx
+	ObjectResourceSecret = "secret"
 
-	ResourceStatusRunning   = "running"
-	ResourceStatusFailed    = "failed"
-	ResourceStatusFinish    = "finish"
+	// ResourceStatusRunning xxx
+	ResourceStatusRunning = "running"
+	// ResourceStatusFailed xxx
+	ResourceStatusFailed = "failed"
+	// ResourceStatusFinish xxx
+	ResourceStatusFinish = "finish"
+	// ResourceStatusOperating xxx
 	ResourceStatusOperating = "operating"
 )
 
 const (
+	// StoreOperatorCreate xxx
 	StoreOperatorCreate = "create"
+	// StoreOperatorDelete xxx
 	StoreOperatorDelete = "delete"
+	// StoreOperatorUpdate xxx
 	StoreOperatorUpdate = "update"
-	StoreOperatorFetch  = "fetch"
+	// StoreOperatorFetch xxx
+	StoreOperatorFetch = "fetch"
 )
 
 // Metrics the store info
 var (
-	//metric value is object status
-	//service、configmap、secret、deployment status only 0 show success
-	//application status 0 show Staging、Deploying、Operating、RollingUpdate; 1 show Running; 2 show Finish; 3 show Abnormal,Error
+	// metric value is object status
+	// service、configmap、secret、deployment status only 0 show success
+	// application status 0 show Staging、Deploying、Operating、RollingUpdate; 1 show Running; 2 show Finish; 3 show Abnormal,Error
 	ObjectResourceInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
@@ -51,8 +65,8 @@ var (
 		Help:      "Object resource info",
 	}, []string{"resource", "namespace", "name", "status"})
 
-	//metric value is taskgroup status
-	//0 show Staging、Starting; 1 show Running; 2 show Finish、Killing、Killed; 3 show Error、Failed; 4 show Lost
+	// metric value is taskgroup status
+	// 0 show Staging、Starting; 1 show Running; 2 show Finish、Killing、Killed; 3 show Error、Failed; 4 show Lost
 	TaskgroupInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
@@ -95,28 +109,42 @@ var (
 		Help:      "Agent ip resource remain",
 	}, []string{"InnerIP", "clusterId"})
 
-	ClusterCpuResouceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	ClusterCpuResourceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "cluster_cpu_resource_remain",
 		Help:      "Cluster cpu resource remain",
 	}, []string{"clusterId"})
 
-	ClusterMemoryResouceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	ClusterCpuResourceAvailable = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: types.MetricsNamespaceScheduler,
+		Subsystem: types.MetricsSubsystemScheduler,
+		Name:      "cluster_cpu_resource_available",
+		Help:      "Cluster cpu resource available",
+	}, []string{"cloudId"})
+
+	ClusterMemoryResourceRemain = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "cluster_memory_resource_remain",
 		Help:      "Cluster memory resource remain",
 	}, []string{"clusterId"})
 
-	ClusterCpuResouceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	ClusterMemoryResourceAvailable = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: types.MetricsNamespaceScheduler,
+		Subsystem: types.MetricsSubsystemScheduler,
+		Name:      "cluster_memory_resource_available",
+		Help:      "Cluster memory resource available",
+	}, []string{"clusterId"})
+
+	ClusterCpuResourceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "cluster_cpu_resource_total",
 		Help:      "Cluster cpu resource total",
 	}, []string{"clusterId"})
 
-	ClusterMemoryResouceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	ClusterMemoryResourceTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: types.MetricsNamespaceScheduler,
 		Subsystem: types.MetricsSubsystemScheduler,
 		Name:      "cluster_memory_resource_total",
@@ -147,10 +175,13 @@ var (
 
 func init() {
 	prometheus.MustRegister(ObjectResourceInfo, TaskgroupInfo, AgentCpuResourceTotal, AgentMemoryResourceTotal,
-		StorageOperatorTotal, StorageOperatorLatencyMs, StorageOperatorFailedTotal, AgentCpuResourceRemain, AgentMemoryResourceRemain,
-		AgentIpResourceRemain, ClusterCpuResouceRemain, ClusterMemoryResouceRemain, ClusterCpuResouceTotal, ClusterMemoryResouceTotal)
+		StorageOperatorTotal, StorageOperatorLatencyMs, StorageOperatorFailedTotal, AgentCpuResourceRemain,
+		AgentMemoryResourceRemain, AgentIpResourceRemain, ClusterCpuResourceRemain, ClusterMemoryResourceRemain,
+		ClusterCpuResourceTotal, ClusterMemoryResourceTotal, ClusterCpuResourceAvailable,
+		ClusterMemoryResourceAvailable)
 }
 
+// ReportObjectResourceInfoMetrics xxx
 func ReportObjectResourceInfoMetrics(resource, ns, name, status string) {
 	var str string
 	switch status {
@@ -169,6 +200,7 @@ func ReportObjectResourceInfoMetrics(resource, ns, name, status string) {
 	ObjectResourceInfo.WithLabelValues(resource, ns, name, str).Set(1)
 }
 
+// ReportTaskgroupInfoMetrics xxx
 func ReportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {
 	var val float64
 	switch status {
@@ -189,6 +221,7 @@ func ReportTaskgroupInfoMetrics(ns, name, taskgroupId, status string) {
 	TaskgroupInfo.WithLabelValues(ns, name, taskgroupId).Set(val)
 }
 
+// ReportAgentInfoMetrics xxx
 func ReportAgentInfoMetrics(ip, clusterId string, totalCpu, remainCpu, totalMem, remainMem, remainIp float64) {
 	AgentCpuResourceTotal.WithLabelValues(ip, clusterId).Set(totalCpu)
 	AgentCpuResourceRemain.WithLabelValues(ip, clusterId).Set(remainCpu)
@@ -197,13 +230,18 @@ func ReportAgentInfoMetrics(ip, clusterId string, totalCpu, remainCpu, totalMem,
 	AgentIpResourceRemain.WithLabelValues(ip, clusterId).Set(remainIp)
 }
 
-func ReportClusterInfoMetrics(clusterId string, remainCpu, totalCpu, remainMem, totalMem float64) {
-	ClusterCpuResouceRemain.WithLabelValues(clusterId).Set(remainCpu)
-	ClusterMemoryResouceRemain.WithLabelValues(clusterId).Set(remainMem)
-	ClusterCpuResouceTotal.WithLabelValues(clusterId).Set(totalCpu)
-	ClusterMemoryResouceTotal.WithLabelValues(clusterId).Set(totalMem)
+// ReportClusterInfoMetrics xxx
+func ReportClusterInfoMetrics(clusterId string, remainCpu, availableCpu, totalCpu, remainMem,
+	availableMem, totalMem float64) {
+	ClusterCpuResourceRemain.WithLabelValues(clusterId).Set(remainCpu)
+	ClusterMemoryResourceRemain.WithLabelValues(clusterId).Set(remainMem)
+	ClusterCpuResourceTotal.WithLabelValues(clusterId).Set(totalCpu)
+	ClusterMemoryResourceTotal.WithLabelValues(clusterId).Set(totalMem)
+	ClusterCpuResourceAvailable.WithLabelValues(clusterId).Set(availableCpu)
+	ClusterMemoryResourceAvailable.WithLabelValues(clusterId).Set(availableMem)
 }
 
+// ReportStorageOperatorMetrics xxx
 func ReportStorageOperatorMetrics(operator string, started time.Time, failed bool) {
 	StorageOperatorTotal.WithLabelValues(operator).Inc()
 	d := time.Duration(time.Since(started).Nanoseconds())

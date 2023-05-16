@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
@@ -24,12 +26,10 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/klog"
-
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/bcs/clustermanager"
 )
 
 const (
-	// ProviderName is the cloud provider name for QCLOUD
+	// ProviderName is the cloud Provider name for QCLOUD
 	ProviderName = "bcs"
 )
 
@@ -44,15 +44,15 @@ var (
 
 // var gpuName = "alpha.kubernetes.io/nvidia-gpu"
 
-var _ cloudprovider.CloudProvider = &provider{}
+var _ cloudprovider.CloudProvider = &Provider{}
 
-// provider implements CloudProvider interface.
-type provider struct {
-	nodeGroupCache  *NodeGroupCache
+// Provider implements CloudProvider interface.
+type Provider struct {
+	NodeGroupCache  *NodeGroupCache
 	resourceLimiter *cloudprovider.ResourceLimiter
 }
 
-// BuildCloudProvider builds a cloud provider.
+// BuildCloudProvider builds a cloud Provider.
 func BuildCloudProvider(opts autoscalerconfig.AutoscalingOptions, do cloudprovider.NodeGroupDiscoveryOptions,
 	rl *cloudprovider.ResourceLimiter) cloudprovider.CloudProvider {
 	var (
@@ -64,7 +64,7 @@ func BuildCloudProvider(opts autoscalerconfig.AutoscalingOptions, do cloudprovid
 	if opts.CloudConfig != "" {
 		config, fileErr := os.Open(opts.CloudConfig)
 		if fileErr != nil {
-			klog.Fatalf("Couldn't open cloud provider configuration %s: %#v", opts.CloudConfig, fileErr)
+			klog.Fatalf("Couldn't open cloud Provider configuration %s: %#v", opts.CloudConfig, fileErr)
 		}
 		defer config.Close()
 		cache, client, cloudError = CreateNodeGroupCache(config)
@@ -78,9 +78,10 @@ func BuildCloudProvider(opts autoscalerconfig.AutoscalingOptions, do cloudprovid
 		}
 	}
 
+	metricsinternal.RegisterScaleTask()
 	cloudProvider, err := BuildBcsCloudProvider(cache, client, do, rl)
 	if err != nil {
-		klog.Fatalf("Failed to create tenc cloud provider: %v", err)
+		klog.Fatalf("Failed to create bcs cloud Provider: %v", err)
 	}
 	return cloudProvider
 }
@@ -89,9 +90,10 @@ func BuildCloudProvider(opts autoscalerconfig.AutoscalingOptions, do cloudprovid
 func BuildBcsCloudProvider(cache *NodeGroupCache, client clustermanager.NodePoolClientInterface,
 	discoveryOpts cloudprovider.NodeGroupDiscoveryOptions, resourceLimiter *cloudprovider.ResourceLimiter) (
 	cloudprovider.CloudProvider, error) {
+	taskChecker = NewTaskChecker(client)
 	if discoveryOpts.StaticDiscoverySpecified() {
-		cloud := &provider{
-			nodeGroupCache:  cache,
+		cloud := &Provider{
+			NodeGroupCache:  cache,
 			resourceLimiter: resourceLimiter,
 		}
 		for _, spec := range discoveryOpts.NodeGroupSpecs {
@@ -102,106 +104,104 @@ func BuildBcsCloudProvider(cache *NodeGroupCache, client clustermanager.NodePool
 		return cloud, nil
 	}
 
-	return nil, fmt.Errorf("Failed to build an BCS cloud provider: Either node group specs or " +
+	return nil, fmt.Errorf("Failed to build an BCS cloud Provider: Either node group specs or " +
 		"node group auto discovery spec must be specified")
 }
 
 // GPULabel returns default gpu type
-func (cloud *provider) GPULabel() string {
+func (cloud *Provider) GPULabel() string {
 	return gpu.DefaultGPUType
 }
 
 // GetAvailableGPUTypes returns available gpu types
-func (cloud *provider) GetAvailableGPUTypes() map[string]struct{} {
+func (cloud *Provider) GetAvailableGPUTypes() map[string]struct{} {
 	return availableGPUTypes
 }
 
-func (cloud *provider) Cleanup() error {
+// Cleanup cleans up open resources before the cloud provider is destroyed, or does nothing if not available.
+func (cloud *Provider) Cleanup() error {
 	return nil
 }
 
-// Name returns name of the cloud provider.
-func (cloud *provider) Name() string {
+// Name returns name of the cloud Provider.
+func (cloud *Provider) Name() string {
 	return ProviderName
 }
 
-// NodeGroups returns all node groups configured for this cloud provider.
-func (cloud *provider) NodeGroups() []cloudprovider.NodeGroup {
-	groups := cloud.nodeGroupCache.GetRegisteredNodeGroups()
+// NodeGroups returns all node groups configured for this cloud Provider.
+func (cloud *Provider) NodeGroups() []cloudprovider.NodeGroup {
+	groups := cloud.NodeGroupCache.GetRegisteredNodeGroups()
 	result := make([]cloudprovider.NodeGroup, 0, len(groups))
 	for _, group := range groups {
 		result = append(result, group)
 	}
+	taskChecker.checkScaleTaskStatus()
 	return result
 }
 
 // NodeGroupForNode returns the node group for the given node.
-func (cloud *provider) NodeGroupForNode(node *apiv1.Node) (cloudprovider.NodeGroup, error) {
-	ref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+func (cloud *Provider) NodeGroupForNode(node *apiv1.Node) (cloudprovider.NodeGroup, error) {
+	// ref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+	ref, err := InstanceRefFromInnerIP(node.Status.Addresses)
 	if err != nil {
 		return nil, err
 	}
-	group, err := cloud.nodeGroupCache.FindForInstance(ref)
+	group, err := cloud.NodeGroupCache.FindForInstance(ref)
 	if err != nil {
 		klog.Errorf("Instance %v, node(%s) to found group err:%s ", ref, node.Name, err.Error())
 		return group, err
 	}
 
 	if group == nil {
-		klog.V(4).Infof("Instance %v, node(%s) is not found in any group", ref, node.Name)
+		klog.V(6).Infof("Instance %v, node(%s) is not found in any group", ref, node.Name)
 		return group, err
 	}
 	return group, nil
 }
 
-// Pricing returns pricing model for this cloud provider or error if not available.
-func (cloud *provider) Pricing() (cloudprovider.PricingModel, errors.AutoscalerError) {
+// Pricing returns pricing model for this cloud Provider or error if not available.
+func (cloud *Provider) Pricing() (cloudprovider.PricingModel, errors.AutoscalerError) {
 	return nil, cloudprovider.ErrNotImplemented
 }
 
-// GetAvailableMachineTypes get all machine types that can be requested from the cloud provider.
-func (cloud *provider) GetAvailableMachineTypes() ([]string, error) {
+// GetAvailableMachineTypes get all machine types that can be requested from the cloud Provider.
+func (cloud *Provider) GetAvailableMachineTypes() ([]string, error) {
 	return []string{}, nil
 }
 
 // NewNodeGroup builds a theoretical node group based on the node definition provided.
-// The node group is not automatically created on the cloud provider side.
+// The node group is not automatically created on the cloud Provider side.
 // The node group is not returned by NodeGroups() until it is created.
-func (cloud *provider) NewNodeGroup(machineType string, labels map[string]string, systemLabels map[string]string,
+func (cloud *Provider) NewNodeGroup(machineType string, labels map[string]string, systemLabels map[string]string,
 	taints []apiv1.Taint, extraResources map[string]resource.Quantity) (cloudprovider.NodeGroup, error) {
 	return nil, cloudprovider.ErrNotImplemented
 }
 
 // GetResourceLimiter returns struct containing limits (max, min) for resources (cores, memory etc.).
-func (cloud *provider) GetResourceLimiter() (*cloudprovider.ResourceLimiter, error) {
+func (cloud *Provider) GetResourceLimiter() (*cloudprovider.ResourceLimiter, error) {
 	return cloud.resourceLimiter, nil
 }
 
-// Refresh is called before every main loop and can be used to dynamically update cloud provider state.
+// Refresh is called before every main loop and can be used to dynamically update cloud Provider state.
 // In particular the list of node groups returned by NodeGroups can change as a result of CloudProvider.Refresh().
-func (cloud *provider) Refresh() error {
+func (cloud *Provider) Refresh() error {
 	klog.V(4).Infof("Refresh loop")
-	if cloud.nodeGroupCache == nil {
+	if cloud.NodeGroupCache == nil {
 		klog.Errorf("Refresh cloud manager is nil")
 		return fmt.Errorf("Refresh cloud manager is nil")
 	}
 
-	if cloud.nodeGroupCache == nil {
-		klog.Errorf("Refresh cloud manager groups is nil")
-		return fmt.Errorf("Refresh cloud manager groups is nil")
-	}
-
-	return cloud.nodeGroupCache.regenerateCache()
+	return cloud.NodeGroupCache.regenerateCache()
 }
 
 // addNodeGroup adds node group defined in string spec. Format:
 // minNodes:maxNodes:groupName
-func (cloud *provider) addNodeGroup(spec string, client clustermanager.NodePoolClientInterface) error {
+func (cloud *Provider) addNodeGroup(spec string, client clustermanager.NodePoolClientInterface) error {
 	group, err := buildNodeGroupFromSpec(spec, client)
 	if err != nil {
 		return err
 	}
 
-	cloud.nodeGroupCache.Register(group)
+	cloud.NodeGroupCache.Register(group)
 	return nil
 }

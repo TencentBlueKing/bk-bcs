@@ -11,6 +11,7 @@
  *
  */
 
+// Package config xxx
 package config
 
 import "github.com/Tencent/bk-bcs/bcs-common/common/types"

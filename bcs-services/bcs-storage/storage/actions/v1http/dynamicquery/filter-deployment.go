@@ -32,8 +32,8 @@ type DeploymentFilter struct {
 	LastRollingTimeEnd   string `json:"lastRollingTimeEnd,omitempty" filter:"data.last_rolling_time,timeR"`
 }
 
-const deploymentNestedTimeLayout = nestedTimeLayout
+const deploymentNestedTimeLayout = NestedTimeLayout
 
-func (t DeploymentFilter) getCondition() *operator.Condition {
+func (t DeploymentFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, deploymentNestedTimeLayout)
 }

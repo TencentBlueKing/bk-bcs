@@ -31,22 +31,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//NSControlInfo store all app info under one namespace
-//type NSControlInfo struct {
+// NSControlInfo store all app info under one namespace
+// type NSControlInfo struct {
 //	path   string             //parent zk node, namespace absolute path
 //	cxt    context.Context    //context for creating sub context
 //	cancel context.CancelFunc //for cancel sub goroutine
-//}
+// }
 
-//DeploymentInfo wrapper for BCS Deployment
+// DeploymentInfo wrapper for BCS Deployment
 type DeploymentInfo struct {
 	data       *schedulertypes.Deployment
 	syncTime   int64
 	reportTime int64
 }
 
-//NewDeploymentWatch create deployment watch
-func NewDeploymentWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter, watchPath string) *DeploymentWatch {
+// NewDeploymentWatch create deployment watch
+func NewDeploymentWatch(cxt context.Context, client ZkClient, reporter cluster.Reporter,
+	watchPath string) *DeploymentWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
 		dataType, ok := data.(*DeploymentInfo)
@@ -71,22 +72,22 @@ func NewDeploymentWatch(cxt context.Context, client ZkClient, reporter cluster.R
 		client:    client,
 		watchPath: watchPath,
 		dataCache: cache.NewCache(keyFunc),
-		//nsCache:   cache.NewCache(nsKeyFunc),
+		// nsCache:   cache.NewCache(nsKeyFunc),
 	}
 }
 
-//DeploymentWatch watch all deployment data and store to local cache
+// DeploymentWatch watch all deployment data and store to local cache
 type DeploymentWatch struct {
-	eventLock sync.Mutex       //lock for event
-	report    cluster.Reporter //reporter
-	cancelCxt context.Context  //context for cancel
-	client    ZkClient         //client for zookeeper
-	dataCache cache.Store      //cache for all app data
-	//nsCache   cache.Store     //all namespace path / namespace goroutine control info
+	eventLock sync.Mutex       // lock for event
+	report    cluster.Reporter // reporter
+	cancelCxt context.Context  // context for cancel
+	client    ZkClient         // client for zookeeper
+	dataCache cache.Store      // cache for all app data
+	// nsCache   cache.Store     //all namespace path / namespace goroutine control info
 	watchPath string
 }
 
-//Work to add path and node watch
+// Work to add path and node watch
 func (watch *DeploymentWatch) Work() {
 	watch.ProcessAllDeployments()
 	tick := time.NewTicker(10 * time.Second)
@@ -103,7 +104,7 @@ func (watch *DeploymentWatch) Work() {
 	}
 }
 
-//ProcessAllDeployments handle all namespace deployment data
+// ProcessAllDeployments handle all namespace deployment data
 func (watch *DeploymentWatch) ProcessAllDeployments() error {
 
 	currTime := time.Now().Unix()
@@ -159,7 +160,7 @@ func (watch *DeploymentWatch) ProcessAllDeployments() error {
 					continue
 				}
 				blog.V(3).Infof("deployment %s is in cache, update sync time(%d)", key, currTime)
-				//watch.UpdateEvent(cacheDataInfo.data, data)
+				// watch.UpdateEvent(cacheDataInfo.data, data)
 				if reflect.DeepEqual(cacheDataInfo.data, data) {
 					if cacheDataInfo.reportTime > currTime {
 						cacheDataInfo.reportTime = currTime
@@ -222,14 +223,15 @@ func (watch *DeploymentWatch) ProcessAllDeployments() error {
 	return nil
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (watch *DeploymentWatch) AddEvent(obj interface{}) {
 	deploymentData, ok := obj.(*schedulertypes.Deployment)
 	if !ok {
 		blog.Error("can not convert object to Deployment in AddEvent, object %v", obj)
 		return
 	}
-	blog.Info("EVENT:: Add Event for Deployment %s.%s", deploymentData.ObjectMeta.NameSpace, deploymentData.ObjectMeta.Name)
+	blog.Info("EVENT:: Add Event for Deployment %s.%s", deploymentData.ObjectMeta.NameSpace,
+		deploymentData.ObjectMeta.Name)
 
 	data := &types.BcsSyncData{
 		DataType: watch.GetDeploymentChannel(deploymentData),
@@ -243,15 +245,16 @@ func (watch *DeploymentWatch) AddEvent(obj interface{}) {
 	}
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (watch *DeploymentWatch) DeleteEvent(obj interface{}) {
 	deploymentData, ok := obj.(*schedulertypes.Deployment)
 	if !ok {
 		blog.Error("can not convert object to Deployment in DeleteEvent, object %v", obj)
 		return
 	}
-	blog.Info("EVENT:: Delete Event for Deployment %s.%s", deploymentData.ObjectMeta.NameSpace, deploymentData.ObjectMeta.Name)
-	//report to cluster
+	blog.Info("EVENT:: Delete Event for Deployment %s.%s", deploymentData.ObjectMeta.NameSpace,
+		deploymentData.ObjectMeta.Name)
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: watch.GetDeploymentChannel(deploymentData),
 		Action:   "Delete",
@@ -264,7 +267,7 @@ func (watch *DeploymentWatch) DeleteEvent(obj interface{}) {
 	}
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 	deploymentData, ok := cur.(*schedulertypes.Deployment)
 	if !ok {
@@ -272,9 +275,10 @@ func (watch *DeploymentWatch) UpdateEvent(old, cur interface{}) {
 		return
 	}
 
-	blog.V(3).Infof("EVENT:: Update Event for BcsSecret %s.%s", deploymentData.ObjectMeta.NameSpace, deploymentData.ObjectMeta.Name)
+	blog.V(3).Infof("EVENT:: Update Event for BcsSecret %s.%s", deploymentData.ObjectMeta.NameSpace,
+		deploymentData.ObjectMeta.Name)
 
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: watch.GetDeploymentChannel(deploymentData),
 		Action:   "Update",

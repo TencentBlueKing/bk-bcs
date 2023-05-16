@@ -39,9 +39,9 @@ import (
 // func input: *types.InitPluginParameter
 // func output: error
 
-//for example
+// for example
 
-//CertConfig is configuration of Cert
+// CertConfig is configuration of Cert
 type certConfig struct {
 	CAFile     string
 	CertFile   string
@@ -82,7 +82,7 @@ func Init(para *plugin.InitPluginParameter) error { //nolint
 
 func initPlugin(p string) error {
 	blog.Infof("plugin ip-resources init...")
-	//go watchConfig()
+	// go watchConfig()
 
 	err := initConfig(p)
 	if err != nil {
@@ -279,7 +279,8 @@ func discvNetservice() {
 			return
 
 		case <-tick.C:
-			blog.Infof("plugin ipResources netservice discover(%s:%s), curr netservice:%s", conf.BcsZk, discvPath, currNetservice)
+			blog.Infof("plugin ipResources netservice discover(%s:%s), curr netservice:%s", conf.BcsZk, discvPath,
+				currNetservice)
 
 		case event := <-discvEvent:
 			blog.Infof("plugin ipResources discover event for netservice")
@@ -305,7 +306,8 @@ func discvNetservice() {
 				}
 
 				if i == 0 {
-					currNet = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(serverInfo.ServerInfo.Port))
+					currNet = serverInfo.ServerInfo.Scheme + "://" + serverInfo.ServerInfo.IP + ":" + strconv.Itoa(int(
+						serverInfo.ServerInfo.Port))
 				}
 			}
 

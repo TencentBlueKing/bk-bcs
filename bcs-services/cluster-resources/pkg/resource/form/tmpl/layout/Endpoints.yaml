@@ -1,0 +1,11 @@
+{{ include "common.metadata" . }}
+- - group:
+      - - group:
+            - [ "addresses", ".", "." ]
+            - - group:
+                  - [ "name", "port", "protocol", "." ]
+                container:
+                  grid-template-columns: "1fr 1fr 1fr auto"
+                prop: ports
+          prop: subsets
+    prop: spec

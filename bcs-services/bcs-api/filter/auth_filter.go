@@ -150,7 +150,8 @@ func (aur *AuthURLRule) init() {
 }
 
 // Match request match for module
-func (aur *AuthURLRule) Match(clusterID, namespace, uri, method string) (match bool, action auth.Action, resource auth.Resource) {
+func (aur *AuthURLRule) Match(clusterID, namespace, uri, method string) (match bool, action auth.Action,
+	resource auth.Resource) {
 	if aur.Method != method {
 		return
 	}
@@ -187,28 +188,36 @@ var (
 		{Rule: `/query/(?:mesos|k8s)/dynamic/clusters/{clusterId}/[^/]+`, Method: "POST", Action: auth.ActionRead},
 
 		// storage dynamic query(old)
-		{Rule: `/(?:mesos|k8s)/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/[^/]+/[^/]+`, Method: "GET", Action: auth.ActionRead},
-		{Rule: `/(?:mesos|k8s)/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/[^/]+`, Method: "GET", Action: auth.ActionRead},
-		{Rule: `/(?:mesos|k8s)/dynamic/cluster_resources/clusters/{clusterId}/[^/]+/[^/]+`, Method: "GET", Action: auth.ActionRead},
+		{Rule: `/(?:mesos|k8s)/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/[^/]+/[^/]+`,
+			Method: "GET", Action: auth.ActionRead},
+		{Rule: `/(?:mesos|k8s)/dynamic/namespace_resources/clusters/{clusterId}/namespaces/{namespace}/[^/]+`, Method: "GET",
+			Action: auth.ActionRead},
+		{Rule: `/(?:mesos|k8s)/dynamic/cluster_resources/clusters/{clusterId}/[^/]+/[^/]+`, Method: "GET",
+			Action: auth.ActionRead},
 		{Rule: `/(?:mesos|k8s)/dynamic/cluster_resources/clusters/{clusterId}/[^/]+`, Method: "GET", Action: auth.ActionRead},
 		{Rule: `/(?:mesos|k8s)/dynamic/all_resources/clusters/{clusterId}/[^/]+`, Method: "GET", Action: auth.ActionRead},
 
 		// storage metric
 		{Rule: `/metric/clusters/{clusterId}/namespaces/{namespace}/[^/]+/[^/]+`, Method: "GET", Action: auth.ActionRead},
 		{Rule: `/metric/clusters/{clusterId}/namespaces/{namespace}/[^/]+/[^/]+`, Method: "PUT", Action: auth.ActionManage},
-		{Rule: `/metric/clusters/{clusterId}/namespaces/{namespace}/[^/]+/[^/]+`, Method: "DELETE", Action: auth.ActionManage},
+		{Rule: `/metric/clusters/{clusterId}/namespaces/{namespace}/[^/]+/[^/]+`, Method: "DELETE",
+			Action: auth.ActionManage},
 		{Rule: `/metric/clusters/{clusterId}`, Method: "GET", Action: auth.ActionRead},
 	}
 	// MetricAuthRule rule for metric
 	MetricAuthRule = []*AuthURLRule{
 		// metric
-		{Rule: `/metric/clustertype/[^/]+/clusters/{clusterId}/namespaces/{namespace}/metrics`, Method: "DELETE", Action: auth.ActionManage},
+		{Rule: `/metric/clustertype/[^/]+/clusters/{clusterId}/namespaces/{namespace}/metrics`, Method: "DELETE",
+			Action: auth.ActionManage},
 		{Rule: `/metric/tasks/clusters/{clusterId}`, Method: "GET", Action: auth.ActionRead},
 
 		// metric task
-		{Rule: `/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/[^/]+`, Method: "GET", Action: auth.ActionRead},
-		{Rule: `/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/[^/]+`, Method: "PUT", Action: auth.ActionManage},
-		{Rule: `/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/[^/]+`, Method: "DELETE", Action: auth.ActionManage},
+		{Rule: `/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/[^/]+`, Method: "GET",
+			Action: auth.ActionRead},
+		{Rule: `/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/[^/]+`, Method: "PUT",
+			Action: auth.ActionManage},
+		{Rule: `/metric/tasks/clusters/{clusterId}/namespaces/{namespace}/name/[^/]+`, Method: "DELETE",
+			Action: auth.ActionManage},
 	}
 	// MesosAuthRule mesosdriver rule
 	MesosAuthRule = []*AuthURLRule{
@@ -217,22 +226,27 @@ var (
 		{Rule: `/mesos/namespaces/{namespace}/(?:applications|processes)`, Method: "PUT", Action: auth.ActionManage},
 		{Rule: `/mesos/namespaces/{namespace}/(?:applications|processes)/[^/]+`, Method: "DELETE", Action: auth.ActionManage},
 		{Rule: `/mesos/namespaces/{namespace}/(?:applications|processes)/rollback`, Method: "PUT", Action: auth.ActionManage},
-		{Rule: `/mesos/namespaces/{namespace}/(?:applications|processes)/[^/]+/scale/[^/]+`, Method: "PUT", Action: auth.ActionManage},
+		{Rule: `/mesos/namespaces/{namespace}/(?:applications|processes)/[^/]+/scale/[^/]+`, Method: "PUT",
+			Action: auth.ActionManage},
 		{Rule: `/mesos/namespaces/{namespace}/(?:applications|processes)`, Method: "GET", Action: auth.ActionRead},
 		{Rule: `/mesos/namespaces/{namespace}/(?:applications|processes)/[^/]+`, Method: "GET", Action: auth.ActionRead},
 
 		// message
 		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/message`, Method: "POST", Action: auth.ActionManage},
-		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups/[^/]+/message`, Method: "POST", Action: auth.ActionManage},
+		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups/[^/]+/message`, Method: "POST",
+			Action: auth.ActionManage},
 
 		// task
 		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/tasks`, Method: "GET", Action: auth.ActionRead},
 
 		// taskgroup
 		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups`, Method: "GET", Action: auth.ActionRead},
-		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups/[^/]+/rescheduler`, Method: "PUT", Action: auth.ActionManage},
-		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups/[^/]+/restart`, Method: "POST", Action: auth.ActionManage},
-		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups/[^/]+/reload`, Method: "POST", Action: auth.ActionManage},
+		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups/[^/]+/rescheduler`, Method: "PUT",
+			Action: auth.ActionManage},
+		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups/[^/]+/restart`, Method: "POST",
+			Action: auth.ActionManage},
+		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/taskgroups/[^/]+/reload`, Method: "POST",
+			Action: auth.ActionManage},
 
 		// version
 		{Rule: `/mesos/namespaces/{namespace}/applications/[^/]+/versions`, Method: "GET", Action: auth.ActionRead},
@@ -241,7 +255,8 @@ var (
 		// configmaps secrets and services
 		{Rule: `/mesos/namespaces/{namespace}/(?:configmaps|secrets|services)`, Method: "POST", Action: auth.ActionManage},
 		{Rule: `/mesos/namespaces/{namespace}/(?:configmaps|secrets|services)`, Method: "PUT", Action: auth.ActionManage},
-		{Rule: `/mesos/namespaces/{namespace}/(?:configmaps|secrets|services)/[^/]+`, Method: "DELETE", Action: auth.ActionManage},
+		{Rule: `/mesos/namespaces/{namespace}/(?:configmaps|secrets|services)/[^/]+`, Method: "DELETE",
+			Action: auth.ActionManage},
 
 		// cluster
 		{Rule: `/mesos/cluster/resources`, Method: "GET", Action: auth.ActionRead},

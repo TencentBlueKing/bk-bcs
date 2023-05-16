@@ -1,0 +1,99 @@
+
+
+@import '@/css/variable.css';
+@import '@/css/mixins/clearfix.css';
+
+.biz-simple-table {
+    width: auto;
+}
+.action-btn {
+    height: 36px;
+    text-align: center;
+    display: inline-block;
+    border: none;
+    background: transparent;
+    outline: none;
+    float: left;
+    .bk-icon {
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        border-radius: 50%;
+        vertical-align: middle;
+        border: 1px solid #dde4eb;
+        color: #737987;
+        font-size: 14px;
+        display: inline-block;
+        &.icon-minus {
+            font-size: 15px;
+        }
+    }
+}
+.biz-part-header {
+    margin-top: 40px;
+    text-align: center;
+}
+.bk-text-button {
+    .bk-icon {
+        transition: all ease 0.3s;
+    }
+    &.rotate {
+        .bk-icon {
+            transform: rotate(180deg);
+        }
+    }
+}
+.bk-button-group {
+    @mixin clearfix;
+    .item {
+        position: relative;
+        display: inline-block;
+        float: left;
+
+        &:hover {
+            z-index: 10;
+            >.bk-icon {
+                display: inline-block;
+            }
+        }
+
+        &:first-child {
+            .bk-button {
+                border-radius: 2px 0 0 2px;
+            }
+        }
+
+        >.bk-button {
+            border-radius: 0;
+            &.is-selected {
+                background-color: #c3cdd7 !important;
+                border-color: #c3cdd7 !important;
+            }
+        }
+
+        >.bk-icon {
+            cursor: pointer;
+            background: #fff;
+            position: absolute;
+            border-radius: 50%;
+            right: -5px;
+            top: -5px;
+            display: none;
+            font-size: 16px;
+            z-index: 1;
+            color: $primaryColor;
+            &:hover {
+                color: $primaryColor;
+            }
+        }
+    }
+}
+.bk-form .bk-form-content .bk-form-tip {
+    overflow: hidden;
+    padding: 0;
+    margin: 10px 0 0 0;
+    position: relative;
+    height: auto;
+    line-height: 1;
+    left: 0;
+}

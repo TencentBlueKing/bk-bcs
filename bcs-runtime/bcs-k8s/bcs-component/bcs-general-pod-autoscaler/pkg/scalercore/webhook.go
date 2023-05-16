@@ -25,8 +25,10 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/klog"
 
 	autoscalingv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/requests"
 )
 
@@ -49,13 +51,25 @@ func NewWebhookScaler(modeConfig *autoscalingv1.WebhookMode) Scaler {
 
 // GetReplicas get replicas
 func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
+	var metricsServer metrics.PrometheusMetricServer
+	var metricName string
+	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
+	startTime := time.Now()
 	if s.modeConfig == nil {
-		return 0, errors.New("webhookPolicy parameter must not be nil")
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, true)
+		return -1, errors.New("webhookPolicy parameter must not be nil")
+	}
+	if gpa.Spec.WebhookMode.WebhookClientConfig.URL != nil {
+		metricName = *gpa.Spec.WebhookMode.WebhookClientConfig.URL
+	} else if gpa.Spec.WebhookMode.WebhookClientConfig.Service != nil {
+		metricName = fmt.Sprintf("%s/%s", gpa.Spec.WebhookMode.WebhookClientConfig.Service.Namespace,
+			gpa.Spec.WebhookMode.WebhookClientConfig.Service.Name)
 	}
 
 	u, err := s.buildURLFromWebhookPolicy()
 	if err != nil {
-		return 0, err
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, true)
+		return -1, err
 	}
 	req := requests.AutoscaleReview{
 		Request: &requests.AutoscaleRequest{
@@ -71,7 +85,8 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 
 	b, err := json.Marshal(req)
 	if err != nil {
-		return 0, err
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, true)
+		return -1, err
 	}
 
 	res, err := client.Post(
@@ -80,7 +95,8 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 		strings.NewReader(string(b)),
 	)
 	if err != nil {
-		return 0, err
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, true)
+		return -1, err
 	}
 	defer func() {
 		if cerr := res.Body.Close(); cerr != nil {
@@ -93,26 +109,35 @@ func (s *WebhookScaler) GetReplicas(gpa *autoscalingv1.GeneralPodAutoscaler, cur
 	}()
 
 	if res.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())
+		err = fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, true)
+		return -1, err
 	}
 	result, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return 0, err
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, true)
+		return -1, err
 	}
 
 	var faResp requests.AutoscaleReview
 	err = json.Unmarshal(result, &faResp)
 	if err != nil {
-		return 0, err
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, true)
+		return -1, err
 	}
 	if faResp.Response == nil {
-		return 0, fmt.Errorf("received empty response")
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, true)
+		return -1, fmt.Errorf("received empty response")
 	}
+	klog.Infof("Webhook Response: Scale: %v, Replicas: %v, CurrentReplicas: %v",
+		faResp.Response.Scale, faResp.Response.Replicas, currentReplicas)
 	if faResp.Response.Scale {
+		recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, faResp.Response.Replicas,
+			currentReplicas, false)
 		return faResp.Response.Replicas, nil
 	}
-	return currentReplicas, nil
-
+	recordWebhookPromMetrics(gpa, metricsServer, key, metricName, startTime, -1, currentReplicas, false)
+	return -1, nil
 }
 
 // ScalerName scaler name
@@ -164,6 +189,7 @@ func (s *WebhookScaler) buildURLFromWebhookPolicy() (u *url.URL, err error) {
 	return createURL(scheme, w.Service.Name, w.Service.Namespace, *w.Service.Path, w.Service.Port), nil
 }
 
+// createURL xxx
 // moved to a separate method to cover it with unit tests and check that URL corresponds to a proper pattern
 func createURL(scheme, name, namespace, path string, port *int32) *url.URL {
 	var hostPort int32 = 8000
@@ -191,4 +217,19 @@ func setCABundle(caBundle []byte) error {
 		},
 	}
 	return nil
+}
+
+func recordWebhookPromMetrics(gpa *autoscalingv1.GeneralPodAutoscaler, ms metrics.PrometheusMetricServer,
+	key, metricName string, t time.Time, targetReplicas, currentReplicas int32, isErr bool) {
+	ms.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "webhook", metricName, isErr)
+	ms.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "webhook", metricName, int64(targetReplicas),
+		int64(currentReplicas))
+	ms.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "webhook", targetReplicas)
+	if isErr {
+		ms.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "failure", time.Since(t))
+		ms.RecordScalerMetricExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "failure", time.Since(t))
+	} else {
+		ms.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "success", time.Since(t))
+		ms.RecordScalerMetricExecDuration(gpa.Namespace, gpa.Name, key, metricName, "webhook", "success", time.Since(t))
+	}
 }

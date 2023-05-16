@@ -28,12 +28,14 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// KubeClient xxx
 type KubeClient struct {
 	nodesInformer k8sinfcorev1.NodeInformer
 	nodesCache    cache.Store
 	stopCh        chan struct{}
 }
 
+// NewKubeClient xxx
 func NewKubeClient(kubeconfig string, handler cache.ResourceEventHandler, syncPeriod time.Duration) (Client, error) {
 	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
@@ -63,6 +65,7 @@ func NewKubeClient(kubeconfig string, handler cache.ResourceEventHandler, syncPe
 	return client, nil
 }
 
+// ListNodes xxx
 func (kc *KubeClient) ListNodes() ([]*Node, error) {
 	selector := k8slabels.Everything()
 	nodes, err := kc.nodesInformer.Lister().List(selector)
@@ -91,6 +94,7 @@ func (kc *KubeClient) ListNodes() ([]*Node, error) {
 	return retNodes, nil
 }
 
+// Close xxx
 func (kc *KubeClient) Close() {
 	close(kc.stopCh)
 }

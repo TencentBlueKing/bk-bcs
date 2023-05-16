@@ -1,0 +1,15 @@
+syntax = "proto2";
+option go_package = "proto";
+
+package proto;
+
+message PluginRenderParam {
+    required string data = 1;
+    repeated string env = 2;
+}
+
+message PluginRenderResp {
+    required int32 code = 1;
+    required string message = 2;
+    required string data = 3;
+}

@@ -114,7 +114,18 @@ class AppDeployer:
         if not content:
             return
         # 保存为release的content
-        self.update_app_release_content(content)
+        # NOTE: 平台解析 chart manifest 内容用于展示使用，如果解析失败，仅做日志记录；然后交由 helm 处理异常
+        try:
+            self.update_app_release_content(content)
+        except Exception as e:
+            logger.error(
+                "更新项目: [%s], 集群: [%s], 命名空间: [%s], release: [%s]下的 manifest 内容出现异常: %s",
+                self.app.project_id,
+                self.app.cluster_id,
+                self.app.namespace,
+                self.app.name,
+                e,
+            )
         # 使用helm执行相应的命令
         with self.make_helm_client() as (client, err):
             if err is not None:
@@ -186,10 +197,10 @@ class AppDeployer:
             transitioning_message = (
                 "helm command execute failed.\n" "Error code: {error_no}\nOutput:\n{output}"
             ).format(error_no=e.error_no, output=e.output)
-            logger.warn(transitioning_message)
+            logger.warning("helm operate error, %s", transitioning_message)
         except HelmError as e:
             err_msg = str(e)
-            logger.warn(err_msg)
+            logger.warning("helm operate error, %s", err_msg)
             # TODO: 现阶段针对删除release找不到的情况，认为是正常的
             if "not found" in err_msg and operation == ChartOperations.UNINSTALL.value:
                 transitioning_result = True
@@ -200,7 +211,7 @@ class AppDeployer:
         except Exception as e:
             err_msg = str(e)
             transitioning_result = False
-            logger.warning(err_msg)
+            logger.warning("helm operate error, %s", err_msg)
             transitioning_message = self.collect_transitioning_error_message(e)
         else:
             transitioning_result = True
@@ -259,10 +270,10 @@ class AppDeployer:
             transitioning_message = (
                 "kubectl command execute failed.\n" "Error code: {error_no}\nOutput:\n{output}"
             ).format(error_no=e.error_no, output=e.output)
-            logger.warn(transitioning_message)
+            logger.warning(transitioning_message)
         except KubectlError as e:
             transitioning_result = False
-            logger.warn(e.message)
+            logger.warning(e.message)
             transitioning_message = e.message
         except Exception as e:
             transitioning_result = False

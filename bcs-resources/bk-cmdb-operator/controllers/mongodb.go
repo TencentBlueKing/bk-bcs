@@ -244,7 +244,7 @@ func makeMongoContainers(z *bkcmdbv1.Bkcmdb) []v1.Container {
 // makeMongoSecret builds mongodb secret object
 func makeMongoSecret(z *bkcmdbv1.Bkcmdb) *v1.Secret {
 	mongoPassword = defaultMongoPassword
-	//base64Ps := base64.StdEncoding.EncodeToString([]byte(mongoPassword))
+	// base64Ps := base64.StdEncoding.EncodeToString([]byte(mongoPassword))
 	return &v1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",

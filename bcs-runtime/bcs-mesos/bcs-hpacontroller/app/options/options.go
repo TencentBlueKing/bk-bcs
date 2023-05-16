@@ -11,6 +11,7 @@
  *
  */
 
+// Package options xxx
 package options
 
 import (
@@ -18,7 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-hpacontroller/hpacontroller/config"
 )
 
-//HpaControllerOption is option in flags
+// HpaControllerOption is option in flags
 type HpaControllerOption struct {
 	conf.FileConfig
 	conf.ServiceConfig
@@ -37,7 +38,7 @@ type HpaControllerOption struct {
 	Conf *config.Config
 }
 
-//NewHpaControllerOption create HpaControllerOption object
+// NewHpaControllerOption create HpaControllerOption object
 func NewHpaControllerOption() *HpaControllerOption {
 	return &HpaControllerOption{
 		Conf: config.NewConfig(),

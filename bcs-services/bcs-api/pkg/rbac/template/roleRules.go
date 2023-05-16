@@ -62,14 +62,18 @@ var workloadsViewRules = []rbacv1.PolicyRule{
 	{
 		Verbs:     []string{"get", "list", "watch"},
 		APIGroups: []string{"*"},
-		Resources: []string{"pods", "pods/attach", "pods/exec", "pods/portforward", "pods/proxy", "replicationcontrollers", "replicationcontrollers/scale", "daemonsets",
-			"deployments", "deployments/rollback", "deployments/scale", "replicasets", "replicasets/scale", "statefulsets", "cronjobs", "jobs", "daemonsets", "deployments",
-			"deployments/rollback", "deployments/scale", "replicasets", "replicasets/scale", "replicationcontrollers/scale", "horizontalpodautoscalers"},
+		Resources: []string{"pods", "pods/attach", "pods/exec", "pods/portforward", "pods/proxy", "replicationcontrollers",
+			"replicationcontrollers/scale", "daemonsets",
+			"deployments", "deployments/rollback", "deployments/scale", "replicasets", "replicasets/scale", "statefulsets",
+			"cronjobs", "jobs", "daemonsets", "deployments",
+			"deployments/rollback", "deployments/scale", "replicasets", "replicasets/scale", "replicationcontrollers/scale",
+			"horizontalpodautoscalers"},
 	},
 	{
 		Verbs:     []string{"get", "list", "watch"},
 		APIGroups: []string{"*"},
-		Resources: []string{"limitranges", "pods/log", "pods/status", "replicationcontrollers/status", "resourcequotas", "resourcequotas/status", "bindings"},
+		Resources: []string{"limitranges", "pods/log", "pods/status", "replicationcontrollers/status", "resourcequotas",
+			"resourcequotas/status", "bindings"},
 	},
 }
 
@@ -78,13 +82,17 @@ var workloadsManageRules = []rbacv1.PolicyRule{
 	{
 		Verbs:     []string{"*"},
 		APIGroups: []string{"*"},
-		Resources: []string{"pods", "pods/attach", "pods/exec", "pods/portforward", "pods/proxy", "replicationcontrollers", "replicationcontrollers/scale", "daemonsets",
-			"deployments", "deployments/rollback", "deployments/scale", "replicasets", "replicasets/scale", "statefulsets", "cronjobs", "jobs", "daemonsets", "deployments",
-			"deployments/rollback", "deployments/scale", "replicasets", "replicasets/scale", "replicationcontrollers/scale", "horizontalpodautoscalers"},
+		Resources: []string{"pods", "pods/attach", "pods/exec", "pods/portforward", "pods/proxy", "replicationcontrollers",
+			"replicationcontrollers/scale", "daemonsets",
+			"deployments", "deployments/rollback", "deployments/scale", "replicasets", "replicasets/scale", "statefulsets",
+			"cronjobs", "jobs", "daemonsets", "deployments",
+			"deployments/rollback", "deployments/scale", "replicasets", "replicasets/scale", "replicationcontrollers/scale",
+			"horizontalpodautoscalers"},
 	},
 	{
 		Verbs:     []string{"get", "list", "watch"},
 		APIGroups: []string{"*"},
-		Resources: []string{"limitranges", "pods/log", "pods/status", "replicationcontrollers/status", "resourcequotas", "resourcequotas/status", "bindings"},
+		Resources: []string{"limitranges", "pods/log", "pods/status", "replicationcontrollers/status", "resourcequotas",
+			"resourcequotas/status", "bindings"},
 	},
 }

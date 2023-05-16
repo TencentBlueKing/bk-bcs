@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -40,13 +41,14 @@ func Run(conf *config.CustomSchedulerConfig) {
 	return
 }
 
-//RunPrometheusMetrics starting prometheus metrics handler
+// RunPrometheusMetricsServer starting prometheus metrics handler
 func RunPrometheusMetricsServer(conf *config.CustomSchedulerConfig) {
 	http.Handle("/metrics", promhttp.Handler())
 	addr := conf.Address + ":" + strconv.Itoa(int(conf.MetricPort))
 	go http.ListenAndServe(addr, nil)
 }
 
+// ParseConfig xxx
 func ParseConfig(op *options.ServerOption) *config.CustomSchedulerConfig {
 	customSchedulerConfig := config.NewCustomSchedulerConfig()
 

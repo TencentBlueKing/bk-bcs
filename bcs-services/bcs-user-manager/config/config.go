@@ -11,16 +11,30 @@
  *
  */
 
+// Package config xxx
 package config
 
 import (
 	"crypto/tls"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
-//CertConfig is configuration of Cert
+var userManagerConfig *UserMgrConfig
+
+// SetGlobalConfig global config
+func SetGlobalConfig(config *UserMgrConfig) {
+	userManagerConfig = config
+}
+
+// GetGlobalConfig global config
+func GetGlobalConfig() *UserMgrConfig {
+	return userManagerConfig
+}
+
+// CertConfig is configuration of Cert
 type CertConfig struct {
 	CAFile     string
 	CertFile   string
@@ -29,9 +43,10 @@ type CertConfig struct {
 	IsSSL      bool
 }
 
-//UserMgrConfig is a configuration of bcs-user-manager
+// UserMgrConfig is a configuration of bcs-user-manager
 type UserMgrConfig struct {
 	Address         string
+	IPv6Address     string
 	Port            uint
 	InsecureAddress string
 	InsecurePort    uint
@@ -40,22 +55,36 @@ type UserMgrConfig struct {
 	MetricPort      uint
 	ServCert        *CertConfig
 	ClientCert      *CertConfig
+	// server http tls authentication
+	TlsServerConfig *tls.Config
+	// client http tls authentication
+	TlsClientConfig *tls.Config
+
 	VerifyClientTLS bool
 
 	DSN            string
+	RedisDSN       string
 	BootStrapUsers []options.BootStrapUser
 	TKE            options.TKEOptions
 	PeerToken      string
+
+	IAMConfig     options.IAMConfig
+	ClusterConfig options.ClusterManagerConfig
+	EtcdConfig    registry.CMDOptions
+
+	PermissionSwitch bool
+	CommunityEdition bool
+	PassConfig       options.PassCCConfig
 }
 
 var (
-	//Tke option for sync tke cluster credentials
+	// Tke option for sync tke cluster credentials
 	Tke options.TKEOptions
-	//CliTls for
+	// CliTls for
 	CliTls *tls.Config
 )
 
-//NewUserMgrConfig create a config object
+// NewUserMgrConfig create a config object
 func NewUserMgrConfig() *UserMgrConfig {
 	return &UserMgrConfig{
 		Address: "127.0.0.1",

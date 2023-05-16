@@ -14,13 +14,11 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 
-from django.conf import settings
 from rest_framework import permissions
 
+from backend.bcs_web.constants import ACCESS_TOKEN_KEY_NAME
 from backend.components.paas_auth import get_access_token
 from backend.utils import FancyDict, whitelist
-
-from .constants import ACCESS_TOKEN_KEY_NAME
 
 logger = logging.getLogger(__name__)
 

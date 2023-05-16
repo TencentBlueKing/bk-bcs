@@ -15,6 +15,9 @@ package bcs
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -45,7 +48,11 @@ type Config struct {
 	ClusterID  string
 }
 
-var config Config
+var (
+	config Config
+	// EncryptionKey is aes key
+	EncryptionKey string
+)
 
 func readConfig(cfg io.Reader) error {
 	if cfg == nil {
@@ -110,23 +117,40 @@ func CreateNodeGroupCache(configReader io.Reader) (*NodeGroupCache, clustermanag
 
 	operator := os.Getenv("Operator")
 	if len(operator) == 0 {
-		klog.Errorf("Can not get Operator")
+		return nil, nil, fmt.Errorf("Can not get Operator")
 	}
 	url := os.Getenv("BcsApiAddress")
 	if len(url) == 0 {
-		klog.Errorf("Can not get BcsApiAddress")
+		return nil, nil, fmt.Errorf("Can not get BcsApiAddress")
 	}
 	token := os.Getenv("BcsToken")
 	if len(token) == 0 {
-		klog.Errorf("Can not get BcsToekn")
+		return nil, nil, fmt.Errorf("Can not get BcsToken")
 	}
+
+	var err error
+	encryption := os.Getenv("Encryption")
+	if encryption == "yes" {
+		if len(EncryptionKey) == 0 {
+			return nil, nil, fmt.Errorf("Can not get EncryptionKey")
+		}
+		url, err = AesDecrypt(url, EncryptionKey)
+		if err != nil {
+			return nil, nil, fmt.Errorf("Can not decrypt BcsApiAddress: %s", err.Error())
+		}
+		token, err = AesDecrypt(token, EncryptionKey)
+		if err != nil {
+			return nil, nil, fmt.Errorf("Can not decrypt BcsToken: %s", err.Error())
+		}
+	}
+
 	var client clustermanager.NodePoolClientInterface
-	client, err := clustermanager.NewNodePoolClient(operator, url, token)
+	client, err = clustermanager.NewNodePoolClient(operator, url, token)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Can not build NodePoolClient")
 	}
 
-	return newNodeGroupCache(func(ng string) ([]*clustermanager.Node, error) {
+	return NewNodeGroupCache(func(ng string) ([]*clustermanager.Node, error) {
 		return client.GetNodes(ng)
 	}), client, nil
 }
@@ -148,6 +172,16 @@ func InstanceRefFromProviderID(id string) (*InstanceRef, error) {
 	return &InstanceRef{
 		Name: splitted[1],
 	}, nil
+}
+
+// InstanceRefFromInnerIP creates InstanceConfig object from internal address
+func InstanceRefFromInnerIP(addrs []apiv1.NodeAddress) (*InstanceRef, error) {
+	for _, addr := range addrs {
+		if addr.Type == apiv1.NodeInternalIP {
+			return &InstanceRef{IP: addr.Address}, nil
+		}
+	}
+	return nil, fmt.Errorf("Cannot find internal address for node")
 }
 
 // buildNodeGroupFromSpec builds node group with value format: <min>:<max>:<nodeGroupID>
@@ -191,6 +225,33 @@ func convertResource(lc *clustermanager.LaunchConfiguration) map[apiv1.ResourceN
 	resources := map[apiv1.ResourceName]resource.Quantity{}
 	resources[apiv1.ResourceCPU] = resource.MustParse(fmt.Sprintf("%v", lc.CPU))
 	resources[apiv1.ResourceMemory] = resource.MustParse(fmt.Sprintf("%v", lc.Mem) + "Gi")
-	resources["gpu"] = resource.MustParse(fmt.Sprintf("%v", lc.CPU))
+	resources["gpu"] = resource.MustParse(fmt.Sprintf("%v", lc.GPU))
 	return resources
+}
+
+// AesDecrypt decrypt message with key
+func AesDecrypt(encrypted, key string) (string, error) {
+	encrytedByte, err := base64.StdEncoding.DecodeString(encrypted)
+	if err != nil {
+		return "", err
+	}
+	k := []byte(key)
+
+	block, err := aes.NewCipher(k)
+	if err != nil {
+		return "", err
+	}
+	blockSize := block.BlockSize()
+	blockMode := cipher.NewCBCDecrypter(block, k[:blockSize])
+	orig := make([]byte, len(encrytedByte))
+	blockMode.CryptBlocks(orig, encrytedByte)
+	orig = PKCS7UnPadding(orig)
+	return string(orig), nil
+}
+
+// PKCS7UnPadding returns the unpadding text
+func PKCS7UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:(length - unpadding)]
 }

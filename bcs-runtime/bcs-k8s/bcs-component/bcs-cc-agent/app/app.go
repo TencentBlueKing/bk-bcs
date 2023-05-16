@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -25,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cc-agent/options"
 )
 
-//Run bcs-cc-agent server
+// Run bcs-cc-agent server
 func Run(op *options.ServerOption) {
 	conf, err := parseConfig(op)
 	if err != nil {

@@ -17,11 +17,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/emicklei/go-restful"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/emicklei/go-restful"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -63,6 +62,34 @@ func GetQueryParamInt(req *restful.Request, key string, defaultValue int) (int, 
 // GetQueryParamInt64 get int64 from restful query parameter
 func GetQueryParamInt64(req *restful.Request, key string, defaultValue int64) (int64, error) {
 	s := req.QueryParameter(key)
+	if len(s) == 0 {
+		return defaultValue, nil
+	}
+	return strconv.ParseInt(s, 10, 64)
+}
+
+// GetJsonParamStringArray get string array from json map parameter
+func GetJsonParamStringArray(params map[string]string, key, sep string) []string {
+	s := params[key]
+	if len(s) == 0 {
+		return nil
+	}
+	fields := strings.Split(s, sep)
+	return fields
+}
+
+// GetJsonParamInt get int from json map parameter
+func GetJsonParamInt(params map[string]string, key string, defaultValue int) (int, error) {
+	s := params[key]
+	if len(s) == 0 {
+		return defaultValue, nil
+	}
+	return strconv.Atoi(s)
+}
+
+// GetJsonParamInt64 get int64 from json map parameter
+func GetJsonParamInt64(params map[string]string, key string, defaultValue int64) (int64, error) {
+	s := params[key]
 	if len(s) == 0 {
 		return defaultValue, nil
 	}
@@ -112,10 +139,14 @@ func GetCustomCondition(req *restful.Request) *operator.Condition {
 	if req.Request.Form == nil || len(req.Request.Form) == 0 {
 		return nil
 	}
+	return GetCustomConditionFromBody(req.Request.Form)
+}
+
+func GetCustomConditionFromBody(body map[string][]string) *operator.Condition {
 	conds := make([]*operator.Condition, 0)
 	// empty Condition
 	rootCondition := operator.NewLeafCondition(operator.Tr, operator.M{})
-	for key, valueList := range req.Request.Form {
+	for key, valueList := range body {
 		switch key {
 		// labelSelector=tag1=val1,tag2+in+(v1,v2),tag3+notin+(v1,v2),tag4+!=+(v1,v2),tag5
 		case labelSelectorTag:
@@ -130,7 +161,8 @@ func GetCustomCondition(req *restful.Request) *operator.Condition {
 				var innerErr error
 				t, innerErr = time.Parse("2006-01-02T15:04:05.000Z", valueList[0])
 				if innerErr != nil {
-					blog.Errorf("Unrecognized update time (%s) format, neither timestamp in seconds format nor time expression like 2006-01-02T15:04:05.000Z", valueList[0])
+					blog.Errorf(
+						"Unrecognized update time (%s) format, neither timestamp in seconds format nor time expression like 2006-01-02T15:04:05.000Z", valueList[0])
 					break
 				}
 			} else {

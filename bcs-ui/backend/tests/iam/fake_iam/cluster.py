@@ -14,13 +14,15 @@ specific language governing permissions and limitations under the License.
 """
 from typing import Dict, List
 
-from iam import Request
+from iam import Request, Resource
 
 from backend.iam.permissions.perm import Permission
-from backend.iam.permissions.request import ResourceRequest
 from backend.iam.permissions.resources.cluster import ClusterAction
+from backend.tests.testing_utils.base import generate_random_string
 
 from ..permissions import roles
+
+FREE_CLUSTER_ID = generate_random_string(10)
 
 
 class FakeClusterIAM:
@@ -42,7 +44,7 @@ class FakeClusterPermission(Permission):
     iam = FakeClusterIAM()
 
     def resource_inst_multi_actions_allowed(
-        self, username: str, action_ids: List[str], res_request: ResourceRequest
+        self, username: str, action_ids: List[str], resources: List[Resource]
     ) -> Dict[str, bool]:
         if username in [
             roles.ADMIN_USER,
@@ -57,3 +59,18 @@ class FakeClusterPermission(Permission):
             multi[ClusterAction.MANAGE] = True
             multi[ClusterAction.VIEW] = False
         return multi
+
+    def batch_resource_multi_actions_allowed(
+        self, username: str, action_ids: List[str], resources: List[Resource]
+    ) -> Dict[str, Dict[str, bool]]:
+
+        perms = {}
+
+        for idx, r_id in enumerate([res.id for res in resources]):
+            if r_id == FREE_CLUSTER_ID:
+                p = {action_id: True for action_id in action_ids}
+            else:
+                p = {action_id: False for action_id in action_ids}
+            perms[r_id] = p
+
+        return perms

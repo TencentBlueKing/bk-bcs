@@ -14,14 +14,18 @@ specific language governing permissions and limitations under the License.
 """
 import logging
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List
 
-from backend.components.base import ComponentAuth
+from django.conf import settings
+
+from backend.components import cc, gse
 from backend.components.cluster_manager import ClusterManagerClient
 from backend.container_service.clusters import constants as node_constants
 from backend.container_service.clusters.base.models import CtxCluster
 from backend.resources.constants import NodeConditionStatus
 from backend.resources.node.client import Node
+from backend.resources.workloads.pod.client import Pod
+from backend.utils.basic import getitems
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +49,7 @@ def query_cluster_nodes(ctx_cluster: CtxCluster, exclude_master: bool = True) ->
     for node in cluster_node_list.items:
         labels = node.labels
         # 现阶段节点页面展示及操作，需要排除master
-        if exclude_master and labels.get(node_constants.K8S_NODE_ROLE_MASTER) == "true":
+        if exclude_master and node.is_master():
             continue
 
         # 使用inner_ip作为key，主要是方便匹配及获取值
@@ -64,7 +68,7 @@ def query_nodes_from_cm(ctx_cluster: CtxCluster) -> Dict:
     """通过 cluster manager 查询节点数据
     目的是展示初始化中、初始化失败、删除中、删除失败的节点
     """
-    client = ClusterManagerClient(ComponentAuth(access_token=ctx_cluster.context.auth.access_token))
+    client = ClusterManagerClient(ctx_cluster.context.auth.access_token)
     try:
         node_list = client.get_nodes(ctx_cluster.id)
     except Exception as e:
@@ -150,3 +154,139 @@ class NodesData:
                 node["status"] = transform_status(node["status"], node["unschedulable"])
                 node_list.append(node)
         return node_list
+
+
+class BcsClusterMaster:
+    def __init__(self, ctx_cluster: CtxCluster, biz_id: str, username: str = settings.ADMIN_USERNAME):
+        self.ctx_cluster = ctx_cluster
+        self.biz_id = biz_id
+        self.username = username
+
+    def list_masters(self) -> List[Dict]:
+        """获取master信息
+        1. 查询集群中的ip和name
+        2. 通过ip查询主机所在的机房、机架、机型
+        3. 通过ip查询主机的agent信息
+        4. 组装数据，添加master对应的机房、agent等信息
+        """
+        cluster_masters = self._get_cluster_masters()
+        master_ips = [m["inner_ip"] for m in cluster_masters]
+        ip_map_hosts = self._get_ip_map_hosts(master_ips)
+        ip_map_agent_status = self._get_ip_map_agent_status(list(ip_map_hosts.values()))
+        # 组装数据，追加前端展示需要的机房、机架、机型及agent信息
+        for master in cluster_masters:
+            inner_ip = master["inner_ip"]
+            master.update(ip_map_hosts.get(inner_ip, {}), **ip_map_agent_status.get(inner_ip, {}))
+        return cluster_masters
+
+    def _get_cluster_masters(self) -> List[Dict]:
+        """查询集群中的master ip和name"""
+        node_client = Node(self.ctx_cluster)
+        # NOTE: 返回节点出现异常，直接报错
+        cluster_nodes = node_client.list(is_format=False)
+        # 过滤 master 信息
+        masters = []
+        for node in cluster_nodes.items:
+            if not node.is_master():
+                continue
+            masters.append({"inner_ip": node.inner_ip, "host_name": node.name})
+        return masters
+
+    def _get_ip_map_hosts(self, inner_ips: List[str]) -> Dict[str, Dict]:
+        """通过 IP 查询主机信息
+        包含: 机房、机架、机型
+        """
+        host_property_filter = {
+            "condition": "OR",
+            "rules": [{"field": "bk_host_innerip", "operator": "equal", "value": inner_ip} for inner_ip in inner_ips],
+        }
+        try:
+            hosts = cc.HostQueryService(
+                self.username, self.biz_id, host_property_filter=host_property_filter
+            ).fetch_all()
+        except Exception as e:
+            logger.error("查询主机信息失败，%s", e)
+            # 忽略异常，直接返回为空
+            return {}
+        # 组装机房、机架、机型数据
+        default_cloud_id = 0
+        return {
+            host["bk_host_innerip"]: {
+                "inner_ip": host["bk_host_innerip"],
+                "idc": host.get("idc_name"),
+                "rack": host.get("rack"),
+                "device_class": host.get("svr_device_class"),
+                "bk_cloud_id": host.get("bk_cloud_id", default_cloud_id),
+            }
+            for host in hosts
+        }
+
+    def _get_ip_map_agent_status(self, hosts: List[Dict]) -> Dict[str, Dict]:
+        """通过 IP 查询主机 agent 状态"""
+        # 主机为空时，直接返回
+        if not hosts:
+            return {}
+        params = [{"ip": host["inner_ip"], "bk_cloud_id": host["bk_cloud_id"]} for host in hosts]
+        try:
+            agents = gse.get_agent_status(self.username, params)
+        except Exception as e:
+            logger.error("查询主机agent信息失败，%s", e)
+            return {}
+        # 如果返回状态字段缺失，则认为agent状态异常，其中0表示agent不在线
+        return {
+            agent["ip"]: {"agent": agent.get("bk_agent_alive", node_constants.DEFAULT_BK_AGENT_ALIVE)}
+            for agent in agents
+        }
+
+
+class NodeDetailQuerier:
+    def __init__(self, name: str, ctx_cluster: CtxCluster):
+        self.name = name
+        self.ctx_cluster = ctx_cluster
+
+    def detail(self) -> Dict[str, Any]:
+        # 通过集群获取
+        client = Node(self.ctx_cluster)
+        node_data = client.get(self.name).get("data", {})
+        # 过滤需要的信息: 包含节点名称、IP、版本、OS、运行时、镜像、标签、污点、pods
+        return self._detail(node_data)
+
+    def _detail(self, node_data: Dict[str, Any]) -> Dict[str, Any]:
+        """提取节点需要展示的信息
+
+        包含节点名称、IP、版本、OS、运行时、镜像、标签、注解、污点
+        """
+        # 获取inner_ip
+        inner_ip = self._get_inner_ip(node_data)
+        node = {"name": self.name, "hostIP": inner_ip}
+        # TODO: 其它属性是否需要放在最上层
+        node.update(getitems(node_data, ["status", "nodeInfo"], {}))
+        # 获取节点上的镜像数据
+        node["images"] = getitems(node_data, ["status", "images"], [])
+        # 获取污点信息
+        node["taints"] = getitems(node_data, ["spec", "taints"], [])
+        # 获取标签和注解
+        metadata = node_data["metadata"]
+        node.update({"labels": metadata["labels"], "annotations": metadata["annotations"]})
+        # 获取节点上的pods
+        node["pods"] = self._get_pods_by_ip(inner_ip)
+        return node
+
+    def _get_inner_ip(self, node_data: Dict[str, Any]) -> str:
+        """获取节点IP, 用于后续匹配节点上的pod信息"""
+        addresses = node_data["status"]["addresses"]
+        for addr in addresses:
+            if addr["type"] == "InternalIP":
+                return addr["address"]
+        logger.error("查询主机(%s)IP为空", self.name)
+        raise ""
+
+    def _get_pods_by_ip(self, inner_ip: str) -> List[Dict]:
+        """通过节点ip过滤节点上的pod信息"""
+        pods = Pod(self.ctx_cluster).list()
+        filtered_pods = []
+        for p in pods:
+            if p["hostIP"] != inner_ip:
+                continue
+            filtered_pods.append(p)
+        return filtered_pods

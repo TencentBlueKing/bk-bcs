@@ -1,4 +1,4 @@
 FROM centos:centos7
 
-COPY ./bin/gpa gpa
-ENTRYPOINT ["/gpa"]
+COPY ./bcs-general-pod-autoscaler bcs-general-pod-autoscaler
+ENTRYPOINT ["/bcs-general-pod-autoscaler"]

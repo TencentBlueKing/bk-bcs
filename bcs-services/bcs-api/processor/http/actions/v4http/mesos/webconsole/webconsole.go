@@ -11,6 +11,7 @@
  *
  */
 
+// Package webconsole xxx
 package webconsole
 
 import (
@@ -28,6 +29,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// WebconsoleProxy xxx
 type WebconsoleProxy struct {
 
 	// Backend returns the backend URL which the proxy uses to reverse proxy
@@ -36,6 +38,7 @@ type WebconsoleProxy struct {
 	CertConfig *config.CertConfig
 }
 
+// NewWebconsoleProxy xxx
 func NewWebconsoleProxy(certConfig *config.CertConfig) *WebconsoleProxy {
 	backend := func(req *http.Request) (*url.URL, error) {
 		v := req.URL.Query()
@@ -61,6 +64,7 @@ func NewWebconsoleProxy(certConfig *config.CertConfig) *WebconsoleProxy {
 	}
 }
 
+// ServeHTTP 用于HTTP服务
 func (w *WebconsoleProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	start := time.Now()
 

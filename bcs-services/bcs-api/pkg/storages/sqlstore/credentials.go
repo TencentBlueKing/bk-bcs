@@ -67,11 +67,13 @@ func GetWsCredentials(serverKey string) *m.WsClusterCredentials {
 	return nil
 }
 
+// DelWsCredentials xxx
 func DelWsCredentials(serverKey string) {
 	credentials := m.WsClusterCredentials{}
 	GCoreDB.Where(&m.WsClusterCredentials{ServerKey: serverKey}).Delete(&credentials)
 }
 
+// GetWsCredentialsByClusterId xxx
 func GetWsCredentialsByClusterId(clusterId string) []*m.WsClusterCredentials {
 	var credentials []*m.WsClusterCredentials
 	query := clusterId + "-%"

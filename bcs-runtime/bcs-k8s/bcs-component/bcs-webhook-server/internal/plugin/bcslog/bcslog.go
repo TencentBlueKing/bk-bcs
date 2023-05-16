@@ -10,9 +10,11 @@
  * limitations under the License.
  */
 
+// Package bcslog xxx
 package bcslog
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -33,13 +35,13 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/apis/bk-bcs/v1"
-	internalclientset "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/clientset/versioned"
-	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/informers/externalversions"
-	listers "github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs/client/listers/bk-bcs/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
+	bcsv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/bkbcs/v1"
+	internalclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
+	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/informers/externalversions"
+	listers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/listers/bkbcs/v1"
 )
 
 // Hooker webhook for bcslog
@@ -105,6 +107,7 @@ func (h *Hooker) initKubeClient() error {
 	return nil
 }
 
+// createBcsLogConfig xxx
 // create crd of BcsLogConf
 func (h *Hooker) createBcsLogConfig(clientset apiextensionsclient.Interface) (bool, error) {
 	bcsLogConfigPlural := "bcslogconfigs"
@@ -127,7 +130,8 @@ func (h *Hooker) createBcsLogConfig(clientset apiextensionsclient.Interface) (bo
 		},
 	}
 
-	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
+	_, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.Background(), crd,
+		metav1.CreateOptions{})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			blog.Infof("crd is already exists: %s", err)
@@ -200,7 +204,7 @@ func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
 		return nil, err
 	}
 
-	//handle bcs-system modules' log inject
+	// handle bcs-system modules' log inject
 	namespaceSet := mapset.NewSet()
 	for _, namespace := range IgnoredNamespaces {
 		namespaceSet.Add(namespace)
@@ -216,7 +220,7 @@ func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
 		return patch, nil
 	}
 
-	//handle business modules' log inject
+	// handle business modules' log inject
 	defaultLogConf := FindDefaultConfigType(bcsLogConfs)
 	matchedLogConf := FindK8sMatchedConfigType(pod, bcsLogConfs)
 	if matchedLogConf != nil {

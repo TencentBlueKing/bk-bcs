@@ -1,0 +1,50 @@
+/* @import '@/css/variable.css'; */
+/* @import '@/css/mixins/ellipsis.css'; */
+
+.dashboard-top-title {
+    display: inline-block;
+    height: 60px;
+    line-height: 60px;
+    font-size: 16px;
+    margin-left: 20px;
+}
+
+.dashboard-top-actions {
+    float: right;
+    margin: 14px 20px;
+    line-height: 30px;
+
+    .bk-text-button {
+        font-size: 14px;
+        float: right;
+        margin-left: 15px;
+    }
+
+    .button {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        font-size: 26px;
+        color: #c3cdd7;
+        padding: 0;
+        margin: 0 3px;
+        line-height: 1;
+    }
+}
+.search-input {
+    width: 320px;
+    float: right;
+}
+
+.biz-cluster-ring {
+    margin: 5px 0;
+}
+.ring-text-inner {
+  position: absolute;
+  right: 0;
+  top: 32%;
+  width: 50px;
+  text-align: center;
+  font-size: 10px;
+}

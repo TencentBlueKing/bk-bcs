@@ -11,6 +11,7 @@
  *
  */
 
+// Package sdk xxx
 package sdk
 
 import (
@@ -195,6 +196,7 @@ func (c *Client) CreateLoadBalance(lb *cloudListenerType.CloudLoadBalancer) (lbI
 	return "", nil, fmt.Errorf("waiting for loadbalance creating timeout")
 }
 
+// doDescribeLoadBalance xxx
 // do actually describe loadbalance by loadbalance name
 func (c *Client) doDescribeLoadBalance(name string) (*tclb.LoadBalancer, error) {
 	request := tclb.NewDescribeLoadBalancersRequest()
@@ -478,7 +480,7 @@ func (c *Client) DescribeListener(lbID, listenerID string, port int) (
 		if !ok {
 			return nil, false, fmt.Errorf("unrecognized protocol %s", *listener.Protocol)
 		}
-		//TODO: get full information from tencent cloud
+		// TODO: get full information from tencent cloud
 		retListener := &cloudListenerType.CloudListener{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: *listener.ListenerName,
@@ -1206,12 +1208,14 @@ func (c *Client) ListListener(lbID string) ([]*cloudListenerType.CloudListener, 
 	return retListenerList, nil
 }
 
+// backendToJSONString xxx
 // mashal backends to string
 func backendToJSONString(b *tclb.Backend) string {
 	data, _ := json.Marshal(b)
 	return string(data)
 }
 
+// convertToCloudListenerBackend xxx
 // convert tclb backend to cloud listener backend
 func (c *Client) convertToCloudListenerBackend(backendList []*tclb.Backend) ([]*cloudListenerType.Backend, error) {
 	var retBackends []*cloudListenerType.Backend
@@ -1229,6 +1233,7 @@ func (c *Client) convertToCloudListenerBackend(backendList []*tclb.Backend) ([]*
 	return retBackends, nil
 }
 
+// convertToCloudListenerHealthCheck xxx
 // convert tclb health check to local type
 func (c *Client) convertToCloudListenerHealthCheck(hc *tclb.HealthCheck) (
 	*cloudListenerType.TargetGroupHealthCheck, error) {
@@ -1258,6 +1263,7 @@ func (c *Client) convertToCloudListenerHealthCheck(hc *tclb.HealthCheck) (
 	return retHealthCheck, nil
 }
 
+// convertRuleTargetsToTargetGroup xxx
 // convert rules targets to local target group
 func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclbRuleTargets *tclb.RuleTargets) (
 	*cloudListenerType.Rule, error) {
@@ -1282,6 +1288,7 @@ func (c *Client) convertRuleTargetsToTargetGroup(tclbRule *tclb.RuleOutput, tclb
 	return nil, nil
 }
 
+// convertTclbListenerToCloudListener xxx
 // convert tclb listener type to local cloud listener type
 func (c *Client) convertTclbListenerToCloudListener(
 	listener *tclb.Listener, listenerBackend *tclb.ListenerBackend, listenerHeath *tclb.ListenerHealth) (
@@ -1377,6 +1384,7 @@ func (c *Client) convertTclbListenerToCloudListener(
 	return cloudListener, nil
 }
 
+// doListListenerWithoutBackends xxx
 // call tencent sdk DescribeListeners
 // there is no backends in response
 func (c *Client) doListListenerWithoutBackends(lbID string) ([]*tclb.Listener, error) {
@@ -1405,6 +1413,7 @@ func (c *Client) doListListenerWithoutBackends(lbID string) ([]*tclb.Listener, e
 	return nil, fmt.Errorf("describe listeners timeout")
 }
 
+// doListBackends xxx
 // call tencent sdk DescribeTargets
 func (c *Client) doListBackends(lbID string) (map[string]*tclb.ListenerBackend, error) {
 	request := tclb.NewDescribeTargetsRequest()
@@ -1436,6 +1445,7 @@ func (c *Client) doListBackends(lbID string) (map[string]*tclb.ListenerBackend, 
 	return nil, fmt.Errorf("describe listener backend timeout")
 }
 
+// doListenerHealthStatus xxx
 // get listener health status by loadbalance id
 // return map[key]*tclb.ListenerHealth, key is listenerid
 func (c *Client) doListenerHealthStatus(lbID string) (map[string]*tclb.ListenerHealth, error) {

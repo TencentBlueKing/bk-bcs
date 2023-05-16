@@ -6,7 +6,8 @@
      "watch_resource": {
         "namespace": "${watchNamespace}",
         "disable_netservice": ${watchDisableNetService},
-        "disable_crd": ${watchDisableCrd}
+        "disable_crd": ${watchDisableCrd},
+        "label_selectors": ${watchLabelSelectors}
     },
     "bcs": {
         "zk": "${bcsZkHost}",

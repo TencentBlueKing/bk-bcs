@@ -1,157 +1,200 @@
 {
-    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-    "operations": [
-        {
-            "operation": "upsert_resource_type",
-                "data": {
-                    "id": "namespace",
-                    "name": "命名空间",
-                    "name_en": "namespace",
-                    "description": "命名空间",
-                    "description_en": "namespace",
-                    "provider_config": {
-                        "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/namespaces/"
-                    },
-                    "version": 1
-                }
+  "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+  "operations": [
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "namespace",
+        "name": "命名空间",
+        "name_en": "namespace",
+        "description": "命名空间",
+        "description_en": "namespace",
+        "provider_config": {
+          "path": "{{ BK_IAM_PROVIDER_PATH_PREFIX }}/v1/namespaces/"
         },
-        {
-            "operation": "upsert_instance_selection",
-                "data": {
-                    "id": "namespace_list",
-                    "name": "命名空间",
-                    "name_en": "namespace",
-                    "resource_type_chain": [
-                        {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "project"},
-                        {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "cluster"},
-                        {"system_id": "{{ BK_IAM_SYSTEM_ID }}", "id": "namespace"}
-                    ]
-                }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "namespace_create",
-                "name": "命名空间创建",
-                "name_en": "create namespace",
-                "description": "用户创建命名空间",
-                "description_en": "user create namespace",
-                "type": "create",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "cluster",
-                    "related_instance_selections": [{
-                        "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                        "id": "cluster_list"
-                    }]
-                }],
-                "related_actions": ["project_view", "cluster_view", "cluster_use"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "namespace_view",
-                "name": "命名空间查看",
-                "name_en": "view namespace",
-                "description": "用户查看命名空间",
-                "description_en": "user view namespace",
-                "type": "view",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "namespace",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "namespace_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "cluster_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "namespace_update",
-                "name": "命名空间更新",
-                "name_en": "update namespace",
-                "description": "用户更新命名空间",
-                "description_en": "user update namespace",
-                "type": "edit",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "namespace",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "namespace_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "cluster_view", "cluster_use","namespace_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "namespace_delete",
-                "name": "命名空间删除",
-                "name_en": "delete namespace",
-                "description": "用户删除命名空间",
-                "description_en": "user delete namespace",
-                "type": "delete",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "namespace",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "namespace_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "cluster_view", "cluster_use","namespace_view"],
-                "version": 1
-            }
-        },
-        {
-            "operation": "upsert_action",
-            "data": {
-                "id": "namespace_use",
-                "name": "命名空间使用",
-                "name_en": "use namespace",
-                "description": "用户使用命名空间",
-                "description_en": "user use namespace",
-                "type": "use",
-                "related_resource_types": [{
-                    "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                    "id": "namespace",
-                    "name_alias":  "",
-                    "name_alias_en": "",
-                    "selection_mode": "instance",
-                    "related_instance_selections": [
-                        {
-                            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
-                            "id": "namespace_list"
-                        }
-                    ]
-                }],
-                "related_actions": ["project_view", "cluster_view", "cluster_use", "namespace_view"],
-                "version": 1
-            }
-        }
-    ]
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "namespace_list",
+        "name": "命名空间",
+        "name_en": "namespace",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          },
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster"
+          },
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_create",
+        "name": "命名空间创建",
+        "name_en": "create namespace",
+        "description": "用户创建命名空间",
+        "description_en": "user create namespace",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "cluster",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "cluster_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_use"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_view",
+        "name": "命名空间查看",
+        "name_en": "view namespace",
+        "description": "用户查看命名空间",
+        "description_en": "user view namespace",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_update",
+        "name": "命名空间更新",
+        "name_en": "update namespace",
+        "description": "用户更新命名空间",
+        "description_en": "user update namespace",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_use",
+          "namespace_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_delete",
+        "name": "命名空间删除",
+        "name_en": "delete namespace",
+        "description": "用户删除命名空间",
+        "description_en": "user delete namespace",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_use",
+          "namespace_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "namespace_use",
+        "name": "命名空间使用",
+        "name_en": "use namespace",
+        "description": "用户使用命名空间",
+        "description_en": "user use namespace",
+        "type": "use",
+        "related_resource_types": [
+          {
+            "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+            "id": "namespace",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ BK_IAM_SYSTEM_ID }}",
+                "id": "namespace_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view",
+          "cluster_view",
+          "cluster_use",
+          "namespace_view"
+        ],
+        "version": 1
+      }
+    }
+  ]
 }

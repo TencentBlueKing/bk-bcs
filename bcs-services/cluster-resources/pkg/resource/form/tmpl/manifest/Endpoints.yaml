@@ -1,0 +1,16 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: Endpoints
+{{ include "common.metadata" .metadata }}
+subsets:
+{{- range .spec.subsets }}
+- addresses:
+  {{- range .addresses }}
+  - ip: {{ . }}
+  {{- end }}
+  ports:
+  {{- range .ports }}
+  - name: {{ .name }}
+    port: {{ .port }}
+    protocol: {{ .protocol }}
+  {{- end }}
+{{- end }}

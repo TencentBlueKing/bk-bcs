@@ -43,7 +43,9 @@ import (
 )
 
 const (
-	CoreGroupPrefix  = "api"
+	// CoreGroupPrefix xxx
+	CoreGroupPrefix = "api"
+	// NamedGroupPrefix xxx
 	NamedGroupPrefix = "apis"
 
 	// DefaultDeleteCollectionWorkers defines the default value for deleteCollectionWorkers
@@ -79,7 +81,8 @@ type REST struct {
 }
 
 // Create inserts a new item into Manifest according to the unique key from the object.
-func (r *REST) Create(ctx context.Context, obj runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
+func (r *REST) Create(ctx context.Context, obj runtime.Object, createValidation rest.ValidateObjectFunc,
+	options *metav1.CreateOptions) (runtime.Object, error) {
 	return nil, fmt.Errorf("not support create object")
 }
 
@@ -120,7 +123,8 @@ func (r *REST) Update(ctx context.Context, name string, objInfo rest.UpdatedObje
 
 // Delete removes the item from storage.
 // options can be mutated by rest.BeforeDelete due to a graceful deletion strategy.
-func (r *REST) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
+func (r *REST) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc,
+	options *metav1.DeleteOptions) (runtime.Object, bool, error) {
 	return nil, false, nil
 }
 
@@ -130,7 +134,8 @@ func (r *REST) Delete(ctx context.Context, name string, deleteValidation rest.Va
 // will be deleted from storage, and then an error will be returned.
 // In case of success, the list of deleted objects will be returned.
 // Copied from k8s.io/apiserver/pkg/registry/generic/registry/store.go and modified.
-func (r *REST) DeleteCollection(ctx context.Context, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions, listOptions *internalversion.ListOptions) (runtime.Object, error) {
+func (r *REST) DeleteCollection(ctx context.Context, deleteValidation rest.ValidateObjectFunc,
+	options *metav1.DeleteOptions, listOptions *internalversion.ListOptions) (runtime.Object, error) {
 	if listOptions == nil {
 		listOptions = &internalversion.ListOptions{}
 	} else {
@@ -194,7 +199,8 @@ func (r *REST) DeleteCollection(ctx context.Context, deleteValidation rest.Valid
 				// function in the delete strategy called in the delete method.  While that is always ugly, it works
 				// when making a single call.  When making multiple calls via delete collection, the mutation applied to
 				// pod/A can change the option ultimately used for pod/B.
-				if _, _, err := r.Delete(ctx, accessor.GetName(), deleteValidation, options.DeepCopy()); err != nil && !errors.IsNotFound(err) {
+				if _, _, err := r.Delete(ctx, accessor.GetName(), deleteValidation, options.DeepCopy()); err != nil &&
+					!errors.IsNotFound(err) {
 					klog.V(4).InfoS("Delete object in DeleteCollection failed", "object", klog.KObj(accessor), "err", err)
 					errs <- err
 					return
@@ -219,7 +225,7 @@ func (r *REST) Watch(ctx context.Context, options *internalversion.ListOptions) 
 // List returns a list of items matching labels.
 func (r *REST) List(ctx context.Context, options *internalversion.ListOptions) (runtime.Object, error) {
 	klog.Infof("limit %d,continue %s", options.Limit, options.Continue)
-	//将continue字段当做分页的起始位置
+	// 将continue字段当做分页的起始位置
 	var offset int64
 	var err error
 	if options.Continue != "" {
@@ -252,6 +258,7 @@ func (r *REST) List(ctx context.Context, options *internalversion.ListOptions) (
 	return result, nil
 }
 
+// NewList xxx
 func (r *REST) NewList() runtime.Object {
 	// Here the list GVK "meta.k8s.io/v1 List" is just a symbol,
 	// since the real GVK will be set when List()
@@ -261,48 +268,60 @@ func (r *REST) NewList() runtime.Object {
 	return newObj
 }
 
-func (r *REST) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {
+// ConvertToTable xxx
+func (r *REST) ConvertToTable(ctx context.Context, object runtime.Object, tableOptions runtime.Object) (*metav1.Table,
+	error) {
 	tableConvertor := rest.NewDefaultTableConvertor(schema.GroupResource{Group: r.group, Resource: r.name})
 	return tableConvertor.ConvertToTable(ctx, object, tableOptions)
 }
 
+// ShortNames xxx
 func (r *REST) ShortNames() []string {
 	return r.shortNames
 }
 
+// SetShortNames xxx
 func (r *REST) SetShortNames(ss []string) {
 	r.shortNames = ss
 }
 
+// SetName xxx
 func (r *REST) SetName(name string) {
 	r.name = name
 }
 
+// NamespaceScoped xxx
 func (r *REST) NamespaceScoped() bool {
 	return r.namespaced
 }
 
+// SetNamespaceScoped xxx
 func (r *REST) SetNamespaceScoped(namespaceScoped bool) {
 	r.namespaced = namespaceScoped
 }
 
+// Categories xxx
 func (r *REST) Categories() []string {
-	//return []string{known.Category}
+	// return []string{known.Category}
 	return nil
 }
 
+// SetGroup xxx
 func (r *REST) SetGroup(group string) {
 	r.group = group
 }
 
+// SetVersion xxx
 func (r *REST) SetVersion(version string) {
 	r.version = version
 }
 
+// SetKind xxx
 func (r *REST) SetKind(kind string) {
 	r.kind = kind
 }
 
+// New xxx
 func (r *REST) New() runtime.Object {
 	newObj := &unstructured.Unstructured{}
 	orignalGVK := r.GroupVersionKind(schema.GroupVersion{})
@@ -310,11 +329,13 @@ func (r *REST) New() runtime.Object {
 	return newObj
 }
 
+// GroupVersionKind xxx
 func (r *REST) GroupVersionKind(_ schema.GroupVersion) schema.GroupVersionKind {
 	// use original GVK
 	return r.GroupVersion().WithKind(r.kind)
 }
 
+// GroupVersion xxx
 func (r *REST) GroupVersion() schema.GroupVersion {
 	return schema.GroupVersion{
 		Group:   r.group,

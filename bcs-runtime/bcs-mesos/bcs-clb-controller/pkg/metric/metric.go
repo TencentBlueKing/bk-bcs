@@ -11,6 +11,7 @@
  *
  */
 
+// Package metric xxx
 package metric
 
 import (

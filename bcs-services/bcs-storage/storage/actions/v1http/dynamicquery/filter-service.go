@@ -25,8 +25,8 @@ type ServiceFilter struct {
 	APIVersion string `json:"apiVersion,omitempty" filter:"data.apiVersion"`
 }
 
-const serviceNestedTimeLayout = nestedTimeLayout
+const serviceNestedTimeLayout = NestedTimeLayout
 
-func (t ServiceFilter) getCondition() *operator.Condition {
+func (t ServiceFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, serviceNestedTimeLayout)
 }

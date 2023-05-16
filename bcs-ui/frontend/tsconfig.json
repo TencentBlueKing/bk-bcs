@@ -12,7 +12,11 @@
     "allowJs": true,
     "outDir": "./dist",
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"],
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "allowSyntheticDefaultImports": true
+  },
+  "vueCompilerOptions": {
+    "target": 2.7,
   },
   "exclude": ["node_modules", "dist"],
   "include": ["./src/**/*.js", "./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.vue"]

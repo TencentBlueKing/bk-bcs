@@ -23,7 +23,7 @@ pytestmark = pytest.mark.django_db
 
 
 class TestCronJob:
-    """ 测试 CronJob 相关接口 """
+    """测试 CronJob 相关接口"""
 
     manifest = load_demo_manifest('workloads/simple_cronjob')
     create_url = f'{DAU_PREFIX}/workloads/cronjobs/'
@@ -31,31 +31,31 @@ class TestCronJob:
     inst_url = f"{list_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
-        """ 测试创建资源接口 """
+        """测试创建资源接口"""
         response = api_client.post(self.create_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_list(self, api_client):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         response = api_client.get(self.list_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'CronJobList'
 
     def test_update(self, api_client):
-        """ 测试更新资源接口 """
+        """测试更新资源接口"""
         # 调整调度规则
         self.manifest['spec']['schedule'] = '*/5 * * * *'
         response = api_client.put(self.inst_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_retrieve(self, api_client):
-        """ 测试获取单个资源接口 """
+        """测试获取单个资源接口"""
         response = api_client.get(self.inst_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'CronJob'
         assert getitems(response.data, 'manifest.spec.schedule') == '*/5 * * * *'
 
     def test_destroy(self, api_client):
-        """ 测试删除单个资源 """
+        """测试删除单个资源"""
         response = api_client.delete(self.inst_url)
         assert response.json()['code'] == 0

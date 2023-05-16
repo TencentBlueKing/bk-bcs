@@ -15,6 +15,7 @@ package models
 
 import "time"
 
+// BcsRole table
 type BcsRole struct {
 	ID        uint   `gorm:"primary_key"`
 	Name      string `gorm:"unique;not null"`
@@ -22,6 +23,7 @@ type BcsRole struct {
 	CreatedAt time.Time
 }
 
+// BcsUserResourceRole table
 type BcsUserResourceRole struct {
 	ID           uint   `gorm:"primary_key"`
 	UserId       uint   `gorm:"not null"`

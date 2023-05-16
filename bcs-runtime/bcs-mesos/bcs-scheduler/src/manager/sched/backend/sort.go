@@ -19,11 +19,16 @@ import (
 	"strings"
 )
 
-//TaskSorter bia name of []TaskGroup
+// TaskSorter bia name of []TaskGroup
 type TaskSorter []*types.TaskGroup
 
-func (s TaskSorter) Len() int      { return len(s) }
+// Len 用于排序
+func (s TaskSorter) Len() int { return len(s) }
+
+// Swap 用于排序
 func (s TaskSorter) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+// Less 用于排序
 func (s TaskSorter) Less(i, j int) bool {
 
 	// the time for building taskgroup

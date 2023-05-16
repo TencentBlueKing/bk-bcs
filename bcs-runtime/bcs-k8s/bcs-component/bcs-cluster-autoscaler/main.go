@@ -27,10 +27,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
+	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
+	metricsinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apiserver/pkg/server/mux"
+	"k8s.io/apiserver/pkg/server/routes"
 	"k8s.io/autoscaler/cluster-autoscaler/config"
 	"k8s.io/autoscaler/cluster-autoscaler/core"
 	"k8s.io/autoscaler/cluster-autoscaler/estimator"
@@ -51,11 +57,6 @@ import (
 	componentbaseconfig "k8s.io/component-base/config"
 	"k8s.io/klog"
 	"k8s.io/kubernetes/pkg/client/leaderelectionconfig"
-
-	cloudBuilder "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/cloudprovider/builder"
-	coreinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/scalingconfig"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator"
 )
 
 // MultiStringFlag is a flag for passing multiple parameters using same flag
@@ -144,6 +145,8 @@ var (
 	maxBulkSoftTaintCount = flag.Int("max-bulk-soft-taint-count", 10,
 		"Maximum number of nodes that can be tainted/untainted PreferNoSchedule at the same time."+
 			"Set to 0 to turn off such tainting.")
+	maxBulkScaleUpCount = flag.Int("max-bulk-scale-up-count", 100,
+		"Maximum number of nodes that can be scale up at the same time. Set to 0 to turn off such scaling up")
 	maxBulkSoftTaintTime = flag.Duration("max-bulk-soft-taint-time", 3*time.Second,
 		"Maximum duration of tainting/untainting nodes as PreferNoSchedule at the same time.")
 	maxEmptyBulkDeleteFlag = flag.Int("max-empty-bulk-delete", 10,
@@ -158,6 +161,10 @@ var (
 		"Should CA scale up when there 0 ready nodes.")
 	maxNodeProvisionTime = flag.Duration("max-node-provision-time", 15*time.Minute,
 		"Maximum time CA waits for node to be provisioned")
+	maxNodeStartupTime = flag.Duration("max-node-startup-time", 15*time.Minute,
+		"Maximum time CA waits for node to be ready")
+	maxNodeStartScheduleTime = flag.Duration("max-node-start-schedule-time", 15*time.Minute,
+		"Maximum time CA waits for node to be schedulable")
 	nodeGroupsFlag = multiStringFlag("nodes",
 		"sets min,max size and other configuration data for a node group in a format accepted by cloud provider."+
 			"Can be used multiple times. Format: <min>:<max>:<other...>")
@@ -170,10 +177,12 @@ var (
 			"Can be used multiple times.")
 
 	estimatorFlag = flag.String("estimator", estimator.BinpackingEstimatorName,
-		"Type of resource estimator to be used in scale up. Available values: ["+strings.Join(estimator.AvailableEstimators, ",")+"]")
+		"Type of resource estimator to be used in scale up. Available values: ["+strings.Join(estimator.AvailableEstimators,
+			",")+"]")
 
 	expanderFlag = flag.String("expander", expander.RandomExpanderName,
-		"Type of node group expander to be used in scale up. Available values: ["+strings.Join(expander.AvailableExpanders, ",")+"]")
+		"Type of node group expander to be used in scale up. Available values: ["+strings.Join(expander.AvailableExpanders,
+			",")+"]")
 
 	ignoreDaemonSetsUtilization = flag.Bool("ignore-daemonsets-utilization", false,
 		"Should CA ignore DaemonSet pods when calculating resource utilization for scaling down")
@@ -206,11 +215,16 @@ var (
 		"Filtering out schedulable pods before CA scale up by trying to pack the schedulable pods on free capacity on existing nodes."+
 			"Setting it to false employs a more lenient filtering approach that does not try to pack the pods on the nodes."+
 			"Pods with nominatedNodeName set are always filtered out.")
+	emitPerNodeGroupMetrics = flag.Bool("emit-per-nodegroup-metrics", true, "If true, emit per node group metrics.")
 
-	ignoreTaintsFlag         = multiStringFlag("ignore-taint", "Specifies a taint to ignore in node templates when considering to scale a node group")
+	ignoreTaintsFlag = multiStringFlag("ignore-taint",
+		"Specifies a taint to ignore in node templates when considering to scale a node group")
 	awsUseStaticInstanceList = flag.Bool("aws-use-static-instance-list", false,
 		"Should CA fetch instance types in runtime or use a static list. AWS only")
+	bufferedCPURatio      = flag.Float64("buffer-cpu-ratio", 0, "ratio of buffered cpu")
+	bufferedMemRatio      = flag.Float64("buffer-mem-ratio", 0, "ratio of buffered memory")
 	bufferedResourceRatio = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")
+	enableProfiling       = flag.Bool("profiling", false, "Is debug/pprof endpoint enabled")
 
 	initialNodeGroupBackoffDuration = flag.Duration("initial-node-group-backoff-duration", 30*time.Second,
 		"initialNodeGroupBackoffDuration is the duration of first backoff after a new node failed to start.")
@@ -218,6 +232,10 @@ var (
 		"maxNodeGroupBackoffDuration is the maximum backoff duration for a NodeGroup after new nodes failed to start.")
 	nodeGroupBackoffResetTimeout = flag.Duration("node-group-backoff-reset-timeout", 15*time.Minute,
 		"nodeGroupBackoffResetTimeout is the time after last failed scale-up when the backoff duration is reset.")
+	webhookMode       = flag.String("webhook-mode", "", "Webhook Mode. Available values: [ Web, ConfigMap ]")
+	webhookModeConfig = flag.String("webhook-mode-config", "", "Configuration of webhook mode."+
+		" It is a url for web, or namespace/name for configmap")
+	webhookModeToken = flag.String("webhook-mode-token", "", "Token for webhook mode")
 )
 
 func createAutoscalingOptions() scalingconfig.Options {
@@ -254,6 +272,8 @@ func createAutoscalingOptions() scalingconfig.Options {
 			MaxEmptyBulkDelete:                  *maxEmptyBulkDeleteFlag,
 			MaxGracefulTerminationSec:           *maxGracefulTerminationFlag,
 			MaxNodeProvisionTime:                *maxNodeProvisionTime,
+			MaxNodeStartupTime:                  *maxNodeStartupTime,
+			MaxNodeStartScheduleTime:            *maxNodeStartScheduleTime,
 			MaxNodesTotal:                       *maxNodesTotal,
 			MaxCoresTotal:                       maxCoresTotal,
 			MinCoresTotal:                       minCoresTotal,
@@ -287,7 +307,13 @@ func createAutoscalingOptions() scalingconfig.Options {
 			NodeDeletionDelayTimeout:            *nodeDeletionDelayTimeout,
 			AWSUseStaticInstanceList:            *awsUseStaticInstanceList,
 		},
+		BufferedCPURatio:      *bufferedCPURatio,
+		BufferedMemRatio:      *bufferedMemRatio,
 		BufferedResourceRatio: *bufferedResourceRatio,
+		WebhookMode:           *webhookMode,
+		WebhookModeConfig:     *webhookModeConfig,
+		WebhookModeToken:      *webhookModeToken,
+		MaxBulkScaleUpCount:   *maxBulkScaleUpCount,
 	}
 }
 
@@ -315,6 +341,8 @@ func getKubeConfig() *rest.Config {
 }
 
 func createKubeClient(kubeConfig *rest.Config) kube_client.Interface {
+	kubeConfig.QPS = 100
+	kubeConfig.Burst = 200
 	return kube_client.NewForConfigOrDie(kubeConfig)
 }
 
@@ -340,7 +368,7 @@ func buildAutoscaler() (core.Autoscaler, error) {
 	eventsKubeClient := createKubeClient(getKubeConfig())
 
 	processors := ca_processors.DefaultProcessors()
-	processors.PodListProcessor = core.NewFilterOutSchedulablePodListProcessor()
+	processors.PodListProcessor = coreinternal.NewFilterOutSchedulablePodListProcessor()
 
 	opts := coreinternal.AutoscalerOptions{
 		Options:          autoscalingOptions,
@@ -353,13 +381,17 @@ func buildAutoscaler() (core.Autoscaler, error) {
 
 	// This metric should be published only once.
 	metrics.UpdateNapEnabled(autoscalingOptions.NodeAutoprovisioningEnabled)
+	metrics.UpdateMaxNodesCount(autoscalingOptions.MaxNodesTotal)
+	metrics.UpdateCPULimitsCores(autoscalingOptions.MinCoresTotal, autoscalingOptions.MaxCoresTotal)
+	metrics.UpdateMemoryLimitsBytes(autoscalingOptions.MinMemoryTotal, autoscalingOptions.MaxMemoryTotal)
 
 	// Create autoscaler.
 	return coreinternal.NewAutoscaler(opts)
 }
 
 func run(healthCheck *metrics.HealthCheck) {
-	metrics.RegisterAll()
+	metrics.RegisterAll(*emitPerNodeGroupMetrics)
+	metricsinternal.RegisterLocal()
 
 	autoscaler, err := buildAutoscaler()
 	if err != nil {
@@ -387,6 +419,9 @@ func run(healthCheck *metrics.HealthCheck) {
 				healthCheck.UpdateLastActivity(loopStart)
 
 				err := autoscaler.RunOnce(loopStart)
+				if err != nil {
+					klog.Warningf("scaler error: %s", err.Error())
+				}
 				if err != nil && err.Type() != errors.TransientError {
 					metrics.RegisterError(err)
 				} else {
@@ -413,9 +448,13 @@ func main() {
 	klog.V(1).Infof("Cluster Autoscaler %s", version.ClusterAutoscalerVersion)
 
 	go func() {
-		http.Handle("/metrics", prometheus.Handler())
-		http.Handle("/health-check", healthCheck)
-		err := http.ListenAndServe(*address, nil)
+		pathRecorderMux := mux.NewPathRecorderMux("cluster-autoscaler")
+		pathRecorderMux.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
+		pathRecorderMux.HandleFunc("/health-check", healthCheck.ServeHTTP)
+		if *enableProfiling {
+			routes.Profiling{}.Install(pathRecorderMux)
+		}
+		err := http.ListenAndServe(*address, pathRecorderMux)
 		klog.Fatalf("Failed to start metrics: %v", err)
 	}()
 

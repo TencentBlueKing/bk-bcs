@@ -20,8 +20,8 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.dashboard.auditors import DashboardAuditor
+from backend.dashboard.constants import DashboardAction
 from backend.dashboard.exceptions import DeleteResourceError, OwnerReferencesNotExist
-from backend.dashboard.permissions import validate_cluster_perm
 from backend.dashboard.viewsets import NamespaceScopeViewSet
 from backend.resources.configs.configmap import ConfigMap
 from backend.resources.configs.secret import Secret
@@ -36,7 +36,9 @@ class PodViewSet(NamespaceScopeViewSet):
 
     @action(methods=['GET'], url_path='pvcs', detail=True)
     def persistent_volume_claims(self, request, project_id, cluster_id, namespace, name):
-        """ 获取 Pod Persistent Volume Claim 信息 """
+        """获取 Pod Persistent Volume Claim 信息"""
+        # 检查是否有查看命名空间域资源权限
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         response_data = Pod(request.ctx_cluster).filter_related_resources(
             PersistentVolumeClaim(request.ctx_cluster), namespace, name
         )
@@ -44,7 +46,9 @@ class PodViewSet(NamespaceScopeViewSet):
 
     @action(methods=['GET'], url_path='configmaps', detail=True)
     def configmaps(self, request, project_id, cluster_id, namespace, name):
-        """ 获取 Pod ConfigMap 信息 """
+        """获取 Pod ConfigMap 信息"""
+        # 检查是否有查看命名空间域资源权限
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         response_data = Pod(request.ctx_cluster).filter_related_resources(
             ConfigMap(request.ctx_cluster), namespace, name
         )
@@ -52,16 +56,18 @@ class PodViewSet(NamespaceScopeViewSet):
 
     @action(methods=['GET'], url_path='secrets', detail=True)
     def secrets(self, request, project_id, cluster_id, namespace, name):
-        """ 获取 Pod Secret 信息 """
+        """获取 Pod Secret 信息"""
+        # 检查是否有查看命名空间域资源权限
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         response_data = Pod(request.ctx_cluster).filter_related_resources(Secret(request.ctx_cluster), namespace, name)
         return Response(response_data)
 
     @action(methods=['PUT'], url_path='reschedule', detail=True)
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Reschedule)
     def reschedule(self, request, project_id, cluster_id, namespace, name):
-        """ 重新调度 Pod（仅对有父级资源的 Pod 有效） """
-        # 操作类接口统一检查集群操作权限
-        validate_cluster_perm(request, project_id, cluster_id)
+        """重新调度 Pod（仅对有父级资源的 Pod 有效）"""
+        # 检查是否有更新命名空间域资源权限（重新调度视为更新操作）
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Update)
         client = Pod(request.ctx_cluster)
         request.audit_ctx.update_fields(
             resource_type=self.resource_client.kind.lower(), resource=f'{namespace}/{name}'

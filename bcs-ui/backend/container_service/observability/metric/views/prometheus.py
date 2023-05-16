@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class PrometheusUpdateViewSet(viewsets.ViewSet):
-    """ 更新 Prometheus 相关 """
+    """更新 Prometheus 相关"""
 
     renderer_classes = (BKAPIRenderer, BrowsableAPIRenderer)
 

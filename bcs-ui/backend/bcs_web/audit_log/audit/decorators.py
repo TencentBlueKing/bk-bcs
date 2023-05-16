@@ -19,6 +19,7 @@ from typing import Optional, Tuple, Type
 import wrapt
 from rest_framework.exceptions import ValidationError
 
+from backend.metrics import Result, counter_inc
 from backend.packages.blue_krill.web.std_error import APIError
 
 from .auditors import Auditor

@@ -13,7 +13,7 @@
 
 package versions
 
-//all apiVersion supported list
+// all apiVersion supported list
 var apiVersionMap = map[string][]string{
 	"1.5":   apiSetV15,
 	"1.6":   apiSetV16,

@@ -27,6 +27,7 @@ type Out struct {
 	out io.Writer
 }
 
+// Write 用于常见IO
 func (o *Out) Write(p []byte) (int, error) {
 	return o.out.Write(p)
 }

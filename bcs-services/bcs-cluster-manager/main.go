@@ -15,11 +15,14 @@ package main
 import (
 	"flag"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/app"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	mconfig "github.com/micro/go-micro/v2/config"
 	mfile "github.com/micro/go-micro/v2/config/source/file"
 	mflag "github.com/micro/go-micro/v2/config/source/flag"
@@ -33,6 +36,7 @@ func main() {
 	flag.String("etcd_ca", "", "ca file for etcd")
 	// server config
 	flag.String("address", "127.0.0.1", "grpc server address")
+	flag.String("ipv6Address", "", "grpc server ipv6 address")
 	flag.String("insecureaddress", "127.0.0.1", "insecure server address")
 	flag.Uint("port", 8081, "grpc server port")
 	flag.Uint("httpport", 8080, "http server port")
@@ -67,6 +71,11 @@ func main() {
 	flag.String("mongo_password", "", "mongo passsword for cluster manager")
 	flag.Uint("mongo_maxpoolsize", 0, "mongo client connection pool max size, 0 means not set")
 	flag.Uint("mongo_minpoolsize", 0, "mongo client connection pool min size, 0 means not set")
+	// broker config
+	flag.String("broker_address", "127.0.0.1:5672", "broker server for background taskserver")
+	flag.String("broker_username", "", "broker username for background taskserver")
+	flag.String("broker_password", "", "broker password for background taskserver")
+	flag.String("broker_exchange", "clustermanager_task", "broker exchange queue for background taskserver")
 	// config file path
 	flag.String("conf", "", "config file path")
 	flag.Parse()
@@ -95,6 +104,9 @@ func main() {
 	if err != nil {
 		blog.Fatalf("scan config failed, err %s", err.Error())
 	}
+	// init serverConfig Ipv6Address
+	opt.ServerConfig.Ipv6Address = util.InitIPv6Address(opt.ServerConfig.Ipv6Address)
+	blog.Infof("service ipv6 server address: %s", opt.ServerConfig.Ipv6Address)
 
 	blog.InitLogs(bcsconf.LogConfig{
 		LogDir:          opt.BcsLog.LogDir,

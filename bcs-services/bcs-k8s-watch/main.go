@@ -14,8 +14,6 @@
 package main
 
 import (
-	"runtime"
-
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/app"
@@ -23,8 +21,6 @@ import (
 )
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
 	watchConfig := options.NewWatchOptions()
 	conf.Parse(watchConfig)
 

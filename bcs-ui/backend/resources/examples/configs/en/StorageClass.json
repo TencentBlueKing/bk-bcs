@@ -1,0 +1,13 @@
+{
+  "kind": "StorageClass",
+  "class": "storages",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_storage_class",
+      "alias": "StorageClass Simple Demo",
+      "description": "A simple storageClass demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

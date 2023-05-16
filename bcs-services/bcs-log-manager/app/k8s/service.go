@@ -28,22 +28,27 @@ import (
 )
 
 // HandleListLogCollectionTask deal with listing log collection task
-func (m *LogManager) HandleListLogCollectionTask(ctx context.Context, filter *config.CollectionFilterConfig) map[string][]config.CollectionConfig {
+func (m *LogManager) HandleListLogCollectionTask(ctx context.Context,
+	filter *config.CollectionFilterConfig) map[string][]config.CollectionConfig {
 	return m.getLogCollectionTaskByFilter(ctx, filter)
 }
 
 // HandleAddLogCollectionTask deal with adding log collection task
-func (m *LogManager) HandleAddLogCollectionTask(ctx context.Context, conf *config.CollectionConfig) *proto.CollectionTaskCommonResp {
+func (m *LogManager) HandleAddLogCollectionTask(ctx context.Context,
+	conf *config.CollectionConfig) *proto.CollectionTaskCommonResp {
 	return m.distributeAddTasks(ctx, m.getLogClients(), []config.CollectionConfig{*conf})
 }
 
 // HandleDeleteLogCollectionTask deal with deleting log collection task
-func (m *LogManager) HandleDeleteLogCollectionTask(ctx context.Context, filter *config.CollectionFilterConfig) *proto.CollectionTaskCommonResp {
+func (m *LogManager) HandleDeleteLogCollectionTask(ctx context.Context,
+	filter *config.CollectionFilterConfig) *proto.CollectionTaskCommonResp {
 	return m.distributeDeleteTasks(ctx, filter)
 }
 
+// getLogCollectionTaskByFilter xxx
 // get bcslogconfigs from clusters
-func (m *LogManager) getLogCollectionTaskByFilter(ctx context.Context, filter *config.CollectionFilterConfig) map[string][]config.CollectionConfig {
+func (m *LogManager) getLogCollectionTaskByFilter(ctx context.Context,
+	filter *config.CollectionFilterConfig) map[string][]config.CollectionConfig {
 	var ret = make(map[string][]config.CollectionConfig)
 	var wg sync.WaitGroup
 	respCh := make(chan interface{}, 1)
@@ -104,8 +109,10 @@ func (m *LogManager) getLogCollectionTaskByFilter(ctx context.Context, filter *c
 	}
 }
 
+// distributeAddTasks xxx
 // distribute add task
-func (m *LogManager) distributeAddTasks(ctx context.Context, newClusters map[string]*LogClient, confs []config.CollectionConfig) *proto.CollectionTaskCommonResp {
+func (m *LogManager) distributeAddTasks(ctx context.Context, newClusters map[string]*LogClient,
+	confs []config.CollectionConfig) *proto.CollectionTaskCommonResp {
 	blog.Infof("Start distribute log configs to clusters")
 	blog.Infof("log config list: %+v", confs)
 	var wg sync.WaitGroup
@@ -179,8 +186,10 @@ distributeAddTasksExit:
 	}
 }
 
+// distributeDeleteTasks xxx
 // distribute delete task
-func (m *LogManager) distributeDeleteTasks(ctx context.Context, filter *config.CollectionFilterConfig) *proto.CollectionTaskCommonResp {
+func (m *LogManager) distributeDeleteTasks(ctx context.Context,
+	filter *config.CollectionFilterConfig) *proto.CollectionTaskCommonResp {
 	ret := &proto.CollectionTaskCommonResp{
 		ErrResult: make([]*proto.ClusterDimensionalResp, 0),
 	}
@@ -239,6 +248,7 @@ func (m *LogManager) distributeDeleteTasks(ctx context.Context, filter *config.C
 	}
 }
 
+// addTaskToCluster xxx
 // msg.Data is *config.CollectionConfig, msg.RespCh is error return channel
 func (m *LogManager) addTaskToCluster(client *LogClient, wg *sync.WaitGroup, msg *RequestMessage) {
 	defer wg.Done()
@@ -276,7 +286,8 @@ func (m *LogManager) addTaskToCluster(client *LogClient, wg *sync.WaitGroup, msg
 		Do().
 		Error()
 	if err != nil {
-		blog.Warnf("Create BcsLogConfig of Cluster %s failed: %s (config info: %+v)", client.ClusterInfo.ClusterID, err.Error(), logconf)
+		blog.Warnf("Create BcsLogConfig of Cluster %s failed: %s (config info: %+v)", client.ClusterInfo.ClusterID,
+			err.Error(), logconf)
 		msg.RespCh <- &proto.ClusterDimensionalResp{
 			ClusterID: client.ClusterInfo.ClusterID,
 			ErrCode:   int32(proto.ErrCode_ERROR_CLUSTER_OPERATION_ERROR),
@@ -288,8 +299,10 @@ func (m *LogManager) addTaskToCluster(client *LogClient, wg *sync.WaitGroup, msg
 	blog.Infof("Create BcsLogConfig of Cluster %s success. (config info: %+v)", client.ClusterInfo.ClusterID, logconf)
 }
 
+// getTaskFromCluster xxx
 // msg.Data is *config.CollectionFilterConfig, msg.RespCh is error return channel
-func (m *LogManager) getTaskFromCluster(ctx context.Context, client *LogClient, wg *sync.WaitGroup, msg *RequestMessage) {
+func (m *LogManager) getTaskFromCluster(ctx context.Context, client *LogClient, wg *sync.WaitGroup,
+	msg *RequestMessage) {
 	defer wg.Done()
 	filter, ok := msg.Data.(*config.CollectionFilterConfig)
 	// TODO error return
@@ -374,7 +387,8 @@ func (m *LogManager) deleteTaskFromCluster(client *LogClient, wg *sync.WaitGroup
 		}
 		return
 	}
-	blog.Infof("Delete BcsLogConfig(%s/%s) from Cluster %s success.", filter.ConfigNamespace, filter.ConfigName, client.ClusterInfo.ClusterID)
+	blog.Infof("Delete BcsLogConfig(%s/%s) from Cluster %s success.", filter.ConfigNamespace, filter.ConfigName,
+		client.ClusterInfo.ClusterID)
 }
 
 // convert converts BcsLogConfig CRD to CollectionConfig representation

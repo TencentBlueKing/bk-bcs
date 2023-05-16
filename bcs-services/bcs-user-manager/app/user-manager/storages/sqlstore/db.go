@@ -19,11 +19,13 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql TODO
 )
 
+// GCoreDB global DB client
 var GCoreDB *gorm.DB
 
+// InitCoreDatabase set DB client
 func InitCoreDatabase(conf *config.UserMgrConfig) error {
 	if conf == nil {
 		return fmt.Errorf("core_database config not init")

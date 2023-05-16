@@ -24,30 +24,30 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-//RegisterPoolHandler create pool handler,
-//url link : v1/pool
+// RegisterPoolHandler create pool handler,
+// url link : v1/pool
 func RegisterPoolHandler(httpSvr *HTTPService, logic *netservice.NetService) *PoolHandler {
 	handler := &PoolHandler{
 		netSvr: logic,
 	}
 	webSvr := new(restful.WebService)
-	//add http handler
+	// add http handler
 	webSvr.Path("/v1/pool").Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
-	//Add pool
+	// Add pool
 	webSvr.Route(webSvr.POST("").To(handler.Add))
-	//get all pool info
+	// get all pool info
 	webSvr.Route(webSvr.GET("").To(handler.List))
-	//Delete by pool net
+	// Delete by pool net
 	webSvr.Route(webSvr.DELETE("/{cluster}/{net}").To(handler.Delete))
-	//update by pool net
+	// update by pool net
 	webSvr.Route(webSvr.PUT("/{cluster}/{net}").To(handler.Update))
-	//get one pool by net
+	// get one pool by net
 	webSvr.Route(webSvr.GET("/{cluster}/{net}").To(handler.ListByID))
-	//query cluster info, query parameter
-	//info:
+	// query cluster info, query parameter
+	// info:
 	//    static(default): static info for cluster
 	//    detail: all pool info under cluster
-	//sort: (todo feature)
+	// sort: (todo feature)
 	webSvr.Route(webSvr.GET("/{cluster}").To(handler.Query))
 
 	httpSvr.Register(webSvr)
@@ -55,12 +55,12 @@ func RegisterPoolHandler(httpSvr *HTTPService, logic *netservice.NetService) *Po
 	return handler
 }
 
-//PoolHandler http request handler
+// PoolHandler http request handler
 type PoolHandler struct {
 	netSvr *netservice.NetService
 }
 
-//Add add new pool
+// Add add new pool
 func (pool *PoolHandler) Add(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	netReq := &types.NetRequest{}
@@ -85,7 +85,8 @@ func (pool *PoolHandler) Add(request *restful.Request, response *restful.Respons
 	if !netReq.Pool.IsValid() {
 		netRes.Code = 1
 		netRes.Message = "Request Pool data lost"
-		blog.Errorf("PoolHandler check pool data err, data lost, Net: %s, Mask: %d, Gateway: %s", netReq.Pool.Net, netReq.Pool.Mask, netReq.Pool.Gateway)
+		blog.Errorf("PoolHandler check pool data err, data lost, Net: %s, Mask: %d, Gateway: %s", netReq.Pool.Net,
+			netReq.Pool.Mask, netReq.Pool.Gateway)
 		response.WriteEntity(netRes)
 		reportMetrics("createIPPool", "4xx", started)
 		return
@@ -99,7 +100,8 @@ func (pool *PoolHandler) Add(request *restful.Request, response *restful.Respons
 		reportMetrics("createIPPool", "5xx", started)
 		return
 	}
-	blog.Info("NetPool %s/%s mask %d gateway %s add succ", netReq.Pool.Cluster, netReq.Pool.Net, netReq.Pool.Mask, netReq.Pool.Gateway)
+	blog.Info("NetPool %s/%s mask %d gateway %s add succ", netReq.Pool.Cluster, netReq.Pool.Net, netReq.Pool.Mask,
+		netReq.Pool.Gateway)
 	netRes.Code = 0
 	netRes.Message = "success"
 	if err := response.WriteEntity(netRes); err != nil {
@@ -108,7 +110,7 @@ func (pool *PoolHandler) Add(request *restful.Request, response *restful.Respons
 	reportMetrics("createIPPool", "2xx", started)
 }
 
-//Delete delete pool by ip segment
+// Delete delete pool by ip segment
 func (pool *PoolHandler) Delete(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	netKey := request.PathParameter("net")
@@ -139,7 +141,7 @@ func (pool *PoolHandler) Delete(request *restful.Request, response *restful.Resp
 	reportMetrics("deleteIPPool", "2xx", started)
 }
 
-//Update update pool by ip segment
+// Update update pool by ip segment
 func (pool *PoolHandler) Update(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	netReq := &types.NetRequest{}
@@ -187,7 +189,8 @@ func (pool *PoolHandler) Update(request *restful.Request, response *restful.Resp
 		reportMetrics("updateIPPool", "5xx", started)
 		return
 	}
-	blog.Info("NetPool %s/%s mask %d gateway %s update succ", netReq.Pool.Cluster, netReq.Pool.Net, netReq.Pool.Mask, netReq.Pool.Gateway)
+	blog.Info("NetPool %s/%s mask %d gateway %s update succ", netReq.Pool.Cluster, netReq.Pool.Net, netReq.Pool.Mask,
+		netReq.Pool.Gateway)
 	netRes.Code = 0
 	netRes.Message = SUCCESS
 	if len(netReq.Pool.Available) == 0 && len(netReq.Pool.Reserved) == 0 {
@@ -199,10 +202,10 @@ func (pool *PoolHandler) Update(request *restful.Request, response *restful.Resp
 	reportMetrics("updateIPPool", "2xx", started)
 }
 
-//List list all pools
+// List list all pools
 func (pool *PoolHandler) List(request *restful.Request, response *restful.Response) {
 	started := time.Now()
-	//list all pools
+	// list all pools
 	netRes := &types.NetResponse{
 		Type: types.ResponseType_POOL,
 	}
@@ -225,10 +228,10 @@ func (pool *PoolHandler) List(request *restful.Request, response *restful.Respon
 	reportMetrics("listIPPool", "2xx", started)
 }
 
-//ListByID list all pools
+// ListByID list all pools
 func (pool *PoolHandler) ListByID(request *restful.Request, response *restful.Response) {
 	started := time.Now()
-	//or list pool by pool id
+	// or list pool by pool id
 	netKey := request.PathParameter("net")
 	netCluster := request.PathParameter("cluster")
 	netRes := &types.NetResponse{
@@ -253,7 +256,7 @@ func (pool *PoolHandler) ListByID(request *restful.Request, response *restful.Re
 	reportMetrics("listIPPoolByID", "2xx", started)
 }
 
-//Query list all pools
+// Query list all pools
 func (pool *PoolHandler) Query(request *restful.Request, response *restful.Response) {
 	started := time.Now()
 	cluster := request.PathParameter("cluster")
@@ -272,14 +275,14 @@ func (pool *PoolHandler) Query(request *restful.Request, response *restful.Respo
 	}
 	var statis types.NetStatic
 	if info == "detail" {
-		//reply detail data
+		// reply detail data
 		netRes.Code = 0
 		netRes.Message = fmt.Sprintf("query net pool under %s succ", cluster)
 		netRes.Type = types.ResponseType_POOL
 		netRes.Pool = pools
 		netRes.Data = netRes.Pool
 	} else {
-		//static info
+		// static info
 		netRes.Code = 0
 		netRes.Message = "query statistic info succ"
 		statis.PoolNum = len(pools)

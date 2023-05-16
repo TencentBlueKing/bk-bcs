@@ -1,0 +1,30 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: Deployment
+{{ include "common.metadata" .metadata }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "common.labelSlice2Map" .metadata.labels | indent 6 }}
+  replicas: {{ .spec.replicas.cnt | default 0 }}
+  strategy:
+    type: {{ .spec.replicas.updateStrategy }}
+    {{- if eq .spec.replicas.updateStrategy "RollingUpdate" }}
+    rollingUpdate:
+      {{- if .spec.replicas.maxUnavailable }}
+      maxUnavailable: {{ .spec.replicas.maxUnavailable }}{{ if eq .spec.replicas.muaUnit "percent" }}% {{ end }}
+      {{- else }}
+      maxUnavailable: 0
+      {{- end }}
+      {{- if .spec.replicas.maxSurge }}
+      maxSurge: {{ .spec.replicas.maxSurge }}{{ if eq .spec.replicas.msUnit "percent" }}% {{ end }}
+      {{- else }}
+      maxSurge: 0
+      {{- end }}
+    {{- end }}
+  {{- if .spec.replicas.minReadySecs }}
+  minReadySeconds: {{ .spec.replicas.minReadySecs }}
+  {{- end }}
+  {{- if .spec.replicas.progressDeadlineSecs }}
+  progressDeadlineSeconds: {{ .spec.replicas.progressDeadlineSecs }}
+  {{- end }}
+  {{- include "workload.podTemplate" . | nindent 2 }}

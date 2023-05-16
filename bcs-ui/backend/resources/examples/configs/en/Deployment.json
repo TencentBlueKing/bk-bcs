@@ -1,0 +1,13 @@
+{
+  "kind": "Deployment",
+  "class": "workloads",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_deployment",
+      "alias": "Deployment Simple Demo",
+      "description": "A simple deployment demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

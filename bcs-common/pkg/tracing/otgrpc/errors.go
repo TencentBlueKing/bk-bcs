@@ -20,6 +20,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Class xxx
 // A Class is a set of types of outcomes (including errors) that will often
 // be handled in the same way.
 type Class string

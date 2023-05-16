@@ -1,4 +1,6 @@
+//go:build linux
 // +build linux
+
 /*
 * Tencent is pleased to support the open source community by making Blueking Container Service available.
 * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -24,7 +26,7 @@ import (
 	"syscall"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	docker "github.com/fsouza/go-dockerclient"
+	dockertypes "github.com/docker/docker/api/types"
 )
 
 func (s *SidecarController) reloadLogbeat() error {
@@ -56,7 +58,7 @@ func (s *SidecarController) reloadLogbeat() error {
 	return nil
 }
 
-func (s *SidecarController) getActualPath(logPath string, container *docker.Container) (string, error) {
+func (s *SidecarController) getActualPath(logPath string, container *dockertypes.ContainerJSON) (string, error) {
 	if !filepath.IsAbs(logPath) {
 		blog.Errorf("log path specified as \"%s\" is not an absolute path", logPath)
 		return "", fmt.Errorf("log path specified as \"%s\" is not an absolute path", logPath)
@@ -82,7 +84,7 @@ func (s *SidecarController) getActualPath(logPath string, container *docker.Cont
 // getContainerRootPath return the root path of the container
 // Usually it begins with /data/bcs/lib/docker/overlay2/{hashid}/merged
 // If the container does not use OverlayFS, it will return /proc/{procid}/root
-func (s *SidecarController) getContainerRootPath(container *docker.Container) string {
+func (s *SidecarController) getContainerRootPath(container *dockertypes.ContainerJSON) string {
 	switch container.Driver {
 	case "overlay2":
 		return container.GraphDriver.Data["UpperDir"]

@@ -1,0 +1,13 @@
+{
+  "kind": "GameStatefulSet",
+  "class": "custom_object",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_gamestatefulset",
+      "alias": "GameStatefulSet Simple Demo",
+      "description": "A simple GameStatefulSet demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

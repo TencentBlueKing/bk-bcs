@@ -19,44 +19,71 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.components.base import ComponentAuth
+from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.dashboard.auditors import DashboardAuditor
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
-from backend.dashboard.permissions import AccessNamespacePermission, validate_cluster_perm
+from backend.dashboard.permissions import AccessNamespacePermission
 from backend.dashboard.serializers import CreateResourceSLZ, ListResourceSLZ, UpdateResourceSLZ
 from backend.dashboard.utils.resp import ListApiRespBuilder, RetrieveApiRespBuilder
 from backend.dashboard.utils.web import gen_base_web_annotations
+from backend.iam.permissions.resources import (
+    ClusterScopedPermCtx,
+    ClusterScopedPermission,
+    NamespaceScopedPermCtx,
+    NamespaceScopedPermission,
+)
+from backend.resources.constants import NATIVE_CLUSTER_SCOPE_RES_KINDS
 from backend.utils.basic import getitems
 from backend.utils.response import BKAPIResponse
 from backend.utils.url_slug import KUBE_NAME_REGEX
+from backend.utils.error_codes import error_codes
+
+from .constants import DashboardAction
+from .exceptions import ActionUnsupported
 
 
 class ListAndRetrieveMixin:
-    """ 查询类接口通用逻辑 """
+    """查询类接口通用逻辑"""
 
     def list(self, request, project_id, cluster_id, namespace):
+        # TODO 优化实现(序列化中校验)
+        cc_client = PaaSCCClient(auth=ComponentAuth(request.user.token.access_token))
+        resp = cc_client.get_cluster(project_id, cluster_id)
+        if resp['result'] is False:
+            raise error_codes.APIError((f"获取集群信息失败，错误信息：{resp['message']}"))
+
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         params = self.params_validate(ListResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         response_data = ListApiRespBuilder(client, namespace=namespace, **params).build()
         # 补充页面信息注解，包含权限信息
-        web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
+        web_annotations = gen_base_web_annotations(request.user.username, project_id, cluster_id, namespace)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, namespace, name):
+        # TODO 优化实现(序列化中校验)
+        cc_client = PaaSCCClient(auth=ComponentAuth(request.user.token.access_token))
+        resp = cc_client.get_cluster(project_id, cluster_id)
+        if resp['result'] is False:
+            raise error_codes.APIError((f"获取集群信息失败，错误信息：{resp['message']}"))
+
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         client = self.resource_client(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace, name).build()
         # 补充页面信息注解，包含权限信息
-        web_annotations = gen_base_web_annotations(request, project_id, cluster_id)
+        web_annotations = gen_base_web_annotations(request.user.username, project_id, cluster_id, namespace)
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
 
 class DestroyMixin:
-    """ 删除类接口通用逻辑 """
+    """删除类接口通用逻辑"""
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Delete)
     def destroy(self, request, project_id, cluster_id, namespace, name):
-        # 操作类接口统一检查集群操作权限
-        validate_cluster_perm(request, project_id, cluster_id)
+        # 检查是否有删除资源权限
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Delete)
         client = self.resource_client(request.ctx_cluster)
         request.audit_ctx.update_fields(
             resource_type=self.resource_client.kind.lower(), resource=f'{namespace}/{name}'
@@ -69,15 +96,20 @@ class DestroyMixin:
 
 
 class CreateMixin:
-    """ 创建类接口通用逻辑 """
+    """创建类接口通用逻辑"""
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Add)
     def create(self, request, project_id, cluster_id):
-        # 操作类接口统一检查集群操作权限
-        validate_cluster_perm(request, project_id, cluster_id)
         params = self.params_validate(CreateResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         namespace = getitems(params, 'manifest.metadata.namespace')
+
+        # 检查命名空间必须性，若为命名空间域资源，必须指定命名空间
+        res_kind = self.resource_client.kind
+        if not (res_kind in NATIVE_CLUSTER_SCOPE_RES_KINDS or namespace):
+            raise CreateResourceError(_('创建资源 {} 需要指定命名空间').format(res_kind))
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Create)
+
         request.audit_ctx.update_fields(
             resource_type=self.resource_client.kind.lower(),
             resource=f"{namespace}/{getitems(params, 'manifest.metadata.name')}",
@@ -93,12 +125,12 @@ class CreateMixin:
 
 
 class UpdateMixin:
-    """ 更新类接口通用逻辑 """
+    """更新类接口通用逻辑"""
 
     @log_audit_on_view(DashboardAuditor, activity_type=ActivityType.Modify)
     def update(self, request, project_id, cluster_id, namespace, name):
-        # 操作类接口统一检查集群操作权限
-        validate_cluster_perm(request, project_id, cluster_id)
+        # 检查是否有更新资源权限
+        self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.Update)
         params = self.params_validate(UpdateResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
         request.audit_ctx.update_fields(
@@ -125,19 +157,46 @@ class AccessNamespacePermMixin:
         return [*super().get_permissions(), AccessNamespacePermission()]
 
 
+class PermValidateMixin:
+    def _validate_perm(self, username, project_id, cluster_id, namespace, action: DashboardAction):
+        params = {"username": username, "project_id": project_id, "cluster_id": cluster_id, "name": namespace}
+        # 前置逻辑中中已检查命名空间的必须性，此处直接判断即可
+        if namespace:
+            perm, perm_ctx = NamespaceScopedPermission(), NamespaceScopedPermCtx.from_dict(params)
+        else:
+            perm, perm_ctx = ClusterScopedPermission(), ClusterScopedPermCtx.from_dict(params)
+
+        try:
+            getattr(perm, f'can_{action}')(perm_ctx)
+        except AttributeError:
+            raise ActionUnsupported(_("Action {} 不被支持").format(action))
+
+
 class NamespaceScopeViewSet(
-    ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, AccessNamespacePermMixin, SystemViewSet
+    ListAndRetrieveMixin,
+    DestroyMixin,
+    CreateMixin,
+    UpdateMixin,
+    AccessNamespacePermMixin,
+    PermValidateMixin,
+    SystemViewSet,
 ):
-    """ 命名空间维度资源 ViewSet，抽层一些通用方法 """
+    """命名空间维度资源 ViewSet，抽层一些通用方法"""
 
     lookup_field = 'name'
     lookup_value_regex = KUBE_NAME_REGEX
 
 
 class ClusterScopeViewSet(
-    ListAndRetrieveMixin, DestroyMixin, CreateMixin, UpdateMixin, AccessClusterPermMixin, SystemViewSet
+    ListAndRetrieveMixin,
+    DestroyMixin,
+    CreateMixin,
+    UpdateMixin,
+    AccessClusterPermMixin,
+    PermValidateMixin,
+    SystemViewSet,
 ):
-    """ 集群维度资源 ViewSet，对缺省命名空间的情况做兼容 """
+    """集群维度资源 ViewSet，对缺省命名空间的情况做兼容"""
 
     lookup_field = 'name'
     lookup_value_regex = KUBE_NAME_REGEX

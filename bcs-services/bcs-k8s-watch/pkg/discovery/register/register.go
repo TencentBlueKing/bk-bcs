@@ -11,6 +11,7 @@
  *
  */
 
+// Package register xxx
 package register
 
 import (
@@ -45,6 +46,7 @@ type ServiceState struct {
 	MyPostion    int
 }
 
+// NewNodeRegister create a new NodeRegister
 func NewNodeRegister(zkServerAddresses string, baseKey string, node Node) *NodeRegister {
 	return &NodeRegister{
 		ZkServerAddresses: zkServerAddresses,
@@ -86,7 +88,7 @@ func (r *NodeRegister) DoRegister() error {
 	return nil
 }
 
-// GetRegisterkey accepts a node and returns the key of zookeeper
+// GetRegisterKey accepts a node and returns the key of zookeeper
 func (r *NodeRegister) GetRegisterKey() string {
 	return fmt.Sprintf("%s/%s", r.baseKey, r.node.PrimaryKey())
 }
@@ -123,7 +125,7 @@ func (r *NodeRegister) startSingleDiscover(timeoutSeconds int) error {
 	}
 
 	// CHANGE: 2018-06-15 comment, let the RegisterAndWatchService do the re-connection
-	//debounceDoRegister := debounceCallable(3*time.Second, r.DoRegister)
+	// debounceDoRegister := debounceCallable(3*time.Second, r.DoRegister)
 	blog.Infof("register watch path: %s", r.baseKey)
 Outer:
 	for {
@@ -139,7 +141,7 @@ Outer:
 				r.SendEmptyEvent()
 
 				// CHANGE: 2018-06-15 comment, let the RegisterAndWatchService do the re-connection
-				//debounceDoRegister()
+				// debounceDoRegister()
 
 				time.Sleep(5 * time.Second)
 				return fmt.Errorf("eventChan error: %s", e.Err)
@@ -187,15 +189,16 @@ Outer:
 			// this serviceNode could be found on zookeeper server.
 			// To avoid this, we will use a technical call "debouce" to compact sequential calls in to a single call
 			// which is delayed by max 3 seconds.
-			//if myPosition == -1 {
+			// if myPosition == -1 {
 			//	blog.Warnf("couldn't find myself [key: %s] from zk, start register again.", r.node.PrimaryKey())
 			//	debounceDoRegister()
-			//}
+			// }
 		}
 	}
 	return nil
 }
 
+// SendEmptyEvent send empty event to stateChan to notify other goroutine that there is no more events
 func (r *NodeRegister) SendEmptyEvent() {
 	r.StateChan <- ServiceState{
 		Nodes:        0,
@@ -204,6 +207,7 @@ func (r *NodeRegister) SendEmptyEvent() {
 	}
 }
 
+// Stop stop the node register
 func (r *NodeRegister) Stop() error {
 	err := r.zkService.Stop()
 	r.SendEmptyEvent()

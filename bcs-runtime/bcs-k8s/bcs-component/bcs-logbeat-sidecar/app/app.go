@@ -11,6 +11,7 @@
  *
  */
 
+// Package app xxx
 package app
 
 import (
@@ -25,11 +26,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-logbeat-sidecar/sidecar"
 )
 
+// Run xxx
 func Run(op *options.SidecarOption) error {
 
 	conf := &config.Config{}
 	setConfig(conf, op)
-	//pid
+	// pid
 	if err := common.SavePid(op.ProcessConfig); err != nil {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
@@ -58,6 +60,7 @@ func setConfig(conf *config.Config, op *options.SidecarOption) {
 	conf.LogbeatPIDFilePath = op.LogbeatPIDFilePath
 	conf.NeedReload = op.NeedReload
 	conf.LogbeatOutputFormat = op.LogbeatOutputFormat
+	conf.NodeName = op.NodeName
 	if op.FileExtension == "" {
 		conf.FileExtension = "yaml"
 	} else {

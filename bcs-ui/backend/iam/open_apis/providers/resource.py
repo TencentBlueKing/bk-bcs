@@ -22,12 +22,14 @@ from .cluster import ClusterProvider
 from .namespace import NamespaceProvider
 from .project import ProjectProvider
 from .templateset import TemplatesetProvider
+from .cloud_account import CloudAccountProvider
 
 PROVIDER_CLS_MAP = {
     ResourceType.Project: ProjectProvider,
     ResourceType.Namespace: NamespaceProvider,
     ResourceType.Cluster: ClusterProvider,
     ResourceType.Templateset: TemplatesetProvider,
+    ResourceType.Cloudaccount: CloudAccountProvider,
 }
 
 
@@ -88,6 +90,9 @@ class ResourceProvider:
         return result.to_dict()
 
     def _parse_filter_and_page(self, data: Dict) -> (FancyDict, Page):
-        filter_obj = get_filter_obj(data["filter"], ["ids", "parent", "search", "resource_type_chain", "keyword"])
+        """处理请求参数"""
+        filter_obj = get_filter_obj(
+            data["filter"], ["ids", "parent", "search", "resource_type_chain", "keyword", "ancestors"]
+        )
         page_obj = get_page_obj(data.get("page"))
         return filter_obj, page_obj

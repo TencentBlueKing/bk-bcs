@@ -1,0 +1,39 @@
+{{ $HostName := (first .Values.ingress.rules).host }}
+
+======================================================================================================================================
+|     __                              __              __                                                                             |
+|    / /_   _____ _____        _____ / /__  __ _____ / /_ ___   _____        _____ ___   _____ ____   __  __ _____ _____ ___   _____ |
+|   / __ \ / ___// ___/______ / ___// // / / // ___// __// _ \ / ___/______ / ___// _ \ / ___// __ \ / / / // ___// ___// _ \ / ___/ |
+|  / /_/ // /__ (__  )/_____// /__ / // /_/ /(__  )/ /_ /  __// /   /_____// /   /  __/(__  )/ /_/ // /_/ // /   / /__ /  __/(__  )  |
+| /_.___/ \___//____/        \___//_/ \__,_//____/ \__/ \___//_/          /_/    \___//____/ \____/ \__,_//_/    \___/ \___//____/   |
+|                                                                                                                                    |
+======================================================================================================================================
+
+Welcome to deploy bcs-cluster-resources!
+
+Blueking Container Service (BCS) cluster resource layer provide Restful API for SaaS / OpenAPI.
+
+** Please be patient while the chart is being deployed **
+
+0. use commands as followed to check deploy status:
+
+    helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+    
+    helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+1. If enabled ingress and ensure domain was points to correct ip, you can call api to check service status
+
+    # Ping Service
+    curl http://{{ $HostName }}/clusterresources/v1/ping
+
+    # Get Service Healthz Status
+    curl http://{{ $HostName }}/clusterresources/v1/healthz
+
+    # Get Service Version Info
+    curl http://{{ $HostName }}/clusterresources/v1/version
+
+2. To uninstall helm chart, execute commands as followed:
+
+    helm uninstall {{ .Release.Name }} -n {{ .Release.Namespace }}
+    
+    kubectl delete pvc -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}

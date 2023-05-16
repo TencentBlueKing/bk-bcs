@@ -116,7 +116,7 @@ func (clb *ClbClient) update4LayerListener(old, cur *loadbalance.CloudListener) 
 		}
 	}
 
-	//register new backends
+	// register new backends
 	if len(backendsNew) > 0 {
 		for i := 0; i < len(backendsNew); i = i + LimitationMaxBackendNumEachBind {
 			tmpBackends := GetBackendsSegment(backendsNew, i, LimitationMaxBackendNumEachBind)
@@ -210,6 +210,7 @@ func (clb *ClbClient) createRule(ls *loadbalance.CloudListener, rule *loadbalanc
 	return clb.doCreateRule(ls, rule)
 }
 
+// doCreateRule xxx
 // call api to create rule
 // TODO: create multiple rules together. temporarily we are not sure if the create rules api is atomic,
 // so create rule one by one
@@ -301,7 +302,7 @@ func (clb *ClbClient) updateRule(
 		}
 	}
 
-	//2.2 register new backend
+	// 2.2 register new backend
 	if len(backendsNew) > 0 {
 		for i := 0; i < len(backendsNew); i = i + LimitationMaxBackendNumEachBind {
 			tmpBackends := GetBackendsSegment(backendsNew, i, LimitationMaxBackendNumEachBind)

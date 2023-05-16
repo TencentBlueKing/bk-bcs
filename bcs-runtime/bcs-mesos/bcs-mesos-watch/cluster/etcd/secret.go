@@ -30,14 +30,14 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-//SecretInfo wrapper for BCSSecret
+// SecretInfo wrapper for BCSSecret
 type SecretInfo struct {
 	data       *commtypes.BcsSecret
 	syncTime   int64
 	reportTime int64
 }
 
-//NewSecretWatch create SecretWatch for data synchronization
+// NewSecretWatch create SecretWatch for data synchronization
 func NewSecretWatch(cxt context.Context, informer bkbcsv2.BcsSecretInformer, reporter cluster.Reporter) *SecretWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
@@ -56,17 +56,17 @@ func NewSecretWatch(cxt context.Context, informer bkbcsv2.BcsSecretInformer, rep
 	}
 }
 
-//SecretWatch watch all secret data and store in local cache
+// SecretWatch watch all secret data and store in local cache
 type SecretWatch struct {
-	eventLock sync.Mutex       //lock for event
-	report    cluster.Reporter //reporter
-	cancelCxt context.Context  //context for cancel
-	dataCache cache.Store      //cache for all app data
+	eventLock sync.Mutex       // lock for event
+	report    cluster.Reporter // reporter
+	cancelCxt context.Context  // context for cancel
+	dataCache cache.Store      // cache for all app data
 	watchPath string
 	informer  bkbcsv2.BcsSecretInformer
 }
 
-//Work list all namespace secret periodically
+// Work list all namespace secret periodically
 func (watch *SecretWatch) Work() {
 	blog.Infof("SecretWatch start work")
 
@@ -85,7 +85,7 @@ func (watch *SecretWatch) Work() {
 	}
 }
 
-//ProcessAllSecrets handle all namespaces data
+// ProcessAllSecrets handle all namespaces data
 func (watch *SecretWatch) ProcessAllSecrets() error {
 	currTime := time.Now().Unix()
 	blog.V(3).Infof("sync all secrets, currTime(%d)", currTime)
@@ -113,7 +113,7 @@ func (watch *SecretWatch) ProcessAllSecrets() error {
 				continue
 			}
 			blog.V(3).Infof("secret %s is in cache, update sync time(%d)", key, currTime)
-			//watch.UpdateEvent(cacheDataInfo.data, data)
+			// watch.UpdateEvent(cacheDataInfo.data, data)
 			if reflect.DeepEqual(cacheDataInfo.data, secret) {
 				if cacheDataInfo.reportTime > currTime {
 					cacheDataInfo.reportTime = currTime
@@ -174,7 +174,7 @@ func (watch *SecretWatch) ProcessAllSecrets() error {
 	return nil
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (watch *SecretWatch) AddEvent(obj interface{}) {
 	secretData, ok := obj.(*commtypes.BcsSecret)
 	if !ok {
@@ -191,7 +191,7 @@ func (watch *SecretWatch) AddEvent(obj interface{}) {
 	watch.report.ReportData(data)
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (watch *SecretWatch) DeleteEvent(obj interface{}) {
 	secretData, ok := obj.(*commtypes.BcsSecret)
 	if !ok {
@@ -199,7 +199,7 @@ func (watch *SecretWatch) DeleteEvent(obj interface{}) {
 		return
 	}
 	blog.Info("EVENT:: Delete Event for BcsSecret %s.%s", secretData.ObjectMeta.NameSpace, secretData.ObjectMeta.Name)
-	//report to cluster
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "Secret",
 		Action:   "Delete",
@@ -208,7 +208,7 @@ func (watch *SecretWatch) DeleteEvent(obj interface{}) {
 	watch.report.ReportData(data)
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (watch *SecretWatch) UpdateEvent(old, cur interface{}) {
 	secretData, ok := cur.(*commtypes.BcsSecret)
 	if !ok {
@@ -216,7 +216,8 @@ func (watch *SecretWatch) UpdateEvent(old, cur interface{}) {
 		return
 	}
 
-	blog.V(3).Infof("EVENT:: Update Event for BcsSecret %s.%s", secretData.ObjectMeta.NameSpace, secretData.ObjectMeta.Name)
+	blog.V(3).Infof("EVENT:: Update Event for BcsSecret %s.%s", secretData.ObjectMeta.NameSpace,
+		secretData.ObjectMeta.Name)
 	data := &types.BcsSyncData{
 		DataType: "Secret",
 		Action:   "Update",

@@ -11,6 +11,7 @@
  *
  */
 
+// Package api xxx
 package api
 
 import (
@@ -30,6 +31,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+// Router xxx
 type Router struct {
 	backend manager.Manager
 	actions []*httpserver.Action
@@ -58,7 +60,8 @@ func (r *Router) initVariables() {
 	}
 }
 
-//get http api routing table information, and use it to register http client
+// GetActions xxx
+// get http api routing table information, and use it to register http client
 func (r *Router) GetActions() []*httpserver.Action {
 	return r.actions
 }
@@ -77,7 +80,7 @@ func createResponeData(err error, code int, msg string, data interface{}) []byte
 }
 
 func (r *Router) initRoutes() {
-	//launch container webconsole proxy
+	// launch container webconsole proxy
 	r.actions = append(r.actions, httpserver.NewAction("POST", "/process", nil, r.createProcess))
 	r.actions = append(r.actions, httpserver.NewAction("GET", "/process/{id}/status", nil, r.inspectProcessStatus))
 	r.actions = append(r.actions, httpserver.NewAction("PUT", "/process/{id}/stop/{timeout}", nil, r.stopProcess))
@@ -193,7 +196,8 @@ func (r *Router) deleteProcess(req *restful.Request, resp *restful.Response) {
 	return
 }
 
-//replace variables
+// parseVariable xxx
+// replace variables
 func (r *Router) parseVariable(by []byte) []byte {
 	str := string(by)
 

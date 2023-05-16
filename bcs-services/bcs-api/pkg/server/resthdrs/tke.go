@@ -32,34 +32,40 @@ import (
 
 var mutex sync.Mutex
 
+// UpdateTkeLbForm xxx
 type UpdateTkeLbForm struct {
 	ClusterRegion string `json:"cluster_region" validate:"required"`
 	SubnetId      string `json:"subnet_id" validate:"required"`
 }
 
+// AddTkeCidrForm xxx
 type AddTkeCidrForm struct {
 	Vpc      string    `json:"vpc" validate:"required"`
 	TkeCidrs []TkeCidr `json:"tke_cidrs" validate:"required"`
 }
 
+// ApplyTkeCidrForm xxx
 type ApplyTkeCidrForm struct {
 	Vpc      string `json:"vpc" validate:"required"`
 	Cluster  string `json:"cluster" validate:"required"`
 	IpNumber uint   `json:"ip_number" validate:"required"`
 }
 
+// ReleaseTkeCidrForm xxx
 type ReleaseTkeCidrForm struct {
 	Vpc     string `json:"vpc" validate:"required"`
 	Cidr    string `json:"cidr" validate:"required"`
 	Cluster string `json:"cluster" validate:"required"`
 }
 
+// TkeCidr xxx
 type TkeCidr struct {
 	Cidr     string `json:"cidr" validate:"required"`
 	IpNumber uint   `json:"ip_number" validate:"required"`
 	Status   string `json:"status"`
 }
 
+// ApplyTkeCidrResult xxx
 type ApplyTkeCidrResult struct {
 	Vpc      string `json:"vpc" validate:"required"`
 	Cidr     string `json:"cidr" validate:"required"`
@@ -67,6 +73,7 @@ type ApplyTkeCidrResult struct {
 	Status   string `json:"status"`
 }
 
+// LbStatus xxx
 type LbStatus struct {
 	ClusterId string `json:"cluster_id"`
 	Status    string `json:"status"`
@@ -192,7 +199,8 @@ func UpdateTkeLbSubnet(request *restful.Request, response *restful.Response) {
 	if err != nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		message := fmt.Sprintf("errcode: %d, can not update tke lb subnet, error: %s", common.BcsErrApiInternalDbError, err.Error())
+		message := fmt.Sprintf("errcode: %d, can not update tke lb subnet, error: %s", common.BcsErrApiInternalDbError,
+			err.Error())
 		WriteClientError(response, "CANNOT_UPDATE_TKE_LB_SUBNET", message)
 		return
 	}
@@ -282,7 +290,8 @@ func ApplyTkeCidr(request *restful.Request, response *restful.Response) {
 	if tkeCidr == nil {
 		metric.RequestErrorCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()
 		metric.RequestErrorLatency.WithLabelValues("k8s_rest", request.Request.Method).Observe(time.Since(start).Seconds())
-		blog.Warnf("Apply cidr ipNumber %d for cluster %s in vpc %s failed, no available cidr any more", form.IpNumber, form.Cluster, form.Vpc)
+		blog.Warnf("Apply cidr ipNumber %d for cluster %s in vpc %s failed, no available cidr any more", form.IpNumber,
+			form.Cluster, form.Vpc)
 		message := fmt.Sprintf("errcode: %d, apply cidr failed, no available cidr any more", common.BcsErrApiInternalDbError)
 		WriteClientError(response, "NO_AVAILABLE_CIDR", message)
 		return
@@ -362,7 +371,8 @@ func ReleaseTkeCidr(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	blog.Info("release cidr successful, vpc %s, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Vpc, tkeCidr.Cidr, tkeCidr.IpNumber, tkeCidr.Cluster)
+	blog.Info("release cidr successful, vpc %s, cidr: %s, ipNumber: %d, cluster: %s", tkeCidr.Vpc, tkeCidr.Cidr,
+		tkeCidr.IpNumber, tkeCidr.Cluster)
 	response.WriteEntity(types.EmptyResponse{})
 
 	metric.RequestCount.WithLabelValues("k8s_rest", request.Request.Method).Inc()

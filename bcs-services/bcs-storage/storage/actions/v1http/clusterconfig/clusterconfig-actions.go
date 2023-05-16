@@ -20,7 +20,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
-
 	"github.com/emicklei/go-restful"
 )
 
@@ -125,7 +124,14 @@ func GetStableVersion(req *restful.Request, resp *restful.Response) {
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
-	version, err := getStableVersion(req)
+	// ctx
+	ctx := req.Request.Context()
+	// option
+	opt := &lib.StoreGetOption{
+		Cond: getSvcCondition(req),
+	}
+
+	version, err := GetStableSvcVersion(ctx, opt)
 	if err != nil {
 		utils.SetSpanLogTagError(span, err)
 		blog.Errorf("%s | err: %v", common.BcsErrStorageGetResourceFailStr, err)

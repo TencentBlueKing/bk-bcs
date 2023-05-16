@@ -15,6 +15,7 @@ package models
 
 import "time"
 
+// BackendCredentials xxx
 type BackendCredentials map[string]interface{}
 
 // User is the internal user model for bke, when bke wants to be "connected" with other user systems like
@@ -32,8 +33,11 @@ type User struct {
 }
 
 const (
+	// UserTokenTypeSession xxx
 	UserTokenTypeSession = iota + 1
+	// UserTokenTypeKubeConfigForPaas xxx
 	UserTokenTypeKubeConfigForPaas
+	// UserTokenTypeKubeConfigPlain xxx
 	UserTokenTypeKubeConfigPlain
 )
 
@@ -56,6 +60,7 @@ func (t *UserToken) HasExpired() bool {
 }
 
 const (
+	// ExternalUserSourceTypeBCS xxx
 	ExternalUserSourceTypeBCS = iota + 1
 )
 

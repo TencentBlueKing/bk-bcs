@@ -58,6 +58,10 @@ const (
 	Pod = "Pod"
 	// PodPrefix queue key prefix
 	PodPrefix = "Pod_"
+	// Event event resource
+	Event = "Event"
+	// EventPrefix queue key prefix
+	EventPrefix = "Event_"
 )
 
 var (
@@ -81,6 +85,8 @@ var (
 		"ExportService",
 		"BcsLogConfig",
 		"BcsDbPrivConfig",
+		"GameDeployment",
+		"GameStatefulSet",
 	}
 )
 
@@ -144,21 +150,24 @@ func (w *Writer) initWatcherResourceDistributeQueue(clusterID string, resource s
 				w.Handlers[handlerChanKey] = NewHandler(clusterID, handlerChanKey, action)
 			}
 		}
+	case Event:
+		// 4 times of podChanQueueNum for event
+		glog.Infof("resource %s create %d handlerQueue", Event, 4*w.resourceQueueNum.podChanQueueNum)
+		for i := 0; i < 4*w.resourceQueueNum.podChanQueueNum; i++ {
+			handlerChanKey := EventPrefix + strconv.Itoa(i)
+			w.Handlers[handlerChanKey] = NewHandler(clusterID, handlerChanKey, action)
+		}
 	default:
 	}
 }
 
 func (w *Writer) init(clusterID string, storageService *bcs.InnerService) error {
-	for resource := range resources.WatcherConfigList {
-		action := action.NewStorageAction(clusterID, resource, storageService)
-		w.Handlers[resource] = NewHandler(clusterID, resource, action)
-		w.initWatcherResourceDistributeQueue(clusterID, resource, action)
+	for resource := range resources.K8sWatcherConfigList {
+		act := action.NewStorageAction(clusterID, resource, storageService)
+		w.Handlers[resource] = NewHandler(clusterID, resource, act)
+		w.initWatcherResourceDistributeQueue(clusterID, resource, act)
 	}
 
-	for resource := range resources.BkbcsWatcherConfigList {
-		action := action.NewStorageAction(clusterID, resource, storageService)
-		w.Handlers[resource] = NewHandler(clusterID, resource, action)
-	}
 	return nil
 }
 
@@ -194,7 +203,7 @@ func (w *Writer) distributeNormal() {
 				glog.V(3).Infof("write queue receive task, current queue(%d/%d)", len(w.queue), cap(w.queue))
 			}
 
-			handlerKey := w.getHandlerKeyBySyncData(data)
+			handlerKey := w.GetHandlerKeyBySyncData(data)
 			if handler, ok := w.Handlers[handlerKey]; ok {
 				handler.HandleWithTimeout(data, defaultQueueTimeout)
 			} else {
@@ -208,7 +217,8 @@ func (w *Writer) distributeNormal() {
 	}
 }
 
-func (w *Writer) getHandlerKeyBySyncData(data *action.SyncData) string {
+// GetHandlerKeyBySyncData returns the handler key by sync data
+func (w *Writer) GetHandlerKeyBySyncData(data *action.SyncData) string {
 	if w == nil || data == nil {
 		return ""
 	}
@@ -225,13 +235,22 @@ func (w *Writer) getHandlerKeyBySyncData(data *action.SyncData) string {
 			}
 			glog.V(5).Infof("Pod resource[%s], handlerKey[%d: %s]", resourceName, index, handlerKey)
 		}
+	case Event:
+		resourceName := w.getResourceName(data)
+		if len(resourceName) > 0 {
+			index := getHashId(resourceName, 4*w.resourceQueueNum.podChanQueueNum)
+			if index >= 0 {
+				handlerKey = EventPrefix + strconv.Itoa(index)
+			}
+			glog.V(5).Infof("Event resource[%s], handlerKey[%d: %s]", resourceName, index, handlerKey)
+		}
 	default:
 	}
 
 	return handlerKey
 }
 
-// debugs here.
+// debug s here.
 func (w *Writer) debug() {
 	for {
 		time.Sleep(debugInterval)
@@ -239,7 +258,7 @@ func (w *Writer) debug() {
 	}
 }
 
-// reportQueueLength report writer module queueInfo to prometheus metrics
+// reportWriterQueueLength report writer module queueInfo to prometheus metrics
 func (w *Writer) reportWriterQueueLength() {
 	metrics.ReportK8sWatchHandlerQueueLength(w.clusterID, NormalQueue, float64(len(w.queue)))
 }
@@ -268,7 +287,7 @@ func (w *Writer) Run(stopCh <-chan struct{}) error {
 	// report writer module queueLen metrics
 	go wait.Until(w.reportWriterQueueLength, defaultHandlerReportPeriod, w.stopCh)
 	// setup debug.
-	//go w.debug()
+	// go w.debug()
 
 	return nil
 }

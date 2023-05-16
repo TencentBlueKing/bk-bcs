@@ -16,7 +16,11 @@ spec:
     singular: portbinding
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .status.status
+      name: status
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
         description: PortBinding is the Schema for the portbindings API
@@ -44,15 +48,38 @@ spec:
                   properties:
                     endPort:
                       type: integer
+                    external:
+                      type: string
+                    hostPort:
+                      type: boolean
                     listenerAttribute:
                       description: IngressListenerAttribute attribute for listener
                       properties:
+                        awsAttributes:
+                          description: aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
+                          items:
+                            description: AWSAttribute define aws target group attribute
+                            properties:
+                              key:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                          type: array
+                        backendInsecure:
+                          description: BackendInsecure specifies whether to enable
+                            insecure access to the backend.
+                          type: boolean
                         healthCheck:
                           description: ListenerHealthCheck health check setting for
                             listener
                           properties:
                             enabled:
                               type: boolean
+                            healthCheckPort:
+                              type: integer
+                            healthCheckProtocol:
+                              type: string
                             healthNum:
                               type: integer
                             httpCheckMethod:
@@ -61,6 +88,12 @@ spec:
                               type: string
                             httpCode:
                               type: integer
+                            httpCodeValues:
+                              description: HTTPCodeValues specifies a set of HTTP
+                                response status codes of health check. You can specify
+                                multiple values (for example, "200,202") or a range
+                                of values (for example, "200-299"). https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2@v1.17.0/types#Matcher
+                              type: string
                             intervalTime:
                               type: integer
                             timeout:
@@ -70,7 +103,13 @@ spec:
                           type: object
                         lbPolicy:
                           type: string
+                        maxRate:
+                          description: MaxRate specifies the maximum number of connections
+                            per second allowed for every target instance.
+                          type: integer
                         sessionTime:
+                          type: integer
+                        sniSwitch:
                           type: integer
                       type: object
                     loadBalancerIDs:
@@ -81,6 +120,10 @@ spec:
                       items:
                         description: IngressLoadBalancer loadbalancer for ingress
                         properties:
+                          awsLBType:
+                            type: string
+                          dnsName:
+                            type: string
                           ips:
                             items:
                               type: string
@@ -90,6 +133,8 @@ spec:
                           loadbalancerName:
                             type: string
                           region:
+                            type: string
+                          scheme:
                             type: string
                           type:
                             type: string

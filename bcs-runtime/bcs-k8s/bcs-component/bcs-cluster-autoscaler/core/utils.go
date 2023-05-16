@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
-	"strings"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -39,6 +38,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	kube_util "k8s.io/autoscaler/cluster-autoscaler/utils/kubernetes"
 	"k8s.io/klog"
+	nodeLabel "k8s.io/kubernetes/cmd/kubeadm/app/constants"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 )
@@ -48,6 +48,14 @@ const (
 	ReschedulerTaintKey = "CriticalAddonsOnly"
 
 	gkeNodeTerminationHandlerTaint = "cloud.google.com/impending-node-termination"
+
+	// filterNodeResourceAnnoKey filters nodes when calculating buffer and total resource
+	filterNodeResourceAnnoKey = "io.tencent.bcs.dev/filter-node-resource"
+
+	// nodeInstanceTypeLabelKey is the instance type of node
+	nodeInstanceTypeLabelKey = "node.kubernetes.io/instance-type"
+	// nodeInstanceTypeEklet indicates the instance type of node is eklet
+	nodeInstanceTypeEklet = "eklet"
 
 	// How old the oldest unschedulable pod should be before starting scale up.
 	unschedulablePodTimeBuffer = 2 * time.Second
@@ -144,7 +152,7 @@ func filterOutExpendableAndSplit(unschedulableCandidates []*apiv1.Pod,
 				" Ignoring in scale up.", pod.Name, expendablePodsPriorityCutoff, *pod.Spec.Priority)
 		} else if nominatedNodeName := pod.Status.NominatedNodeName; nominatedNodeName != "" {
 			waitingForLowerPriorityPreemption = append(waitingForLowerPriorityPreemption, pod)
-			klog.V(4).Infof("Pod %s will be scheduled after low prioity pods are preempted on %s. Ignoring in scale up.",
+			klog.V(4).Infof("Pod %s will be scheduled after low priority pods are preempted on %s. Ignoring in scale up.",
 				pod.Name, nominatedNodeName)
 		} else {
 			unschedulableNonExpendable = append(unschedulableNonExpendable, pod)
@@ -291,25 +299,15 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 			result[id] = sanitizedNodeInfo
 			return true, id, nil
 		}
+		// if founded in result, but not found in cache, should add to node info cache
+		if nodeInfoCache != nil {
+			if _, found := nodeInfoCache[id]; !found {
+				return true, id, nil
+			}
+		}
 		return false, "", nil
 	}
 
-	for _, node := range nodes {
-		// Broken nodes might have some stuff missing. Skipping.
-		if !kube_util.IsNodeReadyAndSchedulable(node) {
-			continue
-		}
-		added, id, typedErr := processNode(node)
-		if typedErr != nil {
-			return map[string]*schedulernodeinfo.NodeInfo{}, typedErr
-		}
-		// TODO: support node pool label update
-		if added && nodeInfoCache != nil {
-			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
-				nodeInfoCache[id] = nodeInfoCopy
-			}
-		}
-	}
 	for _, nodeGroup := range cloudProvider.NodeGroups() {
 		id := nodeGroup.Id()
 		seenGroups[id] = true
@@ -327,8 +325,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 			}
 		}
 
-		// No good template, trying to generate one. This is called only if there are no
-		// working nodes in the node groups. By default CA tries to use a real-world example.
+		// No good template, trying to generate one.
 		nodeInfo, err := getNodeInfoFromTemplate(nodeGroup, daemonsets, predicateChecker, ignoredTaints)
 		if err != nil {
 			if err == cloudprovider.ErrNotImplemented {
@@ -339,6 +336,24 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 			}
 		}
 		result[id] = nodeInfo
+	}
+
+	// if cannot get node template from provider, try to generate with real-world example
+	for _, node := range nodes {
+		// Broken nodes might have some stuff missing. Skipping.
+		if !kube_util.IsNodeReadyAndSchedulable(node) {
+			continue
+		}
+		added, id, typedErr := processNode(node)
+		if typedErr != nil {
+			return map[string]*schedulernodeinfo.NodeInfo{}, typedErr
+		}
+		// TODO: support node pool label update
+		if added && nodeInfoCache != nil {
+			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
+				nodeInfoCache[id] = nodeInfoCopy
+			}
+		}
 	}
 
 	// Remove invalid node groups from cache
@@ -372,7 +387,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 
 // getNodeInfos finds NodeInfos for all nodes
 func getNodeInfos(listers kube_util.ListerRegistry) (map[string]*schedulernodeinfo.NodeInfo, errors.AutoscalerError) {
-	//results := make(map[string]*schedulernodeinfo.NodeInfo)
+	// results := make(map[string]*schedulernodeinfo.NodeInfo)
 
 	podsForNodes, typeErr := getPodsForNodes(listers)
 	if typeErr != nil {
@@ -487,9 +502,9 @@ func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
 	nodeName := fmt.Sprintf("template-node-for-%s-%d", nodeGroup, rand.Int63())
 	newNode.Labels = make(map[string]string, len(node.Labels))
 	for k, v := range node.Labels {
-		if !validLabel(k) {
-			continue
-		}
+		// if !validLabel(k) {
+		// 	continue
+		// }
 		if k != apiv1.LabelHostname {
 			newNode.Labels[k] = v
 		} else {
@@ -531,7 +546,7 @@ func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
 	return newNode, nil
 }
 
-// Removes unregistered nodes if needed. Returns true if anything was removed and error if such occurred.
+// removeOldUnregisteredNodes removes unregistered nodes if needed. Returns true if anything was removed and error if such occurred.
 func removeOldUnregisteredNodes(unregisteredNodes []clusterstate.UnregisteredNode, context *context.AutoscalingContext,
 	currentTime time.Time, logRecorder *utils.LogEventRecorder) (bool, error) {
 	removedAny := false
@@ -567,13 +582,14 @@ func removeOldUnregisteredNodes(unregisteredNodes []clusterstate.UnregisteredNod
 			}
 			logRecorder.Eventf(apiv1.EventTypeNormal, "DeleteUnregistered",
 				"Removed unregistered node %v", unregisteredNode.Node.Name)
+			metrics.RegisterOldUnregisteredNodesRemoved(1)
 			removedAny = true
 		}
 	}
 	return removedAny, nil
 }
 
-// Sets the target size of node groups to the current number of nodes in them
+// fixNodeGroupSize sets the target size of node groups to the current number of nodes in them
 // if the difference was constant for a prolonged time. Returns true if managed
 // to fix something.
 func fixNodeGroupSize(context *context.AutoscalingContext, clusterStateRegistry *clusterstate.ClusterStateRegistry,
@@ -584,18 +600,16 @@ func fixNodeGroupSize(context *context.AutoscalingContext, clusterStateRegistry 
 		if incorrectSize == nil {
 			continue
 		}
+		// set the target size of node groups to the current number of nodes
+		// may descrease or increase the target size
 		if incorrectSize.FirstObserved.Add(context.MaxNodeProvisionTime).Before(currentTime) {
 			delta := incorrectSize.CurrentSize - incorrectSize.ExpectedSize
-			if delta < 0 {
-				klog.V(0).Infof("Decreasing size of %s, expected=%d current=%d delta=%d", nodeGroup.Id(),
-					incorrectSize.ExpectedSize,
-					incorrectSize.CurrentSize,
-					delta)
-				if err := nodeGroup.DecreaseTargetSize(delta); err != nil {
-					return fixed, fmt.Errorf("failed to decrease %s: %v", nodeGroup.Id(), err)
-				}
-				fixed = true
+			klog.V(0).Infof("Fix size of %s, expected=%d current=%d delta=%d", nodeGroup.Id(),
+				incorrectSize.ExpectedSize, incorrectSize.CurrentSize, delta)
+			if err := nodeGroup.DecreaseTargetSize(delta); err != nil {
+				return fixed, fmt.Errorf("failed to fix %s: %v", nodeGroup.Id(), err)
 			}
+			fixed = true
 		}
 	}
 	return fixed, nil
@@ -642,6 +656,13 @@ func ConfigurePredicateCheckerForLoop(unschedulablePods []*apiv1.Pod, schedulabl
 }
 
 func getNodeCoresAndMemory(node *apiv1.Node) (int64, int64) {
+	// filter eklet node
+	if node.Labels[nodeInstanceTypeLabelKey] == nodeInstanceTypeEklet {
+		return 0, 0
+	}
+	if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+		return 0, 0
+	}
 	cores := getNodeResource(node, apiv1.ResourceCPU)
 	memory := getNodeResource(node, apiv1.ResourceMemory)
 	return cores, memory
@@ -735,7 +756,8 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 	return upcomingNodes
 }
 
-func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo, ratio float64) bool {
+func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
+	podsToReschedule []*apiv1.Pod, cpuRatio, memRatio, ratio float64) bool {
 	var leftResourcesList, sumResourcesList schedulernodeinfo.Resource
 	for _, nodeInfo := range nodes {
 		node := nodeInfo.Node()
@@ -745,11 +767,26 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo, ratio 
 		if node.Spec.Unschedulable {
 			continue
 		}
+		if node.Labels["node.kubernetes.io/instance-type"] == "eklet" {
+			continue
+		}
+		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+			continue
+		}
+		if node.Labels[nodeLabel.LabelNodeRoleMaster] == "true" {
+			continue
+		}
 		klog.V(6).Infof("resource: %+v", node.Status.Allocatable)
 		allocatable := nodeInfo.AllocatableResource()
 		sumResourcesList.Add(allocatable.ResourceList())
 		leftResourcesList.Add(singleNodeResource(nodeInfo).ResourceList())
 	}
+
+	if len(podsToReschedule) > 0 {
+		leftResourcesList = substractRescheduledPodResources(leftResourcesList,
+			podsToReschedule)
+	}
+
 	leftResources := leftResourcesList.ResourceList()
 	sumResources := sumResourcesList.ResourceList()
 	for name, sum := range sumResources {
@@ -761,13 +798,51 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo, ratio 
 			continue
 		}
 		r := float64(left.MilliValue()) / float64(sum.MilliValue())
-		klog.V(6).Infof("Resource :%v, left: %v", name, r)
-		klog.V(4).Infof("%v ratio %v, desired ratio %v", name, r, ratio)
-		if r < ratio {
-			return true
+		klog.V(4).Infof("Resource :%v, left: %v", name, r)
+		switch name {
+		case apiv1.ResourceCPU:
+			klog.V(4).Infof("%v ratio %v, desired CPU ratio %v", name, r, cpuRatio)
+			if r < cpuRatio {
+				return true
+			}
+		case apiv1.ResourceMemory:
+			klog.V(4).Infof("%v ratio %v, desired Memory ratio %v", name, r, memRatio)
+			if r < memRatio {
+				return true
+			}
+		default:
+			klog.V(4).Infof("%v ratio %v, desired ratio %v", name, r, ratio)
+			if r < ratio {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+func substractRescheduledPodResources(leftResourcesList schedulernodeinfo.Resource,
+	podsToReschedule []*apiv1.Pod) schedulernodeinfo.Resource {
+	var podResources schedulernodeinfo.Resource
+	for _, pod := range podsToReschedule {
+		for _, container := range pod.Spec.Containers {
+			podResources.Add(container.Resources.Requests)
+		}
+	}
+
+	leftResourcesList.AllowedPodNumber = leftResourcesList.AllowedPodNumber - len(podsToReschedule)
+	leftResourcesList.MilliCPU = leftResourcesList.MilliCPU - podResources.MilliCPU
+	leftResourcesList.Memory = leftResourcesList.Memory - podResources.Memory
+	leftResourcesList.EphemeralStorage = leftResourcesList.EphemeralStorage - podResources.EphemeralStorage
+
+	// calculate extend resources
+	for k, v := range podResources.ScalarResources {
+		_, ok := leftResourcesList.ScalarResources[k]
+		if ok {
+			leftResourcesList.ScalarResources[k] = leftResourcesList.ScalarResources[k] - v
+		}
+	}
+
+	return leftResourcesList
 }
 
 func singleNodeResource(info *schedulernodeinfo.NodeInfo) *schedulernodeinfo.Resource {
@@ -826,13 +901,13 @@ func buildNodeInfos(nodes []*apiv1.Node, podsForNodes map[string][]*apiv1.Pod) m
 	return results
 }
 
-var validLabels = []string{"kubernetes.io", "ocgi.dev", "tencent.cr", "tencent.com"}
+// var validLabels = []string{"kubernetes.io", "ocgi.dev", "tencent.cr", "tencent.com"}
 
-func validLabel(label string) bool {
-	for _, vl := range validLabels {
-		if strings.Contains(label, vl) {
-			return true
-		}
-	}
-	return false
-}
+// func validLabel(label string) bool {
+// 	for _, vl := range validLabels {
+// 		if strings.Contains(label, vl) {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }

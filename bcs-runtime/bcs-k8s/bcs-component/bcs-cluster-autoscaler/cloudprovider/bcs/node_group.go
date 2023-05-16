@@ -54,11 +54,19 @@ type NodeGroup struct {
 	client    clustermanager.NodePoolClientInterface
 }
 
+// TimeRange defines crontab regular
+type TimeRange struct {
+	Name       string
+	Schedule   string
+	Zone       string
+	DesiredNum int
+}
 type nodeTemplate struct {
 	InstanceType string
 	Region       string
 	Resources    map[apiv1.ResourceName]resource.Quantity
 	Label        map[string]string
+	Taint        []*clustermanager.Taint
 }
 
 // MaxSize returns maximum size of the node group.
@@ -103,11 +111,14 @@ func (group *NodeGroup) IncreaseSize(delta int) error {
 		}
 		if group.scalingType == ScalingTypeWakeUpStopped {
 			if group.closedSize < delta {
-				err := group.client.UpdateDesiredNode(group.nodeGroupID, size)
+				taskID, err := group.client.UpdateDesiredNode(group.nodeGroupID, size)
 				if err != nil {
 					return fmt.Errorf("available instance type in selected-zone are sold out,"+
 						" starting up %v closed instances meet error %v - group: %v",
 						group.closedSize, err.Error(), group.nodeGroupID)
+				}
+				if taskID != "" {
+					taskChecker.RecordScaleUpTask(taskID)
 				}
 				return fmt.Errorf("available instance type in selected-zone are sold out,"+
 					" starting up %v closed instances - group: %v",
@@ -115,7 +126,11 @@ func (group *NodeGroup) IncreaseSize(delta int) error {
 			}
 		}
 	}
-	return group.client.UpdateDesiredNode(group.nodeGroupID, size+delta)
+	taskID, err := group.client.UpdateDesiredNode(group.nodeGroupID, size+delta)
+	if taskID != "" {
+		taskChecker.RecordScaleUpTask(taskID)
+	}
+	return err
 }
 
 // IsSoldOut returns whether the instances of the node group are sold out
@@ -129,9 +144,10 @@ func (group *NodeGroup) IsSoldOut() bool {
 // It is assumed that cloud provider will not delete the existing nodes if the size
 // when there is an option to just decrease the target.
 func (group *NodeGroup) DecreaseTargetSize(delta int) error {
-	if delta >= 0 {
-		return fmt.Errorf("size decrease size must be negative")
-	}
+	// delta canbe positive, cause that scale down may failed.
+	// if delta >= 0 {
+	// 	return fmt.Errorf("size decrease size must be negative")
+	// }
 	size, err := group.TargetSize()
 	if err != nil {
 		return err
@@ -151,7 +167,8 @@ func (group *NodeGroup) DecreaseTargetSize(delta int) error {
 func (group *NodeGroup) Belongs(node *apiv1.Node) (bool, error) {
 	ip := getIP(node)
 	if len(ip) == 0 {
-		qcloudref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+		// qcloudref, err := InstanceRefFromProviderID(node.Spec.ProviderID)
+		qcloudref, err := InstanceRefFromInnerIP(node.Status.Addresses)
 		if err != nil {
 			return false, err
 		}
@@ -223,23 +240,23 @@ func (group *NodeGroup) DeleteNodes(nodes []*apiv1.Node) error {
 		ips = append(ips, ip)
 	}
 
-	//TODO： max support 100, separates to multi requests
+	// TODO： max support 100, separates to multi requests
 	if len(ips) < maxRecordsReturnedByAPI {
 		klog.Infof("DeleteInstances len(%d)", len(ips))
 		return group.deleteInstances(ips)
-	} else {
-		for i := 0; i < len(ips); i = i + maxRecordsReturnedByAPI {
-			klog.Infof("page DeleteInstances i %d, len(%d)", i, len(ips))
-			idx := math.Min(float64(i+maxRecordsReturnedByAPI), float64(len(ips)))
-			err := group.deleteInstances(ips[i:int(idx)])
-			if err != nil {
-				return err
-			}
-			time.Sleep(intervalTimeDetach)
-			klog.Infof("page DeleteInstances i %d, len(%d) done", i, len(ips))
-		}
-		return nil
 	}
+	for i := 0; i < len(ips); i = i + maxRecordsReturnedByAPI {
+		klog.Infof("page DeleteInstances i %d, len(%d)", i, len(ips))
+		idx := math.Min(float64(i+maxRecordsReturnedByAPI), float64(len(ips)))
+		err := group.deleteInstances(ips[i:int(idx)])
+		if err != nil {
+			return err
+		}
+		time.Sleep(intervalTimeDetach)
+		klog.Infof("page DeleteInstances i %d, len(%d) done", i, len(ips))
+	}
+	return nil
+
 }
 
 // Id returns node group id.
@@ -270,16 +287,29 @@ func (group *NodeGroup) Nodes() ([]cloudprovider.Instance, error) {
 		}
 
 		i := cloudprovider.Instance{
-			Id:     fmt.Sprintf("qcloud:///%v/%s", instance.Zone, instance.NodeID),
+			Id:     instance.InnerIP,
 			Status: &cloudprovider.InstanceStatus{},
 		}
 		cache[instance.NodeID] = instance.InnerIP
 		switch instance.Status {
-		case "creating":
+		case "INITIALIZATION":
 			i.Status.State = cloudprovider.InstanceCreating
-		case "running":
-			// check more node status
+		case "RUNNING":
 			i.Status.State = cloudprovider.InstanceRunning
+		case "ADD-FAILURE":
+			i.Status.State = cloudprovider.InstanceCreating
+			i.Status.ErrorInfo = &cloudprovider.InstanceErrorInfo{
+				ErrorClass:   cloudprovider.OtherErrorClass,
+				ErrorCode:    "add failure",
+				ErrorMessage: "add failed",
+			}
+		case "REMOVE-FAILURE":
+			i.Status.State = cloudprovider.InstanceDeleting
+			i.Status.ErrorInfo = &cloudprovider.InstanceErrorInfo{
+				ErrorClass:   cloudprovider.OtherErrorClass,
+				ErrorCode:    "remove failure",
+				ErrorMessage: "remove failed",
+			}
 		default:
 			i.Status.State = cloudprovider.InstanceDeleting
 		}
@@ -314,7 +344,7 @@ func (group *NodeGroup) GetNodeGroup() (*clustermanager.NodeGroup, error) {
 	return group.client.GetPool(group.nodeGroupID)
 }
 
-// GetGroupNodes returns NodeGroup nodes.
+// getGroupNodes returns NodeGroup nodes.
 func (group *NodeGroup) getGroupNodes() ([]string, error) {
 	nodes, err := group.client.GetNodes(group.nodeGroupID)
 	if err != nil {
@@ -336,7 +366,11 @@ func (group *NodeGroup) getGroupNodes() ([]string, error) {
 func (group *NodeGroup) deleteInstances(ips []string) error {
 	groupID := group.nodeGroupID
 	klog.V(4).Infof("Start remove nodes %v", ips)
-	return group.client.RemoveNodes(groupID, ips)
+	taskID, err := group.client.RemoveNodes(groupID, ips)
+	if taskID != "" {
+		taskChecker.RecordScaleDownTask(taskID)
+	}
+	return err
 }
 
 func (group *NodeGroup) getNodeTemplate() (*nodeTemplate, error) {
@@ -348,12 +382,18 @@ func (group *NodeGroup) getNodeTemplate() (*nodeTemplate, error) {
 		return nil, fmt.Errorf("node group scaling info is not set")
 	}
 	resources := convertResource(nodeGroup.LaunchTemplate)
-	return &nodeTemplate{
+	template := &nodeTemplate{
 		InstanceType: nodeGroup.LaunchTemplate.InstanceType,
 		Region:       nodeGroup.Region,
 		Resources:    resources,
 		Label:        nodeGroup.Labels,
-	}, nil
+	}
+	if nodeGroup.NodeTemplate != nil {
+		template.Label = cloudprovider.JoinStringMaps(template.Label,
+			nodeGroup.NodeTemplate.Labels)
+		template.Taint = nodeGroup.NodeTemplate.Taints
+	}
+	return template, nil
 }
 
 func (group *NodeGroup) buildNodeFromTemplate(template *nodeTemplate) (*apiv1.Node, error) {
@@ -383,6 +423,17 @@ func (group *NodeGroup) buildNodeFromTemplate(template *nodeTemplate) (*apiv1.No
 	// GenericLabels
 	node.Labels = cloudprovider.JoinStringMaps(node.Labels, buildGenericLabels(template, nodeName))
 
+	node.Spec = apiv1.NodeSpec{
+		Taints: make([]apiv1.Taint, 0),
+	}
+	for _, t := range template.Taint {
+		node.Spec.Taints = append(node.Spec.Taints, apiv1.Taint{
+			Key:    t.Key,
+			Value:  t.Value,
+			Effect: apiv1.TaintEffect(t.Effect),
+		})
+	}
+
 	node.Status.Conditions = cloudprovider.BuildReadyConditions()
 	return &node, nil
 }
@@ -395,4 +446,22 @@ func getIP(node *apiv1.Node) string {
 		return address.Address
 	}
 	return ""
+}
+
+// TimeRanges returns the crontab regulars of the node group
+func (group *NodeGroup) TimeRanges() ([]*TimeRange, error) {
+	result := make([]*TimeRange, 0)
+	pc, err := group.client.GetPoolConfig(group.nodeGroupID)
+	if err != nil {
+		return result, err
+	}
+	for _, t := range pc.TimeRanges {
+		result = append(result, &TimeRange{
+			Name:       t.Name,
+			Schedule:   t.Schedule,
+			Zone:       t.Zone,
+			DesiredNum: int(t.DesiredNum),
+		})
+	}
+	return result, err
 }

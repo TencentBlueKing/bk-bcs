@@ -163,6 +163,7 @@ func (i *imageLoader) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 	return admissionResponse
 }
 
+// Close xxx
 // TODO clean resources like connections, files
 func (i *imageLoader) Close() error {
 	return nil

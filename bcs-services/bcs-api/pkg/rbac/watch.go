@@ -30,8 +30,10 @@ const (
 	wsMessageTypeData = "data"
 )
 
+// WorkerId xxx
 var WorkerId string
 
+// WebsocketRespnse xxx
 type WebsocketRespnse struct {
 	AppCode  string `json:"app_code"`
 	Type     string `json:"type"`
@@ -40,6 +42,7 @@ type WebsocketRespnse struct {
 	Data     string `json:"data"`
 }
 
+// AuthRbacData xxx
 type AuthRbacData struct {
 	Operation        string     `json:"operation"`
 	Principal        Principals `json:"principal"`
@@ -52,16 +55,19 @@ type AuthRbacData struct {
 	PolicyFrom       string     `json:"policy_from"`
 }
 
+// Resource xxx
 type Resource struct {
 	Cluster   string `json:"cluster"`
 	Namespace string `json:"namespace"`
 }
 
+// Principals xxx
 type Principals struct {
 	PrincipalType string `json:"principal_type"`
 	PrincipalId   string `json:"principal_id"`
 }
 
+// WebsocketReq xxx
 type WebsocketReq struct {
 	AppCode  string `json:"app_code"`
 	Type     string `json:"type"`
@@ -69,6 +75,7 @@ type WebsocketReq struct {
 	DataId   string `json:"data_id"`
 }
 
+// SyncRbacFromAuth xxx
 // sync rbac data from paas_auth subserver
 func SyncRbacFromAuth() {
 	subServerHost := config.BKIamAuth.BKIamAuthSubServer
@@ -129,7 +136,8 @@ CONNECTION:
 			blog.Info("data received")
 			err := syncAuthRbacData(&authRbacData)
 			if err != nil {
-				blog.Errorf("error when sync data from paas_auth_subserver. dataid: %s, data: %v, err: %s", wsResp.DataId, wsResp.Data, err.Error())
+				blog.Errorf("error when sync data from paas_auth_subserver. dataid: %s, data: %v, err: %s", wsResp.DataId,
+					wsResp.Data, err.Error())
 				continue
 			}
 

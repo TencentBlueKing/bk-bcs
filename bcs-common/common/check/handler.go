@@ -62,7 +62,8 @@ func StartHealthCheck() {
 	}
 	isStarted = true
 
-	stableTime := *flag.Int("stableTime", 5, "if there are not problems occur in stableTime seconds, means start successful. default 5 seconds.")
+	stableTime := *flag.Int("stableTime", 5,
+		"if there are not problems occur in stableTime seconds, means start successful. default 5 seconds.")
 	watcher = healthWatcher{err: make(chan error, 1), stableTime: time.Duration(stableTime) * time.Second}
 	watcher.run()
 }

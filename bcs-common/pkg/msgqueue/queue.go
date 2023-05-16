@@ -15,22 +15,22 @@ package msgqueue
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/micro/go-micro/v2/broker"
 	"github.com/micro/go-plugins/broker/rabbitmq/v2"
 	"github.com/micro/go-plugins/broker/stan/v2"
 	natstan "github.com/nats-io/stan.go"
+	"github.com/pkg/errors"
 )
 
 // MessageQueue is an interface used for asynchronous messaging.
 type MessageQueue interface {
-	// publish pub data to queue
+	// Publish pub data to queue
 	// data.Header  map[string]string id: cluster_id; resourceType:Pod; namespace:default; resourceName: name; event: Update
 	Publish(data *broker.Message) error
-	// subscribe specified data type
+	// Subscribe specified data type
 	Subscribe(handler Handler, filters []Filter, resourceType string) (UnSub, error)
 	// SubscribeWithQueueName subscribe topic with custom quenename
 	SubscribeWithQueueName(handler Handler, filters []Filter, queuename, topic string) (UnSub, error)
@@ -71,8 +71,7 @@ func NewMsgQueue(opts ...QueueOption) (MessageQueue, error) {
 
 	messageQueue.broker, err = NewQueueBroker(queueOptions)
 	if err != nil {
-		errMsg := fmt.Errorf("messageQueue init broker failed: %v", err)
-		return nil, errMsg
+		return nil, errors.Wrapf(err, "messageQueue init broker failed.")
 	}
 
 	messageQueue.ctx, messageQueue.cancel = context.WithCancel(context.Background())
@@ -95,8 +94,7 @@ func (mq *MsgQueue) Publish(data *broker.Message) error {
 
 	queueName, err := mq.isExistResourceQueue(resourceType)
 	if err != nil {
-		errMsg := fmt.Errorf("resourceType to queue failed: %v", err)
-		return errMsg
+		return errors.Wrapf(err, "resourceType to queue failed.")
 	}
 
 	switch mq.queueOptions.CommonOptions.QueueKind {
@@ -105,7 +103,7 @@ func (mq *MsgQueue) Publish(data *broker.Message) error {
 	case NATSTREAMING:
 		err = mq.broker.Publish(queueName, data)
 	default:
-		return errors.New("unsupported queue kind")
+		return errors.Errorf("unsupported queue kind '%s'", mq.queueOptions.CommonOptions.QueueKind)
 	}
 	if err != nil {
 		errMsg := fmt.Errorf("[pub] message failed: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
@@ -113,7 +111,7 @@ func (mq *MsgQueue) Publish(data *broker.Message) error {
 		return errMsg
 	}
 
-	glog.V(4).Infof("[pub] message successful: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
+	blog.V(4).Infof("[pub] message successful: [messageType: %s], [messageQueue: %s], [cluster_id: %s], [namespace: %s], [resourceName: %s]",
 		data.Header["resourceType"], queueName, data.Header["id"], data.Header["namespace"], data.Header["resourceName"])
 
 	return nil
@@ -129,7 +127,8 @@ func (mq *MsgQueue) Subscribe(handler Handler, filters []Filter, resourceType st
 }
 
 // SubscribeWithQueueName subscribe resourceType data with specific handler and filters
-func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, queueName, resourceType string) (UnSub, error) {
+func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, queueName, resourceType string) (UnSub,
+	error) {
 	if !mq.queueOptions.CommonOptions.QueueFlag {
 		return nil, errors.New("queue flag is off")
 	}
@@ -149,22 +148,24 @@ func (mq *MsgQueue) SubscribeWithQueueName(handler Handler, filters []Filter, qu
 
 	subscribe, err := mq.broker.Subscribe(topic, podHandler.selfHandler, subscribeOptions...)
 	if err != nil {
-		glog.Errorf("subscribe failed: %v", err)
-		return nil, err
+		return nil, errors.Wrapf(err, "subscribe failed.")
 	}
 
-	glog.V(4).Infof("subscribe [%s:%s] successful", subscribe.Options().Queue, subscribe.Topic())
+	blog.V(4).Infof("subscribe [%s:%s] successful", subscribe.Options().Queue, subscribe.Topic())
 
 	return subscribe, nil
 }
 
+// isExistResourceQueue xxx
 // Handlers of all topics
 func (mq *MsgQueue) isExistResourceQueue(resourceType string) (string, error) {
 	q, ok := mq.queueOptions.CommonOptions.ResourceToQueue[resourceType]
 	if !ok {
-		return "", fmt.Errorf("resourceType[%s] not on subscribe", resourceType)
+		return "", errors.Errorf("resourceType[%s] not on subscribe", resourceType)
 	}
-	glog.V(4).Infof("resourceType %s sub queue[%s]", resourceType, q)
+
+	blog.V(4).Infof("resourceType %s sub queue[%s]", resourceType, q)
+
 	return q, nil
 }
 

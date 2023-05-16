@@ -18,19 +18,20 @@ import (
 	"strings"
 )
 
-//Backend hold Backend info for load balance
+// Backend hold Backend info for load balance
 type Backend struct {
-	Host   string //host name for endpoint
-	IP     string //overlap ip info
-	Port   int    //listen port
-	Weight int    //backend weight
+	Host   string // host name for endpoint
+	IP     string // overlap ip info
+	Port   int    // listen port
+	Weight int    // backend weight
 }
 
+// String 用于打印
 func (b *Backend) String() string {
 	return strings.Replace(b.IP, ".", "_", -1) + "_" + strconv.Itoa(b.Port)
 }
 
-//BackendList define Backend list implementing sorter interface
+// BackendList define Backend list implementing sorter interface
 type BackendList []Backend
 
 // Len is the number of elements in the collection.
@@ -49,11 +50,11 @@ func (bl BackendList) Swap(i, j int) {
 	bl[i], bl[j] = bl[j], bl[i]
 }
 
-//ServiceInfo hold http/https info
+// ServiceInfo hold http/https info
 type ServiceInfo struct {
-	Name            string //serviceName
-	ServicePort     int    //export port
-	Balance         string //loadbalance algorithm, default source
-	MaxConn         int    //max connection for service
+	Name            string // serviceName
+	ServicePort     int    // export port
+	Balance         string // loadbalance algorithm, default source
+	MaxConn         int    // max connection for service
 	SessionAffinity bool
 }

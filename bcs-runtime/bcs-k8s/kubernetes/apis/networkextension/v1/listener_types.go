@@ -37,6 +37,18 @@ const (
 	LabelValueTrue = "true"
 	// LabelValueFalse label value for false
 	LabelValueFalse = "false"
+	// LabelValueForPortPoolItemName label value for port pool and item name
+	LabelValueForPortPoolItemName = "portpool-item-name"
+	// LabelKeyForOwnerKind mark which kind of resource generate this listener, e.g. portpool / ingress
+	LabelKeyForOwnerKind = "owner-kind"
+	// LabelKeyForOwnerName mark which resource generate this listener. Value is name of portpool or ingress.
+	LabelKeyForOwnerName = "owner-name"
+	// LabelKetForTargetGroupType label key for target group type
+	LabelKetForTargetGroupType = "listener.bkbcs.tencent.com/target_group_type"
+	// LabelValueForTargetGroupNormal normal target group
+	LabelValueForTargetGroupNormal = "normal"
+	// LabelValueForTargetGroupEmpty empty target group
+	LabelValueForTargetGroupEmpty = "empty"
 	// ListenerStatusNotSynced shows listener changes are not synced
 	ListenerStatusNotSynced = "NotSynced"
 	// ListenerStatusSynced shows listener changes are synced
@@ -84,11 +96,12 @@ type ListenerTargetGroup struct {
 
 // ListenerRule route rule for listener
 type ListenerRule struct {
-	RuleID            string                    `json:"ruleID,omitempty"`
-	Domain            string                    `json:"domain,omitempty"`
-	Path              string                    `json:"path,omitempty"`
-	ListenerAttribute *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
-	TargetGroup       *ListenerTargetGroup      `json:"targetGroup,omitempty"`
+	RuleID            string                      `json:"ruleID,omitempty"`
+	Domain            string                      `json:"domain,omitempty"`
+	Path              string                      `json:"path,omitempty"`
+	Certificate       *IngressListenerCertificate `json:"certificate,omitempty"`
+	ListenerAttribute *IngressListenerAttribute   `json:"listenerAttribute,omitempty"`
+	TargetGroup       *ListenerTargetGroup        `json:"targetGroup,omitempty"`
 }
 
 // ListenerRuleList list of listener rule
@@ -157,11 +170,21 @@ type ListenerStatus struct {
 	ListenerID   string                `json:"listenerID,omitempty"`
 	Status       string                `json:"status,omitempty"`
 	HealthStatus *ListenerHealthStatus `json:"healthStatus,omitempty"`
+	Msg          string                `json:"msg,omitempty"`
+	PortPool     string                `json:"portpool,omitempty"`
+	Ingress      string                `json:"ingress,omitempty"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
+// +kubebuilder:printcolumn:name="status",type=string,JSONPath=`.status.status`
+// +kubebuilder:printcolumn:name="protocol",type=string,JSONPath=`.spec.protocol`
+// +kubebuilder:printcolumn:name="port",type=integer,JSONPath=`.spec.port`
+// +kubebuilder:printcolumn:name="endPort",type=integer,JSONPath=`.spec.endPort`
+// +kubebuilder:printcolumn:name="loadbalancerID",type=string,JSONPath=`.spec.loadbalancerID`
+// +kubebuilder:printcolumn:name="ingress",type=string,JSONPath=`.status.ingress`
+// +kubebuilder:printcolumn:name="portpool",type=string,JSONPath=`.status.portpool`
 
 // Listener is the Schema for the listeners API
 type Listener struct {

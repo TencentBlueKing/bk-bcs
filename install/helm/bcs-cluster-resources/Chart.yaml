@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: latest
+name: cluster-resources
+description: 蓝鲸容器服务 bcs-services/cluster-resources 模块
+type: application
+version: 0.1.0
+dependencies:
+  - name: redis
+    version: 17.7.3
+    repository: https://charts.bitnami.com/bitnami
+  - name: etcd
+    version: 8.7.3
+    repository: https://charts.bitnami.com/bitnami

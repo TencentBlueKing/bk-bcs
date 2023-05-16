@@ -29,7 +29,7 @@ def job_configs():
 
 class TestJobFormatter:
     def test_format_dict(self, job_configs):
-        """ 测试 format_dict 方法 """
+        """测试 format_dict 方法"""
         result = JobFormatter().format_dict(job_configs['normal'])
         assert set(result.keys()) == {'duration', 'images', 'age', 'createTime', 'updateTime'}
         assert result['images'] == ['perl']

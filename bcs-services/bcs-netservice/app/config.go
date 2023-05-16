@@ -17,20 +17,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
-//Backend for mysql
+// Backend for mysql
 type Backend struct {
 	Host   string `json:"backend_host" value:"" usage:"netservice data storage backend ip address"`
 	User   string `json:"backend_user" value:"" usage:"netservice data storage backend user info"`
 	Passwd string `json:"backend_passwd" value:"" usage:"netservice data storage backend password"`
 }
 
-//NewConfig creat new Config for net-server
+// NewConfig creat new Config for net-server
 func NewConfig() *Config {
 	cfg := new(Config)
 	return cfg
 }
 
-//Config for bcs-netservice in conf/bcs.conf
+// Config for bcs-netservice in conf/bcs.conf
 type Config struct {
 	conf.FileConfig
 	conf.ServiceConfig

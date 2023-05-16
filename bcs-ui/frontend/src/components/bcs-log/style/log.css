@@ -1,0 +1,98 @@
+.log-container {
+    display: flex;
+    flex-direction: column;
+    border-radius: 6px;
+    transition-property: transform, opacity;
+    transition: transform 200ms cubic-bezier(0.165, 0.84, 0.44, 1),opacity 100ms cubic-bezier(0.215, 0.61, 0.355, 1);
+    background: #1e1e1e;
+    height: 100%;
+    .log-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #252935;
+        line-height: 48px;
+        padding: 5px 20px;
+        border-bottom: 1px solid #2b2b2b;
+        color: #d4d4d4;
+        border-radius: 6px 6px 0 0;
+        &-right {
+            display: flex;
+            align-items: center;
+            .bk-select {
+                min-width: 150px;
+            }
+            .icon {
+                font-size: 16px;
+                cursor: pointer;
+                &.disabled {
+                    cursor: not-allowed;
+                    color: #fafbfd;
+                }
+            }
+            .select {
+                border: none;
+                color: #f6f8fa;
+            }
+            .bk-select .bk-tooltip.bk-select-dropdown {
+                background: hsla(0,0%,100%,.125);
+            }
+            .bk-select.is-disabled {
+                background: hsla(0,0%,100%,.125);
+            }
+        }
+    }
+    .log-wrapper {
+        flex: 1;
+        overflow: hidden;
+    }
+    .log-content {
+        padding: 0 20px;
+        .log-item {
+            line-height: 16px;
+            font-size: 12px;
+            color: #fff;
+            display: flex;
+            font-family: Consolas, "Courier New", monospace;
+            height: 16px;
+            overflow: hidden;
+            word-break: break-all;
+            transition: background-color 0.5s ease;
+            &:hover {
+              background-color: #333030;
+              border-radius: 2px;
+            }
+            &.active {
+              background-color: #333030;
+              border-radius: 2px;
+            }
+            &-content {
+              flex: 1;
+            }
+        }
+        &-pre {
+            margin-bottom: 20px;
+        }
+        &-tips {
+            position: absolute !important;
+            height: 24px;
+            background: rgba(255,255,255,0.20);
+            border-radius: 12px;
+            box-shadow: 0px 1px 2px 0px rgb(0 0 0 / 50%);
+            color: #fff;
+            right: 15px;
+            top: 15px;
+            padding: 0 10px 0 10px;
+            font-size: 12px;
+            line-height: 24px;
+            cursor: pointer;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+        }
+    }
+    .pre-loading {
+        top: 30px !important;
+        background: unset !important;
+    }
+}

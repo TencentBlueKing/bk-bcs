@@ -380,6 +380,7 @@ func (i *IpScheduler) startGetQuota(ctx context.Context) {
 	}
 }
 
+// setQuota xxx
 // set quota limit
 func (i *IpScheduler) setQuota() {
 	resp, err := i.CloudNetClient.GetQuota(context.Background(), &pbcloudnet.GetIPQuotaReq{

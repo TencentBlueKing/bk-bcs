@@ -32,6 +32,7 @@ from backend.helm.helm.models import Chart, ChartRelease
 from backend.helm.toolkit import utils as bcs_helm_utils
 from backend.helm.toolkit.diff.revision import AppRevisionDiffer
 from backend.helm.toolkit.kubehelm import exceptions as helm_exceptions
+from backend.metrics import Result, helm_install_total, helm_rollback_total, helm_upgrade_total
 
 from . import bcs_info_injector
 from .deployer import AppDeployer
@@ -51,8 +52,9 @@ class App(models.Model):
         ("delete", "Delete"),
     )
 
-    creator = models.CharField(_("创建者"), max_length=32)
-    updator = models.CharField(_("更新者"), max_length=32)
+    # 根据用户管理的限制，允许creator和updater最大长度为64
+    creator = models.CharField("创建者", max_length=64)
+    updator = models.CharField("更新者", max_length=64)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -321,8 +323,15 @@ class App(models.Model):
             logger.exception("first deploy app with unexpected error: %s", e)
             self.set_transitioning(False, "unexpected error: %s" % e)
             log_client.update_log(activity_status="failed")
+            helm_install_total.labels(Result.Failure.value).inc()
         else:
-            activity_status = "succeed" if self.transitioning_result else "failed"
+            if self.transitioning_result:
+                activity_status = "succeed"
+                helm_install_total.labels(Result.Success.value).inc()
+            else:
+                activity_status = "failed"
+                helm_install_total.labels(Result.Failure.value).inc()
+
             log_client.update_log(activity_status=activity_status)
 
     def upgrade_app(
@@ -383,8 +392,6 @@ class App(models.Model):
         # make upgrade
         # `chart_version_id` indicate the target chartverion for app,
         # it can also use KEEP_TEMPLATE_UNCHANGED to keep app template unchanged.
-
-        # operation record
         log_client = self.record_upgrade_app(
             chart_version_id,
             answers,
@@ -397,9 +404,24 @@ class App(models.Model):
             **kwargs,
         )
 
-        self.release = ChartRelease.objects.make_upgrade_release(
-            self, chart_version_id, answers, customs, valuefile=valuefile, valuefile_name=valuefile_name
-        )
+        # NOTE: 这里会匹配更新的版本，可能会导致 `ChartVersion matching query does not exist` 异常
+        try:
+            self.release = ChartRelease.objects.make_upgrade_release(
+                self, chart_version_id, answers, customs, valuefile=valuefile, valuefile_name=valuefile_name
+            )
+        except Exception as e:
+            logger.error(
+                "update release error, cluster_id: %s, namespace: %s, name: %s, error: %s",
+                self.cluster_id,
+                self.namespace,
+                self.name,
+                e,
+            )
+            transitioning_result = False
+            transitioning_message = f"update release failed, {e}"
+            self.set_transitioning(transitioning_result, transitioning_message)
+            return self
+
         self.version = self.release.chartVersionSnapshot.version
         self.updator = updator
         self.cmd_flags = json.dumps(kwargs.get("cmd_flags") or [])
@@ -424,8 +446,15 @@ class App(models.Model):
             logger.exception("upgrade_task unexpected error: %s" % e)
             self.set_transitioning(False, "unexpected error: %s" % e)
             log_client.update_log(activity_status="failed")
+            helm_upgrade_total.labels(Result.Failure.value).inc()
         else:
-            activity_status = "succeed" if self.transitioning_result else "failed"
+            if self.transitioning_result:
+                activity_status = "succeed"
+                helm_upgrade_total.labels(Result.Success.value).inc()
+            else:
+                activity_status = "failed"
+                helm_upgrade_total.labels(Result.Failure.value).inc()
+
             log_client.update_log(activity_status=activity_status)
 
         return self
@@ -499,10 +528,17 @@ class App(models.Model):
             logger.exception("rollback_app_task unexpected error: %s", e)
             self.set_transitioning(self, False, "unexpected error: %s" % e)
             log_client.update_log(activity_status="failed")
+            helm_rollback_total.labels(Result.Failure.value).inc()
         else:
             # no exception case app deployer run kubectl will set transitioning
             # no exception case doesn't means success, so don't set transitioning here
-            activity_status = "succeed" if self.transitioning_result else "failed"
+            if self.transitioning_result:
+                activity_status = "succeed"
+                helm_rollback_total.labels(Result.Success.value).inc()
+            else:
+                activity_status = "failed"
+                helm_rollback_total.labels(Result.Failure.value).inc()
+
             log_client.update_log(activity_status=activity_status)
 
     def get_history_releases(self):

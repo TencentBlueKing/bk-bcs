@@ -22,7 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//NewPauseCommand create deployment pause command
+// NewPauseCommand create deployment pause command
 func NewPauseCommand() cli.Command {
 	return cli.Command{
 		Name:  "pause",

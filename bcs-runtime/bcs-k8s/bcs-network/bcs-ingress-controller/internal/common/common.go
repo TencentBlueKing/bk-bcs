@@ -13,15 +13,26 @@
 package common
 
 import (
+	"crypto/md5"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // GetLbRegionAndName from {region}:{lbID}
 func GetLbRegionAndName(lbName string) (string, string, error) {
+	if a, err := arn.Parse(lbName); err == nil {
+		return a.Region, lbName, nil
+	}
+	// for lb name without region, we use default region
+	if !strings.Contains(lbName, constant.DelimiterForLbID) {
+		return "", lbName, nil
+	}
 	idStrs := strings.Split(lbName, constant.DelimiterForLbID)
 	if len(idStrs) != 2 {
 		return "", "", fmt.Errorf("lb name %s is invalid", lbName)
@@ -29,13 +40,37 @@ func GetLbRegionAndName(lbName string) (string, string, error) {
 	return idStrs[0], idStrs[1], nil
 }
 
+// BuildRegionName return {region}:{name}
+func BuildRegionName(region string, name string) string {
+	return fmt.Sprintf("%s:%s", region, name)
+}
+
+// example: arn:aws:elasticloadbalancing:us-west-1:1234567:loadbalancer/net/name/xxx
+// return: region-lb-name
+func tryParseARNFromLbID(lbID string) string {
+	if a, err := arn.Parse(lbID); err == nil {
+		names := strings.Split(a.Resource, "/")
+		if len(names) != 4 {
+			return ""
+		}
+		return a.Region + "-" + names[2]
+	}
+	return ""
+}
+
 // GetListenerName generate listener name with lb id and port number
 func GetListenerName(lbID string, port int) string {
+	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
+		lbID = a
+	}
 	return lbID + "-" + strconv.Itoa(port)
 }
 
 // GetListenerNameWithProtocol generate listener key with lbid, protocol and port number
 func GetListenerNameWithProtocol(lbID, protocol string, startPort, endPort int) string {
+	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
+		lbID = a
+	}
 	if endPort <= 0 {
 		return lbID + "-" + strings.ToLower(protocol) + "-" + strconv.Itoa(startPort)
 	}
@@ -44,15 +79,75 @@ func GetListenerNameWithProtocol(lbID, protocol string, startPort, endPort int) 
 
 // GetSegmentListenerNameWithProtocol generate segment listener name by protocol
 func GetSegmentListenerNameWithProtocol(lbID, protocol string, startPort, endPort int) string {
+	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
+		lbID = a
+	}
 	return lbID + "-" + strings.ToLower(protocol) + "-" + strconv.Itoa(startPort) + "-" + strconv.Itoa(endPort)
 }
 
 // GetSegmentListenerName generate listener for port segment
 func GetSegmentListenerName(lbID string, startPort, endPort int) string {
+	if a := tryParseARNFromLbID(lbID); len(a) != 0 {
+		lbID = a
+	}
 	return lbID + "-" + strconv.Itoa(startPort) + "-" + strconv.Itoa(endPort)
 }
 
 // GetNamespacedNameKey get key by name and namespace
 func GetNamespacedNameKey(name, ns string) string {
 	return name + "/" + ns
+}
+
+// GetPortPoolListenerLabelKey get key for port pool listener label
+// example: pool1/md5(item1)
+// because item1 is an anomaly string, so we use md5 to encode it
+func GetPortPoolListenerLabelKey(portPoolName, itemName string) string {
+	return portPoolName + "/" + fmt.Sprintf("%x", (md5.Sum([]byte(itemName))))
+}
+
+// GetIngressProtocolLayer get ingress protocol layer,
+// if all ingress' rules / portMappings in layer4, return transportLayer
+// if all ingress' rules / portMappings in layer7, return applicationLayer
+// else return default layer
+// Now it only used for azure sdk
+func GetIngressProtocolLayer(ingress *networkextensionv1.Ingress) string {
+	transportCnt := 0
+	applicationCnt := 0
+	for _, rule := range ingress.Spec.Rules {
+		switch strings.ToLower(rule.Protocol) {
+		case "tcp", "udp":
+			transportCnt++
+		case "http", "https":
+			applicationCnt++
+		}
+	}
+	for _, portMapping := range ingress.Spec.PortMappings {
+		switch strings.ToLower(portMapping.Protocol) {
+		case "tcp", "udp":
+			transportCnt++
+		case "http", "https":
+			applicationCnt++
+		}
+	}
+
+	// portMapping only support tcp&udp
+	if transportCnt == 0 && len(ingress.Spec.PortMappings) == 0 {
+		return constant.ProtocolLayerApplication
+	}
+	if applicationCnt == 0 {
+		return constant.ProtocolLayerTransport
+	}
+	return constant.ProtocolLayerDefault
+}
+
+// GetPortPoolItemProtocols return protocol list of portpool item.protocol
+func GetPortPoolItemProtocols(itemProtocol string) []string {
+	var protocolList []string
+	if len(itemProtocol) == 0 {
+		protocolList = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
+	} else {
+		protocolList = strings.Split(itemProtocol, constant.PortPoolItemProtocolDelimiter)
+	}
+
+	return protocolList
 }

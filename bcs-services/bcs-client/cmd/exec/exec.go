@@ -11,12 +11,13 @@
  *
  */
 
+// Package exec xxx
 package exec
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
-	//"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	// "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
 	"github.com/docker/docker/pkg/signal"
@@ -29,9 +30,9 @@ import (
 
 	"context"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/exec/streams"
-	//v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	// v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	"fmt"
-	//"github.com/docker/docker/api/types"
+	// "github.com/docker/docker/api/types"
 	"github.com/moby/term"
 	"github.com/urfave/cli"
 )
@@ -51,6 +52,7 @@ type execOptions struct {
 	command     []string
 }
 
+// ExecCli xxx
 type ExecCli struct {
 	scheduler v4.Scheduler
 	ClusterId string
@@ -76,7 +78,7 @@ func (cli *ExecCli) Err() io.Writer {
 	return cli.err
 }
 
-//NewExecCommand sub command exec registration
+// NewExecCommand sub command exec registration
 func NewExecCommand() cli.Command {
 	return cli.Command{
 		Name:  "exec",
@@ -135,7 +137,8 @@ func exec(c *utils.ClientContext) error {
 	containerName := c.String("container")
 	if len(containerName) == 0 {
 		if len(single.Data.ContainerStatuses) > 0 {
-			usageString := fmt.Sprintf("Use the first container in pod, container name is %s.", single.Data.ContainerStatuses[0].Name)
+			usageString := fmt.Sprintf("Use the first container in pod, container name is %s.",
+				single.Data.ContainerStatuses[0].Name)
 			containerId = single.Data.ContainerStatuses[0].ContainerID
 			fmt.Println(usageString)
 		}
@@ -239,7 +242,8 @@ func MonitorTtySize(ctx context.Context, cli ExecCli, isExec bool) error {
 }
 
 // initTtySize is to init the tty's size to the same as the window, if there is an error, it will retry 5 times.
-func initTtySize(ctx context.Context, cli ExecCli, isExec bool, resizeTtyFunc func(ctx context.Context, cli ExecCli, isExec bool) error) {
+func initTtySize(ctx context.Context, cli ExecCli, isExec bool, resizeTtyFunc func(ctx context.Context, cli ExecCli,
+	isExec bool) error) {
 	rttyFunc := resizeTtyFunc
 	if rttyFunc == nil {
 		rttyFunc = resizeTty

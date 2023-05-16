@@ -24,7 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
 )
 
-//UpdateApplication is used for application rolling-update.
+// UpdateApplication is used for application rolling-update.
 func (b *backend) UpdateApplication(runAs, appID string, args string, instances int, version *types.Version) error {
 
 	blog.V(3).Infof("update application(%s.%s): args(%s), instances(%d)", runAs, appID, args, instances)
@@ -73,12 +73,12 @@ func (b *backend) UpdateApplication(runAs, appID string, args string, instances 
 		return err
 	}
 
-	//add taskgroup number check
+	// add taskgroup number check
 	if len(updateOpdata.Taskgroups) == 0 {
 		blog.Error("list taskgroups(%s.%s) return empty", runAs, appID)
 		return errors.New("no taskgroups to update")
 	}
-	//check end
+	// check end
 
 	blog.Info("taskgroups before sort:")
 
@@ -97,7 +97,7 @@ func (b *backend) UpdateApplication(runAs, appID string, args string, instances 
 		updateOpdata.Instances = len(updateOpdata.Taskgroups)
 		updateTrans.CurOp.OpUpdateData = &updateOpdata
 	} else {
-		//correct the instances for update
+		// correct the instances for update
 		if updateOpdata.Instances > len(updateOpdata.Taskgroups) {
 			blog.Warn("request update instances(%d) > taskgroups num(%d)",
 				updateOpdata.Instances, len(updateOpdata.Taskgroups))
@@ -130,7 +130,7 @@ func (b *backend) UpdateApplication(runAs, appID string, args string, instances 
 	}
 	b.sched.PushEventQueue(updateTrans)
 
-	//app.RawJson = version.RawJson
+	// app.RawJson = version.RawJson
 	app.LastStatus = app.Status
 	app.Status = types.APP_STATUS_OPERATING
 	app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
@@ -144,6 +144,7 @@ func (b *backend) UpdateApplication(runAs, appID string, args string, instances 
 	return nil
 }
 
+// HealthyReport xxx
 func (b *backend) HealthyReport(healthyResult *commtypes.HealthCheckResult) {
 	b.sched.HealthyReport(healthyResult)
 	return

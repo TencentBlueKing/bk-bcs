@@ -11,6 +11,7 @@
  *
  */
 
+// Package metric xxx
 package metric
 
 import (
@@ -50,6 +51,7 @@ type MetricController struct {
 	Metrics []*MetricContructor
 }
 
+// Describe xxx
 func (m MetricController) Describe(ch chan<- *prometheus.Desc) {
 	for _, metric := range m.Metrics {
 		blog.V(5).Infof("describe metric name- > %s\n", metric.GetMeta().Name)
@@ -61,6 +63,7 @@ func (m MetricController) Describe(ch chan<- *prometheus.Desc) {
 	newRuntimeMetric(m.Meta).Describe(ch)
 }
 
+// Collect xxx
 func (m MetricController) Collect(ch chan<- prometheus.Metric) {
 	for _, metric := range m.Metrics {
 		blog.V(5).Infof("collect metric - > %s\n", metric.GetMeta().Name)

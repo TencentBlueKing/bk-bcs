@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
+// UpstreamServer xxx
 type UpstreamServer struct {
 	clusterId string
 
@@ -37,6 +38,7 @@ type UpstreamServer struct {
 	OnAvailabilityChanged func()
 }
 
+// NewUpstreamServer xxx
 func NewUpstreamServer(clusterId string, serverAddresses []string, onAvailabilityChanged func()) *UpstreamServer {
 	return &UpstreamServer{
 		clusterId:       clusterId,
@@ -48,6 +50,7 @@ func NewUpstreamServer(clusterId string, serverAddresses []string, onAvailabilit
 	}
 }
 
+// Initialize xxx
 func (s *UpstreamServer) Initialize() error {
 	if len(s.servers) > 0 {
 		s.availableServer = s.servers[0]
@@ -81,6 +84,7 @@ func (s *UpstreamServer) startPeriodicChecker() {
 	}()
 }
 
+// GetAvailableServer xxx
 func (s *UpstreamServer) GetAvailableServer() string {
 	return s.availableServer
 }

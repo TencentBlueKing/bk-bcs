@@ -1,0 +1,373 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package eventc
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"sync"
+	"time"
+
+	"bscp.io/cmd/feed-server/bll/lcache"
+	"bscp.io/cmd/feed-server/bll/observer"
+	btyp "bscp.io/cmd/feed-server/bll/types"
+	"bscp.io/pkg/cc"
+	"bscp.io/pkg/kit"
+	"bscp.io/pkg/logs"
+	pbci "bscp.io/pkg/protocol/core/config-item"
+	pbct "bscp.io/pkg/protocol/core/content"
+	"bscp.io/pkg/runtime/shutdown"
+	sfs "bscp.io/pkg/sf-share"
+	"bscp.io/pkg/thirdparty/repo"
+	"bscp.io/pkg/types"
+
+	"go.uber.org/atomic"
+	"golang.org/x/sync/semaphore"
+	"golang.org/x/time/rate"
+)
+
+// Option defines options to create a scheduler instance.
+type Option struct {
+	Observer observer.Interface
+	Cache    *lcache.Cache
+}
+
+// Handler all the call back handles, used to handle schedule jobs.
+type Handler struct {
+	// GetMatchedRelease get the specified app instance's current release id.
+	// Note: this function's match pipeline should not use cache data,
+	GetMatchedRelease func(kt *kit.Kit, meta *btyp.AppInstanceMeta) (uint32, error)
+}
+
+// NewScheduler create a new scheduler instance.
+// And, scheduler start accept subscribe and unsubscribe operations, but still not works for
+// events processing, which means scheduler do not match the subscribed instance's release.
+func NewScheduler(opt *Option, name string) (*Scheduler, error) {
+
+	uriDecorator, err := repo.NewUriDecorator(cc.FeedServer().Repository)
+	if err != nil {
+		return nil, fmt.Errorf("schduler init repository uri decorator failed, err: %v", err)
+	}
+
+	mc := initMetric(name)
+	sch := &Scheduler{
+		ob:            opt.Observer,
+		lc:            opt.Cache,
+		retry:         newRetryList(mc),
+		serialNumber:  atomic.NewUint64(0),
+		uriDecorator:  uriDecorator,
+		notifyLimiter: semaphore.NewWeighted(int64(cc.FeedServer().Downstream.NotifyMaxLimit)),
+		mc:            mc,
+	}
+
+	sch.appPool = &appPool{
+		sch:  sch,
+		lock: sync.RWMutex{},
+		pool: make(map[uint32]*appEvent),
+	}
+
+	go sch.watchRetry()
+
+	return sch, nil
+}
+
+// Scheduler works at all the events handling jobs.
+// 1. it accepts subscribe from sidecar and unsubscribe when the sidecar close the connection.
+// 2. it sends events to all the subscribers and will retry to send event if it fails.
+type Scheduler struct {
+	appPool      *appPool
+	ob           observer.Interface
+	lc           *lcache.Cache
+	csm          *consumer
+	retry        *retryList
+	handler      *Handler
+	serialNumber *atomic.Uint64
+	uriDecorator repo.UriDecoratorInter
+	// notifyLimiter controls the concurrent of sending the event messages to the
+	// event subscribers.
+	notifyLimiter *semaphore.Weighted
+	mc            *metric
+}
+
+// Run start the scheduler's job
+func (sch *Scheduler) Run(h *Handler) error {
+	if h == nil {
+		return errors.New("handler not set")
+	}
+
+	sch.handler = h
+
+	// start watch events from the observer, and if events happens, then
+	// match these related app's instance release with call back.
+	go sch.loopWatch()
+	return nil
+}
+
+// Subscribe register an app instance to subscribe the release event for it.
+// it returns a serial number(as is sn) which represent this app instance's watch identity id.
+func (sch *Scheduler) Subscribe(currentRelease uint32, currentCursorID uint32, subSpec *SubscribeSpec) (uint64, error) {
+	if err := subSpec.Validate(); err != nil {
+		return 0, err
+	}
+
+	if err := sch.waitForObserverReady(currentCursorID); err != nil {
+		return 0, err
+	}
+
+	sn := sch.nextSN()
+	if err := sch.appPool.AddSidecar(currentRelease, sn, subSpec); err != nil {
+		return 0, err
+	}
+
+	return sn, nil
+}
+
+// waitForObserverReady check the cursor id now, should be <= scheduler's local cursor id,
+// if not, then wait until it is.
+func (sch *Scheduler) waitForObserverReady(cursorID uint32) error {
+
+	interval := sch.ob.LoopInterval()
+
+	after := time.After(10 * interval)
+	for {
+		time.Sleep(interval / 2)
+
+		select {
+		case <-after:
+			return errors.New("wait for observer to be ready timeout")
+
+		default:
+		}
+
+		if !sch.ob.IsReady() {
+			continue
+		}
+
+		// the request sidecar's cursor id should 'less equal' than the current
+		// observer's cursor id, this can ensure what it to be matching current
+		// release is correct, because it can avoid this instance got a mistaken
+		// matched released because of the inconsistently local cache.
+		if cursorID <= sch.ob.CurrentCursor() {
+			return nil
+		}
+	}
+
+}
+
+// Unsubscribe for the app to unsubscribe the event.
+func (sch *Scheduler) Unsubscribe(appID uint32, sn uint64, uid string) {
+	// remove it from consumer
+	sch.appPool.RemoveSidecar(sn, appID)
+
+	// remove it from retry list if it exists.
+	sch.retry.DeleteInstance(sn)
+
+	logs.Infof("unsubscribe watch event success, app: %d, uid: %s, sn: %d", appID, uid, sn)
+}
+
+// nextSN generate next serial number.
+func (sch *Scheduler) nextSN() uint64 {
+	return sch.serialNumber.Add(1)
+}
+
+// loopWatch start watch the events from the observer and handle these watched events.
+func (sch *Scheduler) loopWatch() {
+
+	notifier := shutdown.AddNotifier()
+	next := sch.ob.Next()
+	for {
+		select {
+		case <-notifier.Signal:
+			logs.Infof("watch scheduler received shutdown signal, stop loop watch scheduler successfully.")
+			notifier.Done()
+			return
+
+		case events := <-next:
+			logs.Infof("received %d events from observer", len(events))
+
+			sch.handleOneBatch(events)
+		}
+	}
+
+}
+
+func (sch *Scheduler) handleOneBatch(events []*types.EventMeta) {
+
+	arrangedApps := make(map[uint32][]*types.EventMeta)
+	for _, one := range events {
+		_, exist := arrangedApps[one.Attachment.AppID]
+		if !exist {
+			arrangedApps[one.Attachment.AppID] = make([]*types.EventMeta, 0)
+		}
+
+		arrangedApps[one.Attachment.AppID] = append(arrangedApps[one.Attachment.AppID], one)
+	}
+
+	for appID, events := range arrangedApps {
+		sch.appPool.PushEvent(appID, events)
+	}
+
+}
+
+func (sch *Scheduler) notifyEvent(kt *kit.Kit, cursorID uint32, members []*member) {
+	if len(members) == 0 {
+		return
+	}
+
+	cnt := 0
+	wg := sync.WaitGroup{}
+	for idx := range members {
+		cnt += 1
+
+		if err := sch.notifyLimiter.Acquire(kt.Ctx, 1); err != nil {
+			sch.retry.Add(cursorID, members[idx])
+			logs.Errorf("acquire notify semaphore failed, inst: %s, err: %v, rid: %s", members[idx].InstSpec.Format(),
+				err, kt.Rid)
+			continue
+		}
+
+		wg.Add(1)
+
+		go func(one *member) {
+			sch.notifyOne(kt, cursorID, one)
+			sch.notifyLimiter.Release(1)
+			wg.Done()
+		}(members[idx])
+	}
+
+	wg.Wait()
+	return
+}
+
+func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
+	// TODO: optimize this when a mount of instances have the same labels with same release id.
+	inst := one.InstSpec
+	meta := &btyp.AppInstanceMeta{
+		BizID:  inst.BizID,
+		AppID:  inst.AppID,
+		App:    inst.App,
+		Uid:    inst.Uid,
+		Labels: inst.Labels,
+	}
+	releaseID, err := sch.handler.GetMatchedRelease(kt, meta)
+	if err != nil {
+		sch.retry.Add(cursorID, one)
+		logs.Errorf("get %s [sn: %d] matched strategy failed, err: %v, rid: %s", inst.Format(), one.sn, err, kt.Rid)
+		return
+	}
+
+	ciList, err := sch.lc.ReleasedCI.Get(kt, inst.BizID, releaseID)
+	if err != nil {
+		logs.Errorf("get %s [sn: %d] released[%d] CI failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+			kt.Rid)
+		sch.retry.Add(cursorID, one)
+		return
+	}
+
+	if len(ciList) == 0 {
+		return
+	}
+
+	event := sch.buildEvent(inst, ciList, releaseID, cursorID)
+	if one.Receiver.Notify(event, inst.Uid, one.sn) {
+		logs.Warnf("notify app instance event failed, need retry, biz: %d, app: %d, uid: %s, sn: %d, rid: %s",
+			inst.BizID, inst.AppID, inst.Uid, one.sn, kt.Rid)
+		sch.retry.Add(cursorID, one)
+	}
+}
+
+func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.ReleaseCICache, releaseID uint32,
+	cursorID uint32) *Event {
+
+	uriD := sch.uriDecorator.Init(inst.BizID)
+	ciMeta := make([]*sfs.ConfigItemMetaV1, len(ciList))
+	for idx, one := range ciList {
+		cis := one.ConfigItemSpec
+		ciMeta[idx] = &sfs.ConfigItemMetaV1{
+			ID:       one.ID,
+			CommitID: one.CommitID,
+			ContentSpec: &pbct.ContentSpec{
+				Signature: one.CommitSpec.Signature,
+				ByteSize:  one.CommitSpec.ByteSize,
+			},
+			ConfigItemSpec: &pbci.ConfigItemSpec{
+				Name:     cis.Name,
+				Path:     cis.Path,
+				FileType: string(cis.FileType),
+				FileMode: string(cis.FileMode),
+				// Memo is useless for sidecar, so remove it.
+				Memo: "",
+				Permission: &pbci.FilePermission{
+					User:      cis.Permission.User,
+					UserGroup: cis.Permission.UserGroup,
+					Privilege: cis.Permission.Privilege,
+				},
+			},
+			ConfigItemAttachment: &pbci.ConfigItemAttachment{
+				BizId: one.Attachment.BizID,
+				AppId: one.Attachment.AppID,
+			},
+			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
+		}
+	}
+
+	return &Event{
+		Change: &sfs.ReleaseEventMetaV1{
+			App:       inst.App,
+			AppID:     inst.AppID,
+			ReleaseID: releaseID,
+			CIMetas:   ciMeta,
+			Repository: &sfs.RepositoryV1{
+				Root:            uriD.Root(),
+				Url:             uriD.Url(),
+				AccessKeyID:     uriD.AccessKeyID(),
+				SecretAccessKey: uriD.SecretAccessKey(),
+				RepositoryType:  uriD.GetRepositoryType(),
+			},
+		},
+		Instance: inst,
+		CursorID: cursorID,
+	}
+}
+
+func (sch *Scheduler) watchRetry() {
+	limiter := rate.NewLimiter(2, 1)
+	notifier := shutdown.AddNotifier()
+	retrySignal := sch.retry.Signal()
+	for {
+
+		select {
+		case <-notifier.Signal:
+			logs.Infof("event scheduler retry job received shutdown signal, stop retry job success.")
+			notifier.Done()
+			return
+
+		case <-retrySignal:
+			// apps or instances need to be retried to send events.
+		}
+
+		_ = limiter.Wait(context.TODO())
+
+		kt := kit.New()
+		logs.Infof("scheduler received retry send event signal, rid: %s", kt.Rid)
+
+		instCount, members := sch.retry.Purge()
+		for _, one := range members {
+			sch.notifyEvent(kt, one.cursorID, []*member{one.member})
+		}
+
+		logs.Infof("finished scheduler retry send event job, instance count: %d, rid: %s", instCount, kt.Rid)
+	}
+
+}

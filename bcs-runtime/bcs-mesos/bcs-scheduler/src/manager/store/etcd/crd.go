@@ -87,6 +87,7 @@ func (store *managerStore) ListCustomResourceRegister() ([]*commtypes.Crr, error
 	return crrs, nil
 }
 
+// getCrdNamespace xxx
 // crd namespace = crd.kind=crd.namespace
 func getCrdNamespace(kind, ns string) string {
 	return fmt.Sprintf("%s-%s", kind, ns)
@@ -105,7 +106,7 @@ func (store *managerStore) CheckCustomResourceDefinitionExist(crd *commtypes.Crd
 
 // SaveCustomResourceDefinition save custom resource definition into db
 func (store *managerStore) SaveCustomResourceDefinition(crd *commtypes.Crd) error {
-	//crd namespace = crd.kind=crd.namespace
+	// crd namespace = crd.kind=crd.namespace
 	realNs := getCrdNamespace(string(crd.Kind), crd.NameSpace)
 	err := store.checkNamespace(realNs)
 	if err != nil {

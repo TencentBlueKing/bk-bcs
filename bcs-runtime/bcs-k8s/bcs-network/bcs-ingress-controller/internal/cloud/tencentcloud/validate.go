@@ -33,13 +33,13 @@ func (cv *ClbValidater) IsIngressValid(ingress *networkextensionv1.Ingress) (boo
 	}
 	for _, rule := range ingress.Spec.Rules {
 		if ok, msg := cv.validateIngressRule(&rule); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 
 	for _, mapping := range ingress.Spec.PortMappings {
 		if ok, msg := cv.validateListenerMapping(&mapping); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	return true, ""
@@ -50,38 +50,48 @@ func (cv *ClbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 	if rule.Port <= 0 || rule.Port >= 65536 {
 		return false, fmt.Sprintf("invalid port %d, available [1-65535]", rule.Port)
 	}
-	if rule.Protocol != ClbProtocolHTTP &&
-		rule.Protocol != ClbProtocolHTTPS &&
-		rule.Protocol != ClbProtocolTCP &&
-		rule.Protocol != ClbProtocolUDP {
-		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", rule.Protocol)
-	}
 	if rule.Protocol == ClbProtocolHTTPS {
-		if rule.Certificate == nil {
-			return false, fmt.Sprintf("certificate cannot be empty for protocol https")
+		// sni off
+		if rule.ListenerAttribute == nil || rule.ListenerAttribute.SniSwitch == 0 {
+			if rule.Certificate == nil {
+				return false, fmt.Sprintf("certificate cannot be empty for protocol https")
+			}
+			if ok, msg := cv.validateCertificate(rule.Certificate); !ok {
+				return false, msg
+			}
+		} else {
+			// sni open
+			for _, route := range rule.Routes {
+				if route.Certificate == nil {
+					return false, fmt.Sprintf("route certificate cannot be empty for protocol https with sni open")
+				}
+				if ok, msg := cv.validateCertificate(route.Certificate); !ok {
+					return false, msg
+				}
+			}
 		}
-		if ok, msg := cv.validateCertificate(rule.Certificate); !ok {
-			return ok, msg
-		}
+
 	}
 	if rule.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(rule.ListenerAttribute); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	switch rule.Protocol {
 	case ClbProtocolHTTP, ClbProtocolHTTPS:
 		for _, r := range rule.Routes {
 			if ok, msg := cv.validateListenerRoute(&r); !ok {
-				return ok, msg
+				return false, msg
 			}
 		}
 	case ClbProtocolTCP, ClbProtocolUDP:
 		for _, svc := range rule.Services {
 			if ok, msg := cv.validateListenerService(&svc); !ok {
-				return ok, msg
+				return false, msg
 			}
 		}
+	default:
+		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", rule.Protocol)
 	}
 	return true, ""
 }
@@ -90,14 +100,17 @@ func (cv *ClbValidater) validateListenerRoute(r *networkextensionv1.Layer7Route)
 	if len(r.Domain) == 0 {
 		return false, "domain cannot be empty for 7 layer listener"
 	}
+	if len(r.ForwardType) != 0 && r.ForwardType != ClbProtocolGRPC {
+		return false, "ForwardType only support grpc"
+	}
 	if r.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(r.ListenerAttribute); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	for _, svc := range r.Services {
 		if ok, msg := cv.validateListenerService(&svc); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	return true, ""
@@ -109,7 +122,7 @@ func (cv *ClbValidater) validatePortMappingRoute(r *networkextensionv1.IngressPo
 	}
 	if r.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(r.ListenerAttribute); !ok {
-			return ok, msg
+			return false, msg
 		}
 	}
 	return true, ""
@@ -134,7 +147,8 @@ func (cv *ClbValidater) validateListenerAttribute(attr *networkextensionv1.Ingre
 	}
 	if len(attr.LbPolicy) != 0 {
 		if attr.LbPolicy != "WRR" &&
-			attr.LbPolicy != "LEAST_CONN" {
+			attr.LbPolicy != "LEAST_CONN" &&
+			attr.LbPolicy != "IP_HASH" {
 			return false, fmt.Sprintf("invalid lb policy %s, available [WRR, LEAST_CONN]", attr.LbPolicy)
 		}
 	}
@@ -230,7 +244,7 @@ func (cv *ClbValidater) CheckNoConflictsInIngress(ingress *networkextensionv1.In
 		return false, fmt.Sprintf("%+v conflicts with %+v", rule, existedRule)
 	}
 
-	for i := 0; i < len(ingress.Spec.PortMappings)-1; i++ {
+	for i := 0; i < len(ingress.Spec.PortMappings); i++ {
 		mapping := ingress.Spec.PortMappings[i]
 		for port, rule := range ruleMap {
 			if port >= mapping.StartPort+mapping.StartIndex && port < mapping.StartPort+mapping.EndIndex {

@@ -11,6 +11,7 @@
  *
  */
 
+// Package utils xxx
 package utils
 
 import (
@@ -66,10 +67,12 @@ func FormatValidationError(errList error) *ErrorResponse {
 	var message string
 	for _, err := range errList.(validator.ValidationErrors) {
 		if err.Tag() == "required" {
-			message = fmt.Sprintf("errcode: %d, ", common.BcsErrApiBadRequest) + fmt.Sprintf(`field '%s' is required`, err.Field())
+			message = fmt.Sprintf("errcode: %d, ", common.BcsErrApiBadRequest) + fmt.Sprintf(`field '%s' is required`,
+				err.Field())
 			break
 		}
-		message = fmt.Sprintf("errcode: %d, ", common.BcsErrApiBadRequest) + fmt.Sprintf(`'%s' failed on the '%s' tag`, err.Field(), err.Tag())
+		message = fmt.Sprintf("errcode: %d, ", common.BcsErrApiBadRequest) + fmt.Sprintf(`'%s' failed on the '%s' tag`,
+			err.Field(), err.Tag())
 	}
 	return &ErrorResponse{
 		Result:  false,
@@ -79,8 +82,8 @@ func FormatValidationError(errList error) *ErrorResponse {
 	}
 }
 
-// CreateResponeData common response
-func CreateResponeData(err error, msg string, data interface{}) string {
+// CreateResponseData common response
+func CreateResponseData(err error, msg string, data interface{}) string {
 	var rpyErr error
 	if err != nil {
 		rpyErr = bhttp.InternalError(common.BcsErrMesosSchedCommon, msg)
@@ -88,7 +91,17 @@ func CreateResponeData(err error, msg string, data interface{}) string {
 		rpyErr = errors.New(bhttp.GetRespone(common.BcsSuccess, common.BcsSuccessStr, data))
 	}
 
-	//blog.V(3).Infof("createRespone: %s", rpyErr.Error())
+	// blog.V(3).Infof("createRespone: %s", rpyErr.Error())
 
 	return rpyErr.Error()
+}
+
+// StringInSlice returns true if given string in slice
+func StringInSlice(s string, l []string) bool {
+	for _, objStr := range l {
+		if s == objStr {
+			return true
+		}
+	}
+	return false
 }

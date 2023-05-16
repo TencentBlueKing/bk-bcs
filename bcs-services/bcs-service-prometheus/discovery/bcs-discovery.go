@@ -46,7 +46,7 @@ func NewBcsDiscovery(zkAddr string, promFilePrefix string, module []string) (Dis
 	return disc, nil
 }
 
-// start discovery
+// Start discovery
 func (disc *bcsMesosDiscovery) Start() error {
 	var err error
 	disc.moduleDiscovery, err = moduleDiscovery.NewDiscoveryV2(disc.zkAddr, disc.module)
@@ -58,6 +58,7 @@ func (disc *bcsMesosDiscovery) Start() error {
 	return nil
 }
 
+// GetPrometheusSdConfig xxx
 // get prometheus service discovery config
 func (disc *bcsMesosDiscovery) GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error) {
 	promConfigs := make([]*types.PrometheusSdConfig, 0)
@@ -68,7 +69,7 @@ func (disc *bcsMesosDiscovery) GetPrometheusSdConfig(module string) ([]*types.Pr
 	}
 
 	for _, serv := range servs {
-		//serv is string object
+		// serv is string object
 		data, _ := serv.(string)
 		var servInfo *commtypes.ServerInfo
 		err = json.Unmarshal([]byte(data), &servInfo)
@@ -88,12 +89,14 @@ func (disc *bcsMesosDiscovery) GetPrometheusSdConfig(module string) ([]*types.Pr
 	return promConfigs, nil
 }
 
+// GetPromSdConfigFile xxx
 // get prometheus sd config file path
 func (disc *bcsMesosDiscovery) GetPromSdConfigFile(module string) string {
 	return path.Join(disc.promFilePrefix, fmt.Sprintf("%s%s", module, DiscoveryFileName))
 }
 
-//register event handle function
+// RegisterEventFunc xxx
+// register event handle function
 func (disc *bcsMesosDiscovery) RegisterEventFunc(handleFunc EventHandleFunc) {
 	disc.eventHandler = handleFunc
 }

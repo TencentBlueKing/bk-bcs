@@ -22,13 +22,13 @@ import (
 	"time"
 )
 
-//IPLean lease ip address from net
+// IPLean lease ip address from net
 func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
-	//check host info
+	// check host info
 	started := time.Now()
 	blog.Info("try to get ip address for container %s in host %s", lease.Container, lease.Host)
 	hostpath := filepath.Join(defaultHostInfoPath, lease.Host)
-	//check pool node
+	// check pool node
 	if exist, _ := srv.store.Exist(hostpath); !exist {
 		blog.Errorf("host %s do not exist, no ip can be asigned for container %s", hostpath, lease.Container)
 		reportMetrics("ipLean", stateNonExistFailure, started)
@@ -48,11 +48,12 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	}
 	poolpath := filepath.Join(defaultPoolInfoPath, host.Cluster, host.Pool)
 	if exist, _ := srv.store.Exist(poolpath); !exist {
-		blog.Errorf("get no ip resource in host %s for container %s, pool %s/%s is lost", lease.Host, lease.Container, host.Cluster, host.Pool)
+		blog.Errorf("get no ip resource in host %s for container %s, pool %s/%s is lost", lease.Host, lease.Container,
+			host.Cluster, host.Pool)
 		reportMetrics("ipLean", stateNonExistFailure, started)
 		return nil, fmt.Errorf("pool resource %s for host %s lost", host.Pool, lease.Host)
 	}
-	//try to lock
+	// try to lock
 	lockpath := filepath.Join(defaultLockerPath, host.Cluster, host.Pool)
 	poolLocker, lErr := srv.store.GetLocker(lockpath)
 	if lErr != nil {
@@ -67,10 +68,10 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 		return nil, fmt.Errorf("lock pool %s err, %s", host.Pool, err.Error())
 	}
 	blog.Info("lock pool %s success in ip lease for container %s in host %s", lockpath, lease.Container, lease.Host)
-	//construct ip address path
+	// construct ip address path
 	var ippath, destpath, lastStatus string
 	if len(lease.IPAddr) == 0 {
-		//random select from available ip node
+		// random select from available ip node
 		blog.Info("random select ip address for container %s in host %s", lease.Container, lease.Host)
 		pNode := filepath.Join(poolpath, "available")
 		allNodes, err := srv.store.List(pNode)
@@ -93,7 +94,7 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 		destpath = filepath.Join(poolpath, "active", lease.IPAddr)
 		lastStatus = types.IPStatus_RESERVED
 	}
-	//get ip resource data, move node
+	// get ip resource data, move node
 	ipData, ipErr := srv.store.Get(ippath)
 	if ipErr != nil {
 		blog.Errorf("get %s data err, %v", ippath, ipErr)
@@ -115,7 +116,7 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	if lease.App != "" {
 		ipInst.App = lease.App
 	}
-	//delete old node
+	// delete old node
 	if _, err := srv.store.Delete(ippath); err != nil {
 		blog.Errorf("clean ip %s for container %s in host %s err, %v", ippath, lease.Container, lease.Host, err)
 		reportMetrics("ipLean", stateStorageFailure, started)
@@ -123,14 +124,14 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	}
 	data, _ := json.Marshal(ipInst)
 	if err := srv.store.Add(destpath, data); err != nil {
-		//todo(DeveloperJim): recover ip resource when error
+		// todo(DeveloperJim): recover ip resource when error
 		blog.Errorf("move ip %s to active err, %v", ippath, err)
 		reportMetrics("ipLean", stateStorageFailure, started)
 		return nil, fmt.Errorf("active ip %s resource err, %s", filepath.Base(ippath), err.Error())
 	}
 	containerpath := filepath.Join(defaultHostInfoPath, lease.Host, lease.Container)
 	if err := srv.store.Add(containerpath, data); err != nil {
-		//todo(DeveloperJim): recover ip resource when error
+		// todo(DeveloperJim): recover ip resource when error
 		blog.Errorf("create container query node %s err, %v", containerpath, err)
 		reportMetrics("ipLean", stateStorageFailure, started)
 		return nil, fmt.Errorf("active ip %s in host %s err, %s", filepath.Base(ippath), lease.Host, err.Error())
@@ -147,10 +148,10 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	return ipInfo, nil
 }
 
-//IPRelease release ip resource to net pool
+// IPRelease release ip resource to net pool
 func (srv *NetService) IPRelease(release *types.IPRelease) error {
 	started := time.Now()
-	//check container path
+	// check container path
 	blog.Info("try to release ip resource in container %s ", release.Container)
 	containerpath := filepath.Join(defaultHostInfoPath, release.Host, release.Container)
 	if exist, _ := srv.store.Exist(containerpath); !exist {
@@ -163,10 +164,11 @@ func (srv *NetService) IPRelease(release *types.IPRelease) error {
 	if err != nil {
 		blog.Errorf("Release conatainer %s resource in host %s err, %v", release.Container, release.Host, err)
 		reportMetrics("ipRelease", stateStorageFailure, started)
-		return fmt.Errorf("verify ip resource for container %s in host %s err, %s", release.Container, release.Host, err.Error())
+		return fmt.Errorf("verify ip resource for container %s in host %s err, %s", release.Container, release.Host,
+			err.Error())
 	}
 	json.Unmarshal(data, ipInst)
-	//check active path
+	// check active path
 	ippath := filepath.Join(defaultPoolInfoPath, ipInst.Cluster, ipInst.Pool, "active", ipInst.IPAddr)
 	if exist, _ := srv.store.Exist(ippath); !exist {
 		blog.Errorf("ip resource %s lost for container %s in host %s", ipInst.IPAddr, release.Container, release.Host)
@@ -174,7 +176,7 @@ func (srv *NetService) IPRelease(release *types.IPRelease) error {
 		return fmt.Errorf("ip resource %s lost for container %s", ipInst.IPAddr, release.Container)
 	}
 	destpath := filepath.Join(defaultPoolInfoPath, ipInst.Cluster, ipInst.Pool, ipInst.LastStatus, ipInst.IPAddr)
-	//move to reserved path/available path
+	// move to reserved path/available path
 	ipInst.Status = ipInst.LastStatus
 	ipInst.LastStatus = types.IPStatus_ACTIVE
 	ipInst.Update = time.Now().Format("2006-01-02 15:04:05")
@@ -185,7 +187,7 @@ func (srv *NetService) IPRelease(release *types.IPRelease) error {
 		return fmt.Errorf("clean container %s err, %s", release.Container, err.Error())
 	}
 	if _, err := srv.store.Delete(ippath); err != nil {
-		//todo(DeveloperJim): delete force
+		// todo(DeveloperJim): delete force
 		blog.Errorf("clean ip resource %s err, %v", ippath, err)
 		reportMetrics("ipRelease", stateStorageFailure, started)
 		return fmt.Errorf("clean ip resource %s err, %s", ippath, err.Error())
@@ -195,12 +197,13 @@ func (srv *NetService) IPRelease(release *types.IPRelease) error {
 		reportMetrics("ipRelease", stateStorageFailure, started)
 		return fmt.Errorf("release ip %s err, %s", ipInst.IPAddr, err.Error())
 	}
-	blog.Infof("Release ip %s/%s for container %s in host %s success", ipInst.Cluster, ipInst.IPAddr, release.Container, release.Host)
+	blog.Infof("Release ip %s/%s for container %s in host %s success", ipInst.Cluster, ipInst.IPAddr, release.Container,
+		release.Host)
 	reportMetrics("ipRelease", stateSuccess, started)
 	return nil
 }
 
-//HostVIPRelease to release host's vip
+// HostVIPRelease to release host's vip
 func (srv *NetService) HostVIPRelease(hostIP string) error {
 	started := time.Now()
 	blog.Info("try to release ip resource in host %s ", hostIP)

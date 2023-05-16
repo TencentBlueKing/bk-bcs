@@ -15,9 +15,8 @@ package events
 
 import (
 	"context"
+	"strings"
 	"time"
-
-	"github.com/emicklei/go-restful"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -27,9 +26,11 @@ import (
 	v1http "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/clean"
+	"github.com/emicklei/go-restful"
 )
 
 const (
+	TablePrefix   = "event_"
 	tableName     = "event"
 	dataTag       = "data"
 	extraTag      = "extra"
@@ -57,7 +58,9 @@ const (
 	resourceKindTag = "resourceKind"
 	resourceNameTag = "resourceName"
 
-	EventResource = "Event"
+	namespaceTag = "namespace"
+
+	eventResource = "Event"
 )
 
 var needTimeFormatList = [...]string{createTimeTag, eventTimeTag}
@@ -66,6 +69,12 @@ var conditionTagList = [...]string{
 	"extraInfo.name", "extraInfo.namespace", "extraInfo.kind"}
 var eventFeatTags = []string{idTag, envTag, kindTag, levelTag, componentTag, typeTag,
 	clusterIDTag, nameSpaceTag, resourceTypeTag, resourceKindTag, resourceNameTag}
+
+var nsFeatTags = []string{clusterIDTag, namespaceTag, resourceTypeTag, resourceNameTag}
+
+var EventIndexKeys = []string{"data.metadata.name", "data.metadata.resourceVersion"}
+
+var eventQueryIndexKeys = []string{"extraInfo.name", "extraInfo.namespace", "extraInfo.kind", "kind"}
 
 // Use Mongodb for storage.
 const dbConfig = "mongodb/event"
@@ -112,6 +121,28 @@ func ListEvent(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
 }
 
+// PostEvent pods
+func PostEvent(req *restful.Request, resp *restful.Response) {
+	const (
+		handler = "PostEvent"
+	)
+	span := v1http.SetHTTPSpanContextInfo(req, handler)
+	defer span.Finish()
+
+	r, total, err := postEvent(req)
+	extra := map[string]interface{}{"total": total}
+	if err != nil {
+		utils.SetSpanLogTagError(span, err)
+		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
+		lib.ReturnRest(&lib.RestResponse{
+			Resp: resp, Data: []string{},
+			ErrCode: common.BcsErrStorageListResourceFail,
+			Message: common.BcsErrStorageListResourceFailStr, Extra: extra})
+		return
+	}
+	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
+}
+
 // WatchEvent watch event
 func WatchEvent(req *restful.Request, resp *restful.Response) {
 	watch(req, resp)
@@ -121,10 +152,22 @@ func WatchEvent(req *restful.Request, resp *restful.Response) {
 func CleanEvents() {
 	maxCap := apiserver.GetAPIResource().Conf.EventMaxCap
 	maxTime := apiserver.GetAPIResource().Conf.EventMaxTime
-	cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), tableName, time.Hour)
-	cleaner.WithMaxEntryNum(maxCap)
-	cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
-	cleaner.Run(context.TODO())
+	eventDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
+	tables, err := eventDBClient.ListTableNames(context.TODO())
+	if err != nil {
+		blog.Errorf("list table name failed, err: %v", err)
+		return
+	}
+	for _, table := range tables {
+		cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
+		if table == eventResource {
+			cleaner.WithMaxDuration(time.Duration(1)*time.Hour, eventTimeTag)
+		} else if strings.HasPrefix(table, tableName) {
+			cleaner.WithMaxEntryNum(maxCap)
+			cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
+		}
+		go cleaner.Run(context.TODO())
+	}
 }
 
 func init() {
@@ -133,6 +176,8 @@ func init() {
 		Verb: "PUT", Path: eventPath, Params: nil, Handler: lib.MarkProcess(PutEvent)})
 	actions.RegisterV1Action(actions.Action{
 		Verb: "GET", Path: eventPath, Params: nil, Handler: lib.MarkProcess(ListEvent)})
+	actions.RegisterV1Action(actions.Action{
+		Verb: "POST", Path: eventPath, Params: nil, Handler: lib.MarkProcess(PostEvent)})
 
 	eventWatchPath := urlPath("/events/watch")
 	actions.RegisterV1Action(actions.Action{

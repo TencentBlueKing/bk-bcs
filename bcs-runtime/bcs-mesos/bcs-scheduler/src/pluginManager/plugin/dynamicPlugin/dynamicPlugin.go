@@ -11,6 +11,7 @@
  *
  */
 
+// Package dynamicPlugin xxx
 package dynamicPlugin
 
 import (
@@ -19,6 +20,7 @@ import (
 	"time"
 
 	typesplugin "github.com/Tencent/bk-bcs/bcs-common/common/plugin"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/pluginManager/config"
 	bcsplugin "github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-scheduler/src/pluginManager/plugin"
 )
@@ -55,7 +57,6 @@ func NewDynamicPlugin(dir string, conf *config.PluginConfig) (bcsplugin.Plugin, 
 }
 
 func (p *dynamicPlugin) initPlugin() error {
-
 	pluginPath := fmt.Sprintf("%s/bin/%s/%s.so", p.currentDir, p.name, p.name)
 	outPlugin, err := plugin.Open(pluginPath)
 	if err != nil {
@@ -90,7 +91,8 @@ func (p *dynamicPlugin) initPlugin() error {
 		return err
 	}
 
-	schedulerFunc, ok := outScheduler.(func(*typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes, error))
+	schedulerFunc, ok := outScheduler.(func(*typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes,
+		error))
 	if !ok {
 		err = fmt.Errorf("plugin %s func GetHostAttributes convert to function error %s", pluginPath, err.Error())
 		return err
@@ -102,7 +104,8 @@ func (p *dynamicPlugin) initPlugin() error {
 }
 
 // GetHostAttributes interface implementation
-func (p *dynamicPlugin) GetHostAttributes(para *typesplugin.HostPluginParameter) (map[string]*typesplugin.HostAttributes, error) {
+func (p *dynamicPlugin) GetHostAttributes(para *typesplugin.HostPluginParameter) (
+	map[string]*typesplugin.HostAttributes, error) {
 
 	if p.initErr != nil {
 		return nil, p.initErr

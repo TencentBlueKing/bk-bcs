@@ -17,7 +17,8 @@ from collections import OrderedDict
 
 CLUSTER_IMPORT_TPL = ""
 
-DEFAULT_DASHBOARD_CTL_VERSION = "v1"
+# NOTE: 因为现阶段集群版本已经较高(包含导入集群)，如果匹配不到 K8S 版本，则默认使用 v2
+DEFAULT_DASHBOARD_CTL_VERSION = "v2"
 
 DASHBOARD_CTL_VERSION = OrderedDict(
     {
@@ -27,6 +28,11 @@ DASHBOARD_CTL_VERSION = OrderedDict(
             re.compile(r"^[vV]?1\.14\.\S+$"),
             re.compile(r"^[vV]?1\.16\.\S+$"),
         ],
-        "v2": [re.compile(r"^[vV]?1\.18\.\S+$"), re.compile(r"^[vV]?1\.20\.\S+$")],
+        "v2": [
+            re.compile(r"^[vV]?1\.18\.\S+$"),
+            re.compile(r"^[vV]?1\.20\.\S+$"),
+            re.compile(r"^[vV]?1\.21\.\S+$"),
+            re.compile(r"^[vV]?1\.22\.\S+$"),
+        ],
     }
 )

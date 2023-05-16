@@ -114,6 +114,7 @@ type LicenseServerConfig struct {
 	LSClientKeyFile  string `json:"ls_client_key_file" value:"" usage:"Client private key file(*.key) for connecting to license server" mapstructure:"ls_client_key_file"`
 }
 
+// CustomCertConfig xxx
 type CustomCertConfig struct {
 	CAFile         string `json:"custom_ca_file" value:"" usage:"Custom CA file. If server_cert_file/server_key_file/ca_file are all set, it will set up an HTTPS server required and verified client cert" mapstructure:"custom_ca_file"`
 	ServerCertFile string `json:"custom_server_cert_file" value:"" usage:"Custom Server public key file(*.crt). If both server_cert_file and server_key_file are set, it will set up an HTTPS server" mapstructure:"custom_server_cert_file"`
@@ -202,6 +203,7 @@ func removeLowPriorityKey(fs *pflag.FlagSet, jsn *simplejson.Json, flagConfigTyp
 	}
 }
 
+// loadRawConfig xxx
 // Make field to flag by adding "json" "value" "usage"
 func loadRawConfig(fs *pflag.FlagSet, config interface{}) {
 	wrap2flag(fs, reflect.TypeOf(config).Elem(), reflect.ValueOf(config).Elem())
@@ -302,4 +304,12 @@ func wrapFieldFlag(fs *pflag.FlagSet, field reflect.StructField, fieldV reflect.
 			fs.IntSliceVarP((*[]int)(unsafePtr), flagName, flagShortHand, intArr, flagUsage)
 		}
 	}
+}
+
+// InitIPv6AddressFiled 初始化 ServiceConfig 的 IPv6Address 字段
+// 1.检查当前字段 IPv6Address 是否为合法IPv6，若是合法IPv6，则结束执行；否则，执行下一步。
+// 2.依次遍历当前字段 IPv6Address、“localIpv6”环境变量，检查是否存在"IPv4,IPv6"地址表示法，并检查IPv6地址合法性，若，存在并合法，则把新的IPv6地址，赋值给 IPv6Address字段，并结束执行 ；否则，执行下一步。
+// 3.设置 IPv6Address 字段为默认值 "::1"
+func (sc *ServiceConfig) InitIPv6AddressFiled() {
+	sc.IPv6Address = util.InitIPv6Address(sc.IPv6Address)
 }

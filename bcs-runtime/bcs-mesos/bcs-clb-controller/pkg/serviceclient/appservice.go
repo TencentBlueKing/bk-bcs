@@ -22,26 +22,26 @@ type AppService struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Version           string        `json:"version,omitempty"`
-	Type              string        `json:"type,omitempty"`     //service type, ClusterIP, Intergration or Empty
-	Frontend          []string      `json:"frontend,omitempty"` //frontend represents service ip address, use for proxy or intergate
-	Alias             string        `json:"alias,omitempty"`    //domain alias
-	WANIP             []string      `json:"wanip,omitempty"`    //use for wan export
-	Master            string        `json:"master,omitempty"`   //reserved
-	ServicePorts      []ServicePort `json:"ports"`              //BcsService.Ports
-	Nodes             []AppNode     `json:"nodes"`              //TaskGroup/Pod info
-	Spec              interface{}   `json:"spec,omitempty"`     //user custom definition attributes
-	RawBytes          string        `json:"rawBytes,omitempty"` //raw string for user custom definition
+	Type              string        `json:"type,omitempty"`     // service type, ClusterIP, Intergration or Empty
+	Frontend          []string      `json:"frontend,omitempty"` // frontend represents service ip address, use for proxy or intergate
+	Alias             string        `json:"alias,omitempty"`    // domain alias
+	WANIP             []string      `json:"wanip,omitempty"`    // use for wan export
+	Master            string        `json:"master,omitempty"`   // reserved
+	ServicePorts      []ServicePort `json:"ports"`              // BcsService.Ports
+	Nodes             []AppNode     `json:"nodes"`              // TaskGroup/Pod info
+	Spec              interface{}   `json:"spec,omitempty"`     // user custom definition attributes
+	RawBytes          string        `json:"rawBytes,omitempty"` // raw string for user custom definition
 }
 
 // ServicePort port definition for application
 type ServicePort struct {
-	Name        string `json:"name"`                 //name for service port
-	Protocol    string `json:"protocol"`             //protocol for service port
-	Domain      string `json:"domain,omitempty"`     //domain value for http proxy
-	Path        string `json:"path,omitempty"`       //http url path
-	ServicePort int    `json:"serviceport"`          //service port for all AppNode, ServicePort.Name == AppNode.Ports[i].Name
-	ProxyPort   int    `json:"proxyport,omitempty"`  //proxy port for this Service Port if exist
-	TargetPort  int    `json:"targetport,omitempty"` //target port for this Service Port
+	Name        string `json:"name"`                 // name for service port
+	Protocol    string `json:"protocol"`             // protocol for service port
+	Domain      string `json:"domain,omitempty"`     // domain value for http proxy
+	Path        string `json:"path,omitempty"`       // http url path
+	ServicePort int    `json:"serviceport"`          // service port for all AppNode, ServicePort.Name == AppNode.Ports[i].Name
+	ProxyPort   int    `json:"proxyport,omitempty"`  // proxy port for this Service Port if exist
+	TargetPort  int    `json:"targetport,omitempty"` // target port for this Service Port
 }
 
 // ServicePortList list for sorting
@@ -86,15 +86,15 @@ func (list NodeList) Swap(i, j int) {
 type AppNode struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Index             string      `json:"index"`              //node key, pod instance name / taskgroup name
-	Version           string      `json:"version,omitempty"`  //node version, like v1, v1.1, v12.01.1, come from env[BCS_DISCOVERY_VERSION]
-	Weight            uint        `json:"weight,omitempty"`   //node weight, it's a Relative value
-	Network           string      `json:"network,omitempty"`  //app node network mode
-	NodeIP            string      `json:"nodeIP"`             //node ip address
-	ProxyIP           string      `json:"proxyIP,omitempty"`  //proxy ip address for this node
-	Ports             []NodePort  `json:"ports,omitempty"`    //port info for container
-	Spec              interface{} `json:"spec,omitempty"`     //user custom definition attributes
-	RawBytes          string      `json:"rawBytes,omitempty"` //raw string for user custom definition
+	Index             string      `json:"index"`              // node key, pod instance name / taskgroup name
+	Version           string      `json:"version,omitempty"`  // node version, like v1, v1.1, v12.01.1, come from env[BCS_DISCOVERY_VERSION]
+	Weight            uint        `json:"weight,omitempty"`   // node weight, it's a Relative value
+	Network           string      `json:"network,omitempty"`  // app node network mode
+	NodeIP            string      `json:"nodeIP"`             // node ip address
+	ProxyIP           string      `json:"proxyIP,omitempty"`  // proxy ip address for this node
+	Ports             []NodePort  `json:"ports,omitempty"`    // port info for container
+	Spec              interface{} `json:"spec,omitempty"`     // user custom definition attributes
+	RawBytes          string      `json:"rawBytes,omitempty"` // raw string for user custom definition
 }
 
 // GetPort get port by port name
@@ -109,10 +109,10 @@ func (node *AppNode) GetPort(name string) *NodePort {
 
 // NodePort port info for one node of service
 type NodePort struct {
-	Name      string `json:"name"`                //name for port, must equal to one service port
-	Protocol  string `json:"protocol"`            //protocol for this port
-	NodePort  int    `json:"nodeport"`            //node port
-	ProxyPort int    `json:"proxyport,omitempty"` //proxy port if exists
+	Name      string `json:"name"`                // name for port, must equal to one service port
+	Protocol  string `json:"protocol"`            // protocol for this port
+	NodePort  int    `json:"nodeport"`            // node port
+	ProxyPort int    `json:"proxyport,omitempty"` // proxy port if exists
 }
 
 // PortList list for ports
@@ -129,7 +129,7 @@ func (list PortList) Less(i, j int) bool {
 	return list[i].NodePort < list[j].NodePort
 }
 
-//Swap swaps the elements with indexes i and j.
+// Swap swaps the elements with indexes i and j.
 func (list PortList) Swap(i, j int) {
 	list[i], list[j] = list[j], list[i]
 }

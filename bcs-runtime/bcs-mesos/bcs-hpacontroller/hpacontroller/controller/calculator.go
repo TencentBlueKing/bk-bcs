@@ -24,10 +24,12 @@ import (
 )
 
 const (
-	DefaultValidMetricsTimeout = 60 //seconds
+	// DefaultValidMetricsTimeout xxx
+	DefaultValidMetricsTimeout = 60 // seconds
 )
 
-//update scaler current metrics
+// updateScalerCurrentMetrics xxx
+// update scaler current metrics
 func (auto *Autoscaler) updateScalerCurrentMetrics(scaler *commtypes.BcsAutoscaler) error {
 	refKind := scaler.Spec.ScaleTargetRef.Kind
 	refNs := scaler.Spec.ScaleTargetRef.Namespace
@@ -62,7 +64,7 @@ func (auto *Autoscaler) updateScalerCurrentMetrics(scaler *commtypes.BcsAutoscal
 			}
 
 		case commtypes.ExternalMetricSourceType:
-			//todo
+			// todo
 
 		default:
 			blog.Errorf("scaler %s metrics %s type %s is invalid", scaler.GetUuid(), current.Name, current.Type)
@@ -72,8 +74,10 @@ func (auto *Autoscaler) updateScalerCurrentMetrics(scaler *commtypes.BcsAutoscal
 	return nil
 }
 
-//compute scaler DesiredInstance, and return it
-func (auto *Autoscaler) computeScalerDesiredInstance(scaler *commtypes.BcsAutoscaler) (uint, commtypes.AutoscalerOperatorType, error) {
+// computeScalerDesiredInstance xxx
+// compute scaler DesiredInstance, and return it
+func (auto *Autoscaler) computeScalerDesiredInstance(scaler *commtypes.BcsAutoscaler) (uint,
+	commtypes.AutoscalerOperatorType, error) {
 	var (
 		describedInstance uint
 		scaleUpNumber     int
@@ -82,12 +86,12 @@ func (auto *Autoscaler) computeScalerDesiredInstance(scaler *commtypes.BcsAutosc
 	)
 
 	currentInstance := float32(scaler.Status.CurrentInstance)
-	//if current instance > max instance
+	// if current instance > max instance
 	if uint(currentInstance) > scaler.Spec.MaxInstance {
 		return scaler.Spec.MaxInstance, commtypes.AutoscalerOperatorScaleDown, nil
 	}
 
-	//if current instance < min instance
+	// if current instance < min instance
 	if uint(currentInstance) < scaler.Spec.MinInstance {
 		return scaler.Spec.MinInstance, commtypes.AutoscalerOperatorScaleUp, nil
 	}
@@ -173,15 +177,15 @@ func (auto *Autoscaler) computeScalerDesiredInstance(scaler *commtypes.BcsAutosc
 			continue
 		}
 
-		//scale up
+		// scale up
 		if tolerance > (1 + auto.config.AutoscalerTolerance) {
 			ceil := uint(math.Ceil(float64(currentInstance * tolerance)))
 
-			//if described instance == current instance, then don't scale it
+			// if described instance == current instance, then don't scale it
 			if ceil == scaler.Status.CurrentInstance {
 				continue
 			}
-			//if cuttent instance == max instance, then don't scale it
+			// if cuttent instance == max instance, then don't scale it
 			if scaler.Status.CurrentInstance == scaler.Spec.MaxInstance {
 				continue
 			}
@@ -198,20 +202,20 @@ func (auto *Autoscaler) computeScalerDesiredInstance(scaler *commtypes.BcsAutosc
 				current.Name, currentInstance, tolerance, describedInstance)
 		}
 
-		//if scale up number>0, then don't need scale down it
+		// if scale up number>0, then don't need scale down it
 		if scaleUpNumber > 0 {
 			continue
 		}
 
-		//scale down
+		// scale down
 		if tolerance < (1 - auto.config.AutoscalerTolerance) {
 			ceil := uint(math.Ceil(float64(currentInstance * tolerance)))
 
-			//if described instance == current instance, then don't scale it
+			// if described instance == current instance, then don't scale it
 			if ceil == scaler.Status.CurrentInstance {
 				continue
 			}
-			//if cuttent instance == min instance, then don't scale it
+			// if cuttent instance == min instance, then don't scale it
 			if scaler.Status.CurrentInstance == scaler.Spec.MinInstance {
 				continue
 			}
@@ -232,18 +236,18 @@ func (auto *Autoscaler) computeScalerDesiredInstance(scaler *commtypes.BcsAutosc
 		}
 	}
 
-	//if scale up number>0, then scale up it
+	// if scale up number>0, then scale up it
 	if scaleUpNumber > 0 {
 		scalerOperator = commtypes.AutoscalerOperatorScaleUp
 		return describedInstance, scalerOperator, nil
 	}
 
-	//if scale down number==len(scaler.Spec.MetricsTarget), then scale down it
+	// if scale down number==len(scaler.Spec.MetricsTarget), then scale down it
 	if scaleDownNumber == len(scaler.Spec.MetricsTarget) {
 		scalerOperator = commtypes.AutoscalerOperatorScaleDown
 		return describedInstance, scalerOperator, nil
 	}
 
-	//finally don't scale it
+	// finally don't scale it
 	return scaler.Status.CurrentInstance, scalerOperator, nil
 }

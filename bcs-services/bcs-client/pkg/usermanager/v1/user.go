@@ -21,14 +21,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 )
 
+// UserManager xxx
 type UserManager interface {
 	CreateOrGetUser(userType string, userName string, method string) (*models.BcsUser, error)
 	RefreshUsertoken(userType string, userName string) (*models.BcsUser, error)
 	GrantOrRevokePermission(method string, data []byte) error
-	GetPermission(method string, data []byte) ([]v1http.PermissionsResp, error)
+	GetPermission(method string, data []byte) ([]permission.PermissionsResp, error)
 	AddVpcCidrs(data []byte) error
 }
 
@@ -37,7 +38,7 @@ type bcsUserManager struct {
 	requester     utils.ApiRequester
 }
 
-//NewBcsUserManager create bcs-user-manager api implemenation
+// NewBcsUserManager create bcs-user-manager api implemenation
 func NewBcsUserManager(options types.ClientOptions) UserManager {
 	return &bcsUserManager{
 		bcsAPIAddress: options.BcsApiAddress,
@@ -45,6 +46,7 @@ func NewBcsUserManager(options types.ClientOptions) UserManager {
 	}
 }
 
+// CreateOrGetUser xxx
 func (b *bcsUserManager) CreateOrGetUser(userType string, userName string, method string) (*models.BcsUser, error) {
 	resp, err := b.requester.Do(
 		fmt.Sprintf(BcsUserManagerUserURI, b.bcsAPIAddress, userType, userName),
@@ -70,6 +72,7 @@ func (b *bcsUserManager) CreateOrGetUser(userType string, userName string, metho
 	return &result, err
 }
 
+// RefreshUsertoken xxx
 func (b *bcsUserManager) RefreshUsertoken(userType string, userName string) (*models.BcsUser, error) {
 	method := http.MethodPut
 	resp, err := b.requester.Do(
@@ -96,6 +99,7 @@ func (b *bcsUserManager) RefreshUsertoken(userType string, userName string) (*mo
 	return &result, err
 }
 
+// GrantOrRevokePermission xxx
 func (b *bcsUserManager) GrantOrRevokePermission(method string, data []byte) error {
 	resp, err := b.requester.Do(
 		fmt.Sprintf(BcsUserManagerPermissionURI, b.bcsAPIAddress),
@@ -119,7 +123,8 @@ func (b *bcsUserManager) GrantOrRevokePermission(method string, data []byte) err
 	return nil
 }
 
-func (b *bcsUserManager) GetPermission(method string, data []byte) ([]v1http.PermissionsResp, error) {
+// GetPermission xxx
+func (b *bcsUserManager) GetPermission(method string, data []byte) ([]permission.PermissionsResp, error) {
 	resp, err := b.requester.Do(
 		fmt.Sprintf(BcsUserManagerPermissionURI, b.bcsAPIAddress),
 		method,
@@ -139,11 +144,12 @@ func (b *bcsUserManager) GetPermission(method string, data []byte) ([]v1http.Per
 		return nil, fmt.Errorf("failed to get permission: %s", msg)
 	}
 
-	var result []v1http.PermissionsResp
+	var result []permission.PermissionsResp
 	err = codec.DecJson(data, &result)
 	return result, err
 }
 
+// AddVpcCidrs xxx
 func (b *bcsUserManager) AddVpcCidrs(data []byte) error {
 	resp, err := b.requester.Do(
 		fmt.Sprintf(BcsUserManagerAddCidrUri, b.bcsAPIAddress),
@@ -164,7 +170,7 @@ func (b *bcsUserManager) AddVpcCidrs(data []byte) error {
 		return fmt.Errorf("failed to add cidr: %s", msg)
 	}
 
-	var result []v1http.PermissionsResp
+	var result []permission.PermissionsResp
 	err = codec.DecJson(data, &result)
 	return err
 }

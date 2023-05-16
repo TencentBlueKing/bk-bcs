@@ -75,7 +75,7 @@ func (store *managerStore) SaveAgent(agent *types.Agent) error {
 
 // FetchAgent fetch agent for agent InnerIP
 func (store *managerStore) FetchAgent(Key string) (*types.Agent, error) {
-	//fetch agent in cache
+	// fetch agent in cache
 	agent := getCacheAgent(Key)
 	if agent == nil {
 		return nil, schStore.ErrNoFound
@@ -200,6 +200,7 @@ func (store *managerStore) FetchAgentSetting(InnerIP string) (*commtypes.BcsClus
 	return agentSetting, nil
 }
 
+// fetchAgentSettingInDB xxx
 // fetch agentsetting for innerip
 func (store *managerStore) fetchAgentSettingInDB(InnerIP string) (*commtypes.BcsClusterAgentSetting, error) {
 	client := store.BkbcsClient.BcsClusterAgentSettings(DefaultNamespace)

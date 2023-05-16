@@ -11,6 +11,7 @@
  *
  */
 
+// Package driver xxx
 package driver
 
 import (
@@ -35,45 +36,45 @@ import (
 	"github.com/mesos/mesos-go/api/v0/upid"
 )
 
-//DriverEnv The following environment variables are set by the agent that can be
+// DriverEnv The following environment variables are set by the agent that can be
 //    used by the executor upon startup:
-//MESOS_FRAMEWORK_ID: FrameworkID of the scheduler needed as part of the SUBSCRIBE call.
-//MESOS_EXECUTOR_ID: ExecutorID of the executor needed as part of the SUBSCRIBE call.
-//MESOS_DIRECTORY: Path to the working directory for the executor on the host filesystem(deprecated).
-//MESOS_SANDBOX: Path to the mapped sandbox inside of the container (determined by the
+// MESOS_FRAMEWORK_ID: FrameworkID of the scheduler needed as part of the SUBSCRIBE call.
+// MESOS_EXECUTOR_ID: ExecutorID of the executor needed as part of the SUBSCRIBE call.
+// MESOS_DIRECTORY: Path to the working directory for the executor on the host filesystem(deprecated).
+// MESOS_SANDBOX: Path to the mapped sandbox inside of the container (determined by the
 //    agent flag sandbox_directory) for either mesos container with image or docker container.
 //    For the case of command task without image specified, it is the path to the sandbox
 //    on the host filesystem, which is identical to MESOS_DIRECTORY. MESOS_DIRECTORY
 //    is always the sandbox on the host filesystem.
-//MESOS_AGENT_ENDPOINT: agent endpoint i.e. ip:port to be used by the executor to connect
+// MESOS_AGENT_ENDPOINT: agent endpoint i.e. ip:port to be used by the executor to connect
 //    to the agent.
-//MESOS_CHECKPOINT: If set to true, denotes that framework has checkpointing enabled.
-//MESOS_EXECUTOR_SHUTDOWN_GRACE_PERIOD: Amount of time the agent would wait for an
+// MESOS_CHECKPOINT: If set to true, denotes that framework has checkpointing enabled.
+// MESOS_EXECUTOR_SHUTDOWN_GRACE_PERIOD: Amount of time the agent would wait for an
 //    executor to shut down (e.g., 60secs, 3mins etc.) after sending a SHUTDOWN event.
-//If MESOS_CHECKPOINT is set i.e. when framework checkpointing is enabled, the following
+// If MESOS_CHECKPOINT is set i.e. when framework checkpointing is enabled, the following
 //    additional variables are also set that can be used by the executor for retrying
 //    upon a disconnection with the agent:
-//MESOS_RECOVERY_TIMEOUT: The total duration that the executor should spend retrying
+// MESOS_RECOVERY_TIMEOUT: The total duration that the executor should spend retrying
 //    before shutting itself down when it is disconnected from the agent (e.g., 15mins,
 //    5secs etc.). This is configurable at agent startup via the flag --recovery_timeout.
-//MESOS_SUBSCRIPTION_BACKOFF_MAX: The maximum backoff duration to be used by the executor
+// MESOS_SUBSCRIPTION_BACKOFF_MAX: The maximum backoff duration to be used by the executor
 //    between two retries when disconnected (e.g., 250ms, 1mins etc.). This is configurable
 //    at agent startup via the flag --executor_reregistration_timeout.
 type DriverEnv struct {
-	MesosSlavePID            string //agent slave pid
-	MesosSlaveID             string //agent slave uniq id
-	MesosAgentEndpoint       string //agent ip:port endpoint to connect to the agent
-	MesosFrameworkID         string //frameworkid from agent
-	MesosExecutorID          string //exector id from agent
-	SSLEnabled               bool   //true is agent enable https
-	MesosSandBox             string //Path to the mapped sandbox inside of the container
-	MesosCheckpoint          bool   //If set to true, denotes that framework has checkpointing enabled
-	MesosRecoveryTimeout     int    //The total duration that the executor should spend retrying before shutting it self down when it is disconnected from the agent
-	MesosSubscriptionBackoff int    //The maximum backoff duration between two retries when disconnected
-	MesosShutdownGracePeriod int    //Amount of time the agent would wait for an executor to shut down (e.g., 60secs, 3mins etc.) after sending a SHUTDOWN event
+	MesosSlavePID            string // agent slave pid
+	MesosSlaveID             string // agent slave uniq id
+	MesosAgentEndpoint       string // agent ip:port endpoint to connect to the agent
+	MesosFrameworkID         string // frameworkid from agent
+	MesosExecutorID          string // exector id from agent
+	SSLEnabled               bool   // true is agent enable https
+	MesosSandBox             string // Path to the mapped sandbox inside of the container
+	MesosCheckpoint          bool   // If set to true, denotes that framework has checkpointing enabled
+	MesosRecoveryTimeout     int    // The total duration that the executor should spend retrying before shutting it self down when it is disconnected from the agent
+	MesosSubscriptionBackoff int    // The maximum backoff duration between two retries when disconnected
+	MesosShutdownGracePeriod int    // Amount of time the agent would wait for an executor to shut down (e.g., 60secs, 3mins etc.) after sending a SHUTDOWN event
 }
 
-//getAllEnvs get all info from environment
+// getAllEnvs get all info from environment
 func (ee *DriverEnv) getAllEnvs() error {
 	ee.MesosSlavePID = os.Getenv("MESOS_SLAVE_PID")
 	if ee.MesosSlavePID == "" {
@@ -119,33 +120,37 @@ func (ee *DriverEnv) getAllEnvs() error {
 }
 
 const (
+	// SlaveUri xxx
 	SlaveUri = "/api/v1/executor"
 
-	KeepAliveConn    = true
+	// KeepAliveConn xxx
+	KeepAliveConn = true
+	// NotKeepAliveConn xxx
 	NotKeepAliveConn = false
 )
 
-//ExecutorDriver BCS implementation for ExecutorDriver
+// ExecutorDriver BCS implementation for ExecutorDriver
 type ExecutorDriver struct {
 	sync.RWMutex
-	executor  executor.Executor //custom executor
-	status    mesos.Status      //driver status
+	executor  executor.Executor // custom executor
+	status    mesos.Status      // driver status
 	conn      *HttpConnection
-	connected bool //flag for connection
+	connected bool // flag for connection
 
 	slaveEndpoint string
 	slaveUri      string
 
-	frameworkID *mesos.FrameworkID //scheduler frameworkid from environment
-	agentID     *mesos.AgentID     //mesos slave ID form environment
-	agentPID    *upid.UPID         //mesos slave upid for identify
-	executorID  *mesos.ExecutorID  //self executor id from environment
-	exeEnv      *DriverEnv         //executor environment required
+	frameworkID *mesos.FrameworkID // scheduler frameworkid from environment
+	agentID     *mesos.AgentID     // mesos slave ID form environment
+	agentPID    *upid.UPID         // mesos slave upid for identify
+	executorID  *mesos.ExecutorID  // self executor id from environment
+	exeEnv      *DriverEnv         // executor environment required
 
-	cxt    context.Context    //context for cancel
-	cancel context.CancelFunc //function for cancel
+	cxt    context.Context    // context for cancel
+	cancel context.CancelFunc // function for cancel
 }
 
+// NewExecutorDriver xxx
 func NewExecutorDriver(cxt context.Context, bcsExec executor.Executor) (*ExecutorDriver, error) {
 	envs := &DriverEnv{}
 	err := envs.getAllEnvs()
@@ -178,6 +183,7 @@ func NewExecutorDriver(cxt context.Context, bcsExec executor.Executor) (*Executo
 	return driver, nil
 }
 
+// Start xxx
 func (driver *ExecutorDriver) Start() {
 	err := driver.subscribe()
 	if err != nil {
@@ -185,12 +191,12 @@ func (driver *ExecutorDriver) Start() {
 		os.Exit(1)
 	}
 
-	//register callback function update task status
+	// register callback function update task status
 	updateFunc := types.UpdateTaskFunc(driver.UpdateTaskStatus)
 	driver.executor.RegisterCallbackFunc(types.CallbackFuncUpdateTask, updateFunc)
 }
 
-//subscribe send subscribe message to mesos slave
+// subscribe send subscribe message to mesos slave
 func (driver *ExecutorDriver) subscribe() error {
 	subscribe := new(protoExec.Call_Subscribe)
 	call := &protoExec.Call{
@@ -222,7 +228,7 @@ func (driver *ExecutorDriver) launchTaskgroup(from *upid.UPID, pbMsg *protoExec.
 	driver.executor.LaunchTaskgroup(taskgroup)
 }
 
-//recvLoop recv message from mesos
+// recvLoop recv message from mesos
 func (driver *ExecutorDriver) recvLoop(response *http.Response) {
 	defer response.Body.Close()
 
@@ -276,7 +282,7 @@ func (driver *ExecutorDriver) handleMessage(from *upid.UPID, pbMsg *protoExec.Ev
 		return
 	}
 
-	//parse to BcsMessage
+	// parse to BcsMessage
 	var bcsMessage bcstype.BcsMessage
 	if err := json.Unmarshal([]byte(data), &bcsMessage); err != nil {
 		blog.Errorf("unmarshal data %s to BcsMessage error %s", data, err.Error())
@@ -302,7 +308,7 @@ func (driver *ExecutorDriver) handleMessage(from *upid.UPID, pbMsg *protoExec.Ev
 }
 
 func (driver *ExecutorDriver) acknowledged(from *upid.UPID, pbMsg *protoExec.Event_Acknowledged) {
-	//blog.Infof("get slave acknowledged taskid %s uuid %s",pbMsg.GetTaskId().GetValue(),string(pbMsg.GetUuid()))
+	// blog.Infof("get slave acknowledged taskid %s uuid %s",pbMsg.GetTaskId().GetValue(),string(pbMsg.GetUuid()))
 	driver.executor.AckTaskStatusMessage(pbMsg.GetTaskId().GetValue(), pbMsg.GetUuid())
 }
 
@@ -328,6 +334,7 @@ func (driver *ExecutorDriver) loopSubcribedMesosSlave() {
 	}
 }
 
+// UpdateTaskStatus xxx
 func (driver *ExecutorDriver) UpdateTaskStatus(status *mesos.TaskStatus) error {
 	status.AgentId = driver.agentID
 	status.ExecutorId = driver.executorID

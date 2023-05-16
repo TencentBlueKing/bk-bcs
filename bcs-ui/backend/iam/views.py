@@ -21,9 +21,13 @@ from rest_framework.response import Response
 from backend.bcs_web import viewsets
 
 from .perm_maker import make_perm_ctx, make_res_permission
+from .permissions.apply_url import ApplyURLGenerator
 from .permissions.client import IAMClient
 from .permissions.exceptions import AttrValidationError, PermissionDeniedError
-from .request_maker import make_res_request
+from .permissions.request import ActionResourcesRequest
+from .permissions.resources.constants import ResourceType
+from .permissions.resources.project import ProjectAction
+from .request_maker import make_request_resources
 from .serializers import ResourceActionSLZ, ResourceMultiActionsSLZ
 
 logger = logging.getLogger(__name__)
@@ -47,12 +51,12 @@ class UserPermsViewSet(viewsets.SystemViewSet):
         # 资源实例相关
         resource_type = perm_ctx.pop('resource_type')
         try:
-            res_request = make_res_request(resource_type, **perm_ctx)
+            request_resources = make_request_resources(resource_type, **perm_ctx)
         except AttrValidationError as e:
             raise ValidationError(e)
 
         perms = client.resource_inst_multi_actions_allowed(
-            request.user.username, validated_data['action_ids'], res_request
+            request.user.username, validated_data['action_ids'], request_resources
         )
         return Response({'perms': perms})
 
@@ -60,21 +64,32 @@ class UserPermsViewSet(viewsets.SystemViewSet):
         """查询指定 action_id 的权限"""
         validated_data = self.params_validate(ResourceActionSLZ, action_id=action_id)
 
-        resource_type = validated_data['resource_type']
         try:
-            perm_ctx = make_perm_ctx(resource_type, request.user.username, **validated_data['perm_ctx'])
+            perm_ctx = make_perm_ctx(action_id, request.user.username, **validated_data['perm_ctx'])
         except AttrValidationError as e:
             raise ValidationError(e)
 
-        permission = make_res_permission(resource_type)
+        permission = make_res_permission(action_id)
         try:
             # 调用 permission.can_xx 方法
-            getattr(permission, f"can_{validated_data['action']}")(perm_ctx)
+            # rsplit 用于从 action_id 中提取动词, 如 namespace_scoped_view 中提取出 view
+            verb = action_id.rsplit('_', 1)[-1]
+            getattr(permission, f'can_{verb}')(perm_ctx)
         except AttributeError:
             raise ValidationError(f'action_id({action_id}) not supported')
         except AttrValidationError as e:
             raise ValidationError(e)
         except PermissionDeniedError as e:
-            return Response({'perms': {action_id: False, 'apply_url': e.data['apply_url']}})
+            return Response({'perms': {action_id: False, 'apply_url': e.data['perms']['apply_url']}})
 
         return Response({'perms': {action_id: True}})
+
+    def generate_apply_url(self, request, action_id):
+        if action_id != ProjectAction.VIEW.value:
+            raise ValidationError(f'only support {ProjectAction.VIEW.value}')
+
+        action_request_list = [
+            ActionResourcesRequest(ProjectAction.VIEW, ResourceType.Project, allow_instances_empty=True)
+        ]
+        apply_url = ApplyURLGenerator.generate_apply_url(request.user.username, action_request_list)
+        return Response({'perms': {action_id: False, 'apply_url': apply_url}})

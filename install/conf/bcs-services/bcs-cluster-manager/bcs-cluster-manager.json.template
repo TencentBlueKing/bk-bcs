@@ -25,8 +25,116 @@
         "alsotostderr": ${bcsClusterManagerAlsoToStdErr},
         "v": ${bcsClusterManagerVerbosity}
     },
+    "broker": {
+        "address": "${queueAddress}",
+        "exchange": "${exchange}"
+    },
+    "bkOps": {
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "debug": ${debug},
+        "external": ${bcsOpsExternal},
+        "createTaskURL": "${bcsCreateTaskURL}",
+        "taskStatusURL": "${bcsTaskStatusURL}",
+        "startTaskURL": "${bcsStartTaskURL}"
+    },
+    "cmdb": {
+        "enable": ${bcsCmdbEnable},
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "bkUserName": "${bcsBkUserName}",
+        "server": "${bcsCmdbServer}",
+        "debug": ${bcsCmdbDebug}
+    },
+    "nodeman": {
+        "enable": ${bcsNodeManEnable},
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "bkUserName": "${bcsBkUserName}",
+        "server": "${bcsNodeManServer}",
+        "debug": ${bcsNodeManDebug}
+    },
+    "ssm": {
+        "server": "${bcsSsmServer}",
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "enable": ${bcsSsmEnable},
+        "debug": ${bcsSsmDebug}
+    },
+    "passcc": {
+        "server": "${bcsPassServer}",
+        "enable": ${bcsPassEnable},
+        "debug": ${bcsPassDebug}
+    },
+    "user": {
+        "enable": ${bcsUserEnable},
+        "gateWay": "${bcsUserGateWay}",
+        "isVerifyTLS": ${bcsUserVerifyTLS},
+        "token": "${bcsUserToken}"
+    },
+    "iam_config": {
+        "systemID": "${bcsIAMSystemID}",
+        "appCode": "${bcsIAMAppCode}",
+        "appSecret": "${bcsIAMAppSecret}",
+        "external": ${bcsIAMExternal},
+        "gateWayServer": "${bcsIAMGateWayHost}",
+        "iamServer": "${bcsIAMHost}",
+        "bkiIamServer": "${bcsIAMbkiHost}",
+        "metric": ${bcsIAMMetric},
+        "debug": ${bcsIAMDebug},
+        "iamApplyServer": "${bcsIAMApplyPermAddress}"
+    },
+    "auth": {
+        "enable": ${bcsAuthEnable},
+        "publicKeyFile": "${bcsAuthPublicKeyFile}",
+        "privateKeyFile": "${bcsAuthPrivateKeyFile}",
+        "clientPermissions": "${bcsAuthClientPermissions}",
+        "noAuthMethod": "${bcsAuthNoAuthMethod}"
+    },
+    "gse": {
+        "enable": ${bcsGseEnable},
+        "appCode": "${bcsGseAppCode}",
+        "appSecret": "${bcsGseAppSecret}",
+        "bkUserName": "${bcsGseBkUserName}",
+        "server": "${bcsGseServer}",
+        "debug": ${bcsGseDebug}
+    },
+    "bcsapp": {
+        "server": "${bcsAppServer}",
+        "appCode": "${bcsAppAppCode}",
+        "appSecret": "${bcsAppAppSecret}",
+        "bkUserName": "${bcsAppBkUsername}",
+        "enable": ${bcsAppEnable},
+        "debug": ${bcsAppDebug}
+    },
+    "helm": {
+        "module": "${bcsHelmManagerModule}",
+        "enable": ${bcsHelmManagerEnable}
+    },
+    "componentDeploy": {
+        "autoScaler": {
+            "chartName": "${bcsCAChartName}",
+            "releaseName": "${bcsCAReleaseName}",
+            "releaseNamespace": "${bcsCAReleaseNamespace}",
+            "isPublicRepo": ${bcsCAIsPublicRepo}
+        },
+        "watch": {
+            "chartName": "${bcsWatchChartName}",
+            "releaseName": "${bcsWatchReleaseName}",
+            "releaseNamespace": "${bcsWatchReleaseNamespace}",
+            "isPublicRepo": ${bcsWatchIsPublicRepo},
+            "storageServer": "${bcsStorageServer}"
+        },
+        "registry": "${bcsImageRegistry}",
+        "bcsApiGateway": "${bcsCAApiGateway}",
+        "token": "${bcsCAToken}",
+        "deployService": "${deployService}"
+    },
+    "cloudTemplatePath": "${bcsCloudTemplatePath}",
+    "resourceSchemaPath": "${bcsResourceSchemaPath}",
     "debug": ${bcsClusterManagerDebug},
     "address": "${localIp}",
+    "ipv6Address": "${localIpv6}",
     "port": ${bcsClusterManagerPort},
     "httpport": ${bcsClusterManagerHTTPPort},
     "metricport": ${bcsClusterManagerMetricPort},

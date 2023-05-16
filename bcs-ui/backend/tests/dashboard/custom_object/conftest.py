@@ -53,10 +53,6 @@ def update_or_create_crd():
 @pytest.fixture(autouse=True, scope='package')
 def custom_resource_api_common_patch():
     with mock.patch(
-        'backend.dashboard.custom_object_v2.views.validate_cluster_perm', new=lambda *args, **kwargs: None
-    ), mock.patch(
         'backend.dashboard.custom_object_v2.views.gen_cobj_web_annotations', new=lambda *args, **kwargs: {}
-    ), mock.patch(
-        'backend.dashboard.custom_object_v2.views.gen_base_web_annotations', new=lambda *args, **kwargs: {}
-    ):
+    ), mock.patch('backend.dashboard.custom_object_v2.views.gen_base_web_annotations', new=lambda *args, **kwargs: {}):
         yield

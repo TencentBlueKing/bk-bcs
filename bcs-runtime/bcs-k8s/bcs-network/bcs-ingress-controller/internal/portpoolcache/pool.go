@@ -15,12 +15,7 @@ package portpoolcache
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-)
-
-var (
-	protocolList = []string{constant.PortPoolPortProtocolTCP, constant.PortPoolPortProtocolUDP}
 )
 
 // CachePool pool of ports
@@ -59,7 +54,7 @@ func (cp *CachePool) AddPoolItem(itemStatus *networkextensionv1.PortPoolItemStat
 	if cp.HasItem(itemStatus.GetKey()) {
 		return fmt.Errorf("item %s of pool %s already exists", itemStatus.GetKey(), cp.GetKey())
 	}
-	poolItem, err := NewCachePoolItem(cp.GetKey(), protocolList, itemStatus)
+	poolItem, err := NewCachePoolItem(cp.GetKey(), itemStatus)
 	if err != nil {
 		return fmt.Errorf("new cache pool item failed, err %s", err.Error())
 	}
@@ -85,9 +80,16 @@ func (cp *CachePool) SetItemStatus(itemStatus *networkextensionv1.PortPoolItemSt
 			if item.Status != itemStatus.Status {
 				item.SetStatus(itemStatus.Status)
 			}
-			if itemStatus.EndPort > item.ItemStatus.EndPort {
-				return item.IncreaseEndPort(int(itemStatus.EndPort))
+			if item.ItemStatus == nil {
+				item.SetItemsStatus(itemStatus)
+				return nil
 			}
+			if itemStatus.EndPort > item.ItemStatus.EndPort {
+				if err := item.IncreaseEndPort(int(itemStatus.EndPort)); err != nil {
+					return err
+				}
+			}
+			item.SetItemsStatus(itemStatus)
 			return nil
 		}
 	}

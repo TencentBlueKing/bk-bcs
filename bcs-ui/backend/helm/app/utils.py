@@ -25,7 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 from ruamel.yaml import YAML
 from ruamel.yaml.compat import StringIO, ordereddict
 
-from backend.components import bcs, paas_cc
+from backend.components import paas_cc
 from backend.helm.helm.utils.util import EmptyVaue, fix_rancher_value_by_type
 from backend.helm.toolkit.diff import parser
 from backend.resources.utils.kube_client import get_dynamic_client
@@ -51,12 +51,16 @@ yaml.add_representer(type(None), represent_none)
 def ruamel_yaml_load(content):
     # be carefule, ruamel.yaml doesn't work well with dpath
     yaml = YAML()
+    # 添加 preserve_quotes=True, 避免 json 转换 yaml 时，丢掉双引号
+    yaml.preserve_quotes = True
     return yaml.load(content)
 
 
 def ruamel_yaml_dump(yaml_obj):
     # be carefule, ruamel.yaml doesn't work well with dpath
     yaml = YAML()
+    # 添加 preserve_quotes=True, 避免 json 转换 yaml 时，丢掉双引号
+    yaml.preserve_quotes = True
     stream = StringIO()
     yaml.dump(yaml_obj, stream=stream)
     content = stream.getvalue()
@@ -68,8 +72,16 @@ def yaml_load(content):
 
 
 def yaml_dump(obj):
+    # 添加 presenter, 避免 json 转换 yaml 时，丢掉双引号
+    def literal_presenter(dumper, data):
+        if isinstance(data, str) and "\n" in data:
+            return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
+
     noalias_dumper = yaml.dumper.SafeDumper
     noalias_dumper.ignore_aliases = lambda self, data: True
+    noalias_dumper.add_representer(str, literal_presenter)
+
     return yaml.dump(obj, default_flow_style=False, Dumper=noalias_dumper)
 
 
@@ -268,7 +280,7 @@ def extract_state_info_from_dashboard_overview(overview_status, kind, namespace,
     return dict()
 
 
-def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DASHBOARD_CTL_BIN):
+def collect_resource_status(kubeconfig, app, project_code, cluster_id, bin_path=settings.DASHBOARD_CTL_BIN):
     """
     dashboard_client = make_dashboard_ctl_client(
         kubeconfig=kubeconfig
@@ -341,17 +353,6 @@ def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DAS
                     raise
         """
 
-        if status:
-            link = resource_link(
-                kind=kind,
-                project_code=project_code,
-                name=name,
-                namespace=namespace,
-                release_name=release_name,
-            )
-        else:
-            link = None
-
         key = "{kind}/{namespace}/{name}".format(
             name=name,
             namespace=namespace,
@@ -361,9 +362,9 @@ def collect_resource_status(kubeconfig, app, project_code, bin_path=settings.DAS
             "namespace": namespace,
             "name": name,
             "kind": kind,
+            "cluster_id": cluster_id,
             "status": status,
             "status_sumary": status_sumary(status, app),
-            "link": link,
         }
     return result
 

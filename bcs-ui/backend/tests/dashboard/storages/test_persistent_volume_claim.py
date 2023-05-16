@@ -23,7 +23,7 @@ pytestmark = pytest.mark.django_db
 
 
 class TestPersistentVolumeClaim:
-    """ 测试 PersistentVolumeClaim 相关接口 """
+    """测试 PersistentVolumeClaim 相关接口"""
 
     manifest = load_demo_manifest('storages/simple_persistent_volume_claim')
     create_url = f'{DAU_PREFIX}/storages/persistent_volume_claims/'
@@ -31,35 +31,35 @@ class TestPersistentVolumeClaim:
     inst_url = f"{list_url}{getitems(manifest, 'metadata.name')}/"
 
     def test_create(self, api_client):
-        """ 测试创建资源接口 """
+        """测试创建资源接口"""
         response = api_client.post(self.create_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_list(self, api_client):
-        """ 测试获取资源列表接口 """
+        """测试获取资源列表接口"""
         response = api_client.get(self.list_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'PersistentVolumeClaimList'
 
     def test_update(self, api_client):
-        """ 测试更新资源接口 """
+        """测试更新资源接口"""
         self.manifest['metadata']['annotations'] = {'t_key': 't_val'}
         response = api_client.put(self.inst_url, data={'manifest': self.manifest})
         assert response.json()['code'] == 0
 
     def test_retrieve(self, api_client):
-        """ 测试获取单个资源接口 """
+        """测试获取单个资源接口"""
         response = api_client.get(self.inst_url)
         assert response.json()['code'] == 0
         assert response.data['manifest']['kind'] == 'PersistentVolumeClaim'
         assert getitems(response.data, 'manifest.metadata.annotations.t_key') == 't_val'
 
     def test_destroy(self, api_client):
-        """ 测试删除单个资源 """
+        """测试删除单个资源"""
         response = api_client.delete(self.inst_url)
         assert response.json()['code'] == 0
 
     def test_list_shared_cluster_pvc(self, api_client, project_id):
-        """ 获取共享集群 PVC，预期是被拦截（PermissionDenied） """
+        """获取共享集群 PVC，预期是被拦截（PermissionDenied）"""
         url = f'/api/dashboard/projects/{project_id}/clusters/{TEST_SHARED_CLUSTER_ID}/namespaces/{TEST_NAMESPACE}/storages/persistent_volume_claims/'  # noqa
         assert api_client.get(url).json()['code'] == 400

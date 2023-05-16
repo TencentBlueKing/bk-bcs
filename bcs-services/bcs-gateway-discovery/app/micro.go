@@ -41,9 +41,9 @@ func getMicroModuleClusterID(host string) string {
 	return IDName[0]
 }
 
-//microModuleEvent event notification callback
+// microModuleEvent event notification callback
 func (s *DiscoveryServer) microModuleEvent(module string) {
-	//get event notification
+	// get event notification
 	event := &ModuleEvent{
 		// module info: 100032.mesosdriver, storage, meshmanager
 		Module:  module,
@@ -55,9 +55,9 @@ func (s *DiscoveryServer) microModuleEvent(module string) {
 
 func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {
 	module := getMicroModuleName(event.Module)
-	//check grpc service information registration
+	// check grpc service information registration
 	if _, ok := defaultGrpcModules[module]; ok {
-		//get specified module info and construct data for refresh
+		// get specified module info and construct data for refresh
 		svcs, err := s.formatEtcdInfo(event.Module, false)
 		if err != nil {
 			blog.Errorf("discovery formate module %s grpc service failed, %s", event.Module, err.Error())
@@ -69,7 +69,7 @@ func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {
 			return
 		}
 	}
-	//check http service information registration
+	// check http service information registration
 	if _, ok := defaultHTTPModules[module]; ok {
 		if module == modules.BCSModuleMesosdriver {
 			id := getMicroModuleClusterID(event.Module)
@@ -79,7 +79,7 @@ func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {
 			}
 		}
 
-		//http service create/update
+		// http service create/update
 		svcs, err := s.formatEtcdInfo(event.Module, true)
 		if err != nil {
 			blog.Errorf("discovery formate module %s http service failed, %s", event.Module, err.Error())
@@ -94,8 +94,8 @@ func (s *DiscoveryServer) handleMicroChange(event *ModuleEvent) {
 }
 
 // formatEtcdInfo format internal service info according module info
-//@param: module, bkbcs module info, like 10032.mesosdriver, storage, meshsmanager
-//@param: http, flag for http route conversion
+// @param: module, bkbcs module info, like 10032.mesosdriver, storage, meshsmanager
+// @param: http, flag for http route conversion
 func (s *DiscoveryServer) formatEtcdInfo(module string, http bool) (*register.Service, error) {
 	service, err := s.microDiscovery.GetModuleServer(module)
 	if err != nil {
@@ -103,11 +103,11 @@ func (s *DiscoveryServer) formatEtcdInfo(module string, http bool) (*register.Se
 		return nil, err
 	}
 	if service == nil {
-		//no service in local cache, it means deletion event
-		//in this stage, we suppose bkbcs need all modules for long time.
-		//we don't delete service in synchronization and reserves service until that module registes back.
-		//then we can replace upstream target with new information simplly.
-		//if api-gateway routable rules change, we change api-gateway by release maintenance
+		// no service in local cache, it means deletion event
+		// in this stage, we suppose bkbcs need all modules for long time.
+		// we don't delete service in synchronization and reserves service until that module registes back.
+		// then we can replace upstream target with new information simplly.
+		// if api-gateway routable rules change, we change api-gateway by release maintenance
 		blog.Warnf("module %s is not in micro-discovery cache", module)
 		return nil, fmt.Errorf("no module in cache")
 	}
@@ -119,14 +119,14 @@ func (s *DiscoveryServer) formatEtcdInfo(module string, http bool) (*register.Se
 	var rSvcs *register.Service
 	bkbcsName := getMicroModuleName(module)
 	if http {
-		//data structure conversion
+		// data structure conversion
 		rSvcs, err = s.adapter.GetHTTPService(bkbcsName, service)
 		if err != nil {
 			blog.Errorf("converts micro http module %s registry to api-gateway info failed, %s", service.Name, err.Error())
 			return nil, err
 		}
 	} else {
-		//grpc data structure conversion
+		// grpc data structure conversion
 		rSvcs, err = s.adapter.GetGrpcService(bkbcsName, service)
 		if err != nil {
 			blog.Errorf("converts micro grpc module %s registry to api-gateway info failed, %s", service.Name, err.Error())
@@ -151,7 +151,7 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 	var allServices []*register.Service
 	for _, svc := range svcs {
 		module := getMicroModuleName(svc.Name)
-		//check grpc route conversion
+		// check grpc route conversion
 		if _, ok := defaultGrpcModules[module]; ok {
 			rsvc, err := s.adapter.GetGrpcService(module, svc)
 			if err != nil {
@@ -161,8 +161,8 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 			allServices = append(allServices, rsvc)
 			blog.V(5).Infof("etcd registry module %s[%s] grpc conversion successfully", svc.Name, module)
 		}
-		//check http route rules conversion
-		//! pay more attention, modules that don't support grpc must be compatible in http conversion
+		// check http route rules conversion
+		// ! pay more attention, modules that don't support grpc must be compatible in http conversion
 		if _, ok := defaultHTTPModules[module]; ok {
 			rsvc, err := s.adapter.GetHTTPService(module, svc)
 			if err != nil {
@@ -170,11 +170,11 @@ func (s *DiscoveryServer) formatMultiEtcdService() ([]*register.Service, error) 
 				continue
 			}
 			allServices = append(allServices, rsvc)
-			//! compatible discovery for mesosdriver, mesosdriver should support zookeeper registry
-			//! & etcd registry. but actually, it's hard to update all cluster mesos driver at the
-			//! same time. so when discovery find that cluster mesosdriver update to etcd registry
-			//! version, discovery will restrict that only retreve discovery information from etcd
-			//! registry and ignore same information from zookeeper.
+			// ! compatible discovery for mesosdriver, mesosdriver should support zookeeper registry
+			// ! & etcd registry. but actually, it's hard to update all cluster mesos driver at the
+			// ! same time. so when discovery find that cluster mesosdriver update to etcd registry
+			// ! version, discovery will restrict that only retreve discovery information from etcd
+			// ! registry and ignore same information from zookeeper.
 			if module == modules.BCSModuleMesosdriver {
 				id := getMicroModuleClusterID(svc.Name)
 				if !s.isClusterRestriction(id) {

@@ -19,7 +19,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from backend.bcs_web.viewsets import SystemViewSet
-from backend.components import prometheus as prom
+from backend.components import bcs_monitor as prom
 from backend.container_service.clusters.base.utils import get_cluster_nodes
 from backend.container_service.observability.metric.constants import CLUSTER_DIMENSIONS_FUNC, MetricDimension
 from backend.container_service.observability.metric.serializers import FetchMetricOverviewSLZ
@@ -27,11 +27,11 @@ from backend.utils.error_codes import error_codes
 
 
 class ClusterMetricViewSet(SystemViewSet):
-    """ 集群相关指标 """
+    """集群相关指标"""
 
     @action(methods=['POST'], url_path='overview', detail=False)
     def overview(self, request, project_id, cluster_id):
-        """ 集群指标总览 """
+        """集群指标总览"""
         params = self.params_validate(FetchMetricOverviewSLZ)
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
         if not node_ip_list:
@@ -46,38 +46,42 @@ class ClusterMetricViewSet(SystemViewSet):
                 raise error_codes.APIError(_("节点指标维度 {} 不合法").format(dimension))
 
             dimension_func = CLUSTER_DIMENSIONS_FUNC[dimension]
-            response_data[dimension] = dimension_func(cluster_id, node_ip_list)
+            response_data[dimension] = dimension_func(cluster_id, node_ip_list, bk_biz_id=request.project.cc_app_id)
 
         return Response(response_data)
 
     @action(methods=['GET'], url_path='cpu_usage', detail=False)
     def cpu_usage(self, request, project_id, cluster_id):
-        """ 集群 CPU 使用情况 """
+        """集群 CPU 使用情况"""
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
         if not node_ip_list:
             return Response({})
 
-        response_data = prom.get_cluster_cpu_usage_range(cluster_id, node_ip_list)
+        response_data = prom.get_cluster_cpu_usage_range(cluster_id, node_ip_list, bk_biz_id=request.project.cc_app_id)
         return Response(response_data)
 
     @action(methods=['GET'], url_path='memory_usage', detail=False)
     def memory_usage(self, request, project_id, cluster_id):
-        """ 集群 内存 使用情况 """
+        """集群 内存 使用情况"""
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
         if not node_ip_list:
             return Response({})
 
-        response_data = prom.get_cluster_memory_usage_range(cluster_id, node_ip_list)
+        response_data = prom.get_cluster_memory_usage_range(
+            cluster_id, node_ip_list, bk_biz_id=request.project.cc_app_id
+        )
         return Response(response_data)
 
     @action(methods=['GET'], url_path='disk_usage', detail=False)
     def disk_usage(self, request, project_id, cluster_id):
-        """ 集群 磁盘 使用情况 """
+        """集群 磁盘 使用情况"""
         node_ip_list = self._get_cluster_node_ip_list(project_id, cluster_id)
         if not node_ip_list:
             return Response({})
 
-        response_data = prom.get_cluster_disk_usage_range(cluster_id, node_ip_list)
+        response_data = prom.get_cluster_disk_usage_range(
+            cluster_id, node_ip_list, bk_biz_id=request.project.cc_app_id
+        )
         return Response(response_data)
 
     def _get_cluster_node_ip_list(self, project_id: str, cluster_id: str) -> List:

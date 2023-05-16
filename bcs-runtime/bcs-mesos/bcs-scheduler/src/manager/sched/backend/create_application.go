@@ -22,10 +22,12 @@ import (
 	"time"
 )
 
+// CheckVersion xxx
 func (b *backend) CheckVersion(version *types.Version) error {
 	return task.CheckVersion(version, b.store)
 }
 
+// LaunchApplication xxx
 func (b *backend) LaunchApplication(version *types.Version) error {
 	blog.V(3).Infof("launch application(%s.%s)", version.RunAs, version.ID)
 
@@ -70,7 +72,7 @@ func (b *backend) LaunchApplication(version *types.Version) error {
 
 	b.sched.PushEventQueue(launchTrans)
 
-	//app.RawJson = version.RawJson
+	// app.RawJson = version.RawJson
 	app.LastStatus = app.Status
 	app.Status = types.APP_STATUS_OPERATING
 	app.SubStatus = types.APP_SUBSTATUS_UNKNOWN
@@ -85,6 +87,7 @@ func (b *backend) LaunchApplication(version *types.Version) error {
 	return nil
 }
 
+// RecoverApplication xxx
 func (b *backend) RecoverApplication(version *types.Version) error {
 
 	blog.Info("recover application(%s.%s) to instances(%d)",

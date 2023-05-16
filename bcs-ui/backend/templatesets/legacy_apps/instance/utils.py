@@ -34,14 +34,14 @@ from ..configuration.models import CATE_ABBR_NAME, ShowVersion, Template, Versio
 from .constants import InsState
 from .drivers import get_scheduler_driver
 from .generator import GENERATOR_DICT, get_bcs_context
-from .models import InstanceConfig, MetricConfig, VersionInstance
+from .models import InstanceConfig, VersionInstance
 from .utils_pub import get_cluster_version
 
 logger = logging.getLogger(__name__)
 
 
 # TODO mark refactor
-def check_tempalte_available(tem, username):
+def check_template_available(tem, username):
     """检查模板集是否可操作（即未被加锁）"""
     is_locked = tem.is_locked
     if not is_locked:

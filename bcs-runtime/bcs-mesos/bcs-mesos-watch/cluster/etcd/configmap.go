@@ -31,15 +31,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-mesos-watch/util"
 )
 
-//ConfigMapInfo wrapper for BCS ConfigMap
+// ConfigMapInfo wrapper for BCS ConfigMap
 type ConfigMapInfo struct {
 	data       *commtypes.BcsConfigMap
 	syncTime   int64
 	reportTime int64
 }
 
-//NewConfigMapWatch create watch for BCS ConfigMap
-func NewConfigMapWatch(cxt context.Context, informer bkbcsv2.BcsConfigMapInformer, reporter cluster.Reporter) *ConfigMapWatch {
+// NewConfigMapWatch create watch for BCS ConfigMap
+func NewConfigMapWatch(cxt context.Context, informer bkbcsv2.BcsConfigMapInformer,
+	reporter cluster.Reporter) *ConfigMapWatch {
 
 	keyFunc := func(data interface{}) (string, error) {
 		dataType, ok := data.(*ConfigMapInfo)
@@ -57,17 +58,17 @@ func NewConfigMapWatch(cxt context.Context, informer bkbcsv2.BcsConfigMapInforme
 	}
 }
 
-//ConfigMapWatch watch for configmap, watch all detail and store to local cache
+// ConfigMapWatch watch for configmap, watch all detail and store to local cache
 type ConfigMapWatch struct {
-	eventLock sync.Mutex       //lock for event
-	report    cluster.Reporter //reporter
-	cancelCxt context.Context  //context for cancel
-	dataCache cache.Store      //cache for all app data
+	eventLock sync.Mutex       // lock for event
+	report    cluster.Reporter // reporter
+	cancelCxt context.Context  // context for cancel
+	dataCache cache.Store      // cache for all app data
 	watchPath string
 	informer  bkbcsv2.BcsConfigMapInformer
 }
 
-//Work to add path and node watch
+// Work to add path and node watch
 func (watch *ConfigMapWatch) Work() {
 	blog.Infof("ConfigMapWatch start work")
 
@@ -86,7 +87,7 @@ func (watch *ConfigMapWatch) Work() {
 	}
 }
 
-//ProcessAllConfigmaps handle all configmap under all namespace
+// ProcessAllConfigmaps handle all configmap under all namespace
 func (watch *ConfigMapWatch) ProcessAllConfigmaps() error {
 	blog.V(3).Infof("sync all configmaps")
 	currTime := time.Now().Unix()
@@ -176,14 +177,15 @@ func (watch *ConfigMapWatch) ProcessAllConfigmaps() error {
 	return nil
 }
 
-//AddEvent call when data added
+// AddEvent call when data added
 func (watch *ConfigMapWatch) AddEvent(obj interface{}) {
 	configmapData, ok := obj.(*commtypes.BcsConfigMap)
 	if !ok {
 		blog.Error("can not convert object to BcsConfigMap in AddEvent, object %v", obj)
 		return
 	}
-	blog.Info("EVENT:: Add Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace, configmapData.ObjectMeta.Name)
+	blog.Info("EVENT:: Add Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace,
+		configmapData.ObjectMeta.Name)
 
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
@@ -197,15 +199,16 @@ func (watch *ConfigMapWatch) AddEvent(obj interface{}) {
 	}
 }
 
-//DeleteEvent when delete
+// DeleteEvent when delete
 func (watch *ConfigMapWatch) DeleteEvent(obj interface{}) {
 	configmapData, ok := obj.(*commtypes.BcsConfigMap)
 	if !ok {
 		blog.Error("can not convert object to BcsConfigMap in DeleteEvent, object %v", obj)
 		return
 	}
-	blog.Info("EVENT:: Delete Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace, configmapData.ObjectMeta.Name)
-	//report to cluster
+	blog.Info("EVENT:: Delete Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace,
+		configmapData.ObjectMeta.Name)
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
 		Action:   types.ActionDelete,
@@ -218,7 +221,7 @@ func (watch *ConfigMapWatch) DeleteEvent(obj interface{}) {
 	}
 }
 
-//UpdateEvent when update
+// UpdateEvent when update
 func (watch *ConfigMapWatch) UpdateEvent(old, cur interface{}) {
 	configmapData, ok := cur.(*commtypes.BcsConfigMap)
 	if !ok {
@@ -226,13 +229,14 @@ func (watch *ConfigMapWatch) UpdateEvent(old, cur interface{}) {
 		return
 	}
 
-	//if reflect.DeepEqual(old, cur) {
+	// if reflect.DeepEqual(old, cur) {
 	//	blog.V(3).Infof("BcsConfigMap %s.%s data do not changed", configmapData.ObjectMeta.NameSpace, configmapData.ObjectMeta.Name)
 	//	return
-	//}
+	// }
 
-	blog.V(3).Infof("EVENT:: Update Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace, configmapData.ObjectMeta.Name)
-	//report to cluster
+	blog.V(3).Infof("EVENT:: Update Event for BcsConfigMap %s.%s", configmapData.ObjectMeta.NameSpace,
+		configmapData.ObjectMeta.Name)
+	// report to cluster
 	data := &types.BcsSyncData{
 		DataType: "ConfigMap",
 		Action:   types.ActionUpdate,

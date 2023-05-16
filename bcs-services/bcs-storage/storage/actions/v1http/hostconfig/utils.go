@@ -21,16 +21,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/lib"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
-
-	restful "github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful"
 )
 
 func getHostFeat(req *restful.Request) *operator.Condition {
 	return getFeat(req, hostFeatTags)
 }
 
-func getQueryHostFeat(req *restful.Request) *operator.Condition {
+func listHostFeat(req *restful.Request) *operator.Condition {
 	return getFeat(req, hostQueryFeatTags)
 }
 
@@ -77,22 +75,11 @@ func getRelationData(req *restful.Request) operator.M {
 }
 
 func getHost(req *restful.Request) ([]operator.M, error) {
-	return get(req, getHostFeat(req))
+	return QueryHost(req.Request.Context(), getHostFeat(req))
 }
 
-func queryHost(req *restful.Request) ([]operator.M, error) {
-	return get(req, getQueryHostFeat(req))
-}
-
-func get(req *restful.Request, condition *operator.Condition) ([]operator.M, error) {
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	getOption := &lib.StoreGetOption{
-		Cond: condition,
-	}
-	mList, err := store.Get(req.Request.Context(), tableName, getOption)
-	return mList, err
+func listHost(req *restful.Request) ([]operator.M, error) {
+	return QueryHost(req.Request.Context(), listHostFeat(req))
 }
 
 func putHost(req *restful.Request) error {
@@ -100,23 +87,13 @@ func putHost(req *restful.Request) error {
 }
 
 func put(req *restful.Request, features operator.M) error {
+	// 参数
 	condition := operator.NewLeafCondition(operator.Eq, features)
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	putOption := &lib.StorePutOption{
-		UniqueKey:     indexKeys,
-		Cond:          condition,
-		CreateTimeKey: createTimeTag,
-		UpdateTimeKey: updateTimeTag,
-	}
-
 	data, err := getReqData(req, features)
 	if err != nil {
 		return err
 	}
-
-	return store.Put(req.Request.Context(), tableName, data, putOption)
+	return PutHostToDB(req.Request.Context(), data, condition)
 }
 
 func removeHost(req *restful.Request) error {
@@ -124,26 +101,20 @@ func removeHost(req *restful.Request) error {
 }
 
 func remove(req *restful.Request, condition *operator.Condition) error {
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	rmOption := &lib.StoreRemoveOption{
-		Cond: condition,
-	}
-	return store.Remove(req.Request.Context(), tableName, rmOption)
+	return RemoveHost(req.Request.Context(), condition)
 }
 
+// cleanCluster xxx
 // List all host whose cluster equals clusterID
 // and make their cluster empty string
 func cleanCluster(req *restful.Request, clusterID string) error {
-	now := time.Now()
+	// 参数
+	data := operator.M{
+		clusterIDTag:  "",
+		updateTimeTag: time.Now(),
+	}
 	condition := operator.NewLeafCondition(operator.Eq, operator.M{clusterIDTag: clusterID})
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	_, err := store.GetDB().Table(tableName).UpdateMany(req.Request.Context(), condition,
-		operator.M{clusterIDTag: "", updateTimeTag: now})
-	return err
+	return UpdateMany(req.Request.Context(), tableName, condition, data)
 }
 
 // doRelation has 2 options:
@@ -154,72 +125,21 @@ func cleanCluster(req *restful.Request, clusterID string) error {
 //                    post(127.0.0.3)=bcs-10001, then cluster=bcs-10001 contains 3 ips, 127.0.0.1, 127.0.0.2, 127.0.0.3.
 //                    it just add.
 func doRelation(req *restful.Request, isPut bool) error {
-	tmp, err := getRelationFeat(req)
+	// 参数
+	relation, err := getRelationFeat(req)
 	if err != nil {
-		return fmt.Errorf("Failed to get relation features, err %s", err.Error())
+		return fmt.Errorf("failed to QueryHost relation features, err %s", err.Error())
 	}
-	condition := operator.NewLeafCondition(operator.In, operator.M{ipTag: tmp.Ips})
-	getOption := &lib.StoreGetOption{
+	data := getRelationData(req)
+	condition := operator.NewLeafCondition(operator.In, operator.M{ipTag: relation.Ips})
+
+	// option
+	opt := &lib.StoreGetOption{
 		Cond:   condition,
 		Fields: []string{ipTag},
 	}
-	store := lib.NewStore(
-		apiserver.GetAPIResource().GetDBClient(dbConfig),
-		apiserver.GetAPIResource().GetEventBus(dbConfig))
-	mList, err := store.Get(req.Request.Context(), tableName, getOption)
-	if err != nil {
-		return fmt.Errorf("failed to query, err %s", err.Error())
-	}
-	var ipList []string
-	for _, doc := range mList {
-		ip, ok := doc[ipTag]
-		if !ok {
-			return fmt.Errorf("failed to get ip from %+v", doc)
-		}
-		ipStr, aok := ip.(string)
-		if !aok {
-			return fmt.Errorf("failed to parse ip from %+v", doc)
-		}
-		ipList = append(ipList, ipStr)
-	}
-	currentIPList := deduplicateStringSlice(ipList)
-	// expectIpList is the ipList which match the clusterId we expected
-	expectIPList := tmp.Ips
 
-	// insert the ip with clusterId="" which is not in db yet, preparing for next ops
-	insertList := make([]operator.M, 0, len(expectIPList))
-	now := time.Now()
-	for _, ip := range expectIPList {
-		if !inList(ip, currentIPList) {
-			insertList = append(insertList, operator.M{
-				ipTag:         ip,
-				clusterIDTag:  "",
-				createTimeTag: now,
-				updateTimeTag: now,
-			})
-		}
-	}
-
-	if len(insertList) > 0 {
-		if store.GetDB().Table(tableName).Insert(req.Request.Context(), []interface{}{insertList}); err != nil {
-			return err
-		}
-	}
-
-	data := getRelationData(req)
-	// put will clean the all cluster first, if not then just update
-	if isPut {
-		clusterID, ok := data[clusterIDTag].(string)
-		if !ok {
-			return fmt.Errorf("cannot parse clusterID from %+v", data)
-		}
-		if err = cleanCluster(req, clusterID); err != nil {
-			return err
-		}
-	}
-	data.Update(updateTimeTag, now)
-	_, err = store.GetDB().Table(tableName).UpdateMany(req.Request.Context(), condition, data)
-	return err
+	return DoRelation(req.Request.Context(), opt, data, isPut, relation)
 }
 
 func urlPath(oldURL string) string {

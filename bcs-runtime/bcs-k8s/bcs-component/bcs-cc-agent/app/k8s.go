@@ -28,6 +28,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// NodeInfo xxx
 type NodeInfo struct {
 	*Properties
 	CvmRegion string

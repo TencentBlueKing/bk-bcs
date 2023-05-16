@@ -11,6 +11,7 @@
  *
  */
 
+// Package mesos xxx
 package mesos
 
 import (
@@ -346,6 +347,7 @@ func (mm *Manager) Close() {
 	close(mm.stopCh)
 }
 
+// mesosConvertToAppService xxx
 // convert internal function for Discovery data conversion
 // todo: not finished
 func (mm *Manager) mesosConvertToAppService(svc *v2.BcsService, bcsEndpoint *v2.BcsEndpoint) (
@@ -640,6 +642,7 @@ func (mm *Manager) OnBcsEndpointDelete(obj interface{}) {
 	mm.deleteAppService(key)
 }
 
+// findServiceByTaskgroup xxx
 // find service by taskgroup
 func (mm *Manager) findServiceByTaskgroup(tg *v2.TaskGroup) (*v2.BcsService, error) {
 	services, err := mm.svcLister.BcsServices(tg.GetNamespace()).List(labels.Everything())
@@ -654,6 +657,7 @@ func (mm *Manager) findServiceByTaskgroup(tg *v2.TaskGroup) (*v2.BcsService, err
 	return nil, nil
 }
 
+// trigerAppServiceHandler xxx
 // triger process update
 func (mm *Manager) trigerAppServiceHandler(tg *v2.TaskGroup) {
 	svc, err := mm.findServiceByTaskgroup(tg)
@@ -706,7 +710,8 @@ func (mm *Manager) OnBcsTaskgroupUpdate(oldObj, newObj interface{}) {
 			newBcsTaskgroup.GetNamespace(), newBcsTaskgroup.GetName())
 		return
 	}
-	blog.V(5).Infof("BcsTaskgroup %s/%s update, ready to refresh", newBcsTaskgroup.GetNamespace(), newBcsTaskgroup.GetName())
+	blog.V(5).Infof("BcsTaskgroup %s/%s update, ready to refresh", newBcsTaskgroup.GetNamespace(),
+		newBcsTaskgroup.GetName())
 	mm.trigerAppServiceHandler(newBcsTaskgroup)
 }
 

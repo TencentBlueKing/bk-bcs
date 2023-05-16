@@ -15,6 +15,9 @@ package portpoolcontroller
 import (
 	"context"
 	"fmt"
+	"reflect"
+
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -76,9 +79,6 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 		K8sClient:     pph.k8sClient,
 		ListenerAttr:  pool.Spec.ListenerAttribute}
 
-	pph.poolCache.Lock()
-	defer pph.poolCache.Unlock()
-
 	// try to delete
 	successDeletedKeyMap := make(map[string]struct{})
 	failedDeletedKeyMap := make(map[string]struct{})
@@ -115,10 +115,8 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 			updateItemStatus, retry = poolItemHandler.ensurePortPoolItem(tmpItem, nil)
 			newItemStatusList = append(newItemStatusList, updateItemStatus)
 		} else {
-			if tmpItemStatus.Status != constant.PortPoolItemStatusReady || tmpItem.EndPort > tmpItemStatus.EndPort {
-				updateItemStatus, retry = poolItemHandler.ensurePortPoolItem(tmpItem, tmpItemStatus)
-				updateItemStatusMap[updateItemStatus.GetKey()] = updateItemStatus
-			}
+			updateItemStatus, retry = poolItemHandler.ensurePortPoolItem(tmpItem, tmpItemStatus)
+			updateItemStatusMap[updateItemStatus.GetKey()] = updateItemStatus
 		}
 		if retry {
 			shouldRetry = true
@@ -133,10 +131,31 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 		pool.Status.PoolItemStatuses = append(pool.Status.PoolItemStatuses, ts)
 	}
 
+	statusReady := true
+	for _, ts := range pool.Status.PoolItemStatuses {
+		if ts.Status != constant.PortPoolItemStatusReady {
+			statusReady = false
+			break
+		}
+	}
+	if statusReady {
+		pool.Status.Status = constant.PortPoolStatusReady
+	} else {
+		pool.Status.Status = constant.PortPoolStatusNotReady
+	}
+
 	err := pph.k8sClient.Status().Update(context.Background(), pool, &client.UpdateOptions{})
 	if err != nil {
 		return true, fmt.Errorf("update %s/%s status failed, err %s", pool.GetNamespace(), pool.GetName(), err.Error())
 	}
+
+	// if portItem.external changed, update related portBinding
+	if err := pph.ensurePortBinding(pool); err != nil {
+		return true, errors.Wrapf(err, "pool[%s/%s] ensurePortBinding failed", pool.GetNamespace(), pool.GetName())
+	}
+
+	pph.poolCache.Lock()
+	defer pph.poolCache.Unlock()
 
 	// delete item from pool cache
 	poolKey := ingresscommon.GetNamespacedNameKey(pool.GetName(), pool.GetNamespace())
@@ -239,4 +258,56 @@ func (pph *PortPoolHandler) deletePortPool(pool *networkextensionv1.PortPool) (b
 	}
 
 	return true, nil
+}
+
+// if poolItem.external changed, update related portBinding
+func (pph *PortPoolHandler) ensurePortBinding(pool *networkextensionv1.PortPool) error {
+	for i, poolItem := range pool.Spec.PoolItems {
+		portBindingList := &networkextensionv1.PortBindingList{}
+		labelKey := fmt.Sprintf(networkextensionv1.PortPoolBindingLabelKeyFromat, pool.GetName(), pool.GetNamespace())
+		if err := pph.k8sClient.List(context.Background(), portBindingList,
+			client.MatchingLabels{labelKey: poolItem.ItemName}); err != nil {
+			return errors.Wrapf(err, "list portBinding with label['%s'='%s'] failed", labelKey, poolItem.ItemName)
+		}
+
+		poolStatus := pool.Status.PoolItemStatuses[i]
+		for _, portBinding := range portBindingList.Items {
+			changed := false
+			cpPortBinding := portBinding.DeepCopy()
+			for idx, portBindingItem := range cpPortBinding.Spec.PortBindingList {
+				// check if same item
+				if portBindingItem.GetKey() != poolItem.GetKey() ||
+					portBindingItem.PoolName != pool.Name ||
+					portBindingItem.PoolNamespace != pool.Namespace {
+					continue
+				}
+				// check if external changed
+				if portBindingItem.External != poolItem.External {
+					cpPortBinding.Spec.PortBindingList[idx].External = poolItem.External
+					changed = true
+				}
+				// 支持用户新增LBID
+				if !reflect.DeepEqual(portBindingItem.LoadBalancerIDs, poolItem.LoadBalancerIDs) {
+					cpPortBinding.Spec.PortBindingList[idx].LoadBalancerIDs = poolItem.LoadBalancerIDs
+					changed = true
+				}
+				if !reflect.DeepEqual(portBindingItem.PoolItemLoadBalancers, poolStatus.PoolItemLoadBalancers) {
+					cpPortBinding.Spec.PortBindingList[idx].PoolItemLoadBalancers = poolStatus.PoolItemLoadBalancers
+					changed = true
+				}
+			}
+
+			if changed {
+				blog.Infof("pool[%s/%s].poolItem[%s] changed, update related portBinding", pool.GetNamespace(),
+					pool.GetName(), poolItem.ItemName)
+				if err := pph.k8sClient.Update(context.Background(), cpPortBinding,
+					&client.UpdateOptions{}); err != nil {
+					return errors.Wrapf(err, "update portBinding[%s/%s] failed", cpPortBinding.GetNamespace(),
+						cpPortBinding.GetName())
+				}
+			}
+		}
+	}
+
+	return nil
 }

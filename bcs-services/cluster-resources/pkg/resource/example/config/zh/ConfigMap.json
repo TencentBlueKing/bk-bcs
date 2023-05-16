@@ -1,0 +1,25 @@
+{
+  "kind": "ConfigMap",
+  "class": "config",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_configmap",
+      "alias": "ConfigMap 简单示例",
+      "description": "简单的 ConfigMap 示例，仅包含基础配置。",
+      "manifest": null
+    },
+    {
+      "name": "immutable_configmap",
+      "alias": "不可变更的 ConfigMap",
+      "description": "[k8s v1.19+] 设置 immutable 字段为 true 可以确保存储在 ConfigMap 中的数据无法被变更（Metadata 不包含在内）。",
+      "manifest": null
+    },
+    {
+      "name": "binary_data_configmap",
+      "alias": "ConfigMap 使用 BinaryData 示例",
+      "description": "binaryData 字段可以包含不在 UTF-8 范围内的字节序列，需要注意的是，binaryData 字段中的键不能与 data 字段中键重复，否则将无法通过校验。",
+      "manifest": null
+    }
+  ]
+}

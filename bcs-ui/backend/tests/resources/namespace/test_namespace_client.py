@@ -38,13 +38,13 @@ class TestNamespaceClient:
             yield
 
     def test_get_existed(self, common_patch):
-        """ 测试获取已经存在的命名空间 """
+        """测试获取已经存在的命名空间"""
         client = Namespace(CtxCluster.create(TEST_CLUSTER_ID, TEST_PROJECT_ID, token='token'))
         ret = client.get_or_create_cc_namespace('default', 'admin', labels={'test_key': 'test_val'})
         assert ret == {'name': 'default', 'namespace_id': 1}
 
     def test_create_nonexistent(self, common_patch):
-        """ 测试获取不存在的命名空间（触发创建逻辑） """
+        """测试获取不存在的命名空间（触发创建逻辑）"""
         client = Namespace(CtxCluster.create(TEST_CLUSTER_ID, TEST_PROJECT_ID, token='token'))
         ret = client.get_or_create_cc_namespace(self.namespace_for_test, 'admin', annotations={'test_key': 'test_val'})
         assert ret == {'name': self.namespace_for_test, 'namespace_id': 2}

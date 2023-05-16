@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -37,8 +38,6 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
-
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 type scaleUpResourcesLimits map[string]int64
@@ -244,6 +243,7 @@ type skippedReasons struct {
 	message []string
 }
 
+// Reasons xxx
 func (sr *skippedReasons) Reasons() []string {
 	return sr.message
 }
@@ -265,7 +265,7 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, unschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
 	daemonSets []*appsv1.DaemonSet, nodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	ignoredTaints taintKeySet, existingNodeInfos map[string]*schedulernodeinfo.NodeInfo,
-	bufferNotEnough bool) (*status.ScaleUpStatus, errors.AutoscalerError) {
+	bufferNotEnough bool, maxBulkScaleUpCount int) (*status.ScaleUpStatus, errors.AutoscalerError) {
 	// From now on we only care about unschedulable pods that were marked after the newest
 	// node became available for the scheduler.
 	if len(unschedulablePods) == 0 && !bufferNotEnough {
@@ -385,6 +385,16 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 			klog.V(4).Infof("Skipping node group %s; maximal limit exceeded for %v", nodeGroup.Id(),
 				checkResult.exceededResources)
 			skippedNodeGroups[nodeGroup.Id()] = maxResourceLimitReached(checkResult.exceededResources)
+			for _, resource := range checkResult.exceededResources {
+				switch resource {
+				case cloudprovider.ResourceNameCores:
+					metrics.RegisterSkippedScaleUpCPU()
+				case cloudprovider.ResourceNameMemory:
+					metrics.RegisterSkippedScaleUpMemory()
+				default:
+					continue
+				}
+			}
 			continue
 		}
 
@@ -427,9 +437,9 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 		if len(option.Pods) > 0 || bufferNotEnough {
 			estimator := context.ExtendedEstimatorBuilder(context.PredicateChecker, existingNodeInfos)
 			if len(upcomingNodes) > 0 {
-				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(upcomingNodes), upcomingNodes[0])
+				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(option.Pods), upcomingNodes[0])
 			} else {
-				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(upcomingNodes), upcomingNodes)
+				klog.Infof("option.Pods: %+v, upcomingNodes: %v", len(option.Pods), upcomingNodes)
 			}
 			option.NodeCount = estimator.Estimate(option.Pods, nodeInfo, upcomingNodes)
 			if option.NodeCount > 0 {
@@ -529,6 +539,12 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 			bestOption.NodeGroup, resourceLimiter)
 		if err != nil {
 			return &status.ScaleUpStatus{Result: status.ScaleUpError, CreateNodeGroupResults: createNodeGroupResults}, err
+		}
+		// apply scale up limits for node
+		if maxBulkScaleUpCount > 0 && newNodes > maxBulkScaleUpCount {
+			klog.Infof("newNodes(%d) is larger than maxBulkScaleUpCount(%d), set to maxBulkScaleUpCount",
+				newNodes, maxBulkScaleUpCount)
+			newNodes = maxBulkScaleUpCount
 		}
 
 		targetNodeGroups := []cloudprovider.NodeGroup{bestOption.NodeGroup}

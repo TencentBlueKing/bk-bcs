@@ -96,7 +96,7 @@ func Test_WatchChildren(t *testing.T) {
 				return
 			}
 
-			//time.Sleep(2 * time.Second)
+			// time.Sleep(2 * time.Second)
 
 			t.Logf("childs:%+v, watchEnv:%v\n", childs, watchEnv)
 			env := <-watchEnv

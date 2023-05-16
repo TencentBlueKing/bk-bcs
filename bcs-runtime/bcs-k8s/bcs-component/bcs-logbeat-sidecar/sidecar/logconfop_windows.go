@@ -1,4 +1,6 @@
+//go:build windows
 // +build windows
+
 /*
 * Tencent is pleased to support the open source community by making Blueking Container Service available.
 * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -20,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	docker "github.com/fsouza/go-dockerclient"
+	dockertypes "github.com/docker/docker/api/types"
 	"gopkg.in/natefinch/npipe.v2"
 )
 
@@ -44,7 +46,7 @@ func (s *SidecarController) reloadLogbeat() error {
 	return nil
 }
 
-func (s *SidecarController) getActualPath(logPath string, container *docker.Container) (string, error) {
+func (s *SidecarController) getActualPath(logPath string, container *dockertypes.ContainerJSON) (string, error) {
 	if !filepath.IsAbs(logPath) {
 		blog.Errorf("log path specified as \"%s\" is not an absolute path", logPath)
 		return "", fmt.Errorf("log path specified as \"%s\" is not an absolute path", logPath)

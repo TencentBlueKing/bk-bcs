@@ -23,6 +23,9 @@ type ControllerOption struct {
 	// Address address for server
 	Address string
 
+	// PodIPs contains ipv4 and ipv6 address get from status.podIPs
+	PodIPs []string
+
 	// Port port for server
 	Port int
 
@@ -58,4 +61,35 @@ type ControllerOption struct {
 	ServerCertFile string
 	// ServerKeyFile server key file path
 	ServerKeyFile string
+
+	// KubernetesQPS the qps of k8s client request
+	KubernetesQPS int
+	// KubernetesBurst the burst of k8s client request
+	KubernetesBurst int
+
+	// ConflictCheckOpen if false, skip all conflict checking about ingress and port pool
+	ConflictCheckOpen bool
+
+	// HttpServerPort port for http api
+	HttpServerPort uint
+
+	// NodeInfoExporterOpen 如果为true，将会记录集群中的节点信息
+	NodeInfoExporterOpen bool
+
+	Conf Conf
+
+	ServCert ServCert
+}
+type Conf struct {
+	ServCert        ServCert
+	InsecureAddress string
+	InsecurePort    uint
+	VerifyClientTLS bool
+}
+type ServCert struct {
+	CAFile     string
+	CertFile   string
+	KeyFile    string
+	CertPasswd string
+	IsSSL      bool
 }
