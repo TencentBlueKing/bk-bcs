@@ -12,21 +12,21 @@ service Auth {
     // init auth center's auth model.
     rpc InitAuthCenter(InitAuthCenterReq) returns (InitAuthCenterResp) {
         option (google.api.http) = {
-            post: "/api/v1/auth/init/authcenter"
-            body: "*"
+            post : "/api/v1/auth/init/authcenter"
+            body : "*"
         };
     }
 
     // 获取用户鉴权信息
     rpc GetUserInfo(UserCredentialReq) returns (UserInfoResp) {
         option (google.api.http) = {
-            get: "/api/v1/auth/user/info"
+            get : "/api/v1/auth/user/info"
         };
     }
 
     rpc ListUserSpace(ListUserSpaceReq) returns (ListUserSpaceResp) {
         option (google.api.http) = {
-            get: "/api/v1/auth/user/spaces"
+            get : "/api/v1/auth/user/spaces"
         };
     }
 
@@ -36,16 +36,16 @@ service Auth {
     // iam pull resource callback.
     rpc PullResource(PullResourceReq) returns (PullResourceResp) {
         option (google.api.http) = {
-            post: "/api/v1/auth/iam/find/resource"
-            body: "*"
+            post : "/api/v1/auth/iam/find/resource"
+            body : "*"
         };
     }
 
     // 权限中心权限检测
     rpc CheckPermission(ResourceAttribute) returns (CheckPermissionResp) {
         option (google.api.http) = {
-            post: "/api/v1/auth/iam/permission/check"
-            body: "*"
+            post : "/api/v1/auth/iam/permission/check"
+            body : "*"
         };
     }
 
@@ -73,6 +73,7 @@ message GetAuthLoginConfResp {
     string host       = 1;
     string inner_host = 2;
     string provider   = 3;
+    string gw_pubkey  = 4;
 }
 
 message PullResourceReq {
@@ -201,9 +202,9 @@ message UserInfoResp {
 
 message ListUserSpaceReq {
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-        json_schema: {
-            title: "ListUserSpaceReq"
-            description: "查询用户有权限的空间列表, 含业务和BCS项目"
+        json_schema : {
+            title : "ListUserSpaceReq"
+            description : "查询用户有权限的空间列表, 含业务和BCS项目"
         }
     };
 }
@@ -223,9 +224,9 @@ message ListUserSpaceResp {
 
 message QuerySpaceReq {
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-        json_schema: {
-            title: "QuerySpace"
-            description: "查询用户Space空间信息"
+        json_schema : {
+            title : "QuerySpace"
+            description : "查询用户Space空间信息"
         }
     };
     repeated string space_uid = 1;
@@ -237,9 +238,9 @@ message QuerySpaceResp {
 
 message QuerySpaceByAppIDReq {
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
-        json_schema: {
-            title: "QuerySpaceByAppID"
-            description: "通过 app_id 查询 Space"
+        json_schema : {
+            title : "QuerySpaceByAppID"
+            description : "通过 app_id 查询 Space"
         }
     };
     uint32 app_id = 1;

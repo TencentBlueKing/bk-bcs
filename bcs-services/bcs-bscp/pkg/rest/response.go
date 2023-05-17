@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -176,6 +177,7 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 			LoginURL:      res.loginURL,
 			LoginPlainURL: res.loginPlainURL,
 		}
+
 	case "PERMISSION_DENIED":
 		// 把 detail 中拿出来做鉴权详情
 		if len(res.Error.Details) > 0 {
@@ -190,8 +192,15 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 
 // UnauthorizedErr rest 未登入返回
 func UnauthorizedErr(err error, loginAuthHost, loginAuthPlainHost string) render.Renderer {
-	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error()}
-	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized, loginURL: loginAuthHost, loginPlainURL: loginAuthHost}
+	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error(), Details: []interface{}{}}
+	if e, ok := err.(*multierror.Error); ok {
+		for _, v := range e.Errors {
+			payload.Details = append(payload.Details, v.Error())
+		}
+		payload.Message = "user not logged in"
+	}
+
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized, loginURL: loginAuthHost, loginPlainURL: loginAuthPlainHost}
 }
 
 // PermissionDenied 无数据返回
