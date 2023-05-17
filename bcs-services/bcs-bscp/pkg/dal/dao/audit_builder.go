@@ -750,18 +750,19 @@ func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
 }
 
 func (ab *AuditBuilder) getTemplateSpace(templateSpaceID uint32) (*table.TemplateSpace, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(templateSpaceID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
-	filter := filter2.SqlJoint(sqlSentence)
+	// var sqlSentence []string
+	// sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(),
+	// 	" WHERE id = ", strconv.Itoa(int(templateSpaceID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	// filter := filter2.SqlJoint(sqlSentence)
 
-	one := new(table.TemplateSpace)
-	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
-	if err != nil {
-		return nil, fmt.Errorf("get templateSpace details failed, err: %v", err)
-	}
+	// one := new(table.TemplateSpace)
+	// err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("get templateSpace details failed, err: %v", err)
+	// }
 
-	return one, nil
+	// return one, nil
+	return nil, nil
 }
 
 func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInstance, error) {

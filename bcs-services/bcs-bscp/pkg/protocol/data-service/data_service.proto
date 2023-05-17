@@ -119,26 +119,26 @@ service Data {
     // Ping verifies if the grpc connection is still alive.
     rpc Ping(PingMsg) returns (PingMsg) {
         option (google.api.http) = {
-            post: "/ping"
-            body: "*"
+            post : "/ping"
+            body : "*"
         };
     }
 }
 message UpdateCredentialScopesReq {
-    uint32                         biz_id        = 1;
-    uint32                         credential_id = 2;
-    repeated pbcrs.UpdateScopeSpec updated       = 3;
-    repeated string                created       = 4;
-    repeated uint32                deleted       = 5;
+    uint32 biz_id                          = 1;
+    uint32 credential_id                   = 2;
+    repeated pbcrs.UpdateScopeSpec updated = 3;
+    repeated string created                = 4;
+    repeated uint32 deleted                = 5;
 }
-message UpdateCredentialScopesResp{}
+message UpdateCredentialScopesResp {}
 
-message DeleteCredentialScopesReq{
-    repeated uint32                 id         = 1;
+message DeleteCredentialScopesReq {
+    repeated uint32 id                         = 1;
     pbcrs.CredentialScopeAttachment attachment = 2;
 }
 
-message DeleteCredentialScopesResp{}
+message DeleteCredentialScopesResp {}
 
 message ListCredentialScopesReq {
     uint32 biz_id        = 1;
@@ -146,46 +146,46 @@ message ListCredentialScopesReq {
 }
 
 message ListCredentialScopesResp {
-    uint32                             count   = 1;
+    uint32 count                               = 1;
     repeated pbcrs.CredentialScopeList details = 2;
 }
 
 message CreateCredentialScopeReq {
     pbcrs.CredentialScopeAttachment attachment = 1;
-    repeated string                 spec       = 2;
+    repeated string spec                       = 2;
 }
 
 message CreateCredentialReq {
     pbcredential.CredentialAttachment attachment = 1;
-    pbcredential.CredentialSpec       spec       = 2;
+    pbcredential.CredentialSpec spec             = 2;
 }
 
 message ListCredentialReq {
-    uint32                 biz_id = 1;
-    pbbase.BasePage        page   = 2;
+    uint32 biz_id                 = 1;
+    pbbase.BasePage page          = 2;
     google.protobuf.Struct filter = 3;
 }
 
-message ListCredentialResp{
-    uint32                               count   = 1;
+message ListCredentialResp {
+    uint32 count                                 = 1;
     repeated pbcredential.CredentialList details = 2;
 }
 
-message UpdateCredentialReq{
-    uint32                            id         = 1;
+message UpdateCredentialReq {
+    uint32 id                                    = 1;
     pbcredential.CredentialAttachment attachment = 2;
-    pbcredential.CredentialSpec       spec       = 3;
+    pbcredential.CredentialSpec spec             = 3;
 }
 
 message DeleteCredentialReq {
-    uint32                            id         = 1;
+    uint32 id                                    = 1;
     pbcredential.CredentialAttachment attachment = 2;
 }
 
 message EnableCredentialReq {
     uint32 id     = 1;
     uint32 biz_id = 2;
-    bool   enable = 3;
+    bool enable   = 3;
 }
 
 message CreateResp {
@@ -193,14 +193,14 @@ message CreateResp {
 }
 
 message CreateAppReq {
-    uint32        biz_id = 1;
-    pbapp.AppSpec spec   = 2;
+    uint32 biz_id      = 1;
+    pbapp.AppSpec spec = 2;
 }
 
 message UpdateAppReq {
-    uint32        id     = 1;
-    uint32        biz_id = 2;
-    pbapp.AppSpec spec   = 3;
+    uint32 id          = 1;
+    uint32 biz_id      = 2;
+    pbapp.AppSpec spec = 3;
 }
 
 message DeleteAppReq {
@@ -218,13 +218,13 @@ message GetAppByIDReq {
 }
 
 message ListAppsReq {
-    uint32                 biz_id = 1;
+    uint32 biz_id                 = 1;
     google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
+    pbbase.BasePage page          = 3;
 }
 
 message ListAppsRestReq {
-    string biz_id   = 1;  // 多个以逗号分割
+    string biz_id   = 1; // 多个以逗号分割
     uint32 start    = 2;
     uint32 limit    = 3;
     string operator = 4;
@@ -232,23 +232,23 @@ message ListAppsRestReq {
 }
 
 message ListAppsResp {
-    uint32             count   = 1;
+    uint32 count               = 1;
     repeated pbapp.App details = 2;
 }
 
 message CreateConfigItemReq {
     pbci.ConfigItemAttachment attachment = 1;
-    pbci.ConfigItemSpec       spec       = 2;
+    pbci.ConfigItemSpec spec             = 2;
 }
 
 message UpdateConfigItemReq {
-    uint32                    id         = 1;
+    uint32 id                            = 1;
     pbci.ConfigItemAttachment attachment = 2;
-    pbci.ConfigItemSpec       spec       = 3;
+    pbci.ConfigItemSpec spec             = 3;
 }
 
 message DeleteConfigItemReq {
-    uint32                    id         = 1;
+    uint32 id                            = 1;
     pbci.ConfigItemAttachment attachment = 2;
 }
 
@@ -267,12 +267,12 @@ message ListConfigItemsReq {
 }
 
 message ListConfigItemsResp {
-    uint32                   count   = 1;
+    uint32 count                     = 1;
     repeated pbci.ConfigItem details = 2;
 }
 
 message ListConfigItemCountReq {
-    uint32          biz_id = 1;
+    uint32 biz_id          = 1;
     repeated uint32 app_id = 2;
 }
 
@@ -282,7 +282,7 @@ message ListConfigItemCountResp {
 
 message CreateContentReq {
     pbcontent.ContentAttachment attachment = 1;
-    pbcontent.ContentSpec       spec       = 2;
+    pbcontent.ContentSpec spec             = 2;
 }
 
 message GetContentReq {
@@ -292,21 +292,21 @@ message GetContentReq {
 }
 
 message ListContentsReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    pbbase.BasePage page          = 4;
 }
 
 message ListContentsResp {
-    uint32                     count   = 1;
+    uint32 count                       = 1;
     repeated pbcontent.Content details = 2;
 }
 
 message CreateCommitReq {
     pbcommit.CommitAttachment attachment = 1;
-    uint32                    content_id = 2;
-    string                    memo       = 3;
+    uint32 content_id                    = 2;
+    string memo                          = 3;
 }
 
 message GetLatestCommitReq {
@@ -316,32 +316,32 @@ message GetLatestCommitReq {
 }
 
 message ListCommitsReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    pbbase.BasePage page          = 4;
 }
 
 message ListCommitsResp {
-    uint32                   count   = 1;
+    uint32 count                     = 1;
     repeated pbcommit.Commit details = 2;
 }
 
 message CreateReleaseReq {
     pbrelease.ReleaseAttachment attachment = 1;
-    pbrelease.ReleaseSpec       spec       = 2;
+    pbrelease.ReleaseSpec spec             = 2;
 }
 
 message ListReleasesReq {
-    uint32                 biz_id     = 1;
-    uint32                 app_id     = 2;
-    bool                   deprecated = 3;
-    google.protobuf.Struct filter     = 4;
-    pbbase.BasePage        page       = 5;
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    bool deprecated               = 3;
+    google.protobuf.Struct filter = 4;
+    pbbase.BasePage page          = 5;
 }
 
 message ListReleasesResp {
-    uint32                     count   = 1;
+    uint32 count                       = 1;
     repeated pbrelease.Release details = 2;
 }
 
@@ -353,105 +353,105 @@ message GetReleasedCIReq {
 }
 
 message ListReleasedCIsReq {
-    uint32                 biz_id = 1;
+    uint32 biz_id                 = 1;
     google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
+    pbbase.BasePage page          = 3;
 }
 
 message ListReleasedCIsResp {
-    uint32                            count   = 1;
+    uint32 count                              = 1;
     repeated pbrci.ReleasedConfigItem details = 2;
 }
 
 message CreateStrategySetReq {
     pbss.StrategySetAttachment attachment = 1;
-    pbss.StrategySetSpec       spec       = 2;
+    pbss.StrategySetSpec spec             = 2;
 }
 
 message ListStrategySetsReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    pbbase.BasePage page          = 4;
 }
 
 message ListStrategySetsResp {
-    uint32                    count   = 1;
+    uint32 count                      = 1;
     repeated pbss.StrategySet details = 2;
 }
 
 message UpdateStrategySetReq {
-    uint32                     id         = 1;
+    uint32 id                             = 1;
     pbss.StrategySetAttachment attachment = 2;
-    pbss.StrategySetState      state      = 3;
-    pbss.StrategySetSpec       spec       = 4;
+    pbss.StrategySetState state           = 3;
+    pbss.StrategySetSpec spec             = 4;
 }
 
 message DeleteStrategySetReq {
-    uint32                     id         = 1;
+    uint32 id                             = 1;
     pbss.StrategySetAttachment attachment = 2;
 }
 
 message CreateStrategyReq {
     pbstrategy.StrategyAttachment attachment = 1;
-    pbstrategy.StrategySpec       spec       = 2;
+    pbstrategy.StrategySpec spec             = 2;
 }
 
 message ListStrategiesReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    pbbase.BasePage page          = 4;
 }
 
 message ListStrategiesResp {
-    uint32                       count   = 1;
+    uint32 count                         = 1;
     repeated pbstrategy.Strategy details = 2;
 }
 
 message UpdateStrategyReq {
-    uint32                        id         = 1;
+    uint32 id                                = 1;
     pbstrategy.StrategyAttachment attachment = 2;
-    pbstrategy.StrategyState      status     = 3;
-    pbstrategy.StrategySpec       spec       = 4;
+    pbstrategy.StrategyState status          = 3;
+    pbstrategy.StrategySpec spec             = 4;
 }
 
 message DeleteStrategyReq {
-    uint32                        id         = 1;
+    uint32 id                                = 1;
     pbstrategy.StrategyAttachment attachment = 2;
 }
 
 message CreateHookReq {
     pbhook.HookAttachment attachment = 1;
-    pbhook.HookSpec       spec       = 2;
+    pbhook.HookSpec spec             = 2;
 }
 
 message ListHooksReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    pbbase.BasePage page          = 4;
 }
 
 message ListHooksResp {
-    uint32               count   = 1;
+    uint32 count                 = 1;
     repeated pbhook.Hook details = 2;
 }
 
 message UpdateHookReq {
-    uint32                id         = 1;
+    uint32 id                        = 1;
     pbhook.HookAttachment attachment = 2;
-    pbhook.HookSpec       spec       = 3;
+    pbhook.HookSpec spec             = 3;
 }
 
 message DeleteHookReq {
-    uint32                id         = 1;
+    uint32 id                        = 1;
     pbhook.HookAttachment attachment = 2;
 }
 
 message CreateTemplateSpaceReq {
     pbts.TemplateSpaceAttachment attachment = 1;
-    pbts.TemplateSpaceSpec       spec       = 2;
+    pbts.TemplateSpaceSpec spec             = 2;
 }
 
 message ListTemplateSpacesReq {
@@ -461,34 +461,34 @@ message ListTemplateSpacesReq {
 }
 
 message ListTemplateSpacesResp {
-    uint32                      count   = 1;
+    int64 count                         = 1;
     repeated pbts.TemplateSpace details = 2;
 }
 
 message UpdateTemplateSpaceReq {
-    uint32                       id         = 1;
+    uint32 id                               = 1;
     pbts.TemplateSpaceAttachment attachment = 2;
-    pbts.TemplateSpaceSpec       spec       = 3;
+    pbts.TemplateSpaceSpec spec             = 3;
 }
 
 message DeleteTemplateSpaceReq {
-    uint32                       id         = 1;
+    uint32 id                               = 1;
     pbts.TemplateSpaceAttachment attachment = 2;
 }
 
 message CreateGroupReq {
     pbgroup.GroupAttachment attachment = 1;
-    pbgroup.GroupSpec       spec       = 2;
+    pbgroup.GroupSpec spec             = 2;
 }
 
 message ListGroupsReq {
-    uint32                 biz_id = 1;
+    uint32 biz_id                 = 1;
     google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
+    pbbase.BasePage page          = 3;
 }
 
 message ListGroupsResp {
-    uint32                 count   = 1;
+    uint32 count                   = 1;
     repeated pbgroup.Group details = 2;
 }
 
@@ -499,30 +499,30 @@ message ListAppGroupsReq {
 
 message ListAppGroupsResp {
     message ListAppGroupsData {
-        uint32                 group_id     = 1;
-        string                 group_name   = 2;
-        uint32                 release_id   = 3;
-        string                 release_name = 4;
+        uint32 group_id                     = 1;
+        string group_name                   = 2;
+        uint32 release_id                   = 3;
+        string release_name                 = 4;
         google.protobuf.Struct old_selector = 5;
         google.protobuf.Struct new_selector = 6;
-        bool                   edited       = 7;
+        bool edited                         = 7;
     }
     repeated ListAppGroupsData details = 1;
 }
 
 message UpdateGroupReq {
-    uint32                  id         = 1;
+    uint32 id                          = 1;
     pbgroup.GroupAttachment attachment = 2;
-    pbgroup.GroupSpec       spec       = 3;
+    pbgroup.GroupSpec spec             = 3;
 }
 
 message DeleteGroupReq {
-    uint32                  id         = 1;
+    uint32 id                          = 1;
     pbgroup.GroupAttachment attachment = 2;
 }
 
 message CountGroupsReleasedAppsReq {
-    uint32          biz_id = 1;
+    uint32 biz_id          = 1;
     repeated uint32 groups = 2;
 }
 
@@ -530,7 +530,7 @@ message CountGroupsReleasedAppsResp {
     message CountGroupsReleasedAppsData {
         uint32 group_id = 1;
         uint32 count    = 2;
-        bool   edited   = 3;
+        bool edited     = 3;
     }
     repeated CountGroupsReleasedAppsData data = 1;
 }
@@ -548,20 +548,20 @@ message ListGroupRleasesdAppsResp {
         string app_name     = 2;
         uint32 release_id   = 3;
         string release_name = 4;
-        bool   edited       = 5;
+        bool edited         = 5;
     }
-    uint32                             count   = 1;
+    uint32 count                               = 1;
     repeated ListGroupReleasedAppsData details = 2;
 }
 
 message PublishReq {
-    uint32          biz_id     = 1;
-    uint32          app_id     = 2;
-    uint32          release_id = 3;
-    string          memo       = 4;
-    bool            all        = 5;
-    bool            default    = 6;
-    repeated uint32 groups     = 7;
+    uint32 biz_id          = 1;
+    uint32 app_id          = 2;
+    uint32 release_id      = 3;
+    string memo            = 4;
+    bool all               = 5;
+    bool default           = 6;
+    repeated uint32 groups = 7;
 }
 
 message PublishResp {
@@ -575,47 +575,47 @@ message FinishPublishReq {
 }
 
 message ListPubStrategyHistoriesReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
     google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    pbbase.BasePage page          = 4;
 }
 
 message ListPubStrategyHistoriesResp {
-    uint32                                       count   = 1;
+    uint32 count                                         = 1;
     repeated pbstrategy.PublishedStrategyHistory details = 2;
 }
 
 message CreateCRInstanceReq {
-    pbrelease.ReleaseAttachment     attachment = 1;
-    pbinstance.ReleasedInstanceSpec spec       = 2;
+    pbrelease.ReleaseAttachment attachment = 1;
+    pbinstance.ReleasedInstanceSpec spec   = 2;
 }
 
 message ListCRInstancesReq {
-    uint32                 biz_id = 1;
+    uint32 biz_id                 = 1;
     google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
+    pbbase.BasePage page          = 3;
 }
 
 message ListCRInstancesResp {
-    uint32                                      count   = 1;
+    uint32 count                                        = 1;
     repeated pbinstance.CurrentReleasedInstance details = 2;
 }
 
 message DeleteCRInstanceReq {
-    uint32                      id         = 1;
+    uint32 id                              = 1;
     pbrelease.ReleaseAttachment attachment = 2;
 }
 
 message ListInstancesReq {
-    string                 resource_type = 1;
-    uint32                 biz_id        = 2;
-    google.protobuf.Struct filter        = 3;
-    pbbase.BasePage        page          = 4;
+    string resource_type          = 1;
+    uint32 biz_id                 = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage page          = 4;
 }
 
 message ListInstancesResp {
-    uint32                    count   = 1;
+    uint32 count                      = 1;
     repeated InstanceResource details = 2;
 }
 

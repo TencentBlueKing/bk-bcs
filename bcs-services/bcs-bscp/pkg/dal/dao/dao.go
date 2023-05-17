@@ -16,8 +16,15 @@ package dao
 import (
 	"fmt"
 
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/plugin/opentelemetry/tracing"
+	"gorm.io/plugin/prometheus"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/kit"
@@ -64,8 +71,28 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
 
+	db, err := gorm.Open(mysql.Open(opt.AdminDatabase.DSN()), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
+		return nil, err
+	}
+
+	// 会定期执行 SHOW STATUS; 拿状态数据
+	// metricsCollector := []prometheus.MetricsCollector{
+	// 	&prometheus.MySQL{VariableNames: []string{"Threads_running"}},
+	// }
+
+	if err := db.Use(prometheus.New(prometheus.Config{})); err != nil {
+		return nil, err
+	}
+
 	s := &set{
 		orm:               ormInst,
+		db:                db,
+		genM:              gen.Use(db),
 		sd:                sd,
 		credentialSetting: credentialSetting,
 		idGen:             idDao,
@@ -79,6 +106,8 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
 type set struct {
 	orm               orm.Interface
+	genM              *gen.Query
+	db                *gorm.DB
 	sd                *sharding.Sharding
 	credentialSetting cc.Credential
 	idGen             IDGenInterface
@@ -206,6 +235,7 @@ func (s *set) TemplateSpace() TemplateSpace {
 		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+		genM:     s.genM,
 	}
 }
 

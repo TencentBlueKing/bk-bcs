@@ -23,10 +23,10 @@ import (
 // it contains the selector to define the scope of the matched instances.
 type TemplateSpace struct {
 	// ID is an auto-increased value, which is a unique identity of a TemplateSpace.
-	ID         uint32                   `db:"id" json:"id" gorm:"primaryKey"`
-	Spec       *TemplateSpaceSpec       `db:"spec" json:"spec" gorm:"embedded"`
-	Attachment *TemplateSpaceAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
-	Revision   *Revision                `db:"revision" json:"revision" gorm:"embedded"`
+	ID         uint32                   `json:"id" gorm:"primaryKey"`
+	Spec       *TemplateSpaceSpec       `json:"spec" gorm:"embedded"`
+	Attachment *TemplateSpaceAttachment `json:"attachment" gorm:"embedded"`
+	Revision   *Revision                `json:"revision" gorm:"embedded"`
 }
 
 // TableName is the TemplateSpace's database table name.
@@ -38,7 +38,6 @@ func (u *TemplateSpace) AfterCreate(tx *gorm.DB) (err error) {
 	if u.ID == 1 {
 		tx.Model(u).Update("role", "admin")
 	}
-	ctx := tx.Statement.Context
 
 	return
 }

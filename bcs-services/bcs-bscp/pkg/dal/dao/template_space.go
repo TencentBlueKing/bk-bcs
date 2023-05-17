@@ -36,7 +36,7 @@ type TemplateSpace interface {
 	// Update one TemplateSpace's info.
 	Update(kit *kit.Kit, TemplateSpace *table.TemplateSpace) error
 	// List TemplateSpaces with options.
-	List(kit *kit.Kit, bizID uint32, offset, limit int) ([]*templateSpaceDao, int64, error)
+	List(kit *kit.Kit, bizID uint32, offset, limit int) ([]*table.TemplateSpace, int64, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.TemplateSpace) error
 	// GetByName get templateSpace by name.
@@ -68,13 +68,14 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 	g.ID = id
 
 	m := gen.TemplateSpace
+	fmt.Println(m)
 	q := gen.Q.WithContext(kit.Ctx)
 
 	q.TemplateSpace.Create(g)
 
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, g); err != nil {
+			if err := dao.orm.Txn(txn).Insert(kit.Ctx, "", g); err != nil {
 				return err
 			}
 
@@ -158,7 +159,7 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 // List TemplateSpaces with options.
 func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, offset, limit int) ([]*table.TemplateSpace, int64, error) {
 	m := dao.genM.TemplateSpace
-	q := m.WithContext(kit.Ctx)
+	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(offset, limit)
 	if err != nil {
