@@ -16,7 +16,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/render"
 	"github.com/hashicorp/go-multierror"
@@ -177,12 +176,6 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 		res.Error.Data = &UnauthorizedData{
 			LoginURL:      res.loginURL,
 			LoginPlainURL: res.loginPlainURL,
-		}
-
-		// 默认不展示详情
-		withDetail := r.URL.Query().Get("with_detail")
-		if ok, _ := strconv.ParseBool(withDetail); !ok {
-			res.Error.Details = []interface{}{}
 		}
 
 	case "PERMISSION_DENIED":
