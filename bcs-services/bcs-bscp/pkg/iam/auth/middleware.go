@@ -14,7 +14,6 @@
 package auth
 
 import (
-	"errors"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -23,6 +22,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/components"
@@ -37,13 +37,14 @@ import (
 // initKitWithBKJWT 蓝鲸网关鉴权
 func (a authorizer) initKitWithBKJWT(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
 	if a.gwParser == nil {
-		multiErr.Errors = append(multiErr.Errors, errors.New("gw pubkey not init"))
+		err := errors.New("gw pubkey is empty")
+		multiErr.Errors = append(multiErr.Errors, errors.Wrap(err, "auth with bk_jwt"))
 		return false
 	}
 
 	kt, err := a.gwParser.Parse(r.Context(), r.Header)
 	if err != nil {
-		multiErr.Errors = append(multiErr.Errors, err)
+		multiErr.Errors = append(multiErr.Errors, errors.Wrap(err, "auth with bk_jwt"))
 		return false
 	}
 
@@ -56,7 +57,7 @@ func (a authorizer) initKitWithBKJWT(r *http.Request, k *kit.Kit, multiErr *mult
 func (a authorizer) initWithCookie(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
 	loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
 	if err != nil {
-		multiErr.Errors = append(multiErr.Errors, err)
+		multiErr.Errors = append(multiErr.Errors, errors.Wrap(err, "auth with cookie"))
 		return false
 	}
 
@@ -72,7 +73,7 @@ func (a authorizer) initWithCookie(r *http.Request, k *kit.Kit, multiErr *multie
 	resp, err := a.authClient.GetUserInfo(r.Context(), req)
 	if err != nil {
 		s := status.Convert(err)
-		multiErr.Errors = append(multiErr.Errors, errors.New(s.Message()))
+		multiErr.Errors = append(multiErr.Errors, errors.Wrap(errors.New(s.Message()), "auth with cookie"))
 		return false
 	}
 

@@ -16,8 +16,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/render"
+	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -176,6 +178,13 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 			LoginURL:      res.loginURL,
 			LoginPlainURL: res.loginPlainURL,
 		}
+
+		// 默认不展示详情
+		withDetail := r.URL.Query().Get("with_detail")
+		if ok, _ := strconv.ParseBool(withDetail); !ok {
+			res.Error.Details = []interface{}{}
+		}
+
 	case "PERMISSION_DENIED":
 		// 把 detail 中拿出来做鉴权详情
 		if len(res.Error.Details) > 0 {
@@ -190,7 +199,17 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 
 // UnauthorizedErr rest 未登入返回
 func UnauthorizedErr(err error, loginAuthHost, loginAuthPlainHost string) render.Renderer {
-	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error()}
+	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error(), Details: []interface{}{}}
+	if e, ok := err.(*multierror.Error); ok {
+		fmt.Println(e.Errors, e.Error())
+		details := []interface{}{}
+		for _, v := range e.Errors {
+			details = append(details, v.Error())
+		}
+		payload.Details = details
+		payload.Message = "user not logged in"
+	}
+
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized, loginURL: loginAuthHost, loginPlainURL: loginAuthHost}
 }
 
