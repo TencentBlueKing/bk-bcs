@@ -106,10 +106,13 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 
 	// 如果有公钥，初始化配置
 	if resp.GwPubkey != "" {
-		if gwParser, err := gwparser.NewJWTParser(resp.GwPubkey); err != nil {
-			authz.gwParser = gwParser
+		gwParser, err := gwparser.NewJWTParser(resp.GwPubkey)
+		if err != nil {
+			return nil, errors.Wrap(err, "init gw parser")
 		}
-		return nil, errors.Wrap(err, "init gw parser")
+
+		authz.gwParser = gwParser
+		klog.InfoS("init gw parser done", "fingerprint", gwParser.Fingerprint())
 	}
 
 	return authz, nil

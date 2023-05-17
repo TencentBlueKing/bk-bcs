@@ -201,12 +201,9 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 func UnauthorizedErr(err error, loginAuthHost, loginAuthPlainHost string) render.Renderer {
 	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error(), Details: []interface{}{}}
 	if e, ok := err.(*multierror.Error); ok {
-		fmt.Println(e.Errors, e.Error())
-		details := []interface{}{}
 		for _, v := range e.Errors {
-			details = append(details, v.Error())
+			payload.Details = append(payload.Details, v.Error())
 		}
-		payload.Details = details
 		payload.Message = "user not logged in"
 	}
 

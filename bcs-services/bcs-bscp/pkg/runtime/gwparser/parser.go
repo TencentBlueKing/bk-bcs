@@ -14,9 +14,11 @@ package gwparser
 
 import (
 	"context"
+	"crypto/md5"
 	"crypto/rsa"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
@@ -29,6 +31,7 @@ import (
 // Parser is request header parser.
 type Parser interface {
 	Parse(ctx context.Context, r http.Header) (kt *kit.Kit, err error)
+	Fingerprint() string
 }
 
 // defaultParser used to parse requests api-service directly in the scenario.
@@ -60,6 +63,11 @@ func (p *defaultParser) Parse(ctx context.Context, header http.Header) (*kit.Kit
 	return kt, nil
 }
 
+// Fingerprint 默认不带指纹
+func (p *defaultParser) Fingerprint() string {
+	return ""
+}
+
 // jwtParser used to parse requests from blueking api-gateway.
 type jwtParser struct {
 	// PublicKey used to parse jwt token from blueking api-gateway http request.
@@ -83,6 +91,19 @@ func NewJWTParser(pubKey string) (Parser, error) {
 		PublicKeyObj: pubKeyObj,
 	}
 	return parser, nil
+}
+
+// Fingerprint 默认不带指纹
+func (p *jwtParser) Fingerprint() string {
+	hash := md5.Sum([]byte(strings.TrimSpace(p.PublicKey)))
+	out := ""
+	for i := 0; i < 16; i++ {
+		if i > 0 {
+			out += ":"
+		}
+		out += fmt.Sprintf("%02x", hash[i]) // don't forget the leading zeroes
+	}
+	return out
 }
 
 // Parse api-gateway request header to context kit and validate.
