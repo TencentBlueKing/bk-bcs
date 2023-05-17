@@ -104,6 +104,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 		case a.initWithCookie(r, k, multiErr):
 		case a.initKitWithDevEnv(r, k, multiErr):
 		default:
+			// API类返回规范的JSON错误信息
 			loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
 			render.Render(w, r, rest.UnauthorizedErr(multiErr, loginURL, loginPlainURL))
 			return
@@ -120,7 +121,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 }
 
 // WebAuthentication
-// HTTP 前端鉴权, 异常调整302到登入页面
+// HTTP 前端鉴权, 异常跳转302到登入页面
 func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Handler {
 	ignoreExtMap := map[string]struct{}{
 		".js":  {},
@@ -137,21 +138,24 @@ func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Ha
 				return
 			}
 
-			loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
-			if err != nil {
+			k := &kit.Kit{
+				Ctx: r.Context(),
+				Rid: components.RequestIDValue(r.Context()),
+			}
+			multiErr := &multierror.Error{}
+
+			switch {
+			case a.initWithCookie(r, k, multiErr):
+			default:
+				// web类型做302跳转登入
 				http.Redirect(w, r, a.authLoginClient.BuildLoginRedirectURL(r, webHost), http.StatusFound)
 				return
 			}
 
-			req := &pbas.UserCredentialReq{Uid: loginCred.UID, Token: loginCred.Token}
-			resp, err := a.authClient.GetUserInfo(r.Context(), req)
-			if err != nil {
-				http.Redirect(w, r, a.authLoginClient.BuildLoginRedirectURL(r, webHost), http.StatusFound)
-				return
-			}
-
-			k := &kit.Kit{User: resp.Username}
 			ctx := kit.WithKit(r.Context(), k)
+			r.Header.Set(constant.AppCodeKey, k.AppCode)
+			r.Header.Set(constant.RidKey, k.Rid)
+			r.Header.Set(constant.UserKey, k.User)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
