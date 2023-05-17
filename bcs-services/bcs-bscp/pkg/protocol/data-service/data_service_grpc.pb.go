@@ -72,6 +72,7 @@ const (
 	Data_CountGroupsReleasedApps_FullMethodName        = "/pbds.Data/CountGroupsReleasedApps"
 	Data_ListGroupRleasesdApps_FullMethodName          = "/pbds.Data/ListGroupRleasesdApps"
 	Data_Publish_FullMethodName                        = "/pbds.Data/Publish"
+	Data_GenerateReleaseAndPublish_FullMethodName      = "/pbds.Data/GenerateReleaseAndPublish"
 	Data_FinishPublish_FullMethodName                  = "/pbds.Data/FinishPublish"
 	Data_ListPublishedStrategyHistories_FullMethodName = "/pbds.Data/ListPublishedStrategyHistories"
 	Data_CreateCRInstance_FullMethodName               = "/pbds.Data/CreateCRInstance"
@@ -151,6 +152,7 @@ type DataClient interface {
 	ListGroupRleasesdApps(ctx context.Context, in *ListGroupRleasesdAppsReq, opts ...grpc.CallOption) (*ListGroupRleasesdAppsResp, error)
 	// publish related interface.
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
 	// current released instance related interface.
@@ -602,6 +604,15 @@ func (c *dataClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.C
 	return out, nil
 }
 
+func (c *dataClient) GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, Data_GenerateReleaseAndPublish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_FinishPublish_FullMethodName, in, out, opts...)
@@ -783,6 +794,7 @@ type DataServer interface {
 	ListGroupRleasesdApps(context.Context, *ListGroupRleasesdAppsReq) (*ListGroupRleasesdAppsResp, error)
 	// publish related interface.
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
+	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*base.EmptyResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
 	// current released instance related interface.
@@ -947,6 +959,9 @@ func (UnimplementedDataServer) ListGroupRleasesdApps(context.Context, *ListGroup
 }
 func (UnimplementedDataServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
+}
+func (UnimplementedDataServer) GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateReleaseAndPublish not implemented")
 }
 func (UnimplementedDataServer) FinishPublish(context.Context, *FinishPublishReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FinishPublish not implemented")
@@ -1845,6 +1860,24 @@ func _Data_Publish_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateReleaseAndPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GenerateReleaseAndPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GenerateReleaseAndPublish_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GenerateReleaseAndPublish(ctx, req.(*GenerateReleaseAndPublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_FinishPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FinishPublishReq)
 	if err := dec(in); err != nil {
@@ -2273,6 +2306,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Publish",
 			Handler:    _Data_Publish_Handler,
+		},
+		{
+			MethodName: "GenerateReleaseAndPublish",
+			Handler:    _Data_GenerateReleaseAndPublish_Handler,
 		},
 		{
 			MethodName: "FinishPublish",
