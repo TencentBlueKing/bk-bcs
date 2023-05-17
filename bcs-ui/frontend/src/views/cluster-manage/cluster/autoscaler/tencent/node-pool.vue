@@ -27,7 +27,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRefs } from '@vue/composition-api';
+import { defineComponent, ref, computed, onMounted, toRefs } from 'vue';
 import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
@@ -55,9 +55,9 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
+  setup(props) {
     const { clusterId, nodeGroupID } = toRefs(props);
-    const { clusterList } = useClusterList(ctx);
+    const { clusterList } = useClusterList();
     const curCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value) || {});
     const isEdit = computed(() => !!nodeGroupID.value);
@@ -74,7 +74,7 @@ export default defineComponent({
           link: {
             name: 'clusterDetail',
             query: {
-              active: 'AutoScaler',
+              active: 'autoscaler',
             },
           },
         },
@@ -115,7 +115,7 @@ export default defineComponent({
       },
     ]);
     const curStep = ref(1);
-    const curStepItem = computed(() => steps.value.find((_, index) => index + 1 === curStep.value) || {});
+    const curStepItem = computed<any>(() => steps.value.find((_, index) => index + 1 === curStep.value) || {});
     const stepComMap = {
       1: 'NodePoolInfo',
       2: 'NodeConfig',

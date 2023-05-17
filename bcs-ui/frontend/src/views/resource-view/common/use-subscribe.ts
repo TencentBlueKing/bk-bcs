@@ -1,8 +1,9 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable camelcase */
-import { SetupContext, Ref, onBeforeUnmount, computed } from '@vue/composition-api';
+import { Ref, onBeforeUnmount, computed, toRef, reactive } from 'vue';
 import BCSWebSocket from '@/components/bcs-log/common/websocket';
 import { crPrefix } from '@/api/base';
+import $router from '@/router';
 export interface ISubscribeParams {
   kind: string;
   resourceVersion: string;
@@ -50,8 +51,8 @@ export interface IUseSubscribeResult {
  * @param ctx
  * @returns
  */
-export default function useSubscribe(data: Ref<ISubscribeData>, ctx: SetupContext): IUseSubscribeResult {
-  const { $route } = ctx.root;
+export default function useSubscribe(data: Ref<ISubscribeData>): IUseSubscribeResult {
+  const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
   let bcsWebSocket: BCSWebSocket | null = null;
 
   // 添加事件
@@ -84,8 +85,8 @@ export default function useSubscribe(data: Ref<ISubscribeData>, ctx: SetupContex
     }
   };
 
-  const projectId = computed(() => $route.params.projectId);
-  const clusterId = computed(() => $route.params.clusterId);
+  const projectId = computed(() => $route.value.params.projectId);
+  const clusterId = computed(() => $route.value.params.clusterId);
   const subscribeURL = computed(() => {
     const host = window.BCS_API_HOST.replace(/(^\w+:|^)\/\//, '');
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';

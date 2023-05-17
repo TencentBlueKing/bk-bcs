@@ -1,4 +1,4 @@
-import { Ref, ref, onUnmounted, getCurrentInstance, onDeactivated, onBeforeUnmount } from '@vue/composition-api';
+import { Ref, ref, onUnmounted, getCurrentInstance, onDeactivated, onBeforeUnmount } from 'vue';
 
 export type Fn = () => void;
 

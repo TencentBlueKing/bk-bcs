@@ -567,7 +567,9 @@ func (p *CNIPod) Execute(name string, command []string) error {
 }
 
 // startFailedStop xxx
-//   Inner Methods
+//
+//	Inner Methods
+//
 // ///////////////////////////////////////////////
 func (p *CNIPod) startFailedStop(err error) {
 	logs.Infof("CNIPod in start failed stop, runningContainers: %d\n", len(p.runningContainer))

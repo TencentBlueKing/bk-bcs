@@ -68,7 +68,7 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbc
 	resp := new(pbcs.DeleteHookResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Delete,
-		ResourceID: req.AppId}, BizID: grpcKit.BizID}
+		ResourceID: req.HookId}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (s *Service) UpdateHook(ctx context.Context, req *pbcs.UpdateHookReq) (*pbc
 	resp := new(pbcs.UpdateHookResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Update,
-		ResourceID: req.AppId}, BizID: grpcKit.BizID}
+		ResourceID: req.HookId}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}

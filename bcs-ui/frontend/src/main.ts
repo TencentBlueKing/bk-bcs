@@ -26,19 +26,18 @@
 import Vue from 'vue';
 import VeeValidate from 'vee-validate';
 import i18n from '@/i18n/i18n-setup';
-import VueCompositionAPI from '@vue/composition-api';
 import '@/common/bkmagic';
 import bkmagic2 from '@/components/bk-magic-2.0';
 import { bus } from '@/common/bus';
 import focus from '@/directives/focus/index';
-import App from '@/App';
+import App from '@/App.vue';
 import router from '@/router';
 import store from '@/store';
 import Authority from '@/directives/authority';
 import config from '@/mixins/config';
-import bkSelector from '@/components/selector';
-import bkbcsInput from '@/components/bk-input';
-import bkCombox from '@/components/bk-input/combox';
+import bkSelector from '@/components/selector/index.vue';
+import bkbcsInput from '@/components/bk-input/index.vue';
+import bkCombox from '@/components/bk-input/combox.vue';
 import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vue';
 import BcsEmptyTableStatus from '@/components/empty-table-status.vue';
 import { chainable } from '@/common/util';
@@ -47,7 +46,6 @@ import BcsErrorPlugin from '@/views/app/bcs-error';
 Vue.config.devtools = process.env.NODE_ENV === 'development';
 Vue.prototype.$chainable = chainable;
 
-Vue.use(VueCompositionAPI);
 Vue.use(BcsErrorPlugin);
 Vue.use(Authority);
 Vue.use(focus);
@@ -71,5 +69,4 @@ window.mainComponent = new Vue({
   i18n,
   template: '<App/>',
 });
-console.log(`%c${BK_CI_BUILD_NUM}`, 'color: #3a84ff');
-console.log(`%c${BK_BCS_VERSION}`, 'color: #2DCB56');
+console.log(`%c${BK_CI_BUILD_NUM} \n ${BK_BCS_VERSION}`, 'color: #2DCB56');

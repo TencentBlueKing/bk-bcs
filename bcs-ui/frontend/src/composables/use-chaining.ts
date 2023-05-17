@@ -1,9 +1,11 @@
-import { customRef } from '@vue/composition-api';
+import { customRef } from 'vue';
 
 const handlerFactory = configs => ({
   get(target, property, receiver) {
     if (!(property in target) && (property in configs)) {
-      target[property] = configs[property] ? proxify({}, configs) : configs[property];
+      target[property] = Object.prototype.toString.call(configs[property]) === '[object Object]'
+        ? proxify({}, configs)
+        : configs[property];
     }
 
     return Reflect.get(target, property, receiver);
@@ -29,7 +31,7 @@ function proxify(defprop = {}, configs) {
 
 export type IChainingConfig =  {
   path: string;
-  type: 'string' | 'number' | 'object' | 'null' | 'undefined'
+  type: 'string' | 'number' | 'object' | 'null' | 'undefined' | 'array'
 } | string;
 
 export default function useChainingRef<T>(value, config: IChainingConfig[]) {
@@ -39,6 +41,7 @@ export default function useChainingRef<T>(value, config: IChainingConfig[]) {
     object: {},
     null: null,
     undefined,
+    array: [],
   };
   const _config = config.reduce<Record<string, any>>((pre, current) => {
     if (typeof current === 'string') {

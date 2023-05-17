@@ -473,16 +473,11 @@ export const deepEqual = (x, y) => {
   return false;
 };
 
-export const timeZoneTransForm = (time, showTimeZone = true) => {
-  time += ' GMT+0000';
-  const timeZoneOffset = moment().utcOffset() / 60;
-  if (showTimeZone) {
-    return moment(time).utcOffset(timeZoneOffset)
-      .format('YYYY-MM-DD HH:mm:ss ZZ');
-  }
-  return moment(time).utcOffset(timeZoneOffset)
-    .format('YYYY-MM-DD HH:mm:ss');
-};
+export const timeZoneTransForm = (time, showTimeZone = true) => moment(time)
+  .utcOffset(8 * 60 * 2)
+  .format(showTimeZone ? 'YYYY-MM-DD HH:mm:ss ZZ' : 'YYYY-MM-DD HH:mm:ss');
+
+export const timeFormat = (time, format = 'YYYY-MM-DD HH:mm:ss') => moment(time).format(format);
 
 
 export const chainable = (obj, path, defaultValue = undefined) => {
@@ -500,7 +495,7 @@ export const timeDelta = (start, end) => {
   const time = (new Date(end).getTime() - new Date(start).getTime()) / 1000;
   const m = Math.floor(time / 60);
   const s = time - m * 60;
-  return `${m ? `${m}m ` : ''}${s ? `${s}s ` : ''}`;
+  return `${m ? `${m}m ` : ''}${s ? `${Math.ceil(s)}s ` : ''}`;
 };
 
 /**

@@ -10,7 +10,9 @@
     </slot>
   </div>
 </template>
-<script lang="ts">import { defineComponent, onMounted, ref } from '@vue/composition-api';
+<script lang="ts">
+import { Property } from 'csstype';
+import { PropType, defineComponent, onMounted, ref } from 'vue';
 
 export default defineComponent({
   name: 'FixedButton',
@@ -24,7 +26,7 @@ export default defineComponent({
       default: false,
     },
     position: {
-      type: String,
+      type: String as PropType<Property.Position>,
       default: 'absolute',
     },
   },

@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <bk-form class="node-pool-info" :model="nodePoolInfo" :rules="nodePoolInfoRules" ref="formRef">
     <bk-form-item :label="$t('节点池名称')" property="name" error-display-type="normal" required>
@@ -132,7 +133,7 @@
   </bk-form>
 </template>
 <script lang="ts">
-import { defineComponent, ref, toRefs, onMounted } from '@vue/composition-api';
+import { defineComponent, ref, toRefs, onMounted } from 'vue';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';
 import $router from '@/router';
@@ -205,7 +206,8 @@ export default defineComponent({
         {
           message: $i18n.t('标签值不能为空'),
           trigger: 'custom',
-          validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.labels).every(key => !!nodePoolInfo.value.nodeTemplate.labels[key]),
+          validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.labels)
+            .every(key => !!nodePoolInfo.value.nodeTemplate.labels[key]),
         },
       ],
       taints: [

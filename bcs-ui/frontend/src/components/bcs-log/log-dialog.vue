@@ -17,7 +17,7 @@
   </bcs-dialog>
 </template>
 <script lang="ts">
-import { defineComponent, reactive, toRefs, watch } from '@vue/composition-api';
+import { defineComponent, reactive, toRefs, watch } from 'vue';
 import { useProject } from '@/composables/use-app';
 import Log from './index';
 import $store from '@/store';

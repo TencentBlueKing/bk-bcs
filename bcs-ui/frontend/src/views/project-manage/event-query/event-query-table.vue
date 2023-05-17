@@ -76,7 +76,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import { storageEvents, uatStorageEvents } from '@/api/modules/storage';

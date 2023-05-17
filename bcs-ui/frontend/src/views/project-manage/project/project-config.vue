@@ -58,8 +58,11 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
+import { computed, defineComponent, ref, toRefs, watch } from 'vue';
 import useProject from '@/views/project-manage/project/use-project';
+import $store from '@/store';
+import $i18n from '@/i18n/i18n-setup';
+
 export default defineComponent({
   name: 'ProjectConfig',
   model: {
@@ -72,8 +75,7 @@ export default defineComponent({
       default: false,
     },
   },
-  setup: (props, ctx) => {
-    const { $store, $i18n } = ctx.root;
+  setup(props, ctx) {
     const { updateProject, getBusinessList } = useProject();
     const curProject = computed(() => $store.state.curProject);
     const title = computed(() => `${$i18n.t('项目')}【${curProject.value.project_name}】`);

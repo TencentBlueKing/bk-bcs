@@ -32,13 +32,14 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref } from '@vue/composition-api';
+import { defineComponent, onMounted, ref } from 'vue';
 import postActionDescMd from '../node-template/postaction-desc.md';
 import autoscalerScriptsMd from '../cluster/autoscaler/internal/autoscaler-scripts.md';
 import { copyText } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'ActionDoc',
@@ -53,7 +54,7 @@ export default defineComponent({
       default: 'default',
     },
   },
-  setup(props, ctx) {
+  setup() {
     // 配置说明
     const configLoading = ref(false);
     const configList = ref([]);
@@ -64,7 +65,7 @@ export default defineComponent({
     };
     const handleCopyVar = (row) => {
       copyText(row.refer);
-      ctx.root.$bkMessage({
+      $bkMessage({
         theme: 'success',
         message: $i18n.t('复制成功'),
       });

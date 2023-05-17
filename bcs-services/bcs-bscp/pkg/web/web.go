@@ -28,7 +28,7 @@ import (
 	"k8s.io/klog/v2"
 
 	bscp "bscp.io"
-	_ "bscp.io/docs"
+	_ "bscp.io/docs" // 文档自动注册到 swagger
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/config"
 	"bscp.io/pkg/iam/auth"
@@ -168,11 +168,11 @@ func (w *WebServer) subRouter() http.Handler {
 	return r
 }
 
-// HealthyHandler Healthz 接口
 // @Summary  Healthz 接口
 // @Tags     Healthz
 // @Success  200  {string}  string
 // @Router   /healthz [get]
+// HealthzHandler Healthz 接口
 func HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }

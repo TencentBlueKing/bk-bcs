@@ -200,7 +200,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, toRefs } from 'vue';
 import ClusterOverviewChart from './cluster-overview-chart.vue';
 import $store from '@/store/index';
 import { useProject } from '@/composables/use-app';
@@ -208,10 +208,16 @@ import { formatBytes } from '@/common/util';
 export default defineComponent({
   name: 'ClusterOverview',
   components: { ClusterOverviewChart },
-  setup(props, ctx) {
-    const { $route } = ctx.root;
+  props: {
+    clusterId: {
+      type: String,
+      default: '',
+      required: true,
+    },
+  },
+  setup(props) {
+    const { clusterId } = toRefs(props);
     const { projectCode } = useProject();
-    const clusterId = computed(() => $route.params.clusterId);
     const overviewData = ref<{
       cpu_usage: any
       disk_usage: any
@@ -244,7 +250,6 @@ export default defineComponent({
     });
     return {
       overviewData,
-      clusterId,
       conversionPercentUsed,
       formatBytes,
     };

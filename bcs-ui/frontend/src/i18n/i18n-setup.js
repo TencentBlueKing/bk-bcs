@@ -27,32 +27,33 @@ import Vue from 'vue';
 import VueI18n from 'vue-i18n';
 import { locale, lang } from 'bk-magic-vue';
 import cookie from 'cookie';
-import langMap from './lang';
-
-// const modulesFiles = require.context('.', true, /.json$/);
-// const modules = modulesFiles.keys().reduce((modules, modulePath) => {
-//   const langName = modulePath.match(/\/(\S*)\//)[1];
-//   const moduleName = modulePath.replace(/(.*\/)*([^.]+).*/ig, '$2');
-//   const value = modulesFiles(modulePath);
-//   modules[langName] = {
-//     ...(modules[langName] || {}),
-//     [moduleName]: value,
-//   };
-//   return modules;
-// }, {});
 
 Vue.use(VueI18n);
 
-const en = {};
-const cn = {};
-Object.keys(langMap).forEach((key) => {
-  en[key] = langMap[key][0];
-  cn[key] = langMap[key][1] || key;
-});
+const modulesFiles = require.context('.', true, /.json$/);
+const modules = modulesFiles.keys().reduce((modules, modulePath) => {
+  const langName = modulePath.match(/\/(\S*)\//)[1];
+  // const moduleName = modulePath.replace(/(.*\/)*([^.]+).*/ig, '$2');
+  const data = modulesFiles(modulePath);
+  if (!modules[langName]) {
+    modules[langName] = {};
+  }
+  Object.keys(data || {}).forEach((key) => {
+    if (modules[langName][key]) {
+      console.error(`Duplicate key name '${key}', ${modulePath}`);
+    }
+    if (!data[key]) {
+      console.warn(`un-translation '${key}', ${modulePath}`);
+    }
+    modules[langName][key] = data[key];
+  });
+
+  return modules;
+}, {});
 
 const messages = {
-  'en-US': Object.assign(lang.enUS, en),
-  'zh-CN': Object.assign(lang.zhCN, cn),
+  'en-US': Object.assign(lang.enUS, modules['en-US']),
+  'zh-CN': Object.assign(lang.zhCN, modules['zh-CN']),
 };
 
 let curLang = cookie.parse(document.cookie).blueking_language || 'zh-cn';

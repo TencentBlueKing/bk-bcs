@@ -875,3 +875,18 @@ url("@/fonts/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-loadbalance:before {
 	content: "\e227";
 }
+.bcs-icon-lie:before {
+	content: "\e228";
+}
+.bcs-icon-kuai:before {
+	content: "\e229";
+}
+.bcs-icon-hot:before {
+	content: "\e22b";
+}
+.bcs-icon-dongzuo-tiaozhuan:before {
+	content: "\e22d";
+}
+.bcs-icon-wenjian:before {
+	content: "\e22e";
+}

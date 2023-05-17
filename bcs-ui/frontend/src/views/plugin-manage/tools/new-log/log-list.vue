@@ -170,7 +170,7 @@
   </LayoutContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 import LayoutContent from '@/components/layout/Content.vue';
 import $store from '@/store';
 import usePage from '@/composables/use-page';
@@ -179,6 +179,8 @@ import LogListEdit from './log-list-edit.vue';
 import LogDetail from './log-detail.vue';
 import useLog from './use-log';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   components: { LayoutContent, LogListEdit, LogDetail, NamespaceSelect },
@@ -188,8 +190,7 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $bkInfo, $bkMessage } = ctx.root;
+  setup(props) {
     const cluster = computed(() => ($store.state as any).cluster.clusterList
       .find(item => item.clusterID === props.clusterId) || {});
     const showDetail = ref(false);

@@ -1,4 +1,4 @@
-import { reactive, computed, Ref, ComputedRef } from '@vue/composition-api';
+import { reactive, computed, Ref, ComputedRef } from 'vue';
 
 export interface IPageConf {
   current: number;
