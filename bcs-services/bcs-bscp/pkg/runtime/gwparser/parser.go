@@ -24,7 +24,6 @@ import (
 	"github.com/pkg/errors"
 
 	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 )
 
@@ -57,7 +56,7 @@ func (p *defaultParser) Parse(ctx context.Context, header http.Header) (*kit.Kit
 	}
 
 	if err := kt.Validate(); err != nil {
-		return nil, errf.New(errf.InvalidParameter, err.Error())
+		return nil, errors.Wrapf(err, "validate kit")
 	}
 
 	return kt, nil
@@ -71,8 +70,8 @@ func (p *defaultParser) Fingerprint() string {
 // jwtParser used to parse requests from blueking api-gateway.
 type jwtParser struct {
 	// PublicKey used to parse jwt token from blueking api-gateway http request.
-	PublicKey    string
-	PublicKeyObj *rsa.PublicKey `yaml:"-"`
+	publicKey    string
+	publicKeyObj *rsa.PublicKey
 }
 
 // NewJWTParser
@@ -87,15 +86,15 @@ func NewJWTParser(pubKey string) (Parser, error) {
 	}
 
 	parser := &jwtParser{
-		PublicKey:    pubKey,
-		PublicKeyObj: pubKeyObj,
+		publicKey:    pubKey,
+		publicKeyObj: pubKeyObj,
 	}
 	return parser, nil
 }
 
-// Fingerprint 默认不带指纹
+// Fingerprint golang 指纹实现 https://github.com/golang/go/issues/12292
 func (p *jwtParser) Fingerprint() string {
-	hash := md5.Sum([]byte(strings.TrimSpace(p.PublicKey)))
+	hash := md5.Sum([]byte(strings.TrimSpace(p.publicKey)))
 	out := ""
 	for i := 0; i < 16; i++ {
 		if i > 0 {
@@ -190,6 +189,10 @@ func (c *claims) validate() error {
 		return err
 	}
 
+	if c.User == nil {
+		return errors.New("user info is required")
+	}
+
 	return nil
 }
 
@@ -199,7 +202,7 @@ func (p *jwtParser) parseToken(token string) (*claims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return p.PublicKeyObj, nil
+		return p.publicKeyObj, nil
 	})
 	if err != nil {
 		return nil, err
