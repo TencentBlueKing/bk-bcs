@@ -215,7 +215,7 @@ func chunkSlice(nodeList []string, nodeNameList []string, chunkSize int) []*Resu
 			end = len(nodeList)
 		}
 		res = append(res, &ResultTuple{
-			utils.StringJoinWithRegex(nodeList[i:end], "|", ".*"),
+			utils.StringJoinWithRegex(nodeList[i:end], "|", ":9101$"),
 			utils.StringJoinWithRegex(nodeNameList[i:end], "|", "$"),
 			nil,
 		})
@@ -239,4 +239,30 @@ func MatrixsToSeries(matrixs []model.Matrix) []*prompb.TimeSeries {
 		}
 	}
 	return series
+}
+
+// MergeSameSeries merge same metrics series
+func MergeSameSeries(series []*prompb.TimeSeries) []*prompb.TimeSeries {
+	result := &prompb.TimeSeries{}
+	for _, s := range series {
+		result.Labels = s.Labels
+		result.Samples = MergeSameSamples(result.Samples, s.Samples)
+	}
+	return []*prompb.TimeSeries{result}
+}
+
+// MergeSameSamples merge same samples
+func MergeSameSamples(samples1, samples2 []prompb.Sample) []prompb.Sample {
+	if len(samples1) == 0 {
+		return samples2
+	}
+	for i := range samples1 {
+		for j := range samples2 {
+			if samples1[i].Timestamp == samples2[j].Timestamp {
+				samples1[i].Value += samples2[j].Value
+				break
+			}
+		}
+	}
+	return samples1
 }

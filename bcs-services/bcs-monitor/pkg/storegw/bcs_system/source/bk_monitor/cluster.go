@@ -14,14 +14,19 @@ package bkmonitor
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
-	"github.com/prometheus/common/model"
+	"github.com/chonla/format"
 	"github.com/prometheus/prometheus/prompb"
+	"golang.org/x/sync/errgroup"
 
-	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
+	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
 
 const (
@@ -31,6 +36,10 @@ const (
 	DISK_MOUNTPOINT = "/|/data" // 磁盘统计 允许的挂载目录
 	// PROVIDER TODO
 	PROVIDER = `provider="BK_MONITOR"`
+
+	// 默认查询分片，每10个节点一组并发查询，限制并发为 20，防止对数据源造成压力
+	scale                  = 10
+	defaultQueryConcurrent = 20
 )
 
 // BKMonitor :
@@ -44,7 +53,6 @@ func NewBKMonitor() *BKMonitor {
 // handleClusterMetric Cluster 处理公共函数
 func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterId string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	var scale = 100
 	nodeSlice, err := base.GetNodeMatchWithScale(ctx, clusterId, scale)
 	if err != nil {
 		return nil, err
@@ -52,48 +60,57 @@ func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterI
 	if len(nodeSlice) == 0 {
 		return nil, nil
 	}
-	matrixs := make([]model.Matrix, 0)
+
+	// get cluster info
+	cluster, err := bcs.GetCluster(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	provider := fmt.Sprintf(`bk_biz_id="%s"`, cluster.BKBizID)
+	clusterMatch := fmt.Sprintf(`bcs_cluster_id="%s"`, clusterId)
+
+	series := make([]*prompb.TimeSeries, 0)
 	var mtx sync.Mutex
-	var wg sync.WaitGroup
-	errCh := make(chan error, len(nodeSlice))
+	var wg errgroup.Group
+	wg.SetLimit(defaultQueryConcurrent)
 	for _, res := range nodeSlice {
-		wg.Add(1)
-		go func(res *base.ResultTuple) {
-			defer wg.Done()
+		res := res
+		wg.Go(func() error {
 			params := map[string]interface{}{
-				"clusterId":  clusterId,
+				"cluster":    clusterMatch,
 				"node":       res.NodeNameMatch,
 				"instance":   res.NodeMatch,
 				"fstype":     DISK_FSTYPE,
 				"mountpoint": DISK_MOUNTPOINT,
-				"provider":   PROVIDER,
+				"provider":   provider,
 			}
 
-			matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
+			step := int64(clientutil.MinStepSeconds)
+			// 直接查询 bk_monitor，数据源进行聚合查询
+			rawQL := format.Sprintf(promql, params)
+			s, err := bkmonitor_client.QueryByPromQL(ctx, config.G.BKMonitor.URL, cluster.BKBizID,
+				start.Unix(), end.Unix(), step, nil, rawQL)
 			if err != nil {
-				errCh <- err
-				return
+				return err
 			}
 			mtx.Lock()
-			matrixs = append(matrixs, matrix)
+			series = append(series, s...)
 			mtx.Unlock()
-		}(res)
+			return nil
+		})
 	}
-	wg.Wait()
-	close(errCh)
-	for err := range errCh {
-		if err != nil {
-			return nil, err
-		}
+	if err := wg.Wait(); err != nil {
+		return nil, err
 	}
-	return base.MatrixsToSeries(matrixs), nil
+	// 对分片数据进行合并返回
+	return base.MergeSameSeries(series), nil
 }
 
 // GetClusterCPUTotal 获取集群CPU核心总量
 func (m *BKMonitor) GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", mode="idle", bk_instance=~"%<instance>s", %<provider>s}))`
+		`sum(count without(cpu, mode) (node_cpu_seconds_total{%<cluster>s, mode="idle", bk_instance=~"%<instance>s", %<provider>s}))`
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
@@ -101,7 +118,7 @@ func (m *BKMonitor) GetClusterCPUTotal(ctx context.Context, projectId, clusterId
 func (m *BKMonitor) GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", mode!="idle", bk_instance=~"%<instance>s", %<provider>s}[2m]))`
+		`sum(irate(node_cpu_seconds_total{%<cluster>s, mode!="idle", bk_instance=~"%<instance>s", %<provider>s}[2m]))`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -110,8 +127,8 @@ func (m *BKMonitor) GetClusterCPUUsed(ctx context.Context, projectId, clusterId 
 func (m *BKMonitor) GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", mode!="idle", bk_instance=~"%<instance>s", %<provider>s}[2m])) /
-	sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", mode="idle", bk_instance=~"%<instance>s", %<provider>s})) *
+		`sum(irate(node_cpu_seconds_total{%<cluster>s, mode!="idle", bk_instance=~"%<instance>s", %<provider>s}[2m])) /
+	sum(count without(cpu, mode) (node_cpu_seconds_total{%<cluster>s, mode="idle", bk_instance=~"%<instance>s", %<provider>s})) *
 	100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
@@ -121,7 +138,7 @@ func (m *BKMonitor) GetClusterCPUUsage(ctx context.Context, projectId, clusterId
 func (m *BKMonitor) GetClusterCPURequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
+		sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{%<cluster>s, job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -130,8 +147,8 @@ func (m *BKMonitor) GetClusterCPURequest(ctx context.Context, projectId, cluster
 func (m *BKMonitor) GetClusterCPURequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m])) /
-		sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", mode="idle", bk_instance=~"%<instance>s", %<provider>s})) * 100
+		sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{%<cluster>s, job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m])) /
+		sum(count without(cpu, mode) (node_cpu_seconds_total{%<cluster>s, mode="idle", bk_instance=~"%<instance>s", %<provider>s})) * 100
 		`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
@@ -141,7 +158,7 @@ func (m *BKMonitor) GetClusterCPURequestUsage(ctx context.Context, projectId, cl
 func (m *BKMonitor) GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s})`
+		`sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -150,11 +167,11 @@ func (m *BKMonitor) GetClusterMemoryTotal(ctx context.Context, projectId, cluste
 func (m *BKMonitor) GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) -
-        sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) -
-        sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) -
-        sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) +
-        sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}))`
+		`(sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_MemFree_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_Buffers_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
+        sum(node_memory_Cached_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) +
+        sum(node_memory_Shmem_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}))`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -163,12 +180,12 @@ func (m *BKMonitor) GetClusterMemoryUsed(ctx context.Context, projectId, cluster
 func (m *BKMonitor) GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) -
-	sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) -
-	sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) -
-	sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) +
-	sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s})) /
-	sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) *
+		`(sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
+	sum(node_memory_MemFree_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
+	sum(node_memory_Buffers_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
+	sum(node_memory_Cached_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) +
+	sum(node_memory_Shmem_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s})) /
+	sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) *
 	100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
@@ -178,7 +195,7 @@ func (m *BKMonitor) GetClusterMemoryUsage(ctx context.Context, projectId, cluste
 func (m *BKMonitor) GetClusterMemoryRequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
+		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{%<cluster>s, job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -187,8 +204,8 @@ func (m *BKMonitor) GetClusterMemoryRequest(ctx context.Context, projectId, clus
 func (m *BKMonitor) GetClusterMemoryRequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m])) /
-		sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}) * 100`
+		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{%<cluster>s, job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m])) /
+		sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) * 100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -197,7 +214,7 @@ func (m *BKMonitor) GetClusterMemoryRequestUsage(ctx context.Context, projectId,
 func (m *BKMonitor) GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
+		`sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -206,8 +223,8 @@ func (m *BKMonitor) GetClusterDiskTotal(ctx context.Context, projectId, clusterI
 func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) -
-	sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
+		`sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) -
+	sum(node_filesystem_free_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -216,9 +233,9 @@ func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectId, clusterId
 func (m *BKMonitor) GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`(sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) -
-		sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})) /
-        sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) *
+		`(sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) -
+		sum(node_filesystem_free_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})) /
+        sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) *
         100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
@@ -228,8 +245,8 @@ func (m *BKMonitor) GetClusterDiskUsage(ctx context.Context, projectId, clusterI
 func (m *BKMonitor) GetClusterDiskioUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}[2m]))) /
-		count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}[2m]))) 
+		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}[2m]))) /
+		count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}[2m]))) 
 		* 100`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
@@ -239,7 +256,7 @@ func (m *BKMonitor) GetClusterDiskioUsage(ctx context.Context, projectId, cluste
 func (m *BKMonitor) GetClusterDiskioUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}[2m])))`
+		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}[2m])))`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
@@ -248,7 +265,7 @@ func (m *BKMonitor) GetClusterDiskioUsed(ctx context.Context, projectId, cluster
 func (m *BKMonitor) GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", bk_instance=~"%<instance>s", %<provider>s}[2m])))`
+		`count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}[2m])))`
 
 	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
