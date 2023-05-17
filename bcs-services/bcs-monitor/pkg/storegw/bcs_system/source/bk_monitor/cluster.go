@@ -126,12 +126,20 @@ func (m *BKMonitor) GetClusterCPUUsed(ctx context.Context, projectId, clusterId 
 // GetClusterCPUUsage 获取CPU核心使用率
 func (m *BKMonitor) GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql :=
-		`sum(irate(node_cpu_seconds_total{%<cluster>s, mode!="idle", bk_instance=~"%<instance>s", %<provider>s}[2m])) /
-	sum(count without(cpu, mode) (node_cpu_seconds_total{%<cluster>s, mode="idle", bk_instance=~"%<instance>s", %<provider>s})) *
-	100`
+	promqlA :=
+		`sum(irate(node_cpu_seconds_total{%<cluster>s, mode!="idle", bk_instance=~"%<instance>s", %<provider>s}[2m]))`
+	promqlB :=
+		`sum(count without(cpu, mode) (node_cpu_seconds_total{%<cluster>s, mode="idle", bk_instance=~"%<instance>s", %<provider>s}))`
+	seriesA, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlA, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	seriesB, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlB, start, end, step)
+	if err != nil {
+		return nil, err
+	}
 
-	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+	return base.DivideSeries(seriesA, seriesB), nil
 }
 
 // GetClusterCPURequest 获取CPU Rquest
@@ -146,12 +154,19 @@ func (m *BKMonitor) GetClusterCPURequest(ctx context.Context, projectId, cluster
 // GetClusterCPURequestUsage 获取CPU核心装箱率
 func (m *BKMonitor) GetClusterCPURequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `
-		sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{%<cluster>s, job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m])) /
-		sum(count without(cpu, mode) (node_cpu_seconds_total{%<cluster>s, mode="idle", bk_instance=~"%<instance>s", %<provider>s})) * 100
-		`
+	promqlA := `sum(avg_over_time(kube_pod_container_resource_requests_cpu_cores{%<cluster>s, job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
+	promqlB := `sum(count without(cpu, mode) (node_cpu_seconds_total{%<cluster>s, mode="idle", bk_instance=~"%<instance>s", %<provider>s}))`
 
-	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+	seriesA, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlA, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	seriesB, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlB, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+
+	return base.DivideSeries(seriesA, seriesB), nil
 }
 
 // GetClusterMemoryTotal 获取集群CPU核心总量
@@ -179,16 +194,25 @@ func (m *BKMonitor) GetClusterMemoryUsed(ctx context.Context, projectId, cluster
 // GetClusterMemoryUsage 获取内存使用率
 func (m *BKMonitor) GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql :=
+	promqlA :=
 		`(sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
 	sum(node_memory_MemFree_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
 	sum(node_memory_Buffers_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) -
 	sum(node_memory_Cached_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) +
-	sum(node_memory_Shmem_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s})) /
-	sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) *
-	100`
+	sum(node_memory_Shmem_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}))`
+	promqlB :=
+		`sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s})`
 
-	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+	seriesA, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlA, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	seriesB, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlB, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+
+	return base.DivideSeries(seriesA, seriesB), nil
 }
 
 // GetClusterMemoryRequest 获取内存 Request
@@ -203,11 +227,19 @@ func (m *BKMonitor) GetClusterMemoryRequest(ctx context.Context, projectId, clus
 // GetClusterMemoryRequestUsage 获取内存装箱率
 func (m *BKMonitor) GetClusterMemoryRequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql := `
-		sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{%<cluster>s, job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m])) /
-		sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}) * 100`
+	promqlA := `sum(avg_over_time(kube_pod_container_resource_requests_memory_bytes{%<cluster>s, job="kube-state-metrics", node=~"%<node>s", %<provider>s}[1m]))`
+	promqlB := `sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s})`
 
-	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+	seriesA, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlA, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	seriesB, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlB, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+
+	return base.DivideSeries(seriesA, seriesB), nil
 }
 
 // GetClusterDiskTotal 集群磁盘总量
@@ -232,24 +264,42 @@ func (m *BKMonitor) GetClusterDiskUsed(ctx context.Context, projectId, clusterId
 // GetClusterDiskUsage 集群磁盘使用率
 func (m *BKMonitor) GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql :=
+	promqlA :=
 		`(sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) -
-		sum(node_filesystem_free_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})) /
-        sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) *
-        100`
+		sum(node_filesystem_free_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}))`
+	promqlB :=
+		`sum(node_filesystem_size_bytes{%<cluster>s, bk_instance=~"%<instance>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`
 
-	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+	seriesA, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlA, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	seriesB, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlB, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+
+	return base.DivideSeries(seriesA, seriesB), nil
 }
 
 // GetClusterDiskioUsage 集群磁盘IO使用率
 func (m *BKMonitor) GetClusterDiskioUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
-	promql :=
-		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}[2m]))) /
-		count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}[2m]))) 
-		* 100`
+	promqlA :=
+		`sum(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}[2m])))`
+	promqlB :=
+		`count(max by(bk_instance) (rate(node_disk_io_time_seconds_total{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s}[2m])))`
 
-	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+	seriesA, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlA, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+	seriesB, err := m.handleClusterMetric(ctx, projectId, clusterId, promqlB, start, end, step)
+	if err != nil {
+		return nil, err
+	}
+
+	return base.DivideSeries(seriesA, seriesB), nil
 }
 
 // GetClusterDiskioUsed 集群磁盘IO使用量
