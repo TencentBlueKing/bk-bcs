@@ -23,6 +23,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
+// ValidateResourceQuota validate proto ResourceQuota
 func ValidateResourceQuota(quota *proto.ResourceQuota) error {
 	if quota == nil {
 		return nil

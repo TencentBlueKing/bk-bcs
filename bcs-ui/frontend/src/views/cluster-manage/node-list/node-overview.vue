@@ -10,8 +10,9 @@
           index < (infoList.length - 1) ? 'bcs-border-right' : ''
         ]">
         <div class="bcs-ellipsis font-bold">{{ item.label }}:</div>
-        <div class="bcs-ellipsis mt-[8px]">{{
-          (item.format ? item.format(nodeInfo[item.prop]) : nodeInfo[item.prop]) || '--' }}</div>
+        <div class="bcs-ellipsis mt-[8px]" v-bk-overflow-tips>
+          {{ (item.format ? item.format(nodeInfo[item.prop]) : nodeInfo[item.prop]) || '--' }}
+        </div>
       </div>
     </div>
     <!-- 节点指标 -->
@@ -297,8 +298,8 @@ export default defineComponent({
         prop: 'release',
       },
       {
-        label: 'Docker',
-        prop: 'dockerVersion',
+        label: $i18n.t('运行时'),
+        prop: 'container_runtime_version',
       },
       {
         label: $i18n.t('操作系统'),

@@ -621,3 +621,17 @@ export function throttle(fn, delay) {
     }, delay);
   };
 }
+
+export function setCookie(name: string, value: string) {
+  const { host } = location;
+  if (host.split('.').length === 1) {
+    document.cookie = `${name}=${value}; path=/`;
+  } else {
+    const domainParts = host.split('.');
+    if (domainParts.length > 2) {
+      const domain = domainParts.slice(domainParts.length - 1 - 2, domainParts.length - 1);
+      document.cookie = `${name}=${value}; path=/; domain=.${domain.join('.')}`;
+    }
+    document.cookie = `${name}=${value}`;
+  }
+}

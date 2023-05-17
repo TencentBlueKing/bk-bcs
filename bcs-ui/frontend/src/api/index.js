@@ -195,8 +195,13 @@ function handleReject(error, config) {
     if (status === 401) {
       // 登录弹窗
       // eslint-disable-next-line camelcase
-      window.$loginModal.loginUrl = `${data.data.login_url.simple}?c_url=${location.origin}/login_success.html&size=big`;
-      window.$loginModal?.show();
+      if (process.env.NODE_ENV === 'development') {
+        location.href = `${window.LOGIN_FULL}plain/?size=big&c_url=${location.href}`;
+      } else {
+        window.$loginModal.loginUrl = `${data.data.login_url.simple}?c_url=${location.origin}/login_success.html&size=big`;
+        window.$loginModal?.show();
+      }
+
       return;
     } if (status === 500) {
       message = window.i18n.t('系统出现异常');

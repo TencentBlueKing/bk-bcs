@@ -74,9 +74,7 @@
                 </li>
                 <li
                   class="bcs-dropdown-item"
-                  v-if="clusterExtraInfo
-                    && clusterExtraInfo[cluster.clusterID]
-                    && clusterExtraInfo[cluster.clusterID].autoScale"
+                  key="ca"
                   v-authority="{
                     clickable: perms[cluster.clusterID]
                       && perms[cluster.clusterID].cluster_manage,
@@ -98,6 +96,7 @@
                     'bcs-dropdown-item',
                     { disabled: !clusterNodesMap[cluster.clusterID] || clusterNodesMap[cluster.clusterID].length > 0 }
                   ]"
+                  key="deleteCluster"
                   v-authority="{
                     clickable: perms[cluster.clusterID]
                       && perms[cluster.clusterID].cluster_delete,
@@ -214,30 +213,6 @@
           </div>
         </div>
       </div>
-      <!-- <div
-        :class="[
-          'cluster-card create-cluster',
-          'flex flex-col items-center justify-center',
-          {
-            disabled: !isMaintainer
-          }
-        ]"
-        v-bk-tooltips="{
-          disabled: isMaintainer,
-          content: $t('您不是当前项目绑定业务的运维人员')
-        }"
-        v-authority="{
-          actionId: 'cluster_create',
-          resourceName: curProject.name,
-          permCtx: {
-            resource_type: 'project',
-            project_id: curProject.projectID
-          }
-        }"
-        @click="handleCreateCluster">
-        <i class="bcs-icon bcs-icon-plus text-[32px] text-[#c3cdd7] font-bold"></i>
-        <span class="text-[14px] mt-[10px]">{{$t('点击添加集群')}}</span>
-      </div> -->
     </template>
   </div>
 </template>

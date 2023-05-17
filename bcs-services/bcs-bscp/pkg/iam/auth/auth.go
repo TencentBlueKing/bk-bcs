@@ -32,6 +32,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
+	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 )
@@ -97,16 +98,31 @@ func NewAuthorizer(sd serviced.Discover, tls cc.TLSConfig) (Authorizer, error) {
 	authLoginClient := bkpaas.NewAuthLoginClient(conf)
 	klog.InfoS("init authlogin client done", "host", conf.Host, "inner_host", conf.InnerHost, "provider", conf.Provider)
 
-	return &authorizer{
+	authz := &authorizer{
 		authClient:      authClient,
 		authLoginClient: authLoginClient,
-	}, nil
+		gwParser:        nil,
+	}
+
+	// 如果有公钥，初始化配置
+	if resp.GwPubkey != "" {
+		gwParser, err := gwparser.NewJWTParser(resp.GwPubkey)
+		if err != nil {
+			return nil, errors.Wrap(err, "init gw parser")
+		}
+
+		authz.gwParser = gwParser
+		klog.InfoS("init gw parser done", "fingerprint", gwParser.Fingerprint())
+	}
+
+	return authz, nil
 }
 
 type authorizer struct {
 	// authClient auth server's client api
 	authClient      pbas.AuthClient
 	authLoginClient bkpaas.AuthLoginClient
+	gwParser        gwparser.Parser
 }
 
 // Authorize if user has permission to the resources, returns auth status per resource and for all.

@@ -52,11 +52,11 @@ func (p *BusinessHandler) GetBusiness(ctx context.Context,
 func (p *BusinessHandler) ListBusiness(ctx context.Context,
 	req *proto.ListBusinessRequest, resp *proto.ListBusinessResponse) error {
 	la := business.NewListAction(p.model)
-	business, e := la.Do(ctx, req)
+	biz, e := la.Do(ctx, req)
 	if e != nil {
 		return e
 	}
-	resp.Data = business
+	resp.Data = biz
 	return nil
 }
 
