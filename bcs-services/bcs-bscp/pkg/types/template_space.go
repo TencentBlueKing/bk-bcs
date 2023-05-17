@@ -53,9 +53,3 @@ func (opt *ListTemplateSpacesOption) Validate(po *PageOption) error {
 
 	return nil
 }
-
-// ListTemplateSpaceDetails defines the response details of requested ListTemplateSpacesOption.
-type ListTemplateSpaceDetails struct {
-	Count   uint32                 `json:"count"`
-	Details []*table.TemplateSpace `json:"details"`
-}

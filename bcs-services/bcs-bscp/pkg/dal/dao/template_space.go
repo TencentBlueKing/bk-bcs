@@ -27,7 +27,6 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/types"
 )
 
 // TemplateSpace supplies all the TemplateSpace related operations.
@@ -37,7 +36,7 @@ type TemplateSpace interface {
 	// Update one TemplateSpace's info.
 	Update(kit *kit.Kit, TemplateSpace *table.TemplateSpace) error
 	// List TemplateSpaces with options.
-	List(kit *kit.Kit, opts *types.ListTemplateSpacesOption) (*types.ListTemplateSpaceDetails, error)
+	List(kit *kit.Kit, bizID uint32, offset, limit int) ([]*templateSpaceDao, int64, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.TemplateSpace) error
 	// GetByName get templateSpace by name.
@@ -157,68 +156,20 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 }
 
 // List TemplateSpaces with options.
-func (dao *templateSpaceDao) List(kit *kit.Kit, opts *types.ListTemplateSpacesOption) (
-	*types.ListTemplateSpaceDetails, error) {
+func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, offset, limit int) ([]*table.TemplateSpace, int64, error) {
+	m := dao.genM.TemplateSpace
+	q := m.WithContext(kit.Ctx)
 
-	if opts == nil {
-		return nil, errf.New(errf.InvalidParameter, "list TemplateSpace options null")
-	}
-
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
-		return nil, err
-	}
-
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"id", "biz_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				},
-			},
-		},
-	}
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(offset, limit)
 	if err != nil {
-		return nil, err
-	}
-	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.TemplateSpaceTable.Name(), whereExpr)
-	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
-	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	// query TemplateSpace list for now.
-	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
-	if err != nil {
-		return nil, err
-	}
-
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(), whereExpr, pageExpr)
-	sql := filter.SqlJoint(sqlSentence)
-
-	list := make([]*table.TemplateSpace, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.ListTemplateSpaceDetails{Count: count, Details: list}, nil
+	return result, count, nil
 }
 
 // Delete one TemplateSpace instance.
 func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error {
-
-	if g == nil {
-		return errf.New(errf.InvalidParameter, "TemplateSpace is nil")
-	}
-
 	if err := g.ValidateDelete(); err != nil {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
@@ -261,7 +212,7 @@ func (dao *templateSpaceDao) GetByName(kit *kit.Kit, bizID uint32, name string) 
 
 	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
-		fmt.Errorf("get templateSpace failed, err: %v", err)
+		return nil, fmt.Errorf("get templateSpace failed, err: %v", err)
 	}
 
 	return tplSpace, nil
