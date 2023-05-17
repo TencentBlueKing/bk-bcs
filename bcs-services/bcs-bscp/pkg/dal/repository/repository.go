@@ -22,7 +22,6 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	pbas "bscp.io/pkg/protocol/auth-server"
-	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/thirdparty/repo"
 )
 
@@ -40,12 +39,7 @@ type FileApiType interface {
 
 // DownloadFile download file
 func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := s.authorize(kt, r)
 	if needReturn {
@@ -90,12 +84,7 @@ func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 
 // UploadFile upload file
 func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := s.authorize(kt, r)
 	if needReturn {
@@ -163,12 +152,7 @@ func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 // FileMetadata get s3 head data
 func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := s.authorize(kt, r)
 	if needReturn {

@@ -22,6 +22,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/components"
@@ -33,42 +34,79 @@ import (
 	"bscp.io/pkg/rest"
 )
 
+// initKitWithBKJWT 蓝鲸网关鉴权
+func (a authorizer) initKitWithBKJWT(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+	if a.gwParser == nil {
+		multiErr.Errors = append(multiErr.Errors, errors.New("gw pubkey not init"))
+		return false
+	}
+
+	kt, err := a.gwParser.Parse(r.Context(), r.Header)
+	if err != nil {
+		multiErr.Errors = append(multiErr.Errors, err)
+		return false
+	}
+
+	// jwt 只支持 app_code
+	k.AppCode = kt.AppCode
+	return true
+}
+
+// initWithCookie 蓝鲸统一登入Cookie鉴权
+func (a authorizer) initWithCookie(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+	loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
+	if err != nil {
+		multiErr.Errors = append(multiErr.Errors, err)
+		return false
+	}
+
+	req := &pbas.UserCredentialReq{Uid: loginCred.UID, Token: loginCred.Token}
+	if req.Token == constant.BKTokenForTest {
+		username := r.Header.Get(constant.UserKey)
+		if username != "" {
+			k.User = username
+			return true
+		}
+	}
+
+	resp, err := a.authClient.GetUserInfo(r.Context(), req)
+	if err != nil {
+		s := status.Convert(err)
+		multiErr.Errors = append(multiErr.Errors, errors.New(s.Message()))
+		return false
+	}
+
+	// 登入态只支持用户名
+	k.User = resp.Username
+	return true
+}
+
+// initKitWithDevEnv Dev环境, 可以设置环境变量鉴权
+func (a authorizer) initKitWithDevEnv(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+	return false
+}
+
 // UnifiedAuthentication
 // HTTP API 鉴权, 异常返回json信息
 func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
-		loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
-		if err != nil {
+		k := &kit.Kit{
+			Ctx: r.Context(),
+			Rid: components.RequestIDValue(r.Context()),
+		}
+		multiErr := &multierror.Error{}
 
-			render.Render(w, r, rest.UnauthorizedErr(err, loginURL, loginPlainURL))
+		switch {
+		case a.initKitWithBKJWT(r, k, multiErr):
+		case a.initWithCookie(r, k, multiErr):
+		case a.initKitWithDevEnv(r, k, multiErr):
+		default:
+			loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
+			render.Render(w, r, rest.UnauthorizedErr(multiErr, loginURL, loginPlainURL))
 			return
 		}
-		var username string
-		req := &pbas.UserCredentialReq{Uid: loginCred.UID, Token: loginCred.Token}
-		if req.Token == constant.BKTokenForTest {
-			username = r.Header.Get(constant.UserKey)
-		} else {
-			resp, err := a.authClient.GetUserInfo(r.Context(), req)
-			if err != nil {
-				s := status.Convert(err)
-				render.Render(w, r, rest.UnauthorizedErr(errors.New(s.Message()), loginURL, loginPlainURL))
-				return
-			}
-			username = resp.Username
-		}
 
-		k := &kit.Kit{
-			Ctx:         r.Context(),
-			User:        username,
-			Rid:         components.RequestIDValue(r.Context()),
-			AppId:       chi.URLParam(r, "app_id"),
-			AppCode:     "dummyApp", // 测试 App
-			SpaceID:     "",
-			SpaceTypeID: "",
-		}
 		ctx := kit.WithKit(r.Context(), k)
-
 		r.Header.Set(constant.AppCodeKey, k.AppCode)
 		r.Header.Set(constant.RidKey, k.Rid)
 		r.Header.Set(constant.UserKey, k.User)
