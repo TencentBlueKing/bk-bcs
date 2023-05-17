@@ -18,6 +18,8 @@ import (
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/dal/gen"
+	"bscp.io/pkg/dal/orm"
+	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 
@@ -44,16 +46,24 @@ type AuditOption struct {
 var _ AuditDao = new(audit)
 
 // NewAuditDao create the audit DAO
-func NewAuditDao(idGen IDGenInterface, genM *gen.Query) (AuditDao, error) {
+func NewAuditDao(orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface, genM *gen.Query) (AuditDao, error) {
 	return &audit{
-		idGen: idGen,
-		genM:  genM,
+		orm:        orm,
+		sd:         sd,
+		adSharding: sd.Audit(),
+		idGen:      idGen,
+		genM:       genM,
 	}, nil
 }
 
 type audit struct {
-	idGen IDGenInterface
-	genM  *gen.Query
+	orm orm.Interface
+	// sd is the common resource's sharding manager.
+	sd *sharding.Sharding
+	// adSharding is the audit's sharding instance
+	adSharding *sharding.One
+	idGen      IDGenInterface
+	genM       *gen.Query
 }
 
 // Decorator return audit decorator for to record audit.

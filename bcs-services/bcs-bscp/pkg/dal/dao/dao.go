@@ -56,15 +56,6 @@ type Set interface {
 	CredentialScope() CredentialScope
 }
 
-func AfterCreate(tx *gorm.DB) {
-	auditRes, ok := tx.Statement.Model.(*AuditResInterface)
-	if !ok {
-		fmt.Println("not auditRes", tx.Statement.Model)
-		return
-	}
-	fmt.Println("leijiaomin", auditRes)
-}
-
 // NewDaoSet create the DAO set instance.
 func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
@@ -245,8 +236,6 @@ func (s *set) Hook() Hook {
 // TemplateSpace returns the templateSpace's DAO
 func (s *set) TemplateSpace() TemplateSpace {
 	return &templateSpaceDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genM:     s.genM,
