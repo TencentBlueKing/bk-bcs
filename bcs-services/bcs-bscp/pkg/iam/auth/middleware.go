@@ -55,8 +55,8 @@ func (a authorizer) initKitWithBKJWT(r *http.Request, k *kit.Kit, multiErr *mult
 	return true
 }
 
-// initWithCookie 蓝鲸统一登入Cookie鉴权
-func (a authorizer) initWithCookie(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+// initKitWithCookie 蓝鲸统一登入Cookie鉴权
+func (a authorizer) initKitWithCookie(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
 	loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
 	if err != nil {
 		multiErr.Errors = append(multiErr.Errors, errors.Wrap(err, "auth with cookie"))
@@ -101,7 +101,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 
 		switch {
 		case a.initKitWithBKJWT(r, k, multiErr):
-		case a.initWithCookie(r, k, multiErr):
+		case a.initKitWithCookie(r, k, multiErr):
 		case a.initKitWithDevEnv(r, k, multiErr):
 		default:
 			// API类返回规范的JSON错误信息
@@ -145,7 +145,7 @@ func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Ha
 			multiErr := &multierror.Error{}
 
 			switch {
-			case a.initWithCookie(r, k, multiErr):
+			case a.initKitWithCookie(r, k, multiErr):
 			default:
 				// web类型做302跳转登入
 				http.Redirect(w, r, a.authLoginClient.BuildLoginRedirectURL(r, webHost), http.StatusFound)
