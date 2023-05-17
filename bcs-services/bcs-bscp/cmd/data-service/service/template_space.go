@@ -76,7 +76,7 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 	}
 
 	resp := &pbds.ListTemplateSpacesResp{
-		Count:   count,
+		Count:   uint32(count),
 		Details: TemplateSpaces,
 	}
 	return resp, nil

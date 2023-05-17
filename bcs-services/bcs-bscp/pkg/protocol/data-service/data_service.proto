@@ -461,7 +461,7 @@ message ListTemplateSpacesReq {
 }
 
 message ListTemplateSpacesResp {
-    int64 count                         = 1;
+    uint32 count                        = 1;
     repeated pbts.TemplateSpace details = 2;
 }
 
