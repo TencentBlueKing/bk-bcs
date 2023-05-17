@@ -112,10 +112,6 @@ func (dao *contentDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, content *tabl
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	if err := dao.validateAttachmentResExist(kit, content.Attachment); err != nil {
-		return 0, err
-	}
-
 	// generate an content id and update to content.
 	id, err := dao.idGen.One(kit, table.ContentTable)
 	if err != nil {

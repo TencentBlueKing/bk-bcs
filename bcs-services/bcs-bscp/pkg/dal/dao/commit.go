@@ -110,10 +110,6 @@ func (dao *commitDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, commit *table.
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	if err := dao.validateAttachmentResExist(kit, commit.Attachment); err != nil {
-		return 0, err
-	}
-
 	// generate an commit id and update to commit.
 	id, err := dao.idGen.One(kit, table.CommitsTable)
 	if err != nil {

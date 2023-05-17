@@ -58,9 +58,9 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 	content := &table.Content{
 		Spec: req.ContentSpec.ContentSpec(),
 		Attachment: &table.ContentAttachment{
-			ConfigItemID: ciID,
 			BizID:        req.ConfigItemAttachment.BizId,
 			AppID:        req.ConfigItemAttachment.AppId,
+			ConfigItemID: ciID,
 		},
 		Revision: &table.CreatedRevision{
 			Creator:   grpcKit.User,
@@ -79,8 +79,14 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 			ContentID: contentID,
 			Content:   content.Spec,
 		},
+		Attachment: &table.CommitAttachment{
+			BizID:        req.ConfigItemAttachment.BizId,
+			AppID:        req.ConfigItemAttachment.AppId,
+			ConfigItemID: ciID,
+		},
 		Revision: &table.CreatedRevision{
-			Creator: grpcKit.User,
+			Creator:   grpcKit.User,
+			CreatedAt: now,
 		},
 	}
 	_, err = s.dao.Commit().CreateWithTx(grpcKit, tx, commit)
@@ -135,9 +141,9 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		content := &table.Content{
 			Spec: item.ContentSpec.ContentSpec(),
 			Attachment: &table.ContentAttachment{
-				ConfigItemID: ciID,
 				BizID:        req.BizId,
 				AppID:        req.AppId,
+				ConfigItemID: ciID,
 			},
 			Revision: &table.CreatedRevision{
 				Creator:   grpcKit.User,
@@ -156,8 +162,14 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 				ContentID: contentID,
 				Content:   content.Spec,
 			},
+			Attachment: &table.CommitAttachment{
+				BizID:        req.BizId,
+				AppID:        req.AppId,
+				ConfigItemID: ciID,
+			},
 			Revision: &table.CreatedRevision{
-				Creator: grpcKit.User,
+				Creator:   grpcKit.User,
+				CreatedAt: now,
 			},
 		}
 		_, err = s.dao.Commit().CreateWithTx(grpcKit, tx, commit)
