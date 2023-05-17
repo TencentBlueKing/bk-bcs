@@ -25,6 +25,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	filter2 "bscp.io/pkg/runtime/filter"
+	"gorm.io/gorm"
 )
 
 // initAuditBuilder create a new audit builder instance.
@@ -53,6 +54,22 @@ func initAuditBuilder(kit *kit.Kit, bizID uint32, res enumor.AuditResourceType, 
 	}
 
 	return ab
+}
+
+// AuditResInterface :
+type AuditResInterface interface {
+	AppID() uint32
+	ResourceID() uint32
+}
+
+func AfterCreate(tx *gorm.DB) {
+	auditRes, ok := tx.Statement.Model.(*AuditResInterface)
+	if !ok {
+		fmt.Println("not auditRes", tx.Statement.Model)
+		return
+	}
+
+	fmt.Println("leijiaomin", auditRes)
 }
 
 // AuditDecorator is audit decorator interface, use to record audit.

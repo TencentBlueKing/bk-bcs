@@ -19,10 +19,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// TemplateSpace defines a TemplateSpace for an app to publish.
-// it contains the selector to define the scope of the matched instances.
+// TemplateSpace 模版空间
 type TemplateSpace struct {
-	// ID is an auto-increased value, which is a unique identity of a TemplateSpace.
 	ID         uint32                   `json:"id" gorm:"primaryKey"`
 	Spec       *TemplateSpaceSpec       `json:"spec" gorm:"embedded"`
 	Attachment *TemplateSpaceAttachment `json:"attachment" gorm:"embedded"`
@@ -30,10 +28,21 @@ type TemplateSpace struct {
 }
 
 // TableName is the TemplateSpace's database table name.
-func (s TemplateSpace) TableName() Name {
+func (s *TemplateSpace) TableName() string {
 	return "template_spaces"
 }
 
+// AuditResType 审计资源名称
+func (s *TemplateSpace) AuditResType() string {
+	return "template_space"
+}
+
+// AuditResChange
+func (s *TemplateSpace) AuditResChange(last *TemplateSpaceSpec) *TemplateSpaceSpec {
+	return nil
+}
+
+// AfterCreate :
 func (u *TemplateSpace) AfterCreate(tx *gorm.DB) (err error) {
 	if u.ID == 1 {
 		tx.Model(u).Update("role", "admin")

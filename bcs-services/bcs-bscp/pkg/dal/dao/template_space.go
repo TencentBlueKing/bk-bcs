@@ -64,36 +64,14 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 	if err != nil {
 		return 0, err
 	}
-
 	g.ID = id
 
-	m := gen.TemplateSpace
-	fmt.Println(m)
-	q := gen.Q.WithContext(kit.Ctx)
-
-	q.TemplateSpace.Create(g)
-
-	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, "", g); err != nil {
-				return err
-			}
-
-			// audit this to be created TemplateSpace details.
-			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err = dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.TemplateSpace).AuditCreate(g, au); err != nil {
-				return fmt.Errorf("audit create TemplateSpace failed, err: %v", err)
-			}
-
-			return nil
-		})
-
-	if err != nil {
-		logs.Errorf("create TemplateSpace, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
-		return 0, fmt.Errorf("create TemplateSpace, but auto run txn failed, err: %v", err)
+	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
+	if err := q.Create(g); err != nil {
+		return 0, err
 	}
 
-	return id, nil
+	return g.ID, nil
 }
 
 // Update one TemplateSpace instance.
@@ -209,7 +187,7 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 // GetByName get by name
 func (dao *templateSpaceDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error) {
 	m := dao.genM.TemplateSpace
-	q := m.WithContext(kit.Ctx)
+	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
 
 	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {

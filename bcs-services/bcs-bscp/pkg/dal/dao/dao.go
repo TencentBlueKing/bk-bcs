@@ -56,19 +56,21 @@ type Set interface {
 	CredentialScope() CredentialScope
 }
 
+func AfterCreate(tx *gorm.DB) {
+	auditRes, ok := tx.Statement.Model.(*AuditResInterface)
+	if !ok {
+		fmt.Println("not auditRes", tx.Statement.Model)
+		return
+	}
+	fmt.Println("leijiaomin", auditRes)
+}
+
 // NewDaoSet create the DAO set instance.
 func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
 	sd, err := sharding.InitSharding(&opt)
 	if err != nil {
 		return nil, fmt.Errorf("init sharding failed, err: %v", err)
-	}
-
-	ormInst := orm.Do(opt)
-	idDao := &idGenerator{sd: sd}
-	auditDao, err := NewAuditDao(ormInst, sd, idDao)
-	if err != nil {
-		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
 
 	db, err := gorm.Open(mysql.Open(opt.AdminDatabase.DSN()), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
@@ -89,10 +91,22 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		return nil, err
 	}
 
+	// 初始化 Gen 配置
+	genM := gen.Use(db)
+
+	db.Callback().Create().After("gorm:after_create").Register("bscp:audit_create", AfterCreate)
+
+	ormInst := orm.Do(opt)
+	idDao := &idGenerator{sd: sd}
+	auditDao, err := NewAuditDao(ormInst, sd, idDao, genM)
+	if err != nil {
+		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
+	}
+
 	s := &set{
 		orm:               ormInst,
 		db:                db,
-		genM:              gen.Use(db),
+		genM:              genM,
 		sd:                sd,
 		credentialSetting: credentialSetting,
 		idGen:             idDao,

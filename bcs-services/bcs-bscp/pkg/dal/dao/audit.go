@@ -17,12 +17,9 @@ import (
 	"fmt"
 
 	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -47,22 +44,16 @@ type AuditOption struct {
 var _ AuditDao = new(audit)
 
 // NewAuditDao create the audit DAO
-func NewAuditDao(orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface) (AuditDao, error) {
+func NewAuditDao(idGen IDGenInterface, genM *gen.Query) (AuditDao, error) {
 	return &audit{
-		orm:        orm,
-		sd:         sd,
-		adSharding: sd.Audit(),
-		idGen:      idGen,
+		idGen: idGen,
+		genM:  genM,
 	}, nil
 }
 
 type audit struct {
-	orm orm.Interface
-	// sd is the common resource's sharding manager.
-	sd *sharding.Sharding
-	// adSharding is the audit's sharding instance
-	adSharding *sharding.One
-	idGen      IDGenInterface
+	idGen IDGenInterface
+	genM  *gen.Query
 }
 
 // Decorator return audit decorator for to record audit.
@@ -84,25 +75,8 @@ func (au *audit) One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error {
 
 	audit.ID = id
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.AuditTable.Name(), " (", table.AuditColumns.ColumnExpr(), ") VALUES (", table.AuditColumns.ColonNameExpr(), ")")
-	sql := filter.SqlJoint(sqlSentence)
-
-	if au.adSharding.ShardingUid() != opt.ResShardingUid {
-		// audit db is different with the resource's db, then do without transaction
-		if err := au.orm.Do(au.adSharding.DB()).Insert(kit.Ctx, sql, audit); err != nil {
-			logs.Errorf("audit %s resource: %s, id: %s failed, err: %v, rid: %s",
-				audit.Action, audit.ResourceType, audit.ResourceID, err, kit.Rid)
-			// skip return this error to ensue the resource's transaction can be executed successfully.
-			// this may miss the audit log, it's acceptable.
-		}
-
-		return nil
-	}
-
-	// do with the same transaction with the resource, this transaction
-	// is launched by resource's owner.
-	if err := au.orm.Txn(opt.Txn).Insert(kit.Ctx, sql, audit); err != nil {
+	q := au.genM.Audit.WithContext(kit.Ctx)
+	if err := q.Create(audit); err != nil {
 		return fmt.Errorf("insert audit failed, err: %v", err)
 	}
 
