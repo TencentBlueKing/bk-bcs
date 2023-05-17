@@ -38,13 +38,13 @@ var (
 		Namespace: BkBcsK8sWatch,
 		Name:      "storage_request_total_num",
 		Help:      "The total num of requests for bcs-storage api",
-	}, []string{"cluster_id", "handler", "namespace", "resource_type", "method", "status"})
+	}, []string{"cluster_id", "handler", "resource_type", "method", "status"})
 	requestLatencyAPI = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: BkBcsK8sWatch,
 		Name:      "storage_request_latency_time",
 		Help:      "api request latency statistic for bcs-storage api",
 		Buckets:   []float64{0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 3.0},
-	}, []string{"cluster_id", "handler", "namespace", "resource_type", "method", "status"})
+	}, []string{"cluster_id", "handler", "resource_type", "method", "status"})
 
 	// bcs-k8s-watch record watcher cache keys_num
 	requestsWatcherCacheKeysLength = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -102,9 +102,9 @@ func init() {
 }
 
 // ReportK8sWatchAPIMetrics report all api action metrics
-func ReportK8sWatchAPIMetrics(clusterID, handler, namespace, resourceType, method, status string, started time.Time) {
-	requestTotalAPI.WithLabelValues(clusterID, handler, namespace, resourceType, method, status).Inc()
-	requestLatencyAPI.WithLabelValues(clusterID, handler, namespace, resourceType, method, status).
+func ReportK8sWatchAPIMetrics(clusterID, handler, resourceType, method, status string, started time.Time) {
+	requestTotalAPI.WithLabelValues(clusterID, handler, resourceType, method, status).Inc()
+	requestLatencyAPI.WithLabelValues(clusterID, handler, resourceType, method, status).
 		Observe(time.Since(started).Seconds())
 }
 
