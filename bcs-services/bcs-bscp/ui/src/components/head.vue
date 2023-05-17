@@ -66,10 +66,14 @@
         :popover-options="{ theme: 'light bk-select-popover space-selector-popover' }"
         :filterable="true"
         :clearable="false"
+        :input-search="false"
         @change="handleSelectSpace">
         <bk-option v-for="item in spaceList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
           <div v-cursor="{ active: !item.permission }" :class="['biz-option-item', { 'no-perm': !item.permission }]">
-            <div class="name">{{ item.space_name }}</div>
+            <div class="name-wrapper">
+              <span class="text">{{ item.space_name }}</span>
+              <span class="id">({{ item.space_id }})</span>
+            </div>
             <span class="tag">{{ item.space_type_name }}</span>
           </div>
         </bk-option>
@@ -146,27 +150,34 @@
   &.no-perm {
     background-color: #fafafa !important;
     color: #cccccc !important;
-    .tag {
-      border-color: #e6e6e6 !important;
-      color: #cccccc !important;
-    }
   }
-  .name {
+  .name-wrapper {
     padding-right: 30px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    .text {
+      flex: 0 1 auto;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .id {
+      flex: 0 0 auto;
+      margin-left: 4px;
+      color: #979ba5;
+    }
   }
   .tag {
     position: absolute;
-    top: 10px;
-    right: 8px;
+    top: 8px;
+    right: 4px;
     padding: 2px;
     font-size: 12px;
     line-height: 1;
-    color: #3a84ff;
-    border: 1px solid #3a84ff;
+    color: #cccccc;
+    border: 1px solid #cccccc;
     border-radius: 2px;
+    transform: scale(0.8);
   }
 }
 </style>

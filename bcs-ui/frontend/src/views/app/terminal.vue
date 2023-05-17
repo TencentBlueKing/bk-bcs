@@ -17,7 +17,7 @@
 </template>
 <script lang="ts">
 import { useCluster } from '@/composables/use-app';
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import FixedButton from '../resource-view/resource-update/fixed-button.vue';
 import PopoverSelector from '../../components/popover-selector.vue';
 import ClusterSelectPopover from '@/components/cluster-selector/cluster-select-popover.vue';

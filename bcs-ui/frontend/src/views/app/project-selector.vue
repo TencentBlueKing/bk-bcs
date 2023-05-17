@@ -59,7 +59,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref } from '@vue/composition-api';
+import { computed, defineComponent, ref } from 'vue';
 import ProjectCreate from '@/views/project-manage/project/project-create.vue';
 import $router from '@/router';
 import $store from '@/store';
@@ -67,7 +67,7 @@ import $store from '@/store';
 export default defineComponent({
   name: 'ProjectSelector',
   components: { ProjectCreate },
-  setup(props, ctx) {
+  setup() {
     const showCreateDialog = ref(false);
     const projectList = computed<any[]>(() => $store.state.projectList);
 
@@ -81,7 +81,7 @@ export default defineComponent({
     };
     // 切换项目
     const handleProjectChange = (projectCode) => {
-      const currentRoute = ctx.root.$route;
+      const { currentRoute } = $router;
       if (projectCode === currentRoute.params?.projectCode) return;
 
       // 更新当前项目缓存

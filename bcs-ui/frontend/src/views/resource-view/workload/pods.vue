@@ -97,16 +97,16 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref } from '@vue/composition-api';
+import { defineComponent, computed, ref } from 'vue';
 import BaseLayout from '@/views/resource-view/common/base-layout';
 import StatusIcon from '@/components/status-icon';
 import BcsLog from '@/components/bcs-log/log-dialog.vue';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'WorkloadPods',
   components: { BaseLayout, StatusIcon, BcsLog },
-  setup(props, ctx) {
-    const { $store } = ctx.root;
+  setup() {
     const clusterId = computed(() => $store.getters.curClusterId);
 
     // 显示日志

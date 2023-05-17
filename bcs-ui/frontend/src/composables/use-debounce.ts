@@ -1,4 +1,4 @@
-import { customRef } from '@vue/composition-api';
+import { customRef } from 'vue';
 
 export default function useDebouncedRef<T>(value, delay = 200) {
   let timeout;

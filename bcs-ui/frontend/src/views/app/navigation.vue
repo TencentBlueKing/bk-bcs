@@ -98,7 +98,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, toRef, reactive, onMounted } from '@vue/composition-api';
+import { defineComponent, ref, computed, toRef, reactive, onMounted } from 'vue';
 import SystemLog from '@/views/app/log.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';

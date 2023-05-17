@@ -114,7 +114,7 @@ type AuthServerSetting struct {
 	Esb       Esb               `yaml:"esb"`
 }
 
-// LoginAuthSettings
+// LoginAuthSettings login conf
 type LoginAuthSettings struct {
 	Host      string `yaml:"host"`
 	InnerHost string `yaml:"innerHost"`

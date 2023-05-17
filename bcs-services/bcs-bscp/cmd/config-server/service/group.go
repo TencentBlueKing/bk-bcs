@@ -182,19 +182,19 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 				Value: appIDs,
 			}},
 		}
-		laftpb, err := laft.MarshalPB()
-		if err != nil {
-			return nil, err
+		laftpb, e := laft.MarshalPB()
+		if e != nil {
+			return nil, e
 		}
 		laReq := &pbds.ListAppsReq{
 			BizId:  req.BizId,
 			Filter: laftpb,
 			Page:   &pbbase.BasePage{},
 		}
-		laResp, err := s.client.DS.ListApps(grpcKit.RpcCtx(), laReq)
-		if err != nil {
-			logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		laResp, e := s.client.DS.ListApps(grpcKit.RpcCtx(), laReq)
+		if e != nil {
+			logs.Errorf("list apps failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
 		}
 		for _, app := range laResp.Details {
 			appMap[app.Id] = app
@@ -217,10 +217,13 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 
 	respData := make([]*pbcs.ListAllGroupsResp_ListAllGroupsData, 0, len(lgResp.Details))
 	for _, group := range lgResp.Details {
-		apps := make([]string, 0, len(group.Spec.BindApps))
+		apps := make([]*pbcs.ListAllGroupsResp_ListAllGroupsData_BindApp, 0, len(group.Spec.BindApps))
 		for _, appID := range group.Spec.BindApps {
 			if app, ok := appMap[appID]; ok && app != nil {
-				apps = append(apps, app.Spec.Name)
+				apps = append(apps, &pbcs.ListAllGroupsResp_ListAllGroupsData_BindApp{
+					Id:   app.Id,
+					Name: app.Spec.Name,
+				})
 			}
 		}
 		data := &pbcs.ListAllGroupsResp_ListAllGroupsData{

@@ -122,7 +122,7 @@ func (s *Service) GetApp(ctx context.Context, req *pbds.GetAppReq) (*pbapp.App, 
 	return pbapp.PbApp(app), nil
 }
 
-// GetAppByID
+// GetAppByID get apps by only by app id.
 func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pbapp.App, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -165,9 +165,9 @@ func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.Li
 	return resp, nil
 }
 
-// ListApps list apps by query condition.
+// ListAppsRest list apps by query condition.
 func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (*pbds.ListAppsResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	kt := kit.FromGrpcContext(ctx)
 
 	// 默认分页
 	limit := uint(req.Limit)
@@ -220,9 +220,9 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 		Page:    page,
 	}
 
-	details, err := s.dao.App().List(kit, query)
+	details, err := s.dao.App().List(kt, query)
 	if err != nil {
-		logs.Errorf("list apps failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 

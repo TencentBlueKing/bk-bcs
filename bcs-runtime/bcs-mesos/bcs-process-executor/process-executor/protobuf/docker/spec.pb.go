@@ -6,9 +6,11 @@
 Package docker_spec is a generated protocol buffer package.
 
 It is generated from these files:
+
 	mesos/docker/spec.proto
 
 It has these top-level messages:
+
 	ImageReference
 	Config
 */
@@ -31,7 +33,8 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // *
 // The docker image reference:
-//   [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG|@DIGEST]
+//
+//	[REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG|@DIGEST]
 //
 // See more details in:
 // https://github.com/docker/distribution/blob/master/reference/reference.go

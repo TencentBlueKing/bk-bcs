@@ -236,7 +236,6 @@ func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint
 	} else if includeDefault {
 		return table.FullReleased.String(), inRelease
 		// len(inRelease) != 0 && len(outRelease) == 0 && !includeDefault: gray released
-	} else {
-		return table.PartialReleased.String(), inRelease
 	}
+	return table.PartialReleased.String(), inRelease
 }

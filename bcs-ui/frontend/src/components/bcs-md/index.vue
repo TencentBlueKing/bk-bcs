@@ -4,7 +4,7 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import MarkdownIt from 'markdown-it';
 import hljs from './md-highlight.js';
 

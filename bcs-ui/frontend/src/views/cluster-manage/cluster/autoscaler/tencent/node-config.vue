@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <bk-form class="node-config" :model="nodePoolConfig" :rules="nodePoolConfigRules" ref="formRef">
     <bk-form-item :label="$t('镜像提供方')">
@@ -308,7 +309,9 @@
         </bcs-option>
       </bcs-select>
     </bk-form-item>
-    <bk-form-item :label="$t('自定义脚本')" :desc="$t('指定自定义脚本来配置Node，即当Node启动后运行配置的脚本，需要自行保证脚本的可重入及重试逻辑, 脚本及其生成的日志文件可在节点的/usr/local/qcloud/tke/userscript路径查看')">
+    <bk-form-item
+      :label="$t('自定义脚本')"
+      :desc="$t('指定自定义脚本来配置Node，即当Node启动后运行配置的脚本，需要自行保证脚本的可重入及重试逻辑, 脚本及其生成的日志文件可在节点的/usr/local/qcloud/tke/userscript路径查看')">
       <bcs-input
         type="textarea"
         :disabled="isEdit"
@@ -329,7 +332,7 @@
   </bk-form>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
@@ -477,7 +480,7 @@ export default defineComponent({
       handleGetOsImage();
     });
     const osImageLoading = ref(false);
-    const osImageList = ref([]);
+    const osImageList = ref<any[]>([]);
     const handleGetOsImage = async () => {
       osImageLoading.value = true;
       osImageList.value = await $store.dispatch('clustermanager/cloudOsImage', {
@@ -492,7 +495,8 @@ export default defineComponent({
     // 机型
     const instanceTypesLoading = ref(false);
     const instanceTypesList = ref<any[]>([]);
-    const curInstanceItem = computed(() => instanceTypesList.value.find(instance => instance.nodeType === nodePoolConfig.value.launchTemplate.instanceType) || {});
+    const curInstanceItem = computed(() => instanceTypesList.value
+      .find(instance => instance.nodeType === nodePoolConfig.value.launchTemplate.instanceType) || {});
     watch(() => [
       nodePoolConfig.value.launchTemplate.Mem,
       nodePoolConfig.value.launchTemplate.CPU,
@@ -565,7 +569,7 @@ export default defineComponent({
 
     // 安全组
     const securityGroupsLoading = ref(false);
-    const securityGroupsList = ref([]);
+    const securityGroupsList = ref<any[]>([]);
     const handleGetCloudSecurityGroups = async () => {
       securityGroupsLoading.value = true;
       securityGroupsList.value = await $store.dispatch('clustermanager/cloudSecurityGroups', {
@@ -626,7 +630,8 @@ export default defineComponent({
     const saveLoading = ref(false);
     const handleSaveNodePoolData = async () => {
       const result = await formRef.value?.validate();
-      const validateDataDiskSize = nodePoolConfig.value.launchTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
+      const validateDataDiskSize = nodePoolConfig.value.launchTemplate.dataDisks
+        .every(item => item.diskSize % 10 === 0);
       const mountTargetList = nodePoolConfig.value.launchTemplate.dataDisks.map(item => item.mountTarget);
       const validateDataDiskMountTarget = new Set(mountTargetList).size === mountTargetList.length;
       if (!result || !validateDataDiskSize || !validateDataDiskMountTarget) return;
@@ -666,7 +671,7 @@ export default defineComponent({
         $router.push({
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         });
       }
@@ -684,7 +689,7 @@ export default defineComponent({
         $router.push({
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         });
       }

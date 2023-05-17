@@ -101,7 +101,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, toRefs } from 'vue';
 import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import BasicPoolInfo from './basic-pool-info.vue';
 import KubeletParams from './kubelet-params.vue';

@@ -185,6 +185,14 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			render.Render(w, r, rest.BadRequest(err))
 			return
 		}
+		kt.BizID = uint32(bizID)
+
+		// skip validate biz permission when user is for test
+		if strings.HasPrefix(kt.User, constant.BKUserForTestPrefix) {
+			ctx := kit.WithKit(r.Context(), kt)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 
 		req := &pbas.ResourceAttribute{
 			BizId:       uint32(bizID),
@@ -202,8 +210,6 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			render.Render(w, r, rest.PermissionDenied(errf.ErrPermissionDenied, resp))
 			return
 		}
-
-		kt.BizID = uint32(bizID)
 		ctx := kit.WithKit(r.Context(), kt)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

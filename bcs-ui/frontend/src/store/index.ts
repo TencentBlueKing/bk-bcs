@@ -50,6 +50,8 @@ import clustermanager from '@/store/modules/clustermanager';
 import token from '@/store/modules/token';
 import { getProject } from '@/api/modules/project';
 import VuexStorage from '@/common/vuex-storage';
+import { IProject } from '@/composables/use-app';
+import { IMenu } from '@/views/app/menus';
 
 Vue.use(Vuex);
 // cookie 中 zh-cn / en
@@ -60,7 +62,21 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
   lang = 'en-US';
 }
 
-const store = new Vuex.Store({
+const store = new Vuex.Store<{
+  curProject: IProject | Record<string, any>
+  curCluster: any
+  curSideMenu: IMenu | Record<string, any>
+  curNamespace: string
+  user: {
+    username: string
+  }
+  projectList: Partial<IProject>[]
+  openSideMenu: boolean
+  clusterViewType: 'card' | 'list'
+  isEn: boolean
+  crdInstanceList: any[]
+  cluster: typeof cluster.state
+}>({
   // todo 废弃模块
   modules: {
     depot,
@@ -86,7 +102,7 @@ const store = new Vuex.Store({
   plugins: [
     VuexStorage({
       key: '__bcs_vuex_stroage__',
-      paths: ['curProject.projectID', 'curProject.projectCode', 'curCluster.clusterID', 'openSideMenu', 'curNamespace'],
+      paths: ['curProject.projectID', 'curProject.projectCode', 'curCluster.clusterID', 'openSideMenu', 'curNamespace', 'clusterViewType'],
       mutationEffect: [
         {
           type: 'cluster/forceUpdateClusterList',
@@ -108,10 +124,11 @@ const store = new Vuex.Store({
     curNamespace: '',
     user: {},
     projectList: [],
-    openSideMenu: true,
+    openSideMenu: true, // 菜单是否折叠
+    clusterViewType: 'card', // 集群展示模式 card 或者 list
     isEn: lang === 'en-US', // todo 废弃
     crdInstanceList: [], // todo 放入对应的module中
-  },
+  } as any,
   // 公共 getters
   getters: {
     user: state => state.user,
@@ -187,6 +204,9 @@ const store = new Vuex.Store({
     updateCurSideMenu(state, data) {
       state.curSideMenu = data;
     },
+    updateClusterViewType(state, type) {
+      state.clusterViewType = type;
+    },
   },
   actions: {
     /**
@@ -261,7 +281,7 @@ const store = new Vuex.Store({
      */
     getBcsCrdsList(context, { projectId, clusterId, crdKind, params = {} }, config = {}) {
       context.commit('updateCrdInstanceList', []);
-      const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crds/${crdKind}/custom_objects/?${json2Query(params)}`;
+      const url = `${DEVOPS_BCS_API_URL}/api/bcs_crd/projects/${projectId}/clusters/${clusterId}/crds/${crdKind}/custom_objects/?${json2Query(params, '')}`;
       return http.get(url, {}, config).then((res) => {
         context.commit('updateCrdInstanceList', res.data);
         return res;

@@ -163,7 +163,9 @@
     <!-- 变量设置 -->
     <bcs-sideslider
       :is-show.sync="showSetSlider"
-      :width="700">
+      :width="700"
+      :before-close="handleBeforeClose"
+      quick-close>
       <template #header>
         <LayoutRow>
           <template #left>{{currentRow && currentRow.name}}</template>
@@ -186,7 +188,7 @@
             </bcs-table-column>
             <bcs-table-column :label="$t('值')">
               <template #default="{ row }">
-                <bcs-input v-model="row.value"></bcs-input>
+                <bcs-input v-model="row.value" @change="setChanged(true)"></bcs-input>
               </template>
             </bcs-table-column>
           </bcs-table>
@@ -206,7 +208,7 @@
   </LayoutContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, watch } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 import LayoutContent from '@/components/layout/Content.vue';
 import LayoutRow from '@/components/layout/Row.vue';
 import useVariable, { IParams, Pick } from './use-variable';
@@ -216,6 +218,9 @@ import BkForm from 'bk-magic-vue/lib/form';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import exampleData from './variable.json';
 import useDebouncedRef from '@/composables/use-debounce';
+import useSideslider from '@/composables/use-sideslider';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'VariableManager',
@@ -226,8 +231,8 @@ export default defineComponent({
     BkFormItem,
     CodeEditor,
   },
-  setup(props, ctx) {
-    const { $bkMessage, $bkInfo } = ctx.root;
+  setup() {
+    const { reset, setChanged, handleBeforeClose } = useSideslider();
     const showSideslider = ref(false);
     const scopeList = ref([
       {
@@ -484,6 +489,7 @@ export default defineComponent({
       }
       setData.value = data.results || [];
       setSliderLoading.value = false;
+      reset();
     }
     async function handleSave() {
       setSliderLoading.value = true;
@@ -558,6 +564,8 @@ export default defineComponent({
       handleSetVariable,
       handleSave,
       handleJsonDataChange,
+      setChanged,
+      handleBeforeClose,
     };
   },
 });

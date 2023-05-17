@@ -15,3 +15,5 @@ declare module '*.md'
 declare module '*.yaml'
 
 declare module '*.svg'
+
+declare module '*.png'

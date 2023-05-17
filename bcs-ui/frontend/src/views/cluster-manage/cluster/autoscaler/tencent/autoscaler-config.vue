@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <BcsContent>
     <template #header>
@@ -84,7 +85,7 @@
           <bk-checkbox v-model="autoscalerData.scaleUpFromZero"></bk-checkbox>
         </bk-form-item>
       </LayoutGroup>
-      <LayoutGroup collapsible :expanded="autoscalerData.isScaleDownEnable">
+      <LayoutGroup collapsible :expanded="!!autoscalerData.isScaleDownEnable">
         <template #title>
           <span>{{$t('自动缩容配置')}}</span>
           <span class="switch-autoscaler">
@@ -174,7 +175,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
@@ -182,6 +183,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
 import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   components: {
@@ -195,9 +197,8 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $bkMessage } = ctx.root;
-    const { clusterList } = useClusterList(ctx);
+  setup(props) {
+    const { clusterList } = useClusterList();
     const navList = computed(() => [
       {
         title: clusterList.value.find(item => item.clusterID === props.clusterId)?.clusterName,
@@ -210,7 +211,7 @@ export default defineComponent({
         link: {
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         },
       },
@@ -247,7 +248,7 @@ export default defineComponent({
         $router.push({
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         });
       }

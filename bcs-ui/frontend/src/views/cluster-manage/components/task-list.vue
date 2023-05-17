@@ -12,7 +12,7 @@
             </span>
             <i
               class="bcs-icon bcs-icon-fenxiang"
-              v-if="row.params && row.params.taskUrl"
+              v-if="row.params && row.params.showUrl === 'true' && row.params.taskUrl"
               @click="handleGotoSops(row)"></i>
           </span>
         </template>
@@ -29,15 +29,28 @@
       </bk-table-column>
       <bk-table-column :label="$t('执行时间')" width="220">
         <template #default="{ row }">
-          {{row.start}}
+          <template v-if="row.status.toLowerCase() === 'notstarted'">
+            --
+          </template>
+          <template v-else>
+            {{timeFormat(row.start)}}
+          </template>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('总耗时')">
+      <bk-table-column :label="$t('耗时')">
         <template #default="{ row }">
-          {{timeDelta(row.start, row.end) || '--'}}
+          <template v-if="row.status === 'RUNNING'">
+            {{timeDelta(row.start, new Date()) || '--'}}
+          </template>
+          <template v-else-if="row.start && row.end">
+            {{timeDelta(row.start, row.end) || '1s'}}
+          </template>
+          <template v-else>
+            --
+          </template>
         </template>
       </bk-table-column>
-      <bk-table-column min-width="120" :label="$t('内容')" prop="message">
+      <bk-table-column min-width="120" :label="$t('日志')" prop="message">
         <template #default="{ row }">
           <bcs-button
             text
@@ -77,11 +90,12 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from '@vue/composition-api';
-import { taskStatusTextMap, taskStatusColorMap } from '@/common/constant';
-import { timeDelta, copyText } from '@/common/util';
+import { defineComponent, ref } from 'vue';
+import { timeDelta, copyText, timeFormat } from '@/common/util';
 import StatusIcon from '@/components/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
+import $bkMessage from '@/common/bkmagic';
+import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
   name: 'TaskList',
@@ -95,10 +109,24 @@ export default defineComponent({
       default: () => [],
     },
   },
-  setup(props, ctx) {
-    const { $bkMessage, $i18n } = ctx.root;
-
-    const curTaskRow = ref({});
+  setup() {
+    const taskStatusTextMap = {
+      initialzing: window.i18n.t('初始化中'),
+      running: window.i18n.t('运行中'),
+      success: window.i18n.t('成功'),
+      failure: window.i18n.t('失败'),
+      timeout: window.i18n.t('超时'),
+      notstarted: window.i18n.t('未执行'),
+    };
+    const taskStatusColorMap = {
+      initialzing: 'blue',
+      running: 'blue',
+      success: 'green',
+      failure: 'red',
+      timeout: 'red',
+      notstarted: 'blue',
+    };
+    const curTaskRow = ref<Record<string, any>>({});
     const showValuesDialog = ref(false);
     const activeTask = ref('');
     // 跳转标准运维
@@ -125,6 +153,7 @@ export default defineComponent({
     return {
       taskStatusColorMap,
       taskStatusTextMap,
+      timeFormat,
       timeDelta,
       curTaskRow,
       activeTask,

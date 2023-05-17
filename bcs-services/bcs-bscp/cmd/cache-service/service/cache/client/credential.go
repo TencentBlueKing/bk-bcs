@@ -51,7 +51,7 @@ func (c *client) ListCredentialMatchedCI(kt *kit.Kit, bizID uint32, credential s
 	if state.Acquired || (!state.Acquired && state.WithLimit) {
 
 		start := time.Now()
-		list, err := c.refreshMatchedCIFromCache(kt, bizID, credential)
+		list, err = c.refreshMatchedCIFromCache(kt, bizID, credential)
 		if err != nil {
 			state.Release(true)
 			return "", err
@@ -136,6 +136,9 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential s
 
 	// list credential scopes
 	scopes, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
+	if err != nil {
+		return "", 0, err
+	}
 
 	// list all apps which can be matched by credential.
 	appDetails, err := c.op.App().List(kt, &types.ListAppsOption{
@@ -153,9 +156,9 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential s
 	appIDs := make([]uint32, 0, len(appDetails.Details))
 	for _, app := range appDetails.Details {
 		for _, scope := range scopes.Details {
-			match, err := scope.Spec.CredentialScope.MatchApp(app.Spec.Name)
-			if err != nil {
-				return "", 0, err
+			match, e := scope.Spec.CredentialScope.MatchApp(app.Spec.Name)
+			if e != nil {
+				return "", 0, e
 			}
 			if match {
 				appIDs = append(appIDs, app.ID)
@@ -166,7 +169,7 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential s
 		// return early to avoid querying db with empty appIDs which will cause error.
 		return "[]", 2, nil
 	}
-	
+
 	cis := make([]uint32, 0)
 	listReleasedCIopt := &types.ListReleasedCIsOption{
 		BizID: bizID,
@@ -188,9 +191,9 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential s
 	}
 	for _, ci := range CIDetails.Details {
 		for _, scope := range scopes.Details {
-			match, err := scope.Spec.CredentialScope.MatchConfigItem(ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
-			if err != nil {
-				return "", 0, err
+			match, e := scope.Spec.CredentialScope.MatchConfigItem(ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
+			if e != nil {
+				return "", 0, e
 			}
 			if match {
 				cis = append(cis, ci.ID)

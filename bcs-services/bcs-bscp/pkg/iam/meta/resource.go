@@ -44,6 +44,8 @@ const (
 	StrategySet ResourceType = "strategy_set"
 	// Hook resource's bscp auth resource type
 	Hook ResourceType = "hook"
+	// TemplateSpace resource's bscp auth resource type
+	TemplateSpace ResourceType = "template_space"
 	// Group resource's bscp auth resource type
 	Group ResourceType = "group"
 	// PSH resource's bscp auth resource type

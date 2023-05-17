@@ -1,9 +1,9 @@
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../store/global'
-  import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupItem, IGroupBindService } from '../../../../types/group'
-  import { updateGroup, getGroupReleasedApps } from '../../../api/group'
+  import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupItem } from '../../../../types/group'
+  import { updateGroup } from '../../../api/group'
   import groupEditForm from './components/group-edit-form.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -32,7 +32,7 @@
       groupData.value = {
         id,
         name,
-        bind_apps,
+        bind_apps: bind_apps.map(item => item.id),
         public: isPublic,
         rule_logic: selector.labels_and ? 'AND' : 'OR',
         rules: (selector.labels_and || selector.labels_or) as IGroupRuleItem[]

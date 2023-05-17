@@ -1,25 +1,26 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <div class="apply-host-wrapper" v-if="$INTERNAL">
-    <div class="apply-host-btn">
+    <div class="apply-host-btn flex items-center">
       <bk-popover placement="bottom" v-if="!hasAuth" transfer>
         <span class="bk-default bk-button-normal bk-button is-disabled">{{title}}</span>
         <div slot="content" style="width: 220px;">
           {{ authTips.content }}
         </div>
       </bk-popover>
-      <!-- <bk-popover placement="bottom" v-else-if="applyHostButton.disabled" transfer>
-        <span class="bk-default bk-button-normal bk-button is-disabled">{{$t('申请服务器')}}</span>
-        <div slot="content" style="width: 220px;">
-          {{ applyHostButton.tips }}
-        </div>
-      </bk-popover> -->
-      <bk-button
-        v-else
-        :theme="theme"
-        @click="handleOpenApplyHost">
-        {{title}}
-      </bk-button>
+      <template v-else>
+        <bk-button
+          :theme="theme"
+          @click="handleOpenApplyHost">
+          {{title}}
+        </bk-button>
+        <span
+          class="bcs-icon-btn apply-record flex items-center justify-center w-[32px] h-[32px] ml-[-1px] bg-[#fff]"
+          v-bk-tooltips="$t('查看申请记录')"
+          @click="handleOpenLink">
+          <i class="bcs-icon bcs-icon-wenjian"></i>
+        </span>
+      </template>
     </div>
     <bcs-dialog
       :position="{ top: 80 }"
@@ -33,7 +34,7 @@
       <bk-alert type="info" class="mb20">
         <template #title>
           <a
-            :href="PROJECT_CONFIG.applyRecords"
+            :href="PROJECT_CONFIG.applyrecords"
             target="_blank"
             class="bk-button-text bk-primary"
             style="font-size: 12px;"
@@ -47,17 +48,20 @@
         :model="formdata"
         :rules="rules">
         <bk-form-item property="region" :label="$t('所属地域')" :required="true" :desc="defaultInfo.areaDesc">
-          <bk-selector
+          <bcs-select
             :placeholder="$t('请选择地域')"
-            :selected.sync="formdata.region"
-            :list="areaList"
-            :searchable="true"
-            :setting-key="'areaName'"
-            :display-key="'showName'"
-            :search-key="'areaName'"
-            :is-loading="isAreaLoading"
+            v-model="formdata.region"
+            searchable
+            id-key="areaName"
+            display-key="showName"
+            :loading="isAreaLoading"
             :disabled="defaultInfo.disabled || isHostLoading">
-          </bk-selector>
+            <bcs-option
+              v-for="item in areaList"
+              :key="item.region"
+              :id="item.region"
+              :name="item.regionName" />
+          </bcs-select>
         </bk-form-item>
         <bk-form-item property="networkKey" :label="$t('网络类型')" :desc="defaultInfo.netWorkDesc" :required="true">
           <div class="bk-button-group">
@@ -80,30 +84,31 @@
           </div>
         </bk-form-item>
         <bk-form-item property="zone_id" :label="$t('园区')" :required="true">
-          <bk-selector
+          <bcs-select
             :placeholder="$t('请选择园区')"
-            :selected.sync="formdata.zone_id"
-            :list="zoneList"
-            :searchable="true"
-            setting-key="value"
-            display-key="label"
-            search-key="label"
+            v-model="formdata.zone_id"
+            searchable
+            :clearable="false"
             :disabled="isHostLoading"
-            @item-selected="hanldeReloadHosts"
-          >
-          </bk-selector>
+            :loading="zoneLoading">
+            <bcs-option
+              v-for="item in zoneList"
+              :key="item.value"
+              :id="item.value"
+              :name="item.label" />
+          </bcs-select>
         </bk-form-item>
         <bk-form-item property="vpc_name" :label="$t('所属VPC')" :required="true" :desc="defaultInfo.vpcDesc">
-          <bk-selector
+          <bcs-select
             :placeholder="$t('请选择VPC')"
-            :selected.sync="formdata.vpc_name"
+            v-model="formdata.vpc_name"
             :list="vpcList"
-            :searchable="true"
-            :setting-key="'vpcId'"
-            :display-key="'vpcName'"
-            :search-key="'vpcName'"
-            :disabled="defaultInfo.disabled">
-          </bk-selector>
+            searchable
+            :clearable="false"
+            :disabled="defaultInfo.disabled"
+            :loading="vpcLoading">
+            <bcs-option v-for="item in vpcList" :key="item.vpcId" :id="item.vpcId" :name="item.vpcName" />
+          </bcs-select>
         </bk-form-item>
         <bk-form-item ext-cls="has-append-item" :label="$t('数据盘')" property="disk_size">
           <div class="disk-inner">
@@ -116,7 +121,9 @@
               >
               </bcs-option>
             </bcs-select>
-            <bk-input v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('请输入50的倍数的数值')">
+            <bk-input
+              class="ml-[-1px]"
+              v-model="formdata.disk_size" type="number" :min="50" :placeholder="$t('请输入50的倍数的数值')">
               <div class="group-text" slot="append">GB</div>
             </bk-input>
           </div>
@@ -135,27 +142,23 @@
           <div class="form-item-inner">
             <label class="inner-label">CPU</label>
             <div class="inner-content">
-              <bk-selector
-                :selected.sync="hostData.cpu"
-                :list="cpuList"
-                :searchable="true"
-                :setting-key="'id'"
-                :display-key="'name'"
-                :search-key="'name'">
-              </bk-selector>
+              <bcs-select
+                v-model="hostData.cpu"
+                searchable
+                :clearable="false">
+                <bcs-option v-for="item in cpuList" :key="item.id" :id="item.id" :name="item.name" />
+              </bcs-select>
             </div>
           </div>
           <div :class="['form-item-inner', !isEn && 'ml40']" :style="{ width: isEn ? '310px' : '286px' }">
             <label class="inner-label">{{$t('内存')}}</label>
             <div class="inner-content">
-              <bk-selector
-                :selected.sync="hostData.mem"
-                :list="memList"
-                :searchable="true"
-                :setting-key="'id'"
-                :display-key="'name'"
-                :search-key="'name'">
-              </bk-selector>
+              <bcs-select
+                v-model="hostData.mem"
+                searchable
+                :clearable="false">
+                <bcs-option v-for="item in memList" :key="item.id" :id="item.id" :name="item.name" />
+              </bcs-select>
             </div>
           </div>
           <bk-button theme="primary" :disabled="isHostLoading" @click.stop="hanldeReloadHosts">{{$t('查询')}}</bk-button>
@@ -170,18 +173,18 @@
           property="cvm_type"
           class="host-item">
           <bk-radio-group v-model="formdata.cvm_type">
-            <bk-table :data="hostTableData" :max-height="320" :height="320" style="overflow-y: hidden;">
+            <bk-table :data="hostTableData" :max-height="320" style="overflow-y: hidden;">
               <bk-table-column label="" width="40" :resizable="false">
                 <template slot-scope="{ row }">
                   <span
                     v-bk-tooltips="{
                       content: $t('当前区域CVM资源不足，请选择其它机型'),
-                      disabled: !((cvmData[row.specifications] || 0) < formdata.replicas)
+                      disabled: !((cvmData[row.specifications] || 0) < formdata.replicas) || isCvmLoading
                     }">
                     <bk-radio
                       name="host"
                       :value="row.specifications"
-                      :disabled="(cvmData[row.specifications] || 0) < formdata.replicas"
+                      :disabled="((cvmData[row.specifications] || 0) < formdata.replicas) || isCvmLoading"
                       @change="handleRadioChange(row)">
                     </bk-radio>
                   </span>
@@ -200,7 +203,8 @@
               <bk-table-column :label="$t('内存')" prop="mem" width="80"></bk-table-column>
               <bk-table-column :label="$t('可生产实例数')" prop="mem">
                 <template #default="{ row }">
-                  {{ cvmData[row.specifications] }}
+                  <LoadingIcon v-if="isCvmLoading">{{ $t('加载中') }}...</LoadingIcon>
+                  <span v-else>{{ cvmData[row.specifications] }}</span>
                 </template>
               </bk-table-column>
               <bk-table-column :label="$t('备注')" prop="description" show-overflow-tooltip>
@@ -231,8 +235,12 @@
 
 <script>
 /* eslint-disable max-len */
+import http from '@/api';
 import { request } from '@/api/request';
+import LoadingIcon from '@/components/loading-icon.vue';
+
 export default {
+  components: { LoadingIcon },
   props: {
     theme: {
       type: String,
@@ -255,13 +263,12 @@ export default {
     return {
       cvmData: {},
       timer: null,
-      // applyHostButton: {
-      //   disabled: true,
-      //   tips: '',
-      // },
       isSubmitLoading: false,
       isAreaLoading: false,
-      isHostLoading: true,
+      isHostLoading: false,
+      isCvmLoading: false,
+      vpcLoading: false,
+      zoneLoading: false,
       applyDialogShow: false,
       areaList: [],
       vpcList: [],
@@ -277,6 +284,7 @@ export default {
         disk_type: '',
         networkKey: 'overlay',
       },
+      isQuery: false,
       rules: {
         region: [{
           required: true,
@@ -289,7 +297,7 @@ export default {
           message: this.$t('请输入50的倍数的数值'),
         }],
         cvm_type: [{
-          required: true,
+          validator: value => this.isQuery || !!value,
           trigger: 'change',
           message: this.$t('请选择机型'),
         }],
@@ -307,8 +315,6 @@ export default {
         disabled: false,
       },
       clusterInfo: {},
-      hasAuth: false,
-      maintainers: [],
       cpuList: [{
         id: 0,
         name: this.$t('全部'),
@@ -386,6 +392,9 @@ export default {
     };
   },
   computed: {
+    maintainers() {
+      return this.$store.state.cluster.maintainers || [];
+    },
     projectId() {
       return this.$route.params.projectId;
     },
@@ -402,9 +411,8 @@ export default {
       return this.formdata.disk_size / parseInt(this.checkedHostInfo.cpu) > 50;
     },
     authTips() {
-      const users = this.maintainers.join(', ');
       return {
-        content: this.$t('您不是当前项目绑定业务的运维人员，如需申请机器，请联系业务运维人员 {maintainers}', { maintainers: users }),
+        content: this.$t('您不是当前项目绑定业务的运维人员，请联系业务运维人员'),
         width: 240,
       };
     },
@@ -414,6 +422,9 @@ export default {
     zoneName() {
       const zone = this.zoneList.find(item => item.value === this.formdata.zone_id) || {};
       return zone.label || '--';
+    },
+    hasAuth() {
+      return this.maintainers.includes(this.userInfo.username);
     },
   },
   watch: {
@@ -444,8 +455,6 @@ export default {
     },
   },
   async created() {
-    await this.getBizMaintainers();
-
     if (!this.hasAuth) return;
     if (this.isBackfill) {
       this.defaultInfo = {
@@ -462,14 +471,6 @@ export default {
     clearTimeout(this.timer) && (this.timer = null);
   },
   methods: {
-    /**
-             * 获取申请权限
-             */
-    async getBizMaintainers() {
-      const res = await this.$store.dispatch('cluster/getBizMaintainers');
-      this.maintainers = res.maintainer;
-      this.hasAuth = this.maintainers.includes(this.userInfo.username);
-    },
     /**
              * 获取当前集群数据
              */
@@ -498,6 +499,7 @@ export default {
           $cloudId: 'tencentCloud',
         });
         this.areaList = list.map(item => ({
+          ...item,
           areaId: item.cloudID,
           areaName: item.region,
           showName: item.regionName,
@@ -507,10 +509,11 @@ export default {
           if (area) {
             this.formdata.region = area.areaName;
           }
-        } else if (this.areaList.length) {
-          // 默认选中第一个
-          this.formdata.region = this.areaList[0].areaName;
         }
+        // else if (this.areaList.length) {
+        //   // 默认选中第一个
+        //   this.formdata.region = this.areaList[0].areaName;
+        // }
       } catch (e) {
         this.areaList = [];
         console.error(e);
@@ -534,10 +537,12 @@ export default {
       if (!this.formdata.region) return;
 
       try {
+        this.zoneLoading = true;
         const data = await this.$store.dispatch('cluster/getZoneList', {
           projectId: this.projectId,
           region: this.formdata.region,
         });
+        this.zoneLoading = false;
         this.zoneList = data.data;
         if (this.clusterInfo.zone_id && this.isBackfill) {
           const zone = this.zoneList.find(item => item.value === this.clusterInfo.zone_id);
@@ -579,11 +584,13 @@ export default {
         return;
       }
       try {
+        this.vpcLoading = true;
         const data = await this.$store.dispatch('clustermanager/fetchCloudVpc', {
           cloudID: 'tencentCloud',
           region: this.formdata.region,
           networkType: this.formdata.networkKey,
         });
+        this.vpcLoading = false;
         const vpcList = data.map(item => ({
           vpcId: item.vpcID,
           vpcName: item.vpcName,
@@ -605,7 +612,7 @@ export default {
           // 默认选中第一个
           this.formdata.vpc_name = this.vpcList[0].vpcId;
         }
-        this.hanldeReloadHosts();
+        // this.hanldeReloadHosts();
       } catch (e) {
         console.error(e);
       }
@@ -636,7 +643,9 @@ export default {
             description: getRow[3].replace('备注:', ''),
           };
         });
+        // 接口很慢，异步执行
         await this.getCvmCapacity();
+        this.hostTableData = this.hostTableData.sort((pre, next) => (this.cvmData[next.specifications] || 0) - (this.cvmData[pre.specifications] || 0));
         this.isHostLoading = false;
       } catch (e) {
         this.hostTableData = [];
@@ -649,6 +658,7 @@ export default {
              * 申请服务器
              */
     async handleSubmitApply() {
+      this.isQuery = false;
       const validate = await this.$refs.applyForm.validate();
       if (!validate) return;
       try {
@@ -667,8 +677,11 @@ export default {
         this.isSubmitLoading = false;
       }
     },
-    hanldeReloadHosts() {
-      this.isHostLoading = true;
+    async hanldeReloadHosts() {
+      this.isQuery = true;
+      const result = await this.$refs.applyForm.validate();
+      if (!result) return;
+
       this.formdata.cvm_type = '';
       this.getHosts();
     },
@@ -688,6 +701,7 @@ export default {
         disk_size: 50,
         replicas: 1,
         cvm_type: '',
+        zone_id: '',
       };
 
       this.hostData = {
@@ -695,6 +709,7 @@ export default {
         mem: 0,
       };
 
+      this.hostTableData = [];
       this.applyDialogShow = true;
       this.isAreaLoading = true;
       this.getAreas();
@@ -708,55 +723,31 @@ export default {
       clearTimeout(this.timer) && (this.timer = null);
       // this.getApplyHostStatus();
     },
-
-    /**
-             * 查看主机申请状态
-             */
-    // async getApplyHostStatus() {
-    //   try {
-    //     const res = await this.$store.dispatch('cluster/checkApplyHostStatus', { projectId: this.projectId });
-    //     const data = res.data || {};
-    //     const { status } = data;
-    //     if (status && status !== 'FINISHED') {
-    //       const tipsContentMap = {
-    //         RUNNING: this.$t('主机申请中'),
-    //       };
-    //       this.applyHostButton.tips = `${tipsContentMap[status] || this.$t('项目下存在主机申请失败的单据，请联系申请者【{name}】或', { name: data.operator })}
-    //                     <a href="${window.BCS_CONFIG?.host?.SRC_IED_HOST}" target="_blank" style="color: #3a84ff;">${this.$t('查看详情')}</a>`;
-    //     } else {
-    //       this.applyHostButton.tips = '';
-    //     }
-    //     this.applyHostButton.disabled = status === 'RUNNING';
-    //     if (this.timer) {
-    //       clearTimeout(this.timer);
-    //       this.timer = null;
-    //     }
-    //     if (status === 'RUNNING') {
-    //       this.timer = setTimeout(() => {
-    //         this.getApplyHostStatus();
-    //       }, 15000);
-    //     }
-    //   } catch (e) {
-    //     console.error(e);
-    //   }
-    // },
     async getCvmCapacity() {
       if (!this.formdata.zone_id || !this.formdata.region || !this.$INTERNAL) return;
-      this.isHostLoading = true;
+      // 取消上一次的请求
+      await http.cancel('get_cvm_capacity_request_id');
+      this.isCvmLoading = true;
       const srePrefix = `${process.env.NODE_ENV === 'development' ? '' : window.BK_SRE_HOST}`;
       const cvmCapacity = request('get', `${srePrefix}/bcsadmin/cvmcapacity`);
       this.cvmData = await cvmCapacity({
         zone_id: this.formdata.zone_id,
         region_id: this.formdata.region,
-      }).catch(() => ({}));
-      this.isHostLoading = false;
+        vpc_id: this.formdata.vpc_name,
+      }, { requestId: 'get_cvm_capacity_request_id' }).catch(() => ({}));
+      this.isCvmLoading = false;
+    },
+    handleOpenLink() {
+      window.open(this.PROJECT_CONFIG?.applyrecords);
     },
   },
 };
 </script>
 
 <style lang="postcss" scoped>
-.apply-host-wrapper {
+.apply-record {
+  border: 1px solid #C4C6CC;
+  border-left: 1px solid #DCDEE5;
 }
 .apply-host-dialog {
     .bk-dialog-footer {

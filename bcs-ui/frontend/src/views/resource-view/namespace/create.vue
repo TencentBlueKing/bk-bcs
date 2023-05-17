@@ -7,108 +7,122 @@
           v-model="formData"
           :rules="rules"
           form-type="vertical">
-          <bk-form-item
-            v-if="isSharedCluster"
-            :label="$t('名称')"
-            :required="true"
-            property="name"
-            error-display-type="normal"
-            :desc="$t('命名规则：ieg-项目英文名称-自定义名称')">
-            <bk-input v-model="formData.name" class="w-[620px]" maxlength="30">
-              <div slot="prepend">
-                <div class="group-text">{{ 'ieg-' + projectCode + '-' }}</div>
-              </div>
-            </bk-input>
-          </bk-form-item>
-          <bk-form-item
-            v-else
-            :label="$t('名称')"
-            :required="true"
-            error-display-type="normal"
-            property="name">
-            <bk-input v-model="formData.name" class="w-[620px]"></bk-input>
-          </bk-form-item>
-          <bk-form-item
-            v-if="!isSharedCluster"
-            :label="$t('标签')"
-            error-display-type="normal"
-            property="labels">
-            <bk-form
-              class="flex mb-[10px] items-center"
-              v-for="(label, index) in formData.labels"
-              :key="index"
-              ref="labelsForm">
-              <bk-form-item>
-                <bk-input v-model="label.key" placeholder="Key" class="w-[300px]" @blur="validate"></bk-input>
-              </bk-form-item>
-              <span class="px-[5px]">=</span>
-              <bk-form-item>
-                <bk-input :placeholder="$t('值')" v-model="label.value" class="w-[300px]" @blur="validate"></bk-input>
-              </bk-form-item>
-              <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveLabel(index)" />
-            </bk-form>
-            <i class="bk-icon icon-plus-line ml-[5px] cursor-pointer" @click="handleAddLabel" />
-          </bk-form-item>
-          <bk-form-item
-            v-if="!isSharedCluster"
-            :label="$t('注解')"
-            error-display-type="normal"
-            property="annotations">
-            <bk-form
-              class="flex mb-[10px] items-center"
-              v-for="(annotation, index) in formData.annotations"
-              :key="index"
-              ref="annotationsForm">
-              <bk-form-item>
-                <bk-input v-model="annotation.key" placeholder="Key" class="w-[300px]" @blur="validate"></bk-input>
-              </bk-form-item>
-              <span class="px-[5px]">=</span>
-              <bk-form-item>
-                <bk-input v-model="annotation.value" placeholder="Value" class="w-[300px]" @blur="validate"></bk-input>
-              </bk-form-item>
-              <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveAnnotation(index)"></i>
-            </bk-form>
-            <i class="bk-icon icon-plus-line ml-[5px] cursor-pointer" @click="handleAddAnnotation"></i>
-          </bk-form-item>
+          <!-- 共享集群 -->
+          <template v-if="isSharedCluster">
+            <bk-form-item
+              :label="$t('名称')"
+              required
+              property="name"
+              error-display-type="normal"
+              :desc="$t('命名规则：ieg-项目英文名称-自定义名称')">
+              <bk-input v-model="formData.name" class="w-[620px]" maxlength="30">
+                <div slot="prepend">
+                  <div class="group-text">{{ 'ieg-' + projectCode + '-' }}</div>
+                </div>
+              </bk-input>
+            </bk-form-item>
+          </template>
+          <!-- 普通集群 -->
+          <template v-else>
+            <bk-form-item
+              :label="$t('名称')"
+              :required="true"
+              error-display-type="normal"
+              property="name">
+              <bk-input v-model="formData.name" class="w-[620px]"></bk-input>
+            </bk-form-item>
+            <bk-form-item
+              :label="$t('标签')"
+              error-display-type="normal"
+              property="labels">
+              <bk-form
+                class="flex mb-[10px] items-center"
+                v-for="(label, index) in formData.labels"
+                :key="index"
+                ref="labelsForm">
+                <bk-form-item>
+                  <bk-input v-model="label.key" placeholder="Key" class="w-[300px]" @blur="validate"></bk-input>
+                </bk-form-item>
+                <span class="px-[5px]">=</span>
+                <bk-form-item>
+                  <bk-input :placeholder="$t('值')" v-model="label.value" class="w-[300px]" @blur="validate"></bk-input>
+                </bk-form-item>
+                <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveLabel(index)" />
+              </bk-form>
+              <span
+                class="text-[14px] text-[#3a84ff] cursor-pointer flex items-center h-[32px]"
+                @click="handleAddLabel">
+                <i class="bk-icon icon-plus-circle-shape mr5"></i>
+                {{$t('添加')}}
+              </span>
+            </bk-form-item>
+            <bk-form-item
+              :label="$t('注解')"
+              error-display-type="normal"
+              property="annotations">
+              <bk-form
+                class="flex mb-[10px] items-center"
+                v-for="(annotation, index) in formData.annotations"
+                :key="index"
+                ref="annotationsForm">
+                <bk-form-item>
+                  <bk-input v-model="annotation.key" placeholder="Key" class="w-[300px]" @blur="validate"></bk-input>
+                </bk-form-item>
+                <span class="px-[5px]">=</span>
+                <bk-form-item>
+                  <bk-input
+                    v-model="annotation.value"
+                    placeholder="Value"
+                    class="w-[300px]"
+                    @blur="validate">
+                  </bk-input>
+                </bk-form-item>
+                <i class="bk-icon icon-minus-line ml-[5px] cursor-pointer" @click="handleRemoveAnnotation(index)"></i>
+              </bk-form>
+              <span
+                class="text-[14px] text-[#3a84ff] cursor-pointer flex items-center h-[32px]"
+                @click="handleAddAnnotation">
+                <i class="bk-icon icon-plus-circle-shape mr5"></i>
+                {{$t('添加')}}
+              </span>
+            </bk-form-item>
+          </template>
           <bk-form-item
             :label="$t('配额设置')"
             :required="isSharedCluster"
+            :desc="isSharedCluster ? {
+              content: $t('1.创建命名会进入审批流程，如需加急审批请主动联系审批人 2.为了避免产生过多资源碎片，CPU/内存资源比不应大于1/4'),
+              width: 360,
+            } : ''"
             error-display-type="normal"
-            property="quota"
-            v-bind="quotaFormItemConfig">
+            property="quota">
             <div class="flex">
               <div class="flex mr-[20px]">
                 <span class="mr-[15px] text-[14px]">CPU</span>
-                <bk-input
+                <bcs-input
                   v-model="formData.quota.cpuRequests"
                   class="w-[250px]"
                   type="number"
                   :min="1"
-                  int
                   :max="512000"
                   :precision="0">
                   <div class="group-text" slot="append">{{ $t('核') }}</div>
-                </bk-input>
+                </bcs-input>
               </div>
               <div class="flex">
                 <span class="mr-[15px] text-[14px]">MEN</span>
-                <bk-input
+                <bcs-input
                   v-model="formData.quota.memoryRequests"
                   class="w-[250px]"
                   type="number"
                   :min="1"
-                  int
                   :max="1024000"
                   :precision="0">
                   <div class="group-text" slot="append">G</div>
-                </bk-input>
+                </bcs-input>
               </div>
             </div>
           </bk-form-item>
-          <div id="quota-tip" v-if="isSharedCluster">
-            <p>{{ $t('1.创建命名会进入审批流程，如需加急审批请主动联系审批人') }}</p>
-            <p>{{ $t('2.为了避免产生过多资源碎片，CPU/内存资源比不应大于1/4') }}</p>
-          </div>
         </bk-form>
       </div>
     </div>
@@ -123,27 +137,36 @@
   </LayoutContent>
 </template>
 
-<script>
-import { defineComponent, computed, ref } from '@vue/composition-api';
+<script lang='ts'>
+import { defineComponent, computed, ref, toRef, reactive } from 'vue';
 import LayoutContent from '@/components/layout/Content.vue';
 import { useNamespace } from './use-namespace';
 import { useCluster } from '@/composables/use-app';
 import { KEY_REGEXP } from '@/common/constant';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'CreateNamespace',
   components: {
     LayoutContent,
   },
-  setup(props, ctx) {
-    const { $bkInfo, $i18n, $router, $route, $bkMessage } = ctx.root;
-    const quotaTipsCof = ref({
-      allowHtml: true,
-      width: 380,
-      content: '#quota-tip',
-      placement: 'top',
-    });
-    const formData = ref({
+  setup() {
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
+
+    const formData = ref<{
+      name: string
+      quota: {
+        cpuLimits: string
+        cpuRequests: string
+        memoryLimits: string
+        memoryRequests: string
+      }
+      labels: any[]
+      annotations: any[]
+    }>({
       name: '',
       quota: {
         cpuLimits: '',
@@ -155,18 +178,7 @@ export default defineComponent({
       annotations: [],
     });
 
-    const quotaFormItemConfig = computed(() => {
-      const config = {
-        required: isSharedCluster.value,
-
-      };
-      if (isSharedCluster.value) {
-        config.desc = quotaTipsCof.value;
-      };
-      return config;
-    });
-
-    const clusterId = computed(() => $route.params.clusterId);
+    const clusterId = computed(() => $route.value.params.clusterId);
 
     const { isSharedCluster } = useCluster();
     const { handleCreatedNamespace } = useNamespace();
@@ -184,7 +196,7 @@ export default defineComponent({
       quota: isSharedCluster.value ? [
         {
           validator() {
-            return Boolean(formData.value.quota.cpuRequests) >= 1 && Boolean(formData.value.quota.memoryRequests) >= 1;
+            return Number(formData.value.quota.cpuRequests) >= 1 && Number(formData.value.quota.memoryRequests) >= 1;
           },
           message: $i18n.t('共享集群需设置MEN、CPU配额，且两者最小值不小于0'),
           trigger: 'blur',
@@ -197,7 +209,7 @@ export default defineComponent({
             const regx = new RegExp(KEY_REGEXP);
             return formData.value.labels.every(item => regx.test(item.key) && regx.test(item.value));
           },
-          message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
+          message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
           trigger: 'blur',
         },
       ],
@@ -208,14 +220,14 @@ export default defineComponent({
             const regx = new RegExp(KEY_REGEXP);
             return formData.value.annotations.every(item => regx.test(item.key) && regx.test(item.value));
           },
-          message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
+          message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
           trigger: 'blur',
         },
       ],
 
     };
 
-    const projectCode = computed(() => $route.params.projectCode);
+    const projectCode = computed(() => $route.value.params.projectCode);
     const namespaceForm = ref();
     const isLoading = ref(false);
 
@@ -260,14 +272,14 @@ export default defineComponent({
           name = `ieg-${projectCode.value}-${name}`;
         }
         isLoading.value = true;
-        let quota = null;
+        let quota: Record<string, string> | null = null;
         if (formData.value.quota.cpuRequests || formData.value.quota.memoryRequests) {
-          quota = Object.assign({}, {
+          quota = {
             cpuLimits: String(formData.value.quota.cpuRequests),
             cpuRequests: String(formData.value.quota.cpuRequests),
             memoryLimits: `${formData.value.quota.memoryRequests}Gi`,
             memoryRequests: `${formData.value.quota.memoryRequests}Gi`,
-          });
+          };
         }
         const result = await handleCreatedNamespace({
           $clusterId: clusterId.value,
@@ -288,7 +300,6 @@ export default defineComponent({
 
     return {
       rules,
-      quotaFormItemConfig,
       formData,
       isLoading,
       isSharedCluster,

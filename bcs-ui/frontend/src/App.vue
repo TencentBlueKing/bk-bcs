@@ -15,7 +15,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onBeforeUnmount, onMounted, ref } from '@vue/composition-api';
+import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 import Navigation from '@/views/app/navigation.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
 import PermDialog from '@/views/app/apply-perm.vue';

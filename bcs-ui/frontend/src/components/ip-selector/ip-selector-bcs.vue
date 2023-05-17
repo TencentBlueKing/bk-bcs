@@ -42,11 +42,15 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, reactive, toRefs, h, ref, watch } from '@vue/composition-api';
+import { defineComponent, reactive, toRefs, h, ref, watch, computed, PropType } from 'vue';
 import { ipSelector, AgentStatus } from './ip-selector';
 import './ip-selector.css';
 import { fetchBizTopo, fetchBizHosts, nodeAvailable } from '@/api/base';
 import { copyText } from '@/common/util';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
+import $store from '@/store';
+import { useClusterOperate } from '@/views/cluster-manage/cluster/use-cluster';
 
 export interface ISelectorState {
   isLoading: boolean;
@@ -74,9 +78,25 @@ export default defineComponent({
       type: Number,
       default: 600,
     },
+    disabledIpList: {
+      type: Array as PropType<Array<string|{ip: string, tips: string}>>,
+      default: () => [],
+    },
+    cloudId: {
+      type: String,
+      default: '',
+    },
+    region: {
+      type: String,
+      default: '',
+    },
+    // 集群VPC
+    vpc: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   setup(props, ctx) {
-    const { $i18n } = ctx.root;
     const statusMap = {
       0: 'terminated',
       1: 'running',
@@ -105,7 +125,7 @@ export default defineComponent({
         },
         {
           name: 'custom-input',
-          label: $i18n.t('自定义输入'),
+          label: $i18n.t('手动输入'),
         },
       ],
       active: 'static-topo',
@@ -150,7 +170,7 @@ export default defineComponent({
     const selectorRef = ref<any>(null);
 
     // 初始化回显列表
-    const { ipList } = toRefs(props);
+    const { ipList, disabledIpList, cloudId } = toRefs(props);
     watch(ipList, () => {
       const groups = state.previewData.find(item => item.id === 'nodes');
       if (groups) {
@@ -187,6 +207,7 @@ export default defineComponent({
       return treeData;
     };
     const nodeAvailableMap = {};
+    const { getCloudNodes } = useClusterOperate();
     // 静态表格数据处理
     const handleGetStaticTableData = async (params) => {
       const { selections = [], current, limit, tableKeyword, accurate } = params;
@@ -209,6 +230,21 @@ export default defineComponent({
       const nodeAvailableData = await nodeAvailable({
         innerIPs: data.results.map(item => item.bk_host_innerip),
       });
+      // 合并节点对应的云数据信息
+      if (props.cloudId && props.region && data.results.length) {
+        const nodeCloudData = await getCloudNodes({
+          $cloudId: props.cloudId,
+          region: props.region,
+          ipList: data.results.map(item => item.bk_host_innerip).join(','),
+        });
+        data.results = data.results.map((item) => {
+          const extraData = nodeCloudData.find(node => node.innerIP === item.bk_host_innerip) || {};
+          return {
+            ...item,
+            ...extraData,
+          };
+        });
+      }
       Object.assign(nodeAvailableMap, nodeAvailableData);
       return {
         total: data.count || 0,
@@ -227,6 +263,21 @@ export default defineComponent({
       const nodeAvailableData = await nodeAvailable({
         innerIPs: data.results.map(item => item.bk_host_innerip),
       });
+      // 合并节点对应的云数据信息
+      if (props.cloudId && props.region && ipList.length) {
+        const nodeCloudData = await getCloudNodes({
+          $cloudId: props.cloudId,
+          region: props.region,
+          ipList: ipList.join(','),
+        });
+        data.results = data.results.map((item) => {
+          const extraData = nodeCloudData.find(node => node.innerIP === item.bk_host_innerip) || {};
+          return {
+            ...item,
+            ...extraData,
+          };
+        });
+      }
       Object.assign(nodeAvailableMap, nodeAvailableData);
       return {
         total: data.count || 0,
@@ -257,7 +308,7 @@ export default defineComponent({
         const group = state.previewData.find(data => data.id === 'nodes');
         const ipList = group?.data.map(item => item.bk_host_innerip) || [];
         copyText(ipList.join('\n'));
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'success',
           message: $i18n.t('成功复制IP {number} 个', { number: ipList.length }),
         });
@@ -331,7 +382,10 @@ export default defineComponent({
     };
     // 表格勾选事件
     const handleCheckChange = async (data) => {
-      if (data?.checkType === 'current' || state.active === 'custom-input') {
+      if (data?.checkType === 'current') {
+        handleCurrentPageChecked(data);
+      } else if (state.active === 'custom-input') {
+        data.selections = data.selections?.filter(row => !getRowDisabledStatus(row));
         handleCurrentPageChecked(data);
       } else if (data?.checkType === 'all') {
         await handleStaticTopoAllChecked(data);
@@ -344,8 +398,20 @@ export default defineComponent({
       const group = state.previewData.find(data => data.id === 'nodes');
       return group?.data.some(data => identityIp(data, row));
     };
+    // 禁用ip列表
+    const disabledIpData = computed(() => disabledIpList.value.reduce((pre, item) => {
+      if (typeof item === 'object') {
+        pre[item.ip] = item.tips;
+      } else {
+        pre[item] = $i18n.t('当前IP不可用');
+      }
+      return pre;
+    }, {}));
     // 表格表格当前行禁用状态
-    const getRowDisabledStatus = row => !row.is_valid || nodeAvailableMap[row.bk_host_innerip]?.isExist;
+    const getRowDisabledStatus = row => !row.is_valid
+      || nodeAvailableMap[row.bk_host_innerip]?.isExist
+      || disabledIpData.value[row.bk_host_innerip]
+      || (!!props.cloudId && !!props.region && (row.vpc !== props.vpc?.vpcID || row.region !== props.region));
     // 获取表格当前行tips内容
     const getRowTipsContent = (row) => {
       let tips: any = '';
@@ -357,6 +423,14 @@ export default defineComponent({
           name: clusterName,
           id: clusterID ? ` (${clusterID}) ` : '',
         });
+      } else if (disabledIpData.value[row.bk_host_innerip]) {
+        tips = disabledIpData.value[row.bk_host_innerip];
+      } else if (!!props.cloudId && !!props.region) {
+        if (row.region !== props.region) {
+          tips = $i18n.t('待选节点所属地域需与集群保持一致, 集群地域: {0}', [getRegionName(props.region)]);
+        } else if (row.vpc !== props.vpc?.vpcID) {
+          tips = $i18n.t('待选节点所属VPC需与集群保持一致, 待选节点VPC: {0}, 集群VPC: {1}', [row.vpc, props.vpc?.vpcID]);
+        }
       }
       return tips;
     };
@@ -370,6 +444,23 @@ export default defineComponent({
     const handleGetData = () => {
       const group = state.previewData.find(data => data.id === 'nodes');
       return group?.data || [];
+    };
+
+    const regionList = ref<any[]>([]);
+    const getRegionList = async () => {
+      if (!cloudId.value) return;
+      regionList.value = await $store.dispatch('clustermanager/fetchCloudRegion', {
+        $cloudId: cloudId.value,
+      });
+    };
+    watch(cloudId, () => {
+      getRegionList();
+    }, { immediate: true, deep: true });
+
+    const getRegionName = (region) => {
+      const name = regionList.value.find(item => item.region === region)?.regionName;
+
+      return name ? `${name}(${region})` : region;
     };
 
     return {

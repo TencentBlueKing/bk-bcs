@@ -307,8 +307,8 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	}
 
 	// validate can file be downloaded by credential.
-	if match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
+	if match, e := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec); e != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", e.Error())
 	} else if !match {
 		return nil, status.Error(codes.PermissionDenied, "no permission to download file")
 	}

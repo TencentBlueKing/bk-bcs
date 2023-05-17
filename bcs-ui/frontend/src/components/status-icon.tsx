@@ -1,6 +1,7 @@
-import { defineComponent, computed, toRefs } from '@vue/composition-api';
+import { defineComponent, computed, toRefs } from 'vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import './status-icon.css';
+import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
   name: 'StatusIcon',
@@ -37,7 +38,7 @@ export default defineComponent({
     const color = computed(() => statusColorMap.value[status.value.toLowerCase()]
       || statusColorMap.value[status.value]);
     const statusClass = computed(() => `status-icon status-${color.value}`);
-    const statusText = computed(() => statusTextMap.value[status.value] || status.value || '--');
+    const statusText = computed(() => statusTextMap.value[status.value] || status.value || $i18n.t('未知状态'));
 
     return {
       statusClass,
