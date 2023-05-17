@@ -91,7 +91,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRefs, watch } from '@vue/composition-api';
+import { defineComponent, ref, computed, onMounted, toRefs, watch, getCurrentInstance } from 'vue';
 import $store from '@/store/index';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
@@ -190,10 +190,12 @@ export default defineComponent({
 
       activeKubeletFlagName.value = row.flagName;
     };
+    const { proxy } = getCurrentInstance() || { proxy: null };
     const handleEditkubelet = (row) => {
       editKey.value = row.flagName;
+      const $refs = proxy?.$refs || {};
       setTimeout(() => {
-        (ctx.refs.editInputRef as any).focus();
+        ($refs.editInputRef as any)?.focus();
       }, 0);
     };
     const handleEditBlur = () => {

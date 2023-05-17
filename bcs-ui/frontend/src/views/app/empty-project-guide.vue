@@ -59,12 +59,13 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent, computed, toRef, reactive } from 'vue';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'ProjectGuide',
-  setup(props, ctx) {
-    const { $router, $route } = ctx.root;
+  setup() {
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
     function handleGotoIAM() {
       window.open(`${window.BK_IAM_APP_URL}apply-join-user-group?system_id=bk_bcs_app`);
@@ -73,7 +74,7 @@ export default defineComponent({
       if (window.REGION === 'ieod') {
         window.open(`${window.DEVOPS_HOST}/console/pm`);
       } else {
-        if ($route.name === 'projectManage') return;
+        if ($route.value.name === 'projectManage') return;
         $router.push({
           name: 'projectManage',
         });

@@ -118,22 +118,19 @@ func (h *EventHandler) handleQueue() bool {
 		return true
 	}
 
-	copiedListener := listener.DeepCopy()
-	blog.Infof("add listener %s/%s to processing cache", copiedListener.GetName(), copiedListener.GetNamespace())
-	if copiedListener.DeletionTimestamp != nil {
+	blog.Infof("add listener %s/%s to processing cache", listener.GetName(), listener.GetNamespace())
+	if listener.DeletionTimestamp != nil {
 		deleteEvent := NewListenerEvent(
 			EventDelete,
-			copiedListener.GetName(),
-			copiedListener.GetNamespace(),
-			copiedListener,
+			listener.GetName(),
+			listener.GetNamespace(),
 		)
 		h.eventRecvCache.Set(deleteEvent.Key(), deleteEvent)
 	} else {
 		updateEvent := NewListenerEvent(
 			EventUpdate,
-			copiedListener.GetName(),
-			copiedListener.GetNamespace(),
-			copiedListener,
+			listener.GetName(),
+			listener.GetNamespace(),
 		)
 		h.eventRecvCache.Set(updateEvent.Key(), updateEvent)
 	}
@@ -147,16 +144,33 @@ func (h *EventHandler) doHandleMulti() error {
 	var segListenerEnsureList []*networkextensionv1.Listener
 	for _, event := range h.eventRecvCache.List() {
 		blog.Infof("[worker %s] eventType: %s, listener: %s/%s",
-			h.lbID, event.Type, event.Listener.GetName(), event.Listener.GetNamespace())
-		switch event.Type {
-		case EventAdd, EventUpdate:
-			if event.Listener.Spec.EndPort > 0 {
-				segListenerEnsureList = append(segListenerEnsureList, event.Listener)
+			h.lbID, event.Type, event.Name, event.Namespace)
+		listener := &networkextensionv1.Listener{}
+		nsName := k8stypes.NamespacedName{
+			Namespace: event.Namespace,
+			Name:      event.Name,
+		}
+		if err := h.k8sCli.Get(context.TODO(), nsName, listener); err != nil {
+			if k8serrors.IsNotFound(err) {
+				blog.Infof("listener '%s' is deleted, skip", nsName.String())
 				continue
 			}
-			listenerEnsureList = append(listenerEnsureList, event.Listener)
+
+			blog.Errorf("get listener '%s' failed, err: %s", nsName.String(), err.Error())
+			h.eventQueue.AddRateLimited(nsName)
+			h.eventQueue.Done(nsName)
+			continue
+		}
+
+		switch event.Type {
+		case EventAdd, EventUpdate:
+			if listener.Spec.EndPort > 0 {
+				segListenerEnsureList = append(segListenerEnsureList, listener)
+				continue
+			}
+			listenerEnsureList = append(listenerEnsureList, listener)
 		case EventDelete:
-			listenerDeleteList = append(listenerDeleteList, event.Listener)
+			listenerDeleteList = append(listenerDeleteList, listener)
 		}
 	}
 	h.eventRecvCache.Clean()

@@ -1,5 +1,6 @@
-import { defineComponent, PropType, ref, toRefs, watch, computed } from '@vue/composition-api';
+import { defineComponent, PropType, ref, toRefs, watch, computed } from 'vue';
 import { TranslateResult } from 'vue-i18n';
+import $i18n from '@/i18n/i18n-setup';
 
 interface IOption {
   id: string | number;
@@ -49,8 +50,6 @@ export default defineComponent({
     watch(defaultContainer, (v) => {
       container.value = v;
     });
-
-    const { $i18n } = ctx.root;
 
     const operateList = computed<IOperate[]>(() => [
       {

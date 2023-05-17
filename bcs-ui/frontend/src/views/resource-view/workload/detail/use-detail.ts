@@ -1,6 +1,11 @@
 /* eslint-disable camelcase */
-import { ref, computed, SetupContext } from '@vue/composition-api';
+import { ref, computed } from 'vue';
 import yamljs from 'js-yaml';
+import $store from '@/store';
+import $router from '@/router';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $bkMessage from '@/common/bkmagic';
+import $i18n from '@/i18n/i18n-setup';
 
 export interface IWorkloadDetail {
   manifest: any;
@@ -18,8 +23,7 @@ export interface IDetailOptions {
   crd?: string;
 }
 
-export default function useDetail(ctx: SetupContext, options: IDetailOptions) {
-  const { $store, $router, $bkInfo, $bkMessage, $i18n } = ctx.root;
+export default function useDetail(options: IDetailOptions) {
   const isLoading = ref(false);
   const detail = ref<IWorkloadDetail|null>(null);
   const activePanel = ref(options.defaultActivePanel);

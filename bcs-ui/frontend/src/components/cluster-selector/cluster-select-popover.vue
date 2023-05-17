@@ -12,7 +12,7 @@
       scene="part"
       v-if="!clusterData.length">
     </bcs-exception>
-    <div class="max-h-[400px] overflow-y-auto bg-[#fff]" v-else>
+    <div class="max-h-[400px] overflow-y-auto" v-else>
       <CollapseTitle
         :title="`${$t('独立集群')} (${independentClusterList.length})`"
         :collapse="independentCollapse"
@@ -62,61 +62,47 @@
     </div>
   </div>
 </template>
-<script lang="ts">
+<script lang="ts" setup>
 // popover场景的集群选择器
-import { PropType, defineComponent } from '@vue/composition-api';
+import { PropType } from 'vue';
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
 
-export default defineComponent({
-  name: 'ClusterSelectPopover',
-  components: { CollapseTitle },
-  props: {
-    value: {
-      type: String,
-      default: '',
-    },
-    clusterType: {
-      type: String as PropType<ClusterType>,
-      default: 'independent', // 默认只展示独立集群
-    },
-    updateStore: {
-      type: Boolean,
-      default: true,
-    },
-    selectable: {
-      type: Boolean,
-      default: true,
-    },
+const props = defineProps({
+  value: {
+    type: String,
+    default: '',
   },
-  setup(props, ctx) {
-    const {
-      keyword,
-      localValue,
-      clusterData,
-      sharedClusterList,
-      independentClusterList,
-      sharedCollapse,
-      independentCollapse,
-      handleClusterChange,
-    } = useClusterSelector(ctx.emit, props.value, props.clusterType, props.updateStore);
-
-    const handleClick = (clusterID) => {
-      handleClusterChange(clusterID);
-
-      ctx.emit('click', clusterID);
-    };
-
-    return {
-      keyword,
-      localValue,
-      clusterData,
-      sharedClusterList,
-      independentClusterList,
-      sharedCollapse,
-      independentCollapse,
-      handleClick,
-    };
+  clusterType: {
+    type: String as PropType<ClusterType>,
+    default: 'independent', // 默认只展示独立集群
+  },
+  updateStore: {
+    type: Boolean,
+    default: true,
+  },
+  selectable: {
+    type: Boolean,
+    default: true,
   },
 });
+
+const emits = defineEmits(['change', 'click']);
+
+const {
+  keyword,
+  localValue,
+  clusterData,
+  sharedClusterList,
+  independentClusterList,
+  sharedCollapse,
+  independentCollapse,
+  handleClusterChange,
+} = useClusterSelector(emits, props.value, props.clusterType, props.updateStore);
+
+const handleClick = (clusterID) => {
+  handleClusterChange(clusterID);
+
+  emits('click', clusterID);
+};
 </script>

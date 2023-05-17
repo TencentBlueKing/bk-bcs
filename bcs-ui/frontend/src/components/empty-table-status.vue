@@ -12,7 +12,7 @@
   </bcs-exception>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from '@vue/composition-api';
+import { defineComponent, ref } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({

@@ -1,6 +1,6 @@
 import menusData, { IMenu } from './menus';
 import { useCluster, useConfig } from '@/composables/use-app';
-import { computed, ref } from '@vue/composition-api';
+import { computed, ref } from 'vue';
 
 export default function useMenu() {
   const menus = ref<IMenu[]>(menusData);

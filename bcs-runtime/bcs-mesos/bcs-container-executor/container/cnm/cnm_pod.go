@@ -515,7 +515,9 @@ func (p *DockerPod) Execute(name string, command []string) error {
 }
 
 // startFailedStop xxx
-//   Inner Methods
+//
+//	Inner Methods
+//
 // ///////////////////////////////////////////////
 func (p *DockerPod) startFailedStop(err error) {
 	logs.Infof("DockerPod in start failed stop, runningContainers: %d\n", len(p.runningContainer))

@@ -140,6 +140,10 @@ func (o *operator) dispatch(op Operation, timeout time.Duration, done chan struc
 	// run operation
 	go func() {
 		defer func() {
+			// 防止部署过程 panic 导致整个程序都挂掉，同时 panic 后把对应 release 设置为失败状态
+			if r := recover(); r != nil {
+				op.Done(fmt.Errorf("operation error, %v", r))
+			}
 			o.dec()
 			cancel()
 			done <- struct{}{}

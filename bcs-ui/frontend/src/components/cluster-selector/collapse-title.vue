@@ -10,28 +10,21 @@
     <span class="ml-[8px]">{{ title }}</span>
   </div>
 </template>
-<script lang="ts">
-import { defineComponent } from '@vue/composition-api';
+<script lang="ts" setup>
 
-export default defineComponent({
-  name: 'CollapseTitle',
-  props: {
-    title: {
-      type: String,
-      default: '',
-    },
-    collapse: {
-      type: Boolean,
-      default: false,
-    },
+defineProps({
+  title: {
+    type: String,
+    default: '',
   },
-  setup(props, ctx) {
-    const handleClick = () => {
-      ctx.emit('click');
-    };
-    return {
-      handleClick,
-    };
+  collapse: {
+    type: Boolean,
+    default: false,
   },
 });
+const emits = defineEmits(['click']);
+
+const handleClick = () => {
+  emits('click');
+};
 </script>

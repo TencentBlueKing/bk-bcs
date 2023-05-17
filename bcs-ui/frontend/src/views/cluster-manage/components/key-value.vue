@@ -2,22 +2,26 @@
   <div>
     <span
       class="add-btn" v-if="!labels.length"
-      @click="handleAddLabel">
+      @click="handleAddLabel(0)">
       <i class="bk-icon icon-plus-circle-shape mr5"></i>
       {{$t('添加')}}
     </span>
     <div class="key-value" v-for="(item, index) in labels" :key="index">
-      <bcs-input
-        v-model="item.key"
-        :placeholder="$t('键')"
-        @change="handleLabelKeyChange">
-      </bcs-input>
+      <Validate class="w-[100%]" :value="item.key" :rules="keyRules">
+        <bcs-input
+          v-model="item.key"
+          :placeholder="$t('键')"
+          @change="handleLabelKeyChange">
+        </bcs-input>
+      </Validate>
       <span class="ml8 mr8">=</span>
-      <bcs-input
-        v-model="item.value"
-        :placeholder="$t('值')"
-        @change="handleLabelValueChange"
-      ></bcs-input>
+      <Validate class="w-[100%]" :value="item.value" :rules="valueRules">
+        <bcs-input
+          v-model="item.value"
+          :placeholder="$t('值')"
+          @change="handleLabelValueChange">
+        </bcs-input>
+      </Validate>
       <i class="bk-icon icon-plus-circle ml15" @click="handleAddLabel(index)"></i>
       <i
         :class="['bk-icon icon-minus-circle ml10', { disabled: disabledDelete }]"
@@ -27,7 +31,9 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref, watch, toRefs } from '@vue/composition-api';
+import { computed, defineComponent, ref, watch, toRefs, PropType } from 'vue';
+import Validate from '@/components/validate.vue';
+import $i18n from '@/i18n/i18n-setup';
 
 interface ILabel {
   key: string;
@@ -35,6 +41,7 @@ interface ILabel {
 }
 export default defineComponent({
   name: 'KeyValue',
+  components: { Validate },
   model: {
     prop: 'value',
     event: 'change',
@@ -51,6 +58,24 @@ export default defineComponent({
     disableDeleteItem: {
       type: Boolean,
       default: true,
+    },
+    keyRules: {
+      type: Array as PropType<Array<any>>,
+      default: () => [
+        {
+          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          validator: '^[A-Za-z0-9._/-]+$',
+        },
+      ],
+    },
+    valueRules: {
+      type: Array as PropType<Array<any>>,
+      default: () => [
+        {
+          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          validator: '^[A-Za-z0-9._/-]+$',
+        },
+      ],
     },
   },
   setup(props, ctx) {
@@ -112,6 +137,7 @@ export default defineComponent({
     display: flex;
     align-items: center;
     height: 32px;
+    max-width: 100px;
 }
 .key-value {
     display: flex;

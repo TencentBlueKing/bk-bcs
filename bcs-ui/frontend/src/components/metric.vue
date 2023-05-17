@@ -25,13 +25,16 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, reactive, toRefs, onMounted, ref, watch, computed, PropType } from '@vue/composition-api';
+import { defineComponent, reactive, toRefs, onMounted, ref, watch, computed, PropType, toRef } from 'vue';
 import moment from 'moment';
 import defaultChartOption from '../views/resource-view/common/default-echarts-option';
 import ECharts from 'vue-echarts/components/ECharts.vue';
 import 'echarts/lib/chart/line';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/legend';
+import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store';
+import $router from '@/router';
 
 interface ITimeRange {
   name: string
@@ -105,8 +108,8 @@ export default defineComponent({
       default: () => [],
     },
   },
-  setup(props, ctx) {
-    const { $i18n, $store, $route } = ctx.root;
+  setup(props) {
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
     const metricMap = {
       cpu_usage: $i18n.t('CPU使用率'),
@@ -155,7 +158,7 @@ export default defineComponent({
     const handleSetChartOptions = (data) => {
       if (!data) return;
 
-      const metrics = Array.isArray(props.metric) ? props.metric : [props.metric];
+      const metrics: any[] = Array.isArray(props.metric) ? props.metric : [props.metric];
       const series: any[] = [];
       data.forEach((item, index) => {
         const suffix = metricSuffix.value[index];
@@ -189,7 +192,7 @@ export default defineComponent({
       echartsOptions.value = Object.assign(defaultChartOption(props.unit), props.options, { series });
     };
     // 获取图表数据
-    const projectCode = computed(() => $route.params.projectCode);
+    const projectCode = computed(() => $route.value.params.projectCode);
     const handleGetMetricData = async () => {
       const timeRange = {
         start_at: moment().subtract(state.activeTime.range, 'ms')
@@ -243,8 +246,8 @@ export default defineComponent({
       }
     });
 
-    onMounted(async () => {
-      await handleGetMetricData();
+    onMounted(() => {
+      handleGetMetricData();
     });
 
     return {

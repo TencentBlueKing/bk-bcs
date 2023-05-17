@@ -17,11 +17,12 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed } from '@vue/composition-api';
+import { defineComponent, ref, computed } from 'vue';
 import DetailTopNav from './detail-top-nav.vue';
 import WorkloadDetail from './workload-detail.vue';
 import PodDetail from './pod-detail.vue';
 import ContainerDetail from './container-detail.vue';
+import $router from '@/router';
 
 export type ComponentIdType = 'WorkloadDetail' | 'PodDetail' | 'ContainerDetail';
 export interface ITitle {
@@ -88,8 +89,7 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $router } = ctx.root;
+  setup(props) {
     // 区分首次进入pod详情还是其他workload详情
     const defaultComId = props.category === 'pods' ? 'PodDetail' : 'WorkloadDetail';
     // 子标题

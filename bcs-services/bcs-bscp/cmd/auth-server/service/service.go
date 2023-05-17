@@ -304,7 +304,7 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 	return &pbas.UserInfoResp{Username: username, AvatarUrl: ""}, nil
 }
 
-// ListUserSpaceAnnotation
+// ListUserSpaceAnnotation list user space permission annotations
 func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Authorizer, msg proto.Message) (*webannotation.Annotation, error) {
 	resp, ok := msg.(*pbas.ListUserSpaceResp)
 	if !ok {

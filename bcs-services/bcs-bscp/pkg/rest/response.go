@@ -163,7 +163,7 @@ type ErrorResponse struct {
 	loginPlainURL  string        `json:"-"` // login url
 }
 
-// Render
+// Render go-chi/render Renderer interface implement
 func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	statusCode := res.HTTPStatusCode
 	if statusCode == 0 {

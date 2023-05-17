@@ -151,10 +151,7 @@
             :data="curPodTablePageData"
             ref="podTableRef"
             row-key="metadata.uid"
-            :pagination="{
-              ...podTablePagination,
-              limitList: [10]
-            }"
+            :pagination="podTablePagination"
             @page-change="podTablePageChang"
             @page-limit-change="podTablePageSizeChange"
             @select="handleSelectPod"
@@ -170,31 +167,31 @@
             </bcs-table-column>
             <bcs-table-column
               :label="$t('名称')"
-              min-width="130" prop="metadata.name" sortable :resizable="false" show-overflow-tooltip fixed="left">
+              min-width="130" prop="metadata.name" sortable show-overflow-tooltip fixed="left">
               <template #default="{ row }">
                 <bk-button
                   class="bcs-button-ellipsis"
                   text @click="gotoPodDetail(row)">{{ row.metadata.name }}</bk-button>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
+            <bcs-table-column :label="$t('镜像')" min-width="200" :show-overflow-tooltip="false">
               <template #default="{ row }">
                 <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
                   {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
                 </span>
               </template>
             </bcs-table-column>
-            <bcs-table-column label="Status" width="120" :resizable="false" show-overflow-tooltip>
+            <bcs-table-column label="Status" width="120" show-overflow-tooltip>
               <template #default="{ row }">
                 <StatusIcon :status="handleGetExtData(row.metadata.uid, 'status')"></StatusIcon>
               </template>
             </bcs-table-column>
-            <bcs-table-column label="Ready" width="100" :resizable="false">
+            <bcs-table-column label="Ready" width="100">
               <template #default="{ row }">
                 {{handleGetExtData(row.metadata.uid, 'readyCnt')}}/{{handleGetExtData(row.metadata.uid, 'totalCnt')}}
               </template>
             </bcs-table-column>
-            <bcs-table-column label="Restarts" width="100" :resizable="false">
+            <bcs-table-column label="Restarts" width="100">
               <template #default="{ row }">{{handleGetExtData(row.metadata.uid, 'restartCnt')}}</template>
             </bcs-table-column>
             <bcs-table-column label="Host IP" min-width="140" show-overflow-tooltip>
@@ -209,12 +206,12 @@
             <bcs-table-column label="Node" show-overflow-tooltip>
               <template #default="{ row }">{{row.spec.nodeName || '--'}}</template>
             </bcs-table-column>
-            <bcs-table-column label="Age" sortable prop="createTime" :resizable="false">
+            <bcs-table-column label="Age" sortable prop="createTime">
               <template #default="{ row }">
                 <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('操作')" width="140" :resizable="false" fixed="right">
+            <bcs-table-column :label="$t('操作')" width="140" fixed="right">
               <template #default="{ row }">
                 <bk-button
                   text :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
@@ -298,7 +295,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, computed, ref, onMounted, onBeforeUnmount, watch, toRefs } from '@vue/composition-api';
+import { defineComponent, computed, ref, onMounted, onBeforeUnmount, watch, toRefs } from 'vue';
 import { bkOverflowTips } from 'bk-magic-vue';
 import StatusIcon from '@/components/status-icon';
 import Metric from '@/components/metric.vue';
@@ -313,6 +310,9 @@ import { timeZoneTransForm } from '@/common/util';
 import useSearch from '@/composables/use-search';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 import useTableSort from '@/composables/use-table-sort';
+import $store from '@/store';
+import $bkMessage from '@/common/bkmagic';
+import $i18n from '@/i18n/i18n-setup';
 
 export interface IDetail {
   manifest: any;
@@ -374,7 +374,6 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { clusterId } = toRefs(props);
-    const { $store, $bkMessage, $i18n } = ctx.root;
     const updateStrategyMap = ref({
       RollingUpdate: $i18n.t('滚动升级'),
       InplaceUpdate: $i18n.t('原地升级'),
@@ -403,7 +402,7 @@ export default defineComponent({
       handleShowYamlPanel,
       handleUpdateResource,
       handleDeleteResource,
-    } = useDetail(ctx, {
+    } = useDetail({
       ...props,
       defaultActivePanel: 'pod',
       type: curType,

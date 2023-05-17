@@ -126,7 +126,7 @@ func (c *Kit) ContextWithRid() context.Context {
 	return context.WithValue(c.Ctx, constant.RidKey, c.Rid)
 }
 
-// RPCMetaData
+// RPCMetaData rpc 头部元数据
 func (c *Kit) RPCMetaData() metadata.MD {
 	m := map[string]string{
 		constant.RidKey:         c.Rid,
@@ -210,10 +210,12 @@ func (c *Kit) Vas() *Vas {
 	}
 }
 
+// WithKit 封装 kit 到当前的 context
 func WithKit(ctx context.Context, kit *Kit) context.Context {
 	return context.WithValue(ctx, constant.KitKey, kit)
 }
 
+// MustGetKit 从 context 获取 kit, 注意: 如果没有, 会panic, 一般在中间件中使用
 func MustGetKit(ctx context.Context) *Kit {
 	k, ok := ctx.Value(constant.KitKey).(*Kit)
 	if !ok {

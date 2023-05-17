@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { defineComponent, computed, ref, watch, onMounted, toRefs } from '@vue/composition-api';
+import { defineComponent, computed, ref, watch, onMounted, toRefs } from 'vue';
 import { useSelectItemsNamespace } from '../namespace/use-namespace';
 import usePage from '../../../composables/use-page';
 import useSubscribe, { ISubscribeData, ISubscribeParams } from './use-subscribe';
@@ -13,6 +13,11 @@ import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import Header from '@/components/layout/Header.vue';
 import jp from 'jsonpath';
 import useTableSort from '@/composables/use-table-sort';
+import $store from '@/store';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'BaseLayout',
@@ -74,8 +79,7 @@ export default defineComponent({
       default: 'overview',
     },
   },
-  setup(props, ctx) {
-    const { $router, $i18n, $bkInfo, $store, $bkMessage } = ctx.root;
+  setup(props) {
     const {
       type,
       category,
@@ -174,7 +178,7 @@ export default defineComponent({
       handleFetchList,
       fetchCRDData,
       handleFetchCustomResourceList,
-    } = useTableData(ctx);
+    } = useTableData();
 
     // 获取表格数据
     const handleGetTableData = async (subscribe = true) => {
@@ -248,7 +252,7 @@ export default defineComponent({
     });
 
     // 订阅事件
-    const { handleSubscribe } = useSubscribe(data, ctx);
+    const { handleSubscribe } = useSubscribe(data);
     const subscribeKind = computed(() =>
     // 自定义资源（非CustomResourceDefinition类型的crd）的kind是根据选择的crd动态获取的，不能取props的kind值
       (kind.value === 'CustomObject' ? crdKind.value : kind.value));
@@ -311,7 +315,7 @@ export default defineComponent({
       list: [
         {
           id: 'overview',
-          name: window.i18n.t('总览'),
+          name: $i18n.t('总览'),
         },
         {
           id: 'yaml',

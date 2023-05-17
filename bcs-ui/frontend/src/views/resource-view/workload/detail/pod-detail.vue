@@ -300,7 +300,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { computed, defineComponent, onMounted, ref, toRefs } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, toRefs, toRef, reactive } from 'vue';
 import { bkOverflowTips } from 'bk-magic-vue';
 import StatusIcon from '@/components/status-icon';
 import Metric from '@/components/metric.vue';
@@ -309,6 +309,9 @@ import { formatTime, timeZoneTransForm } from '@/common/util';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
+import $store from '@/store';
+import $router from '@/router';
+import { useConfig } from '@/composables/use-app';
 
 export interface IDetail {
   manifest: any;
@@ -357,7 +360,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $store, $route, $INTERNAL } = ctx.root;
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
     const {
       isLoading,
       detail,
@@ -372,7 +375,7 @@ export default defineComponent({
       handleShowYamlPanel,
       handleUpdateResource,
       handleDeleteResource,
-    } = useDetail(ctx, {
+    } = useDetail({
       ...props,
       category: 'pods',
       defaultActivePanel: 'container',
@@ -386,6 +389,7 @@ export default defineComponent({
     }));
 
     // 容器
+    const { _INTERNAL_ } = useConfig();
     const container = ref<any[]>([]);
     const containerLoading = ref(false);
     const logLinks = ref({});
@@ -399,13 +403,13 @@ export default defineComponent({
       });
       const containerIDs = container.value.map(item => item.containerID).filter(id => !!id);
       if (containerIDs.length) {
-        logLinks.value = $INTERNAL
+        logLinks.value = _INTERNAL_.value
           ? await $store.dispatch('dashboard/logLinks', {
             container_ids: containerIDs.join(','),
           })
           : await $store.dispatch('crdcontroller/getLogLinks', {
             container_ids: containerIDs.join(','),
-            bk_biz_id: curProject.value?.cc_app_id,
+            bk_biz_id: curProject.value?.businessID,
           });
       }
       containerLoading.value = false;
@@ -471,7 +475,7 @@ export default defineComponent({
 
     // 容器操作
     // 1. 跳转WebConsole
-    const projectId = computed(() => $route.params.projectId);
+    const projectId = computed(() => $route.value.params.projectId);
     const terminalWins = new Map();
     const handleShowTerminal = (row) => {
       const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
