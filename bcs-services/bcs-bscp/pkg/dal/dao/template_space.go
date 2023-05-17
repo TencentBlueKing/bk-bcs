@@ -20,6 +20,7 @@ import (
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -50,17 +51,13 @@ type templateSpaceDao struct {
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
 	auditDao AuditDao
+	genM     *gen.Query
 }
 
 // Create one TemplateSpace instance.
 func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint32, error) {
-
-	if g == nil {
-		return 0, errf.New(errf.InvalidParameter, "TemplateSpace is nil")
-	}
-
 	if err := g.ValidateCreate(); err != nil {
-		return 0, errf.New(errf.InvalidParameter, err.Error())
+		return 0, err
 	}
 
 	// generate a TemplateSpace id and update to TemplateSpace.
@@ -70,10 +67,11 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 	}
 
 	g.ID = id
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.TemplateSpaceTable.Name(), " (", table.TemplateSpaceColumns.ColumnExpr(), ")  VALUES(", table.TemplateSpaceColumns.ColonNameExpr(), ")")
 
-	sql := filter.SqlJoint(sqlSentence)
+	m := gen.TemplateSpace
+	q := gen.Q.WithContext(kit.Ctx)
+
+	q.TemplateSpace.Create(g)
 
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
@@ -83,8 +81,7 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 
 			// audit this to be created TemplateSpace details.
 			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err = dao.auditDao.Decorator(kit, g.Attachment.BizID,
-				enumor.TemplateSpace).AuditCreate(g, au); err != nil {
+			if err = dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.TemplateSpace).AuditCreate(g, au); err != nil {
 				return fmt.Errorf("audit create TemplateSpace failed, err: %v", err)
 			}
 
@@ -259,15 +256,13 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 
 // GetByName get by name
 func (dao *templateSpaceDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(),
-		" WHERE name = '", name, "' AND biz_id = ", strconv.Itoa(int(bizID)))
-	expr := filter.SqlJoint(sqlSentence)
-	one := new(table.TemplateSpace)
-	err := dao.orm.Do(dao.sd.Admin().DB()).Get(kit.Ctx, one, expr)
+	m := dao.genM.TemplateSpace
+	q := m.WithContext(kit.Ctx)
+
+	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get app details failed, err: %v", err)
+		fmt.Errorf("get templateSpace failed, err: %v", err)
 	}
 
-	return one, nil
+	return tplSpace, nil
 }

@@ -76,6 +76,10 @@ pb:
 	@cd pkg/protocol && make clean && make
 	@echo -e "\e[34;1mMake Protocol Done\n\033[0m"
 
+.PHONY: gen
+gen:
+	@go run scripts/gen/main.go
+
 test: pre
 	@cd test/suite && make && cp -rf suite-test ${OUTPUT_DIR}/ && rm -rf suite-test
 	@cd test/benchmark && make && cp -rf bench-test ${OUTPUT_DIR}/ && rm -rf bench-test
@@ -144,3 +148,4 @@ build_ui:
 .PHONY: docker
 docker:
 	@docker build -t bcs-bscp:latest .
+

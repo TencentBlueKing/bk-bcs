@@ -33,10 +33,10 @@ var TemplateSpaceColumnDescriptor = mergeColumnDescriptors("",
 // it contains the selector to define the scope of the matched instances.
 type TemplateSpace struct {
 	// ID is an auto-increased value, which is a unique identity of a TemplateSpace.
-	ID         uint32                   `db:"id" json:"id"`
-	Spec       *TemplateSpaceSpec       `db:"spec" json:"spec"`
-	Attachment *TemplateSpaceAttachment `db:"attachment" json:"attachment"`
-	Revision   *Revision                `db:"revision" json:"revision"`
+	ID         uint32                   `db:"id" json:"id" "gorm":"primaryKey"`
+	Spec       *TemplateSpaceSpec       `db:"spec" json:"spec" gorm:"embedded"`
+	Attachment *TemplateSpaceAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
+	Revision   *Revision                `db:"revision" json:"revision" gorm:"embedded"`
 }
 
 // TableName is the TemplateSpace's database table name.
