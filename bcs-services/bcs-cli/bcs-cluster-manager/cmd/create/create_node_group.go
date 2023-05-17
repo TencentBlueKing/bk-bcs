@@ -32,11 +32,11 @@ var (
 	{"name":"test001","autoScaling":{"maxSize":10,"minSize":0,"scalingMode":"CLASSIC_SCALING",
 	"multiZoneSubnetPolicy":"PRIORITY","retryPolicy":"IMMEDIATE_RETRY","subnetIDs":["subnet-5zem7xxx"]},
 	"enableAutoscale":true,"nodeTemplate":{"unSchedulable":0,"labels":{},"taints":[],"dataDisks":[],
-	"dockerGraphPath":"/var/lib/docker","runtime":{"containerRuntime":"docker","runtimeVersion":"19.3"}},
+	"dockerGraphPath":"/var/lib/docker","runtime":{"containerRuntime":"docker","runtimeVersion":"19.x"}},
 	"launchTemplate":{"imageInfo":{"imageID":"img-fv2263iz"},"CPU":2,"Mem":2,"instanceType":"S4.MEDIUM2",
 	"systemDisk":{"diskType":"CLOUD_PREMIUM","diskSize":"50"},"internetAccess":{"internetChargeType":
 	"TRAFFIC_POSTPAID_BY_HOUR","internetMaxBandwidth":"0","publicIPAssigned":false},"initLoginPassword":"123456",
-	"securityGroupIDs":["sg-dhjkgqo4"],"dataDisks":[],"isSecurityService":true,"isMonitorService":true},
+	"securityGroupIDs":["sg-xxx"],"dataDisks":[],"isSecurityService":true,"isMonitorService":true},
 	"clusterID":"BCS-K8S-xxxxx","region":"ap-shanghai","creator":"bcs"}`))
 )
 

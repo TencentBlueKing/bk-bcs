@@ -68,7 +68,7 @@ kubectl-bcs-cluster-manager create cloudVPC -f [filename]
 	"region": "ap-guangzhou",
 	"regionName": "广州",
 	"vpcName": "vpc-xxxxxxx-1",
-	"vpcID": "vpc-123456789",
+	"vpcID": "vpc-xxx",
 	"available": "true",
 	"extra": "",
 	"creator": "bcs"
@@ -102,13 +102,13 @@ kubectl-bcs-cluster-manager create cluster -v -f [filename]
 	"isExclusive": true,
 	"clusterType": "single",
 	"creator": "bcs",
-	"manageType": "INDEPENDENT_CLUSTER",
+	"manageType": "INDEPENDENT_xxx",
 	"clusterName": "test001",
 	"environment": "prod",
 	"provider": "bluekingCloud",
 	"description": "创建测试集群",
 	"clusterBasicSettings": {
-		"version": "v1.20.11"
+		"version": "v1.20.xxx"
 	},
 	"networkType": "overlay",
 	"region": "default",
@@ -135,7 +135,7 @@ virtual cluster json template
 	"labels": {
 		"xxx": "xxx"
 	},
-	"creator": "pelenli",
+	"creator": "bcs",
 	"onlyCreateInfo": false,
 	"master": ["xxx"],
 	"networkSettings": {
@@ -168,9 +168,9 @@ virtual cluster json template
 	"extraInfo": {
 		"xxx": "xxx"
 	},
-	"description": "GitOps UAT 环境 for ArgoCD",
+	"description": "xxx",
 	"ns": {
-		"name": "ieg-bcs-scenarios-uat",
+		"name": "xxx",
 		"labels": {
 			"xxx": "xxx"
 		},
@@ -204,9 +204,9 @@ kubectl-bcs-cluster-manager create nodeGroup -f [filename]
 	"autoScaling": {
 		"maxSize": 10,
 		"minSize": 0,
-		"scalingMode": "CLASSIC_SCALING",
-		"multiZoneSubnetPolicy": "PRIORITY",
-		"retryPolicy": "IMMEDIATE_RETRY",
+		"scalingMode": "xxx",
+		"multiZoneSubnetPolicy": "xxx",
+		"retryPolicy": "IMMEDIATE_xxx",
 		"subnetIDs": ["subnet-5zem7xxx"]
 	},
 	"enableAutoscale": true,
@@ -215,30 +215,30 @@ kubectl-bcs-cluster-manager create nodeGroup -f [filename]
 		"labels": {},
 		"taints": [],
 		"dataDisks": [],
-		"dockerGraphPath": "/var/lib/docker",
+		"dockerGraphPath": "/var/lib/xxx",
 		"runtime": {
 			"containerRuntime": "docker",
-			"runtimeVersion": "19.3"
+			"runtimeVersion": "19.x"
 		}
 	},
 	"launchTemplate": {
 		"imageInfo": {
-			"imageID": "img-fv2263iz"
+			"imageID": "img-xxx"
 		},
 		"CPU": 2,
 		"Mem": 2,
-		"instanceType": "S4.MEDIUM2",
+		"instanceType": "S4.xxx",
 		"systemDisk": {
-			"diskType": "CLOUD_PREMIUM",
+			"diskType": "CLOUD_xxx",
 			"diskSize": "50"
 		},
 		"internetAccess": {
-			"internetChargeType": "TRAFFIC_POSTPAID_BY_HOUR",
+			"internetChargeType": "TRAFFIC_POSTPAID_xxx",
 			"internetMaxBandwidth": "0",
 			"publicIPAssigned": false
 		},
 		"initLoginPassword": "123456",
-		"securityGroupIDs": ["sg-dhjkgqo4"],
+		"securityGroupIDs": ["sg-xxx"],
 		"dataDisks": [],
 		"isSecurityService": true,
 		"isMonitorService": true
@@ -269,21 +269,21 @@ kubectl-bcs-cluster-manager create task -f [filename]
 ```json
 {
 	"taskID": "feec6ed2-c3e3-481f-a58b-xxxxxx",
-	"taskType": "blueking-AddNodesToCluster",
+	"taskType": "blueking-xxx",
 	"status": "FAILED",
-	"message": "step bksopsjob-createTask running failed",
+	"message": "xxx",
 	"start": "2022-11-11T18:23:32+08:00",
 	"end": "2022-11-11T18:24:03+08:00",
 	"executionTime": 31,
-	"currentStep": "bksopsjob-createTask",
-	"stepSequence": ["bksopsjob-createTask", "blueking-UpdateAddNodeDBInfoTask"],
+	"currentStep": "bksopsjob-xxx",
+	"stepSequence": ["bksopsjob-xxx", "blueking-xxx"],
 	"steps": {
 		"bksopsjob-createTask": {
-			"name": "bksopsjob-createTask",
-			"system": "bksops",
+			"name": "bksopsjob-xxx",
+			"system": "xxx",
 			"link": "",
 			"params": {
-				"taskUrl": "http://apps.site.bktencent.com"
+				"taskUrl": "http://apps.xxx.com"
 			},
 			"retry": 0,
 			"start": "2022-11-11T18:23:32+08:00",
@@ -292,12 +292,12 @@ kubectl-bcs-cluster-manager create task -f [filename]
 			"status": "FAILURE",
 			"message": "running fialed",
 			"lastUpdate": "2022-11-11T18:24:03+08:00",
-			"taskMethod": "bksopsjob",
+			"taskMethod": "xxx",
 			"taskName": "标准运维任务",
 			"skipOnFailed": false
 		},
 		"blueking-UpdateAddNodeDBInfoTask": {
-			"name": "blueking-UpdateAddNodeDBInfoTask",
+			"name": "blueking-xxx",
 			"system": "api",
 			"link": "",
 			"params": null,
@@ -308,25 +308,25 @@ kubectl-bcs-cluster-manager create task -f [filename]
 			"status": "NOTSTARTED",
 			"message": "",
 			"lastUpdate": "",
-			"taskMethod": "blueking-UpdateAddNodeDBInfoTask",
+			"taskMethod": "blueking-xxx",
 			"taskName": "更新任务状态",
 			"skipOnFailed": false
 		}
 	},
-	"clusterID": "BCS-K8S-40003",
+	"clusterID": "BCS-K8S-xxx",
 	"projectID": "b363e23b1b354928a0f3exxxxxx",
-	"creator": "frodomei",
+	"creator": "bcs",
 	"lastUpdate": "2022-11-11T18:24:03+08:00",
-	"updater": "frodomei",
+	"updater": "bcs",
 	"forceTerminate": false,
 	"commonParams": {
 		"jobType": "add-node",
 		"nodeIPs": "xxx.xxx.xxx.xxx",
-		"operator": "frodomei",
-		"taskName": "blueking-add nodes: BCS-K8S-40003",
-		"user": "frodomei"
+		"operator": "bcs",
+		"taskName": "blueking-add nodes: BCS-K8S-xxx",
+		"user": "bcs"
 	},
-	"taskName": "集群添加节点任务",
+	"taskName": "xxx",
 	"nodeIPList": ["xxx.xxx.xxx.xxx"],
 	"nodeGroupID": ""
 }
@@ -1032,8 +1032,8 @@ kubectl-bcs-cluster-manager import cluster -f [filename]
 ```
 ```json
 {
-	"clusterID": "",
-	"projectID": "",
+	"clusterID": "xxx",
+	"projectID": "xxx",
 	"businessID": "100001",
 	"engineType": "k8s",
 	"isExclusive": false,

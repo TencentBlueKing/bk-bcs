@@ -32,19 +32,19 @@ var (
 	{"projectID":"b363e23b1b354928axxxxxxxxx","businessID":"3","engineType":"k8s","isExclusive":true,
 	"clusterType":"single","creator":"bcs","manageType":"INDEPENDENT_CLUSTER","clusterName":"test001",
 	"environment":"prod","provider":"bluekingCloud","description":"创建测试集群","clusterBasicSettings":
-	{"version":"v1.20.11"},"networkType":"overlay","region":"default","vpcID":"","networkSettings":{},
+	{"version":"v1.20.xx"},"networkType":"overlay","region":"default","vpcID":"","networkSettings":{},
 	"master":["xxx.xxx.xxx.xxx","xxx.xxx.xxx.xxx"]}.
 
 	create virtual cluster json template: 
 	{"clusterID":"","clusterName":"test-xxx","provider":"tencentCloud","region":"ap-xxx","vpcID":
 	"vpc-xxx","projectID":"xxx","businessID":"xxx","environment":"debug","engineType":"k8s","isExclusive":
 	true,"clusterType":"single","hostClusterID":"BCS-K8S-xxx","hostClusterNetwork":"devnet","labels":
-	{"xxx":"xxx"},"creator":"pelenli","onlyCreateInfo":false,"master":["xxx"],"networkSettings":{"cidrStep":
+	{"xxx":"xxx"},"creator":"bcs","onlyCreateInfo":false,"master":["xxx"],"networkSettings":{"cidrStep":
 	1,"maxNodePodNum":1,"maxServiceNum":1},"clusterBasicSettings":{"version":"xxx"},"clusterAdvanceSettings":
 	{"IPVS":false,"containerRuntime":"xxx","runtimeVersion":"xxx","extraArgs":{"xxx":"xxx"}},"nodeSettings":
 	{"dockerGraphPath":"xxx","mountTarget":"xxx","unSchedulable":1,"labels":{"xxx":"xxx"},"extraArgs":{"xxx":
-	"xxx"}},"extraInfo":{"xxx":"xxx"},"description":"GitOps UAT 环境 for ArgoCD","ns":{"name":
-	"ieg-bcs-scenarios-uat","labels":{"xxx":"xxx"},"annotations":{"xxx":"xxx"}}}`))
+	"xxx"}},"extraInfo":{"xxx":"xxx"},"description":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","ns":{"name":
+	"ieg-bcs-xxxxxxxxxxxxxxx","labels":{"xxx":"xxx"},"annotations":{"xxx":"xxx"}}}`))
 )
 
 func newCreateClusterCmd() *cobra.Command {

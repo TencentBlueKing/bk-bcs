@@ -33,27 +33,27 @@ func newUpdateCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&file, "file", "f", "./update_node_group.json", `update node group from json file.
-file template: {"nodeGroupID":"BCS-ng-dsmEyqpT","name":"evan测试","clusterID":"BCS-K8S-40001","region":"ap-shanghai",
-"enableAutoscale":true,"autoScaling":{"autoScalingID":"asg-giiw9vjx","autoScalingName":"tke-np-4bnh2prt",
-"minSize":0,"maxSize":10,"desiredSize":0,"vpcID":"vpc-9z1zghcw","defaultCooldown":300,"subnetIDs":["subnet-5zem78ph"],
+file template: {"nodeGroupID":"BCS-ng-xxxxx","name":"evan测试","clusterID":"BCS-K8S-xxxx","region":"ap-shanghai",
+"enableAutoscale":true,"autoScaling":{"autoScalingID":"asg-xxxxx","autoScalingName":"tke-np-xxxxxx",
+"minSize":0,"maxSize":10,"desiredSize":0,"vpcID":"vpc-xxxxx","defaultCooldown":300,"subnetIDs":["subnet-xxxx"],
 "zones":[],"retryPolicy":"IMMEDIATE_RETRY","multiZoneSubnetPolicy":"PRIORITY","replaceUnhealthy":false,
-"scalingMode":"CLASSIC_SCALING","timeRanges":[]},"launchTemplate":{"launchConfigurationID":"asc-5gjp0qh5",
-"launchConfigureName":"tke-np-4bnh2prt","projectID":"0","CPU":4,"Mem":8,"GPU":0,"instanceType":"S4.LARGE8",
+"scalingMode":"CLASSIC_SCALING","timeRanges":[]},"launchTemplate":{"launchConfigurationID":"asc-xxxxxxxxxx",
+"launchConfigureName":"tke-np-xxx","projectID":"0","CPU":4,"Mem":8,"GPU":0,"instanceType":"S4.LARGE8",
 "instanceChargeType":"POSTPAID_BY_HOUR","systemDisk":{"diskType":"CLOUD_PREMIUM","diskSize":"50","fileSystem":"",
 "autoFormatAndMount":false,"mountTarget":""},"dataDisks":[{"diskType":"CLOUD_PREMIUM","diskSize":"50",
 "fileSystem":"ext4","autoFormatAndMount":false,"mountTarget":"/var/lib/docker"}],"internetAccess":
 {"internetChargeType":"","internetMaxBandwidth":"0","publicIPAssigned":false},"initLoginPassword":"",
-"securityGroupIDs":["sg-9kp4txzg"],"imageInfo":{"imageID":"img-eb30mz89","imageName":"TencentOS Server 3.1 (TK4)"},
+"securityGroupIDs":["sg-xxxxxx"],"imageInfo":{"imageID":"img-xxxx","imageName":"TencentOS Server xxxxx"},
 "isSecurityService":true,"isMonitorService":true,"userData":"xxxxxxxx"},"labels":{},"taints":{},"nodeOS":"",
-"creator":"evanxinli","updater":"bcs","createTime":"2022-11-18T14:28:06+08:00","updateTime":"2022-11-18T14:28:06+08:00",
+"creator":"bcs","updater":"bcs","createTime":"2022-11-18T14:28:06+08:00","updateTime":"2022-11-18T14:28:06+08:00",
 "projectID":"b363e23b1b354928a0f3exxxxxx","provider":"tencentCloud","status":"RUNNING","consumerID":"",
 "nodeTemplate":{"nodeTemplateID":"","name":"","projectID":"","labels":{},"taints":[],"dockerGraphPath":
 "/var/lib/docker","mountTarget":"","userScript":"","unSchedulable":0,"dataDisks":[{"diskType":"CLOUD_PREMIUM",
 "diskSize":"50","fileSystem":"ext4","autoFormatAndMount":false,"mountTarget":"/var/lib/docker"}],"extraArgs":{},
 "preStartUserScript":"","bcsScaleOutAddons":null,"bcsScaleInAddons":null,"scaleOutExtraAddons":null,
 "scaleInExtraAddons":null,"nodeOS":"","moduleID":"","creator":"","updater":"","createTime":"","updateTime":"",
-"desc":"","runtime":{"containerRuntime":"docker","runtimeVersion":"19.3"},
-"module":null},"cloudNodeGroupID":"np-4bnh2prt","tags":{}}`)
+"desc":"","runtime":{"containerRuntime":"docker","runtimeVersion":"19.x"},
+"module":null},"cloudNodeGroupID":"np-xxxx","tags":{}}`)
 
 	return cmd
 }
