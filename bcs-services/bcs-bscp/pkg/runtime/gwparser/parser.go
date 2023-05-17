@@ -110,31 +110,32 @@ func (p *jwtParser) Fingerprint() string {
 func (p *jwtParser) Parse(ctx context.Context, header http.Header) (*kit.Kit, error) {
 	jwtToken := header.Get(constant.BKGWJWTTokenKey)
 	if len(jwtToken) == 0 {
-		return nil, errf.New(errf.InvalidParameter, "jwt token is required")
+		return nil, errors.Errorf("jwt token header %s is required", constant.BKGWJWTTokenKey)
 	}
 
-	token, err := p.parseToken(jwtToken, p.PublicKey)
+	token, err := p.parseToken(jwtToken)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "parse jwt token %s", jwtToken)
 	}
 
 	if err := token.validate(); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "validate jwt token %s", jwtToken)
 	}
 
-	if ctx == nil {
-		ctx = context.Background()
+	username := token.User.UserName
+	if err := token.User.validate(); err != nil {
+		username = header.Get(constant.UserKey)
 	}
 
 	kt := &kit.Kit{
 		Ctx:     ctx,
-		User:    token.User.UserName,
+		User:    username,
 		AppCode: token.App.AppCode,
 		Rid:     header.Get(constant.RidKey),
 	}
 
 	if err := kt.Validate(); err != nil {
-		return nil, errf.New(errf.InvalidParameter, err.Error())
+		return nil, errors.Wrapf(err, "validate kit")
 	}
 
 	return kt, nil
@@ -150,8 +151,9 @@ type app struct {
 // validate app.
 func (a *app) validate() error {
 	if !a.Verified {
-		return errf.New(errf.InvalidParameter, "app not verified")
+		return errors.New("app not verified")
 	}
+
 	return nil
 }
 
@@ -165,8 +167,9 @@ type user struct {
 // validate user.
 func (u *user) validate() error {
 	if !u.Verified {
-		return errf.New(errf.InvalidParameter, "user not verified")
+		return errors.New("user not verified")
 	}
+
 	return nil
 }
 
@@ -180,18 +183,10 @@ type claims struct {
 // validate claims.
 func (c *claims) validate() error {
 	if c.App == nil {
-		return errf.New(errf.InvalidParameter, "app info is required")
+		return errors.New("app info is required")
 	}
 
 	if err := c.App.validate(); err != nil {
-		return err
-	}
-
-	if c.User == nil {
-		return errf.New(errf.InvalidParameter, "user info is required")
-	}
-
-	if err := c.User.validate(); err != nil {
 		return err
 	}
 
@@ -199,7 +194,7 @@ func (c *claims) validate() error {
 }
 
 // parseToken parse token by jwt token and secret.
-func (p *jwtParser) parseToken(token, jwtSecret string) (*claims, error) {
+func (p *jwtParser) parseToken(token string) (*claims, error) {
 	tokenClaims, err := jwt.ParseWithClaims(token, &claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

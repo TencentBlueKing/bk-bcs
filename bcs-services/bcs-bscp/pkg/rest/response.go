@@ -207,7 +207,7 @@ func UnauthorizedErr(err error, loginAuthHost, loginAuthPlainHost string) render
 		payload.Message = "user not logged in"
 	}
 
-	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized, loginURL: loginAuthHost, loginPlainURL: loginAuthHost}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized, loginURL: loginAuthHost, loginPlainURL: loginAuthPlainHost}
 }
 
 // PermissionDenied 无数据返回

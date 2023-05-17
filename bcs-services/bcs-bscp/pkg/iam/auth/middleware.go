@@ -48,8 +48,10 @@ func (a authorizer) initKitWithBKJWT(r *http.Request, k *kit.Kit, multiErr *mult
 		return false
 	}
 
-	// jwt 只支持 app_code
+	// jwt 只会从jwt里面解析出 app_code
+	// user 会从jwt获取, fallback 从 X-Bkapi-User-Name 头部获取(app校验成功, 说明有权限, 网关使用场景)
 	k.AppCode = kt.AppCode
+	k.User = kt.User
 	return true
 }
 
