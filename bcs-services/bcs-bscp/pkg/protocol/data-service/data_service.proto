@@ -97,6 +97,7 @@ service Data {
 
     // publish related interface.
     rpc Publish(PublishReq) returns (PublishResp) {}
+    rpc GenerateReleaseAndPublish(GenerateReleaseAndPublishReq) returns (PublishResp) {}
     rpc FinishPublish(FinishPublishReq) returns (pbbase.EmptyResp) {}
     rpc ListPublishedStrategyHistories(ListPubStrategyHistoriesReq) returns (ListPubStrategyHistoriesResp) {}
 
@@ -581,6 +582,15 @@ message PublishReq {
     bool            all        = 5;
     bool            default    = 6;
     repeated uint32 groups     = 7;
+}
+
+message GenerateReleaseAndPublishReq {
+    uint32          biz_id = 1;
+    uint32          app_id = 2;
+    string    release_name = 3;
+    string    release_memo = 4;
+    bool               all = 5;
+    repeated string groups = 6;
 }
 
 message PublishResp {

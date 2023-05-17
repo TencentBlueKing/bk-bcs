@@ -65,6 +65,7 @@ const (
 	Config_ListAppGroups_FullMethodName                  = "/pbcs.Config/ListAppGroups"
 	Config_ListGroupReleasedApps_FullMethodName          = "/pbcs.Config/ListGroupReleasedApps"
 	Config_Publish_FullMethodName                        = "/pbcs.Config/Publish"
+	Config_GenerateReleaseAndPublish_FullMethodName      = "/pbcs.Config/GenerateReleaseAndPublish"
 	Config_FinishPublish_FullMethodName                  = "/pbcs.Config/FinishPublish"
 	Config_ListPublishedStrategyHistories_FullMethodName = "/pbcs.Config/ListPublishedStrategyHistories"
 	Config_PublishInstance_FullMethodName                = "/pbcs.Config/PublishInstance"
@@ -129,6 +130,7 @@ type ConfigClient interface {
 	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
 	ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
 	PublishInstance(ctx context.Context, in *PublishInstanceReq, opts ...grpc.CallOption) (*PublishInstanceResp, error)
@@ -555,6 +557,15 @@ func (c *configClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc
 	return out, nil
 }
 
+func (c *configClient) GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, Config_GenerateReleaseAndPublish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error) {
 	out := new(FinishPublishResp)
 	err := c.cc.Invoke(ctx, Config_FinishPublish_FullMethodName, in, out, opts...)
@@ -705,6 +716,7 @@ type ConfigServer interface {
 	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
 	ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
+	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
 	PublishInstance(context.Context, *PublishInstanceReq) (*PublishInstanceResp, error)
@@ -856,6 +868,9 @@ func (UnimplementedConfigServer) ListGroupReleasedApps(context.Context, *ListGro
 }
 func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
+}
+func (UnimplementedConfigServer) GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateReleaseAndPublish not implemented")
 }
 func (UnimplementedConfigServer) FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FinishPublish not implemented")
@@ -1712,6 +1727,24 @@ func _Config_Publish_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateReleaseAndPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GenerateReleaseAndPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GenerateReleaseAndPublish_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GenerateReleaseAndPublish(ctx, req.(*GenerateReleaseAndPublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_FinishPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FinishPublishReq)
 	if err := dec(in); err != nil {
@@ -2096,6 +2129,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Publish",
 			Handler:    _Config_Publish_Handler,
+		},
+		{
+			MethodName: "GenerateReleaseAndPublish",
+			Handler:    _Config_GenerateReleaseAndPublish_Handler,
 		},
 		{
 			MethodName: "FinishPublish",

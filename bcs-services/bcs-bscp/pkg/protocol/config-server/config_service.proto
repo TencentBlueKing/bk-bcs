@@ -286,6 +286,13 @@ service Config {
             body: "*"
         };
     }
+
+    rpc GenerateReleaseAndPublish(GenerateReleaseAndPublishReq) returns (PublishResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/publish"
+            body: "*"
+        };
+    }
     rpc FinishPublish(FinishPublishReq) returns (FinishPublishResp) {
         option (google.api.http) = {
             put: "/api/v1/config/update/strategy/publish/finish/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
@@ -953,6 +960,19 @@ message PublishReq {
     bool            all        = 5;
     bool            default    = 6;
     repeated uint32 groups     = 7;
+}
+
+message GenerateReleaseAndPublishReq {
+    uint32          biz_id = 1;
+    uint32          app_id = 2;
+    string    release_name = 3;
+    string    release_memo = 4;
+    bool               all = 5;
+    repeated string groups = 6;
+}
+
+message GenerateReleaseAndPublishResp {
+    uint32 id = 1;
 }
 
 message PublishResp {
