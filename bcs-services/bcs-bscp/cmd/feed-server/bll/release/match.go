@@ -355,7 +355,7 @@ func (rs *ReleasedService) matchNormalStrategyWithLabels(kt *kit.Kit, list []*pt
 		return nil, errf.New(errf.AppInstanceNotMatchedStrategy, "no strategy can match this app instance")
 	}
 
-	// select latest release in matchd stragety list
+	// select latest release in matchd strategy list
 	latestRelease := matchedList[0]
 	for _, matched := range matchedList {
 		if matched.ReleaseID > latestRelease.ReleaseID {

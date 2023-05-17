@@ -38,6 +38,8 @@ const (
 	Strategy AuditResourceType = "strategy"
 	// Hook hook脚本资源
 	Hook AuditResourceType = "hook"
+	// TemplateSpace 模版空间
+	TemplateSpace AuditResourceType = "template_space"
 	// Group 分组资源
 	Group AuditResourceType = "group"
 	// Credential 凭据资源
@@ -56,6 +58,7 @@ var AuditResourceTypeEnums = map[AuditResourceType]bool{
 	StrategySet:     true,
 	Strategy:        true,
 	Hook:            true,
+	TemplateSpace:   true,
 	Group:           true,
 	Credential:      true,
 	CredentialScope: true,

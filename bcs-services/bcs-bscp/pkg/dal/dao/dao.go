@@ -36,6 +36,7 @@ type Set interface {
 	CRInstance() CRInstance
 	Strategy() Strategy
 	Hook() Hook
+	TemplateSpace() TemplateSpace
 	Group() Group
 	GroupAppBind() GroupAppBind
 	ReleasedGroup() ReleasedGroup
@@ -188,9 +189,19 @@ func (s *set) Strategy() Strategy {
 	}
 }
 
-// Hook returns the group's DAO
+// Hook returns the hook's DAO
 func (s *set) Hook() Hook {
 	return &hookDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+	}
+}
+
+// TemplateSpace returns the templateSpace's DAO
+func (s *set) TemplateSpace() TemplateSpace {
+	return &templateSpaceDao{
 		orm:      s.orm,
 		sd:       s.sd,
 		idGen:    s.idGen,

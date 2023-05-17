@@ -51,7 +51,7 @@ func (c *client) ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) 
 	if state.Acquired || (!state.Acquired && state.WithLimit) {
 
 		start := time.Now()
-		list, err := c.refreshAppReleasedGroupCache(kt, bizID, appID)
+		list, err = c.refreshAppReleasedGroupCache(kt, bizID, appID)
 		if err != nil {
 			state.Release(true)
 			return "", err

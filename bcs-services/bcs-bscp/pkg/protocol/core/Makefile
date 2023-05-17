@@ -15,6 +15,7 @@ all:
 	@cd released-group && make
 	@cd credential && make
 	@cd credential-scope && make
+	@cd template-space && make
 
 clean:
 	@cd base && make clean
@@ -33,3 +34,4 @@ clean:
 	@cd released-group && make clean
 	@cd credential && make clean
 	@cd credential-scope && make clean
+	@cd template-space && make clean

@@ -102,7 +102,7 @@ func (ap *App) GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, erro
 
 	if err != gcache.KeyNotFoundError {
 		// this is not a not found error, log it.
-		logs.Errorf("get biz: %d, appName: %d app id from local cache failed, err: %v, rid: %s", bizID, appName,
+		logs.Errorf("get biz: %d, appName: %s app id from local cache failed, err: %v, rid: %s", bizID, appName,
 			err, kt.Rid)
 		// do not return here, try to refresh cache for now.
 	}

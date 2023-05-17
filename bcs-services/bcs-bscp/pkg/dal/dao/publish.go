@@ -98,6 +98,10 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 		// create strategy to publish it later
 		now := time.Now()
 		stgID, err := pd.idGen.One(kit, table.StrategyTable)
+		if err != nil {
+			logs.Errorf("generate strategy id failed, err: %v, rid: %s", err, kit.Rid)
+			return errf.New(errf.DBOpFailed, err.Error())
+		}
 		stg := &table.Strategy{
 			ID: stgID,
 			Spec: &table.StrategySpec{
@@ -148,9 +152,9 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 		}
 
 		// upsert the published strategy to the CurrentPublishedStrategy table for record.
-		if err := pd.upsertToCurrentPublishedStrategy(kit, txn, stg); err != nil {
-			logs.Errorf("upsert to current published strategy table failed, err: %v, rid: %s", err, kit.Rid)
-			return err
+		if e := pd.upsertToCurrentPublishedStrategy(kit, txn, stg); e != nil {
+			logs.Errorf("upsert to current published strategy table failed, err: %v, rid: %s", e, kit.Rid)
+			return e
 		}
 
 		// save history to the PublishedStrategyHistoryTable table for record.
@@ -302,7 +306,10 @@ func (pd *pubDao) recordPublishedStrategyHistory(kit *kit.Kit, txn *sqlx.Tx, pub
 
 // increaseReleasePublishNum increase release publish num by 1
 func (pd *pubDao) increaseReleasePublishNum(kit *kit.Kit, txn *sqlx.Tx, releaseID uint32) error {
-	sql := fmt.Sprintf(`UPDATE %s SET publish_num = publish_num + 1 WHERE id = %d`, table.ReleaseTable, releaseID)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "UPDATE ", table.ReleaseTable.Name(),
+		" SET publish_num = publish_num + 1 WHERE id = ", strconv.Itoa(int(releaseID)))
+	sql := filter.SqlJoint(sqlSentence)
 	if _, err := txn.ExecContext(kit.Ctx, sql); err != nil {
 		logs.Errorf("increate release publish num failed, sql: %s, err: %v, rid: %s", sql, err, kit.Rid)
 		return errf.New(errf.DBOpFailed, "insert published strategy history failed, err: "+err.Error())
@@ -344,7 +351,8 @@ func (pd *pubDao) upsertReleasedGroups(kit *kit.Kit, txn *sqlx.Tx,
 		expr, toUpdate, err := orm.RearrangeSQLDataWithOption(gcr, opts)
 		var sqlSentence []string
 		sqlSentence = append(sqlSentence, "UPDATE ", table.ReleasedGroupTable.Name(), " SET ", expr,
-			fmt.Sprintf(" WHERE biz_id = %d AND group_id = %d AND app_id = %d", opt.BizID, group.ID, opt.AppID))
+			" WHERE biz_id = ", strconv.Itoa(int(opt.BizID)), " AND group_id = ", strconv.Itoa(int(group.ID)),
+			" AND app_id = ", strconv.Itoa(int(opt.AppID)))
 		sql := filter.SqlJoint(sqlSentence)
 		result, err := txn.NamedExecContext(kit.Ctx, sql, toUpdate)
 		if err != nil {

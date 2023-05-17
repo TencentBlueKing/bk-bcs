@@ -53,7 +53,7 @@ var (
 	globalClient *resty.Client
 )
 
-// WithLabelMatchValue 设置 RequestId 值
+// WithRequestIDValue 设置 RequestId 值
 func WithRequestIDValue(ctx context.Context, id string) context.Context {
 	newCtx := context.WithValue(ctx, requestIDCtxKey, id)
 	return metadata.AppendToOutgoingContext(newCtx, RequestIDHeaderKey, id)

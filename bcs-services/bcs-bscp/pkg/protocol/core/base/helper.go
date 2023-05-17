@@ -40,7 +40,7 @@ func (x *Versioning) Format() string {
 	return fmt.Sprintf("%d.%d.%d", x.Major, x.Minor, x.Patch)
 }
 
-// 错误参数返回
+// InvalidArgumentsErr 错误参数返回
 func InvalidArgumentsErr(e *InvalidArgument, others ...*InvalidArgument) error {
 	errPb, _ := anypb.New(e)
 	s := &spb.Status{

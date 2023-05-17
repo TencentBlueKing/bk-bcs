@@ -197,6 +197,10 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 			},
 		},
 	})
+	if err != nil {
+		logs.Errorf("list released group failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 	releaseMap := make(map[uint32]*table.Release, 0)
 	for _, gcr := range gcrs {
 		releaseMap[gcr.ReleaseID] = nil
@@ -207,7 +211,7 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 	}
 
 	if len(releaseIDs) != 0 {
-		releases, err := s.dao.Release().List(kt, &types.ListReleasesOption{
+		releases, e := s.dao.Release().List(kt, &types.ListReleasesOption{
 			BizID: req.BizId,
 			AppID: req.AppId,
 			Filter: &filter.Expression{
@@ -222,9 +226,9 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 			},
 			Page: &types.BasePage{},
 		})
-		if err != nil {
-			logs.Errorf("list app releases failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
+		if e != nil {
+			logs.Errorf("list app releases failed, err: %v, rid: %s", e, kt.Rid)
+			return nil, e
 		}
 		for _, release := range releases.Details {
 			if _, ok := releaseMap[release.ID]; ok {
