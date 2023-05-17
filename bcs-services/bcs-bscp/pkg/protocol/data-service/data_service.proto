@@ -35,6 +35,7 @@ service Data {
 
     // config item related interface.
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
+    rpc BatchUpsertConfigItems(BatchUpsertConfigItemsReq) returns (pbbase.EmptyResp) {}
     rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
@@ -243,8 +244,20 @@ message ListAppsResp {
 }
 
 message CreateConfigItemReq {
-    pbci.ConfigItemAttachment attachment = 1;
-    pbci.ConfigItemSpec       spec       = 2;
+    pbci.ConfigItemAttachment config_item_attachment = 1;
+    pbci.ConfigItemSpec       config_item_spec       = 2;
+    pbcontent.ContentSpec     content_spec           = 3;
+}
+
+message BatchUpsertConfigItemsReq {
+    message ConfigItem {
+        pbci.ConfigItemAttachment config_item_attachment = 1;
+        pbci.ConfigItemSpec       config_item_spec       = 2;
+        pbcontent.ContentSpec     content_spec           = 3;
+    }
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    repeated ConfigItem items = 3;
 }
 
 message UpdateConfigItemReq {
