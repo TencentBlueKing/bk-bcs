@@ -29,11 +29,13 @@ service Data {
     rpc DeleteApp(DeleteAppReq) returns (pbbase.EmptyResp) {}
     rpc GetApp(GetAppReq) returns (pbapp.App) {}
     rpc GetAppByID(GetAppByIDReq) returns (pbapp.App) {}
+    rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {}
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
 
     // config item related interface.
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
+    rpc BatchUpsertConfigItems(BatchUpsertConfigItemsReq) returns (pbbase.EmptyResp) {}
     rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
@@ -218,6 +220,11 @@ message GetAppByIDReq {
     uint32 app_id = 1;
 }
 
+message GetAppByNameReq {
+    uint32 biz_id = 1;
+    string app_name = 2;
+}
+
 message ListAppsReq {
     uint32                 biz_id = 1;
     google.protobuf.Struct filter = 2;
@@ -238,8 +245,20 @@ message ListAppsResp {
 }
 
 message CreateConfigItemReq {
-    pbci.ConfigItemAttachment attachment = 1;
-    pbci.ConfigItemSpec       spec       = 2;
+    pbci.ConfigItemAttachment config_item_attachment = 1;
+    pbci.ConfigItemSpec       config_item_spec       = 2;
+    pbcontent.ContentSpec     content_spec           = 3;
+}
+
+message BatchUpsertConfigItemsReq {
+    message ConfigItem {
+        pbci.ConfigItemAttachment config_item_attachment = 1;
+        pbci.ConfigItemSpec       config_item_spec       = 2;
+        pbcontent.ContentSpec     content_spec           = 3;
+    }
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    repeated ConfigItem items = 3;
 }
 
 message UpdateConfigItemReq {
