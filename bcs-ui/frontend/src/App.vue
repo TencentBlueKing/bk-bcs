@@ -61,7 +61,7 @@ export default defineComponent({
     onMounted(async () => {
       validateAllowDomains();
 
-      window.$loginModal = loginRef.value.login;
+      window.$loginModal = loginRef.value;
 
       isLoading.value = true;
       await Promise.all([

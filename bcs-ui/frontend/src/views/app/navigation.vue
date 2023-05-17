@@ -108,6 +108,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import menusData, { IMenu } from './menus';
 import { releaseNode } from '@/api/modules/project';
+import { setCookie } from '@/common/util';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -179,7 +180,7 @@ export default defineComponent({
     // 切换语言
     const handleChangeLang = (item) => {
       $i18n.locale = item.id;
-      document.cookie = `blueking_language=${item.id}`;
+      setCookie('blueking_language', item.id);
       window.location.reload();
     };
     // 帮助文档

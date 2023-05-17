@@ -93,11 +93,14 @@ export default defineComponent({
       if (!await validateProjectCode()) return;
 
       loading.value = true;
-      const data = await Promise.all([
+      const list = [
         $store.dispatch('getProject', { projectId: curProject.value?.project_id }),
         $store.dispatch('cluster/getClusterList', curProject.value?.project_id),
-        $store.dispatch('cluster/getBizMaintainers'),
-      ]).catch((err) => {
+      ];
+      if (curProject.value?.kind) {
+        list.push($store.dispatch('cluster/getBizMaintainers'));
+      }
+      const data = await Promise.all(list).catch((err) => {
         console.error(err);
       });
       // 校验集群ID是否正确

@@ -1649,7 +1649,6 @@
   "集群状态": "Cluster status",
   "集群节点数": "Number of cluster nodes",
   "集群资源(CPU/内存/磁盘)": "Cluster resources (CPU/memory/disk)",
-  "全局路由与 vpc-cni 混合模式": "Global route with VPC-CNI hybrid mode",
   "全局路由网络分配": "Global route network",
   "集群模式": "Cluster mode",
   "Kubernetes 集群的 Master 和 Etcd 会由 TKE 团队集中管理和维护，不需要关心集群 Master 的管理和维护。": "The Master and ETCDs of the Kubernetes cluster will be centrally managed and maintained by the TKE team, and do not need to care about the management and maintenance of the cluster Master.",
@@ -1767,7 +1766,6 @@
   "添加集群": "Add cluster",
   "仅支持字母，数字和字符(-_./)": "only support letters, numbers and characters (-_./)",
   "名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符(-)及小数点": "Between the names of 2 and 255 characters, only Chinese, English, numbers, lowering lines, separators (-) and decimal points",
-  "点击添加集群": "Click to add cluster",
   "可用容器网络 IP {num} 个": "Available container network IP {num}",
   "仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾": "Only support the letters, numbers and characters (-_./), and need to start with the letter number",
   "此操作相当于kubectl patch gamestatefulset {name} -n {namespace} --type=json -p={文本中的内容}": "This operation is equivalent to Kubectl Patch GameStateFulset {name} -n {namespace} --Type = json -p = {content in text}",
@@ -1927,7 +1925,6 @@
   "已开启自动升配功能，当集群资源超过当前规格设定阈值时，会自动升级到下一个等级。": "The automatic upgrade function has been turned on. When the cluster resources exceed the current specification setting threshold, it will automatically upgrade to the next level.",
   "节点初始化模板": "Node initialization template",
   "查看申请记录": "Check the application record",
-  "您不是当前项目绑定业务的运维人员": "You are not the operation and maintenance personnel of the business bound to the current project",
   "搜索IP、标签、污点、注解、状态、可用区、节点来源、所属节点规格": "Search for IP, label, taints, annotations, status, node source, NodePool",
   "待选节点所属地域需与集群保持一致, 集群地域: {0}": "The area of the belonging to the election node must be consistent with the cluster, cluster area: {0}",
   "待选节点所属VPC需与集群保持一致, 待选节点VPC: {0}, 集群VPC: {1}": "The VPC that belongs to the election node must be consistent with the cluster. The selected node VPC: {0}, cluster VPC: {1}",
@@ -1936,5 +1933,7 @@
   "您不是当前项目绑定业务的运维人员，请联系业务运维人员": "You are not the operation and maintenance personnel of the business bound to the current project",
   "全局路由模式": "Global routing mode",
   "全局路由网络模式是TKE基于底层私有网络（VPC）的全局路由能力，实现了容器网络和VPC互访的路由策略，类似云原生的Overlay网络模式": "The global routing network mode is the global routing capability of TKE based on the underlying private network (VPC), which realizes the routing strategy of container network and VPC interoperability.",
-  "集群同时支持全局路由模式与VPC-CNI模式，VPC-CNI 网络模式是 TKE 基于 CNI 和 VPC 弹性网卡实现的容器网络能力，VPC-CNI网络模式类似云原生的Underlay网络模式，如需使用请联系蓝鲸容器助手协助": "The cluster supports the global routing mode and VPC-CNI mode. The VPC-CNI network mode is a container network capability implemented by TKE based on CNI and VPC elastic network cards. The VPC-CNI network mode is similar to cloud-native UNDERLAY network mode. If you need to use, please contact BlueWhale container assistant assistance"
+  "集群同时支持全局路由模式与VPC-CNI模式，VPC-CNI 网络模式是 TKE 基于 CNI 和 VPC 弹性网卡实现的容器网络能力，VPC-CNI网络模式类似云原生的Underlay网络模式，如需使用请联系蓝鲸容器助手协助": "The cluster supports the global routing mode and VPC-CNI mode. The VPC-CNI network mode is a container network capability implemented by TKE based on CNI and VPC elastic network cards. The VPC-CNI network mode is similar to cloud-native UNDERLAY network mode. If you need to use, please contact BlueWhale container assistant assistance",
+  "全局路由与 VPC-CNI 混合模式": "Global route with VPC-CNI hybrid mode",
+  "运行时": "Runtime"
 }
