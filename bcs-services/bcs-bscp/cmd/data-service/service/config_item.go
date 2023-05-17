@@ -16,7 +16,6 @@ import (
 	"context"
 	"time"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -32,10 +31,16 @@ import (
 func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
+	tx, err := s.dao.BeginTx(grpcKit, req.ConfigItemAttachment.BizId)
+	if err != nil {
+		logs.Errorf("create config item, begin transaction failed, err: %v", err)
+		return nil, err
+	}
 	now := time.Now()
+	// 1. create config item.
 	ci := &table.ConfigItem{
-		Spec:       req.Spec.ConfigItemSpec(),
-		Attachment: req.Attachment.ConfigItemAttachment(),
+		Spec:       req.ConfigItemSpec.ConfigItemSpec(),
+		Attachment: req.ConfigItemAttachment.ConfigItemAttachment(),
 		Revision: &table.Revision{
 			Creator:   grpcKit.User,
 			Reviser:   grpcKit.User,
@@ -43,14 +48,128 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 			UpdatedAt: now,
 		},
 	}
-	id, err := s.dao.ConfigItem().Create(grpcKit, ci)
+	ciID, err := s.dao.ConfigItem().CreateWithTx(grpcKit, tx, ci)
 	if err != nil {
 		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, errf.RPCAbortedErr(err)
+		tx.Rollback(grpcKit)
+		return nil, err
 	}
+	// 2. create content.
+	content := &table.Content{
+		Spec: req.ContentSpec.ContentSpec(),
+		Attachment: &table.ContentAttachment{
+			ConfigItemID: ciID,
+			BizID:        req.ConfigItemAttachment.BizId,
+			AppID:        req.ConfigItemAttachment.AppId,
+		},
+		Revision: &table.CreatedRevision{
+			Creator:   grpcKit.User,
+			CreatedAt: now,
+		},
+	}
+	contentID, err := s.dao.Content().CreateWithTx(grpcKit, tx, content)
+	if err != nil {
+		logs.Errorf("create content failed, err: %v, rid: %s", err, grpcKit.Rid)
+		tx.Rollback(grpcKit)
+		return nil, err
+	}
+	// 3. create commit.
+	commit := &table.Commit{
+		Spec: &table.CommitSpec{
+			ContentID: contentID,
+			Content:   content.Spec,
+		},
+		Revision: &table.CreatedRevision{
+			Creator: grpcKit.User,
+		},
+	}
+	_, err = s.dao.Commit().CreateWithTx(grpcKit, tx, commit)
+	if err != nil {
+		logs.Errorf("create commit failed, err: %v, rid: %s", err, grpcKit.Rid)
+		tx.Rollback(grpcKit)
+		return nil, err
+	}
+	tx.Commit(grpcKit)
 
-	resp := &pbds.CreateResp{Id: id}
+	resp := &pbds.CreateResp{Id: ciID}
 	return resp, nil
+}
+
+// BatchUpsertConfigItems batch upsert config items.
+func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUpsertConfigItemsReq) (
+	*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	tx, err := s.dao.BeginTx(grpcKit, req.BizId)
+	if err != nil {
+		logs.Errorf("create config item, begin transaction failed, err: %v", err)
+		return nil, err
+	}
+	now := time.Now()
+	// 1. truncate app config items.
+	if e := s.dao.ConfigItem().TruncateWithTx(grpcKit, tx, req.BizId, req.AppId); e != nil {
+		logs.Errorf("truncate app config items failed, err: %v, rid: %s", e, grpcKit.Rid)
+		tx.Rollback(grpcKit)
+		return nil, e
+	}
+	// 2. create config items.
+	for _, item := range req.Items {
+		// 2.1 create config item.
+		ci := &table.ConfigItem{
+			Spec:       item.ConfigItemSpec.ConfigItemSpec(),
+			Attachment: item.ConfigItemAttachment.ConfigItemAttachment(),
+			Revision: &table.Revision{
+				Creator:   grpcKit.User,
+				Reviser:   grpcKit.User,
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
+		}
+		ciID, err := s.dao.ConfigItem().CreateWithTx(grpcKit, tx, ci)
+		if err != nil {
+			logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+			tx.Rollback(grpcKit)
+			return nil, err
+		}
+		// 2. create content.
+		content := &table.Content{
+			Spec: item.ContentSpec.ContentSpec(),
+			Attachment: &table.ContentAttachment{
+				ConfigItemID: ciID,
+				BizID:        req.BizId,
+				AppID:        req.AppId,
+			},
+			Revision: &table.CreatedRevision{
+				Creator:   grpcKit.User,
+				CreatedAt: now,
+			},
+		}
+		contentID, err := s.dao.Content().CreateWithTx(grpcKit, tx, content)
+		if err != nil {
+			logs.Errorf("create content failed, err: %v, rid: %s", err, grpcKit.Rid)
+			tx.Rollback(grpcKit)
+			return nil, err
+		}
+		// 3. create commit.
+		commit := &table.Commit{
+			Spec: &table.CommitSpec{
+				ContentID: contentID,
+				Content:   content.Spec,
+			},
+			Revision: &table.CreatedRevision{
+				Creator: grpcKit.User,
+			},
+		}
+		_, err = s.dao.Commit().CreateWithTx(grpcKit, tx, commit)
+		if err != nil {
+			logs.Errorf("create commit failed, err: %v, rid: %s", err, grpcKit.Rid)
+			tx.Rollback(grpcKit)
+			return nil, err
+		}
+	}
+	tx.Commit(grpcKit)
+
+	return new(pbbase.EmptyResp), nil
 }
 
 // UpdateConfigItem update config item.

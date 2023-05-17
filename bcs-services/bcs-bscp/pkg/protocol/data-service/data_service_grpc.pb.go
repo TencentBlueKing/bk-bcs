@@ -33,6 +33,7 @@ const (
 	Data_ListApps_FullMethodName                       = "/pbds.Data/ListApps"
 	Data_ListAppsRest_FullMethodName                   = "/pbds.Data/ListAppsRest"
 	Data_CreateConfigItem_FullMethodName               = "/pbds.Data/CreateConfigItem"
+	Data_BatchUpsertConfigItems_FullMethodName         = "/pbds.Data/BatchUpsertConfigItems"
 	Data_UpdateConfigItem_FullMethodName               = "/pbds.Data/UpdateConfigItem"
 	Data_DeleteConfigItem_FullMethodName               = "/pbds.Data/DeleteConfigItem"
 	Data_GetConfigItem_FullMethodName                  = "/pbds.Data/GetConfigItem"
@@ -101,6 +102,7 @@ type DataClient interface {
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// config item related interface.
 	CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateResp, error)
+	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*config_item.ConfigItem, error)
@@ -245,6 +247,15 @@ func (c *dataClient) ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts
 func (c *dataClient) CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_BatchUpsertConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -733,6 +744,7 @@ type DataServer interface {
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
 	// config item related interface.
 	CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateResp, error)
+	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*base.EmptyResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*base.EmptyResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error)
@@ -830,6 +842,9 @@ func (UnimplementedDataServer) ListAppsRest(context.Context, *ListAppsRestReq) (
 }
 func (UnimplementedDataServer) CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateConfigItem not implemented")
+}
+func (UnimplementedDataServer) BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertConfigItems not implemented")
 }
 func (UnimplementedDataServer) UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigItem not implemented")
@@ -1139,6 +1154,24 @@ func _Data_CreateConfigItem_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).CreateConfigItem(ctx, req.(*CreateConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_BatchUpsertConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpsertConfigItemsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).BatchUpsertConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_BatchUpsertConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).BatchUpsertConfigItems(ctx, req.(*BatchUpsertConfigItemsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2117,6 +2150,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateConfigItem",
 			Handler:    _Data_CreateConfigItem_Handler,
+		},
+		{
+			MethodName: "BatchUpsertConfigItems",
+			Handler:    _Data_BatchUpsertConfigItems_Handler,
 		},
 		{
 			MethodName: "UpdateConfigItem",
