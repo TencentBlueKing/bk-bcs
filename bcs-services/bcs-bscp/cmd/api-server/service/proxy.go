@@ -116,6 +116,13 @@ func (p *proxy) handler() http.Handler {
 		r.Mount("/", p.authSvrMux)
 	})
 
+	r.Route("/api/v1/config/biz/{biz_id}/apps/unique", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Use(view.Generic(p.authorizer))
+		r.Mount("/", p.cfgSvrMux)
+	})
+
 	// 规范后的路由，url 需要包含 {app_id} 变量, 使用 AppVerified 中间件校验和初始化 kit.SpaceID 变量
 	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
