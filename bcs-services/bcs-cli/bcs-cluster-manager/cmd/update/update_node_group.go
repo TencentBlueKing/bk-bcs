@@ -29,10 +29,10 @@ import (
 
 var (
 	updateNodeGroupExample = templates.Examples(i18n.T(`update node group from json file. file template: 
-	{"nodeGroupID":"BCS-ng-dsmEyqpT","name":"evan测试","clusterID":"BCS-K8S-xxx","region":"ap-shanghai",
-	"enableAutoscale":true,"autoScaling":{"autoScalingID":"asg-giiw9vjx","autoScalingName":"tke-np-xxxxx",
+	{"nodeGroupID":"BCS-ng-xxxxx","name":"evan测试","clusterID":"BCS-K8S-xxx","region":"ap-shanghai",
+	"enableAutoscale":true,"autoScaling":{"autoScalingID":"asg-xxxxxx","autoScalingName":"tke-np-xxxxx",
 	"minSize":0,"maxSize":10,"desiredSize":0,"vpcID":"vpc-xxx","defaultCooldown":300,"subnetIDs":
-	["subnet-5zem78ph"],"zones":[],"retryPolicy":"IMMEDIATE_RETRY","multiZoneSubnetPolicy":"PRIORITY",
+	["subnet-xxxxxx"],"zones":[],"retryPolicy":"IMMEDIATE_RETRY","multiZoneSubnetPolicy":"PRIORITY",
 	"replaceUnhealthy":false,"scalingMode":"CLASSIC_SCALING","timeRanges":[]},"launchTemplate":
 	{"launchConfigurationID":"asc-xxxxxx","launchConfigureName":"tke-np-xxxxx","projectID":"0","CPU":4,
 	"Mem":8,"GPU":0,"instanceType":"S4.LARGE8","instanceChargeType":"POSTPAID_BY_HOUR","systemDisk":
@@ -49,7 +49,7 @@ var (
 	"autoFormatAndMount":false,"mountTarget":"/var/lib/docker"}],"extraArgs":{},"preStartUserScript":"",
 	"bcsScaleOutAddons":null,"bcsScaleInAddons":null,"scaleOutExtraAddons":null,"scaleInExtraAddons":null,"nodeOS":"",
 	"moduleID":"","creator":"","updater":"","createTime":"","updateTime":"","desc":"","runtime":{"containerRuntime":
-	"docker","runtimeVersion":"19.3"},"module":null},"cloudNodeGroupID":"np-xxxxx","tags":{}}`))
+	"docker","runtimeVersion":"19.x"},"module":null},"cloudNodeGroupID":"np-xxxxx","tags":{}}`))
 )
 
 func newUpdateNodeGroupCmd() *cobra.Command {

@@ -207,7 +207,7 @@ kubectl-bcs-cluster-manager create nodeGroup -f [filename]
 		"scalingMode": "xxx",
 		"multiZoneSubnetPolicy": "xxx",
 		"retryPolicy": "IMMEDIATE_xxx",
-		"subnetIDs": ["subnet-5zem7xxx"]
+		"subnetIDs": ["subnet-xxxxx"]
 	},
 	"enableAutoscale": true,
 	"nodeTemplate": {

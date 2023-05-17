@@ -29,11 +29,11 @@ import (
 
 var (
 	createTaskExample = templates.Examples(i18n.T(`create task from json file. file template: 
-	{"taskID":"feec6ed2-c3e3-481f-a58b-xxxxxx","taskType":"blueking-AddNodesToCluster","status":"FAILED",
-	"message":"step bksopsjob-createTask running failed","start":"2022-11-11T18:23:32+08:00",
-	"end":"2022-11-11T18:24:03+08:00","executionTime":31,"currentStep":"bksopsjob-createTask",
-	"stepSequence":["bksopsjob-createTask","blueking-xxxxxxxxxxxxxxxxxxxxxx"],"steps":{"bksopsjob-createTask":
-	{"name":"bksopsjob-createTask","system":"bksops","link":"","params":{"taskUrl":"http://apps.xxx.com"},
+	{"taskID":"feec6ed2-c3e3-481f-a58b-xxxxxx","taskType":"blueking-xxxxxxxxxxxx","status":"FAILED",
+	"message":"step bksopsjob-xxxxxxxxxx running failed","start":"2022-11-11T18:23:32+08:00",
+	"end":"2022-11-11T18:24:03+08:00","executionTime":31,"currentStep":"bksopsjob-xxxxxxxxxx",
+	"stepSequence":["bksopsjob-xxxxxxxxxx","blueking-xxxxxxxxxxxxxxxxxxxxxx"],"steps":{"bksopsjob-xxxxxxxxxx":
+	{"name":"bksopsjob-xxxxxxxxxx","system":"bksops","link":"","params":{"taskUrl":"http://apps.xxx.com"},
 	"retry":0,"start":"2022-11-11T18:23:32+08:00","end":"2022-11-11T18:24:03+08:00","executionTime":31,
 	"status":"FAILURE","message":"running fialed","lastUpdate":"2022-11-11T18:24:03+08:00","taskMethod":"xxx",
 	"taskName":"标准运维任务","skipOnFailed":false},"blueking-xxxxxxxxxxxxxxxxxxxxxx":{"name":
