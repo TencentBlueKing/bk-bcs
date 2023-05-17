@@ -31,7 +31,7 @@
 	"user": "root",
 	"user_group": "root",
 	"privilege": "755",
-	"memo": "my first config"
+	"memo": "my first config",
 	"sign": "11e3a57c479ebfae641c5821ee70bf61dca74b8e6596b78950526c397a3bfe6b",
 	"byte_size": 1675
 }
