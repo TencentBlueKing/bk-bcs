@@ -79,7 +79,7 @@ func (h *Handler) Subscribe(
 			if err != nil {
 				return err
 			}
-			resp.ManifestExt, err = pbstruct.Map2pbStruct(formatter.GetFormatFunc(req.Kind)(raw))
+			resp.ManifestExt, err = pbstruct.Map2pbStruct(formatter.GetFormatFunc(req.Kind, "")(raw))
 			if err != nil {
 				return err
 			}
