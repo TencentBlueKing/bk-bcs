@@ -231,6 +231,7 @@ func (s *Service) GetAuthLoginConf(ctx context.Context, req *pbas.GetAuthLoginCo
 		Host:      cc.AuthServer().LoginAuth.Host,
 		InnerHost: cc.AuthServer().LoginAuth.InnerHost,
 		Provider:  cc.AuthServer().LoginAuth.Provider,
+		GwPubkey:  cc.AuthServer().LoginAuth.GWPubKey,
 	}
 	return resp, nil
 }
