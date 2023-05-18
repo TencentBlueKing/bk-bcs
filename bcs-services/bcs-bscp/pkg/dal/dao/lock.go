@@ -214,35 +214,15 @@ func (dao *lockDao) TruncateCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	count, err := dao.getLockCount(kit, lock, opt)
-	if err != nil {
-		return err
-	}
-
-	// the current lock is related to more than one resource, decrease the lock count.
+	// set the lock count to zero.
 	var sqlSentence []string
-	if count > 1 {
-		sqlSentence = append(sqlSentence, "UPDATE ", table.ResourceLockTable.Name(),
-			" SET res_count = 0 WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
-			" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
-		sql := filter.SqlJoint(sqlSentence)
-
-		_, err := opt.Txn.ExecContext(kit.Ctx, sql)
-		if err != nil {
-			logs.Errorf("decrease lock count failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
-			return fmt.Errorf("delete lock failed, err: %v", err)
-		}
-
-		return nil
-	}
-
 	// the current lock is related to only one resource, delete the lock.
 	sqlSentence = append(sqlSentence, "DELETE FROM ", table.ResourceLockTable.Name(),
 		" WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
 		" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
 	sql := filter.SqlJoint(sqlSentence)
 
-	_, err = opt.Txn.ExecContext(kit.Ctx, sql)
+	_, err := opt.Txn.ExecContext(kit.Ctx, sql)
 	if err != nil {
 		logs.Errorf("delete lock failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
 		return fmt.Errorf("delete lock failed, err: %v", err)
