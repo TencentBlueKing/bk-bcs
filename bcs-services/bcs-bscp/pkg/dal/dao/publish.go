@@ -242,14 +242,16 @@ func (pd *pubDao) PublishWithTx(kit *kit.Kit, tx *sharding.Tx, opt *types.Publis
 	var pshID uint32
 	groups := make([]*table.Group, 0, len(groupIDs))
 	// list groups if gray release
-	var lgSentence []string
-	lgSentence = append(lgSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(),
-		" WHERE id IN (", tools.JoinUint32(groupIDs, ","), ")")
-	lgExpr := filter.SqlJoint(lgSentence)
-	if err := pd.orm.Do(pd.sd.MustSharding(opt.BizID)).Select(kit.Ctx, &groups, lgExpr); err != nil {
-		logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
-			tools.JoinUint32(groupIDs, ","), err, kit.Rid)
-		return 0, errf.New(errf.DBOpFailed, err.Error())
+	if len(groupIDs) > 0 {
+		var lgSentence []string
+		lgSentence = append(lgSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(),
+			" WHERE id IN (", tools.JoinUint32(groupIDs, ","), ")")
+		lgExpr := filter.SqlJoint(lgSentence)
+		if err := pd.orm.Do(pd.sd.MustSharding(opt.BizID)).Select(kit.Ctx, &groups, lgExpr); err != nil {
+			logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
+				tools.JoinUint32(groupIDs, ","), err, kit.Rid)
+			return 0, errf.New(errf.DBOpFailed, err.Error())
+		}
 	}
 	// create strategy to publish it later
 	now := time.Now()
