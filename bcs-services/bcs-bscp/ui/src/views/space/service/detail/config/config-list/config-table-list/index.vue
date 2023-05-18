@@ -190,9 +190,9 @@
           <bk-table-column label="操作">
             <template #default="{ row }">
               <div class="operate-action-btns">
-                <bk-button text theme="primary" @click="handleEdit(row)">{{ versionData.id === 0 ? '编辑' : '查看' }}</bk-button>
+                <bk-button :disabled="row.file_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{ versionData.id === 0 ? '编辑' : '查看' }}</bk-button>
                 <bk-button v-if="versionData.status.publish_status !== 'editing'" text theme="primary" @click="handleDiff(row)">对比</bk-button>
-                <bk-button v-if="versionData.id === 0" text theme="primary" @click="handleDel(row)">删除</bk-button>
+                <bk-button v-if="versionData.id === 0" text theme="primary" :disabled="row.file_state === 'DELETE'" @click="handleDel(row)">删除</bk-button>
               </div>
             </template>
           </bk-table-column>
