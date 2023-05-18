@@ -37,7 +37,7 @@ func (b *bkPaaSAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*Logi
 	token, err := r.Cookie("bk_token")
 	if err != nil {
 		if errors.Is(err, http.ErrNoCookie) {
-			return nil, fmt.Errorf("http: %s cookie not present", "bk_token")
+			return nil, fmt.Errorf("%s cookie not present", "bk_token")
 		}
 		return nil, err
 	}
