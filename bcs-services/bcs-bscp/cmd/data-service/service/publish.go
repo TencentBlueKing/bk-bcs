@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"time"
 
+	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -43,6 +44,30 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 			Creator:   kt.User,
 			CreatedAt: time.Now(),
 		},
+	}
+
+	for _, groupID := range opt.Groups {
+		// frontend would set groupID 0 as default.
+		if groupID == 0 {
+			opt.Default = true
+			continue
+		}
+		group, e := s.dao.Group().Get(kt, groupID, req.BizId)
+		if e != nil {
+			if e == orm.ErrRecordNotFound {
+				return nil, fmt.Errorf("group %d not exists", groupID)
+			}
+			return nil, e
+		}
+		if group.Spec.Public {
+			continue
+		}
+		if _, e := s.dao.GroupAppBind().Get(kt, groupID, req.AppId, req.BizId); e != nil {
+			if e == orm.ErrRecordNotFound {
+				return nil, fmt.Errorf("group %d not bind app %d", groupID, req.AppId)
+			}
+			return nil, e
+		}
 	}
 	pshID, err := s.dao.Publish().Publish(kt, opt)
 	if err != nil {
@@ -161,6 +186,29 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 			Creator:   kt.User,
 			CreatedAt: time.Now(),
 		},
+	}
+	for _, groupID := range opt.Groups {
+		// frontend would set groupID 0 as default.
+		if groupID == 0 {
+			opt.Default = true
+			continue
+		}
+		group, e := s.dao.Group().Get(kt, groupID, req.BizId)
+		if e != nil {
+			if e == orm.ErrRecordNotFound {
+				return nil, fmt.Errorf("group %d not exists", groupID)
+			}
+			return nil, e
+		}
+		if group.Spec.Public {
+			continue
+		}
+		if _, e := s.dao.GroupAppBind().Get(kt, groupID, req.AppId, req.BizId); e != nil {
+			if e == orm.ErrRecordNotFound {
+				return nil, fmt.Errorf("group %d not bind app %d", groupID, req.AppId)
+			}
+			return nil, e
+		}
 	}
 	pshID, err := s.dao.Publish().PublishWithTx(kt, tx, opt)
 	if err != nil {
