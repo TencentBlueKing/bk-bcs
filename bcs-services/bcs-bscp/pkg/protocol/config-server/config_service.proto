@@ -44,6 +44,11 @@ service Config {
             get: "/api/v1/config/get/app/app/app_id/{app_id}/biz_id/{biz_id}"
         };
     }
+    rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/apps/query/name/{app_name}"
+        };
+    }
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {
         option (google.api.http) = {
             post: "/api/v1/config/list/app/app/biz_id/{biz_id}"
@@ -67,6 +72,12 @@ service Config {
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateConfigItemResp) {
         option (google.api.http) = {
             post: "/api/v1/config/create/config_item/config_item/app_id/{app_id}/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+    rpc BatchUpsertConfigItems(BatchUpsertConfigItemsReq) returns (BatchUpsertConfigItemsResp) {
+        option (google.api.http) = {
+            put: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"
             body: "*"
         };
     }
@@ -275,6 +286,13 @@ service Config {
             body: "*"
         };
     }
+
+    rpc GenerateReleaseAndPublish(GenerateReleaseAndPublishReq) returns (PublishResp) {
+        option (google.api.http) = {
+            post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/publish"
+            body: "*"
+        };
+    }
     rpc FinishPublish(FinishPublishReq) returns (FinishPublishResp) {
         option (google.api.http) = {
             put: "/api/v1/config/update/strategy/publish/finish/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}"
@@ -444,6 +462,11 @@ message GetAppReq {
     uint32 app_id = 2;
 }
 
+message GetAppByNameReq {
+    uint32 biz_id = 1;
+    string app_name = 2;
+}
+
 message ListAppsReq {
     uint32                 biz_id = 1;
     google.protobuf.Struct filter = 2;
@@ -485,6 +508,26 @@ message CreateConfigItemReq {
     string sign       = 11;
     uint64 byte_size  = 12;
 }
+
+message BatchUpsertConfigItemsReq {
+    message ConfigItem {
+        string name       = 1;
+        string path       = 2;
+        string file_type  = 3;  // file_type is enum type, source resource reference: pkg/dal/table/config_item.go
+        string file_mode  = 4;  // file_mode is enum type, source resource reference: pkg/dal/table/config_item.go
+        string memo       = 5;
+        string user       = 6;
+        string user_group = 7;
+        string privilege  = 8;
+        string sign       = 9;
+        uint64 byte_size  = 10;
+    }
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    repeated ConfigItem items = 3;
+}
+
+message BatchUpsertConfigItemsResp {}
 
 message CreateConfigItemResp {
     uint32 id = 1;
@@ -917,6 +960,19 @@ message PublishReq {
     bool            all        = 5;
     bool            default    = 6;
     repeated uint32 groups     = 7;
+}
+
+message GenerateReleaseAndPublishReq {
+    uint32          biz_id = 1;
+    uint32          app_id = 2;
+    string    release_name = 3;
+    string    release_memo = 4;
+    bool               all = 5;
+    repeated string groups = 6;
+}
+
+message GenerateReleaseAndPublishResp {
+    uint32 id = 1;
 }
 
 message PublishResp {

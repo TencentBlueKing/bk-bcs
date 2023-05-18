@@ -25,7 +25,6 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
-
 	"github.com/jmoiron/sqlx"
 )
 
@@ -33,6 +32,8 @@ import (
 type Commit interface {
 	// Create one commit instance.
 	Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
+	// CreateWithTx create one commit instance with transaction
+	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, commit *table.Commit) (uint32, error)
 	// List commits with options.
 	List(kit *kit.Kit, opts *types.ListCommitsOption) (*types.ListCommitDetails, error)
 }
@@ -69,13 +70,14 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 
 	commit.ID = id
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CommitsTable.Name(), " (", table.CommitsColumns.ColumnExpr(), ")  VALUES(", table.CommitsColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CommitsTable.Name(),
+		" (", table.CommitsColumns.ColumnExpr(), ")  VALUES(", table.CommitsColumns.ColonNameExpr(), ")")
 
 	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(commit.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, commit); err != nil {
+			if e := dao.orm.Txn(txn).Insert(kit.Ctx, sql, commit); e != nil {
 				return err
 			}
 
@@ -92,6 +94,44 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 	if err != nil {
 		logs.Errorf("create commit, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
 		return 0, fmt.Errorf("create commit, but auto run txn failed, err: %v", err)
+	}
+
+	return id, nil
+}
+
+// CreateWithTx create one commit instance with transaction
+func (dao *commitDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, commit *table.Commit) (uint32, error) {
+
+	if commit == nil {
+		return 0, errf.New(errf.InvalidParameter, "commit is nil")
+	}
+
+	if err := commit.ValidateCreate(); err != nil {
+		return 0, errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	// generate an commit id and update to commit.
+	id, err := dao.idGen.One(kit, table.CommitsTable)
+	if err != nil {
+		return 0, err
+	}
+
+	commit.ID = id
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CommitsTable.Name(),
+		" (", table.CommitsColumns.ColumnExpr(), ")  VALUES(", table.CommitsColumns.ColonNameExpr(), ")")
+
+	sql := filter.SqlJoint(sqlSentence)
+
+	if e := dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, commit); e != nil {
+		return 0, err
+	}
+
+	// audit this to be create commit details.
+	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
+	if err = dao.auditDao.Decorator(kit, commit.Attachment.BizID,
+		enumor.Content).AuditCreate(commit, au); err != nil {
+		return 0, fmt.Errorf("audit create commit failed, err: %v", err)
 	}
 
 	return id, nil
@@ -153,7 +193,8 @@ func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT ", table.CommitsColumns.NamedExpr(), " FROM ", table.CommitsTable.Name(), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.CommitsColumns.NamedExpr(),
+		" FROM ", table.CommitsTable.Name(), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Commit, 0)
@@ -169,7 +210,8 @@ func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
 func (dao *commitDao) validateAttachmentResExist(kit *kit.Kit, am *table.CommitAttachment) error {
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)),
+		" AND biz_id = ", strconv.Itoa(int(am.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
@@ -181,7 +223,8 @@ func (dao *commitDao) validateAttachmentResExist(kit *kit.Kit, am *table.CommitA
 	}
 
 	var sqlSentenceRes []string
-	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
+	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)),
+		" AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
 	sqlRes := filter.SqlJoint(sqlSentenceRes)
 	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable, sqlRes)
 	if err != nil {

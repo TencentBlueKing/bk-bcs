@@ -24,10 +24,12 @@ const (
 	Config_UpdateApp_FullMethodName                      = "/pbcs.Config/UpdateApp"
 	Config_DeleteApp_FullMethodName                      = "/pbcs.Config/DeleteApp"
 	Config_GetApp_FullMethodName                         = "/pbcs.Config/GetApp"
+	Config_GetAppByName_FullMethodName                   = "/pbcs.Config/GetAppByName"
 	Config_ListApps_FullMethodName                       = "/pbcs.Config/ListApps"
 	Config_ListAppsRest_FullMethodName                   = "/pbcs.Config/ListAppsRest"
 	Config_ListAppsBySpaceRest_FullMethodName            = "/pbcs.Config/ListAppsBySpaceRest"
 	Config_CreateConfigItem_FullMethodName               = "/pbcs.Config/CreateConfigItem"
+	Config_BatchUpsertConfigItems_FullMethodName         = "/pbcs.Config/BatchUpsertConfigItems"
 	Config_UpdateConfigItem_FullMethodName               = "/pbcs.Config/UpdateConfigItem"
 	Config_DeleteConfigItem_FullMethodName               = "/pbcs.Config/DeleteConfigItem"
 	Config_GetConfigItem_FullMethodName                  = "/pbcs.Config/GetConfigItem"
@@ -63,6 +65,7 @@ const (
 	Config_ListAppGroups_FullMethodName                  = "/pbcs.Config/ListAppGroups"
 	Config_ListGroupReleasedApps_FullMethodName          = "/pbcs.Config/ListGroupReleasedApps"
 	Config_Publish_FullMethodName                        = "/pbcs.Config/Publish"
+	Config_GenerateReleaseAndPublish_FullMethodName      = "/pbcs.Config/GenerateReleaseAndPublish"
 	Config_FinishPublish_FullMethodName                  = "/pbcs.Config/FinishPublish"
 	Config_ListPublishedStrategyHistories_FullMethodName = "/pbcs.Config/ListPublishedStrategyHistories"
 	Config_PublishInstance_FullMethodName                = "/pbcs.Config/PublishInstance"
@@ -84,12 +87,14 @@ type ConfigClient interface {
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
+	GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// 按 space 查询 app 信息
 	ListAppsBySpaceRest(ctx context.Context, in *ListAppsBySpaceRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateConfigItemResp, error)
+	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
@@ -125,6 +130,7 @@ type ConfigClient interface {
 	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
 	ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
 	PublishInstance(ctx context.Context, in *PublishInstanceReq, opts ...grpc.CallOption) (*PublishInstanceResp, error)
@@ -182,6 +188,15 @@ func (c *configClient) GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.C
 	return out, nil
 }
 
+func (c *configClient) GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
+	err := c.cc.Invoke(ctx, Config_GetAppByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
 	out := new(ListAppsResp)
 	err := c.cc.Invoke(ctx, Config_ListApps_FullMethodName, in, out, opts...)
@@ -212,6 +227,15 @@ func (c *configClient) ListAppsBySpaceRest(ctx context.Context, in *ListAppsBySp
 func (c *configClient) CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateConfigItemResp, error) {
 	out := new(CreateConfigItemResp)
 	err := c.cc.Invoke(ctx, Config_CreateConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error) {
+	out := new(BatchUpsertConfigItemsResp)
+	err := c.cc.Invoke(ctx, Config_BatchUpsertConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -533,6 +557,15 @@ func (c *configClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc
 	return out, nil
 }
 
+func (c *configClient) GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, Config_GenerateReleaseAndPublish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error) {
 	out := new(FinishPublishResp)
 	err := c.cc.Invoke(ctx, Config_FinishPublish_FullMethodName, in, out, opts...)
@@ -640,12 +673,14 @@ type ConfigServer interface {
 	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
+	GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
 	// 按 space 查询 app 信息
 	ListAppsBySpaceRest(context.Context, *ListAppsBySpaceRestReq) (*ListAppsResp, error)
 	CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateConfigItemResp, error)
+	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
@@ -681,6 +716,7 @@ type ConfigServer interface {
 	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
 	ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
+	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
 	PublishInstance(context.Context, *PublishInstanceReq) (*PublishInstanceResp, error)
@@ -710,6 +746,9 @@ func (UnimplementedConfigServer) DeleteApp(context.Context, *DeleteAppReq) (*Del
 func (UnimplementedConfigServer) GetApp(context.Context, *GetAppReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetApp not implemented")
 }
+func (UnimplementedConfigServer) GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAppByName not implemented")
+}
 func (UnimplementedConfigServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
 }
@@ -721,6 +760,9 @@ func (UnimplementedConfigServer) ListAppsBySpaceRest(context.Context, *ListAppsB
 }
 func (UnimplementedConfigServer) CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateConfigItem not implemented")
+}
+func (UnimplementedConfigServer) BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertConfigItems not implemented")
 }
 func (UnimplementedConfigServer) UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*UpdateConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigItem not implemented")
@@ -826,6 +868,9 @@ func (UnimplementedConfigServer) ListGroupReleasedApps(context.Context, *ListGro
 }
 func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
+}
+func (UnimplementedConfigServer) GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateReleaseAndPublish not implemented")
 }
 func (UnimplementedConfigServer) FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FinishPublish not implemented")
@@ -944,6 +989,24 @@ func _Config_GetApp_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetAppByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAppByNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetAppByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetAppByName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetAppByName(ctx, req.(*GetAppByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAppsReq)
 	if err := dec(in); err != nil {
@@ -1012,6 +1075,24 @@ func _Config_CreateConfigItem_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).CreateConfigItem(ctx, req.(*CreateConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchUpsertConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpsertConfigItemsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchUpsertConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchUpsertConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchUpsertConfigItems(ctx, req.(*BatchUpsertConfigItemsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1646,6 +1727,24 @@ func _Config_Publish_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateReleaseAndPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GenerateReleaseAndPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GenerateReleaseAndPublish_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GenerateReleaseAndPublish(ctx, req.(*GenerateReleaseAndPublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_FinishPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FinishPublishReq)
 	if err := dec(in); err != nil {
@@ -1868,6 +1967,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_GetApp_Handler,
 		},
 		{
+			MethodName: "GetAppByName",
+			Handler:    _Config_GetAppByName_Handler,
+		},
+		{
 			MethodName: "ListApps",
 			Handler:    _Config_ListApps_Handler,
 		},
@@ -1882,6 +1985,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateConfigItem",
 			Handler:    _Config_CreateConfigItem_Handler,
+		},
+		{
+			MethodName: "BatchUpsertConfigItems",
+			Handler:    _Config_BatchUpsertConfigItems_Handler,
 		},
 		{
 			MethodName: "UpdateConfigItem",
@@ -2022,6 +2129,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Publish",
 			Handler:    _Config_Publish_Handler,
+		},
+		{
+			MethodName: "GenerateReleaseAndPublish",
+			Handler:    _Config_GenerateReleaseAndPublish_Handler,
 		},
 		{
 			MethodName: "FinishPublish",
