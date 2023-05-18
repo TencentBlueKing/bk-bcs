@@ -46,7 +46,7 @@ service Config {
     }
     rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {
         option (google.api.http) = {
-            get: "/api/v1/config/biz/{biz_id}/apps/unique/name/{app_name}"
+            get: "/api/v1/config/biz/{biz_id}/apps/query/name/{app_name}"
         };
     }
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {
