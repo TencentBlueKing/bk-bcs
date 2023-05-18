@@ -13,7 +13,6 @@ limitations under the License.
 package dao
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -110,7 +109,7 @@ func (pd *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, error
 			Spec: &table.StrategySpec{
 				Name:      now.Format(time.RFC3339),
 				ReleaseID: opt.ReleaseID,
-				AsDefault: opt.All,
+				AsDefault: opt.Default,
 				Scope: &table.Scope{
 					Groups: groups,
 				},
@@ -233,9 +232,6 @@ func (pd *pubDao) PublishWithTx(kit *kit.Kit, tx *sharding.Tx, opt *types.Publis
 		}
 		opt.Default = true
 	}
-	b, _ := json.Marshal(opt)
-	fmt.Println("opt:", string(b))
-	fmt.Println("groupIDs:", groupIDs)
 
 	eDecorator := pd.event.Eventf(kit)
 
@@ -265,7 +261,7 @@ func (pd *pubDao) PublishWithTx(kit *kit.Kit, tx *sharding.Tx, opt *types.Publis
 		Spec: &table.StrategySpec{
 			Name:      now.Format(time.RFC3339),
 			ReleaseID: opt.ReleaseID,
-			AsDefault: opt.All,
+			AsDefault: opt.Default,
 			Scope: &table.Scope{
 				Groups: groups,
 			},
