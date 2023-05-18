@@ -12,7 +12,7 @@
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
-  import ReleaseVersion from './release-version/index.vue'
+  import CreateVersion from './create-version/index.vue'
   import ModifyGroupPublish from './modify-group-publish.vue'
   import VersionDiff from '../../components/version-diff/index.vue'
 
@@ -129,10 +129,11 @@
           class="version-desc" />
       </section>
       <section class="version-operations">
-        <ReleaseVersion
+        <CreateVersion
           v-if="versionData.status.publish_status === 'editing'"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
+          :config-count="pagination.count"
           @confirm="handleUpdateStatus" />
         <PublishVersion
           v-if="versionData.status.publish_status === 'not_released'"
