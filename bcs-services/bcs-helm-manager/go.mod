@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager
 
-go 1.17
+go 1.20
 
 replace (
 	github.com/Tencent/bk-bcs/bcs-services/pkg => ../pkg
@@ -62,6 +62,8 @@ require (
 	k8s.io/apimachinery v0.23.5
 	k8s.io/cli-runtime v0.23.5
 	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/klog v1.0.0
+	k8s.io/klog/v2 v2.30.0
 )
 
 require (
@@ -217,8 +219,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.23.5 // indirect
 	k8s.io/apiserver v0.23.5 // indirect
 	k8s.io/component-base v0.23.5 // indirect
-	k8s.io/klog v1.0.0 // indirect
-	k8s.io/klog/v2 v2.30.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/kubectl v0.23.5 // indirect
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect
