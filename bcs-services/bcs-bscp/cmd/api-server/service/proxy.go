@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -31,9 +29,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	"bscp.io/pkg/rest/view"
 	"bscp.io/pkg/runtime/grpcgw"
-	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 )
@@ -83,74 +79,6 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 	}
 
 	return p, nil
-}
-
-// handler return proxy handler.
-func (p *proxy) handler() http.Handler {
-	r := chi.NewRouter()
-	r.Use(handler.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(handler.CORS)
-	// r.Use(middleware.Timeout(60 * time.Second))
-
-	r.Get("/healthz", p.Healthz)
-	r.Mount("/", handler.RegisterCommonHandler())
-
-	// iam 回调接口
-	r.Route("/api/v1/auth/iam/find/resource", func(r chi.Router) {
-		r.Use(handler.RequestBodyLogger())
-		r.Use(view.Generic(p.authorizer))
-		r.Use(auth.IAMVerified)
-		r.Mount("/", p.authSvrMux)
-	})
-
-	// 用户信息
-	r.With(p.authorizer.UnifiedAuthentication).Get("/api/v1/auth/user/info", UserInfoHandler)
-
-	// authserver通用接口
-	r.Route("/api/v1/auth", func(r chi.Router) {
-		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(view.Generic(p.authorizer))
-		r.Mount("/", p.authSvrMux)
-	})
-
-	// 规范后的路由，url 需要包含 {app_id} 变量, 使用 AppVerified 中间件校验和初始化 kit.SpaceID 变量
-	r.Route("/api/v1/config/biz/{biz_id}/apps/{app_id}", func(r chi.Router) {
-		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(p.authorizer.BizVerified)
-		r.Use(p.authorizer.AppVerified)
-		r.Use(view.Generic(p.authorizer))
-		r.Mount("/", p.cfgSvrMux)
-	})
-
-	r.Route("/api/v1/config/", func(r chi.Router) {
-		r.Use(p.authorizer.UnifiedAuthentication)
-		r.Use(p.authorizer.BizVerified)
-		r.Use(view.Generic(p.authorizer))
-		r.Mount("/", p.cfgSvrMux)
-	})
-
-	// repo 上传 API
-	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
-		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.UploadFile)
-	})
-
-	// repo 下载 API
-	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
-		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.DownloadFile)
-	})
-
-	// repo 获取二进制元数据 API
-	r.Route("/api/v1/api/get/content/metadata", func(r chi.Router) {
-		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.FileMetadata)
-	})
-
-	return r
 }
 
 func newAuthServerMux(dis serviced.Discover) (http.Handler, error) {
