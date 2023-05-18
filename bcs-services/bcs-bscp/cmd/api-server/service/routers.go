@@ -54,7 +54,7 @@ func (p *proxy) routers() http.Handler {
 		r.Mount("/", p.authSvrMux)
 	})
 
-	r.Route("/api/v1/config/biz/{biz_id}/apps/query/", func(r chi.Router) {
+	r.Route("/api/v1/config/biz/{biz_id}/apps/query", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.BizVerified)
 		r.Use(view.Generic(p.authorizer))
