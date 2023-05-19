@@ -66,7 +66,7 @@ func (l *ListChartVersionV1Action) list() error {
 	chartName := l.req.GetName()
 	username := auth.GetUserFromCtx(l.ctx)
 
-	repository, err := l.model.GetRepository(l.ctx, projectCode, repoName)
+	repository, err := l.model.GetProjectRepository(l.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf(
 			"list chart version failed, %s, projectCode: %s, repository: %s, chartName: %s, operator: %s",

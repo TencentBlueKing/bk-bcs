@@ -140,6 +140,10 @@ func (hm *HelmManager) Init() error {
 		}
 	}
 
+	go func() {
+		blog.Infof("run pprof, %v", http.ListenAndServe(":6060", nil))
+	}()
+
 	return nil
 }
 

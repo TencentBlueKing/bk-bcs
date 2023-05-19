@@ -72,7 +72,7 @@ func (l *ListChartActionV1) list() error {
 	repoName := l.req.GetRepoName()
 	username := auth.GetUserFromCtx(l.ctx)
 
-	repository, err := l.model.GetRepository(l.ctx, projectCode, repoName)
+	repository, err := l.model.GetProjectRepository(l.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("list chart failed, %s, projectCode: %s, repository: %s, operator: %s",
 			err.Error(), projectCode, repoName, username)

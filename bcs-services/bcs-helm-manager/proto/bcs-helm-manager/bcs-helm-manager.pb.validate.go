@@ -6515,38 +6515,11 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := UpgradeReleaseV1ReqValidationError{
-			field:  "Repository",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Repository
 
-	if utf8.RuneCountInString(m.GetChart()) < 1 {
-		err := UpgradeReleaseV1ReqValidationError{
-			field:  "Chart",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Chart
 
-	if utf8.RuneCountInString(m.GetVersion()) < 1 {
-		err := UpgradeReleaseV1ReqValidationError{
-			field:  "Version",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Version
 
 	// no validation rules for ValueFile
 
