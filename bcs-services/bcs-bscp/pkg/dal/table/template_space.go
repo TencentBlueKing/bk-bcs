@@ -132,8 +132,8 @@ func (s TemplateSpace) ValidateDelete() error {
 
 // TemplateSpaceSpec defines all the specifics for TemplateSpace set by user.
 type TemplateSpaceSpec struct {
-	Name string `db:"name" json:"name"`
-	Memo string `db:"memo" json:"memo"`
+	Name string `json:"name" gorm:"column:name"`
+	Memo string `json:"memo" gorm:"column:memo"`
 }
 
 // TemplateSpaceType is the type of TemplateSpace
@@ -167,7 +167,7 @@ func (s TemplateSpaceSpec) ValidateUpdate() error {
 
 // TemplateSpaceAttachment defines the TemplateSpace attachments.
 type TemplateSpaceAttachment struct {
-	BizID uint32 `db:"biz_id" json:"biz_id"`
+	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
 }
 
 // IsEmpty test whether TemplateSpace attachment is empty or not.
