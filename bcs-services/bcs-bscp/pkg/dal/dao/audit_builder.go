@@ -21,12 +21,10 @@ import (
 	"time"
 
 	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	filter2 "bscp.io/pkg/runtime/filter"
-	"gorm.io/gorm"
 )
 
 // initAuditBuilder create a new audit builder instance.
@@ -57,32 +55,14 @@ func initAuditBuilder(kit *kit.Kit, bizID uint32, res enumor.AuditResourceType, 
 	return ab
 }
 
-// AuditResInterface :
-type AuditResInterface interface {
-	AppID() uint32
-	ResourceID() uint32
-}
-
-func AfterCreate(tx *gorm.DB) {
-	auditRes, ok := tx.Statement.Model.(*AuditResInterface)
-	if !ok {
-		fmt.Println("not auditRes", tx.Statement.Model)
-		return
-	}
-
-	fmt.Println("leijiaomin", auditRes)
-}
-
 // AuditDecorator is audit decorator interface, use to record audit.
 type AuditDecorator interface {
 	AuditCreate(cur interface{}, opt *AuditOption) error
 	PrepareUpdate(updatedTo interface{}) AuditDecorator
-	PrepareUpdateV2(oldObj, newObj interface{}) AuditDecorator
 	PrepareDelete(resID uint32) AuditDecorator
 	AuditPublish(cur interface{}, opt *AuditOption) error
 	AuditFinishPublish(strID, appID uint32, opt *AuditOption) error
 	Do(opt *AuditOption) error
-	DoV2(tx *gen.Query) error
 }
 
 // AuditBuilder is a wrapper decorator to handle all the resource's
@@ -688,17 +668,6 @@ func (ab *AuditBuilder) Do(opt *AuditOption) error {
 	}
 
 	return ab.ad.One(ab.kit, ab.toAudit, opt)
-
-}
-
-// Do save audit log to the db immediately.
-func (ab *AuditBuilder) DoV2(tx *gen.Query) error {
-
-	if ab.hitErr != nil {
-		return ab.hitErr
-	}
-
-	return ab.ad.One(ab.kit, ab.toAudit, &AuditOption{genM: tx})
 
 }
 

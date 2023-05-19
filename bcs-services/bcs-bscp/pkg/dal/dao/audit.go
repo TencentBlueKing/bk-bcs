@@ -31,7 +31,7 @@ type AuditDao interface {
 	// Decorator is used to handle the audit process as a pipeline
 	// according CUD scenarios.
 	Decorator(kit *kit.Kit, bizID uint32, res enumor.AuditResourceType) AuditDecorator
-	DecoratorV2(kit *kit.Kit, bizID uint32) AuditDecorator
+	DecoratorV2(kit *kit.Kit, bizID uint32) AuditPrepare
 	// One insert one resource's audit.
 	One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error
 }
@@ -71,8 +71,8 @@ func (au *audit) Decorator(kit *kit.Kit, bizID uint32, res enumor.AuditResourceT
 	return initAuditBuilder(kit, bizID, res, au)
 }
 
-func (au *audit) DecoratorV2(kit *kit.Kit, bizID uint32) AuditDecorator {
-	return initAuditBuilder(kit, bizID, "", au)
+func (au *audit) DecoratorV2(kit *kit.Kit, bizID uint32) AuditPrepare {
+	return initAuditBuilderV2(kit, bizID, au)
 }
 
 // One audit one resource's operation.

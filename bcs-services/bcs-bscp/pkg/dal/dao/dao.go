@@ -85,8 +85,6 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	// 初始化 Gen 配置
 	genM := gen.Use(db)
 
-	db.Callback().Create().After("gorm:after_create").Register("bscp:audit_create", AfterCreate)
-
 	ormInst := orm.Do(opt)
 	idDao := &idGenerator{sd: sd, genM: genM}
 	auditDao, err := NewAuditDao(ormInst, sd, idDao)

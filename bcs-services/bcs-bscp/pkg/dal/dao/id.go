@@ -61,22 +61,26 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 
 	genObj := new(generator)
 
-	ig.genM.Transaction(func(tx *gen.Query) error {
+	err := ig.genM.Transaction(func(tx *gen.Query) error {
 		m := tx.IDGenerator
 		q := tx.IDGenerator.WithContext(ctx.Ctx)
 
-		_, err := q.Where(m.Resource.Eq(string(resource))).UpdateSimple(m.MaxID.Add(uint32(step)))
-		if err != nil {
+		if _, err := q.Where(m.Resource.Eq(string(resource))).UpdateSimple(m.MaxID.Add(uint32(step))); err != nil {
 			return err
 		}
 
-		newOne, err := q.Where(m.Resource.Eq(string(resource))).Select(m.MaxID).Take()
+		obj, err := q.Where(m.Resource.Eq(string(resource))).Select(m.MaxID).Take()
 		if err != nil {
 			return err
 		}
-		genObj.MaxID = newOne.MaxID
+		genObj.MaxID = obj.MaxID
+		fmt.Println("lejioamin", obj.MaxID)
 		return nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	// validate the max id is valid or not.
 	if genObj.MaxID < uint32(step) {

@@ -40,8 +40,8 @@ type Audit struct {
 	ID           uint32                   `db:"id" json:"id" gorm:"primaryKey"`
 	BizID        uint32                   `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
 	AppID        uint32                   `db:"app_id" json:"app_id" gorm:"column:app_id"`
-	ResourceType enumor.AuditResourceType `db:"res_type" json:"resource_type" gorm:"column:resource_type"`
-	ResourceID   uint32                   `db:"res_id" json:"resource_id" gorm:"column:resource_id"`
+	ResourceType enumor.AuditResourceType `db:"res_type" json:"resource_type" gorm:"column:res_type"`
+	ResourceID   uint32                   `db:"res_id" json:"resource_id" gorm:"column:res_id"`
 	Action       enumor.AuditAction       `db:"action" json:"action" gorm:"column:action"`
 	Rid          string                   `db:"rid" json:"rid" gorm:"column:rid"`
 	AppCode      string                   `db:"app_code" json:"app_code" gorm:"column:app_code"`

@@ -16,7 +16,6 @@ import (
 	"errors"
 
 	"bscp.io/pkg/criteria/validator"
-	"gorm.io/gorm"
 )
 
 // TemplateSpace 模版空间
@@ -32,23 +31,19 @@ func (s *TemplateSpace) TableName() string {
 	return "template_spaces"
 }
 
-// AuditResType 审计资源名称
-func (s *TemplateSpace) AuditResType() string {
+// AppID AuditRes interface
+func (s *TemplateSpace) AppID() uint32 {
+	return 0
+}
+
+// AuditResID AuditRes interface
+func (s *TemplateSpace) ResourceID() uint32 {
+	return s.ID
+}
+
+// AuditResType AuditRes interface
+func (s *TemplateSpace) ResourceType() string {
 	return "template_space"
-}
-
-// AuditResChange
-func (s *TemplateSpace) AuditResChange(last *TemplateSpaceSpec) *TemplateSpaceSpec {
-	return nil
-}
-
-// AfterCreate :
-func (u *TemplateSpace) AfterCreate(tx *gorm.DB) (err error) {
-	if u.ID == 1 {
-		tx.Model(u).Update("role", "admin")
-	}
-
-	return
 }
 
 // ValidateCreate validate TemplateSpace is valid or not when create it.
