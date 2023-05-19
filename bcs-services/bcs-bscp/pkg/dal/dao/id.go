@@ -74,7 +74,6 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 			return err
 		}
 		genObj.MaxID = obj.MaxID
-		fmt.Println("lejioamin", obj.MaxID)
 		return nil
 	})
 

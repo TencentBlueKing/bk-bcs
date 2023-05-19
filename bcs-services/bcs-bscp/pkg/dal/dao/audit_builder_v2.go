@@ -116,14 +116,27 @@ func (ab *AuditBuilderV2) PrepareUpdate(obj AuditRes, oldObj interface{}) AuditD
 	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResourceType())
 	ab.toAudit.ResourceID = obj.ResourceID()
 	ab.toAudit.Action = enumor.Update
+	ab.prev = oldObj
 
 	changed, err := parseChangedSpecFields(oldObj, obj)
 	if err != nil {
 		ab.hitErr = err
 		return ab
 	}
-
 	ab.changed = changed
+
+	detail := &table.AuditBasicDetail{
+		Prev:    ab.prev,
+		Changed: ab.changed,
+	}
+
+	js, err := json.Marshal(detail)
+	if err != nil {
+		ab.hitErr = fmt.Errorf("marshal audit detail failed, err: %v", err)
+		return ab
+	}
+	ab.toAudit.Detail = string(js)
+
 	return ab
 }
 

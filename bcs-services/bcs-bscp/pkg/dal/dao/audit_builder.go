@@ -239,17 +239,6 @@ func (ab *AuditBuilder) AuditFinishPublish(strID, appID uint32, opt *AuditOption
 	return ab.ad.One(ab.kit, ab.toAudit, opt)
 }
 
-func (ab *AuditBuilder) PrepareUpdateV2(oldObj, newObj interface{}) AuditDecorator {
-	changed, err := parseChangedSpecFields(oldObj, newObj)
-	if err != nil {
-		ab.hitErr = err
-		return ab
-	}
-
-	ab.changed = changed
-	return ab
-}
-
 // PrepareUpdate prepare the resource's previous instance details by
 // get the instance's detail from db and save it to ab.prev for later use.
 // Note:

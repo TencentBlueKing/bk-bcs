@@ -55,24 +55,23 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 	}
 	g.ID = id
 
-	ab := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
 
 	// 多个使用事务处理
-	err = dao.genM.Transaction(func(tx *gen.Query) error {
+	createTx := func(tx *gen.Query) error {
 		q := tx.TemplateSpace.WithContext(kit.Ctx)
 		if err := q.Create(g); err != nil {
 			return err
 		}
 
-		if err := ab.Do(tx); err != nil {
+		if err := ad.Do(tx); err != nil {
 			return err
 		}
 
 		return nil
-	})
-
-	if err != nil {
-		return 0, err
+	}
+	if err := dao.genM.Transaction(createTx); err != nil {
+		return 0, nil
 	}
 
 	return g.ID, nil
@@ -85,28 +84,28 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 	}
 
 	m := dao.genM.TemplateSpace
-	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
 
-	// 更新记录审计, 查询上一个记录数据
+	// 更新操作, 获取当前记录做审计
+	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
 	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
 	}
-	ab := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(oldOne, g)
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 
 	// 多个使用事务处理
-	err = dao.genM.Transaction(func(tx *gen.Query) error {
+	updateTx := func(tx *gen.Query) error {
+		q = tx.TemplateSpace.WithContext(kit.Ctx)
 		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Select(m.Memo, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 
-		if err := ab.Do(tx); err != nil {
+		if err := ad.Do(tx); err != nil {
 			return err
 		}
 		return nil
-	})
-
-	if err != nil {
+	}
+	if err := dao.genM.Transaction(updateTx); err != nil {
 		return err
 	}
 
@@ -165,8 +164,6 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 func (dao *templateSpaceDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error) {
 	m := dao.genM.TemplateSpace
 	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
-
-	q.Where(m.Reviser)
 
 	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
