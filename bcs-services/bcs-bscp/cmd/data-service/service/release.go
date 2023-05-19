@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -40,6 +41,10 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	if err != nil {
 		logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
+	}
+	// if no config item, return directly.
+	if len(cfgItems) == 0 {
+		return nil, errors.New("app config items is empty")
 	}
 
 	// step2: query config item newest commit
