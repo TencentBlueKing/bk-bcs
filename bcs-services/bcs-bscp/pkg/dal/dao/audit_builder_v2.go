@@ -131,6 +131,7 @@ func (ab *AuditBuilderV2) PrepareDelete(obj AuditRes) AuditDo {
 	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResourceType())
 	ab.toAudit.ResourceID = obj.ResourceID()
 	ab.toAudit.Action = enumor.Delete
+	ab.prev = obj
 
 	detail := &table.AuditBasicDetail{
 		Prev:    ab.prev,

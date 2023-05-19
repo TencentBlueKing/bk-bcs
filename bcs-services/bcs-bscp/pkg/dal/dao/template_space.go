@@ -128,34 +128,33 @@ func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, offset, limit int)
 
 // Delete one TemplateSpace instance.
 func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error {
+	// 参数校验
 	if err := g.ValidateDelete(); err != nil {
 		return err
 	}
 
+	// 删除操作, 获取当前记录做审计
 	m := dao.genM.TemplateSpace
 	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
-
-	// 更新记录审计, 查询上一个记录数据
 	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
 	}
-	ab := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
 	// 多个使用事务处理
-	err = dao.genM.Transaction(func(tx *gen.Query) error {
-		m = dao.genM.TemplateSpace
-		q = dao.genM.TemplateSpace.WithContext(kit.Ctx)
+	deleteTx := func(tx *gen.Query) error {
+		q = tx.TemplateSpace.WithContext(kit.Ctx)
 		if _, err := q.Delete(g); err != nil {
 			return err
 		}
 
-		if err := ab.Do(tx); err != nil {
+		if err := ad.Do(tx); err != nil {
 			return err
 		}
 		return nil
-	})
-	if err != nil {
+	}
+	if err := dao.genM.Transaction(deleteTx); err != nil {
 		return err
 	}
 
