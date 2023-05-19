@@ -17,7 +17,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -170,21 +169,21 @@ func (s *service) UploadHandler(c *gin.Context) {
 	data := types.APIResponse{RequestID: authCtx.RequestId}
 	if uploadPath == "" {
 		data.Code = types.ApiErrorCode
-		data.Message = "请先输入上传路径"
+		data.Message = i18n.GetMessage("请先输入上传路径")
 		c.JSON(http.StatusOK, data)
 		return
 	}
 	err := checkFileExists(uploadPath, sessionId)
 	if err != nil {
 		data.Code = types.ApiErrorCode
-		data.Message = "目标路径不存在"
+		data.Message = i18n.GetMessage("目标路径不存在")
 		c.JSON(http.StatusOK, data)
 		return
 	}
 	err = checkPathIsDir(uploadPath, sessionId)
 	if err != nil {
 		data.Code = types.ApiErrorCode
-		data.Message = "目标路径不存在"
+		data.Message = i18n.GetMessage("目标路径不存在")
 		c.JSON(http.StatusOK, data)
 		return
 	}
@@ -192,7 +191,7 @@ func (s *service) UploadHandler(c *gin.Context) {
 	if err != nil {
 		logger.Errorf("get file from request failed, err: %s", err.Error())
 		data.Code = types.ApiErrorCode
-		data.Message = "解析上传文件失败"
+		data.Message = i18n.GetMessage("解析上传文件失败")
 		c.JSON(http.StatusOK, data)
 		return
 	}
@@ -202,7 +201,7 @@ func (s *service) UploadHandler(c *gin.Context) {
 	if err != nil {
 		logger.Errorf("open file from request failed, err: %s", err.Error())
 		data.Code = types.ApiErrorCode
-		data.Message = "解析上传文件失败"
+		data.Message = i18n.GetMessage("解析上传文件失败")
 		c.JSON(http.StatusOK, data)
 		return
 	}
@@ -211,7 +210,7 @@ func (s *service) UploadHandler(c *gin.Context) {
 	if err != nil {
 		logger.Errorf("get pod context by session %s failed, err: %s", sessionId, err.Error())
 		data.Code = types.ApiErrorCode
-		data.Message = "获取pod信息失败"
+		data.Message = i18n.GetMessage("获取pod信息失败")
 		c.JSON(http.StatusOK, data)
 		return
 	}
@@ -220,7 +219,7 @@ func (s *service) UploadHandler(c *gin.Context) {
 	if err != nil {
 		logger.Errorf("new pod exec failed, err: %s", err.Error())
 		data.Code = types.ApiErrorCode
-		data.Message = "执行上传命令失败"
+		data.Message = i18n.GetMessage("执行上传命令失败")
 		c.JSON(http.StatusOK, data)
 		return
 	}
@@ -262,7 +261,7 @@ func (s *service) UploadHandler(c *gin.Context) {
 	if err != nil {
 		logger.Errorf("pod exec failed, err: %s", err.Error())
 		data.Code = types.ApiErrorCode
-		data.Message = "执行上传命令失败"
+		data.Message = i18n.GetMessage("执行上传命令失败")
 		c.JSON(http.StatusOK, data)
 		return
 	}
@@ -271,12 +270,12 @@ func (s *service) UploadHandler(c *gin.Context) {
 	if ok && err != nil {
 		logger.Errorf("writer to tar failed, err: %s", err.Error())
 		data.Code = types.ApiErrorCode
-		data.Message = "文件上传失败"
+		data.Message = i18n.GetMessage("文件上传失败")
 		c.JSON(http.StatusOK, data)
 		return
 	}
 	data.Code = types.NoError
-	data.Message = "文件上传成功"
+	data.Message = i18n.GetMessage("文件上传成功")
 	c.JSON(http.StatusOK, data)
 	return
 }
@@ -322,7 +321,7 @@ func (s *service) DownloadHandler(c *gin.Context) {
 	_, err := tarReader.Next()
 	if err != nil {
 		data.Code = types.ApiErrorCode
-		data.Message = "复制文件流失败"
+		data.Message = i18n.GetMessage("复制文件流失败")
 		c.JSON(http.StatusOK, data)
 		return
 	}
@@ -344,25 +343,25 @@ func (s *service) CheckDownloadHandler(c *gin.Context) {
 	sessionId := c.Param("sessionId")
 
 	if err := checkFileExists(downloadPath, sessionId); err != nil {
-		data.Message = "目标文件不存在"
+		data.Message = i18n.GetMessage("目标文件不存在")
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	if err := checkPathIsDir(downloadPath, sessionId); err == nil {
-		data.Message = "暂不支持文件夹下载"
+		data.Message = i18n.GetMessage("暂不支持文件夹下载")
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	if err := checkFileSize(downloadPath, sessionId, FileSizeLimits*FileSizeUnitMb); err != nil {
-		data.Message = fmt.Sprintf("文件不能超过 %d MB", FileSizeLimits)
+		data.Message = i18n.GetMessage("文件不能超过{}MB", map[string]int{"fileLimit": FileSizeLimits})
 		c.JSON(http.StatusOK, data)
 		return
 	}
 
 	data.Code = types.NoError
-	data.Message = "文件可以下载"
+	data.Message = i18n.GetMessage("文件可以下载")
 	c.JSON(http.StatusOK, data)
 }
 
@@ -445,7 +444,7 @@ func checkFileSize(path, sessionID string, sizeLimit int) error {
 func (s *service) CreatePortalSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 	if authCtx.BindSession == nil {
-		msg := i18n.GetMessage("sessin_id不正确")
+		msg := i18n.GetMessage("session_id不合法或已经过期")
 		APIError(c, msg)
 		return
 	}
@@ -459,10 +458,12 @@ func (s *service) CreatePortalSession(c *gin.Context) {
 		return
 	}
 
+	lang := c.Query("lang")
+	lang = strings.TrimSuffix(lang, "/")
 	data := types.APIResponse{
 		Data: map[string]string{
 			"session_id": sessionId,
-			"ws_url":     makeWebSocketURL(sessionId, "", false),
+			"ws_url":     makeWebSocketURL(sessionId, lang, false),
 		},
 		Code:      types.NoError,
 		Message:   i18n.GetMessage("获取session成功"),
@@ -479,13 +480,13 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 
 	err := c.BindJSON(consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
+		msg := i18n.GetMessage("请求参数错误{}", err)
 		APIError(c, msg)
 		return
 	}
 
 	if err := consoleQuery.Validate(); err != nil {
-		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
+		msg := i18n.GetMessage("请求参数错误{}", err)
 		APIError(c, msg)
 		return
 	}
@@ -493,14 +494,14 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	// 自定义命令行
 	commands, err := consoleQuery.SplitCommand()
 	if err != nil {
-		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, command not valid, %s", err))
+		msg := i18n.GetMessage("请求参数错误{}", err)
 		APIError(c, msg)
 		return
 	}
 
 	podCtx, err := podmanager.QueryOpenPodCtx(c.Request.Context(), authCtx.ClusterId, consoleQuery)
 	if err != nil {
-		msg := i18n.GetMessage(fmt.Sprintf("请求参数错误, %s", err))
+		msg := i18n.GetMessage("请求参数错误{}", err)
 		APIError(c, msg)
 		return
 	}

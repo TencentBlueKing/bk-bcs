@@ -96,22 +96,22 @@
         </div>
         <bk-dialog v-model="downloadDialogVisiable" width="720" :show-footer="false">
             <bk-tab :active.sync="updownloadPanel" type="unborder-card">
-                <bk-tab-panel name="upload" label="上传">
+                <bk-tab-panel name="upload" :label="$t('message.upload')">
                     <div class="upload-panel">
                         <div class="upload-panel-input">
-                            <bk-input :clearable="true" v-model="uploadPath" placeholder="请先输入上传路径"></bk-input>
+                            <bk-input :clearable="true" v-model="uploadPath" :placeholder="$t('message.uploadPath')"></bk-input>
                         </div>
-                        <bk-upload :key="key" :tip="'文件限制小于30Mb, 暂不支持文件夹上传'" name="file" :size="30" :form-data-attributes="uploadData" @on-success="uploadSuccess" @on-progress="uploadProgress" @on-done="uploadDone" @on-error="uploadError"
+                        <bk-upload :key="key" :tip="$t('message.uploadLimit')" name="file" :size="30" :form-data-attributes="uploadData" @on-success="uploadSuccess" @on-progress="uploadProgress" @on-done="uploadDone" @on-error="uploadError"
                             :url="'{{ .settings.SITE_STATIC_URL }}/api/sessions/' + sessionID + '/upload/'">
                         </bk-upload>
                     </div>
                 </bk-tab-panel>
-                <bk-tab-panel name="download" label="下载">
+                <bk-tab-panel name="download" :label="$t('message.download')">
                     <div class="download-panel">
                         <div class="download-panel-input">
-                            <bk-input :clearable="true" v-model="downloadPath" placeholder="请先输入下载路径,暂不支持文件夹下载"></bk-input>
+                            <bk-input :clearable="true" v-model="downloadPath" :placeholder="$t('message.downloadPath')"></bk-input>
                         </div>
-                        <bk-button theme="primary" title="下载" icon="download" :disabled="downloadDisabled" :loading="downloadBtnLoading" @click="handleClickDownload">下载</bk-button>
+                        <bk-button theme="primary" :title="$t('message.download')" icon="download" :disabled="downloadDisabled" :loading="downloadBtnLoading" @click="handleClickDownload">{{ .download }}</bk-button>
                     </div>
                 </bk-tab-panel>
             </bk-tab>
@@ -124,9 +124,33 @@
         </bk-dialog> -->
     </div>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/vue.js"></script>
+    <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/vue-i18n.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.js"></script>
     <script type="text/javascript" defer>
         var app = new Vue({
+            i18n: new VueI18n({
+                locale: '{{ .Language }}',
+                messages: {
+                    en: {
+                        message: {
+                            upload: 'Upload',
+                            uploadPath: 'Please enter the upload path first',
+                            uploadLimit: 'File limit is less than 30Mb, and folder upload is not supported.',
+                            download: 'Download',
+                            downloadPath: 'Please enter the download path first. Folder download is not supported.'
+                        }
+                    },
+                    zh: {
+                        message: {
+                            upload: '上传',
+                            uploadPath: '请先输入上传路径',
+                            uploadLimit: '文件限制小于30Mb, 暂不支持文件夹上传',
+                            download: '下载',
+                            downloadPath: '请先输入下载路径,暂不支持文件夹下载'
+                        }
+                    }
+                }
+            }),
             delimiters: ['$[', ']'],
             el: '#app',
             data() {
@@ -478,6 +502,38 @@
             },
         })
     </script>
+<!--    <script type="module">-->
+<!--        import Vue from 'https://unpkg.com/vue@2.6.10/dist/vue.esm.browser.js'-->
+<!--        import VueI18n from 'https://unpkg.com/vue-i18n@8.11.1/dist/vue-i18n.esm.browser.js'-->
+
+<!--        Vue.use(VueI18n)-->
+
+<!--        new Vue({-->
+<!--            i18n: new VueI18n({-->
+<!--                locale: 'en',-->
+<!--                messages: {-->
+<!--                    en: {-->
+<!--                        message: {-->
+<!--                            upload: 'Upload',-->
+<!--                            uploadPath: 'Please enter the upload path first',-->
+<!--                            uploadLimit: 'File limit is less than 30Mb, and folder upload is not supported.',-->
+<!--                            download: 'Download',-->
+<!--                            downloadPath: 'Please enter the download path first. Folder download is not supported.'-->
+<!--                        }-->
+<!--                    },-->
+<!--                    zh: {-->
+<!--                        message: {-->
+<!--                            upload: '上传',-->
+<!--                            uploadPath: '请先输入上传路径',-->
+<!--                            uploadLimit: '文件限制小于30Mb, 暂不支持文件夹上传',-->
+<!--                            download: '下载',-->
+<!--                            downloadPath: '请先输入下载路径,暂不支持文件夹下载'-->
+<!--                        }-->
+<!--                    }-->
+<!--                }-->
+<!--            })-->
+<!--        }).$mount('#app')-->
+<!--    </script>-->
 </body>
 
 </html>

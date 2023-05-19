@@ -15,14 +15,14 @@ package web
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
-	"path"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
+	"net/http"
+	"net/url"
+	"path"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -87,6 +87,16 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
 		"COMMON_EXCEPTION_MSG": "",
 	}
+	var (
+		language, download string
+	)
+	if consoleQuery.Lang == "en" {
+		language = "en"
+		download = "download"
+	} else {
+		language = "zh"
+		download = "下载"
+	}
 
 	data := gin.H{
 		"title":            clusterId,
@@ -97,6 +107,8 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"project_id":       projectId,
 		"cluster_id":       clusterId,
 		"settings":         settings,
+		"Language":         language,
+		"download":         download,
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
@@ -136,6 +148,16 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 	}
 
 	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/portal/sessions/%s/", sessionId)) + "/"
+	lang := strings.TrimSuffix(c.Query("lang"), "/")
+	var download string
+	if lang == "en" {
+		lang = "en"
+		download = "download"
+	} else {
+		lang = "zh"
+		download = "下载"
+	}
+	sessionUrl = fmt.Sprintf("%s?lang=%s", sessionUrl, lang)
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
@@ -146,6 +168,8 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 		"title":       containerName,
 		"session_url": sessionUrl,
 		"settings":    settings,
+		"Language":    lang,
+		"download":    download,
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
