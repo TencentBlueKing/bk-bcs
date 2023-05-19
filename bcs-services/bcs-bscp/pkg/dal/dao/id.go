@@ -59,10 +59,10 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 		return nil, fmt.Errorf("gen %s unique id, but got invalid step", resource)
 	}
 
+	m := ig.genM.IDGenerator
 	genObj := new(generator)
 
-	err := ig.genM.Transaction(func(tx *gen.Query) error {
-		m := tx.IDGenerator
+	updateTx := func(tx *gen.Query) error {
 		q := tx.IDGenerator.WithContext(ctx.Ctx)
 
 		if _, err := q.Where(m.Resource.Eq(string(resource))).UpdateSimple(m.MaxID.Add(uint32(step))); err != nil {
@@ -73,11 +73,12 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 		if err != nil {
 			return err
 		}
+
 		genObj.MaxID = obj.MaxID
 		return nil
-	})
+	}
 
-	if err != nil {
+	if err := ig.genM.Transaction(updateTx); err != nil {
 		return nil, err
 	}
 
