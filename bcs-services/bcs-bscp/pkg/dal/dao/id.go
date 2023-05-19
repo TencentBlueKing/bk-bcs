@@ -13,15 +13,13 @@ limitations under the License.
 package dao
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-	"strconv"
 
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/runtime/filter"
 )
 
 // IDGenInterface supplies all the method to generate a resource's
@@ -41,7 +39,8 @@ func NewIDGenerator(sd *sharding.Sharding) IDGenInterface {
 }
 
 type idGenerator struct {
-	sd *sharding.Sharding
+	sd   *sharding.Sharding
+	genM *gen.Query
 }
 
 type generator struct {
@@ -60,51 +59,32 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 		return nil, fmt.Errorf("gen %s unique id, but got invalid step", resource)
 	}
 
-	txn, err := ig.sd.Admin().DB().BeginTx(ctx.Ctx, new(sql.TxOptions))
-	if err != nil {
-		return nil, fmt.Errorf("gen %s unique id, but begin txn failed, err: %v", resource, err)
-	}
+	genObj := new(generator)
 
-	var sqlSentenceUp []string
-	sqlSentenceUp = append(sqlSentenceUp, "UPDATE ", table.IDGeneratorTable.Name(), " SET max_id = max_id + ", strconv.Itoa(step),
-		", updated_at = NOW()  WHERE resource = '", string(resource), "'")
-	updateExpr := filter.SqlJoint(sqlSentenceUp)
+	ig.genM.Transaction(func(tx *gen.Query) error {
+		m := tx.IDGenerator
+		q := tx.IDGenerator.WithContext(ctx.Ctx)
 
-	_, err = txn.ExecContext(ctx.Ctx, updateExpr)
-	if err != nil {
-		return nil, fmt.Errorf("gen %s unique id, but update max_id failed, err: %v", resource, err)
-	}
-
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT max_id FROM ", table.IDGeneratorTable.Name(), " WHERE resource = '", string(resource), "'")
-	queryExpr := filter.SqlJoint(sqlSentence)
-
-	rows, err := txn.QueryContext(ctx.Ctx, queryExpr)
-	if err != nil {
-		return nil, fmt.Errorf("gen %s unique id, but query max id failed, err: %v", resource, err)
-	}
-	defer rows.Close()
-
-	gen := new(generator)
-	for rows.Next() {
-		if err := rows.Scan(&gen.MaxID); err != nil {
-			return nil, fmt.Errorf("gen %s unique id, but scan max id failed, err: %v", resource, err)
+		_, err := q.Where(m.Resource.Eq(string(resource))).UpdateSimple(m.MaxID.Add(uint32(step)))
+		if err != nil {
+			return err
 		}
-		// only one raw is queried, "resource" is a unique index key.
-		break
-	}
 
-	if err := txn.Commit(); err != nil {
-		return nil, fmt.Errorf("gen %s unique id, but commit failed, err: %v", resource, err)
-	}
+		newOne, err := q.Where(m.Resource.Eq(string(resource))).Select(m.MaxID).Take()
+		if err != nil {
+			return err
+		}
+		genObj.MaxID = newOne.MaxID
+		return nil
+	})
 
 	// validate the max id is valid or not.
-	if gen.MaxID < uint32(step) {
+	if genObj.MaxID < uint32(step) {
 		return nil, fmt.Errorf("gen %s unique id, but got unexpected invalid max_id", resource)
 	}
 
 	// generate the id list that can be used.
-	scope := gen.MaxID - uint32(step)
+	scope := genObj.MaxID - uint32(step)
 	list := make([]uint32, step)
 	for id := 1; id <= int(step); id++ {
 		list[id-1] = scope + uint32(id)

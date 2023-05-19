@@ -18,12 +18,14 @@ import (
 var (
 	Q             = new(Query)
 	Audit         *audit
+	IDGenerator   *iDGenerator
 	TemplateSpace *templateSpace
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Audit = &Q.Audit
+	IDGenerator = &Q.IDGenerator
 	TemplateSpace = &Q.TemplateSpace
 }
 
@@ -31,6 +33,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:            db,
 		Audit:         newAudit(db, opts...),
+		IDGenerator:   newIDGenerator(db, opts...),
 		TemplateSpace: newTemplateSpace(db, opts...),
 	}
 }
@@ -39,6 +42,7 @@ type Query struct {
 	db *gorm.DB
 
 	Audit         audit
+	IDGenerator   iDGenerator
 	TemplateSpace templateSpace
 }
 
@@ -48,6 +52,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:            db,
 		Audit:         q.Audit.clone(db),
+		IDGenerator:   q.IDGenerator.clone(db),
 		TemplateSpace: q.TemplateSpace.clone(db),
 	}
 }
@@ -64,18 +69,21 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:            db,
 		Audit:         q.Audit.replaceDB(db),
+		IDGenerator:   q.IDGenerator.replaceDB(db),
 		TemplateSpace: q.TemplateSpace.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
 	Audit         IAuditDo
+	IDGenerator   IIDGeneratorDo
 	TemplateSpace ITemplateSpaceDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		Audit:         q.Audit.WithContext(ctx),
+		IDGenerator:   q.IDGenerator.WithContext(ctx),
 		TemplateSpace: q.TemplateSpace.WithContext(ctx),
 	}
 }

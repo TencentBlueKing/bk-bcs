@@ -88,8 +88,8 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	db.Callback().Create().After("gorm:after_create").Register("bscp:audit_create", AfterCreate)
 
 	ormInst := orm.Do(opt)
-	idDao := &idGenerator{sd: sd}
-	auditDao, err := NewAuditDao(ormInst, sd, idDao, genM)
+	idDao := &idGenerator{sd: sd, genM: genM}
+	auditDao, err := NewAuditDao(ormInst, sd, idDao)
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}

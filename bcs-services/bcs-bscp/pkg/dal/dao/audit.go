@@ -31,6 +31,7 @@ type AuditDao interface {
 	// Decorator is used to handle the audit process as a pipeline
 	// according CUD scenarios.
 	Decorator(kit *kit.Kit, bizID uint32, res enumor.AuditResourceType) AuditDecorator
+	DecoratorV2(kit *kit.Kit, bizID uint32) AuditDecorator
 	// One insert one resource's audit.
 	One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error
 }
@@ -41,18 +42,18 @@ type AuditOption struct {
 	Txn *sqlx.Tx
 	// ResShardingUid is the resource's sharding instance.
 	ResShardingUid string
+	genM           *gen.Query
 }
 
 var _ AuditDao = new(audit)
 
 // NewAuditDao create the audit DAO
-func NewAuditDao(orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface, genM *gen.Query) (AuditDao, error) {
+func NewAuditDao(orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface) (AuditDao, error) {
 	return &audit{
 		orm:        orm,
 		sd:         sd,
 		adSharding: sd.Audit(),
 		idGen:      idGen,
-		genM:       genM,
 	}, nil
 }
 
@@ -63,12 +64,15 @@ type audit struct {
 	// adSharding is the audit's sharding instance
 	adSharding *sharding.One
 	idGen      IDGenInterface
-	genM       *gen.Query
 }
 
 // Decorator return audit decorator for to record audit.
 func (au *audit) Decorator(kit *kit.Kit, bizID uint32, res enumor.AuditResourceType) AuditDecorator {
 	return initAuditBuilder(kit, bizID, res, au)
+}
+
+func (au *audit) DecoratorV2(kit *kit.Kit, bizID uint32) AuditDecorator {
+	return initAuditBuilder(kit, bizID, "", au)
 }
 
 // One audit one resource's operation.
@@ -85,7 +89,7 @@ func (au *audit) One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error {
 
 	audit.ID = id
 
-	q := au.genM.Audit.WithContext(kit.Ctx)
+	q := opt.genM.Audit.WithContext(kit.Ctx)
 	if err := q.Create(audit); err != nil {
 		return fmt.Errorf("insert audit failed, err: %v", err)
 	}

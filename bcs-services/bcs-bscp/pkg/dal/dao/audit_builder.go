@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"bscp.io/pkg/criteria/enumor"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -76,10 +77,12 @@ func AfterCreate(tx *gorm.DB) {
 type AuditDecorator interface {
 	AuditCreate(cur interface{}, opt *AuditOption) error
 	PrepareUpdate(updatedTo interface{}) AuditDecorator
+	PrepareUpdateV2(oldObj, newObj interface{}) AuditDecorator
 	PrepareDelete(resID uint32) AuditDecorator
 	AuditPublish(cur interface{}, opt *AuditOption) error
 	AuditFinishPublish(strID, appID uint32, opt *AuditOption) error
 	Do(opt *AuditOption) error
+	DoV2(tx *gen.Query) error
 }
 
 // AuditBuilder is a wrapper decorator to handle all the resource's
@@ -254,6 +257,17 @@ func (ab *AuditBuilder) AuditFinishPublish(strID, appID uint32, opt *AuditOption
 	ab.toAudit.Detail = string(js)
 
 	return ab.ad.One(ab.kit, ab.toAudit, opt)
+}
+
+func (ab *AuditBuilder) PrepareUpdateV2(oldObj, newObj interface{}) AuditDecorator {
+	changed, err := parseChangedSpecFields(oldObj, newObj)
+	if err != nil {
+		ab.hitErr = err
+		return ab
+	}
+
+	ab.changed = changed
+	return ab
 }
 
 // PrepareUpdate prepare the resource's previous instance details by
@@ -674,6 +688,17 @@ func (ab *AuditBuilder) Do(opt *AuditOption) error {
 	}
 
 	return ab.ad.One(ab.kit, ab.toAudit, opt)
+
+}
+
+// Do save audit log to the db immediately.
+func (ab *AuditBuilder) DoV2(tx *gen.Query) error {
+
+	if ab.hitErr != nil {
+		return ab.hitErr
+	}
+
+	return ab.ad.One(ab.kit, ab.toAudit, &AuditOption{genM: tx})
 
 }
 

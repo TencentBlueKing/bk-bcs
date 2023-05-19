@@ -72,10 +72,23 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 	m := dao.genM.TemplateSpace
 	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
 
-	_, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Select(m.Memo, m.Reviser).Updates(g)
+	// 更新记录审计, 查询上一个记录数据
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
 	}
+	ab := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdateV2(oldOne, g)
+
+	// 多个使用事务处理
+	dao.genM.Transaction(func(tx *gen.Query) error {
+		_, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Select(m.Memo, m.Reviser).Updates(g)
+		if err != nil {
+			return err
+		}
+
+		ab.DoV2(tx)
+		return nil
+	})
 
 	return nil
 }
@@ -99,8 +112,29 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 		return err
 	}
 
+	m := dao.genM.TemplateSpace
 	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
-	_, err := q.Delete(g)
+
+	// 更新记录审计, 查询上一个记录数据
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ab := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdateV2(oldOne, g)
+
+	// 多个使用事务处理
+	err = dao.genM.Transaction(func(tx *gen.Query) error {
+		m = dao.genM.TemplateSpace
+		q = dao.genM.TemplateSpace.WithContext(kit.Ctx)
+		if _, err := q.Delete(g); err != nil {
+			return err
+		}
+
+		if err := ab.DoV2(tx); err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}

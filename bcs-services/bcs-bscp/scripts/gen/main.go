@@ -15,6 +15,7 @@ func main() {
 
 	// 需要 Gen 的模型这里添加
 	g.ApplyBasic(
+		table.IDGenerator{},
 		table.Audit{},
 		table.TemplateSpace{},
 	)
