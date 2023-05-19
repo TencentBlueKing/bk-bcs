@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Group source resource reference: pkg/dal/table/hook.go
+// Hook source resource reference: pkg/dal/table/hook.go
 type Hook struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

@@ -10,6 +10,7 @@ import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
+import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
@@ -28,11 +29,13 @@ service Data {
     rpc DeleteApp(DeleteAppReq) returns (pbbase.EmptyResp) {}
     rpc GetApp(GetAppReq) returns (pbapp.App) {}
     rpc GetAppByID(GetAppByIDReq) returns (pbapp.App) {}
+    rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {}
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
 
     // config item related interface.
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
+    rpc BatchUpsertConfigItems(BatchUpsertConfigItemsReq) returns (pbbase.EmptyResp) {}
     rpc UpdateConfigItem(UpdateConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc DeleteConfigItem(DeleteConfigItemReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
@@ -75,6 +78,12 @@ service Data {
     rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
 
+    // template-space related interface.
+    rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CreateResp) {}
+    rpc ListTemplateSpaces(ListTemplateSpacesReq) returns (ListTemplateSpacesResp) {}
+    rpc UpdateTemplateSpace(UpdateTemplateSpaceReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteTemplateSpace(DeleteTemplateSpaceReq) returns (pbbase.EmptyResp) {}
+
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
     rpc ListGroups(ListGroupsReq) returns (ListGroupsResp) {}
@@ -88,6 +97,7 @@ service Data {
 
     // publish related interface.
     rpc Publish(PublishReq) returns (PublishResp) {}
+    rpc GenerateReleaseAndPublish(GenerateReleaseAndPublishReq) returns (PublishResp) {}
     rpc FinishPublish(FinishPublishReq) returns (pbbase.EmptyResp) {}
     rpc ListPublishedStrategyHistories(ListPubStrategyHistoriesReq) returns (ListPubStrategyHistoriesResp) {}
 
@@ -103,9 +113,7 @@ service Data {
     rpc UpdateCredential(UpdateCredentialReq) returns (pbbase.EmptyResp) {}
 
     // credential scope related interface
-    rpc CreateCredentialScope(CreateCredentialScopeReq) returns (CreateResp) {}
     rpc ListCredentialScopes(ListCredentialScopesReq) returns (ListCredentialScopesResp) {}
-    rpc DeleteCredentialScopes(DeleteCredentialScopesReq) returns (DeleteCredentialScopesResp) {}
     rpc UpdateCredentialScopes(UpdateCredentialScopesReq) returns (UpdateCredentialScopesResp) {}
 
     // used iam pull resource callback.
@@ -120,14 +128,17 @@ service Data {
     }
 }
 message UpdateCredentialScopesReq {
-    repeated  pbcrs.UpdateScopeSpec      alter_scope = 1;
-    pbcrs.CredentialScopeAttachment      attachment  = 2;
+    uint32                         biz_id        = 1;
+    uint32                         credential_id = 2;
+    repeated pbcrs.UpdateScopeSpec updated       = 3;
+    repeated string                created       = 4;
+    repeated uint32                deleted       = 5;
 }
 message UpdateCredentialScopesResp{}
 
 message DeleteCredentialScopesReq{
-    repeated   uint32                    id         = 1;
-    pbcrs.CredentialScopeAttachment      attachment = 2;
+    repeated uint32                 id         = 1;
+    pbcrs.CredentialScopeAttachment attachment = 2;
 }
 
 message DeleteCredentialScopesResp{}
@@ -138,13 +149,13 @@ message ListCredentialScopesReq {
 }
 
 message ListCredentialScopesResp {
-    uint32   count                             = 1;
+    uint32                             count   = 1;
     repeated pbcrs.CredentialScopeList details = 2;
 }
 
 message CreateCredentialScopeReq {
-    pbcrs.CredentialScopeAttachment          attachment = 1;
-    repeated string                          spec       = 2;
+    pbcrs.CredentialScopeAttachment attachment = 1;
+    repeated string                 spec       = 2;
 }
 
 message CreateCredentialReq {
@@ -153,13 +164,13 @@ message CreateCredentialReq {
 }
 
 message ListCredentialReq {
-    uint32                 biz_id    = 1;
-    pbbase.BasePage        page      = 2;
-    google.protobuf.Struct filter    = 3;
+    uint32                 biz_id = 1;
+    pbbase.BasePage        page   = 2;
+    google.protobuf.Struct filter = 3;
 }
 
 message ListCredentialResp{
-    uint32   count                               = 1;
+    uint32                               count   = 1;
     repeated pbcredential.CredentialList details = 2;
 }
 
@@ -170,7 +181,7 @@ message UpdateCredentialReq{
 }
 
 message DeleteCredentialReq {
-    uint32       id                              = 1;
+    uint32                            id         = 1;
     pbcredential.CredentialAttachment attachment = 2;
 }
 
@@ -209,6 +220,11 @@ message GetAppByIDReq {
     uint32 app_id = 1;
 }
 
+message GetAppByNameReq {
+    uint32 biz_id = 1;
+    string app_name = 2;
+}
+
 message ListAppsReq {
     uint32                 biz_id = 1;
     google.protobuf.Struct filter = 2;
@@ -229,8 +245,20 @@ message ListAppsResp {
 }
 
 message CreateConfigItemReq {
-    pbci.ConfigItemAttachment attachment = 1;
-    pbci.ConfigItemSpec       spec       = 2;
+    pbci.ConfigItemAttachment config_item_attachment = 1;
+    pbci.ConfigItemSpec       config_item_spec       = 2;
+    pbcontent.ContentSpec     content_spec           = 3;
+}
+
+message BatchUpsertConfigItemsReq {
+    message ConfigItem {
+        pbci.ConfigItemAttachment config_item_attachment = 1;
+        pbci.ConfigItemSpec       config_item_spec       = 2;
+        pbcontent.ContentSpec     content_spec           = 3;
+    }
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    repeated ConfigItem items = 3;
 }
 
 message UpdateConfigItemReq {
@@ -264,8 +292,8 @@ message ListConfigItemsResp {
 }
 
 message ListConfigItemCountReq {
-    uint32          biz_id     = 1;
-    repeated uint32 app_id     = 2;
+    uint32          biz_id = 1;
+    repeated uint32 app_id = 2;
 }
 
 message ListConfigItemCountResp {
@@ -325,11 +353,11 @@ message CreateReleaseReq {
 }
 
 message ListReleasesReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    bool               deprecated = 3;
-    google.protobuf.Struct filter = 4;
-    pbbase.BasePage        page   = 5;
+    uint32                 biz_id     = 1;
+    uint32                 app_id     = 2;
+    bool                   deprecated = 3;
+    google.protobuf.Struct filter     = 4;
+    pbbase.BasePage        page       = 5;
 }
 
 message ListReleasesResp {
@@ -441,6 +469,33 @@ message DeleteHookReq {
     pbhook.HookAttachment attachment = 2;
 }
 
+message CreateTemplateSpaceReq {
+    pbts.TemplateSpaceAttachment attachment = 1;
+    pbts.TemplateSpaceSpec       spec       = 2;
+}
+
+message ListTemplateSpacesReq {
+    uint32 biz_id = 1;
+    uint32 start  = 2;
+    uint32 limit  = 3;
+}
+
+message ListTemplateSpacesResp {
+    uint32                      count   = 1;
+    repeated pbts.TemplateSpace details = 2;
+}
+
+message UpdateTemplateSpaceReq {
+    uint32                       id         = 1;
+    pbts.TemplateSpaceAttachment attachment = 2;
+    pbts.TemplateSpaceSpec       spec       = 3;
+}
+
+message DeleteTemplateSpaceReq {
+    uint32                       id         = 1;
+    pbts.TemplateSpaceAttachment attachment = 2;
+}
+
 message CreateGroupReq {
     pbgroup.GroupAttachment attachment = 1;
     pbgroup.GroupSpec       spec       = 2;
@@ -487,7 +542,7 @@ message DeleteGroupReq {
 }
 
 message CountGroupsReleasedAppsReq {
-    uint32 biz_id = 1;
+    uint32          biz_id = 1;
     repeated uint32 groups = 2;
 }
 
@@ -501,10 +556,10 @@ message CountGroupsReleasedAppsResp {
 }
 
 message ListGroupRleasesdAppsReq {
-    uint32                biz_id   = 1;
-    uint32                group_id = 2;
-    uint32                start    = 3;
-    uint32                limit    = 4;
+    uint32 biz_id   = 1;
+    uint32 group_id = 2;
+    uint32 start    = 3;
+    uint32 limit    = 4;
 }
 
 message ListGroupRleasesdAppsResp {
@@ -527,6 +582,15 @@ message PublishReq {
     bool            all        = 5;
     bool            default    = 6;
     repeated uint32 groups     = 7;
+}
+
+message GenerateReleaseAndPublishReq {
+    uint32          biz_id = 1;
+    uint32          app_id = 2;
+    string    release_name = 3;
+    string    release_memo = 4;
+    bool               all = 5;
+    repeated string groups = 6;
 }
 
 message PublishResp {

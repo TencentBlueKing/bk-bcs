@@ -17,6 +17,7 @@ import (
 	"bscp.io/cmd/feed-server/bll/lcache"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
+	pbci "bscp.io/pkg/protocol/core/config-item"
 )
 
 // New initialize the auth service instance.
@@ -34,4 +35,9 @@ type AuthService struct {
 // Authorize if user has permission to the bscp resource.
 func (as *AuthService) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool, error) {
 	return as.cache.Auth.Authorize(kt, res)
+}
+
+// CanMatchCI if credential can match the config item.
+func (as *AuthService) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string, ci *pbci.ConfigItemSpec) (bool, error) {
+	return as.cache.Credential.CanMatchCI(kt, bizID, app, credential, ci)
 }

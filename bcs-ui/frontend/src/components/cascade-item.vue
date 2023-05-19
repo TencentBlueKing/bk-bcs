@@ -39,7 +39,7 @@
   </ul>
 </template>
 <script lang="ts">
-import { defineComponent, PropType, ref } from '@vue/composition-api';
+import { defineComponent, PropType, ref } from 'vue';
 import PopoverSelector from './popover-selector.vue';
 
 export interface IData {
@@ -62,6 +62,7 @@ export default defineComponent({
     const childrenItemRef = ref<any>(null);
     const activeID = ref('');
     const handleMouseEnter = (item: IData, index) => {
+      if (item.disabled) return;
       activeID.value = item.id;
       if (!item.children?.length) return;
       popoverRef.value[index]?.show();

@@ -19,6 +19,12 @@ import (
 	"net/http"
 	"strconv"
 
+	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
+	etcd3 "go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
+
 	"bscp.io/cmd/feed-server/options"
 	"bscp.io/cmd/feed-server/service"
 	"bscp.io/pkg/cc"
@@ -28,15 +34,9 @@ import (
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/brpc"
 	"bscp.io/pkg/runtime/ctl"
-	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // Run start the feed server
@@ -84,11 +84,6 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 	// init metrics
 	metrics.InitMetrics(net.JoinHostPort(cc.FeedServer().Network.BindIP,
 		strconv.Itoa(int(cc.FeedServer().Network.RpcPort))))
-
-	if err := gwparser.Init(opt.DisableJWT, opt.PublicKey); err != nil {
-		return err
-	}
-	logs.Infof("jwt disable state: %v", opt.DisableJWT)
 
 	etcdOpt, err := cc.FeedServer().Service.Etcd.ToConfig()
 	if err != nil {
@@ -154,6 +149,8 @@ func (fs *feedServer) listenAndServe() error {
 
 	serve := grpc.NewServer(opts...)
 	pbfs.RegisterUpstreamServer(serve, fs.service)
+	// Register reflection service on gRPC server.
+	reflection.Register(serve)
 
 	// initialize and register standard grpc server grpcMetrics.
 	grpcMetrics.InitializeMetrics(serve)

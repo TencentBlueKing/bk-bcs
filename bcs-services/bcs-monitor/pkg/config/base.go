@@ -32,6 +32,7 @@ type BaseConf struct {
 	AppCode      string              `yaml:"app_code"`
 	AppSecret    string              `yaml:"app_secret"`
 	SystemID     string              `yaml:"system_id"`
+	BKUsername   string              `yaml:"bk_username"`
 	TimeZone     string              `yaml:"time_zone"`
 	LanguageCode string              `yaml:"language_code"`
 	Managers     []string            `yaml:"managers"`

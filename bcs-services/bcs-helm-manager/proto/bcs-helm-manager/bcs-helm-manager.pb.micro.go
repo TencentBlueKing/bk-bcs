@@ -82,24 +82,6 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		&api.Endpoint{
-			Name:    "HelmManager.ListChart",
-			Path:    []string{"/helmmanager/v1/chart/{projectID}/{repository}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.ListChartVersion",
-			Path:    []string{"/helmmanager/v1/chart/{projectID}/{repository}/{name}/version"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.GetVersionDetail",
-			Path:    []string{"/helmmanager/v1/chart/{projectID}/{repository}/{name}/detail/{version}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
 			Name:    "HelmManager.ListChartV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts"},
 			Method:  []string{"GET"},
@@ -146,46 +128,6 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 		&api.Endpoint{
 			Name:    "HelmManager.GetChartRelease",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/releases"},
-			Method:  []string{"POST"},
-			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.ListRelease",
-			Path:    []string{"/helmmanager/v1/release/{clusterID}"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.GetReleaseDetail",
-			Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/detail"},
-			Method:  []string{"GET"},
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.InstallRelease",
-			Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/install"},
-			Method:  []string{"POST"},
-			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.UninstallRelease",
-			Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/uninstall"},
-			Method:  []string{"POST"},
-			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.UpgradeRelease",
-			Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/upgrade"},
-			Method:  []string{"POST"},
-			Body:    "*",
-			Handler: "rpc",
-		},
-		&api.Endpoint{
-			Name:    "HelmManager.RollbackRelease",
-			Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/rollback"},
 			Method:  []string{"POST"},
 			Body:    "*",
 			Handler: "rpc",
@@ -270,9 +212,6 @@ type HelmManagerService interface {
 	DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, opts ...client.CallOption) (*DeleteRepositoryResp, error)
 	ListRepository(ctx context.Context, in *ListRepositoryReq, opts ...client.CallOption) (*ListRepositoryResp, error)
 	//* chart service
-	ListChart(ctx context.Context, in *ListChartReq, opts ...client.CallOption) (*ListChartResp, error)
-	ListChartVersion(ctx context.Context, in *ListChartVersionReq, opts ...client.CallOption) (*ListChartVersionResp, error)
-	GetVersionDetail(ctx context.Context, in *GetVersionDetailReq, opts ...client.CallOption) (*GetVersionDetailResp, error)
 	ListChartV1(ctx context.Context, in *ListChartV1Req, opts ...client.CallOption) (*ListChartV1Resp, error)
 	GetChartDetailV1(ctx context.Context, in *GetChartDetailV1Req, opts ...client.CallOption) (*GetChartDetailV1Resp, error)
 	ListChartVersionV1(ctx context.Context, in *ListChartVersionV1Req, opts ...client.CallOption) (*ListChartVersionV1Resp, error)
@@ -282,12 +221,6 @@ type HelmManagerService interface {
 	DownloadChart(ctx context.Context, in *DownloadChartReq, opts ...client.CallOption) (*httpbody.HttpBody, error)
 	GetChartRelease(ctx context.Context, in *GetChartReleaseReq, opts ...client.CallOption) (*GetChartReleaseResp, error)
 	//* release service
-	ListRelease(ctx context.Context, in *ListReleaseReq, opts ...client.CallOption) (*ListReleaseResp, error)
-	GetReleaseDetail(ctx context.Context, in *GetReleaseDetailReq, opts ...client.CallOption) (*GetReleaseDetailResp, error)
-	InstallRelease(ctx context.Context, in *InstallReleaseReq, opts ...client.CallOption) (*InstallReleaseResp, error)
-	UninstallRelease(ctx context.Context, in *UninstallReleaseReq, opts ...client.CallOption) (*UninstallReleaseResp, error)
-	UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, opts ...client.CallOption) (*UpgradeReleaseResp, error)
-	RollbackRelease(ctx context.Context, in *RollbackReleaseReq, opts ...client.CallOption) (*RollbackReleaseResp, error)
 	ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error)
 	GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, opts ...client.CallOption) (*GetReleaseDetailV1Resp, error)
 	InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, opts ...client.CallOption) (*InstallReleaseV1Resp, error)
@@ -372,36 +305,6 @@ func (c *helmManagerService) ListRepository(ctx context.Context, in *ListReposit
 	return out, nil
 }
 
-func (c *helmManagerService) ListChart(ctx context.Context, in *ListChartReq, opts ...client.CallOption) (*ListChartResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.ListChart", in)
-	out := new(ListChartResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) ListChartVersion(ctx context.Context, in *ListChartVersionReq, opts ...client.CallOption) (*ListChartVersionResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.ListChartVersion", in)
-	out := new(ListChartVersionResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) GetVersionDetail(ctx context.Context, in *GetVersionDetailReq, opts ...client.CallOption) (*GetVersionDetailResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.GetVersionDetail", in)
-	out := new(GetVersionDetailResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *helmManagerService) ListChartV1(ctx context.Context, in *ListChartV1Req, opts ...client.CallOption) (*ListChartV1Resp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.ListChartV1", in)
 	out := new(ListChartV1Resp)
@@ -475,66 +378,6 @@ func (c *helmManagerService) DownloadChart(ctx context.Context, in *DownloadChar
 func (c *helmManagerService) GetChartRelease(ctx context.Context, in *GetChartReleaseReq, opts ...client.CallOption) (*GetChartReleaseResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.GetChartRelease", in)
 	out := new(GetChartReleaseResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) ListRelease(ctx context.Context, in *ListReleaseReq, opts ...client.CallOption) (*ListReleaseResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.ListRelease", in)
-	out := new(ListReleaseResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) GetReleaseDetail(ctx context.Context, in *GetReleaseDetailReq, opts ...client.CallOption) (*GetReleaseDetailResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseDetail", in)
-	out := new(GetReleaseDetailResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) InstallRelease(ctx context.Context, in *InstallReleaseReq, opts ...client.CallOption) (*InstallReleaseResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.InstallRelease", in)
-	out := new(InstallReleaseResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) UninstallRelease(ctx context.Context, in *UninstallReleaseReq, opts ...client.CallOption) (*UninstallReleaseResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.UninstallRelease", in)
-	out := new(UninstallReleaseResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, opts ...client.CallOption) (*UpgradeReleaseResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.UpgradeRelease", in)
-	out := new(UpgradeReleaseResp)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *helmManagerService) RollbackRelease(ctx context.Context, in *RollbackReleaseReq, opts ...client.CallOption) (*RollbackReleaseResp, error) {
-	req := c.c.NewRequest(c.name, "HelmManager.RollbackRelease", in)
-	out := new(RollbackReleaseResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -654,9 +497,6 @@ type HelmManagerHandler interface {
 	DeleteRepository(context.Context, *DeleteRepositoryReq, *DeleteRepositoryResp) error
 	ListRepository(context.Context, *ListRepositoryReq, *ListRepositoryResp) error
 	//* chart service
-	ListChart(context.Context, *ListChartReq, *ListChartResp) error
-	ListChartVersion(context.Context, *ListChartVersionReq, *ListChartVersionResp) error
-	GetVersionDetail(context.Context, *GetVersionDetailReq, *GetVersionDetailResp) error
 	ListChartV1(context.Context, *ListChartV1Req, *ListChartV1Resp) error
 	GetChartDetailV1(context.Context, *GetChartDetailV1Req, *GetChartDetailV1Resp) error
 	ListChartVersionV1(context.Context, *ListChartVersionV1Req, *ListChartVersionV1Resp) error
@@ -666,12 +506,6 @@ type HelmManagerHandler interface {
 	DownloadChart(context.Context, *DownloadChartReq, *httpbody.HttpBody) error
 	GetChartRelease(context.Context, *GetChartReleaseReq, *GetChartReleaseResp) error
 	//* release service
-	ListRelease(context.Context, *ListReleaseReq, *ListReleaseResp) error
-	GetReleaseDetail(context.Context, *GetReleaseDetailReq, *GetReleaseDetailResp) error
-	InstallRelease(context.Context, *InstallReleaseReq, *InstallReleaseResp) error
-	UninstallRelease(context.Context, *UninstallReleaseReq, *UninstallReleaseResp) error
-	UpgradeRelease(context.Context, *UpgradeReleaseReq, *UpgradeReleaseResp) error
-	RollbackRelease(context.Context, *RollbackReleaseReq, *RollbackReleaseResp) error
 	ListReleaseV1(context.Context, *ListReleaseV1Req, *ListReleaseV1Resp) error
 	GetReleaseDetailV1(context.Context, *GetReleaseDetailV1Req, *GetReleaseDetailV1Resp) error
 	InstallReleaseV1(context.Context, *InstallReleaseV1Req, *InstallReleaseV1Resp) error
@@ -692,9 +526,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		GetRepository(ctx context.Context, in *GetRepositoryReq, out *GetRepositoryResp) error
 		DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, out *DeleteRepositoryResp) error
 		ListRepository(ctx context.Context, in *ListRepositoryReq, out *ListRepositoryResp) error
-		ListChart(ctx context.Context, in *ListChartReq, out *ListChartResp) error
-		ListChartVersion(ctx context.Context, in *ListChartVersionReq, out *ListChartVersionResp) error
-		GetVersionDetail(ctx context.Context, in *GetVersionDetailReq, out *GetVersionDetailResp) error
 		ListChartV1(ctx context.Context, in *ListChartV1Req, out *ListChartV1Resp) error
 		GetChartDetailV1(ctx context.Context, in *GetChartDetailV1Req, out *GetChartDetailV1Resp) error
 		ListChartVersionV1(ctx context.Context, in *ListChartVersionV1Req, out *ListChartVersionV1Resp) error
@@ -703,12 +534,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		DeleteChartVersion(ctx context.Context, in *DeleteChartVersionReq, out *DeleteChartVersionResp) error
 		DownloadChart(ctx context.Context, in *DownloadChartReq, out *httpbody.HttpBody) error
 		GetChartRelease(ctx context.Context, in *GetChartReleaseReq, out *GetChartReleaseResp) error
-		ListRelease(ctx context.Context, in *ListReleaseReq, out *ListReleaseResp) error
-		GetReleaseDetail(ctx context.Context, in *GetReleaseDetailReq, out *GetReleaseDetailResp) error
-		InstallRelease(ctx context.Context, in *InstallReleaseReq, out *InstallReleaseResp) error
-		UninstallRelease(ctx context.Context, in *UninstallReleaseReq, out *UninstallReleaseResp) error
-		UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, out *UpgradeReleaseResp) error
-		RollbackRelease(ctx context.Context, in *RollbackReleaseReq, out *RollbackReleaseResp) error
 		ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error
 		GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error
 		InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, out *InstallReleaseV1Resp) error
@@ -764,24 +589,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.ListChart",
-		Path:    []string{"/helmmanager/v1/chart/{projectID}/{repository}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.ListChartVersion",
-		Path:    []string{"/helmmanager/v1/chart/{projectID}/{repository}/{name}/version"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.GetVersionDetail",
-		Path:    []string{"/helmmanager/v1/chart/{projectID}/{repository}/{name}/detail/{version}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.ListChartV1",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts"},
 		Method:  []string{"GET"},
@@ -828,46 +635,6 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetChartRelease",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{repoName}/charts/{name}/releases"},
-		Method:  []string{"POST"},
-		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.ListRelease",
-		Path:    []string{"/helmmanager/v1/release/{clusterID}"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.GetReleaseDetail",
-		Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/detail"},
-		Method:  []string{"GET"},
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.InstallRelease",
-		Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/install"},
-		Method:  []string{"POST"},
-		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.UninstallRelease",
-		Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/uninstall"},
-		Method:  []string{"POST"},
-		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.UpgradeRelease",
-		Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/upgrade"},
-		Method:  []string{"POST"},
-		Body:    "*",
-		Handler: "rpc",
-	}))
-	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "HelmManager.RollbackRelease",
-		Path:    []string{"/helmmanager/v1/release/{clusterID}/{namespace}/{name}/rollback"},
 		Method:  []string{"POST"},
 		Body:    "*",
 		Handler: "rpc",
@@ -968,18 +735,6 @@ func (h *helmManagerHandler) ListRepository(ctx context.Context, in *ListReposit
 	return h.HelmManagerHandler.ListRepository(ctx, in, out)
 }
 
-func (h *helmManagerHandler) ListChart(ctx context.Context, in *ListChartReq, out *ListChartResp) error {
-	return h.HelmManagerHandler.ListChart(ctx, in, out)
-}
-
-func (h *helmManagerHandler) ListChartVersion(ctx context.Context, in *ListChartVersionReq, out *ListChartVersionResp) error {
-	return h.HelmManagerHandler.ListChartVersion(ctx, in, out)
-}
-
-func (h *helmManagerHandler) GetVersionDetail(ctx context.Context, in *GetVersionDetailReq, out *GetVersionDetailResp) error {
-	return h.HelmManagerHandler.GetVersionDetail(ctx, in, out)
-}
-
 func (h *helmManagerHandler) ListChartV1(ctx context.Context, in *ListChartV1Req, out *ListChartV1Resp) error {
 	return h.HelmManagerHandler.ListChartV1(ctx, in, out)
 }
@@ -1010,30 +765,6 @@ func (h *helmManagerHandler) DownloadChart(ctx context.Context, in *DownloadChar
 
 func (h *helmManagerHandler) GetChartRelease(ctx context.Context, in *GetChartReleaseReq, out *GetChartReleaseResp) error {
 	return h.HelmManagerHandler.GetChartRelease(ctx, in, out)
-}
-
-func (h *helmManagerHandler) ListRelease(ctx context.Context, in *ListReleaseReq, out *ListReleaseResp) error {
-	return h.HelmManagerHandler.ListRelease(ctx, in, out)
-}
-
-func (h *helmManagerHandler) GetReleaseDetail(ctx context.Context, in *GetReleaseDetailReq, out *GetReleaseDetailResp) error {
-	return h.HelmManagerHandler.GetReleaseDetail(ctx, in, out)
-}
-
-func (h *helmManagerHandler) InstallRelease(ctx context.Context, in *InstallReleaseReq, out *InstallReleaseResp) error {
-	return h.HelmManagerHandler.InstallRelease(ctx, in, out)
-}
-
-func (h *helmManagerHandler) UninstallRelease(ctx context.Context, in *UninstallReleaseReq, out *UninstallReleaseResp) error {
-	return h.HelmManagerHandler.UninstallRelease(ctx, in, out)
-}
-
-func (h *helmManagerHandler) UpgradeRelease(ctx context.Context, in *UpgradeReleaseReq, out *UpgradeReleaseResp) error {
-	return h.HelmManagerHandler.UpgradeRelease(ctx, in, out)
-}
-
-func (h *helmManagerHandler) RollbackRelease(ctx context.Context, in *RollbackReleaseReq, out *RollbackReleaseResp) error {
-	return h.HelmManagerHandler.RollbackRelease(ctx, in, out)
 }
 
 func (h *helmManagerHandler) ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error {

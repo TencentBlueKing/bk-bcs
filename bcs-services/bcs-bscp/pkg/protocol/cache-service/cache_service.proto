@@ -13,6 +13,11 @@ package pbcs;
 option go_package = "bscp.io/pkg/protocol/cache-service;pbcs";
 
 service Cache {
+    rpc GetAppID(GetAppIDReq) returns (GetAppIDResp) {
+        option (google.api.http) = {
+            get: "/api/v1/cache/biz/{biz_id}/apps/{app_name}/app_id"
+        };
+    }
     rpc GetAppMeta(GetAppMetaReq) returns (JsonRawResp) {
         // response data reference pkg/types/cache.go/AppCacheMeta
         option (google.api.http) = {
@@ -77,6 +82,20 @@ service Cache {
         };
     }
 
+    rpc GetCredential(GetCredentialReq) returns (JsonRawResp) {
+        // get credential with filter
+        option (google.api.http) = {
+            get: "/api/v1/cache/biz/{biz_id}/credential/{credential}"
+        };
+    }
+
+    rpc ListCredentialMatchedCI(ListCredentialMatchedCIReq) returns (JsonRawResp) {
+        // list credential matched config items with filter
+        option (google.api.http) = {
+            get: "/api/v1/cache/credentials/{credential}/config_items"
+        };
+    }
+
     // only stress test use.
     rpc BenchAppMeta(BenchAppMetaReq) returns (BenchAppMetaResp) {}
     rpc BenchAppCRIMeta(BenchAppCRIMetaReq) returns (BenchAppCRIMetaResp) {}
@@ -86,6 +105,15 @@ service Cache {
 
 message JsonRawResp {
     string json_raw = 1;
+}
+
+message GetAppIDReq {
+    uint32 biz_id = 1;
+    string app_name = 2;
+}
+
+message GetAppIDResp {
+    uint32 app_id = 2;
 }
 
 message GetAppMetaReq {
@@ -146,10 +174,11 @@ message BenchAppMetaResp {
 }
 
 message AppMeta {
-    string cft          = 1;
-    string dpt          = 2;
-    string mod          = 3;
-    pbapp.Reload reload = 4;
+    string name         = 1;
+    string cft          = 2;
+    string dpt          = 3;
+    string mod          = 4;
+    pbapp.Reload reload = 5;
 }
 
 message BenchAppCRIMetaReq {
@@ -212,4 +241,14 @@ message EventMeta {
     uint32 id                          = 1;
     pbevent.EventSpec spec             = 2;
     pbevent.EventAttachment attachment = 3;
+}
+
+message ListCredentialMatchedCIReq {
+    uint32 biz_id     = 1;
+    string credential = 2;
+}
+
+message GetCredentialReq {
+    uint32 biz_id     = 1;
+    string credential = 2;
 }

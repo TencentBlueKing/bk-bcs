@@ -14,10 +14,10 @@ package bkrepo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 )
 
@@ -29,15 +29,16 @@ func (rh *repositoryHandler) createUser(ctx context.Context) (string, string, er
 	blog.Infof("create user to bk-repo for repository %s in project %s", rh.repository, rh.projectID)
 
 	var data []byte
+	var err error
 	u := rh.generateUserUsername()
 	p := rh.generateUserPassword()
-	if err := codec.EncJson(&user{
+	if data, err = json.Marshal(&user{
 		Name:      u,
 		Password:  p,
 		UserID:    u,
 		ProjectID: rh.projectID,
 		RepoName:  rh.repository,
-	}, &data); err != nil {
+	}); err != nil {
 		blog.Errorf("create user to bk-repo for repository %s in project %s failed, %s",
 			rh.repository, rh.projectID, err.Error())
 		return "", "", err
@@ -51,7 +52,7 @@ func (rh *repositoryHandler) createUser(ctx context.Context) (string, string, er
 	}
 
 	var r createUserResp
-	if err := codec.DecJson(resp.Reply, &r); err != nil {
+	if err := json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf("create repository to bk-repo for repository %s in project %s "+
 			"decode resp failed, %s, with resp %s",
 			rh.repository, rh.projectID, err.Error(), resp.Reply)

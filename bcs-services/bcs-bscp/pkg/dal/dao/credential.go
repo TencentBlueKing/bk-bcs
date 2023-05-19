@@ -3,9 +3,12 @@ package dao
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
+	"bscp.io/pkg/cc"
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
@@ -14,11 +17,16 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/filter"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
 // Credential supplies all the Credential related operations.
 type Credential interface {
+	// Get get credential
+	Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error)
+	// GetByCredentialString get credential by credential string
+	GetByCredentialString(kit *kit.Kit, bizID uint32, credential string) (*table.Credential, error)
 	// Create one credential instance.
 	Create(kit *kit.Kit, credential *table.Credential) (uint32, error)
 	// List get credentials
@@ -27,15 +35,69 @@ type Credential interface {
 	Delete(kit *kit.Kit, strategy *table.Credential) error
 	// Update update credential
 	Update(kit *kit.Kit, credential *table.Credential) error
+	// UpdateRevisionWithTx update credential revision with transaction
+	UpdateRevisionWithTx(kit *kit.Kit, tx *sharding.Tx, bizID, id uint32) error
 }
 
 var _ Credential = new(credentialDao)
 
 type credentialDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
-	idGen    IDGenInterface
-	auditDao AuditDao
+	orm               orm.Interface
+	sd                *sharding.Sharding
+	credentialSetting cc.Credential
+	idGen             IDGenInterface
+	auditDao          AuditDao
+	event             Event
+}
+
+func (dao *credentialDao) Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID is empty")
+	}
+	if id == 0 {
+		return nil, errf.New(errf.InvalidParameter, "credential id is empty")
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialColumns.NamedExpr(), " FROM ",
+		table.CredentialTable.Name(), " WHERE id = '", strconv.Itoa(int(id)), "' AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
+
+	one := new(table.Credential)
+	if err := dao.orm.Do(dao.sd.MustSharding(bizID)).Get(kit.Ctx, one, sql); err != nil {
+		return nil, fmt.Errorf("get credential failed, err: %v", err)
+	}
+	return one, nil
+}
+
+// Get Credential by encoded credential string.
+func (dao *credentialDao) GetByCredentialString(kit *kit.Kit, bizID uint32, str string) (*table.Credential, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID is empty")
+	}
+	if str == "" {
+		return nil, errf.New(errf.InvalidParameter, "credential string is empty")
+	}
+
+	// encode credential string
+	encryptionAlgorithm := dao.credentialSetting.EncryptionAlgorithm
+	masterKey := dao.credentialSetting.MasterKey
+	encrypted, err := tools.EncryptCredential(str, masterKey, encryptionAlgorithm)
+	if err != nil {
+		return nil, errf.ErrCredentialInvalid
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialColumns.NamedExpr(), " FROM ",
+		table.CredentialTable.Name(), " WHERE enc_credential = '", encrypted, "' AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
+
+	one := new(table.Credential)
+	if err := dao.orm.Do(dao.sd.MustSharding(bizID)).Get(kit.Ctx, one, sql); err != nil {
+		return nil, fmt.Errorf("get credential failed, err: %v", err)
+	}
+
+	return one, nil
 }
 
 // Create create credential
@@ -60,7 +122,6 @@ func (dao *credentialDao) Create(kit *kit.Kit, c *table.Credential) (uint32, err
 	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CredentialTable.Name(), " (", table.CredentialColumns.ColumnExpr(), ")  VALUES(", table.CredentialColumns.ColonNameExpr(), ")")
 
 	sql := filter.SqlJoint(sqlSentence)
-
 	err = dao.sd.ShardingOne(c.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, c); err != nil {
@@ -174,6 +235,7 @@ func (dao *credentialDao) Delete(kit *kit.Kit, g *table.Credential) error {
 }
 
 // Update update credential
+// Note: only update name, description, enable
 func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	if g == nil {
 		return errf.New(errf.InvalidParameter, "credential is nil")
@@ -183,8 +245,8 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	opts := orm.NewFieldOptions().AddIgnoredFields(
-		"id", "biz_id").AddBlankedFields("enable")
+	opts := orm.NewFieldOptions().AddBlankedFields("enable", "memo").
+		AddIgnoredFields("id", "biz_id", "enc_algorithm", "enc_credential", "credential_type")
 	expr, toUpdate, err := orm.RearrangeSQLDataWithOption(g, opts)
 	if err != nil {
 		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)
@@ -195,7 +257,6 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
 		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
-
 	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
 			var effected int64
@@ -220,7 +281,6 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 			if err := ab.Do(&AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}); err != nil {
 				return fmt.Errorf("do credential update audit failed, err: %v", err)
 			}
-
 			return nil
 		})
 
@@ -229,5 +289,31 @@ func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
 	}
 
 	return nil
+}
 
+// UpdateRevisionWithTx update credential revision with transaction
+func (dao *credentialDao) UpdateRevisionWithTx(kit *kit.Kit, tx *sharding.Tx, bizID uint32, id uint32) error {
+	if bizID == 0 || id == 0 {
+		return errf.New(errf.InvalidParameter, "credential bizID or id is zero")
+	}
+
+	var sqlSentence []string
+	now := time.Now().Format(constant.TimeStdFormat)
+	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialTable.Name(),
+		" SET updated_at = :updated_at, reviser = :reviser"+
+			" WHERE id = ", strconv.Itoa(int(id)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
+
+	toUpdate := map[string]interface{}{
+		"updated_at": now,
+		"reviser":    kit.User,
+	}
+
+	_, err := dao.orm.Txn(tx.Tx()).Update(kit.Ctx, sql, toUpdate)
+	if err != nil {
+		logs.Errorf("update credential %d revision failed, err: %v, rid: %v", id, err, kit.Rid)
+		return err
+	}
+
+	return nil
 }

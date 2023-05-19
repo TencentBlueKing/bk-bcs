@@ -34,10 +34,12 @@ type Configuration struct {
 	mtx         sync.Mutex
 	Base        *BaseConf                  `yaml:"base_conf"`
 	Redis       *RedisConf                 `yaml:"redis"`
+	Mongo       *MongoConf                 `yaml:"mongo"`
 	StoreGWList []*StoreConf               `yaml:"storegw"`
 	Logging     *LogConf                   `yaml:"logging"`
 	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
 	BKMonitor   *BKMonitorConf             `yaml:"bk_monitor_conf"`
+	BKLog       *BKLogConf                 `yaml:"bk_log_conf"`
 	BCS         *BCSConf                   `yaml:"bcs_conf"`
 	IAM         *IAMConfig                 `yaml:"iam_conf"`
 	Credentials map[string][]*Credential   `yaml:"-"`
@@ -87,6 +89,7 @@ func newConfiguration() (*Configuration, error) {
 	}
 
 	c.Redis = DefaultRedisConf()
+	c.Mongo = DefaultMongoConf()
 
 	c.Logging = defaultLogConf()
 	c.Web = defaultWebConf()
@@ -108,6 +111,8 @@ func newConfiguration() (*Configuration, error) {
 	c.QueryStore = &QueryStoreConf{}
 
 	c.BKMonitor = defaultBKMonitorConf()
+
+	c.BKLog = &BKLogConf{}
 
 	return c, nil
 }
@@ -194,6 +199,17 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	// iam env
 	if c.IAM.GatewayServer == "" {
 		c.IAM.GatewayServer = BKIAM_GATEWAY_SERVER
+	}
+
+	// mongo
+	if c.Mongo.Address == "" {
+		c.Mongo.Address = MONGO_ADDRESS
+	}
+	if c.Mongo.Username == "" {
+		c.Mongo.Username = MONGO_USERNAME
+	}
+	if c.Mongo.Password == "" {
+		c.Mongo.Password = MONGO_PASSWORD
 	}
 
 	if err := c.init(); err != nil {

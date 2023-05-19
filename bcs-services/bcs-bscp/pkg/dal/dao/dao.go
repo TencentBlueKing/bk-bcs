@@ -36,6 +36,7 @@ type Set interface {
 	CRInstance() CRInstance
 	Strategy() Strategy
 	Hook() Hook
+	TemplateSpace() TemplateSpace
 	Group() Group
 	GroupAppBind() GroupAppBind
 	ReleasedGroup() ReleasedGroup
@@ -49,7 +50,7 @@ type Set interface {
 }
 
 // NewDaoSet create the DAO set instance.
-func NewDaoSet(opt cc.Sharding) (Set, error) {
+func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
 	sd, err := sharding.InitSharding(&opt)
 	if err != nil {
@@ -64,24 +65,26 @@ func NewDaoSet(opt cc.Sharding) (Set, error) {
 	}
 
 	s := &set{
-		orm:      ormInst,
-		sd:       sd,
-		idGen:    idDao,
-		auditDao: auditDao,
-		event:    &eventDao{orm: ormInst, sd: sd, idGen: idDao},
-		lock:     &lockDao{orm: ormInst, idGen: idDao},
+		orm:               ormInst,
+		sd:                sd,
+		credentialSetting: credentialSetting,
+		idGen:             idDao,
+		auditDao:          auditDao,
+		event:             &eventDao{orm: ormInst, sd: sd, idGen: idDao},
+		lock:              &lockDao{orm: ormInst, idGen: idDao},
 	}
 
 	return s, nil
 }
 
 type set struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
-	idGen    IDGenInterface
-	auditDao AuditDao
-	event    Event
-	lock     LockDao
+	orm               orm.Interface
+	sd                *sharding.Sharding
+	credentialSetting cc.Credential
+	idGen             IDGenInterface
+	auditDao          AuditDao
+	event             Event
+	lock              LockDao
 }
 
 // ID returns the resource id generator DAO
@@ -186,9 +189,19 @@ func (s *set) Strategy() Strategy {
 	}
 }
 
-// Hook returns the group's DAO
+// Hook returns the hook's DAO
 func (s *set) Hook() Hook {
 	return &hookDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+	}
+}
+
+// TemplateSpace returns the templateSpace's DAO
+func (s *set) TemplateSpace() TemplateSpace {
+	return &templateSpaceDao{
 		orm:      s.orm,
 		sd:       s.sd,
 		idGen:    s.idGen,
@@ -278,10 +291,12 @@ func (s *set) Healthz() error {
 // Credential returns the Credential's DAO
 func (s *set) Credential() Credential {
 	return &credentialDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
+		orm:               s.orm,
+		sd:                s.sd,
+		credentialSetting: s.credentialSetting,
+		idGen:             s.idGen,
+		auditDao:          s.auditDao,
+		event:             s.event,
 	}
 }
 

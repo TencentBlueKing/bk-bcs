@@ -68,20 +68,20 @@ func PbGroupSpec(spec *table.GroupSpec) (*GroupSpec, error) {
 		return nil, nil
 	}
 
-	selector := new(pbstruct.Struct)
+	sel := new(pbstruct.Struct)
 	if spec.Selector != nil {
 		s, err := spec.Selector.MarshalPB()
 		if err != nil {
 			return nil, err
 		}
-		selector = s
+		sel = s
 	}
 
 	return &GroupSpec{
 		Name:     spec.Name,
 		Public:   spec.Public,
 		Mode:     string(spec.Mode),
-		Selector: selector,
+		Selector: sel,
 		Uid:      spec.UID,
 	}, nil
 }

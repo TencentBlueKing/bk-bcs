@@ -49,7 +49,41 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 	}
 	rp, err := s.client.DS.Publish(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("publish failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.PublishResp{
+		Id: rp.PublishedStrategyHistoryId,
+	}
+	return resp, nil
+}
+
+// GenerateReleaseAndPublish generate release and publish
+func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbcs.GenerateReleaseAndPublishReq) (
+	*pbcs.PublishResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.PublishResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Publish,
+		ResourceID: req.AppId}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GenerateReleaseAndPublishReq{
+		BizId:       req.BizId,
+		AppId:       req.AppId,
+		ReleaseName: req.ReleaseName,
+		ReleaseMemo: req.ReleaseMemo,
+		All:         req.All,
+		Groups:      req.Groups,
+	}
+	rp, err := s.client.DS.GenerateReleaseAndPublish(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("generate release and publish failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

@@ -74,7 +74,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref } from '@vue/composition-api';
+import { defineComponent, onMounted, ref } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
@@ -82,13 +82,13 @@ import $router from '@/router';
 import $store from '@/store/index';
 import NodeTemplateDetail from './node-template-detail.vue';
 import ContentHeader from '@/components/layout/Header.vue';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'NodeTemplateConfig',
   components: { NodeTemplateDetail, ContentHeader },
-  setup(props, ctx) {
-    const { $bkInfo, $bkMessage } = ctx.root;
-
+  setup() {
     const loading = ref(false);
     const data = ref<any[]>([]);
     const handleNodeTemplateList = async () => {

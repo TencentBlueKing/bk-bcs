@@ -255,13 +255,14 @@ type Repository struct {
 type BkRepoStorage struct {
 	// Endpoints is a seed list of host:port addresses of repo nodes.
 	Endpoints []string `yaml:"endpoints"`
-	// Token plat authority authentication of repo.
-	Token string `yaml:"token"`
 	// Project bscp project name in repo.
 	Project string `yaml:"project"`
-	// User bscp project admin user in repo.
-	User string    `yaml:"user"`
-	TLS  TLSConfig `yaml:"tls"`
+	// User basic auth username.
+	Username string `yaml:"username"`
+	// Password basic auth password.
+	Password string `yaml:"password"`
+	// TLS defines the tls config for repo.
+	TLS TLSConfig `yaml:"tls"`
 }
 
 type S3Storage struct {
@@ -323,16 +324,16 @@ func (s Repository) validate() error {
 			return errors.New("bk_repo endpoints is not set")
 		}
 
-		if len(s.BkRepo.Token) == 0 {
-			return errors.New("repo token is not set")
+		if len(s.BkRepo.Username) == 0 {
+			return errors.New("repo basic auth username is not set")
+		}
+
+		if len(s.BkRepo.Password) == 0 {
+			return errors.New("repo basic auth password is not set")
 		}
 
 		if len(s.BkRepo.Project) == 0 {
 			return errors.New("repo project is not set")
-		}
-
-		if len(s.BkRepo.User) == 0 {
-			return errors.New("repo user is not set")
 		}
 
 		if err := s.BkRepo.TLS.validate(); err != nil {
@@ -738,6 +739,11 @@ type FSLocalCache struct {
 	AuthCacheSize uint `yaml:"authCacheSize"`
 	// AuthCacheTTLSec defines how long this auth result with permission can be cached in seconds.
 	AuthCacheTTLSec uint `yaml:"authCacheTTLSec"`
+
+	// CredentialCacheSize defines how many credentials can be cached.
+	CredentialCacheSize uint `yaml:"credentialCacheSize"`
+	// CredentialCacheTTLSec defines how long this credential can be cached in seconds.
+	CredentialCacheTTLSec uint `yaml:"credentialCacheTTLSec"`
 }
 
 // validate if the feed server's local cache runtime is valid or not.
@@ -802,6 +808,14 @@ func (fc *FSLocalCache) trySetDefault() {
 
 	if fc.AuthCacheTTLSec == 0 {
 		fc.AuthCacheTTLSec = 300
+	}
+
+	if fc.CredentialCacheSize == 0 {
+		fc.CredentialCacheSize = 5000
+	}
+
+	if fc.CredentialCacheTTLSec == 0 {
+		fc.CredentialCacheTTLSec = 1
 	}
 
 	return

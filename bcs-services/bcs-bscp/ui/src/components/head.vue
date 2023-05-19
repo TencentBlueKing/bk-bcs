@@ -1,5 +1,4 @@
 <script setup lang="ts">
-  import { ref, computed, onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../store/global'
@@ -12,18 +11,11 @@
   const { userInfo } = storeToRefs(useUserStore())
 
   const navList = [
-    { id: 'service', name: '服务管理'},
-    { id: 'groups-management', name: '分组管理'},
-    // { id: 'scripts-management', name: '脚本管理'},
-    { id: 'credentials-management', name: '服务密钥'}
+    { id: 'service-mine', module: 'service', name: '服务管理'},
+    { id: 'groups-management', module: 'groups', name: '分组管理'},
+    // { id: 'scripts-management', module: 'scripts', name: '脚本管理'},
+    { id: 'credentials-management', module: 'credentials', name: '服务密钥'}
   ]
-
-  const activedRootRoute = computed(() => {
-    if (['service-config', 'service-mine', 'service-all'].includes(<string>route.name)) {
-      return 'service'
-    }
-    return route.matched[0]?.name
-  })
 
   const handleSelectSpace = (id: string) => {
     const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id)
@@ -42,9 +34,7 @@
         showApplyPermDialog.value = true
         return
       }
-      spaceId.value = id
-      const { query, params } = route
-      router.push({ name: <string>route.name, query, params: { ...params, spaceId: id } })
+      router.push({ name: 'service-mine', params: { spaceId: id } })
     }
   }
 
@@ -60,9 +50,9 @@
       <div class="head-routes">
         <router-link
           v-for="nav in navList"
-          :class="['nav-item', { actived: activedRootRoute === nav.id }]"
+          :class="['nav-item', { actived: route.meta.navModule === nav.module }]"
           :key="nav.id"
-          :to="{ name: nav.id, params: { spaceId } }">
+          :to="{ name: nav.id, params: { spaceId: spaceId || 0 } }">
           {{ nav.name }}
         </router-link>
       </div>
@@ -76,10 +66,14 @@
         :popover-options="{ theme: 'light bk-select-popover space-selector-popover' }"
         :filterable="true"
         :clearable="false"
+        :input-search="false"
         @change="handleSelectSpace">
         <bk-option v-for="item in spaceList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
           <div v-cursor="{ active: !item.permission }" :class="['biz-option-item', { 'no-perm': !item.permission }]">
-            <div class="name">{{ item.space_name }}</div>
+            <div class="name-wrapper">
+              <span class="text">{{ item.space_name }}</span>
+              <span class="id">({{ item.space_id }})</span>
+            </div>
             <span class="tag">{{ item.space_type_name }}</span>
           </div>
         </bk-option>
@@ -156,27 +150,34 @@
   &.no-perm {
     background-color: #fafafa !important;
     color: #cccccc !important;
-    .tag {
-      border-color: #e6e6e6 !important;
-      color: #cccccc !important;
-    }
   }
-  .name {
+  .name-wrapper {
     padding-right: 30px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    .text {
+      flex: 0 1 auto;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .id {
+      flex: 0 0 auto;
+      margin-left: 4px;
+      color: #979ba5;
+    }
   }
   .tag {
     position: absolute;
-    top: 10px;
-    right: 8px;
+    top: 8px;
+    right: 4px;
     padding: 2px;
     font-size: 12px;
     line-height: 1;
-    color: #3a84ff;
-    border: 1px solid #3a84ff;
+    color: #cccccc;
+    border: 1px solid #cccccc;
     border-radius: 2px;
+    transform: scale(0.8);
   }
 }
 </style>

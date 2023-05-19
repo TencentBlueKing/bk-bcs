@@ -10,8 +10,9 @@
           index < (infoList.length - 1) ? 'bcs-border-right' : ''
         ]">
         <div class="bcs-ellipsis font-bold">{{ item.label }}:</div>
-        <div class="bcs-ellipsis mt-[8px]">{{
-          (item.format ? item.format(nodeInfo[item.prop]) : nodeInfo[item.prop]) || '--' }}</div>
+        <div class="bcs-ellipsis mt-[8px]" v-bk-overflow-tips>
+          {{ (item.format ? item.format(nodeInfo[item.prop]) : nodeInfo[item.prop]) || '--' }}
+        </div>
       </div>
     </div>
     <!-- 节点指标 -->
@@ -54,7 +55,7 @@
       <bcs-tab-panel name="pod" label="Pods">
         <Row class="mb-[20px]">
           <template #right>
-            <span class="bcs-form-prefix">{{$t('命名空间')}}</span>
+            <span class="bcs-form-prefix bg-[#f5f7fa]">{{$t('命名空间')}}</span>
             <bcs-select
               class="w-[200px]"
               v-model="namespaceValue"
@@ -86,7 +87,7 @@
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"
           @sort-change="handleSortChange">
-          <bk-table-column :label="$t('名称')" min-width="130" sortable :resizable="false" fixed="left">
+          <bk-table-column :label="$t('名称')" min-width="130" sortable fixed="left">
             <template #default="{ row }">
               <bk-button
                 class="bcs-button-ellipsis"
@@ -107,29 +108,29 @@
               </bk-button>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('命名空间')" min-width="100" sortable :resizable="false">
+          <bk-table-column :label="$t('命名空间')" min-width="100" sortable>
             <template #default="{ row }">
               <span>{{ row.namespace }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('镜像')" min-width="200" :resizable="false" :show-overflow-tooltip="false">
+          <bk-table-column :label="$t('镜像')" min-width="200" :show-overflow-tooltip="false">
             <template #default="{ row }">
               <span v-bk-tooltips.top="(row.images || []).join('<br />')">
                 {{ (row.images || []).join(', ') }}
               </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="Status" width="140" :resizable="false">
+          <bk-table-column label="Status" width="140">
             <template #default="{ row }">
               <StatusIcon :status="row.status"></StatusIcon>
             </template>
           </bk-table-column>
-          <bk-table-column label="Ready" width="100" :resizable="false">
+          <bk-table-column label="Ready" width="100">
             <template #default="{ row }">
               {{row.readyCnt}}/{{row.totalCnt}}
             </template>
           </bk-table-column>
-          <bk-table-column label="Restarts" width="100" :resizable="false">
+          <bk-table-column label="Restarts" width="100">
             <template #default="{ row }">{{row.restartCnt}}</template>
           </bk-table-column>
           <bk-table-column label="Host IP" min-width="140">
@@ -141,20 +142,20 @@
           <bk-table-column label="Pod IPv6" min-width="200">
             <template #default="{ row }">{{row.podIPv6 || '--'}}</template>
           </bk-table-column>
-          <bk-table-column label="Node" :resizable="false">
+          <bk-table-column label="Node">
             <template #default="{ row }">{{row.node || '--'}}</template>
           </bk-table-column>
-          <bk-table-column label="Age" sortable prop="createTime" :resizable="false">
+          <bk-table-column label="Age" sortable prop="createTime">
             <template #default="{ row }">
               <span>{{row.age || '--'}}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('编辑模式')" :resizable="false" width="100">
+          <bk-table-column :label="$t('编辑模式')" width="100">
             <template #default="{ row }">
               <span>{{row.editModel === 'form' ? $t('表单') : 'YAML'}}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('操作')" :resizable="false" width="180" fixed="right">
+          <bk-table-column :label="$t('操作')" width="180" fixed="right">
             <template #default="{ row }">
               <bk-button
                 text
@@ -233,7 +234,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs, computed } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, toRefs, computed } from 'vue';
 import BcsContent from '@/components/layout/Content.vue';
 import $i18n from '@/i18n/i18n-setup';
 import { formatBytes } from '@/common/util';
@@ -251,6 +252,8 @@ import $router from '@/router/index';
 import $store from '@/store';
 import StatusIcon from '@/components/status-icon';
 import useTableSort from '@/composables/use-table-sort';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'NodeOverview',
@@ -267,8 +270,7 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props, ctx) {
-    const { $bkInfo, $bkMessage } = ctx.root;
+  setup(props) {
     const { nodeName, clusterId } = toRefs(props);
     const { projectCode, projectID } = useProject();
     // 节点详情
@@ -296,8 +298,8 @@ export default defineComponent({
         prop: 'release',
       },
       {
-        label: 'Docker',
-        prop: 'dockerVersion',
+        label: $i18n.t('运行时'),
+        prop: 'container_runtime_version',
       },
       {
         label: $i18n.t('操作系统'),

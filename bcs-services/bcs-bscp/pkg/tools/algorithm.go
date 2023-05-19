@@ -1,3 +1,15 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package tools
 
 import (
@@ -18,13 +30,20 @@ var (
 
 // CreateCredential create credential
 func CreateCredential(masterKey, encryptionAlgorithm string) (string, error) {
+	return EncryptCredential(randStr(EncryptionLen), masterKey, encryptionAlgorithm)
+}
+
+// EncryptCredential encrypt credential
+func EncryptCredential(credential, masterKey, encryptionAlgorithm string) (string, error) {
+	if credential == "" {
+		return "", fmt.Errorf("credential is null")
+	}
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
 	}
-	algorithmText := randStr(EncryptionLen)
 	switch encryptionAlgorithm {
 	case AES:
-		return AesEncrypt([]byte(algorithmText), []byte(masterKey))
+		return AesEncrypt([]byte(credential), []byte(masterKey))
 	default:
 		return "", fmt.Errorf("algorithm type is is not supported, type: %s", encryptionAlgorithm)
 	}
@@ -32,13 +51,15 @@ func CreateCredential(masterKey, encryptionAlgorithm string) (string, error) {
 
 // DecryptCredential Decrypt credential
 func DecryptCredential(credential, masterKey, encryptionAlgorithm string) (string, error) {
+	if credential == "" {
+		return "", fmt.Errorf("credential is null")
+	}
 	if len(masterKey) == 0 || len(encryptionAlgorithm) == 0 {
 		return "", fmt.Errorf("key or encryption algorithm is null")
 	}
-	b64Byte, _ := base64.StdEncoding.DecodeString(credential)
 	switch encryptionAlgorithm {
 	case AES:
-		return AesDecrypt(b64Byte, []byte(masterKey))
+		return AesDecrypt(credential, []byte(masterKey))
 	default:
 		return "", fmt.Errorf("algorithm type is is not supported, type: %s", encryptionAlgorithm)
 	}
@@ -84,15 +105,19 @@ func AesEncrypt(origData, key []byte) (string, error) {
 }
 
 // AesDecrypt AES解密
-func AesDecrypt(crypted, key []byte) (string, error) {
+func AesDecrypt(crypted string, key []byte) (string, error) {
+	b64Byte, err := base64.StdEncoding.DecodeString(crypted)
+	if err != nil {
+		return "", err
+	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
 	}
 	blockSize := block.BlockSize()
 	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
-	origData := make([]byte, len(crypted))
-	blockMode.CryptBlocks(origData, crypted)
+	origData := make([]byte, len(b64Byte))
+	blockMode.CryptBlocks(origData, b64Byte)
 	origData = PKCS7UnPadding(origData)
 	return string(origData), nil
 }

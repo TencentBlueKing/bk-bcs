@@ -17,12 +17,12 @@ package metric
 import (
 	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/metric/prometheus"
-
 	prom "go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/metric/prometheus"
 )
 
 const (
@@ -74,7 +74,7 @@ func InitMeterProvider(op ...Option) (metric.MeterProvider, *prom.Exporter, erro
 
 	err := validateMetricOptions(defaultOptions)
 	if err != nil {
-		blog.Errorf("validateMetricOptions failed: %v", err)
+		klog.Errorf("validateMetricOptions failed: %v", err)
 		return nil, nil, err
 	}
 

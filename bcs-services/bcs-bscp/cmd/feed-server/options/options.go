@@ -28,15 +28,8 @@ import (
 // Option defines the app's runtime flag options.
 type Option struct {
 	Sys *cc.SysOption
-	// PublicKey used to api gateway jwt token.
-	PublicKey string
 	// Name current feed server instance name，is the only one of all feed server.
 	Name string
-	// DisableJWT whether to enable blueking api-gateway jwt parser.if disable-tgw = false, api-service
-	// parse request will api-gateway parser, requests from other parties will not be parsed.if
-	// disable-tgw = true, api-service parse requests for direct access that have not been processed by
-	// the gateway. Parse rule details：pkg/runtime/parser/parser.go
-	DisableJWT bool
 }
 
 // InitOptions init config server's options from command flags.
@@ -45,9 +38,6 @@ func InitOptions() (*Option, error) {
 	sysOpt := flags.SysFlags(fs)
 	opt := &Option{Sys: sysOpt}
 
-	fs.StringVarP(&opt.PublicKey, "public-key", "", "", "the api gateway public key path")
-	fs.BoolVarP(&opt.DisableJWT, "disable-jwt", "", false, "to disable jwt authorize for "+
-		"all the incoming request. Note: disable jwt authorize may cause security problems.")
 	fs.StringVarP(&opt.Name, "name", "n", "", "feed server instance name, that is the only one of all feed server. "+
 		"And only allows to include english、numbers, and must start and end with an english")
 

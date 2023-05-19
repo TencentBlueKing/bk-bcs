@@ -17,6 +17,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
+
+	"github.com/bluele/gcache"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
@@ -31,6 +34,8 @@ type Client interface {
 	SearchBusiness(ctx context.Context, params *SearchBizParams) (*SearchBizResp, error)
 	// ListAllBusiness 读取全部业务列表
 	ListAllBusiness(ctx context.Context) (*SearchBizResult, error)
+	// GeBusinessbyID
+	GeBusinessbyID(ctx context.Context, bizID uint32) (*Biz, error)
 }
 
 // NewClient initialize a new cmdb client
@@ -38,11 +43,13 @@ func NewClient(client rest.ClientInterface, config *cc.Esb) Client {
 	return &cmdb{
 		client: client,
 		config: config,
+		cache:  gcache.New(1000).Expiration(time.Hour * 24).EvictType(gcache.TYPE_LRU).Build(),
 	}
 }
 
 // cmdb is an esb client to request cmdb.
 type cmdb struct {
+	cache  gcache.Cache
 	config *cc.Esb
 	// http client instance
 	client rest.ClientInterface
@@ -86,4 +93,36 @@ func (c *cmdb) ListAllBusiness(ctx context.Context) (*SearchBizResult, error) {
 	}
 
 	return &resp.SearchBizResult, nil
+}
+
+// GeBusinessbyID 读取单个biz
+func (c *cmdb) GeBusinessbyID(ctx context.Context, bizID uint32) (*Biz, error) {
+	if cacheResult, err := c.cache.Get(bizID); err == nil {
+		return cacheResult.(*Biz), nil
+	}
+
+	params := &SearchBizParams{
+		Page: BasePage{Limit: 1},
+		BizPropertyFilter: &QueryFilter{
+			Rule: CombinedRule{
+				Condition: ConditionAnd,
+				Rules: []Rule{
+					AtomRule{
+						Field:    BizIDField,
+						Operator: OperatorEqual,
+						Value:    bizID,
+					}},
+			}},
+	}
+	resp, err := c.SearchBusiness(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	if len(resp.Info) == 0 {
+		return nil, fmt.Errorf("biz %d not found", bizID)
+	}
+
+	c.cache.Set(bizID, &resp.Info[0])
+
+	return &resp.Info[0], nil
 }

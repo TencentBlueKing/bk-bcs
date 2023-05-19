@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230202032803-47379be3c4c1
+	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230202032803-47379be3c4c1
 	github.com/TencentBlueKing/bkmonitor-kits v0.2.0
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
@@ -51,6 +52,16 @@ require (
 	k8s.io/client-go v0.23.5
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.60.1
+)
+
+require (
+	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
+	github.com/xdg-go/scram v1.0.2 // indirect
+	github.com/xdg-go/stringprep v1.0.2 // indirect
+	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
+	sigs.k8s.io/controller-runtime v0.11.2 // indirect
 )
 
 require (
@@ -170,6 +181,8 @@ require (
 	go.elastic.co/fastjson v1.1.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.4 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.4 // indirect
+	go.etcd.io/etcd/client/v3 v3.5.4 // indirect
+	go.mongodb.org/mongo-driver v1.7.5
 	go.opencensus.io v0.23.0 // indirect
 	go.opentelemetry.io/contrib/propagators/ot v1.4.0 // indirect
 	go.opentelemetry.io/otel v1.5.0 // indirect
@@ -221,7 +234,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/urfave/cli/v2 v2.8.1 // indirect
-	go.etcd.io/etcd/client/v3 v3.5.4 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
 	google.golang.org/genproto v0.0.0-20220607223854-30acc4cbd2aa // indirect

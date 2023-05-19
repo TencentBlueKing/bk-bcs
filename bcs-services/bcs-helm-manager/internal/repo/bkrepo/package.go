@@ -19,9 +19,9 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -63,7 +63,7 @@ func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.List
 	}
 
 	var r listPackResp
-	if err = codec.DecJson(resp.Reply, &r); err != nil {
+	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf("list helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (rh *repositoryHandler) searchHelmChart(ctx context.Context, option repo.Li
 	}
 
 	var r listPackResp
-	if err = codec.DecJson(resp.Reply, &r); err != nil {
+	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf("search helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (rh *repositoryHandler) getHelmChart(ctx context.Context, name string) (*re
 	}
 
 	var r getPackResp
-	if err = codec.DecJson(resp.Reply, &r); err != nil {
+	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf("get helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (rh *repositoryHandler) getOCIChart(ctx context.Context, name string) (*rep
 	}
 
 	var r getPackResp
-	if err = codec.DecJson(resp.Reply, &r); err != nil {
+	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf("list helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
 	}
@@ -278,21 +278,21 @@ type listPackData struct {
 }
 
 type pack struct {
-	ProjectID        string        `json:"projectId"`
-	Name             string        `json:"name"`
-	Key              string        `json:"key"`
-	Type             string        `json:"type"`
-	Latest           string        `json:"latest"`
-	Downloads        int64         `json:"downloads"`
-	Versions         int           `json:"versions"`
-	Description      string        `json:"description"`
-	VersionTag       interface{}   `json:"versionTag"`
-	Extension        packExtension `json:"extension"`
-	HistoryVersion   []string      `json:"historyVersion"`
-	CreatedBy        string        `json:"createdBy"`
-	CreatedDate      json.Number   `json:"createdDate"`
-	LastModifiedBy   string        `json:"lastModifiedBy"`
-	LastModifiedDate json.Number   `json:"lastModifiedDate"`
+	ProjectID        string          `json:"projectId"`
+	Name             string          `json:"name"`
+	Key              string          `json:"key"`
+	Type             string          `json:"type"`
+	Latest           string          `json:"latest"`
+	Downloads        int64           `json:"downloads"`
+	Versions         int             `json:"versions"`
+	Description      string          `json:"description"`
+	VersionTag       interface{}     `json:"versionTag"`
+	Extension        packExtension   `json:"extension"`
+	HistoryVersion   []string        `json:"historyVersion"`
+	CreatedBy        string          `json:"createdBy"`
+	CreatedDate      json.RawMessage `json:"createdDate"`
+	LastModifiedBy   string          `json:"lastModifiedBy"`
+	LastModifiedDate json.RawMessage `json:"lastModifiedDate"`
 }
 
 type packExtension struct {
@@ -310,28 +310,27 @@ func (p *pack) convert2Chart() *repo.Chart {
 		Description: p.Description,
 		CreateBy:    p.CreatedBy,
 		UpdateBy:    p.LastModifiedBy,
-	}
-	if i, err := p.CreatedDate.Int64(); err != nil {
-		t, err := time.Parse(time.RFC3339Nano, p.CreatedDate.String())
-		if err != nil {
-			chart.CreateTime = p.CreatedDate.String()
-		} else {
-			chart.CreateTime = t.Format(common.TimeFormat)
-		}
-	} else {
-		chart.CreateTime = time.UnixMilli(i).Format(common.TimeFormat)
-	}
-	if i, err := p.LastModifiedDate.Int64(); err != nil {
-		t, err := time.Parse(time.RFC3339Nano, p.LastModifiedDate.String())
-		if err != nil {
-			chart.UpdateTime = p.LastModifiedDate.String()
-		} else {
-			chart.UpdateTime = t.Format(common.TimeFormat)
-		}
-	} else {
-		chart.UpdateTime = time.UnixMilli(i).Format(common.TimeFormat)
+		CreateTime:  getDateFromRawMessage(p.CreatedDate),
+		UpdateTime:  getDateFromRawMessage(p.LastModifiedDate),
 	}
 	return chart
+}
+
+// 返回结构中可能包含 int 格式时间戳和 string 格式时间
+func getDateFromRawMessage(raw json.RawMessage) string {
+	data, err := raw.MarshalJSON()
+	if err != nil {
+		return "null"
+	}
+	if !utf8.Valid(data) {
+		return "null"
+	}
+	i, err := strconv.Atoi(string(data))
+	if err != nil {
+		return string(data)
+	} else {
+		return time.UnixMilli(int64(i)).Format(common.TimeFormat)
+	}
 }
 
 func (ch *chartHandler) deleteChart(ctx context.Context) error {
@@ -344,7 +343,7 @@ func (ch *chartHandler) deleteChart(ctx context.Context) error {
 	}
 
 	var r basicResp
-	if err = codec.DecJson(resp.Reply, &r); err != nil {
+	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf(
 			"delete chart from bk-repo failed, %s, with resp %s", err.Error(), resp.Reply)
 		return err
@@ -372,7 +371,7 @@ func (ch *chartHandler) deleteChartVersion(ctx context.Context, version string) 
 	}
 
 	var r basicResp
-	if err = codec.DecJson(resp.Reply, &r); err != nil {
+	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf(
 			"delete chart version from bk-repo failed, %s, with resp %s", err.Error(), resp.Reply)
 		return err

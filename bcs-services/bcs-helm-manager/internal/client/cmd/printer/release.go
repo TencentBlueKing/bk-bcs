@@ -13,14 +13,12 @@
 package printer
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/tidwall/pretty"
 )
 
 // PrintReleaseInTable print release data in table format
@@ -73,20 +71,6 @@ func PrintReleaseInTable(wide bool, release *helmmanager.ReleaseListData) {
 	table.Render()
 }
 
-// PrintReleaseInJson print release data in json format
-func PrintReleaseInJson(release *helmmanager.ReleaseListData) {
-	if release == nil {
-		return
-	}
-
-	for _, ct := range release.Data {
-		var data []byte
-		_ = encodeJsonWithIndent(4, ct, &data)
-
-		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
-	}
-}
-
 // PrintReleaseDetailInTable print release detail data in table format
 func PrintReleaseDetailInTable(wide bool, release []*helmmanager.ReleaseDetail) {
 	if release == nil {
@@ -97,7 +81,7 @@ func PrintReleaseDetailInTable(wide bool, release []*helmmanager.ReleaseDetail) 
 	table.SetHeader(func() []string {
 		r := []string{"NAME", "NAMESPACE", "REVISION", "UPDATED", "STATUS", "CHART", "CHART_VERSION", "APP_VERSION"}
 		if wide {
-			// nothing to do
+			r = append(r, "MESSAGE")
 		}
 
 		return r
@@ -128,27 +112,13 @@ func PrintReleaseDetailInTable(wide bool, release []*helmmanager.ReleaseDetail) 
 			}
 
 			if wide {
-				// nothing to do
+				r = append(r, rl.GetMessage())
 			}
 
 			return r
 		}())
 	}
 	table.Render()
-}
-
-// PrintReleaseDetailInJson print release detail data in json format
-func PrintReleaseDetailInJson(release []*helmmanager.ReleaseDetail) {
-	if release == nil {
-		return
-	}
-
-	for _, ct := range release {
-		var data []byte
-		_ = encodeJsonWithIndent(4, ct, &data)
-
-		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
-	}
 }
 
 // PrintReleaseHistoryInTable print release history data in table format
@@ -159,7 +129,7 @@ func PrintReleaseHistoryInTable(wide bool, release []*helmmanager.ReleaseHistory
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"NAME", "NAMESPACE", "REVISION", "UPDATED", "STATUS", "CHART", "CHART_VERSION", "APP_VERSION"}
+		r := []string{"REVISION", "UPDATED", "STATUS", "CHART", "CHART_VERSION", "APP_VERSION", "DESCRIPTION"}
 		if wide {
 			// nothing to do
 		}
@@ -181,14 +151,13 @@ func PrintReleaseHistoryInTable(wide bool, release []*helmmanager.ReleaseHistory
 	for _, rl := range release {
 		table.Append(func() []string {
 			r := []string{
-				rl.GetName(),
-				rl.GetNamespace(),
 				strconv.Itoa(int(rl.GetRevision())),
 				rl.GetUpdateTime(),
 				rl.GetStatus(),
 				rl.GetChart(),
 				rl.GetChartVersion(),
 				rl.GetAppVersion(),
+				rl.GetDescription(),
 			}
 
 			if wide {
@@ -199,18 +168,4 @@ func PrintReleaseHistoryInTable(wide bool, release []*helmmanager.ReleaseHistory
 		}())
 	}
 	table.Render()
-}
-
-// PrintReleaseHistoryInJson print release history data in json format
-func PrintReleaseHistoryInJson(releaseHistory []*helmmanager.ReleaseHistory) {
-	if releaseHistory == nil {
-		return
-	}
-
-	for _, ct := range releaseHistory {
-		var data []byte
-		_ = encodeJsonWithIndent(4, ct, &data)
-
-		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
-	}
 }

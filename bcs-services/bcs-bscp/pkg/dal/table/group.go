@@ -170,6 +170,7 @@ const (
 // GroupMode is the mode of an group works in
 type GroupMode string
 
+// String returns the string value of GroupMode.
 func (s GroupMode) String() string {
 	return string(s)
 }

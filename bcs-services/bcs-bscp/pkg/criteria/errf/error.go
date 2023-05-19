@@ -106,12 +106,12 @@ func Error(err error) *ErrorF {
 	return ef
 }
 
-// RPCAborted
+// RPCAborted 通过 msg 构建通用 rpc 退出错误
 func RPCAborted(format string, a ...interface{}) error {
 	return status.Errorf(codes.Aborted, format, a...)
 }
 
-// RPCAbortedErr
+// RPCAbortedErr 通过 err 构建通用 rpc 退出错误
 func RPCAbortedErr(err error) error {
 	return status.Errorf(codes.Aborted, err.Error())
 }

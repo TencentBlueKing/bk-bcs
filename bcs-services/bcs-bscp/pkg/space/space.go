@@ -18,8 +18,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
-	"bscp.io/pkg/components/bcs"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
 	"k8s.io/klog/v2"
 )
@@ -54,10 +54,86 @@ type Space struct {
 	SpaceUid      string
 }
 
-func listBKCMDB(ctx context.Context, client esbcli.Client, username string, bizIdList []int) ([]*Space, error) {
-	bizList, err := client.Cmdb().ListAllBusiness(ctx)
-	if err != nil {
+// SpaceMgr Space定时拉取
+type SpaceMgr struct {
+	mtx         sync.Mutex
+	client      esbcli.Client
+	cachedSpace []*Space
+}
+
+// NewSpaceMgr 新增Space定时拉取, 注: 每个实例一个 goroutine
+func NewSpaceMgr(ctx context.Context, client esbcli.Client) (*SpaceMgr, error) {
+	mgr := &SpaceMgr{client: client}
+
+	initCtx, initCancel := context.WithTimeout(ctx, time.Second*10)
+	defer initCancel()
+
+	// 启动初始化拉一次
+	if err := mgr.fetchAllSpace(initCtx); err != nil {
 		return nil, err
+	}
+
+	// 定期拉取
+	mgr.run(ctx)
+
+	return mgr, nil
+}
+
+// run 定时刷新全量业务信息
+func (s *SpaceMgr) run(ctx context.Context) error {
+	ticker := time.NewTicker(10 * time.Minute)
+
+	go func() {
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				if err := s.fetchAllSpace(ctx); err != nil {
+					klog.ErrorS(err, "fetch all space failed")
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return nil
+}
+
+// AllSpaces 返回全量业务
+func (s *SpaceMgr) AllSpaces() []*Space {
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
+
+	return s.cachedSpace
+}
+
+// QuerySpace 按uid查询业务
+func (s *SpaceMgr) QuerySpace(spaceUidList []string) ([]*Space, error) {
+	spaceList := []*Space{}
+	spaceUidMap := map[string]struct{}{}
+
+	for _, uid := range spaceUidList {
+		spaceUidMap[uid] = struct{}{}
+	}
+	for _, v := range s.AllSpaces() {
+		if _, ok := spaceUidMap[v.SpaceId]; ok {
+			spaceList = append(spaceList, v)
+		}
+	}
+	return spaceList, nil
+}
+
+// fetchAllSpace 获取全量业务列表
+func (s *SpaceMgr) fetchAllSpace(ctx context.Context) error {
+	bizList, err := s.client.Cmdb().ListAllBusiness(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(bizList.Info) == 0 {
+		return fmt.Errorf("biz list is empty")
 	}
 
 	spaceList := make([]*Space, 0, len(bizList.Info))
@@ -72,146 +148,17 @@ func listBKCMDB(ctx context.Context, client esbcli.Client, username string, bizI
 		})
 	}
 
-	return spaceList, nil
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
+
+	s.cachedSpace = spaceList
+
+	klog.InfoS("fetch all space done", "biz_count", len(s.cachedSpace))
+	return nil
 }
 
-func listBCSProject(ctx context.Context, username string, projectCodeList []string) ([]*Space, error) {
-	var (
-		projects []*bcs.Project
-		err      error
-	)
-
-	if username != "" {
-		projects, err = bcs.ListAuthorizedProjects(ctx, username)
-	} else {
-		projects, err = bcs.ListProjects(ctx, projectCodeList)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	spaceList := make([]*Space, 0, len(projects))
-	for _, project := range projects {
-		spaceList = append(spaceList, &Space{
-			SpaceId:       project.Code,
-			SpaceName:     project.Name,
-			SpaceTypeID:   BCS.ID,
-			SpaceTypeName: BCS.Name,
-			SpaceUid:      BuildSpaceUid(BCS, project.Code),
-		})
-	}
-	return spaceList, nil
-}
-
-// ListUserSpace 并发获取cmdb的业务, bcs的项目列表
-func ListUserSpace(ctx context.Context, client esbcli.Client, username string) ([]*Space, error) {
-	var (
-		spaceList = []*Space{}
-		mtx       sync.Mutex
-		wg        sync.WaitGroup
-	)
-
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-
-		spaces, err := listBCSProject(ctx, username, []string{})
-		if err != nil {
-			klog.Warningf("list bcs space failed. err: %s", err)
-			return
-		}
-		mtx.Lock()
-		defer mtx.Unlock()
-
-		spaceList = append(spaceList, spaces...)
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		spaces, err := listBKCMDB(ctx, client, username, []int{})
-		if err != nil {
-			klog.Warningf("list bk_cmdb space failed. err: %s", err)
-			return
-		}
-		mtx.Lock()
-		defer mtx.Unlock()
-
-		spaceList = append(spaceList, spaces...)
-	}()
-
-	wg.Wait()
-	return spaceList, nil
-}
-
-func QuerySpace(ctx context.Context, client esbcli.Client, spaceUidList []string) ([]*Space, error) {
-	var (
-		spaceList = []*Space{}
-		mtx       sync.Mutex
-		wg        sync.WaitGroup
-	)
-
-	spaceMap, err := BuildSpaceMap(spaceUidList)
-	if err != nil {
-		return nil, err
-	}
-
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-
-		idList := spaceMap[BCS.ID]
-		if len(idList) == 0 {
-			return
-		}
-
-		spaces, err := listBCSProject(ctx, "", idList)
-		if err != nil {
-			klog.Warningf("list bcs space failed. err: %s", err)
-			return
-		}
-		mtx.Lock()
-		defer mtx.Unlock()
-
-		spaceList = append(spaceList, spaces...)
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		idList := spaceMap[BK_CMDB.ID]
-		if len(idList) == 0 {
-			return
-		}
-
-		// cmdb bk_biz_id 需要 int 类型
-		idIntList := make([]int, 0, len(idList))
-		for _, id := range idList {
-			idInt, err := strconv.Atoi(id)
-			if err != nil {
-				klog.Warningf("%s not integer", id)
-				continue
-			}
-			idIntList = append(idIntList, idInt)
-		}
-
-		spaces, err := listBKCMDB(ctx, client, "", idIntList)
-		if err != nil {
-			klog.Warningf("list bk_cmdb space failed. err: %s", err)
-			return
-		}
-		mtx.Lock()
-		defer mtx.Unlock()
-
-		spaceList = append(spaceList, spaces...)
-	}()
-
-	wg.Wait()
-	return spaceList, nil
-}
-
-// spaceUidList 分解
-func BuildSpaceMap(spaceUidList []string) (map[string][]string, error) {
+// buildSpaceMap 分解
+func buildSpaceMap(spaceUidList []string) (map[string][]string, error) {
 	s := map[string][]string{}
 	for _, uid := range spaceUidList {
 		patterns := strings.Split(uid, "__")

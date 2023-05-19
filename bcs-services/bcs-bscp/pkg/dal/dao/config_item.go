@@ -32,8 +32,8 @@ import (
 
 // ConfigItem supplies all the configItem related operations.
 type ConfigItem interface {
-	// Create one configItem instance.
-	Create(kit *kit.Kit, configItem *table.ConfigItem) (uint32, error)
+	// CreateWithTx create one configItem instance.
+	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, configItem *table.ConfigItem) (uint32, error)
 	// Update one configItem instance.
 	Update(kit *kit.Kit, configItem *table.ConfigItem) error
 	// Get configItem by id
@@ -44,6 +44,8 @@ type ConfigItem interface {
 	Delete(kit *kit.Kit, configItem *table.ConfigItem) error
 	// GetCount bizID config count
 	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
+	// TruncateWithTx truncate app config items with transaction.
+	TruncateWithTx(kit *kit.Kit, tx *sharding.Tx, bizID, appID uint32) error
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -56,8 +58,8 @@ type configItemDao struct {
 	lock     LockDao
 }
 
-// Create one configItem instance.
-func (dao *configItemDao) Create(kit *kit.Kit, ci *table.ConfigItem) (uint32, error) {
+// CreateWithTx create one configItem instance with transaction.
+func (dao *configItemDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, ci *table.ConfigItem) (uint32, error) {
 	if ci == nil {
 		return 0, errors.New("config item is nil")
 	}
@@ -78,32 +80,23 @@ func (dao *configItemDao) Create(kit *kit.Kit, ci *table.ConfigItem) (uint32, er
 
 	ci.ID = id
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ConfigItemTable.Name(), " (", table.ConfigItemColumns.ColumnExpr(), ")  VALUES(", table.ConfigItemColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ConfigItemTable.Name(),
+		" (", table.ConfigItemColumns.ColumnExpr(), ")  VALUES(", table.ConfigItemColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
-	err = dao.sd.ShardingOne(ci.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err = dao.validateAppCINumber(kit, ci.Attachment, &LockOption{Txn: txn}); err != nil {
-				return err
-			}
+	if err = dao.validateAppCINumber(kit, ci.Attachment, &LockOption{Txn: tx.Tx()}); err != nil {
+		return 0, err
+	}
 
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, ci); err != nil {
-				return err
-			}
+	if e := dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, ci); e != nil {
+		return 0, err
+	}
 
-			// audit this to be create config item details.
-			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err = dao.auditDao.Decorator(kit, ci.Attachment.BizID,
-				enumor.ConfigItem).AuditCreate(ci, au); err != nil {
-				return fmt.Errorf("audit create config item failed, err: %v", err)
-			}
-
-			return nil
-		})
-
-	if err != nil {
-		logs.Errorf("create config item, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
-		return 0, fmt.Errorf("create config item, but auto run txn failed, err: %v", err)
+	// audit this to be create config item details.
+	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
+	if err = dao.auditDao.Decorator(kit, ci.Attachment.BizID,
+		enumor.ConfigItem).AuditCreate(ci, au); err != nil {
+		return 0, fmt.Errorf("audit create config item failed, err: %v", err)
 	}
 
 	return id, nil
@@ -410,4 +403,30 @@ func (dao *configItemDao) GetCount(kit *kit.Kit, bizID uint32, appId []uint32) (
 		return nil, err
 	}
 	return configItem, nil
+}
+
+// TruncateWithTx delete all config item by bizID and appID
+func (dao *configItemDao) TruncateWithTx(kit *kit.Kit, tx *sharding.Tx, bizID, appID uint32) error {
+
+	if bizID == 0 || appID == 0 {
+		return errf.New(errf.InvalidParameter, "config item biz id or app id can not be 0")
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.ConfigItemTable.Name(),
+		" WHERE app_id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+	expr := filter.SqlJoint(sqlSentence)
+
+	err := dao.orm.Txn(tx.Tx()).Delete(kit.Ctx, expr)
+	if err != nil {
+		return err
+	}
+
+	// decrease the config item lock count after the deletion
+	lock := lockKey.ConfigItem(bizID, appID)
+	if err := dao.lock.TruncateCount(kit, lock, &LockOption{Txn: tx.Tx()}); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -24,7 +24,7 @@
   </div>
 </template>
 <script lang="ts">
-import {  computed, defineComponent, ref, toRefs, watch } from '@vue/composition-api';
+import {  computed, defineComponent, ref, toRefs, watch } from 'vue';
 import DetailItem from '@/components/layout/DetailItem.vue';
 import ChartFileTree from './chart-file-tree.vue';
 import BcsMd from '@/components/bcs-md/index.vue';

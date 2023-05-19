@@ -17,9 +17,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -33,17 +35,19 @@ type ReleaseInstallAction struct {
 	platform       repo.Platform
 	releaseHandler release.Handler
 
-	projectCode string
-	projectID   string
-	clusterID   string
-	name        string
-	namespace   string
-	repoName    string
-	chartName   string
-	version     string
-	values      []string
-	args        []string
-	username    string
+	projectCode    string
+	projectID      string
+	clusterID      string
+	name           string
+	namespace      string
+	repoName       string
+	chartName      string
+	version        string
+	values         []string
+	args           []string
+	username       string
+	AuthUser       string
+	IsShardCluster bool
 
 	contents []byte
 	result   *release.HelmInstallResult
@@ -55,17 +59,19 @@ type ReleaseInstallActionOption struct {
 	Platform       repo.Platform
 	ReleaseHandler release.Handler
 
-	ProjectCode string
-	ProjectID   string
-	ClusterID   string
-	Name        string
-	Namespace   string
-	RepoName    string
-	ChartName   string
-	Version     string
-	Values      []string
-	Args        []string
-	Username    string
+	ProjectCode    string
+	ProjectID      string
+	ClusterID      string
+	Name           string
+	Namespace      string
+	RepoName       string
+	ChartName      string
+	Version        string
+	Values         []string
+	Args           []string
+	Username       string
+	AuthUser       string
+	IsShardCluster bool
 }
 
 // NewReleaseInstallAction new release install action
@@ -85,6 +91,8 @@ func NewReleaseInstallAction(o *ReleaseInstallActionOption) *ReleaseInstallActio
 		values:         o.Values,
 		args:           o.Args,
 		username:       o.Username,
+		AuthUser:       o.AuthUser,
+		IsShardCluster: o.IsShardCluster,
 	}
 }
 
@@ -98,11 +106,6 @@ func (r *ReleaseInstallAction) Action() string {
 // Name xxx
 func (r *ReleaseInstallAction) Name() string {
 	return fmt.Sprintf("install-%s", r.name)
-}
-
-// Validate xxx
-func (r *ReleaseInstallAction) Validate() error {
-	return nil
 }
 
 // Prepare xxx
@@ -133,6 +136,52 @@ func (r *ReleaseInstallAction) Prepare(ctx context.Context) error {
 
 	r.contents = contents
 	return nil
+}
+
+// Validate xxx
+func (r *ReleaseInstallAction) Validate() error {
+	blog.V(5).Infof("start to validate release %s/%s install", r.namespace, r.name)
+	// 非真实用户无法在权限中心鉴权，跳过检测
+	if len(r.AuthUser) == 0 {
+		return nil
+	}
+	// get manifest from helm dry run
+	result, err := release.InstallRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
+		r.namespace, r.chartName, r.version, r.username, r.username, r.args, nil, r.contents, r.values,
+		true, true, true)
+	if err != nil {
+		return err
+	}
+	if result == nil || result.Release == nil || (result.Release.Manifest == "" && result.Release.Hooks == nil) {
+		blog.Infof("release %s/%s is nil in cluster %s", r.namespace, r.name, r.clusterID)
+		return nil
+	}
+	manifest, err := release.GetManifestSimpleHeadFromRelease(result.Release, r.namespace)
+	if err != nil {
+		return err
+	}
+	blog.V(5).Infof("release %s/%s has %d manifest", r.namespace, r.name, len(manifest))
+
+	// get server resources
+	client, err := component.GetK8SClientByClusterID(r.clusterID)
+	if err != nil {
+		return err
+	}
+	resources, err := client.DiscoveryClient.ServerPreferredResources()
+	if err != nil {
+		return err
+	}
+	blog.V(5).Infof("cluster %s has %d api-resources", r.clusterID, len(resources))
+
+	permInfo := basePermInfo{
+		username:       r.AuthUser,
+		projectCode:    r.projectCode,
+		projectID:      r.projectID,
+		clusterID:      r.clusterID,
+		isShardCluster: r.IsShardCluster,
+	}
+	// check access
+	return checkReleaseAccess(manifest, resources, permInfo)
 }
 
 // Execute xxx

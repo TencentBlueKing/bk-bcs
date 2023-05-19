@@ -27,14 +27,14 @@ func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredenti
 	credential := &table.Credential{
 		Spec:       spec,
 		Attachment: req.Attachment.CredentialAttachment(),
-		Revision: &table.CredentialRevision{
+		Revision: &table.Revision{
 			Creator:   kt.User,
 			Reviser:   kt.User,
 			CreatedAt: now,
 			UpdatedAt: now,
-			ExpiredAt: now,
 		},
 	}
+	credential.Spec.ExpiredAt = now
 	id, err := s.dao.Credential().Create(kt, credential)
 	if err != nil {
 		logs.Errorf("create credential failed, err: %v, rid: %s", err, kt.Rid)
@@ -123,7 +123,7 @@ func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredenti
 		ID:         req.Id,
 		Spec:       spec,
 		Attachment: req.Attachment.CredentialAttachment(),
-		Revision: &table.CredentialRevision{
+		Revision: &table.Revision{
 			Reviser:   kt.User,
 			UpdatedAt: now,
 		},

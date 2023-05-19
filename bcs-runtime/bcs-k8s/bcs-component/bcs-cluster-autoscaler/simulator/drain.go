@@ -32,7 +32,8 @@ import (
 const (
 	// PodDeletionTimeout - time after which a pod to be deleted is not included in the list of pods for drain.
 	PodDeletionTimeout = 12 * time.Minute
-	// PodLongTerminatingExtraThreshold - time after which a pod, that is terminating and that has run over its terminationGracePeriod, should be ignored and considered as deleted
+	// PodLongTerminatingExtraThreshold - time after which a pod, that is terminating and that has run over its
+	// terminationGracePeriod, should be ignored and considered as deleted
 	PodLongTerminatingExtraThreshold = 30 * time.Second
 )
 
@@ -212,10 +213,6 @@ func GetPodsForDeletionOnNodeDrain(
 			} else {
 				replicated = true
 			}
-		} else if refKind == "GameDeployment" {
-			replicated = false
-		} else if refKind == "GameStatefulSet" {
-			replicated = false
 		}
 
 		if daemonsetPod {
@@ -447,7 +444,8 @@ func checkLocalPV(ns string, vs apiv1.VolumeSource, listers kube_util.ListerRegi
 	return false
 }
 
-// IsPodLongTerminating checks if a pod has been terminating for a long time (pod's terminationGracePeriod + an additional const buffer)
+// IsPodLongTerminating checks if a pod has been terminating for a long time
+// (pod's terminationGracePeriod + an additional const buffer)
 func IsPodLongTerminating(pod *apiv1.Pod, currentTime time.Time) bool {
 	// pod has not even been deleted
 	if pod.DeletionTimestamp == nil {

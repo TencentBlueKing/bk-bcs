@@ -123,7 +123,7 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 	cs.bds = bds
 
 	// initial DAO set
-	set, err := dao.NewDaoSet(cc.CacheService().Sharding)
+	set, err := dao.NewDaoSet(cc.CacheService().Sharding, cc.CacheService().Credential)
 	if err != nil {
 		return fmt.Errorf("initial dao set failed, err: %v", err)
 	}

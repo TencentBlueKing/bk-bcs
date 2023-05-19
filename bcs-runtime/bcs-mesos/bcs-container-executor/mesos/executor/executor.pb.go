@@ -19,9 +19,11 @@
 Package mesos_v1_executor is a generated protocol buffer package.
 
 It is generated from these files:
+
 	mesos/v1/executor/executor.proto
 
 It has these top-level messages:
+
 	Event
 	Call
 */

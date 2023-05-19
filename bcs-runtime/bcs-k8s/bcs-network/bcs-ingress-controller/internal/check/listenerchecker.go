@@ -119,7 +119,12 @@ func (l *listenerChecker) deletePortPoolUnusedListener(listenerList *networkexte
 		for _, item := range portpool.Spec.PoolItems {
 			lbIDSet := mapset.NewThreadUnsafeSet()
 			for _, lbID := range item.LoadBalancerIDs {
-				lbIDSet.Add(lbID)
+				_, tmpID, err := common.GetLbRegionAndName(lbID)
+				if err != nil {
+					blog.Errorf("unknown type lbID: %s, portpool: %s/%s", lbID, portpool.GetNamespace(), portpool.GetName())
+					continue
+				}
+				lbIDSet.Add(tmpID)
 			}
 			key := portpool.GetNamespace() + "/" + common.GetPortPoolListenerLabelKey(portpool.GetName(), item.ItemName)
 			poolItemLBIDMap[key] = lbIDSet

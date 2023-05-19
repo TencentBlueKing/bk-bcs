@@ -1,6 +1,6 @@
 <template>
   <div class="biz-content">
-    <BcsContentHeader
+    <Header
       :title="title"
       :desc="desc"
       :hide-back="hideBack"
@@ -10,19 +10,19 @@
       <template #right>
         <slot name="header-right"></slot>
       </template>
-    </BcsContentHeader>
+    </Header>
     <div class="biz-content-wrapper content" ref="contentRef">
       <slot></slot>
     </div>
   </div>
 </template>
 <script lang="ts">
-import BcsContentHeader from '@/components/layout/Header.vue';
-import { defineComponent, ref, PropType } from '@vue/composition-api';
+import Header from '@/components/layout/Header.vue';
+import { defineComponent, ref, PropType } from 'vue';
 export default defineComponent({
   name: 'LayoutContent',
   components: {
-    BcsContentHeader,
+    Header,
   },
   props: {
     title: {

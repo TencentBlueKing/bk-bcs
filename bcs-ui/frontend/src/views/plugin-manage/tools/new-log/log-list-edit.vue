@@ -250,7 +250,7 @@
   </section>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRefs, PropType } from '@vue/composition-api';
+import { defineComponent, ref, computed, onMounted, toRefs, PropType } from 'vue';
 import KeyValue from '@/components/key-value.vue';
 import $store from '@/store/index';
 import $i18n from '@/i18n/i18n-setup';
@@ -258,6 +258,7 @@ import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
 import useLog from './use-log';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   components: { KeyValue, BkForm, BkFormItem, NamespaceSelect },
@@ -282,7 +283,6 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { name } = toRefs(props);
-    const { $bkMessage } = ctx.root;
     const isEdit = computed(() => !!name.value);
     const clusterList = computed(() => ($store.state as any).cluster.clusterList);
 

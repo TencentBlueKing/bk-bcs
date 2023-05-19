@@ -14,16 +14,17 @@
 package cluster
 
 import (
+	"os"
 	"testing"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 )
 
-const (
-	AppCode   = "bk_bcs"
-	AppSecret = "xxx"
+var (
+	AppCode   = os.Getenv("APP_CODE")
+	AppSecret = os.Getenv("APP_SECRET")
 
-	GateWayHost = "http://xxx/stage"
+	GateWayHost = os.Getenv("IAM_HOST")
 )
 
 var opts = &iam.Options{
@@ -109,7 +110,7 @@ func TestBCSClusterPerm_CanDeleteCluster(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestBCSClusterPerm_GetClusterMultiActionPermission(t *testing.T) {
+func TestGetClusterMultiActionPermission(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -125,7 +126,7 @@ func TestBCSClusterPerm_GetClusterMultiActionPermission(t *testing.T) {
 	t.Log(allow)
 }
 
-func TestBCSClusterPerm_GetMultiClusterMultiActionPermission(t *testing.T) {
+func TestGetMultiClusterMultiActionPerm(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -140,4 +141,80 @@ func TestBCSClusterPerm_GetMultiClusterMultiActionPermission(t *testing.T) {
 	}
 
 	t.Log(allow)
+}
+
+func TestCanCreateClusterScopedResource(t *testing.T) {
+	cli, err := newBcsClusterPermCli()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		projectID = os.Getenv("PROJECT_ID")
+		clusterID = os.Getenv("CLUSTER_ID")
+		username  = os.Getenv("PERM_USERNAME")
+	)
+	allow, url, _, err := cli.CanCreateClusterScopedResource(username, projectID, clusterID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(allow, url)
+}
+
+func TestCanViewClusterScopedResource(t *testing.T) {
+	cli, err := newBcsClusterPermCli()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		projectID = os.Getenv("PROJECT_ID")
+		clusterID = os.Getenv("CLUSTER_ID")
+		username  = os.Getenv("PERM_USERNAME")
+	)
+	allow, url, _, err := cli.CanViewClusterScopedResource(username, projectID, clusterID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(allow, url)
+}
+
+func TestCanUpdateClusterScopedResource(t *testing.T) {
+	cli, err := newBcsClusterPermCli()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		projectID = os.Getenv("PROJECT_ID")
+		clusterID = os.Getenv("CLUSTER_ID")
+		username  = os.Getenv("PERM_USERNAME")
+	)
+	allow, url, _, err := cli.CanUpdateClusterScopedResource(username, projectID, clusterID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(allow, url)
+}
+
+func TestCanDeleteClusterScopedResource(t *testing.T) {
+	cli, err := newBcsClusterPermCli()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		projectID = os.Getenv("PROJECT_ID")
+		clusterID = os.Getenv("CLUSTER_ID")
+		username  = os.Getenv("PERM_USERNAME")
+	)
+	allow, url, _, err := cli.CanDeleteClusterScopedResource(username, projectID, clusterID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(allow, url)
 }

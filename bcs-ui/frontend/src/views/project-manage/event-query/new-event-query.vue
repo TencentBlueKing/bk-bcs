@@ -4,7 +4,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from '@vue/composition-api';
+import { defineComponent, ref } from 'vue';
 import BcsContent from '@/components/layout/Content.vue';
 import EventQueryTable from './event-query-table.vue';
 import $store from '@/store';

@@ -56,33 +56,6 @@ func (hm *HelmManager) GetVersionDetailV1(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
-// ListChart provide the actions to list charts
-func (hm *HelmManager) ListChart(ctx context.Context,
-	req *helmmanager.ListChartReq, resp *helmmanager.ListChartResp) error {
-
-	defer recorder(ctx, "ListChart", req, resp)()
-	action := actionChart.NewListChartAction(hm.model, hm.platform)
-	return action.Handle(ctx, req, resp)
-}
-
-// ListChartVersion provide the actions to list chart versions
-func (hm *HelmManager) ListChartVersion(ctx context.Context,
-	req *helmmanager.ListChartVersionReq, resp *helmmanager.ListChartVersionResp) error {
-
-	defer recorder(ctx, "ListChartVersion", req, resp)()
-	action := actionChart.NewListChartVersionAction(hm.model, hm.platform)
-	return action.Handle(ctx, req, resp)
-}
-
-// GetVersionDetail provide the actions the get chart version detail
-func (hm *HelmManager) GetVersionDetail(ctx context.Context,
-	req *helmmanager.GetVersionDetailReq, resp *helmmanager.GetVersionDetailResp) error {
-
-	defer recorder(ctx, "GetVersionDetail", req, resp)()
-	action := actionChart.NewGetVersionDetailAction(hm.model, hm.platform)
-	return action.Handle(ctx, req, resp)
-}
-
 // DeleteChart provide the actions to delete chart
 func (hm *HelmManager) DeleteChart(ctx context.Context,
 	req *helmmanager.DeleteChartReq, resp *helmmanager.DeleteChartResp) error {

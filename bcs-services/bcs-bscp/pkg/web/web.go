@@ -28,7 +28,7 @@ import (
 	"k8s.io/klog/v2"
 
 	bscp "bscp.io"
-	_ "bscp.io/docs"
+	_ "bscp.io/docs" // 文档自动注册到 swagger
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/config"
 	"bscp.io/pkg/iam/auth"
@@ -72,7 +72,7 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 	}
 
 	// 鉴权中间件
-	webAuthentication := authorizer.WebAuthentication(config.G.Web.Host, config.G.LoginAuthHost())
+	webAuthentication := authorizer.WebAuthentication(config.G.Web.Host)
 
 	s := &WebServer{
 		ctx:               ctx,
@@ -125,7 +125,7 @@ func (w *WebServer) newRouter() http.Handler {
 	r.Get("/healthz", HealthzHandler)
 	// r.Mount("/", handler.RegisterCommonHandler())
 
-	if config.G.Web.RoutePrefix != "/" {
+	if config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != "" {
 		r.With(w.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
 			httpSwagger.URL(config.G.Web.RoutePrefix+"/swagger/doc.json"),
 		))
@@ -151,14 +151,14 @@ func (w *WebServer) subRouter() http.Handler {
 	conf := &bscp.IndexConfig{
 		StaticURL: path.Join(config.G.Web.RoutePrefix, "/web"),
 		RunEnv:    config.G.Base.RunEnv,
-		APIURL:    config.G.BCS.Host + "/bscp",
 		ProxyAPI:  shouldProxyAPI,
 		SiteURL:   config.G.Web.RoutePrefix,
-		IAMHost:   config.G.IAM.Host,
+		APIURL:    config.G.Frontend.Host.BSCPAPIURL,
+		IAMHost:   config.G.Frontend.Host.BKIAMHost,
 	}
 
 	if shouldProxyAPI {
-		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.BCS.Host))
+		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.Web.Host))
 	}
 
 	// vue 模版渲染
@@ -168,11 +168,11 @@ func (w *WebServer) subRouter() http.Handler {
 	return r
 }
 
-// HealthyHandler Healthz 接口
 // @Summary  Healthz 接口
 // @Tags     Healthz
 // @Success  200  {string}  string
 // @Router   /healthz [get]
+// HealthzHandler Healthz 接口
 func HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }

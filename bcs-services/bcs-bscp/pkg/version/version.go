@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -60,6 +61,9 @@ var (
 	// DEBUG if enable debug.
 	DEBUG = "false"
 
+	// GoVersion Go 版本号
+	GoVersion = runtime.Version()
+
 	// Row print version info by row.
 	Row VersionFormat = "row"
 	// JSON print version info by json.
@@ -88,13 +92,16 @@ func FormatVersion(prefix string, format VersionFormat) string {
 	if prefix != "" {
 		prefix = prefix + " "
 	}
+	rawFormat := fmt.Sprintf("%sVersion  : %s\nBuildTime: %s\nGitHash  : %s\nGoVersion: %s", prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
+	jsonFormat := fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s", "GoVersion": "%s"}`, prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
+
 	switch format {
 	case Row:
-		return fmt.Sprintf("%sVersion: %s\nBuildTime: %s\nGitHash: %s\n", prefix, VERSION, BUILDTIME, GITHASH)
+		return rawFormat
 	case JSON:
-		return fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s"}`, prefix, VERSION, BUILDTIME, GITHASH)
+		return jsonFormat
 	default:
-		return fmt.Sprintf("%sVersion: %s\nBuildTime: %s\nGitHash: %s\n", prefix, VERSION, BUILDTIME, GITHASH)
+		return rawFormat
 	}
 }
 
@@ -107,9 +114,10 @@ func GetStartInfo() string {
 // Version NOTES
 func Version() *SysVersion {
 	return &SysVersion{
-		Version: VERSION,
-		Hash:    GITHASH,
-		Time:    BUILDTIME,
+		Version:   VERSION,
+		Hash:      GITHASH,
+		Time:      BUILDTIME,
+		GoVersion: GoVersion,
 	}
 }
 
@@ -157,7 +165,8 @@ func parseVersion() ([3]uint32, error) {
 
 // SysVersion describe a binary version
 type SysVersion struct {
-	Version string `json:"version"`
-	Hash    string `json:"hash"`
-	Time    string `json:"time"`
+	Version   string `json:"version"`
+	Hash      string `json:"hash"`
+	Time      string `json:"time"`
+	GoVersion string `json:"go_version"`
 }

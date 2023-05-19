@@ -33,7 +33,7 @@
             :autoscaler-data="autoscalerData">
           </AutoScalerFormItem>
         </LayoutGroup>
-        <LayoutGroup collapsible class="mb15" :expanded="autoscalerData.isScaleDownEnable">
+        <LayoutGroup collapsible class="mb15" :expanded="!!autoscalerData.isScaleDownEnable">
           <template #title>
             <span>{{$t('自动缩容配置')}}</span>
             <span class="switch-autoscaler">
@@ -340,7 +340,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed, onBeforeUnmount } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, computed, onBeforeUnmount, CreateElement, getCurrentInstance } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -348,9 +348,10 @@ import StatusIcon from '@/components/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
 import usePage from '@/composables/use-page';
 import useInterval from '@/composables/use-interval';
-import { CreateElement } from 'vue';
 import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 import AutoScalerFormItem from './form-item.vue';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'AutoScaler',
@@ -361,9 +362,7 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $bkInfo, $bkMessage } = ctx.root;
-
+  setup(props) {
     const configLoading = ref(false);
     const autoscalerData = ref<Record<string, string>>({});
     const basicScalerConfig = ref([
@@ -620,10 +619,12 @@ export default defineComponent({
     const disabledAutoscaler = computed(() => autoscalerData.value.enableAutoscale
                     && nodepoolList.value.filter(item => item.enableAutoscale).length <= 1);
     // 单节点开启和关闭弹性伸缩
+    const { proxy } = getCurrentInstance() || { proxy: null };
     const handleToggleNodeScaler = async (row) => {
       if (nodepoolLoading.value || ['CREATING', 'DELETING', 'UPDATING'].includes(row.status)) return;
 
-      ctx.refs[row.nodeGroupID] && (ctx.refs[row.nodeGroupID] as any).hideHandler();
+      const $refs = proxy?.$refs || {};
+      $refs[row.nodeGroupID] && ($refs[row.nodeGroupID] as any).hideHandler();
       nodepoolLoading.value = true;
       let result = false;
       if (row.enableAutoscale) {

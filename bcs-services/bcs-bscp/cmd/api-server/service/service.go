@@ -34,8 +34,8 @@ func (s *Service) Handler() (http.Handler, error) {
 	}
 
 	r := chi.NewRouter()
-	r.Mount("/bscp/", http.StripPrefix("/bscp", s.proxy.handler()))
-	r.Mount("/", s.proxy.handler())
+	r.Mount("/bscp/", http.StripPrefix("/bscp", s.proxy.routers()))
+	r.Mount("/", s.proxy.routers())
 	return r, nil
 }
 

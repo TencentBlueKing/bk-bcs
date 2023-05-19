@@ -34,7 +34,7 @@ var ConfigItemColumnDescriptor = mergeColumnDescriptors("",
 	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
 
 // maxConfigItemsLimitForApp defines the max limit of config item for an app for user to create.
-const maxConfigItemsLimitForApp = 50
+const maxConfigItemsLimitForApp = 500
 
 // ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
 func ValidateAppCINumber(count uint32) error {

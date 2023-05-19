@@ -86,18 +86,18 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, onMounted, watch } from '@vue/composition-api';
+import { defineComponent, ref, onMounted, watch } from 'vue';
 import ProjectCreate from './project-create.vue';
 import useProjects from './use-project';
 import useDebouncedRef from '@/composables/use-debounce';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'ProjectManagement',
   components: {
     ProjectCreate,
   },
-  setup: (props, ctx) => {
-    const { $router } = ctx.root;
+  setup: () => {
     const { getAllProjectList } = useProjects();
     const pagination = ref({
       current: 1,

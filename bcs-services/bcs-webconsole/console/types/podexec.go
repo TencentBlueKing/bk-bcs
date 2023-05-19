@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
+// PodExec pod exec context
 type PodExec struct {
 	K8sClient     *kubernetes.Clientset
 	RESTConfig    *rest.Config
@@ -39,6 +40,7 @@ type PodExec struct {
 	NoPreserve    bool
 }
 
+// NewPodExec 创建 PodExec
 func (p *PodContext) NewPodExec() (*PodExec, error) {
 	clientset, err := k8sclient.GetK8SClientByClusterId(p.AdminClusterId)
 	if err != nil {

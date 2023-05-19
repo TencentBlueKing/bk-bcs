@@ -21,6 +21,7 @@ import (
 	"bscp.io/pkg/dal/dao"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/runtime/lock"
 	"bscp.io/pkg/types"
@@ -28,10 +29,13 @@ import (
 
 // Interface defines all the supported operations to get resource cache.
 type Interface interface {
+	GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error)
 	GetAppMeta(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
 	GetReleasedCI(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)
 	GetAppReleasedStrategies(kt *kit.Kit, bizID uint32, appID uint32, cpsID []uint32) ([]string, error)
 	ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
+	ListCredentialMatchedCI(kt *kit.Kit, bizID uint32, credential string) (string, error)
+	GetCredential(kt *kit.Kit, bizID uint32, credential string) (string, error)
 	RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error
 }
 
@@ -55,6 +59,7 @@ func New(op dao.Set, bds bedis.Client) (Interface, error) {
 // client do all the read cache related operations.
 type client struct {
 	op  dao.Set
+	db  pbds.DataClient
 	bds bedis.Client
 	// rLock is the resource's lock
 	rLock lock.Interface

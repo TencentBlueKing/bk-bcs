@@ -13,16 +13,11 @@
 package printer
 
 import (
-	"github.com/ugorji/go/codec"
-)
+	"encoding/json"
+	"fmt"
 
-func encodeJsonWithIndent(indent int8, v interface{}, s *[]byte) error {
-	enc := codec.NewEncoderBytes(s, &codec.JsonHandle{
-		MapKeyAsString: true,
-		Indent:         indent,
-	})
-	return enc.Encode(v)
-}
+	"github.com/tidwall/pretty"
+)
 
 func cut(s string, length int) string {
 	if len(s) <= length {
@@ -30,4 +25,10 @@ func cut(s string, length int) string {
 	}
 
 	return s[:length] + "..."
+}
+
+// PrintResultInJSON print data in json format
+func PrintResultInJSON(result interface{}) {
+	data, _ := json.Marshal(result)
+	fmt.Print(string(pretty.Color(pretty.Pretty(data), nil)))
 }

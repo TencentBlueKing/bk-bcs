@@ -124,10 +124,11 @@
     </div>
     <!-- 新建/更新 -->
     <bk-sideslider
-      :quick-close="false"
+      quick-close
       :is-show.sync="crdInstanceSlider.isShow"
       :title="crdInstanceSlider.title"
-      :width="800">
+      :width="800"
+      :before-close="handleBeforeClose">
       <div class="p30" slot="content">
         <div class="bk-form bk-form-vertical">
           <div class="bk-form-item">
@@ -301,23 +302,30 @@
   </div>
 </template>
 
-<script>
-import { defineComponent, reactive, toRefs, computed, onMounted, watch } from '@vue/composition-api';
+<script lang="ts">
+import { defineComponent, reactive, toRefs, computed, onMounted, watch, toRef, h } from 'vue';
 import { useNamespace } from '@/views/resource-view/namespace/use-namespace';
 import Header from '@/components/layout/Header.vue';
+import useSideslider from '@/composables/use-sideslider';
+import $store from '@/store';
+import $router from '@/router';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'CrdcontrollerPolarisInstances',
   components: {
     Header,
   },
-  setup(props, ctx) {
-    const { $store, $route, $router, $i18n } = ctx.root;
+  setup() {
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
+
     const crdInstanceList = computed(() => Object.assign([], $store.state.crdcontroller.crdInstanceList));
     const clusterList = computed(() => $store.state.cluster.clusterList);
     const curProject = computed(() => $store.state.curProject).value;
-    const projectId = computed(() => $route.params.projectId).value;
-    const clusterId = computed(() => $route.params.clusterId).value;
+    const projectId = computed(() => $route.value.params.projectId).value;
+    const clusterId = computed(() => $route.value.params.clusterId).value;
     const clusterName = computed(() => {
       const cluster = clusterList.value.find(item => item.cluster_id === clusterId);
       return cluster ? cluster.name : '';
@@ -390,6 +398,8 @@ export default defineComponent({
       ],
     });
 
+    const { handleBeforeClose, reset } = useSideslider(toRef(state, 'curCrdInstance'));
+
     watch(crdInstanceList, async () => {
       state.curPageData = await getDataByPage(state.pageConf.current);
     });
@@ -431,6 +441,7 @@ export default defineComponent({
       state.isTokenExist = false;
       state.isReadonly = false;
       state.crdInstanceSlider.isShow = true;
+      reset();
     };
 
     /**
@@ -604,7 +615,7 @@ export default defineComponent({
 
       if (!result) return;
 
-      ctx.root.$bkMessage({
+      $bkMessage({
         theme: 'success',
         message: $i18n.t('数据保存成功'),
       });
@@ -647,6 +658,7 @@ export default defineComponent({
       state.curCrdInstance = res.data.crd_data;
       state.curCrdInstance.crd_id = crdId;
       state.crdInstanceSlider.title = $i18n.t('编辑');
+      reset();
     };
 
     /**
@@ -658,12 +670,10 @@ export default defineComponent({
       const { crdKind } = state;
       const crdId = crdInstance.id;
 
-      ctx.root.$bkInfo({
+      $bkInfo({
         title: $i18n.t('确认删除'),
         clsName: 'biz-remove-dialog',
-        content: ctx.root.$createElement('p', {
-          class: 'biz-confirm-desc',
-        }, `${$i18n.t('确定要删除')}【${crdInstance.name}】？`),
+        content: `${$i18n.t('确定要删除')}【${crdInstance.name}】？`,
         async confirmFn() {
           state.isPageLoading = true;
           const res = await $store.dispatch('crdcontroller/deleteCrdInstance', { projectId, clusterId, crdKind, crdId }).catch(() => false);
@@ -671,7 +681,7 @@ export default defineComponent({
 
           if (!res) return;
 
-          ctx.root.$bkMessage({
+          $bkMessage({
             theme: 'success',
             message: $i18n.t('删除成功'),
           });
@@ -686,7 +696,7 @@ export default defineComponent({
              */
     const checkData = () => {
       if (!state.curCrdInstance.name) {
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'error',
           message: $i18n.t('请输入规则名'),
           delay: 5000,
@@ -695,7 +705,7 @@ export default defineComponent({
       }
 
       if (state.curCrdInstance.name.length > 63) {
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'error',
           message: $i18n.t('规则名必须小于等于63字符'),
           delay: 5000,
@@ -704,7 +714,7 @@ export default defineComponent({
       }
 
       if (!/^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$/.test(state.curCrdInstance.name)) {
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'error',
           message: $i18n.t('规则名以字母数字字符（[a-z0-9A-Z]）开头和结尾， 带有破折号（-），下划线（_），点（ .）和之间的字母数字'),
           delay: 5000,
@@ -713,7 +723,7 @@ export default defineComponent({
       }
 
       if (state.curCrdInstance.namespace === '') {
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'error',
           message: $i18n.t('请选择命名空间'),
         });
@@ -721,7 +731,7 @@ export default defineComponent({
       }
 
       if (!state.curCrdInstance.polaris.name) {
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'error',
           message: $i18n.t('请输入Polaris信息名'),
           delay: 5000,
@@ -730,7 +740,7 @@ export default defineComponent({
       }
 
       if (state.curCrdInstance.polaris.name && !/^[\w-.:]{1,128}$/.test(state.curCrdInstance.polaris.name)) {
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'error',
           message: $i18n.t('Polaris信息名只允许数字、英文字母、.、-、_, 限制128个字符'),
           delay: 5000,
@@ -739,7 +749,7 @@ export default defineComponent({
       }
 
       if (!state.curCrdInstance.polaris.namespace) {
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'error',
           message: $i18n.t('请选择Polaris命名空间'),
           delay: 5000,
@@ -751,7 +761,7 @@ export default defineComponent({
         let status = true;
         state.curCrdInstance.services.forEach((i) => {
           if (!i.name) {
-            ctx.root.$bkMessage({
+            $bkMessage({
               theme: 'error',
               message: $i18n.t('请输入关联Sercice服务名'),
               delay: 5000,
@@ -759,7 +769,7 @@ export default defineComponent({
             status = false;
           }
           if (!i.port) {
-            ctx.root.$bkMessage({
+            $bkMessage({
               theme: 'error',
               message: $i18n.t('请输入关联Sercice的端口(整数类型)'),
               delay: 5000,
@@ -767,7 +777,7 @@ export default defineComponent({
             status = false;
           }
           if (i.port && i.port < 0) {
-            ctx.root.$bkMessage({
+            $bkMessage({
               theme: 'error',
               message: $i18n.t('关联Sercice的端口不能为负数'),
               delay: 5000,
@@ -775,7 +785,7 @@ export default defineComponent({
             status = false;
           }
           if (!i.weight) {
-            ctx.root.$bkMessage({
+            $bkMessage({
               theme: 'error',
               message: $i18n.t('请输入关联Sercice的权重(整数类型)'),
               delay: 5000,
@@ -783,7 +793,7 @@ export default defineComponent({
             status = false;
           }
           if (i.port && i.weight < 0) {
-            ctx.root.$bkMessage({
+            $bkMessage({
               theme: 'error',
               message: $i18n.t('关联Sercice的权重不能为负数'),
               delay: 5000,
@@ -814,6 +824,7 @@ export default defineComponent({
       saveCrdInstance,
       addServiceMap,
       removeServiceMap,
+      handleBeforeClose,
     };
   },
 });

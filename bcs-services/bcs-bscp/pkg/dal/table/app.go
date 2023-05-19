@@ -182,7 +182,7 @@ func (as *AppSpec) ValidateCreate() error {
 		return errors.New("app spec is nil")
 	}
 
-	if err := validator.ValidateName(as.Name); err != nil {
+	if err := validator.ValidateAppName(as.Name); err != nil {
 		return err
 	}
 
@@ -220,7 +220,7 @@ func (as *AppSpec) ValidateUpdate(configType ConfigType) error {
 		return errors.New("app spec is nil")
 	}
 
-	if err := validator.ValidateName(as.Name); err != nil {
+	if err := validator.ValidateAppName(as.Name); err != nil {
 		return err
 	}
 

@@ -2,7 +2,7 @@ package pbcrs
 
 import (
 	"bscp.io/pkg/dal/table"
-	pbcredential "bscp.io/pkg/protocol/core/credential"
+	pbbase "bscp.io/pkg/protocol/core/base"
 )
 
 // CredentialAttachment convert pb CredentialAttachment to table CredentialScopeAttachment
@@ -50,7 +50,7 @@ func PbCredentialScope(s *table.CredentialScope) (*CredentialScopeList, error) {
 		Id:         s.ID,
 		Spec:       spec,
 		Attachment: PbCredentialScopeAttachment(s.Attachment),
-		Revision:   pbcredential.PbCredentialRevision(s.Revision),
+		Revision:   pbbase.PbRevision(s.Revision),
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func PbCredentialScopeSpec(spec *table.CredentialScopeSpec) (*CredentialScopeSpe
 	}
 
 	return &CredentialScopeSpec{
-		CredentialScope: spec.CredentialScope,
+		CredentialScope: string(spec.CredentialScope),
 	}, nil
 }
 

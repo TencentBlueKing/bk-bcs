@@ -43,29 +43,42 @@ const (
 )
 
 // DriverEnv The following environment variables are set by the agent that can be
-//    used by the executor upon startup:
+//
+//	used by the executor upon startup:
+//
 // MESOS_FRAMEWORK_ID: FrameworkID of the scheduler needed as part of the SUBSCRIBE call.
 // MESOS_EXECUTOR_ID: ExecutorID of the executor needed as part of the SUBSCRIBE call.
 // MESOS_DIRECTORY: Path to the working directory for the executor on the host filesystem(deprecated).
 // MESOS_SANDBOX: Path to the mapped sandbox inside of the container (determined by the
-//    agent flag sandbox_directory) for either mesos container with image or docker container.
-//    For the case of command task without image specified, it is the path to the sandbox
-//    on the host filesystem, which is identical to MESOS_DIRECTORY. MESOS_DIRECTORY
-//    is always the sandbox on the host filesystem.
+//
+//	agent flag sandbox_directory) for either mesos container with image or docker container.
+//	For the case of command task without image specified, it is the path to the sandbox
+//	on the host filesystem, which is identical to MESOS_DIRECTORY. MESOS_DIRECTORY
+//	is always the sandbox on the host filesystem.
+//
 // MESOS_AGENT_ENDPOINT: agent endpoint i.e. ip:port to be used by the executor to connect
-//    to the agent.
+//
+//	to the agent.
+//
 // MESOS_CHECKPOINT: If set to true, denotes that framework has checkpointing enabled.
 // MESOS_EXECUTOR_SHUTDOWN_GRACE_PERIOD: Amount of time the agent would wait for an
-//    executor to shut down (e.g., 60secs, 3mins etc.) after sending a SHUTDOWN event.
+//
+//	executor to shut down (e.g., 60secs, 3mins etc.) after sending a SHUTDOWN event.
+//
 // If MESOS_CHECKPOINT is set i.e. when framework checkpointing is enabled, the following
-//    additional variables are also set that can be used by the executor for retrying
-//    upon a disconnection with the agent:
+//
+//	additional variables are also set that can be used by the executor for retrying
+//	upon a disconnection with the agent:
+//
 // MESOS_RECOVERY_TIMEOUT: The total duration that the executor should spend retrying
-//    before shutting itself down when it is disconnected from the agent (e.g., 15mins,
-//    5secs etc.). This is configurable at agent startup via the flag --recovery_timeout.
+//
+//	before shutting itself down when it is disconnected from the agent (e.g., 15mins,
+//	5secs etc.). This is configurable at agent startup via the flag --recovery_timeout.
+//
 // MESOS_SUBSCRIPTION_BACKOFF_MAX: The maximum backoff duration to be used by the executor
-//    between two retries when disconnected (e.g., 250ms, 1mins etc.). This is configurable
-//    at agent startup via the flag --executor_reregistration_timeout.
+//
+//	between two retries when disconnected (e.g., 250ms, 1mins etc.). This is configurable
+//	at agent startup via the flag --executor_reregistration_timeout.
 type DriverEnv struct {
 	MesosSlavePID            string // agent slave pid
 	MesosSlaveID             string // agent slave uniq id

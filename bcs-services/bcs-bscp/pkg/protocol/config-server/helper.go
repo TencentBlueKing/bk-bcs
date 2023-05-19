@@ -14,6 +14,7 @@ package pbcs
 
 import (
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/criteria/validator"
 )
 
 // Validate delete strategy request param.
@@ -30,5 +31,13 @@ func (r *DeleteStrategySetReq) Validate() error {
 		return errf.New(errf.InvalidParameter, "invalid app_id, app_id should > 0")
 	}
 
+	return nil
+}
+
+// Validate 新建服务校验
+func (r *CreateAppReq) Validate() error {
+	if err := validator.ValidateAppName(r.Name); err != nil {
+		return err
+	}
 	return nil
 }

@@ -46,6 +46,10 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 		}
 	}
 
+	if _, err := s.dao.App().GetByName(kt, req.BizId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("app name %s already exists", req.Spec.Name)
+	}
+
 	now := time.Now()
 	app := &table.App{
 		BizID: req.BizId,
@@ -111,14 +115,14 @@ func (s *Service) GetApp(ctx context.Context, req *pbds.GetAppReq) (*pbapp.App, 
 
 	app, err := s.dao.App().Get(grpcKit, req.BizId, req.AppId)
 	if err != nil {
-		logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	return pbapp.PbApp(app), nil
 }
 
-// GetAppByID
+// GetAppByID get apps by only by app id.
 func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pbapp.App, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -126,6 +130,19 @@ func (s *Service) GetAppByID(ctx context.Context, req *pbds.GetAppByIDReq) (*pba
 	if err != nil {
 		logs.Errorf("get app by id failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, errors.Wrapf(err, "query app by id %d", req.GetAppId())
+	}
+
+	return pbapp.PbApp(app), nil
+}
+
+// GetAppByName get app by app name.
+func (s *Service) GetAppByName(ctx context.Context, req *pbds.GetAppByNameReq) (*pbapp.App, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	app, err := s.dao.App().GetByName(grpcKit, req.GetBizId(), req.GetAppName())
+	if err != nil {
+		logs.Errorf("get app by name failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errors.Wrapf(err, "query app by name %s", req.GetAppName())
 	}
 
 	return pbapp.PbApp(app), nil
@@ -161,9 +178,9 @@ func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.Li
 	return resp, nil
 }
 
-// ListApps list apps by query condition.
+// ListAppsRest list apps by query condition.
 func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (*pbds.ListAppsResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	kt := kit.FromGrpcContext(ctx)
 
 	// 默认分页
 	limit := uint(req.Limit)
@@ -216,9 +233,9 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 		Page:    page,
 	}
 
-	details, err := s.dao.App().List(kit, query)
+	details, err := s.dao.App().List(kt, query)
 	if err != nil {
-		logs.Errorf("list apps failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 

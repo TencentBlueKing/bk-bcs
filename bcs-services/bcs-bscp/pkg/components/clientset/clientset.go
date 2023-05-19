@@ -38,7 +38,7 @@ type ClientSet struct {
 	Authorizer auth.Authorizer
 }
 
-// NewClientSet
+// NewClientSet : new clientset
 func NewClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 	logs.Infof("start initialize the client set.")
 

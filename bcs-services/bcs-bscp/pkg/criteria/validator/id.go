@@ -21,7 +21,7 @@ import (
 const (
 	qualifiedUidFmt   string = "(" + qnameExtUidFmt + qnameExtUidSuffix + "*)?" + qnameExtUidFmt
 	qnameExtUidFmt    string = "[A-Za-z0-9]"
-	qnameExtUidSuffix string = "[A-Za-z0-9-_]"
+	qnameExtUidSuffix string = "[A-Za-z0-9-_:]"
 )
 
 var qualifiedUidRegexp = regexp.MustCompile("^" + qualifiedUidFmt + "$")

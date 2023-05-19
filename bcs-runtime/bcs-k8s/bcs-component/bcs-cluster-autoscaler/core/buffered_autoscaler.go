@@ -25,6 +25,7 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
@@ -543,7 +544,6 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 		klog.Errorf("Failed to list unscheduled pods: %v", err)
 		return scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, nil, errors.ToAutoscalerError(errors.ApiCallError, err)
 	}
-	metrics.UpdateUnschedulablePodsCount(len(unschedulablePods))
 
 	// scheduledPods will be mutated over this method. We keep original list of pods on originalScheduledPods.
 	scheduledPods := append([]*corev1.Pod{}, originalScheduledPods...)
@@ -555,6 +555,8 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 	// Such pods don't require scale up but should be considered during scale down.
 	unschedulablePods, unschedulableWaitingForLowerPriorityPreemption := filterOutExpendableAndSplit(unschedulablePods,
 		b.ExpendablePodsPriorityCutoff)
+
+	metrics.UpdateUnschedulablePodsCount(len(unschedulablePods))
 
 	// we tread pods with nominated node-name as scheduled for sake of scale-up considerations
 	scheduledPods = append(scheduledPods, unschedulableWaitingForLowerPriorityPreemption...)
@@ -568,6 +570,12 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
 			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
 			delete(pod.Spec.Containers[j].Resources.Requests, "ephemeral-storage")
+		}
+		for j := range pod.Spec.InitContainers {
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "ephemeral-storage")
 		}
 		prunedUnschedulablePods = append(prunedUnschedulablePods, pod)
 	}
@@ -660,7 +668,25 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors() {
 		if nodeGroup == nil {
 			err = fmt.Errorf("node group %s not found", nodeGroupsID)
 		} else {
-			err = nodeGroup.DeleteNodes(nodesToBeDeleted)
+			// 扩容失败节点的缩容也需走 Pod 驱逐流程，防止意外情况
+			for i := range nodesToBeDeleted {
+				go func(node *apiv1.Node) {
+					var result status.NodeDeleteResult
+					defer func() { b.scaleDown.nodeDeletionTracker.AddNodeDeleteResult(node.Name, result) }()
+					defer b.scaleDown.nodeDeletionTracker.SetNonEmptyNodeDeleteInProgress(false)
+					freshNode, getErr := b.ClientSet.CoreV1().Nodes().Get(node.Name, metav1.GetOptions{})
+					if err != nil || freshNode == nil {
+						klog.Warningf("Error while get fresh node %v: %v", node.Name, getErr)
+						return
+					}
+					// deleteNode 中会重新获取需驱逐 Pod 列表，此处直接传入 nil
+					result = b.scaleDown.deleteNode(freshNode, nil, nodeGroup)
+					if result.ResultType != status.NodeDeleteOk {
+						klog.Errorf("Failed to delete %s: %v", node.Name, result.Err)
+						return
+					}
+				}(nodesToBeDeleted[i])
+			}
 		}
 
 		if err != nil {

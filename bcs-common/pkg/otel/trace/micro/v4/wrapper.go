@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 )
 
+// NewTracingWrapper :
 func NewTracingWrapper() server.HandlerWrapper {
 	return func(fn server.HandlerFunc) server.HandlerFunc {
 		return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
@@ -59,7 +60,7 @@ func NewTracingWrapper() server.HandlerWrapper {
 			err = fn(ctx, req, rsp)
 
 			rspData, _ := json.Marshal(rsp)
-			elapsedTime := time.Now().Sub(startTime)
+			elapsedTime := time.Since(startTime)
 
 			reqBody := string(reqData)
 			if len(reqBody) > 1024 {

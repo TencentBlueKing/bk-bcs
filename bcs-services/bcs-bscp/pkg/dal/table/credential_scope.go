@@ -2,8 +2,10 @@ package table
 
 import (
 	"errors"
+	"time"
 
 	"bscp.io/pkg/criteria/enumor"
+	"bscp.io/pkg/runtime/credential"
 )
 
 // CredentialColumns defines credential's columns
@@ -14,7 +16,7 @@ var CredentialScopeColumnDescriptor = mergeColumnDescriptors("",
 	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
 	mergeColumnDescriptors("spec", CredentialScopeSpecColumnDescriptor),
 	mergeColumnDescriptors("attachment", CredentialScopeAttachmentColumnDescriptor),
-	mergeColumnDescriptors("revision", CredentialRevisionColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor),
 )
 
 // CredentialScope defines CredentialScope's columns
@@ -23,7 +25,7 @@ type CredentialScope struct {
 	ID         uint32                     `db:"id" json:"id"`
 	Spec       *CredentialScopeSpec       `db:"spec" json:"spec"`
 	Attachment *CredentialScopeAttachment `db:"attachment" json:"attachment"`
-	Revision   *CredentialRevision        `db:"revision" json:"revision"`
+	Revision   *Revision                  `db:"revision" json:"revision"`
 }
 
 // TableName is the CredentialScope's database table name.
@@ -40,6 +42,10 @@ func (s CredentialScope) ValidateCreate() error {
 
 	if s.Spec == nil {
 		return errors.New("spec not set")
+	}
+
+	if err := s.Spec.CredentialScope.Validate(); err != nil {
+		return err
 	}
 
 	if s.Attachment == nil {
@@ -63,11 +69,13 @@ var CredentialScopeSpecColumns = mergeColumns(CredentialScopeSpecColumnDescripto
 // CredentialScopeSpecColumnDescriptor defines credential scope's descriptor
 var CredentialScopeSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "credential_scope", NamedC: "credential_scope", Type: enumor.String},
+	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
 }
 
 // CredentialScopeSpec defines credential scope's Spec
 type CredentialScopeSpec struct {
-	CredentialScope string `db:"credential_scope" json:"credential_scope"`
+	CredentialScope credential.CredentialScope `db:"credential_scope" json:"credential_scope"`
+	ExpiredAt       time.Time                  `db:"expired_at" json:"expired_at"`
 }
 
 // CredentialScopeAttachmentColumnDescriptor defines credential scope's ColumnDescriptors
@@ -104,6 +112,10 @@ func (s CredentialScope) ValidateUpdate() error {
 
 	if s.Spec == nil {
 		return errors.New("spec not set")
+	}
+
+	if err := s.Spec.CredentialScope.Validate(); err != nil {
+		return err
 	}
 
 	if s.Attachment == nil {

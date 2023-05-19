@@ -35,7 +35,6 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/processors/nodegroupset"
 	"k8s.io/autoscaler/cluster-autoscaler/processors/status"
 	simulator "k8s.io/autoscaler/cluster-autoscaler/simulator"
-	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	v1lister "k8s.io/client-go/listers/core/v1"
@@ -115,7 +114,8 @@ func generateNodeGroup(nodeGroup cloudprovider.NodeGroup,
 // HandleResponse abstracts options of scale up and candidates of scale down from response
 func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo,
-	sd *ScaleDown, newPriorities priorities) (ScaleUpOptions, ScaleDownCandidates, error) {
+	sd *ScaleDown, newPriorities priorities,
+	scaleDownDelay time.Duration) (ScaleUpOptions, ScaleDownCandidates, error) {
 	var options ScaleUpOptions
 	var candidates ScaleDownCandidates
 	var err error
@@ -129,7 +129,7 @@ func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 
 	if review.Response != nil && review.Response.ScaleDowns != nil {
 		candidates, err = handleScaleDownResponse(review.Request, review.Response.ScaleDowns,
-			nodes, nodeNameToNodeInfo, sd)
+			nodes, nodeNameToNodeInfo, sd, scaleDownDelay)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -164,7 +164,8 @@ func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (S
 }
 
 func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy, nodes []*corev1.Node,
-	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo, sd *ScaleDown) (ScaleDownCandidates, error) {
+	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo, sd *ScaleDown,
+	scaleDownDelay time.Duration) (ScaleDownCandidates, error) {
 	candidates := make(ScaleDownCandidates, 0)
 	if len(policies) <= 0 {
 		return candidates, nil
@@ -177,6 +178,7 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 		if !ok {
 			return nil, fmt.Errorf("Cannot find node group info in requests for %s", policy.NodeGroupID)
 		}
+		filteredIPs := filteroutInitializingNodes(nodes, originNodeGroup.NodeIPs, scaleDownDelay)
 		switch policy.Type {
 		case NodeNumScaleDownType:
 			metricsinternal.UpdateWebhookScaleDownNumResponse(policy.NodeGroupID, policy.NodeNum)
@@ -195,23 +197,24 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 				return nil, fmt.Errorf("In scale down policy of nodegroup %v, node num %d should not greater than len(NodeIPs) %v",
 					policy.NodeGroupID, policy.NodeNum, len(originNodeGroup.NodeIPs))
 			}
-			ips, err := sortNodesWithCostAndUtilization(nodes, originNodeGroup.NodeIPs, nodeNameToNodeInfo, sd)
+			ips, err := sortNodesWithCostAndUtilization(nodes, filteredIPs, nodeNameToNodeInfo, sd)
 			if err != nil {
 				return nil, fmt.Errorf("Sort nodes with cost and utilization failed: %v", err)
 			}
-			// 缩容中的节点可能出现不在 ips，但在 DeletionsInProgress 的情况，所以可能这一逻辑周期会少缩，但下一周期会继续处理缩容，此处保守处理
-			scaleDownNum := len(ips) - policy.NodeNum - sd.nodeDeletionTracker.GetDeletionsInProgress(policy.NodeGroupID)
+			// 缩容中的节点可能出现不在 NodeIPs，但在 DeletionsInProgress 的情况，所以可能这一逻辑周期会少缩，但下一周期会继续处理缩容，此处保守处理
+			scaleDownNum := len(originNodeGroup.NodeIPs) - policy.NodeNum -
+				sd.nodeDeletionTracker.GetDeletionsInProgress(policy.NodeGroupID)
 			if scaleDownNum <= 0 {
 				continue
 			}
-			if scaleDownNum > len(ips) {
-				return nil, fmt.Errorf("Get candidates for nodegroup %v failed, scaleDownNum %v should not"+
-					" greater than len(ips) %v", policy.NodeGroupID, scaleDownNum, len(ips))
+			if scaleDownNum >= len(ips) {
+				candidates = append(candidates, ips...)
+				continue
 			}
 			candidates = append(candidates, ips[:scaleDownNum]...)
 		case NodeIPsScaleDownType:
 			metricsinternal.UpdateWebhookScaleDownIPResponse(policy.NodeGroupID, strings.Join(policy.NodeIPs, ","))
-			ips := intersect(originNodeGroup.NodeIPs, policy.NodeIPs)
+			ips := intersect(filteredIPs, policy.NodeIPs)
 			if originNodeGroup.DesiredSize-len(ips) < originNodeGroup.MinSize {
 				return nil, fmt.Errorf("Cannot scale down node group %v to %d after scaling down %d nodes, the min size is %d",
 					originNodeGroup.NodeGroupID, originNodeGroup.DesiredSize-len(ips), len(ips), originNodeGroup.MinSize)
@@ -250,10 +253,7 @@ func sortNodesWithCostAndUtilization(nodes []*corev1.Node, candidates []string,
 	nodeToCost := make(map[string]float64)
 	for i := range nodes {
 		node := nodes[i]
-		ip, found, err := checkCandidates(node, candidates)
-		if err != nil {
-			return nil, err
-		}
+		ip, found := checkCandidates(node, candidates)
 		if !found {
 			continue
 		}
@@ -334,10 +334,7 @@ func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 			klog.V(4).Infof("node %s is under deleting...", node.Name)
 			continue
 		}
-		_, found, err := checkCandidates(node, candidates)
-		if err != nil {
-			return err
-		}
+		_, found := checkCandidates(node, candidates)
 		if !found {
 			continue
 		}
@@ -370,12 +367,12 @@ func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 		go func() {
 			// Finishing the delete process once this goroutine is over.
 			var result status.NodeDeleteResult
+			// record results and metrics
 			defer func() { sd.nodeDeletionTracker.AddNodeDeleteResult(node.Name, result) }()
 
 			result = sd.deleteNode(node, podsToRemove, ng)
 			if result.ResultType != status.NodeDeleteOk {
 				klog.Errorf("Failed to delete %s: %v", node.Name, result.Err)
-				metricsinternal.RecordWebhookScaleDownFailed(node.Name)
 				if len(result.PodEvictionResults) > 0 {
 					for k, v := range result.PodEvictionResults {
 						if !v.WasEvictionSuccessful() {
@@ -395,30 +392,22 @@ func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 
 }
 
-func checkCandidates(node *corev1.Node, candidates ScaleDownCandidates) (string, bool, error) {
+func checkCandidates(node *corev1.Node, candidates ScaleDownCandidates) (string, bool) {
 	// get internal IP
-	if len(node.Status.Addresses) == 0 {
-		return "", false, fmt.Errorf("Cannot get Address for node %v", node.Name)
-	}
-	ip := ""
-	for _, ad := range node.Status.Addresses {
-		if ad.Type == corev1.NodeInternalIP {
-			ip = ad.Address
-			break
-		}
-	}
-	if ip == "" {
-		return "", false, fmt.Errorf("Cannot get Internal IP for node %v", node.Name)
+	IP := getInternalIP(node)
+	if IP == "" {
+		klog.Infof("cannot get internal IP for node %s", node.Name)
+		return IP, false
 	}
 	// check candidates
 	found := false
 	for _, candidate := range candidates {
-		if candidate == ip {
+		if candidate == IP {
 			found = true
 			break
 		}
 	}
-	return ip, found, nil
+	return IP, found
 }
 
 func simpleGetPodsToMove(nodeInfo *schedulernodeinfo.NodeInfo) []*corev1.Pod {
@@ -436,18 +425,6 @@ func simpleGetPodsToMove(nodeInfo *schedulernodeinfo.NodeInfo) []*corev1.Pod {
 		pods = append(pods, pod)
 	}
 	return pods
-}
-
-func hasToBeDeletedTaint(taints []corev1.Taint) bool {
-	if len(taints) == 0 {
-		return false
-	}
-	for _, taint := range taints {
-		if taint.Key == deletetaint.ToBeDeletedTaint && taint.Effect == corev1.TaintEffectNoSchedule {
-			return true
-		}
-	}
-	return false
 }
 
 func getPriority(lister v1lister.ConfigMapNamespaceLister) (priorities, error) {
@@ -690,4 +667,47 @@ func calculateWebhookScaleDownCoresMemoryTotal(candidates ScaleDownCandidates, n
 		memoryTotal += memory
 	}
 	return coresTotal, memoryTotal, nil
+}
+
+func filteroutInitializingNodes(nodes []*corev1.Node, ips []string, delayTime time.Duration) []string {
+	res := make([]string, 0, len(nodes))
+	now := time.Now()
+	for _, node := range nodes {
+		IP, found := checkCandidates(node, ips)
+		// well_known_taints are not exist in 0.16.x, use string instead
+		if found && hasTaint(node, "node.kubernetes.io/unschedulable") &&
+			now.Sub(node.CreationTimestamp.Time) < delayTime {
+			klog.Infof("skip scaling down initializing node %v", node.Name)
+
+			continue
+		}
+		if found {
+			res = append(res, IP)
+		}
+	}
+
+	return res
+}
+
+func getInternalIP(node *corev1.Node) string {
+	if len(node.Status.Addresses) == 0 {
+		return ""
+	}
+	IP := ""
+	for _, ad := range node.Status.Addresses {
+		if ad.Type == corev1.NodeInternalIP {
+			IP = ad.Address
+			break
+		}
+	}
+	return IP
+}
+
+func hasTaint(node *corev1.Node, taintKey string) bool {
+	for _, taint := range node.Spec.Taints {
+		if taint.Key == taintKey {
+			return true
+		}
+	}
+	return false
 }

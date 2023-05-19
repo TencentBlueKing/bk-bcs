@@ -74,13 +74,13 @@ func (r *ReleaseRollbackAction) Name() string {
 	return fmt.Sprintf("rollback-%s", r.name)
 }
 
-// Validate xxx
-func (r *ReleaseRollbackAction) Validate() error {
+// Prepare xxx
+func (r *ReleaseRollbackAction) Prepare(ctx context.Context) error {
 	return nil
 }
 
-// Prepare xxx
-func (r *ReleaseRollbackAction) Prepare(ctx context.Context) error {
+// Validate xxx
+func (r *ReleaseRollbackAction) Validate() error {
 	return nil
 }
 

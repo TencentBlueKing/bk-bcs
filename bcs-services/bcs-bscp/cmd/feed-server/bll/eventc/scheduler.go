@@ -256,6 +256,7 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 	meta := &btyp.AppInstanceMeta{
 		BizID:  inst.BizID,
 		AppID:  inst.AppID,
+		App:    inst.App,
 		Uid:    inst.Uid,
 		Labels: inst.Labels,
 	}
@@ -313,12 +314,17 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 					Privilege: cis.Permission.Privilege,
 				},
 			},
+			ConfigItemAttachment: &pbci.ConfigItemAttachment{
+				BizId: one.Attachment.BizID,
+				AppId: one.Attachment.AppID,
+			},
 			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
 		}
 	}
 
 	return &Event{
 		Change: &sfs.ReleaseEventMetaV1{
+			App:       inst.App,
 			AppID:     inst.AppID,
 			ReleaseID: releaseID,
 			CIMetas:   ciMeta,

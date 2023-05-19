@@ -25,10 +25,6 @@ import (
 // db方法
 
 func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) ([]operator.M, error) {
-	if resourceType == eventResourceType {
-		resourceType = eventDBConfig
-	}
-
 	return dbutils.GetData(&dbutils.DBOperate{
 		Context:      ctx,
 		GetOpt:       opt,
@@ -40,9 +36,6 @@ func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) 
 
 // PutData put data to db
 func PutData(ctx context.Context, data, features operator.M, resourceFeatList []string, table string) error {
-	if table == eventResourceType {
-		table = eventDBConfig
-	}
 	opt := &lib.StorePutOption{
 		UniqueKey:     resourceFeatList,
 		Cond:          operator.NewLeafCondition(operator.Eq, features),
@@ -181,7 +174,7 @@ func CreateCustomResourceIndex(ctx context.Context, resourceType string, index d
 	return CreateIndex(ctx, resourceType, index)
 }
 
-//DeleteCustomResourceIndex 删除 Custom Resources 索引
+// DeleteCustomResourceIndex 删除 Custom Resources 索引
 func DeleteCustomResourceIndex(ctx context.Context, resourceType string, indexName string) error {
 	return DeleteIndex(ctx, resourceType, indexName)
 }

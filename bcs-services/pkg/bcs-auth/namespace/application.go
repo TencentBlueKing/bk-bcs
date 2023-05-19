@@ -41,9 +41,13 @@ func (cls NamespaceInstances) BuildInstances() [][]iam.Instance {
 	if cls.IsClusterPerm && len(cls.Data) > 0 {
 		for i := range cls.Data {
 			iamInstances = append(iamInstances, []iam.Instance{
-				iam.Instance{
+				{
 					ResourceType: string(project.SysProject),
 					ResourceID:   cls.Data[i].Project,
+				},
+				{
+					ResourceType: string(cluster.SysCluster),
+					ResourceID:   cls.Data[i].Cluster,
 				},
 			})
 		}
@@ -53,15 +57,15 @@ func (cls NamespaceInstances) BuildInstances() [][]iam.Instance {
 
 	for i := range cls.Data {
 		iamInstances = append(iamInstances, []iam.Instance{
-			iam.Instance{
+			{
 				ResourceType: string(project.SysProject),
 				ResourceID:   cls.Data[i].Project,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(cluster.SysCluster),
 				ResourceID:   cls.Data[i].Cluster,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(SysNamespace),
 				ResourceID:   cls.Data[i].Namespace,
 			},
@@ -82,15 +86,15 @@ func (cls NamespaceScopedInstances) BuildInstances() [][]iam.Instance {
 
 	for i := range cls.Data {
 		iamInstances = append(iamInstances, []iam.Instance{
-			iam.Instance{
+			{
 				ResourceType: string(project.SysProject),
 				ResourceID:   cls.Data[i].Project,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(cluster.SysCluster),
 				ResourceID:   cls.Data[i].Cluster,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(SysNamespace),
 				ResourceID:   cls.Data[i].Namespace,
 			},

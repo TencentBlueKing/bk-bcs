@@ -82,11 +82,13 @@
           ref="validateRefs">
           <bcs-input :placeholder="item.placeholder || $t('值')" class="value" v-model="item.value"></bcs-input>
         </Validate>
-        <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
-        <i
-          :class="['bk-icon icon-minus-circle', { disabled: disabledDelete }]"
-          @click="handleDeleteKeyValue(index)"
-        ></i>
+        <template v-if="showOperate">
+          <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
+          <i
+            :class="['bk-icon icon-minus-circle', { disabled: disabledDelete }]"
+            @click="handleDeleteKeyValue(index)"
+          ></i>
+        </template>
       </div>
     </template>
     <span
@@ -113,7 +115,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, toRefs, watch, ref, computed, PropType, onMounted } from '@vue/composition-api';
+import { defineComponent, toRefs, watch, ref, computed, PropType, onMounted } from 'vue';
 import Validate from './validate.vue';
 import $i18n from '@/i18n/i18n-setup';
 
@@ -182,6 +184,10 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
+    showOperate: {
+      type: Boolean,
+      default: true,
+    },
     keyRequired: {
       type: Boolean,
       default: false,
@@ -212,6 +218,9 @@ export default defineComponent({
         });
       }
     }, { immediate: true });
+    watch(keyValueData, () => {
+      ctx.emit('data-change', keyValueData.value);
+    }, { deep: true });
 
     const handleAddKeyValue = (index) => {
       keyValueData.value.splice(index + 1, 0, {
@@ -229,10 +238,10 @@ export default defineComponent({
     }, {}));
     const confirmSetLabel = async () => {
       if (!validate()) return;
-      ctx.emit('confirm', labels.value);
+      ctx.emit('confirm', labels.value, keyValueData.value);
     };
     const hideSetLabel = () => {
-      ctx.emit('cancel', labels.value);
+      ctx.emit('cancel', labels.value, keyValueData.value);
     };
     // key联想功能
     const handleAdvice = (advice, item) => {

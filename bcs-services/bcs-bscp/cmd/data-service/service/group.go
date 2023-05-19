@@ -97,6 +97,8 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbds.ListGroupsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	resp := new(pbds.ListGroupsResp)
+
 	// parse pb struct filter to filter.Expression.
 	lgft, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
 	if err != nil {
@@ -114,6 +116,10 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 	if err != nil {
 		logs.Errorf("list group failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
+	}
+
+	if details.Count == 0 {
+		return resp, nil
 	}
 
 	groups, err := pbgroup.PbGroups(details.Details)
@@ -154,10 +160,8 @@ func (s *Service) ListGroups(ctx context.Context, req *pbds.ListGroupsReq) (*pbd
 		}
 	}
 
-	resp := &pbds.ListGroupsResp{
-		Count:   details.Count,
-		Details: groups,
-	}
+	resp.Count = details.Count
+	resp.Details = groups
 	return resp, nil
 }
 
@@ -193,6 +197,10 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 			},
 		},
 	})
+	if err != nil {
+		logs.Errorf("list released group failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 	releaseMap := make(map[uint32]*table.Release, 0)
 	for _, gcr := range gcrs {
 		releaseMap[gcr.ReleaseID] = nil
@@ -203,7 +211,7 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 	}
 
 	if len(releaseIDs) != 0 {
-		releases, err := s.dao.Release().List(kt, &types.ListReleasesOption{
+		releases, e := s.dao.Release().List(kt, &types.ListReleasesOption{
 			BizID: req.BizId,
 			AppID: req.AppId,
 			Filter: &filter.Expression{
@@ -218,9 +226,9 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 			},
 			Page: &types.BasePage{},
 		})
-		if err != nil {
-			logs.Errorf("list app releases failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
+		if e != nil {
+			logs.Errorf("list app releases failed, err: %v, rid: %s", e, kt.Rid)
+			return nil, e
 		}
 		for _, release := range releases.Details {
 			if _, ok := releaseMap[release.ID]; ok {

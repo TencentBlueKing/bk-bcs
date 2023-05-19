@@ -4,12 +4,13 @@ import { IConfigListQueryParams, IConfigVersionQueryParams } from '../../types/c
 
 /**
  * 获取配置项列表，通过params中的release_id区分是否拿某个版本下的配置项列表
+ * @param biz_id 空间ID
  * @param app_id 应用ID
  * @param params 查询参数
  * @returns 
  */
-export const getConfigList = (app_id: number, params: IConfigListQueryParams = {}) => {
-  return http.get(`/config/apps/${app_id}/config_items`, { params }).then(res => res.data)
+export const getConfigList = (biz_id: string, app_id: number, params: IConfigListQueryParams = {}) => {
+  return http.get(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { params }).then(res => res.data)
 }
 
 /**
@@ -49,12 +50,13 @@ export const getConfigList = (app_id: number, params: IConfigListQueryParams = {
 
 /**
  * 获取配置项详情
+ * @param biz_id 空间ID
  * @param id 配置ID
  * @param appId 应用ID
  * @returns 
  */
-export const getConfigItemDetail = (id: number, appId: number, params: { release_id?: number } = {}) => {
-  return http.get(`/config/apps/${appId}/config_items/${id}`, { params }).then(resp => resp.data);
+export const getConfigItemDetail = (biz_id: string, id: number, appId: number, params: { release_id?: number } = {}) => {
+  return http.get(`/config/biz/${biz_id}/apps/${appId}/config_items/${id}`, { params }).then(resp => resp.data);
 }
 
 /**
@@ -104,12 +106,13 @@ export const createVersion = (bizId: string, appId: number, name: string, memo: 
 
 /**
  * 获取版本列表
+ * @param bizId 业务ID
  * @param appId 应用ID
  * @param params 查询参数
  * @returns 
  */
-export const getConfigVersionList = (appId: number, params: IConfigVersionQueryParams) => {
-  return http.get(`config/apps/${appId}/releases`, { params })
+export const getConfigVersionList = (bizId: string, appId: number, params: IConfigVersionQueryParams) => {
+  return http.get(`config/biz/${bizId}/apps/${appId}/releases`, { params })
 }
 
 /**

@@ -27,7 +27,7 @@
     </bk-form-item>
     <bk-form-item :label="$t('标签')" property="labels" error-display-type="normal">
       <KeyValue
-        class="labels"
+        class="max-w-[420px]"
         :min-item="0"
         :disable-delete-item="false"
         v-model="nodePoolInfo.nodeTemplate.labels">
@@ -50,7 +50,7 @@
     </bk-form-item>
     <bk-form-item :label="$t('注解')" property="annotations" error-display-type="normal">
       <KeyValue
-        class="labels"
+        class="max-w-[420px]"
         :min-item="0"
         :disable-delete-item="false"
         v-model="nodePoolInfo.nodeTemplate.annotations">
@@ -111,7 +111,7 @@
   </bk-form>
 </template>
 <script lang="ts">
-import { defineComponent, ref, toRefs } from '@vue/composition-api';
+import { defineComponent, ref, toRefs } from 'vue';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';
 import $i18n from '@/i18n/i18n-setup';
@@ -168,25 +168,6 @@ export default defineComponent({
     });
 
     const nodePoolInfoRules = ref({
-      // name: [
-      //   {
-      //     required: true,
-      //     message: $i18n.t('必填项'),
-      //     trigger: 'blur',
-      //   },
-      //   {
-      //     message: $i18n.t('名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符("-")及小数点'),
-      //     trigger: 'blur',
-      //     validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
-      //   },
-      // ],
-      // maxSize: [
-      //   {
-      //     message: $i18n.t('节点配额太小'),
-      //     trigger: 'blur',
-      //     validator: () => nodePoolInfo.value.autoScaling.minSize < nodePoolInfo.value.autoScaling.maxSize,
-      //   },
-      // ],
       labels: [
         {
           message: $i18n.t('标签值不能为空'),
@@ -195,7 +176,7 @@ export default defineComponent({
           validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.labels).every(key => !!nodePoolInfo.value.nodeTemplate.labels[key]),
         },
         {
-          message: $i18n.t('键和值仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\''),
+          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
           trigger: 'custom',
           validator: () => {
             const keys = Object.keys(nodePoolInfo.value.nodeTemplate.labels);
@@ -222,6 +203,29 @@ export default defineComponent({
             }, []);
             const removeDuplicateData = new Set(data);
             return data.length === removeDuplicateData.size;
+          },
+        },
+        {
+          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          trigger: 'custom',
+          validator: () => (nodePoolInfo.value.nodeTemplate.taints as any[])
+            .every(item => /^[A-Za-z0-9._/-]+$/.test(item.key) && /^[A-Za-z0-9._/-]+$/.test(item.value)),
+        },
+      ],
+      annotations: [
+        {
+          message: $i18n.t('注解值不能为空'),
+          trigger: 'custom',
+          validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.annotations)
+            .every(key => !!nodePoolInfo.value.nodeTemplate.annotations[key]),
+        },
+        {
+          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          trigger: 'custom',
+          validator: () => {
+            const keys = Object.keys(nodePoolInfo.value.nodeTemplate.annotations);
+            const values = keys.map(key => nodePoolInfo.value.nodeTemplate.annotations[key]);
+            return keys.every(v => /^[A-Za-z0-9._/-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9._/-]+$/.test(v));
           },
         },
       ],
@@ -267,12 +271,6 @@ export default defineComponent({
     }
     >>> .w160 {
         width: 160px;
-    }
-    >>> .labels,
-    >>> .taints {
-        .bk-form-control {
-            width: 160px;
-        }
     }
     >>> .bk-form-content {
         max-width: 600px;

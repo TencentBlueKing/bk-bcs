@@ -43,7 +43,7 @@ type IndexConfig struct {
 	ProxyAPI  bool
 }
 
-// EmbedWebServer
+// EmbedWebServer 前端 web server
 type EmbedWebServer interface {
 	RenderIndexHandler(conf *IndexConfig) http.Handler
 	FaviconHandler(w http.ResponseWriter, r *http.Request)

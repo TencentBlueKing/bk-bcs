@@ -1,5 +1,3 @@
-//go:build bk_login
-
 /*
 Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
 Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -16,17 +14,49 @@ package bkpaas
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
 
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components"
 )
 
+type bkLoginResult struct {
+	Msg  string `json:"msg"`
+	Code int    `json:"ret"`
+}
+
+type bkLoginAuthClient struct {
+	conf *cc.LoginAuthSettings
+}
+
+// GetLoginCredentialFromCookies 从 cookie 获取 LoginCredential
+func (b *bkLoginAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error) {
+	uid, err := r.Cookie("bk_uid")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return nil, fmt.Errorf("%s cookie not present", "bk_uid")
+		}
+		return nil, err
+	}
+
+	token, err := r.Cookie("bk_ticket")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return nil, fmt.Errorf("%s cookie not present", "bk_ticket")
+		}
+		return nil, err
+	}
+
+	return &LoginCredential{UID: uid.Value, Token: token.Value}, nil
+}
+
 // GetUserInfoByToken BK_LIGIN 统一登入服务 bk_ticket 统一鉴权
-func GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error) {
+func (b *bkLoginAuthClient) GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error) {
 	url := fmt.Sprintf("%s/user/is_login/", host)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
@@ -41,16 +71,25 @@ func GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, e
 		return "", errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
 	}
 
-	user := new(userInfo)
-	if err := components.UnmarshalBKResult(resp, user); err != nil {
+	result := new(bkLoginResult)
+	if err := json.Unmarshal(resp.Body(), result); err != nil {
 		return "", err
 	}
 
-	return user.Username, nil
+	if result.Code != 0 {
+		return "", errors.Errorf("ret code %d != 0, body: %s", result.Code, resp.Body())
+	}
+
+	return uid, nil
 }
 
 // BuildLoginRedirectURL 登入跳转URL
-func BuildLoginRedirectURL(r *http.Request, webHost, Loginhost string) string {
-	redirectURL := fmt.Sprintf("%s/?c_url=%s", Loginhost, url.QueryEscape(buildAbsoluteUri(webHost, r)))
+func (b *bkLoginAuthClient) BuildLoginRedirectURL(r *http.Request, webHost string) string {
+	redirectURL := fmt.Sprintf("%s/?c_url=%s", b.conf.Host, url.QueryEscape(buildAbsoluteUri(webHost, r)))
 	return redirectURL
+}
+
+// BuildLoginURL API未登入访问URL
+func (b *bkLoginAuthClient) BuildLoginURL(r *http.Request) (string, string) {
+	return buildLoginURL(r, b.conf.Host), buildLoginPlainURL(r, b.conf.Host)
 }

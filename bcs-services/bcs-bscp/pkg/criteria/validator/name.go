@@ -35,6 +35,31 @@ func validResNamePrefix(name string) error {
 	return nil
 }
 
+// qualifiedAppNameRegexp bscp resource's name regexp.
+var qualifiedAppNameRegexp = regexp.MustCompile(`^[a-zA-Z0-9][\w\-]*[a-zA-Z0-9]$`)
+
+// ValidateAppName validate bscp app name's length and format.
+func ValidateAppName(name string) error {
+	if len(name) < 1 {
+		return errors.New("invalid name, length should >= 1")
+	}
+
+	if len(name) > 128 {
+		return errors.New("invalid name, length should <= 128")
+	}
+
+	if err := validResNamePrefix(name); err != nil {
+		return err
+	}
+
+	if !qualifiedAppNameRegexp.MatchString(name) {
+		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
+			"、hyphen (-), and must start and end with an english、numbers", name)
+	}
+
+	return nil
+}
+
 const (
 	// qualifiedNameFmt bscp resource's name format.
 	// '.' And '/' as reserved characters, users are absolutely not allowed to create
@@ -100,13 +125,11 @@ func ValidateReleaseName(name string) error {
 }
 
 const (
-	qualifiedCfgItemNameFmt string = "(" + qCfgItemNameFmt + qExtCfgItemNameFmt + "*)?" + qCfgItemNameFmt
-	qCfgItemNameFmt         string = "[A-Za-z0-9]"
-	qExtCfgItemNameFmt      string = "[A-Za-z0-9-_.]"
+	qualifiedCfgItemNameFmt string = "^[A-Za-z0-9-_.]+$"
 )
 
 // qualifiedCfgItemNameRegexp config item name regexp.
-var qualifiedCfgItemNameRegexp = regexp.MustCompile("^" + qualifiedCfgItemNameFmt + "$")
+var qualifiedCfgItemNameRegexp = regexp.MustCompile(qualifiedCfgItemNameFmt)
 
 // ValidateCfgItemName validate config item's name.
 func ValidateCfgItemName(name string) error {
@@ -122,9 +145,13 @@ func ValidateCfgItemName(name string) error {
 		return err
 	}
 
+	if name == "." || name == ".." {
+		return fmt.Errorf("invalid name: %s, not allows to be '.' or '..'", name)
+	}
+
 	if !qualifiedCfgItemNameRegexp.MatchString(name) {
 		return fmt.Errorf("invalid name: %s, only allows to include english、numbers、underscore (_)"+
-			"、hyphen (-)、point (.), and must start and end with an english、numbers", name)
+			"、hyphen (-)、point (.)", name)
 	}
 
 	return nil

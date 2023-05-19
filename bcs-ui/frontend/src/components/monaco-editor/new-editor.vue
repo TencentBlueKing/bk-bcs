@@ -7,7 +7,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref, toRefs, watch, onMounted, onBeforeMount } from '@vue/composition-api';
+import { computed, defineComponent, ref, toRefs, watch, onMounted, onBeforeMount } from 'vue';
 import yamljs from 'js-yaml';
 import { isObject } from '@/common/util';
 import useEditor, { IDiffValue } from './use-editor';

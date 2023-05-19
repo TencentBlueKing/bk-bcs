@@ -234,7 +234,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, watch } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
 import ChartReleasesTable from './chart-releases-table.vue';
@@ -246,6 +246,7 @@ import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
 import { copyText } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
 
 interface ITableConfig {
   name: string;
@@ -261,7 +262,7 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
+  setup(props) {
     const {
       loading,
       repos,
@@ -289,7 +290,7 @@ export default defineComponent({
     // 复制
     const handleCopyData = (value: string) => {
       copyText(value);
-      ctx.root.$bkMessage({
+      $bkMessage({
         theme: 'success',
         message: $i18n.t('复制成功'),
       });

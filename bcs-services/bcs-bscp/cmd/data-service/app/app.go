@@ -128,7 +128,7 @@ func (ds *dataService) prepare(opt *options.Option) error {
 	}
 
 	// initial DAO set
-	set, err := dao.NewDaoSet(cc.DataService().Sharding)
+	set, err := dao.NewDaoSet(cc.DataService().Sharding, cc.DataService().Credential)
 	if err != nil {
 		return fmt.Errorf("initial dao set failed, err: %v", err)
 	}

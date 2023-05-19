@@ -36,6 +36,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/thirdparty/esb/cmdb"
 )
 
 // Auth related operate.
@@ -234,7 +235,7 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 }
 
 // CheckPermission
-func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
+func (a *Auth) CheckPermission(ctx context.Context, biz *cmdb.Biz, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
 	log := &logrus.Logger{
@@ -261,27 +262,27 @@ func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *met
 		return nil, err
 	}
 
-	resp := &pbas.CheckPermissionResp{IsAllowed: false}
+	resp := &pbas.CheckPermissionResp{
+		IsAllowed: false,
+		ApplyUrl:  "",
+		Resources: []*pbas.BasicDetail{},
+	}
+
 	if allowed {
 		resp.IsAllowed = true
 		return resp, nil
 	}
 
-	sErr := errf.PRCPermissionDenied()
-
 	if req.GenApplyURL {
-		applyDetail := &pbas.ApplyDetail{
-			Resources: []*pbas.BasicDetail{
-				{
-					Type:         string(req.Type),
-					Action:       req.Action.String(),
-					ResourceId:   strconv.FormatInt(int64(req.ResourceID), 10),
-					TypeName:     "业务",
-					ActionName:   "业务访问",
-					ResourceName: "蓝鲸",
-				},
-			},
-		}
+		resp.Resources = append(resp.Resources, &pbas.BasicDetail{
+			Type:         string(req.Type),
+			Action:       req.Action.String(),
+			ResourceId:   strconv.FormatInt(int64(req.ResourceID), 10),
+			TypeName:     "业务",
+			ActionName:   "业务访问",
+			ResourceName: biz.BizName,
+		})
+
 		application, err := AdaptIAMApplicationOptions(req)
 		if err != nil {
 			return nil, err
@@ -290,16 +291,10 @@ func (a *Auth) CheckPermission(ctx context.Context, iamSettings cc.IAM, req *met
 		if err != nil {
 			return nil, errors.Wrap(err, "gen apply url")
 		}
-		applyDetail.ApplyUrl = url
-		sErr, err := sErr.WithDetails(applyDetail)
-		if err != nil {
-			return nil, err
-		}
-		return nil, sErr.Err()
-
+		resp.ApplyUrl = url
 	}
 
-	return nil, sErr.Err()
+	return resp, nil
 }
 
 func (a *Auth) getPermissionToApply(kt *kit.Kit, resources []*meta.ResourceAttribute) (*meta.IamPermission, error) {

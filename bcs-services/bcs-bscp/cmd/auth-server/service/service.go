@@ -15,11 +15,11 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/protobuf/proto"
@@ -62,7 +62,8 @@ type Service struct {
 	// initial logic module.
 	initial *initial.Initial
 	// auth logic module.
-	auth *auth.Auth
+	auth     *auth.Auth
+	spaceMgr *space.SpaceMgr
 }
 
 // NewService create a service instance.
@@ -83,12 +84,18 @@ func NewService(sd serviced.Discover, iamSettings cc.IAM, disableAuth bool,
 		return nil, fmt.Errorf("new gateway failed, err: %v", err)
 	}
 
+	spaceMgr, err := space.NewSpaceMgr(context.Background(), client.Esb)
+	if err != nil {
+		return nil, errors.Wrap(err, "init space mgr")
+	}
+
 	s := &Service{
 		client:          client,
 		gateway:         gateway,
 		disableAuth:     disableAuth,
 		disableWriteOpt: disableWriteOpt,
 		iamSettings:     iamSettings,
+		spaceMgr:        spaceMgr,
 	}
 
 	if err = s.initLogicModule(); err != nil {
@@ -218,6 +225,17 @@ func (s *Service) InitAuthCenter(ctx context.Context, req *pbas.InitAuthCenterRe
 	return s.initial.InitAuthCenter(ctx, req)
 }
 
+// GetAuthLoginConf get auth login conf
+func (s *Service) GetAuthLoginConf(ctx context.Context, req *pbas.GetAuthLoginConfReq) (*pbas.GetAuthLoginConfResp, error) {
+	resp := &pbas.GetAuthLoginConfResp{
+		Host:      cc.AuthServer().LoginAuth.Host,
+		InnerHost: cc.AuthServer().LoginAuth.InnerHost,
+		Provider:  cc.AuthServer().LoginAuth.Provider,
+		GwPubkey:  cc.AuthServer().LoginAuth.GWPubKey,
+	}
+	return resp, nil
+}
+
 // AuthorizeBatch authorize resource batch.
 func (s *Service) AuthorizeBatch(ctx context.Context, req *pbas.AuthorizeBatchReq) (*pbas.AuthorizeBatchResp, error) {
 	return s.auth.AuthorizeBatch(ctx, req)
@@ -232,7 +250,12 @@ func (s *Service) GetPermissionToApply(ctx context.Context, req *pbas.GetPermiss
 
 // CheckPermission
 func (s *Service) CheckPermission(ctx context.Context, req *pbas.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
-	resp, err := s.auth.CheckPermission(ctx, s.iamSettings, req.ResourceAttribute())
+	biz, err := s.client.Esb.Cmdb().GeBusinessbyID(ctx, req.BizId)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.auth.CheckPermission(ctx, biz, s.iamSettings, req.ResourceAttribute())
 	return resp, err
 }
 
@@ -271,7 +294,10 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 		host = cc.AuthServer().LoginAuth.InnerHost
 	}
 
-	username, err := bkpaas.GetUserInfoByToken(ctx, host, req.GetUid(), token)
+	conf := cc.AuthServer().LoginAuth
+	authLoginClient := bkpaas.NewAuthLoginClient(&conf)
+
+	username, err := authLoginClient.GetUserInfoByToken(ctx, host, req.GetUid(), token)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +305,7 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 	return &pbas.UserInfoResp{Username: username, AvatarUrl: ""}, nil
 }
 
-// ListUserSpaceAnnotation
+// ListUserSpaceAnnotation list user space permission annotations
 func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Authorizer, msg proto.Message) (*webannotation.Annotation, error) {
 	resp, ok := msg.(*pbas.ListUserSpaceResp)
 	if !ok {
@@ -324,10 +350,8 @@ func (s *Service) ListUserSpace(ctx context.Context, req *pbas.ListUserSpaceReq)
 		return nil, err
 	}
 
-	spaceList, err := space.ListUserSpace(ctx, s.client.Esb, kt.User)
-	if err != nil {
-		return nil, err
-	}
+	// 定期同步
+	spaceList := s.spaceMgr.AllSpaces()
 
 	items := make([]*pbas.Space, 0, len(spaceList))
 	for _, space := range spaceList {
@@ -350,7 +374,7 @@ func (s *Service) QuerySpace(ctx context.Context, req *pbas.QuerySpaceReq) (*pba
 		return &pbas.QuerySpaceResp{}, nil
 	}
 
-	spaceList, err := space.QuerySpace(ctx, s.client.Esb, uidList)
+	spaceList, err := s.spaceMgr.QuerySpace(uidList)
 	if err != nil {
 		return nil, err
 	}

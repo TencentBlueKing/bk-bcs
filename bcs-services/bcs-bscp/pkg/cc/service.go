@@ -65,11 +65,10 @@ type Setting interface {
 
 // ApiServerSetting defines api server used setting options.
 type ApiServerSetting struct {
-	Network   Network           `yaml:"network"`
-	Service   Service           `yaml:"service"`
-	Log       LogOption         `yaml:"log"`
-	LoginAuth LoginAuthSettings `yaml:"loginAuth"`
-	Repo      Repository        `yaml:"repository"`
+	Network Network    `yaml:"network"`
+	Service Service    `yaml:"service"`
+	Log     LogOption  `yaml:"log"`
+	Repo    Repository `yaml:"repository"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -115,10 +114,12 @@ type AuthServerSetting struct {
 	Esb       Esb               `yaml:"esb"`
 }
 
-// LoginAuthSettings
+// LoginAuthSettings login conf
 type LoginAuthSettings struct {
 	Host      string `yaml:"host"`
 	InnerHost string `yaml:"innerHost"`
+	Provider  string `yaml:"provider"`
+	GWPubKey  string `yaml:"gwPubkey"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -159,6 +160,7 @@ type CacheServiceSetting struct {
 	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
+	Credential   Credential   `yaml:"credential"`
 	Sharding     Sharding     `yaml:"sharding"`
 	RedisCluster RedisCluster `yaml:"redisCluster"`
 }
@@ -253,8 +255,9 @@ type DataServiceSetting struct {
 	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
-	Sharding Sharding `yaml:"sharding"`
-	Esb      Esb      `yaml:"esb"`
+	Credential Credential `yaml:"credential"`
+	Sharding   Sharding   `yaml:"sharding"`
+	Esb        Esb        `yaml:"esb"`
 }
 
 // trySetFlagBindIP try set flag bind ip.

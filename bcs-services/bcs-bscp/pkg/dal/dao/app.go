@@ -39,9 +39,11 @@ type App interface {
 	// Update one app's info
 	Update(kit *kit.Kit, app *table.App) error
 	// get app with id.
-	Get(kit *kit.Kit, BizID, AppID uint32) (*table.App, error)
+	Get(kit *kit.Kit, bizID, appID uint32) (*table.App, error)
 	// get app only with id.
-	GetByID(kit *kit.Kit, AppID uint32) (*table.App, error)
+	GetByID(kit *kit.Kit, appID uint32) (*table.App, error)
+	// get app by name.
+	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.App, error)
 	// List apps with options.
 	List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListAppDetails, error)
 	// ListAppsByGroupID list apps by group id.
@@ -151,7 +153,8 @@ func (ap *appDao) ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*tab
 	group := &table.Group{}
 	var getGroupSqlSentence []string
 	getGroupSqlSentence = append(getGroupSqlSentence, "SELECT ", table.GroupColumns.NamedExpr(),
-		" FROM "+table.GroupTable.Name()+fmt.Sprintf(" WHERE biz_id = %d AND id = %d", bizID, groupID))
+		" FROM "+table.GroupTable.Name()+" WHERE biz_id = ", strconv.Itoa(int(bizID)),
+		" AND id = ", strconv.Itoa(int(groupID)))
 	getGroupSql := filter.SqlJoint(getGroupSqlSentence)
 
 	err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, getGroupSql)
@@ -424,6 +427,21 @@ func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
 	return one, nil
 }
 
+// GetByName 通过 name 查询
+func (ap *appDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.App, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
+		" WHERE name = '", name, "' AND biz_id = ", strconv.Itoa(int(bizID)))
+	expr := filter.SqlJoint(sqlSentence)
+	one := new(table.App)
+	err := ap.orm.Do(ap.sd.Admin().DB()).Get(kit.Ctx, one, expr)
+	if err != nil {
+		return nil, fmt.Errorf("get app details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
 func getAppMode(kit *kit.Kit, orm orm.Interface, sd *sharding.Sharding, bizID, appID uint32) (table.AppMode, error) {
 
 	var sqlSentence []string
@@ -479,7 +497,7 @@ func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32
 
 	appIDList := tools.JoinUint32(appIDs, ",")
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT id, config_type AS 'spec.config_type', mode AS 'spec.mode', reload_type AS ",
+	sqlSentence = append(sqlSentence, "SELECT id, name AS 'spec.name', config_type AS 'spec.config_type', mode AS 'spec.mode', reload_type AS ",
 		"'spec.reload.reload_type', reload_file_path AS 'spec.reload.file_reload_spec.reload_file_path' ",
 		"FROM ", table.AppTable.Name(), " WHERE id IN (", appIDList, ") AND biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
@@ -491,6 +509,7 @@ func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32
 	meta := make(map[uint32]*types.AppCacheMeta)
 	for _, one := range appList {
 		meta[one.ID] = &types.AppCacheMeta{
+			Name:       one.Spec.Name,
 			ConfigType: one.Spec.ConfigType,
 			Mode:       one.Spec.Mode,
 			Reload:     one.Spec.Reload,

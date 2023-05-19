@@ -18,10 +18,53 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/hashicorp/go-multierror"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/components/bkpaas"
 	"bscp.io/pkg/logs"
+)
+
+var (
+	// grpcCodeMap 蓝鲸 Code 映射
+	grpcCodeMap = map[codes.Code]string{
+		codes.Canceled:           "CANCELLED",
+		codes.Unknown:            "UNKNOWN",
+		codes.InvalidArgument:    "INVALID_ARGUMENT",
+		codes.DeadlineExceeded:   "DEADLINE_EXCEEDED",
+		codes.NotFound:           "NOT_FOUND",
+		codes.AlreadyExists:      "ALREADY_EXISTS",
+		codes.PermissionDenied:   "PERMISSION_DENIED",
+		codes.ResourceExhausted:  "RESOURCE_EXHAUSTED",
+		codes.FailedPrecondition: "FAILED_PRECONDITION",
+		codes.Aborted:            "ABORTED",
+		codes.OutOfRange:         "OUT_OF_RANGE",
+		codes.Unimplemented:      "UNIMPLEMENTED",
+		codes.Internal:           "INTERNAL",
+		codes.Unavailable:        "UNAVAILABLE",
+		codes.DataLoss:           "DATA_LOSS",
+		codes.Unauthenticated:    "UNAUTHENTICATED",
+	}
+
+	// grpcCodeMap 蓝鲸 status 映射
+	grpcHttpStatusMap = map[codes.Code]int{
+		codes.Canceled:           http.StatusBadRequest,
+		codes.Unknown:            http.StatusBadRequest,
+		codes.InvalidArgument:    http.StatusBadRequest,
+		codes.DeadlineExceeded:   http.StatusBadRequest,
+		codes.NotFound:           http.StatusNotFound,
+		codes.AlreadyExists:      http.StatusBadRequest,
+		codes.PermissionDenied:   http.StatusForbidden,
+		codes.ResourceExhausted:  http.StatusBadRequest,
+		codes.FailedPrecondition: http.StatusBadRequest,
+		codes.Aborted:            http.StatusBadRequest,
+		codes.OutOfRange:         http.StatusBadRequest,
+		codes.Unimplemented:      http.StatusBadRequest,
+		codes.Internal:           http.StatusBadRequest,
+		codes.Unavailable:        http.StatusBadRequest,
+		codes.DataLoss:           http.StatusBadRequest,
+		codes.Unauthenticated:    http.StatusUnauthorized,
+	}
 )
 
 // BaseResp http response.
@@ -117,28 +160,24 @@ type ErrorResponse struct {
 	Err            error         `json:"-"` // low-level runtime error
 	HTTPStatusCode int           `json:"-"` // http response status code
 	Error          *ErrorPayload `json:"error"`
+	loginURL       string        `json:"-"` // login plain url
+	loginPlainURL  string        `json:"-"` // login url
 }
 
-// Render
+// Render go-chi/render Renderer interface implement
 func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	statusCode := res.HTTPStatusCode
 	if statusCode == 0 {
 		statusCode = http.StatusBadRequest
 	}
 
-	if res.Error.Code == "UNAUTHENTICATED" {
-		res.Error.Data = &UnauthorizedData{
-			LoginURL:      bkpaas.BuildLoginURL(r, cc.ApiServer().LoginAuth.Host),
-			LoginPlainURL: bkpaas.BuildLoginPlainURL(r, cc.ApiServer().LoginAuth.Host),
-		}
-	}
-
 	switch res.Error.Code {
 	case "UNAUTHENTICATED":
 		res.Error.Data = &UnauthorizedData{
-			LoginURL:      bkpaas.BuildLoginURL(r, cc.ApiServer().LoginAuth.Host),
-			LoginPlainURL: bkpaas.BuildLoginPlainURL(r, cc.ApiServer().LoginAuth.Host),
+			LoginURL:      res.loginURL,
+			LoginPlainURL: res.loginPlainURL,
 		}
+
 	case "PERMISSION_DENIED":
 		// 把 detail 中拿出来做鉴权详情
 		if len(res.Error.Details) > 0 {
@@ -152,14 +191,21 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 // UnauthorizedErr rest 未登入返回
-func UnauthorizedErr(err error) render.Renderer {
-	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error()}
-	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized}
+func UnauthorizedErr(err error, loginAuthHost, loginAuthPlainHost string) render.Renderer {
+	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error(), Details: []interface{}{}}
+	if e, ok := err.(*multierror.Error); ok {
+		for _, v := range e.Errors {
+			payload.Details = append(payload.Details, v.Error())
+		}
+		payload.Message = "user not logged in"
+	}
+
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized, loginURL: loginAuthHost, loginPlainURL: loginAuthPlainHost}
 }
 
 // PermissionDenied 无数据返回
-func PermissionDenied(err error) render.Renderer {
-	payload := &ErrorPayload{Code: "PERMISSION_DENIED", Message: err.Error()}
+func PermissionDenied(err error, data interface{}) render.Renderer {
+	payload := &ErrorPayload{Code: "PERMISSION_DENIED", Message: err.Error(), Data: data}
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusForbidden}
 }
 
@@ -167,4 +213,21 @@ func PermissionDenied(err error) render.Renderer {
 func BadRequest(err error) render.Renderer {
 	payload := &ErrorPayload{Code: "INVALID_REQUEST", Message: err.Error()}
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusBadRequest}
+}
+
+// GRPCErr GRPC-Gateway 错误
+func GRPCErr(err error) render.Renderer {
+	s := status.Convert(err)
+	code := grpcCodeMap[s.Code()]
+	if code == "" {
+		code = "INVALID_REQUEST"
+	}
+
+	status := grpcHttpStatusMap[s.Code()]
+	if status == 0 {
+		status = http.StatusBadRequest
+	}
+
+	payload := &ErrorPayload{Code: code, Message: s.Message(), Details: s.Details()}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: status}
 }

@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager
 
-go 1.17
+go 1.20
 
 replace (
 	github.com/Tencent/bk-bcs/bcs-services/pkg => ../pkg
@@ -31,7 +31,7 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.0
 	github.com/tidwall/pretty v1.0.0
-	github.com/ugorji/go/codec v1.2.6
+	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/vmware-tanzu/carvel-ytt v0.40.1
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
@@ -61,6 +61,9 @@ require (
 	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
 	k8s.io/cli-runtime v0.23.5
+	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/klog v1.0.0
+	k8s.io/klog/v2 v2.30.0
 )
 
 require (
@@ -215,10 +218,7 @@ require (
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	k8s.io/apiextensions-apiserver v0.23.5 // indirect
 	k8s.io/apiserver v0.23.5 // indirect
-	k8s.io/client-go v11.0.0+incompatible // indirect
 	k8s.io/component-base v0.23.5 // indirect
-	k8s.io/klog v1.0.0 // indirect
-	k8s.io/klog/v2 v2.30.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/kubectl v0.23.5 // indirect
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect

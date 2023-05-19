@@ -71,6 +71,7 @@ type BusinessTopologyData struct {
 	Child      []BusinessTopologyData `json:"child"`
 }
 
+// TransferToProto transfer cmdb data to proto
 func (b *BusinessTopologyData) TransferToProto() *proto.TopologyData {
 	protoData := &proto.TopologyData{
 		Default:    uint32(b.Default),
@@ -174,6 +175,7 @@ func GetBusinessMaintainers(bizID string) ([]string, error) {
 	return maintainers, nil
 }
 
+// GetBusinessTopology get business topology by bizID
 func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
 	// 获取超时时间
 	timeout := defaultTimeout
