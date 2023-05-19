@@ -422,5 +422,11 @@ func (dao *configItemDao) TruncateWithTx(kit *kit.Kit, tx *sharding.Tx, bizID, a
 		return err
 	}
 
+	// decrease the config item lock count after the deletion
+	lock := lockKey.ConfigItem(bizID, appID)
+	if err := dao.lock.TruncateCount(kit, lock, &LockOption{Txn: tx.Tx()}); err != nil {
+		return err
+	}
+
 	return nil
 }

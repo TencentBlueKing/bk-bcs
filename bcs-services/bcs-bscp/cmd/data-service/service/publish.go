@@ -14,9 +14,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -44,6 +46,11 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 			CreatedAt: time.Now(),
 		},
 	}
+
+	if err := s.validatePublishGroups(kt, opt); err != nil {
+		return nil, err
+	}
+
 	pshID, err := s.dao.Publish().Publish(kt, opt)
 	if err != nil {
 		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, kt.Rid)
@@ -82,6 +89,11 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	if err != nil {
 		logs.Errorf("query app config item list failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
+	}
+
+	// if no config item, return directly.
+	if len(cfgItems) == 0 {
+		return nil, errors.New("app config items is empty")
 	}
 
 	// step3: query config item newest commit
@@ -162,6 +174,9 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 			CreatedAt: time.Now(),
 		},
 	}
+	if e := s.validatePublishGroups(kt, opt); e != nil {
+		return nil, e
+	}
 	pshID, err := s.dao.Publish().PublishWithTx(kt, tx, opt)
 	if err != nil {
 		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, kt.Rid)
@@ -236,4 +251,31 @@ func (s *Service) ListPublishedStrategyHistories(ctx context.Context, req *pbds.
 		Details: strategies,
 	}
 	return resp, nil
+}
+
+func (s *Service) validatePublishGroups(kt *kit.Kit, opt *types.PublishOption) error {
+	for _, groupID := range opt.Groups {
+		// frontend would set groupID 0 as default.
+		if groupID == 0 {
+			opt.Default = true
+			continue
+		}
+		group, e := s.dao.Group().Get(kt, groupID, opt.BizID)
+		if e != nil {
+			if e == orm.ErrRecordNotFound {
+				return fmt.Errorf("group %d not exists", groupID)
+			}
+			return e
+		}
+		if group.Spec.Public {
+			continue
+		}
+		if _, e := s.dao.GroupAppBind().Get(kt, groupID, opt.AppID, opt.BizID); e != nil {
+			if e == orm.ErrRecordNotFound {
+				return fmt.Errorf("group %d not bind app %d", groupID, opt.AppID)
+			}
+			return e
+		}
+	}
+	return nil
 }

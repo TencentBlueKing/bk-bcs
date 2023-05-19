@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, withDefaults, watch, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
   import * as monaco from 'monaco-editor'
 
   const props = withDefaults(defineProps<{
