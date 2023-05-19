@@ -90,3 +90,5 @@ Vue.prototype.messageError = messageError;
 Vue.prototype.messageSuccess = messageSuccess;
 Vue.prototype.messageInfo = messageInfo;
 Vue.prototype.messageWarn = messageWarn;
+
+export default Message;

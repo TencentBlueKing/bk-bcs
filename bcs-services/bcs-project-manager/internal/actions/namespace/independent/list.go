@@ -49,7 +49,7 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		return errorx.NewClusterErr(err.Error())
 	}
 	quotaMap := map[string]corev1.ResourceQuota{}
-	if quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); err == nil {
+	if quotaList, e := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); e == nil {
 		for _, quota := range quotaList.Items {
 			if quota.GetName() == quota.GetNamespace() {
 				quotaMap[quota.GetName()] = quota

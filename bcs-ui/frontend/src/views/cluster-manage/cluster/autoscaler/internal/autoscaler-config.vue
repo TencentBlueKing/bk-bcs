@@ -111,6 +111,16 @@
           </bk-input>
         </bk-form-item>
         <bk-form-item
+          desc-icon="bk-icon icon-info-circle"
+          :label="$t('触发扩容资源阈值 (Pods)')"
+          :desc="$t('集群整体内存资源Pod数量使用率超过该阈值触发扩容, 无论CPU / 内存资源使用率是否达到阈值')">
+          <bk-input int type="number" :min="0" :max="100" v-model="autoscalerData.bufferResourceRatio">
+            <template slot="append">
+              <div class="group-text">%</div>
+            </template>
+          </bk-input>
+        </bk-form-item>
+        <bk-form-item
           :label="$t('等待节点提供最长时间')"
           desc-icon="bk-icon icon-info-circle"
           :desc="$t('如果节点规格在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败，取值范围900 ~ 86400秒')">
@@ -124,7 +134,7 @@
           <bk-checkbox v-model="autoscalerData.scaleUpFromZero"></bk-checkbox>
         </bk-form-item> -->
       </LayoutGroup>
-      <LayoutGroup collapsible :expanded="!!autoscalerData.isScaleDownEnable">
+      <LayoutGroup collapsible class="mb10" :expanded="!!autoscalerData.isScaleDownEnable">
         <template #title>
           <span>{{$t('自动缩容配置')}}</span>
           <span class="switch-autoscaler">
@@ -208,12 +218,35 @@
             </template>
           </bk-input>
         </bk-form-item>
+        <bk-form-item
+          :label="$t('允许缩容已使用本地存储的节点')"
+          :desc="$t('如果设置为 “是”，则表示已使用本地存储的节点将允许被缩容，例如已使用过empryDir / HostPath的节点将允许被缩容')">
+          <bcs-checkbox
+            v-model="autoscalerData.skipNodesWithLocalStorage"
+            :true-value="false"
+            :false-value="true">
+            {{ autoscalerData.skipNodesWithLocalStorage ? $t('否') : $t('是') }}
+          </bcs-checkbox>
+        </bk-form-item>
+      </LayoutGroup>
+      <LayoutGroup collapsible :title="$t('低优先级 Pod 配置')">
+        <i18n path="低优先级Pod配置提示语" class="text-[14px]">
+          <span>{{ $t('低于') }}</span>
+          <bcs-input
+            class="w-[74px] px-[5px]"
+            type="number"
+            :min="-2147483648"
+            :max="-1"
+            :show-controls="false"
+            v-model="autoscalerData.expendablePodsPriorityCutoff">
+          </bcs-input>
+        </i18n>
       </LayoutGroup>
     </bk-form>
   </BcsContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref } from 'vue';
 import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
@@ -222,6 +255,8 @@ import $router from '@/router';
 import $store from '@/store/index';
 import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 import TopoSelectTree from './topo-select-tree.vue';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   components: {
@@ -236,8 +271,7 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $bkMessage, $bkInfo } = ctx.root;
+  setup(props) {
     const formRef = ref<any>(null);
     const rules = ref({
       scaleOutModuleID: [
@@ -248,7 +282,7 @@ export default defineComponent({
         },
       ],
     });
-    const { clusterList } = useClusterList(ctx);
+    const { clusterList } = useClusterList();
     const navList = computed(() => [
       {
         title: clusterList.value.find(item => item.clusterID === props.clusterId)?.clusterName,
@@ -261,7 +295,7 @@ export default defineComponent({
         link: {
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         },
       },
@@ -304,7 +338,7 @@ export default defineComponent({
         $router.push({
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         });
       }

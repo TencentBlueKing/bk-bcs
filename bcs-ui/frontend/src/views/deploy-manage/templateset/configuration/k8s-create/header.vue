@@ -1998,21 +1998,9 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器"{name}"的镜像及版本配置：请设置所属的镜像及版本', container),
+            message: megPrefix + this.$t('容器 {name} 的镜像及版本配置：请设置所属的镜像及版本', container),
           });
           return false;
-        } if (container.webCache.imageName && !container.webCache.imageName.startsWith('{{')) {
-          // const matchs = this.imageList.filter(item => {
-          //     return item.value === container.webCache.imageName
-          // })
-          // if (!matchs.length) {
-          //     this.$bkMessage({
-          //         theme: 'error',
-          //         message: megPrefix + this.$t('容器"{name}"的镜像及版本配置：原镜像已经删除，请重新选择', container),
-          //         delay: 8000
-          //     })
-          //     return false
-          // }
         }
 
         // 端口映射检查
@@ -2023,14 +2011,14 @@ export default {
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('容器"{name}"的端口映射配置：名称不能为空', container),
+                message: megPrefix + this.$t('容器 {name} 的端口映射配置：名称不能为空', container),
               });
               return false;
             }
             if (!portNameReg.test(item.name.replace(varReg, 'name'))) {
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('容器"{name}"的端口映射配置：名称错误，以小写字母开头，只能包含：小写字母、数字、连字符(-)，长度小于256个字符', container),
+                message: megPrefix + this.$t('容器 {name} 的端口映射配置：名称错误，以小写字母开头，只能包含：小写字母、数字、连字符(-)，长度小于256个字符', container),
                 delay: 8000,
               });
               return false;
@@ -2038,7 +2026,7 @@ export default {
             if (portNameCache[item.name]) {
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('容器"{name}"的端口映射配置：端口名称不可重复', container),
+                message: megPrefix + this.$t('容器 {name} 的端口映射配置：端口名称不可重复', container),
                 delay: 8000,
               });
               return false;
@@ -2050,7 +2038,7 @@ export default {
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('容器"{name}"的端口映射配置：容器端口不能为空', container),
+                message: megPrefix + this.$t('容器 {name} 的端口映射配置：容器端口不能为空', container),
               });
               return false;
             }
@@ -2058,7 +2046,7 @@ export default {
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('容器"{name}"的端口映射配置：容器端口范围为1-65535', container),
+                message: megPrefix + this.$t('容器 {name} 的端口映射配置：容器端口范围为1-65535', container),
               });
               return false;
             }
@@ -2070,7 +2058,7 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器"{name}"的命令：启动命令不能含有中文字符', container),
+            message: megPrefix + this.$t('容器 {name} 的命令：启动命令不能含有中文字符', container),
           });
           return false;
         }
@@ -2079,7 +2067,7 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器"{name}"的命令：命令参数不能含有中文字符', container),
+            message: megPrefix + this.$t('容器 {name} 的命令：命令参数不能含有中文字符', container),
           });
           return false;
         }
@@ -2092,14 +2080,14 @@ export default {
                 this.$bkMessage({
                   theme: 'error',
                   delay: 5000,
-                  message: megPrefix + this.$t('容器"${name}"的挂载卷配置：挂载名不能为空', container),
+                  message: megPrefix + this.$t('容器 ${name} 的挂载卷配置：挂载名不能为空', container),
                 });
                 return false;
               }
               if (!item.mountPath) {
                 this.$bkMessage({
                   theme: 'error',
-                  message: megPrefix + this.$t('容器"{name}"的挂载卷配置：容器目录不能为空', container),
+                  message: megPrefix + this.$t('容器 {name} 的挂载卷配置：容器目录不能为空', container),
                   delay: 5000,
                 });
                 return false;
@@ -2135,7 +2123,7 @@ export default {
               if (!env.key) {
                 this.$bkMessage({
                   theme: 'error',
-                  message: megPrefix + this.$t('容器"{name}"的环境变量配置：键不能为空', container),
+                  message: megPrefix + this.$t('容器 {name} 的环境变量配置：键不能为空', container),
                   delay: 5000,
                 });
                 return false;
@@ -2143,7 +2131,7 @@ export default {
               if (!envKeyReg.test(env.key.replace(varReg, 'key'))) {
                 this.$bkMessage({
                   theme: 'error',
-                  message: megPrefix + this.$t('容器"{name}"的环境变量配置：键只能含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母', container),
+                  message: megPrefix + this.$t('容器 {name} 的环境变量配置：键只能含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母', container),
                   delay: 8000,
                 });
                 return false;
@@ -2155,7 +2143,7 @@ export default {
             if (env.type !== 'custom' && !env.value) {
               this.$bkMessage({
                 theme: 'error',
-                message: megPrefix + this.$t('容器"{name}"的环境变量配置：值不能为空', container),
+                message: megPrefix + this.$t('容器 {name} 的环境变量配置：值不能为空', container),
                 delay: 5000,
               });
               return false;
@@ -2168,7 +2156,7 @@ export default {
         if (resources.limits.cpu && resources.requests.cpu && !varReg.test(resources.limits.cpu) && !varReg.test(resources.requests.cpu) && (resources.requests.cpu > resources.limits.cpu)) {
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('容器"{name}"的资源限制配置：CPU限制中最小值必须小于等于最大值', container),
+            message: megPrefix + this.$t('容器 {name} 的资源限制配置：CPU限制中最小值必须小于等于最大值', container),
             delay: 7000,
           });
           return false;
@@ -2176,7 +2164,7 @@ export default {
         if (resources.limits.memory && resources.requests.memory && !varReg.test(resources.limits.memory) && !varReg.test(resources.requests.memory) && (resources.requests.memory > resources.limits.memory)) {
           this.$bkMessage({
             theme: 'error',
-            message: megPrefix + this.$t('容器"{name}"的资源限制配置：内存限制中最小值必须小于等于最大值', container),
+            message: megPrefix + this.$t('容器 {name} 的资源限制配置：内存限制中最小值必须小于等于最大值', container),
             delay: 7000,
           });
           return false;
@@ -2189,7 +2177,7 @@ export default {
               this.$bkMessage({
                 theme: 'error',
                 delay: 5000,
-                message: megPrefix + this.$t('容器"{name}"的非标准日志采集配置：日志绝对路径不正确', container),
+                message: megPrefix + this.$t('容器 {name} 的非标准日志采集配置：日志绝对路径不正确', container),
               });
               return false;
             }
@@ -2201,7 +2189,7 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器"{name}"的生命周期：停止前执行不能含有中文字符', container),
+            message: megPrefix + this.$t('容器 {name} 的生命周期：停止前执行不能含有中文字符', container),
           });
           return false;
         }
@@ -2210,7 +2198,7 @@ export default {
           this.$bkMessage({
             theme: 'error',
             delay: 5000,
-            message: megPrefix + this.$t('容器"{name}"的生命周期：启动后执行不能含有中文字符', container),
+            message: megPrefix + this.$t('容器 {name} 的生命周期：启动后执行不能含有中文字符', container),
           });
           return false;
         }

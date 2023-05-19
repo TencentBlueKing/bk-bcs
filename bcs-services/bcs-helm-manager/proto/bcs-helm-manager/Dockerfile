@@ -21,7 +21,7 @@ RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${PROT
 # Install protoc-gen-validate
 RUN go install github.com/envoyproxy/protoc-gen-validate@v${PROTOC_GEN_VALIDATE_VERSION}
 
-FROM debian:stretch-slim
+FROM debian:bullseye-slim
 
 WORKDIR /proto
 

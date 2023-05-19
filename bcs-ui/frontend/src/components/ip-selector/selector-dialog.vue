@@ -14,14 +14,20 @@
       :key="selectorKey"
       :height="dialogHeight"
       :ip-list="ipList"
+      :disabled-ip-list="disabledIpList"
+      :cloud-id="cloudId"
+      :region="region"
+      :vpc="vpc"
       v-if="modelValue"
       @change="handleIpSelectorChange"
-    ></Selector>
+    />
   </bcs-dialog>
 </template>
 <script lang="ts">
-import { defineComponent, ref, toRefs, watch, onMounted } from '@vue/composition-api';
+import { defineComponent, ref, toRefs, watch, onMounted, PropType } from 'vue';
 import Selector from './ip-selector-bcs.vue';
+import $bkMessage from '@/common/bkmagic';
+import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
   name: 'SelectorDialog',
@@ -41,6 +47,23 @@ export default defineComponent({
     ipList: {
       type: Array,
       default: () => ([]),
+    },
+    disabledIpList: {
+      type: Array as PropType<Array<string|{ip: string, tips: string}>>,
+      default: () => [],
+    },
+    cloudId: {
+      type: String,
+      default: '',
+    },
+    region: {
+      type: String,
+      default: '',
+    },
+    // 集群VPC
+    vpc: {
+      type: Object,
+      default: () => ({}),
     },
   },
 
@@ -66,9 +89,9 @@ export default defineComponent({
     const handleConfirm = () => {
       const data = selector.value?.handleGetData() || [];
       if (!data.length) {
-        ctx.root.$bkMessage({
+        $bkMessage({
           theme: 'error',
-          message: ctx.root.$i18n.t('请选择服务器'),
+          message: $i18n.t('请选择服务器'),
         });
         return;
       }
@@ -77,7 +100,7 @@ export default defineComponent({
 
     onMounted(() => {
       dialogWidth.value = document.body.clientWidth < 1650 ? 1200 : document.body.clientWidth - 650;
-      dialogHeight.value = document.body.clientHeight < 1000 ? 600 : document.body.clientHeight - 320;
+      dialogHeight.value = document.body.clientHeight < 1000 ? 460 : document.body.clientHeight - 320;
     });
 
     return {

@@ -30,9 +30,11 @@ const (
 	Data_DeleteApp_FullMethodName                      = "/pbds.Data/DeleteApp"
 	Data_GetApp_FullMethodName                         = "/pbds.Data/GetApp"
 	Data_GetAppByID_FullMethodName                     = "/pbds.Data/GetAppByID"
+	Data_GetAppByName_FullMethodName                   = "/pbds.Data/GetAppByName"
 	Data_ListApps_FullMethodName                       = "/pbds.Data/ListApps"
 	Data_ListAppsRest_FullMethodName                   = "/pbds.Data/ListAppsRest"
 	Data_CreateConfigItem_FullMethodName               = "/pbds.Data/CreateConfigItem"
+	Data_BatchUpsertConfigItems_FullMethodName         = "/pbds.Data/BatchUpsertConfigItems"
 	Data_UpdateConfigItem_FullMethodName               = "/pbds.Data/UpdateConfigItem"
 	Data_DeleteConfigItem_FullMethodName               = "/pbds.Data/DeleteConfigItem"
 	Data_GetConfigItem_FullMethodName                  = "/pbds.Data/GetConfigItem"
@@ -60,6 +62,10 @@ const (
 	Data_ListHooks_FullMethodName                      = "/pbds.Data/ListHooks"
 	Data_UpdateHook_FullMethodName                     = "/pbds.Data/UpdateHook"
 	Data_DeleteHook_FullMethodName                     = "/pbds.Data/DeleteHook"
+	Data_CreateTemplateSpace_FullMethodName            = "/pbds.Data/CreateTemplateSpace"
+	Data_ListTemplateSpaces_FullMethodName             = "/pbds.Data/ListTemplateSpaces"
+	Data_UpdateTemplateSpace_FullMethodName            = "/pbds.Data/UpdateTemplateSpace"
+	Data_DeleteTemplateSpace_FullMethodName            = "/pbds.Data/DeleteTemplateSpace"
 	Data_CreateGroup_FullMethodName                    = "/pbds.Data/CreateGroup"
 	Data_ListGroups_FullMethodName                     = "/pbds.Data/ListGroups"
 	Data_ListAppGroups_FullMethodName                  = "/pbds.Data/ListAppGroups"
@@ -68,6 +74,7 @@ const (
 	Data_CountGroupsReleasedApps_FullMethodName        = "/pbds.Data/CountGroupsReleasedApps"
 	Data_ListGroupRleasesdApps_FullMethodName          = "/pbds.Data/ListGroupRleasesdApps"
 	Data_Publish_FullMethodName                        = "/pbds.Data/Publish"
+	Data_GenerateReleaseAndPublish_FullMethodName      = "/pbds.Data/GenerateReleaseAndPublish"
 	Data_FinishPublish_FullMethodName                  = "/pbds.Data/FinishPublish"
 	Data_ListPublishedStrategyHistories_FullMethodName = "/pbds.Data/ListPublishedStrategyHistories"
 	Data_CreateCRInstance_FullMethodName               = "/pbds.Data/CreateCRInstance"
@@ -93,10 +100,12 @@ type DataClient interface {
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
 	GetAppByID(ctx context.Context, in *GetAppByIDReq, opts ...grpc.CallOption) (*app.App, error)
+	GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// config item related interface.
 	CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateResp, error)
+	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*config_item.ConfigItem, error)
@@ -131,6 +140,11 @@ type DataClient interface {
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	// template-space related interface.
+	CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, opts ...grpc.CallOption) (*CreateResp, error)
+	ListTemplateSpaces(ctx context.Context, in *ListTemplateSpacesReq, opts ...grpc.CallOption) (*ListTemplateSpacesResp, error)
+	UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// group related interface.
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
@@ -142,6 +156,7 @@ type DataClient interface {
 	ListGroupRleasesdApps(ctx context.Context, in *ListGroupRleasesdAppsReq, opts ...grpc.CallOption) (*ListGroupRleasesdAppsResp, error)
 	// publish related interface.
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
 	// current released instance related interface.
@@ -215,6 +230,15 @@ func (c *dataClient) GetAppByID(ctx context.Context, in *GetAppByIDReq, opts ...
 	return out, nil
 }
 
+func (c *dataClient) GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
+	err := c.cc.Invoke(ctx, Data_GetAppByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
 	out := new(ListAppsResp)
 	err := c.cc.Invoke(ctx, Data_ListApps_FullMethodName, in, out, opts...)
@@ -236,6 +260,15 @@ func (c *dataClient) ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts
 func (c *dataClient) CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_BatchUpsertConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -485,6 +518,42 @@ func (c *dataClient) DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...
 	return out, nil
 }
 
+func (c *dataClient) CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, Data_CreateTemplateSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateSpaces(ctx context.Context, in *ListTemplateSpacesReq, opts ...grpc.CallOption) (*ListTemplateSpacesResp, error) {
+	out := new(ListTemplateSpacesResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateSpaces_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UpdateTemplateSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_DeleteTemplateSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateGroup_FullMethodName, in, out, opts...)
@@ -551,6 +620,15 @@ func (c *dataClient) ListGroupRleasesdApps(ctx context.Context, in *ListGroupRle
 func (c *dataClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
 	out := new(PublishResp)
 	err := c.cc.Invoke(ctx, Data_Publish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, Data_GenerateReleaseAndPublish_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -684,10 +762,12 @@ type DataServer interface {
 	DeleteApp(context.Context, *DeleteAppReq) (*base.EmptyResp, error)
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
 	GetAppByID(context.Context, *GetAppByIDReq) (*app.App, error)
+	GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
 	// config item related interface.
 	CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateResp, error)
+	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*base.EmptyResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*base.EmptyResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*base.EmptyResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error)
@@ -722,6 +802,11 @@ type DataServer interface {
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	UpdateHook(context.Context, *UpdateHookReq) (*base.EmptyResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*base.EmptyResp, error)
+	// template-space related interface.
+	CreateTemplateSpace(context.Context, *CreateTemplateSpaceReq) (*CreateResp, error)
+	ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error)
+	UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq) (*base.EmptyResp, error)
+	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*base.EmptyResp, error)
 	// group related interface.
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error)
 	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
@@ -733,6 +818,7 @@ type DataServer interface {
 	ListGroupRleasesdApps(context.Context, *ListGroupRleasesdAppsReq) (*ListGroupRleasesdAppsResp, error)
 	// publish related interface.
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
+	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*base.EmptyResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
 	// current released instance related interface.
@@ -772,6 +858,9 @@ func (UnimplementedDataServer) GetApp(context.Context, *GetAppReq) (*app.App, er
 func (UnimplementedDataServer) GetAppByID(context.Context, *GetAppByIDReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAppByID not implemented")
 }
+func (UnimplementedDataServer) GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAppByName not implemented")
+}
 func (UnimplementedDataServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
 }
@@ -780,6 +869,9 @@ func (UnimplementedDataServer) ListAppsRest(context.Context, *ListAppsRestReq) (
 }
 func (UnimplementedDataServer) CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateConfigItem not implemented")
+}
+func (UnimplementedDataServer) BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertConfigItems not implemented")
 }
 func (UnimplementedDataServer) UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigItem not implemented")
@@ -862,6 +954,18 @@ func (UnimplementedDataServer) UpdateHook(context.Context, *UpdateHookReq) (*bas
 func (UnimplementedDataServer) DeleteHook(context.Context, *DeleteHookReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteHook not implemented")
 }
+func (UnimplementedDataServer) CreateTemplateSpace(context.Context, *CreateTemplateSpaceReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateSpace not implemented")
+}
+func (UnimplementedDataServer) ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSpaces not implemented")
+}
+func (UnimplementedDataServer) UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplateSpace not implemented")
+}
+func (UnimplementedDataServer) DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateSpace not implemented")
+}
 func (UnimplementedDataServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
 }
@@ -885,6 +989,9 @@ func (UnimplementedDataServer) ListGroupRleasesdApps(context.Context, *ListGroup
 }
 func (UnimplementedDataServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
+}
+func (UnimplementedDataServer) GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateReleaseAndPublish not implemented")
 }
 func (UnimplementedDataServer) FinishPublish(context.Context, *FinishPublishReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FinishPublish not implemented")
@@ -1027,6 +1134,24 @@ func _Data_GetAppByID_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetAppByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAppByNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetAppByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetAppByName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetAppByName(ctx, req.(*GetAppByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAppsReq)
 	if err := dec(in); err != nil {
@@ -1077,6 +1202,24 @@ func _Data_CreateConfigItem_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).CreateConfigItem(ctx, req.(*CreateConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_BatchUpsertConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpsertConfigItemsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).BatchUpsertConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_BatchUpsertConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).BatchUpsertConfigItems(ctx, req.(*BatchUpsertConfigItemsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1567,6 +1710,78 @@ func _Data_DeleteHook_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_CreateTemplateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTemplateSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CreateTemplateSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CreateTemplateSpace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CreateTemplateSpace(ctx, req.(*CreateTemplateSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateSpaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSpacesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateSpaces(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateSpaces_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateSpaces(ctx, req.(*ListTemplateSpacesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateTemplateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTemplateSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateTemplateSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateTemplateSpace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateTemplateSpace(ctx, req.(*UpdateTemplateSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteTemplateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTemplateSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteTemplateSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_DeleteTemplateSpace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteTemplateSpace(ctx, req.(*DeleteTemplateSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateGroupReq)
 	if err := dec(in); err != nil {
@@ -1707,6 +1922,24 @@ func _Data_Publish_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).Publish(ctx, req.(*PublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateReleaseAndPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GenerateReleaseAndPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GenerateReleaseAndPublish_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GenerateReleaseAndPublish(ctx, req.(*GenerateReleaseAndPublishReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1973,6 +2206,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_GetAppByID_Handler,
 		},
 		{
+			MethodName: "GetAppByName",
+			Handler:    _Data_GetAppByName_Handler,
+		},
+		{
 			MethodName: "ListApps",
 			Handler:    _Data_ListApps_Handler,
 		},
@@ -1983,6 +2220,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateConfigItem",
 			Handler:    _Data_CreateConfigItem_Handler,
+		},
+		{
+			MethodName: "BatchUpsertConfigItems",
+			Handler:    _Data_BatchUpsertConfigItems_Handler,
 		},
 		{
 			MethodName: "UpdateConfigItem",
@@ -2093,6 +2334,22 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_DeleteHook_Handler,
 		},
 		{
+			MethodName: "CreateTemplateSpace",
+			Handler:    _Data_CreateTemplateSpace_Handler,
+		},
+		{
+			MethodName: "ListTemplateSpaces",
+			Handler:    _Data_ListTemplateSpaces_Handler,
+		},
+		{
+			MethodName: "UpdateTemplateSpace",
+			Handler:    _Data_UpdateTemplateSpace_Handler,
+		},
+		{
+			MethodName: "DeleteTemplateSpace",
+			Handler:    _Data_DeleteTemplateSpace_Handler,
+		},
+		{
 			MethodName: "CreateGroup",
 			Handler:    _Data_CreateGroup_Handler,
 		},
@@ -2123,6 +2380,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Publish",
 			Handler:    _Data_Publish_Handler,
+		},
+		{
+			MethodName: "GenerateReleaseAndPublish",
+			Handler:    _Data_GenerateReleaseAndPublish_Handler,
 		},
 		{
 			MethodName: "FinishPublish",

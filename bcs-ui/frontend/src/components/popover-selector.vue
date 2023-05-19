@@ -11,12 +11,14 @@
     ref="popoverRef">
     <slot></slot>
     <template slot="content">
-      <slot name="content"></slot>
+      <div class="py-[4px] bg-[#fff]">
+        <slot name="content"></slot>
+      </div>
     </template>
   </bcs-popover>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from '@vue/composition-api';
+import { defineComponent, ref } from 'vue';
 
 export default defineComponent({
   name: 'PopoverSelector',

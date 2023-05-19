@@ -192,6 +192,30 @@ func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbapp.App, 
 	return rp, nil
 }
 
+// GetAppByName get app by app name
+func (s *Service) GetAppByName(ctx context.Context, req *pbcs.GetAppByNameReq) (*pbapp.App, error) {
+	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbapp.App)
+
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetAppByNameReq{
+		BizId:   req.BizId,
+		AppName: req.AppName,
+	}
+	rp, err := s.client.DS.GetAppByName(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return rp, nil
+}
+
 // ListAppsRest list apps with rest filter
 func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
@@ -250,7 +274,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 	return resp, nil
 }
 
-// ListAppsRest list apps with rest filter
+// ListAppsBySpaceRest list apps with rest filter
 func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsBySpaceRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppsResp)

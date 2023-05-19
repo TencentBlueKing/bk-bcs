@@ -89,16 +89,6 @@
                 <span>{{ row.memory }}G</span>
               </template>
             </bcs-table-column>
-            <!-- <bcs-table-column :label="$t('配置费用')" prop="unitPrice">
-          <template #default="{ row }">
-            {{ $t('￥{price}元/小时起', { price: row.unitPrice }) }}
-          </template>
-        </bcs-table-column>
-        <bcs-table-column :label="$t('状态')" width="80">
-          <template #default="{ row }">
-            {{ row.status === 'SELL' ? $t('售卖') : $t('售罄') }}
-          </template>
-        </bcs-table-column> -->
           </bcs-table>
           <div class="mt25" style="display:flex;align-items:center;">
             <div class="prefix-select">
@@ -226,6 +216,30 @@
             </div>
           </div>
         </bk-form-item>
+        <!-- <bk-form-item :label="$t('可用区')">
+          <div class="flex items-center h-[32px]">
+            <bk-radio-group
+              :value="nodePoolConfig.autoScaling.zones && !!nodePoolConfig.autoScaling.zones.length"
+              class="w-[260px]"
+              @change="(v) => showAvailableArea = v">
+              <bk-radio :value="false">{{$t('任一可用区')}}</bk-radio>
+              <bk-radio :value="true">
+                {{$t('指定可用区')}}
+              </bk-radio>
+            </bk-radio-group>
+            <bcs-select
+              class="flex-1"
+              v-if="(nodePoolConfig.autoScaling.zones && !!nodePoolConfig.autoScaling.zones.length) || showAvailableArea"
+              v-model="nodePoolConfig.autoScaling.zones"
+              multiple>
+              <bcs-option
+                v-for="zone in (curInstanceItem.zones || [])"
+                :key="zone"
+                :id="zone"
+                :name="zone" />
+            </bcs-select>
+          </div>
+        </bk-form-item> -->
         <bk-form-item
           :label="$t('设置root密码')"
           property="nodePoolConfig.launchTemplate.initLoginPassword"
@@ -294,7 +308,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
@@ -355,6 +369,7 @@ export default defineComponent({
       name: defaultValues.value.name || '', // 节点名称
       autoScaling: {
         vpcID: '', // todo 放在basic-pool-info组件比较合适
+        // zones: [],
       },
       launchTemplate: {
         imageInfo: {
@@ -411,7 +426,7 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符("-")及小数点'),
+          message: $i18n.t('名称2 ~ 255个字符之间，仅支持中文、英文、数字、下划线，分隔符(-)及小数点'),
           trigger: 'blur',
           validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
         },
@@ -434,6 +449,7 @@ export default defineComponent({
     });
     watch(curInstanceItem, () => {
       nodePoolConfig.value.extra.provider = curInstanceItem.value.provider;
+      // nodePoolConfig.value.autoScaling.zones = [];
     });
     const instanceRowClass = ({ row }) => {
       // SELL 表示售卖，SOLD_OUT 表示售罄
@@ -475,6 +491,9 @@ export default defineComponent({
       pageChange,
       pageSizeChange,
     } = usePage(instanceTypesList);
+
+    // // 可用区
+    // const showAvailableArea = ref(false);
 
     // 数据盘
     const defaultDiskItem = {
@@ -609,6 +628,7 @@ export default defineComponent({
     });
 
     return {
+      // showAvailableArea,
       extraInfo,
       clusterAdvanceSettings,
       clusterOS,

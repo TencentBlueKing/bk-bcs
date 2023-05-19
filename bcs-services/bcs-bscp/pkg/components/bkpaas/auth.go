@@ -36,6 +36,9 @@ type bkPaaSAuthClient struct {
 func (b *bkPaaSAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error) {
 	token, err := r.Cookie("bk_token")
 	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return nil, fmt.Errorf("%s cookie not present", "bk_token")
+		}
 		return nil, err
 	}
 

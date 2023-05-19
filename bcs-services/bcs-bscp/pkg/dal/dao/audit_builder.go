@@ -131,6 +131,10 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 		ab.toAudit.AppID = sset.Attachment.AppID
 		ab.toAudit.ResourceID = sset.ID
 
+	case *table.TemplateSpace:
+		sset := cur.(*table.TemplateSpace)
+		ab.toAudit.ResourceID = sset.ID
+
 	case *table.Group:
 		sset := cur.(*table.Group)
 		ab.toAudit.ResourceID = sset.ID
@@ -286,6 +290,13 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 	case *table.Hook:
 		hook := updatedTo.(*table.Hook)
 		if err := ab.decorateHookUpdate(hook); err != nil {
+			ab.hitErr = err
+			return ab
+		}
+
+	case *table.TemplateSpace:
+		templateSpace := updatedTo.(*table.TemplateSpace)
+		if err := ab.decorateTemplateSpaceUpdate(templateSpace); err != nil {
 			ab.hitErr = err
 			return ab
 		}
@@ -451,6 +462,26 @@ func (ab *AuditBuilder) decorateHookUpdate(hook *table.Hook) error {
 	return nil
 }
 
+func (ab *AuditBuilder) decorateTemplateSpaceUpdate(templateSpace *table.TemplateSpace) error {
+	ab.toAudit.ResourceID = templateSpace.ID
+
+	preTemplateSpace, err := ab.getTemplateSpace(templateSpace.ID)
+	if err != nil {
+		return err
+	}
+
+	ab.prev = preTemplateSpace
+
+	changed, err := parseChangedSpecFields(preTemplateSpace, templateSpace)
+	if err != nil {
+		ab.hitErr = err
+		return fmt.Errorf("parse templateSpace changed spec field failed, err: %v", err)
+	}
+
+	ab.changed = changed
+	return nil
+}
+
 func (ab *AuditBuilder) decorateCredentialUpdate(credential *table.Credential) error {
 	ab.toAudit.ResourceID = credential.ID
 
@@ -560,6 +591,15 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.AppID = hook.Attachment.AppID
 		ab.toAudit.ResourceID = hook.ID
 		ab.prev = hook
+
+	case enumor.TemplateSpace:
+		templateSpace, err := ab.getTemplateSpace(resID)
+		if err != nil {
+			ab.hitErr = err
+			return ab
+		}
+		ab.toAudit.ResourceID = templateSpace.ID
+		ab.prev = templateSpace
 
 	case enumor.CRInstance:
 		cri, err := ab.getCRInstance(resID)
@@ -704,6 +744,21 @@ func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get hook details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getTemplateSpace(templateSpaceID uint32) (*table.TemplateSpace, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(),
+		" WHERE id = ", strconv.Itoa(int(templateSpaceID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.TemplateSpace)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get templateSpace details failed, err: %v", err)
 	}
 
 	return one, nil

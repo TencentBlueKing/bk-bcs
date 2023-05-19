@@ -264,7 +264,8 @@
       :is-show.sync="setVariableConf.isShow"
       :title="setVariableConf.title"
       :width="600"
-      :quick-close="false"
+      :before-close="handleBeforeClose"
+      quick-close
       @hidden="hideSetVariable">
       <div slot="content" class="py-5 px-5" v-bkloading="{ isLoading: variableLoading }">
         <div>
@@ -284,7 +285,12 @@
                     <bk-input disabled v-model="variable.key"></bk-input>
                   </div>
                   <span class="px-[5px]">=</span>
-                  <bk-input class="flex-1" :placeholder="$t('值')" v-model="variable.value"></bk-input>
+                  <bk-input
+                    class="flex-1"
+                    :placeholder="$t('值')"
+                    v-model="variable.value"
+                    @change="setChanged(true)">
+                  </bk-input>
                 </div>
               </div>
             </div>
@@ -330,27 +336,25 @@
           property="quota"
           error-display-type="normal">
           <div class="flex mr-[20px]">
-            <bk-input
+            <bcs-input
               v-model="setQuotaConf.quota.cpuRequests"
               class="w-[200px]"
               type="number"
               :min="1"
-              int
               :max="512000"
               :precision="0">
               <div class="group-text" slot="append">{{ $t('核') }}</div>
-            </bk-input>
+            </bcs-input>
             <span class="mx-[10px]">MEN</span>
-            <bk-input
+            <bcs-input
               v-model="setQuotaConf.quota.memoryRequests"
               class="w-[200px]"
               type="number"
               :min="1"
-              int
               :max="1024000"
               :precision="0">
               <div class="group-text" slot="append">Gi</div>
-            </bk-input>
+            </bcs-input>
           </div>
         </bk-form-item>
       </bk-form>
@@ -384,6 +388,7 @@
       :is-show.sync="showSetLabel"
       :title="$t('设置标签')"
       :width="800"
+      :before-close="handleBeforeClose"
       quick-close>
       <div slot="content">
         <KeyValue
@@ -393,16 +398,17 @@
           :min-items="0"
           :key-rules="[
             {
-              message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
+              message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
               validator: KEY_REGEXP
             }
           ]"
           :value-rules="[
             {
-              message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
+              message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
               validator: VALUE_REGEXP
             }
           ]"
+          @data-change="setChanged(true)"
           @cancel="handleLabelEditCancel"
           @confirm="handleLabelEditConfirm"
         ></KeyValue>
@@ -413,6 +419,7 @@
       :is-show.sync="showSetAnnotations"
       :title="$t('设置注解')"
       :width="800"
+      :before-close="handleBeforeClose"
       quick-close>
       <div slot="content">
         <KeyValue
@@ -422,16 +429,17 @@
           :min-items="0"
           :key-rules="[
             {
-              message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
+              message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
               validator: KEY_REGEXP
             }
           ]"
           :value-rules="[
             {
-              message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
+              message: $i18n.t('仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾'),
               validator: VALUE_REGEXP
             }
           ]"
+          @data-change="setChanged(true)"
           @cancel="handleAnnotationsEditCancel"
           @confirm="handleAnnotationsEditConfirm"
         ></KeyValue>
@@ -441,7 +449,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, watch, ref } from '@vue/composition-api';
+import { defineComponent, computed, watch, ref, CreateElement, reactive, toRef } from 'vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import LayoutContent from '@/components/layout/Content.vue';
 import LayoutRow from '@/components/layout/Row.vue';
@@ -452,11 +460,16 @@ import { useCluster, useProject } from '@/composables/use-app';
 import { useNamespace } from './use-namespace';
 import { timeZoneTransForm } from '@/common/util';
 import { VALUE_REGEXP, KEY_REGEXP } from '@/common/constant';
-import { CreateElement } from 'vue';
 import KeyValue from '@/components/key-value.vue';
 import useInterval from '@/composables/use-interval';
 import StatusIcon from '../../../components/status-icon';
 import AppFooter from '@/views/app/app-footer.vue';
+import useSideslider from '@/composables/use-sideslider';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $router from '@/router';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'NamespaceList',
@@ -469,9 +482,10 @@ export default defineComponent({
     StatusIcon,
     AppFooter,
   },
-  setup(props, ctx) {
-    const { $store, $bkInfo, $i18n, $bkMessage, $router, $route } = ctx.root;
+  setup() {
+    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
+    const { handleBeforeClose, reset, setChanged } = useSideslider();
     const { projectID } = useProject();
     const { isSharedCluster } = useCluster();
 
@@ -540,7 +554,7 @@ export default defineComponent({
       ],
     }, [data.column.label]);
 
-    const projectCode = computed(() => $route.params.projectCode);
+    const projectCode = computed(() => $route.value.params.projectCode);
 
     // 搜索功能
     const { tableDataMatchSearch, searchValue } = useSearch(namespaceData, keys);
@@ -594,6 +608,7 @@ export default defineComponent({
         $clusterId: clusterID.value,
         $namespace: namespace,
       });
+      reset();
     };
 
     const hideSetVariable = () => {
@@ -806,6 +821,7 @@ export default defineComponent({
     const handleSetLabel = (row) => {
       showSetLabel.value = true;
       curNamespaceData.value = row;
+      reset();
     };
     const handleLabelEditCancel = () => {
       showSetLabel.value = false;
@@ -843,6 +859,7 @@ export default defineComponent({
     const handleSetAnnotations = (row) => {
       showSetAnnotations.value = true;
       curNamespaceData.value = row;
+      reset();
     };
 
     const handleAnnotationsEditConfirm = async (val) => {
@@ -960,6 +977,8 @@ export default defineComponent({
       handleAnnotationsEditConfirm,
       handleAnnotationsEditCancel,
       withdrawNamespace,
+      handleBeforeClose,
+      setChanged,
     };
   },
 });
@@ -968,9 +987,9 @@ export default defineComponent({
 <style lang="postcss" scoped>
   @import './namespace.css';
   >>> .custom-header-cell {
-    text-decoration: underline;
-    text-decoration-style: dashed;
-    text-underline-position: under;
+    display: inline-block;
+    line-height: 18px;
+    border-bottom: 1px dashed #979ba5;
   }
   .key-value-content {
     padding: 20px 30px;

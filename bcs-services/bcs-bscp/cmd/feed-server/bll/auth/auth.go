@@ -37,6 +37,7 @@ func (as *AuthService) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool
 	return as.cache.Auth.Authorize(kt, res)
 }
 
+// CanMatchCI if credential can match the config item.
 func (as *AuthService) CanMatchCI(kt *kit.Kit, bizID uint32, app string, credential string, ci *pbci.ConfigItemSpec) (bool, error) {
 	return as.cache.Credential.CanMatchCI(kt, bizID, app, credential, ci)
 }

@@ -6,9 +6,11 @@
 Package mesos_internal is a generated protocol buffer package.
 
 It is generated from these files:
+
 	mesos/authentication/authentication.proto
 
 It has these top-level messages:
+
 	AuthenticateMessage
 	AuthenticationMechanismsMessage
 	AuthenticationStartMessage

@@ -173,7 +173,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable no-unused-expressions */
-import { defineComponent, computed, toRefs, ref, onMounted, watch, onBeforeUnmount } from '@vue/composition-api';
+import { defineComponent, computed, toRefs, ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import { copyText } from '@/common/util';
 import yamljs from 'js-yaml';
@@ -181,6 +181,11 @@ import EditorStatus from './editor-status.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
 import FixedButton from './fixed-button.vue';
 import Header from '@/components/layout/Header.vue';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import $router from '@/router';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'ResourceUpdate',
@@ -247,7 +252,6 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { $i18n, $store, $bkMessage, $router, $bkInfo } = ctx.root;
     const {
       namespace,
       type,

@@ -1,6 +1,5 @@
-import Vue from 'vue';
 import store from '@/store';
-import { computed } from '@vue/composition-api';
+import Vue, { computed } from 'vue';
 import {
   getK8sNodes,
   schedulerNode as handleSchedulerNode,

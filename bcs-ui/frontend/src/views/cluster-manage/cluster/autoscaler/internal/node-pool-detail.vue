@@ -243,7 +243,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from '@vue/composition-api';
+import { defineComponent, computed, ref, onMounted } from 'vue';
 import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 import { useClusterList, useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
@@ -255,6 +255,7 @@ import LoadingIcon from '@/components/loading-icon.vue';
 import useInterval from '@/composables/use-interval';
 import kubeletParams from './kubelet-params.vue';
 import UserAction from './user-action.vue';
+import useChainingRef from '@/composables/use-chaining';
 
 export default defineComponent({
   components: {
@@ -276,13 +277,21 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props, ctx) {
-    const { clusterList } = useClusterList(ctx);
+  setup(props) {
+    const { clusterList } = useClusterList();
     const showDataDisks = ref(false);
     const showLabels = ref(false);
     const showTaints = ref(false);
+    const nodePoolData = useChainingRef<any>({}, [
+      'autoScaling',
+      'nodeTemplate.extraArgs',
+      'launchTemplate.systemDisk',
+      {
+        path: 'subnetIDs',
+        type: 'array',
+      },
+    ]);
     const showAnnotations = ref(false);
-    const nodePoolData = ref<any>(null);
     const loading = ref(false);
     const statusTextMap = { // 节点规格状态
       RUNNING: $i18n.t('正常'),
@@ -329,7 +338,7 @@ export default defineComponent({
         link: {
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         },
       },

@@ -147,14 +147,8 @@
             theme="light dropdown"
             :arrow="false"
             class="ml-[5px]"
-            :disabled="!row.repo"
             trigger="click">
-            <span
-              :class="['bcs-icon-more-btn', { disabled: !row.repo }]"
-              v-bk-tooltips="{
-                content: $t('非本平台部署release无法操作'),
-                disabled: row.repo
-              }">
+            <span class="bcs-icon-more-btn">
               <i class="bcs-icon bcs-icon-more"></i>
             </span>
             <template #content>
@@ -173,11 +167,16 @@
                       name: row.namespace
                     }
                   }"
+                  v-bk-tooltips="{
+                    content: $t('非本平台部署release无法操作'),
+                    disabled: row.repo,
+                    placement: 'left'
+                  }"
                   @click="handleUpdate(row)">
                   {{$t('更新')}}
                 </li>
                 <li
-                  class="bcs-dropdown-item"
+                  :class="['bcs-dropdown-item', { disabled: !row.repo }]"
                   v-authority="{
                     clickable: webAnnotationsPerms[row.iamNamespaceID]
                       && webAnnotationsPerms[row.iamNamespaceID].namespace_scoped_update,
@@ -190,11 +189,16 @@
                       name: row.namespace
                     }
                   }"
+                  v-bk-tooltips="{
+                    content: $t('非本平台部署release无法操作'),
+                    disabled: row.repo,
+                    placement: 'left'
+                  }"
                   @click="handleShowRollback(row)">
                   {{$t('回滚')}}
                 </li>
                 <li
-                  class="bcs-dropdown-item"
+                  :class="['bcs-dropdown-item', { disabled: !row.repo && row.namespace === 'kube-system' }]"
                   v-authority="{
                     clickable: webAnnotationsPerms[row.iamNamespaceID]
                       && webAnnotationsPerms[row.iamNamespaceID].namespace_scoped_delete,
@@ -206,6 +210,11 @@
                       cluster_id: clusterID,
                       name: row.namespace
                     }
+                  }"
+                  v-bk-tooltips="{
+                    content: $t('无法删除kube-system下非本平台部署的release'),
+                    disabled: row.repo || row.namespace !== 'kube-system',
+                    placement: 'left'
                   }"
                   @click="handleDelete(row)">
                   {{$t('删除')}}
@@ -377,7 +386,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch, computed, onMounted } from '@vue/composition-api';
+import { defineComponent, ref, watch, computed, onMounted } from 'vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
@@ -393,6 +402,8 @@ import { copyText } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'ReleaseList',
@@ -414,8 +425,7 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $bkMessage, $bkInfo } = ctx.root;
+  setup(props) {
     const {
       handleGetReleasesList,
       handleGetReleaseStatus,
@@ -669,7 +679,8 @@ export default defineComponent({
 
     // 删除
     const handleDelete = (row) => {
-      if (!row.repo) return;
+      // 不允许删除kube system下面的系统内置chart
+      if (!row.repo && row.namespace === 'kube-system') return;
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',

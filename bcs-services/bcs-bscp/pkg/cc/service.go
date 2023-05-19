@@ -114,11 +114,12 @@ type AuthServerSetting struct {
 	Esb       Esb               `yaml:"esb"`
 }
 
-// LoginAuthSettings
+// LoginAuthSettings login conf
 type LoginAuthSettings struct {
 	Host      string `yaml:"host"`
 	InnerHost string `yaml:"innerHost"`
 	Provider  string `yaml:"provider"`
+	GWPubKey  string `yaml:"gwPubkey"`
 }
 
 // trySetFlagBindIP try set flag bind ip.

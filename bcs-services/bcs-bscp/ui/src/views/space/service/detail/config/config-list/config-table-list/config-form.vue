@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, withDefaults, computed, watch } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import SHA256 from 'crypto-js/sha256'
   import WordArray from 'crypto-js/lib-typedarrays'
   import { TextFill, Done } from 'bkui-vue/lib/icon'
@@ -40,9 +40,9 @@
       },
       {
         validator: (value: string) => {
-          return /^[a-zA-Z0-9][a-zA-Z0-9_\-\.]*[a-zA-Z0-9]?$/.test(value)
+          return /^[a-zA-Z0-9_\-\.]+$/.test(value)
         },
-        message: '请使用英文、数字、下划线、中划线、点，且必须以英文、数字开头和结尾'
+        message: '请使用英文、数字、下划线、中划线或点'
       }
     ],
     path: [
@@ -186,7 +186,8 @@
             class="config-uploader"
             url=""
             theme="button"
-            tip="支持扩展名：.bin"
+            tip="支持扩展名：.bin，文件大小100M以内"
+            :size="100"
             :disabled="!editable"
             :multiple="false"
             :files="fileList"

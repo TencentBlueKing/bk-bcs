@@ -14,8 +14,6 @@ package worker
 
 import (
 	"time"
-
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 const (
@@ -36,17 +34,15 @@ type ListenerEvent struct {
 	EventTime time.Time
 	Name      string
 	Namespace string
-	Listener  *networkextensionv1.Listener
 }
 
 // NewListenerEvent create listener event
-func NewListenerEvent(t EventType, name, ns string, listener *networkextensionv1.Listener) *ListenerEvent {
+func NewListenerEvent(t EventType, name, ns string) *ListenerEvent {
 	return &ListenerEvent{
 		Type:      t,
 		EventTime: time.Now(),
 		Name:      name,
 		Namespace: ns,
-		Listener:  listener,
 	}
 }
 

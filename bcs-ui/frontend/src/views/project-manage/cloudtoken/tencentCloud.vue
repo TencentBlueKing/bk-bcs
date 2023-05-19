@@ -123,15 +123,16 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, computed } from 'vue';
 import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import usePage from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
-  setup(props, ctx) {
-    const { $bkMessage, $bkInfo } = ctx.root;
+  setup() {
     const curProject = computed(() => $store.state.curProject);
     const user = computed(() => $store.state.user);
 
@@ -159,7 +160,7 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('仅支持英文、数字和\'-\''),
+          message: $i18n.t('仅支持英文、数字和字符(-)'),
           trigger: 'blur',
           validator(val) {
             return /^[0-9a-zA-Z-]+$/g.test(val);
@@ -173,7 +174,7 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('仅支持英文、数字和\'-\''),
+          message: $i18n.t('仅支持英文、数字和字符(-)'),
           trigger: 'blur',
           validator(val) {
             return /^[0-9a-zA-Z-]+$/g.test(val);
@@ -187,7 +188,7 @@ export default defineComponent({
           trigger: 'blur',
         },
         {
-          message: $i18n.t('仅支持英文、数字和\'-\''),
+          message: $i18n.t('仅支持英文、数字和字符(-)'),
           trigger: 'blur',
           validator(val) {
             return /^[0-9a-zA-Z-]+$/g.test(val);

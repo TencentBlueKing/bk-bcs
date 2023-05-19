@@ -24,10 +24,12 @@ const (
 	Config_UpdateApp_FullMethodName                      = "/pbcs.Config/UpdateApp"
 	Config_DeleteApp_FullMethodName                      = "/pbcs.Config/DeleteApp"
 	Config_GetApp_FullMethodName                         = "/pbcs.Config/GetApp"
+	Config_GetAppByName_FullMethodName                   = "/pbcs.Config/GetAppByName"
 	Config_ListApps_FullMethodName                       = "/pbcs.Config/ListApps"
 	Config_ListAppsRest_FullMethodName                   = "/pbcs.Config/ListAppsRest"
 	Config_ListAppsBySpaceRest_FullMethodName            = "/pbcs.Config/ListAppsBySpaceRest"
 	Config_CreateConfigItem_FullMethodName               = "/pbcs.Config/CreateConfigItem"
+	Config_BatchUpsertConfigItems_FullMethodName         = "/pbcs.Config/BatchUpsertConfigItems"
 	Config_UpdateConfigItem_FullMethodName               = "/pbcs.Config/UpdateConfigItem"
 	Config_DeleteConfigItem_FullMethodName               = "/pbcs.Config/DeleteConfigItem"
 	Config_GetConfigItem_FullMethodName                  = "/pbcs.Config/GetConfigItem"
@@ -52,6 +54,10 @@ const (
 	Config_DeleteHook_FullMethodName                     = "/pbcs.Config/DeleteHook"
 	Config_UpdateHook_FullMethodName                     = "/pbcs.Config/UpdateHook"
 	Config_ListHooks_FullMethodName                      = "/pbcs.Config/ListHooks"
+	Config_CreateTemplateSpace_FullMethodName            = "/pbcs.Config/CreateTemplateSpace"
+	Config_DeleteTemplateSpace_FullMethodName            = "/pbcs.Config/DeleteTemplateSpace"
+	Config_UpdateTemplateSpace_FullMethodName            = "/pbcs.Config/UpdateTemplateSpace"
+	Config_ListTemplateSpaces_FullMethodName             = "/pbcs.Config/ListTemplateSpaces"
 	Config_CreateGroup_FullMethodName                    = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                    = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                    = "/pbcs.Config/UpdateGroup"
@@ -59,6 +65,7 @@ const (
 	Config_ListAppGroups_FullMethodName                  = "/pbcs.Config/ListAppGroups"
 	Config_ListGroupReleasedApps_FullMethodName          = "/pbcs.Config/ListGroupReleasedApps"
 	Config_Publish_FullMethodName                        = "/pbcs.Config/Publish"
+	Config_GenerateReleaseAndPublish_FullMethodName      = "/pbcs.Config/GenerateReleaseAndPublish"
 	Config_FinishPublish_FullMethodName                  = "/pbcs.Config/FinishPublish"
 	Config_ListPublishedStrategyHistories_FullMethodName = "/pbcs.Config/ListPublishedStrategyHistories"
 	Config_PublishInstance_FullMethodName                = "/pbcs.Config/PublishInstance"
@@ -80,12 +87,14 @@ type ConfigClient interface {
 	UpdateApp(ctx context.Context, in *UpdateAppReq, opts ...grpc.CallOption) (*UpdateAppResp, error)
 	DeleteApp(ctx context.Context, in *DeleteAppReq, opts ...grpc.CallOption) (*DeleteAppResp, error)
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
+	GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// 按 space 查询 app 信息
 	ListAppsBySpaceRest(ctx context.Context, in *ListAppsBySpaceRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateConfigItemResp, error)
+	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(ctx context.Context, in *UpdateConfigItemReq, opts ...grpc.CallOption) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
@@ -110,6 +119,10 @@ type ConfigClient interface {
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
 	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*UpdateHookResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
+	CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, opts ...grpc.CallOption) (*CreateTemplateSpaceResp, error)
+	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*DeleteTemplateSpaceResp, error)
+	UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...grpc.CallOption) (*UpdateTemplateSpaceResp, error)
+	ListTemplateSpaces(ctx context.Context, in *ListTemplateSpacesReq, opts ...grpc.CallOption) (*ListTemplateSpacesResp, error)
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
@@ -117,6 +130,7 @@ type ConfigClient interface {
 	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
 	ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
 	PublishInstance(ctx context.Context, in *PublishInstanceReq, opts ...grpc.CallOption) (*PublishInstanceResp, error)
@@ -174,6 +188,15 @@ func (c *configClient) GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.C
 	return out, nil
 }
 
+func (c *configClient) GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error) {
+	out := new(app.App)
+	err := c.cc.Invoke(ctx, Config_GetAppByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
 	out := new(ListAppsResp)
 	err := c.cc.Invoke(ctx, Config_ListApps_FullMethodName, in, out, opts...)
@@ -204,6 +227,15 @@ func (c *configClient) ListAppsBySpaceRest(ctx context.Context, in *ListAppsBySp
 func (c *configClient) CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateConfigItemResp, error) {
 	out := new(CreateConfigItemResp)
 	err := c.cc.Invoke(ctx, Config_CreateConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*BatchUpsertConfigItemsResp, error) {
+	out := new(BatchUpsertConfigItemsResp)
+	err := c.cc.Invoke(ctx, Config_BatchUpsertConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -426,6 +458,42 @@ func (c *configClient) ListHooks(ctx context.Context, in *ListHooksReq, opts ...
 	return out, nil
 }
 
+func (c *configClient) CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, opts ...grpc.CallOption) (*CreateTemplateSpaceResp, error) {
+	out := new(CreateTemplateSpaceResp)
+	err := c.cc.Invoke(ctx, Config_CreateTemplateSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*DeleteTemplateSpaceResp, error) {
+	out := new(DeleteTemplateSpaceResp)
+	err := c.cc.Invoke(ctx, Config_DeleteTemplateSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...grpc.CallOption) (*UpdateTemplateSpaceResp, error) {
+	out := new(UpdateTemplateSpaceResp)
+	err := c.cc.Invoke(ctx, Config_UpdateTemplateSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListTemplateSpaces(ctx context.Context, in *ListTemplateSpacesReq, opts ...grpc.CallOption) (*ListTemplateSpacesResp, error) {
+	out := new(ListTemplateSpacesResp)
+	err := c.cc.Invoke(ctx, Config_ListTemplateSpaces_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error) {
 	out := new(CreateGroupResp)
 	err := c.cc.Invoke(ctx, Config_CreateGroup_FullMethodName, in, out, opts...)
@@ -483,6 +551,15 @@ func (c *configClient) ListGroupReleasedApps(ctx context.Context, in *ListGroupR
 func (c *configClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
 	out := new(PublishResp)
 	err := c.cc.Invoke(ctx, Config_Publish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, Config_GenerateReleaseAndPublish_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -596,12 +673,14 @@ type ConfigServer interface {
 	UpdateApp(context.Context, *UpdateAppReq) (*UpdateAppResp, error)
 	DeleteApp(context.Context, *DeleteAppReq) (*DeleteAppResp, error)
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
+	GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
 	// 按 space 查询 app 信息
 	ListAppsBySpaceRest(context.Context, *ListAppsBySpaceRestReq) (*ListAppsResp, error)
 	CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateConfigItemResp, error)
+	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error)
 	UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*UpdateConfigItemResp, error)
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
@@ -626,6 +705,10 @@ type ConfigServer interface {
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
 	UpdateHook(context.Context, *UpdateHookReq) (*UpdateHookResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
+	CreateTemplateSpace(context.Context, *CreateTemplateSpaceReq) (*CreateTemplateSpaceResp, error)
+	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*DeleteTemplateSpaceResp, error)
+	UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq) (*UpdateTemplateSpaceResp, error)
+	ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error)
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
@@ -633,6 +716,7 @@ type ConfigServer interface {
 	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
 	ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
+	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
 	FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error)
 	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
 	PublishInstance(context.Context, *PublishInstanceReq) (*PublishInstanceResp, error)
@@ -662,6 +746,9 @@ func (UnimplementedConfigServer) DeleteApp(context.Context, *DeleteAppReq) (*Del
 func (UnimplementedConfigServer) GetApp(context.Context, *GetAppReq) (*app.App, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetApp not implemented")
 }
+func (UnimplementedConfigServer) GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAppByName not implemented")
+}
 func (UnimplementedConfigServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
 }
@@ -673,6 +760,9 @@ func (UnimplementedConfigServer) ListAppsBySpaceRest(context.Context, *ListAppsB
 }
 func (UnimplementedConfigServer) CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateConfigItem not implemented")
+}
+func (UnimplementedConfigServer) BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*BatchUpsertConfigItemsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertConfigItems not implemented")
 }
 func (UnimplementedConfigServer) UpdateConfigItem(context.Context, *UpdateConfigItemReq) (*UpdateConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigItem not implemented")
@@ -746,6 +836,18 @@ func (UnimplementedConfigServer) UpdateHook(context.Context, *UpdateHookReq) (*U
 func (UnimplementedConfigServer) ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListHooks not implemented")
 }
+func (UnimplementedConfigServer) CreateTemplateSpace(context.Context, *CreateTemplateSpaceReq) (*CreateTemplateSpaceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateSpace not implemented")
+}
+func (UnimplementedConfigServer) DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*DeleteTemplateSpaceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateSpace not implemented")
+}
+func (UnimplementedConfigServer) UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq) (*UpdateTemplateSpaceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplateSpace not implemented")
+}
+func (UnimplementedConfigServer) ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSpaces not implemented")
+}
 func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
 }
@@ -766,6 +868,9 @@ func (UnimplementedConfigServer) ListGroupReleasedApps(context.Context, *ListGro
 }
 func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
+}
+func (UnimplementedConfigServer) GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GenerateReleaseAndPublish not implemented")
 }
 func (UnimplementedConfigServer) FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FinishPublish not implemented")
@@ -884,6 +989,24 @@ func _Config_GetApp_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetAppByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAppByNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetAppByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetAppByName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetAppByName(ctx, req.(*GetAppByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAppsReq)
 	if err := dec(in); err != nil {
@@ -952,6 +1075,24 @@ func _Config_CreateConfigItem_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).CreateConfigItem(ctx, req.(*CreateConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchUpsertConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpsertConfigItemsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchUpsertConfigItems(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchUpsertConfigItems_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchUpsertConfigItems(ctx, req.(*BatchUpsertConfigItemsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1388,6 +1529,78 @@ func _Config_ListHooks_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CreateTemplateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTemplateSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateTemplateSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateTemplateSpace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateTemplateSpace(ctx, req.(*CreateTemplateSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteTemplateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTemplateSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteTemplateSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteTemplateSpace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteTemplateSpace(ctx, req.(*DeleteTemplateSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateTemplateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTemplateSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateTemplateSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateTemplateSpace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateTemplateSpace(ctx, req.(*UpdateTemplateSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListTemplateSpaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSpacesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTemplateSpaces(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTemplateSpaces_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTemplateSpaces(ctx, req.(*ListTemplateSpacesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateGroupReq)
 	if err := dec(in); err != nil {
@@ -1510,6 +1723,24 @@ func _Config_Publish_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).Publish(ctx, req.(*PublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateReleaseAndPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GenerateReleaseAndPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GenerateReleaseAndPublish_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GenerateReleaseAndPublish(ctx, req.(*GenerateReleaseAndPublishReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1736,6 +1967,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_GetApp_Handler,
 		},
 		{
+			MethodName: "GetAppByName",
+			Handler:    _Config_GetAppByName_Handler,
+		},
+		{
 			MethodName: "ListApps",
 			Handler:    _Config_ListApps_Handler,
 		},
@@ -1750,6 +1985,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateConfigItem",
 			Handler:    _Config_CreateConfigItem_Handler,
+		},
+		{
+			MethodName: "BatchUpsertConfigItems",
+			Handler:    _Config_BatchUpsertConfigItems_Handler,
 		},
 		{
 			MethodName: "UpdateConfigItem",
@@ -1848,6 +2087,22 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListHooks_Handler,
 		},
 		{
+			MethodName: "CreateTemplateSpace",
+			Handler:    _Config_CreateTemplateSpace_Handler,
+		},
+		{
+			MethodName: "DeleteTemplateSpace",
+			Handler:    _Config_DeleteTemplateSpace_Handler,
+		},
+		{
+			MethodName: "UpdateTemplateSpace",
+			Handler:    _Config_UpdateTemplateSpace_Handler,
+		},
+		{
+			MethodName: "ListTemplateSpaces",
+			Handler:    _Config_ListTemplateSpaces_Handler,
+		},
+		{
 			MethodName: "CreateGroup",
 			Handler:    _Config_CreateGroup_Handler,
 		},
@@ -1874,6 +2129,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Publish",
 			Handler:    _Config_Publish_Handler,
+		},
+		{
+			MethodName: "GenerateReleaseAndPublish",
+			Handler:    _Config_GenerateReleaseAndPublish_Handler,
 		},
 		{
 			MethodName: "FinishPublish",

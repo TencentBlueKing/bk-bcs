@@ -231,6 +231,7 @@ func (s *Service) GetAuthLoginConf(ctx context.Context, req *pbas.GetAuthLoginCo
 		Host:      cc.AuthServer().LoginAuth.Host,
 		InnerHost: cc.AuthServer().LoginAuth.InnerHost,
 		Provider:  cc.AuthServer().LoginAuth.Provider,
+		GwPubkey:  cc.AuthServer().LoginAuth.GWPubKey,
 	}
 	return resp, nil
 }
@@ -304,7 +305,7 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 	return &pbas.UserInfoResp{Username: username, AvatarUrl: ""}, nil
 }
 
-// ListUserSpaceAnnotation
+// ListUserSpaceAnnotation list user space permission annotations
 func ListUserSpaceAnnotation(ctx context.Context, kt *kit.Kit, authorizer iamauth.Authorizer, msg proto.Message) (*webannotation.Annotation, error) {
 	resp, ok := msg.(*pbas.ListUserSpaceResp)
 	if !ok {

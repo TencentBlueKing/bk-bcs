@@ -172,11 +172,15 @@
   </section>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
+import { defineComponent, ref, computed, onMounted, watch } from 'vue';
 import useFormLabel from '@/composables/use-form-label';
 import BkForm from 'bk-magic-vue/lib/form';
 import BkFormItem from 'bk-magic-vue/lib/form-item';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import $router from '@/router';
+import $store from '@/store';
+import $i18n from '@/i18n/i18n-setup';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'CreateImportCluster',
@@ -185,8 +189,7 @@ export default defineComponent({
     BkForm,
     BkFormItem,
   },
-  setup(props, ctx) {
-    const { $router, $bkMessage, $i18n, $store } = ctx.root;
+  setup() {
     const importClusterInfo = ref({
       importType: 'kubeconfig',
       clusterName: '',
@@ -413,6 +416,8 @@ export default defineComponent({
       initFormLabelWidth(importFormRef.value);
     });
     return {
+      regionLoading,
+      templateLoading,
       user,
       codeEditorRef,
       clusterLoading,

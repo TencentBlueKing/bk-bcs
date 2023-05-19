@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <div class="ring-wrapper" :class="extCls" :style="{ width: size + 'px', height: size + 'px' }">
     <svg :height="size" :width="size" :class="[text === 'hover' ? 'show-text' : '']">
@@ -28,7 +29,7 @@
      */
 
 export default {
-  name: 'Ring',
+  name: 'RingLoading',
   props: {
     // 圆环百分比数字
     percent: {

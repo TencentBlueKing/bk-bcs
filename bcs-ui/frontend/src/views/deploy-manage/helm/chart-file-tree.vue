@@ -43,7 +43,7 @@
 </template>
 <script lang="ts">
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import { defineComponent, ref, computed, toRefs, watch } from '@vue/composition-api';
+import { defineComponent, ref, computed, toRefs, watch } from 'vue';
 import { path2Tree } from '@/common/util';
 
 export default defineComponent({

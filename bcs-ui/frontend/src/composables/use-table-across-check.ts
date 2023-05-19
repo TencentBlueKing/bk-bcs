@@ -1,5 +1,4 @@
-import { ref, Ref } from '@vue/composition-api';
-import { CreateElement } from 'vue';
+import { ref, Ref, CreateElement } from 'vue';
 import AcrossCheck, { CheckType } from '@/components/across-check.vue';
 
 export interface IAcrossCheckConfig {

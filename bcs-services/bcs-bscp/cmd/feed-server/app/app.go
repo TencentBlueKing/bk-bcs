@@ -34,7 +34,6 @@ import (
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/brpc"
 	"bscp.io/pkg/runtime/ctl"
-	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
@@ -85,11 +84,6 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 	// init metrics
 	metrics.InitMetrics(net.JoinHostPort(cc.FeedServer().Network.BindIP,
 		strconv.Itoa(int(cc.FeedServer().Network.RpcPort))))
-
-	if err := gwparser.Init(opt.DisableJWT, opt.PublicKey); err != nil {
-		return err
-	}
-	logs.Infof("jwt disable state: %v", opt.DisableJWT)
 
 	etcdOpt, err := cc.FeedServer().Service.Etcd.ToConfig()
 	if err != nil {

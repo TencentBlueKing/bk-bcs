@@ -66,21 +66,72 @@
         </LayoutGroup>
         <LayoutGroup collapsible class="mb15" :expanded="!!autoscalerData.isScaleDownEnable">
           <template #title>
-            <span>{{$t('自动缩容配置')}}</span>
-            <span class="switch-autoscaler" @click.stop>
-              {{$t('允许缩容节点')}}
-              <bcs-switcher
-                size="small"
-                :disabled="autoscalerData.status === 'UPDATING'"
-                v-model="autoscalerData.isScaleDownEnable"
-                :pre-check="handleChangeScalerDown">
-              </bcs-switcher>
+            <span class="flex items-center">
+              <span>{{$t('自动缩容配置')}}</span>
+              <span class="flex items-center ml-[8px]" @click.stop>
+                <span
+                  :class="['px-[8px] inline-block leading-[20px] text-[#979BA5]', {
+                    '!text-[#2DCB56] bg-[#F2FFF4]': autoscalerData.isScaleDownEnable && autoscalerData.enableAutoscale
+                  }]">
+                  {{ autoscalerData.isScaleDownEnable && autoscalerData.enableAutoscale ? $t('已开启') : $t('已关闭') }}
+                </span>
+                <bcs-divider direction="vertical" class="!mr-[10px]"></bcs-divider>
+                <span
+                  v-bk-tooltips="{
+                    disabled: autoscalerData.enableAutoscale,
+                    content: $t('集群自动扩缩容已关闭，无法单独开启自动缩容配置')
+                  }">
+                  <bk-button
+                    text
+                    class="text-[12px]"
+                    :disabled="autoscalerData.status === 'UPDATING' || !autoscalerData.enableAutoscale"
+                    @click="handleChangeScalerDown">
+                    {{ autoscalerData.isScaleDownEnable && autoscalerData.enableAutoscale ? $t('关闭') : $t('开启') }}
+                  </bk-button>
+                </span>
+              </span>
             </span>
           </template>
           <AutoScalerFormItem
             :list="autoScalerDownConfig"
             :autoscaler-data="autoscalerData">
           </AutoScalerFormItem>
+        </LayoutGroup>
+        <LayoutGroup collapsible class="mb15" :expanded="isPodsPriorityEnable">
+          <template #title>
+            <span class="flex items-center">
+              <span>{{$t('低优先级 Pod 配置')}}</span>
+              <span class="flex items-center ml-[8px]" @click.stop>
+                <span
+                  :class="['px-[8px] inline-block leading-[20px] text-[#979BA5]', {
+                    '!text-[#2DCB56] bg-[#F2FFF4]': isPodsPriorityEnable && autoscalerData.enableAutoscale
+                  }]">
+                  {{ isPodsPriorityEnable && autoscalerData.enableAutoscale ? $t('已开启') : $t('已关闭') }}
+                </span>
+                <bcs-divider direction="vertical" class="!mr-[10px]"></bcs-divider>
+                <span
+                  v-bk-tooltips="{
+                    disabled: autoscalerData.enableAutoscale,
+                    content: $t('集群自动扩缩容已关闭，无法单独开启低优先级 Pod 配置')
+                  }">
+                  <bk-button
+                    text
+                    class="text-[12px]"
+                    :disabled="autoscalerData.status === 'UPDATING' || !autoscalerData.enableAutoscale"
+                    @click="handleTogglePodsPriorityDialog">
+                    {{ isPodsPriorityEnable && autoscalerData.enableAutoscale ? $t('关闭') : $t('开启') }}
+                  </bk-button>
+                </span>
+              </span>
+            </span>
+          </template>
+          <AutoScalerFormItem
+            :list="[{
+              prop: 'expendablePodsPriorityCutoff',
+              name: $t('Pod 优先级阈值'),
+              desc: $t('当优先级低于此值的 pod，pending不会触发扩容，缩容时会直接kill，不会等待优雅退出时间'),
+            }]"
+            :autoscaler-data="autoscalerData" />
         </LayoutGroup>
       </div>
     </section>
@@ -425,7 +476,6 @@
               @click="handleRetryTask(row)">{{$t('重试')}}</bcs-button> -->
             <bcs-button
               text
-              class="ml-[8px]"
               :disabled="!(row.task && row.task.nodeIPList && row.task.nodeIPList.length)"
               @click="handleShowIPList(row)">{{$t('IP列表')}}</bcs-button>
           </template>
@@ -446,10 +496,39 @@
         </bcs-table-column>
       </bk-table>
     </bcs-dialog>
+    <!-- 低优先级Pod配置 -->
+    <bcs-dialog
+      theme="primary"
+      header-position="left"
+      :title="$t('开启低优先级 Pod 配置')"
+      :width="480"
+      :loading="podsPriorityLoading"
+      v-model="showPodsPriorityDialog"
+      @confirm="handleSetPodsPriority">
+      <div class="flex items-start">
+        <i class="bk-icon icon-info-circle mr-[8px] relative top-[2px]"></i>
+        <i18n path="低优先级Pod配置提示语" class="text-[12px]">
+          <span class="text-[#FF9C01] font-bold">{{ $t('低于') }}</span>
+          <span>{{ $t('以下') }}</span>
+        </i18n>
+      </div>
+      <div class="flex items-center mt-[20px] ml-[22px]">
+        <span class="mr-[20px]">{{ $t('Pod 优先级阈值') }}</span>
+        <bcs-input
+          class="w-[74px]"
+          type="number"
+          :min="-2147483648"
+          :max="-1"
+          :show-controls="false"
+          v-model="curPodsPriority">
+        </bcs-input>
+        <span class="text-[#979BA5] ml-[8px]">(-2147483648 - -1)</span>
+      </div>
+    </bcs-dialog>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed, onBeforeUnmount } from '@vue/composition-api';
+import { defineComponent, onMounted, ref, computed, onBeforeUnmount, getCurrentInstance } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -462,6 +541,8 @@ import AutoScalerFormItem from '../tencent/form-item.vue';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 import { clusterOverview } from '@/api/modules/monitor';
 import { formatBytes } from '@/common/util';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'AutoScaler',
@@ -472,9 +553,7 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $bkInfo, $bkMessage } = ctx.root;
-
+  setup(props) {
     const configLoading = ref(false);
     const autoscalerData = ref<Record<string, any>>({});
     const basicScalerConfig = ref([
@@ -513,6 +592,12 @@ export default defineComponent({
         isBasicProp: true,
         unit: '%',
         desc: $i18n.t('集群整体内存资源(Request)使用率超过该阈值触发扩容, 无论CPU资源使用率是否达到阈值'),
+      },
+      {
+        prop: 'bufferResourceRatio',
+        name: $i18n.t('触发扩容资源阈值 (Pods)'),
+        unit: '%',
+        desc: $i18n.t('集群整体内存资源Pod数量使用率超过该阈值触发扩容, 无论CPU / 内存资源使用率是否达到阈值'),
       },
       {
         prop: 'maxNodeProvisionTime',
@@ -574,6 +659,12 @@ export default defineComponent({
         prop: 'maxEmptyBulkDelete',
         name: $i18n.t('单次缩容最大节点数'),
         unit: $i18n.t('个'),
+      },
+      {
+        prop: 'skipNodesWithLocalStorage',
+        name: $i18n.t('允许缩容已使用本地存储的节点'),
+        invert: true,
+        desc: $i18n.t('如果设置为 “是”，则表示已使用本地存储的节点将允许被缩容，例如已使用过empryDir / HostPath的节点将允许被缩容'),
       },
     ]);
     const getAutoScalerConfig = async () => {
@@ -657,7 +748,8 @@ export default defineComponent({
       }
     });
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    const handleChangeScalerDown = async value => new Promise(async (resolve, reject) => {
+    const handleChangeScalerDown = async () => new Promise(async (resolve, reject) => {
+      const value = !autoscalerData.value.isScaleDownEnable;
       $bkInfo({
         type: 'warning',
         clsName: 'custom-info-confirm',
@@ -690,6 +782,41 @@ export default defineComponent({
         },
       });
     });
+    // 低优先级Pod配置
+    const podsPriorityLoading = ref(false);
+    const showPodsPriorityDialog = ref(false);
+    const curPodsPriority = ref(-10);
+    const isPodsPriorityEnable = computed(() => autoscalerData.value?.expendablePodsPriorityCutoff !== -2147483648);
+    const handleTogglePodsPriorityDialog = () => {
+      if (!isPodsPriorityEnable.value) {
+        // 开启
+        curPodsPriority.value = autoscalerData.value?.expendablePodsPriorityCutoff;
+        showPodsPriorityDialog.value = true;
+      } else {
+        // 关闭
+        curPodsPriority.value  = -2147483648;
+        handleSetPodsPriority();
+      }
+    };
+    const handleSetPodsPriority = async () => {
+      podsPriorityLoading.value = true;
+      const result = await $store.dispatch('clustermanager/updateClusterAutoScaling', {
+        ...autoscalerData.value,
+        expendablePodsPriorityCutoff: curPodsPriority.value,
+        updater: user.value.username,
+        $clusterId: props.clusterId,
+      });
+      if (result) {
+        $bkMessage({
+          theme: 'success',
+          message: $i18n.t('修改成功'),
+        });
+        handleGetAutoScalerConfig();
+        showPodsPriorityDialog.value = false;
+      }
+      podsPriorityLoading.value = false;
+    };
+
     const statusTextMap = { // 节点规格状态
       RUNNING: $i18n.t('正常'),
       CREATING: $i18n.t('创建中'),
@@ -769,10 +896,12 @@ export default defineComponent({
     const disabledAutoscaler = computed(() => autoscalerData.value.enableAutoscale
                     && nodepoolList.value.filter(item => item.enableAutoscale).length <= 1);
     // 单节点开启和关闭弹性伸缩
+    const { proxy } = getCurrentInstance() || { proxy: null };
     const handleToggleNodeScaler = async (row) => {
       if (nodepoolLoading.value || ['CREATING', 'DELETING', 'UPDATING'].includes(row.status)) return;
 
-      ctx.refs[row.nodeGroupID] && (ctx.refs[row.nodeGroupID] as any).hideHandler();
+      const $refs = proxy?.$refs || {};
+      $refs[row.nodeGroupID] && ($refs[row.nodeGroupID] as any).hideHandler();
       nodepoolLoading.value = true;
       let result = false;
       if (row.enableAutoscale) {
@@ -1272,6 +1401,12 @@ export default defineComponent({
       stopTaskPool();
     });
     return {
+      isPodsPriorityEnable,
+      podsPriorityLoading,
+      showPodsPriorityDialog,
+      curPodsPriority,
+      handleSetPodsPriority,
+      handleTogglePodsPriorityDialog,
       filters,
       filterValues,
       ipTableKey,

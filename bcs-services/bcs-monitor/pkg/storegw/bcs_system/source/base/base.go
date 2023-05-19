@@ -215,7 +215,7 @@ func chunkSlice(nodeList []string, nodeNameList []string, chunkSize int) []*Resu
 			end = len(nodeList)
 		}
 		res = append(res, &ResultTuple{
-			utils.StringJoinWithRegex(nodeList[i:end], "|", ".*"),
+			utils.StringJoinWithRegex(nodeList[i:end], "|", ":9101$"),
 			utils.StringJoinWithRegex(nodeNameList[i:end], "|", "$"),
 			nil,
 		})
@@ -239,4 +239,69 @@ func MatrixsToSeries(matrixs []model.Matrix) []*prompb.TimeSeries {
 		}
 	}
 	return series
+}
+
+// MergeSameSeries merge same metrics series
+func MergeSameSeries(series []*prompb.TimeSeries) []*prompb.TimeSeries {
+	if len(series) == 0 {
+		return nil
+	}
+	result := &prompb.TimeSeries{
+		Labels:  make([]prompb.Label, 0),
+		Samples: make([]prompb.Sample, 0),
+	}
+	for _, s := range series {
+		result.Labels = s.Labels
+		result.Samples = MergeSameSamples(result.Samples, s.Samples)
+	}
+	return []*prompb.TimeSeries{result}
+}
+
+// MergeSameSamples merge same samples
+func MergeSameSamples(samples1, samples2 []prompb.Sample) []prompb.Sample {
+	if len(samples1) == 0 {
+		return samples2
+	}
+	for i := range samples1 {
+		for j := range samples2 {
+			if samples1[i].Timestamp == samples2[j].Timestamp {
+				samples1[i].Value += samples2[j].Value
+				break
+			}
+		}
+	}
+	return samples1
+}
+
+// DivideSeries divide same metrics series, series1 divide series2, series must only have one element
+func DivideSeries(series1, series2 []*prompb.TimeSeries) []*prompb.TimeSeries {
+	if len(series1) == 0 || len(series2) == 0 {
+		return nil
+	}
+	result := &prompb.TimeSeries{
+		Labels:  series1[0].Labels,
+		Samples: make([]prompb.Sample, 0),
+	}
+	result.Samples = DivideSamples(series1[0].Samples, series2[0].Samples)
+	return []*prompb.TimeSeries{result}
+}
+
+// DivideSamples samples1 divide samples2
+func DivideSamples(samples1, samples2 []prompb.Sample) []prompb.Sample {
+	if len(samples1) == 0 || len(samples2) == 0 {
+		return nil
+	}
+	for i := range samples1 {
+		for j := range samples2 {
+			if samples1[i].Timestamp == samples2[j].Timestamp {
+				if samples2[j].Value == 0 {
+					samples1[i].Value = 0
+				} else {
+					samples1[i].Value = samples1[i].Value / samples2[j].Value * 100
+				}
+				break
+			}
+		}
+	}
+	return samples1
 }

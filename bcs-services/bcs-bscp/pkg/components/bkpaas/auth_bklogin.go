@@ -38,11 +38,17 @@ type bkLoginAuthClient struct {
 func (b *bkLoginAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error) {
 	uid, err := r.Cookie("bk_uid")
 	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return nil, fmt.Errorf("%s cookie not present", "bk_uid")
+		}
 		return nil, err
 	}
 
 	token, err := r.Cookie("bk_ticket")
 	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return nil, fmt.Errorf("%s cookie not present", "bk_ticket")
+		}
 		return nil, err
 	}
 

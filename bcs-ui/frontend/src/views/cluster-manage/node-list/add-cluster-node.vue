@@ -2,52 +2,6 @@
   <div class="choose-node-template bcs-content-wrapper">
     <bk-form>
       <FormGroup :allow-toggle="false" class="choose-node">
-        <bk-form-item :label="$t('选择节点模板')" v-if="$INTERNAL">
-          <div
-            class="item-node-template" v-bk-tooltips="{
-              disabled: isTkeCluster,
-              content: $t('非TKE集群不支持节点模板')
-            }">
-            <bcs-select
-              searchable
-              :clearable="false"
-              placeholder=" "
-              :disabled="!isTkeCluster"
-              :loading="loading"
-              v-model="nodeTemplateID"
-              @change="handleNodeTemplateIDChange">
-              <bcs-option id="" :name="$t('不使用节点模板')"></bcs-option>
-              <bcs-option
-                v-for="item in templateList"
-                :key="item.nodeTemplateID"
-                :id="item.nodeTemplateID"
-                :name="item.name">
-              </bcs-option>
-              <template #extension>
-                <span style="cursor: pointer" @click="handleGotoNodeTemplate">
-                  <i
-                    class="bcs-icon bcs-icon-fenxiang mr5"
-                    style="font-size: 12px"></i>
-                  {{$t('节点模板配置')}}
-                </span>
-              </template>
-            </bcs-select>
-            <template v-if="isTkeCluster">
-              <span
-                class="icon ml10"
-                v-bk-tooltips.top="$t('刷新列表')"
-                @click="handleNodeTemplateList">
-                <i class="bcs-icon bcs-icon-reset"></i>
-              </span>
-              <span class="icon" v-if="nodeTemplateID">
-                <i
-                  class="bcs-icon bcs-icon-yulan ml15"
-                  v-bk-tooltips.top="$t('预览')"
-                  @click="handlePreview"></i>
-              </span>
-            </template>
-          </div>
-        </bk-form-item>
         <bk-form-item :label="$t('选择节点')">
           <bcs-button theme="primary" icon="plus" @click="handleAddNode">{{$t('添加节点')}}</bcs-button>
           <bcs-table class="mt15" :data="ipList">
@@ -69,6 +23,12 @@
             </bcs-table-column>
           </bcs-table>
         </bk-form-item>
+        <bk-form-item :label="$t('节点初始化模板')" v-if="$INTERNAL">
+          <TemplateSelector
+            :is-tke-cluster="isTkeCluster"
+            :cluster-id="clusterId"
+            @template-change="handleTemplateChange" />
+        </bk-form-item>
       </FormGroup>
     </bk-form>
     <div class="mt25">
@@ -83,89 +43,59 @@
       </span>
       <bk-button class="mw88 ml10" @click="handleCancel">{{$t('取消')}}</bk-button>
     </div>
-    <TipDialog
-      ref="confirmDialogRef"
-      icon="bcs-icon bcs-icon-exclamation-triangle"
+    <ConfirmDialog
+      v-model="showConfirmDialog"
       :title="$t('确定添加节点')"
       :sub-title="$t('请确认以下配置:')"
-      :check-list="checkList"
-      :confirm-btn-text="$t('确定')"
-      :cancel-btn-text="$t('取消')"
-      :confirm-loading="confirmLoading"
-      :confirm-callback="handleConfirm">
-    </TipDialog>
+      :tips="checkList"
+      :ok-text="$t('确定添加')"
+      :cancel-text="$t('取消')"
+      :confirm="handleConfirm"
+      theme="primary">
+    </ConfirmDialog>
     <!-- IP选择器 -->
-    <IpSelector v-model="showIpSelector" :ip-list="ipList" @confirm="chooseServer"></IpSelector>
-    <!-- 节点模板详情 -->
-    <bcs-sideslider
-      :is-show.sync="showDetail"
-      :title="currentTemplate.name"
-      quick-close
-      :width="800">
-      <div slot="content">
-        <NodeTemplateDetail :data="currentTemplate"></NodeTemplateDetail>
-      </div>
-    </bcs-sideslider>
+    <IpSelector
+      :cloud-id="curCluster.provider"
+      :region="curCluster.region"
+      :vpc="{ vpcID: curCluster.vpcID }"
+      v-model="showIpSelector"
+      :ip-list="ipList"
+      @confirm="chooseServer">
+    </IpSelector>
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from '@vue/composition-api';
+import { computed, defineComponent, ref } from 'vue';
 import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
-import $store from '@/store/index';
 import $router from '@/router';
 import IpSelector from '@/components/ip-selector/selector-dialog.vue';
 import StatusIcon from '@/components/status-icon';
 import $i18n from '@/i18n/i18n-setup';
+import $store from '@/store/index';
 import useNode from './use-node';
-import NodeTemplateDetail from '@/views/cluster-manage/node-template/node-template-detail.vue';
-import TipDialog from '@/components/tip-dialog/index.vue';
-import { NODE_TEMPLATE_ID } from '@/common/constant';
+import ConfirmDialog from '@/components/comfirm-dialog.vue';
+import TemplateSelector from '../components/template-selector.vue';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
-  components: { FormGroup, IpSelector, StatusIcon, NodeTemplateDetail, TipDialog },
+  components: { FormGroup, IpSelector, StatusIcon, ConfirmDialog, TemplateSelector },
   props: {
     clusterId: {
       type: String,
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $INTERNAL, $bkInfo } = ctx.root;
-    const isTkeCluster = computed(() => ($store.state as any).cluster.clusterList
-      ?.find(item => item.clusterID === props.clusterId)?.provider === 'tencentCloud');
-    const loading = ref(false);
+  setup(props) {
+    const curCluster = computed(() => ($store.state as any).cluster.clusterList
+      ?.find(item => item.clusterID === props.clusterId) || {});
+    const isTkeCluster = computed(() => curCluster.value?.provider === 'tencentCloud');
     const statusColorMap = ref({
       0: 'red',
       1: 'green',
     });
+
     const showIpSelector = ref(false);
     const ipList = ref<any[]>([]);
-    const nodeTemplateID = ref(localStorage.getItem(NODE_TEMPLATE_ID) || '');
-    const templateList = ref<any[]>([]);
-    const handleNodeTemplateList = async () => {
-      loading.value = true;
-      templateList.value = await $store.dispatch('clustermanager/nodeTemplateList');
-      if (!isTkeCluster.value
-                    || !templateList.value.find(item => item.nodeTemplateID === nodeTemplateID.value)
-      ) {
-        nodeTemplateID.value = '';
-      }
-      loading.value = false;
-    };
-    const handleGotoNodeTemplate = () => {
-      const location = $router.resolve({ name: 'nodeTemplate' });
-      window.open(location.href);
-    };
-    const showDetail = ref(false);
-    const currentTemplate = computed(() => templateList.value
-      .find(item => item.nodeTemplateID === nodeTemplateID.value) || {});
-    const handlePreview = () => {
-      showDetail.value = true;
-    };
-    const handleCancel = () => {
-      $router.back();
-    };
-
     const handleAddNode = () => {
       showIpSelector.value = true;
     };
@@ -180,32 +110,30 @@ export default defineComponent({
       showIpSelector.value = false;
     };
     const { addNode } = useNode();
-    const confirmDialogRef = ref<any>(null);
     const checkList = computed(() => [
-      {
-        id: 1,
-        text: $i18n.t('请确认是否对 {ip} 等 {num} 个IP进行操作系统初始化和安装容器服务相关组件操作', {
-          ip: ipList.value[0]?.bk_host_innerip,
-          num: ipList.value.length,
-        }),
-        isChecked: false,
-      },
-      {
-        id: 2,
-        text: $i18n.t('为了保证集群环境标准化，添加节点会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据'),
-        isChecked: false,
-      },
+      $i18n.t('请确认是否对 {ip} 等 {num} 个IP进行操作系统初始化和安装容器服务相关组件操作', {
+        ip: ipList.value[0]?.bk_host_innerip,
+        num: ipList.value.length,
+      }),
+      $i18n.t('为了保证集群环境标准化，添加节点会格式化数据盘/dev/vdb，盘内数据将被清除，请确认该数据盘内没有放置业务数据'),
     ]);
+    const currentTemplate = ref<Record<string, string>>({});
+    const handleTemplateChange = (item) => {
+      currentTemplate.value = item;
+    };
+    const showConfirmDialog = ref(false);
     const handleShowConfirmDialog = () => {
-      $bkInfo({
-        type: 'warning',
-        clsName: 'custom-info-confirm',
-        title: $i18n.t('确定使用节点模板 {name}', { name: currentTemplate.value.name }),
-        defaultInfo: true,
-        confirmFn: () => {
-          confirmDialogRef.value?.show();
-        },
-      });
+      currentTemplate.value.nodeTemplateID
+        ? $bkInfo({
+          type: 'warning',
+          clsName: 'custom-info-confirm',
+          title: $i18n.t('确定使用节点模板 {name}', { name: currentTemplate.value.name }),
+          defaultInfo: true,
+          confirmFn: () => {
+            showConfirmDialog.value = true;
+          },
+        })
+        : showConfirmDialog.value = true;
     };
     const confirmLoading = ref(false);
     const handleConfirm = async () => {
@@ -213,7 +141,7 @@ export default defineComponent({
       const result = await addNode({
         clusterId: props.clusterId,
         nodeIps: ipList.value.map(item => item.bk_host_innerip),
-        nodeTemplateID: nodeTemplateID.value,
+        nodeTemplateID: currentTemplate.value.nodeTemplateID,
       });
       confirmLoading.value = false;
 
@@ -229,60 +157,37 @@ export default defineComponent({
         });
       }
     };
-
-    // todo 框架支持数据持久化
-    const handleNodeTemplateIDChange = (value) => {
-      localStorage.setItem(NODE_TEMPLATE_ID, value);
+    const handleCancel = () => {
+      $router.back();
     };
 
-    onMounted(() => {
-      $INTERNAL && handleNodeTemplateList();
-    });
     return {
-      confirmLoading,
-      confirmDialogRef,
-      checkList,
-      loading,
+      curCluster,
       isTkeCluster,
-      showDetail,
-      currentTemplate,
+      confirmLoading,
+      showConfirmDialog,
+      checkList,
       showIpSelector,
       ipList,
-      nodeTemplateID,
-      templateList,
       statusColorMap,
       handleRemoveIp,
       chooseServer,
       handleCancel,
       handleShowConfirmDialog,
       handleConfirm,
-      handleGotoNodeTemplate,
-      handlePreview,
       handleAddNode,
-      handleNodeTemplateIDChange,
-      handleNodeTemplateList,
+      handleTemplateChange,
     };
   },
 });
 </script>
 <style lang="postcss" scoped>
 .choose-node-template {
-    padding: 24px;
-    >>> .item-node-template {
-        display: flex;
-        max-width: 524px;
-        .bk-select {
-          width: 400px;
-        }
-        .icon:hover {
-          color: #3a84ff;
-          cursor: pointer;
-        }
+  padding: 24px;
+  >>> .choose-node {
+    .form-group-content {
+      padding-top: 0;
     }
-    >>> .choose-node {
-        .form-group-content {
-            padding-top: 0;
-        }
-    }
+  }
 }
 </style>

@@ -5,7 +5,11 @@
         {{ isSharedCluster ? $t('共享') : $t('专用') }}
       </span>
       <span class="flex flex-1 flex-col ml-[10px]">
-        <span class="mb-[4px] bcs-ellipsis">{{ curCluster.clusterName }}</span>
+        <span
+          class="mb-[4px] bcs-ellipsis-word"
+          :title="curCluster.clusterName">
+          {{ curCluster.clusterName }}
+        </span>
         <span class="text-[#979ba5] bcs-ellipsis">{{ curCluster.clusterID }}</span>
       </span>
       <!-- 集群切换 -->
@@ -25,7 +29,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, toRef, reactive } from '@vue/composition-api';
+import { computed, defineComponent, toRef, reactive, ref } from 'vue';
 import SideMenu from '@/views/app/side-menu.vue';
 import ClusterSelectPopover from '@/components/cluster-selector/cluster-select-popover.vue';
 import PopoverSelector from '@/components/popover-selector.vue';

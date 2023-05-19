@@ -42,7 +42,9 @@ import (
 )
 
 const (
+	// FileSizeUnitMb
 	FileSizeUnitMb = 1024 * 1024
+	// FileSizeLimits
 	FileSizeLimits = 30
 )
 
@@ -198,7 +200,6 @@ func (s *service) UploadHandler(c *gin.Context) {
 	}
 
 	opened, err := file.Open()
-	defer opened.Close()
 	if err != nil {
 		logger.Errorf("open file from request failed, err: %s", err.Error())
 		data.Code = types.ApiErrorCode
@@ -206,6 +207,7 @@ func (s *service) UploadHandler(c *gin.Context) {
 		c.JSON(http.StatusOK, data)
 		return
 	}
+	defer opened.Close()
 
 	podCtx, err := sessions.NewStore().WebSocketScope().Get(c.Request.Context(), sessionId)
 	if err != nil {
@@ -232,34 +234,34 @@ func (s *service) UploadHandler(c *gin.Context) {
 			writer.Close()
 			close(errChan)
 		}()
-		err := tarWriter.WriteHeader(&tar.Header{
+		e := tarWriter.WriteHeader(&tar.Header{
 			Name: file.Filename,
 			Size: file.Size,
 			Mode: 0644,
 		})
-		if err != nil {
-			logger.Errorf("writer tar header failed, err: %s", err.Error())
-			errChan <- err
+		if e != nil {
+			logger.Errorf("writer tar header failed, err: %s", e.Error())
+			errChan <- e
 			return
 		}
-		_, err = io.Copy(tarWriter, opened)
-		if err != nil {
-			logger.Errorf("writer tar from opened file failed, err: %s", err.Error())
-			errChan <- err
+		_, e = io.Copy(tarWriter, opened)
+		if e != nil {
+			logger.Errorf("writer tar from opened file failed, err: %s", e.Error())
+			errChan <- e
 			return
 		}
 		errChan <- nil
 	}(opened, writer)
 
 	pe.Stdin = reader
-	bytesBuffer := &bytes.Buffer{}
-	pe.Stderr = bytesBuffer
+	// 需要同时读取 stdout/stderr, 否则可能会 block 住
+	pe.Stdout = &bytes.Buffer{}
+	pe.Stderr = &bytes.Buffer{}
+
 	pe.Command = []string{"tar", "-xmf", "-", "-C", uploadPath}
 	pe.Tty = false
 
-	err = pe.Exec()
-
-	if err != nil {
+	if err := pe.Exec(); err != nil {
 		logger.Errorf("pod exec failed, err: %s", err.Error())
 		data.Code = types.ApiErrorCode
 		data.Message = "执行上传命令失败"
@@ -278,7 +280,6 @@ func (s *service) UploadHandler(c *gin.Context) {
 	data.Code = types.NoError
 	data.Message = "文件上传成功"
 	c.JSON(http.StatusOK, data)
-	return
 }
 
 // DownloadHandler 下载文件
@@ -377,7 +378,7 @@ func checkPathIsDir(path, sessionID string) error {
 		return err
 	}
 	pe.Command = append([]string{"test", "-d"}, path)
-	pe.Stdout = bytes.NewBuffer([]byte{})
+	pe.Stdout = &bytes.Buffer{}
 	pe.Stderr = &bytes.Buffer{}
 	pe.Tty = false
 	err = pe.Exec()
@@ -398,7 +399,7 @@ func checkFileExists(path, sessionID string) error {
 		return err
 	}
 	pe.Command = append([]string{"test", "-e"}, path)
-	pe.Stdout = bytes.NewBuffer([]byte{})
+	pe.Stdout = &bytes.Buffer{}
 	pe.Stderr = &bytes.Buffer{}
 	pe.Tty = false
 	err = pe.Exec()
@@ -420,9 +421,8 @@ func checkFileSize(path, sessionID string, sizeLimit int) error {
 	}
 	pe.Command = []string{"stat", "-c", "%s", path}
 	stdout := &bytes.Buffer{}
-	stderr := &bytes.Buffer{}
 	pe.Stdout = stdout
-	pe.Stderr = stderr
+	pe.Stderr = &bytes.Buffer{}
 	pe.Tty = false
 	err = pe.Exec()
 	if err != nil {
@@ -436,7 +436,7 @@ func checkFileSize(path, sessionID string, sizeLimit int) error {
 		return err
 	}
 	if size > sizeLimit {
-		return errors.Errorf("file size %s > %s", size, sizeLimit)
+		return errors.Errorf("file size %d > %d", size, sizeLimit)
 	}
 	return nil
 }

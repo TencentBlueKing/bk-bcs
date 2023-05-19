@@ -246,7 +246,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 	request, err := client.NewRequest()
 	if err != nil {
 		status = metrics.ErrStatus
-		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodGet, status, start)
 		return
 	}
@@ -267,7 +267,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 		status = metrics.ErrStatus
 	}
 
-	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodGet, status, start)
 	return
 }
@@ -282,7 +282,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 	request, err := client.NewRequest()
 	if err != nil {
 		status = metrics.ErrStatus
-		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodDelete, status, start)
 		return
 	}
@@ -303,7 +303,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 		status = metrics.ErrStatus
 	}
 
-	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodDelete, status, start)
 	return
 }
@@ -321,8 +321,9 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 
 	body, err := client.GetBody(data)
 	if err != nil {
+		// todo 这里报错
 		status = metrics.ErrStatus
-		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodPut, status, start)
 		return
 	}
@@ -351,7 +352,7 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 		status = metrics.ErrStatus
 	}
 
-	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodPut, status, start)
 	return
 }
@@ -364,7 +365,7 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 	)
 
 	defer func() {
-		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodGet, status, start)
 	}()
 

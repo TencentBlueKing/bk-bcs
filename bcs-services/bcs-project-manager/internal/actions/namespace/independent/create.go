@@ -41,8 +41,8 @@ func (c *IndependentNamespaceAction) CreateNamespace(ctx context.Context,
 		// 授权创建者命名空间编辑和查看权限
 		creator = authUser.Username
 	}
-	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
-		return err
+	if e := quotautils.ValidateResourceQuota(req.Quota); e != nil {
+		return e
 	}
 	_, err = c.createNamespace(ctx, req, creator)
 	if err != nil {

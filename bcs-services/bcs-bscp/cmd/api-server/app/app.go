@@ -24,7 +24,6 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
@@ -63,11 +62,6 @@ func (as *apiServer) prepare(opt *options.Option) error {
 	logs.InitLogger(cc.ApiServer().Log.Logs())
 
 	logs.Infof("load settings from config file success.")
-
-	if err := gwparser.Init(opt.DisableJWT, opt.PublicKey); err != nil {
-		return err
-	}
-	logs.Infof("jwt disable state: %v", opt.DisableJWT)
 
 	// init metrics
 	metrics.InitMetrics(net.JoinHostPort(cc.ApiServer().Network.BindIP,

@@ -47,14 +47,3 @@ td,
 th {
     padding: 0;
 }
-
-*::-webkit-scrollbar {
-    width: 4px !important;
-    height: 4px !important;
-}
-
-*::-webkit-scrollbar-thumb {
-    background: #ddd;
-    border-radius: 20px;
-    box-shadow: inset 0 0 6px hsl(0deg 0% 80% / 30%);
-}

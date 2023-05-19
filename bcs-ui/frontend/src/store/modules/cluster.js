@@ -43,6 +43,7 @@ export default {
     clusterList: [],
     isClusterDataReady: false,
     clusterWebAnnotations: { perms: {} },
+    maintainers: [],
   },
   mutations: {
     /**
@@ -65,6 +66,9 @@ export default {
     updateClusterWebAnnotations(state, data) {
       state.clusterWebAnnotations = data;
     },
+    updateMaintainers(state, data) {
+      state.maintainers = data;
+    },
   },
   actions: {
     /**
@@ -80,7 +84,6 @@ export default {
       let userData = {};
       if (!context.rootState.user?.username) {
         // 修复username偶尔拿不到问题
-        console.warn('failed to get rootState username');
         userData = await userInfo().catch(() => ({}));
       }
       const res = await fetchClusterList({
@@ -1052,6 +1055,7 @@ export default {
       const data = await projectBusiness(params, config).catch(() => ({
         maintainer: [],
       }));
+      context.commit('updateMaintainers', data.maintainer || []);
       return data;
     },
 

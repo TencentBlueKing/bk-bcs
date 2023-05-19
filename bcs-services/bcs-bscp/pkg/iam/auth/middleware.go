@@ -14,7 +14,6 @@
 package auth
 
 import (
-	"errors"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -22,6 +21,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/components"
@@ -33,42 +34,83 @@ import (
 	"bscp.io/pkg/rest"
 )
 
+// initKitWithBKJWT 蓝鲸网关鉴权
+func (a authorizer) initKitWithBKJWT(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+	if a.gwParser == nil {
+		err := errors.New("gw pubkey is empty")
+		multiErr.Errors = append(multiErr.Errors, errors.Wrap(err, "auth with bk_jwt"))
+		return false
+	}
+
+	kt, err := a.gwParser.Parse(r.Context(), r.Header)
+	if err != nil {
+		multiErr.Errors = append(multiErr.Errors, errors.Wrap(err, "auth with bk_jwt"))
+		return false
+	}
+
+	// jwt 只会从jwt里面解析出 app_code
+	// user 会从jwt获取, fallback 从 X-Bkapi-User-Name 头部获取(app校验成功, 说明有权限, 网关使用场景)
+	k.AppCode = kt.AppCode
+	k.User = kt.User
+	return true
+}
+
+// initKitWithCookie 蓝鲸统一登入Cookie鉴权
+func (a authorizer) initKitWithCookie(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+	loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
+	if err != nil {
+		multiErr.Errors = append(multiErr.Errors, errors.Wrap(err, "auth with cookie"))
+		return false
+	}
+
+	req := &pbas.UserCredentialReq{Uid: loginCred.UID, Token: loginCred.Token}
+	if req.Token == constant.BKTokenForTest {
+		username := r.Header.Get(constant.UserKey)
+		if username != "" {
+			k.User = username
+			return true
+		}
+	}
+
+	resp, err := a.authClient.GetUserInfo(r.Context(), req)
+	if err != nil {
+		s := status.Convert(err)
+		multiErr.Errors = append(multiErr.Errors, errors.Wrap(errors.New(s.Message()), "auth with cookie"))
+		return false
+	}
+
+	// 登入态只支持用户名
+	k.User = resp.Username
+	return true
+}
+
+// initKitWithDevEnv Dev环境, 可以设置环境变量鉴权
+func (a authorizer) initKitWithDevEnv(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+	return false
+}
+
 // UnifiedAuthentication
 // HTTP API 鉴权, 异常返回json信息
 func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
-		loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
-		if err != nil {
+		k := &kit.Kit{
+			Ctx: r.Context(),
+			Rid: components.RequestIDValue(r.Context()),
+		}
+		multiErr := &multierror.Error{}
 
-			render.Render(w, r, rest.UnauthorizedErr(err, loginURL, loginPlainURL))
+		switch {
+		case a.initKitWithBKJWT(r, k, multiErr):
+		case a.initKitWithCookie(r, k, multiErr):
+		case a.initKitWithDevEnv(r, k, multiErr):
+		default:
+			// API类返回规范的JSON错误信息
+			loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
+			render.Render(w, r, rest.UnauthorizedErr(multiErr, loginURL, loginPlainURL))
 			return
 		}
-		var username string
-		req := &pbas.UserCredentialReq{Uid: loginCred.UID, Token: loginCred.Token}
-		if req.Token == constant.BKTokenForTest {
-			username = r.Header.Get(constant.UserKey)
-		} else {
-			resp, err := a.authClient.GetUserInfo(r.Context(), req)
-			if err != nil {
-				s := status.Convert(err)
-				render.Render(w, r, rest.UnauthorizedErr(errors.New(s.Message()), loginURL, loginPlainURL))
-				return
-			}
-			username = resp.Username
-		}
 
-		k := &kit.Kit{
-			Ctx:         r.Context(),
-			User:        username,
-			Rid:         components.RequestIDValue(r.Context()),
-			AppId:       chi.URLParam(r, "app_id"),
-			AppCode:     "dummyApp", // 测试 App
-			SpaceID:     "",
-			SpaceTypeID: "",
-		}
 		ctx := kit.WithKit(r.Context(), k)
-
 		r.Header.Set(constant.AppCodeKey, k.AppCode)
 		r.Header.Set(constant.RidKey, k.Rid)
 		r.Header.Set(constant.UserKey, k.User)
@@ -79,7 +121,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 }
 
 // WebAuthentication
-// HTTP 前端鉴权, 异常调整302到登入页面
+// HTTP 前端鉴权, 异常跳转302到登入页面
 func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Handler {
 	ignoreExtMap := map[string]struct{}{
 		".js":  {},
@@ -96,21 +138,24 @@ func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Ha
 				return
 			}
 
-			loginCred, err := a.authLoginClient.GetLoginCredentialFromCookies(r)
-			if err != nil {
+			k := &kit.Kit{
+				Ctx: r.Context(),
+				Rid: components.RequestIDValue(r.Context()),
+			}
+			multiErr := &multierror.Error{}
+
+			switch {
+			case a.initKitWithCookie(r, k, multiErr):
+			default:
+				// web类型做302跳转登入
 				http.Redirect(w, r, a.authLoginClient.BuildLoginRedirectURL(r, webHost), http.StatusFound)
 				return
 			}
 
-			req := &pbas.UserCredentialReq{Uid: loginCred.UID, Token: loginCred.Token}
-			resp, err := a.authClient.GetUserInfo(r.Context(), req)
-			if err != nil {
-				http.Redirect(w, r, a.authLoginClient.BuildLoginRedirectURL(r, webHost), http.StatusFound)
-				return
-			}
-
-			k := &kit.Kit{User: resp.Username}
 			ctx := kit.WithKit(r.Context(), k)
+			r.Header.Set(constant.AppCodeKey, k.AppCode)
+			r.Header.Set(constant.RidKey, k.Rid)
+			r.Header.Set(constant.UserKey, k.User)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
@@ -185,6 +230,14 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			render.Render(w, r, rest.BadRequest(err))
 			return
 		}
+		kt.BizID = uint32(bizID)
+
+		// skip validate biz permission when user is for test
+		if strings.HasPrefix(kt.User, constant.BKUserForTestPrefix) {
+			ctx := kit.WithKit(r.Context(), kt)
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 
 		req := &pbas.ResourceAttribute{
 			BizId:       uint32(bizID),
@@ -202,8 +255,6 @@ func (a authorizer) BizVerified(next http.Handler) http.Handler {
 			render.Render(w, r, rest.PermissionDenied(errf.ErrPermissionDenied, resp))
 			return
 		}
-
-		kt.BizID = uint32(bizID)
 		ctx := kit.WithKit(r.Context(), kt)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}

@@ -66,7 +66,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent } from '@vue/composition-api';
+import { defineComponent } from 'vue';
 import { timeZoneTransForm } from '@/common/util';
 
 

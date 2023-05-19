@@ -1,4 +1,4 @@
-import { ref, computed, Ref } from '@vue/composition-api';
+import { ref, computed, Ref } from 'vue';
 import { TranslateResult } from 'vue-i18n';
 
 export interface ISearchSelectData {

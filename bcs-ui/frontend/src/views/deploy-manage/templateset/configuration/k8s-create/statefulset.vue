@@ -616,7 +616,7 @@
                   <div class="bk-form-item is-required">
                     <label class="bk-label" style="width: 140px;">{{$t('镜像及版本')}}：</label>
                     <div class="bk-form-content" style="margin-left: 140px;">
-                      <div class="mb10">
+                      <!-- <div class="mb10">
                         <span @click="handleChangeImageMode">
                           <bk-switcher
                             :selected="curContainer.webCache.isImageCustomed"
@@ -626,8 +626,8 @@
                         </span>
                         <span class="vm">{{$t('使用自定义镜像')}}</span>
                         <span class="biz-tip vm">({{$t('启用后允许直接填写镜像信息')}})</span>
-                      </div>
-                      <template v-if="curContainer.webCache.isImageCustomed">
+                      </div> -->
+                      <template>
                         <bkbcs-input
                           type="text"
                           style="width: 325px;"
@@ -638,12 +638,13 @@
                         <bkbcs-input
                           type="text"
                           style="width: 250px;"
-                          :placeholder="$t('版本号1')"
+                          :placeholder="$t('版本号')"
+                          class="ml5"
                           :value.sync="curContainer.imageVersion"
                           @change="handleImageCustom">
                         </bkbcs-input>
                       </template>
-                      <template v-else>
+                      <!-- <template v-else>
                         <div class="bk-dropdown-box" style="width: 380px;">
                           <bk-combox
                             style="width: 325px;"
@@ -695,7 +696,7 @@
                             @item-selected="setImageVersion">
                           </bk-combox>
                         </div>
-                      </template>
+                      </template> -->
 
                       <bk-checkbox
                         class="ml10"
@@ -706,9 +707,9 @@
                         {{$t('总是在创建之前拉取镜像')}}
                       </bk-checkbox>
 
-                      <p class="biz-tip mt5" v-if="!isLoadingImageList && !imageList.length">{{$t('提示：项目镜像不存在，')}}
+                      <!-- <p class="biz-tip mt5" v-if="!isLoadingImageList && !imageList.length">{{$t('提示：项目镜像不存在，')}}
                         <router-link class="bk-text-button" :to="{ name: 'projectImage', params: { projectCode, projectId } }">{{$t('去创建')}}</router-link>
-                      </p>
+                      </p> -->
                     </div>
                   </div>
 
@@ -771,7 +772,7 @@
                           </tr>
                         </tbody>
                       </table>
-                      <p class="biz-tip">{{$t('提示：容器端口是容器内部的Port。在配置Service的端口映射时，通过"目标端口"进行关联，从而暴露服务')}}</p>
+                      <p class="biz-tip">{{$t('提示：容器端口是容器内部的Port。在配置Service的端口映射时，通过 目标端口 进行关联，从而暴露服务')}}</p>
                     </div>
                   </div>
 
@@ -804,7 +805,7 @@
                             <div class="bk-form-content" style="margin-left: 140px;">
                               <bkbcs-input
                                 type="text"
-                                :placeholder="$t('多个参数用空格分隔，例如&quot;-c&quot;  &quot;while true; do echo hello; sleep 10;done&quot;')"
+                                :placeholder="$t('命令参数提示语')"
                                 :value.sync="curContainer.args"
                                 :list="varList"
                               >
@@ -831,7 +832,7 @@
                           <template v-if="curMountVolumes.length">
                             <template v-if="curContainer.volumeMounts.length">
                               <p class="biz-tip mb10">
-                                {{$t('请先在"Pod模板设置" -> "卷"中设置')}}</p>
+                                {{$t('挂载卷提示语')}}</p>
                               <table class="biz-simple-table">
                                 <thead>
                                   <tr>
@@ -899,7 +900,7 @@
                             </div>
                           </template>
                           <div v-else class="tc p30">
-                            {{$t('请先在"Pod模板设置" -> "卷"中设置')}}
+                            {{$t('挂载卷提示语')}}
                           </div>
                         </div>
                       </bk-tab-panel>
@@ -1555,7 +1556,7 @@
                                 <div class="bk-form-content" style="margin-left: 108px;">
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('多个命令用空格分隔，例如/bin/bash &quot;-c&quot;  &quot;while true; do echo hello; sleep 10;done&quot;')"
+                                    :placeholder="$t('命令参数提示语')"
                                     :value.sync="curContainer.lifecycle.preStop.exec.command"
                                     :list="varList"
                                   >
@@ -1567,7 +1568,7 @@
                                 <div class="bk-form-content" style="margin-left: 108px;">
                                   <bkbcs-input
                                     type="text"
-                                    :placeholder="$t('多个命令用空格分隔，例如/bin/bash &quot;-c&quot;  &quot;while true; do echo hello; sleep 10;done&quot;')"
+                                    :placeholder="$t('命令参数提示语')"
                                     :value.sync="curContainer.lifecycle.postStart.exec.command"
                                     :list="varList"
                                   >

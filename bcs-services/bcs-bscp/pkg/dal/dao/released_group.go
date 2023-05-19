@@ -14,6 +14,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
@@ -128,7 +129,7 @@ func (dao *releasedGroupDao) UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding
 
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "UPDATE ", table.ReleasedGroupTable.Name(),
-		fmt.Sprintf(" SET edited = %t WHERE biz_id = %d AND group_id = %d", edited, bizID, groupID))
+		" SET edited = ", strconv.FormatBool(edited), " WHERE biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	toUpdate := map[string]interface{}{

@@ -98,7 +98,7 @@ func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[strin
 		mtx sync.Mutex
 	)
 
-	defaultValue := "0"
+	defaultValue := ""
 
 	resultMap := map[string]string{}
 

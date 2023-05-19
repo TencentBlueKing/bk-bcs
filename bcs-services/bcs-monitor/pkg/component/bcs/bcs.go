@@ -15,6 +15,7 @@
 package bcs
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -94,15 +95,33 @@ func GetClusterMap() (map[string]*Cluster, error) {
 	return nil, fmt.Errorf("not found clusters")
 }
 
+var errNotFoundCluster = errors.New("not found cluster")
+
 // GetCluster 获取集群详情
 func GetCluster(clusterID string) (*Cluster, error) {
-	var cacheResult interface{}
-	var ok bool
-	if cacheResult, ok = storage.LocalCache.Slot.Get(listClustersCacheKey); !ok {
-		return nil, fmt.Errorf("not found cluster")
+	getCluster := func() (*Cluster, error) {
+		var cacheResult interface{}
+		var ok bool
+		if cacheResult, ok = storage.LocalCache.Slot.Get(listClustersCacheKey); !ok {
+			return nil, fmt.Errorf("not found cluster")
+		}
+		if clusterMap, ok := cacheResult.(map[string]*Cluster); ok {
+			if cls, ok := clusterMap[clusterID]; ok {
+				return cls, nil
+			}
+			return nil, errNotFoundCluster
+		}
+		return nil, fmt.Errorf("cluster cache is invalid")
 	}
-	if clusterMap, ok := cacheResult.(map[string]*Cluster); ok {
-		return clusterMap[clusterID], nil
+
+	cls, err := getCluster()
+	if err != nil {
+		// 新创建的集群，未在缓存中，刷新一下缓存
+		if errors.Is(err, errNotFoundCluster) {
+			ListClusters()
+			return getCluster()
+		}
+		return nil, err
 	}
-	return nil, fmt.Errorf("cluster cache is invalid")
+	return cls, nil
 }
