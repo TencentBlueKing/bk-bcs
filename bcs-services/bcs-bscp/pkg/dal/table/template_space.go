@@ -37,12 +37,12 @@ func (s *TemplateSpace) AppID() uint32 {
 }
 
 // AuditResID AuditRes interface
-func (s *TemplateSpace) ResourceID() uint32 {
+func (s *TemplateSpace) ResID() uint32 {
 	return s.ID
 }
 
 // AuditResType AuditRes interface
-func (s *TemplateSpace) ResourceType() string {
+func (s *TemplateSpace) ResType() string {
 	return "template_space"
 }
 

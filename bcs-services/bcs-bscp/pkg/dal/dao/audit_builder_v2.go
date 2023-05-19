@@ -24,16 +24,16 @@ import (
 	"bscp.io/pkg/kit"
 )
 
-// AuditDo
+// AuditDo audit traction action
 type AuditDo interface {
 	Do(tx *gen.Query) error
 }
 
-// AuditRes :
+// AuditRes
 type AuditRes interface {
 	AppID() uint32
-	ResourceType() string
-	ResourceID() uint32
+	ResType() string
+	ResID() uint32
 }
 
 // AuditPrepare
@@ -92,8 +92,8 @@ func (ab *AuditBuilderV2) Do(tx *gen.Query) error {
 }
 
 func (ab *AuditBuilderV2) PrepareCreate(obj AuditRes) AuditDo {
-	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResourceType())
-	ab.toAudit.ResourceID = obj.ResourceID()
+	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResType())
+	ab.toAudit.ResourceID = obj.ResID()
 	ab.toAudit.Action = enumor.Create
 	ab.prev = obj
 
@@ -113,8 +113,8 @@ func (ab *AuditBuilderV2) PrepareCreate(obj AuditRes) AuditDo {
 }
 
 func (ab *AuditBuilderV2) PrepareUpdate(obj AuditRes, oldObj interface{}) AuditDo {
-	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResourceType())
-	ab.toAudit.ResourceID = obj.ResourceID()
+	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResType())
+	ab.toAudit.ResourceID = obj.ResID()
 	ab.toAudit.Action = enumor.Update
 	ab.prev = oldObj
 
@@ -141,8 +141,8 @@ func (ab *AuditBuilderV2) PrepareUpdate(obj AuditRes, oldObj interface{}) AuditD
 }
 
 func (ab *AuditBuilderV2) PrepareDelete(obj AuditRes) AuditDo {
-	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResourceType())
-	ab.toAudit.ResourceID = obj.ResourceID()
+	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResType())
+	ab.toAudit.ResourceID = obj.ResID()
 	ab.toAudit.Action = enumor.Delete
 	ab.prev = obj
 
