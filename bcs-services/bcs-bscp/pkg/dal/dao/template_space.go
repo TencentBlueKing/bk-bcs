@@ -49,7 +49,7 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 	}
 
 	// generate a TemplateSpace id and update to TemplateSpace.
-	id, err := dao.idGen.One(kit, table.TemplateSpaceTable)
+	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
 		return 0, err
 	}
