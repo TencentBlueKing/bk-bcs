@@ -1,3 +1,15 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package cmd
 
 import (
@@ -29,7 +41,13 @@ var migrateCreateCmd = &cobra.Command{
 			return
 		}
 
-		if err := migrator.Create(name); err != nil {
+		mode, err := cmd.Flags().GetString("mode")
+		if err != nil {
+			fmt.Println("Unable to read flag `mode`, err:", err)
+			return
+		}
+
+		if err := migrator.Create(name, mode); err != nil {
 			fmt.Println("Unable to create migration, err:", err)
 			return
 		}
@@ -46,19 +64,24 @@ var migrateUpCmd = &cobra.Command{
 			fmt.Println("Unable to read flag `step`, err:", err)
 			return
 		}
+		debugGorm, err := cmd.Flags().GetBool("debug-gorm")
+		if err != nil {
+			fmt.Println("Unable to read flag `debug-gorm`, err:", err)
+			return
+		}
 
 		if err := cc.LoadSettings(SysOpt); err != nil {
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
 
-		db, err := migrator.NewDB()
+		db, err := migrator.NewSqlDB()
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db)
+		migrator, err := migrator.Init(db, debugGorm)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
@@ -83,19 +106,24 @@ var migrateDownCmd = &cobra.Command{
 			fmt.Println("Unable to read flag `step`, err:", err)
 			return
 		}
+		debugGorm, err := cmd.Flags().GetBool("debug-gorm")
+		if err != nil {
+			fmt.Println("Unable to read flag `debug-gorm`, err:", err)
+			return
+		}
 
 		if err := cc.LoadSettings(SysOpt); err != nil {
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
 
-		db, err := migrator.NewDB()
+		db, err := migrator.NewSqlDB()
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db)
+		migrator, err := migrator.Init(db, debugGorm)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
@@ -118,13 +146,13 @@ var migrateStatusCmd = &cobra.Command{
 			return
 		}
 
-		db, err := migrator.NewDB()
+		db, err := migrator.NewSqlDB()
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db)
+		migrator, err := migrator.Init(db, false)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
@@ -140,8 +168,14 @@ var migrateStatusCmd = &cobra.Command{
 }
 
 func init() {
+	// Add "debug-gorm" flag to all migrate sub commands
+	migrateCmd.PersistentFlags().BoolP("debug-gorm", "d", false, "whether debug gorm to print sql, default is false")
+
 	// Add "--name" flag to "create" command
 	migrateCreateCmd.Flags().StringP("name", "n", "", "Name for the migration")
+
+	// Add "--gorm" flag to "create" command
+	migrateCreateCmd.Flags().StringP("mode", "m", "gorm", "mode of the migration:sql or gorm, default is gorm")
 
 	// Add "--step" flag to both "up" and "down" command
 	migrateUpCmd.Flags().IntP("step", "s", 0, "Number of migrations to execute")
