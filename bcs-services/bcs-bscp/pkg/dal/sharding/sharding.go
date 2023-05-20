@@ -25,7 +25,6 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/plugin/opentelemetry/tracing"
-	"gorm.io/plugin/prometheus"
 	"gorm.io/sharding"
 	"k8s.io/klog/v2"
 
@@ -149,15 +148,6 @@ func InitAuditorSharding(adminDB *gorm.DB) (*gorm.DB, error) {
 	}
 
 	if err := auditorDB.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
-		return nil, err
-	}
-
-	// 会定期执行 SHOW STATUS; 拿状态数据
-	// metricsCollector := []prometheus.MetricsCollector{
-	// 	&prometheus.MySQL{VariableNames: []string{"Threads_running"}},
-	// }
-
-	if err := auditorDB.Use(prometheus.New(prometheus.Config{})); err != nil {
 		return nil, err
 	}
 
