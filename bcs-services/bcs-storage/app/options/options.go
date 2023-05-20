@@ -49,17 +49,18 @@ type StorageOptions struct {
 	Etcd       registryv4.CMDOptions `json:"etcdRegistry"`
 	Tracing    tracing.Options       `json:"tracing"`
 
-	DBConfig     string `json:"database_config_file" value:"storage-database.conf" usage:"Config file for database."`
-	QueueConfig  string `json:"queue_config_file" value:"queue.conf" usage:"Config file for database."`
-	EventMaxTime int64  `json:"event_max_day" value:"15" usage:"Max day for holding events data."`
-	EventMaxCap  int64  `json:"event_max_cap" value:"10000" usage:"Max num for holding events data of each cluster."`
-	AlarmMaxTime int64  `json:"alarm_max_day" value:"15" usage:"Max day for holding alarms data."`
-	AlarmMaxCap  int64  `json:"alarm_max_cap" value:"10000" usage:"Max num for holding alarms data of each cluster."`
-	QueryMaxNum  int64  `json:"query_max_num" value:"100" usage:"Max num query to same url one time."`
-	WatchTimeSep int64  `json:"watch_time_sep" value:"10" usage:"Request watch time sep."`
-	PrintBody    bool   `json:"print_body" value:"false" usage:"Print body every request."`
-	PrintManager bool   `json:"print_manager" value:"false" usage:"Print manager."`
-	DebugMode    bool   `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
+	DBConfig               string `json:"database_config_file" value:"storage-database.conf" usage:"Config file for database."`
+	QueueConfig            string `json:"queue_config_file" value:"queue.conf" usage:"Config file for database."`
+	EventMaxTime           int64  `json:"event_max_day" value:"15" usage:"Max day for holding events data."`
+	EventMaxCap            int64  `json:"event_max_cap" value:"10000" usage:"Max num for holding events data of each cluster."`
+	EventCleanTimeRangeMin int64  `json:"event_clean_time_range_min" value:"30" usage:"Max time of random range for delay when clean timeout event"`
+	AlarmMaxTime           int64  `json:"alarm_max_day" value:"15" usage:"Max day for holding alarms data."`
+	AlarmMaxCap            int64  `json:"alarm_max_cap" value:"10000" usage:"Max num for holding alarms data of each cluster."`
+	QueryMaxNum            int64  `json:"query_max_num" value:"100" usage:"Max num query to same url one time."`
+	WatchTimeSep           int64  `json:"watch_time_sep" value:"10" usage:"Request watch time sep."`
+	PrintBody              bool   `json:"print_body" value:"false" usage:"Print body every request."`
+	PrintManager           bool   `json:"print_manager" value:"false" usage:"Print manager."`
+	DebugMode              bool   `json:"debug_mode" value:"false" usage:"Debug mode, use pprof."`
 }
 
 // NewStorageOptions create StorageOptions object

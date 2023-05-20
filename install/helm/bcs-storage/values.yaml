@@ -34,6 +34,7 @@ env:
   BK_BCS_storageDbConfig: "./storage-database.conf"
   BK_BCS_eventMaxDay: "7"
   BK_BCS_eventMaxCap: "10000"
+  BK_BCS_eventCleanTimeRangeMin: "30"
   BK_BCS_alarmMaxDay: "7"
   BK_BCS_alarmMaxCap: "10000"
   BK_BCS_caFile: "/data/bcs/cert/bcs/bcs-ca.crt"

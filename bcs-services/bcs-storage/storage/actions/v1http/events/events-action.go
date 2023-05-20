@@ -156,33 +156,43 @@ func CleanEvents() {
 	// cleaner config
 	maxCap := apiserver.GetAPIResource().Conf.EventMaxCap
 	maxTime := apiserver.GetAPIResource().Conf.EventMaxTime
+	maxDelayTime := apiserver.GetAPIResource().Conf.EventCleanTimeRangeMin
 	eventDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
 
+	createCleaners := func() {
+		tables, err := eventDBClient.ListTableNames(context.TODO())
+		if err != nil {
+			blog.Errorf("list table name failed, err: %v", err)
+			return
+		}
+
+		for _, table := range tables {
+			if _, ok := tableCache[table]; ok {
+				continue
+			}
+			tableCache[table] = struct{}{}
+
+			// create cleaner
+			cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
+			if table == eventResource {
+				cleaner.WithMaxDuration(time.Duration(1)*time.Hour, time.Duration(0), eventTimeTag)
+			} else if strings.HasPrefix(table, tableName) {
+				cleaner.WithMaxEntryNum(maxCap)
+				cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, time.Duration(maxDelayTime)*time.Minute, eventTimeTag)
+			}
+			blog.Infof("create events cleaner for db [%s] table [%s]", eventDBClient.DataBase(), table)
+			go cleaner.Run(context.TODO())
+		}
+	}
+
+	//create cleaners at begin
+	createCleaners()
 	for {
 		select {
 		case <-ticker.C:
-			tables, err := eventDBClient.ListTableNames(context.TODO())
-			if err != nil {
-				blog.Errorf("list table name failed, err: %v", err)
-				return
-			}
-
-			for _, table := range tables {
-				if _, ok := tableCache[table]; ok {
-					continue
-				}
-				tableCache[table] = struct{}{}
-
-				// create cleaner
-				cleaner := clean.NewDBCleaner(eventDBClient, table, time.Hour)
-				if table == eventResource {
-					cleaner.WithMaxDuration(time.Duration(1)*time.Hour, eventTimeTag)
-				} else if strings.HasPrefix(table, tableName) {
-					cleaner.WithMaxEntryNum(maxCap)
-					cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
-				}
-				go cleaner.Run(context.TODO())
-			}
+			blog.Infof("new ticker for creat cleaners for new tables")
+			// create cleaners every hour for new table
+			createCleaners()
 		}
 	}
 }
