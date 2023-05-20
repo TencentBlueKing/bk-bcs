@@ -86,9 +86,10 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	auditorDB := sharding.MustShardingAuditor(adminDB)
 
 	// biz 分表 mysql.Dialector -> sharding.ShardingDialector
-	if err := sharding.InitBizSharding(adminDB); err != nil {
-		return nil, err
-	}
+	// 不支持 sqlparser.QualifiedRef, 暂时去掉, 参考 issue https://github.com/go-gorm/sharding/pull/32
+	// if err := sharding.InitBizSharding(adminDB); err != nil {
+	// 	return nil, err
+	// }
 
 	// 初始化 Gen 配置
 	genM := gen.Use(adminDB)

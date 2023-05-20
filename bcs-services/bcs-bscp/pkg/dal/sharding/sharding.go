@@ -156,7 +156,7 @@ func InitAuditorSharding(adminDB *gorm.DB) (*gorm.DB, error) {
 
 // bizPrimaryKeyGeneratorFn biz 主键生成算法
 func bizPrimaryKeyGeneratorFn(index int64) int64 {
-	return 1230
+	return 0
 }
 
 // bizShardingAlgorithm biz切表算法
@@ -174,7 +174,7 @@ func bizShardingAlgorithm(value interface{}) (suffix string, err error) {
 	}
 
 	// 特定业务才切换表
-	if id == 3 {
+	if id == 0 {
 		return fmt.Sprintf("_%d", id), nil
 	}
 
