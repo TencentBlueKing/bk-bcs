@@ -21,7 +21,6 @@ Available Commands:
 Flags:
   -d, --debug-gorm    whether debug gorm to print sql, default is false
   -h, --help          help for migrate
-  -m, --mode string   mode of the migration:sql or gorm, default is gorm (default "gorm")
 
 Global Flags:
   -b, --bind-ip ip                which IP the server is listen to
@@ -29,7 +28,6 @@ Global Flags:
   -v, --version                   show version
 
 Use "bk-bscp-dataservice migrate [command] --help" for more information about a command.
-
 ```
 
 - 创建migration
@@ -96,7 +94,6 @@ Running migration 20230207171029
 Finished running migration 20230207171029
 Running migration 20230207215606
 Finished running migration 20230207215606
-
 ```
 
 - 向后回滚db
@@ -125,6 +122,20 @@ Finished reverting migration 20230207165857
 # 打印当前db迁移状态，如下为迁移了一个版本时的db状态
 # pending 代表有待执行的migration
 # completed代表已执行过的migration
+$ ./bk-bscp-dataservice migrate status -c /tmp/data_service.yaml
+Connecting to MySQL database...
+Database connected!
+Migration 20230207165857_test_mig001 completed
+Migration 20230207171029_test_mig002 pending
+Migration 20230207215606_init_schema pending
+
+```
+
+- gorm模式下开启debug日志
+
+```bash
+# 为了便于排查gorm模式下db迁移过程中的错误，可开启debug日志，打印执行的sql语句
+# 通过命令行参数指定gorm的debug日志：-d 或 --debug-gorm
 $ ./bk-bscp-dataservice migrate up -s 1 -d -c /tmp/data_service.yaml
 Connecting to MySQL database...
 Database connected!
@@ -141,23 +152,8 @@ Running migration 20230511114513
 
 2023/05/20 12:09:50 bscp.io/cmd/data-service/db-migration/migrations/20230511114513_gorm_add_template.go:121
 [48.765ms] [rows:0] CREATE TABLE `template_spaces` (`id` bigint(1) unsigned not null,`name` varchar(255) not null,`memo` varchar(256) default '',`biz_id` bigint(1) unsigned not null,`creator` varchar(64) not null,`reviser` varchar(64) not null,`created_at` datetime(6) not null,`updated_at` datetime(6) not null,PRIMARY KEY (`id`),UNIQUE INDEX `idx_bizID_name` (`biz_id`,`name`))ENGINE=InnoDB CHARSET=utf8mb4
-
 ```
 
-- gorm模式下开启debug日志
-
-```bash
-# 为了便于排查gorm模式下db迁移过程中的错误，可开启debug日志，打印执行的sql语句
-# 通过命令行参数指定gorm的debug日志：-d 或 --debug-gorm
-$ ./bk-bscp-dataservice migrate status -c /tmp/data_service.yaml
-Connecting to MySQL database...
-Database connected!
-Migration 20230207165857_test_mig001 completed
-Migration 20230207171029_test_mig002 pending
-Migration 20230207215606_init_schema pending
-
-
-```
 
 ### 注意事项
 
