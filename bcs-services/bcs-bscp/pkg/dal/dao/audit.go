@@ -52,6 +52,7 @@ var _ AuditDao = new(audit)
 func NewAuditDao(db *gorm.DB, orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface) (AuditDao, error) {
 	return &audit{
 		db:         db,
+		genM:       gen.Use(db),
 		orm:        orm,
 		sd:         sd,
 		adSharding: sd.Audit(),

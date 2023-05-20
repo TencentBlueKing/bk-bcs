@@ -199,35 +199,6 @@ func (t Name) Name() string {
 
 // Validate whether the table name is valid or not.
 func (n Name) Validate() error {
-	switch n {
-	case AppTable:
-	case ArchivedAppTable:
-	case ContentTable:
-	case ConfigItemTable:
-	case CommitsTable:
-	case ReleaseTable:
-	case ReleasedConfigItemTable:
-	case StrategySetTable:
-	case StrategyTable:
-	case GroupTable:
-	case GroupAppBindTable:
-	case ReleasedGroupTable:
-	case HookTable:
-	case CurrentPublishedStrategyTable:
-	case PublishedStrategyHistoryTable:
-	case CurrentReleasedInstanceTable:
-	case EventTable:
-	case ShardingDBTable:
-	case ShardingBizTable:
-	case IDGeneratorTable:
-	case AuditTable:
-	case ResourceLockTable:
-	case CredentialTable:
-	case CredentialScopeTable:
-	default:
-		return fmt.Errorf("unknown table name: %s", n)
-	}
-
 	return nil
 }
 

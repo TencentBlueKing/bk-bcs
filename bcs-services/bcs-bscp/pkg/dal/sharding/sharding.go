@@ -154,6 +154,33 @@ func InitAuditorSharding(adminDB *gorm.DB) (*gorm.DB, error) {
 	return auditorDB, nil
 }
 
+// bizPrimaryKeyGeneratorFn biz 主键生成算法
+func bizPrimaryKeyGeneratorFn(index int64) int64 {
+	return 1230
+}
+
+// bizShardingAlgorithm biz切表算法
+func bizShardingAlgorithm(value interface{}) (suffix string, err error) {
+	id := 0
+	switch value := value.(type) {
+	case int:
+		id = value
+	case int64:
+		id = int(value)
+	case uint32:
+		id = int(value)
+	default:
+		return "", fmt.Errorf("not valid biz type")
+	}
+
+	// 特定业务才切换表
+	if id == 3 {
+		return fmt.Sprintf("_%d", id), nil
+	}
+
+	return "", nil
+}
+
 // InitBizSharding 按业务ID分表
 func InitBizSharding(db *gorm.DB) error {
 	// 初始化 Gen 配置
@@ -162,9 +189,10 @@ func InitBizSharding(db *gorm.DB) error {
 	// 使用 biz_id 分表
 	sh := sharding.Register(
 		sharding.Config{
-			ShardingKey:         genM.TemplateSpace.BizID.ColumnName().String(),
-			NumberOfShards:      64,
-			PrimaryKeyGenerator: sharding.PKSnowflake,
+			ShardingKey:           genM.TemplateSpace.BizID.ColumnName().String(),
+			PrimaryKeyGenerator:   sharding.PKCustom,
+			ShardingAlgorithm:     bizShardingAlgorithm,
+			PrimaryKeyGeneratorFn: bizPrimaryKeyGeneratorFn,
 		},
 		genM.TemplateSpace.TableName(),
 	)

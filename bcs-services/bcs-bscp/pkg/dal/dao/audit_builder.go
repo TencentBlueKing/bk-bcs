@@ -811,7 +811,12 @@ func parseChangedSpecFields(pre, cur interface{}) (map[string]interface{}, error
 
 		dbTag := prevSpecV.Type().Field(i).Tag.Get("db")
 		if len(dbTag) == 0 {
-			return nil, fmt.Errorf("filed: %s do not have a db tag, can not compare", preName)
+			// fallback to json tag
+			dbTag = prevSpecV.Type().Field(i).Tag.Get("json")
+		}
+
+		if len(dbTag) == 0 {
+			return nil, fmt.Errorf("filed: %s do not have a db or json tag, can not compare", preName)
 		}
 
 		changedField[dbTag] = curFieldV.Interface()

@@ -144,7 +144,7 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 	// 多个使用事务处理
 	deleteTx := func(tx *gen.Query) error {
 		q = tx.TemplateSpace.WithContext(kit.Ctx)
-		if _, err := q.Delete(g); err != nil {
+		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
 			return err
 		}
 
