@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { computed, onMounted, ref, watch, withDefaults } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { Search, AngleDown, AngleUp } from 'bkui-vue/lib/icon'
   import { IGroupToPublish } from '../../../../../../../../../../types/group'
   import { IConfigVersion } from '../../../../../../../../../../types/config'

@@ -1,5 +1,7 @@
 FROM centos:7
 
+ENV GODEBUG=x509sha1=1
+
 RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo 'Asia/Shanghai' > /etc/timezone
 

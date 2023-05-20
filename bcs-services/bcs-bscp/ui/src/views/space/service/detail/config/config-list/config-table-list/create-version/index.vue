@@ -5,7 +5,8 @@
 
   const props = defineProps<{
     bkBizId: string,
-    appId: number
+    appId: number,
+    configCount: number
   }>()
 
   const emits = defineEmits(['confirm'])
@@ -53,10 +54,15 @@
 
 </script>
 <template>
-  <bk-button theme="primary" @click="isConfirmDialogShow = true">生成版本</bk-button>
+  <bk-button
+    theme="primary"
+    :disabled="props.configCount === 0"
+    @click="isConfirmDialogShow = true">
+    生成版本
+  </bk-button>
   <bk-dialog
     title="生成版本"
-    ext-cls="release-version-dialog"
+    ext-cls="create-version-dialog"
     :is-show="isConfirmDialogShow"
     :esc-close="false"
     :quick-close="false"
@@ -97,7 +103,7 @@
   }
 </style>
 <style lang="scss">
-  .release-version-dialog.bk-dialog-wrapper .bk-dialog-header {
+  .create-version-dialog.bk-dialog-wrapper .bk-dialog-header {
     padding-bottom: 20px;
   }
 </style>

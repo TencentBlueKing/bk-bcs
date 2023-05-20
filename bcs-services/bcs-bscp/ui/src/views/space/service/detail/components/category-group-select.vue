@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, withDefaults, onMounted, watch } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ECategoryType, IAllCategoryGroupItem } from '../../../../../../types/group';
   import { getSpaceGroupList } from '../../../../../api/group';

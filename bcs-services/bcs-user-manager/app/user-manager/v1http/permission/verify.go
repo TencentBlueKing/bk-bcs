@@ -178,6 +178,7 @@ func (cli *PermVerifyClient) verifyUserK8sClusterPermission(ctx context.Context,
 			namespaceScopedAllow bool
 			err                  error
 		)
+		// client 类型的用户，首先使用 user-manager 的数据库鉴权，没有权限后再向权限中心鉴权
 		if user.IsClient() {
 			namespaceScopedAllow, err = cli.verifyClientNamespaceScopedPermission(ctx, user, action, resource)
 		} else {
@@ -442,9 +443,9 @@ func (cli *PermVerifyClient) verifyClientNamespaceScopedPermission(ctx context.C
 	resource ClusterResource) (bool, error) {
 	blog.Log(ctx).Infof("verifyClientNamespaceScopedPermission for user %s, type %s, resource %s, action %s",
 		user.Name, NamespaceScoped, resource.Namespace, action)
-	nsAllow, message := verifyResourceReplica(user.ID, NamespaceScoped, resource.Namespace, action)
+	nsAllow, _ := verifyResourceReplica(user.ID, NamespaceScoped, resource.Namespace, action)
 	if !nsAllow {
-		return nsAllow, errors.New(message)
+		return cli.verifyUserNamespaceScopedPermission(ctx, user.Name, action, resource)
 	}
 	return nsAllow, nil
 }

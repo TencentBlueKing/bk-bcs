@@ -76,7 +76,7 @@ func (g *GetVersionDetailV1Action) getDetail() (*helmmanager.ChartDetail, error)
 	version := g.req.GetVersion()
 	username := auth.GetUserFromCtx(g.ctx)
 
-	repository, err := g.model.GetRepository(g.ctx, projectCode, repoName)
+	repository, err := g.model.GetProjectRepository(g.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("get chart version detail failed, %s, "+
 			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
@@ -176,7 +176,7 @@ func (g *GetChartDetailV1Action) getDetail() (*helmmanager.Chart, error) {
 	chartName := g.req.GetName()
 	username := auth.GetUserFromCtx(g.ctx)
 
-	repository, err := g.model.GetRepository(g.ctx, projectCode, repoName)
+	repository, err := g.model.GetProjectRepository(g.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("get chart detail failed, %s, projectCode: %s, repository: %s, chartName: %s, operator: %s",
 			err.Error(), projectCode, repoName, chartName, username)

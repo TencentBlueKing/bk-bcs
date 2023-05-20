@@ -1745,15 +1745,15 @@ message UpgradeReleaseV1Req {
     optional string repository = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "repository",
         description: "chart所属的仓库"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    }];
     optional string chart = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "chart",
         description: "chart名称"
-    }, (validate.rules).string = {min_len : 1}];
+    }];
     optional string version = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "version",
         description: "chart版本"
-    }, (validate.rules).string = {min_len : 1}];
+    }];
     repeated string values = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "values",
         description: "values文件, 越靠后优先级越高"

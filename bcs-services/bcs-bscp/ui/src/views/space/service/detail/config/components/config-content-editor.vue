@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import { withDefaults, ref } from 'vue';
+  import { ref } from 'vue';
   import BkMessage from 'bkui-vue/lib/message';
-  import { InfoLine, Upload, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon'
+  import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon'
   import ReadFileContent from './read-file-content.vue';
   import CodeEditor from '../../../../../../components/code-editor/index.vue'
 
@@ -53,7 +53,6 @@
         </div>
         <div v-if="editable" class="btns">
             <ReadFileContent @completed="handleFileReadComplete" />
-            <!-- <Upload style="font-size: 14px; margin-right: 10px;" /> -->
             <FilliscreenLine
               v-if="!isOpenFullScreen"
               v-bk-tooltips="{

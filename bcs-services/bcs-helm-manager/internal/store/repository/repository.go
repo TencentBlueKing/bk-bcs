@@ -153,6 +153,25 @@ func (m *ModelRepository) GetRepository(ctx context.Context, projectID, name str
 	return repository, nil
 }
 
+// GetProjectRepository get a specific entity.Repository from database
+func (m *ModelRepository) GetProjectRepository(ctx context.Context, projectID, name string) (*entity.Repository, error) {
+	if projectID == "" || name == "" {
+		return nil, fmt.Errorf("can not get with empty projectID or name")
+	}
+
+	if name == common.PublicRepoName {
+		return &entity.Repository{
+			ProjectID:   projectID,
+			Name:        name,
+			DisplayName: common.PublicRepoDisplayName,
+			Public:      true,
+			Type:        "HELM",
+		}, nil
+	}
+
+	return m.GetRepository(ctx, projectID, name)
+}
+
 // ListRepository get a list of entity.Repository by condition and option from database
 func (m *ModelRepository) ListRepository(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (
 	int64, []*entity.Repository, error) {
