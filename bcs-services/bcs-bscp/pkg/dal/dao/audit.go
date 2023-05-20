@@ -22,6 +22,7 @@ import (
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"gorm.io/gorm"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -48,8 +49,9 @@ type AuditOption struct {
 var _ AuditDao = new(audit)
 
 // NewAuditDao create the audit DAO
-func NewAuditDao(orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface) (AuditDao, error) {
+func NewAuditDao(db *gorm.DB, orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface) (AuditDao, error) {
 	return &audit{
+		db:         db,
 		orm:        orm,
 		sd:         sd,
 		adSharding: sd.Audit(),
@@ -58,7 +60,9 @@ func NewAuditDao(orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface)
 }
 
 type audit struct {
-	orm orm.Interface
+	db   *gorm.DB
+	genM *gen.Query
+	orm  orm.Interface
 	// sd is the common resource's sharding manager.
 	sd *sharding.Sharding
 	// adSharding is the audit's sharding instance
@@ -89,10 +93,18 @@ func (au *audit) One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error {
 
 	audit.ID = id
 
-	q := opt.genM.Audit.WithContext(kit.Ctx)
+	var q gen.IAuditDo
+
+	if au.db.Migrator().CurrentDatabase() == opt.genM.CurrentDatabase() {
+		// 使用同一个库，事务处理
+		q = opt.genM.Audit.WithContext(kit.Ctx)
+	} else {
+		// 使用独立的 DB
+		q = au.genM.Audit.WithContext(kit.Ctx)
+	}
+
 	if err := q.Create(audit); err != nil {
 		return fmt.Errorf("insert audit failed, err: %v", err)
 	}
-
 	return nil
 }

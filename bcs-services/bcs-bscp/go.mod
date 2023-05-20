@@ -52,12 +52,13 @@ require (
 	google.golang.org/grpc v1.54.0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
-	gorm.io/driver/mysql v1.4.4
+	gorm.io/driver/mysql v1.4.7
 	gorm.io/gen v0.3.22
 	gorm.io/gorm v1.25.0
-	gorm.io/plugin/dbresolver v1.3.0
+	gorm.io/plugin/dbresolver v1.4.1
 	gorm.io/plugin/opentelemetry v0.1.2
 	gorm.io/plugin/prometheus v0.0.0-20230504115745-1aec2356381b
+	gorm.io/sharding v0.5.3
 	k8s.io/klog/v2 v2.90.1
 )
 
@@ -67,6 +68,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
@@ -94,6 +96,7 @@ require (
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
+	github.com/longbridgeapp/sqlparser v0.3.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
@@ -135,6 +138,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c // indirect
-	gorm.io/hints v1.1.0 // indirect
+	gorm.io/hints v1.1.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )

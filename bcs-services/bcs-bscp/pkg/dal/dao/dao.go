@@ -64,12 +64,12 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		return nil, fmt.Errorf("init sharding failed, err: %v", err)
 	}
 
-	db, err := gorm.Open(mysql.Open(opt.AdminDatabase.DSN()), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	adminDB, err := gorm.Open(mysql.Open(opt.AdminDatabase.DSN()), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
+	if err := adminDB.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
 		return nil, err
 	}
 
@@ -78,23 +78,31 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	// 	&prometheus.MySQL{VariableNames: []string{"Threads_running"}},
 	// }
 
-	if err := db.Use(prometheus.New(prometheus.Config{})); err != nil {
+	if err := adminDB.Use(prometheus.New(prometheus.Config{})); err != nil {
+		return nil, err
+	}
+
+	// auditor 分库, 注意需要在分表前面
+	auditorDB := sharding.MustShardingAuditor(adminDB)
+
+	// biz 分表 mysql.Dialector -> sharding.ShardingDialector
+	if err := sharding.InitBizSharding(adminDB); err != nil {
 		return nil, err
 	}
 
 	// 初始化 Gen 配置
-	genM := gen.Use(db)
+	genM := gen.Use(adminDB)
 
 	ormInst := orm.Do(opt)
 	idDao := &idGenerator{sd: sd, genM: genM}
-	auditDao, err := NewAuditDao(ormInst, sd, idDao)
+	auditDao, err := NewAuditDao(auditorDB, ormInst, sd, idDao)
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
 
 	s := &set{
 		orm:               ormInst,
-		db:                db,
+		db:                adminDB,
 		genM:              genM,
 		sd:                sd,
 		credentialSetting: credentialSetting,
