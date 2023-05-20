@@ -31,7 +31,7 @@ func init() {
 }
 
 func mig{{.Version}}Gorm{{.FuncName}}Up(tx *gorm.DB) error {
-    // ModelExample: 模式示例，实际迁移DB时，需按实际情况进行修改（包括修改该注释）
+    // ModelExample: 模型示例，实际迁移DB时，需按实际情况进行修改（包括修改该注释）
     type ModelExample struct {
         ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
         Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`
@@ -57,24 +57,8 @@ func mig{{.Version}}Gorm{{.FuncName}}Up(tx *gorm.DB) error {
 }
 
 func mig{{.Version}}Gorm{{.FuncName}}Down(tx *gorm.DB) error {
-    // ModelExample: 模式示例，实际迁移DB时，需按实际情况进行修改（包括修改该注释）
-    type ModelExample struct {
-        ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
-        Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`
-        MaxID     uint      `gorm:"type:bigint(1) unsigned not null"`
-        UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
-    }
-
 	if err := tx.Migrator().DropTable("model_example"); err != nil {
 		return err
-	}
-
-	var resources = []string{
-		"table1",
-		"table2",
-	}
-	if result := tx.Where("resource in ?", resources).Delete(&ModelExample{}); result.Error != nil {
-		return result.Error
 	}
 
 	return nil
