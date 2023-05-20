@@ -13,7 +13,6 @@ limitations under the License.
 package migrator
 
 import (
-	"database/sql"
 	"fmt"
 
 	"gorm.io/driver/mysql"
@@ -24,34 +23,14 @@ import (
 	"bscp.io/pkg/dal/sharding"
 )
 
-// NewSqlDB new a sql db instance
-func NewSqlDB() (*sql.DB, error) {
-
+// NewDB new a gorm db instance
+func NewDB(debug bool) (*gorm.DB, error) {
 	fmt.Println("Connecting to MySQL database...")
 
 	dbConf := cc.DataService().Sharding.AdminDatabase
-	db, err := sql.Open("mysql", sharding.URI(dbConf))
-	if err != nil {
-		return nil, fmt.Errorf("unable to connect to database, err: %s", err)
+	dsn := sharding.URI(dbConf)
+	if debug {
+		return gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	}
-
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("unable to connect to database, err: %s", err)
-	}
-
-	fmt.Println("Database connected!")
-
-	return db, nil
-}
-
-// NewGormDB new a gorm db instance from an existing sql db
-func NewGormDB(sqlDB *sql.DB, debugGorm bool) (*gorm.DB, error) {
-	if debugGorm {
-		return gorm.Open(mysql.New(mysql.Config{
-			Conn: sqlDB,
-		}), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
-	}
-	return gorm.Open(mysql.New(mysql.Config{
-		Conn: sqlDB,
-	}), &gorm.Config{})
+	return gorm.Open(mysql.Open(dsn), &gorm.Config{})
 }

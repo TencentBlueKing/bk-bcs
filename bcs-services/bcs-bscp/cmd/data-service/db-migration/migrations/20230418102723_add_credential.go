@@ -13,9 +13,9 @@ limitations under the License.
 package migrations
 
 import (
-	"database/sql"
-	"fmt"
 	"strings"
+
+	"gorm.io/gorm"
 
 	"bscp.io/cmd/data-service/db-migration/migrator"
 )
@@ -32,33 +32,33 @@ func init() {
 	})
 }
 
-func mig20230418102723AddCredentialUp(tx *sql.Tx) error {
+func mig20230418102723AddCredentialUp(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetUpSQLKey(mig20230418102723)], ";")
 	for _, sql := range sqlArr {
 		sql = strings.TrimSpace(sql)
 		if sql == "" {
 			continue
 		}
-		_, err := tx.Exec(sql)
-		if err != nil {
-			return fmt.Errorf("exec sql [%s] err: %s", sql, err)
+		if result := tx.Exec(sql); result.Error != nil {
+			return result.Error
 		}
 	}
+
 	return nil
 
 }
 
-func mig20230418102723AddCredentialDown(tx *sql.Tx) error {
+func mig20230418102723AddCredentialDown(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetDownSQLKey(mig20230418102723)], ";")
 	for _, sql := range sqlArr {
 		sql = strings.TrimSpace(sql)
 		if sql == "" {
 			continue
 		}
-		_, err := tx.Exec(sql)
-		if err != nil {
-			return fmt.Errorf("exec sql [%s] err: %s", sql, err)
+		if result := tx.Exec(sql); result.Error != nil {
+			return result.Error
 		}
 	}
+
 	return nil
 }

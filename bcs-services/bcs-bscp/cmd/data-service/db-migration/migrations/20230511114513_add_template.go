@@ -22,11 +22,11 @@ import (
 
 func init() {
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
-		Version:  "20230511114513",
-		Name:     "20230511114513_add_template",
-		Mode:     migrator.GormMode,
-		GormUp:   mig20230511114513GormTestUp,
-		GormDown: mig20230511114513GormDown,
+		Version: "20230511114513",
+		Name:    "20230511114513_add_template",
+		Mode:    migrator.GormMode,
+		Up:      mig20230511114513GormTestUp,
+		Down:    mig20230511114513GormDown,
 	})
 }
 

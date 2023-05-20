@@ -64,9 +64,9 @@ var migrateUpCmd = &cobra.Command{
 			fmt.Println("Unable to read flag `step`, err:", err)
 			return
 		}
-		debugGorm, err := cmd.Flags().GetBool("debug-gorm")
+		debug, err := cmd.Flags().GetBool("debug")
 		if err != nil {
-			fmt.Println("Unable to read flag `debug-gorm`, err:", err)
+			fmt.Println("Unable to read flag `debug`, err:", err)
 			return
 		}
 
@@ -75,13 +75,13 @@ var migrateUpCmd = &cobra.Command{
 			return
 		}
 
-		db, err := migrator.NewSqlDB()
+		db, err := migrator.NewDB(debug)
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db, debugGorm)
+		migrator, err := migrator.Init(db)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
@@ -106,9 +106,9 @@ var migrateDownCmd = &cobra.Command{
 			fmt.Println("Unable to read flag `step`, err:", err)
 			return
 		}
-		debugGorm, err := cmd.Flags().GetBool("debug-gorm")
+		debug, err := cmd.Flags().GetBool("debug")
 		if err != nil {
-			fmt.Println("Unable to read flag `debug-gorm`, err:", err)
+			fmt.Println("Unable to read flag `debug`, err:", err)
 			return
 		}
 
@@ -117,13 +117,13 @@ var migrateDownCmd = &cobra.Command{
 			return
 		}
 
-		db, err := migrator.NewSqlDB()
+		db, err := migrator.NewDB(debug)
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db, debugGorm)
+		migrator, err := migrator.Init(db)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
@@ -141,18 +141,24 @@ var migrateStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "display status of each migrations",
 	Run: func(cmd *cobra.Command, args []string) {
+		debug, err := cmd.Flags().GetBool("debug")
+		if err != nil {
+			fmt.Println("Unable to read flag `debug`, err:", err)
+			return
+		}
+
 		if err := cc.LoadSettings(SysOpt); err != nil {
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
 
-		db, err := migrator.NewSqlDB()
+		db, err := migrator.NewDB(debug)
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db, false)
+		migrator, err := migrator.Init(db)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
@@ -169,7 +175,7 @@ var migrateStatusCmd = &cobra.Command{
 
 func init() {
 	// Add "--debug-gorm" flag to all migrate sub commands
-	migrateCmd.PersistentFlags().BoolP("debug-gorm", "d", false, "whether debug gorm to print sql, default is false")
+	migrateCmd.PersistentFlags().BoolP("debug", "d", false, "whether debug gorm to print sql, default is false")
 
 	// Add "--name" flag to "create" command
 	migrateCreateCmd.Flags().StringP("name", "n", "", "Name for the migration")

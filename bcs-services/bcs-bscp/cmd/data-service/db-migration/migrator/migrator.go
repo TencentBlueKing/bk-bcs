@@ -14,8 +14,6 @@ package migrator
 
 import (
 	"bytes"
-	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"html/template"
@@ -40,21 +38,18 @@ var allSQLFiles []string
 
 // Migration is one specific db migration
 type Migration struct {
-	Version  string
-	Name     string
-	Mode     string
-	Up       func(*sql.Tx) error
-	Down     func(*sql.Tx) error
-	GormUp   func(*gorm.DB) error
-	GormDown func(*gorm.DB) error
+	Version string
+	Name    string
+	Mode    string
+	Up      func(*gorm.DB) error
+	Down    func(*gorm.DB) error
 
 	done bool
 }
 
 // Migrator is the controller for all migrations
 type Migrator struct {
-	sqlDB         *sql.DB
-	gormDB        *gorm.DB
+	db            *gorm.DB
 	Versions      []string
 	Migrations    map[string]*Migration
 	MigrationSQLs map[string]string
@@ -86,31 +81,25 @@ func (m *Migrator) AddMigration(mg *Migration) {
 }
 
 // Init create the db connection and get migrator
-func Init(db *sql.DB, debugGorm bool) (*Migrator, error) {
-	migrator.sqlDB = db
+func Init(db *gorm.DB) (*Migrator, error) {
+	migrator.db = db
 	var err error
-	migrator.gormDB, err = NewGormDB(db, debugGorm)
-	if err != nil {
-		fmt.Println("new gorm db err:", err)
-		return migrator, err
-	}
 
 	// Create `schema_migrations` table to remember which migrations were executed.
-	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
+	if result := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
 		id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 		applied DATETIME ( 6 ) NOT NULL,
 		version VARCHAR ( 255 )
-	);`); err != nil {
-		fmt.Println("Unable to create `schema_migrations` table", err)
-		return migrator, err
+	);`); result.Error != nil {
+		fmt.Println("Unable to create `schema_migrations` table", result.Error)
+		return migrator, result.Error
 	}
 
 	// Find out all the executed migrations
-	rows, err := db.Query("SELECT version FROM `schema_migrations`;")
+	rows, err := db.Raw("SELECT version FROM `schema_migrations`;").Rows()
 	if err != nil {
 		return migrator, err
 	}
-
 	defer rows.Close()
 
 	// Mark the migrations as Done if it is already executed
@@ -143,11 +132,7 @@ func GetMigrator() *Migrator {
 
 // Up execute forward migration
 func (m *Migrator) Up(step int) error {
-	sqlTx, err := m.sqlDB.BeginTx(context.TODO(), &sql.TxOptions{})
-	if err != nil {
-		return err
-	}
-	gormTx := m.gormDB.Begin()
+	tx := m.db.Begin()
 
 	count := 0
 	for _, v := range m.Versions {
@@ -162,49 +147,29 @@ func (m *Migrator) Up(step int) error {
 		}
 
 		fmt.Println("Running migration", mg.Version)
-		switch mg.Mode {
-		case GormMode:
-			if err := mg.GormUp(gormTx); err != nil {
-				sqlTx.Rollback()
-				gormTx.Rollback()
-				return err
-			}
-		case SqlMode:
-			if err := mg.Up(sqlTx); err != nil {
-				sqlTx.Rollback()
-				gormTx.Rollback()
-				return err
-			}
-		default:
-			sqlTx.Rollback()
-			gormTx.Rollback()
-			return fmt.Errorf("unsupported migration mode: %s for version: %s", mg.Mode, mg.Version)
+		if err := mg.Up(tx); err != nil {
+			tx.Rollback()
+			return err
 		}
 
-		if _, err := sqlTx.Exec("INSERT INTO `schema_migrations` (applied, version) VALUES(?, ?)",
-			time.Now().Format(constant.TimeStdFormat), mg.Version); err != nil {
-			sqlTx.Rollback()
-			gormTx.Rollback()
-			return err
+		if result := tx.Exec("INSERT INTO `schema_migrations` (applied, version) VALUES(?, ?)",
+			time.Now().Format(constant.TimeStdFormat), mg.Version); result.Error != nil {
+			tx.Rollback()
+			return result.Error
 		}
 		fmt.Println("Finished running migration", mg.Version)
 
 		count++
 	}
 
-	sqlTx.Commit()
-	gormTx.Commit()
+	tx.Commit()
 
 	return nil
 }
 
 // Down execute backward migration
 func (m *Migrator) Down(step int) error {
-	sqlTx, err := m.sqlDB.BeginTx(context.TODO(), &sql.TxOptions{})
-	if err != nil {
-		return err
-	}
-	gormTx := m.gormDB.Begin()
+	tx := m.db.Begin()
 
 	count := 0
 	for _, v := range reverse(m.Versions) {
@@ -219,37 +184,21 @@ func (m *Migrator) Down(step int) error {
 		}
 
 		fmt.Println("Reverting Migration", mg.Version)
-		switch mg.Mode {
-		case GormMode:
-			if err := mg.GormDown(gormTx); err != nil {
-				sqlTx.Rollback()
-				gormTx.Rollback()
-				return err
-			}
-		case SqlMode:
-			if err := mg.Down(sqlTx); err != nil {
-				sqlTx.Rollback()
-				gormTx.Rollback()
-				return err
-			}
-		default:
-			sqlTx.Rollback()
-			gormTx.Rollback()
-			return fmt.Errorf("unsupported migration mode: %s for version: %s", mg.Mode, mg.Version)
+		if err := mg.Down(tx); err != nil {
+			tx.Rollback()
+			return err
 		}
 
-		if _, err := sqlTx.Exec("DELETE FROM `schema_migrations` WHERE version = ?", mg.Version); err != nil {
-			sqlTx.Rollback()
-			gormTx.Rollback()
-			return err
+		if result := tx.Exec("DELETE FROM `schema_migrations` WHERE version = ?", mg.Version); result.Error != nil {
+			tx.Rollback()
+			return result.Error
 		}
 		fmt.Println("Finished reverting migration", mg.Version)
 
 		count++
 	}
 
-	sqlTx.Commit()
-	gormTx.Commit()
+	tx.Commit()
 
 	return nil
 }
@@ -309,7 +258,7 @@ func genGormMigrationFile(version, fileName string, in interface{}) error {
 		return errors.New("Unable to execute template:" + err.Error())
 	}
 
-	migrationFile, err := os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/%s_gorm_%s.go",
+	migrationFile, err := os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/%s_%s.go",
 		version, fileName))
 	if err != nil {
 		return errors.New("Unable to create gorm migration file:" + err.Error())
