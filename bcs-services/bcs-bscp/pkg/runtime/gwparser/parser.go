@@ -36,8 +36,8 @@ type Parser interface {
 // defaultParser used to parse requests api-service directly in the scenario.
 type defaultParser struct{}
 
+// NewDefaultParser init default Parser
 // Note: authorize in prod env may cause security problems, only use for dev/test
-// NewDefaultParser
 func NewDefaultParser() Parser {
 	return &defaultParser{}
 }
@@ -74,7 +74,7 @@ type jwtParser struct {
 	publicKeyObj *rsa.PublicKey
 }
 
-// NewJWTParser
+// NewJWTParser init JWT Parser
 func NewJWTParser(pubKey string) (Parser, error) {
 	if pubKey == "" {
 		return nil, errors.New("pubkey is required")
