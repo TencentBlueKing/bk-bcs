@@ -77,9 +77,10 @@ type RepoConfig struct {
 
 // ReleaseConfig option for helm release handler
 type ReleaseConfig struct {
-	APIServer string `json:"api" yaml:"api"`
-	Token     string `json:"token" yaml:"token"`
-	PatchDir  string `json:"patchdir" yaml:"patchdir"`
+	APIServer        string `json:"api" yaml:"api"`
+	Token            string `json:"token" yaml:"token"`
+	PatchDir         string `json:"patchdir" yaml:"patchdir"`
+	AddonsConfigFile string `json:"addonsConfigFile" yaml:"addonsConfigFile"`
 }
 
 // JWTConfig option for jwt config

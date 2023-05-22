@@ -39,6 +39,300 @@
         ]
       }
     },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons": {
+      "get": {
+        "summary": "获取集群组件列表",
+        "description": "获取集群组件列表",
+        "operationId": "ClusterAddons_ListAddons",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerListAddonsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterAddons"
+        ]
+      },
+      "post": {
+        "summary": "安装集群组件",
+        "description": "安装集群组件",
+        "operationId": "ClusterAddons_InstallAddons",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerInstallAddonsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerInstallAddonsReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterAddons"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}": {
+      "get": {
+        "summary": "获取集群组件详情",
+        "description": "获取集群组件详情",
+        "operationId": "ClusterAddons_GetAddonsDetail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerGetAddonsDetailResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "组件名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterAddons"
+        ]
+      },
+      "delete": {
+        "summary": "卸载集群组件",
+        "description": "删除组件所有内容",
+        "operationId": "ClusterAddons_UninstallAddons",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUninstallAddonsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "组件名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUninstallAddonsReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterAddons"
+        ]
+      },
+      "put": {
+        "summary": "更新集群组件",
+        "description": "更新集群组件",
+        "operationId": "ClusterAddons_UpgradeAddons",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUpgradeAddonsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "组件名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerUpgradeAddonsReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterAddons"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/stop": {
+      "put": {
+        "summary": "停止集群组件运行",
+        "description": "停止组件实例运行，保留配置相关信息",
+        "operationId": "ClusterAddons_StopAddons",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerStopAddonsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "组件名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerStopAddonsReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterAddons"
+        ]
+      }
+    },
     "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}": {
       "get": {
         "summary": "查询指定release详细信息",
@@ -1305,6 +1599,81 @@
       },
       "description": "Message that represents an arbitrary HTTP body. It should only be used for\npayload formats that can't be represented as JSON, such as raw binary or\nan HTML page.\n\n\nThis message can be used both in streaming and non-streaming API methods in\nthe request as well as the response.\n\nIt can be used as a top-level request field, which is convenient if one\nwants to extract parameters from either the URL or HTTP template into the\nrequest fields and also want access to the raw HTTP body.\n\nExample:\n\n    message GetResourceRequest {\n      // A unique request id.\n      string request_id = 1;\n\n      // The raw HTTP body is bound to this field.\n      google.api.HttpBody http_body = 2;\n\n    }\n\n    service ResourceService {\n      rpc GetResource(GetResourceRequest)\n        returns (google.api.HttpBody);\n      rpc UpdateResource(google.api.HttpBody)\n        returns (google.protobuf.Empty);\n\n    }\n\nExample with streaming methods:\n\n    service CaldavService {\n      rpc GetCalendar(stream google.api.HttpBody)\n        returns (stream google.api.HttpBody);\n      rpc UpdateCalendar(stream google.api.HttpBody)\n        returns (stream google.api.HttpBody);\n\n    }\n\nUse of this type only changes how the request and response bodies are\nhandled, all other features will continue to work unchanged."
     },
+    "helmmanagerAddons": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "组件名称",
+          "title": "name"
+        },
+        "chartName": {
+          "type": "string",
+          "description": "chart name",
+          "title": "chartName"
+        },
+        "description": {
+          "type": "string",
+          "description": "组件描述",
+          "title": "description"
+        },
+        "logo": {
+          "type": "string",
+          "description": "logo",
+          "title": "logo"
+        },
+        "docsLink": {
+          "type": "string",
+          "description": "文档链接",
+          "title": "docsLink"
+        },
+        "version": {
+          "type": "string",
+          "description": "组件最新版本",
+          "title": "version"
+        },
+        "currentVersion": {
+          "type": "string",
+          "description": "组件当前安装版本，空代表没安装",
+          "title": "currentVersion"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "部署的命名空间",
+          "title": "namespace"
+        },
+        "defaultValues": {
+          "type": "string",
+          "description": "默认配置，空代表可以直接安装，不需要填写自定义配置",
+          "title": "defaultValues"
+        },
+        "currentValues": {
+          "type": "string",
+          "description": "当前部署配置",
+          "title": "currentValues"
+        },
+        "status": {
+          "type": "string",
+          "description": "部署状态，同 Helm release 状态，空代表没安装",
+          "title": "status"
+        },
+        "message": {
+          "type": "string",
+          "description": "部署信息，部署异常则显示报错信息",
+          "title": "message"
+        },
+        "supportedActions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "组件支持的操作，目前有 install, upgrade, stop, uninstall",
+          "title": "supportedActions"
+        }
+      },
+      "description": "集群组件",
+      "title": "Addons"
+    },
     "helmmanagerAvailableResp": {
       "type": "object",
       "properties": {
@@ -1844,6 +2213,44 @@
         }
       }
     },
+    "helmmanagerGetAddonsDetailResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/helmmanagerAddons",
+          "description": "组件信息",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "requestID",
+          "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "title": "GetAddonsDetailResp"
+    },
     "helmmanagerGetChartDetailV1Resp": {
       "type": "object",
       "properties": {
@@ -2114,6 +2521,70 @@
       "description": "查询指定版本的chart包详细信息的返回",
       "title": "GetVersionDetailV1Resp"
     },
+    "helmmanagerInstallAddonsReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目代码",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "name": {
+          "type": "string",
+          "description": "组件名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "组件版本",
+          "title": "version"
+        },
+        "values": {
+          "type": "string",
+          "description": "values",
+          "title": "values"
+        }
+      },
+      "title": "InstallAddonsReq"
+    },
+    "helmmanagerInstallAddonsResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "requestID",
+          "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "title": "InstallAddonsResp"
+    },
     "helmmanagerInstallReleaseV1Req": {
       "type": "object",
       "properties": {
@@ -2215,6 +2686,47 @@
       },
       "description": "安装 release 的返回",
       "title": "InstallReleaseV1Resp"
+    },
+    "helmmanagerListAddonsResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/helmmanagerAddons"
+          },
+          "description": "组件列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "requestID",
+          "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "title": "ListAddonsResp"
     },
     "helmmanagerListChartV1Resp": {
       "type": "object",
@@ -2926,6 +3438,114 @@
       "description": "回滚 release 的返回",
       "title": "RollbackReleaseV1Resp"
     },
+    "helmmanagerStopAddonsReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目代码",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "name": {
+          "type": "string",
+          "description": "组件名称",
+          "title": "name"
+        }
+      },
+      "title": "StopAddonsReq"
+    },
+    "helmmanagerStopAddonsResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "requestID",
+          "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "title": "StopAddonsResp"
+    },
+    "helmmanagerUninstallAddonsReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目代码",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "name": {
+          "type": "string",
+          "description": "组件名称",
+          "title": "name"
+        }
+      },
+      "title": "UninstallAddonsReq"
+    },
+    "helmmanagerUninstallAddonsResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "requestID",
+          "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "title": "UninstallAddonsResp"
+    },
     "helmmanagerUninstallReleaseV1Req": {
       "type": "object",
       "properties": {
@@ -3068,6 +3688,70 @@
       },
       "description": "更新仓库的返回",
       "title": "UpdateRepositoryResp"
+    },
+    "helmmanagerUpgradeAddonsReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目代码",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "name": {
+          "type": "string",
+          "description": "组件名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "组件版本",
+          "title": "version"
+        },
+        "values": {
+          "type": "string",
+          "description": "values",
+          "title": "values"
+        }
+      },
+      "title": "UpgradeAddonsReq"
+    },
+    "helmmanagerUpgradeAddonsResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "requestID",
+          "title": "requestID"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/helmmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "title": "UpgradeAddonsResp"
     },
     "helmmanagerUpgradeReleaseV1Req": {
       "type": "object",
