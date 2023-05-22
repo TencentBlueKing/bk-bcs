@@ -116,15 +116,19 @@ type BasePage struct {
 	Order Order `json:"order"`
 }
 
+// Offset 偏移量
+func (bp *BasePage) Offset() int {
+	return int(bp.Start)
+}
+
+// LimitInt Limit int类型值
+func (bp *BasePage) LimitInt() int {
+	return int(bp.Limit)
+}
+
 // Validate the base page's options.
 // if the page option is not set, use the default configuration.
 func (bp BasePage) Validate(opt ...*PageOption) (err error) {
-	defer func() {
-		if err != nil {
-			err = errf.New(errf.InvalidParameter, err.Error())
-		}
-	}()
-
 	if len(opt) >= 2 {
 		return errors.New("at most one page options is allows")
 	}
@@ -225,10 +229,11 @@ type SortOption struct {
 
 // SQLExpr return the expression of the query clause based one the page options.
 // Note:
-// 1. do not call this, when it's a count request.
-// 2. if sort is not set, use the default resource's identity 'id' as the sort key.
-// 3. if Sort is set by the system(PageSQLOption.Sort), then use its Sort value
-//    according to the various options.
+//  1. do not call this, when it's a count request.
+//  2. if sort is not set, use the default resource's identity 'id' as the sort key.
+//  3. if Sort is set by the system(PageSQLOption.Sort), then use its Sort value
+//     according to the various options.
+//
 // see the test case to get more returned example and learn the supported scenarios.
 func (bp BasePage) SQLExpr(ps *PageSQLOption) (where string, err error) {
 	defer func() {

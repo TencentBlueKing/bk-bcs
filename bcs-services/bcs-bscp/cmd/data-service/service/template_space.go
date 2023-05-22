@@ -23,6 +23,7 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbts "bscp.io/pkg/protocol/core/template-space"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/types"
 )
 
 // CreateTemplateSpace create TemplateSpace.
@@ -63,7 +64,13 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTempl
 func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplateSpacesReq) (*pbds.ListTemplateSpacesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, int(req.Start), int(req.Limit))
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
+	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, opt)
+
 	if err != nil {
 		logs.Errorf("list TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err

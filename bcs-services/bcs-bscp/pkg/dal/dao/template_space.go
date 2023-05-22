@@ -18,6 +18,7 @@ import (
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/types"
 )
 
 // TemplateSpace supplies all the TemplateSpace related operations.
@@ -27,7 +28,7 @@ type TemplateSpace interface {
 	// Update one TemplateSpace's info.
 	Update(kit *kit.Kit, TemplateSpace *table.TemplateSpace) error
 	// List TemplateSpaces with options.
-	List(kit *kit.Kit, bizID uint32, offset, limit int) ([]*table.TemplateSpace, int64, error)
+	List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.TemplateSpace) error
 	// GetByName get templateSpace by name.
@@ -113,11 +114,11 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 }
 
 // List TemplateSpaces with options.
-func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, offset, limit int) ([]*table.TemplateSpace, int64, error) {
+func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error) {
 	m := dao.genM.TemplateSpace
 	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(offset, limit)
+	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err
 	}
