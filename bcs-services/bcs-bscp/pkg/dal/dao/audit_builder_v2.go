@@ -29,21 +29,21 @@ type AuditDo interface {
 	Do(tx *gen.Query) error
 }
 
-// AuditRes
+// AuditRes audit Res interface
 type AuditRes interface {
 	AppID() uint32
 	ResType() string
 	ResID() uint32
 }
 
-// AuditPrepare
+// AuditPrepare auditBuilder interface
 type AuditPrepare interface {
 	PrepareCreate(obj AuditRes) AuditDo
 	PrepareUpdate(obj, oldObj AuditRes) AuditDo
 	PrepareDelete(obj AuditRes) AuditDo
 }
 
-// initAuditBuilder create a new audit builder instance.
+// initAuditBuilderV2 create a new audit builder instance.
 func initAuditBuilderV2(kit *kit.Kit, bizID uint32, ad *audit) AuditPrepare {
 	ab := &AuditBuilderV2{
 		toAudit: &table.Audit{
@@ -69,7 +69,7 @@ func initAuditBuilderV2(kit *kit.Kit, bizID uint32, ad *audit) AuditPrepare {
 	return ab
 }
 
-// AuditBuilder is a wrapper decorator to handle all the resource's
+// AuditBuilderV2 is a wrapper decorator to handle all the resource's
 // audit operation.
 type AuditBuilderV2 struct {
 	hitErr error

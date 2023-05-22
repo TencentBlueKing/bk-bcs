@@ -76,7 +76,7 @@ func (au *audit) Decorator(kit *kit.Kit, bizID uint32, res enumor.AuditResourceT
 	return initAuditBuilder(kit, bizID, res, au)
 }
 
-// DecoratorV2 使用强类型
+// DecoratorV2 return audit decorator for to record audit.
 func (au *audit) DecoratorV2(kit *kit.Kit, bizID uint32) AuditPrepare {
 	return initAuditBuilderV2(kit, bizID, au)
 }
