@@ -146,6 +146,7 @@
 
   // 下载已上传文件
   const handleDownloadFile = async () => {
+    debugger
     const { signature, name } = <IFileConfigContentSummary>fileContent.value
     const res = await getConfigContent(props.bkBizId, props.appId, signature)
     fileDownload(res, `${name}.bin`)
@@ -228,6 +229,9 @@
     :deep(.bk-upload-list__item) {
       padding: 0;
       border: none;
+    }
+    :deep(.bk-upload-list--disabled .bk-upload-list__item) {
+      pointer-events: inherit;
     }
     .file-wrapper {
       display: flex;

@@ -28,6 +28,14 @@
     ],
   }
 
+  const handleCreateDialogOpen = () => {
+    localVal.value = {
+      name: '',
+      memo: '',
+    }
+    isConfirmDialogShow.value = true
+  }
+
   const handleConfirm = async() => {
     try {
       pending.value = true
@@ -45,10 +53,6 @@
 
   const handleClose = () => {
     isConfirmDialogShow.value = false
-    localVal.value = {
-      name: '',
-      memo: '',
-    }
     isPublish.value = false
   }
 
@@ -57,7 +61,7 @@
   <bk-button
     theme="primary"
     :disabled="props.configCount === 0"
-    @click="isConfirmDialogShow = true">
+    @click="handleCreateDialogOpen">
     生成版本
   </bk-button>
   <bk-dialog

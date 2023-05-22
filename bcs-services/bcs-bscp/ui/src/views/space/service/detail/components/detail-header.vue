@@ -38,9 +38,9 @@
       <ServiceSelector :value="props.appId" />
     </div>
     <div class="detail-header-tabs">
-      <BkTab type="unborder-card" v-model:active="activeTab" @change="handleTabChange">
+      <!-- <BkTab type="unborder-card" v-model:active="activeTab" @change="handleTabChange">
         <BkTabPanel v-for="tab in tabs" :key="tab.name" :name="tab.name" :label="tab.label"></BkTabPanel>
-      </BkTab>
+      </BkTab> -->
     </div>
     <div class="access-guide">
       <Help /><span style="margin-left: 6px;">接入指引</span>

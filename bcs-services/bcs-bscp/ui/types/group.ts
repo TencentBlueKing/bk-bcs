@@ -100,7 +100,7 @@ export interface IGroupEditing {
 // 分组规则
 export interface IGroupRuleItem {
   key: string;
-  op: EGroupRuleType;
+  op: EGroupRuleType|string;
   value: string|number|string[]
 }
 
