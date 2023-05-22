@@ -88,7 +88,7 @@ func (ab *AuditBuilderV2) Do(tx *gen.Query) error {
 		return ab.hitErr
 	}
 
-	return ab.ad.One(ab.kit, ab.toAudit, &AuditOption{genM: tx})
+	return ab.ad.One(ab.kit, ab.toAudit, &AuditOption{genQ: tx})
 }
 
 func (ab *AuditBuilderV2) PrepareCreate(obj AuditRes) AuditDo {

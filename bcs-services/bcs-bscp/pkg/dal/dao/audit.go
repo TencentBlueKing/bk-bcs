@@ -43,7 +43,7 @@ type AuditOption struct {
 	Txn *sqlx.Tx
 	// ResShardingUid is the resource's sharding instance.
 	ResShardingUid string
-	genM           *gen.Query
+	genQ           *gen.Query
 }
 
 var _ AuditDao = new(audit)
@@ -52,7 +52,7 @@ var _ AuditDao = new(audit)
 func NewAuditDao(db *gorm.DB, orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface) (AuditDao, error) {
 	return &audit{
 		db:         db,
-		genM:       gen.Use(db),
+		genQ:       gen.Use(db),
 		orm:        orm,
 		sd:         sd,
 		adSharding: sd.Audit(),
@@ -62,7 +62,7 @@ func NewAuditDao(db *gorm.DB, orm orm.Interface, sd *sharding.Sharding, idGen ID
 
 type audit struct {
 	db   *gorm.DB
-	genM *gen.Query
+	genQ *gen.Query
 	orm  orm.Interface
 	// sd is the common resource's sharding manager.
 	sd *sharding.Sharding
@@ -96,12 +96,12 @@ func (au *audit) One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error {
 
 	var q gen.IAuditDo
 
-	if au.db.Migrator().CurrentDatabase() == opt.genM.CurrentDatabase() {
+	if au.db.Migrator().CurrentDatabase() == opt.genQ.CurrentDatabase() {
 		// 使用同一个库，事务处理
-		q = opt.genM.Audit.WithContext(kit.Ctx)
+		q = opt.genQ.Audit.WithContext(kit.Ctx)
 	} else {
 		// 使用独立的 DB
-		q = au.genM.Audit.WithContext(kit.Ctx)
+		q = au.genQ.Audit.WithContext(kit.Ctx)
 	}
 
 	if err := q.Create(audit); err != nil {

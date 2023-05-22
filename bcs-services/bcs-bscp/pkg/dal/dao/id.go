@@ -40,7 +40,7 @@ func NewIDGenerator(sd *sharding.Sharding) IDGenInterface {
 
 type idGenerator struct {
 	sd   *sharding.Sharding
-	genM *gen.Query
+	genQ *gen.Query
 }
 
 type generator struct {
@@ -59,7 +59,7 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 		return nil, fmt.Errorf("gen %s unique id, but got invalid step", resource)
 	}
 
-	m := ig.genM.IDGenerator
+	m := ig.genQ.IDGenerator
 	genObj := new(generator)
 
 	updateTx := func(tx *gen.Query) error {
@@ -78,7 +78,7 @@ func (ig *idGenerator) Batch(ctx *kit.Kit, resource table.Name, step int) ([]uin
 		return nil
 	}
 
-	if err := ig.genM.Transaction(updateTx); err != nil {
+	if err := ig.genQ.Transaction(updateTx); err != nil {
 		return nil, err
 	}
 

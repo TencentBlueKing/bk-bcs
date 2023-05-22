@@ -38,7 +38,7 @@ type TemplateSpace interface {
 var _ TemplateSpace = new(templateSpaceDao)
 
 type templateSpaceDao struct {
-	genM     *gen.Query
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 }
@@ -71,7 +71,7 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 
 		return nil
 	}
-	if err := dao.genM.Transaction(createTx); err != nil {
+	if err := dao.genQ.Transaction(createTx); err != nil {
 		return 0, nil
 	}
 
@@ -84,10 +84,10 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 		return err
 	}
 
-	m := dao.genM.TemplateSpace
+	m := dao.genQ.TemplateSpace
 
 	// 更新操作, 获取当前记录做审计
-	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 		}
 		return nil
 	}
-	if err := dao.genM.Transaction(updateTx); err != nil {
+	if err := dao.genQ.Transaction(updateTx); err != nil {
 		return err
 	}
 
@@ -115,8 +115,8 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 
 // List TemplateSpaces with options.
 func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error) {
-	m := dao.genM.TemplateSpace
-	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 
 	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
@@ -134,8 +134,8 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 	}
 
 	// 删除操作, 获取当前记录做审计
-	m := dao.genM.TemplateSpace
-	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 		}
 		return nil
 	}
-	if err := dao.genM.Transaction(deleteTx); err != nil {
+	if err := dao.genQ.Transaction(deleteTx); err != nil {
 		return err
 	}
 
@@ -163,8 +163,8 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 
 // GetByName get by name
 func (dao *templateSpaceDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error) {
-	m := dao.genM.TemplateSpace
-	q := dao.genM.TemplateSpace.WithContext(kit.Ctx)
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 
 	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {

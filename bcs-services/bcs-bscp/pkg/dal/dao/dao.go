@@ -92,10 +92,10 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	// }
 
 	// 初始化 Gen 配置
-	genM := gen.Use(adminDB)
+	genQ := gen.Use(adminDB)
 
 	ormInst := orm.Do(opt)
-	idDao := &idGenerator{sd: sd, genM: genM}
+	idDao := &idGenerator{sd: sd, genQ: genQ}
 	auditDao, err := NewAuditDao(auditorDB, ormInst, sd, idDao)
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
@@ -104,7 +104,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	s := &set{
 		orm:               ormInst,
 		db:                adminDB,
-		genM:              genM,
+		genQ:              genQ,
 		sd:                sd,
 		credentialSetting: credentialSetting,
 		idGen:             idDao,
@@ -118,7 +118,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
 type set struct {
 	orm               orm.Interface
-	genM              *gen.Query
+	genQ              *gen.Query
 	db                *gorm.DB
 	sd                *sharding.Sharding
 	credentialSetting cc.Credential
@@ -245,7 +245,7 @@ func (s *set) TemplateSpace() TemplateSpace {
 	return &templateSpaceDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
-		genM:     s.genM,
+		genQ:     s.genQ,
 	}
 }
 
