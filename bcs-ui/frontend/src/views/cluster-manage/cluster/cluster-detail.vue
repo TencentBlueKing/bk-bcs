@@ -1,7 +1,8 @@
 <template>
   <!-- 集群详情 -->
   <BcsContent
-    :title="curCluster.clusterName" :desc="`(${curCluster.clusterID})`"
+    :title="curCluster ? curCluster.clusterName : ''"
+    :desc="curCluster ? `(${curCluster.clusterID})` : ''"
     v-bkloading="{ isLoading, opacity: 1 }">
     <bcs-tab :label-height="42" :active.sync="activeTabName" :validate-active="false" @tab-change="handleTabChange">
       <bcs-tab-panel name="overview" :label="$t('集群总览')" render-directive="if">
@@ -81,7 +82,7 @@ export default defineComponent({
     const cloudDetail = ref<Record<string, any>|null>(null);
     const handleGetCloudDetail = async () => {
       cloudDetail.value = await $store.dispatch('clustermanager/cloudDetail', {
-        $cloudId: curCluster.value.provider,
+        $cloudId: curCluster.value?.provider,
       });
     };
     const showAutoScaler = computed(() => cloudDetail.value && !cloudDetail.value?.confInfo?.disableNodeGroup);

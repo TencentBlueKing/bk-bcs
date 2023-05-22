@@ -20,12 +20,46 @@
         <bk-form-item :label="$t('操作系统')">
           <bcs-input disabled :value="clusterOS"></bcs-input>
         </bk-form-item>
+        <bk-form-item
+          :label="$t('可用区')"
+          :desc="$t('一般无需指定可用区，当已有的资源（存储或者网络等）偏好甚至依赖特定可用区时，可以指定可用区范围')"
+          property="nodePoolConfig.autoScaling.zones">
+          <div class="flex items-center h-[32px]">
+            <bk-radio-group
+              :value="isSpecifiedZoneList"
+              class="w-[auto]"
+              @change="handleZoneChange">
+              <bk-radio :value="false" :disabled="isEdit">
+                <TextTips :text="$t('任一可用区')" />
+              </bk-radio>
+              <bk-radio :value="true" :disabled="isEdit">
+                <TextTips :text="$t('指定可用区')" />
+              </bk-radio>
+            </bk-radio-group>
+            <bcs-select
+              class="flex-1 ml-[10px]"
+              v-if="isSpecifiedZoneList"
+              v-model="nodePoolConfig.autoScaling.zones"
+              multiple
+              searchable
+              :loading="zoneListLoading"
+              :disabled="isEdit"
+              :clearable="false"
+              @change="handleSetDefaultInstance">
+              <bcs-option
+                v-for="zone in zoneList"
+                :key="zone.zoneID"
+                :id="zone.zone"
+                :name="zone.zoneName" />
+            </bcs-select>
+          </div>
+        </bk-form-item>
         <bk-form-item :label="$t('机型配置')">
           <div class="mb15" style="display: flex;">
             <div class="prefix-select">
               <span :class="['prefix', { disabled: isEdit }]">CPU</span>
               <bcs-select
-                v-model="nodePoolConfig.launchTemplate.CPU"
+                v-model="CPU"
                 searchable
                 :clearable="false"
                 :disabled="isEdit"
@@ -33,7 +67,7 @@
                 class="bg-[#fff]">
                 <bcs-option id="" :name="$t('全部')"></bcs-option>
                 <bcs-option
-                  v-for="cpuItem in getSchemaByProp('launchTemplate.CPU').enum"
+                  v-for="cpuItem in cpuList"
                   :key="cpuItem"
                   :id="cpuItem"
                   :name="cpuItem">
@@ -44,7 +78,7 @@
             <div class="prefix-select ml30">
               <span :class="['prefix', { disabled: isEdit }]">{{$t('内存')}}</span>
               <bcs-select
-                v-model="nodePoolConfig.launchTemplate.Mem"
+                v-model="Mem"
                 searchable
                 :clearable="false"
                 :disabled="isEdit"
@@ -52,7 +86,7 @@
                 class="bg-[#fff]">
                 <bcs-option id="" :name="$t('全部')"></bcs-option>
                 <bcs-option
-                  v-for="memItem in getSchemaByProp('launchTemplate.Mem').enum"
+                  v-for="memItem in memList"
                   :key="memItem"
                   :id="memItem"
                   :name="memItem">
@@ -63,7 +97,7 @@
           </div>
           <bcs-table
             :data="instanceList"
-            v-bkloading="{ isLoading: instanceTypesLoading }"
+            v-bkloading="{ isLoading: instanceTypesLoading || clusterDetailLoading }"
             :pagination="pagination"
             :row-class-name="instanceRowClass"
             @page-change="pageChange"
@@ -71,11 +105,13 @@
             @row-click="handleCheckInstanceType">
             <bcs-table-column :label="$t('机型')" prop="typeName" show-overflow-tooltip>
               <template #default="{ row }">
-                <bcs-radio
-                  :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
-                  :disabled="row.status === 'SOLD_OUT' || isEdit">
-                  <span class="bcs-ellipsis">{{row.typeName}}</span>
-                </bcs-radio>
+                <span v-bk-tooltips="{ disabled: row.status !== 'SOLD_OUT', content: $t('售罄') }">
+                  <bcs-radio
+                    :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
+                    :disabled="row.status === 'SOLD_OUT' || isEdit">
+                    <span class="bcs-ellipsis">{{row.typeName}}</span>
+                  </bcs-radio>
+                </span>
               </template>
             </bcs-table-column>
             <bcs-table-column :label="$t('规格')" min-width="160" show-overflow-tooltip prop="nodeType"></bcs-table-column>
@@ -90,6 +126,7 @@
               </template>
             </bcs-table-column>
           </bcs-table>
+          <p class="text-[12px] text-[#ea3636]" v-if="!nodePoolConfig.launchTemplate.instanceType">{{ $t('必填项') }}</p>
           <div class="mt25" style="display:flex;align-items:center;">
             <div class="prefix-select">
               <span :class="['prefix', { disabled: isEdit }]">{{$t('系统盘')}}</span>
@@ -216,30 +253,6 @@
             </div>
           </div>
         </bk-form-item>
-        <!-- <bk-form-item :label="$t('可用区')">
-          <div class="flex items-center h-[32px]">
-            <bk-radio-group
-              :value="nodePoolConfig.autoScaling.zones && !!nodePoolConfig.autoScaling.zones.length"
-              class="w-[260px]"
-              @change="(v) => showAvailableArea = v">
-              <bk-radio :value="false">{{$t('任一可用区')}}</bk-radio>
-              <bk-radio :value="true">
-                {{$t('指定可用区')}}
-              </bk-radio>
-            </bk-radio-group>
-            <bcs-select
-              class="flex-1"
-              v-if="(nodePoolConfig.autoScaling.zones && !!nodePoolConfig.autoScaling.zones.length) || showAvailableArea"
-              v-model="nodePoolConfig.autoScaling.zones"
-              multiple>
-              <bcs-option
-                v-for="zone in (curInstanceItem.zones || [])"
-                :key="zone"
-                :id="zone"
-                :name="zone" />
-            </bcs-select>
-          </div>
-        </bk-form-item> -->
         <bk-form-item
           :label="$t('设置root密码')"
           property="nodePoolConfig.launchTemplate.initLoginPassword"
@@ -317,9 +330,11 @@ import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
 import { useProject } from '@/composables/use-app';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import { cloudsZones } from '@/api/modules/cluster-manager';
+import TextTips from '@/components/layout/TextTips.vue';
 
 export default defineComponent({
-  components: { FormGroup },
+  components: { FormGroup, TextTips },
   props: {
     schema: {
       type: Object,
@@ -369,7 +384,7 @@ export default defineComponent({
       name: defaultValues.value.name || '', // 节点名称
       autoScaling: {
         vpcID: '', // todo 放在basic-pool-info组件比较合适
-        // zones: [],
+        zones: defaultValues.value.autoScaling?.zones || [],
       },
       launchTemplate: {
         imageInfo: {
@@ -417,6 +432,13 @@ export default defineComponent({
           validator: () => !!nodePoolConfig.value.launchTemplate.securityGroupIDs.length,
         },
       ],
+      'nodePoolConfig.autoScaling.zones': [
+        {
+          message: $i18n.t('必填项'),
+          trigger: 'blur',
+          validator: () => !isSpecifiedZoneList.value || !!nodePoolConfig.value.autoScaling?.zones?.length,
+        },
+      ],
     });
     const basicFormRules = ref({
       name: [
@@ -433,19 +455,82 @@ export default defineComponent({
       ],
     });
 
+    // 可用区
+    const showZoneList = ref(false);
+    const zoneList = ref<any[]>([]);
+    const zoneListLoading = ref(false);
+    const isSpecifiedZoneList = computed(() => (!!nodePoolConfig.value.autoScaling?.zones?.length)
+    || showZoneList.value);
+    const handleGetZoneList = async () => {
+      zoneListLoading.value = true;
+      zoneList.value = await cloudsZones({
+        $cloudId: cluster.value.provider,
+        region: cluster.value.region,
+        accountID: cluster.value.cloudAccountID,
+      });
+      zoneListLoading.value = false;
+    };
+    const handleZoneChange = (v: boolean) => {
+      showZoneList.value = v;
+      nodePoolConfig.value.autoScaling.zones = [];
+    };
+
     // 机型
     const instanceTypesLoading = ref(false);
-    const instanceTypesList = ref<any[]>([]);
+    const instanceData = ref<any[]>([]);
+    const instanceTypesList = computed(() => {
+      const zoneList: string[] = nodePoolConfig.value.autoScaling?.zones || [];
+      const cacheInstanceMap = {};
+      if (!zoneList.length) return instanceData.value
+        .filter((instance) => {
+        // todo 简单过滤同类型机型
+          if (!cacheInstanceMap[instance.nodeType]) {
+            cacheInstanceMap[instance.nodeType] = true;
+            return true;
+          }
+          return false;
+        })
+        .filter(instance => (!CPU.value || instance.cpu === CPU.value)
+        && (!Mem.value || instance.memory === Mem.value));;
+      // 先过滤可用区, 再过滤同类型机型
+      return instanceData.value
+        .filter(instance => instance?.zones?.some(zone => zoneList.includes(zone)))
+        .filter((instance) => {
+        // todo 简单过滤同类型机型
+          if (!cacheInstanceMap[instance.nodeType]) {
+            cacheInstanceMap[instance.nodeType] = true;
+            return true;
+          }
+          return false;
+        })
+        .filter(instance => (!CPU.value || instance.cpu === CPU.value)
+        && (!Mem.value || instance.memory === Mem.value));
+    });
     // eslint-disable-next-line max-len
-    const curInstanceItem = computed(() => instanceTypesList.value.find(instance => instance.nodeType === nodePoolConfig.value.launchTemplate.instanceType) || {});
+    const curInstanceItem = computed(() => instanceData.value.find(instance => instance.nodeType === nodePoolConfig.value.launchTemplate.instanceType) || {});
+    const cpuList = computed(() => instanceData.value.reduce((pre, item) => {
+      if (!pre.includes(item.cpu)) {
+        pre.push(item.cpu);
+      }
+      return pre;
+    }, []));
+    const memList = computed(() => instanceData.value.reduce((pre, item) => {
+      if (!pre.includes(item.memory)) {
+        pre.push(item.memory);
+      }
+      return pre;
+    }, []));
+    const CPU = ref('');
+    const Mem = ref('');
     watch(() => [
-      nodePoolConfig.value.launchTemplate.Mem,
-      nodePoolConfig.value.launchTemplate.CPU,
+      CPU.value,
+      Mem.value,
     ], () => {
       // 重置机型
       nodePoolConfig.value.launchTemplate.instanceType = '';
-      // 获取机型
-      handleGetInstanceTypes();
+      handleSetDefaultInstance();
+      // // 获取机型
+      // handleGetInstanceTypes();
     });
     watch(curInstanceItem, () => {
       nodePoolConfig.value.extra.provider = curInstanceItem.value.provider;
@@ -463,26 +548,33 @@ export default defineComponent({
       nodePoolConfig.value.launchTemplate.instanceType = row.nodeType;
     };
     const { projectID } = useProject();
+    // 设置默认机型
+    const handleSetDefaultInstance = () => {
+      setTimeout(() => {
+        // 默认机型配置
+        if (!nodePoolConfig.value.launchTemplate.instanceType) {
+          nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
+            .find(instance => instance.status === 'SELL')?.nodeType;
+        }
+      });
+    };
     const handleGetInstanceTypes = async () => {
       instanceTypesLoading.value = true;
-      const cpu = nodePoolConfig.value.launchTemplate.CPU || undefined;
-      const memory =  nodePoolConfig.value.launchTemplate.Mem || undefined;
+      // const cpu = nodePoolConfig.value.launchTemplate.CPU || undefined;
+      // const memory =  nodePoolConfig.value.launchTemplate.Mem || undefined;
       const data = await $store.dispatch('clustermanager/cloudInstanceTypes', {
         $cloudID: cluster.value.provider,
         region: cluster.value.region,
         accountID: cluster.value.cloudAccountID,
-        provider: extraInfo.value.IMAGE_PROVIDER,
-        cpu,
-        memory,
+        provider: 'yunti', // todo self
+        // cpu,
+        // memory,
         projectID: projectID.value,
-        resourceType: 'CVM',
+        version: 'v2',
+        // bizID: curProject.value?.businessID,
       });
-      instanceTypesList.value = data.sort((pre, current) => pre.cpu - current.cpu);
-      // 默认机型配置
-      if (!nodePoolConfig.value.launchTemplate.instanceType) {
-        nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
-          .find(instance => instance.status === 'SELL')?.nodeType;
-      }
+      instanceData.value = data.sort((pre, current) => pre.cpu - current.cpu);
+      handleSetDefaultInstance();
       instanceTypesLoading.value = false;
     };
     const {
@@ -491,9 +583,6 @@ export default defineComponent({
       pageChange,
       pageSizeChange,
     } = usePage(instanceTypesList);
-
-    // // 可用区
-    // const showAvailableArea = ref(false);
 
     // 数据盘
     const defaultDiskItem = {
@@ -577,9 +666,18 @@ export default defineComponent({
       if (!basicFormValidate && nodeConfigRef.value) {
         nodeConfigRef.value.scrollTop = 0;
       }
+      // 校验机型
+      if (!nodePoolConfig.value.launchTemplate.instanceType) {
+        nodeConfigRef.value.scrollTop = 20;
+        return false;
+      }
       const result = await formRef.value?.validate().catch(() => false);
       if (!result && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = nodeConfigRef.value.offsetHeight;
+        if (isSpecifiedZoneList.value && !nodePoolConfig.value.autoScaling?.zones?.length) {
+          nodeConfigRef.value.scrollTop = 0;
+        } else {
+          nodeConfigRef.value.scrollTop = nodeConfigRef.value.offsetHeight;
+        }
       }
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
@@ -611,10 +709,13 @@ export default defineComponent({
     };
 
     // 集群详情
+    const clusterDetailLoading = ref(false);
     const { clusterData, clusterOS, clusterAdvanceSettings, extraInfo, getClusterDetail } = useClusterInfo();
     const handleGetClusterDetail = async () => {
+      clusterDetailLoading.value = true;
       await getClusterDetail(cluster.value?.clusterID, true);
       nodePoolConfig.value.autoScaling.vpcID = clusterData.value.vpcID;
+      clusterDetailLoading.value = false;
     };
 
     onMounted(async () => {
@@ -625,10 +726,15 @@ export default defineComponent({
       await handleGetClusterDetail();
       handleGetInstanceTypes();
       handleGetCloudSecurityGroups();
+      handleGetZoneList();
     });
 
     return {
-      // showAvailableArea,
+      isSpecifiedZoneList,
+      zoneListLoading,
+      zoneList,
+      handleZoneChange,
+      handleSetDefaultInstance,
       extraInfo,
       clusterAdvanceSettings,
       clusterOS,
@@ -660,6 +766,12 @@ export default defineComponent({
       showRepeatMountTarget,
       validate,
       getNodePoolData,
+      CPU,
+      Mem,
+      cpuList,
+      memList,
+      clusterDetailLoading,
+      instanceTypesList,
     };
   },
 });
