@@ -20,45 +20,43 @@ import (
 	"bscp.io/cmd/data-service/db-migration/migrator"
 )
 
-const mig20230418102723 = "20230418102723_add_credential"
+const mig{{.Version}} = "{{.Version}}_{{.FileName}}"
 
 func init() {
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
-		Version: "20230418102723",
-		Name:    "20230418102723_add_credential",
+		Version: "{{.Version}}",
+		Name:    "{{.Version}}_{{.FileName}}",
 		Mode:    migrator.SqlMode,
-		Up:      mig20230418102723AddCredentialUp,
-		Down:    mig20230418102723AddCredentialDown,
+		Up:      mig{{.Version}}{{.FuncName}}Up,
+		Down:    mig{{.Version}}{{.FuncName}}Down,
 	})
 }
 
-func mig20230418102723AddCredentialUp(tx *gorm.DB) error {
-	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetUpSQLKey(mig20230418102723)], ";")
+func mig{{.Version}}{{.FuncName}}Up(tx *gorm.DB) error {
+	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetUpSQLKey(mig{{.Version}})], ";")
 	for _, sql := range sqlArr {
 		sql = strings.TrimSpace(sql)
 		if sql == "" {
 			continue
 		}
-		if result := tx.Exec(sql); result.Error != nil {
+        if result := tx.Exec(sql); result.Error != nil {
 			return result.Error
 		}
 	}
-
 	return nil
 
 }
 
-func mig20230418102723AddCredentialDown(tx *gorm.DB) error {
-	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetDownSQLKey(mig20230418102723)], ";")
-	for _, sql := range sqlArr {
-		sql = strings.TrimSpace(sql)
-		if sql == "" {
-			continue
-		}
-		if result := tx.Exec(sql); result.Error != nil {
+func mig{{.Version}}{{.FuncName}}Down(tx *gorm.DB) error {
+    sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetDownSQLKey(mig{{.Version}})], ";")
+    for _, sql := range sqlArr {
+        sql = strings.TrimSpace(sql)
+        if sql == "" {
+            continue
+        }
+        if result := tx.Exec(sql); result.Error != nil {
 			return result.Error
 		}
-	}
-
-	return nil
+    }
+    return nil
 }
