@@ -39,7 +39,7 @@ type AuditRes interface {
 // AuditPrepare
 type AuditPrepare interface {
 	PrepareCreate(obj AuditRes) AuditDo
-	PrepareUpdate(obj AuditRes, oldObj interface{}) AuditDo
+	PrepareUpdate(obj, oldObj AuditRes) AuditDo
 	PrepareDelete(obj AuditRes) AuditDo
 }
 
@@ -91,6 +91,7 @@ func (ab *AuditBuilderV2) Do(tx *gen.Query) error {
 	return ab.ad.One(ab.kit, ab.toAudit, &AuditOption{genQ: tx})
 }
 
+// PrepareCreate 创建资源
 func (ab *AuditBuilderV2) PrepareCreate(obj AuditRes) AuditDo {
 	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResType())
 	ab.toAudit.ResourceID = obj.ResID()
@@ -112,7 +113,8 @@ func (ab *AuditBuilderV2) PrepareCreate(obj AuditRes) AuditDo {
 	return ab
 }
 
-func (ab *AuditBuilderV2) PrepareUpdate(obj AuditRes, oldObj interface{}) AuditDo {
+// PrepareUpdate 更新资源, 会记录 spec 对比值
+func (ab *AuditBuilderV2) PrepareUpdate(obj, oldObj AuditRes) AuditDo {
 	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResType())
 	ab.toAudit.ResourceID = obj.ResID()
 	ab.toAudit.Action = enumor.Update
@@ -140,6 +142,7 @@ func (ab *AuditBuilderV2) PrepareUpdate(obj AuditRes, oldObj interface{}) AuditD
 	return ab
 }
 
+// PrepareDelete 删除资源
 func (ab *AuditBuilderV2) PrepareDelete(obj AuditRes) AuditDo {
 	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResType())
 	ab.toAudit.ResourceID = obj.ResID()

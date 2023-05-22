@@ -83,7 +83,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	}
 
 	// auditor 分库, 注意需要在分表前面
-	auditorDB := sharding.MustShardingAuditor(adminDB)
+	// auditorDB := sharding.MustShardingAuditor(adminDB)
 
 	// biz 分表 mysql.Dialector -> sharding.ShardingDialector
 	// 不支持 sqlparser.QualifiedRef, 暂时去掉, 参考 issue https://github.com/go-gorm/sharding/pull/32
@@ -96,7 +96,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
 	ormInst := orm.Do(opt)
 	idDao := &idGenerator{sd: sd, genQ: genQ}
-	auditDao, err := NewAuditDao(auditorDB, ormInst, sd, idDao)
+	auditDao, err := NewAuditDao(adminDB, ormInst, sd, idDao)
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
