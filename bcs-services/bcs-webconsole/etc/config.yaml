@@ -32,7 +32,6 @@ bcs_conf:
   jwt_public_key: ""
   insecure_skip_verify: false
 
-bcs_env_conf: []
 
 webconsole:
   mode: internal # external

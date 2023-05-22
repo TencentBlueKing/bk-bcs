@@ -25,10 +25,6 @@ type BCSClusterEnv string
 const (
 	// ProdCluster xxx
 	ProdCluster BCSClusterEnv = "prod" // 正式环境
-	// DebugCLuster xxx
-	DebugCLuster BCSClusterEnv = "debug" // debug 环境
-	// UatCluster xxx
-	UatCluster BCSClusterEnv = "uat" // uat 环境
 )
 
 // BCSConf BCS配置
