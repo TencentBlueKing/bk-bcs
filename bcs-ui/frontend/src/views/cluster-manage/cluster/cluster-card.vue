@@ -27,7 +27,7 @@
                   {{cluster.clusterID || '--'}}
                 </span>
                 <bcs-tag theme="warning" v-if="['stag', 'debug'].includes(cluster.environment)">
-                  {{$t('测试')}}
+                  {{cluster.environment === 'stag' ? 'UAT' : $t('测试')}}
                 </bcs-tag>
                 <bcs-tag theme="info" v-else-if="cluster.environment === 'prod'">
                   {{$t('正式')}}

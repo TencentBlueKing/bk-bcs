@@ -59,16 +59,10 @@
     <bk-table-column
       :label="$t('集群环境')"
       prop="environment"
-      :filters="[{
-        text: $t('测试'),
-        value: 'stag'
-      },{
-        text: $t('正式'),
-        value: 'prod'
-      }]"
+      :filters="clusterEnvFilters"
       :filter-method="filterMethod">
       <template #default="{ row }">
-        {{ ['stag', 'debug'].includes(row.environment) ? $t('测试') : $t('正式') }}
+        {{ CLUSTER_ENV[row.environment] }}
       </template>
     </bk-table-column>
     <bk-table-column
@@ -250,12 +244,13 @@
   </bk-table>
 </template>
 <script lang="ts">
-import { defineComponent, PropType, toRefs } from 'vue';
+import { computed, defineComponent, PropType, toRefs } from 'vue';
 import StatusIcon from '@/components/status-icon';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import { useProject } from '@/composables/use-app';
+import { CLUSTER_ENV } from '@/common/constant';
 
 export default defineComponent({
   name: 'ClusterList',
@@ -289,6 +284,14 @@ export default defineComponent({
   setup(props, ctx) {
     const { curProject } = useProject();
     const { clusterExtraInfo } = toRefs(props);
+    const clusterEnvFilters = computed(() => props.clusterList.reduce((pre, cluster) => {
+      if (pre.find(item => item.value === cluster.environment)) return pre;
+      pre.push({
+        text: CLUSTER_ENV[cluster.environment],
+        value: cluster.environment,
+      });
+      return pre;
+    }, []));
     const filterMethod = (value, row, column) => {
       const { property } = column;
       return row[property] === value;
@@ -338,6 +341,8 @@ export default defineComponent({
     };
 
     return {
+      CLUSTER_ENV,
+      clusterEnvFilters,
       curProject,
       filterMethod,
       handleGotoClusterOverview,

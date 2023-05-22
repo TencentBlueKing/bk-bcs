@@ -63,3 +63,4 @@ export const newUserPermsByAction = request('post', '/perms/actions/$actionId');
 
 // CA
 export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');
+export const cloudsZones = request('get', '/clouds/$cloudId/zones');

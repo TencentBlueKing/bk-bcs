@@ -10,6 +10,7 @@
     <bcs-exception
       type="empty"
       scene="part"
+      class="!w-[320px]"
       v-if="!clusterData.length">
     </bcs-exception>
     <div class="max-h-[400px] overflow-y-auto" v-else>

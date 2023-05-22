@@ -147,7 +147,10 @@
         :data="curPageData"
         ref="tableRef"
         :key="tableKey"
-        @filter-change="handleFilterChange">
+        :pagination="pagination"
+        @filter-change="handleFilterChange"
+        @change="pageChange"
+        @limit-change="pageSizeChange">
         <template #prepend>
           <transition name="fade">
             <div class="selection-tips" v-if="selectType !== CheckType.Uncheck">
@@ -493,18 +496,6 @@
           <BcsEmptyTableStatus :type="searchSelectValue.length ? 'search-empty' : 'empty'" @clear="searchSelectValue = []" />
         </template>
       </bcs-table>
-      <bcs-pagination
-        class="pagination"
-        :limit="pagination.limit"
-        :count="pagination.count"
-        :current="pagination.current"
-        align="right"
-        show-total-count
-        show-selection-count
-        :selection-count="selections.length"
-        @change="pageChange"
-        @limit-change="pageSizeChange">
-      </bcs-pagination>
     </div>
     <!-- 设置标签 -->
     <bcs-sideslider
@@ -934,14 +925,20 @@ export default defineComponent({
 
     // 可用区
     const zoneList = computed(() => tableData.value.reduce((pre, row) => {
-      const exit = pre.find(item => item.value === row.zoneID);
-      if (!exit) {
+      if (!row.zoneID) return pre;
+      const data = pre.find(item => item.value === row.zoneID);
+      if (!data) {
         pre.push({
           value: row.zoneID,
-          text: row.zoneName,
+          text: `${row.zoneName} (1)`,
           id: row.zoneID,
-          name: row.zoneName,
+          name: `${row.zoneName} (1)`,
+          count: 1,
         });
+      } else {
+        data.count += 1;
+        data.text = `${row.zoneName} (${data.count})`;
+        data.name = `${row.zoneName} (${data.count})`;
       }
       return pre;
     }, []));
@@ -1792,14 +1789,6 @@ export default defineComponent({
     .tips-btn {
         font-size: 12px;
         margin-left: 5px;
-    }
-}
-.pagination {
-    padding: 14px 16px;
-    height: 60px;
-    background: #fff;
-    >>> .bk-page-total-count {
-        color: #63656e;
     }
 }
 .row-label {
