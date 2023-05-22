@@ -13,7 +13,7 @@ limitations under the License.
 package dao
 
 import (
-	"strconv"
+	"bytes"
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
@@ -149,14 +149,16 @@ func (dao *groupAppDao) Get(kit *kit.Kit, groupID, appID, bizID uint32) (*table.
 		return nil, errf.New(errf.InvalidParameter, "app id is 0")
 	}
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.GroupAppBindColumns.NamedExpr(), " FROM ",
-		table.GroupAppBindTable.Name(), " WHERE group_id = "+strconv.Itoa(int(groupID))+
-			" AND app_id = "+strconv.Itoa(int(appID))+" AND biz_id = "+strconv.Itoa(int(bizID)))
-	sql := filter.SqlJoint(sqlSentence)
+	var sqlBuf bytes.Buffer
+	sqlBuf.WriteString("SELECT ")
+	sqlBuf.WriteString(table.GroupAppBindColumns.NamedExpr())
+	sqlBuf.WriteString(" FROM ")
+	sqlBuf.WriteString(table.GroupAppBindTable.Name())
+	sqlBuf.WriteString(" WHERE group_id = ? AND app_id = ? AND biz_id = ?")
 
 	item := &table.GroupAppBind{}
-	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, item, sql); err != nil {
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, item, sqlBuf.String(),
+		groupID, appID, bizID); err != nil {
 		return nil, err
 	}
 	return item, nil
