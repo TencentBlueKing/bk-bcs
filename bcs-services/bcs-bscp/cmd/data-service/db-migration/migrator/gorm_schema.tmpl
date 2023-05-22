@@ -31,7 +31,7 @@ func init() {
 }
 
 func mig{{.Version}}Gorm{{.FuncName}}Up(tx *gorm.DB) error {
-    // ModelExample: 模型示例，实际迁移DB时，需按实际情况进行修改（包括修改该注释）
+    // ModelExample : 模型示例，实际迁移DB时，需按实际情况进行修改（包括修改该注释）
     type ModelExample struct {
         ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
         Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`
