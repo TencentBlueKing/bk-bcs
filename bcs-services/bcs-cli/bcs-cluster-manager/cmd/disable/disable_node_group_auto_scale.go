@@ -52,5 +52,5 @@ func disableNodeGroupAutoScale(cmd *cobra.Command, args []string) {
 		klog.Fatalf("disable node group auto scale failed: %v", err)
 	}
 
-	fmt.Printf("disable node group auto scale succeed")
+	fmt.Println("disable node group auto scale succeed")
 }

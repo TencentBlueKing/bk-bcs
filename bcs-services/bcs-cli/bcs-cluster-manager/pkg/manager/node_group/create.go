@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
-// Create 创建节点池
+// Create 创建节点池,创建成功返回节点池ID和任务ID
 func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNodeGroupResp, err error) {
 	timeRange := make([]*clustermanager.TimeRange, 0)
 	for _, v := range req.AutoScaling.TimeRanges {
@@ -99,6 +99,7 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNo
 		}
 	}
 
+	//构建CreateNodeGroupRequest并创建节点池
 	servResp, err := c.client.CreateNodeGroup(c.ctx, &clustermanager.CreateNodeGroupRequest{
 		ClusterID:       req.ClusterID,
 		Name:            req.Name,

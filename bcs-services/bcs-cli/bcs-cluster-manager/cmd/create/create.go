@@ -27,6 +27,7 @@ var (
 	# create a cluster variable
 	kubectl-bcs-cluster-manager create`))
 
+	virtual  bool
 	filename string
 )
 

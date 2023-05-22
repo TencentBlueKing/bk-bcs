@@ -42,7 +42,7 @@ func newMoveNodesToGroupCmd() *cobra.Command {
 	cmd.MarkFlagRequired("clusterID")
 	cmd.Flags().StringVarP(&nodeGroupID, "nodeGroupID", "n", "", "node group ID")
 	cmd.MarkFlagRequired("nodeGroupID")
-	cmd.Flags().StringSliceVarP(&nodes, "nodes", "i", []string{}, "node inner ip, for example: -i 47.43.47.103 -i 244.87.232.48")
+	cmd.Flags().StringSliceVarP(&nodes, "nodes", "i", []string{}, "node inner ip, for example: -i xxx.xxx.xxx.xxx -i xxx.xxx.xxx.xxx")
 	cmd.MarkFlagRequired("nodes")
 
 	return cmd
@@ -58,5 +58,5 @@ func moveNodesToGroup(cmd *cobra.Command, args []string) {
 		klog.Fatalf("move nodes to group failed: %v", err)
 	}
 
-	fmt.Printf("move nodes to group succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("move nodes to group succeed: taskID: %v\n", resp.TaskID)
 }

@@ -55,5 +55,5 @@ func updateGroupDesiredSize(cmd *cobra.Command, args []string) {
 		klog.Fatalf("update group desired size failed: %v", err)
 	}
 
-	fmt.Printf("update group desired size succeed")
+	fmt.Println("update group desired size succeed")
 }

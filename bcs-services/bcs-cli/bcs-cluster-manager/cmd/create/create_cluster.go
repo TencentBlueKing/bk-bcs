@@ -32,8 +32,19 @@ var (
 	{"projectID":"b363e23b1b354928axxxxxxxxx","businessID":"3","engineType":"k8s","isExclusive":true,
 	"clusterType":"single","creator":"bcs","manageType":"INDEPENDENT_CLUSTER","clusterName":"test001",
 	"environment":"prod","provider":"bluekingCloud","description":"创建测试集群","clusterBasicSettings":
-	{"version":"v1.20.11"},"networkType":"overlay","region":"default","vpcID":"","networkSettings":{},
-	"master":["11.144.254.xx","11.144.254.xx"]}`))
+	{"version":"v1.20.xx"},"networkType":"overlay","region":"default","vpcID":"","networkSettings":{},
+	"master":["xxx.xxx.xxx.xxx","xxx.xxx.xxx.xxx"]}.
+
+	create virtual cluster json template: 
+	{"clusterID":"","clusterName":"test-xxx","provider":"tencentCloud","region":"ap-xxx","vpcID":
+	"vpc-xxx","projectID":"xxx","businessID":"xxx","environment":"debug","engineType":"k8s","isExclusive":
+	true,"clusterType":"single","hostClusterID":"BCS-K8S-xxx","hostClusterNetwork":"devnet","labels":
+	{"xxx":"xxx"},"creator":"bcs","onlyCreateInfo":false,"master":["xxx"],"networkSettings":{"cidrStep":
+	1,"maxNodePodNum":1,"maxServiceNum":1},"clusterBasicSettings":{"version":"xxx"},"clusterAdvanceSettings":
+	{"IPVS":false,"containerRuntime":"xxx","runtimeVersion":"xxx","extraArgs":{"xxx":"xxx"}},"nodeSettings":
+	{"dockerGraphPath":"xxx","mountTarget":"xxx","unSchedulable":1,"labels":{"xxx":"xxx"},"extraArgs":{"xxx":
+	"xxx"}},"extraInfo":{"xxx":"xxx"},"description":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","ns":{"name":
+	"ieg-bcs-xxxxxxxxxxxxxxx","labels":{"xxx":"xxx"},"annotations":{"xxx":"xxx"}}}`))
 )
 
 func newCreateClusterCmd() *cobra.Command {
@@ -44,6 +55,8 @@ func newCreateClusterCmd() *cobra.Command {
 		Run:     createCluster,
 	}
 
+	cmd.Flags().BoolVarP(&virtual, "virtual", "v", false, `create virtual cluster`)
+
 	return cmd
 }
 
@@ -51,6 +64,28 @@ func createCluster(cmd *cobra.Command, args []string) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		klog.Fatalf("read json file failed: %v", err)
+	}
+
+	if virtual {
+		req := types.CreateVirtualClusterReq{}
+		err = json.Unmarshal(data, &req)
+		if err != nil {
+			klog.Fatalf("unmarshal json file failed: %v", err)
+		}
+
+		resp := &types.CreateVirtualClusterResp{}
+		err = clusterMgr.NewHttpClient(context.Background()).Post("/bcsapi/v4/clustermanager/v1/vcluster", req, resp)
+		if err != nil {
+			klog.Fatalf("create virtual cluster failed: %v", err)
+		}
+
+		if resp != nil && resp.Code != 0 {
+			klog.Fatalf("create virtual cluster failed: %s", resp.Message)
+		}
+
+		fmt.Printf("create virtual cluster succeed: clusterID: %v, taskID: %v\n", resp.Data.ClusterID, resp.Task.TaskID)
+
+		return
 	}
 
 	req := types.CreateClusterReq{}
@@ -64,5 +99,5 @@ func createCluster(cmd *cobra.Command, args []string) {
 		klog.Fatalf("create cluster failed: %v", err)
 	}
 
-	fmt.Printf("create cluster succeed: clusterID: %v, taskID: %v", resp.ClusterID, resp.TaskID)
+	fmt.Printf("create cluster succeed: clusterID: %v, taskID: %v\n", resp.ClusterID, resp.TaskID)
 }

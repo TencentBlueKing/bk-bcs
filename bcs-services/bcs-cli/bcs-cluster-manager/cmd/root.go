@@ -75,13 +75,6 @@ func NewRootCommand() *cobra.Command {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "cfg", defaultCfgFile, "config file")
 
-	// rootCmd.AddCommand(cluster.NewClusterCmd())
-	// rootCmd.AddCommand(node.NewNodeCmd())
-	// rootCmd.AddCommand(cloudvpc.NewCloudVPCCmd())
-	// rootCmd.AddCommand(cloudaccount.NewCloudAccountCmd())
-	// rootCmd.AddCommand(task.NewTaskCmd())
-	// rootCmd.AddCommand(nodegroup.NewNodeGroupCmd())
-
 	rootCmd.AddCommand(create.NewCreateCmd())
 	rootCmd.AddCommand(delete.NewDeleteCmd())
 	rootCmd.AddCommand(update.NewUpdateCmd())

@@ -52,5 +52,5 @@ func retryTask(cmd *cobra.Command, args []string) {
 		klog.Fatalf("retry task failed: %v", err)
 	}
 
-	fmt.Printf("retry task succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("retry task succeed: taskID: %v\n", resp.TaskID)
 }
