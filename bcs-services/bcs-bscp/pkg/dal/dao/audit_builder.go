@@ -294,13 +294,6 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 			return ab
 		}
 
-	case *table.TemplateSpace:
-		templateSpace := updatedTo.(*table.TemplateSpace)
-		if err := ab.decorateTemplateSpaceUpdate(templateSpace); err != nil {
-			ab.hitErr = err
-			return ab
-		}
-
 	case *table.Credential:
 		credential := updatedTo.(*table.Credential)
 		if err := ab.decorateCredentialUpdate(credential); err != nil {
@@ -462,26 +455,6 @@ func (ab *AuditBuilder) decorateHookUpdate(hook *table.Hook) error {
 	return nil
 }
 
-func (ab *AuditBuilder) decorateTemplateSpaceUpdate(templateSpace *table.TemplateSpace) error {
-	ab.toAudit.ResourceID = templateSpace.ID
-
-	preTemplateSpace, err := ab.getTemplateSpace(templateSpace.ID)
-	if err != nil {
-		return err
-	}
-
-	ab.prev = preTemplateSpace
-
-	changed, err := parseChangedSpecFields(preTemplateSpace, templateSpace)
-	if err != nil {
-		ab.hitErr = err
-		return fmt.Errorf("parse templateSpace changed spec field failed, err: %v", err)
-	}
-
-	ab.changed = changed
-	return nil
-}
-
 func (ab *AuditBuilder) decorateCredentialUpdate(credential *table.Credential) error {
 	ab.toAudit.ResourceID = credential.ID
 
@@ -591,15 +564,6 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.AppID = hook.Attachment.AppID
 		ab.toAudit.ResourceID = hook.ID
 		ab.prev = hook
-
-	case enumor.TemplateSpace:
-		templateSpace, err := ab.getTemplateSpace(resID)
-		if err != nil {
-			ab.hitErr = err
-			return ab
-		}
-		ab.toAudit.ResourceID = templateSpace.ID
-		ab.prev = templateSpace
 
 	case enumor.CRInstance:
 		cri, err := ab.getCRInstance(resID)
@@ -749,21 +713,6 @@ func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
 	return one, nil
 }
 
-func (ab *AuditBuilder) getTemplateSpace(templateSpaceID uint32) (*table.TemplateSpace, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(templateSpaceID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
-	filter := filter2.SqlJoint(sqlSentence)
-
-	one := new(table.TemplateSpace)
-	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
-	if err != nil {
-		return nil, fmt.Errorf("get templateSpace details failed, err: %v", err)
-	}
-
-	return one, nil
-}
-
 func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInstance, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.CurrentReleasedInstanceColumns.NamedExpr(),
@@ -862,7 +811,12 @@ func parseChangedSpecFields(pre, cur interface{}) (map[string]interface{}, error
 
 		dbTag := prevSpecV.Type().Field(i).Tag.Get("db")
 		if len(dbTag) == 0 {
-			return nil, fmt.Errorf("filed: %s do not have a db tag, can not compare", preName)
+			// fallback to json tag
+			dbTag = prevSpecV.Type().Field(i).Tag.Get("json")
+		}
+
+		if len(dbTag) == 0 {
+			return nil, fmt.Errorf("filed: %s do not have a db or json tag, can not compare", preName)
 		}
 
 		changedField[dbTag] = curFieldV.Interface()

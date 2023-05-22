@@ -16,8 +16,15 @@ package dao
 import (
 	"fmt"
 
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/plugin/opentelemetry/tracing"
+	"gorm.io/plugin/prometheus"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/kit"
@@ -57,15 +64,47 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		return nil, fmt.Errorf("init sharding failed, err: %v", err)
 	}
 
+	adminDB, err := gorm.Open(mysql.Open(sharding.URI(opt.AdminDatabase)), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := adminDB.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
+		return nil, err
+	}
+
+	// 会定期执行 SHOW STATUS; 拿状态数据
+	// metricsCollector := []prometheus.MetricsCollector{
+	// 	&prometheus.MySQL{VariableNames: []string{"Threads_running"}},
+	// }
+
+	if err := adminDB.Use(prometheus.New(prometheus.Config{})); err != nil {
+		return nil, err
+	}
+
+	// auditor 分库, 注意需要在分表前面
+	// auditorDB := sharding.MustShardingAuditor(adminDB)
+
+	// biz 分表 mysql.Dialector -> sharding.ShardingDialector
+	// 不支持 sqlparser.QualifiedRef, 暂时去掉, 参考 issue https://github.com/go-gorm/sharding/pull/32
+	// if err := sharding.InitBizSharding(adminDB); err != nil {
+	// 	return nil, err
+	// }
+
+	// 初始化 Gen 配置
+	genQ := gen.Use(adminDB)
+
 	ormInst := orm.Do(opt)
-	idDao := &idGenerator{sd: sd}
-	auditDao, err := NewAuditDao(ormInst, sd, idDao)
+	idDao := &idGenerator{sd: sd, genQ: genQ}
+	auditDao, err := NewAuditDao(adminDB, ormInst, sd, idDao)
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
 
 	s := &set{
 		orm:               ormInst,
+		db:                adminDB,
+		genQ:              genQ,
 		sd:                sd,
 		credentialSetting: credentialSetting,
 		idGen:             idDao,
@@ -79,6 +118,8 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
 type set struct {
 	orm               orm.Interface
+	genQ              *gen.Query
+	db                *gorm.DB
 	sd                *sharding.Sharding
 	credentialSetting cc.Credential
 	idGen             IDGenInterface
@@ -202,10 +243,9 @@ func (s *set) Hook() Hook {
 // TemplateSpace returns the templateSpace's DAO
 func (s *set) TemplateSpace() TemplateSpace {
 	return &templateSpaceDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+		genQ:     s.genQ,
 	}
 }
 

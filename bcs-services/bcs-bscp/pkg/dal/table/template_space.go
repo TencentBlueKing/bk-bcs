@@ -15,38 +15,39 @@ package table
 import (
 	"errors"
 
-	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/validator"
 )
 
-// TemplateSpaceColumns defines TemplateSpace's columns
-var TemplateSpaceColumns = mergeColumns(TemplateSpaceColumnDescriptor)
-
-// TemplateSpaceColumnDescriptor is TemplateSpace's column descriptors.
-var TemplateSpaceColumnDescriptor = mergeColumnDescriptors("",
-	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
-	mergeColumnDescriptors("spec", TemplateSpaceSpecColumnDescriptor),
-	mergeColumnDescriptors("attachment", TemplateSpaceAttachmentColumnDescriptor),
-	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
-
-// TemplateSpace defines a TemplateSpace for an app to publish.
-// it contains the selector to define the scope of the matched instances.
+// TemplateSpace 模版空间
 type TemplateSpace struct {
-	// ID is an auto-increased value, which is a unique identity of a TemplateSpace.
-	ID         uint32                   `db:"id" json:"id"`
-	Spec       *TemplateSpaceSpec       `db:"spec" json:"spec"`
-	Attachment *TemplateSpaceAttachment `db:"attachment" json:"attachment"`
-	Revision   *Revision                `db:"revision" json:"revision"`
+	ID         uint32                   `json:"id" gorm:"primaryKey"`
+	Spec       *TemplateSpaceSpec       `json:"spec" gorm:"embedded"`
+	Attachment *TemplateSpaceAttachment `json:"attachment" gorm:"embedded"`
+	Revision   *Revision                `json:"revision" gorm:"embedded"`
 }
 
 // TableName is the TemplateSpace's database table name.
-func (s TemplateSpace) TableName() Name {
-	return TemplateSpaceTable
+func (s *TemplateSpace) TableName() string {
+	return "template_spaces"
+}
+
+// AppID AuditRes interface
+func (s *TemplateSpace) AppID() uint32 {
+	return 0
+}
+
+// AuditResID AuditRes interface
+func (s *TemplateSpace) ResID() uint32 {
+	return s.ID
+}
+
+// AuditResType AuditRes interface
+func (s *TemplateSpace) ResType() string {
+	return "template_space"
 }
 
 // ValidateCreate validate TemplateSpace is valid or not when create it.
 func (s TemplateSpace) ValidateCreate() error {
-
 	if s.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -129,19 +130,10 @@ func (s TemplateSpace) ValidateDelete() error {
 	return nil
 }
 
-// TemplateSpaceSpecColumns defines TemplateSpaceSpec's columns
-var TemplateSpaceSpecColumns = mergeColumns(TemplateSpaceSpecColumnDescriptor)
-
-// TemplateSpaceSpecColumnDescriptor is TemplateSpaceSpec's column descriptors.
-var TemplateSpaceSpecColumnDescriptor = ColumnDescriptors{
-	{Column: "name", NamedC: "name", Type: enumor.String},
-	{Column: "memo", NamedC: "memo", Type: enumor.String},
-}
-
 // TemplateSpaceSpec defines all the specifics for TemplateSpace set by user.
 type TemplateSpaceSpec struct {
-	Name string `db:"name" json:"name"`
-	Memo string `db:"memo" json:"memo"`
+	Name string `json:"name" gorm:"column:name"`
+	Memo string `json:"memo" gorm:"column:memo"`
 }
 
 // TemplateSpaceType is the type of TemplateSpace
@@ -173,16 +165,9 @@ func (s TemplateSpaceSpec) ValidateUpdate() error {
 	return nil
 }
 
-// TemplateSpaceAttachmentColumns defines TemplateSpaceAttachment's columns
-var TemplateSpaceAttachmentColumns = mergeColumns(TemplateSpaceAttachmentColumnDescriptor)
-
-// TemplateSpaceAttachmentColumnDescriptor is TemplateSpaceAttachment's column descriptors.
-var TemplateSpaceAttachmentColumnDescriptor = ColumnDescriptors{
-	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric}}
-
 // TemplateSpaceAttachment defines the TemplateSpace attachments.
 type TemplateSpaceAttachment struct {
-	BizID uint32 `db:"biz_id" json:"biz_id"`
+	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
 }
 
 // IsEmpty test whether TemplateSpace attachment is empty or not.
