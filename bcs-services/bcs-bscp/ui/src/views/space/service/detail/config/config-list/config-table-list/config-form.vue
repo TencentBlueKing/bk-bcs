@@ -146,7 +146,6 @@
 
   // 下载已上传文件
   const handleDownloadFile = async () => {
-    debugger
     const { signature, name } = <IFileConfigContentSummary>fileContent.value
     const res = await getConfigContent(props.bkBizId, props.appId, signature)
     fileDownload(res, `${name}.bin`)
