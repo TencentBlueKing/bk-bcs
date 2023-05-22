@@ -471,14 +471,6 @@ func (ds *Database) trySetDefault() {
 	}
 }
 
-// DSN 数据库连接 Data Source Name
-func (ds *Database) DSN() string {
-	// 目前只用第一个配置
-	ep := ds.Endpoints[0]
-
-	return fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", ds.User, ds.Password, ep, ds.Database)
-}
-
 // validate database runtime.
 func (ds Database) validate() error {
 	if len(ds.Endpoints) == 0 {
