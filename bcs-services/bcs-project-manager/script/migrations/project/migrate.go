@@ -322,9 +322,8 @@ func getStrKind(kind uint) string {
 func getBusinessID(ccAppID uint) string {
 	if ccAppID == 0 {
 		return ""
-	} else {
-		return strconv.Itoa(int(ccAppID))
 	}
+	return strconv.Itoa(int(ccAppID))
 }
 
 func stringInSlice(str string, list []string) bool {

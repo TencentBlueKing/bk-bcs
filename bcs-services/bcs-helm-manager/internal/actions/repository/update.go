@@ -78,7 +78,7 @@ func (u *UpdateRepositoryAction) update(projectCode, name string, m entity.M) er
 		return nil
 	}
 
-	r, err := u.model.GetRepository(u.ctx, projectCode, name)
+	r, err := u.model.GetProjectRepository(u.ctx, projectCode, name)
 	if err != nil {
 		blog.Errorf("update repository failed, %s, projectCode: %s, name: %s", err.Error(), projectCode, name)
 		u.setResp(common.ErrHelmManagerUpdateActionFailed, err.Error(), nil)

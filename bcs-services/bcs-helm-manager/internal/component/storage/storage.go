@@ -38,8 +38,7 @@ func NewClient(tlsConfig *tls.Config) error {
 
 // GetPods get cluster pods
 func GetPods(clusterID, namespace string) ([]*storage.Pod, error) {
-	bcsServer := options.GetBCSAPIConfigByClusterID(clusterID)
-	u, err := url.Parse(bcsServer.URL)
+	u, err := url.Parse(options.GlobalOptions.Release.APIServer)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +46,7 @@ func GetPods(clusterID, namespace string) ([]*storage.Pod, error) {
 		Gateway:   true,
 		TLSConfig: client.ClientTLSConfig,
 		Hosts:     []string{u.Host},
-		AuthToken: bcsServer.Token,
+		AuthToken: options.GlobalOptions.Release.Token,
 	}
 	cli := bcsapi.NewStorage(&cfg)
 	return cli.QueryK8SPod(clusterID, namespace)

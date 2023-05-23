@@ -673,9 +673,7 @@ export default defineComponent({
       $bkInfo({
         title: $i18n.t('确认删除'),
         clsName: 'biz-remove-dialog',
-        content: h('p', {
-          class: 'biz-confirm-desc',
-        }, `${$i18n.t('确定要删除')}【${crdInstance.name}】？`),
+        content: `${$i18n.t('确定要删除')}【${crdInstance.name}】？`,
         async confirmFn() {
           state.isPageLoading = true;
           const res = await $store.dispatch('crdcontroller/deleteCrdInstance', { projectId, clusterId, crdKind, crdId }).catch(() => false);

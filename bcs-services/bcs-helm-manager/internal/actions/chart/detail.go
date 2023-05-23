@@ -28,163 +28,6 @@ import (
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
-// NewGetVersionDetailAction return a new GetVersionDetailAction instance
-func NewGetVersionDetailAction(model store.HelmManagerModel, platform repo.Platform) *GetVersionDetailAction {
-	return &GetVersionDetailAction{
-		model:    model,
-		platform: platform,
-	}
-}
-
-// GetVersionDetailAction provides the action to do get chart version detail info
-type GetVersionDetailAction struct {
-	ctx context.Context
-
-	model    store.HelmManagerModel
-	platform repo.Platform
-
-	req  *helmmanager.GetVersionDetailReq
-	resp *helmmanager.GetVersionDetailResp
-}
-
-// Handle the chart detail getting process
-func (g *GetVersionDetailAction) Handle(ctx context.Context,
-	req *helmmanager.GetVersionDetailReq, resp *helmmanager.GetVersionDetailResp) error {
-
-	if req == nil || resp == nil {
-		blog.Errorf("get chart version detail failed, req or resp is empty")
-		return common.ErrHelmManagerReqOrRespEmpty.GenError()
-	}
-	g.ctx = ctx
-	g.req = req
-	g.resp = resp
-
-	if err := g.req.Validate(); err != nil {
-		blog.Errorf("get chart version detail failed, invalid request, %s, param: %v", err.Error(), g.req)
-		g.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
-		return nil
-	}
-
-	return g.getDetail()
-}
-
-func (g *GetVersionDetailAction) getDetail() error {
-	projectID := g.req.GetProjectID()
-	repoName := g.req.GetRepository()
-	chartName := g.req.GetName()
-	version := g.req.GetVersion()
-	username := auth.GetUserFromCtx(g.ctx)
-
-	repository, err := g.model.GetRepository(g.ctx, projectID, repoName)
-	if err != nil {
-		blog.Errorf("get chart version detail failed, %s, "+
-			"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-			err.Error(), projectID, repoName, chartName, version, username)
-		g.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
-		return nil
-	}
-
-	origin, err := g.platform.
-		User(repo.User{
-			Name:     repository.Username,
-			Password: repository.Password,
-		}).
-		Project(repository.GetRepoProjectID()).
-		Repository(
-			repo.GetRepositoryType(repository.Type),
-			repository.GetRepoName(),
-		).
-		Chart(chartName).
-		Detail(g.ctx, version)
-	if err != nil {
-		blog.Errorf("get chart version detail failed, %s, "+
-			"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-			err.Error(), projectID, repoName, chartName, version, username)
-		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
-		return nil
-	}
-
-	valuesFile := make([]string, 0, 0)
-	readmeFile := ""
-	for _, item := range origin.Contents {
-		if isValuesFile(item) {
-			valuesFile = append(valuesFile, item.Path)
-		}
-		if isReadMeFile(item) {
-			readmeFile = item.Path
-		}
-	}
-
-	r := origin.Transfer2Proto(repository.RepoURL)
-	r.Readme = common.GetStringP(readmeFile)
-	r.ValuesFile = valuesFile
-	g.setResp(common.ErrHelmManagerSuccess, "ok", r)
-	blog.Infof("get chart version detail successfully, "+
-		"projectID: %s, repository: %s, chartName: %s, version: %s, operator: %s",
-		projectID, repoName, chartName, version, username)
-	return nil
-}
-
-func (g *GetVersionDetailAction) setResp(err common.HelmManagerError, message string, r *helmmanager.ChartDetail) {
-	code := err.Int32()
-	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
-	g.resp.Result = err.OK()
-	g.resp.Data = r
-}
-
-func getValuesFiles(files map[string]*repo.FileContent, chartName string) []string {
-	valuesFile := make([]string, 0, 0)
-	defaultValuesFile := fmt.Sprintf("%s/%s", chartName, "values.yaml")
-	hasDefaultValuesFile := false
-	for _, item := range files {
-		if item.Path == defaultValuesFile {
-			hasDefaultValuesFile = true
-			continue
-		}
-		if isValuesFile(item) {
-			valuesFile = append(valuesFile, item.Path)
-		}
-	}
-
-	sort.Sort(sort.StringSlice(valuesFile))
-	if hasDefaultValuesFile {
-		valuesFile = append([]string{defaultValuesFile}, valuesFile...)
-	}
-	return valuesFile
-}
-
-func isValuesFile(f *repo.FileContent) bool {
-	// 允许根目录所有以values.yaml结尾的文件, 如
-	// values.yaml
-	// game-values.yaml
-	// my-values.yaml
-	if (strings.HasSuffix(f.Name, "values.yaml") || strings.HasSuffix(f.Name, "values.yml")) &&
-		strings.Count(f.Path, "/") <= 1 {
-		return true
-	}
-
-	// 允许所有在bcs-values文件夹下的.yml或.yaml文件, 如
-	// bcs-values/values.yaml
-	// templates/bcs-values/my.yaml
-	if strings.HasSuffix(strings.TrimSuffix(f.Path, f.Name), "bcs-values/") &&
-		(strings.HasSuffix(f.Path, ".yaml") || strings.HasSuffix(f.Path, ".yml")) {
-		return true
-	}
-
-	return false
-}
-
-func isReadMeFile(f *repo.FileContent) bool {
-	// README.md 一般以最外层为准, 目录层级不能超过1
-	if f.Name == "README.md" && strings.Count(f.Path, "/") <= 1 {
-		return true
-	}
-
-	return false
-}
-
 // NewGetVersionDetailV1Action return a new GetChartDetailV1Action instance
 func NewGetVersionDetailV1Action(model store.HelmManagerModel, platform repo.Platform) *GetVersionDetailV1Action {
 	return &GetVersionDetailV1Action{
@@ -233,7 +76,7 @@ func (g *GetVersionDetailV1Action) getDetail() (*helmmanager.ChartDetail, error)
 	version := g.req.GetVersion()
 	username := auth.GetUserFromCtx(g.ctx)
 
-	repository, err := g.model.GetRepository(g.ctx, projectCode, repoName)
+	repository, err := g.model.GetProjectRepository(g.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("get chart version detail failed, %s, "+
 			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",
@@ -333,7 +176,7 @@ func (g *GetChartDetailV1Action) getDetail() (*helmmanager.Chart, error) {
 	chartName := g.req.GetName()
 	username := auth.GetUserFromCtx(g.ctx)
 
-	repository, err := g.model.GetRepository(g.ctx, projectCode, repoName)
+	repository, err := g.model.GetProjectRepository(g.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("get chart detail failed, %s, projectCode: %s, repository: %s, chartName: %s, operator: %s",
 			err.Error(), projectCode, repoName, chartName, username)
@@ -373,4 +216,55 @@ func (g *GetChartDetailV1Action) setResp(err common.HelmManagerError, message st
 	g.resp.Message = &msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
+}
+
+func getValuesFiles(files map[string]*repo.FileContent, chartName string) []string {
+	valuesFile := make([]string, 0, 0)
+	defaultValuesFile := fmt.Sprintf("%s/%s", chartName, "values.yaml")
+	hasDefaultValuesFile := false
+	for _, item := range files {
+		if item.Path == defaultValuesFile {
+			hasDefaultValuesFile = true
+			continue
+		}
+		if isValuesFile(item) {
+			valuesFile = append(valuesFile, item.Path)
+		}
+	}
+
+	sort.Sort(sort.StringSlice(valuesFile))
+	if hasDefaultValuesFile {
+		valuesFile = append([]string{defaultValuesFile}, valuesFile...)
+	}
+	return valuesFile
+}
+
+func isValuesFile(f *repo.FileContent) bool {
+	// 允许根目录所有以values.yaml结尾的文件, 如
+	// values.yaml
+	// game-values.yaml
+	// my-values.yaml
+	if (strings.HasSuffix(f.Name, "values.yaml") || strings.HasSuffix(f.Name, "values.yml")) &&
+		strings.Count(f.Path, "/") <= 1 {
+		return true
+	}
+
+	// 允许所有在bcs-values文件夹下的.yml或.yaml文件, 如
+	// bcs-values/values.yaml
+	// templates/bcs-values/my.yaml
+	if strings.HasSuffix(strings.TrimSuffix(f.Path, f.Name), "bcs-values/") &&
+		(strings.HasSuffix(f.Path, ".yaml") || strings.HasSuffix(f.Path, ".yml")) {
+		return true
+	}
+
+	return false
+}
+
+func isReadMeFile(f *repo.FileContent) bool {
+	// README.md 一般以最外层为准, 目录层级不能超过1
+	if f.Name == "README.md" && strings.Count(f.Path, "/") <= 1 {
+		return true
+	}
+
+	return false
 }

@@ -55,5 +55,5 @@ func deleteCloudAccount(cmd *cobra.Command, args []string) {
 		klog.Fatalf("delete cloud account failed: %v", err)
 	}
 
-	fmt.Printf("delete cloud account succeed")
+	fmt.Println("delete cloud account succeed")
 }

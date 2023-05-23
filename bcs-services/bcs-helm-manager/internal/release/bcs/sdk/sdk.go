@@ -100,9 +100,9 @@ func (g *group) getClient(clusterID string) Client {
 	c, ok = g.groups[clusterID]
 	if !ok {
 		flags := genericclioptions.NewConfigFlags(false)
-		bcsConfig := options.GetBCSAPIConfigByClusterID(clusterID)
-		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, bcsConfig.URL, clusterID))
-		flags.BearerToken = common.GetStringP(bcsConfig.Token)
+		apiserver := options.GlobalOptions.Release.APIServer
+		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, apiserver, clusterID))
+		flags.BearerToken = common.GetStringP(options.GlobalOptions.Release.Token)
 		flags.Insecure = common.GetBoolP(true)
 
 		c = &client{

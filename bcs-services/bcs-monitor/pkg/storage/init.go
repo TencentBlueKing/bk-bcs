@@ -15,15 +15,25 @@ package storage
 
 // once synchronization
 import (
+	"strings"
 	"sync"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
-// GLobals
+// Globals
 var (
 	GlobalRedisSession *RedisSession
+	GlobalStorage      Storage
 )
 
-var redisOnce sync.Once
+var (
+	redisOnce   sync.Once
+	storageOnce sync.Once
+)
 
 // GetDefaultRedisSession : get default redis session for default database
 func GetDefaultRedisSession() *RedisSession {
@@ -38,4 +48,33 @@ func GetDefaultRedisSession() *RedisSession {
 		})
 	}
 	return GlobalRedisSession
+}
+
+// InitStorage init storage client
+func InitStorage() {
+	storageOnce.Do(func() {
+		mongoConf := config.G.Mongo
+		mongoOptions := &mongo.Options{
+			Hosts:                 strings.Split(mongoConf.Address, ","),
+			ConnectTimeoutSeconds: int(mongoConf.ConnectTimeout),
+			AuthDatabase:          mongoConf.AuthDatabase,
+			Database:              mongoConf.Database,
+			Username:              mongoConf.Username,
+			Password:              mongoConf.Password,
+			MaxPoolSize:           uint64(mongoConf.MaxPoolSize),
+			MinPoolSize:           uint64(mongoConf.MinPoolSize),
+		}
+		mongoDB, err := mongo.NewDB(mongoOptions)
+		if err != nil {
+			blog.Errorf("init mongo db failed, err %s", err.Error())
+			panic(err)
+		}
+		if err = mongoDB.Ping(); err != nil {
+			blog.Errorf("ping mongo db failed, err %s", err.Error())
+			panic(err)
+		}
+		blog.Info("init mongo db successfully")
+		GlobalStorage = New(mongoDB)
+	})
+	return
 }

@@ -25,7 +25,6 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
-
 	"github.com/jmoiron/sqlx"
 )
 
@@ -33,6 +32,8 @@ import (
 type Content interface {
 	// Create one content instance.
 	Create(kit *kit.Kit, content *table.Content) (uint32, error)
+	// CreateWithTx create one content instance with transaction
+	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, content *table.Content) (uint32, error)
 	// Get get content by id
 	Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error)
 	// List contents with options.
@@ -72,12 +73,13 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 	content.ID = id
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ContentTable.Name(), " (", table.ContentColumns.ColumnExpr(), ")  VALUES(", table.ContentColumns.ColonNameExpr(), ")")
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ContentTable.Name(),
+		" (", table.ContentColumns.ColumnExpr(), ")  VALUES(", table.ContentColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
 
 	err = dao.sd.ShardingOne(content.Attachment.BizID).AutoTxn(kit,
 		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, content); err != nil {
+			if e := dao.orm.Txn(txn).Insert(kit.Ctx, sql, content); e != nil {
 				return err
 			}
 
@@ -99,6 +101,44 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 	return id, nil
 }
 
+// CreateWithTx create one content instance with transaction
+func (dao *contentDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, content *table.Content) (uint32, error) {
+
+	if content == nil {
+		return 0, errf.New(errf.InvalidParameter, "content is nil")
+	}
+
+	if err := content.ValidateCreate(); err != nil {
+		return 0, errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	// generate an content id and update to content.
+	id, err := dao.idGen.One(kit, table.ContentTable)
+	if err != nil {
+		return 0, err
+	}
+
+	content.ID = id
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ContentTable.Name(),
+		" (", table.ContentColumns.ColumnExpr(), ")  VALUES(", table.ContentColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
+
+	if e := dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, content); e != nil {
+		return 0, err
+	}
+
+	// audit this to be create content details.
+	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
+	if err = dao.auditDao.Decorator(kit, content.Attachment.BizID,
+		enumor.Content).AuditCreate(content, au); err != nil {
+		return 0, fmt.Errorf("audit create content failed, err: %v", err)
+	}
+
+	return id, nil
+}
+
 // Get content by id.
 // TODO: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
 func (dao *contentDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error) {
@@ -108,7 +148,8 @@ func (dao *contentDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Content, erro
 	}
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(), " FROM ", table.ContentTable.Name(), " WHERE id = ", strconv.Itoa(int(id)))
+	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(),
+		" FROM ", table.ContentTable.Name(), " WHERE id = ", strconv.Itoa(int(id)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	content := &table.Content{}
@@ -174,7 +215,8 @@ func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
 		return nil, err
 	}
 
-	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(), " FROM ", table.ContentTable.Name(), whereExpr, pageExpr)
+	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(),
+		" FROM ", table.ContentTable.Name(), whereExpr, pageExpr)
 	sql = filter.SqlJoint(sqlSentence)
 
 	list := make([]*table.Content, 0)
@@ -190,7 +232,8 @@ func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
 func (dao *contentDao) validateAttachmentResExist(kit *kit.Kit, am *table.ContentAttachment) error {
 
 	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
+	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)),
+		" AND biz_id = ", strconv.Itoa(int(am.BizID)))
 	sql := filter.SqlJoint(sqlSentence)
 	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
 	if err != nil {
@@ -202,7 +245,8 @@ func (dao *contentDao) validateAttachmentResExist(kit *kit.Kit, am *table.Conten
 	}
 
 	var sqlSentenceRes []string
-	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
+	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)),
+		" AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
 	sqlRes := filter.SqlJoint(sqlSentenceRes)
 
 	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable, sqlRes)

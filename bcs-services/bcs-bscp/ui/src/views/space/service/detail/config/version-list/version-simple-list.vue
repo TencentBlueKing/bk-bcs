@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted, defineExpose } from 'vue'
+  import { ref, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../../store/config'
   import { Ellipsis } from 'bkui-vue/lib/icon'
@@ -75,6 +75,14 @@
     }
   }
 
+  const refreshConfigList = async() => {
+    await getVersionList()
+    const newVersionData = versionList.value.find(item => item.id === versionData.value.id)
+    if (newVersionData) {
+      handleSelectVersion(newVersionData)
+    }
+  }
+
   const handleSelectVersion = (version: IConfigVersion) => {
     versionStore.$patch(state => {
       state.versionData = version
@@ -104,7 +112,7 @@
   }
 
   defineExpose({
-    getVersionList
+    refreshConfigList
   })
 
 </script>
@@ -123,7 +131,7 @@
             <Ellipsis class="action-more-icon" />
             <template #content>
               <bk-dropdown-menu placement="bottom-end">
-                <bk-dropdown-item @click="handleDiffDialogShow(version)">版本对比</bk-dropdown-item>
+                <bk-dropdown-item v-if="version.status.publish_status !== 'editing'" @click="handleDiffDialogShow(version)">版本对比</bk-dropdown-item>
                 <bk-dropdown-item @click="handleDeprecate(version.id)">废弃</bk-dropdown-item>
               </bk-dropdown-menu>
             </template>

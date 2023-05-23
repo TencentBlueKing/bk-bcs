@@ -29,7 +29,7 @@ paths:
           upstreams: {}
           transformHeaders: {}
         authConfig:
-          userVerifiedRequired: true
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/api/get/content/download/biz_id/{biz_id}/app_id/{app_id}:
     get:
@@ -126,6 +126,30 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items:
+    put:
+      operationId: batch_upsert_config_items
+      description: 批量覆盖上传配置项
+      tags:
+      - 配置项管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_items
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/create/content/content/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}:
     post:
@@ -392,6 +416,30 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: true
+        disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/query/name/{app_name}:
+    get:
+      operationId: get_app_by_name
+      description: 通过名称获取服务详情
+      tags:
+      - 应用管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/apps/query/name/{app_name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
         disabledStages: []
   /api/v1/config/list/app/app/biz_id/{biz_id}:
     post:
@@ -804,6 +852,31 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/publish:
+    post:
+      operationId: generate_release_and_publish
+      description: 生成版本并发布
+      tags:
+      - 发布管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/publish
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+
   /api/v1/config/update/strategy_set/strategy_set/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
     put:
       operationId: update_strategy_set
@@ -1184,30 +1257,6 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
-  api/v1/config/biz_id/{biz_id}/credentials:
-    post:
-      operationId: create_credential
-      description: 创建凭据
-      tags:
-        - credential管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: api/v1/config/biz_id/{biz_id}/credentials
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
   /api/v1/config/biz_id/{biz_id}/credentials:
     get:
       operationId: list_credential
@@ -1232,10 +1281,9 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
-  /api/v1/config/biz_id/{biz_id}/credential:
-    delete:
-      operationId: delete_credential
-      description: 删除凭据
+    post:
+      operationId: create_credential
+      description: 创建凭据
       tags:
         - credential管理
       responses:
@@ -1247,8 +1295,8 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: delete
-          path: /api/v1/config/biz_id/{biz_id}/credential
+          method: post
+          path: /api/v1/config/biz_id/{biz_id}/credentials
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -1272,6 +1320,29 @@ paths:
         backend:
           type: HTTP
           method: put
+          path: /api/v1/config/biz_id/{biz_id}/credential
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+    delete:
+      operationId: delete_credential
+      description: 删除凭据
+      tags:
+        - credential管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
           path: /api/v1/config/biz_id/{biz_id}/credential
           matchSubpath: false
           timeout: 0

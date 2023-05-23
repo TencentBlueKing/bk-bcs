@@ -47,4 +47,12 @@ var ActionPermissions = map[string]string{
 	"HelmManager.GetReleaseHistory":  namespace.CanViewNamespaceScopedResourceOperation,
 	"HelmManager.GetReleaseStatus":   project.CanViewProjectOperation,
 	"HelmManager.GetReleasePods":     project.CanViewProjectOperation,
+
+	// Addons
+	"ClusterAddons.ListAddons":      project.CanViewProjectOperation,
+	"ClusterAddons.GetAddonsDetail": project.CanViewProjectOperation,
+	"ClusterAddons.InstallAddons":   project.CanViewProjectOperation,
+	"ClusterAddons.UpgradeAddons":   project.CanViewProjectOperation,
+	"ClusterAddons.StopAddons":      project.CanViewProjectOperation,
+	"ClusterAddons.UninstallAddons": project.CanViewProjectOperation,
 }

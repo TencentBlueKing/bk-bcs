@@ -38,7 +38,7 @@ func getQueryURL() (string, http.Header) {
 // GetFirstValue 获取第一个值
 func GetFirstValue(vector model.Vector) string {
 	if len(vector) == 0 {
-		return "0"
+		return ""
 	}
 	return vector[0].Value.String()
 }

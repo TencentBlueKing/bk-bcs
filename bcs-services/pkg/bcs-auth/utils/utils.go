@@ -40,20 +40,14 @@ type PermDeniedError struct {
 	Perms PermData `json:"perms"`
 }
 
+// PermData permission data for no permission
 type PermData struct {
 	ApplyURL   string           `json:"apply_url"`
 	ActionList []ResourceAction `json:"action_list"`
 }
 
+// Error return error message with perm actions
 func (e *PermDeniedError) Error() string {
-	var actions string
-	for _, action := range e.Perms.ActionList {
-		actions = actions + " " + action.Action
-	}
-	return fmt.Sprintf("permission denied, need%s permition", actions)
-}
-
-func (e *PermDeniedError) Data() string {
 	var actions string
 	for _, action := range e.Perms.ActionList {
 		actions = actions + " " + action.Action

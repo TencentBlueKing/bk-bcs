@@ -38,6 +38,7 @@ func newDeleteClusterCmd() *cobra.Command {
 		Run:     deleteCluster,
 	}
 
+	cmd.Flags().BoolVarP(&virtual, "virtual", "v", false, `delete virtual cluster`)
 	cmd.Flags().StringVarP(&clusterID, "clusterID", "c", "", "cluster ID (required)")
 	cmd.MarkFlagRequired("clusterID")
 
@@ -45,10 +46,28 @@ func newDeleteClusterCmd() *cobra.Command {
 }
 
 func deleteCluster(cmd *cobra.Command, args []string) {
+	if virtual {
+		resp := &types.CreateVirtualClusterResp{}
+		url := fmt.Sprintf("/bcsapi/v4/clustermanager/v1/vcluster/%s?operator=bcs&onlyDeleteInfo=false", clusterID)
+
+		err := clusterMgr.NewHttpClient(context.Background()).Delete(url, resp)
+		if err != nil {
+			klog.Fatalf("delete virtual cluster failed: %v", err)
+		}
+
+		if resp != nil && resp.Code != 0 {
+			klog.Fatalf("delete virtual cluster failed: %s", resp.Message)
+		}
+
+		fmt.Printf("delete virtual cluster succeed: clusterID: %v, taskID: %v\n", resp.Data.ClusterID, resp.Task.TaskID)
+
+		return
+	}
+
 	resp, err := clusterMgr.New(context.Background()).Delete(types.DeleteClusterReq{ClusterID: clusterID})
 	if err != nil {
 		klog.Fatalf("delete cluster failed: %v", err)
 	}
 
-	fmt.Printf("create cluster succeed: clusterID: %v, taskID: %v", resp.ClusterID, resp.TaskID)
+	fmt.Printf("create cluster succeed: clusterID: %v, taskID: %v\n", resp.ClusterID, resp.TaskID)
 }

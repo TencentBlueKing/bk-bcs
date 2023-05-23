@@ -32,129 +32,6 @@ const (
 	defaultSize = 5000
 )
 
-// NewListChartAction return a new ListChartAction instance
-func NewListChartAction(model store.HelmManagerModel, platform repo.Platform) *ListChartAction {
-	return &ListChartAction{
-		model:    model,
-		platform: platform,
-	}
-}
-
-// ListChartAction provides the action to do list charts
-type ListChartAction struct {
-	ctx context.Context
-
-	model    store.HelmManagerModel
-	platform repo.Platform
-
-	req  *helmmanager.ListChartReq
-	resp *helmmanager.ListChartResp
-}
-
-// Handle the listing process
-func (l *ListChartAction) Handle(ctx context.Context,
-	req *helmmanager.ListChartReq, resp *helmmanager.ListChartResp) error {
-
-	if req == nil || resp == nil {
-		blog.Errorf("list chart failed, req or resp is empty")
-		return common.ErrHelmManagerReqOrRespEmpty.GenError()
-	}
-	l.ctx = ctx
-	l.req = req
-	l.resp = resp
-
-	if err := l.req.Validate(); err != nil {
-		blog.Errorf("list chart failed, invalid request, %s, param: %v", err.Error(), l.req)
-		l.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
-		return nil
-	}
-
-	return l.list()
-}
-
-func (l *ListChartAction) list() error {
-	projectID := l.req.GetProjectID()
-	repoName := l.req.GetRepository()
-	username := auth.GetUserFromCtx(l.ctx)
-
-	repository, err := l.model.GetRepository(l.ctx, projectID, repoName)
-	if err != nil {
-		blog.Errorf("list chart failed, %s, projectID: %s, repository: %s, operator: %s",
-			err.Error(), projectID, repoName, username)
-		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
-		return nil
-	}
-
-	origin, err := l.platform.
-		User(repo.User{
-			Name:     repository.Username,
-			Password: repository.Password,
-		}).
-		Project(repository.GetRepoProjectID()).
-		Repository(
-			repo.GetRepositoryType(repository.Type),
-			repository.GetRepoName(),
-		).
-		ListChart(l.ctx, l.getOption())
-	if err != nil {
-		blog.Errorf("list chart failed, %s, projectID: %s, repository: %s, operator: %s",
-			err.Error(), projectID, repoName, username)
-		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
-		return nil
-	}
-
-	r := make([]*helmmanager.Chart, 0, len(origin.Charts))
-	for _, item := range origin.Charts {
-		chart := item.Transfer2Proto()
-		chart.ProjectID = common.GetStringP(projectID)
-		chart.ProjectCode = common.GetStringP(projectID)
-		chart.Repository = common.GetStringP(repoName)
-		r = append(r, chart)
-	}
-
-	l.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.ChartListData{
-		Page:  common.GetUint32P(uint32(origin.Page)),
-		Size:  common.GetUint32P(uint32(origin.Size)),
-		Total: common.GetUint32P(uint32(origin.Total)),
-		Data:  r,
-	})
-	blog.Infof("list chart successfully")
-	return nil
-}
-
-func (l *ListChartAction) getCondition() *operator.Condition {
-	cond := make(operator.M)
-	if l.req.ProjectID != nil {
-		cond.Update(entity.FieldKeyProjectID, l.req.GetProjectID())
-	}
-	if l.req.Repository != nil {
-		cond.Update(entity.FieldKeyName, l.req.GetRepository())
-	}
-
-	return operator.NewLeafCondition(operator.Eq, cond)
-}
-
-func (l *ListChartAction) getOption() repo.ListOption {
-	size := l.req.GetSize()
-	if size == 0 {
-		size = defaultSize
-	}
-
-	return repo.ListOption{
-		Page: int64(l.req.GetPage()),
-		Size: int64(size),
-	}
-}
-
-func (l *ListChartAction) setResp(err common.HelmManagerError, message string, r *helmmanager.ChartListData) {
-	code := err.Int32()
-	msg := err.ErrorMessage(message)
-	l.resp.Code = &code
-	l.resp.Message = &msg
-	l.resp.Result = err.OK()
-	l.resp.Data = r
-}
-
 // NewListChartV1Action return a new ListChartActionV1 instance
 func NewListChartV1Action(model store.HelmManagerModel, platform repo.Platform) *ListChartActionV1 {
 	return &ListChartActionV1{
@@ -195,7 +72,7 @@ func (l *ListChartActionV1) list() error {
 	repoName := l.req.GetRepoName()
 	username := auth.GetUserFromCtx(l.ctx)
 
-	repository, err := l.model.GetRepository(l.ctx, projectCode, repoName)
+	repository, err := l.model.GetProjectRepository(l.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("list chart failed, %s, projectCode: %s, repository: %s, operator: %s",
 			err.Error(), projectCode, repoName, username)

@@ -23,7 +23,6 @@ import (
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbts "bscp.io/pkg/protocol/core/template-space"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
@@ -65,32 +64,26 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTempl
 func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplateSpacesReq) (*pbds.ListTemplateSpacesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	query := &types.ListTemplateSpacesOption{
-		BizID: req.BizId,
-		Filter: &filter.Expression{
-			Op:    filter.And,
-			Rules: []filter.RuleFactory{},
-		},
-		Page: &types.BasePage{
-			Start: req.Start,
-			Limit: uint(req.Limit),
-		},
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
 	}
 
-	details, err := s.dao.TemplateSpace().List(kt, query)
+	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, opt)
+
 	if err != nil {
 		logs.Errorf("list TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	TemplateSpaces, err := pbts.PbTemplateSpaces(details.Details)
+	TemplateSpaces, err := pbts.PbTemplateSpaces(details)
 	if err != nil {
 		logs.Errorf("get pb TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	resp := &pbds.ListTemplateSpacesResp{
-		Count:   details.Count,
+		Count:   uint32(count),
 		Details: TemplateSpaces,
 	}
 	return resp, nil

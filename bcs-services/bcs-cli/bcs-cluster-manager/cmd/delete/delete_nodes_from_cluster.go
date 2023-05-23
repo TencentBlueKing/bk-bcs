@@ -27,7 +27,7 @@ import (
 
 var (
 	deleteClusterNodesExample = templates.Examples(i18n.T(`
-	kubectl-bcs-cluster-manager delete clusterNodes --clusterID xxx --node 47.43.47.103 --node 244.87.232.48`))
+	kubectl-bcs-cluster-manager delete clusterNodes --clusterID xxx --node xxx.xxx.xxx.xxx --node xxx.xxx.xxx.xxx`))
 )
 
 func newDeleteNodesFromClusterCmd() *cobra.Command {
@@ -41,7 +41,7 @@ func newDeleteNodesFromClusterCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&clusterID, "clusterID", "c", "", "cluster ID (required)")
 	cmd.MarkFlagRequired("clusterID")
 
-	cmd.Flags().StringSliceVarP(&nodes, "node", "n", []string{}, "node ip, for example: -n 47.43.47.103 -n 244.87.232.48")
+	cmd.Flags().StringSliceVarP(&nodes, "node", "n", []string{}, "node ip, for example: -n xxx.xxx.xxx.xxx -n xxx.xxx.xxx.xxx")
 	cmd.MarkFlagRequired("node")
 
 	return cmd
@@ -56,5 +56,5 @@ func deleteNodesFromCluster(cmd *cobra.Command, args []string) {
 		klog.Fatalf("delete nodes to cluster failed: %v", err)
 	}
 
-	fmt.Printf("delete nodes to cluster succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("delete nodes to cluster succeed: taskID: %v\n", resp.TaskID)
 }

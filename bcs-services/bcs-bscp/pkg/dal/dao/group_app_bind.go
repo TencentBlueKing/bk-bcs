@@ -13,6 +13,8 @@ limitations under the License.
 package dao
 
 import (
+	"bytes"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
@@ -30,6 +32,8 @@ type GroupAppBind interface {
 	BatchDeleteByGroupIDWithTx(kit *kit.Kit, tx *sharding.Tx, groupID, bizID uint32) error
 	// BatchListByGroupIDs batch list group app by group ids.
 	List(kit *kit.Kit, opts *types.ListGroupAppBindsOption) ([]*table.GroupAppBind, error)
+	// Get get GroupAppBind by group id and app id.
+	Get(kit *kit.Kit, groupID, appID, bizID uint32) (*table.GroupAppBind, error)
 }
 
 var _ GroupAppBind = new(groupAppDao)
@@ -131,4 +135,31 @@ func (dao *groupAppDao) List(kit *kit.Kit, opts *types.ListGroupAppBindsOption) 
 		return nil, err
 	}
 	return list, nil
+}
+
+// Get get GroupAppBind by group id and app id.
+func (dao *groupAppDao) Get(kit *kit.Kit, groupID, appID, bizID uint32) (*table.GroupAppBind, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz id is 0")
+	}
+	if groupID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "group id is 0")
+	}
+	if appID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "app id is 0")
+	}
+
+	var sqlBuf bytes.Buffer
+	sqlBuf.WriteString("SELECT ")
+	sqlBuf.WriteString(table.GroupAppBindColumns.NamedExpr())
+	sqlBuf.WriteString(" FROM ")
+	sqlBuf.WriteString(table.GroupAppBindTable.Name())
+	sqlBuf.WriteString(" WHERE group_id = ? AND app_id = ? AND biz_id = ?")
+
+	item := &table.GroupAppBind{}
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, item, sqlBuf.String(),
+		groupID, appID, bizID); err != nil {
+		return nil, err
+	}
+	return item, nil
 }

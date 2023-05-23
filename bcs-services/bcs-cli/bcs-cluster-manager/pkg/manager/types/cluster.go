@@ -13,6 +13,10 @@
 
 package types
 
+import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+)
+
 // CreateClusterReq 创建集群request
 type CreateClusterReq struct {
 	ProjectID            string               `json:"projectID"`
@@ -32,6 +36,84 @@ type CreateClusterReq struct {
 	VpcID                string               `json:"vpcID"`
 	NetworkSettings      NetworkSettings      `json:"networkSettings"`
 	Master               []string             `json:"master"`
+}
+
+// CreateVirtualClusterReq 创建虚拟集群request
+type CreateVirtualClusterReq struct {
+	ClusterID          string            `json:"clusterID"`
+	ClusterName        string            `json:"clusterName"`
+	Provider           string            `json:"provider"`
+	Region             string            `json:"region"`
+	VpcID              string            `json:"vpcID"`
+	ProjectID          string            `json:"projectID"`
+	BusinessID         string            `json:"businessID"`
+	Environment        string            `json:"environment"`
+	EngineType         string            `json:"engineType"`
+	IsExclusive        bool              `json:"isExclusive"`
+	ClusterType        string            `json:"clusterType"`
+	HostClusterID      string            `json:"hostClusterID"`
+	HostClusterNetwork string            `json:"hostClusterNetwork"`
+	Labels             map[string]string `json:"labels"`
+	Creator            string            `json:"creator"`
+	// 集群创建的控制信息
+	OnlyCreateInfo         bool                   `json:"onlyCreateInfo"`
+	Master                 []string               `json:"master"`
+	NetworkSettings        *NetworkSettings       `json:"networkSettings"`
+	ClusterBasicSettings   *ClusterBasicSettings  `json:"clusterBasicSettings"`
+	ClusterAdvanceSettings *ClusterAdvanceSetting `json:"clusterAdvanceSettings"`
+	NodeSettings           *NodeSetting           `json:"nodeSettings"`
+	ExtraInfo              map[string]string      `json:"extraInfo"`
+	Description            string                 `json:"description"`
+	Ns                     *NamespaceInfo         `json:"ns"`
+}
+
+// ClusterAdvanceSetting 集群高级设置
+type ClusterAdvanceSetting struct {
+	IPVS             bool              `json:"IPVS"`
+	ContainerRuntime string            `json:"containerRuntime"`
+	RuntimeVersion   string            `json:"runtimeVersion"`
+	ExtraArgs        map[string]string `json:"extraArgs"`
+}
+
+// NodeSetting 节点设置
+type NodeSetting struct {
+	DockerGraphPath string            `json:"dockerGraphPath"`
+	MountTarget     string            `json:"mountTarget"`
+	UnSchedulable   uint32            `json:"unSchedulable"`
+	Labels          map[string]string `json:"labels"`
+	ExtraArgs       map[string]string `json:"extraArgs"`
+}
+
+// NamespaceInfo 命名空间信息
+type NamespaceInfo struct {
+	Name        string            `json:"name,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty" `
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+// CreateVirtualClusterResp 创建虚拟集群response
+type CreateVirtualClusterResp struct {
+	Code    uint32                  `json:"code,omitempty"`
+	Message string                  `json:"message,omitempty"`
+	Result  bool                    `json:"result,omitempty"`
+	Data    *clustermanager.Cluster `json:"data,omitempty"`
+	Task    *clustermanager.Task    `json:"task,omitempty"`
+}
+
+// DeleteVirtualClusterReq 删除虚拟集群request
+type DeleteVirtualClusterReq struct {
+	ClusterID      string `json:"clusterID,omitempty"`
+	OnlyDeleteInfo bool   `json:"onlyDeleteInfo,omitempty"`
+	Operator       string `json:"operator,omitempty"`
+}
+
+// DeleteVirtualClusterResp 删除虚拟集群response
+type DeleteVirtualClusterResp struct {
+	Code    uint32                  `json:"code,omitempty"`
+	Message string                  `json:"message,omitempty"`
+	Result  bool                    `json:"result,omitempty"`
+	Data    *clustermanager.Cluster `json:"data,omitempty"`
+	Task    *clustermanager.Task    `json:"task,omitempty"`
 }
 
 // CreateClusterResp 创建集群response

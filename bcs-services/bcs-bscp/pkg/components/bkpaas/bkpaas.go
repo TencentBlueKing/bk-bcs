@@ -20,7 +20,7 @@ import (
 	"bscp.io/pkg/cc"
 )
 
-// LoginCredential
+// LoginCredential uid/token for grpc auth
 type LoginCredential struct {
 	UID   string
 	Token string

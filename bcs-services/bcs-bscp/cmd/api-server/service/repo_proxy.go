@@ -40,7 +40,6 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/thirdparty/repo"
 )
 
@@ -66,12 +65,7 @@ type repoProxy struct {
 
 // FileMetadata get repo head data
 func (p repoProxy) FileMetadata(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := p.authorize(kt, r)
 	if needReturn {
@@ -103,12 +97,7 @@ func (p repoProxy) FileMetadata(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p repoProxy) DownloadFile(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := p.authorize(kt, r)
 	if needReturn {
@@ -119,12 +108,7 @@ func (p repoProxy) DownloadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p repoProxy) UploadFile(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := p.authorize(kt, r)
 	if needReturn {
@@ -334,11 +318,7 @@ func successResp(res *http.Response, rid string) error {
 func newRepoDirector(cli *repo.Client) func(req *http.Request) {
 	return func(req *http.Request) {
 		config := cc.ApiServer().Repo
-		kt, err := gwparser.Parse(req.Context(), req.Header)
-		if err != nil {
-			logs.Errorf("gateway parser failed, err: %v, rid: %s", err, kt.Rid)
-			return
-		}
+		kt := kit.MustGetKit(req.Context())
 
 		addr, err := config.OneEndpoint()
 		if err != nil {

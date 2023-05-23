@@ -345,7 +345,7 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 
 	var retBackends []networkextensionv1.ListenerBackend
 	for _, pod := range podList {
-		if len(pod.Status.PodIP) == 0 {
+		if len(pod.Status.PodIP) == 0 || pod.Status.Phase != k8scorev1.PodRunning {
 			continue
 		}
 		backendWeight := rc.getPodWeight(pod, weight)

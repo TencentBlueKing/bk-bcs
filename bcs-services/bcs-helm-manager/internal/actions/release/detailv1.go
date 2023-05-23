@@ -115,7 +115,8 @@ func (g *GetReleaseDetailV1Action) mergeRelease(detail *helmmanager.ReleaseDetai
 		return rl.Transfer2DetailProto()
 	}
 
-	if rl.Revision >= int(*detail.Revision) {
+	t := time.Unix(rl.UpdateTime, 0).Format(common.TimeFormat)
+	if t >= detail.GetUpdateTime() {
 		detail.Values = rl.Values
 		detail.ChartVersion = &rl.ChartVersion
 		detail.UpdateTime = common.GetStringP(time.Unix(rl.UpdateTime, 0).Format(common.TimeFormat))

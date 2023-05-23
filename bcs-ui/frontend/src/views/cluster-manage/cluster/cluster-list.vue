@@ -59,16 +59,10 @@
     <bk-table-column
       :label="$t('集群环境')"
       prop="environment"
-      :filters="[{
-        text: $t('测试'),
-        value: 'stag'
-      },{
-        text: $t('正式'),
-        value: 'prod'
-      }]"
+      :filters="clusterEnvFilters"
       :filter-method="filterMethod">
       <template #default="{ row }">
-        {{ ['stag', 'debug'].includes(row.environment) ? $t('测试') : $t('正式') }}
+        {{ CLUSTER_ENV[row.environment] }}
       </template>
     </bk-table-column>
     <bk-table-column
@@ -88,15 +82,18 @@
     </bk-table-column>
     <bk-table-column :label="$t('集群节点数')">
       <template #default="{ row }">
-        <LoadingIcon v-if="!clusterNodesMap[row.clusterID]">{{ $t('加载中') }}...</LoadingIcon>
-        <div
-          :class=" row.status === 'RUNNING' ? 'cursor-pointer' : 'cursor-not-allowed'"
-          v-else
-          @click="handleGotoClusterNode(row)">
-          <bk-button text :disabled="row.status !== 'RUNNING'">
-            {{ clusterNodesMap[row.clusterID].length }}
-          </bk-button>
-        </div>
+        <template v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage">
+          <LoadingIcon v-if="!clusterNodesMap[row.clusterID]">{{ $t('加载中') }}...</LoadingIcon>
+          <div
+            :class=" row.status === 'RUNNING' ? 'cursor-pointer' : 'cursor-not-allowed'"
+            v-else
+            @click="handleGotoClusterNode(row)">
+            <bk-button text :disabled="row.status !== 'RUNNING'">
+              {{ clusterNodesMap[row.clusterID].length }}
+            </bk-button>
+          </div>
+        </template>
+        <span v-else>--</span>
       </template>
     </bk-table-column>
     <bk-table-column :label="$t('集群资源(CPU/内存/磁盘)')" min-width="200">
@@ -148,6 +145,7 @@
                       cluster_id: row.clusterID
                     }
                   }"
+                  key="deleteCluster"
                   @click="handleDeleteCluster(row)">
                   {{ $t('删除') }}
                 </li>
@@ -172,6 +170,7 @@
                 cluster_id: row.clusterID
               }
             }"
+            key="nodeList"
             @click="handleGotoClusterNode(row)">{{ $t('节点列表') }}</bk-button>
           <PopoverSelector offset="0, 10">
             <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
@@ -196,6 +195,7 @@
                       cluster_id: row.clusterID
                     }
                   }"
+                  key="ca"
                   @click="handleGotoClusterCA(row)">
                   {{ $t('弹性扩缩容') }}
                 </li>
@@ -217,6 +217,7 @@
                       cluster_id: row.clusterID
                     }
                   }"
+                  key="deleteCluster"
                   v-bk-tooltips="{
                     content: $t('集群下存在节点，无法删除'),
                     disabled: !clusterNodesMap[row.clusterID] || clusterNodesMap[row.clusterID].length === 0,
@@ -243,12 +244,13 @@
   </bk-table>
 </template>
 <script lang="ts">
-import { defineComponent, PropType, toRefs } from 'vue';
+import { computed, defineComponent, PropType, toRefs } from 'vue';
 import StatusIcon from '@/components/status-icon';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import { useProject } from '@/composables/use-app';
+import { CLUSTER_ENV } from '@/common/constant';
 
 export default defineComponent({
   name: 'ClusterList',
@@ -282,6 +284,14 @@ export default defineComponent({
   setup(props, ctx) {
     const { curProject } = useProject();
     const { clusterExtraInfo } = toRefs(props);
+    const clusterEnvFilters = computed(() => props.clusterList.reduce((pre, cluster) => {
+      if (pre.find(item => item.value === cluster.environment)) return pre;
+      pre.push({
+        text: CLUSTER_ENV[cluster.environment],
+        value: cluster.environment,
+      });
+      return pre;
+    }, []));
     const filterMethod = (value, row, column) => {
       const { property } = column;
       return row[property] === value;
@@ -331,6 +341,8 @@ export default defineComponent({
     };
 
     return {
+      CLUSTER_ENV,
+      clusterEnvFilters,
       curProject,
       filterMethod,
       handleGotoClusterOverview,

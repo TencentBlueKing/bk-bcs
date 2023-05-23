@@ -484,7 +484,7 @@ export default defineComponent({
       master: any[]
     }>({
       clusterBasicSettings: {
-        clusterLevel: 'L5',
+        clusterLevel: 'L20',
       },
       master: [],
     });

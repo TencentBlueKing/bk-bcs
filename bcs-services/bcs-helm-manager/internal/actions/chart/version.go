@@ -25,117 +25,6 @@ import (
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
-// NewListChartVersionAction return a new ListChartVersionAction instance
-func NewListChartVersionAction(model store.HelmManagerModel, platform repo.Platform) *ListChartVersionAction {
-	return &ListChartVersionAction{
-		model:    model,
-		platform: platform,
-	}
-}
-
-// ListChartVersionAction provides the action to do list chart versions
-type ListChartVersionAction struct {
-	ctx context.Context
-
-	model    store.HelmManagerModel
-	platform repo.Platform
-
-	req  *helmmanager.ListChartVersionReq
-	resp *helmmanager.ListChartVersionResp
-}
-
-// Handle the version listing process
-func (l *ListChartVersionAction) Handle(ctx context.Context,
-	req *helmmanager.ListChartVersionReq, resp *helmmanager.ListChartVersionResp) error {
-
-	if req == nil || resp == nil {
-		blog.Errorf("list chart version failed, req or resp is empty")
-		return common.ErrHelmManagerReqOrRespEmpty.GenError()
-	}
-	l.ctx = ctx
-	l.req = req
-	l.resp = resp
-
-	if err := l.req.Validate(); err != nil {
-		blog.Errorf("list chart version failed, invalid request, %s, param: %v", err.Error(), l.req)
-		l.setResp(common.ErrHelmManagerRequestParamInvalid, err.Error(), nil)
-		return nil
-	}
-
-	return l.list()
-}
-
-func (l *ListChartVersionAction) list() error {
-	projectID := l.req.GetProjectID()
-	repoName := l.req.GetRepository()
-	chartName := l.req.GetName()
-	username := auth.GetUserFromCtx(l.ctx)
-
-	repository, err := l.model.GetRepository(l.ctx, projectID, repoName)
-	if err != nil {
-		blog.Errorf(
-			"list chart version failed, %s, projectID: %s, repository: %s, chartName: %s, operator: %s",
-			err.Error(), projectID, repoName, chartName, username)
-		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
-		return nil
-	}
-
-	origin, err := l.platform.
-		User(repo.User{
-			Name:     repository.Username,
-			Password: repository.Password,
-		}).
-		Project(repository.GetRepoProjectID()).
-		Repository(
-			repo.GetRepositoryType(repository.Type),
-			repository.GetRepoName(),
-		).
-		Chart(chartName).
-		ListVersion(l.ctx, l.getOption())
-	if err != nil {
-		blog.Errorf("list chart version failed, %s, projectID: %s, repository: %s, chartName: %s, operator: %s",
-			err.Error(), projectID, repoName, chartName, username)
-		l.setResp(common.ErrHelmManagerListActionFailed, err.Error(), nil)
-		return nil
-	}
-
-	r := make([]*helmmanager.ChartVersion, 0, len(origin.Versions))
-	for _, item := range origin.Versions {
-		chart := item.Transfer2Proto(repository.RepoURL)
-		r = append(r, chart)
-	}
-	l.setResp(common.ErrHelmManagerSuccess, "ok", &helmmanager.ChartVersionListData{
-		Page:  common.GetUint32P(uint32(origin.Page)),
-		Size:  common.GetUint32P(uint32(origin.Size)),
-		Total: common.GetUint32P(uint32(origin.Total)),
-		Data:  r,
-	})
-	blog.Infof("list chart version successfully")
-	return nil
-}
-
-func (l *ListChartVersionAction) getOption() repo.ListOption {
-	size := l.req.GetSize()
-	if size == 0 {
-		size = defaultSize
-	}
-
-	return repo.ListOption{
-		Page: int64(l.req.GetPage()),
-		Size: int64(size),
-	}
-}
-
-func (l *ListChartVersionAction) setResp(
-	err common.HelmManagerError, message string, r *helmmanager.ChartVersionListData) {
-	code := err.Int32()
-	msg := err.ErrorMessage(message)
-	l.resp.Code = &code
-	l.resp.Message = &msg
-	l.resp.Result = err.OK()
-	l.resp.Data = r
-}
-
 // NewListChartVersionV1Action return a new ListChartVersionV1Action instance
 func NewListChartVersionV1Action(model store.HelmManagerModel, platform repo.Platform) *ListChartVersionV1Action {
 	return &ListChartVersionV1Action{
@@ -177,7 +66,7 @@ func (l *ListChartVersionV1Action) list() error {
 	chartName := l.req.GetName()
 	username := auth.GetUserFromCtx(l.ctx)
 
-	repository, err := l.model.GetRepository(l.ctx, projectCode, repoName)
+	repository, err := l.model.GetProjectRepository(l.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf(
 			"list chart version failed, %s, projectCode: %s, repository: %s, chartName: %s, operator: %s",

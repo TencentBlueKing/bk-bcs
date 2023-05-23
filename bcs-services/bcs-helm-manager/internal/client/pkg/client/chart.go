@@ -69,7 +69,7 @@ func (ct *chart) Versions(ctx context.Context, req *helmmanager.ListChartVersion
 		return nil, err
 	}
 
-	var r helmmanager.ListChartVersionResp
+	var r helmmanager.ListChartVersionV1Resp
 	if err = unmarshalPB(resp.Reply, &r); err != nil {
 		return nil, err
 	}
@@ -276,7 +276,7 @@ func (ct *chart) List(ctx context.Context, req *helmmanager.ListChartV1Req) (*he
 		return nil, err
 	}
 
-	var r helmmanager.ListChartResp
+	var r helmmanager.ListChartV1Resp
 	if err = unmarshalPB(resp.Reply, &r); err != nil {
 		return nil, err
 	}

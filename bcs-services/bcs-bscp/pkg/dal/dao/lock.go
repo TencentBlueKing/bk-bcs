@@ -36,6 +36,8 @@ type LockDao interface {
 	IncreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *LockOption) (uint32, error)
 	// DecreaseCount decrease the lock resource count, if the lock count is zero, delete the lock.
 	DecreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *LockOption) error
+	// TruncateCount truncate the lock resource count to zero.
+	TruncateCount(kit *kit.Kit, lock *table.ResourceLock, opt *LockOption) error
 	// AddUnique validate if the resource is unique by adding a lock with unique index, returns true if it is unique.
 	// need to call DeleteUnique after the resource is deleted to ensure the lock unique is correct.
 	AddUnique(kit *kit.Kit, lock *table.ResourceLock, opt *LockOption) (bool, error)
@@ -194,6 +196,33 @@ func (dao *lockDao) DecreaseCount(kit *kit.Kit, lock *table.ResourceLock, opt *L
 	sql := filter.SqlJoint(sqlSentence)
 
 	_, err = opt.Txn.ExecContext(kit.Ctx, sql)
+	if err != nil {
+		logs.Errorf("delete lock failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
+		return fmt.Errorf("delete lock failed, err: %v", err)
+	}
+
+	return nil
+}
+
+// TruncateLock truncate the lock resource count to zero.
+func (dao *lockDao) TruncateCount(kit *kit.Kit, lock *table.ResourceLock, opt *LockOption) error {
+	if lock == nil {
+		return errf.New(errf.InvalidParameter, "lock is nil")
+	}
+
+	if err := lock.Validate(); err != nil {
+		return errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	// set the lock count to zero.
+	var sqlSentence []string
+	// the current lock is related to only one resource, delete the lock.
+	sqlSentence = append(sqlSentence, "DELETE FROM ", table.ResourceLockTable.Name(),
+		" WHERE biz_id = ", strconv.Itoa(int(lock.BizID)),
+		" AND res_type = '", lock.ResType, "' AND res_key = '", lock.ResKey, "'")
+	sql := filter.SqlJoint(sqlSentence)
+
+	_, err := opt.Txn.ExecContext(kit.Ctx, sql)
 	if err != nil {
 		logs.Errorf("delete lock failed, lock: %v, err: %v, rid: %s", lock, err, kit.Rid)
 		return fmt.Errorf("delete lock failed, err: %v", err)

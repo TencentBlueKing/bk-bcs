@@ -35,6 +35,8 @@ type Group interface {
 	UpdateWithTx(kit *kit.Kit, tx *sharding.Tx, group *table.Group) error
 	// Get group by id.
 	Get(kit *kit.Kit, id, bizID uint32) (*table.Group, error)
+	// GetByName get group by name.
+	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Group, error)
 	// List groups with options.
 	List(kit *kit.Kit, opts *types.ListGroupsOption) (*types.ListGroupDetails, error)
 	// DeleteWithTx delete one group instance with transaction.
@@ -166,6 +168,24 @@ func (dao *groupDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Group, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(id)))
+	sql := filter.SqlJoint(sqlSentence)
+
+	group := &table.Group{}
+	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, sql); err != nil {
+		return nil, err
+	}
+	return group, nil
+}
+
+// GetByName get group by name.
+func (dao *groupDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Group, error) {
+
+	if bizID == 0 || name == "" {
+		return nil, errf.New(errf.InvalidParameter, "biz id or name is empty")
+	}
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.GroupColumns.NamedExpr(), " FROM ", table.GroupTable.Name(),
+		" WHERE name = '", name, "' AND biz_id = ", strconv.Itoa(int(bizID)))
 	sql := filter.SqlJoint(sqlSentence)
 
 	group := &table.Group{}

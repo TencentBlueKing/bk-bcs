@@ -159,6 +159,15 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 	} else {
 		u.createBy = old.CreateBy
 		u.updateBy = createBy
+		if u.req.GetRepository() == "" {
+			u.req.Repository = &old.Repo
+		}
+		if u.req.GetChart() == "" {
+			u.req.Chart = &old.ChartName
+		}
+		if u.req.GetVersion() == "" {
+			u.req.Version = &old.ChartVersion
+		}
 		rl := entity.M{
 			entity.FieldKeyRepoName:     u.req.GetRepository(),
 			entity.FieldKeyChartName:    u.req.GetChart(),

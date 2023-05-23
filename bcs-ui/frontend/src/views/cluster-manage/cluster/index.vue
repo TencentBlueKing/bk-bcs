@@ -368,11 +368,13 @@ export default defineComponent({
     const { getNodeList } = useNode();
     const clusterNodesMap = ref({});
     const handleGetClusterNodes = async () => {
-      clusterList.value.forEach((item) => {
-        getNodeList(item.clusterID).then((data) => {
-          set(clusterNodesMap.value, item.clusterID, data);
+      clusterList.value
+        .filter(cluster => webAnnotations.value.perms[cluster.clusterID].cluster_manage)
+        .forEach((item) => {
+          getNodeList(item.clusterID).then((data) => {
+            set(clusterNodesMap.value, item.clusterID, data);
+          });
         });
-      });
     };
 
     onMounted(async () => {
