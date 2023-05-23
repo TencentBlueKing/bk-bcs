@@ -36,12 +36,12 @@ func (s *TemplateSpace) AppID() uint32 {
 	return 0
 }
 
-// AuditResID AuditRes interface
+// ResID AuditRes interface
 func (s *TemplateSpace) ResID() uint32 {
 	return s.ID
 }
 
-// AuditResType AuditRes interface
+// ResType AuditRes interface
 func (s *TemplateSpace) ResType() string {
 	return "template_space"
 }

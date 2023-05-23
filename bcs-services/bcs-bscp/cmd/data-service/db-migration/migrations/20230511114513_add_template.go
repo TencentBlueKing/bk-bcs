@@ -31,7 +31,7 @@ func init() {
 }
 
 func mig20230511114513GormTestUp(tx *gorm.DB) error {
-	// TemplateSpaces：模版空间
+	// TemplateSpaces ：模版空间
 	type TemplateSpaces struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
@@ -49,7 +49,7 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
-	// Templates: 配置模版
+	// Templates : 配置模版
 	type Templates struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
@@ -69,7 +69,7 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
-	// TemplateReleases: 模版版本
+	// TemplateReleases : 模版版本
 	type TemplateReleases struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
@@ -89,7 +89,7 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
-	// TemplateSets: 模版套餐
+	// TemplateSets : 模版套餐
 	type TemplateSets struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
@@ -109,7 +109,7 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
-	// IDGenerators: ID生成器
+	// IDGenerators : ID生成器
 	type IDGenerators struct {
 		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
 		Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`
@@ -137,7 +137,7 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 }
 
 func mig20230511114513GormDown(tx *gorm.DB) error {
-	// IDGenerators: ID生成器
+	// IDGenerators : ID生成器
 	type IDGenerators struct {
 		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
 		Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`

@@ -234,7 +234,7 @@ func (a *Auth) GetPermissionToApply(ctx context.Context, req *pbas.GetPermission
 	return resp, nil
 }
 
-// CheckPermission
+// CheckPermission check permission by attr
 func (a *Auth) CheckPermission(ctx context.Context, biz *cmdb.Biz, iamSettings cc.IAM, req *meta.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
