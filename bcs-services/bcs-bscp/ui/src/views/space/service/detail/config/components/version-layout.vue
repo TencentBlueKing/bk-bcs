@@ -29,7 +29,7 @@
     right: 0;
     height: calc(100vh - 52px);
     background: #ffffff;
-    z-index: 1;
+    z-index: 2000;
     &.without-footer {
       .layout-content {
         height: calc(100% - 48px);
