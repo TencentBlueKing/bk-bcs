@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -160,12 +161,15 @@ func (m *ModelRepository) GetProjectRepository(ctx context.Context, projectID, n
 	}
 
 	if name == common.PublicRepoName {
+		repo := options.GlobalOptions.Repo
+		publicRepoURL := common.GetPublicRepoURL(repo.URL, repo.PublicRepoProject, repo.PublicRepoName)
 		return &entity.Repository{
 			ProjectID:   projectID,
 			Name:        name,
 			DisplayName: common.PublicRepoDisplayName,
 			Public:      true,
 			Type:        "HELM",
+			RepoURL:     publicRepoURL,
 		}, nil
 	}
 
