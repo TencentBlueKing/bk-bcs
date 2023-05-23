@@ -46,6 +46,7 @@
     isDiffSliderShow.value = true
   }
 
+  // 版本上线成功
   const handleConfirm = () => {
     isDiffSliderShow.value = false
     handlePanelClose()

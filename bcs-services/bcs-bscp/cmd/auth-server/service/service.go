@@ -248,7 +248,7 @@ func (s *Service) GetPermissionToApply(ctx context.Context, req *pbas.GetPermiss
 	return s.auth.GetPermissionToApply(ctx, req)
 }
 
-// CheckPermission
+// CheckPermission grpc check permission
 func (s *Service) CheckPermission(ctx context.Context, req *pbas.ResourceAttribute) (*pbas.CheckPermissionResp, error) {
 	biz, err := s.client.Esb.Cmdb().GeBusinessbyID(ctx, req.BizId)
 	if err != nil {

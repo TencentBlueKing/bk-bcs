@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 )
 
-// Update 更新节点池
+// Update 更新节点池,更新成功返回nil
 func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 	timeRange := make([]*clustermanager.TimeRange, 0)
 	for _, v := range req.AutoScaling.TimeRanges {
@@ -99,6 +99,7 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 		}
 	}
 
+	//构建UpdateNodeGroupRequest请求并更新节点池
 	resp, err := c.client.UpdateNodeGroup(c.ctx, &clustermanager.UpdateNodeGroupRequest{
 		NodeGroupID:     req.NodeGroupID,
 		ClusterID:       req.ClusterID,

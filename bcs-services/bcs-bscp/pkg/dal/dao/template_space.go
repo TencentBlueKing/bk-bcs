@@ -14,18 +14,10 @@ package dao
 
 import (
 	"fmt"
-	"strconv"
 
-	"github.com/jmoiron/sqlx"
-
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
@@ -36,7 +28,7 @@ type TemplateSpace interface {
 	// Update one TemplateSpace's info.
 	Update(kit *kit.Kit, TemplateSpace *table.TemplateSpace) error
 	// List TemplateSpaces with options.
-	List(kit *kit.Kit, opts *types.ListTemplateSpacesOption) (*types.ListTemplateSpaceDetails, error)
+	List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.TemplateSpace) error
 	// GetByName get templateSpace by name.
@@ -46,113 +38,75 @@ type TemplateSpace interface {
 var _ TemplateSpace = new(templateSpaceDao)
 
 type templateSpaceDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 }
 
 // Create one TemplateSpace instance.
 func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint32, error) {
-
-	if g == nil {
-		return 0, errf.New(errf.InvalidParameter, "TemplateSpace is nil")
-	}
-
 	if err := g.ValidateCreate(); err != nil {
-		return 0, errf.New(errf.InvalidParameter, err.Error())
-	}
-
-	// generate a TemplateSpace id and update to TemplateSpace.
-	id, err := dao.idGen.One(kit, table.TemplateSpaceTable)
-	if err != nil {
 		return 0, err
 	}
 
-	g.ID = id
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.TemplateSpaceTable.Name(), " (", table.TemplateSpaceColumns.ColumnExpr(), ")  VALUES(", table.TemplateSpaceColumns.ColonNameExpr(), ")")
-
-	sql := filter.SqlJoint(sqlSentence)
-
-	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, g); err != nil {
-				return err
-			}
-
-			// audit this to be created TemplateSpace details.
-			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err = dao.auditDao.Decorator(kit, g.Attachment.BizID,
-				enumor.TemplateSpace).AuditCreate(g, au); err != nil {
-				return fmt.Errorf("audit create TemplateSpace failed, err: %v", err)
-			}
-
-			return nil
-		})
-
+	// generate a TemplateSpace id and update to TemplateSpace.
+	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
-		logs.Errorf("create TemplateSpace, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
-		return 0, fmt.Errorf("create TemplateSpace, but auto run txn failed, err: %v", err)
+		return 0, err
+	}
+	g.ID = id
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+
+	// 多个使用事务处理
+	createTx := func(tx *gen.Query) error {
+		q := tx.TemplateSpace.WithContext(kit.Ctx)
+		if err := q.Create(g); err != nil {
+			return err
+		}
+
+		if err := ad.Do(tx); err != nil {
+			return err
+		}
+
+		return nil
+	}
+	if err := dao.genQ.Transaction(createTx); err != nil {
+		return 0, nil
 	}
 
-	return id, nil
+	return g.ID, nil
 }
 
 // Update one TemplateSpace instance.
 func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error {
-
-	if g == nil {
-		return errf.New(errf.InvalidParameter, "TemplateSpace is nil")
-	}
-
 	if err := g.ValidateUpdate(); err != nil {
-		return errf.New(errf.InvalidParameter, err.Error())
+		return err
 	}
 
-	opts := orm.NewFieldOptions().AddIgnoredFields(
-		"id", "biz_id")
-	expr, toUpdate, err := orm.RearrangeSQLDataWithOption(g, opts)
+	m := dao.genQ.TemplateSpace
+
+	// 更新操作, 获取当前记录做审计
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
-		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)
+		return err
 	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 
-	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.TemplateSpace).PrepareUpdate(g)
+	// 多个使用事务处理
+	updateTx := func(tx *gen.Query) error {
+		q = tx.TemplateSpace.WithContext(kit.Ctx)
+		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Select(m.Memo, m.Reviser).Updates(g); err != nil {
+			return err
+		}
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", table.TemplateSpaceTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
-		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
-	sql := filter.SqlJoint(sqlSentence)
-
-	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			var effected int64
-			effected, err = dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
-			if err != nil {
-				logs.Errorf("update TemplateSpace: %d failed, err: %v, rid: %v", g.ID, err, kit.Rid)
-				return err
-			}
-
-			if effected == 0 {
-				logs.Errorf("update one TemplateSpace: %d, but record not found, rid: %v", g.ID, kit.Rid)
-				return errf.New(errf.RecordNotFound, orm.ErrRecordNotFound.Error())
-			}
-
-			if effected > 1 {
-				logs.Errorf("update one TemplateSpace: %d, but got updated TemplateSpace count: %d, rid: %v", g.ID,
-					effected, kit.Rid)
-				return fmt.Errorf("matched TemplateSpace count %d is not as excepted", effected)
-			}
-
-			// do audit
-			if err := ab.Do(&AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}); err != nil {
-				return fmt.Errorf("do TemplateSpace update audit failed, err: %v", err)
-			}
-
-			return nil
-		})
-
-	if err != nil {
+		if err := ad.Do(tx); err != nil {
+			return err
+		}
+		return nil
+	}
+	if err := dao.genQ.Transaction(updateTx); err != nil {
 		return err
 	}
 
@@ -160,98 +114,48 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 }
 
 // List TemplateSpaces with options.
-func (dao *templateSpaceDao) List(kit *kit.Kit, opts *types.ListTemplateSpacesOption) (
-	*types.ListTemplateSpaceDetails, error) {
+func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error) {
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 
-	if opts == nil {
-		return nil, errf.New(errf.InvalidParameter, "list TemplateSpace options null")
-	}
-
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
-		return nil, err
-	}
-
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"id", "biz_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				},
-			},
-		},
-	}
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
-		return nil, err
-	}
-	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.TemplateSpaceTable.Name(), whereExpr)
-	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
-	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	// query TemplateSpace list for now.
-	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
-	if err != nil {
-		return nil, err
-	}
-
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(), whereExpr, pageExpr)
-	sql := filter.SqlJoint(sqlSentence)
-
-	list := make([]*table.TemplateSpace, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.ListTemplateSpaceDetails{Count: count, Details: list}, nil
+	return result, count, nil
 }
 
 // Delete one TemplateSpace instance.
 func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error {
-
-	if g == nil {
-		return errf.New(errf.InvalidParameter, "TemplateSpace is nil")
-	}
-
+	// 参数校验
 	if err := g.ValidateDelete(); err != nil {
-		return errf.New(errf.InvalidParameter, err.Error())
+		return err
 	}
 
-	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.TemplateSpace).PrepareDelete(g.ID)
+	// 删除操作, 获取当前记录做审计
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", table.TemplateSpaceTable.Name(), " WHERE id = ", strconv.Itoa(int(g.ID)),
-		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
-	expr := filter.SqlJoint(sqlSentence)
-
-	err := dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-		// delete the TemplateSpace at first.
-		err := dao.orm.Txn(txn).Delete(kit.Ctx, expr)
-		if err != nil {
+	// 多个使用事务处理
+	deleteTx := func(tx *gen.Query) error {
+		q = tx.TemplateSpace.WithContext(kit.Ctx)
+		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
 			return err
 		}
 
-		// audit this delete TemplateSpace details.
-		auditOpt := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-		if err := ab.Do(auditOpt); err != nil {
-			return fmt.Errorf("audit delete TemplateSpace failed, err: %v", err)
+		if err := ad.Do(tx); err != nil {
+			return err
 		}
-
 		return nil
-	})
-
-	if err != nil {
-		logs.Errorf("delete TemplateSpace: %d failed, err: %v, rid: %v", g.ID, err, kit.Rid)
-		return fmt.Errorf("delete TemplateSpace, but run txn failed, err: %v", err)
+	}
+	if err := dao.genQ.Transaction(deleteTx); err != nil {
+		return err
 	}
 
 	return nil
@@ -259,15 +163,13 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 
 // GetByName get by name
 func (dao *templateSpaceDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.TemplateSpaceColumns.NamedExpr(), " FROM ", table.TemplateSpaceTable.Name(),
-		" WHERE name = '", name, "' AND biz_id = ", strconv.Itoa(int(bizID)))
-	expr := filter.SqlJoint(sqlSentence)
-	one := new(table.TemplateSpace)
-	err := dao.orm.Do(dao.sd.Admin().DB()).Get(kit.Ctx, one, expr)
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
+
+	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get app details failed, err: %v", err)
+		return nil, fmt.Errorf("get templateSpace failed, err: %v", err)
 	}
 
-	return one, nil
+	return tplSpace, nil
 }

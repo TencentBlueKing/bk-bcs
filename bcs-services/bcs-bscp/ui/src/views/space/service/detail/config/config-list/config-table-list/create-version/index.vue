@@ -20,12 +20,31 @@
   const pending = ref(false)
   const formRef = ref()
   const rules = {
+    name: [
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-\.]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value)
+          }
+          return true
+        },
+        message: '仅允许使用中文、英文、数字、下划线、中划线、点，且必须以中文、英文、数字开头和结尾'
+      }
+    ],
     memo: [
       {
         validator: (value: string) => value.length < 100,
         message: '最大长度100个字符'
       }
     ],
+  }
+
+  const handleCreateDialogOpen = () => {
+    localVal.value = {
+      name: '',
+      memo: '',
+    }
+    isConfirmDialogShow.value = true
   }
 
   const handleConfirm = async() => {
@@ -45,10 +64,6 @@
 
   const handleClose = () => {
     isConfirmDialogShow.value = false
-    localVal.value = {
-      name: '',
-      memo: '',
-    }
     isPublish.value = false
   }
 
@@ -57,7 +72,7 @@
   <bk-button
     theme="primary"
     :disabled="props.configCount === 0"
-    @click="isConfirmDialogShow = true">
+    @click="handleCreateDialogOpen">
     生成版本
   </bk-button>
   <bk-dialog

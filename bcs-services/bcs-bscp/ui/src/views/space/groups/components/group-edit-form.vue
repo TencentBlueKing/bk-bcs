@@ -10,7 +10,7 @@
   import { IAppItem } from '../../../../../types/app'
 
   const getDefaultRuleConfig = (): IGroupRuleItem => {
-    return { key: '', op: <EGroupRuleType>'', value: '' }
+    return { key: '', op: '', value: '' }
   }
 
   const route = useRoute()
@@ -26,6 +26,7 @@
   const serviceList = ref<IAppItem[]>([])
   const formData = ref(cloneDeep(props.group))
   const formRef = ref()
+  const rulesValid = ref(true)
 
   const rules = {
     name: [
@@ -92,9 +93,11 @@
   // 删除规则
   const handleDeleteRule = (index: number) => {
     formData.value.rules.splice(index, 1)
+    change()
   }
 
   const handleLogicChange = (index: number, val: EGroupRuleType) => {
+    validateRules()
     const rule = formData.value.rules[index]
     if (['in', 'nin'].includes(val) && !['in', 'nin'].includes(rule.op)) {
       rule.value = []
@@ -105,11 +108,28 @@
   }
 
   const change = () => {
+    validateRules()
     emits('change', formData.value)
   }
 
   const validate = () => {
-    return formRef.value.validate()
+    const isRulesValid = validateRules()
+    
+    return formRef.value.validate().then(() => {
+      return isRulesValid
+    })
+  }
+
+  // 校验分组规则是否有表单项为空
+  const validateRules = () => {
+    const inValid = formData.value.rules.some(item => {
+      const { key, op, value } = item
+      return key === '' || op === '' || (Array.isArray(value) ? (<string[]>value).length === 0 : value === '')
+    })
+
+    rulesValid.value = !inValid
+
+    return !inValid
   }
 
   defineExpose({
@@ -138,7 +158,7 @@
         <bk-option v-for="service in serviceList" :key="service.id" :label="service.spec.name" :value="service.id"></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item class="radio-group-form" label="分组规则" required property="rule_logic"> 
+    <bk-form-item class="radio-group-form" label="分组规则" required property="rules"> 
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
         <bk-input v-model="rule.key" style="width: 176px;" placeholder="" @change="change"></bk-input>
         <bk-select :model-value="rule.op" style="width: 82px;" :clearable="false" @change="handleLogicChange(index, $event)">
@@ -149,7 +169,10 @@
             v-if="['in', 'nin'].includes(rule.op)"
             v-model="rule.value"
             :allow-create="true"
+            :collapse-tags="true"
+            :has-delete-icon="true"
             :show-clear-only-hover="true"
+            :allow-auto-match="true"
             :list="[]"
             @change="change">
           </bk-tag-input>
@@ -166,6 +189,7 @@
           <i v-if="index === formData.rules.length - 1" style="margin-left: 10px;" class="bk-bscp-icon icon-add" @click="handleAddRule(index)"></i>
         </div>
       </div>
+      <div v-if="!rulesValid" class="bk-form-error">分组规则表单不能为空</div>
     </bk-form-item>
   </bk-form>
 </template>

@@ -146,7 +146,7 @@
           @confirm="handleUpdateStatus" />
         <ModifyGroupPublish
           v-if="versionData.status.publish_status === 'partial_released'"
-          bk-biz-id="props.bkBizId"
+          :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :release-id="versionData.id"
           :app-name="appData.spec.name"

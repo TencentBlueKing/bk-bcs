@@ -42,14 +42,14 @@ func newRemoveNodesFromGroupCmd() *cobra.Command {
 	cmd.MarkFlagRequired("clusterID")
 	cmd.Flags().StringVarP(&nodeGroupID, "nodeGroupID", "n", "", "node group ID")
 	cmd.MarkFlagRequired("nodeGroupID")
-	cmd.Flags().StringSliceVarP(&nodes, "nodes", "i", []string{}, "node inner ip, for example: -i 47.43.47.103 -i 244.87.232.48")
+	cmd.Flags().StringSliceVarP(&nodes, "nodes", "i", []string{}, "node inner ip, for example: -i xxx.xxx.xxx.xxx -i xxx.xxx.xxx.xxx")
 	cmd.MarkFlagRequired("nodes")
 
 	return cmd
 }
 
 func removeNodesFromGroup(cmd *cobra.Command, args []string) {
-	resp, err := nodegroup.New(context.Background()).MoveNodes(types.MoveNodesToGroupReq{
+	resp, err := nodegroup.New(context.Background()).RemoveNodes(types.RemoveNodesFromGroupReq{
 		ClusterID:   clusterID,
 		NodeGroupID: nodeGroupID,
 		Nodes:       nodes,
@@ -58,5 +58,5 @@ func removeNodesFromGroup(cmd *cobra.Command, args []string) {
 		klog.Fatalf("remove nodes to group failed: %v", err)
 	}
 
-	fmt.Printf("remove nodes to group succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("remove nodes to group succeed: taskID: %v\n", resp.TaskID)
 }

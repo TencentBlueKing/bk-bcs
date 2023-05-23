@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, computed, watch } from 'vue'
+  import { ref, computed, watch, nextTick } from 'vue'
   import { useI18n } from "vue-i18n"
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../../store/global'
@@ -18,20 +18,46 @@
   const emits = defineEmits(['update:show'])
 
   const isMemoEdit = ref(false)
-  const memo = ref('')
+  const formData = ref({
+    memo: ''
+  })
+  const formRef = ref()
+  const memoRef = ref()
 
   const spaceName = computed(() => {
     const space = spaceList.value.find(item => item.space_id === props.service.space_id)
     return space?.space_name
   })
 
+  const rules = {
+    memo: [
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-\s]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value)
+          }
+          return true
+        },
+        message: '仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾'
+      }
+    ]
+  }
+
   watch(() => props.show, (val) => {
     if (val) {
-      memo.value = props.service.spec.memo
+      formData.value.memo = props.service.spec.memo
     }
   })
 
+  const handleEditMemo = () => {
+    isMemoEdit.value = true
+    nextTick(() => {
+      memoRef.value.focus()
+    })
+  }
+
   const handleUpdateMemo = async() => {
+    await formRef.value.validate()
     const { id, biz_id, spec } = props.service;
     const { name, mode, config_type, reload } = spec;
     const data = {
@@ -43,7 +69,7 @@
       reload_type: reload.reload_type,
       reload_file_path: reload.file_reload_spec.reload_file_path,
       deploy_type: "common",
-      memo: memo.value
+      memo: formData.value.memo
     }
     await updateApp({ id, biz_id, data })
     isMemoEdit.value = false
@@ -68,14 +94,15 @@
         </div>
       </template>
       <div class="service-edit-wrapper">
-        <bk-form :model="props.service" label-width="100">
+        <bk-form ref="formRef" :model="formData" label-width="100" :rules="rules">
           <bk-form-item :label="t('服务名称')">{{ props.service.spec.name }}</bk-form-item>
           <bk-form-item :label="t('所属业务')">{{ spaceName }}</bk-form-item>
-          <bk-form-item :label="t('服务描述')">
+          <bk-form-item :label="t('服务描述')" property="memo" error-display-type="tooltips">
             <div class="content-edit">
               <template v-if="isMemoEdit">
                 <bk-input
-                  v-model="memo"
+                  ref="memoRef"
+                  v-model="formData.memo"
                   type="textarea"
                   :show-word-limit="true"
                   :maxlength="255"
@@ -84,8 +111,8 @@
                 </bk-input>
               </template>
               <template v-else>
-                {{ memo || '--' }}
-                <i class="bk-bscp-icon icon-edit-small edit-icon" @click="isMemoEdit = true"></i>
+                {{ formData.memo || '--' }}
+                <i class="bk-bscp-icon icon-edit-small edit-icon" @click="handleEditMemo"></i>
               </template>
             </div>
           </bk-form-item>
@@ -132,10 +159,10 @@
     }
     .content-edit {
       position: relative;
-      padding-right: 16px;
+      // padding-right: 16px;
       .edit-icon {
         position: absolute;
-        right: 0;
+        right: -20px;
         top: -3px;
         font-size: 22px;
         color: #979ba5;

@@ -55,5 +55,5 @@ func checkCloudKubeconfig(cmd *cobra.Command, args []string) {
 		klog.Fatalf("check cloud kube config failed: %v", err)
 	}
 
-	fmt.Printf("check cloud kube config succeed")
+	fmt.Println("check cloud kube config succeed")
 }

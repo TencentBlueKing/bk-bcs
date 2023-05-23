@@ -262,15 +262,15 @@ func (s ShardingBizSpec) Validate() error {
 // IDGenerator defines all the specifics to generate resource's unique
 // id list with different step.
 type IDGenerator struct {
-	ID uint32 `db:"id" json:"id"`
+	ID uint32 `db:"id" json:"id" gorm:"primaryKey"`
 	// Resource defines what kind of this id works for.
 	// Resource should be unique.
-	Resource  Name      `db:"resource" json:"resource"`
-	MaxID     uint32    `db:"max_id" json:"max_id"`
-	UpdatedAt time.Time `db:"update_at" json:"update_time"`
+	Resource  Name      `db:"resource" json:"resource" gorm:"column:resource"`
+	MaxID     uint32    `db:"max_id" json:"max_id" gorm:"column:max_id"`
+	UpdatedAt time.Time `db:"update_at" json:"update_time" gorm:"column:updated_at"`
 }
 
 // TableName is the resource id generator's database table name.
 func (IDGenerator) TableName() Name {
-	return IDGeneratorTable
+	return "id_generators"
 }

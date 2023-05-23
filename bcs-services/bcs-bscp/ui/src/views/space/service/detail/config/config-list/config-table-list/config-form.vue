@@ -229,6 +229,9 @@
       padding: 0;
       border: none;
     }
+    :deep(.bk-upload-list--disabled .bk-upload-list__item) {
+      pointer-events: inherit;
+    }
     .file-wrapper {
       display: flex;
       align-items: center;

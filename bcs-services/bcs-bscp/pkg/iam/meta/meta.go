@@ -40,7 +40,7 @@ type Basic struct {
 	ResourceID uint32
 }
 
-// BasicDetail
+// BasicDetail add deail for auth api
 type BasicDetail struct {
 	Basic        `json:",inline"`
 	TypeName     string `json:"type_name"`

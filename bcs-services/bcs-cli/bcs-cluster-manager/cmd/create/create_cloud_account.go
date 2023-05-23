@@ -61,5 +61,5 @@ func createCloudAccount(cmd *cobra.Command, args []string) {
 		klog.Fatalf("create cloud account failed: %v", err)
 	}
 
-	fmt.Printf("create cloud account succeed")
+	fmt.Println("create cloud account succeed")
 }

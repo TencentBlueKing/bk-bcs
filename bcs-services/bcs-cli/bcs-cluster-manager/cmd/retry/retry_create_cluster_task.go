@@ -52,5 +52,5 @@ func retryCreateClusterTask(cmd *cobra.Command, args []string) {
 		klog.Fatalf("retry create cluster failed: %v", err)
 	}
 
-	fmt.Printf("retry create cluster succeed: clusterID: %v, taskID: %v", resp.ClusterID, resp.TaskID)
+	fmt.Printf("retry create cluster succeed: clusterID: %v, taskID: %v\n", resp.ClusterID, resp.TaskID)
 }
