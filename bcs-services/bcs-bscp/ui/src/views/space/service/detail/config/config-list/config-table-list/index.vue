@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue'
+  import { ref, watch, onMounted, nextTick } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useServiceStore } from '../../../../../../../store/service'
   import { useConfigStore } from '../../../../../../../store/config'
   import { InfoBox } from "bkui-vue/lib";
   import { InfoLine, Search } from 'bkui-vue/lib/icon';
   import { IConfigItem, IConfigListQueryParams } from '../../../../../../../../types/config'
-  import { CONFIG_STATUS_MAP, VERSION_STATUS_MAP } from '../../../../../../../constants/index'
+  import { CONFIG_STATUS_MAP, VERSION_STATUS_MAP } from '../../../../../../../constants/config'
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
   import EditConfig from './edit-config.vue'
@@ -17,11 +17,9 @@
   import VersionDiff from '../../components/version-diff/index.vue'
 
   const serviceStore = useServiceStore()
-  const versionStore = useConfigStore()
+  const configStore = useConfigStore()
   const { appData } = storeToRefs(serviceStore)
-  const { versionData } = storeToRefs(versionStore)
-
-  const emit = defineEmits(['updateVersionList'])
+  const { versionData } = storeToRefs(configStore)
 
   const props = defineProps<{
     bkBizId: string,
@@ -39,6 +37,7 @@
   const activeConfig = ref(0)
   const isDiffPanelShow = ref(false)
   const diffConfig = ref(0)
+  const publishVersionRef = ref()
 
   watch(() => versionData.value.id, () => {
     getListData()
@@ -100,13 +99,26 @@
     } as any);
   }
 
+  // 创建版本成功后，刷新版本列表，若选择同时上线，则打开选择分组面板
+  const handleVersionCreated = (versionId: number, isPublish: boolean) => {
+    versionData.value.id = versionId
+    refreshVesionList()
+    nextTick(() => {
+      if (isPublish && publishVersionRef.value) {
+        publishVersionRef.value.handleOpenSelectGroupPanel()
+      }
+    })
+  }
+
   const handlePageLimitChange = (limit: number) => {
     pagination.value.limit = limit
     refreshConfigList()
   }
 
-  const handleUpdateStatus = () => {
-    emit('updateVersionList')
+  const refreshVesionList = () => {
+    configStore.$patch((state) => {
+      state.refreshVersionListFlag = true
+    })
   }
 
   defineExpose({
@@ -131,10 +143,11 @@
       <section class="version-operations">
         <CreateVersion
           v-if="versionData.status.publish_status === 'editing'"
+          ref="publishVersionRef"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :config-count="pagination.count"
-          @confirm="handleUpdateStatus" />
+          @confirm="handleVersionCreated" />
         <PublishVersion
           v-if="versionData.status.publish_status === 'not_released'"
           :bk-biz-id="props.bkBizId"
@@ -143,7 +156,7 @@
           :app-name="appData.spec.name"
           :version-name="versionData.spec.name"
           :config-list="configList"
-          @confirm="handleUpdateStatus" />
+          @confirm="refreshVesionList" />
         <ModifyGroupPublish
           v-if="versionData.status.publish_status === 'partial_released'"
           :bk-biz-id="props.bkBizId"
@@ -152,7 +165,7 @@
           :app-name="appData.spec.name"
           :version-name="versionData.spec.name"
           :config-list="configList"
-          @confirm="handleUpdateStatus" />
+          @confirm="refreshVesionList" />
       </section>
     </section>
     <div class="operate-area">

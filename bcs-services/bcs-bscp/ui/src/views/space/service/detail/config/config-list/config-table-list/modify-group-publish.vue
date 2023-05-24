@@ -69,14 +69,12 @@
   const handleConfirm = () => {
     isDiffSliderShow.value = false
     handlePanelClose()
+    emit('confirm')
     InfoBox({
     // @ts-ignore
       infoType: "success",
-      title: '版本已上线',
-      dialogType: 'confirm',
-      onConfirm () {
-        emit('confirm')
-      }
+      title: '调整分组上线成功',
+      dialogType: 'confirm'
     })
   }
 

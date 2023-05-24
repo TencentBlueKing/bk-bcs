@@ -9,7 +9,7 @@
   import { updateConfigContent, getConfigContent } from '../../../../../../../api/config'
   import { stringLengthInBytes } from '../../../../../../../utils/index'
   import { transFileToObject, fileDownload } from '../../../../../../../utils/file'
-  import { CONFIG_FILE_TYPE } from '../../../../../../../constants/index'
+  import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config'
   import ConfigContentEditor from '../../components/config-content-editor.vue'
 
   const props = withDefaults(defineProps<{

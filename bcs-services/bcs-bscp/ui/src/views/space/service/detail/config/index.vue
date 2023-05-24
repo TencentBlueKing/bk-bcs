@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { onBeforeUnmount } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../store/config'
   import { AngleDoubleRight } from 'bkui-vue/lib/icon'
@@ -14,18 +14,9 @@
     appId: number
   }>()
 
-  const versionListRef = ref()
-  // 版本列表数据在初次加载
-  const versionDataLoading = ref(true)
-
   // 切换视图
   const handleToggleView = () => {
-    versionDataLoading.value = true
     versionDetailView.value = !versionDetailView.value
-  }
-
-  const updateVersionList = () => {
-    versionListRef.value.refreshVersionList()
   }
 
 </script>
@@ -33,11 +24,9 @@
   <section :class="['service-config-wrapper', { 'version-detail-view': versionDetailView}]">
     <section class="version-list-side">
       <VersionList
-        ref="versionListRef"
         :version-detail-view="versionDetailView"
         :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :loaded="versionDataLoading = false" />
+        :app-id="props.appId"/>
       <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="handleToggleView">
         <AngleDoubleRight class="arrow-icon" />
         <span class="text">版本详情</span>
@@ -45,11 +34,9 @@
     </section>
     <section class="version-config-content">
       <ConfigList
-        v-if="!versionDataLoading"
         :version-detail-view="versionDetailView"
         :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        @updateVersionList="updateVersionList" />
+        :app-id="props.appId" />
     </section>
   </section>
 </template>
