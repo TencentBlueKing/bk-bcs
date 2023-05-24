@@ -36,23 +36,6 @@ import (
 	"bscp.io/pkg/tools"
 )
 
-// ServiceDiscover defines all the service and discovery
-// related operations.
-type ServiceDiscover interface {
-	Service
-	Discover
-}
-
-// Service defines all the service and discovery
-// related operations.
-type Service interface {
-	// Register the service
-	Register() error
-	// Deregister the service
-	Deregister() error
-	State
-}
-
 // State defines the service's state related operations.
 type State interface {
 	// IsMaster test if this service instance is
@@ -65,9 +48,26 @@ type State interface {
 	Healthz(etcd cc.Etcd) error
 }
 
+// Service defines all the service and discovery
+// related operations.
+type Service interface {
+	State
+	// Register the service
+	Register() error
+	// Deregister the service
+	Deregister() error
+}
+
 // Discover defines service discovery related operations.
 type Discover interface {
 	LBRoundRobin() grpc.DialOption
+}
+
+// ServiceDiscover defines all the service and discovery
+// related operations.
+type ServiceDiscover interface {
+	Service
+	Discover
 }
 
 // NewService create a service instance.
