@@ -18,7 +18,7 @@
     public: true,
     bind_apps: [],
     rule_logic: 'AND',
-    rules: [{ key: '', op: <EGroupRuleType>'', value: '' }]
+    rules: [{ key: '', op: '', value: '' }]
   })
   const groupFormRef = ref()
   const pending = ref(false)
@@ -30,7 +30,7 @@
         public: true,
         bind_apps: [],
         rule_logic: 'AND',
-        rules: [{ key: '', op: <EGroupRuleType>'', value: '' }]
+        rules: [{ key: '', op: '', value: '' }]
       }
     }
   })
@@ -40,7 +40,10 @@
   }
 
   const handleConfirm = async() => {
-    await groupFormRef.value.validate()
+    const result = await groupFormRef.value.validate()
+    if (!result) {
+      return
+    }
     try {
       const { name, public: isPublic, bind_apps, rule_logic, rules } = groupData.value
       const params = {
@@ -78,7 +81,7 @@
     :is-loading="pending"
     @closed="handleClose"
     @confirm="handleConfirm">
-    <group-edit-form v-if="props.show" ref="groupFormRef" :group="groupData" @change="updateData"></group-edit-form>
+    <group-edit-form ref="groupFormRef" :group="groupData" @change="updateData"></group-edit-form>
   </bk-dialog>
 </template>
 <style lang="scss">

@@ -13,7 +13,7 @@
     <bcs-option-group
       :name="$t('独立集群')"
       :is-collapse="independentCollapse"
-      class="mt-[8px]">
+      :class="['mt-[8px]', { 'mb-[4px]': clusterType === 'independent' }]">
       <template #group-name>
         <CollapseTitle
           :title="`${$t('独立集群')} (${independentClusterList.length})`"

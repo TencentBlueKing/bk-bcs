@@ -14,7 +14,7 @@
   const emits = defineEmits(['loaded'])
 
   const refreshVersionList = () => {
-    simpleListRef.value.getVersionList()
+    simpleListRef.value.refreshConfigList()
   }
 
   defineExpose({

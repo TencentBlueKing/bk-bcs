@@ -10,7 +10,7 @@ export const GROUP_RULE_OPS = [
 ]
 
 export const CONFIG_FILE_TYPE = [
-  { id: 'text', name: 'Text' },
+  { id: 'text', name: '文本文件' },
   { id: 'binary', name: '二进制文件' }
 ]
 

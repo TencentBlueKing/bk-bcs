@@ -28,7 +28,7 @@
       {{ clusterData.systemID || '--' }}
     </bk-form-item>
     <bk-form-item :label="$t('集群环境')">
-      {{ ['stag', 'debug'].includes(clusterData.environment) ? $t('测试') : $t('正式') }}
+      {{ CLUSTER_ENV[clusterData.environment] }}
     </bk-form-item>
     <bk-form-item :label="$t('状态')">
       <StatusIcon
@@ -128,6 +128,7 @@ import $router from '@/router';
 import { useClusterInfo, useClusterList } from '../use-cluster';
 import useSideslider from '@/composables/use-sideslider';
 import $bkMessage from '@/common/bkmagic';
+import { CLUSTER_ENV } from '@/common/constant';
 
 export default defineComponent({
   name: 'ClusterInfo',
@@ -244,6 +245,7 @@ export default defineComponent({
       handleGotoToken,
       setChanged,
       handleBeforeClose,
+      CLUSTER_ENV,
     };
   },
 });

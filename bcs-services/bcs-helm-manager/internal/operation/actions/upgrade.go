@@ -113,7 +113,7 @@ func (r *ReleaseUpgradeAction) Name() string {
 
 // Prepare xxx
 func (r *ReleaseUpgradeAction) Prepare(ctx context.Context) error {
-	repository, err := r.model.GetRepository(ctx, r.projectCode, r.repoName)
+	repository, err := r.model.GetProjectRepository(ctx, r.projectCode, r.repoName)
 	if err != nil {
 		return fmt.Errorf("get %s/%s repo info in cluster %s error, %s",
 			r.namespace, r.name, r.clusterID, err.Error())

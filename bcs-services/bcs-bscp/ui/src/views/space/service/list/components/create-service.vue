@@ -43,6 +43,17 @@
         },
         message: '服务名称由英文、数字、下划线、中划线组成且以英文、数字开头和结尾'
       }
+    ],
+    memo: [
+      {
+        validator: (value: string) => {
+          if (value.length > 0) {
+            return /^[\u4e00-\u9fa5a-zA-Z0-9][\u4e00-\u9fa5a-zA-Z0-9_\-\s]*[\u4e00-\u9fa5a-zA-Z0-9]?$/.test(value)
+          }
+          return true
+        },
+        message: '仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾'
+      }
     ]
   }
   const formRef = ref()
@@ -107,7 +118,7 @@
             v-model="formData.name"
           ></bk-input>
         </bk-form-item>
-        <bk-form-item :label="t('服务描述')">
+        <bk-form-item :label="t('服务描述')" property="memo">
           <bk-input
             placeholder="请输入"
             type="textarea"

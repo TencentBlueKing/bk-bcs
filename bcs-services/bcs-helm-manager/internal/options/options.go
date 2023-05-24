@@ -13,20 +13,6 @@
 // Package options xxx
 package options
 
-import "strings"
-
-// BCSClusterEnv xxx
-type BCSClusterEnv string
-
-const (
-	// ProdCluster xxx
-	ProdCluster BCSClusterEnv = "prod" // 正式环境
-	// DebugCluster xxx
-	DebugCluster BCSClusterEnv = "debug" // debug 环境
-	// UatCluster xxx
-	UatCluster BCSClusterEnv = "uat" // uat 环境
-)
-
 // EtcdOption option for etcd
 type EtcdOption struct {
 	EtcdEndpoints string `json:"endpoints" yaml:"endpoints" value:"" usage:"endpoints of etcd"`
@@ -91,15 +77,10 @@ type RepoConfig struct {
 
 // ReleaseConfig option for helm release handler
 type ReleaseConfig struct {
-	Binary   string `json:"binary" yaml:"binary"`
-	PatchDir string `json:"patchdir" yaml:"patchdir"`
-	VarDir   string `json:"vardir" yaml:"vardir"`
-}
-
-// BCSAPIConfig option for bcs api config
-type BCSAPIConfig struct {
-	URL   string `json:"url" yaml:"url"`
-	Token string `json:"token" yaml:"token"`
+	APIServer        string `json:"api" yaml:"api"`
+	Token            string `json:"token" yaml:"token"`
+	PatchDir         string `json:"patchdir" yaml:"patchdir"`
+	AddonsConfigFile string `json:"addonsConfigFile" yaml:"addonsConfigFile"`
 }
 
 // JWTConfig option for jwt config
@@ -151,38 +132,18 @@ type CredentialScope struct {
 
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
-	Etcd         EtcdOption              `json:"etcd" yaml:"etcd"`
-	BcsLog       LogConfig               `json:"log" yaml:"log"`
-	Swagger      SwaggerConfig           `json:"swagger" yaml:"swagger"`
-	Mongo        MongoConfig             `json:"mongo" yaml:"mongo"`
-	Repo         RepoConfig              `json:"repo" yaml:"repo"`
-	Release      ReleaseConfig           `json:"release" yaml:"release"`
-	BCSAPIConfig map[string]BCSAPIConfig `json:"bcsAPIConfig" yaml:"bcsAPIConfig"`
-	IAM          IAMConfig               `json:"iam" yaml:"iam"`
-	JWT          JWTConfig               `json:"jwt" yaml:"jwt"`
-	Credentials  []Credential            `json:"credentials" yaml:"credentials"`
-	Debug        bool                    `json:"debug" yaml:"debug"`
-	TLS          TLS                     `json:"tls" yaml:"tls"`
+	Etcd        EtcdOption    `json:"etcd" yaml:"etcd"`
+	BcsLog      LogConfig     `json:"log" yaml:"log"`
+	Swagger     SwaggerConfig `json:"swagger" yaml:"swagger"`
+	Mongo       MongoConfig   `json:"mongo" yaml:"mongo"`
+	Repo        RepoConfig    `json:"repo" yaml:"repo"`
+	Release     ReleaseConfig `json:"release" yaml:"release"`
+	IAM         IAMConfig     `json:"iam" yaml:"iam"`
+	JWT         JWTConfig     `json:"jwt" yaml:"jwt"`
+	Credentials []Credential  `json:"credentials" yaml:"credentials"`
+	Debug       bool          `json:"debug" yaml:"debug"`
+	TLS         TLS           `json:"tls" yaml:"tls"`
 	ServerConfig
-}
-
-// GetBCSAPIConfigByClusterID xxx
-func GetBCSAPIConfigByClusterID(clusterID string) BCSAPIConfig {
-	return GlobalOptions.BCSAPIConfig[string(GetEnvByClusterID(clusterID))]
-}
-
-// GetEnvByClusterID 获取集群所属环境, 目前通过集群ID前缀判断
-func GetEnvByClusterID(clusterID string) BCSClusterEnv {
-	if strings.HasPrefix(clusterID, "BCS-K8S-1") {
-		return UatCluster
-	}
-	if strings.HasPrefix(clusterID, "BCS-K8S-2") {
-		return DebugCluster
-	}
-	if strings.HasPrefix(clusterID, "BCS-K8S-4") {
-		return ProdCluster
-	}
-	return ProdCluster
 }
 
 // GlobalOptions global helm manager options

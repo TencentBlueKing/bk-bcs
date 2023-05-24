@@ -38,6 +38,7 @@ export interface ICluster {
   master: any
   clusterBasicSettings: any
   manageType: 'INDEPENDENT_CLUSTER' | 'MANAGED_CLUSTER'
+  provider: string
   is_shared: boolean
   cluster_id: string // 兼容旧版数据（不要再使用）
 }

@@ -13,7 +13,7 @@ limitations under the License.
 package dao
 
 import (
-	"fmt"
+	"bytes"
 	"strconv"
 
 	"bscp.io/pkg/criteria/errf"
@@ -22,7 +22,6 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -101,16 +100,14 @@ func (dao *releasedGroupDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.C
 		return nil, err
 	}
 
-	args := tools.JoinUint32(opts.Groups, ",")
-
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT group_id, COUNT(DISTINCT app_id) AS counts, MAX(edited) AS edited FROM ",
-		table.ReleasedGroupTable.Name(), fmt.Sprintf(" WHERE biz_id = %d AND group_id IN (%s) ", opts.BizID, args),
-		" GROUP BY group_id ")
-	sql := filter.SqlJoint(sqlSentence)
+	var sqlBuf bytes.Buffer
+	sqlBuf.WriteString("SELECT group_id, COUNT(DISTINCT app_id) AS counts, MAX(edited) AS edited FROM ")
+	sqlBuf.WriteString(table.ReleasedGroupTable.Name())
+	sqlBuf.WriteString(" WHERE biz_id = ? AND group_id IN (?) GROUP BY group_id")
 
 	counts := make([]*types.GroupPublishedAppsCount, 0)
-	err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &counts, sql)
+	err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx,
+		&counts, sqlBuf.String(), opts.BizID, opts.Groups)
 	if err != nil {
 		return nil, err
 	}

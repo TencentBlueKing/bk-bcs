@@ -27,7 +27,7 @@ import (
 
 var (
 	updateNodeExample = templates.Examples(i18n.T(`
-	kubectl-bcs-cluster-manager update node --status xxx --innerIPs 47.43.47.103 --innerIPs 244.87.232.48`))
+	kubectl-bcs-cluster-manager update node --status xxx --innerIPs xxx.xxx.xxx.xxx --innerIPs xxx.xxx.xxx.xxx`))
 )
 
 func newUpdateNodeCmd() *cobra.Command {
@@ -38,7 +38,7 @@ func newUpdateNodeCmd() *cobra.Command {
 		Run:     updateNode,
 	}
 
-	cmd.Flags().StringSliceVarP(&innerIPs, "innerIPs", "i", []string{}, "node inner ip, for example: -i 47.43.47.103 -i 244.87.232.48")
+	cmd.Flags().StringSliceVarP(&innerIPs, "innerIPs", "i", []string{}, "node inner ip, for example: -i xxx.xxx.xxx.xxx -i xxx.xxx.xxx.xxx")
 	cmd.MarkFlagRequired("innerIPs")
 
 	cmd.Flags().StringVarP(&status, "status", "s", "", "更新节点状态(INITIALIZATION/RUNNING/DELETING/ADD-FAILURE/REMOVE-FAILURE)")
@@ -59,5 +59,5 @@ func updateNode(cmd *cobra.Command, args []string) {
 		klog.Fatalf("get node failed: %v", err)
 	}
 
-	fmt.Printf("update node succeed")
+	fmt.Println("update node succeed")
 }

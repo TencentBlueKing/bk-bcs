@@ -334,7 +334,7 @@
     }
   }
   .diff-content-area {
-    flex: 1;
+    width: calc(100% - 264px);
     height: 100%;
   }
   .diff-panel-head {

@@ -1,9 +1,19 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package migrator
 
 import (
 	"bytes"
-	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"html/template"
@@ -13,8 +23,15 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
+
 	"bscp.io/cmd/data-service/db-migration"
 	"bscp.io/pkg/criteria/constant"
+)
+
+const (
+	GormMode string = "gorm"
+	SqlMode  string = "sql"
 )
 
 var allSQLFiles []string
@@ -23,15 +40,16 @@ var allSQLFiles []string
 type Migration struct {
 	Version string
 	Name    string
-	Up      func(*sql.Tx) error
-	Down    func(*sql.Tx) error
+	Mode    string
+	Up      func(*gorm.DB) error
+	Down    func(*gorm.DB) error
 
 	done bool
 }
 
 // Migrator is the controller for all migrations
 type Migrator struct {
-	db            *sql.DB
+	db            *gorm.DB
 	Versions      []string
 	Migrations    map[string]*Migration
 	MigrationSQLs map[string]string
@@ -63,25 +81,25 @@ func (m *Migrator) AddMigration(mg *Migration) {
 }
 
 // Init create the db connection and get migrator
-func Init(db *sql.DB) (*Migrator, error) {
+func Init(db *gorm.DB) (*Migrator, error) {
 	migrator.db = db
+	var err error
 
 	// Create `schema_migrations` table to remember which migrations were executed.
-	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
+	if result := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
 		id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 		applied DATETIME ( 6 ) NOT NULL,
 		version VARCHAR ( 255 )
-	);`); err != nil {
-		fmt.Println("Unable to create `schema_migrations` table", err)
-		return migrator, err
+	);`); result.Error != nil {
+		fmt.Println("Unable to create `schema_migrations` table", result.Error)
+		return migrator, result.Error
 	}
 
 	// Find out all the executed migrations
-	rows, err := db.Query("SELECT version FROM `schema_migrations`;")
+	rows, err := db.Raw("SELECT version FROM `schema_migrations`;").Rows()
 	if err != nil {
 		return migrator, err
 	}
-
 	defer rows.Close()
 
 	// Mark the migrations as Done if it is already executed
@@ -114,10 +132,7 @@ func GetMigrator() *Migrator {
 
 // Up execute forward migration
 func (m *Migrator) Up(step int) error {
-	tx, err := m.db.BeginTx(context.TODO(), &sql.TxOptions{})
-	if err != nil {
-		return err
-	}
+	tx := m.db.Begin()
 
 	count := 0
 	for _, v := range m.Versions {
@@ -137,10 +152,10 @@ func (m *Migrator) Up(step int) error {
 			return err
 		}
 
-		if _, err := tx.Exec("INSERT INTO `schema_migrations` (applied, version) VALUES(?, ?)",
-			time.Now().Format(constant.TimeStdFormat), mg.Version); err != nil {
+		if result := tx.Exec("INSERT INTO `schema_migrations` (applied, version) VALUES(?, ?)",
+			time.Now().Format(constant.TimeStdFormat), mg.Version); result.Error != nil {
 			tx.Rollback()
-			return err
+			return result.Error
 		}
 		fmt.Println("Finished running migration", mg.Version)
 
@@ -154,10 +169,7 @@ func (m *Migrator) Up(step int) error {
 
 // Down execute backward migration
 func (m *Migrator) Down(step int) error {
-	tx, err := m.db.BeginTx(context.TODO(), &sql.TxOptions{})
-	if err != nil {
-		return err
-	}
+	tx := m.db.Begin()
 
 	count := 0
 	for _, v := range reverse(m.Versions) {
@@ -177,9 +189,9 @@ func (m *Migrator) Down(step int) error {
 			return err
 		}
 
-		if _, err := tx.Exec("DELETE FROM `schema_migrations` WHERE version = ?", mg.Version); err != nil {
+		if result := tx.Exec("DELETE FROM `schema_migrations` WHERE version = ?", mg.Version); result.Error != nil {
 			tx.Rollback()
-			return err
+			return result.Error
 		}
 		fmt.Println("Finished reverting migration", mg.Version)
 
@@ -207,7 +219,7 @@ func (m *Migrator) MigrationStatus() error {
 }
 
 // Create generate one migration template file to use
-func Create(name string) error {
+func Create(name, mode string) error {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return fmt.Errorf("the name used to create migration file can't be empty")
@@ -226,9 +238,21 @@ func Create(name string) error {
 		FileName: fileName,
 	}
 
+	switch mode {
+	case GormMode:
+		return genGormMigrationFile(version, fileName, in)
+	case SqlMode:
+		return genSqlMigrationFile(version, fileName, in)
+	default:
+		return fmt.Errorf("unsupported migration mode: %s", mode)
+	}
+}
+
+// genGormMigrationFile gen migration file when using gorm
+func genGormMigrationFile(version, fileName string, in interface{}) error {
 	var out bytes.Buffer
 
-	t := template.Must(template.ParseFiles("./cmd/data-service/db-migration/migrator/schema.tmpl"))
+	t := template.Must(template.ParseFiles("./cmd/data-service/db-migration/migrator/gorm_schema.tmpl"))
 	err := t.Execute(&out, in)
 	if err != nil {
 		return errors.New("Unable to execute template:" + err.Error())
@@ -237,7 +261,33 @@ func Create(name string) error {
 	migrationFile, err := os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/%s_%s.go",
 		version, fileName))
 	if err != nil {
-		return errors.New("Unable to create migration file:" + err.Error())
+		return errors.New("Unable to create gorm migration file:" + err.Error())
+	}
+	defer migrationFile.Close()
+
+	if _, err := migrationFile.WriteString(out.String()); err != nil {
+		return errors.New("Unable to write to migration file:" + err.Error())
+	}
+
+	fmt.Printf("Generated new migration files:\n%s\n",
+		migrationFile.Name())
+	return nil
+}
+
+// genSqlMigrationFile gen migration file when using sql
+func genSqlMigrationFile(version, fileName string, in interface{}) error {
+	var out bytes.Buffer
+
+	t := template.Must(template.ParseFiles("./cmd/data-service/db-migration/migrator/sql_schema.tmpl"))
+	err := t.Execute(&out, in)
+	if err != nil {
+		return errors.New("Unable to execute template:" + err.Error())
+	}
+
+	migrationFile, err := os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/%s_%s.go",
+		version, fileName))
+	if err != nil {
+		return errors.New("Unable to create sql migration file:" + err.Error())
 	}
 	defer migrationFile.Close()
 
@@ -267,6 +317,10 @@ func Create(name string) error {
 // checkSQLFiles check if every migration has corresponding sql file
 func (m *Migrator) checkSQLFiles() {
 	for _, v := range m.Migrations {
+		// not check for gore mode
+		if v.Mode == GormMode {
+			continue
+		}
 		// only check 'up sql' files, 'down sql' files are optional
 		if _, ok := m.MigrationSQLs[GetUpSQLKey(v.Name)]; !ok {
 			fmt.Printf("Warning: missing sql file for migration %s, please check!\n", v.Name)

@@ -61,5 +61,5 @@ func importCluster(cmd *cobra.Command, args []string) {
 		klog.Fatalf("import cluster failed: %v", err)
 	}
 
-	fmt.Printf("import cluster succeed")
+	fmt.Println("import cluster succeed")
 }

@@ -27,6 +27,7 @@ var (
 	# delete one or many resources
 	kubectl-bcs-cluster-manager delete`))
 
+	virtual     bool
 	cloudID     string
 	accountID   string
 	vpcID       string

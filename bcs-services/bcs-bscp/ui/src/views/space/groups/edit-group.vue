@@ -21,7 +21,7 @@
     public: true,
     bind_apps: [],
     rule_logic: 'AND',
-    rules: [{ key: '', op: <EGroupRuleType>'', value: '' }]
+    rules: [{ key: '', op: '', value: '' }]
   })
   const groupFormRef = ref()
   const pending = ref(false)
@@ -47,7 +47,10 @@
 
   // 保存
   const handleConfirm = async() => {
-    await groupFormRef.value.validate()
+    const result = await groupFormRef.value.validate()
+    if (!result) {
+      return
+    }
     pending.value = true
     try {
       const { id, name, public: isPublic, bind_apps, rule_logic, rules } = groupData.value

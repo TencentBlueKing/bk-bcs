@@ -44,6 +44,7 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	gCred "google.golang.org/grpc/credentials"
+	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
@@ -98,6 +99,7 @@ type HelmManager struct {
 	mongoOptions   *mongo.Options
 	model          store.HelmManagerModel
 	platform       repo.Platform
+	addons         release.AddonsSlice
 	releaseHandler release.Handler
 
 	ctx           context.Context
@@ -124,6 +126,7 @@ func (hm *HelmManager) Init() error {
 	for _, f := range []func() error{
 		hm.initTLSConfig,
 		hm.initModel,
+		hm.initAddons,
 		hm.initPlatform,
 		hm.initReleaseHandler,
 		hm.initRegistry,
@@ -139,6 +142,10 @@ func (hm *HelmManager) Init() error {
 			return err
 		}
 	}
+
+	go func() {
+		blog.Infof("run pprof, %v", http.ListenAndServe(":6060", nil))
+	}()
 
 	return nil
 }
@@ -216,6 +223,29 @@ func (hm *HelmManager) initModel() error {
 	blog.Info("init mongo db successfully")
 	hm.model = store.New(mongoDB)
 	blog.Info("init store successfully")
+	return nil
+}
+
+// initAddons get add-ons list from config
+func (hm *HelmManager) initAddons() error {
+	if hm.opt.Release.AddonsConfigFile == "" {
+		return nil
+	}
+
+	// Load the YAML file
+	configData, err := ioutil.ReadFile(hm.opt.Release.AddonsConfigFile)
+	if err != nil {
+		blog.Errorf("init addons read file failed, err %s", err.Error())
+		return err
+	}
+
+	// Parse the YAML data into addons
+	err = yaml.Unmarshal(configData, &hm.addons)
+	if err != nil {
+		blog.Errorf("init addons parse yaml failed, err %s", err.Error())
+		return err
+	}
+	blog.Infof("init addons successfully from %s", hm.opt.Release.AddonsConfigFile)
 	return nil
 }
 
@@ -354,7 +384,13 @@ func (hm *HelmManager) initMicro() error {
 
 	if err := helmmanager.RegisterHelmManagerHandler(
 		svc.Server(), handler.NewHelmManager(hm.model, hm.platform, hm.opt, hm.releaseHandler)); err != nil {
-		blog.Errorf("register helm manager handler to micro failed: %s", err.Error())
+		blog.Errorf("register helm handler to micro failed: %s", err.Error())
+		return nil
+	}
+	if err := helmmanager.RegisterClusterAddonsHandler(
+		svc.Server(), handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, hm.addons,
+			hm.releaseHandler)); err != nil {
+		blog.Errorf("register addons handler to micro failed: %s", err.Error())
 		return nil
 	}
 
@@ -386,8 +422,17 @@ func (hm *HelmManager) initHTTPService() error {
 		net.JoinHostPort(hm.opt.Address, strconv.Itoa(int(hm.opt.Port))),
 		grpcDialOpts)
 	if err != nil {
-		blog.Errorf("register http service failed, err %s", err.Error())
-		return fmt.Errorf("register http service failed, err %s", err.Error())
+		blog.Errorf("register helm http service failed, err %s", err.Error())
+		return fmt.Errorf("register helm http service failed, err %s", err.Error())
+	}
+	err = helmmanager.RegisterClusterAddonsGwFromEndpoint(
+		context.TODO(),
+		rmMux,
+		net.JoinHostPort(hm.opt.Address, strconv.Itoa(int(hm.opt.Port))),
+		grpcDialOpts)
+	if err != nil {
+		blog.Errorf("register addons http service failed, err %s", err.Error())
+		return fmt.Errorf("register addons http service failed, err %s", err.Error())
 	}
 	router.Handle("/{uri:.*}", rmMux)
 

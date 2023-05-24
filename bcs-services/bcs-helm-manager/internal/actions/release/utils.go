@@ -29,7 +29,7 @@ const (
 func getChartContent(model store.HelmManagerModel, platform repo.Platform,
 	projectID, repoName, chart, version string) ([]byte, error) {
 	// 获取对应的仓库信息
-	repository, err := model.GetRepository(context.Background(), projectID, repoName)
+	repository, err := model.GetProjectRepository(context.Background(), projectID, repoName)
 	if err != nil {
 		return nil, err
 	}

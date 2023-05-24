@@ -308,7 +308,10 @@ func (c *Collection) Insert(ctx context.Context, docs []interface{}) (int, error
 		if mongo.IsDuplicateKeyError(err) {
 			return len(ret.InsertedIDs), drivers.ErrTableRecordDuplicateKey
 		}
-		return len(ret.InsertedIDs), err
+		if ret != nil {
+			return len(ret.InsertedIDs), err
+		}
+		return 0, err
 	}
 	return len(ret.InsertedIDs), nil
 }

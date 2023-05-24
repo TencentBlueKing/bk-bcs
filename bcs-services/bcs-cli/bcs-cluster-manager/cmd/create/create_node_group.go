@@ -30,13 +30,13 @@ import (
 var (
 	createNodeGroupExample = templates.Examples(i18n.T(`create node group from json file.file template:
 	{"name":"test001","autoScaling":{"maxSize":10,"minSize":0,"scalingMode":"CLASSIC_SCALING",
-	"multiZoneSubnetPolicy":"PRIORITY","retryPolicy":"IMMEDIATE_RETRY","subnetIDs":["subnet-5zem7xxx"]},
+	"multiZoneSubnetPolicy":"PRIORITY","retryPolicy":"IMMEDIATE_RETRY","subnetIDs":["subnet-xxxxxxx"]},
 	"enableAutoscale":true,"nodeTemplate":{"unSchedulable":0,"labels":{},"taints":[],"dataDisks":[],
-	"dockerGraphPath":"/var/lib/docker","runtime":{"containerRuntime":"docker","runtimeVersion":"19.3"}},
-	"launchTemplate":{"imageInfo":{"imageID":"img-fv2263iz"},"CPU":2,"Mem":2,"instanceType":"S4.MEDIUM2",
+	"dockerGraphPath":"/var/lib/docker","runtime":{"containerRuntime":"docker","runtimeVersion":"19.x"}},
+	"launchTemplate":{"imageInfo":{"imageID":"img-xxxxx"},"CPU":2,"Mem":2,"instanceType":"S4.MEDIUM2",
 	"systemDisk":{"diskType":"CLOUD_PREMIUM","diskSize":"50"},"internetAccess":{"internetChargeType":
 	"TRAFFIC_POSTPAID_BY_HOUR","internetMaxBandwidth":"0","publicIPAssigned":false},"initLoginPassword":"123456",
-	"securityGroupIDs":["sg-dhjkgqo4"],"dataDisks":[],"isSecurityService":true,"isMonitorService":true},
+	"securityGroupIDs":["sg-xxx"],"dataDisks":[],"isSecurityService":true,"isMonitorService":true},
 	"clusterID":"BCS-K8S-xxxxx","region":"ap-shanghai","creator":"bcs"}`))
 )
 
@@ -69,5 +69,5 @@ func createNodeGroup(cmd *cobra.Command, args []string) {
 		klog.Fatalf("create node group failed: %v", err)
 	}
 
-	fmt.Printf("create node group succeed: nodeGroupID: %v, taskID: %v", resp.NodeGroupID, resp.TaskID)
+	fmt.Printf("create node group succeed: nodeGroupID: %v, taskID: %v\n", resp.NodeGroupID, resp.TaskID)
 }
