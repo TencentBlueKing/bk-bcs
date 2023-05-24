@@ -32,7 +32,6 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
-	view "bscp.io/pkg/rest/view"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
@@ -164,16 +163,8 @@ func (s *Service) handler() http.Handler {
 	r.Get("/-/healthy", s.HealthyHandler)
 	r.Get("/-/ready", s.ReadyHandler)
 	r.Get("/healthz", s.Healthz)
+
 	r.Mount("/", handler.RegisterCommonToolHandler())
-
-	// feedserver方法
-	r.Route("/api/v1/feed", func(r chi.Router) {
-		r.Use(auth.BKRepoVerified)
-		r.Use(view.Generic(s.authorizer))
-		r.Method("POST", "/list/app/release/type/file/latest", view.GenericFunc(s.ListFileAppLatestReleaseMetaRest))
-		r.Method("POST", "/auth/repository/file_pull", view.GenericFunc(s.AuthRepoRest))
-	})
-
 	return r
 }
 
@@ -203,5 +194,4 @@ func (s *Service) Healthz(w http.ResponseWriter, req *http.Request) {
 	}
 
 	rest.WriteResp(w, rest.NewBaseResp(errf.OK, "healthy"))
-	return
 }
