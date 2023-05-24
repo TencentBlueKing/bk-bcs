@@ -28,6 +28,7 @@ type Configuration struct {
 	BCSEnvMap    map[BCSClusterEnv]*BCSConf `yaml:"-"`
 	Web          *WebConf                   `yaml:"web"`
 	FrontendConf *FrontendConf              `yaml:"frontend_conf"`
+	Tracing      *TracingConf               `yaml:"tracing"`
 }
 
 // init 初始化
@@ -67,6 +68,8 @@ func newConfiguration() (*Configuration, error) {
 
 	c.BCSEnvConf = []*BCSConf{}
 	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
+
+	c.Tracing = &TracingConf{}
 
 	return c, nil
 }
