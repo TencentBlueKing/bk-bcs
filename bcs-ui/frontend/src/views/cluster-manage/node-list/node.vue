@@ -149,8 +149,8 @@
         :key="tableKey"
         :pagination="pagination"
         @filter-change="handleFilterChange"
-        @change="pageChange"
-        @limit-change="pageSizeChange">
+        @page-change="pageChange"
+        @page-limit-change="pageSizeChange">
         <template #prepend>
           <transition name="fade">
             <div class="selection-tips" v-if="selectType !== CheckType.Uncheck">
