@@ -229,7 +229,7 @@ func (rs *ReleasedService) matchReleasedGroupWithLabels(
 
 	if len(matchedList) == 0 {
 		if def == nil {
-			return nil, errf.New(errf.AppInstanceNotMatchedRelease, "this app instance can not match any release")
+			return nil, errf.ErrAppInstanceNotMatchedRelease
 		}
 		return def, nil
 	}
@@ -245,7 +245,7 @@ func (rs *ReleasedService) matchNamespacedStrategyWithLabels(kt *kit.Kit, list [
 	meta *types.AppInstanceMeta) (*matchedMeta, error) {
 
 	if len(list) == 0 {
-		return nil, errf.New(errf.AppInstanceNotMatchedRelease, "no release is published for this app")
+		return nil, errf.ErrAppInstanceNotMatchedRelease
 	}
 
 	// at most 2 strategies in the list, one is the namespaced strategies,
@@ -295,7 +295,7 @@ func (rs *ReleasedService) matchNamespacedStrategyWithLabels(kt *kit.Kit, list [
 	// this app instance does not have the namespaced strategy, validate
 	// whether it has the been configured a default strategy.
 	if defaultStrategy == nil {
-		return nil, errf.New(errf.AppInstanceNotMatchedRelease, "this app instance can not match any release")
+		return nil, errf.ErrAppInstanceNotMatchedRelease
 	}
 
 	if defaultStrategy.StrategyID <= 0 {
@@ -358,7 +358,7 @@ func (rs *ReleasedService) matchNormalStrategyWithLabels(kt *kit.Kit, list []*pt
 	}
 
 	if len(matchedList) == 0 {
-		return nil, errf.New(errf.AppInstanceNotMatchedRelease, "this app instance can not match any release")
+		return nil, errf.ErrAppInstanceNotMatchedRelease
 	}
 
 	// select latest release in matchd strategy list
