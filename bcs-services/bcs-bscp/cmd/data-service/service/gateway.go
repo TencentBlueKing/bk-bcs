@@ -70,7 +70,7 @@ func (g *gateway) handler() http.Handler {
 	r.Get("/-/ready", g.ReadyHandler)
 	r.Get("/healthz", g.Healthz)
 
-	r.Mount("/", g.mux)
+	r.Mount("/", handler.RegisterCommonToolHandler())
 	return r
 }
 

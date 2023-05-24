@@ -47,5 +47,4 @@ func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rest.WriteResp(w, rest.NewBaseResp(errf.OK, "healthy"))
-	return
 }
