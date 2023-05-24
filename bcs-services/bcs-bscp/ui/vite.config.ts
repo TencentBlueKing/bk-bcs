@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import viteCompression from "vite-plugin-compression"
 
 const viteHtml = (options?: any) => {
@@ -24,6 +25,8 @@ export default defineConfig(({ command, mode }) => {
   console.error('defineConfig command', command);
   if (command === 'build') {
     plugins.push(viteHtml())
+  } else {
+    plugins.push(basicSsl())
   }
 
   return {
@@ -50,15 +53,22 @@ export default defineConfig(({ command, mode }) => {
         }
       }
     },
+    optimizeDeps: {
+      include: [
+        `monaco-editor/esm/vs/language/json/json.worker`,
+        `monaco-editor/esm/vs/language/css/css.worker`,
+        `monaco-editor/esm/vs/language/html/html.worker`,
+        `monaco-editor/esm/vs/language/typescript/ts.worker`,
+        `monaco-editor/esm/vs/editor/editor.worker`
+      ], 
+    },
     server: {
+      https: true,
       proxy: {
-        '/api/c/compapi/v2/cc/': {
-          target: 'http://bcs-api.site.bktencent.com/bscp',
-          changeOrigin: true,
-        },
         '/api/v1/': {
-          target: 'http://bcs-api.site.bktencent.com/bscp',
+          target: '{{ .BK_BCS_BSCP_API }}',
           changeOrigin: true,
+          secure: false
         }
       }
     }
