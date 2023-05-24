@@ -15,7 +15,6 @@ package service
 import (
 	"net/http"
 
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
@@ -41,7 +40,7 @@ func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := g.state.Healthz(cc.DataService().Service.Etcd); err != nil {
+	if err := g.state.Healthz(); err != nil {
 		logs.Errorf("etcd healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return

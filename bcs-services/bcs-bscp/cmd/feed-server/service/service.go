@@ -196,7 +196,7 @@ func (s *Service) Healthz(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := s.state.Healthz(cc.FeedServer().Service.Etcd); err != nil {
+	if err := s.state.Healthz(); err != nil {
 		logs.Errorf("etcd healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return

@@ -17,7 +17,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -44,7 +43,7 @@ func (p *proxy) Healthz(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := p.state.Healthz(cc.ApiServer().Service.Etcd); err != nil {
+	if err := p.state.Healthz(); err != nil {
 		logs.Errorf("etcd healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return

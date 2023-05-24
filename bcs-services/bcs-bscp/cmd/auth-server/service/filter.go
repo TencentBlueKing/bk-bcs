@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"bscp.io/cmd/auth-server/types"
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/uuid"
@@ -103,7 +102,7 @@ func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := g.state.Healthz(cc.AuthServer().Service.Etcd); err != nil {
+	if err := g.state.Healthz(); err != nil {
 		logs.Errorf("etcd healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return
