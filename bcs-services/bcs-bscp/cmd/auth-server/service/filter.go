@@ -110,7 +110,6 @@ func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rest.WriteResp(w, rest.NewBaseResp(errf.OK, "healthy"))
-	return
 }
 
 // iamRequestFilter setups all api filters here. All request would cross here, and we filter request base on URL.
