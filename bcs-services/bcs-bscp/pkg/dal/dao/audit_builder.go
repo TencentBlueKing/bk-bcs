@@ -128,7 +128,6 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 
 	case *table.Hook:
 		sset := cur.(*table.Hook)
-		ab.toAudit.AppID = sset.Attachment.AppID
 		ab.toAudit.ResourceID = sset.ID
 
 	case *table.TemplateSpace:
@@ -435,7 +434,6 @@ func (ab *AuditBuilder) decorateGroupUpdate(group *table.Group) error {
 }
 
 func (ab *AuditBuilder) decorateHookUpdate(hook *table.Hook) error {
-	ab.toAudit.AppID = hook.Attachment.AppID
 	ab.toAudit.ResourceID = hook.ID
 
 	preHook, err := ab.getHook(hook.ID)
@@ -561,7 +559,6 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 			ab.hitErr = err
 			return ab
 		}
-		ab.toAudit.AppID = hook.Attachment.AppID
 		ab.toAudit.ResourceID = hook.ID
 		ab.prev = hook
 

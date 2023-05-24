@@ -225,6 +225,8 @@ const (
 	ReleasedGroupTable Name = "released_groups"
 	// HookTable is hook table's name
 	HookTable Name = "hooks"
+	// HookReleaseTable is hook release table's name
+	HookReleaseTable Name = "hook_releases"
 	// StrategySetTable is strategy set table's name
 	StrategySetTable Name = "strategy_sets"
 	// StrategyTable is strategy table's name

@@ -45,11 +45,8 @@ func (m *HookSpec) HookSpec() (*table.HookSpec, error) {
 	}
 
 	return &table.HookSpec{
-		Name:     m.Name,
-		PreType:  table.HookType(m.PreType),
-		PreHook:  m.PreHook,
-		PostType: table.HookType(m.PostType),
-		PostHook: m.PostHook,
+		Name: m.Name,
+		Type: table.HookType(m.Type),
 	}, nil
 }
 
@@ -60,11 +57,8 @@ func PbHookSpec(spec *table.HookSpec) (*HookSpec, error) {
 	}
 
 	return &HookSpec{
-		Name:     spec.Name,
-		PreType:  string(spec.PreType),
-		PreHook:  spec.PreHook,
-		PostType: string(spec.PostType),
-		PostHook: spec.PostHook,
+		Name: spec.Name,
+		Type: string(spec.Type),
 	}, nil
 }
 
@@ -75,9 +69,7 @@ func (m *HookAttachment) HookAttachment() *table.HookAttachment {
 	}
 
 	return &table.HookAttachment{
-		BizID:     m.BizId,
-		AppID:     m.AppId,
-		ReleaseID: m.ReleaseId,
+		BizID: m.BizId,
 	}
 }
 
@@ -88,9 +80,7 @@ func PbHookAttachment(at *table.HookAttachment) *HookAttachment {
 	}
 
 	return &HookAttachment{
-		BizId:     at.BizID,
-		AppId:     at.AppID,
-		ReleaseId: at.ReleaseID,
+		BizId: at.BizID,
 	}
 }
 

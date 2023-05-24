@@ -11,6 +11,7 @@ drop table if exists `groups`;
 drop table if exists `group_app_binds`;
 drop table if exists `released_groups`;
 drop table if exists `hooks`;
+drop table if exists `hook_releases`;
 drop table if exists `released_config_items`;
 drop table if exists `releases`;
 drop table if exists `current_released_instances`;

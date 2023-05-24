@@ -38,6 +38,8 @@ const (
 	Strategy AuditResourceType = "strategy"
 	// Hook hook脚本资源
 	Hook AuditResourceType = "hook"
+	// HookRelease hook脚本版本资源
+	HookRelease AuditResourceType = "hook_release"
 	// TemplateSpace 模版空间
 	TemplateSpace AuditResourceType = "template_space"
 	// Group 分组资源

@@ -34,18 +34,34 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+
 	now := time.Now()
+	res := &table.Revision{
+		Creator:   kt.User,
+		Reviser:   kt.User,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
 	hook := &table.Hook{
 		Spec:       spec,
 		Attachment: req.Attachment.HookAttachment(),
-		Revision: &table.Revision{
-			Creator:   kt.User,
-			Reviser:   kt.User,
-			CreatedAt: now,
-			UpdatedAt: now,
-		},
+		Revision:   res,
 	}
-	id, err := s.dao.Hook().Create(kt, hook)
+
+	hookRelease := &table.HookRelease{
+		Spec: &table.HookReleaseSpec{
+			Name:     req.Spec.ReleaseName,
+			Contents: req.Spec.Content,
+			Memo:     "",
+		},
+		Attachment: &table.HookReleaseAttachment{
+			BizID: req.Attachment.BizId,
+		},
+		Revision: res,
+	}
+
+	id, err := s.dao.Hook().Create(kt, hook, hookRelease)
 	if err != nil {
 		logs.Errorf("create hook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -57,36 +73,33 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 
 // ListHooks list hooks.
 func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.ListHooksResp, error) {
+
 	kt := kit.FromGrpcContext(ctx)
 
-	// parse pb struct filter to filter.Expression.
-	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
-	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kt.Rid)
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
-	query := &types.ListHooksOption{
-		BizID:  req.BizId,
-		AppID:  req.AppId,
-		Filter: filter,
-		Page:   req.Page.BasePage(),
-	}
-
-	details, err := s.dao.Hook().List(kt, query)
+	details, count, err := s.dao.Hook().List(kt, req.BizId, opt)
 	if err != nil {
 		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	hooks, err := pbhook.PbHooks(details.Details)
 	if err != nil {
-		logs.Errorf("get pb hook failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	hooks, err := pbhook.PbHooks(details)
+	if err != nil {
+		logs.Errorf("get pb TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	resp := &pbds.ListHooksResp{
-		Count:   details.Count,
+		Count:   uint32(count),
 		Details: hooks,
 	}
 	return resp, nil
@@ -133,4 +146,26 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 	}
 
 	return new(pbbase.EmptyResp), nil
+}
+
+func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*pbds.ListHookTagResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	ht, err := s.dao.Hook().CountHookTag(kt, req.BizId)
+	if err != nil {
+		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListHookTagResp{}
+
+	for _, count := range ht {
+		resp.Details = append(resp.Details, &pbhook.CountHookTags{
+			Tag:    count.Tag,
+			Counts: count.Counts,
+		})
+	}
+
+	return resp, nil
 }
