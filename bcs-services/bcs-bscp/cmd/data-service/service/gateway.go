@@ -24,9 +24,12 @@ import (
 	"bscp.io/pkg/logs"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/grpcgw"
+	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -57,9 +60,18 @@ func newGateway(st serviced.State, dao dao.Set) (*gateway, error) {
 
 // handler return gateway handler.
 func (g *gateway) handler() http.Handler {
-	mux := http.NewServeMux()
-	mux.Handle("/", g.mux)
-	return g.setupFilter(mux)
+	r := chi.NewRouter()
+	r.Use(handler.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	r.Get("/-/healthy", g.HealthyHandler)
+	r.Get("/-/ready", g.ReadyHandler)
+	r.Get("/healthz", g.Healthz)
+
+	r.Mount("/", g.mux)
+	return r
 }
 
 // newDataServiceMux new data service mux.

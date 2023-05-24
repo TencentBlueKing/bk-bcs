@@ -25,6 +25,16 @@ import (
 	"bscp.io/pkg/runtime/shutdown"
 )
 
+// HealthyHandler livenessProbe 健康检查
+func (p *proxy) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// ReadyHandler ReadinessProbe 健康检查
+func (p *proxy) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	p.Healthz(w, r)
+}
+
 // Healthz service health check.
 func (p *proxy) Healthz(w http.ResponseWriter, r *http.Request) {
 	if shutdown.IsShuttingDown() {

@@ -84,6 +84,16 @@ func (g *gateway) setFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// HealthyHandler livenessProbe 健康检查
+func (g *gateway) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// ReadyHandler ReadinessProbe 健康检查
+func (g *gateway) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	g.Healthz(w, r)
+}
+
 // Healthz service health check.
 func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 	if shutdown.IsShuttingDown() {

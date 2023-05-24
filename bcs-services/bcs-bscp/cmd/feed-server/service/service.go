@@ -161,6 +161,8 @@ func (s *Service) handler() http.Handler {
 	r.Use(middleware.Recoverer)
 
 	// 公共方法
+	r.Get("/-/healthy", s.HealthyHandler)
+	r.Get("/-/ready", s.ReadyHandler)
 	r.Get("/healthz", s.Healthz)
 	r.Mount("/", handler.RegisterCommonToolHandler())
 
@@ -173,6 +175,16 @@ func (s *Service) handler() http.Handler {
 	})
 
 	return r
+}
+
+// HealthyHandler livenessProbe 健康检查
+func (s *Service) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// ReadyHandler ReadinessProbe 健康检查
+func (s *Service) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	s.Healthz(w, r)
 }
 
 // Healthz check whether the service is healthy.
