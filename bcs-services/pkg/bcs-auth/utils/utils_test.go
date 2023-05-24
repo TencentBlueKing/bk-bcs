@@ -13,7 +13,12 @@
 
 package utils
 
-import "testing"
+import (
+	"strings"
+	"testing"
+
+	"github.com/google/uuid"
+)
 
 func TestCalcIAMNsID(t *testing.T) {
 	cases := []struct {
@@ -84,5 +89,24 @@ func TestCalcIAMNsID(t *testing.T) {
 				t.Errorf("got: %s, want: %s, clusterID: %s, namespace: %s", got, v.Want, v.ClusterID, v.Namespace)
 			}
 		})
+	}
+}
+
+func TestGenerateString(t *testing.T) {
+	appCode := "bcs"
+	for i := 0; i < 5; i++ {
+		result := GenerateEventID(appCode, uuid.NewString())
+		if len(strings.Split(result, "-")) != 3 {
+			t.Error("Generated string has invalid number of sections")
+		}
+		if !strings.HasPrefix(result, "bcs-") {
+			t.Error("Generated string does not start with testapp-")
+		}
+		if len(strings.Split(result, "-")[1]) != 14 {
+			t.Error("Timestamp section of generated string has invalid length")
+		}
+		if len(strings.Split(result, "-")[2]) != 16 {
+			t.Error("MD5 substring section of generated string has invalid length")
+		}
 	}
 }

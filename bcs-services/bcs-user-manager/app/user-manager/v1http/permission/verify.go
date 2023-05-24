@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
@@ -321,6 +322,12 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 	start := time.Now()
 
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
+	instanceData := map[string]interface{}{
+		"ProjectID": projectID,
+		"ClusterID": resource.ClusterID,
+		"Namespace": resource.Namespace,
+	}
+	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check namespaceScoped resource permission failed: %v", err)
@@ -430,6 +437,12 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 	start := time.Now()
 
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
+	instanceData := map[string]interface{}{
+		"ProjectID": projectID,
+		"ClusterID": resource.ClusterID,
+		"Namespace": resource.Namespace,
+	}
+	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check namespace permission failed: %v", err)
@@ -519,6 +532,12 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
 	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
+	instanceData := map[string]interface{}{
+		"ProjectID": projectID,
+		"ClusterID": resource.ClusterID,
+		"Namespace": resource.Namespace,
+	}
+	defer audit.AddEvent(actionID, string(rn1.RType), rn1.RInstance, user, allow, instanceData)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check cluster permission failed: %v", err)
