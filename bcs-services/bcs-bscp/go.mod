@@ -1,6 +1,6 @@
 module bscp.io
 
-go 1.19
+go 1.17
 
 replace (
 	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.0.8
@@ -53,13 +53,7 @@ require (
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.1
-	gorm.io/driver/sqlite v1.5.0
-	gorm.io/gen v0.3.22
 	gorm.io/gorm v1.25.1
-	gorm.io/plugin/dbresolver v1.4.1
-	gorm.io/plugin/opentelemetry v0.1.2
-	gorm.io/plugin/prometheus v0.0.0-20230504115745-1aec2356381b
-	gorm.io/sharding v0.5.3
 	k8s.io/klog/v2 v2.90.1
 )
 
@@ -69,15 +63,13 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
-	github.com/go-logr/logr v1.2.4 // indirect
-	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/spec v0.20.6 // indirect
@@ -97,10 +89,8 @@ require (
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.0 // indirect
-	github.com/longbridgeapp/sqlparser v0.3.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
-	github.com/mattn/go-sqlite3 v1.14.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
@@ -125,13 +115,9 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.3 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.8 // indirect
-	go.opentelemetry.io/otel v1.15.1 // indirect
-	go.opentelemetry.io/otel/metric v0.38.1 // indirect
-	go.opentelemetry.io/otel/trace v1.15.1 // indirect
-	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
@@ -139,7 +125,5 @@ require (
 	google.golang.org/grpc/examples v0.0.0-20230426024715-eff0942e95d9 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/datatypes v1.1.1-0.20230130040222-c43177d3cf8c // indirect
-	gorm.io/hints v1.1.1 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )
