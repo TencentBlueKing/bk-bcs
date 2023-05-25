@@ -494,7 +494,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	// 自定义命令行
 	commands, err := consoleQuery.SplitCommand()
 	if err != nil {
-		msg := i18n.GetMessage("请求参数错误{}", err)
+		msg := i18n.GetMessage("请求参数错误, command not valid{}", err)
 		APIError(c, msg)
 		return
 	}

@@ -32,6 +32,8 @@ mgrGuideMessage: "Support common Bash shortcuts; Ctrl-W in Windows is to close t
 
 请求参数错误{}: "Request Params Error: {{ .err }}"
 
+请求参数错误, command not valid{}: "Request Params Error, command not valid: {{ .err }}"
+
 请先输入上传路径: "Please enter the upload path first"
 
 目标路径不存在: "Destination path does not exist"

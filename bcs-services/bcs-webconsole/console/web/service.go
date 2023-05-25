@@ -19,12 +19,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/url"
 	"path"
-	"strings"
-
-	"github.com/gin-gonic/gin"
 )
 
 type service struct {
@@ -87,16 +85,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
 		"COMMON_EXCEPTION_MSG": "",
 	}
-	var (
-		language, download string
-	)
-	if consoleQuery.Lang == "en" {
-		language = "en"
-		download = "download"
-	} else {
-		language = "zh"
-		download = "下载"
-	}
+	language, download := getLang(c)
 
 	data := gin.H{
 		"title":            clusterId,
@@ -148,15 +137,7 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 	}
 
 	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/portal/sessions/%s/", sessionId)) + "/"
-	lang := strings.TrimSuffix(c.Query("lang"), "/")
-	var download string
-	if lang == "en" {
-		lang = "en"
-		download = "download"
-	} else {
-		lang = "zh"
-		download = "下载"
-	}
+	lang, download := getLang(c)
 	sessionUrl = fmt.Sprintf("%s?lang=%s", sessionUrl, lang)
 
 	settings := map[string]string{
@@ -188,4 +169,15 @@ func (s *service) HealthyHandler(c *gin.Context) {
 // ReadyHandler xxx
 func (s *service) ReadyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
+}
+
+// getLang 返回lang参数和模版变量download
+func getLang(c *gin.Context) (string, string) {
+	//只有lang为en时返回en,其他都返回zh
+	lang := c.Query("lang")
+	if lang == "en" {
+		return "en", "download"
+	} else {
+		return "zh", "下载"
+	}
 }
