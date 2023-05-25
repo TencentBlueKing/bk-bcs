@@ -109,7 +109,6 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
 
 // Update one hook instance.
 func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
-	// TODO
 	return nil
 }
 
