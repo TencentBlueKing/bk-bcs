@@ -128,6 +128,7 @@ func (dao *hookDao) List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hoo
 	return result, count, nil
 }
 
+// CountHookTag count hook tag
 func (dao *hookDao) CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error) {
 
 	m := dao.genQ.Hook
