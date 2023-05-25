@@ -51,9 +51,9 @@
     try {
       pending.value = true
       await formRef.value.validate()
-      await createVersion(props.bkBizId, props.appId, localVal.value.name, localVal.value.memo)
+      const res = await createVersion(props.bkBizId, props.appId, localVal.value.name, localVal.value.memo)
 			BkMessage({ theme: 'success', message: '新版本已生成' })
-      emits('confirm')
+      emits('confirm', res.data.id, isPublish.value)
       handleClose()
     } catch (e) {
       console.error(e)
