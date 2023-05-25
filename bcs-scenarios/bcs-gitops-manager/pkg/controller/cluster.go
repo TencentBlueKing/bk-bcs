@@ -26,6 +26,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
@@ -85,6 +86,9 @@ func (control *cluster) Stop() {
 // will work until context cancel.
 func (control *cluster) SingleStart(ctx context.Context) {
 	blog.Infof("cluster controller single start....")
+	if err := control.innerLoop(ctx); err != nil {
+		blog.Errorf("inner loop first failed: %s", err.Error())
+	}
 	tick := time.NewTicker(time.Second * time.Duration(control.option.Interval))
 	defer tick.Stop()
 	for {
@@ -122,15 +126,23 @@ func (control *cluster) ForceSync(projectCode, clusterID string) {
 		blog.Warnf("cluster-manager found no cluster %s", clusterID)
 		return
 	}
-	exist, err := control.checkClusterExist(context.Background(), response.Data)
+	if response.Data.IsShared {
+		return
+	}
+
+	cls := response.Data
+	argoCluster, err := control.option.Storage.GetCluster(context.Background(), cls.ClusterID)
 	if err != nil {
-		blog.Errorf("cluster controller confirm cluster %s exsitencen failure, %s", clusterID, err.Error())
+		blog.Errorf("query cluster '%s' from storage failed: %s", cls.ClusterID, err.Error())
 		return
 	}
-	if exist {
-		blog.Infof("cluster controller found cluster %s already exist, skip", clusterID)
+	if argoCluster != nil {
+		if err = control.updateToStorage(context.Background(), cls, argoCluster); err != nil {
+			blog.Errorf("update cluster '%s' to storage failed: %s", cls.ClusterID, err.Error())
+		}
 		return
 	}
+
 	appPro, err := control.option.Storage.GetProject(context.Background(), projectCode)
 	if err != nil {
 		blog.Errorf("cluster controller get project %s for cluster %s from storage failure, %s",
@@ -217,6 +229,61 @@ func (control *cluster) syncClustersByProject(ctx context.Context, projectID str
 	appPro *v1alpha1.AppProject) error {
 	control.Lock()
 	defer control.Unlock()
+
+	clusterMap, err := control.buildClustersByProject(ctx, projectID)
+	if err != nil {
+		return errors.Wrapf(err, "list clusters from project managerfor project [%s]%s failed",
+			appPro.Name, projectID)
+	}
+	argoClusterMap, err := control.buildArgoClusters(ctx, projectID)
+	if err != nil {
+		return errors.Wrapf(err, "list clusters from argo stage for project '%s' failed", projectID)
+	}
+
+	needUpdate, needCreate, needDelete := control.compareClusters(clusterMap, argoClusterMap)
+	for _, clsID := range needUpdate {
+		cls := clusterMap[clsID]
+		argoCls := argoClusterMap[clsID]
+		if err = control.updateToStorage(ctx, cls, argoCls); err != nil {
+			blog.Errorf("cluster '%s' update to argo storage failed: %s", clsID, err.Error())
+			continue
+		}
+		blog.Infof("update cluster '%s' to argo storage success", clsID)
+	}
+	for _, clsID := range needCreate {
+		cls := clusterMap[clsID]
+		if err = control.saveToStorage(ctx, cls, appPro); err != nil {
+			blog.Errorf("cluster '%s' save to argo storage failed: %s", clsID, err.Error())
+			continue
+		}
+		blog.Infof("save cluster '%s' to argo storage success", clsID)
+	}
+	for _, clsID := range needDelete {
+		if err = control.option.Storage.DeleteCluster(ctx, clsID); err != nil {
+			blog.Errorf("delete cluster '%s' from argo storage failed: %s", clsID, err.Error())
+			continue
+		}
+		blog.Infof("delete cluster '%s' argo success", clsID)
+	}
+	return nil
+}
+
+func (control *cluster) buildArgoClusters(ctx context.Context,
+	projectID string) (map[string]*v1alpha1.Cluster, error) {
+	argoClusters, err := control.option.Storage.ListClustersByProject(ctx, projectID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "list clusters by project '%s' failed", projectID)
+	}
+	argoClusterMap := make(map[string]*v1alpha1.Cluster)
+	for i := range argoClusters.Items {
+		item := argoClusters.Items[i]
+		argoClusterMap[item.Name] = &item
+	}
+	return argoClusterMap, nil
+}
+
+func (control *cluster) buildClustersByProject(ctx context.Context,
+	projectID string) (map[string]*clustermanager.Cluster, error) {
 	bcsCtx := metadata.NewOutgoingContext(ctx,
 		metadata.New(map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", control.option.APIToken),
@@ -224,51 +291,47 @@ func (control *cluster) syncClustersByProject(ctx context.Context, projectID str
 	)
 	clusters, err := control.client.ListCluster(bcsCtx, &cm.ListClusterReq{ProjectID: projectID})
 	if err != nil {
-		return errors.Wrapf(err, "list all clusters for project [%s]%s failed", appPro.Name, projectID)
+		return nil, errors.Wrapf(err, "list clusters failed")
 	}
 	if clusters.Code != 0 {
-		return errors.Errorf("list all clusters fro project [%s]%s resp code not 0 but %d: %s",
-			appPro.Name, projectID, clusters.Code, clusters.Message)
+		return nil, errors.Errorf("list clusters resp code not 0 build %d: %s",
+			clusters.Code, clusters.Message)
 	}
-	if len(clusters.Data) == 0 {
-		blog.Warnf("list all clusters fro project [%s]%s not have clusters", appPro.Name, projectID)
-		return nil
+	clusterMap := make(map[string]*clustermanager.Cluster)
+	for _, item := range clusters.Data {
+		if !item.IsShared {
+			clusterMap[item.ClusterID] = item
+		}
 	}
-	for _, cls := range clusters.Data {
-		exist, err := control.checkClusterExist(ctx, cls)
-		if err != nil {
-			blog.Errorf("cluster controller confirm cluster %s existence failure, %s. wait for next tick",
-				cls.ClusterID, err.Error())
-			continue
-		}
-		if exist {
-			blog.Infof("cluster %s exist in gitops storage, skip", cls.ClusterID)
-			continue
-		}
-		if err := control.saveToStorage(ctx, cls, appPro); err != nil {
-			blog.Errorf("cluster controller save cluster %s to storage for project [%s]%s failure, %s",
-				cls.ClusterID, appPro.Name, projectID, err.Error())
-			continue
-		}
-		blog.Infof("cluster controller add new cluster %s for project [%s]%s",
-			cls.ClusterID, appPro.Name, projectID)
-	}
-	return nil
+	return clusterMap, nil
 }
 
-// checkClusterExist check the cluster whether exist. If existed, we need
+func (control *cluster) compareClusters(clusterMap map[string]*clustermanager.Cluster,
+	argoClusterMap map[string]*v1alpha1.Cluster) ([]string, []string, []string) {
+	needUpdate := make([]string, 0)
+	needCreate := make([]string, 0)
+	needDelete := make([]string, 0)
+	for clsID := range clusterMap {
+		_, ok := argoClusterMap[clsID]
+		if ok {
+			needUpdate = append(needUpdate, clsID)
+		} else {
+			needCreate = append(needCreate, clsID)
+		}
+	}
+	for clsID := range argoClusterMap {
+		if _, ok := clusterMap[clsID]; !ok {
+			needDelete = append(needDelete, clsID)
+		}
+	}
+	return needUpdate, needCreate, needDelete
+}
+
+// updateToStorage check the cluster whether exist. If existed, we need
 // check the cluster's name whether changed, and update the cluster object
 // from argocd.
-func (control *cluster) checkClusterExist(ctx context.Context, cls *cm.Cluster) (bool, error) {
-	argoCluster, err := control.option.Storage.GetCluster(ctx, cls.ClusterID)
-	if err != nil {
-		return false, errors.Wrapf(err, "query cluster '%s' from storage failed", cls.ClusterID)
-	}
-	if argoCluster == nil {
-		blog.Warnf("no cluster %s found in storage", cls.ClusterID)
-		return false, nil
-	}
-
+func (control *cluster) updateToStorage(ctx context.Context, cls *cm.Cluster,
+	argoCluster *v1alpha1.Cluster) error {
 	// we should check the cluster's attr whether there has been a change, if changed
 	// need to update to argocd storage
 	needUpdate := false
@@ -281,13 +344,13 @@ func (control *cluster) checkClusterExist(ctx context.Context, cls *cm.Cluster) 
 		argoCluster.Annotations[common.ClusterEnv] = cls.Environment
 	}
 	if !needUpdate {
-		return true, nil
+		return nil
 	}
 	// the cluster will be updated if cluster alias name is changed
 	if err := control.option.Storage.UpdateCluster(ctx, argoCluster); err != nil {
-		return false, errors.Wrapf(err, "update cluster '%s' from gitops storage failed", cls.ClusterID)
+		return errors.Wrapf(err, "update cluster '%s' from gitops storage failed", cls.ClusterID)
 	}
-	return true, nil
+	return nil
 }
 
 func (control *cluster) saveToStorage(ctx context.Context, cls *cm.Cluster, project *v1alpha1.AppProject) error {

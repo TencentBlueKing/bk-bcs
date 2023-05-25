@@ -63,7 +63,7 @@ func (plugin *RepositoryPlugin) Init() error {
 func (plugin *RepositoryPlugin) listRepositoryHandler(ctx context.Context, r *http.Request) *httpResponse {
 	projectName := r.URL.Query().Get("projects")
 	repositoryList, statusCode, err := plugin.middleware.
-		ListRepositories(ctx, []string{projectName}, false)
+		ListRepositories(ctx, []string{projectName}, true)
 	if statusCode != http.StatusOK {
 		return &httpResponse{
 			statusCode: statusCode,

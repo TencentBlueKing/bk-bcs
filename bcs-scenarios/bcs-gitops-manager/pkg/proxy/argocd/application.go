@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
@@ -28,11 +29,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
 // AppPlugin for internal project authorization
 type AppPlugin struct {
 	*mux.Router
+	storage    store.Store
 	middleware MiddlewareInterface
 }
 
@@ -77,12 +80,17 @@ func (plugin *AppPlugin) Init() error {
 	plugin.Path("").Methods("GET").Queries("projects", "{projects}").
 		Handler(plugin.middleware.HttpWrapper(plugin.listApplicationsHandler))
 
+	plugin.Path("/{name}/clean").Methods("DELETE").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationCleanHandler))
 	// Put,Patch,Delete with preifx /api/v1/applications/{name}
-	plugin.PathPrefix("/{name}").Methods("PUT", "POST", "DELETE", "PATCH").
+	appRouter := plugin.PathPrefix("/{name}").Subrouter()
+	appRouter.Path("/clean").Methods("DELETE").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationCleanHandler))
+	appRouter.PathPrefix("").Methods("PUT", "POST", "DELETE", "PATCH").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationEditHandler))
 
 	// GET with prefix /api/v1/applications/{name}
-	plugin.PathPrefix("/{name}").Methods("GET").
+	appRouter.PathPrefix("").Methods("GET").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationViewsHandler))
 
 	// todo(DeveloperJim): GET /api/v1/stream/applications?project={project}
@@ -122,6 +130,10 @@ func (plugin *AppPlugin) createApplicationHandler(ctx context.Context, r *http.R
 		}
 	}
 
+	// setting application name with project prefix
+	if !strings.HasPrefix(app.Name, app.Spec.Project+"-") {
+		app.Name = app.Spec.Project + "-" + app.Name
+	}
 	// setting control annotations
 	if app.Annotations == nil {
 		app.Annotations = make(map[string]string)
@@ -181,6 +193,33 @@ func (plugin *AppPlugin) applicationEditHandler(ctx context.Context, r *http.Req
 		}
 	}
 	return nil
+}
+
+func (plugin *AppPlugin) applicationCleanHandler(ctx context.Context, r *http.Request) *httpResponse {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return &httpResponse{
+			statusCode: http.StatusBadRequest,
+			err:        fmt.Errorf("request application name cannot be empty"),
+		}
+	}
+	app, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, iam.ProjectEdit)
+	if statusCode != http.StatusOK {
+		return &httpResponse{
+			statusCode: statusCode,
+			err:        err,
+		}
+	}
+	if err = plugin.storage.DeleteApplicationResource(ctx, app); err != nil {
+		return &httpResponse{
+			statusCode: http.StatusInternalServerError,
+			err:        err,
+		}
+	}
+	return &httpResponse{
+		statusCode: http.StatusOK,
+		obj:        "clean application subresource success",
+	}
 }
 
 // GET with prefix /api/v1/applications/{name}
