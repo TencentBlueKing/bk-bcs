@@ -17,18 +17,18 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
-	"github.com/go-chi/chi/v5/middleware"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/go-chi/chi/v5/middleware"
 	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 )
 
 // MiddleWareTracing middleware tracing
@@ -44,6 +44,7 @@ func MiddleWareTracing(next http.Handler) http.Handler {
 		}
 		w = writer
 
+		// get http X-Request-Id
 		requestID := r.Header.Get(constants.RequestIDHeaderKey)
 		ctx := r.Context()
 		// 使用requestID当作TraceID
@@ -69,7 +70,6 @@ func MiddleWareTracing(next http.Handler) http.Handler {
 		// tracerName是检测库的包名
 		tracer := cfg.TracerProvider.Tracer(
 			constants.TracerName,
-			oteltrace.WithInstrumentationVersion(SemVersion()),
 		)
 
 		ctx, span := tracer.Start(ctx, spanName, opts...)
@@ -119,14 +119,16 @@ func getRequestBody(r *http.Request) []byte {
 	return body
 }
 
+// responseWriter response writer
 type responseWriter struct {
 	http.ResponseWriter
 	b *bytes.Buffer
 }
 
+// Write Rewrite Write of http.ResponseWriter
 func (w responseWriter) Write(b []byte) (int, error) {
-	//向一个bytes.buffer中写一份数据来为获取body使用
+	// 向一个bytes.buffer中写一份数据来为获取body使用
 	w.b.Write(b)
-	//完成gin.Context.Writer.Write()原有功能
+	// 完成http.ResponseWriter.Write()原有功能
 	return w.ResponseWriter.Write(b)
 }

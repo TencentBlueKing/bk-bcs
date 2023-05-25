@@ -15,7 +15,6 @@ package main
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
 	"net"
 	"os"
 	"os/signal"
@@ -33,6 +32,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/web"
 )
 
