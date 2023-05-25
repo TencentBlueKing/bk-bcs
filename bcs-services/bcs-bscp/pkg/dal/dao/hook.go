@@ -48,6 +48,10 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook, release *table.HookRelea
 		return 0, errf.New(errf.InvalidParameter, "hook is nil")
 	}
 
+	if release == nil {
+		return 0, errf.New(errf.InvalidParameter, "hook release is nil")
+	}
+
 	if err := g.ValidateCreate(); err != nil {
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}

@@ -18,9 +18,11 @@ message HookRelease {
 
 // HookReleaseAttachment source resource reference: pkg/dal/table/hook_release.go
 message HookReleaseSpec {
-    string name    = 1;
-    string content = 2;
-    string memo    = 3;
+    string name         = 1;
+    string content      = 2;
+    uint32 publish_num  = 3;
+    string pub_state    = 4;
+    string memo         = 5;
 }
 
 // HookReleaseAttachment source resource reference: pkg/dal/table/hook_release.go

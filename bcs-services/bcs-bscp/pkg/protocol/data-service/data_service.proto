@@ -507,6 +507,7 @@ message ListHookReleasesResp {
 message GetHookReleaseByIdReq {
     uint32 biz_id       = 1;
     uint32 hook_id      = 2;
+    uint32 id           = 3;
 }
 
 message DeleteHookReleaseReq {

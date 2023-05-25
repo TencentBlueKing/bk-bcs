@@ -49,11 +49,11 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		Revision:   res,
 	}
 
-	hookRelease := &table.HookRelease{
+	release := &table.HookRelease{
 		Spec: &table.HookReleaseSpec{
 			Name:     req.Spec.ReleaseName,
 			Contents: req.Spec.Content,
-			Memo:     "",
+			PubState: table.NotReleased,
 		},
 		Attachment: &table.HookReleaseAttachment{
 			BizID: req.Attachment.BizId,
@@ -61,7 +61,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		Revision: res,
 	}
 
-	id, err := s.dao.Hook().Create(kt, hook, hookRelease)
+	id, err := s.dao.Hook().Create(kt, hook, release)
 	if err != nil {
 		logs.Errorf("create hook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err

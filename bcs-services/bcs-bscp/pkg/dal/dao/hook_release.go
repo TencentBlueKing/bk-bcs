@@ -25,7 +25,7 @@ type HookRelease interface {
 	// Create one hook instance.
 	Create(kit *kit.Kit, hook *table.HookRelease) (uint32, error)
 	// Get hook release by id
-	Get(kit *kit.Kit, bizID, id uint32) (*table.HookRelease, error)
+	Get(kit *kit.Kit, bizID, hookID, id uint32) (*table.HookRelease, error)
 	// List hooks with options.
 	List(kit *kit.Kit, bizID, hookID uint32, opt *types.BasePage) ([]*table.HookRelease, int64, error)
 	// Delete one strategy instance.
@@ -82,12 +82,12 @@ func (dao *hookReleaseDao) Create(kit *kit.Kit, g *table.HookRelease) (uint32, e
 }
 
 // Get hookRelease by id
-func (dao *hookReleaseDao) Get(kit *kit.Kit, bizID, id uint32) (*table.HookRelease, error) {
+func (dao *hookReleaseDao) Get(kit *kit.Kit, bizID, hookID, id uint32) (*table.HookRelease, error) {
 
 	m := dao.genQ.HookRelease
 	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
 
-	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).Take()
+	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.HookID.Eq(hookID), m.ID.Eq(id)).Take()
 	if err != nil {
 		return nil, fmt.Errorf("get hookRelease failed, err: %v", err)
 	}

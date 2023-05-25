@@ -34,8 +34,8 @@ func (m *HookReleaseSpec) HookReleaseSpec() (*table.HookReleaseSpec, error) {
 	return &table.HookReleaseSpec{
 		Name:       m.Name,
 		PublishNum: 0,
-		PubState:   "",
-		Contents:   "",
+		PubState:   table.NotReleased,
+		Contents:   m.Content,
 		Memo:       m.Memo,
 	}, nil
 }
@@ -47,11 +47,11 @@ func PbHookReleaseSpec(spec *table.HookReleaseSpec) (*HookReleaseSpec, error) {
 	}
 
 	return &HookReleaseSpec{
-		Name: spec.Name,
-		//PublishNum: 0,
-		//PubState:   "",
-		//Contents:   "",
-		Memo: spec.Memo,
+		Name:       spec.Name,
+		Content:    spec.Contents,
+		PublishNum: spec.PublishNum,
+		PubState:   spec.PubState.String(),
+		Memo:       spec.Memo,
 	}, nil
 }
 

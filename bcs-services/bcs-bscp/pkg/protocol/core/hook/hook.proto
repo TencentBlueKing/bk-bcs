@@ -20,7 +20,7 @@ message HookSpec {
     string release_name = 2;
     string type         = 3;
     string tag          = 4;
-    string momo         = 5;
+    string memo         = 5;
     string content      = 6;
 }
 

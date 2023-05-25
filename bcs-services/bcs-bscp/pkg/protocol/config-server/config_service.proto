@@ -250,6 +250,11 @@ service Config {
             put : "/api/v1/config/publish/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
         };
     }
+    rpc GetHookRelease(GetHookReleaseReq) returns (pbhr.HookRelease) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
+        };
+    }
 
     rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CreateTemplateSpaceResp) {
         option (google.api.http) = {
@@ -802,7 +807,7 @@ message CreateHookReq {
     string release_name = 3;
     string type         = 4;
     string tag          = 5;
-    string momo         = 6;
+    string memo         = 6;
     string content      = 7;
 }
 
@@ -892,6 +897,12 @@ message PublishHookReleaseReq {
 }
 
 message PublishHookReleaseResp {}
+
+message GetHookReleaseReq {
+    uint32 biz_id          = 1;
+    uint32 hook_id         = 2;
+    uint32 release_id      = 3;
+}
 
 message CreateTemplateSpaceReq {
     uint32 biz_id = 1;

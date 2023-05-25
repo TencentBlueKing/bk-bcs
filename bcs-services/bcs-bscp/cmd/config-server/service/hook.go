@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -35,6 +36,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 		return nil, err
 	}
 
+	contentBase64 := base64.StdEncoding.EncodeToString([]byte(req.Content))
 	r := &pbds.CreateHookReq{
 		Attachment: &pbhook.HookAttachment{
 			BizId: grpcKit.BizID,
@@ -44,8 +46,8 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 			ReleaseName: req.ReleaseName,
 			Type:        req.Type,
 			Tag:         req.Tag,
-			Momo:        req.Momo,
-			Content:     req.Content,
+			Memo:        req.Memo,
+			Content:     contentBase64,
 		},
 	}
 	rp, err := s.client.DS.CreateHook(grpcKit.RpcCtx(), r)

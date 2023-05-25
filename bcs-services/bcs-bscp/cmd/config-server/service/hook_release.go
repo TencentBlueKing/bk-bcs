@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -35,6 +36,7 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 		return nil, err
 	}
 
+	contentBase64 := base64.StdEncoding.EncodeToString([]byte(req.Content))
 	r := &pbds.CreateHookReleaseReq{
 		Attachment: &pbhr.HookReleaseAttachment{
 			BizId:  grpcKit.BizID,
@@ -42,7 +44,7 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 		},
 		Spec: &pbhr.HookReleaseSpec{
 			Name:    req.Name,
-			Content: req.Name,
+			Content: contentBase64,
 			Memo:    req.Memo,
 		},
 	}
@@ -122,8 +124,8 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbcs.PublishHookR
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.PublishHookReleaseResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update,
-		ResourceID: req.ReleaseId}, BizID: grpcKit.BizID}
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update},
+		BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
@@ -140,4 +142,37 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbcs.PublishHookR
 	}
 
 	return resp, nil
+}
+
+func (s *Service) GetHookRelease(ctx context.Context, req *pbcs.GetHookReleaseReq) (*pbhr.HookRelease, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbhr.HookRelease)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update},
+		BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetHookReleaseByIdReq{
+		BizId:  req.BizId,
+		HookId: req.HookId,
+		Id:     req.ReleaseId,
+	}
+
+	release, err := s.client.DS.GetHookReleaseByID(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get HookRelease failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	content, err := base64.StdEncoding.DecodeString(release.Spec.Content)
+	if err != nil {
+		logs.Errorf("base64 decode release content failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	release.Spec.Content = string(content)
+
+	return release, nil
 }

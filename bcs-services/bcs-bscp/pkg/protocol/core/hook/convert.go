@@ -16,7 +16,6 @@ import (
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	"bscp.io/pkg/runtime/selector"
-
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
@@ -47,6 +46,8 @@ func (m *HookSpec) HookSpec() (*table.HookSpec, error) {
 	return &table.HookSpec{
 		Name: m.Name,
 		Type: table.HookType(m.Type),
+		Tag:  m.Tag,
+		Memo: m.Memo,
 	}, nil
 }
 
@@ -57,8 +58,11 @@ func PbHookSpec(spec *table.HookSpec) (*HookSpec, error) {
 	}
 
 	return &HookSpec{
-		Name: spec.Name,
-		Type: string(spec.Type),
+		Name:        spec.Name,
+		ReleaseName: spec.Name,
+		Type:        string(spec.Type),
+		Tag:         spec.Tag,
+		Memo:        spec.Memo,
 	}, nil
 }
 
