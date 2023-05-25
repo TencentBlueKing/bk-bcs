@@ -10,6 +10,7 @@ import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
+import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
@@ -202,13 +203,13 @@ service Config {
 
     rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks"
+            post : "/api/v1/config/biz/{biz_id}/hooks"
             body : "*"
         };
     }
     rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
         option (google.api.http) = {
-            delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"
+            delete : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
         };
     }
     rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
@@ -219,8 +220,39 @@ service Config {
     }
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/list"
+            get : "/api/v1/config/list/biz/{biz_id}/hooks"
+        };
+    }
+    rpc ListHookTags(ListHookTagsReq) returns (ListHookTagsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/list/biz/{biz_id}/hook/tags"
+        };
+    }
+
+    rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateHookReleaseResp){
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/hook/{hook_id}/release"
             body : "*"
+        };
+    }
+    rpc ListHookRelease(ListHookReleaseReq) returns (ListHookReleaseResp){
+        option (google.api.http) = {
+            get : "/api/v1/config/list/biz/{biz_id}/hook/{hook_id}/release"
+        };
+    }
+    rpc DeleteHookRelease(DeleteHookReleaseReq) returns (DeleteHookReleaseResp){
+        option (google.api.http) = {
+            delete : "/api/v1/config/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
+        };
+    }
+    rpc PublishHookRelease(PublishHookReleaseReq) returns (PublishHookReleaseResp){
+        option (google.api.http) = {
+            put : "/api/v1/config/publish/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
+        };
+    }
+    rpc GetHookRelease(GetHookReleaseReq) returns (pbhr.HookRelease) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
         };
     }
 
@@ -770,14 +802,13 @@ message ListStrategiesResp {
 }
 
 message CreateHookReq {
-    uint32 biz_id     = 1;
-    uint32 app_id     = 2;
-    uint32 release_id = 3;
-    string name       = 4;
-    string pre_type   = 5;
-    string pre_hook   = 6;
-    string post_type  = 7;
-    string post_hook  = 8;
+    uint32 biz_id       = 1;
+    string name         = 2;
+    string release_name = 3;
+    string type         = 4;
+    string tag          = 5;
+    string memo         = 6;
+    string content      = 7;
 }
 
 message CreateHookResp {
@@ -801,22 +832,76 @@ message UpdateHookResp {
 
 message DeleteHookReq {
     uint32 biz_id  = 1;
-    uint32 app_id  = 2;
-    uint32 hook_id = 3;
+    uint32 hook_id = 2;
 }
 
 message DeleteHookResp {}
 
 message ListHooksReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage page          = 4;
+    uint32 biz_id = 1;
+    string name   = 2;
+    uint32 start  = 3;
+    uint32 limit  = 4;
 }
 
 message ListHooksResp {
     uint32 count                 = 1;
     repeated pbhook.Hook details = 2;
+}
+
+message ListHookTagsReq {
+    uint32 biz_id       = 1;
+}
+
+message ListHookTagsResp {
+    repeated pbhook.CountHookTags details = 1;
+}
+
+message CreateHookReleaseReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    string name         = 3;
+    string memo         = 4;
+    string content      = 7;
+}
+
+message CreateHookReleaseResp {
+    uint32 id = 1;
+}
+
+message ListHookReleaseReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    string search_key   = 3;
+    uint32 start        = 4;
+    uint32 limit        = 5;
+}
+
+message ListHookReleaseResp {
+    uint32   count                    = 1;
+    repeated pbhr.HookRelease details = 2;
+}
+
+message DeleteHookReleaseReq {
+    uint32 biz_id          = 1;
+    uint32 hook_id         = 2;
+    uint32 release_id      = 3;
+}
+
+message DeleteHookReleaseResp {}
+
+message PublishHookReleaseReq {
+    uint32 biz_id          = 1;
+    uint32 hook_id         = 2;
+    uint32 release_id      = 3;
+}
+
+message PublishHookReleaseResp {}
+
+message GetHookReleaseReq {
+    uint32 biz_id          = 1;
+    uint32 hook_id         = 2;
+    uint32 release_id      = 3;
 }
 
 message CreateTemplateSpaceReq {

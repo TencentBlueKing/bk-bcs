@@ -10,6 +10,7 @@ import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
+import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
@@ -77,6 +78,14 @@ service Data {
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
     rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
+    rpc ListHookTags(ListHookTagReq)returns (ListHookTagResp);
+
+    // hook release interface.
+    rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateResp) {}
+    rpc ListHookReleases(ListHookReleasesReq) returns (ListHookReleasesResp) {}
+    rpc GetHookReleaseByID(GetHookReleaseByIdReq) returns (pbhr.HookRelease){}
+    rpc DeleteHookRelease(DeleteHookReleaseReq) returns (pbbase.EmptyResp){}
+    rpc PublishHookRelease(PublishHookReleaseReq) returns (pbbase.EmptyResp){}
 
     // template-space related interface.
     rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CreateResp) {}
@@ -446,16 +455,24 @@ message CreateHookReq {
     pbhook.HookSpec       spec       = 2;
 }
 
+message ListHookTagReq {
+    uint32 biz_id = 1;
+}
+
 message ListHooksReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    uint32 biz_id = 1;
+    string name   = 2;
+    uint32 start  = 3;
+    uint32 limit  = 4;
 }
 
 message ListHooksResp {
     uint32               count   = 1;
     repeated pbhook.Hook details = 2;
+}
+
+message ListHookTagResp {
+    repeated pbhook.CountHookTags details = 1;
 }
 
 message UpdateHookReq {
@@ -467,6 +484,42 @@ message UpdateHookReq {
 message DeleteHookReq {
     uint32                id         = 1;
     pbhook.HookAttachment attachment = 2;
+}
+
+message CreateHookReleaseReq {
+    pbhr.HookReleaseAttachment attachment = 1;
+    pbhr.HookReleaseSpec       spec       = 2;
+}
+
+message ListHookReleasesReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    string search_key   = 3;
+    uint32 start        = 4;
+    uint32 limit        = 5;
+}
+
+message ListHookReleasesResp {
+    uint32                    count   = 1;
+    repeated pbhr.HookRelease details = 2;
+}
+
+message GetHookReleaseByIdReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
+}
+
+message DeleteHookReleaseReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
+}
+
+message PublishHookReleaseReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
 }
 
 message CreateTemplateSpaceReq {

@@ -13,30 +13,22 @@ limitations under the License.
 package dao
 
 import (
-	"fmt"
-	"strconv"
-
-	"github.com/jmoiron/sqlx"
-
-	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
 // Hook supplies all the hook related operations.
 type Hook interface {
 	// Create one hook instance.
-	Create(kit *kit.Kit, hook *table.Hook) (uint32, error)
+	Create(kit *kit.Kit, hook *table.Hook, release *table.HookRelease) (uint32, error)
 	// Update one hook's info.
 	Update(kit *kit.Kit, hook *table.Hook) error
 	// List hooks with options.
-	List(kit *kit.Kit, opts *types.ListHooksOption) (*types.ListHookDetails, error)
+	List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.Hook, int64, error)
+	CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.Hook) error
 }
@@ -44,186 +36,99 @@ type Hook interface {
 var _ Hook = new(hookDao)
 
 type hookDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 }
 
 // Create one hook instance.
-func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook) (uint32, error) {
+func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook, release *table.HookRelease) (uint32, error) {
 
 	if g == nil {
 		return 0, errf.New(errf.InvalidParameter, "hook is nil")
+	}
+
+	if release == nil {
+		return 0, errf.New(errf.InvalidParameter, "hook release is nil")
 	}
 
 	if err := g.ValidateCreate(); err != nil {
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	if err := dao.validateAttachmentResExist(kit, g.Attachment); err != nil {
-		return 0, err
-	}
-
-	// generate a hook id and update to hook.
+	//generate a hook id and update to hook.
 	id, err := dao.idGen.One(kit, table.HookTable)
 	if err != nil {
 		return 0, err
 	}
-
 	g.ID = id
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.HookTable.Name(), " (", table.HookColumns.ColumnExpr(), ")  VALUES(", table.HookColumns.ColonNameExpr(), ")")
 
-	sql := filter.SqlJoint(sqlSentence)
-
-	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, g); err != nil {
-				return err
-			}
-
-			// audit this to be created hook details.
-			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err = dao.auditDao.Decorator(kit, g.Attachment.BizID,
-				enumor.Hook).AuditCreate(g, au); err != nil {
-				return fmt.Errorf("audit create hook failed, err: %v", err)
-			}
-
-			return nil
-		})
-
+	releaseID, err := dao.idGen.One(kit, table.HookReleaseTable)
 	if err != nil {
-		logs.Errorf("create hook, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
-		return 0, fmt.Errorf("create hook, but auto run txn failed, err: %v", err)
+		return 0, err
+	}
+	release.ID = releaseID
+	release.Attachment.HookID = id
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+
+	// 多个使用事务处理
+	createTx := func(tx *gen.Query) error {
+		q := tx.Hook.WithContext(kit.Ctx)
+		if err := q.Create(g); err != nil {
+			return err
+		}
+
+		releaseQ := tx.HookRelease.WithContext(kit.Ctx)
+		if err := releaseQ.Create(release); err != nil {
+			return err
+		}
+
+		if err := ad.Do(tx); err != nil {
+			return err
+		}
+
+		return nil
+	}
+	if err := dao.genQ.Transaction(createTx); err != nil {
+		return 0, nil
 	}
 
-	return id, nil
+	return g.ID, nil
+
 }
 
 // Update one hook instance.
 func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
-
-	if g == nil {
-		return errf.New(errf.InvalidParameter, "hook is nil")
-	}
-
-	if err := g.ValidateUpdate(); err != nil {
-		return errf.New(errf.InvalidParameter, err.Error())
-	}
-
-	if err := dao.validateAttachmentAppExist(kit, g.Attachment); err != nil {
-		return err
-	}
-
-	opts := orm.NewFieldOptions().AddIgnoredFields(
-		"id", "biz_id", "app_id")
-	expr, toUpdate, err := orm.RearrangeSQLDataWithOption(g, opts)
-	if err != nil {
-		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)
-	}
-
-	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Hook).PrepareUpdate(g)
-
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", table.HookTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(g.ID)),
-		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
-	sql := filter.SqlJoint(sqlSentence)
-
-	err = dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			var effected int64
-			effected, err = dao.orm.Txn(txn).Update(kit.Ctx, sql, toUpdate)
-			if err != nil {
-				logs.Errorf("update hook: %d failed, err: %v, rid: %v", g.ID, err, kit.Rid)
-				return err
-			}
-
-			if effected == 0 {
-				logs.Errorf("update one hook: %d, but record not found, rid: %v", g.ID, kit.Rid)
-				return errf.New(errf.RecordNotFound, orm.ErrRecordNotFound.Error())
-			}
-
-			if effected > 1 {
-				logs.Errorf("update one hook: %d, but got updated hook count: %d, rid: %v", g.ID,
-					effected, kit.Rid)
-				return fmt.Errorf("matched hook count %d is not as excepted", effected)
-			}
-
-			// do audit
-			if err := ab.Do(&AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}); err != nil {
-				return fmt.Errorf("do hook update audit failed, err: %v", err)
-			}
-
-			return nil
-		})
-
-	if err != nil {
-		return err
-	}
-
+	// TODO
 	return nil
 }
 
 // List hooks with options.
-func (dao *hookDao) List(kit *kit.Kit, opts *types.ListHooksOption) (
-	*types.ListHookDetails, error) {
+func (dao *hookDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.Hook, int64, error) {
+	m := dao.genQ.Hook
+	q := dao.genQ.Hook.WithContext(kit.Ctx)
 
-	if opts == nil {
-		return nil, errf.New(errf.InvalidParameter, "list hook options null")
-	}
-
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
-		return nil, err
-	}
-
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"id", "biz_id", "app_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				},
-				&filter.AtomRule{
-					Field: "app_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.AppID,
-				},
-			},
-		},
-	}
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.HookTable.Name(), whereExpr)
-	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
+
+	return result, count, nil
+}
+
+func (dao *hookDao) CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error) {
+
+	m := dao.genQ.Hook
+	q := dao.genQ.Hook.WithContext(kit.Ctx)
+
+	counts := make([]*types.HookTagCount, 0)
+	err := q.Select(m.Tag, m.ID.Count().As("counts")).Where(m.BizID.Eq(bizID), m.Tag.Neq("")).Group(m.Tag).Scan(&counts)
 	if err != nil {
 		return nil, err
 	}
 
-	// query hook list for now.
-	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
-	if err != nil {
-		return nil, err
-	}
-
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", table.HookTable.Name(), whereExpr, pageExpr)
-	sql := filter.SqlJoint(sqlSentence)
-
-	list := make([]*table.Hook, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.ListHookDetails{Count: count, Details: list}, nil
+	return counts, nil
 }
 
 // Delete one hook instance.
@@ -237,58 +142,45 @@ func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
 
-	if err := dao.validateAttachmentAppExist(kit, g.Attachment); err != nil {
+	// 删除操作, 获取当前记录做审计
+	m := dao.genQ.Hook
+	q := dao.genQ.Hook.WithContext(kit.Ctx)
+
+	hookRM := dao.genQ.HookRelease
+	hookRQ := dao.genQ.HookRelease.WithContext(kit.Ctx)
+
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
 		return err
 	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
-	ab := dao.auditDao.Decorator(kit, g.Attachment.BizID, enumor.Hook).PrepareDelete(g.ID)
+	hookRelease := &table.HookRelease{
+		Attachment: &table.HookReleaseAttachment{
+			BizID:  g.Attachment.BizID,
+			HookID: g.ID,
+		},
+	}
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", table.HookTable.Name(), " WHERE id = ", strconv.Itoa(int(g.ID)),
-		" AND biz_id = ", strconv.Itoa(int(g.Attachment.BizID)))
-	expr := filter.SqlJoint(sqlSentence)
-
-	err := dao.sd.ShardingOne(g.Attachment.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-		// delete the hook at first.
-		err := dao.orm.Txn(txn).Delete(kit.Ctx, expr)
-		if err != nil {
+	// 多个使用事务处理
+	deleteTx := func(tx *gen.Query) error {
+		q = tx.Hook.WithContext(kit.Ctx)
+		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
 			return err
 		}
 
-		// audit this delete hook details.
-		auditOpt := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-		if err := ab.Do(auditOpt); err != nil {
-			return fmt.Errorf("audit delete hook failed, err: %v", err)
+		hookRQ = tx.HookRelease.WithContext(kit.Ctx)
+		if _, err := hookRQ.Where(hookRM.BizID.Eq(g.Attachment.BizID), hookRM.HookID.Eq(g.ID)).Delete(hookRelease); err != nil {
+			return err
 		}
 
+		if err := ad.Do(tx); err != nil {
+			return err
+		}
 		return nil
-	})
-
-	if err != nil {
-		logs.Errorf("delete hook: %d failed, err: %v, rid: %v", g.ID, err, kit.Rid)
-		return fmt.Errorf("delete hook, but run txn failed, err: %v", err)
 	}
-
-	return nil
-}
-
-// validateAttachmentResExist validate if attachment resource exists before creating hook.
-func (dao *hookDao) validateAttachmentResExist(kit *kit.Kit, am *table.HookAttachment) error {
-	return dao.validateAttachmentAppExist(kit, am)
-}
-
-// validateAttachmentAppExist validate if attachment app exists before creating hook.
-func (dao *hookDao) validateAttachmentAppExist(kit *kit.Kit, am *table.HookAttachment) error {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)), " AND biz_id = ", strconv.Itoa(int(am.BizID)))
-	sql := filter.SqlJoint(sqlSentence)
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
-	if err != nil {
+	if err := dao.genQ.Transaction(deleteTx); err != nil {
 		return err
-	}
-
-	if !exist {
-		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("hook attached app %d is not exist", am.AppID))
 	}
 
 	return nil

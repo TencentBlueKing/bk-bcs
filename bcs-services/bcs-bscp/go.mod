@@ -1,6 +1,6 @@
 module bscp.io
 
-go 1.17
+go 1.19
 
 replace (
 	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.0.8
@@ -53,6 +53,7 @@ require (
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.5.1
+	gorm.io/driver/sqlite v1.5.0
 	gorm.io/gen v0.3.22
 	gorm.io/gorm v1.25.1
 	gorm.io/plugin/dbresolver v1.4.1
@@ -99,6 +100,7 @@ require (
 	github.com/longbridgeapp/sqlparser v0.3.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
+	github.com/mattn/go-sqlite3 v1.14.15 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect

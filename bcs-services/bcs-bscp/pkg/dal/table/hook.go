@@ -13,11 +13,10 @@ limitations under the License.
 package table
 
 import (
-	"errors"
-	"fmt"
-
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/validator"
+	"errors"
+	"fmt"
 )
 
 // HookColumns defines Hook's columns
@@ -34,15 +33,30 @@ var HookColumnDescriptor = mergeColumnDescriptors("",
 // it contains the selector to define the scope of the matched instances.
 type Hook struct {
 	// ID is an auto-increased value, which is a unique identity of a hook.
-	ID         uint32          `db:"id" json:"id"`
-	Spec       *HookSpec       `db:"spec" json:"spec"`
-	Attachment *HookAttachment `db:"attachment" json:"attachment"`
-	Revision   *Revision       `db:"revision" json:"revision"`
+	ID         uint32          `json:"id" gorm:"primaryKey"`
+	Spec       *HookSpec       `json:"spec" gorm:"embedded"`
+	Attachment *HookAttachment `json:"attachment" gorm:"embedded"`
+	Revision   *Revision       `json:"revision" gorm:"embedded"`
 }
 
-// TableName is the hook's database table name.
-func (s Hook) TableName() Name {
-	return HookTable
+// TableName is the Hook's database table name.
+func (h *Hook) TableName() string {
+	return "hooks"
+}
+
+// AppID HookRes interface
+func (h *Hook) AppID() uint32 {
+	return 0
+}
+
+// ResID HookRes interface
+func (h *Hook) ResID() uint32 {
+	return h.ID
+}
+
+// ResType HookRes interface
+func (h *Hook) ResType() string {
+	return "hook"
 }
 
 // ValidateCreate validate hook is valid or not when create it.
@@ -102,10 +116,6 @@ func (s Hook) ValidateUpdate() error {
 		return errors.New("biz id should be set")
 	}
 
-	if s.Attachment.AppID <= 0 {
-		return errors.New("app id should be set")
-	}
-
 	if !changed {
 		return errors.New("nothing is found to be change")
 	}
@@ -140,23 +150,18 @@ var HookSpecColumns = mergeColumns(HookSpecColumnDescriptor)
 // HookSpecColumnDescriptor is HookSpec's column descriptors.
 var HookSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "name", NamedC: "name", Type: enumor.String},
-	{Column: "pre_type", NamedC: "pre_type", Type: enumor.String},
-	{Column: "pre_hook", NamedC: "pre_hook", Type: enumor.String},
-	{Column: "post_type", NamedC: "post_type", Type: enumor.String},
-	{Column: "post_hook", NamedC: "post_hook", Type: enumor.String},
+	{Column: "type", NamedC: "type", Type: enumor.String},
+	{Column: "tag", NamedC: "tag", Type: enumor.String},
 }
 
 // HookSpec defines all the specifics for hook set by user.
 type HookSpec struct {
-	Name string `db:"name" json:"name"`
-	// PreType is the hook type of pre hook
-	PreType HookType `db:"pre_type" json:"pre_type"`
-	// PreHook is the content of pre hook
-	PreHook string `db:"pre_hook" json:"pre_hook"`
-	// PostType is the hook type of post hook
-	PostType HookType `db:"post_type" json:"post_type"`
-	// PostHook is the content of post hook
-	PostHook string `db:"post_hook" json:"post_hook"`
+	Name string `json:"name" gorm:"column:name"`
+	// Type is the hook type of hook
+	Type HookType `json:"type" gorm:"column:type"`
+	// Tag
+	Tag  string `json:"tag" gorm:"column:tag"`
+	Memo string `json:"memo" gorm:"column:memo"`
 }
 
 const (
@@ -190,14 +195,8 @@ func (s HookSpec) ValidateCreate() error {
 	if err := validator.ValidateName(s.Name); err != nil {
 		return err
 	}
-	if err := s.PreType.Validate(); err != nil {
-		return err
-	}
-	if err := s.PostType.Validate(); err != nil {
-		return err
-	}
 
-	if err := s.ValidateHookContentSecurity(); err != nil {
+	if err := s.Type.Validate(); err != nil {
 		return err
 	}
 
@@ -208,45 +207,6 @@ func (s HookSpec) ValidateCreate() error {
 func (s HookSpec) ValidateUpdate() error {
 	if err := validator.ValidateName(s.Name); err != nil {
 		return err
-	}
-
-	if err := s.ValidateHookContentSecurity(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// ValidateHookContentSecurity validate security of hook content
-func (s HookSpec) ValidateHookContentSecurity() error {
-	if s.PreHook != "" {
-		switch s.PreType {
-		case Shell:
-			if err := s.ValidateShellHookSecurity(s.PreHook); err != nil {
-				return err
-			}
-		case Python:
-			if err := s.ValidatePythonHookSecurity(s.PreHook); err != nil {
-				return err
-			}
-		case "":
-			return fmt.Errorf("pre hook must set a hook type")
-		}
-	}
-
-	if s.PostHook != "" {
-		switch s.PostType {
-		case Shell:
-			if err := s.ValidateShellHookSecurity(s.PostHook); err != nil {
-				return err
-			}
-		case Python:
-			if err := s.ValidatePythonHookSecurity(s.PostHook); err != nil {
-				return err
-			}
-		case "":
-			return fmt.Errorf("post hook must set a hook type")
-		}
 	}
 
 	return nil
@@ -270,29 +230,22 @@ var HookAttachmentColumns = mergeColumns(HookAttachmentColumnDescriptor)
 // HookAttachmentColumnDescriptor is HookAttachment's column descriptors.
 var HookAttachmentColumnDescriptor = ColumnDescriptors{
 	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
-	{Column: "app_id", NamedC: "app_id", Type: enumor.Numeric},
-	{Column: "release_id", NamedC: "release_id", Type: enumor.Numeric}}
+}
 
 // HookAttachment defines the hook attachments.
 type HookAttachment struct {
-	BizID     uint32 `db:"biz_id" json:"biz_id"`
-	AppID     uint32 `db:"app_id" json:"app_id"`
-	ReleaseID uint32 `db:"release_id" json:"release_id"`
+	BizID uint32 `db:"biz_id" gorm:"column:biz_id"`
 }
 
 // IsEmpty test whether hook attachment is empty or not.
 func (s HookAttachment) IsEmpty() bool {
-	return s.BizID == 0 && s.AppID == 0
+	return s.BizID == 0
 }
 
 // Validate whether hook attachment is valid or not.
 func (s HookAttachment) Validate() error {
 	if s.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
-	}
-
-	if s.AppID <= 0 {
-		return errors.New("invalid attachment app id")
 	}
 
 	return nil
