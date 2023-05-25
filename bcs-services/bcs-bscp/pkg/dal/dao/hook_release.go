@@ -47,9 +47,9 @@ type hookReleaseDao struct {
 // Create one hook instance.
 func (dao *hookReleaseDao) Create(kit *kit.Kit, g *table.HookRelease) (uint32, error) {
 
-	//if err := g.ValidateCreate(); err != nil {
-	//	return 0, err
-	//}
+	if err := g.ValidateCreate(); err != nil {
+		return 0, err
+	}
 
 	// generate a TemplateSpace id and update to HookRelease.
 	id, err := dao.idGen.One(kit, table.Name(g.TableName()))

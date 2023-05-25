@@ -141,10 +141,6 @@ func (s Hook) ValidateDelete() error {
 		return errors.New("biz id should be set")
 	}
 
-	if err := s.Spec.ValidateDelete(); err != nil {
-		return err
-	}
-
 	return nil
 }
 

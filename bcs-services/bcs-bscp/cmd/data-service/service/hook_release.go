@@ -29,10 +29,11 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 	req *pbds.CreateHookReleaseReq) (*pbds.CreateResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
-	// TODO 获取是否已经存在
-	//if _, err := s.dao.HookRelease().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
-	//	return nil, fmt.Errorf("templateSpace name %s already exists", req.Spec.Name)
-	//}
+	_, err := s.dao.Hook().GetByID(kt, req.Attachment.HookId)
+	if err != nil {
+		logs.Errorf("hook (%d) does not exist, err: %v, rid: %s", req.Attachment.HookId, err, kt.Rid)
+		return nil, err
+	}
 
 	spec, err := req.Spec.HookReleaseSpec()
 	if err != nil {
