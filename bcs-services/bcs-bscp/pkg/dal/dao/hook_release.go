@@ -30,9 +30,10 @@ type HookRelease interface {
 	List(kit *kit.Kit, opt *types.ListHookReleasesOption) ([]*table.HookRelease, int64, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.HookRelease) error
-	// Publish 脚本版本上线
-	// 每个脚本只允许一个版本上线，
-	// 如果之前存在已上线的版本，则把老版本设为已下线
+	// Publish
+	// Only one version of each script is allowed to go online.
+	// If an earlier version is online,
+	// set the earlier version to offline
 	Publish(kit *kit.Kit, g *table.HookRelease) error
 }
 
@@ -151,6 +152,10 @@ func (dao *hookReleaseDao) Delete(kit *kit.Kit, g *table.HookRelease) error {
 	return nil
 }
 
+// Publish
+// Only one version of each script is allowed to go online.
+// If an earlier version is online,
+// set the earlier version to offline
 func (dao *hookReleaseDao) Publish(kit *kit.Kit, g *table.HookRelease) error {
 
 	if err := g.ValidatePublish(); err != nil {
