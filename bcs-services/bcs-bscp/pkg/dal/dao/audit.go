@@ -97,7 +97,7 @@ func (au *audit) One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error {
 
 	var q gen.IAuditDo
 
-	if au.db.Migrator().CurrentDatabase() == opt.genQ.CurrentDatabase() {
+	if opt.genQ != nil && au.db.Migrator().CurrentDatabase() == opt.genQ.CurrentDatabase() {
 		// 使用同一个库，事务处理
 		q = opt.genQ.Audit.WithContext(kit.Ctx)
 	} else {

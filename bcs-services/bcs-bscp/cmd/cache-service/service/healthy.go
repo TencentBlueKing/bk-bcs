@@ -15,37 +15,24 @@ package service
 import (
 	"net/http"
 
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 )
 
-// setupFilter setups all api filters here. All request would cross here, and we filter request base on URL.
-func (g *gateway) setupFilter(mux *http.ServeMux) http.Handler {
-	var httpHandler http.Handler
+// HealthyHandler livenessProbe 健康检查
+func (g *gateway) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
 
-	httpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// healthz.
-		if r.RequestURI == "/healthz" {
-			g.Healthz(w)
-			return
-		}
-
-		// handle request.
-		mux.ServeHTTP(w, r)
-	})
-
-	// add common handler
-	httpHandler = handler.HTTPMiddleware(httpHandler)
-
-	return httpHandler
+// ReadyHandler ReadinessProbe 健康检查
+func (g *gateway) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	g.Healthz(w, r)
 }
 
 // Healthz service health check.
-func (g *gateway) Healthz(w http.ResponseWriter) {
+func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 	if shutdown.IsShuttingDown() {
 		logs.Errorf("service healthz check failed, current service is shutting down")
 		w.WriteHeader(http.StatusServiceUnavailable)
@@ -53,7 +40,7 @@ func (g *gateway) Healthz(w http.ResponseWriter) {
 		return
 	}
 
-	if err := g.state.Healthz(cc.DataService().Service.Etcd); err != nil {
+	if err := g.state.Healthz(); err != nil {
 		logs.Errorf("etcd healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return
@@ -62,6 +49,12 @@ func (g *gateway) Healthz(w http.ResponseWriter) {
 	if err := g.dao.Healthz(); err != nil {
 		logs.Errorf("mysql healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "mysql healthz error, "+err.Error()))
+		return
+	}
+
+	if err := g.bs.Healthz(); err != nil {
+		logs.Errorf("redis healthz check failed, err: %v", err)
+		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "redis healthz error, "+err.Error()))
 		return
 	}
 

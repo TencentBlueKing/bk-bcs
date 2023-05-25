@@ -14,6 +14,7 @@ package eventc
 
 import (
 	"context"
+	"errors"
 
 	btyp "bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/criteria/errf"
@@ -109,7 +110,7 @@ func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, u
 		if errf.Error(err).Code == errf.RecordNotFound {
 			return 0, 0, nil
 		}
-		if errf.Error(err).Code == errf.AppInstanceNotMatchedStrategy {
+		if errors.Is(err, errf.ErrAppInstanceNotMatchedRelease) {
 			return 0, 0, nil
 		}
 	}

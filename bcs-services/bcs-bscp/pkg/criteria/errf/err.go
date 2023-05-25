@@ -28,4 +28,7 @@ var (
 
 	// ErrCredentialInvalid is error when the credential not found in db.
 	ErrCredentialInvalid = errors.New("invalid credential")
+
+	// ErrAppInstanceNotMatchedRelease
+	ErrAppInstanceNotMatchedRelease = errors.New("this app instance can not match any release")
 )

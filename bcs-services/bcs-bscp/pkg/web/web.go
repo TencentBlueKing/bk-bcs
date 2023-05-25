@@ -24,7 +24,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
-	etcd3 "go.etcd.io/etcd/client/v3"
 	"k8s.io/klog/v2"
 
 	bscp "bscp.io"
@@ -54,13 +53,8 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 		return nil, fmt.Errorf("get etcd config failed, err: %v", err)
 	}
 
-	etcdCli, err := etcd3.New(*etcdOpt)
-	if err != nil {
-		return nil, fmt.Errorf("new etcd client failed, err: %v", err)
-	}
-
 	// new discovery client.
-	dis, err := serviced.NewDiscovery(etcdCli)
+	dis, err := serviced.NewDiscovery(*etcdOpt)
 	if err != nil {
 		return nil, fmt.Errorf("new discovery faield, err: %v", err)
 	}
