@@ -15,21 +15,73 @@
 package i18n
 
 import (
-	"golang.org/x/text/language"
 	"net/http"
+
+	"github.com/pkg/errors"
+	"golang.org/x/text/language"
 )
 
-var availableLanguage = map[string]language.Tag{
-	"en":         language.English,
-	"en-us":      language.English,
-	"en_US":      language.English,
-	"zh":         language.SimplifiedChinese,
-	"zh-hans-cn": language.SimplifiedChinese,
-	"zh-hans":    language.SimplifiedChinese,
-	"zh-cn":      language.SimplifiedChinese,
-	"zh_CN":      language.SimplifiedChinese,
+var (
+	availableLanguage = map[string]language.Tag{
+		"en":         language.English,
+		"en-us":      language.English,
+		"en_US":      language.English,
+		"zh":         language.SimplifiedChinese,
+		"zh-hans-cn": language.SimplifiedChinese,
+		"zh-hans":    language.SimplifiedChinese,
+		"zh-Hans":    language.SimplifiedChinese,
+		"zh-cn":      language.SimplifiedChinese,
+		"zh_CN":      language.SimplifiedChinese,
+	}
+	defaultAcceptLanguage = makeAcceptLanguage()
+)
+
+// makeAcceptLanguage : 合法的语言列表
+func makeAcceptLanguage() (acceptLanguage []language.Tag) {
+	langMap := map[string]language.Tag{}
+	for _, v := range availableLanguage {
+		langMap[v.String()] = v
+	}
+	for _, v := range langMap {
+		acceptLanguage = append(acceptLanguage, v)
+	}
+	return
 }
 
+// getMatchLangByHeader 解析 header, 查找最佳匹配
+func getMatchLangByHeader(lng string) (string, error) {
+	if lng == "" {
+		return "", errors.Errorf("not found accept-language header value")
+	}
+
+	// 用户接受的语言
+	userAccept, _, err := language.ParseAcceptLanguage(lng)
+	if err != nil {
+		return "", err
+	}
+
+	// 系统中允许的语言
+	matcher := language.NewMatcher(defaultAcceptLanguage)
+	// 根据顺序优先级进行匹配
+	matchedTag, _, _ := matcher.Match(userAccept...)
+
+	// x/text/language: change of behavior for language matcher
+	// https://github.com/golang/go/issues/24211
+	var tag string
+	if len(matchedTag.String()) < 2 {
+		return "", errors.Errorf("not found %s", lng)
+	}
+
+	tag = matchedTag.String()[0:2]
+	language, ok := availableLanguage[tag]
+	if !ok {
+		return "", errors.Errorf("not found %s", lng)
+	}
+
+	return language.String(), nil
+}
+
+// IsAvailableLanguage determine if the language is legal
 func IsAvailableLanguage(s string) bool {
 	if _, ok := availableLanguage[s]; ok {
 		return true
@@ -60,7 +112,7 @@ func GetLangByRequest(r *http.Request, defaultLang string) string {
 		return cookie.Value
 	}
 
-	lng = r.Header.Get("accept-language")
+	lng, err = getMatchLangByHeader(r.Header.Get("accept-language"))
 	if lng != "" {
 		return lng
 	}

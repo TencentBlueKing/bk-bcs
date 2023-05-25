@@ -15,9 +15,10 @@ package config
 
 import (
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/i18n"
 	"time"
 	_ "time/tzdata" // tzdata TODO
+
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/i18n"
 )
 
 const (
@@ -42,6 +43,7 @@ type BaseConf struct {
 func (c *BaseConf) Init() error {
 	var err error
 	c.TimeZone = "Asia/Shanghai"
+	c.LanguageCode = "en-us"
 	c.RunEnv = DevEnv
 	c.Region = "ce"
 	c.Location, err = time.LoadLocation(c.TimeZone)

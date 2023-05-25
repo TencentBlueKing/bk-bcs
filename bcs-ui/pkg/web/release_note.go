@@ -15,8 +15,6 @@ package web
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/i18n"
-	"golang.org/x/text/language"
 	"net/http"
 	"path"
 	"regexp"
@@ -24,8 +22,10 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
+	"golang.org/x/text/language"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/i18n"
 )
 
 const (
@@ -52,8 +52,8 @@ type ReleaseNoteLang map[language.Tag]ReleaseNote
 
 // ReleaseNote  release_note
 type ReleaseNote struct {
-	ChangeLog []*ChangeLog `json:"changelog"`
-	Feature   *Feature     `json:"feature"`
+	ChangeLogs []*ChangeLog `json:"changelog"`
+	Feature    *Feature     `json:"feature"`
 }
 
 func parseChangelogName(value string) map[string]string {
@@ -74,42 +74,47 @@ func parseChangelogName(value string) map[string]string {
 
 // initReleaseNote
 func (s *WebServer) initReleaseNote() error {
+	// obtain the folder under CHANGELOG
 	entries, err := s.embedWebServer.RootFS().ReadDir(changelogPath)
 	if err != nil {
 		return err
 	}
 
-	// the directory name
-	fileNames := make([]string, 0, len(entries))
+	// array of directory name
+	directoryNames := make([]string, 0, len(entries))
 	for _, e := range entries {
 		if e.IsDir() {
 			// get available language
 			if !i18n.IsAvailableLanguage(e.Name()) {
 				continue
 			}
-			fileNames = append(fileNames, e.Name())
+			directoryNames = append(directoryNames, e.Name())
 		}
 	}
 
-	releaseNoteLang := make(ReleaseNoteLang, len(fileNames))
-	for _, fn := range fileNames {
+	// array of language and content
+	releaseNoteLang := make(ReleaseNoteLang, len(directoryNames))
+	for _, fn := range directoryNames {
 		langEntries, err := s.embedWebServer.RootFS().ReadDir(changelogPath + "/" + fn)
 		if err != nil {
 			return err
 		}
 
 		langTag := i18n.GetAvailableLanguage(fn, "zh")
+		// array of file contents
 		cls := make([]*ChangeLog, 0, len(langEntries))
 		for _, e := range langEntries {
 			if e.IsDir() {
 				continue
 			}
 
+			// get file contents
 			c, err := s.embedWebServer.RootFS().ReadFile(path.Join(changelogPath+"/"+fn, e.Name()))
 			if err != nil {
 				return err
 			}
 
+			// get valid changelog name
 			result := parseChangelogName(e.Name())
 			if len(result) == 0 {
 				return fmt.Errorf("not valid changelog name: %s", e.Name())
@@ -141,8 +146,8 @@ func (s *WebServer) initReleaseNote() error {
 		}
 
 		releaseNoteLang[langTag] = ReleaseNote{
-			ChangeLog: cls,
-			Feature:   feature,
+			ChangeLogs: cls,
+			Feature:    feature,
 		}
 	}
 	s.releaseNote = releaseNoteLang
