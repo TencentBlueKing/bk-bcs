@@ -24,6 +24,7 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 )
 
+// CreateHookRelease create hook release  with option
 func (s *Service) CreateHookRelease(ctx context.Context,
 	req *pbcs.CreateHookReleaseReq) (*pbcs.CreateHookReleaseResp, error) {
 
@@ -61,6 +62,7 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 	return resp, nil
 }
 
+// ListHookRelease list HookRelease with filter
 func (s *Service) ListHookRelease(ctx context.Context, req *pbcs.ListHookReleaseReq) (*pbcs.ListHookReleaseResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
@@ -81,7 +83,7 @@ func (s *Service) ListHookRelease(ctx context.Context, req *pbcs.ListHookRelease
 
 	rp, err := s.client.DS.ListHookReleases(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list TemplateSpaces failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list HookReleases failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -93,6 +95,7 @@ func (s *Service) ListHookRelease(ctx context.Context, req *pbcs.ListHookRelease
 	return resp, nil
 }
 
+// DeleteHookRelease delete a HookRelease
 func (s *Service) DeleteHookRelease(ctx context.Context,
 	req *pbcs.DeleteHookReleaseReq) (*pbcs.DeleteHookReleaseResp, error) {
 
@@ -119,6 +122,7 @@ func (s *Service) DeleteHookRelease(ctx context.Context,
 	return resp, nil
 }
 
+// PublishHookRelease publish a release
 func (s *Service) PublishHookRelease(ctx context.Context, req *pbcs.PublishHookReleaseReq) (*pbcs.PublishHookReleaseResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
@@ -144,6 +148,7 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbcs.PublishHookR
 	return resp, nil
 }
 
+// GetHookRelease get a hookRelease
 func (s *Service) GetHookRelease(ctx context.Context, req *pbcs.GetHookReleaseReq) (*pbhr.HookRelease, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)

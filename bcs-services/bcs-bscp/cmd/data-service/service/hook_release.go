@@ -25,6 +25,7 @@ import (
 	"time"
 )
 
+// CreateHookRelease create hook release  with option
 func (s *Service) CreateHookRelease(ctx context.Context,
 	req *pbds.CreateHookReleaseReq) (*pbds.CreateResp, error) {
 
@@ -62,6 +63,7 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 	return resp, nil
 }
 
+// ListHookReleases list HookRelease with filter
 func (s *Service) ListHookReleases(ctx context.Context,
 	req *pbds.ListHookReleasesReq) (*pbds.ListHookReleasesResp, error) {
 
@@ -97,6 +99,7 @@ func (s *Service) ListHookReleases(ctx context.Context,
 	return resp, nil
 }
 
+// GetHookReleaseByID get a release
 func (s *Service) GetHookReleaseByID(ctx context.Context,
 	req *pbds.GetHookReleaseByIdReq) (*hr.HookRelease, error) {
 
@@ -112,6 +115,7 @@ func (s *Service) GetHookReleaseByID(ctx context.Context,
 	return resp, nil
 }
 
+// DeleteHookRelease delete a HookRelease
 func (s *Service) DeleteHookRelease(ctx context.Context,
 	req *pbds.DeleteHookReleaseReq) (*pbbase.EmptyResp, error) {
 
@@ -133,6 +137,7 @@ func (s *Service) DeleteHookRelease(ctx context.Context,
 	return new(pbbase.EmptyResp), nil
 }
 
+// PublishHookRelease publish a release
 func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookReleaseReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)

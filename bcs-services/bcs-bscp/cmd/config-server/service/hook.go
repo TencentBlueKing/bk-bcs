@@ -119,6 +119,7 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 	return resp, nil
 }
 
+// ListHookTags list tag
 func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (*pbcs.ListHookTagsResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)

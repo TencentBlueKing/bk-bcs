@@ -74,7 +74,7 @@ func (dao *hookReleaseDao) Create(kit *kit.Kit, g *table.HookRelease) (uint32, e
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return g.ID, nil

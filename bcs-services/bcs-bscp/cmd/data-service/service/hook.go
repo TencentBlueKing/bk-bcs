@@ -99,7 +99,7 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 
 	hooks, err := pbhook.PbHooks(details)
 	if err != nil {
-		logs.Errorf("get pb TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("get pb hook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -153,6 +153,7 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 	return new(pbbase.EmptyResp), nil
 }
 
+// ListHookTags list tag
 func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*pbds.ListHookTagResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
