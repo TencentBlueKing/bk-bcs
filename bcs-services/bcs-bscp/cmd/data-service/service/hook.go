@@ -76,12 +76,17 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.ListHooksOption{
+		BizID: req.BizId,
+		Name:  req.Name,
+		Page:  page,
+	}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
-	details, count, err := s.dao.Hook().List(kt, req.BizId, opt)
+	details, count, err := s.dao.Hook().List(kt, opt)
 	if err != nil {
 		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err

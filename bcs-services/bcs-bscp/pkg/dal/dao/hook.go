@@ -18,6 +18,7 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/types"
+	"fmt"
 )
 
 // Hook supplies all the hook related operations.
@@ -27,7 +28,8 @@ type Hook interface {
 	// Update one hook's info.
 	Update(kit *kit.Kit, hook *table.Hook) error
 	// List hooks with options.
-	List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.Hook, int64, error)
+	List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hook, int64, error)
+	// CountHookTag count hook tag
 	CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.Hook) error
@@ -42,7 +44,8 @@ type hookDao struct {
 }
 
 // Create one hook instance.
-func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook, release *table.HookRelease) (uint32, error) {
+func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
+	release *table.HookRelease) (uint32, error) {
 
 	if g == nil {
 		return 0, errf.New(errf.InvalidParameter, "hook is nil")
@@ -69,6 +72,10 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook, release *table.HookRelea
 	}
 	release.ID = releaseID
 	release.Attachment.HookID = id
+
+	if err := release.ValidateCreate(); err != nil {
+		return 0, errf.New(errf.InvalidParameter, err.Error())
+	}
 
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
 
@@ -105,11 +112,13 @@ func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
 }
 
 // List hooks with options.
-func (dao *hookDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.Hook, int64, error) {
+func (dao *hookDao) List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hook, int64, error) {
+
 	m := dao.genQ.Hook
 	q := dao.genQ.Hook.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(opt.Offset(), opt.LimitInt())
+	result, count, err := q.Where(m.BizID.Eq(opt.BizID), m.Name.Like(fmt.Sprintf("%%%s%%", opt.Name))).
+		FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
 	if err != nil {
 		return nil, 0, err
 	}

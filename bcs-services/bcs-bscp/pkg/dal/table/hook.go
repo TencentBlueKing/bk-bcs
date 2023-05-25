@@ -141,6 +141,16 @@ func (s Hook) ValidateDelete() error {
 		return errors.New("biz id should be set")
 	}
 
+	if err := s.Spec.ValidateDelete(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateDelete validate the TemplateSpace's info when delete it.
+func (s HookSpec) ValidateDelete() error {
+
 	return nil
 }
 

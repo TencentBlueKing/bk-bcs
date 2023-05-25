@@ -14,6 +14,7 @@ package table
 
 import (
 	"bscp.io/pkg/criteria/enumor"
+	"bscp.io/pkg/criteria/validator"
 	"errors"
 )
 
@@ -92,25 +93,21 @@ func (r *HookRelease) ResType() string {
 // ValidateCreate validate hook is valid or not when create it.
 func (r *HookRelease) ValidateCreate() error {
 
-	if r.ID > 0 {
-		return errors.New("id should not be set")
-	}
-
 	if r.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	//if err := r.Spec.ValidateCreate(); err != nil {
-	//	return err
-	//}
+	if err := r.Spec.ValidateCreate(); err != nil {
+		return err
+	}
 
 	if r.Attachment == nil {
 		return errors.New("attachment not set")
 	}
 
-	//if err := r.Attachment.Validate(); err != nil {
-	//	return err
-	//}
+	if err := r.Attachment.Validate(); err != nil {
+		return err
+	}
 
 	if r.Revision == nil {
 		return errors.New("revision not set")
@@ -118,6 +115,32 @@ func (r *HookRelease) ValidateCreate() error {
 
 	if err := r.Revision.ValidateCreate(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (s *HookReleaseSpec) ValidateCreate() error {
+
+	if err := validator.ValidateName(s.Name); err != nil {
+		return err
+	}
+
+	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a HookReleaseAttachment) Validate() error {
+
+	if a.BizID <= 0 {
+		return errors.New("biz id should be set")
+	}
+
+	if a.HookID <= 0 {
+		return errors.New("hook id should be set")
 	}
 
 	return nil

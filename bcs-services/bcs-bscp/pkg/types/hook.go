@@ -15,28 +15,19 @@ package types
 import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/runtime/filter"
 )
 
 // ListHooksOption defines options to list group.
 type ListHooksOption struct {
-	BizID  uint32             `json:"biz_id"`
-	Filter *filter.Expression `json:"filter"`
-	Page   *BasePage          `json:"page"`
+	BizID uint32    `json:"biz_id"`
+	Name  string    `json:"name"`
+	Page  *BasePage `json:"page"`
 }
 
 // Validate the list group options
 func (opt *ListHooksOption) Validate(po *PageOption) error {
 	if opt.BizID <= 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
-	}
-
-	exprOpt := &filter.ExprOption{
-		// remove biz_id,app_id because it's a required field in the option.
-		RuleFields: table.HookColumns.WithoutColumn("biz_id"),
-	}
-	if err := opt.Filter.Validate(exprOpt); err != nil {
-		return err
 	}
 
 	if opt.Page == nil {

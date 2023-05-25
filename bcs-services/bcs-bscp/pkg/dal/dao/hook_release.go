@@ -27,7 +27,7 @@ type HookRelease interface {
 	// Get hook release by id
 	Get(kit *kit.Kit, bizID, hookID, id uint32) (*table.HookRelease, error)
 	// List hooks with options.
-	List(kit *kit.Kit, bizID, hookID uint32, opt *types.BasePage) ([]*table.HookRelease, int64, error)
+	List(kit *kit.Kit, opt *types.ListHookReleasesOption) ([]*table.HookRelease, int64, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.HookRelease) error
 	// Publish 脚本版本上线
@@ -96,13 +96,17 @@ func (dao *hookReleaseDao) Get(kit *kit.Kit, bizID, hookID, id uint32) (*table.H
 }
 
 // List hooks with options.
-func (dao *hookReleaseDao) List(kit *kit.Kit, bizID, hookID uint32,
-	opt *types.BasePage) ([]*table.HookRelease, int64, error) {
+func (dao *hookReleaseDao) List(kit *kit.Kit,
+	opt *types.ListHookReleasesOption) ([]*table.HookRelease, int64, error) {
 
 	m := dao.genQ.HookRelease
 	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(bizID), m.HookID.Eq(hookID)).FindByPage(opt.Offset(), opt.LimitInt())
+	result, count, err := q.Where(
+		m.BizID.Eq(opt.BizID),
+		m.HookID.Eq(opt.HookID),
+		m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey))).
+		FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
 	if err != nil {
 		return nil, 0, err
 	}
