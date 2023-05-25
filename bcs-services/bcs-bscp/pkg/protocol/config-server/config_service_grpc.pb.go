@@ -53,7 +53,6 @@ const (
 	Config_ListStrategies_FullMethodName                 = "/pbcs.Config/ListStrategies"
 	Config_CreateHook_FullMethodName                     = "/pbcs.Config/CreateHook"
 	Config_DeleteHook_FullMethodName                     = "/pbcs.Config/DeleteHook"
-	Config_UpdateHook_FullMethodName                     = "/pbcs.Config/UpdateHook"
 	Config_ListHooks_FullMethodName                      = "/pbcs.Config/ListHooks"
 	Config_ListHookTags_FullMethodName                   = "/pbcs.Config/ListHookTags"
 	Config_CreateHookRelease_FullMethodName              = "/pbcs.Config/CreateHookRelease"
@@ -124,7 +123,6 @@ type ConfigClient interface {
 	ListStrategies(ctx context.Context, in *ListStrategiesReq, opts ...grpc.CallOption) (*ListStrategiesResp, error)
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
-	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*UpdateHookResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	ListHookTags(ctx context.Context, in *ListHookTagsReq, opts ...grpc.CallOption) (*ListHookTagsResp, error)
 	CreateHookRelease(ctx context.Context, in *CreateHookReleaseReq, opts ...grpc.CallOption) (*CreateHookReleaseResp, error)
@@ -453,15 +451,6 @@ func (c *configClient) DeleteHook(ctx context.Context, in *DeleteHookReq, opts .
 	return out, nil
 }
 
-func (c *configClient) UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*UpdateHookResp, error) {
-	out := new(UpdateHookResp)
-	err := c.cc.Invoke(ctx, Config_UpdateHook_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error) {
 	out := new(ListHooksResp)
 	err := c.cc.Invoke(ctx, Config_ListHooks_FullMethodName, in, out, opts...)
@@ -770,7 +759,6 @@ type ConfigServer interface {
 	ListStrategies(context.Context, *ListStrategiesReq) (*ListStrategiesResp, error)
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
-	UpdateHook(context.Context, *UpdateHookReq) (*UpdateHookResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	ListHookTags(context.Context, *ListHookTagsReq) (*ListHookTagsResp, error)
 	CreateHookRelease(context.Context, *CreateHookReleaseReq) (*CreateHookReleaseResp, error)
@@ -902,9 +890,6 @@ func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*C
 }
 func (UnimplementedConfigServer) DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteHook not implemented")
-}
-func (UnimplementedConfigServer) UpdateHook(context.Context, *UpdateHookReq) (*UpdateHookResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateHook not implemented")
 }
 func (UnimplementedConfigServer) ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListHooks not implemented")
@@ -1584,24 +1569,6 @@ func _Config_DeleteHook_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_UpdateHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateHookReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).UpdateHook(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_UpdateHook_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).UpdateHook(ctx, req.(*UpdateHookReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_ListHooks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListHooksReq)
 	if err := dec(in); err != nil {
@@ -2276,10 +2243,6 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteHook",
 			Handler:    _Config_DeleteHook_Handler,
-		},
-		{
-			MethodName: "UpdateHook",
-			Handler:    _Config_UpdateHook_Handler,
 		},
 		{
 			MethodName: "ListHooks",

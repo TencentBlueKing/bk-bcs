@@ -212,12 +212,6 @@ service Config {
             delete : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
         };
     }
-    rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
-        option (google.api.http) = {
-            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"
-            body : "*"
-        };
-    }
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
         option (google.api.http) = {
             get : "/api/v1/config/list/biz/{biz_id}/hooks"
@@ -813,21 +807,6 @@ message CreateHookReq {
 
 message CreateHookResp {
     uint32 id = 1;
-}
-
-message UpdateHookReq {
-    uint32 biz_id     = 1;
-    uint32 app_id     = 2;
-    uint32 hook_id    = 3;
-    uint32 release_id = 4;
-    string name       = 5;
-    string pre_type   = 6;
-    string pre_hook   = 7;
-    string post_type  = 8;
-    string post_hook  = 9;
-}
-
-message UpdateHookResp {
 }
 
 message DeleteHookReq {

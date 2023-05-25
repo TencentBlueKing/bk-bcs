@@ -87,40 +87,6 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbc
 	return resp, nil
 }
 
-// UpdateHook update a hook
-func (s *Service) UpdateHook(ctx context.Context, req *pbcs.UpdateHookReq) (*pbcs.UpdateHookResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.UpdateHookResp)
-
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Hook, Action: meta.Update,
-		ResourceID: req.HookId}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
-		return nil, err
-	}
-
-	r := &pbds.UpdateHookReq{
-		Id: req.HookId,
-		Attachment: &pbhook.HookAttachment{
-			BizId: grpcKit.BizID,
-			//AppId:     req.AppId,
-			//ReleaseId: req.ReleaseId,
-		},
-		Spec: &pbhook.HookSpec{
-			Name: req.Name,
-			//PreType:  req.PreType,
-			//PreHook:  req.PreHook,
-			//PostType: req.PostType,
-			//PostHook: req.PostHook,
-		},
-	}
-	if _, err := s.client.DS.UpdateHook(grpcKit.RpcCtx(), r); err != nil {
-		logs.Errorf("update hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	return resp, nil
-}
-
 // ListHooks list hooks with filter
 func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.ListHooksResp, error) {
 
