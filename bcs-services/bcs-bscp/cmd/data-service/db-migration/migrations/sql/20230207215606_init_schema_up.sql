@@ -451,8 +451,7 @@ create table if not exists `hook_releases`
     `updated_at` datetime(6)        not null,
 
     primary key (`id`),
-    unique key `idx_bizid_hookid_releasename` (`biz_id`, `hook_id`, `name`),
-    index `idx_bizid_hookid_release` (`biz_id`, `hook_id`, `id`)
+    unique key `idx_bizid_hookid_releasename` (`biz_id`, `hook_id`, `name`)
 ) engine = innodb
 default charset = utf8mb4;
 
