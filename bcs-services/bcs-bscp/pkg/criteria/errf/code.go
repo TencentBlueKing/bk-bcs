@@ -36,9 +36,6 @@ const (
 	Aborted int32 = 4000002
 	// DBOpFailed means read or write db failed
 	DBOpFailed int32 = 4000003
-	// AppInstanceNotMatchedStrategy means an app instance does not match any
-	// strategies configured by user.
-	AppInstanceNotMatchedStrategy = 4000004
 	// RecordNotFound means resource not exist.
 	RecordNotFound int32 = 4000005
 	// RelatedResNotExist means attachment resource is not exist.

@@ -8,13 +8,11 @@
     appId: number,
   }>()
 
-  const emits = defineEmits(['updateVersionList'])
-
 </script>
 <template>
   <div class="config-list-area">
     <ConfigSimpleList v-if="versionDetailView" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
-    <ConfigTableList v-else :bk-biz-id="props.bkBizId" :app-id="props.appId" @updateVersionList="emits('updateVersionList')" />
+    <ConfigTableList v-else :bk-biz-id="props.bkBizId" :app-id="props.appId" />
   </div>
 </template>
 <style lang="scss" scoped>

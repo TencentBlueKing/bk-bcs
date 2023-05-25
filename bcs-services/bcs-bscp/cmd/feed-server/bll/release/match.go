@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 
 	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/criteria/errf"
@@ -185,6 +186,11 @@ func (rs *ReleasedService) matchReleasedGroupWithLabels(
 	kt *kit.Kit,
 	groups []*ptypes.ReleasedGroupCache,
 	meta *types.AppInstanceMeta) (*matchedMeta, error) {
+	// 1. sort released groups by update time
+	sort.Slice(groups, func(i, j int) bool {
+		return groups[i].UpdatedAt.After(groups[j].UpdatedAt)
+	})
+	// 2. match groups with labels
 	matchedList := []*matchedMeta{}
 	var def *matchedMeta
 	for _, group := range groups {
@@ -223,7 +229,7 @@ func (rs *ReleasedService) matchReleasedGroupWithLabels(
 
 	if len(matchedList) == 0 {
 		if def == nil {
-			return nil, errf.New(errf.AppInstanceNotMatchedStrategy, "no strategy can match this app instance")
+			return nil, errf.ErrAppInstanceNotMatchedRelease
 		}
 		return def, nil
 	}
@@ -239,7 +245,7 @@ func (rs *ReleasedService) matchNamespacedStrategyWithLabels(kt *kit.Kit, list [
 	meta *types.AppInstanceMeta) (*matchedMeta, error) {
 
 	if len(list) == 0 {
-		return nil, errf.New(errf.AppInstanceNotMatchedStrategy, "no strategy is published for this app")
+		return nil, errf.ErrAppInstanceNotMatchedRelease
 	}
 
 	// at most 2 strategies in the list, one is the namespaced strategies,
@@ -289,7 +295,7 @@ func (rs *ReleasedService) matchNamespacedStrategyWithLabels(kt *kit.Kit, list [
 	// this app instance does not have the namespaced strategy, validate
 	// whether it has the been configured a default strategy.
 	if defaultStrategy == nil {
-		return nil, errf.New(errf.AppInstanceNotMatchedStrategy, "no strategy can match this app instance")
+		return nil, errf.ErrAppInstanceNotMatchedRelease
 	}
 
 	if defaultStrategy.StrategyID <= 0 {
@@ -352,7 +358,7 @@ func (rs *ReleasedService) matchNormalStrategyWithLabels(kt *kit.Kit, list []*pt
 	}
 
 	if len(matchedList) == 0 {
-		return nil, errf.New(errf.AppInstanceNotMatchedStrategy, "no strategy can match this app instance")
+		return nil, errf.ErrAppInstanceNotMatchedRelease
 	}
 
 	// select latest release in matchd strategy list

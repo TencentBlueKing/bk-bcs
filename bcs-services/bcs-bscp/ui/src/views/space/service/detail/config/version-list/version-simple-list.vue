@@ -1,42 +1,23 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../../store/config'
   import { Ellipsis } from 'bkui-vue/lib/icon'
   import { InfoBox } from "bkui-vue/lib";
   import { getConfigVersionList } from '../../../../../../api/config'
+  import { GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config'
   import { IConfigVersion } from '../../../../../../../types/config'
   import VersionDiff from '../components/version-diff/index.vue'
 
-  const versionStore = useConfigStore()
-  const { versionData } = storeToRefs(versionStore)
+  const configStore = useConfigStore()
+  const { versionData, refreshVersionListFlag } = storeToRefs(configStore)
 
   const props = defineProps<{
     bkBizId: string,
     appId: number,
   }>()
 
-  const emits = defineEmits(['loaded'])
-
-  const currentConfig: IConfigVersion = {
-    id: 0,
-    attachment: {
-      app_id: 0,
-      biz_id: 0
-    },
-    revision: {
-      create_at: '',
-      creator: ''
-    },
-    spec: {
-      name: '未命名版本',
-      memo: ''
-    },
-    status: {
-      publish_status: 'editing',
-      released_groups: []
-    }
-  }
+  const currentConfig: IConfigVersion = GET_UNNAMED_VERSION_DATE()
   const versionListLoading = ref(false)
   const versionList = ref<IConfigVersion[]>([])
   const showDiffPanel = ref(false)
@@ -47,16 +28,26 @@
     count: 0
   })
 
+  watch(refreshVersionListFlag, async(val) => {
+    if (val) {
+      await getVersionList()
+      const versionDetail = versionList.value.find(item => item.id === versionData.value.id)
+      if (versionDetail) {
+        handleSelectVersion(versionDetail)
+        refreshVersionListFlag.value = false
+      }
+    }
+  })
+
   onMounted(async() => {
-    await getVersionList()
-    // 默认选中未命名版本
-    handleSelectVersion(currentConfig)
+    getVersionList()
   })
 
   const getVersionList = async() => {
     try {
       versionListLoading.value = true
       const params = {
+        // 未命名版本不在实际的版本列表里，需要特殊处理
         start: pagination.value.current === 1 ? 0 : (pagination.value.current - 1) * pagination.value.limit - 1,
         limit: pagination.value.current === 1 ? pagination.value.limit - 1 : pagination.value.limit,
       }
@@ -67,7 +58,6 @@
         versionList.value = res.data.details
       }
       pagination.value.count = res.data.count + 1
-      emits('loaded')
     } catch (e) {
       console.error(e)
     } finally {
@@ -75,18 +65,8 @@
     }
   }
 
-  const refreshConfigList = async() => {
-    await getVersionList()
-    const newVersionData = versionList.value.find(item => item.id === versionData.value.id)
-    if (newVersionData) {
-      handleSelectVersion(newVersionData)
-    }
-  }
-
   const handleSelectVersion = (version: IConfigVersion) => {
-    versionStore.$patch(state => {
-      state.versionData = version
-    })
+    versionData.value = version
   }
 
   // @todo 切换页码时，组件会调用两次change事件，待确认
@@ -110,10 +90,6 @@
       },
     } as any);
   }
-
-  defineExpose({
-    refreshConfigList
-  })
 
 </script>
 <template>

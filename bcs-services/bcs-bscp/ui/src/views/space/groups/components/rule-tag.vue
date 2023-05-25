@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import { IGroupRuleItem } from '../../../../../types/group';
-  import { GROUP_RULE_OPS } from '../../../../constants';
+  import { GROUP_RULE_OPS } from '../../../../constants/group';
 
   const props = defineProps<{
     rule: IGroupRuleItem

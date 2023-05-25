@@ -33,6 +33,8 @@ func (p *proxy) routers() http.Handler {
 	r.Use(handler.CORS)
 	// r.Use(middleware.Timeout(60 * time.Second))
 
+	r.Get("/-/healthy", p.HealthyHandler)
+	r.Get("/-/ready", p.ReadyHandler)
 	r.Get("/healthz", p.Healthz)
 	r.Mount("/", handler.RegisterCommonHandler())
 
