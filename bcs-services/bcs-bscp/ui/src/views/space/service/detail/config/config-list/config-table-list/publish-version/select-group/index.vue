@@ -15,7 +15,8 @@
 
 
   const props = defineProps<{
-    groups: IGroupToPublish[]
+    groups: IGroupToPublish[];
+    disabled?: number[];
   }>()
   const emits = defineEmits(['openPreviewVersionDiff', 'change'])
 
@@ -67,6 +68,7 @@
           :group-list-loading="groupListLoading"
           :version-list="versionList"
           :version-list-loading="versionListLoading"
+          :disabled="props.disabled"
           :value="props.groups"
           @togglePreviewDelete="allowPreviewDelete = $event"
           @change="emits('change', $event)" />
@@ -79,6 +81,7 @@
         :version-list="versionList"
         :version-list-loading="versionListLoading"
         :allow-preview-delete="allowPreviewDelete"
+        :disabled="props.disabled"
         :value="props.groups"
         @diff="emits('openPreviewVersionDiff', $event)"
         @change="emits('change', $event)"  />

@@ -69,6 +69,10 @@
     return ''
   }
 
+  const getGroupNames = (data: IConfigVersion) => {
+    return data.status?.released_groups.length ? data.status.released_groups.map(item => item.name).join('; ') : '--'
+  }
+
   const handleTabChange = (tab: string) =>  {
     currentTab.value = tab
     refreshVersionList()
@@ -140,9 +144,17 @@
     </div>
     <bk-loading :loading="listLoading">
         <bk-table :border="['outer']" :data="versionList" :row-class="getRowCls" @row-click="handleSelectVersion">
-          <bk-table-column label="版本" prop="spec.name"></bk-table-column>
-          <bk-table-column label="版本描述" prop="spec.memo"></bk-table-column>
-          <bk-table-column label="已上线分组">xx</bk-table-column>
+          <bk-table-column label="版本" prop="spec.name" show-overflow-tooltip></bk-table-column>
+          <bk-table-column label="版本描述" prop="spec.memo" show-overflow-tooltip>
+            <template v-slot="{ row }">
+              {{ row.spec?.memo || '--' }}
+            </template>
+          </bk-table-column>
+          <bk-table-column label="已上线分组" show-overflow-tooltip>
+            <template v-slot="{ row }">
+              {{ getGroupNames(row) }}
+            </template>
+          </bk-table-column>
           <bk-table-column label="创建人">
             <template v-slot="{ row }">
               {{ row.revision?.creator || '--' }}
@@ -175,7 +187,8 @@
                 @click.stop="handleOpenDiff(row)">
                 版本对比
               </bk-button>
-              <bk-button text theme="primary" @click.stop="handleDeprecate(row.id)">废弃</bk-button>
+              <template v-else>--</template>
+              <!-- <bk-button text theme="primary" @click.stop="handleDeprecate(row.id)">废弃</bk-button> -->
             </template>
           </bk-table-column>
         </bk-table>
