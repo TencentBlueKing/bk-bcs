@@ -20,13 +20,13 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"k8s.io/klog/v2"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
@@ -37,7 +37,7 @@ type WebServer struct {
 	srv            *http.Server
 	addrIPv6       string
 	embedWebServer bcsui.EmbedWebServer
-	releaseNote    *ReleaseNote
+	releaseNote    ReleaseNoteLang
 }
 
 // NewWebServer :
