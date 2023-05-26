@@ -30,7 +30,7 @@ func newIDGenerator(db *gorm.DB, opts ...gen.DOOption) iDGenerator {
 	_iDGenerator.ID = field.NewUint32(tableName, "id")
 	_iDGenerator.Resource = field.NewString(tableName, "resource")
 	_iDGenerator.MaxID = field.NewUint32(tableName, "max_id")
-	_iDGenerator.UpdatedAt = field.NewTime(tableName, "update_at")
+	_iDGenerator.UpdatedAt = field.NewTime(tableName, "updated_at")
 
 	_iDGenerator.fillFieldMap()
 
@@ -64,7 +64,7 @@ func (i *iDGenerator) updateTableName(table string) *iDGenerator {
 	i.ID = field.NewUint32(table, "id")
 	i.Resource = field.NewString(table, "resource")
 	i.MaxID = field.NewUint32(table, "max_id")
-	i.UpdatedAt = field.NewTime(table, "update_at")
+	i.UpdatedAt = field.NewTime(table, "updated_at")
 
 	i.fillFieldMap()
 
@@ -93,7 +93,7 @@ func (i *iDGenerator) fillFieldMap() {
 	i.fieldMap["id"] = i.ID
 	i.fieldMap["resource"] = i.Resource
 	i.fieldMap["max_id"] = i.MaxID
-	i.fieldMap["update_at"] = i.UpdatedAt
+	i.fieldMap["updated_at"] = i.UpdatedAt
 }
 
 func (i iDGenerator) clone(db *gorm.DB) iDGenerator {

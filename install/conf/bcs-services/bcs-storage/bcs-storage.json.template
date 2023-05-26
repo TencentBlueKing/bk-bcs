@@ -12,6 +12,7 @@
   "queue_config_file": "${queueConfig}",
   "event_max_day": ${eventMaxDay},
   "event_max_cap": ${eventMaxCap},
+  "event_clean_time_range_min": ${eventCleanTimeRangeMin},
   "alarm_max_day": ${alarmMaxDay},
   "alarm_max_cap": ${alarmMaxCap},
   "ca_file": "${caFile}",

@@ -5,7 +5,7 @@
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../../store/config'
   import { getConfigVersionList } from '../../../../../../api/config';
-  import { VERSION_STATUS_MAP } from '../../../../../../constants/index'
+  import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config'
   import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
   import VersionDiff from '../components/version-diff/index.vue';
 
@@ -17,27 +17,7 @@
     appId: number
   }>()
 
-  const emits = defineEmits(['loaded'])
-
-  const UN_NAMED_VERSION = {
-    id: 0,
-    attachment: {
-      app_id: 0,
-      biz_id: 0
-    },
-    revision: {
-      create_at: '',
-      creator: ''
-    },
-    spec: {
-      name: '未命名版本',
-      memo: ''
-    },
-    status: {
-      publish_status: 'editing',
-      released_groups: []
-    }
-  }
+  const UN_NAMED_VERSION = GET_UNNAMED_VERSION_DATE()
 
   const listLoading = ref(true)
   const versionList = ref<Array<IConfigVersion>>([])
@@ -57,9 +37,7 @@
   })
 
   onMounted(async() => {
-    await getVersionList()
-    emits('loaded')
-    handleSelectVersion(undefined, UN_NAMED_VERSION)
+    getVersionList()
   })
 
   const getVersionList = async() => {

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+  import { ref, computed, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
+  import { AngleDown } from 'bkui-vue/lib/icon'
   import { useGlobalStore } from '../store/global'
   import { useUserStore } from '../store/user'
   import { ISpaceDetail } from '../../types/index'
@@ -16,6 +18,32 @@
     // { id: 'scripts-management', module: 'scripts', name: '脚本管理'},
     { id: 'credentials-management', module: 'credentials', name: '服务密钥'}
   ]
+
+  const optionList = ref<ISpaceDetail[]>([])
+
+  const crtSpaceText = computed(() => {
+    const space = spaceList.value.find(item => item.space_id === spaceId.value)
+    if (space) {
+      return `${space.space_name}(${spaceId.value})`
+    }
+    return ''
+  })
+
+  watch(spaceList, (val) => {
+    optionList.value = val.slice()
+  }, {
+    immediate: true
+  })
+
+  const handleSpaceSearch = (searchStr: string) => {
+    if (searchStr) {
+      optionList.value = spaceList.value.filter(item => {
+        return item.space_name.toLowerCase().includes(searchStr.toLowerCase()) || String(item.space_id).includes(searchStr)
+    })
+    } else {
+      optionList.value = spaceList.value.slice()
+    }
+  }
 
   const handleSelectSpace = (id: string) => {
     const space = spaceList.value.find((item: ISpaceDetail) => item.space_id === id)
@@ -67,8 +95,15 @@
         :filterable="true"
         :clearable="false"
         :input-search="false"
+        :remote-method="handleSpaceSearch"
         @change="handleSelectSpace">
-        <bk-option v-for="item in spaceList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
+        <template #trigger>
+          <div class="space-name">
+            <input readonly :value="crtSpaceText">
+            <AngleDown class="arrow-icon" />
+          </div>
+        </template>
+        <bk-option v-for="item in optionList" :key="item.space_id" :value="item.space_id" :label="item.space_name">
           <div v-cursor="{ active: !item.permission }" :class="['biz-option-item', { 'no-perm': !item.permission }]">
             <div class="name-wrapper">
               <span class="text">{{ item.space_name }}</span>
@@ -134,13 +169,33 @@
 .space-selector {
   margin-right: 24px;
   width: 240px;
-  :deep(.bk-select-trigger) {
-    .bk-input--default {
-      border: none;
+  &.popover-show {
+    .space-name .arrow-icon {
+      transform: rotate(-180deg);
     }
-    .bk-input--text {
+  }
+  .space-name {
+    position: relative;
+    input {
+      padding: 0 24px 0 10px;
+      width: 100%;
+      line-height: 32px;
+      font-size: 12px;
+      border: none;
+      outline: none;
       background: #303d55;
+      border-radius: 2px;
       color: #d3d9e4;
+      cursor: pointer;
+    }
+    .arrow-icon {
+      position: absolute;
+      top: 0;
+      right: 4px;
+      height: 100%;
+      font-size: 20px;
+      color: #979ba5;
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
     }
   }
 }

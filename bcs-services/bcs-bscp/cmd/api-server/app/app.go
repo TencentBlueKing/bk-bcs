@@ -27,8 +27,6 @@ import (
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 // Run start the api server
@@ -72,13 +70,8 @@ func (as *apiServer) prepare(opt *options.Option) error {
 		return fmt.Errorf("get etcd config failed, err: %v", err)
 	}
 
-	etcdCli, err := etcd3.New(etcdOpt)
-	if err != nil {
-		return fmt.Errorf("new etcd client failed, err: %v", err)
-	}
-
 	// new discovery client.
-	dis, err := serviced.NewDiscovery(etcdCli)
+	dis, err := serviced.NewDiscovery(etcdOpt)
 	if err != nil {
 		return fmt.Errorf("new discovery faield, err: %v", err)
 	}

@@ -5,7 +5,7 @@
   import { cloneDeep } from 'lodash'
   import { useUserStore } from '../../../../store/user'
   import { IGroupEditing, EGroupRuleType, IGroupRuleItem, IGroupBindService } from '../../../../../types/group'
-  import { GROUP_RULE_OPS } from '../../../../constants'
+  import { GROUP_RULE_OPS } from '../../../../constants/group'
   import { getAppList } from '../../../../api/index'
   import { IAppItem } from '../../../../../types/app'
 

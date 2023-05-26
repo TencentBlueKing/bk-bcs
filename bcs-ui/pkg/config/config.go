@@ -26,6 +26,7 @@ type Configuration struct {
 	BCS          *BCSConf      `yaml:"bcs_conf"`
 	Web          *WebConf      `yaml:"web"`
 	FrontendConf *FrontendConf `yaml:"frontend_conf"`
+	Tracing      *TracingConf               `yaml:"tracing"`
 }
 
 // init 初始化
@@ -57,6 +58,8 @@ func newConfiguration() (*Configuration, error) {
 	c.BCS.Init()
 
 	c.FrontendConf = defaultFrontendConf()
+
+	c.Tracing = &TracingConf{}
 	return c, nil
 }
 
@@ -87,6 +90,10 @@ func (c *Configuration) ReadFrom(content []byte) error {
 		return err
 	}
 	if err := c.init(); err != nil {
+		return err
+	}
+
+	if err := c.Base.InitBaseConf(); err != nil {
 		return err
 	}
 	return nil

@@ -30,8 +30,8 @@ func newAudit(db *gorm.DB, opts ...gen.DOOption) audit {
 	_audit.ID = field.NewUint32(tableName, "id")
 	_audit.BizID = field.NewUint32(tableName, "biz_id")
 	_audit.AppID = field.NewUint32(tableName, "app_id")
-	_audit.ResourceType = field.NewString(tableName, "resource_type")
-	_audit.ResourceID = field.NewUint32(tableName, "resource_id")
+	_audit.ResourceType = field.NewString(tableName, "res_type")
+	_audit.ResourceID = field.NewUint32(tableName, "res_id")
 	_audit.Action = field.NewString(tableName, "action")
 	_audit.Rid = field.NewString(tableName, "rid")
 	_audit.AppCode = field.NewString(tableName, "app_code")
@@ -78,8 +78,8 @@ func (a *audit) updateTableName(table string) *audit {
 	a.ID = field.NewUint32(table, "id")
 	a.BizID = field.NewUint32(table, "biz_id")
 	a.AppID = field.NewUint32(table, "app_id")
-	a.ResourceType = field.NewString(table, "resource_type")
-	a.ResourceID = field.NewUint32(table, "resource_id")
+	a.ResourceType = field.NewString(table, "res_type")
+	a.ResourceID = field.NewUint32(table, "res_id")
 	a.Action = field.NewString(table, "action")
 	a.Rid = field.NewString(table, "rid")
 	a.AppCode = field.NewString(table, "app_code")
@@ -112,8 +112,8 @@ func (a *audit) fillFieldMap() {
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["biz_id"] = a.BizID
 	a.fieldMap["app_id"] = a.AppID
-	a.fieldMap["resource_type"] = a.ResourceType
-	a.fieldMap["resource_id"] = a.ResourceID
+	a.fieldMap["res_type"] = a.ResourceType
+	a.fieldMap["res_id"] = a.ResourceID
 	a.fieldMap["action"] = a.Action
 	a.fieldMap["rid"] = a.Rid
 	a.fieldMap["app_code"] = a.AppCode

@@ -37,7 +37,6 @@ import (
 	"bscp.io/pkg/tools"
 
 	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -96,11 +95,6 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 		return fmt.Errorf("get etcd config failed, err: %v", err)
 	}
 
-	etcdCli, err := etcd3.New(etcdOpt)
-	if err != nil {
-		return fmt.Errorf("new etcd client failed, err: %v", err)
-	}
-
 	// register cache service.
 	svcOpt := serviced.ServiceOption{
 		Name: cc.CacheServiceName,
@@ -108,7 +102,7 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 		Port: cc.CacheService().Network.RpcPort,
 		Uid:  uuid.UUID(),
 	}
-	sd, err := serviced.NewServiceD(etcdCli, svcOpt)
+	sd, err := serviced.NewServiceD(etcdOpt, svcOpt)
 	if err != nil {
 		return fmt.Errorf("new service discovery faield, err: %v", err)
 	}

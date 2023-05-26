@@ -83,6 +83,8 @@ spec:
             value: "{{ .Values.env.BK_BCS_eventMaxDay }}"
           - name: eventMaxCap
             value: "{{ .Values.env.BK_BCS_eventMaxCap }}"
+          - name: eventCleanTimeRangeMin
+            value: "{{ .Values.env.BK_BCS_eventCleanTimeRangeMin }}"
           - name: alarmMaxDay
             value: "{{ .Values.env.BK_BCS_alarmMaxDay }}"
           - name: alarmMaxCap

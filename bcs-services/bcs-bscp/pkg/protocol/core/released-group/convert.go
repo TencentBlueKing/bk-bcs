@@ -99,5 +99,6 @@ func CacheReleasedGroup(s *table.ReleasedGroup) *types.ReleasedGroupCache {
 		Selector:   s.Selector,
 		UID:        s.UID,
 		BizID:      s.BizID,
+		UpdatedAt:  s.UpdatedAt,
 	}
 }

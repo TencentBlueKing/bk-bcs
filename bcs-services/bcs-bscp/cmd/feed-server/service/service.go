@@ -32,7 +32,6 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
-	view "bscp.io/pkg/rest/view"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
@@ -161,18 +160,22 @@ func (s *Service) handler() http.Handler {
 	r.Use(middleware.Recoverer)
 
 	// 公共方法
+	r.Get("/-/healthy", s.HealthyHandler)
+	r.Get("/-/ready", s.ReadyHandler)
 	r.Get("/healthz", s.Healthz)
+
 	r.Mount("/", handler.RegisterCommonToolHandler())
-
-	// feedserver方法
-	r.Route("/api/v1/feed", func(r chi.Router) {
-		r.Use(auth.BKRepoVerified)
-		r.Use(view.Generic(s.authorizer))
-		r.Method("POST", "/list/app/release/type/file/latest", view.GenericFunc(s.ListFileAppLatestReleaseMetaRest))
-		r.Method("POST", "/auth/repository/file_pull", view.GenericFunc(s.AuthRepoRest))
-	})
-
 	return r
+}
+
+// HealthyHandler livenessProbe 健康检查
+func (s *Service) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// ReadyHandler ReadinessProbe 健康检查
+func (s *Service) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	s.Healthz(w, r)
 }
 
 // Healthz check whether the service is healthy.
@@ -184,12 +187,11 @@ func (s *Service) Healthz(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := s.state.Healthz(cc.FeedServer().Service.Etcd); err != nil {
+	if err := s.state.Healthz(); err != nil {
 		logs.Errorf("etcd healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return
 	}
 
 	rest.WriteResp(w, rest.NewBaseResp(errf.OK, "healthy"))
-	return
 }
