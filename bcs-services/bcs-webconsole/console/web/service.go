@@ -16,6 +16,7 @@ package web
 import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
@@ -176,8 +177,8 @@ func getLang(c *gin.Context) (string, string) {
 	//只有lang为en时返回en,其他都返回zh
 	lang := c.Query("lang")
 	if lang == "en" {
-		return "en", "download"
+		return i18n.GetMessage("语言"), i18n.GetMessage("下载")
 	} else {
-		return "zh", "下载"
+		return i18n.GetMessage("语言"), i18n.GetMessage("下载")
 	}
 }

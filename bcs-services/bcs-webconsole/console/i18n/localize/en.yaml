@@ -57,3 +57,7 @@ mgrGuideMessage: "Support common Bash shortcuts; Ctrl-W in Windows is to close t
 文件不能超过{}MB: "Files cannot exceed {{ .fileLimit }}MB"
 
 文件可以下载: "Files can be downloaded"
+
+下载: "download"
+
+语言: "en"
