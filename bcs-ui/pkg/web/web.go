@@ -16,6 +16,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -110,6 +111,7 @@ func (w *WebServer) newRouter() http.Handler {
 
 func (w *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
+	r.Use(tracing.MiddleWareTracing)
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
 	r.Get("/release_note", w.ReleaseNoteHandler)
