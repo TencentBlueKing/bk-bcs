@@ -9,10 +9,13 @@
     groupList: IGroupToPublish[];
     versionListLoading: boolean;
     versionList: IConfigVersion[];
+    disabled?: number[];
     value: IGroupToPublish[];
   }>(), {
     groupList: () => [],
-    versionList: () => []
+    versionList: () => [],
+    disabled: () => [],
+    value: () => []
   })
 
   const emits = defineEmits(['togglePreviewDelete', 'change'])
@@ -32,10 +35,18 @@
     type.value = val
     if (val === 'all') {
       handleSelectGroup(props.groupList)
+    } else if (val === 'select') {
+      const list = props.groupList.filter(group => props.disabled.includes(group.id))
+      handleSelectGroup(list)
     } else {
-      handleSelectGroup([])
+      let list: IGroupToPublish[] = []
+      if (props.disabled.length > 0) {
+        debugger
+        list = props.groupList.filter(group => !props.disabled.includes(group.id))
+      }
+      handleSelectGroup(list)
     }
-    emits('togglePreviewDelete', type.value === 'select')
+    emits('togglePreviewDelete', val === 'select')
   }
 
   const handleSelectGroup = (val: IGroupToPublish[]) => {
@@ -64,6 +75,7 @@
             :group-list-loading="props.groupListLoading"
             :version-list="props.versionList"
             :version-list-loading="props.versionListLoading"
+            :disabled="props.disabled"
             :value="selectedGroup"
             @change="handleSelectGroup">
           </GroupTree>
@@ -76,6 +88,7 @@
             :group-list-loading="groupListLoading"
             :version-list="versionList"
             :version-list-loading="versionListLoading"
+            :disabled="props.disabled"
             :value="selectedGroup"
             @change="handleSelectGroup">
           </GroupTree>

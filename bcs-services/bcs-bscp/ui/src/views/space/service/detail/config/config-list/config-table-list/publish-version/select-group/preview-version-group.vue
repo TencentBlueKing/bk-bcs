@@ -6,7 +6,8 @@
 
   const props = defineProps<{
     allowPreviewDelete: boolean;
-    previewGroup: IGroupPreviewItem
+    previewGroup: IGroupPreviewItem;
+    disabled: number[];
   }>()
 
   const emits = defineEmits(['diff', 'delete'])
@@ -49,7 +50,7 @@
             <rule-tag class="tag-item" :rule="rule"/>
           </template>
         </div>
-        <span v-if="props.allowPreviewDelete" class="del-icon" @click="emits('delete', group.id)">
+        <span v-if="props.allowPreviewDelete && !props.disabled.includes(group.id)" class="del-icon" @click="emits('delete', group.id)">
           <Del />
         </span>
       </div>
