@@ -111,7 +111,7 @@
               :status="row.status"
               :status-color-map="statusColorMap"
               v-else>
-              {{ statusTextMap[row.status] }}
+              {{ statusTextMap[row.status] || $t('未知状态') }}
             </StatusIcon>
           </template>
         </bcs-table-column>

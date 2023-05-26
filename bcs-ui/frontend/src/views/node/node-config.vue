@@ -294,7 +294,13 @@
     </bk-form-item>
     <bk-form-item :label="$t('运行时组件')">
       <bk-radio-group v-model="nodePoolConfig.nodeTemplate.runtime.containerRuntime" :disabled="isEdit">
-        <bk-radio value="docker" :disabled="isEdit">docker</bk-radio>
+        <span
+          v-bk-tooltips="{ disabled: !disableDocker, content: $t('TKE集群1.24+版本不再支持docker运行时组件') }"
+          class="mr-[20px] inline-flex h-[20px]">
+          <bk-radio value="docker" :disabled="isEdit || disableDocker">
+            docker
+          </bk-radio>
+        </span>
         <bk-radio value="containerd" :disabled="isEdit">containerd</bk-radio>
       </bk-radio-group>
     </bk-form-item>
@@ -337,7 +343,7 @@ import $router from '@/router/index';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 import usePage from '@/views/dashboard/common/use-page';
-import { mergeDeep } from '@/common/util';
+import { mergeDeep, compareVersion } from '@/common/util';
 import Schema from './resolve-schema';
 
 export default defineComponent({
@@ -366,6 +372,7 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { defaultValues, cluster, isEdit, schema, nodePoolInfo } = toRefs(props);
+    const disableDocker = computed(() => compareVersion(cluster.value?.clusterBasicSettings?.version, '1.24') >= 0);
     const formRef = ref<any>(null);
     // 磁盘类型
     const diskEnum = ref([
@@ -416,8 +423,8 @@ export default defineComponent({
         dockerGraphPath: defaultValues.value.nodeTemplate.dockerGraphPath, // 容器目录
         userScript: defaultValues.value.nodeTemplate.userScript, // 自定义数据
         runtime: {
-          containerRuntime: defaultValues.value.nodeTemplate.runtime?.containerRuntime || 'docker', // 运行时容器组件
-          runtimeVersion: defaultValues.value.nodeTemplate.runtime?.runtimeVersion || '19.3', // 运行时版本
+          containerRuntime: defaultValues.value.nodeTemplate.runtime?.containerRuntime || disableDocker.value ? 'containerd' : 'docker', // 运行时容器组件
+          runtimeVersion: defaultValues.value.nodeTemplate.runtime?.runtimeVersion || disableDocker.value ? '1.6.9' : '19.3', // 运行时版本
         },
       },
 
@@ -614,12 +621,13 @@ export default defineComponent({
       if (runtime === 'docker') {
         nodePoolConfig.value.nodeTemplate.runtime.runtimeVersion = '19.3';
       } else {
-        nodePoolConfig.value.nodeTemplate.runtime.runtimeVersion = '1.4.3';
+        nodePoolConfig.value.nodeTemplate.runtime.runtimeVersion = disableDocker.value ? '1.6.9' : '1.4.3';
       }
     });
-    const versionList = computed(() => (nodePoolConfig.value.nodeTemplate.runtime.containerRuntime === 'docker'
-      ? ['18.6', '19.3']
-      : ['1.3.4', '1.4.3']));
+    const versionList = computed(() => {
+      if (nodePoolConfig.value.nodeTemplate.runtime.containerRuntime === 'docker') return ['18.6', '19.3'];
+      return disableDocker.value ? ['1.6.9'] : ['1.3.4', '1.4.3'];
+    });
 
     // 操作
     const user = computed(() => $store.state.user);
@@ -630,7 +638,9 @@ export default defineComponent({
     const handleSaveNodePoolData = async () => {
       const result = await formRef.value?.validate();
       const validateDataDiskSize = nodePoolConfig.value.launchTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
-      const mountTargetList = nodePoolConfig.value.launchTemplate.dataDisks.map(item => item.mountTarget);
+      const mountTargetList = nodePoolConfig.value.launchTemplate.dataDisks
+        .filter(item => item.autoFormatAndMount)
+        .map(item => item.mountTarget);
       const validateDataDiskMountTarget = new Set(mountTargetList).size === mountTargetList.length;
       if (!result || !validateDataDiskSize || !validateDataDiskMountTarget) return;
 
@@ -745,6 +755,7 @@ export default defineComponent({
       handleCancel,
       getSchemaByProp,
       showRepeatMountTarget,
+      disableDocker,
     };
   },
 });
