@@ -28,7 +28,7 @@ func GetBCSConfByClusterId(clusterId string) *config.BCSConf {
 // GetK8SConfigByClusterId 通过集群 ID 获取 K8S Rest Config
 func GetK8SConfigByClusterId(clusterId string) *rest.Config {
 	bcsConf := GetBCSConfByClusterId(clusterId)
-	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.InnerHost, clusterId)
 	config := &rest.Config{
 		Host:        host,
 		BearerToken: bcsConf.Token,

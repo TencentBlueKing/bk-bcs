@@ -58,7 +58,7 @@ func (c *Cluster) String() string {
 
 // ListClusters 获取项目集群列表
 func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string) ([]*Cluster, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", bcsConf.Host)
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster", bcsConf.InnerHost)
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
@@ -89,7 +89,7 @@ func ListClusters(ctx context.Context, bcsConf *config.BCSConf, projectId string
 
 // GetCluster 获取单个集群信息
 func GetCluster(ctx context.Context, bcsConf *config.BCSConf, projectId, clusterId string) (*Cluster, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterId)
+	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.InnerHost, clusterId)
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
@@ -121,7 +121,7 @@ type Token struct {
 
 // CreateTempToken 创建临时 token
 func CreateTempToken(ctx context.Context, bcsConf *config.BCSConf, username, clusterId string) (*Token, error) {
-	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/tokens/temp", bcsConf.Host)
+	url := fmt.Sprintf("%s/bcsapi/v4/usermanager/v1/tokens/temp", bcsConf.InnerHost)
 
 	// 管理员账号不做鉴权
 	var userType BCSTokenUserType

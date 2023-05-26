@@ -27,6 +27,7 @@ bcs_cc_conf:
   stage: ""
 
 bcs_conf:
+  inner_host: "" # 集群内访问
   host: ""
   token: ""
   jwt_public_key: ""
@@ -34,8 +35,6 @@ bcs_conf:
 
 
 webconsole:
-  host: ""
-  insecure_skip_verify: false
   mode: internal # external
   admin_cluster_id: "" # external 模式时的管理集群ID
   guide_doc_link: "" # 使用文档链接

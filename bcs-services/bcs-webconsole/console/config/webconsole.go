@@ -51,8 +51,6 @@ type ResourceConf struct {
 
 // WebConsoleConf webconsole 配置
 type WebConsoleConf struct {
-	Host                string                  `yaml:"host"`
-	InsecureSkipVerify  bool                    `yaml:"insecure_skip_verify"`
 	AdminClusterId      string                  `yaml:"admin_cluster_id"`
 	Mode                string                  `yaml:"mode"`               // internal , external
 	GuideDocLinks       []string                `yaml:"guide_doc_links"`    // 使用文档链接
@@ -77,8 +75,6 @@ func (v *Version) String() string {
 // Init xxx
 func (c *WebConsoleConf) Init() error {
 	// only for development
-	c.Host = ""
-	c.InsecureSkipVerify = false
 	c.KubectldImage = ""
 	c.AdminClusterId = ""
 	c.Mode = InternalMode

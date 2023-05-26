@@ -35,6 +35,7 @@ type Configurations struct {
 	Redis       *RedisConf               `yaml:"redis"`
 	WebConsole  *WebConsoleConf          `yaml:"webconsole"`
 	Web         *WebConf                 `yaml:"web"`
+	Etcd        *EtcdConf                `yaml:"etcd"`
 }
 
 // newConfigurations 新增配置
@@ -72,6 +73,9 @@ func newConfigurations() (*Configurations, error) {
 
 	c.WebConsole = &WebConsoleConf{}
 	c.WebConsole.Init()
+
+	c.Etcd = &EtcdConf{}
+	c.Etcd.Init()
 
 	c.Credentials = map[string][]*Credential{}
 
@@ -185,8 +189,12 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	if c.Redis.Password == "" {
 		c.Redis.Password = REDIS_PASSWORD
 	}
-	c.BCS.Token = BCS_APIGW_TOKEN
-	c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
+	if c.BCS.Token == "" {
+		c.BCS.Token = BCS_APIGW_TOKEN
+	}
+	if c.BCS.JWTPubKey == "" {
+		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
+	}
 
 	if err := c.init(); err != nil {
 		return err
@@ -194,6 +202,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 
 	c.Logging.InitBlog()
 	c.Base.InitManagers()
+	c.BCS.initInnerHost()
 
 	if err := c.WebConsole.InitTagPatterns(); err != nil {
 		return err
