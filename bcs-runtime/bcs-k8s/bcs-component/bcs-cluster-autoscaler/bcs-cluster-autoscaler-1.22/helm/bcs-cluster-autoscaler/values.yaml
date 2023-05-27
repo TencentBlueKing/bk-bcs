@@ -1,0 +1,90 @@
+# Default values for bcs-cluster-autoscaler.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+namespace: bcs-system
+
+# image configuration
+image:
+  registry: ""
+  repository: /bcs/bcs-cluster-autoscaler
+  pullPolicy: Always
+  tag: ""
+
+# cluster autoscaler command configuration
+command:
+  - ./bcs-cluster-autoscaler
+  - --v=4
+  - --stderrthreshold=info
+  - --namespace=bcs-system
+  - --cloud-provider=bcs
+  - --nodes=0:15:bcs-abewdjkle-withtencipauto
+  - --expander=least-waste
+  - --estimator=clusterresource
+  - --scale-down-delay-after-add=20m
+  - --scale-down-unneeded-time=5m
+  - --skip-nodes-with-local-storage=false        
+  - --buffer-resource-ratio=0
+  - --initial-node-group-backoff-duration=10s
+  - --max-node-group-backoff-duration=3m
+  - --node-group-backoff-reset-timeout=5m
+  - --max-total-unready-percentage=70
+  - --ok-total-unready-count=100
+  - --scale-down-unready-time=8h
+  
+# BCS cluster manager service
+env:
+  - name: BcsApiAddress
+    value: ""
+  - name: BcsToken
+    value: ""
+  - name: Operator
+    value: "bcs"
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-cluster-autoscaler"
+
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use
+  name: "bcs-cluster-autoscaler"
+
+# the port expose promehteus metrics
+service:
+  port: 8085
+  targetPort: 8085
+
+
+podAnnotations: 
+  prometheus.io/path: /metrics
+  prometheus.io/scrape: 'true'
+
+podSecurityContext: {}
+
+securityContext: {}
+
+# specify resources the pod used
+resources: 
+  limits:
+    cpu: 1000m
+    memory: 2048Mi
+  requests:
+    cpu: 1000m
+    memory: 2048Mi
+
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+

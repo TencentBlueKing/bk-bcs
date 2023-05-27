@@ -348,9 +348,10 @@ general-pod-autoscaler:pre
 	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/bcs-general-pod-autoscaler ./cmd/gpa/main.go
 
 cluster-autoscaler:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-cluster-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler ./main.go
+	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16 && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16 ./main.go
+	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22 && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22 ./main.go
 
 # network plugins section
 networkpolicy:pre
