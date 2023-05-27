@@ -8,6 +8,7 @@ package pbcs
 
 import (
 	app "bscp.io/pkg/protocol/core/app"
+	base "bscp.io/pkg/protocol/core/base"
 	hook_release "bscp.io/pkg/protocol/core/hook-release"
 	context "context"
 	grpc "google.golang.org/grpc"
@@ -27,6 +28,7 @@ const (
 	Config_GetApp_FullMethodName                         = "/pbcs.Config/GetApp"
 	Config_GetAppByName_FullMethodName                   = "/pbcs.Config/GetAppByName"
 	Config_ListApps_FullMethodName                       = "/pbcs.Config/ListApps"
+	Config_UpdateAppHook_FullMethodName                  = "/pbcs.Config/UpdateAppHook"
 	Config_ListAppsRest_FullMethodName                   = "/pbcs.Config/ListAppsRest"
 	Config_ListAppsBySpaceRest_FullMethodName            = "/pbcs.Config/ListAppsBySpaceRest"
 	Config_CreateConfigItem_FullMethodName               = "/pbcs.Config/CreateConfigItem"
@@ -95,6 +97,7 @@ type ConfigClient interface {
 	GetApp(ctx context.Context, in *GetAppReq, opts ...grpc.CallOption) (*app.App, error)
 	GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
+	UpdateAppHook(ctx context.Context, in *UpdateAppHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	// 按 space 查询 app 信息
@@ -211,6 +214,15 @@ func (c *configClient) GetAppByName(ctx context.Context, in *GetAppByNameReq, op
 func (c *configClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
 	out := new(ListAppsResp)
 	err := c.cc.Invoke(ctx, Config_ListApps_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateAppHook(ctx context.Context, in *UpdateAppHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Config_UpdateAppHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -731,6 +743,7 @@ type ConfigServer interface {
 	GetApp(context.Context, *GetAppReq) (*app.App, error)
 	GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
+	UpdateAppHook(context.Context, *UpdateAppHookReq) (*base.EmptyResp, error)
 	// 获取用户有权限的 spaces 所有的 apps
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
 	// 按 space 查询 app 信息
@@ -812,6 +825,9 @@ func (UnimplementedConfigServer) GetAppByName(context.Context, *GetAppByNameReq)
 }
 func (UnimplementedConfigServer) ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListApps not implemented")
+}
+func (UnimplementedConfigServer) UpdateAppHook(context.Context, *UpdateAppHookReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppHook not implemented")
 }
 func (UnimplementedConfigServer) ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppsRest not implemented")
@@ -1097,6 +1113,24 @@ func _Config_ListApps_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListApps(ctx, req.(*ListAppsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateAppHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAppHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateAppHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateAppHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateAppHook(ctx, req.(*UpdateAppHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2139,6 +2173,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListApps",
 			Handler:    _Config_ListApps_Handler,
+		},
+		{
+			MethodName: "UpdateAppHook",
+			Handler:    _Config_UpdateAppHook_Handler,
 		},
 		{
 			MethodName: "ListAppsRest",

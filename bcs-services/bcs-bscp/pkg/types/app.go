@@ -61,3 +61,17 @@ type ListAppDetails struct {
 	Count   uint32       `json:"count"`
 	Details []*table.App `json:"details"`
 }
+
+type UpdateAppHookOption struct {
+	AppID             uint32
+	BizID             uint32
+	PreHookID         uint32
+	PreHookReleaseID  uint32
+	PostHookID        uint32
+	PostHookReleaseID uint32
+}
+
+func (o *UpdateAppHookOption) Validate() error {
+
+	return nil
+}

@@ -279,3 +279,31 @@ func (s *Service) validateBizExist(kt *kit.Kit, bizID uint32) error {
 
 	return nil
 }
+
+// UpdateAppHook update AppHook
+func (s *Service) UpdateAppHook(ctx context.Context, req *pbds.UpdateAppHookReq) (*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	now := time.Now()
+	app := &table.App{
+		ID: req.AppId,
+		Spec: &table.AppSpec{
+			PreHookID:         req.PreHookId,
+			PreHookReleaseID:  req.PreHookReleaseId,
+			PostHookID:        req.PostHookId,
+			PostHookReleaseID: req.PostHookReleaseId,
+		},
+		BizID: req.BizId,
+		Revision: &table.Revision{
+			Reviser:   kt.User,
+			UpdatedAt: now,
+		},
+	}
+
+	if err := s.dao.App().UpdateAppHook(kt, app); err != nil {
+		logs.Errorf("update AppHook failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}

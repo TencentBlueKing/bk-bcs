@@ -40,9 +40,10 @@ type Hook interface {
 var _ Hook = new(hookDao)
 
 type hookDao struct {
-	genQ     *gen.Query
-	idGen    IDGenInterface
-	auditDao AuditDao
+	genQ           *gen.Query
+	idGen          IDGenInterface
+	auditDao       AuditDao
+	hookReleaseDao HookRelease
 }
 
 // Create one hook instance.
@@ -67,17 +68,7 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
 		return 0, err
 	}
 	g.ID = id
-
-	releaseID, err := dao.idGen.One(kit, table.HookReleaseTable)
-	if err != nil {
-		return 0, err
-	}
-	release.ID = releaseID
 	release.Attachment.HookID = id
-
-	if err := release.ValidateCreate(); err != nil {
-		return 0, errf.New(errf.InvalidParameter, err.Error())
-	}
 
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
 
@@ -88,8 +79,8 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
 			return err
 		}
 
-		releaseQ := tx.HookRelease.WithContext(kit.Ctx)
-		if err := releaseQ.Create(release); err != nil {
+		_, err = dao.hookReleaseDao.CreateWithTx(kit, tx, release)
+		if err != nil {
 			return err
 		}
 
@@ -182,6 +173,10 @@ func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
 
 		hookRQ = tx.HookRelease.WithContext(kit.Ctx)
 		if _, err := hookRQ.Where(hookRM.BizID.Eq(g.Attachment.BizID), hookRM.HookID.Eq(g.ID)).Delete(hookRelease); err != nil {
+			return err
+		}
+
+		if err = dao.hookReleaseDao.DeleteByHookIDWithTx(kit, tx, hookRelease); err != nil {
 			return err
 		}
 

@@ -32,6 +32,8 @@ func main() {
 		table.TemplateSpace{},
 		table.Hook{},
 		table.HookRelease{},
+		table.App{},
+		table.Release{},
 	)
 
 	g.Execute()

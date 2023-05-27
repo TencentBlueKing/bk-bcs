@@ -38,3 +38,25 @@ func (opt *ListHookReleasesOption) Validate(po *PageOption) error {
 
 	return nil
 }
+
+type GetByPubStateOption struct {
+	BizID  uint32
+	HookID uint32
+	State  table.ReleaseStatus
+}
+
+func (opt *GetByPubStateOption) Validate() error {
+	if opt.BizID <= 0 {
+		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
+	}
+
+	if opt.HookID <= 0 {
+		return errf.New(errf.InvalidParameter, "invalid hook id id, should >= 1")
+	}
+
+	if err := opt.State.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}

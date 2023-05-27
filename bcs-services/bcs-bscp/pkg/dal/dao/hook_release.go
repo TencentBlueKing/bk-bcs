@@ -13,17 +13,23 @@ limitations under the License.
 package dao
 
 import (
+	"fmt"
+
+	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/types"
-	"fmt"
 )
 
 // HookRelease supplies all the hook release related operations.
 type HookRelease interface {
 	// Create one hook instance.
 	Create(kit *kit.Kit, hook *table.HookRelease) (uint32, error)
+	// CreateWithTx ...
+	CreateWithTx(kit *kit.Kit, tx *gen.Query, g *table.HookRelease) (uint32, error)
 	// Get hook release by id
 	Get(kit *kit.Kit, bizID, hookID, id uint32) (*table.HookRelease, error)
 	// List hooks with options.
@@ -35,6 +41,20 @@ type HookRelease interface {
 	// If an earlier version is online,
 	// set the earlier version to offline
 	Publish(kit *kit.Kit, g *table.HookRelease) error
+	// GetByPubState hook release by PubState
+	GetByPubState(kit *kit.Kit, opt *types.GetByPubStateOption) (*table.HookRelease, error)
+
+	DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.Query, g *table.HookRelease) error
+
+	PublishNumPlusOneWithTx(kit *kit.Kit, tx *gen.Query) error
+}
+
+type HookReleaseOption struct {
+	// resource's transaction infos.
+	Txn *sqlx.Tx
+	// ResShardingUid is the resource's sharding instance.
+	ResShardingUid string
+	genQ           *gen.Query
 }
 
 var _ HookRelease = new(hookReleaseDao)
@@ -52,7 +72,7 @@ func (dao *hookReleaseDao) Create(kit *kit.Kit, g *table.HookRelease) (uint32, e
 		return 0, err
 	}
 
-	// generate a TemplateSpace id and update to HookRelease.
+	// generate a HookRelease id and update to HookRelease.
 	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
 		return 0, err
@@ -80,6 +100,43 @@ func (dao *hookReleaseDao) Create(kit *kit.Kit, g *table.HookRelease) (uint32, e
 
 	return g.ID, nil
 
+}
+
+// NewHookReleaseDao create the audit DAO
+func NewHookReleaseDao(db *gorm.DB, idGen IDGenInterface, auditDao AuditDao) (HookRelease, error) {
+	return &hookReleaseDao{
+		genQ:     gen.Use(db),
+		idGen:    idGen,
+		auditDao: auditDao,
+	}, nil
+}
+
+// CreateWithTx ....
+func (dao *hookReleaseDao) CreateWithTx(kit *kit.Kit, tx *gen.Query, g *table.HookRelease) (uint32, error) {
+
+	if err := g.ValidateCreate(); err != nil {
+		return 0, err
+	}
+
+	// generate a HookRelease id and update to HookRelease.
+	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
+	if err != nil {
+		return 0, err
+	}
+	g.ID = id
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+
+	err = tx.HookRelease.WithContext(kit.Ctx).Create(g)
+	if err != nil {
+		return 0, err
+	}
+	err = ad.Do(tx)
+	if err != nil {
+		return 0, err
+	}
+
+	return g.ID, nil
 }
 
 // Get hookRelease by id
@@ -152,6 +209,34 @@ func (dao *hookReleaseDao) Delete(kit *kit.Kit, g *table.HookRelease) error {
 	return nil
 }
 
+// DeleteWithTx ...
+func (dao *hookReleaseDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.Query, g *table.HookRelease) error {
+
+	// 参数校验
+	if err := g.ValidateDelete(); err != nil {
+		return err
+	}
+
+	// 删除操作, 获取当前记录做审计
+	m := dao.genQ.HookRelease
+	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
+
+	if _, err := tx.HookRelease.WithContext(kit.Ctx).Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Delete(g); err != nil {
+		return err
+	}
+
+	if err := ad.Do(tx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Publish
 // Only one version of each script is allowed to go online.
 // If an earlier version is online,
@@ -210,4 +295,36 @@ func (dao *hookReleaseDao) Publish(kit *kit.Kit, g *table.HookRelease) error {
 	}
 
 	return nil
+}
+
+// GetByPubState hook release by PubState
+func (dao *hookReleaseDao) GetByPubState(kit *kit.Kit,
+	opt *types.GetByPubStateOption) (*table.HookRelease, error) {
+
+	// 参数校验
+	if err := opt.Validate(); err != nil {
+		return nil, err
+	}
+
+	m := dao.genQ.HookRelease
+	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
+
+	release, err := q.Where(
+		m.BizID.Eq(opt.BizID),
+		m.HookID.Eq(opt.HookID),
+		m.PubState.Eq(opt.State.String()),
+	).Take()
+	if err != nil {
+		return nil, fmt.Errorf("get pubState(%s) hook(%d) failed, err: %v", opt.State, opt.HookID, err)
+	}
+
+	return release, nil
+
+}
+
+func (dao *hookReleaseDao) PublishNumPlusOneWithTx(kit *kit.Kit, tx *gen.Query) error {
+
+	m := tx.HookRelease
+	_, err := tx.WithContext(kit.Ctx).Hook.Update(m.PublishNum, gorm.Expr("publish_num + ?", 1))
+	return err
 }

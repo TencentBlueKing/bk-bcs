@@ -24,11 +24,15 @@ func (m *AppSpec) AppSpec() *table.AppSpec {
 	}
 
 	return &table.AppSpec{
-		Name:       m.Name,
-		ConfigType: table.ConfigType(m.ConfigType),
-		Mode:       table.AppMode(m.Mode),
-		Memo:       m.Memo,
-		Reload:     m.Reload.Reload(),
+		Name:              m.Name,
+		ConfigType:        table.ConfigType(m.ConfigType),
+		Mode:              table.AppMode(m.Mode),
+		Memo:              m.Memo,
+		Reload:            m.Reload.Reload(),
+		PreHookID:         m.PreHookId,
+		PreHookReleaseID:  m.PreHookReleaseId,
+		PostHookID:        m.PostHookId,
+		PostHookReleaseID: m.PostHookReleaseId,
 	}
 }
 

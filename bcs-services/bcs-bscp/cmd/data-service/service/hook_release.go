@@ -163,3 +163,26 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 	return new(pbbase.EmptyResp), nil
 
 }
+
+// GetHookReleaseByPubState get a HookRelease by PubState
+func (s *Service) GetHookReleaseByPubState(ctx context.Context,
+	req *pbds.GetByPubStateReq) (*hr.HookRelease, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	opt := &types.GetByPubStateOption{
+		BizID:  req.BizId,
+		HookID: req.HookId,
+		State:  table.ReleaseStatus(req.PubState),
+	}
+
+	release, err := s.dao.HookRelease().GetByPubState(kt, opt)
+	if err != nil {
+		logs.Errorf("get HookRelease failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp, _ := hr.PbHookRelease(release)
+
+	return resp, nil
+}

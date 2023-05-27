@@ -101,6 +101,10 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
+	hrDao, err := NewHookReleaseDao(adminDB, idDao, auditDao)
+	if err != nil {
+		return nil, fmt.Errorf("new hookReleas dao failed, err: %v", err)
+	}
 
 	s := &set{
 		orm:               ormInst,
@@ -110,6 +114,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		credentialSetting: credentialSetting,
 		idGen:             idDao,
 		auditDao:          auditDao,
+		hookReleaseDao:    hrDao,
 		event:             &eventDao{orm: ormInst, sd: sd, idGen: idDao},
 		lock:              &lockDao{orm: ormInst, idGen: idDao},
 	}
@@ -125,6 +130,7 @@ type set struct {
 	credentialSetting cc.Credential
 	idGen             IDGenInterface
 	auditDao          AuditDao
+	hookReleaseDao    HookRelease
 	event             Event
 	lock              LockDao
 }
@@ -138,6 +144,7 @@ func (s *set) ID() IDGenInterface {
 func (s *set) App() App {
 	return &appDao{
 		orm:      s.orm,
+		genQ:     s.genQ,
 		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
@@ -180,6 +187,7 @@ func (s *set) Content() Content {
 func (s *set) Release() Release {
 	return &releaseDao{
 		orm:      s.orm,
+		genQ:     s.genQ,
 		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
@@ -234,9 +242,10 @@ func (s *set) Strategy() Strategy {
 // Hook returns the hook's DAO
 func (s *set) Hook() Hook {
 	return &hookDao{
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		genQ:     s.genQ,
+		idGen:          s.idGen,
+		auditDao:       s.auditDao,
+		hookReleaseDao: s.hookReleaseDao,
+		genQ:           s.genQ,
 	}
 }
 

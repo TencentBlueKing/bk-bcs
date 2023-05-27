@@ -21,6 +21,7 @@ import (
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -53,12 +54,15 @@ type App interface {
 	Delete(kit *kit.Kit, app *table.App) error
 	// ListAppMetaForCache list app's basic meta info.
 	ListAppMetaForCache(kt *kit.Kit, bizID uint32, appID []uint32) (map[ /*appID*/ uint32]*types.AppCacheMeta, error)
+	// UpdateAppHook
+	UpdateAppHook(kit *kit.Kit, g *table.App) error
 }
 
 var _ App = new(appDao)
 
 type appDao struct {
 	orm      orm.Interface
+	genQ     *gen.Query
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
 	auditDao AuditDao
@@ -519,4 +523,61 @@ func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32
 	}
 
 	return meta, nil
+}
+
+func (ap *appDao) UpdateAppHookWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.App) error {
+
+	m := ap.genQ.App
+
+	_, err := tx.WithContext(kit.Ctx).App.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).Select(
+		m.PreHookID,
+		m.PreHookReleaseID,
+		m.PostHookID,
+		m.PostHookReleaseID,
+		m.Reviser).Updates(g)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ap *appDao) UpdateAppHook(kit *kit.Kit, g *table.App) error {
+
+	if err := g.ValidateUpdateAppHook(); err != nil {
+		return err
+	}
+
+	m := ap.genQ.App
+
+	// 更新操作, 获取当前记录做审计
+	q := ap.genQ.App.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := ap.auditDao.DecoratorV2(kit, g.BizID).PrepareUpdate(g, oldOne)
+
+	// 多个使用事务处理
+	updateTx := func(tx *gen.Query) error {
+		q = tx.App.WithContext(kit.Ctx)
+		if _, err := q.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).Select(
+			m.PreHookID,
+			m.PreHookReleaseID,
+			m.PostHookID,
+			m.PostHookReleaseID,
+			m.Reviser).Updates(g); err != nil {
+			return err
+		}
+
+		if err := ad.Do(tx); err != nil {
+			return err
+		}
+		return nil
+	}
+	if err := ap.genQ.Transaction(updateTx); err != nil {
+		return err
+	}
+
+	return nil
 }

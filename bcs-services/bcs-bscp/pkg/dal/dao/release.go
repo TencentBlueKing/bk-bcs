@@ -18,8 +18,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -34,7 +34,7 @@ type Release interface {
 	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *table.Release) (uint32, error)
 	// List releases with options.
 	List(kit *kit.Kit, opts *types.ListReleasesOption) (*types.ListReleaseDetails, error)
-	// GetByName
+	// GetByName ..
 	GetByName(kit *kit.Kit, bizID uint32, appID uint32, name string) (*table.Release, error)
 }
 
@@ -42,6 +42,7 @@ var _ Release = new(releaseDao)
 
 type releaseDao struct {
 	orm      orm.Interface
+	genQ     *gen.Query
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
 	auditDao AuditDao
@@ -66,24 +67,27 @@ func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *tabl
 	if err != nil {
 		return 0, err
 	}
-
 	release.ID = id
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ReleaseTable.Name(), " (", table.ReleaseColumns.ColumnExpr(),
-		")  VALUES(", table.ReleaseColumns.ColonNameExpr(), ")")
-	sql := filter.SqlJoint(sqlSentence)
 
-	if err = dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, release); err != nil {
-		return 0, err
+	ad := dao.auditDao.DecoratorV2(kit, release.Attachment.BizID).PrepareCreate(release)
+	createTx := func(tx *gen.Query) error {
+		q := tx.Release.WithContext(kit.Ctx)
+		if err := q.Create(release); err != nil {
+			return err
+		}
+
+		if err := ad.Do(tx); err != nil {
+			return err
+		}
+
+		return nil
+	}
+	if err := dao.genQ.Transaction(createTx); err != nil {
+		return 0, nil
 	}
 
-	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
-	if err := dao.auditDao.Decorator(kit, release.Attachment.BizID,
-		enumor.Release).AuditCreate(release, au); err != nil {
-		return 0, fmt.Errorf("audit create release failed, err: %v", err)
-	}
+	return release.ID, nil
 
-	return id, nil
 }
 
 // GetByName 通过名称获取, 可以做唯一性校验

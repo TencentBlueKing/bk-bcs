@@ -33,6 +33,7 @@ service Data {
     rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {}
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
+    rpc UpdateAppHook(UpdateAppHookReq) returns (pbbase.EmptyResp) {}
 
     // config item related interface.
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
@@ -78,7 +79,7 @@ service Data {
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
     rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
-    rpc ListHookTags(ListHookTagReq)returns (ListHookTagResp);
+    rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
 
     // hook release interface.
     rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateResp) {}
@@ -86,6 +87,7 @@ service Data {
     rpc GetHookReleaseByID(GetHookReleaseByIdReq) returns (pbhr.HookRelease){}
     rpc DeleteHookRelease(DeleteHookReleaseReq) returns (pbbase.EmptyResp){}
     rpc PublishHookRelease(PublishHookReleaseReq) returns (pbbase.EmptyResp){}
+    rpc GetHookReleaseByPubState(GetByPubStateReq) returns (pbhr.HookRelease){}
 
     // template-space related interface.
     rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CreateResp) {}
@@ -251,6 +253,15 @@ message ListAppsRestReq {
 message ListAppsResp {
     uint32             count   = 1;
     repeated pbapp.App details = 2;
+}
+
+message UpdateAppHookReq {
+    uint32 biz_id                = 1;
+    uint32 app_id                = 2;
+    uint32 pre_hook_id           = 3;
+    uint32 pre_hook_release_id   = 4;
+    uint32 post_hook_id          = 5;
+    uint32 post_hook_release_id  = 6;
 }
 
 message CreateConfigItemReq {
@@ -520,6 +531,12 @@ message PublishHookReleaseReq {
     uint32 biz_id       = 1;
     uint32 hook_id      = 2;
     uint32 id           = 3;
+}
+
+message GetByPubStateReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    string pub_state     = 3;
 }
 
 message CreateTemplateSpaceReq {
