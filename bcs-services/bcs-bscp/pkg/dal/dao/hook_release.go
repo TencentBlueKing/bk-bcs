@@ -43,9 +43,9 @@ type HookRelease interface {
 	Publish(kit *kit.Kit, g *table.HookRelease) error
 	// GetByPubState hook release by PubState
 	GetByPubState(kit *kit.Kit, opt *types.GetByPubStateOption) (*table.HookRelease, error)
-
+	// DeleteByHookIDWithTx  delete release revision with transaction
 	DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.Query, g *table.HookRelease) error
-
+	// PublishNumPlusOneWithTx PublishNum +1 revision with transaction
 	PublishNumPlusOneWithTx(kit *kit.Kit, tx *gen.Query) error
 }
 
@@ -209,7 +209,7 @@ func (dao *hookReleaseDao) Delete(kit *kit.Kit, g *table.HookRelease) error {
 	return nil
 }
 
-// DeleteWithTx ...
+// DeleteByHookIDWithTx  delete release revision with transaction
 func (dao *hookReleaseDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.Query, g *table.HookRelease) error {
 
 	// 参数校验
@@ -322,6 +322,7 @@ func (dao *hookReleaseDao) GetByPubState(kit *kit.Kit,
 
 }
 
+// PublishNumPlusOneWithTx PublishNum +1 revision with transaction
 func (dao *hookReleaseDao) PublishNumPlusOneWithTx(kit *kit.Kit, tx *gen.Query) error {
 
 	m := tx.HookRelease

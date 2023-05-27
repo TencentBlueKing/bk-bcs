@@ -34,7 +34,7 @@ type Hook interface {
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, strategy *table.Hook) error
 	// GetByID get hook only with id.
-	GetByID(kit *kit.Kit, hookID uint32) (*table.Hook, error)
+	GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error)
 }
 
 var _ Hook = new(hookDao)
@@ -193,12 +193,12 @@ func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
 }
 
 // GetByID get hook only with id.
-func (dao *hookDao) GetByID(kit *kit.Kit, hookID uint32) (*table.Hook, error) {
+func (dao *hookDao) GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error) {
 
 	m := dao.genQ.Hook
 	q := dao.genQ.Hook.WithContext(kit.Ctx)
 
-	hook, err := q.Where(m.ID.Eq(hookID)).Take()
+	hook, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(hookID)).Take()
 	if err != nil {
 		return nil, err
 	}

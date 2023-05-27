@@ -12,6 +12,7 @@ import (
 	commit "bscp.io/pkg/protocol/core/commit"
 	config_item "bscp.io/pkg/protocol/core/config-item"
 	content "bscp.io/pkg/protocol/core/content"
+	hook "bscp.io/pkg/protocol/core/hook"
 	hook_release "bscp.io/pkg/protocol/core/hook-release"
 	released_ci "bscp.io/pkg/protocol/core/released-ci"
 	context "context"
@@ -65,6 +66,7 @@ const (
 	Data_UpdateHook_FullMethodName                     = "/pbds.Data/UpdateHook"
 	Data_DeleteHook_FullMethodName                     = "/pbds.Data/DeleteHook"
 	Data_ListHookTags_FullMethodName                   = "/pbds.Data/ListHookTags"
+	Data_GetHook_FullMethodName                        = "/pbds.Data/GetHook"
 	Data_CreateHookRelease_FullMethodName              = "/pbds.Data/CreateHookRelease"
 	Data_ListHookReleases_FullMethodName               = "/pbds.Data/ListHookReleases"
 	Data_GetHookReleaseByID_FullMethodName             = "/pbds.Data/GetHookReleaseByID"
@@ -151,6 +153,7 @@ type DataClient interface {
 	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	ListHookTags(ctx context.Context, in *ListHookTagReq, opts ...grpc.CallOption) (*ListHookTagResp, error)
+	GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*hook.Hook, error)
 	// hook release interface.
 	CreateHookRelease(ctx context.Context, in *CreateHookReleaseReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListHookReleases(ctx context.Context, in *ListHookReleasesReq, opts ...grpc.CallOption) (*ListHookReleasesResp, error)
@@ -554,6 +557,15 @@ func (c *dataClient) ListHookTags(ctx context.Context, in *ListHookTagReq, opts 
 	return out, nil
 }
 
+func (c *dataClient) GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*hook.Hook, error) {
+	out := new(hook.Hook)
+	err := c.cc.Invoke(ctx, Data_GetHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateHookRelease(ctx context.Context, in *CreateHookReleaseReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateHookRelease_FullMethodName, in, out, opts...)
@@ -894,6 +906,7 @@ type DataServer interface {
 	UpdateHook(context.Context, *UpdateHookReq) (*base.EmptyResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*base.EmptyResp, error)
 	ListHookTags(context.Context, *ListHookTagReq) (*ListHookTagResp, error)
+	GetHook(context.Context, *GetHookReq) (*hook.Hook, error)
 	// hook release interface.
 	CreateHookRelease(context.Context, *CreateHookReleaseReq) (*CreateResp, error)
 	ListHookReleases(context.Context, *ListHookReleasesReq) (*ListHookReleasesResp, error)
@@ -1058,6 +1071,9 @@ func (UnimplementedDataServer) DeleteHook(context.Context, *DeleteHookReq) (*bas
 }
 func (UnimplementedDataServer) ListHookTags(context.Context, *ListHookTagReq) (*ListHookTagResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListHookTags not implemented")
+}
+func (UnimplementedDataServer) GetHook(context.Context, *GetHookReq) (*hook.Hook, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHook not implemented")
 }
 func (UnimplementedDataServer) CreateHookRelease(context.Context, *CreateHookReleaseReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHookRelease not implemented")
@@ -1869,6 +1885,24 @@ func _Data_ListHookTags_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetHook(ctx, req.(*GetHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateHookRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateHookReleaseReq)
 	if err := dec(in); err != nil {
@@ -2607,6 +2641,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListHookTags",
 			Handler:    _Data_ListHookTags_Handler,
+		},
+		{
+			MethodName: "GetHook",
+			Handler:    _Data_GetHook_Handler,
 		},
 		{
 			MethodName: "CreateHookRelease",

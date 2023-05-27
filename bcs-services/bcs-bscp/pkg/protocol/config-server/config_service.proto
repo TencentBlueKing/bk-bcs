@@ -250,6 +250,11 @@ service Config {
             put : "/api/v1/config/publish/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
         };
     }
+    rpc GetHook(GetHookReq) returns (pbhook.Hook){
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+        };
+    }
     rpc GetHookRelease(GetHookReleaseReq) returns (pbhr.HookRelease) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
@@ -889,6 +894,11 @@ message PublishHookReleaseReq {
 }
 
 message PublishHookReleaseResp {}
+
+message GetHookReq {
+    uint32 biz_id  = 1;
+    uint32 hook_id = 2;
+}
 
 message GetHookReleaseReq {
     uint32 biz_id          = 1;

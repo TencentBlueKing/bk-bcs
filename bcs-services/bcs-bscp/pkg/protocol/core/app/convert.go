@@ -24,15 +24,11 @@ func (m *AppSpec) AppSpec() *table.AppSpec {
 	}
 
 	return &table.AppSpec{
-		Name:              m.Name,
-		ConfigType:        table.ConfigType(m.ConfigType),
-		Mode:              table.AppMode(m.Mode),
-		Memo:              m.Memo,
-		Reload:            m.Reload.Reload(),
-		PreHookID:         m.PreHookId,
-		PreHookReleaseID:  m.PreHookReleaseId,
-		PostHookID:        m.PostHookId,
-		PostHookReleaseID: m.PostHookReleaseId,
+		Name:       m.Name,
+		ConfigType: table.ConfigType(m.ConfigType),
+		Mode:       table.AppMode(m.Mode),
+		Memo:       m.Memo,
+		Reload:     m.Reload.Reload(),
 	}
 }
 
@@ -47,7 +43,8 @@ func PbAppSpec(spec *table.AppSpec) *AppSpec {
 		ConfigType: string(spec.ConfigType),
 		Mode:       string(spec.Mode),
 		Memo:       spec.Memo,
-		Reload:     PbReload(spec.Reload),
+		Reload:     PbReload(spec),
+		AppHook:    PbAppHook(spec),
 	}
 }
 
@@ -63,15 +60,28 @@ func (r *Reload) Reload() *table.Reload {
 	}
 }
 
+func PbAppHook(spec *table.AppSpec) *AppHook {
+	if spec == nil {
+		return nil
+	}
+
+	return &AppHook{
+		PreHookId:         spec.AppHook.PreHookID,
+		PreHookReleaseId:  spec.AppHook.PreHookReleaseID,
+		PostHookId:        spec.AppHook.PostHookID,
+		PostHookReleaseId: spec.AppHook.PostHookReleaseID,
+	}
+}
+
 // PbReload convert table Reload to pb Reload
-func PbReload(spec *table.Reload) *Reload {
+func PbReload(spec *table.AppSpec) *Reload {
 	if spec == nil {
 		return nil
 	}
 
 	return &Reload{
 		ReloadType:     string(spec.ReloadType),
-		FileReloadSpec: PbFileReloadSpec(spec.FileReloadSpec),
+		FileReloadSpec: PbFileReloadSpec(spec),
 	}
 }
 
@@ -87,7 +97,7 @@ func (f *FileReloadSpec) FileReloadSpec() *table.FileReloadSpec {
 }
 
 // PbFileReloadSpec convert table FileReloadSpec to pb FileReloadSpec
-func PbFileReloadSpec(spec *table.FileReloadSpec) *FileReloadSpec {
+func PbFileReloadSpec(spec *table.AppSpec) *FileReloadSpec {
 	if spec == nil {
 		return nil
 	}

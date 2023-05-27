@@ -188,15 +188,19 @@ type AppSpec struct {
 	ConfigType ConfigType `db:"config_type" json:"config_type"`
 	// Mode defines what mode of this app works at.
 	// Mode can not be updated once it is created.
-	Mode              AppMode `db:"mode" json:"mode"`
-	Memo              string  `db:"memo" json:"memo"`
-	Reload            *Reload `db:"reload" json:"reload" gorm:"-"`
-	ReloadType        string  `gorm:"column:reload_type" json:"reload_type"`
-	ReloadFilePath    string  `gorm:"column:reload_file_path" json:"reload_file_path"`
-	PreHookID         uint32  `db:"pre_hook_id" json:"pre_hook_id" gorm:"pre_hook_id"`
-	PreHookReleaseID  uint32  `db:"pre_hook_release_id" json:"pre_hook_release_id" gorm:"pre_hook_release_id"`
-	PostHookID        uint32  `db:"post_hook_id" json:"post_hook_id" gorm:"post_hook_id"`
-	PostHookReleaseID uint32  `db:"post_hook_release_id" json:"post_hook_release_id" gorm:"post_hook_release_id"`
+	Mode           AppMode  `db:"mode" json:"mode"`
+	Memo           string   `db:"memo" json:"memo"`
+	Reload         *Reload  `db:"reload" json:"reload" gorm:"-"`
+	ReloadType     string   `gorm:"column:reload_type" json:"reload_type"`
+	ReloadFilePath string   `gorm:"column:reload_file_path" json:"reload_file_path"`
+	AppHook        *AppHook `db:"app_hook" json:"app_hook" gorm:"embedded"`
+}
+
+type AppHook struct {
+	PreHookID         uint32 `db:"pre_hook_id" json:"pre_hook_id" gorm:"pre_hook_id"`
+	PreHookReleaseID  uint32 `db:"pre_hook_release_id" json:"pre_hook_release_id" gorm:"pre_hook_release_id"`
+	PostHookID        uint32 `db:"post_hook_id" json:"post_hook_id" gorm:"post_hook_id"`
+	PostHookReleaseID uint32 `db:"post_hook_release_id" json:"post_hook_release_id" gorm:"post_hook_release_id"`
 }
 
 const (

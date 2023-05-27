@@ -288,10 +288,12 @@ func (s *Service) UpdateAppHook(ctx context.Context, req *pbds.UpdateAppHookReq)
 	app := &table.App{
 		ID: req.AppId,
 		Spec: &table.AppSpec{
-			PreHookID:         req.PreHookId,
-			PreHookReleaseID:  req.PreHookReleaseId,
-			PostHookID:        req.PostHookId,
-			PostHookReleaseID: req.PostHookReleaseId,
+			AppHook: &table.AppHook{
+				PreHookID:         req.PreHookId,
+				PreHookReleaseID:  req.PreHookReleaseId,
+				PostHookID:        req.PostHookId,
+				PostHookReleaseID: req.PostHookReleaseId,
+			},
 		},
 		BizID: req.BizId,
 		Revision: &table.Revision{

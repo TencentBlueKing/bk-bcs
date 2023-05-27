@@ -80,6 +80,7 @@ service Data {
     rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
     rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
+    rpc GetHook(GetHookReq) returns (pbhook.Hook) {}
 
     // hook release interface.
     rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateResp) {}
@@ -468,6 +469,11 @@ message CreateHookReq {
 
 message ListHookTagReq {
     uint32 biz_id = 1;
+}
+
+message GetHookReq {
+    uint32 biz_id  = 1;
+    uint32 hook_id = 2;
 }
 
 message ListHooksReq {

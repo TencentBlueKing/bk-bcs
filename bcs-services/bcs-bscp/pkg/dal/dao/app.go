@@ -404,18 +404,15 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 
 func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, error) {
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ",
-		table.AppTable.Name(), " WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
-	sql := filter.SqlJoint(sqlSentence)
+	m := ap.genQ.App
+	q := ap.genQ.App.WithContext(kit.Ctx)
 
-	one := new(table.App)
-	err := ap.orm.Do(ap.sd.MustSharding(bizID)).Get(kit.Ctx, one, sql)
+	app, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(appID)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get app details failed, err: %v", err)
+		return nil, err
 	}
+	return app, nil
 
-	return one, nil
 }
 
 // GetByID 通过 AppId 查询

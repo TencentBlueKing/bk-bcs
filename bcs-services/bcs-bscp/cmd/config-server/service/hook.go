@@ -143,3 +143,28 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (
 
 	return resp, nil
 }
+
+// GetHook get a hook
+func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbhook.Hook, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbhook.Hook)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetHookReq{
+		BizId:  req.BizId,
+		HookId: req.HookId,
+	}
+
+	h, err := s.client.DS.GetHook(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return h, nil
+}

@@ -175,3 +175,19 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*
 
 	return resp, nil
 }
+
+// GetHook get a hook
+func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbhook.Hook, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	h, err := s.dao.Hook().GetByID(kt, req.BizId, req.HookId)
+	if err != nil {
+		logs.Errorf("list hook failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp, _ := pbhook.PbHook(h)
+
+	return resp, nil
+}

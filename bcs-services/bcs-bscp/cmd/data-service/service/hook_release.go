@@ -13,6 +13,9 @@ limitations under the License.
 package service
 
 import (
+	"context"
+	"time"
+
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -21,8 +24,6 @@ import (
 	pbhr "bscp.io/pkg/protocol/core/hook-release"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
-	"context"
-	"time"
 )
 
 // CreateHookRelease create hook release  with option
@@ -30,7 +31,7 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 	req *pbds.CreateHookReleaseReq) (*pbds.CreateResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
-	_, err := s.dao.Hook().GetByID(kt, req.Attachment.HookId)
+	_, err := s.dao.Hook().GetByID(kt, req.Attachment.BizId, req.Attachment.HookId)
 	if err != nil {
 		logs.Errorf("hook (%d) does not exist, err: %v, rid: %s", req.Attachment.HookId, err, kt.Rid)
 		return nil, err

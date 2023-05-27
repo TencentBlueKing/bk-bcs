@@ -25,10 +25,7 @@ message AppSpec {
     string mode                 = 4;  // mode is enum type.
     string memo                 = 5;
     Reload reload               = 6;
-    uint32 pre_hook_id          = 7;
-    uint32 pre_hook_release_id  = 8;
-    uint32 post_hook_id         = 9;
-    uint32 post_hook_release_id =10;
+    AppHook app_hook            = 7;
 }
 
 // ReloadSpec source resource reference: pkg/dal/table/app.go
@@ -40,4 +37,11 @@ message Reload {
 // FileReloadSpec source resource reference: pkg/dal/table/app.go
 message FileReloadSpec {
     string reload_file_path = 1;
+}
+
+message AppHook {
+    uint32 pre_hook_id          = 1;
+    uint32 pre_hook_release_id  = 2;
+    uint32 post_hook_id         = 3;
+    uint32 post_hook_release_id = 4;
 }

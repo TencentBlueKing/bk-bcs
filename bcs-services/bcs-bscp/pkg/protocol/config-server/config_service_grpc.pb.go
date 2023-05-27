@@ -9,6 +9,7 @@ package pbcs
 import (
 	app "bscp.io/pkg/protocol/core/app"
 	base "bscp.io/pkg/protocol/core/base"
+	hook "bscp.io/pkg/protocol/core/hook"
 	hook_release "bscp.io/pkg/protocol/core/hook-release"
 	context "context"
 	grpc "google.golang.org/grpc"
@@ -61,6 +62,7 @@ const (
 	Config_ListHookRelease_FullMethodName                = "/pbcs.Config/ListHookRelease"
 	Config_DeleteHookRelease_FullMethodName              = "/pbcs.Config/DeleteHookRelease"
 	Config_PublishHookRelease_FullMethodName             = "/pbcs.Config/PublishHookRelease"
+	Config_GetHook_FullMethodName                        = "/pbcs.Config/GetHook"
 	Config_GetHookRelease_FullMethodName                 = "/pbcs.Config/GetHookRelease"
 	Config_CreateTemplateSpace_FullMethodName            = "/pbcs.Config/CreateTemplateSpace"
 	Config_DeleteTemplateSpace_FullMethodName            = "/pbcs.Config/DeleteTemplateSpace"
@@ -132,6 +134,7 @@ type ConfigClient interface {
 	ListHookRelease(ctx context.Context, in *ListHookReleaseReq, opts ...grpc.CallOption) (*ListHookReleaseResp, error)
 	DeleteHookRelease(ctx context.Context, in *DeleteHookReleaseReq, opts ...grpc.CallOption) (*DeleteHookReleaseResp, error)
 	PublishHookRelease(ctx context.Context, in *PublishHookReleaseReq, opts ...grpc.CallOption) (*PublishHookReleaseResp, error)
+	GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*hook.Hook, error)
 	GetHookRelease(ctx context.Context, in *GetHookReleaseReq, opts ...grpc.CallOption) (*hook_release.HookRelease, error)
 	CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, opts ...grpc.CallOption) (*CreateTemplateSpaceResp, error)
 	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*DeleteTemplateSpaceResp, error)
@@ -517,6 +520,15 @@ func (c *configClient) PublishHookRelease(ctx context.Context, in *PublishHookRe
 	return out, nil
 }
 
+func (c *configClient) GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*hook.Hook, error) {
+	out := new(hook.Hook)
+	err := c.cc.Invoke(ctx, Config_GetHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) GetHookRelease(ctx context.Context, in *GetHookReleaseReq, opts ...grpc.CallOption) (*hook_release.HookRelease, error) {
 	out := new(hook_release.HookRelease)
 	err := c.cc.Invoke(ctx, Config_GetHookRelease_FullMethodName, in, out, opts...)
@@ -778,6 +790,7 @@ type ConfigServer interface {
 	ListHookRelease(context.Context, *ListHookReleaseReq) (*ListHookReleaseResp, error)
 	DeleteHookRelease(context.Context, *DeleteHookReleaseReq) (*DeleteHookReleaseResp, error)
 	PublishHookRelease(context.Context, *PublishHookReleaseReq) (*PublishHookReleaseResp, error)
+	GetHook(context.Context, *GetHookReq) (*hook.Hook, error)
 	GetHookRelease(context.Context, *GetHookReleaseReq) (*hook_release.HookRelease, error)
 	CreateTemplateSpace(context.Context, *CreateTemplateSpaceReq) (*CreateTemplateSpaceResp, error)
 	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*DeleteTemplateSpaceResp, error)
@@ -924,6 +937,9 @@ func (UnimplementedConfigServer) DeleteHookRelease(context.Context, *DeleteHookR
 }
 func (UnimplementedConfigServer) PublishHookRelease(context.Context, *PublishHookReleaseReq) (*PublishHookReleaseResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PublishHookRelease not implemented")
+}
+func (UnimplementedConfigServer) GetHook(context.Context, *GetHookReq) (*hook.Hook, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHook not implemented")
 }
 func (UnimplementedConfigServer) GetHookRelease(context.Context, *GetHookReleaseReq) (*hook_release.HookRelease, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHookRelease not implemented")
@@ -1711,6 +1727,24 @@ func _Config_PublishHookRelease_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetHook(ctx, req.(*GetHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_GetHookRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetHookReleaseReq)
 	if err := dec(in); err != nil {
@@ -2305,6 +2339,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PublishHookRelease",
 			Handler:    _Config_PublishHookRelease_Handler,
+		},
+		{
+			MethodName: "GetHook",
+			Handler:    _Config_GetHook_Handler,
 		},
 		{
 			MethodName: "GetHookRelease",
