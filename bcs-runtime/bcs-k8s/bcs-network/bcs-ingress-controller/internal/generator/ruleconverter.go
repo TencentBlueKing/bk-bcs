@@ -129,10 +129,14 @@ func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkex
 	if rc.rule.Certificate != nil {
 		li.Spec.Certificate = rc.rule.Certificate
 	}
-	// 暂时只允许使用listener.listenerAttribute.sniSwitch参数
-	if rc.rule.ListenerAttribute != nil && rc.rule.ListenerAttribute.SniSwitch != 0 {
-		li.Spec.ListenerAttribute = &networkextensionv1.IngressListenerAttribute{SniSwitch: rc.rule.
-			ListenerAttribute.SniSwitch}
+	if rc.rule.ListenerAttribute != nil {
+		li.Spec.ListenerAttribute = &networkextensionv1.IngressListenerAttribute{}
+		if rc.rule.ListenerAttribute.SniSwitch != 0 {
+			li.Spec.ListenerAttribute.SniSwitch = rc.rule.ListenerAttribute.SniSwitch
+		}
+		if rc.rule.ListenerAttribute.KeepAliveEnable != 0 {
+			li.Spec.ListenerAttribute.KeepAliveEnable = rc.rule.ListenerAttribute.KeepAliveEnable
+		}
 	}
 
 	listenerRules, err := rc.generateListenerRule(rc.rule.Routes)

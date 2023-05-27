@@ -554,7 +554,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 		}
 
 		switch portMapping.WorkloadKind {
-		case networkextensionv1.WorkloadKindGameStatefulset:
+		case "GameStatefulSet":
 			gsts := &k8sunstruct.Unstructured{}
 			gsts.SetGroupVersionKind(schema.GroupVersionKind{
 				Group:   "tkex.tencent.com",
@@ -574,7 +574,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 					msgSet[fmt.Sprintf(constant.ValidateMsgUnknownErr, err)] = struct{}{}
 				}
 			}
-		case networkextensionv1.WorkloadKindStatefulset:
+		case "StatefulSet":
 			sts := &k8sappsv1.StatefulSet{}
 			err := g.cli.Get(context.TODO(), k8stypes.NamespacedName{
 				Namespace: portMapping.WorkloadNamespace,

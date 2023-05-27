@@ -434,8 +434,10 @@ func (c *Clb) updateListenerAttrAndCerts(region, listenerID string, listener *ne
 
 		// 注意：未开启SNI的监听器可以开启SNI；已开启SNI的监听器不能关闭SNI。
 		req.SniSwitch = tcommon.Int64Ptr(int64(attr.SniSwitch))
+		req.KeepaliveEnable = tcommon.Int64Ptr(int64(attr.KeepAliveEnable))
 	} else {
 		req.SniSwitch = tcommon.Int64Ptr(0)
+		req.KeepaliveEnable = tcommon.Int64Ptr(0)
 	}
 	certs := listener.Spec.Certificate
 	req.Certificate = transIngressCertificate(certs)

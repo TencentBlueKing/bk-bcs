@@ -124,9 +124,10 @@ type ListenerHealthCheck struct {
 
 // IngressListenerAttribute attribute for listener
 type IngressListenerAttribute struct {
-	SessionTime int    `json:"sessionTime,omitempty"`
-	SniSwitch   int    `json:"sniSwitch,omitempty"`
-	LbPolicy    string `json:"lbPolicy,omitempty"`
+	SessionTime     int    `json:"sessionTime,omitempty"`
+	SniSwitch       int    `json:"sniSwitch,omitempty"`
+	KeepAliveEnable int    `json:"keepAliveEnable,omitempty"`
+	LbPolicy        string `json:"lbPolicy,omitempty"`
 	// BackendInsecure specifies whether to enable insecure access to the backend.
 	BackendInsecure bool `json:"backendInsecure,omitempty"`
 	// MaxRate specifies the maximum number of connections per second allowed for every target instance.

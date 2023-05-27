@@ -453,6 +453,7 @@ func (c *Clb) batchCreate7LayerListener(region string, listeners []*networkexten
 	req.Certificate = transIngressCertificate(listener.Spec.Certificate)
 	if listener.Spec.ListenerAttribute != nil {
 		req.SniSwitch = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.SniSwitch))
+		req.KeepaliveEnable = tcommon.Int64Ptr(int64(listener.Spec.ListenerAttribute.KeepAliveEnable))
 	}
 
 	ctime := time.Now()
