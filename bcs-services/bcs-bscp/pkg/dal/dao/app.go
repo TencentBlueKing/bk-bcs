@@ -417,14 +417,12 @@ func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, err
 
 // GetByID 通过 AppId 查询
 func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(appID)))
-	expr := filter.SqlJoint(sqlSentence)
-	one := new(table.App)
-	err := ap.orm.Do(ap.sd.Admin().DB()).Get(kit.Ctx, one, expr)
+
+	m := ap.genQ.App
+	q := ap.genQ.App.WithContext(kit.Ctx)
+	one, err := q.Where(m.ID.Eq(appID)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get app details failed, err: %v", err)
+		return nil, err
 	}
 
 	return one, nil

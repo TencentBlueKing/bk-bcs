@@ -24,10 +24,14 @@ func (m *ReleaseSpec) ReleaseSpec() *table.ReleaseSpec {
 	}
 
 	return &table.ReleaseSpec{
-		Name:       m.Name,
-		Memo:       m.Memo,
-		Deprecated: m.Deprecated,
-		PublishNum: m.PublishNum,
+		Name:              m.Name,
+		Memo:              m.Memo,
+		Deprecated:        m.Deprecated,
+		PublishNum:        m.PublishNum,
+		PreHookID:         m.PreHookId,
+		PreHookReleaseID:  m.PreHookReleaseId,
+		PostHookID:        m.PostHookId,
+		PostHookReleaseID: m.PostHookReleaseId,
 	}
 }
 
@@ -38,10 +42,14 @@ func PbReleaseSpec(spec *table.ReleaseSpec) *ReleaseSpec {
 	}
 
 	return &ReleaseSpec{
-		Name:       spec.Name,
-		Memo:       spec.Memo,
-		Deprecated: spec.Deprecated,
-		PublishNum: spec.PublishNum,
+		Name:              spec.Name,
+		Memo:              spec.Memo,
+		Deprecated:        spec.Deprecated,
+		PublishNum:        spec.PublishNum,
+		PreHookId:         spec.PreHookID,
+		PreHookReleaseId:  spec.PreHookReleaseID,
+		PostHookId:        spec.PostHookID,
+		PostHookReleaseId: spec.PostHookReleaseID,
 	}
 }
 
