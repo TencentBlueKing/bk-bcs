@@ -102,7 +102,7 @@ func (dao *hookReleaseDao) Create(kit *kit.Kit, g *table.HookRelease) (uint32, e
 
 }
 
-// NewHookReleaseDao create the audit DAO
+// NewHookReleaseDao create the HookRelease DAO
 func NewHookReleaseDao(db *gorm.DB, idGen IDGenInterface, auditDao AuditDao) (HookRelease, error) {
 	return &hookReleaseDao{
 		genQ:     gen.Use(db),
@@ -213,14 +213,14 @@ func (dao *hookReleaseDao) Delete(kit *kit.Kit, g *table.HookRelease) error {
 func (dao *hookReleaseDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.Query, g *table.HookRelease) error {
 
 	// 参数校验
-	if err := g.ValidateDelete(); err != nil {
+	if err := g.ValidateDeleteByHookID(); err != nil {
 		return err
 	}
 
 	// 删除操作, 获取当前记录做审计
 	m := dao.genQ.HookRelease
 	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
-	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	oldOne, err := q.Where(m.HookID.Eq(g.Attachment.HookID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
 	}

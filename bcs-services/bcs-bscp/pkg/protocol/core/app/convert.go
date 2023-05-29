@@ -29,6 +29,7 @@ func (m *AppSpec) AppSpec() *table.AppSpec {
 		Mode:       table.AppMode(m.Mode),
 		Memo:       m.Memo,
 		Reload:     m.Reload.Reload(),
+		Hook:       m.Hook.Hook(),
 	}
 }
 
@@ -43,8 +44,8 @@ func PbAppSpec(spec *table.AppSpec) *AppSpec {
 		ConfigType: string(spec.ConfigType),
 		Mode:       string(spec.Mode),
 		Memo:       spec.Memo,
-		Reload:     PbReload(spec),
-		AppHook:    PbAppHook(spec),
+		Reload:     PbReload(spec.Reload),
+		Hook:       PbHook(spec),
 	}
 }
 
@@ -60,28 +61,41 @@ func (r *Reload) Reload() *table.Reload {
 	}
 }
 
-func PbAppHook(spec *table.AppSpec) *AppHook {
+func (r *Hook) Hook() *table.AppHook {
+	if r == nil {
+		return &table.AppHook{}
+	}
+
+	return &table.AppHook{
+		PreHookID:         r.PreHookId,
+		PreHookReleaseID:  r.PreHookReleaseId,
+		PostHookID:        r.PostHookId,
+		PostHookReleaseID: r.PostHookReleaseId,
+	}
+}
+
+func PbHook(spec *table.AppSpec) *Hook {
 	if spec == nil {
 		return nil
 	}
 
-	return &AppHook{
-		PreHookId:         spec.AppHook.PreHookID,
-		PreHookReleaseId:  spec.AppHook.PreHookReleaseID,
-		PostHookId:        spec.AppHook.PostHookID,
-		PostHookReleaseId: spec.AppHook.PostHookReleaseID,
+	return &Hook{
+		PreHookId:         spec.Hook.PreHookID,
+		PreHookReleaseId:  spec.Hook.PreHookReleaseID,
+		PostHookId:        spec.Hook.PostHookID,
+		PostHookReleaseId: spec.Hook.PostHookReleaseID,
 	}
 }
 
 // PbReload convert table Reload to pb Reload
-func PbReload(spec *table.AppSpec) *Reload {
+func PbReload(spec *table.Reload) *Reload {
 	if spec == nil {
 		return nil
 	}
 
 	return &Reload{
 		ReloadType:     string(spec.ReloadType),
-		FileReloadSpec: PbFileReloadSpec(spec),
+		FileReloadSpec: PbFileReloadSpec(spec.FileReloadSpec),
 	}
 }
 
@@ -97,7 +111,7 @@ func (f *FileReloadSpec) FileReloadSpec() *table.FileReloadSpec {
 }
 
 // PbFileReloadSpec convert table FileReloadSpec to pb FileReloadSpec
-func PbFileReloadSpec(spec *table.AppSpec) *FileReloadSpec {
+func PbFileReloadSpec(spec *table.FileReloadSpec) *FileReloadSpec {
 	if spec == nil {
 		return nil
 	}

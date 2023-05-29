@@ -172,11 +172,9 @@ var AppSpecColumnDescriptor = mergeColumnDescriptors("",
 		{Column: "config_type", NamedC: "config_type", Type: enumor.String},
 		{Column: "mode", NamedC: "mode", Type: enumor.String},
 		{Column: "memo", NamedC: "memo", Type: enumor.String},
-		{Column: "pre_hook_id", NamedC: "pre_hook_id", Type: enumor.Numeric},
-		{Column: "pre_hook_release_id", NamedC: "pre_hook_release_id", Type: enumor.Numeric},
-		{Column: "post_hook_id", NamedC: "post_hook_id", Type: enumor.Numeric},
-		{Column: "post_hook_release_id", NamedC: "post_hook_release_id", Type: enumor.Numeric},
 	},
+
+	mergeColumnDescriptors("hook", AppHookColumnDescriptor),
 	mergeColumnDescriptors("reload", ReloadColumnDescriptor))
 
 // AppSpec is a collection of app's specifics defined with user
@@ -188,12 +186,10 @@ type AppSpec struct {
 	ConfigType ConfigType `db:"config_type" json:"config_type"`
 	// Mode defines what mode of this app works at.
 	// Mode can not be updated once it is created.
-	Mode           AppMode  `db:"mode" json:"mode"`
-	Memo           string   `db:"memo" json:"memo"`
-	Reload         *Reload  `db:"reload" json:"reload" gorm:"-"`
-	ReloadType     string   `gorm:"column:reload_type" json:"reload_type"`
-	ReloadFilePath string   `gorm:"column:reload_file_path" json:"reload_file_path"`
-	AppHook        *AppHook `db:"app_hook" json:"app_hook" gorm:"embedded"`
+	Mode   AppMode  `db:"mode" json:"mode"`
+	Memo   string   `db:"memo" json:"memo"`
+	Reload *Reload  `db:"reload" json:"reload" gorm:"embedded"`
+	Hook   *AppHook `db:"hook" json:"hook" gorm:"embedded"`
 }
 
 type AppHook struct {
@@ -202,6 +198,17 @@ type AppHook struct {
 	PostHookID        uint32 `db:"post_hook_id" json:"post_hook_id" gorm:"post_hook_id"`
 	PostHookReleaseID uint32 `db:"post_hook_release_id" json:"post_hook_release_id" gorm:"post_hook_release_id"`
 }
+
+var AppHookColumns = mergeColumns(AppHookColumnDescriptor)
+
+var AppHookColumnDescriptor = mergeColumnDescriptors("",
+	ColumnDescriptors{
+		{Column: "pre_hook_id", NamedC: "pre_hook_id", Type: enumor.Numeric},
+		{Column: "pre_hook_release_id", NamedC: "pre_hook_release_id", Type: enumor.Numeric},
+		{Column: "post_hook_id", NamedC: "post_hook_id", Type: enumor.Numeric},
+		{Column: "post_hook_release_id", NamedC: "post_hook_release_id", Type: enumor.Numeric},
+	},
+)
 
 const (
 	// Normal means this is a normal app, and configuration
@@ -324,7 +331,7 @@ var ReloadColumnDescriptor = mergeColumnDescriptors("",
 // Reload is used to control how bscp sidecar notifies applications to go to reload config files.
 type Reload struct {
 	ReloadType     AppReloadType   `db:"reload_type" json:"reload_type"`
-	FileReloadSpec *FileReloadSpec `db:"file_reload_spec" json:"file_reload_spec"`
+	FileReloadSpec *FileReloadSpec `db:"file_reload_spec" json:"file_reload_spec" gorm:"embedded"`
 }
 
 // IsEmpty reload.

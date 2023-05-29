@@ -35,7 +35,6 @@ const (
 	Data_GetAppByName_FullMethodName                   = "/pbds.Data/GetAppByName"
 	Data_ListApps_FullMethodName                       = "/pbds.Data/ListApps"
 	Data_ListAppsRest_FullMethodName                   = "/pbds.Data/ListAppsRest"
-	Data_UpdateAppHook_FullMethodName                  = "/pbds.Data/UpdateAppHook"
 	Data_CreateConfigItem_FullMethodName               = "/pbds.Data/CreateConfigItem"
 	Data_BatchUpsertConfigItems_FullMethodName         = "/pbds.Data/BatchUpsertConfigItems"
 	Data_UpdateConfigItem_FullMethodName               = "/pbds.Data/UpdateConfigItem"
@@ -114,7 +113,6 @@ type DataClient interface {
 	GetAppByName(ctx context.Context, in *GetAppByNameReq, opts ...grpc.CallOption) (*app.App, error)
 	ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsResp, error)
 	ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error)
-	UpdateAppHook(ctx context.Context, in *UpdateAppHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// config item related interface.
 	CreateConfigItem(ctx context.Context, in *CreateConfigItemReq, opts ...grpc.CallOption) (*CreateResp, error)
 	BatchUpsertConfigItems(ctx context.Context, in *BatchUpsertConfigItemsReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -272,15 +270,6 @@ func (c *dataClient) ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc
 func (c *dataClient) ListAppsRest(ctx context.Context, in *ListAppsRestReq, opts ...grpc.CallOption) (*ListAppsResp, error) {
 	out := new(ListAppsResp)
 	err := c.cc.Invoke(ctx, Data_ListAppsRest_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataClient) UpdateAppHook(ctx context.Context, in *UpdateAppHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
-	out := new(base.EmptyResp)
-	err := c.cc.Invoke(ctx, Data_UpdateAppHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -867,7 +856,6 @@ type DataServer interface {
 	GetAppByName(context.Context, *GetAppByNameReq) (*app.App, error)
 	ListApps(context.Context, *ListAppsReq) (*ListAppsResp, error)
 	ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error)
-	UpdateAppHook(context.Context, *UpdateAppHookReq) (*base.EmptyResp, error)
 	// config item related interface.
 	CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateResp, error)
 	BatchUpsertConfigItems(context.Context, *BatchUpsertConfigItemsReq) (*base.EmptyResp, error)
@@ -978,9 +966,6 @@ func (UnimplementedDataServer) ListApps(context.Context, *ListAppsReq) (*ListApp
 }
 func (UnimplementedDataServer) ListAppsRest(context.Context, *ListAppsRestReq) (*ListAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppsRest not implemented")
-}
-func (UnimplementedDataServer) UpdateAppHook(context.Context, *UpdateAppHookReq) (*base.EmptyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppHook not implemented")
 }
 func (UnimplementedDataServer) CreateConfigItem(context.Context, *CreateConfigItemReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateConfigItem not implemented")
@@ -1323,24 +1308,6 @@ func _Data_ListAppsRest_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListAppsRest(ctx, req.(*ListAppsRestReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Data_UpdateAppHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateAppHookReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServer).UpdateAppHook(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Data_UpdateAppHook_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).UpdateAppHook(ctx, req.(*UpdateAppHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2517,10 +2484,6 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAppsRest",
 			Handler:    _Data_ListAppsRest_Handler,
-		},
-		{
-			MethodName: "UpdateAppHook",
-			Handler:    _Data_UpdateAppHook_Handler,
 		},
 		{
 			MethodName: "CreateConfigItem",

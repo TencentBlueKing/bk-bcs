@@ -163,6 +163,20 @@ func (r HookRelease) ValidateDelete() error {
 	return nil
 }
 
+// ValidateDeleteByHookID validate the hook release info when delete it.
+func (r HookRelease) ValidateDeleteByHookID() error {
+
+	if r.Attachment.BizID <= 0 {
+		return errors.New("biz id should be set")
+	}
+
+	if r.Attachment.HookID <= 0 {
+		return errors.New("hook id should be set")
+	}
+
+	return nil
+}
+
 func (r HookRelease) ValidatePublish() error {
 
 	if r.ID <= 0 {

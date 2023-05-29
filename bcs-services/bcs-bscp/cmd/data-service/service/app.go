@@ -76,6 +76,38 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
+	if req.Spec.Hook.PreHookId > 0 {
+		getHookReq := &types.GetByPubStateOption{
+			BizID:  req.BizId,
+			HookID: req.Spec.Hook.PreHookId,
+			State:  table.PartialReleased,
+		}
+		release, err := s.dao.HookRelease().GetByPubState(grpcKit, getHookReq)
+		if err != nil {
+			logs.Errorf("update app hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		req.Spec.Hook.PreHookReleaseId = release.ID
+	} else {
+		req.Spec.Hook.PreHookReleaseId = 0
+	}
+
+	if req.Spec.Hook.PostHookId > 0 {
+		getHookReq := &types.GetByPubStateOption{
+			BizID:  req.BizId,
+			HookID: req.Spec.Hook.PostHookId,
+			State:  table.PartialReleased,
+		}
+		release, err := s.dao.HookRelease().GetByPubState(grpcKit, getHookReq)
+		if err != nil {
+			logs.Errorf("update app hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		req.Spec.Hook.PostHookReleaseId = release.ID
+	} else {
+		req.Spec.Hook.PostHookReleaseId = 0
+	}
+
 	app := &table.App{
 		ID:    req.Id,
 		BizID: req.BizId,
@@ -278,34 +310,4 @@ func (s *Service) validateBizExist(kt *kit.Kit, bizID uint32) error {
 	}
 
 	return nil
-}
-
-// UpdateAppHook update AppHook
-func (s *Service) UpdateAppHook(ctx context.Context, req *pbds.UpdateAppHookReq) (*pbbase.EmptyResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	now := time.Now()
-	app := &table.App{
-		ID: req.AppId,
-		Spec: &table.AppSpec{
-			AppHook: &table.AppHook{
-				PreHookID:         req.PreHookId,
-				PreHookReleaseID:  req.PreHookReleaseId,
-				PostHookID:        req.PostHookId,
-				PostHookReleaseID: req.PostHookReleaseId,
-			},
-		},
-		BizID: req.BizId,
-		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
-		},
-	}
-
-	if err := s.dao.App().UpdateAppHook(kt, app); err != nil {
-		logs.Errorf("update AppHook failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	return new(pbbase.EmptyResp), nil
 }

@@ -20,14 +20,12 @@ import (
 	"github.com/pkg/errors"
 
 	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbapp "bscp.io/pkg/protocol/core/app"
-	pbbase "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/space"
 	"bscp.io/pkg/types"
@@ -96,6 +94,10 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 				FileReloadSpec: &pbapp.FileReloadSpec{
 					ReloadFilePath: req.ReloadFilePath,
 				},
+			},
+			Hook: &pbapp.Hook{
+				PreHookId:  req.PreHookId,
+				PostHookId: req.PostHookId,
 			},
 		},
 	}
@@ -343,63 +345,4 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context, req *pbcs.ListAppsByS
 		Details: rp.Details,
 	}
 	return resp, nil
-}
-
-// UpdateAppHook update AppHook
-func (s *Service) UpdateAppHook(ctx context.Context, req *pbcs.UpdateAppHookReq) (*pbbase.EmptyResp, error) {
-
-	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbbase.EmptyResp)
-
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
-		return nil, err
-	}
-
-	var preHookReleaseID, postHookReleaseID uint32
-
-	if req.PreHookId > 0 {
-		getHookReq := &pbds.GetByPubStateReq{
-			BizId:    req.BizId,
-			HookId:   req.PreHookId,
-			PubState: table.PartialReleased.String(),
-		}
-		release, err := s.client.DS.GetHookReleaseByPubState(ctx, getHookReq)
-		if err != nil {
-			logs.Errorf("update app hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-		preHookReleaseID = release.Id
-	}
-
-	if req.PostHookId > 0 {
-		getHookReq := &pbds.GetByPubStateReq{
-			BizId:    req.BizId,
-			HookId:   req.PostHookId,
-			PubState: table.PartialReleased.String(),
-		}
-		release, err := s.client.DS.GetHookReleaseByPubState(ctx, getHookReq)
-		if err != nil {
-			logs.Errorf("update app hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-		postHookReleaseID = release.Id
-	}
-
-	r := &pbds.UpdateAppHookReq{
-		BizId:             req.BizId,
-		AppId:             req.Id,
-		PreHookId:         req.PreHookId,
-		PreHookReleaseId:  preHookReleaseID,
-		PostHookId:        req.PostHookId,
-		PostHookReleaseId: postHookReleaseID,
-	}
-
-	if _, err := s.client.DS.UpdateAppHook(grpcKit.RpcCtx(), r); err != nil {
-		logs.Errorf("update app hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	return resp, nil
-
 }

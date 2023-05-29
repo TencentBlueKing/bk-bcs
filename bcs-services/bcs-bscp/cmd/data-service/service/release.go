@@ -81,11 +81,13 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		return nil, err
 	}
 	spec := req.Spec.ReleaseSpec()
+	spec.Hook = &table.ReleaseHook{
+		PreHookID:         app.Spec.Hook.PreHookID,
+		PreHookReleaseID:  app.Spec.Hook.PreHookReleaseID,
+		PostHookID:        app.Spec.Hook.PostHookID,
+		PostHookReleaseID: app.Spec.Hook.PostHookReleaseID,
+	}
 
-	spec.PreHookID = app.Spec.AppHook.PreHookID
-	spec.PreHookReleaseID = app.Spec.AppHook.PreHookReleaseID
-	spec.PostHookID = app.Spec.AppHook.PostHookID
-	spec.PostHookReleaseID = app.Spec.AppHook.PostHookReleaseID
 	release := &table.Release{
 		Spec:       spec,
 		Attachment: req.Attachment.ReleaseAttachment(),

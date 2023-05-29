@@ -269,8 +269,8 @@ func (ap *appDao) Update(kit *kit.Kit, app *table.App) error {
 	if err := app.ValidateUpdate(updateApp.Spec.ConfigType); err != nil {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
-
-	opts := orm.NewFieldOptions().AddBlankedFields("memo").AddIgnoredFields("id", "biz_id")
+	opts := orm.NewFieldOptions().AddBlankedFields("memo", "pre_hook_id", "pre_hook_release_id", "post_hook_id",
+		"post_hook_release_id").AddIgnoredFields("id", "biz_id")
 	expr, toUpdate, err := orm.RearrangeSQLDataWithOption(app, opts)
 	if err != nil {
 		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)

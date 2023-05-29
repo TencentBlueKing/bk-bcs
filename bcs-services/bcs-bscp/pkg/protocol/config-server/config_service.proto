@@ -56,12 +56,6 @@ service Config {
             body : "*"
         };
     }
-    rpc UpdateAppHook(UpdateAppHookReq) returns (pbbase.EmptyResp) {
-        option (google.api.http) = {
-            put : "/api/v1/config/update/app/app/app_id/{id}/biz_id/{biz_id}/hook"
-            body : "*"
-        };
-    }
 
     // 获取用户有权限的 spaces 所有的 apps
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {
@@ -483,6 +477,8 @@ message UpdateAppReq {
     string memo             = 4;
     string reload_type      = 5;
     string reload_file_path = 6;
+    uint32 pre_hook_id      = 7;
+    uint32 post_hook_id     = 8;
 }
 
 message UpdateAppResp {}
@@ -516,13 +512,6 @@ message ListAppsRestReq {
     uint32 limit    = 3;
     string operator = 4;
     string name     = 5;
-}
-
-message UpdateAppHookReq {
-    uint32 biz_id                = 1;
-    uint32 id                    = 2;
-    uint32 pre_hook_id           = 3;
-    uint32 post_hook_id          = 4;
 }
 
 message ListAppsBySpaceRestReq {

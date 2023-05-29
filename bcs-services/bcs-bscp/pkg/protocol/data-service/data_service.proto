@@ -33,7 +33,6 @@ service Data {
     rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {}
     rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
-    rpc UpdateAppHook(UpdateAppHookReq) returns (pbbase.EmptyResp) {}
 
     // config item related interface.
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
@@ -254,15 +253,6 @@ message ListAppsRestReq {
 message ListAppsResp {
     uint32             count   = 1;
     repeated pbapp.App details = 2;
-}
-
-message UpdateAppHookReq {
-    uint32 biz_id                = 1;
-    uint32 app_id                = 2;
-    uint32 pre_hook_id           = 3;
-    uint32 pre_hook_release_id   = 4;
-    uint32 post_hook_id          = 5;
-    uint32 post_hook_release_id  = 6;
 }
 
 message CreateConfigItemReq {
