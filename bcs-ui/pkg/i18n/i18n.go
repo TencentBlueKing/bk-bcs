@@ -45,7 +45,7 @@ func makeAcceptLanguage() (acceptLanguage []language.Tag) {
 	for _, v := range langMap {
 		acceptLanguage = append(acceptLanguage, v)
 	}
-	return
+	return acceptLanguage
 }
 
 // getMatchLangByHeader 解析 header, 查找最佳匹配
@@ -73,12 +73,12 @@ func getMatchLangByHeader(lng string) (string, error) {
 	}
 
 	tag = matchedTag.String()[0:2]
-	language, ok := availableLanguage[tag]
+	lang, ok := availableLanguage[tag]
 	if !ok {
 		return "", errors.Errorf("not found %s", lng)
 	}
 
-	return language.String(), nil
+	return lang.String(), nil
 }
 
 // IsAvailableLanguage determine if the language is legal

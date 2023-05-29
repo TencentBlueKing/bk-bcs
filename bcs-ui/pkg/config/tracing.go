@@ -17,6 +17,16 @@ package config
 type TracingConf struct {
 	Enabled       bool              `yaml:"enabled" usage:"enable trace"`
 	Endpoint      string            `yaml:"endpoint" usage:"Collector service endpoint"`
-	Token         string            `yaml:"token" usage:"token for collector sevice"`
+	Token         string            `yaml:"token" usage:"token for collector service"`
 	ResourceAttrs map[string]string `yaml:"resource_attrs" usage:"attributes of traced service"`
+}
+
+// Init :
+func (c *TracingConf) Init() error {
+	// only for development
+	c.Enabled = false
+	c.Token = ""
+	c.Endpoint = ""
+	c.ResourceAttrs = nil
+	return nil
 }

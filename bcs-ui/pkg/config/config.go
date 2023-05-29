@@ -26,7 +26,7 @@ type Configuration struct {
 	BCS          *BCSConf      `yaml:"bcs_conf"`
 	Web          *WebConf      `yaml:"web"`
 	FrontendConf *FrontendConf `yaml:"frontend_conf"`
-	Tracing      *TracingConf               `yaml:"tracing"`
+	Tracing      *TracingConf  `yaml:"tracing"`
 }
 
 // init 初始化
@@ -60,6 +60,7 @@ func newConfiguration() (*Configuration, error) {
 	c.FrontendConf = defaultFrontendConf()
 
 	c.Tracing = &TracingConf{}
+	c.Tracing.Init()
 	return c, nil
 }
 
