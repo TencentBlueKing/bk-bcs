@@ -18,9 +18,10 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/global"
 	iam "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3"
-	iamModel "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/model"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/iam/v3/region"
 )
 
 var nodeMgr sync.Once
@@ -38,10 +39,12 @@ func GetIamClient(opt *cloudprovider.CommonOption) (*iam.IamClient, error) {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 
-	auth := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).Build()
+	auth := global.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).Build()
 
 	// 创建IAM client
-	return iam.NewIamClient(iam.IamClientBuilder().WithCredential(auth).Build()), nil
+	return iam.NewIamClient(
+		iam.IamClientBuilder().WithCredential(auth).WithRegion(region.ValueOf("cn-north-4")).Build(),
+	), nil
 }
 
 // NodeManager CVM relative API management
@@ -70,7 +73,7 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 		return nil, err
 	}
 
-	req := iamModel.KeystoneListRegionsRequest{}
+	req := model.KeystoneListRegionsRequest{}
 	rsp, err := client.KeystoneListRegions(&req)
 	if err != nil {
 		return nil, err

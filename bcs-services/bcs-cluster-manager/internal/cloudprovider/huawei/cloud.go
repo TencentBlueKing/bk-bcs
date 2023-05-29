@@ -56,18 +56,17 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 
 	// get cloud cluster
-
 	client, err := api.NewCceClient(opt.Common)
 	if err != nil {
 		return err
 	}
 
-	cluster, err := client.GetCceCluster(cls.ClusterName)
+	cluster, err := client.GetCceCluster(opt.ImportMode.CloudID)
 	if err != nil {
 		return err
 	}
 
-	kubeConfig, err := api.GetClusterKubeConfig(client, cls.ClusterID)
+	kubeConfig, err := api.GetClusterKubeConfig(client, opt.ImportMode.CloudID)
 	if err != nil {
 		return fmt.Errorf("SyncClusterCloudInfo GetClusterKubeConfig failed: %v", err)
 	}
@@ -89,40 +88,44 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 }
 
 func clusterBasicSettingByCCE(cls *cmproto.Cluster, cluster *model.ShowClusterResponse) {
-	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
-		Version:     *cluster.Spec.Version,
-		VersionName: *cluster.Spec.Version,
-	}
+	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{}
 
 	if cluster.Spec != nil {
-		cls.ClusterBasicSettings.OS = cluster.Spec.Type.Value()
+		cls.ClusterBasicSettings.Version = *cluster.Spec.Version
+		cls.ClusterBasicSettings.VersionName = *cluster.Spec.Version
+
+		if cluster.Spec.Type != nil {
+			cls.ClusterBasicSettings.OS = cluster.Spec.Type.Value()
+		}
 	}
 }
 
 func clusterNetworkSettingByCCE(cls *cmproto.Cluster, cluster *model.ShowClusterResponse) error {
-	cls.NetworkSettings = &cmproto.NetworkSetting{
-		ClusterIPv4CIDR: *cluster.Spec.ContainerNetwork.Cidr,
-	}
+	cls.NetworkSettings = &cmproto.NetworkSetting{}
 
-	if *cluster.Spec.Ipv6enable {
-		cls.NetworkSettings.ServiceIPv4CIDR = *cluster.Spec.ContainerNetwork.Cidr
-	}
+	if cluster.Spec != nil {
+		if cluster.Spec.ContainerNetwork != nil {
+			if cluster.Spec.ContainerNetwork.Cidr != nil {
+				cls.NetworkSettings = &cmproto.NetworkSetting{
+					ClusterIPv4CIDR: *cluster.Spec.ContainerNetwork.Cidr,
+					ServiceIPv4CIDR: *cluster.Spec.ContainerNetwork.Cidr,
+				}
+			}
 
-	if len(*cluster.Spec.ContainerNetwork.Cidrs) > 0 {
-		cls.NetworkSettings.ClusterIPv4CIDR = (*cluster.Spec.ContainerNetwork.Cidrs)[0].Cidr
-
-		if *cluster.Spec.Ipv6enable {
-			cls.NetworkSettings.ServiceIPv4CIDR = (*cluster.Spec.ContainerNetwork.Cidrs)[0].Cidr
-		}
-	}
-
-	if cluster.Spec != nil && cluster.Spec.ExtendParam != nil {
-		num, err := strconv.ParseInt(*cluster.Spec.ExtendParam.AlphaCceFixPoolMask, 10, 32)
-		if err != nil {
-			return err
+			if cluster.Spec.ContainerNetwork.Cidrs != nil && len(*cluster.Spec.ContainerNetwork.Cidrs) > 0 {
+				cls.NetworkSettings.ClusterIPv4CIDR = (*cluster.Spec.ContainerNetwork.Cidrs)[0].Cidr
+				cls.NetworkSettings.ServiceIPv4CIDR = (*cluster.Spec.ContainerNetwork.Cidrs)[0].Cidr
+			}
 		}
 
-		cls.NetworkSettings.MaxNodePodNum = uint32(num)
+		if cluster.Spec.ExtendParam != nil && cluster.Spec.ExtendParam.AlphaCceFixPoolMask != nil {
+			num, err := strconv.ParseInt(*cluster.Spec.ExtendParam.AlphaCceFixPoolMask, 10, 32)
+			if err != nil {
+				return err
+			}
+
+			cls.NetworkSettings.MaxNodePodNum = uint32(num)
+		}
 	}
 
 	return nil

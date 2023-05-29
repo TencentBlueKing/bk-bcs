@@ -3,9 +3,9 @@ package api
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/auth/basic"
-	"github.com/huaweicloud/huaweicloud-sdk-go-v3/core/region"
 	cce "github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
+	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/region"
 )
 
 // CceClient cce client
@@ -22,17 +22,11 @@ func NewCceClient(opt *cloudprovider.CommonOption) (*CceClient, error) {
 		return nil, cloudprovider.ErrCloudRegionLost
 	}
 
-	auth := basic.NewCredentialsBuilder().
-		WithAk(opt.Account.SecretID).
-		WithSk(opt.Account.SecretKey).
-		WithProjectId(opt.Account.HwCCEProjectID).
-		Build()
+	auth := basic.NewCredentialsBuilder().WithAk(opt.Account.SecretID).WithSk(opt.Account.SecretKey).
+		WithProjectId(opt.Account.HwCCEProjectID).Build()
 	// 创建CCE client
 	client := cce.NewCceClient(
-		cce.CceClientBuilder().
-			WithCredential(auth).
-			WithRegion(region.NewRegion(opt.Region)). //指定region区域
-			Build(),
+		cce.CceClientBuilder().WithCredential(auth).WithRegion(region.ValueOf(opt.Region)).Build(),
 	)
 
 	return &CceClient{

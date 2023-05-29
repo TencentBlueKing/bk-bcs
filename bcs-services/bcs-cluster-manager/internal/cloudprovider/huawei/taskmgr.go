@@ -119,17 +119,25 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		Name:       importClusterNodesTask,
 		System:     "api",
 		Params:     make(map[string]string),
-		Retry:      0,
+		Retry:      3,
 		Start:      nowStr,
 		Status:     cloudprovider.TaskStatusNotStarted,
 		TaskMethod: importClusterNodesTask,
 		TaskName:   "导入集群节点",
 	}
-	importNodesStep.Params["ClusterID"] = cls.ClusterID
-	importNodesStep.Params["CloudID"] = cls.Provider
+	importNodesStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
+	importNodesStep.Params[cloudprovider.CloudIDKey.String()] = cls.Provider
 
 	task.Steps[importClusterNodesTask] = importNodesStep
 	task.StepSequence = append(task.StepSequence, importClusterNodesTask)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildImportClusterTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.OperatorKey.String()] = opt.Operator
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.ImportClusterJob.String()
 
 	return task, nil
 }

@@ -39,15 +39,15 @@ func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClu
 func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	// call cce interface to create cluster
 	if cls == nil {
-		return nil, fmt.Errorf("qcloud ImportCluster cluster is empty")
+		return nil, fmt.Errorf("huawei ImportCluster cluster is empty")
 	}
 
 	if opt == nil || opt.Cloud == nil {
-		return nil, fmt.Errorf("qcloud ImportCluster cluster opt or cloud is empty")
+		return nil, fmt.Errorf("huawei ImportCluster cluster opt or cloud is empty")
 	}
 
 	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud CreateCluster opt lost valid crendential info")
+		return nil, fmt.Errorf("huawei CreateCluster opt lost valid crendential info")
 	}
 
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
@@ -83,7 +83,7 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 // ListCluster get cloud cluster list by region
 func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.CloudClusterInfo, error) {
 	if opt == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("qcloud ListCluster cluster lost operation")
+		return nil, fmt.Errorf("huawei ListCluster cluster lost operation")
 	}
 
 	cli, err := api.NewCceClient(&opt.CommonOption)
