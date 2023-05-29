@@ -53,6 +53,7 @@ func (c *BaseConf) Init() error {
 	return nil
 }
 
+// InitBaseConf init base config
 func (c *BaseConf) InitBaseConf() error {
 	// if the configuration is incorrect, panic
 	if !i18n.IsAvailableLanguage(c.LanguageCode) {

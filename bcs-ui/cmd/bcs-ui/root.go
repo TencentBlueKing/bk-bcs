@@ -80,9 +80,9 @@ func RunSrv() {
 	defer stop()
 
 	//初始化 Tracer
-	shutdown, err := tracing.InitTracing(config.G.Tracing)
-	if err != nil {
-		klog.Info(err.Error())
+	shutdown, errorInitTracing := tracing.InitTracing(config.G.Tracing)
+	if errorInitTracing != nil {
+		klog.Info(errorInitTracing.Error())
 	}
 	if shutdown != nil {
 		defer func() {
