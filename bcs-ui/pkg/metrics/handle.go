@@ -14,24 +14,27 @@
 package metrics
 
 import (
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 // RequestCollect 统计请求计数、耗时
-func RequestCollect(handler string, hr http.HandlerFunc) func(w http.ResponseWriter,
-	r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		hr(w, r)
-		statusCode := 200
-		if value, ok := w.(middleware.WrapResponseWriter); ok {
-			statusCode = value.Status()
-		}
-		code := strconv.Itoa(statusCode)
-		requestDuration := time.Since(start)
-		collectHTTPRequestMetric(handler, r.Method, code, requestDuration)
+func RequestCollect(handler string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			// http.ResponseWriter replace
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			next.ServeHTTP(ww, r)
+			// get http code
+			code := strconv.Itoa(ww.Status())
+			// sub the time as duration type
+			requestDuration := time.Since(start)
+			// http metrics 处理
+			collectHTTPRequestMetric(handler, r.Method, code, requestDuration)
+		})
 	}
 }
