@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/metrics"
 )
 
 // WebServer :
@@ -114,11 +115,20 @@ func (w *WebServer) subRouter() http.Handler {
 	r.Use(tracing.MiddleWareTracing)
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
-	r.Get("/release_note", w.ReleaseNoteHandler)
+
+	r.Route("/release_note", func(r chi.Router) {
+		// 单独使用metrics中间件的方式收集请求量、耗时
+		r.Use(metrics.RequestCollect("ReleaseNoteHandler"))
+		r.Get("/", w.ReleaseNoteHandler)
+	})
+
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 
 	// vue 模版渲染
-	r.Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
+	r.Route("/", func(r chi.Router) {
+		r.Use(metrics.RequestCollect("IndexHandler"))
+		r.Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
+	})
 	r.NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
 
 	return r
