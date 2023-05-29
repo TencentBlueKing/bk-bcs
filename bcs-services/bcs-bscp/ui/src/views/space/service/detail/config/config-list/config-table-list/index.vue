@@ -28,6 +28,7 @@
 
   const loading = ref(false)
   const configList = ref<IConfigItem[]>([])
+  const searchStr = ref('')
   const pagination = ref({
     current: 1,
     count: 0,
@@ -54,6 +55,9 @@
         start: (pagination.value.current - 1) * pagination.value.limit,
         limit: pagination.value.limit
       }
+      if (searchStr.value) {
+        params.searchKey = searchStr.value
+      }
       if (versionData.value.id !== 0) {
         params.release_id = versionData.value.id
       }
@@ -65,6 +69,12 @@
       console.error(e)
     } finally {
       loading.value = false
+    }
+  }
+
+  const handleSearchInputChange = (val: string) => {
+    if (!val) {
+      refreshConfigList()
     }
   }
 
@@ -175,7 +185,7 @@
           {{ group.name }}
         </div>
       </div>
-      <bk-input class="search-config-input" placeholder="配置项名称/创建人/修改人">
+      <bk-input v-model="searchStr" class="search-config-input" placeholder="配置项名称/创建人/修改人" @enter="refreshConfigList" @clear="refreshConfigList" @change="handleSearchInputChange">
         <template #suffix>
             <Search class="search-input-icon" />
         </template>
