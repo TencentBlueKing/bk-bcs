@@ -13,42 +13,20 @@
 
 package config
 
-import (
-	"crypto/rsa"
-
-	"github.com/dgrijalva/jwt-go"
-)
-
-// BCSConf :
-type BCSConf struct {
-	Host         string         `yaml:"host"`
-	Token        string         `yaml:"token"`
-	Verify       bool           `yaml:"verify"`
-	JWTPubKey    string         `yaml:"jwt_public_key"`
-	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
+// TracingConf tracing config
+type TracingConf struct {
+	Enabled       bool              `yaml:"enabled" usage:"enable trace"`
+	Endpoint      string            `yaml:"endpoint" usage:"Collector service endpoint"`
+	Token         string            `yaml:"token" usage:"token for collector service"`
+	ResourceAttrs map[string]string `yaml:"resource_attrs" usage:"attributes of traced service"`
 }
 
 // Init :
-func (c *BCSConf) Init() error {
+func (c *TracingConf) Init() error {
 	// only for development
-	c.Host = ""
+	c.Enabled = false
 	c.Token = ""
-	c.JWTPubKey = ""
-	c.JWTPubKeyObj = nil
-	c.Verify = false
-	return nil
-}
-
-// InitJWTPubKey :
-func (c *BCSConf) InitJWTPubKey() error {
-	if c.JWTPubKey == "" {
-		return nil
-	}
-	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(c.JWTPubKey))
-	if err != nil {
-		return err
-	}
-
-	c.JWTPubKeyObj = pubKey
+	c.Endpoint = ""
+	c.ResourceAttrs = nil
 	return nil
 }

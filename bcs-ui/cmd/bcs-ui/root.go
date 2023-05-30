@@ -32,6 +32,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/web"
 )
 
@@ -77,6 +78,19 @@ func RunSrv() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	//初始化 Tracer
+	shutdown, errorInitTracing := tracing.InitTracing(config.G.Tracing)
+	if errorInitTracing != nil {
+		klog.Info(errorInitTracing.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				klog.Infof("failed to shutdown TracerProvider: %s", err.Error())
+			}
+		}()
+	}
 
 	g.Add(func() error {
 		<-ctx.Done()

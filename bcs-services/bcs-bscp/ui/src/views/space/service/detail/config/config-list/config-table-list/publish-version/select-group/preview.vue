@@ -28,12 +28,15 @@
     return list
   }
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     groupListLoading: boolean;
     groupList: IGroupToPublish[];
     allowPreviewDelete: boolean;
+    disabled?: number[];
     value: IGroupToPublish[];
-  }>()
+  }>(), {
+    disabled: () => []
+  })
 
   const emits = defineEmits(['diff', 'change'])
 
@@ -67,6 +70,7 @@
           :key="previewGroup.id"
           :preview-group="previewGroup"
           :allow-preview-delete="allowPreviewDelete"
+          :disabled="props.disabled"
           @diff="emits('diff', $event)"
           @delete="handleDelete">
         </preview-version-group>

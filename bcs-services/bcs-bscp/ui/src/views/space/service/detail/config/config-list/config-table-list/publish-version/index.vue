@@ -68,7 +68,9 @@
     groups.value = []
   }
 
-  defineExpose(['handleOpenSelectGroupPanel'])
+  defineExpose({
+    handleOpenSelectGroupPanel
+  })
 
 </script>
 <template>

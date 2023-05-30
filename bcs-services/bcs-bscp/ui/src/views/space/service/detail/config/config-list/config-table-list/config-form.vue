@@ -89,12 +89,12 @@
           return
         }
       } else if (localVal.value.file_type === 'text') {
-        if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 100 ) {
-          BkMessage({ theme: 'error', message: '配置内容不能超过100M' })
+        if (stringLengthInBytes(stringContent.value) > 1024 * 1024 * 40 ) {
+          BkMessage({ theme: 'error', message: '配置内容不能超过40M' })
           return
         }
       }
-      
+
       submitPending.value = true
       let sign = await generateSHA256()
       let size = 0

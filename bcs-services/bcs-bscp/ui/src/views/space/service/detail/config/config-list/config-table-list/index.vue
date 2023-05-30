@@ -184,15 +184,16 @@
     <section class="config-list-table">
       <bk-loading :loading="loading">
         <bk-table v-if="!loading" :border="['outer']" :data="configList">
-          <bk-table-column label="配置项名称" prop="spec.name" :sort="true"></bk-table-column>
+          <bk-table-column label="配置项名称" prop="spec.name" :sort="true" :min-width="240"></bk-table-column>
           <bk-table-column label="配置格式">
             <template #default="{ row }">
               {{ getConfigTypeName(row.spec?.file_type) }}
             </template>
           </bk-table-column>
+          <bk-table-column label="配置路径" prop="spec.path"></bk-table-column>
           <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
           <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
-          <bk-table-column label="修改时间" prop="revision.update_at" :sort="true"></bk-table-column>
+          <bk-table-column label="修改时间" prop="revision.update_at" :sort="true" :width="180"></bk-table-column>
           <bk-table-column v-if="versionData.id === 0" label="变更状态">
             <template #default="{ row }">
                 <span v-if="row.file_state" :class="['status', row.file_state.toLowerCase()]">
@@ -200,7 +201,7 @@
                 </span>
             </template>
           </bk-table-column>
-          <bk-table-column label="操作">
+          <bk-table-column label="操作" fixed="right">
             <template #default="{ row }">
               <div class="operate-action-btns">
                 <bk-button :disabled="row.file_state === 'DELETE'" text theme="primary" @click="handleEdit(row)">{{ versionData.id === 0 ? '编辑' : '查看' }}</bk-button>
