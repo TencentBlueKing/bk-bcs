@@ -13,7 +13,6 @@ limitations under the License.
 package dao
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -156,14 +155,13 @@ func (ap *appDao) ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*tab
 	}
 
 	group := &table.Group{}
-	var sqlBuf bytes.Buffer
-	sqlBuf.WriteString("SELECT ")
-	sqlBuf.WriteString(table.GroupColumns.NamedExpr())
-	sqlBuf.WriteString(" FROM ")
-	sqlBuf.WriteString(table.GroupTable.Name())
-	sqlBuf.WriteString(" WHERE biz_id = ? AND id = ?")
+	var getGroupSqlSentence []string
+	getGroupSqlSentence = append(getGroupSqlSentence, "SELECT ", table.GroupColumns.NamedExpr(),
+		" FROM "+table.GroupTable.Name()+" WHERE biz_id = ", strconv.Itoa(int(bizID)),
+		" AND id = ", strconv.Itoa(int(groupID)))
+	getGroupSql := filter.SqlJoint(getGroupSqlSentence)
 
-	err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, sqlBuf.String(), bizID, groupID)
+	err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, getGroupSql)
 	if err != nil {
 		return nil, err
 	}
