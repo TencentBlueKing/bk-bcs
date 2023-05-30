@@ -22,14 +22,14 @@ from iam.contrib.iam_migration.migrator import IAMMigrator
 
 
 def forward_func(apps, schema_editor):
-    
-    migrator = IAMMigrator(Migration.migration_json)
-    migrator.migrate()
+    if settings.EDITION == settings.COMMUNITY_EDITION and os.environ.get("ENABLE_TEMPLATESET_PERMISSION", False):
+        migrator = IAMMigrator(Migration.migration_json)
+        migrator.migrate()
 
 
 class Migration(migrations.Migration):
-    migration_json = "0025_upsert_action_groups.json"
+    migration_json = "0027_upsert_action_groups_sg.json"
 
-    dependencies = [('bcs_iam_migration', '0024_bk_bcs_app_202209261543')]
+    dependencies = [('bcs_iam_migration', '0026_bk_bcs_app_202305251457')]
 
     operations = [migrations.RunPython(forward_func)]
