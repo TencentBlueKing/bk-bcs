@@ -86,7 +86,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
 		"COMMON_EXCEPTION_MSG": "",
 	}
-	language, download := getLang(c)
+	language, download := i18n.GetMessage("语言"), i18n.GetMessage("下载")
 
 	data := gin.H{
 		"title":            clusterId,
@@ -138,7 +138,7 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 	}
 
 	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/portal/sessions/%s/", sessionId)) + "/"
-	lang, download := getLang(c)
+	lang, download := i18n.GetMessage("语言"), i18n.GetMessage("下载")
 	sessionUrl = fmt.Sprintf("%s?lang=%s", sessionUrl, lang)
 
 	settings := map[string]string{
@@ -170,15 +170,4 @@ func (s *service) HealthyHandler(c *gin.Context) {
 // ReadyHandler xxx
 func (s *service) ReadyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
-}
-
-// getLang 返回lang参数和模版变量download
-func getLang(c *gin.Context) (string, string) {
-	//只有lang为en时返回en,其他都返回zh
-	lang := c.Query("lang")
-	if lang == "en" {
-		return i18n.GetMessage("语言"), i18n.GetMessage("下载")
-	} else {
-		return i18n.GetMessage("语言"), i18n.GetMessage("下载")
-	}
 }
