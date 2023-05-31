@@ -89,9 +89,9 @@
         },
         onClosed() {
           emits('reload')
-          handleClose()
         }
       } as any);
+      handleClose()
     } catch (e) {
       console.error(e)
     } finally {

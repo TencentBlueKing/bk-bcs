@@ -5,7 +5,7 @@
   import { useConfigStore } from '../../../../../../../store/config'
   import { InfoBox } from "bkui-vue/lib";
   import { InfoLine, Search } from 'bkui-vue/lib/icon';
-  import { IConfigItem, IConfigListQueryParams } from '../../../../../../../../types/config'
+  import { IConfigItem, IConfigListQueryParams, IConfigVersion } from '../../../../../../../../types/config'
   import { CONFIG_STATUS_MAP, VERSION_STATUS_MAP } from '../../../../../../../constants/config'
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
@@ -110,14 +110,13 @@
   }
 
   // 创建版本成功后，刷新版本列表，若选择同时上线，则打开选择分组面板
-  const handleVersionCreated = (versionId: number, isPublish: boolean) => {
-    versionData.value.id = versionId
+  const handleVersionCreated = (version: IConfigVersion, isPublish: boolean) => {
     refreshVesionList()
-    nextTick(() => {
-      if (isPublish && publishVersionRef.value) {
+    if (isPublish && publishVersionRef.value) {
+        console.log('start')
+        versionData.value = version
         publishVersionRef.value.handleOpenSelectGroupPanel()
       }
-    })
   }
 
   const handlePageLimitChange = (limit: number) => {
@@ -152,14 +151,12 @@
       </section>
       <section class="version-operations">
         <CreateVersion
-          v-if="versionData.status.publish_status === 'editing'"
-          ref="publishVersionRef"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :config-count="pagination.count"
           @confirm="handleVersionCreated" />
         <PublishVersion
-          v-if="versionData.status.publish_status === 'not_released'"
+          ref="publishVersionRef"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :release-id="versionData.id"
@@ -168,7 +165,6 @@
           :config-list="configList"
           @confirm="refreshVesionList" />
         <ModifyGroupPublish
-          v-if="versionData.status.publish_status === 'partial_released'"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :release-id="versionData.id"
@@ -185,7 +181,7 @@
           {{ group.name }}
         </div>
       </div>
-      <bk-input v-model="searchStr" class="search-config-input" placeholder="配置项名称/创建人/修改人" @enter="refreshConfigList" @clear="refreshConfigList" @change="handleSearchInputChange">
+      <bk-input v-model="searchStr" class="search-config-input" placeholder="配置文件名/创建人/修改人" @enter="refreshConfigList" @clear="refreshConfigList" @change="handleSearchInputChange">
         <template #suffix>
             <Search class="search-input-icon" />
         </template>
@@ -194,13 +190,13 @@
     <section class="config-list-table">
       <bk-loading :loading="loading">
         <bk-table v-if="!loading" :border="['outer']" :data="configList">
-          <bk-table-column label="配置项名称" prop="spec.name" :sort="true" :min-width="240"></bk-table-column>
-          <bk-table-column label="配置格式">
+          <bk-table-column label="配置文件名" prop="spec.name" :sort="true" :min-width="240"></bk-table-column>
+          <bk-table-column label="配置文件路径" prop="spec.path"></bk-table-column>
+          <bk-table-column label="配置文件格式">
             <template #default="{ row }">
               {{ getConfigTypeName(row.spec?.file_type) }}
             </template>
           </bk-table-column>
-          <bk-table-column label="配置路径" prop="spec.path"></bk-table-column>
           <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
           <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
           <bk-table-column label="修改时间" prop="revision.update_at" :sort="true" :width="180"></bk-table-column>
