@@ -113,7 +113,6 @@
   const handleVersionCreated = (version: IConfigVersion, isPublish: boolean) => {
     refreshVesionList()
     if (isPublish && publishVersionRef.value) {
-        console.log('start')
         versionData.value = version
         publishVersionRef.value.handleOpenSelectGroupPanel()
       }
