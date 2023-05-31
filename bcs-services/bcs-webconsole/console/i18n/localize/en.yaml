@@ -27,3 +27,37 @@ container_id不正确，请检查参数: "Container_id is incorrect, please chec
 guideMessage: "Support common Bash shortcuts; Ctrl-W under Windows is the shortcut to close, please use Alt-W instead"
 
 mgrGuideMessage: "Support common Bash shortcuts; Ctrl-W in Windows is to close the window shortcut, please use Alt-W instead; use Alt-Num to switch Tab"
+
+获取集群成功: "Get Clusters successful"
+
+请求参数错误{}: "Request Params Error: {{ .err }}"
+
+请求参数错误, command not valid{}: "Request Params Error, command not valid: {{ .err }}"
+
+请先输入上传路径: "Please enter the upload path first"
+
+目标路径不存在: "Destination path does not exist"
+
+解析上传文件失败: "Failed to parse uploaded file"
+
+获取pod信息失败: "Failed to get pod information"
+
+执行上传命令失败: "Failed to execute upload command"
+
+文件上传失败: "File upload failed"
+
+文件上传成功: "File upload successful"
+
+复制文件流失败: "Failed to copy file stream"
+
+目标文件不存在: "Target file does not exist"
+
+暂不支持文件夹下载: "Folder download is not supported"
+
+文件不能超过{}MB: "Files cannot exceed {{ .fileLimit }}MB"
+
+文件可以下载: "Files can be downloaded"
+
+下载: "download"
+
+语言: "en"
