@@ -7,18 +7,17 @@
   import { useGlobalStore } from '../../../../../store/global'
   import { createApp } from "../../../../../api";
 
-  const route = useRoute()
   const router = useRouter()
   const { t } = useI18n()
-  const { spaceList } = storeToRefs(useGlobalStore())
 
   const props = defineProps<{
     show: boolean
   }>()
   const emits = defineEmits(['update:show', 'reload'])
 
+  const { spaceId } = storeToRefs(useGlobalStore())
+
   const formData = ref({
-    biz_id: <string>route.params.spaceId,
     name: '',
     config_type: 'file',
     reload_type: 'file',
@@ -70,7 +69,7 @@
     await formRef.value.validate()
     pending.value = false
     try {
-      const resp = await createApp(formData.value.biz_id, formData.value)
+      const resp = await createApp(spaceId.value, formData.value)
       InfoBox({
         type: "success",
         title: "服务新建成功",
@@ -83,16 +82,16 @@
           router.push({
             name: 'service-config',
             params: {
-              spaceId: formData.value.biz_id,
+              spaceId: spaceId.value,
               appId: resp.id
             }
           })
         },
         onClosed() {
           emits('reload')
-          handleClose()
         }
       } as any);
+      handleClose()
     } catch (e) {
       console.error(e)
     } finally {

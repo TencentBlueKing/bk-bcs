@@ -1,7 +1,13 @@
 <script setup lang="ts">
   import { ref } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import {  assign } from 'lodash'
 	import BkMessage from 'bkui-vue/lib/message';
+  import { GET_UNNAMED_VERSION_DATE } from '../../../../../../../../constants/config'
+  import { useConfigStore } from '../../../../../../../../store/config'
   import { createVersion } from '../../../../../../../../api/config'
+
+  const { versionData } = storeToRefs(useConfigStore())
 
   const props = defineProps<{
     bkBizId: string,
@@ -52,8 +58,10 @@
       pending.value = true
       await formRef.value.validate()
       const res = await createVersion(props.bkBizId, props.appId, localVal.value.name, localVal.value.memo)
+      // 创建接口未返回完整的版本详情数据，在前端拼接最新版本数据，加载完版本列表后再更新
+      const version = assign({}, GET_UNNAMED_VERSION_DATE(), { id: res.data.id, spec: { name: localVal.value.name, memo: localVal.value.memo } })
 			BkMessage({ theme: 'success', message: '新版本已生成' })
-      emits('confirm', res.data.id, isPublish.value)
+      emits('confirm', version, isPublish.value)
       handleClose()
     } catch (e) {
       console.error(e)
@@ -70,6 +78,7 @@
 </script>
 <template>
   <bk-button
+    v-if="versionData.id === 0"
     theme="primary"
     :disabled="props.configCount === 0"
     @click="handleCreateDialogOpen">

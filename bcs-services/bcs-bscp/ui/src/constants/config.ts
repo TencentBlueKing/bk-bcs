@@ -29,7 +29,9 @@ export const GET_UNNAMED_VERSION_DATE = () => {
     },
     spec: {
       name: '未命名版本',
-      memo: ''
+      memo: '',
+      deprecated: false,
+      publish_num: 0,
     },
     status: {
       publish_status: 'editing',
