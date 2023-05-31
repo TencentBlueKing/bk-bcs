@@ -95,10 +95,6 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbcs.
 					ReloadFilePath: req.ReloadFilePath,
 				},
 			},
-			Hook: &pbapp.Hook{
-				PreHookId:  req.PreHookId,
-				PostHookId: req.PostHookId,
-			},
 		},
 	}
 	_, err = s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)

@@ -16,6 +16,7 @@ import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
+import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -42,6 +43,11 @@ service Data {
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
+
+    // config hook related interface.
+    rpc CreateConfigHook(CreateConfigHookReq) returns (CreateResp) {}
+    rpc UpdateConfigHook(UpdateConfigHookReq) returns (pbbase.EmptyResp) {}
+    rpc GetConfigHook(GetConfigHookReq) returns (pbch.ConfigHook) {}
 
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
@@ -206,6 +212,17 @@ message CreateResp {
     uint32 id = 1;
 }
 
+message UpdateConfigHookReq {
+    uint32                    id         = 1;
+    pbch.ConfigHookAttachment attachment = 2;
+    pbch.ConfigHookSpec       spec       = 3;
+}
+
+message GetConfigHookReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
 message CreateAppReq {
     uint32        biz_id = 1;
     pbapp.AppSpec spec   = 2;
@@ -309,6 +326,11 @@ message ListConfigItemCountReq {
 
 message ListConfigItemCountResp {
     repeated pbci.ListConfigItemCounts details = 1;
+}
+
+message CreateConfigHookReq {
+    pbch.ConfigHookAttachment attachment = 1;
+    pbch.ConfigHookSpec       spec       = 2;
 }
 
 message CreateContentReq {

@@ -41,29 +41,14 @@ type App struct {
 	// BizID is the business is which this app belongs to
 	BizID uint32 `db:"biz_id" json:"biz_id"`
 	// Spec is a collection of app's specifics defined with user
-	Spec *AppSpec `db:"spec" json:"spec" gorm:"embedded"`
+	Spec *AppSpec `db:"spec" json:"spec"`
 	// Revision record this app's revision information
-	Revision *Revision `db:"revision" json:"revision" gorm:"embedded"`
+	Revision *Revision `db:"revision" json:"revision"`
 }
 
 // TableName is the app's database table name.
-func (a App) TableName() string {
-	return AppTable.String()
-}
-
-// AppID AuditRes interface
-func (a *App) AppID() uint32 {
-	return a.ID
-}
-
-// ResID AuditRes interface
-func (a *App) ResID() uint32 {
-	return a.ID
-}
-
-// ResType AuditRes interface
-func (a *App) ResType() string {
-	return "application"
+func (a App) TableName() Name {
+	return AppTable
 }
 
 // ValidateCreate validate app's info when created.
@@ -137,31 +122,6 @@ func (a App) ValidateDelete() error {
 	return nil
 }
 
-func (a App) ValidateUpdateAppHook() error {
-
-	if a.ID <= 0 {
-		return errors.New("id is not set")
-	}
-
-	if a.BizID <= 0 {
-		return errors.New("biz id not set")
-	}
-
-	if a.Spec == nil {
-		return errors.New("invalid spec, is nil")
-	}
-
-	if a.Revision == nil {
-		return errors.New("invalid revision, is nil")
-	}
-
-	if err := a.Revision.ValidateUpdate(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // AppSpecColumns defines all the app spec's columns.
 var AppSpecColumns = mergeColumns(AppSpecColumnDescriptor)
 
@@ -173,8 +133,6 @@ var AppSpecColumnDescriptor = mergeColumnDescriptors("",
 		{Column: "mode", NamedC: "mode", Type: enumor.String},
 		{Column: "memo", NamedC: "memo", Type: enumor.String},
 	},
-
-	mergeColumnDescriptors("hook", AppHookColumnDescriptor),
 	mergeColumnDescriptors("reload", ReloadColumnDescriptor))
 
 // AppSpec is a collection of app's specifics defined with user
@@ -186,29 +144,10 @@ type AppSpec struct {
 	ConfigType ConfigType `db:"config_type" json:"config_type"`
 	// Mode defines what mode of this app works at.
 	// Mode can not be updated once it is created.
-	Mode   AppMode  `db:"mode" json:"mode"`
-	Memo   string   `db:"memo" json:"memo"`
-	Reload *Reload  `db:"reload" json:"reload" gorm:"embedded"`
-	Hook   *AppHook `db:"hook" json:"hook" gorm:"embedded"`
+	Mode   AppMode `db:"mode" json:"mode"`
+	Memo   string  `db:"memo" json:"memo"`
+	Reload *Reload `db:"reload" json:"reload"`
 }
-
-type AppHook struct {
-	PreHookID         uint32 `db:"pre_hook_id" json:"pre_hook_id" gorm:"pre_hook_id"`
-	PreHookReleaseID  uint32 `db:"pre_hook_release_id" json:"pre_hook_release_id" gorm:"pre_hook_release_id"`
-	PostHookID        uint32 `db:"post_hook_id" json:"post_hook_id" gorm:"post_hook_id"`
-	PostHookReleaseID uint32 `db:"post_hook_release_id" json:"post_hook_release_id" gorm:"post_hook_release_id"`
-}
-
-var AppHookColumns = mergeColumns(AppHookColumnDescriptor)
-
-var AppHookColumnDescriptor = mergeColumnDescriptors("",
-	ColumnDescriptors{
-		{Column: "pre_hook_id", NamedC: "pre_hook_id", Type: enumor.Numeric},
-		{Column: "pre_hook_release_id", NamedC: "pre_hook_release_id", Type: enumor.Numeric},
-		{Column: "post_hook_id", NamedC: "post_hook_id", Type: enumor.Numeric},
-		{Column: "post_hook_release_id", NamedC: "post_hook_release_id", Type: enumor.Numeric},
-	},
-)
 
 const (
 	// Normal means this is a normal app, and configuration
@@ -331,7 +270,7 @@ var ReloadColumnDescriptor = mergeColumnDescriptors("",
 // Reload is used to control how bscp sidecar notifies applications to go to reload config files.
 type Reload struct {
 	ReloadType     AppReloadType   `db:"reload_type" json:"reload_type"`
-	FileReloadSpec *FileReloadSpec `db:"file_reload_spec" json:"file_reload_spec" gorm:"embedded"`
+	FileReloadSpec *FileReloadSpec `db:"file_reload_spec" json:"file_reload_spec"`
 }
 
 // IsEmpty reload.

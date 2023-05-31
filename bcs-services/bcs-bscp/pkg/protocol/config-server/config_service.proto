@@ -15,6 +15,7 @@ import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
+import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -119,6 +120,24 @@ service Config {
         option (google.api.http) = {
             post : "/api/v1/config/list/content/content/app_id/{app_id}/biz_id/{biz_id}"
             body : "*"
+        };
+    }
+
+    rpc CreateConfigHook(CreateConfigHookReq) returns (CreateConfigHookResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/create/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}"
+            body : "*"
+        };
+    }
+    rpc UpdateConfigHook(UpdateConfigHookReq) returns (UpdateConfigHookResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/update/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}"
+            body : "*"
+        };
+    }
+    rpc GetConfigHook(GetConfigHookReq) returns (GetConfigHookResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_hook"
         };
     }
 
@@ -648,6 +667,35 @@ message ListContentsReq {
 message ListContentsResp {
     uint32 count                       = 1;
     repeated pbcontent.Content details = 2;
+}
+
+message CreateConfigHookReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    uint32 pre_hook_id            = 3;
+    uint32 post_hook_id           = 4;
+}
+
+message CreateConfigHookResp {
+    uint32 id = 1;
+}
+
+message UpdateConfigHookReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+    uint32 pre_hook_id            = 3;
+    uint32 post_hook_id           = 4;
+}
+
+message UpdateConfigHookResp {}
+
+message GetConfigHookReq {
+    uint32 biz_id                 = 1;
+    uint32 app_id                 = 2;
+}
+
+message  GetConfigHookResp {
+    pbch.ConfigHook config_hook   = 1;
 }
 
 message CreateCommitReq {

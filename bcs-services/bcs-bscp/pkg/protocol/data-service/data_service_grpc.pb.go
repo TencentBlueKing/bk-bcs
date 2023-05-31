@@ -10,6 +10,7 @@ import (
 	app "bscp.io/pkg/protocol/core/app"
 	base "bscp.io/pkg/protocol/core/base"
 	commit "bscp.io/pkg/protocol/core/commit"
+	config_hook "bscp.io/pkg/protocol/core/config-hook"
 	config_item "bscp.io/pkg/protocol/core/config-item"
 	content "bscp.io/pkg/protocol/core/content"
 	hook "bscp.io/pkg/protocol/core/hook"
@@ -42,6 +43,9 @@ const (
 	Data_GetConfigItem_FullMethodName                  = "/pbds.Data/GetConfigItem"
 	Data_ListConfigItems_FullMethodName                = "/pbds.Data/ListConfigItems"
 	Data_ListConfigItemCount_FullMethodName            = "/pbds.Data/ListConfigItemCount"
+	Data_CreateConfigHook_FullMethodName               = "/pbds.Data/CreateConfigHook"
+	Data_UpdateConfigHook_FullMethodName               = "/pbds.Data/UpdateConfigHook"
+	Data_GetConfigHook_FullMethodName                  = "/pbds.Data/GetConfigHook"
 	Data_CreateContent_FullMethodName                  = "/pbds.Data/CreateContent"
 	Data_GetContent_FullMethodName                     = "/pbds.Data/GetContent"
 	Data_ListContents_FullMethodName                   = "/pbds.Data/ListContents"
@@ -121,6 +125,10 @@ type DataClient interface {
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*config_item.ConfigItem, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
+	// config hook related interface.
+	CreateConfigHook(ctx context.Context, in *CreateConfigHookReq, opts ...grpc.CallOption) (*CreateResp, error)
+	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	GetConfigHook(ctx context.Context, in *GetConfigHookReq, opts ...grpc.CallOption) (*config_hook.ConfigHook, error)
 	// content related interface.
 	CreateContent(ctx context.Context, in *CreateContentReq, opts ...grpc.CallOption) (*CreateResp, error)
 	GetContent(ctx context.Context, in *GetContentReq, opts ...grpc.CallOption) (*content.Content, error)
@@ -333,6 +341,33 @@ func (c *dataClient) ListConfigItems(ctx context.Context, in *ListConfigItemsReq
 func (c *dataClient) ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error) {
 	out := new(ListConfigItemCountResp)
 	err := c.cc.Invoke(ctx, Data_ListConfigItemCount_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) CreateConfigHook(ctx context.Context, in *CreateConfigHookReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, Data_CreateConfigHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_UpdateConfigHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetConfigHook(ctx context.Context, in *GetConfigHookReq, opts ...grpc.CallOption) (*config_hook.ConfigHook, error) {
+	out := new(config_hook.ConfigHook)
+	err := c.cc.Invoke(ctx, Data_GetConfigHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -864,6 +899,10 @@ type DataServer interface {
 	GetConfigItem(context.Context, *GetConfigItemReq) (*config_item.ConfigItem, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
+	// config hook related interface.
+	CreateConfigHook(context.Context, *CreateConfigHookReq) (*CreateResp, error)
+	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*base.EmptyResp, error)
+	GetConfigHook(context.Context, *GetConfigHookReq) (*config_hook.ConfigHook, error)
 	// content related interface.
 	CreateContent(context.Context, *CreateContentReq) (*CreateResp, error)
 	GetContent(context.Context, *GetContentReq) (*content.Content, error)
@@ -987,6 +1026,15 @@ func (UnimplementedDataServer) ListConfigItems(context.Context, *ListConfigItems
 }
 func (UnimplementedDataServer) ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemCount not implemented")
+}
+func (UnimplementedDataServer) CreateConfigHook(context.Context, *CreateConfigHookReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateConfigHook not implemented")
+}
+func (UnimplementedDataServer) UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigHook not implemented")
+}
+func (UnimplementedDataServer) GetConfigHook(context.Context, *GetConfigHookReq) (*config_hook.ConfigHook, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConfigHook not implemented")
 }
 func (UnimplementedDataServer) CreateContent(context.Context, *CreateContentReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContent not implemented")
@@ -1434,6 +1482,60 @@ func _Data_ListConfigItemCount_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListConfigItemCount(ctx, req.(*ListConfigItemCountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_CreateConfigHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateConfigHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CreateConfigHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CreateConfigHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CreateConfigHook(ctx, req.(*CreateConfigHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_UpdateConfigHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateConfigHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).UpdateConfigHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_UpdateConfigHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).UpdateConfigHook(ctx, req.(*UpdateConfigHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetConfigHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetConfigHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetConfigHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetConfigHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetConfigHook(ctx, req.(*GetConfigHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2512,6 +2614,18 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListConfigItemCount",
 			Handler:    _Data_ListConfigItemCount_Handler,
+		},
+		{
+			MethodName: "CreateConfigHook",
+			Handler:    _Data_CreateConfigHook_Handler,
+		},
+		{
+			MethodName: "UpdateConfigHook",
+			Handler:    _Data_UpdateConfigHook_Handler,
+		},
+		{
+			MethodName: "GetConfigHook",
+			Handler:    _Data_GetConfigHook_Handler,
 		},
 		{
 			MethodName: "CreateContent",

@@ -76,38 +76,6 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbase.EmptyResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	if req.Spec.Hook.PreHookId > 0 {
-		getHookReq := &types.GetByPubStateOption{
-			BizID:  req.BizId,
-			HookID: req.Spec.Hook.PreHookId,
-			State:  table.PartialReleased,
-		}
-		release, err := s.dao.HookRelease().GetByPubState(grpcKit, getHookReq)
-		if err != nil {
-			logs.Errorf("update app hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-		req.Spec.Hook.PreHookReleaseId = release.ID
-	} else {
-		req.Spec.Hook.PreHookReleaseId = 0
-	}
-
-	if req.Spec.Hook.PostHookId > 0 {
-		getHookReq := &types.GetByPubStateOption{
-			BizID:  req.BizId,
-			HookID: req.Spec.Hook.PostHookId,
-			State:  table.PartialReleased,
-		}
-		release, err := s.dao.HookRelease().GetByPubState(grpcKit, getHookReq)
-		if err != nil {
-			logs.Errorf("update app hook failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-		req.Spec.Hook.PostHookReleaseId = release.ID
-	} else {
-		req.Spec.Hook.PostHookReleaseId = 0
-	}
-
 	app := &table.App{
 		ID:    req.Id,
 		BizID: req.BizId,

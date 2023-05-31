@@ -17,8 +17,8 @@ import (
 
 var (
 	Q             = new(Query)
-	App           *app
 	Audit         *audit
+	ConfigHook    *configHook
 	Hook          *hook
 	HookRelease   *hookRelease
 	IDGenerator   *iDGenerator
@@ -28,8 +28,8 @@ var (
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
-	App = &Q.App
 	Audit = &Q.Audit
+	ConfigHook = &Q.ConfigHook
 	Hook = &Q.Hook
 	HookRelease = &Q.HookRelease
 	IDGenerator = &Q.IDGenerator
@@ -40,8 +40,8 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:            db,
-		App:           newApp(db, opts...),
 		Audit:         newAudit(db, opts...),
+		ConfigHook:    newConfigHook(db, opts...),
 		Hook:          newHook(db, opts...),
 		HookRelease:   newHookRelease(db, opts...),
 		IDGenerator:   newIDGenerator(db, opts...),
@@ -53,8 +53,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 type Query struct {
 	db *gorm.DB
 
-	App           app
 	Audit         audit
+	ConfigHook    configHook
 	Hook          hook
 	HookRelease   hookRelease
 	IDGenerator   iDGenerator
@@ -67,8 +67,8 @@ func (q *Query) Available() bool { return q.db != nil }
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:            db,
-		App:           q.App.clone(db),
 		Audit:         q.Audit.clone(db),
+		ConfigHook:    q.ConfigHook.clone(db),
 		Hook:          q.Hook.clone(db),
 		HookRelease:   q.HookRelease.clone(db),
 		IDGenerator:   q.IDGenerator.clone(db),
@@ -88,8 +88,8 @@ func (q *Query) WriteDB() *Query {
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:            db,
-		App:           q.App.replaceDB(db),
 		Audit:         q.Audit.replaceDB(db),
+		ConfigHook:    q.ConfigHook.replaceDB(db),
 		Hook:          q.Hook.replaceDB(db),
 		HookRelease:   q.HookRelease.replaceDB(db),
 		IDGenerator:   q.IDGenerator.replaceDB(db),
@@ -99,8 +99,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 }
 
 type queryCtx struct {
-	App           IAppDo
 	Audit         IAuditDo
+	ConfigHook    IConfigHookDo
 	Hook          IHookDo
 	HookRelease   IHookReleaseDo
 	IDGenerator   IIDGeneratorDo
@@ -110,8 +110,8 @@ type queryCtx struct {
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		App:           q.App.WithContext(ctx),
 		Audit:         q.Audit.WithContext(ctx),
+		ConfigHook:    q.ConfigHook.WithContext(ctx),
 		Hook:          q.Hook.WithContext(ctx),
 		HookRelease:   q.HookRelease.WithContext(ctx),
 		IDGenerator:   q.IDGenerator.WithContext(ctx),

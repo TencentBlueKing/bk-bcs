@@ -13,6 +13,7 @@ limitations under the License.
 package dao
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -20,7 +21,6 @@ import (
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -53,15 +53,12 @@ type App interface {
 	Delete(kit *kit.Kit, app *table.App) error
 	// ListAppMetaForCache list app's basic meta info.
 	ListAppMetaForCache(kt *kit.Kit, bizID uint32, appID []uint32) (map[ /*appID*/ uint32]*types.AppCacheMeta, error)
-	// UpdateAppHook
-	UpdateAppHook(kit *kit.Kit, g *table.App) error
 }
 
 var _ App = new(appDao)
 
 type appDao struct {
 	orm      orm.Interface
-	genQ     *gen.Query
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
 	auditDao AuditDao
@@ -155,13 +152,14 @@ func (ap *appDao) ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*tab
 	}
 
 	group := &table.Group{}
-	var getGroupSqlSentence []string
-	getGroupSqlSentence = append(getGroupSqlSentence, "SELECT ", table.GroupColumns.NamedExpr(),
-		" FROM "+table.GroupTable.Name()+" WHERE biz_id = ", strconv.Itoa(int(bizID)),
-		" AND id = ", strconv.Itoa(int(groupID)))
-	getGroupSql := filter.SqlJoint(getGroupSqlSentence)
+	var sqlBuf bytes.Buffer
+	sqlBuf.WriteString("SELECT ")
+	sqlBuf.WriteString(table.GroupColumns.NamedExpr())
+	sqlBuf.WriteString(" FROM ")
+	sqlBuf.WriteString(table.GroupTable.Name())
+	sqlBuf.WriteString(" WHERE biz_id = ? AND id = ?")
 
-	err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, getGroupSql)
+	err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, sqlBuf.String(), bizID, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -267,8 +265,8 @@ func (ap *appDao) Update(kit *kit.Kit, app *table.App) error {
 	if err := app.ValidateUpdate(updateApp.Spec.ConfigType); err != nil {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
-	opts := orm.NewFieldOptions().AddBlankedFields("memo", "pre_hook_id", "pre_hook_release_id", "post_hook_id",
-		"post_hook_release_id").AddIgnoredFields("id", "biz_id")
+
+	opts := orm.NewFieldOptions().AddBlankedFields("memo").AddIgnoredFields("id", "biz_id")
 	expr, toUpdate, err := orm.RearrangeSQLDataWithOption(app, opts)
 	if err != nil {
 		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)
@@ -402,25 +400,30 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 
 func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, error) {
 
-	m := ap.genQ.App
-	q := ap.genQ.App.WithContext(kit.Ctx)
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ",
+		table.AppTable.Name(), " WHERE id = ", strconv.Itoa(int(appID)), " AND biz_id = ", strconv.Itoa(int(bizID)))
+	sql := filter.SqlJoint(sqlSentence)
 
-	app, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(appID)).Take()
+	one := new(table.App)
+	err := ap.orm.Do(ap.sd.MustSharding(bizID)).Get(kit.Ctx, one, sql)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get app details failed, err: %v", err)
 	}
-	return app, nil
 
+	return one, nil
 }
 
 // GetByID 通过 AppId 查询
 func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
-
-	m := ap.genQ.App
-	q := ap.genQ.App.WithContext(kit.Ctx)
-	one, err := q.Where(m.ID.Eq(appID)).Take()
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
+		" WHERE id = ", strconv.Itoa(int(appID)))
+	expr := filter.SqlJoint(sqlSentence)
+	one := new(table.App)
+	err := ap.orm.Do(ap.sd.Admin().DB()).Get(kit.Ctx, one, expr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get app details failed, err: %v", err)
 	}
 
 	return one, nil
@@ -516,61 +519,4 @@ func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32
 	}
 
 	return meta, nil
-}
-
-func (ap *appDao) UpdateAppHookWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.App) error {
-
-	m := ap.genQ.App
-
-	_, err := tx.WithContext(kit.Ctx).App.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).Select(
-		m.PreHookID,
-		m.PreHookReleaseID,
-		m.PostHookID,
-		m.PostHookReleaseID,
-		m.Reviser).Updates(g)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (ap *appDao) UpdateAppHook(kit *kit.Kit, g *table.App) error {
-
-	if err := g.ValidateUpdateAppHook(); err != nil {
-		return err
-	}
-
-	m := ap.genQ.App
-
-	// 更新操作, 获取当前记录做审计
-	q := ap.genQ.App.WithContext(kit.Ctx)
-	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.BizID)).Take()
-	if err != nil {
-		return err
-	}
-	ad := ap.auditDao.DecoratorV2(kit, g.BizID).PrepareUpdate(g, oldOne)
-
-	// 多个使用事务处理
-	updateTx := func(tx *gen.Query) error {
-		q = tx.App.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).Select(
-			m.PreHookID,
-			m.PreHookReleaseID,
-			m.PostHookID,
-			m.PostHookReleaseID,
-			m.Reviser).Updates(g); err != nil {
-			return err
-		}
-
-		if err := ad.Do(tx); err != nil {
-			return err
-		}
-		return nil
-	}
-	if err := ap.genQ.Transaction(updateTx); err != nil {
-		return err
-	}
-
-	return nil
 }

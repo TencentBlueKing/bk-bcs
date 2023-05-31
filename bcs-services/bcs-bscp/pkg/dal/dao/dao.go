@@ -55,6 +55,7 @@ type Set interface {
 	Healthz() error
 	Credential() Credential
 	CredentialScope() CredentialScope
+	ConfigHook() ConfigHook
 }
 
 // NewDaoSet create the DAO set instance.
@@ -144,7 +145,6 @@ func (s *set) ID() IDGenInterface {
 func (s *set) App() App {
 	return &appDao{
 		orm:      s.orm,
-		genQ:     s.genQ,
 		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
@@ -363,6 +363,15 @@ func (s *set) CredentialScope() CredentialScope {
 	return &credentialScopeDao{
 		orm:      s.orm,
 		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+	}
+}
+
+// ConfigHook returns the configHook's DAO
+func (s *set) ConfigHook() ConfigHook {
+	return &configHookDao{
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 	}
