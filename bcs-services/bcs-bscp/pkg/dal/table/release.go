@@ -105,8 +105,7 @@ var ReleaseSpecColumnDescriptor = ColumnDescriptors{
 	{Column: "publish_num", NamedC: "publish_num", Type: enumor.Numeric},
 }
 
-// ReleaseSpec defines all the specifics related with a release, which is
-// set by user.
+// ReleaseSpec defines all the specifics related with a release, which is set by user.
 type ReleaseSpec struct {
 	Name       string       `db:"name" json:"name"`
 	Memo       string       `db:"memo" json:"memo"`

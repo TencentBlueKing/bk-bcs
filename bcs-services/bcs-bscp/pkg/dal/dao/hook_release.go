@@ -51,6 +51,7 @@ type HookRelease interface {
 	PublishNumPlusOneWithTx(kit *kit.Kit, tx *gen.Query) error
 }
 
+// HookReleaseOption defines all the needed infos to HookRelease a resource.
 type HookReleaseOption struct {
 	// resource's transaction infos.
 	Txn *sqlx.Tx

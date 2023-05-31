@@ -40,12 +40,14 @@ func (opt *ListHookReleasesOption) Validate(po *PageOption) error {
 	return nil
 }
 
+// GetByPubStateOption defines options to get hr by PubState
 type GetByPubStateOption struct {
 	BizID  uint32
 	HookID uint32
 	State  table.ReleaseStatus
 }
 
+// Validate the get ByPubState option
 func (opt *GetByPubStateOption) Validate() error {
 	if opt.BizID <= 0 {
 		return errors.New("invalid biz id, should >= 1")

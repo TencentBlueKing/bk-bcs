@@ -53,6 +53,7 @@ type ConfigHookSpec struct {
 	PostHookReleaseID uint32 `json:"post_hook_release_id" gorm:"post_hook_release_id"`
 }
 
+// ConfigHookAttachment defines the ConfigHook attachments.
 type ConfigHookAttachment struct {
 	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
 	AppID uint32 `json:"app_id" gorm:"column:app_id"`
