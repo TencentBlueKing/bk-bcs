@@ -114,6 +114,7 @@ type ReleaseSpec struct {
 	Hook       *ReleaseHook `db:"app_hook" json:"hook" gorm:"embedded"`
 }
 
+// ReleaseHook is a resource's resource hook
 type ReleaseHook struct {
 	PreHookID         uint32 `json:"pre_hook_id" gorm:"pre_hook_id"`
 	PreHookReleaseID  uint32 `json:"pre_hook_release_id" gorm:"pre_hook_release_id"`
