@@ -13,16 +13,15 @@ limitations under the License.
 package service
 
 import (
-	"context"
-	"fmt"
-	"time"
-
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbch "bscp.io/pkg/protocol/core/config-hook"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/types"
+	"context"
+	"fmt"
 )
 
 // CreateConfigHook create configHook.
@@ -30,7 +29,35 @@ func (s *Service) CreateConfigHook(ctx context.Context, req *pbds.CreateConfigHo
 	kt := kit.FromGrpcContext(ctx)
 
 	if _, err := s.dao.ConfigHook().GetByAppID(kt, req.Attachment.BizId, req.Attachment.AppId); err == nil {
-		return nil, fmt.Errorf("configHook id %d already exists", req.Attachment.AppId)
+		return nil, fmt.Errorf("configHook app_id %d already exists", req.Attachment.AppId)
+	}
+
+	if req.Spec.PreHookId > 0 {
+		opt := &types.GetByPubStateOption{
+			BizID:  req.Attachment.BizId,
+			HookID: req.Spec.PreHookId,
+			State:  table.PartialReleased,
+		}
+		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
+		if err != nil {
+			logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		req.Spec.PreHookReleaseId = hr.ID
+	}
+
+	if req.Spec.PostHookId > 0 {
+		opt := &types.GetByPubStateOption{
+			BizID:  req.Attachment.BizId,
+			HookID: req.Spec.PostHookId,
+			State:  table.PartialReleased,
+		}
+		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
+		if err != nil {
+			logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		req.Spec.PostHookReleaseId = hr.ID
 	}
 
 	spec, err := req.Spec.ConfigHookSpec()
@@ -38,15 +65,12 @@ func (s *Service) CreateConfigHook(ctx context.Context, req *pbds.CreateConfigHo
 		logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	now := time.Now()
 	hook := &table.ConfigHook{
 		Spec:       spec,
 		Attachment: req.Attachment.ConfigHookAttachment(),
 		Revision: &table.Revision{
-			Creator:   kt.User,
-			Reviser:   kt.User,
-			CreatedAt: now,
-			UpdatedAt: now,
+			Creator: kt.User,
+			Reviser: kt.User,
 		},
 	}
 	id, err := s.dao.ConfigHook().Create(kt, hook)
@@ -65,19 +89,51 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 
 	kt := kit.FromGrpcContext(ctx)
 
+	if req.Spec.PreHookId > 0 {
+		opt := &types.GetByPubStateOption{
+			BizID:  req.Attachment.BizId,
+			HookID: req.Spec.PreHookId,
+			State:  table.PartialReleased,
+		}
+		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
+		if err != nil {
+			logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		req.Spec.PreHookReleaseId = hr.ID
+	} else {
+		req.Spec.PreHookId = 0
+		req.Spec.PreHookReleaseId = 0
+	}
+
+	if req.Spec.PostHookId > 0 {
+		opt := &types.GetByPubStateOption{
+			BizID:  req.Attachment.BizId,
+			HookID: req.Spec.PostHookId,
+			State:  table.PartialReleased,
+		}
+		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
+		if err != nil {
+			logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		req.Spec.PostHookReleaseId = hr.ID
+	} else {
+		req.Spec.PostHookId = 0
+		req.Spec.PostHookReleaseId = 0
+	}
+
 	spec, err := req.Spec.ConfigHookSpec()
 	if err != nil {
 		logs.Errorf("get ConfigHookSpec spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	now := time.Now()
 	hook := &table.ConfigHook{
 		ID:         req.Id,
 		Spec:       spec,
 		Attachment: req.Attachment.ConfigHookAttachment(),
 		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
+			Reviser: kt.User,
 		},
 	}
 	if err := s.dao.ConfigHook().Update(kt, hook); err != nil {

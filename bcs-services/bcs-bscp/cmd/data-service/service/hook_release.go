@@ -14,7 +14,7 @@ package service
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -31,10 +31,14 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 	req *pbds.CreateHookReleaseReq) (*pbds.CreateResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
-	_, err := s.dao.Hook().GetByID(kt, req.Attachment.BizId, req.Attachment.HookId)
-	if err != nil {
-		logs.Errorf("hook (%d) does not exist, err: %v, rid: %s", req.Attachment.HookId, err, kt.Rid)
+
+	if _, err := s.dao.Hook().GetByID(kt, req.Attachment.BizId, req.Attachment.HookId); err != nil {
+		logs.Errorf("get hook (%d) failed, err: %v, rid: %s", req.Attachment.HookId, err, kt.Rid)
 		return nil, err
+	}
+
+	if _, err := s.dao.HookRelease().GetByName(kt, req.Attachment.BizId, req.Attachment.HookId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
 	}
 
 	spec, err := req.Spec.HookReleaseSpec()
@@ -42,15 +46,12 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 		logs.Errorf("get HookReleaseSpec spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	now := time.Now()
 	hookRelease := &table.HookRelease{
 		Spec:       spec,
 		Attachment: req.Attachment.HookReleaseAttachment(),
 		Revision: &table.Revision{
-			Creator:   kt.User,
-			Reviser:   kt.User,
-			CreatedAt: now,
-			UpdatedAt: now,
+			Creator: kt.User,
+			Reviser: kt.User,
 		},
 	}
 
@@ -142,7 +143,6 @@ func (s *Service) DeleteHookRelease(ctx context.Context,
 func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookReleaseReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
-	now := time.Now()
 	HookRelease := &table.HookRelease{
 		ID: req.Id,
 		Attachment: &table.HookReleaseAttachment{
@@ -151,8 +151,7 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 		},
 		Spec: &table.HookReleaseSpec{},
 		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
+			Reviser: kt.User,
 		},
 	}
 

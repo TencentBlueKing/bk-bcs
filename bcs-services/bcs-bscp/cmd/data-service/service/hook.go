@@ -14,7 +14,7 @@ package service
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -29,18 +29,19 @@ import (
 func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	if _, err := s.dao.Hook().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
+	}
+
 	spec, err := req.Spec.HookSpec()
 	if err != nil {
 		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	now := time.Now()
 	res := &table.Revision{
-		Creator:   kt.User,
-		Reviser:   kt.User,
-		CreatedAt: now,
-		UpdatedAt: now,
+		Creator: kt.User,
+		Reviser: kt.User,
 	}
 
 	hook := &table.Hook{
@@ -52,7 +53,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 	release := &table.HookRelease{
 		Spec: &table.HookReleaseSpec{
 			Name:     req.Spec.ReleaseName,
-			Contents: req.Spec.Content,
+			Content:  req.Spec.Content,
 			PubState: table.NotReleased,
 		},
 		Attachment: &table.HookReleaseAttachment{
@@ -80,6 +81,8 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 	opt := &types.ListHooksOption{
 		BizID: req.BizId,
 		Name:  req.Name,
+		Tag:   req.Tag,
+		All:   req.All,
 		Page:  page,
 	}
 	if err := opt.Validate(types.DefaultPageOption); err != nil {
@@ -108,33 +111,6 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		Details: hooks,
 	}
 	return resp, nil
-}
-
-// UpdateHook update hook.
-func (s *Service) UpdateHook(ctx context.Context, req *pbds.UpdateHookReq) (*pbbase.EmptyResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	spec, err := req.Spec.HookSpec()
-	if err != nil {
-		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	now := time.Now()
-	hook := &table.Hook{
-		ID:         req.Id,
-		Spec:       spec,
-		Attachment: req.Attachment.HookAttachment(),
-		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
-		},
-	}
-	if err := s.dao.Hook().Update(kt, hook); err != nil {
-		logs.Errorf("update hook failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	return new(pbbase.EmptyResp), nil
 }
 
 // DeleteHook delete hook.

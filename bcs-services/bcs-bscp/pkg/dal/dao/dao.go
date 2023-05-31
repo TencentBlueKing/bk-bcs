@@ -71,7 +71,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		return nil, err
 	}
 
-	if err := adminDB.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
+	if e := adminDB.Use(tracing.NewPlugin(tracing.WithoutMetrics())); e != nil {
 		return nil, err
 	}
 
@@ -80,7 +80,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	// 	&prometheus.MySQL{VariableNames: []string{"Threads_running"}},
 	// }
 
-	if err := adminDB.Use(prometheus.New(prometheus.Config{})); err != nil {
+	if e := adminDB.Use(prometheus.New(prometheus.Config{})); e != nil {
 		return nil, err
 	}
 

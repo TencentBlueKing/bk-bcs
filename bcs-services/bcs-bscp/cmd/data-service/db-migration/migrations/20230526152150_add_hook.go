@@ -20,6 +20,49 @@ func init() {
 
 func mig20230526152150GormTestUp(tx *gorm.DB) error {
 
+	// Hook 脚本
+	type Hook struct {
+		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
+
+		// Spec is specifics of the resource defined with user
+		Name       string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_name,priority:2"`
+		Memo       string `gorm:"type:varchar(256) default ''"`
+		PublishNum uint   `gorm:"type:bigint(1) unsigned not null"`
+		Type       string `gorm:"type:varchar(64) not null"`
+		Tag        string `gorm:"type:varchar(64) not null"`
+
+		// Attachment is attachment info of the resource
+		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_name,priority:1"`
+
+		// Revision is revision info of the resource
+		Creator   string    `gorm:"type:varchar(64) not null"`
+		Reviser   string    `gorm:"type:varchar(64) not null"`
+		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
+	// HookRelease 脚本版本
+	type HookRelease struct {
+		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
+
+		// Spec is specifics of the resource defined with user
+		Name       string `gorm:"type:varchar(255) not null;;uniqueIndex:idx_bizID_releaseName,priority:2"`
+		Memo       string `gorm:"type:varchar(256) default ''"`
+		PublishNum uint   `gorm:"type:bigint(1) unsigned not null"`
+		PubState   string `gorm:"type:varchar(64) not null"`
+		Content    string `gorm:"type:longtext"`
+
+		// Attachment is attachment info of the resource
+		BizID  uint `gorm:"type:bigint(1) unsigned not null"`
+		HookID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_releaseName,priority:1"`
+
+		// Revision is revision info of the resource
+		Creator   string    `gorm:"type:varchar(64) not null"`
+		Reviser   string    `gorm:"type:varchar(64) not null"`
+		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
 	// ConfigHook : 配置脚本
 	type ConfigHook struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
@@ -31,7 +74,7 @@ func mig20230526152150GormTestUp(tx *gorm.DB) error {
 		PostHookReleaseID uint `gorm:"type:bigint(1) unsigned not null"`
 
 		// Attachment is attachment info of the resource
-		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_AppID:2"`
+		BizID uint `gorm:"type:bigint(1) unsigned not null"`
 		APPID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_AppID:1"`
 
 		// Revision is revision info of the resource
@@ -58,12 +101,14 @@ func mig20230526152150GormTestUp(tx *gorm.DB) error {
 	}
 
 	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").
-		AutoMigrate(&ConfigHook{}, &Release{}); err != nil {
+		AutoMigrate(&Hook{}, &HookRelease{}, &ConfigHook{}, &Release{}); err != nil {
 		return err
 	}
 
 	now := time.Now()
 	if result := tx.Create([]IDGenerators{
+		{Resource: "hooks", MaxID: 0, UpdatedAt: now},
+		{Resource: "hook_releases", MaxID: 0, UpdatedAt: now},
 		{Resource: "config_hooks", MaxID: 0, UpdatedAt: now},
 	}); result.Error != nil {
 		return result.Error
@@ -74,6 +119,50 @@ func mig20230526152150GormTestUp(tx *gorm.DB) error {
 
 func mig20230526152150GormDown(tx *gorm.DB) error {
 
+	// Hook 脚本
+	type Hook struct {
+		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
+
+		// Spec is specifics of the resource defined with user
+		Name       string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_name,priority:2"`
+		Meme       string `gorm:"type:varchar(64) not null"`
+		PublishNum uint   `gorm:"type:bigint(1) unsigned not null"`
+		Type       string `gorm:"type:varchar(64) not null"`
+		Tag        string `gorm:"type:varchar(64) not null"`
+
+		// Attachment is attachment info of the resource
+		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_name,priority:1"`
+
+		// Revision is revision info of the resource
+		Creator   string    `gorm:"type:varchar(64) not null"`
+		Reviser   string    `gorm:"type:varchar(64) not null"`
+		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
+	// HookRelease 脚本版本
+	type HookRelease struct {
+		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
+
+		// Spec is specifics of the resource defined with user
+		Name       string `gorm:"type:varchar(64) not null;uniqueIndex:idx_bizID_releaseName,priority:2"`
+		Meme       string `gorm:"type:varchar(64) not null"`
+		PublishNum uint   `gorm:"type:bigint(1) unsigned not null"`
+		PubState   string `gorm:"type:varchar(64) not null"`
+		Content    string `gorm:"type:longtext"`
+
+		// Attachment is attachment info of the resource
+		BizID  uint `gorm:"type:bigint(1) unsigned not null"`
+		HookID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_releaseName,priority:1"`
+
+		// Revision is revision info of the resource
+		Creator   string    `gorm:"type:varchar(64) not null"`
+		Reviser   string    `gorm:"type:varchar(64) not null"`
+		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
+	// ConfigHook : 配置脚本
 	type ConfigHook struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
@@ -85,7 +174,7 @@ func mig20230526152150GormDown(tx *gorm.DB) error {
 
 		// Attachment is attachment info of the resource
 		BizID uint `gorm:"type:bigint(1) unsigned not null"`
-		APPID uint `gorm:"type:bigint(1) unsigned not null uniqueIndex:idx_AppID:1"`
+		APPID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_AppID:1"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`
@@ -128,11 +217,16 @@ func mig20230526152150GormDown(tx *gorm.DB) error {
 	}
 
 	if err := tx.Migrator().
-		DropTable("template_spaces", "templates", "template_releases", "template_sets"); err != nil {
+		DropTable("hooks", "hook_releases", "config_hooks"); err != nil {
 		return err
 	}
 
-	if result := tx.Where("resource = ?", "config_hooks").Delete(&IDGenerators{}); result.Error != nil {
+	var resources = []string{
+		"hooks",
+		"hook_releases",
+		"config_hooks",
+	}
+	if result := tx.Where("resource IN ?", resources).Delete(&IDGenerators{}); result.Error != nil {
 		return result.Error
 	}
 

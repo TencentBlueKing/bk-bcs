@@ -101,6 +101,8 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 	r := &pbds.ListHooksReq{
 		BizId: grpcKit.BizID,
 		Name:  req.Name,
+		Tag:   req.Tag,
+		All:   req.All,
 		Start: req.Start,
 		Limit: req.Limit,
 	}

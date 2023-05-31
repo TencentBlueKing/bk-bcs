@@ -82,7 +82,6 @@ service Data {
     // hook related interface.
     rpc CreateHook(CreateHookReq) returns (CreateResp) {}
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
-    rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
     rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
     rpc GetHook(GetHookReq) returns (pbhook.Hook) {}
@@ -491,8 +490,10 @@ message GetHookReq {
 message ListHooksReq {
     uint32 biz_id = 1;
     string name   = 2;
-    uint32 start  = 3;
-    uint32 limit  = 4;
+    string tag    = 3;
+    bool   all    = 5;
+    uint32 start  = 6;
+    uint32 limit  = 7;
 }
 
 message ListHooksResp {
@@ -502,12 +503,6 @@ message ListHooksResp {
 
 message ListHookTagResp {
     repeated pbhook.CountHookTags details = 1;
-}
-
-message UpdateHookReq {
-    uint32                id         = 1;
-    pbhook.HookAttachment attachment = 2;
-    pbhook.HookSpec       spec       = 3;
 }
 
 message DeleteHookReq {

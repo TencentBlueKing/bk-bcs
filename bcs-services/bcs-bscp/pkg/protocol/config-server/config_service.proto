@@ -137,7 +137,7 @@ service Config {
     }
     rpc GetConfigHook(GetConfigHookReq) returns (GetConfigHookResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_hook"
+            get : "/api/v1/config/get/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}"
         };
     }
 
@@ -222,55 +222,55 @@ service Config {
 
     rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/hooks"
+            post : "/api/v1/config/create/hook/hook/biz_id/{biz_id}"
             body : "*"
         };
     }
     rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
         option (google.api.http) = {
-            delete : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+            delete : "/api/v1/config/delete/hook/hook/biz_id/{biz_id}"
         };
     }
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/list/biz/{biz_id}/hooks"
+            get :  "/api/v1/config/list/hook/hook/biz_id/{biz_id}"
         };
     }
     rpc ListHookTags(ListHookTagsReq) returns (ListHookTagsResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/list/biz/{biz_id}/hook/tags"
+            get :  "/api/v1/config/list/hook/hook_tag/biz_id/{biz_id}"
+        };
+    }
+    rpc GetHook(GetHookReq) returns (pbhook.Hook){
+        option (google.api.http) = {
+            get :  "/api/v1/config/get/hook/hook/biz_id/{biz_id}"
         };
     }
 
     rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateHookReleaseResp){
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/hook/{hook_id}/release"
+            post : "/api/v1/config/create/hook_release/hook_release/hook_id/{hook_id}/biz_id/{biz_id}"
             body : "*"
         };
     }
     rpc ListHookRelease(ListHookReleaseReq) returns (ListHookReleaseResp){
         option (google.api.http) = {
-            get : "/api/v1/config/list/biz/{biz_id}/hook/{hook_id}/release"
+            get : "/api/v1/config/list/hook_release/hook_release/hook_id/{hook_id}/biz_id/{biz_id}"
         };
     }
     rpc DeleteHookRelease(DeleteHookReleaseReq) returns (DeleteHookReleaseResp){
         option (google.api.http) = {
-            delete : "/api/v1/config/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
+            delete : "/api/v1/config/delete/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}"
         };
     }
     rpc PublishHookRelease(PublishHookReleaseReq) returns (PublishHookReleaseResp){
         option (google.api.http) = {
-            put : "/api/v1/config/publish/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
-        };
-    }
-    rpc GetHook(GetHookReq) returns (pbhook.Hook){
-        option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+            put : "/api/v1/config/publish/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}"
         };
     }
     rpc GetHookRelease(GetHookReleaseReq) returns (pbhr.HookRelease) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/hook/{hook_id}/release/{release_id}"
+            get : "/api/v1/config/get/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}"
         };
     }
 
@@ -874,8 +874,10 @@ message DeleteHookResp {}
 message ListHooksReq {
     uint32 biz_id = 1;
     string name   = 2;
-    uint32 start  = 3;
-    uint32 limit  = 4;
+    string tag    = 3;
+    bool   all    = 4;
+    uint32 start  = 5;
+    uint32 limit  = 6;
 }
 
 message ListHooksResp {

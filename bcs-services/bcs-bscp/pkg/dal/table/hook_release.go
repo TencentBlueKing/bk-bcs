@@ -13,20 +13,10 @@ limitations under the License.
 package table
 
 import (
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/validator"
 	"errors"
+
+	"bscp.io/pkg/criteria/validator"
 )
-
-// HookReleaseColumns defines Hook's columns
-var HookReleaseColumns = mergeColumns(HookReleaseColumnDescriptor)
-
-// HookReleaseColumnDescriptor is Hook's column descriptors.
-var HookReleaseColumnDescriptor = mergeColumnDescriptors("",
-	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
-	mergeColumnDescriptors("spec", HookReleaseSpecColumnDescriptor),
-	mergeColumnDescriptors("attachment", HookReleaseAttachmentColumnDescriptor),
-	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
 
 // HookRelease 脚本版本
 type HookRelease struct {
@@ -38,29 +28,12 @@ type HookRelease struct {
 	Revision   *Revision              `json:"revision" gorm:"embedded"`
 }
 
-// HookReleaseSpecColumns defines HookReleaseSpec's columns
-var HookReleaseSpecColumns = mergeColumns(HookSpecColumnDescriptor)
-
-// HookReleaseSpecColumnDescriptor is HookSpec's column descriptors.
-var HookReleaseSpecColumnDescriptor = ColumnDescriptors{
-	{Column: "name", NamedC: "name", Type: enumor.String},
-	{Column: "contents", NamedC: "contents", Type: enumor.String},
-	{Column: "release_log", NamedC: "release_log", Type: enumor.String},
-	{Column: "state", NamedC: "state", Type: enumor.Boolean},
-}
-
-// HookReleaseAttachmentColumnDescriptor is HookReleaseAttachment's column descriptors.
-var HookReleaseAttachmentColumnDescriptor = ColumnDescriptors{
-	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
-	{Column: "hook_id", NamedC: "hook_id", Type: enumor.Numeric},
-}
-
 // HookReleaseSpec defines all the specifics for hook set by user.
 type HookReleaseSpec struct {
 	Name       string        `json:"name" gorm:"column:name"`
 	PublishNum uint32        `json:"publish_num" gorm:"column:publish_num"`
 	PubState   ReleaseStatus `json:"pub_state" gorm:"column:pub_state"`
-	Contents   string        `json:"contents" gorm:"column:contents"`
+	Content    string        `json:"content" gorm:"column:content"`
 	Memo       string        `json:"memo" gorm:"column:memo"`
 }
 

@@ -1,7 +1,8 @@
 package types
 
 import (
-	"bscp.io/pkg/criteria/errf"
+	"errors"
+
 	"bscp.io/pkg/dal/table"
 )
 
@@ -21,15 +22,15 @@ type ListHookReleaseDetails struct {
 // Validate the list release options
 func (opt *ListHookReleasesOption) Validate(po *PageOption) error {
 	if opt.BizID <= 0 {
-		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
+		return errors.New("invalid biz id, should >= 1")
 	}
 
 	if opt.HookID <= 0 {
-		return errf.New(errf.InvalidParameter, "invalid hook id id, should >= 1")
+		return errors.New("invalid hook id id, should >= 1")
 	}
 
 	if opt.Page == nil {
-		return errf.New(errf.InvalidParameter, "page is null")
+		return errors.New("page is null")
 	}
 
 	if err := opt.Page.Validate(po); err != nil {
@@ -47,11 +48,11 @@ type GetByPubStateOption struct {
 
 func (opt *GetByPubStateOption) Validate() error {
 	if opt.BizID <= 0 {
-		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
+		return errors.New("invalid biz id, should >= 1")
 	}
 
 	if opt.HookID <= 0 {
-		return errf.New(errf.InvalidParameter, "invalid hook id id, should >= 1")
+		return errors.New("invalid hook id id, should >= 1")
 	}
 
 	if err := opt.State.Validate(); err != nil {

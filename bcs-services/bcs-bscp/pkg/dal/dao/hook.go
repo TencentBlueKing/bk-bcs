@@ -25,8 +25,6 @@ import (
 type Hook interface {
 	// Create one hook instance.
 	Create(kit *kit.Kit, hook *table.Hook, release *table.HookRelease) (uint32, error)
-	// Update one hook's info.
-	Update(kit *kit.Kit, hook *table.Hook) error
 	// List hooks with options.
 	List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hook, int64, error)
 	// CountHookTag count hook tag
@@ -35,6 +33,8 @@ type Hook interface {
 	Delete(kit *kit.Kit, strategy *table.Hook) error
 	// GetByID get hook only with id.
 	GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error)
+	// GetByName get hook by name
+	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Hook, error)
 }
 
 var _ Hook = new(hookDao)
@@ -91,16 +91,11 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return g.ID, nil
 
-}
-
-// Update one hook instance.
-func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
-	return nil
 }
 
 // List hooks with options.
@@ -109,8 +104,12 @@ func (dao *hookDao) List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hoo
 	m := dao.genQ.Hook
 	q := dao.genQ.Hook.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(opt.BizID), m.Name.Like(fmt.Sprintf("%%%s%%", opt.Name))).
-		FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
+	q = q.Where(m.BizID.Eq(opt.BizID), m.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
+	if !opt.All {
+		q = q.Where(m.Tag.Eq(opt.Tag))
+	}
+
+	result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
 	if err != nil {
 		return nil, 0, err
 	}
@@ -199,6 +198,19 @@ func (dao *hookDao) GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, er
 	q := dao.genQ.Hook.WithContext(kit.Ctx)
 
 	hook, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(hookID)).Take()
+	if err != nil {
+		return nil, err
+	}
+
+	return hook, nil
+}
+
+// GetByName get a Hook by name
+func (dao *hookDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Hook, error) {
+	m := dao.genQ.Hook
+	q := dao.genQ.Hook.WithContext(kit.Ctx)
+
+	hook, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
 		return nil, err
 	}

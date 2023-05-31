@@ -286,13 +286,6 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 			return ab
 		}
 
-	case *table.Hook:
-		hook := updatedTo.(*table.Hook)
-		if err := ab.decorateHookUpdate(hook); err != nil {
-			ab.hitErr = err
-			return ab
-		}
-
 	case *table.Credential:
 		credential := updatedTo.(*table.Credential)
 		if err := ab.decorateCredentialUpdate(credential); err != nil {
@@ -433,26 +426,6 @@ func (ab *AuditBuilder) decorateGroupUpdate(group *table.Group) error {
 	return nil
 }
 
-func (ab *AuditBuilder) decorateHookUpdate(hook *table.Hook) error {
-	ab.toAudit.ResourceID = hook.ID
-
-	preHook, err := ab.getHook(hook.ID)
-	if err != nil {
-		return err
-	}
-
-	ab.prev = preHook
-
-	changed, err := parseChangedSpecFields(preHook, hook)
-	if err != nil {
-		ab.hitErr = err
-		return fmt.Errorf("parse hook changed spec field failed, err: %v", err)
-	}
-
-	ab.changed = changed
-	return nil
-}
-
 func (ab *AuditBuilder) decorateCredentialUpdate(credential *table.Credential) error {
 	ab.toAudit.ResourceID = credential.ID
 
@@ -552,15 +525,6 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		}
 		ab.toAudit.ResourceID = group.ID
 		ab.prev = group
-
-	case enumor.Hook:
-		hook, err := ab.getHook(resID)
-		if err != nil {
-			ab.hitErr = err
-			return ab
-		}
-		ab.toAudit.ResourceID = hook.ID
-		ab.prev = hook
 
 	case enumor.CRInstance:
 		cri, err := ab.getCRInstance(resID)
@@ -690,21 +654,6 @@ func (ab *AuditBuilder) getGroup(groupID uint32) (*table.Group, error) {
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get group details failed, err: %v", err)
-	}
-
-	return one, nil
-}
-
-func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.HookColumns.NamedExpr(), " FROM ", table.HookTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(hookID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
-	filter := filter2.SqlJoint(sqlSentence)
-
-	one := new(table.Hook)
-	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
-	if err != nil {
-		return nil, fmt.Errorf("get hook details failed, err: %v", err)
 	}
 
 	return one, nil

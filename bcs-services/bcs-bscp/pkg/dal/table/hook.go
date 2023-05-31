@@ -19,16 +19,6 @@ import (
 	"fmt"
 )
 
-// HookColumns defines Hook's columns
-var HookColumns = mergeColumns(HookColumnDescriptor)
-
-// HookColumnDescriptor is Hook's column descriptors.
-var HookColumnDescriptor = mergeColumnDescriptors("",
-	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
-	mergeColumnDescriptors("spec", HookSpecColumnDescriptor),
-	mergeColumnDescriptors("attachment", HookAttachmentColumnDescriptor),
-	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
-
 // Hook defines a hook for an app to publish.
 // it contains the selector to define the scope of the matched instances.
 type Hook struct {
@@ -150,21 +140,12 @@ func (s HookSpec) ValidateDelete() error {
 	return nil
 }
 
-// HookSpecColumns defines HookSpec's columns
-var HookSpecColumns = mergeColumns(HookSpecColumnDescriptor)
-
-// HookSpecColumnDescriptor is HookSpec's column descriptors.
-var HookSpecColumnDescriptor = ColumnDescriptors{
-	{Column: "name", NamedC: "name", Type: enumor.String},
-	{Column: "type", NamedC: "type", Type: enumor.String},
-	{Column: "tag", NamedC: "tag", Type: enumor.String},
-}
-
 // HookSpec defines all the specifics for hook set by user.
 type HookSpec struct {
 	Name string `json:"name" gorm:"column:name"`
 	// Type is the hook type of hook
-	Type HookType `json:"type" gorm:"column:type"`
+	Type       HookType `json:"type" gorm:"column:type"`
+	PublishNum uint32   `json:"publish_num" gorm:"column:publish_num"`
 	// Tag
 	Tag  string `json:"tag" gorm:"column:tag"`
 	Memo string `json:"memo" gorm:"column:memo"`

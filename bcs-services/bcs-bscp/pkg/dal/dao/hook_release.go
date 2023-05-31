@@ -32,6 +32,8 @@ type HookRelease interface {
 	CreateWithTx(kit *kit.Kit, tx *gen.Query, g *table.HookRelease) (uint32, error)
 	// Get hook release by id
 	Get(kit *kit.Kit, bizID, hookID, id uint32) (*table.HookRelease, error)
+	// GetByName get HookRelease by name
+	GetByName(kit *kit.Kit, bizID, hookID uint32, name string) (*table.HookRelease, error)
 	// List hooks with options.
 	List(kit *kit.Kit, opt *types.ListHookReleasesOption) ([]*table.HookRelease, int64, error)
 	// Delete one strategy instance.
@@ -146,6 +148,19 @@ func (dao *hookReleaseDao) Get(kit *kit.Kit, bizID, hookID, id uint32) (*table.H
 	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
 
 	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.HookID.Eq(hookID), m.ID.Eq(id)).Take()
+	if err != nil {
+		return nil, fmt.Errorf("get hookRelease failed, err: %v", err)
+	}
+
+	return tplSpace, nil
+}
+
+// GetByName get HookRelease by name
+func (dao *hookReleaseDao) GetByName(kit *kit.Kit, bizID, hookID uint32, name string) (*table.HookRelease, error) {
+	m := dao.genQ.HookRelease
+	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
+
+	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.HookID.Eq(hookID), m.Name.Eq(name)).Take()
 	if err != nil {
 		return nil, fmt.Errorf("get hookRelease failed, err: %v", err)
 	}

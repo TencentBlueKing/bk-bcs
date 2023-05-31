@@ -7,7 +7,7 @@ import (
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
-// HookReleaseSpace convert pb TemplateSpace to table TemplateSpace
+// HookReleaseSpace convert pb HookReleaseSpace to table HookReleaseSpace
 func (m *HookRelease) HookReleaseSpace() (*table.HookRelease, error) {
 	if m == nil {
 		return nil, nil
@@ -25,7 +25,7 @@ func (m *HookRelease) HookReleaseSpace() (*table.HookRelease, error) {
 	}, nil
 }
 
-// HookReleaseSpec convert pb TemplateSpaceSpec to table TemplateSpaceSpec
+// HookReleaseSpec convert pb HookReleaseSpace to table HookReleaseSpace
 func (m *HookReleaseSpec) HookReleaseSpec() (*table.HookReleaseSpec, error) {
 	if m == nil {
 		return nil, nil
@@ -35,12 +35,12 @@ func (m *HookReleaseSpec) HookReleaseSpec() (*table.HookReleaseSpec, error) {
 		Name:       m.Name,
 		PublishNum: 0,
 		PubState:   table.NotReleased,
-		Contents:   m.Content,
+		Content:    m.Content,
 		Memo:       m.Memo,
 	}, nil
 }
 
-// PbHookReleaseSpec convert table TemplateSpaceSpec to pb TemplateSpaceSpec
+// PbHookReleaseSpec convert table HookReleaseSpec to pb HookReleaseSpec
 func PbHookReleaseSpec(spec *table.HookReleaseSpec) (*HookReleaseSpec, error) {
 	if spec == nil {
 		return nil, nil
@@ -48,14 +48,14 @@ func PbHookReleaseSpec(spec *table.HookReleaseSpec) (*HookReleaseSpec, error) {
 
 	return &HookReleaseSpec{
 		Name:       spec.Name,
-		Content:    spec.Contents,
+		Content:    spec.Content,
 		PublishNum: spec.PublishNum,
 		PubState:   spec.PubState.String(),
 		Memo:       spec.Memo,
 	}, nil
 }
 
-// HookReleaseAttachment convert pb TemplateSpaceAttachment to table TemplateSpaceAttachment
+// HookReleaseAttachment convert pb HookReleaseAttachment to table HookReleaseAttachment
 func (m *HookReleaseAttachment) HookReleaseAttachment() *table.HookReleaseAttachment {
 	if m == nil {
 		return nil
@@ -67,7 +67,7 @@ func (m *HookReleaseAttachment) HookReleaseAttachment() *table.HookReleaseAttach
 	}
 }
 
-// HookReleaseSpaceAttachment convert table TemplateSpaceAttachment to pb TemplateSpaceAttachment
+// HookReleaseSpaceAttachment convert table HookReleaseAttachment to pb HookReleaseAttachment
 func HookReleaseSpaceAttachment(at *table.HookReleaseAttachment) *HookReleaseAttachment {
 	if at == nil {
 		return nil
@@ -79,7 +79,7 @@ func HookReleaseSpaceAttachment(at *table.HookReleaseAttachment) *HookReleaseAtt
 	}
 }
 
-// PbTemplateSpaces convert table TemplateSpace to pb TemplateSpace
+// PbHookReleaseSpaces convert table HookRelease to pb HookRelease
 func PbHookReleaseSpaces(s []*table.HookRelease) ([]*HookRelease, error) {
 	if s == nil {
 		return make([]*HookRelease, 0), nil
@@ -97,7 +97,7 @@ func PbHookReleaseSpaces(s []*table.HookRelease) ([]*HookRelease, error) {
 	return result, nil
 }
 
-// PbTemplateSpace convert table TemplateSpace to pb TemplateSpace
+// PbHookRelease convert table HookRelease to pb HookRelease
 func PbHookRelease(s *table.HookRelease) (*HookRelease, error) {
 	if s == nil {
 		return nil, nil

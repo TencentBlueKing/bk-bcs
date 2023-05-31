@@ -40,10 +40,8 @@ func (s *Service) CreateConfigHook(ctx context.Context, req *pbcs.CreateConfigHo
 			AppId: req.AppId,
 		},
 		Spec: &pbch.ConfigHookSpec{
-			PreHookId:         0,
-			PreHookReleaseId:  0,
-			PostHookId:        0,
-			PostHookReleaseId: 0,
+			PreHookId:  req.PreHookId,
+			PostHookId: req.PostHookId,
 		},
 	}
 	rp, err := s.client.DS.CreateConfigHook(grpcKit.RpcCtx(), h)

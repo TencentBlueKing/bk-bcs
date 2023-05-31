@@ -32,7 +32,7 @@ func (s *ConfigHook) TableName() string {
 
 // AppID AuditRes interface
 func (s *ConfigHook) AppID() uint32 {
-	return 0
+	return s.Attachment.AppID
 }
 
 // ResID AuditRes interface

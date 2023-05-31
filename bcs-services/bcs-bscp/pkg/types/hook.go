@@ -13,7 +13,8 @@ limitations under the License.
 package types
 
 import (
-	"bscp.io/pkg/criteria/errf"
+	"errors"
+
 	"bscp.io/pkg/dal/table"
 )
 
@@ -21,17 +22,19 @@ import (
 type ListHooksOption struct {
 	BizID uint32    `json:"biz_id"`
 	Name  string    `json:"name"`
+	Tag   string    `json:"tag"`
+	All   bool      `json:"all"`
 	Page  *BasePage `json:"page"`
 }
 
 // Validate the list group options
 func (opt *ListHooksOption) Validate(po *PageOption) error {
 	if opt.BizID <= 0 {
-		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
+		return errors.New("invalid biz id, should >= 1")
 	}
 
 	if opt.Page == nil {
-		return errf.New(errf.InvalidParameter, "page is null")
+		return errors.New("page is null")
 	}
 
 	if err := opt.Page.Validate(po); err != nil {
