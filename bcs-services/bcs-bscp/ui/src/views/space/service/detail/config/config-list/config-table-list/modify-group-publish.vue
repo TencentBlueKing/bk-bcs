@@ -91,7 +91,7 @@
 </script>
 <template>
     <section class="create-version">
-        <bk-button theme="primary" @click="handleOpenSelectGroupPanel">调整分组上线</bk-button>
+        <bk-button v-if="versionData.status.publish_status === 'partial_released'" theme="primary" @click="handleOpenSelectGroupPanel">调整分组上线</bk-button>
         <VersionLayout v-if="openSelectGroupPanel">
             <template #header>
                 <section class="header-wrapper">

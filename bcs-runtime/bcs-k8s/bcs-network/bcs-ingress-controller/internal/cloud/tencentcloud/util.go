@@ -76,6 +76,9 @@ func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressLis
 	if lis.SniSwitch != nil {
 		attr.SniSwitch = int(*lis.SniSwitch)
 	}
+	if lis.KeepaliveEnable != nil {
+		attr.KeepAliveEnable = int(*lis.KeepaliveEnable)
+	}
 	return attr
 }
 

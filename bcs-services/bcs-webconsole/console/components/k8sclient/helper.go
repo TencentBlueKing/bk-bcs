@@ -13,34 +13,14 @@ package k8sclient
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
-// GetEnvByClusterId 获取集群所属环境, 目前通过集群ID前缀判断
-func GetEnvByClusterId(clusterId string) config.BCSClusterEnv {
-	if strings.HasPrefix(clusterId, "BCS-K8S-1") {
-		return config.UatCluster
-	}
-	if strings.HasPrefix(clusterId, "BCS-K8S-2") {
-		return config.DebugCLuster
-	}
-	if strings.HasPrefix(clusterId, "BCS-K8S-4") {
-		return config.ProdEnv
-	}
-	return config.ProdEnv
-}
-
 // GetBCSConfByClusterId 通过集群ID, 获取不同admin token 信息
 func GetBCSConfByClusterId(clusterId string) *config.BCSConf {
-	env := GetEnvByClusterId(clusterId)
-	conf, ok := config.G.BCSEnvMap[env]
-	if ok {
-		return conf
-	}
+	// 只保留prod环境,不再通过集群ID选取不同环境配置
 	// 默认返回bcs配置
 	return config.G.BCS
 }
@@ -48,7 +28,7 @@ func GetBCSConfByClusterId(clusterId string) *config.BCSConf {
 // GetK8SConfigByClusterId 通过集群 ID 获取 K8S Rest Config
 func GetK8SConfigByClusterId(clusterId string) *rest.Config {
 	bcsConf := GetBCSConfByClusterId(clusterId)
-	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.InnerHost, clusterId)
 	config := &rest.Config{
 		Host:        host,
 		BearerToken: bcsConf.Token,

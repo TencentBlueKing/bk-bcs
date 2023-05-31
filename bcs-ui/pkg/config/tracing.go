@@ -21,12 +21,10 @@ type TracingConf struct {
 	ResourceAttrs map[string]string `yaml:"resource_attrs" usage:"attributes of traced service"`
 }
 
-// Init :
-func (c *TracingConf) Init() error {
-	// only for development
+// Init : tracing init
+func (c *TracingConf) Init() {
 	c.Enabled = false
 	c.Token = ""
 	c.Endpoint = ""
 	c.ResourceAttrs = nil
-	return nil
 }

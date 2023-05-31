@@ -37,6 +37,7 @@ type BaseConf struct {
 	RunEnv       string         `yaml:"run_env"` // 前端依赖, 必须是 dev / prod
 	Region       string         `yaml:"region"`
 	Location     *time.Location `yaml:"-"`
+	Domain       string         `yaml:"domain"`
 }
 
 // Init :
@@ -50,6 +51,7 @@ func (c *BaseConf) Init() error {
 	if err != nil {
 		return err
 	}
+	c.Domain = ""
 	return nil
 }
 

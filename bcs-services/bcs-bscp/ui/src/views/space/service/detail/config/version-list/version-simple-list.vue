@@ -28,10 +28,12 @@
     count: 0
   })
 
+  // 监听刷新版本列表标识，处理新增版本场景，默认选中新增的版本
   watch(refreshVersionListFlag, async(val) => {
     if (val) {
+      pagination.value.current = 1
       await getVersionList()
-      const versionDetail = versionList.value.find(item => item.id === versionData.value.id)
+      const versionDetail = versionList.value[1]
       if (versionDetail) {
         handleSelectVersion(versionDetail)
         refreshVersionListFlag.value = false

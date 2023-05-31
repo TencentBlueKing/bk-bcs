@@ -22,34 +22,25 @@ import (
 // BCSClusterEnv xxx
 type BCSClusterEnv string
 
-const (
-	// ProdCluster xxx
-	ProdCluster BCSClusterEnv = "prod" // 正式环境
-	// DebugCLuster xxx
-	DebugCLuster BCSClusterEnv = "debug" // debug 环境
-	// UatCluster xxx
-	UatCluster BCSClusterEnv = "uat" // uat 环境
-)
-
 // BCSConf BCS配置
 type BCSConf struct {
+	InnerHost          string         `yaml:"inner_host"`
 	Host               string         `yaml:"host"`
 	Token              string         `yaml:"token"`
 	InsecureSkipVerify bool           `yaml:"insecure_skip_verify"`
 	JWTPubKey          string         `yaml:"jwt_public_key"`
 	JWTPubKeyObj       *rsa.PublicKey `yaml:"-"`
-	ClusterEnv         BCSClusterEnv  `yaml:"cluster_env"`
 }
 
 // Init xxx
 func (c *BCSConf) Init() error {
 	// only for development
+	c.InnerHost = ""
 	c.Host = ""
 	c.Token = ""
 	c.JWTPubKey = ""
 	c.JWTPubKeyObj = nil
 	c.InsecureSkipVerify = false
-	c.ClusterEnv = ProdCluster
 	return nil
 }
 
@@ -65,4 +56,10 @@ func (c *BCSConf) InitJWTPubKey() error {
 
 	c.JWTPubKeyObj = pubKey
 	return nil
+}
+
+func (c *BCSConf) initInnerHost() {
+	if c.InnerHost == "" {
+		c.InnerHost = c.Host
+	}
 }

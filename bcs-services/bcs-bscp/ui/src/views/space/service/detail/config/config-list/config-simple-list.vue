@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useConfigStore } from '../../../../../../store/config'
   import { IConfigItem, IConfigListQueryParams } from '../../../../../../../types/config'
@@ -19,6 +19,10 @@
   const configList = ref<Array<IConfigItem>>([])
   const configId = ref(0)
   const editDialogShow = ref(false)
+
+  watch(() => versionData.value.id, () => {
+    getListData()
+  })
 
   onMounted(() => {
     getListData()
