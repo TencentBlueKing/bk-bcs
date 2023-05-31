@@ -113,7 +113,7 @@ func GetLangByRequest(r *http.Request, defaultLang string) string {
 	}
 
 	lng, err = getMatchLangByHeader(r.Header.Get("accept-language"))
-	if lng != "" {
+	if err == nil && lng != "" {
 		return lng
 	}
 

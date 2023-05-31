@@ -31,7 +31,6 @@ import (
 const (
 	changelogPath = "CHANGELOG"
 	featurePath   = "frontend/static/features"
-	defaultLang   = "zh_cn" // viper 默认不区分大小写
 )
 
 var changelogNamePattern = regexp.MustCompile(`^(?P<version>v1.\d+.\d+)_(?P<date>[\w-]+).md$`)
@@ -48,6 +47,7 @@ type Feature struct {
 	Content string `json:"content"`
 }
 
+// ReleaseNoteLang map of ReleaseNote
 type ReleaseNoteLang map[language.Tag]ReleaseNote
 
 // ReleaseNote  release_note
