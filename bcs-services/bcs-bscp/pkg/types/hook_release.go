@@ -6,6 +6,7 @@ import (
 	"bscp.io/pkg/dal/table"
 )
 
+// ListHookReleasesOption defines the response details of requested ListHookReleasesOption.
 type ListHookReleasesOption struct {
 	BizID     uint32    `json:"biz_id"`
 	HookID    uint32    `json:"hook_id"`

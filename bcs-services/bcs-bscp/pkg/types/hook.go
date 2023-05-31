@@ -50,6 +50,7 @@ type ListHookDetails struct {
 	Details []*table.Hook `json:"details"`
 }
 
+// HookTagCount defines the response details of requested CountHookTag.
 type HookTagCount struct {
 	Tag    string `db:"tag" json:"tag"`
 	Counts uint32 `db:"counts" json:"counts"`

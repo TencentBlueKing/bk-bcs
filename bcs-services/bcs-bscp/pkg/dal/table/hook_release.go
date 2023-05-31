@@ -93,6 +93,7 @@ func (r *HookRelease) ValidateCreate() error {
 	return nil
 }
 
+// ValidateCreate validate spec when created.
 func (s *HookReleaseSpec) ValidateCreate() error {
 
 	if err := validator.ValidateName(s.Name); err != nil {
@@ -106,6 +107,7 @@ func (s *HookReleaseSpec) ValidateCreate() error {
 	return nil
 }
 
+// Validate validate Attachment.
 func (a HookReleaseAttachment) Validate() error {
 
 	if a.BizID <= 0 {
@@ -150,6 +152,7 @@ func (r HookRelease) ValidateDeleteByHookID() error {
 	return nil
 }
 
+// ValidatePublish validate the Publish
 func (r HookRelease) ValidatePublish() error {
 
 	if r.ID <= 0 {

@@ -75,8 +75,8 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
 	// 多个使用事务处理
 	createTx := func(tx *gen.Query) error {
 		q := tx.Hook.WithContext(kit.Ctx)
-		if err := q.Create(g); err != nil {
-			return err
+		if e := q.Create(g); e != nil {
+			return e
 		}
 
 		_, err = dao.hookReleaseDao.CreateWithTx(kit, tx, release)
@@ -84,13 +84,13 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
 			return err
 		}
 
-		if err := ad.Do(tx); err != nil {
-			return err
+		if e := ad.Do(tx); e != nil {
+			return e
 		}
 
 		return nil
 	}
-	if err := dao.genQ.Transaction(createTx); err != nil {
+	if e := dao.genQ.Transaction(createTx); e != nil {
 		return 0, err
 	}
 
@@ -166,21 +166,21 @@ func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
 	// 多个使用事务处理
 	deleteTx := func(tx *gen.Query) error {
 		q = tx.Hook.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
-			return err
+		if _, e := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); e != nil {
+			return e
 		}
 
 		hookRQ = tx.HookRelease.WithContext(kit.Ctx)
-		if _, err := hookRQ.Where(hookRM.BizID.Eq(g.Attachment.BizID), hookRM.HookID.Eq(g.ID)).Delete(hookRelease); err != nil {
-			return err
+		if _, e := hookRQ.Where(hookRM.BizID.Eq(g.Attachment.BizID), hookRM.HookID.Eq(g.ID)).Delete(hookRelease); e != nil {
+			return e
 		}
 
 		if err = dao.hookReleaseDao.DeleteByHookIDWithTx(kit, tx, hookRelease); err != nil {
 			return err
 		}
 
-		if err := ad.Do(tx); err != nil {
-			return err
+		if e := ad.Do(tx); e != nil {
+			return e
 		}
 		return nil
 	}
