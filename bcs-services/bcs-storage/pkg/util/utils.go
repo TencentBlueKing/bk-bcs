@@ -15,8 +15,10 @@ package util
 
 import (
 	"encoding/json"
+	"hash/fnv"
 	"reflect"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -111,4 +113,20 @@ func StructToStruct(obj interface{}, target interface{}, debugMsg string) error 
 		return errors.Wrapf(err, "json to struct failed. %s", debugMsg)
 	}
 	return nil
+}
+
+// HashString2Time 把字符串哈希到给定时间段之间的某个时间段
+func HashString2Time(str string, maxTime time.Duration) time.Duration {
+	if maxTime <= time.Duration(0) {
+		return time.Duration(0)
+	}
+	// 计算字符串的哈希值
+	h := fnv.New64a()
+	h.Write([]byte(str))
+	hash := h.Sum64()
+
+	premill := int64(hash % 1000)
+	randomDuration := maxTime / 1000 * time.Duration(premill)
+
+	return randomDuration
 }

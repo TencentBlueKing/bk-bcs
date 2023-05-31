@@ -1,65 +1,87 @@
 <script setup lang="ts">
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { computed, ref, watch } from 'vue'
   import { Search, AngleDown, AngleUp } from 'bkui-vue/lib/icon'
   import { IGroupToPublish } from '../../../../../../../../../../types/group'
   import { IConfigVersion } from '../../../../../../../../../../types/config'
   import RuleTag from '../../../../../../../groups/components/rule-tag.vue'
 
-  interface treeParentNodeData {
+  interface ITreeParentNodeData {
+    parent: boolean;
     node_id: string;
     name: string;
     count: number;
+    checked: boolean;
+    indeterminate: boolean;
     children: IGroupNodeData[];
   }
   
   interface IGroupNodeData extends IGroupToPublish {
     node_id: string;
+    checked: boolean;
+    disabled: boolean;
   }
 
   // 将全量分组数据按照规则key分组，并记录所有分组节点数据
-  const categorizingData = (data: IGroupToPublish[]) => {
+  const categorizingData = (groupList: IGroupToPublish[]) => {
     const nodeItemList: IGroupNodeData[] = []
-    const treeNodeData: treeParentNodeData[] = []
-    data.forEach(group => {
+    const treeNodeData: ITreeParentNodeData[] = []
+    groupList.forEach(group => {
       if (group.id === 0) { // id为0表示默认分组，在分组节点树中不可选
         return
       }
+      const checked = props.value.findIndex(item => item.id === group.id) > -1
+      const disabled = props.disabled.includes(group.id)
       group.rules.forEach(rule => {
         const nodeId = `${rule.key}_${group.id}` // 用在节点树上做唯一标识
-        const data = treeNodeData.find(item => item.node_id === rule.key)
-        const nodeData = { ...group, node_id: nodeId}
-        if (data) {
-          data.count++
-          data.children.push(nodeData)
+        const parentNode = treeNodeData.find(item => item.node_id === rule.key)
+        const nodeData = { ...group, node_id: nodeId, checked, disabled }
+        if (parentNode) {
+          parentNode.count++
+          parentNode.children.push(nodeData)
         } else {
           treeNodeData.push({
+            parent: true,
             node_id: rule.key,
             name: rule.key,
             count: 1,
+            checked: false,
+            indeterminate: false,
             children: [nodeData]
           })
         }
         nodeItemList.push({ ...nodeData })
       })
     })
+    treeNodeData.forEach(parentNode => {
+      parentNode.checked = isParentNodeChecked(parentNode)
+      parentNode.indeterminate = isParentNodeIndeterminate(parentNode)
+    })
     treeData.value = treeNodeData
     allGroupNode.value = nodeItemList
   }
 
-  const props = withDefaults(defineProps<{
+  // 父级分类节点是否选中
+  const isParentNodeChecked = (node: ITreeParentNodeData) => {
+    return node.children.length > 0 && node.children.every(group => group.checked)
+  }
+
+  // 父级分类节点是否半选
+  const isParentNodeIndeterminate = (node: ITreeParentNodeData) => {
+    return node.children.length > 0 && !node.children.every(group => group.checked) && node.children.some(group => group.checked)
+  }
+
+  const props = defineProps<{
     groupListLoading: boolean;
     groupList: IGroupToPublish[];
     versionListLoading: boolean;
     versionList: IConfigVersion[];
+    disabled: number[]; // 调整分组上线时，【选择分组上线】已选择分组不可取消，【排除分组上线】已选择分组不可勾选
     value: IGroupToPublish[];
-  }>(), {
-    groupList: () => [],
-    versionList: () => []
-  })
+  }>()
 
   const emits = defineEmits(['change'])
 
-  const treeData = ref<{ name: string; count: number; children: IGroupNodeData[] }[]>([])
+  const treeData = ref<ITreeParentNodeData[]>([])
   const allGroupNode = ref<IGroupNodeData[]>([]) // 树中所有的分组叶子节点
   const versionSelectorOpen = ref(false)
   const searchStr = ref('')
@@ -78,50 +100,26 @@
   }, { immediate: true })
 
   // 选中小组变更
-  watch(() => props.value, (newVal, oldVal) => {
-    console.log('newVal: ', newVal.map(item => item.id))
-    if (oldVal) {
-      console.log('oldVal: ',  oldVal.map(item => item.id))
-    }
-    
-    // tree组件UI上选中节点
-    newVal.forEach(checkedGroupItem => {
-      const groupNodes = allGroupNode.value.filter(node => node.id === checkedGroupItem.id)
-      groupNodes.forEach(node => {
-        treeRef.value.setChecked(node.node_id, true)
+  watch(() => props.value, val => {
+    const ids = val.map(item => item.id)
+    treeData.value.forEach(parentNode => {
+      parentNode.children.forEach(node => {
+        node.checked = ids.includes(node.id)
       })
+      parentNode.checked = isParentNodeChecked(parentNode)
+      parentNode.indeterminate = isParentNodeIndeterminate(parentNode)
     })
-    // tree组件UI上取消选中节点
-    if (oldVal) {
-      oldVal.forEach(group => {
-        if (!newVal.find(item => item.id === group.id)) {
-          const groupNodes = allGroupNode.value.filter(node => node.id === group.id)
-          groupNodes.forEach(node => {
-            treeRef.value.setChecked(node.node_id, false)
-          })
-        }
-      })
-    }
-  })
-
-  onMounted(() => {
-    if (props.value.length > 0) {
-      // tree组件UI上选中节点
-      props.value.forEach(group => {
-        const groupNodes = allGroupNode.value.filter(node => node.id === group.id)
-        groupNodes.forEach(node => {
-          treeRef.value.setChecked(node.node_id, true)
-        })
-      })
-    }
   })
 
   // 全选
   const handleSelectAll = () => {
     const groupList: IGroupToPublish[] = []
-    allGroupNode.value.forEach(node => {
-      if (!groupList.find(group => group.id === node.id)) {
-        groupList.push(node)
+    props.groupList.forEach(group => {
+      const hasGroupChecked = props.value.findIndex(item => item.id === group.id) > -1 // 分组在编辑前是否选中
+      const hasAdded = groupList.findIndex(item => item.id === group.id) > -1// 分组已添加
+      const isDisabled = props.disabled.includes(group.id)
+      if (group.id !== 0 && !hasAdded && (!isDisabled || hasGroupChecked)) {
+        groupList.push(group)
       }
     })
     emits('change', groupList)
@@ -129,7 +127,10 @@
 
   // 全不选
   const handleClearAll = () => {
-    emits('change', [])
+    const hasCheckedGroups = props.groupList.filter(group => {
+      return props.disabled.includes(group.id) && props.value.findIndex(item => item.id === group.id) > -1
+    })
+    emits('change', hasCheckedGroups)
   }
 
   // 按版本选择
@@ -156,26 +157,46 @@
         }
       })
     })
-
     emits('change', list)
   }
 
   // 节点搜索
   const handleSearch = (val: string, itemValue: string, item: any) => {
-    console.log(val, itemValue, item)
-    searchStr.value = val
+    return itemValue.toLowerCase().includes(val.toLowerCase())
   }
 
-  // 选中节点
-  const handleNodeChecked = (selected: string[]) => {
-    console.log(selected)
-    const list: IGroupToPublish[] = []
-    selected.forEach(id => {
-      const group = allGroupNode.value.find(group => group.node_id === id)
-      if (group && !list.find(item => item.id === group.id)) { // 相同分组的节点去重
-        list.push(group)
+  // 选中/取消选中节点
+  const handleNodeCheckChange = (node: IGroupNodeData|ITreeParentNodeData, checked: boolean) => {
+    const list = props.value.slice()
+    if (node.hasOwnProperty('parent')) { // 分类节点
+      const treeParentNode = treeData.value.find(parentNode => parentNode.node_id === node.node_id)
+      if (treeParentNode) {
+        if (checked) {
+          treeParentNode.children.filter(group => !group.disabled).forEach(group => {
+            if (!list.find(item => item.id === group.id)) {
+              list.push(group)
+            }
+          })
+        } else {
+          treeParentNode.children.filter(group => !group.disabled).forEach(group => {
+            const index = list.findIndex(item => item.id === group.id)
+            if (index > -1) {
+              list.splice(index, 1)
+            }
+          })
+        }
       }
-    })
+    } else { // 叶子节点
+      const group = props.groupList.find(group => group.id === (<IGroupNodeData>node).id)
+      if (group) {
+        if (checked) {
+          list.push(group)
+        } else {
+          const index = list.findIndex(item => item.id === group.id)
+          list.splice(index, 1)
+        }
+      }
+    }
     emits('change', list)
   }
 
@@ -222,26 +243,31 @@
         label="name"
         node-key="node_id"
         :data="treeData"
-        :show-checkbox="true"
         :expand-all="false"
         :show-node-type-icon="false"
-        :search="searchOption"
-        @node-checked="handleNodeChecked">
+        :search="searchOption">
         <template #node="node">
-          <div class="node-label">
-            <div class="label">{{ node.name }}</div>
-            <span v-if="node.count" class="count">({{ node.count }})</span>
-            <template v-if="node.rules">
-              <span class="split-line"> | </span>
-              <div class="rules">
-                <bk-overflow-title type="tips">
+          <div class="node-item-wrapper">
+            <bk-checkbox
+              size="small"
+              :model-value="node.checked"
+              :disabled="node.disabled"
+              :indeterminate="node.indeterminate"
+              @change="handleNodeCheckChange(node, $event)">
+            </bk-checkbox>
+            <div class="node-label">
+              <div class="label">{{ node.name }}</div>
+              <span v-if="node.count" class="count">({{ node.count }})</span>
+              <template v-if="node.rules">
+                <span class="split-line"> | </span>
+                <div class="rules">
                   <span v-for="(rule, index) in node.rules" :key="index" class="rule">
                     <span v-if="index > 0 "> & </span>
                     <rule-tag class="tag-item" :rule="rule"/>
                   </span>
-                </bk-overflow-title>
-              </div>
-            </template>
+                </div>
+              </template>
+            </div>
           </div>
         </template>
       </bk-tree>
@@ -284,6 +310,11 @@
     margin-top: 8px;
     max-height: 403px;
     overflow: auto;
+    .node-item-wrapper {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
     .node-label {
       display: flex;
       align-items: center;

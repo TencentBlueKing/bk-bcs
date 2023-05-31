@@ -11,44 +11,30 @@
  *
  */
 
-package config
+package metrics
 
 import (
-	"crypto/rsa"
+	"net/http"
+	"strconv"
+	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-// BCSConf :
-type BCSConf struct {
-	Host         string         `yaml:"host"`
-	Token        string         `yaml:"token"`
-	Verify       bool           `yaml:"verify"`
-	JWTPubKey    string         `yaml:"jwt_public_key"`
-	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
-}
-
-// Init :
-func (c *BCSConf) Init() error {
-	// only for development
-	c.Host = ""
-	c.Token = ""
-	c.JWTPubKey = ""
-	c.JWTPubKeyObj = nil
-	c.Verify = false
-	return nil
-}
-
-// InitJWTPubKey :
-func (c *BCSConf) InitJWTPubKey() error {
-	if c.JWTPubKey == "" {
-		return nil
+// RequestCollect 统计请求计数、耗时
+func RequestCollect(handler string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			// http.ResponseWriter replace
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			next.ServeHTTP(ww, r)
+			// get http code
+			code := strconv.Itoa(ww.Status())
+			// sub the time as duration type
+			requestDuration := time.Since(start)
+			// http metrics 处理
+			collectHTTPRequestMetric(handler, r.Method, code, requestDuration)
+		})
 	}
-	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(c.JWTPubKey))
-	if err != nil {
-		return err
-	}
-
-	c.JWTPubKeyObj = pubKey
-	return nil
 }

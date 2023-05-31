@@ -103,12 +103,12 @@
           @click="handleSelectVersion(version)">
           <div :class="['dot', version.status.publish_status]"></div>
           <div class="version-name">{{ version.spec.name }}</div>
-          <bk-dropdown class="action-area">
+          <bk-dropdown v-if="version.status.publish_status !== 'editing'" class="action-area">
             <Ellipsis class="action-more-icon" />
             <template #content>
               <bk-dropdown-menu placement="bottom-end">
-                <bk-dropdown-item v-if="version.status.publish_status !== 'editing'" @click="handleDiffDialogShow(version)">版本对比</bk-dropdown-item>
-                <bk-dropdown-item @click="handleDeprecate(version.id)">废弃</bk-dropdown-item>
+                <bk-dropdown-item @click="handleDiffDialogShow(version)">版本对比</bk-dropdown-item>
+                <!-- <bk-dropdown-item @click="handleDeprecate(version.id)">废弃</bk-dropdown-item> -->
               </bk-dropdown-menu>
             </template>
           </bk-dropdown>

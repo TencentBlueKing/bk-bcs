@@ -58,12 +58,13 @@
   <section class="current-config-list">
     <bk-loading :loading="loading">
       <h4 class="version-name">{{ versionData.spec.name }}</h4>
-      <div class="config-list-wrapper">
+      <div v-if="configList.length > 0" class="config-list-wrapper">
         <div v-for="config in configList" class="config-item" :key="config.id" @click="handleEditConfigOpen(config.id)">
           <div class="config-name">{{ config.spec.name }}</div>
           <div class="config-type">{{ getConfigTypeName(config.spec.file_type) }}</div>
         </div>
       </div>
+      <bk-exception v-else scene="part" type="empty" description="暂无数据"></bk-exception>
     </bk-loading>
     <EditConfig
       v-model:show="editDialogShow"
