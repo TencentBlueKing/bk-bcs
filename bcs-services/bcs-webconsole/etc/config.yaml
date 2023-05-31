@@ -27,12 +27,12 @@ bcs_cc_conf:
   stage: ""
 
 bcs_conf:
+  inner_host: "" # 集群内访问
   host: ""
   token: ""
   jwt_public_key: ""
   insecure_skip_verify: false
 
-bcs_env_conf: []
 
 webconsole:
   mode: internal # external

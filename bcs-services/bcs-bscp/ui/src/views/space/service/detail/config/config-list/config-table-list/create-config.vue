@@ -46,10 +46,10 @@
 </script>
 <template>
   <section class="create-config-btn">
-    <bk-button outline theme="primary" @click="handleCreateConfig">新增配置项</bk-button>
+    <bk-button outline theme="primary" @click="handleCreateConfig">新增配置文件</bk-button>
     <bk-sideslider
       width="640"
-      title="新增配置项"
+      title="新增配置文件"
       :is-show="slideShow"
       :before-close="close">
       <ConfigForm

@@ -15,16 +15,15 @@ package web
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
-	"path"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"net/url"
+	"path"
 )
 
 type service struct {
@@ -87,6 +86,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
 		"COMMON_EXCEPTION_MSG": "",
 	}
+	language, download := i18n.GetMessage("语言"), i18n.GetMessage("下载")
 
 	data := gin.H{
 		"title":            clusterId,
@@ -97,6 +97,8 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"project_id":       projectId,
 		"cluster_id":       clusterId,
 		"settings":         settings,
+		"Language":         language,
+		"download":         download,
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)
@@ -136,6 +138,8 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 	}
 
 	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/portal/sessions/%s/", sessionId)) + "/"
+	lang, download := i18n.GetMessage("语言"), i18n.GetMessage("下载")
+	sessionUrl = fmt.Sprintf("%s?lang=%s", sessionUrl, lang)
 
 	settings := map[string]string{
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
@@ -146,6 +150,8 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 		"title":       containerName,
 		"session_url": sessionUrl,
 		"settings":    settings,
+		"Language":    lang,
+		"download":    download,
 	}
 
 	c.HTML(http.StatusOK, "index.html", data)

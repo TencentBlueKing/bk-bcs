@@ -13,18 +13,19 @@
 
 package config
 
-// TracingConf tracing config
-type TracingConf struct {
-	Enabled       bool              `yaml:"enabled" usage:"enable trace"`
-	Endpoint      string            `yaml:"endpoint" usage:"Collector service endpoint"`
-	Token         string            `yaml:"token" usage:"token for collector service"`
-	ResourceAttrs map[string]string `yaml:"resource_attrs" usage:"attributes of traced service"`
+// EtcdConf etcd配置
+type EtcdConf struct {
+	Endpoints string `yaml:"endpoints"`
+	Ca        string `yaml:"ca"`
+	Cert      string `yaml:"cert"`
+	Key       string `yaml:"key"`
 }
 
-// Init : tracing init
-func (c *TracingConf) Init() {
-	c.Enabled = false
-	c.Token = ""
-	c.Endpoint = ""
-	c.ResourceAttrs = nil
+// Init etcd初始化默认值
+func (c *EtcdConf) Init() error {
+	c.Endpoints = ""
+	c.Cert = ""
+	c.Ca = ""
+	c.Key = ""
+	return nil
 }

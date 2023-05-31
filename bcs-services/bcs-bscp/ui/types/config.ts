@@ -86,6 +86,7 @@ export interface IConfigDiffDetail {
 
 // 配置项列表查询接口请求参数
 export interface IConfigListQueryParams {
+  searchKey?: string;
   release_id?: number;
   start?: number;
   limit?: number

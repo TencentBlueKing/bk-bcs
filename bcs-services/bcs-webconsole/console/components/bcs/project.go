@@ -57,7 +57,7 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 		return cacheResult.(*Project), nil
 	}
 
-	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.Host, projectIDOrCode)
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.InnerHost, projectIDOrCode)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetAuthToken(bcsConf.Token).

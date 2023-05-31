@@ -19,4 +19,7 @@ const (
 	ServerName         = "bcs-ui"
 	TracerName         = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	RequestIDHeaderKey = "X-Request-Id"
+
+	// BluekingLanguage switch cookies constant
+	BluekingLanguage = "blueking_language"
 )
