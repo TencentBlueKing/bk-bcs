@@ -1,28 +1,61 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, onMounted } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { Plus, Search } from 'bkui-vue/lib/icon'
+  import { useGlobalStore } from '../../../store/global'
+  import { getScriptList } from '../../../api/script'
+  import { IScriptItem } from '../../../../types/script'
+  import CreateScript from './create-script.vue'
 
+  const { spaceId } = storeToRefs(useGlobalStore())
+
+  const showCreateScript = ref(false)
+  const scriptsData = ref<IScriptItem[]>([])
+  const scriptsLoading = ref(false)
   const pagination = ref({
     current: 1,
     count: 0,
     limit: 10,
   })
 
-  const refreshList = () => {}
+  onMounted(() => {
+    getScripts()
+  })
 
-  const handlePageLimitChange = () => {}
+  // 获取脚本列表
+  const getScripts = async () => {
+    scriptsLoading.value = true
+    const params = {
+      start: (pagination.value.current - 1) * pagination.value.limit,
+      limit: pagination.value.limit
+    }
+    const res = await getScriptList(spaceId.value, params)
+    scriptsData.value = res.detail
+    pagination.value.count = res.count
+    scriptsLoading.value = false
+  }
+
+  const refreshList = (val: number = 1) => {
+    pagination.value.current = 1
+    getScripts()
+  }
+
+  const handlePageLimitChange = (val: number) => {
+    pagination.value.limit = val
+    refreshList()
+  }
 </script>
 <template>
   <section class="scripts-manange-page">
     <div class="side-menu">
       <div class="group-wrapper">
-        <li><i class="bk-bscp-icon icon-app-store"></i>全部脚本</li>
-        <li><i class="bk-bscp-icon icon-app-store"></i>未分类</li>
+        <li><i class="bk-bscp-icon icon-block-shape"></i>全部脚本</li>
+        <li><i class="bk-bscp-icon icon-tags"></i>未分类</li>
       </div>
     </div>
     <div class="script-list-wrapper">
       <div class="operate-area">
-        <bk-button theme="primary"><Plus class="button-icon" />新建脚本</bk-button>
+        <bk-button theme="primary" @click="showCreateScript = true"><Plus class="button-icon" />新建脚本</bk-button>
         <bk-input class="search-group-input" placeholder="脚本名称">
            <template #suffix>
               <Search class="search-input-icon" />
@@ -45,9 +78,10 @@
         :layout="['total', 'limit', 'list']"
         :count="pagination.count"
         :limit="pagination.limit"
-        @change="refreshList()"
+        @change="refreshList"
         @limit-change="handlePageLimitChange"/>
     </div>
+    <create-script v-if="showCreateScript" v-model:show="showCreateScript" @created="refreshList"></create-script>
   </section>
 </template>
 <style lang="scss" scoped>

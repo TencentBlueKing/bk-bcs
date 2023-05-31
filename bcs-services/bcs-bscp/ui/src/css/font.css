@@ -53,3 +53,9 @@ url("../assets/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .icon-revoke:before {
 	content: "\e10b";
 }
+.icon-tags:before {
+	content: "\e10c";
+}
+.icon-block-shape:before {
+	content: "\e10d";
+}

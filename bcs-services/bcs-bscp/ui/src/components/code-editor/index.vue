@@ -26,10 +26,12 @@
   }
 
   const props = withDefaults(defineProps<{
-    modelValue: string,
-    editable?: boolean
+    modelValue: string;
+    editable?: boolean;
+    language?: string;
   }>(), {
-    editable: true
+    editable: true,
+    language: ''
   })
 
   const emit = defineEmits(['update:modelValue'])
@@ -44,12 +46,17 @@
     }
   })
 
+  watch(() => props.language, (val) => {
+    monaco.editor.setModelLanguage(<monaco.editor.ITextModel>editor.getModel(), val)
+  })
+
   onMounted(() => {
     if (!editor) {
       editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
         value: localVal.value,
         theme: 'vs-dark',
         automaticLayout: true,
+        language: props.language,
         readOnly: !props.editable
       })
     }
