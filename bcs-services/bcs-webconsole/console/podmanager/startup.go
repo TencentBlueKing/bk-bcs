@@ -216,8 +216,8 @@ func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string)
 	authInfo := &clusterAuth{
 		Token: tokenObj.Token,
 		Cluster: clientcmdv1.Cluster{
-			Server:                fmt.Sprintf("%s/clusters/%s", bcsConf.Host, targetClusterId),
-			InsecureSkipTLSVerify: bcsConf.InsecureSkipVerify,
+			Server:                fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, targetClusterId),
+			InsecureSkipTLSVerify: config.G.BCS.InsecureSkipVerify,
 		},
 	}
 

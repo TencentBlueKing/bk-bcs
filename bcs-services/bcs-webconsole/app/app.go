@@ -42,6 +42,7 @@ import (
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/util/cmd"
 	"golang.org/x/sync/errgroup"
+	yaml2 "gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
@@ -177,9 +178,8 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 	microCmd := cmd.NewCmd(cmdOptions...)
 	microCmd.App().Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:     serverAddressFlag,
-			Required: true,
-			Usage:    "Bind ip address for the server. 127.0.0.1",
+			Name:  serverAddressFlag,
+			Usage: "Bind ip address for the server. 127.0.0.1",
 		},
 		&cli.StringFlag{
 			Name:  serverPortFlag,
@@ -189,7 +189,6 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 		&cli.StringFlag{
 			Name:        "config",
 			Usage:       "config file path",
-			Required:    true,
 			Destination: &configPath,
 		},
 		&cli.StringSliceFlag{
@@ -198,9 +197,29 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 			Required:    false,
 			Destination: &credentialConfigPath,
 		},
+		&cli.BoolFlag{
+			Name:    "confinfo",
+			Usage:   "print init confinfo to stdout",
+			Aliases: []string{"o"},
+		},
 	}
 
 	microCmd.App().Action = func(c *cli.Context) error {
+		if c.Bool("confinfo") {
+			encoder := yaml2.NewEncoder(os.Stdout)
+			encoder.SetIndent(2)
+			if err := encoder.Encode(config.G); err != nil {
+				os.Exit(1)
+				return err
+			}
+			os.Exit(0)
+			return nil
+		}
+
+		if c.String(serverAddressFlag) == "" || c.String("config") == "" {
+			logger.Error("--config and --server-address not set")
+			os.Exit(1)
+		}
 		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
 			return err
 		}
