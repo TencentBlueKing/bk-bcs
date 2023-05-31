@@ -1043,7 +1043,7 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/apps/{app_id}/hooks:
+  /api/v1/config/create/hook/hook/biz_id/{biz_id}:
     post:
       operationId: create_hook
       description: 创建hook脚本
@@ -1059,7 +1059,7 @@ paths:
         backend:
           type: HTTP
           method: post
-          path:  /api/v1/config/apps/{app_id}/hooks
+          path:  /api/v1/config/create/hook/hook/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -1067,10 +1067,10 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/apps/{app_id}/hooks/{hook_id}:
-    put:
-      operationId: update_hook
-      description: 更新hook脚本
+  /api/v1/config/get/hook/hook/biz_id/{biz_id}:
+    get:
+      operationId: get_hook
+      description: 获取hook脚本
       tags:
         - hook脚本管理
       responses:
@@ -1082,15 +1082,16 @@ paths:
         matchSubpath: false
         backend:
           type: HTTP
-          method: put
-          path:  /api/v1/config/apps/{app_id}/hooks/{hook_id}
+          method: get
+          path: /api/v1/config/get/hook/hook/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: true
-        disabledStages: []
+        disabledStages: [ ]
+  /api/v1/config/delete/hook/hook/biz_id/{biz_id}:
     delete:
       operationId: delete_hook
       description: 删除hook脚本
@@ -1106,18 +1107,66 @@ paths:
         backend:
           type: HTTP
           method: delete
-          path:  /api/v1/config/apps/{app_id}/hooks/{hook_id}
+          path: /api/v1/config/delete/hook/hook/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/apps/{app_id}/hooks/list:
+        disabledStages: [ ]
+  /api/v1/config/list/hook/hook/biz_id/{biz_id}:
+    get:
+      operationId: list_hook
+      description: hook脚本列表
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/list/hook/hook/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/list/hook/hook_tag/biz_id/{biz_id}:
+    get:
+      operationId: list_hook_tag
+      description: hook脚本标签列表
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/list/hook/hook_tag/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/create/hook_release/hook_release/hook_id/{hook_id}/biz_id/{biz_id}:
     post:
-      operationId: list_hooks
-      description: 获取hook脚本列表
+      operationId: create_hook_release
+      description: 创建hook版本
       tags:
         - hook脚本管理
       responses:
@@ -1130,14 +1179,110 @@ paths:
         backend:
           type: HTTP
           method: post
-          path:  /api/v1/config/apps/{app_id}/hooks/list
+          path: /api/v1/config/create/hook_release/hook_release/hook_id/{hook_id}/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
-          upstreams: {}
-          transformHeaders: {}
+          upstreams: { }
+          transformHeaders: { }
         authConfig:
           userVerifiedRequired: true
-        disabledStages: []
+        disabledStages: [ ]
+  /api/v1/config/list/hook_release/hook_release/hook_id/{hook_id}/biz_id/{biz_id}:
+    get:
+      operationId: get_hook_release
+      description: 获取hook版本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/list/hook_release/hook_release/hook_id/{hook_id}/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/delete/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}:
+    delete:
+      operationId: delete_hook_release
+      description: 删除hook版本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /api/v1/config/delete/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/publish/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}:
+    put:
+      operationId: delete_hook_release
+      description: 上线hook版本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/publish/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/get/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}:
+    get:
+      operationId: get_hook_release
+      description: 获取hook版本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/get/hook_release/hook_release/release_id/{release_id}/hook_id/{hook_id}/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
   /api/v1/config/biz/{biz_id}/template_spaces:
     post:
       operationId: create_template_space
@@ -1392,6 +1537,79 @@ paths:
           type: HTTP
           method: put
           path: /api/v1/config/biz_id/{biz_id}/credential/{credential_id}/scope
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+
+  /api/v1/config/create/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}:
+    post:
+      operationId: create_config_hook
+      description: 创建配置脚本
+      tags:
+        - 配置脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/create/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/update/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}:
+    put:
+      operationId: update_config_hook
+      description: 更新配置脚本
+      tags:
+        - 配置脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/update/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/get/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}:
+    get:
+      operationId: get_config_hook
+      description: 更新配置脚本
+      tags:
+        - 配置脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/get/config_hook/config_hook/app_id/{app_id}/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: { }

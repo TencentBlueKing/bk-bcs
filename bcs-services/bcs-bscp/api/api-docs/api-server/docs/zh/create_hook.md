@@ -8,23 +8,24 @@
 
 | 参数名称     | 参数类型     | 必选   | 描述                                  |
 | ------------ | ------------ | ------ |-------------------------------------|
-| app_id    | uint32       | 是     | 应用ID                                |
-| release_id | uint32 | 否 | 版本ID，可选项，不传或传0时则为没有发布的脚本            |
-| name | string | 是 | hook脚本名称                            |
-| pre_type | string | 否 | 前置hook脚本类型，当前类型有shell、python        |
-| pre_hook | string | 否 | 前置hook脚本内容，内容格式需和脚本类型相匹配，为内容字节流对应的字符串 |
-| post_type | string | 否    | 后置hook脚本类型，当前类型有shell、python        |
-| post_hook | string       | 否     | 后置hook脚本内容，内容格式需和脚本类型相匹配，为内容字节流对应的字符串 |
+| biz_id       | uint32   | 是   | 业务id                                |
+| name         | string   | 是   | 脚本名称                              |
+| release_name | string   | 是   | 版本号                                |
+| type         | string   | 是   | hook脚本类型，当前类型有shell、python |
+| tag          | string   | 否   | 脚本标签                              |
+| memo         | string   | 否   | 脚本描述                              |
+| content      | string   | 是   | 脚本内容                              |
 
 #### 调用示例
 
 ```json
 {
-  "name": "myhook001",
-  "pre_type": "shell",
-  "pre_hook": "#!/bin/bash\n\nnow=$(date +'%Y-%m-%d %H:%M:%S')\necho \"hello, start at $now\"\n",
-  "post_type": "python",
-  "post_hook": "from datetime import datetime\nprint(\"hello, end at\", datetime.now())\n"
+    "name": "myhook003",
+    "release_name": "v1",
+    "type": "shell",
+    "tag": "自动化脚本2",
+    "content": "#!/bin/bash\n\nnow=$(date +'%Y-%m-%d %H:%M:%S')\necho \"hello, start at $now\"\n",
+    "memo": "from datetime import datetime\nprint(\"hello, end at\", datetime.now())\n"
 }
 ```
 
@@ -32,9 +33,9 @@
 
 ```json
 {
-  "data": {
-    "id": 1
-  }
+    "data": {
+        "id": 24
+    }
 }
 ```
 
