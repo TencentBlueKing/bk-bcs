@@ -99,7 +99,7 @@ func MiddleWareTracing(next http.Handler) http.Handler {
 		}
 		span.SetAttributes(attribute.Key("rsp").String(respBody))
 
-		elapsedTime := time.Now().Sub(startTime)
+		elapsedTime := time.Since(startTime)
 		span.SetAttributes(attribute.Key("elapsed_ime").String(elapsedTime.String()))
 
 		status := middleware.NewWrapResponseWriter(w, r.ProtoMajor).Status()
