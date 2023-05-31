@@ -26,22 +26,17 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// CreateTemplateSpace create TemplateSpace.
+// CreateTemplateSpace create template space.
 func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTemplateSpaceReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if _, err := s.dao.TemplateSpace().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
-		return nil, fmt.Errorf("templateSpace name %s already exists", req.Spec.Name)
+	if _, err := s.dao.TemplateSpace().GetByUniqueKey(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
+		return nil, fmt.Errorf("template space's same name %s already exists", req.Spec.Name)
 	}
 
-	spec, err := req.Spec.TemplateSpaceSpec()
-	if err != nil {
-		logs.Errorf("get TemplateSpace spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
 	now := time.Now()
 	TemplateSpace := &table.TemplateSpace{
-		Spec:       spec,
+		Spec:       req.Spec.TemplateSpaceSpec(),
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
 		Revision: &table.Revision{
 			Creator:   kt.User,
@@ -52,7 +47,7 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTempl
 	}
 	id, err := s.dao.TemplateSpace().Create(kt, TemplateSpace)
 	if err != nil {
-		logs.Errorf("create TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("create template space failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -60,7 +55,7 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTempl
 	return resp, nil
 }
 
-// ListTemplateSpaces list TemplateSpaces.
+// ListTemplateSpaces list template space.
 func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplateSpacesReq) (*pbds.ListTemplateSpacesResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -72,36 +67,25 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, opt)
 
 	if err != nil {
-		logs.Errorf("list TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	TemplateSpaces, err := pbts.PbTemplateSpaces(details)
-	if err != nil {
-		logs.Errorf("get pb TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	resp := &pbds.ListTemplateSpacesResp{
 		Count:   uint32(count),
-		Details: TemplateSpaces,
+		Details: pbts.PbTemplateSpaces(details),
 	}
 	return resp, nil
 }
 
-// UpdateTemplateSpace update TemplateSpace.
+// UpdateTemplateSpace update template space.
 func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTemplateSpaceReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	spec, err := req.Spec.TemplateSpaceSpec()
-	if err != nil {
-		logs.Errorf("get TemplateSpace spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
 	now := time.Now()
 	TemplateSpace := &table.TemplateSpace{
 		ID:         req.Id,
-		Spec:       spec,
+		Spec:       req.Spec.TemplateSpaceSpec(),
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
 		Revision: &table.Revision{
 			Reviser:   kt.User,
@@ -109,14 +93,14 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTempl
 		},
 	}
 	if err := s.dao.TemplateSpace().Update(kt, TemplateSpace); err != nil {
-		logs.Errorf("update TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("update template space failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	return new(pbbase.EmptyResp), nil
 }
 
-// DeleteTemplateSpace delete TemplateSpace.
+// DeleteTemplateSpace delete template space.
 func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbds.DeleteTemplateSpaceReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -125,7 +109,7 @@ func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbds.DeleteTempl
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
 	}
 	if err := s.dao.TemplateSpace().Delete(kt, TemplateSpace); err != nil {
-		logs.Errorf("delete TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("delete template space failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 

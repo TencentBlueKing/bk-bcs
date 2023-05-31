@@ -32,6 +32,7 @@ import (
 
 // Set defines all the DAO to be operated.
 type Set interface {
+	GenQuery() *gen.Query
 	ID() IDGenInterface
 	App() App
 	Commit() Commit
@@ -44,6 +45,8 @@ type Set interface {
 	Strategy() Strategy
 	Hook() Hook
 	TemplateSpace() TemplateSpace
+	Template() Template
+	TemplateRelease() TemplateRelease
 	Group() Group
 	GroupAppBind() GroupAppBind
 	ReleasedGroup() ReleasedGroup
@@ -126,6 +129,11 @@ type set struct {
 	auditDao          AuditDao
 	event             Event
 	lock              LockDao
+}
+
+// GenQuery returns the gen Query object
+func (s *set) GenQuery() *gen.Query {
+	return s.genQ
 }
 
 // ID returns the resource id generator DAO
@@ -240,9 +248,27 @@ func (s *set) Hook() Hook {
 	}
 }
 
-// TemplateSpace returns the templateSpace's DAO
+// TemplateSpace returns the template space's DAO
 func (s *set) TemplateSpace() TemplateSpace {
 	return &templateSpaceDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// Template returns the template's DAO
+func (s *set) Template() Template {
+	return &templateDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// TemplateRelease returns the template release's DAO
+func (s *set) TemplateRelease() TemplateRelease {
+	return &templateReleaseDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
