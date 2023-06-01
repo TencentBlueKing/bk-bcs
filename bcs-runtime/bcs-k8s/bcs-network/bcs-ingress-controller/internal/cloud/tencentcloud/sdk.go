@@ -1531,7 +1531,7 @@ func (sw *SdkWrapper) DescribeTargetHealth(region string,
 
 func (sw *SdkWrapper) doDescribeTargetHealth(region string,
 	req *tclb.DescribeTargetHealthRequest) (*tclb.DescribeTargetHealthResponse, error) {
-	blog.V(3).Infof("DescribeTargetHealth request: %s", req.ToJsonString())
+	blog.V(5).Infof("DescribeTargetHealth request: %s", req.ToJsonString())
 	var err error
 	var resp *tclb.DescribeTargetHealthResponse
 
@@ -1545,7 +1545,7 @@ func (sw *SdkWrapper) doDescribeTargetHealth(region string,
 
 	counter := 1
 	for ; counter <= maxRetry; counter++ {
-		blog.V(3).Infof("DescribeTargetHealth try %d/%d", counter, maxRetry)
+		blog.V(5).Infof("DescribeTargetHealth try %d/%d", counter, maxRetry)
 		sw.tryThrottle()
 		// get client by region
 		clbCli, inErr := sw.getRegionClient(region)

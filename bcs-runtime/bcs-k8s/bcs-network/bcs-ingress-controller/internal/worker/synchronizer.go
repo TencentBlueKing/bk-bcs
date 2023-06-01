@@ -289,7 +289,7 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 			h.eventQueue.Done(obj)
 			continue
 		}
-		h.recordListenerSuccessEvent(li, listenerResult.Res)
+		// h.recordListenerSuccessEvent(li, listenerResult.Res)
 		if err := h.patchListenerStatus(li, listenerResult.Res, networkextensionv1.ListenerStatusSynced,
 			"multi ensure success"); err != nil {
 			blog.Warnf("patch listener id of %s/%s failed, err %s", li.GetName(), li.GetNamespace(), err.Error())
@@ -412,7 +412,7 @@ func (h *EventHandler) ensureListener(li *networkextensionv1.Listener) error {
 			return fmt.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())
 		}
 	}
-	h.recordListenerSuccessEvent(li, listenerID)
+	// h.recordListenerSuccessEvent(li, listenerID)
 
 	if err := h.patchListenerStatus(li, listenerID, networkextensionv1.ListenerStatusSynced,
 		"ensure success"); err != nil {
