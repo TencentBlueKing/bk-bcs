@@ -136,16 +136,18 @@ func (as *authService) listenAndServe() error {
 	grpcMetrics := grpc_prometheus.NewServerMetrics()
 	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
 
+	recoveryOpt := grpc_recovery.WithRecoveryHandlerContext(brpc.RecoveryHandlerFuncContext)
+
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(math.MaxInt32),
 		// add bscp unary interceptor and standard grpc server metrics interceptor.
 		grpc.ChainUnaryInterceptor(
 			brpc.LogUnaryServerInterceptor(),
 			grpcMetrics.UnaryServerInterceptor(),
-			grpc_recovery.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
 		),
 		grpc.ChainStreamInterceptor(
 			grpcMetrics.StreamServerInterceptor(),
-			grpc_recovery.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(recoveryOpt),
 		),
 	}
 	network := cc.AuthServer().Network

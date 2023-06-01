@@ -139,15 +139,17 @@ func (ds *dataService) listenAndServe() error {
 	grpcMetrics := grpc_prometheus.NewServerMetrics()
 	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
 
+	recoveryOpt := grpc_recovery.WithRecoveryHandlerContext(brpc.RecoveryHandlerFuncContext)
+
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(math.MaxInt32),
 		grpc.ChainUnaryInterceptor(
 			brpc.LogUnaryServerInterceptor(),
 			grpcMetrics.UnaryServerInterceptor(),
-			grpc_recovery.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
 		),
 		grpc.ChainStreamInterceptor(
 			grpcMetrics.StreamServerInterceptor(),
-			grpc_recovery.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(recoveryOpt),
 		),
 	}
 

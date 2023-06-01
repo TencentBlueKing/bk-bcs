@@ -144,16 +144,18 @@ func (cs *cacheService) listenAndServe() error {
 	grpcMetrics := grpc_prometheus.NewServerMetrics()
 	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
 
+	recoveryOpt := grpc_recovery.WithRecoveryHandlerContext(brpc.RecoveryHandlerFuncContext)
+
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(4 * 1024 * 1024),
 		// add bscp unary interceptor and standard grpc server metrics interceptor.
 		grpc.ChainUnaryInterceptor(
 			brpc.LogUnaryServerInterceptor(),
 			grpcMetrics.UnaryServerInterceptor(),
-			grpc_recovery.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
 		),
 		grpc.ChainStreamInterceptor(
 			grpcMetrics.StreamServerInterceptor(),
-			grpc_recovery.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(recoveryOpt),
 		),
 		grpc.ReadBufferSize(8 * 1024 * 1024),
 		grpc.WriteBufferSize(16 * 1024 * 1024),
