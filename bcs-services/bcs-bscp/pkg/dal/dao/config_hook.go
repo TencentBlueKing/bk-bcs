@@ -54,18 +54,18 @@ func (dao *configHookDao) Create(kit *kit.Kit, g *table.ConfigHook) (uint32, err
 	// 多个使用事务处理
 	createTx := func(tx *gen.Query) error {
 		q := tx.ConfigHook.WithContext(kit.Ctx)
-		if err := q.Create(g); err != nil {
-			return err
+		if e := q.Create(g); e != nil {
+			return e
 		}
 
-		if err := ad.Do(tx); err != nil {
-			return err
+		if e := ad.Do(tx); e != nil {
+			return e
 		}
 
 		return nil
 	}
-	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+	if e := dao.genQ.Transaction(createTx); e != nil {
+		return 0, e
 	}
 
 	return g.ID, nil
@@ -90,18 +90,18 @@ func (dao *configHookDao) Update(kit *kit.Kit, g *table.ConfigHook) error {
 	// 多个使用事务处理
 	updateTx := func(tx *gen.Query) error {
 		q = tx.ConfigHook.WithContext(kit.Ctx)
-		if _, err := q.Where(m.AppID.Eq(g.Attachment.AppID), m.BizID.Eq(g.Attachment.BizID)).
-			Select(m.PreHookID, m.PreHookReleaseID, m.PostHookID, m.PostHookReleaseID, m.Reviser).Updates(g); err != nil {
-			return err
+		if _, e := q.Where(m.AppID.Eq(g.Attachment.AppID), m.BizID.Eq(g.Attachment.BizID)).
+			Select(m.PreHookID, m.PreHookReleaseID, m.PostHookID, m.PostHookReleaseID, m.Reviser).Updates(g); e != nil {
+			return e
 		}
 
-		if err := ad.Do(tx); err != nil {
-			return err
+		if e := ad.Do(tx); e != nil {
+			return e
 		}
 		return nil
 	}
-	if err := dao.genQ.Transaction(updateTx); err != nil {
-		return err
+	if e := dao.genQ.Transaction(updateTx); e != nil {
+		return e
 	}
 
 	return nil

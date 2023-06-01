@@ -68,6 +68,15 @@ type hookReleaseDao struct {
 	auditDao AuditDao
 }
 
+// NewHookReleaseDao create the HookRelease DAO
+func NewHookReleaseDao(db *gorm.DB, idGen IDGenInterface, auditDao AuditDao) (HookRelease, error) {
+	return &hookReleaseDao{
+		genQ:     gen.Use(db),
+		idGen:    idGen,
+		auditDao: auditDao,
+	}, nil
+}
+
 // Create one hook instance.
 func (dao *hookReleaseDao) Create(kit *kit.Kit, g *table.HookRelease) (uint32, error) {
 
@@ -87,31 +96,22 @@ func (dao *hookReleaseDao) Create(kit *kit.Kit, g *table.HookRelease) (uint32, e
 	// 多个使用事务处理
 	createTx := func(tx *gen.Query) error {
 		q := tx.HookRelease.WithContext(kit.Ctx)
-		if err := q.Create(g); err != nil {
-			return err
+		if e := q.Create(g); e != nil {
+			return e
 		}
 
-		if err := ad.Do(tx); err != nil {
-			return err
+		if e := ad.Do(tx); e != nil {
+			return e
 		}
 
 		return nil
 	}
-	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, err
+	if e := dao.genQ.Transaction(createTx); e != nil {
+		return 0, e
 	}
 
 	return g.ID, nil
 
-}
-
-// NewHookReleaseDao create the HookRelease DAO
-func NewHookReleaseDao(db *gorm.DB, idGen IDGenInterface, auditDao AuditDao) (HookRelease, error) {
-	return &hookReleaseDao{
-		genQ:     gen.Use(db),
-		idGen:    idGen,
-		auditDao: auditDao,
-	}, nil
 }
 
 // CreateWithTx ....
@@ -209,17 +209,17 @@ func (dao *hookReleaseDao) Delete(kit *kit.Kit, g *table.HookRelease) error {
 	// 多个使用事务处理
 	deleteTx := func(tx *gen.Query) error {
 		q = tx.HookRelease.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Delete(g); err != nil {
-			return err
+		if _, e := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Delete(g); e != nil {
+			return e
 		}
 
-		if err := ad.Do(tx); err != nil {
-			return err
+		if e := ad.Do(tx); e != nil {
+			return e
 		}
 		return nil
 	}
-	if err := dao.genQ.Transaction(deleteTx); err != nil {
-		return err
+	if e := dao.genQ.Transaction(deleteTx); e != nil {
+		return e
 	}
 
 	return nil
@@ -242,11 +242,11 @@ func (dao *hookReleaseDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.Query, g *
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
-	if _, err := tx.HookRelease.WithContext(kit.Ctx).Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Delete(g); err != nil {
-		return err
+	if _, e := tx.HookRelease.WithContext(kit.Ctx).Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Delete(g); e != nil {
+		return e
 	}
 
-	if err := ad.Do(tx); err != nil {
+	if e := ad.Do(tx); e != nil {
 		return err
 	}
 
@@ -288,26 +288,26 @@ func (dao *hookReleaseDao) Publish(kit *kit.Kit, g *table.HookRelease) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.HookRelease.WithContext(kit.Ctx)
 
-		if _, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Select(m.PubState, m.Reviser).Updates(g); err != nil {
-			return err
+		if _, e := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Select(m.PubState, m.Reviser).Updates(g); e != nil {
+			return e
 		}
 
 		if oldReleased != nil {
-			if _, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Select(m.PubState, m.Reviser).
-				Updates(oldReleased); err != nil {
-				return err
+			if _, e := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Select(m.PubState, m.Reviser).
+				Updates(oldReleased); e != nil {
+				return e
 			}
 		}
 
-		if err := ad.Do(tx); err != nil {
-			return err
+		if e := ad.Do(tx); e != nil {
+			return e
 		}
 		return nil
 
 	}
 
-	if err := dao.genQ.Transaction(updateTx); err != nil {
-		return err
+	if e := dao.genQ.Transaction(updateTx); e != nil {
+		return e
 	}
 
 	return nil

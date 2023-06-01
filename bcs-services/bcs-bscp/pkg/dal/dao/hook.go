@@ -13,12 +13,14 @@ limitations under the License.
 package dao
 
 import (
+	"errors"
+	"fmt"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/types"
-	"fmt"
 )
 
 // Hook supplies all the hook related operations.
@@ -51,15 +53,15 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
 	release *table.HookRelease) (uint32, error) {
 
 	if g == nil {
-		return 0, errf.New(errf.InvalidParameter, "hook is nil")
+		return 0, errors.New("hook is nil")
 	}
 
 	if release == nil {
-		return 0, errf.New(errf.InvalidParameter, "hook release is nil")
+		return 0, errors.New("hook release is nil")
 	}
 
 	if err := g.ValidateCreate(); err != nil {
-		return 0, errf.New(errf.InvalidParameter, err.Error())
+		return 0, err
 	}
 
 	//generate a hook id and update to hook.
@@ -184,7 +186,8 @@ func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
 		}
 		return nil
 	}
-	if err := dao.genQ.Transaction(deleteTx); err != nil {
+	err = dao.genQ.Transaction(deleteTx)
+	if err != nil {
 		return err
 	}
 

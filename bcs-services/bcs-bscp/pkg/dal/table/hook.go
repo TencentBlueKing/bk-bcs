@@ -13,10 +13,11 @@ limitations under the License.
 package table
 
 import (
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/validator"
 	"errors"
 	"fmt"
+
+	"bscp.io/pkg/criteria/enumor"
+	"bscp.io/pkg/criteria/validator"
 )
 
 // Hook defines a hook for an app to publish.
@@ -130,12 +131,6 @@ func (s Hook) ValidateDelete() error {
 	if s.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
-
-	return nil
-}
-
-// ValidateDelete validate the TemplateSpace's info when delete it.
-func (s HookSpec) ValidateDelete() error {
 
 	return nil
 }
