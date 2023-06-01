@@ -121,9 +121,10 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 }
 
 // PbConfigItemState convert config item state
-func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) []*pbci.ConfigItem {
+func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) (
+	[]*pbci.ConfigItem, []*pbci.ConfigItem) {
 	if cis == nil {
-		return make([]*pbci.ConfigItem, 0)
+		return make([]*pbci.ConfigItem, 0), nil
 	}
 
 	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
@@ -132,6 +133,7 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 	}
 
 	result := make([]*pbci.ConfigItem, 0)
+	deleted := make([]*pbci.ConfigItem, 0)
 	for _, ci := range cis {
 		var fileState string
 		if len(fileRelease) == 0 {
@@ -154,11 +156,11 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 
 	if len(releaseMap) != 0 {
 		for _, file := range releaseMap {
-			result = append(result, PbConfigItem(file, DELETE))
+			deleted = append(deleted, PbConfigItem(file, DELETE))
 		}
 	}
 
-	return result
+	return result, deleted
 }
 
 // 文件状态

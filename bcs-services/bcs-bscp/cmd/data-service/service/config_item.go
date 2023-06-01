@@ -267,10 +267,10 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-
+		configItems, count := s.queryConfigItemsWithDeleted(details, fileReleased, req.Start, req.Limit)
 		resp := &pbds.ListConfigItemsResp{
-			Count:   details.Count,
-			Details: pbrci.PbConfigItemState(details.Details, fileReleased),
+			Count:   count,
+			Details: configItems,
 		}
 		return resp, nil
 	}
@@ -338,9 +338,44 @@ func (s *Service) queryAppConfigItemList(kit *kit.Kit, bizID, appID uint32) ([]*
 	return cfgItems, nil
 }
 
+// queryAppConfigItemList query config item list under specific app.
+func (s *Service) queryConfigItemsWithDeleted(details *types.ListConfigItemDetails,
+	released []*table.ReleasedConfigItem, start, limit uint32) ([]*pbci.ConfigItem, uint32) {
+	configItems, deleted := pbrci.PbConfigItemState(details.Details, released)
+	count := details.Count + uint32(len(deleted))
+	// 1. req.Start > details.Count
+	if start > uint32(details.Count) {
+		deletedStart := len(deleted)
+		deletedEnd := len(deleted)
+		if start-details.Count < uint32(len(deleted)) {
+			deletedStart = int(start - details.Count)
+		}
+		if deletedStart+int(limit) < len(deleted) {
+			deletedEnd = deletedStart + int(limit)
+		}
+		deleted = deleted[deletedStart:deletedEnd]
+	} else {
+		// 2 req.Start < details.Count
+		// 2.1 req.Start+req.Limit > details.Count
+		if start+limit < uint32(details.Count) {
+			deleted = deleted[:0]
+		} else {
+			// 2.2 req.Start+req.Limit < details.Count
+			deletedStart := 0
+			deletedEnd := len(deleted)
+			if start+limit-uint32(details.Count) < uint32(len(deleted)) {
+				deletedEnd = int(start + limit - uint32(details.Count))
+			}
+			deleted = deleted[deletedStart:deletedEnd]
+		}
+	}
+	configItems = append(configItems, deleted...)
+	return configItems, count
+}
+
 // ListConfigItemCount list config items count.
-func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigItemCountReq) (*pbds.ListConfigItemCountResp,
-	error) {
+func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigItemCountReq) (
+	*pbds.ListConfigItemCountResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
 
