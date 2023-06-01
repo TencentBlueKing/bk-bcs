@@ -19,7 +19,8 @@ import (
 	"net/http"
 	"strconv"
 
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -120,12 +121,21 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
 func (fs *feedServer) listenAndServe() error {
 	// generate standard grpc server grpcMetrics.
-	grpcMetrics := gprm.NewServerMetrics()
+	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
 
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(1 * 1024 * 1024),
 		// add bscp unary interceptor and standard grpc server metrics interceptor.
-		grpc.UnaryInterceptor(brpc.UnaryServerInterceptorWithMetrics(grpcMetrics)),
-		grpc.StreamInterceptor(grpcMetrics.StreamServerInterceptor())}
+		grpc.ChainUnaryInterceptor(
+			brpc.LogUnaryServerInterceptor(),
+			grpcMetrics.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(),
+		),
+		grpc.ChainStreamInterceptor(
+			grpcMetrics.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(),
+		),
+	}
 
 	network := cc.FeedServer().Network
 	if network.TLS.Enable() {
