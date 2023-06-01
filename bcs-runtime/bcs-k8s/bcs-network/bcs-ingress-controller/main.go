@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	gocache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/client-go/kubernetes"
@@ -118,6 +119,7 @@ func main() {
 		"bcs-ingress-controller will record node info in cluster")
 
 	flag.UintVar(&opts.HttpServerPort, "http_svr_port", 8088, "port for ingress controller http server")
+	flag.IntVar(&opts.LBCacheExpiration, "lb_cache_expiration", 60, "lb cache expiration, unit: minute ")
 
 	flag.Parse()
 
@@ -285,11 +287,13 @@ func main() {
 	}
 
 	listenerHelper := listenerctrl.NewListenerHelper(mgr.GetClient())
+	lbIDCache := gocache.New(time.Duration(opts.LBCacheExpiration)*time.Minute, 120*time.Minute)
+	lbNameCache := gocache.New(time.Duration(opts.LBCacheExpiration)*time.Minute, 120*time.Minute)
 	ingressConverter, err := generator.NewIngressConverter(&generator.IngressConverterOpt{
 		DefaultRegion:     opts.Region,
 		IsTCPUDPPortReuse: opts.IsTCPUDPPortReuse,
 		Cloud:             opts.Cloud,
-	}, mgr.GetClient(), validater, lbClient, listenerHelper)
+	}, mgr.GetClient(), validater, lbClient, listenerHelper, lbIDCache, lbNameCache)
 	if err != nil {
 		blog.Errorf("create ingress converter failed, err %s", err.Error())
 		os.Exit(1)
@@ -381,6 +385,7 @@ func main() {
 	checkRunner.
 		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"))).
 		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper)).
+		Register(check.NewIngressChecker(mgr.GetClient(), lbClient, lbIDCache, lbNameCache, opts.LBCacheExpiration)).
 		Start()
 	blog.Infof("starting check runner")
 

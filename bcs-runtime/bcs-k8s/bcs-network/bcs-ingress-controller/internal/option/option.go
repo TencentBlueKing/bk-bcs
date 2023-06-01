@@ -76,6 +76,9 @@ type ControllerOption struct {
 	// NodeInfoExporterOpen 如果为true，将会记录集群中的节点信息
 	NodeInfoExporterOpen bool
 
+	// LBCacheExpiration lb缓存过期时间，单位分钟
+	LBCacheExpiration int
+
 	Conf Conf
 
 	ServCert ServCert
