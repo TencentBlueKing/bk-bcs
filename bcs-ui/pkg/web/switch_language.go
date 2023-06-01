@@ -36,8 +36,8 @@ func (s *WebServer) CookieSwitchLanguage(w http.ResponseWriter, r *http.Request)
 	cookie, err := r.Cookie(constants.BluekingLanguage)
 	if err != nil {
 		// failure return
-		okResponse.Message = "Fail"
-		okResponse.Data = ErrorRsp{ErrorMessage: err.Error()}
+		okResponse.Code = http.StatusBadRequest
+		okResponse.Message = err.Error()
 		return
 	}
 	// get language
@@ -46,9 +46,11 @@ func (s *WebServer) CookieSwitchLanguage(w http.ResponseWriter, r *http.Request)
 	// set cookie message
 	if config.G.Base.Domain != "" {
 		http.SetCookie(w, &http.Cookie{
-			Name:   constants.BluekingLanguage,
-			Value:  lang,
-			Domain: config.G.Base.Domain,
+			Name:     constants.BluekingLanguage,
+			Value:    lang,
+			Domain:   config.G.Base.Domain,
+			Path:     "/",
+			SameSite: http.SameSiteNoneMode,
 		})
 	}
 }
