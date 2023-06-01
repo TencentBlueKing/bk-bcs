@@ -207,8 +207,7 @@ func (m *StartupManager) ensurePod(namespace, name string, podManifest *v1.Pod) 
 
 // getExternalKubeConfig 外部集群鉴权
 func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string) (*clientcmdv1.Config, error) {
-	bcsConf := k8sclient.GetBCSConfByClusterId(targetClusterId)
-	tokenObj, err := bcs.CreateTempToken(m.ctx, bcsConf, username, targetClusterId)
+	tokenObj, err := bcs.CreateTempToken(m.ctx, username, targetClusterId)
 	if err != nil {
 		return nil, err
 	}

@@ -88,7 +88,7 @@ func (s *service) ListClusters(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
 	projectId := c.Param("projectId")
-	clusters, err := bcs.ListClusters(c.Request.Context(), config.G.BCS, projectId)
+	clusters, err := bcs.ListClusters(c.Request.Context(), projectId)
 	if err != nil {
 		APIError(c, i18n.GetMessage(err.Error()))
 		return

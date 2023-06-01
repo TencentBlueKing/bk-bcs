@@ -243,7 +243,7 @@ func GetAccessToken(ctx context.Context) (string, error) {
 		return "", nil
 	}
 
-	cacheKey := fmt.Sprintf("iam.GetAccessToken:%s", config.G.BCSCC.Stage)
+	cacheKey := "iam.GetAccessToken"
 	if cacheResult, ok := storage.LocalCache.Slot.Get(cacheKey); ok {
 		return cacheResult.(*accessToken).AccessToken, nil
 	}

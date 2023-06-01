@@ -155,7 +155,6 @@
                     winHeight: 500,
                     projectId: "{{ .project_id }}",
                     siteUrl: "{{ .settings.SITE_URL }}",
-                    loginUrl: "{{ .login_url }}",
                     permRequestUrl: "{{ .perm_request_url }}",
                     dropdownLeft: 0,
                     isDropdownShow: false,
@@ -223,27 +222,7 @@
                             })
                         }
                     }).fail(function (result) {
-                        if (result.status == 401) {
-                            self.$bkInfo({
-                                type: 'warning',
-                                title: result.responseJSON.message,
-                                showFooter: false,
-                                maskClose: false,
-                                subHeader: h('div', {}, [
-                                    h('bk-button', {
-                                        attrs: {
-                                            theme: "primary",
-                                        },
-                                        on: {
-                                            click: () => {
-                                                window.open(self.loginUrl);
-                                            }
-                                        }
-                                    }, '前往登录'),
-                                ]),
-                                delay: 0
-                            })
-                        } else if (result.status == 403) {
+                        if (result.status == 403) {
                             self.$bkInfo({
                                 type: 'warning',
                                 title: result.responseJSON.message,
@@ -266,7 +245,7 @@
                         } else {
                             self.$bkInfo({
                                 type: 'error',
-                                title: '发生未知错误',
+                                title: '请求失败',
                                 subTitle: result.responseJSON.message,
                                 showFooter: false,
                                 maskClose: false,

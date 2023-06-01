@@ -15,15 +15,16 @@ package web
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+	"path"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"net/url"
-	"path"
 )
 
 type service struct {
@@ -40,7 +41,6 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 	web := router.Use(route.WebAuthRequired())
 
 	// 跳转 URL
-	web.GET("/user/login/", metrics.RequestCollect("UserLoginRedirect"), s.UserLoginRedirect)
 	web.GET("/user/perm_request/", metrics.RequestCollect("UserPermRequestRedirect"), route.APIAuthRequired(),
 		s.UserPermRequestRedirect)
 
@@ -62,9 +62,6 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	consoleQuery := new(podmanager.ConsoleQuery)
 	c.BindQuery(consoleQuery)
-
-	// 登入Url
-	loginUrl := path.Join(s.opts.RoutePrefix, "/user/login") + "/"
 
 	// 权限申请Url
 	promRequestQuery := url.Values{}
@@ -91,7 +88,6 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 	data := gin.H{
 		"title":            clusterId,
 		"session_url":      sessionUrl,
-		"login_url":        loginUrl,
 		"perm_request_url": promRequestUrl,
 		"guide_doc_links":  config.G.WebConsole.GuideDocLinks,
 		"project_id":       projectId,
@@ -110,9 +106,6 @@ func (s *service) MgrPageHandler(c *gin.Context) {
 
 	settings := map[string]string{"SITE_URL": s.opts.RoutePrefix}
 
-	// 登入Url
-	loginUrl := path.Join(s.opts.RoutePrefix, "/user/login") + "/"
-
 	// 权限申请Url
 	promRequestQuery := url.Values{}
 	promRequestQuery.Set("project_id", projectId)
@@ -121,7 +114,6 @@ func (s *service) MgrPageHandler(c *gin.Context) {
 	data := gin.H{
 		"settings":         settings,
 		"project_id":       projectId,
-		"login_url":        loginUrl,
 		"perm_request_url": promRequestUrl,
 	}
 
