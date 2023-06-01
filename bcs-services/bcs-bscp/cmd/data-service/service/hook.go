@@ -38,18 +38,28 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-
 	res := &table.Revision{
 		Creator: kt.User,
 		Reviser: kt.User,
 	}
 
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. create hook
 	hook := &table.Hook{
 		Spec:       spec,
 		Attachment: req.Attachment.HookAttachment(),
 		Revision:   res,
 	}
 
+	hookID, err := s.dao.Hook().CreateWithTx(kt, tx, hook)
+	if err != nil {
+		logs.Errorf("create hook failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+
+	// 2. create hook release
 	release := &table.HookRelease{
 		Spec: &table.HookReleaseSpec{
 			Name:     req.Spec.ReleaseName,
@@ -57,16 +67,19 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 			PubState: table.NotReleased,
 		},
 		Attachment: &table.HookReleaseAttachment{
-			BizID: req.Attachment.BizId,
+			BizID:  req.Attachment.BizId,
+			HookID: hookID,
 		},
 		Revision: res,
 	}
-
-	id, err := s.dao.Hook().Create(kt, hook, release)
+	id, err := s.dao.HookRelease().CreateWithTx(kt, tx, release)
 	if err != nil {
-		logs.Errorf("create hook failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("create hook release failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
 		return nil, err
 	}
+
+	tx.Commit()
 
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
@@ -117,12 +130,27 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. delete hook
 	hook := &table.Hook{
 		ID:         req.Id,
 		Attachment: req.Attachment.HookAttachment(),
 	}
-	if err := s.dao.Hook().Delete(kt, hook); err != nil {
+	if err := s.dao.Hook().DeleteWithTx(kt, tx, hook); err != nil {
 		logs.Errorf("delete hook failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	// 2. delete hook release
+	release := &table.HookRelease{
+		Attachment: &table.HookReleaseAttachment{
+			BizID:  req.Attachment.BizId,
+			HookID: req.Id,
+		},
+	}
+	if err := s.dao.HookRelease().DeleteByHookIDWithTx(kt, tx, release); err != nil {
+		logs.Errorf("delete hook release failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 

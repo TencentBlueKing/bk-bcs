@@ -66,9 +66,6 @@ func ClearDB(db *sqlx.DB) error {
 	if _, err := db.Exec("truncate table " + table.ArchivedAppTable.Name()); err != nil {
 		return err
 	}
-	if _, err := db.Exec("truncate table " + string(table.HookTable)); err != nil {
-		return err
-	}
 	if _, err := db.Exec("truncate table " + string(table.ContentTable)); err != nil {
 		return err
 	}

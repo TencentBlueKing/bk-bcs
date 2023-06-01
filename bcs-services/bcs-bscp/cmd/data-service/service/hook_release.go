@@ -143,22 +143,46 @@ func (s *Service) DeleteHookRelease(ctx context.Context,
 func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookReleaseReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
-	HookRelease := &table.HookRelease{
-		ID: req.Id,
+	r := &table.HookRelease{
 		Attachment: &table.HookReleaseAttachment{
 			BizID:  req.BizId,
 			HookID: req.HookId,
 		},
-		Spec: &table.HookReleaseSpec{},
+		Spec: &table.HookReleaseSpec{
+			PubState: table.FullReleased,
+		},
 		Revision: &table.Revision{
 			Reviser: kt.User,
 		},
 	}
 
-	if err := s.dao.HookRelease().Publish(kt, HookRelease); err != nil {
-		logs.Errorf("delete HookRelease failed, err: %v, rid: %s", err, kt.Rid)
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. 上线的版本下线
+	opt := &types.GetByPubStateOption{
+		BizID:  req.BizId,
+		HookID: req.HookId,
+		State:  table.PartialReleased,
+	}
+	old, err := s.dao.HookRelease().GetByPubState(kt, opt)
+	if err == nil {
+		r.ID = old.ID
+		if e := s.dao.HookRelease().UpdatePubStateWithTx(kt, tx, r); e != nil {
+			logs.Errorf("update HookRelease PubState failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, e
+		}
+	}
+
+	// 2. 未上线的版本上线
+	r.ID = req.Id
+	r.Spec.PubState = table.PartialReleased
+	if e := s.dao.HookRelease().UpdatePubStateWithTx(kt, tx, r); e != nil {
+		logs.Errorf("update HookRelease PubState failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, err
 	}
+
+	tx.Commit()
 
 	return new(pbbase.EmptyResp), nil
 

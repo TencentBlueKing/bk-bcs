@@ -51,33 +51,33 @@ func (h *Hook) ResType() string {
 }
 
 // ValidateCreate validate hook is valid or not when create it.
-func (s Hook) ValidateCreate() error {
+func (h Hook) ValidateCreate() error {
 
-	if s.ID > 0 {
+	if h.ID > 0 {
 		return errors.New("id should not be set")
 	}
 
-	if s.Spec == nil {
+	if h.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	if err := s.Spec.ValidateCreate(); err != nil {
+	if err := h.Spec.ValidateCreate(); err != nil {
 		return err
 	}
 
-	if s.Attachment == nil {
+	if h.Attachment == nil {
 		return errors.New("attachment not set")
 	}
 
-	if err := s.Attachment.Validate(); err != nil {
+	if err := h.Attachment.Validate(); err != nil {
 		return err
 	}
 
-	if s.Revision == nil {
+	if h.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateCreate(); err != nil {
+	if err := h.Revision.ValidateCreate(); err != nil {
 		return err
 	}
 
@@ -85,25 +85,25 @@ func (s Hook) ValidateCreate() error {
 }
 
 // ValidateUpdate validate hook is valid or not when update it.
-func (s Hook) ValidateUpdate() error {
+func (h Hook) ValidateUpdate() error {
 
-	if s.ID <= 0 {
+	if h.ID <= 0 {
 		return errors.New("id should be set")
 	}
 
 	changed := false
-	if s.Spec != nil {
+	if h.Spec != nil {
 		changed = true
-		if err := s.Spec.ValidateUpdate(); err != nil {
+		if err := h.Spec.ValidateUpdate(); err != nil {
 			return err
 		}
 	}
 
-	if s.Attachment == nil {
+	if h.Attachment == nil {
 		return errors.New("attachment should be set")
 	}
 
-	if s.Attachment.BizID <= 0 {
+	if h.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
 
@@ -111,11 +111,11 @@ func (s Hook) ValidateUpdate() error {
 		return errors.New("nothing is found to be change")
 	}
 
-	if s.Revision == nil {
+	if h.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateUpdate(); err != nil {
+	if err := h.Revision.ValidateUpdate(); err != nil {
 		return err
 	}
 
@@ -123,12 +123,12 @@ func (s Hook) ValidateUpdate() error {
 }
 
 // ValidateDelete validate the hook's info when delete it.
-func (s Hook) ValidateDelete() error {
-	if s.ID <= 0 {
+func (h Hook) ValidateDelete() error {
+	if h.ID <= 0 {
 		return errors.New("hook id should be set")
 	}
 
-	if s.Attachment.BizID <= 0 {
+	if h.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
 
@@ -191,18 +191,6 @@ func (s HookSpec) ValidateUpdate() error {
 		return err
 	}
 
-	return nil
-}
-
-// ValidateShellHookSecurity validate security of shell hook content
-func (s HookSpec) ValidateShellHookSecurity(hookContent string) error {
-	// TODO implement this
-	return nil
-}
-
-// ValidatePythonHookSecurity validate security of python hook content
-func (s HookSpec) ValidatePythonHookSecurity(hookContent string) error {
-	// TODO implement this
 	return nil
 }
 

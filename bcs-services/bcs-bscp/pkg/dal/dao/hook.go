@@ -16,7 +16,6 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -25,14 +24,14 @@ import (
 
 // Hook supplies all the hook related operations.
 type Hook interface {
-	// Create one hook instance.
-	Create(kit *kit.Kit, hook *table.Hook, release *table.HookRelease) (uint32, error)
+	// CreateWithTx create one hook instance with transaction.
+	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, hook *table.Hook) (uint32, error)
 	// List hooks with options.
 	List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hook, int64, error)
 	// CountHookTag count hook tag
 	CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error)
-	// Delete one strategy instance.
-	Delete(kit *kit.Kit, strategy *table.Hook) error
+	// DeleteWithTx delete hook instance with transaction.
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, strategy *table.Hook) error
 	// GetByID get hook only with id.
 	GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error)
 	// GetByName get hook by name
@@ -42,22 +41,15 @@ type Hook interface {
 var _ Hook = new(hookDao)
 
 type hookDao struct {
-	genQ           *gen.Query
-	idGen          IDGenInterface
-	auditDao       AuditDao
-	hookReleaseDao HookRelease
+	genQ     *gen.Query
+	idGen    IDGenInterface
+	auditDao AuditDao
 }
 
-// Create one hook instance.
-func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
-	release *table.HookRelease) (uint32, error) {
-
+// CreateWithTx create one hook instance with transaction.
+func (dao *hookDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) (uint32, error) {
 	if g == nil {
 		return 0, errors.New("hook is nil")
-	}
-
-	if release == nil {
-		return 0, errors.New("hook release is nil")
 	}
 
 	if err := g.ValidateCreate(); err != nil {
@@ -65,39 +57,26 @@ func (dao *hookDao) Create(kit *kit.Kit, g *table.Hook,
 	}
 
 	//generate a hook id and update to hook.
-	id, err := dao.idGen.One(kit, table.HookTable)
+	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
 		return 0, err
 	}
 	g.ID = id
-	release.Attachment.HookID = id
 
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
 
 	// 多个使用事务处理
-	createTx := func(tx *gen.Query) error {
-		q := tx.Hook.WithContext(kit.Ctx)
-		if e := q.Create(g); e != nil {
-			return e
-		}
 
-		_, err = dao.hookReleaseDao.CreateWithTx(kit, tx, release)
-		if err != nil {
-			return err
-		}
-
-		if e := ad.Do(tx); e != nil {
-			return e
-		}
-
-		return nil
+	q := tx.Hook.WithContext(kit.Ctx)
+	if e := q.Create(g); e != nil {
+		return 0, e
 	}
-	if e := dao.genQ.Transaction(createTx); e != nil {
-		return 0, err
+
+	if e := ad.Do(tx.Query); e != nil {
+		return 0, e
 	}
 
 	return g.ID, nil
-
 }
 
 // List hooks with options.
@@ -134,61 +113,33 @@ func (dao *hookDao) CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCo
 	return counts, nil
 }
 
-// Delete one hook instance.
-func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
+// DeleteWithTx one hook instance.
+func (dao *hookDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error {
 
 	if g == nil {
-		return errf.New(errf.InvalidParameter, "hook is nil")
+		return errors.New("hook is nil")
 	}
 
 	if err := g.ValidateDelete(); err != nil {
-		return errf.New(errf.InvalidParameter, err.Error())
+		return err
 	}
 
-	// 删除操作, 获取当前记录做审计
-	m := dao.genQ.Hook
-	q := dao.genQ.Hook.WithContext(kit.Ctx)
+	m := tx.Hook
+	q := tx.Hook.WithContext(kit.Ctx)
 
-	hookRM := dao.genQ.HookRelease
-	hookRQ := dao.genQ.HookRelease.WithContext(kit.Ctx)
-
-	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	oldOne, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Take()
 	if err != nil {
 		return err
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
-	hookRelease := &table.HookRelease{
-		Attachment: &table.HookReleaseAttachment{
-			BizID:  g.Attachment.BizID,
-			HookID: g.ID,
-		},
-	}
-
-	// 多个使用事务处理
-	deleteTx := func(tx *gen.Query) error {
-		q = tx.Hook.WithContext(kit.Ctx)
-		if _, e := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); e != nil {
-			return e
-		}
-
-		hookRQ = tx.HookRelease.WithContext(kit.Ctx)
-		if _, e := hookRQ.Where(hookRM.BizID.Eq(g.Attachment.BizID), hookRM.HookID.Eq(g.ID)).Delete(hookRelease); e != nil {
-			return e
-		}
-
-		if e := dao.hookReleaseDao.DeleteByHookIDWithTx(kit, tx, hookRelease); e != nil {
-			return e
-		}
-
-		if e := ad.Do(tx); e != nil {
-			return e
-		}
-		return nil
-	}
-	err = dao.genQ.Transaction(deleteTx)
+	_, err = q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g)
 	if err != nil {
 		return err
+	}
+
+	if e := ad.Do(tx.Query); e != nil {
+		return e
 	}
 
 	return nil

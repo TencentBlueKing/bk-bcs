@@ -32,6 +32,7 @@ import (
 
 // Set defines all the DAO to be operated.
 type Set interface {
+	GenQuery() *gen.Query
 	ID() IDGenInterface
 	App() App
 	Commit() Commit
@@ -102,10 +103,6 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
-	hrDao, err := NewHookReleaseDao(adminDB, idDao, auditDao)
-	if err != nil {
-		return nil, fmt.Errorf("new hookReleas dao failed, err: %v", err)
-	}
 
 	s := &set{
 		orm:               ormInst,
@@ -115,7 +112,6 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		credentialSetting: credentialSetting,
 		idGen:             idDao,
 		auditDao:          auditDao,
-		hookReleaseDao:    hrDao,
 		event:             &eventDao{orm: ormInst, sd: sd, idGen: idDao},
 		lock:              &lockDao{orm: ormInst, idGen: idDao},
 	}
@@ -131,9 +127,13 @@ type set struct {
 	credentialSetting cc.Credential
 	idGen             IDGenInterface
 	auditDao          AuditDao
-	hookReleaseDao    HookRelease
 	event             Event
 	lock              LockDao
+}
+
+// GenQuery returns the gen Query object
+func (s *set) GenQuery() *gen.Query {
+	return s.genQ
 }
 
 // ID returns the resource id generator DAO
@@ -242,14 +242,13 @@ func (s *set) Strategy() Strategy {
 // Hook returns the hook's DAO
 func (s *set) Hook() Hook {
 	return &hookDao{
-		idGen:          s.idGen,
-		auditDao:       s.auditDao,
-		hookReleaseDao: s.hookReleaseDao,
-		genQ:           s.genQ,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
 	}
 }
 
-// HookRelease returns the hook's DAO
+// HookRelease returns the hookRelease's DAO
 func (s *set) HookRelease() HookRelease {
 	return &hookReleaseDao{
 		idGen:    s.idGen,
