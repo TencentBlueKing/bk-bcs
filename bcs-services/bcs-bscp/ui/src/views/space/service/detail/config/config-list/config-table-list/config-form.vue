@@ -120,7 +120,7 @@
   // 上传配置内容
   const uploadContent =  async () => {
     const SHA256Str = await generateSHA256()
-    const data = localVal.value.file_type === 'binary' ? fileContent.value : stringContent.value
+    const data = localVal.value.file_type === 'binary' ? fileContent.value : JSON.stringify(stringContent.value)
     // @ts-ignore
     return updateConfigContent(props.bkBizId, props.appId, data, SHA256Str)
   }
@@ -141,7 +141,7 @@
       }
       return (fileContent.value as IFileConfigContentSummary).signature
     }
-    return SHA256(stringContent.value).toString()
+    return SHA256(JSON.stringify(stringContent.value)).toString()
   }
 
   // 下载已上传文件
