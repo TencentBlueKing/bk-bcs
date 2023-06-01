@@ -469,6 +469,10 @@ func (ds *Database) trySetDefault() {
 	if ds.MaxIdleConn == 0 {
 		ds.MaxIdleConn = 5
 	}
+
+	if ds.MaxIdleTimeoutMin == 0 {
+		ds.MaxIdleTimeoutMin = 60
+	}
 }
 
 // validate database runtime.
