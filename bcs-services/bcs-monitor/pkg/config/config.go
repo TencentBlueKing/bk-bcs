@@ -32,21 +32,19 @@ const (
 type Configuration struct {
 	Viper       *viper.Viper
 	mtx         sync.Mutex
-	Base        *BaseConf                  `yaml:"base_conf"`
-	Redis       *RedisConf                 `yaml:"redis"`
-	Mongo       *MongoConf                 `yaml:"mongo"`
-	StoreGWList []*StoreConf               `yaml:"storegw"`
-	Logging     *LogConf                   `yaml:"logging"`
-	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
-	BKMonitor   *BKMonitorConf             `yaml:"bk_monitor_conf"`
-	BKLog       *BKLogConf                 `yaml:"bk_log_conf"`
-	BCS         *BCSConf                   `yaml:"bcs_conf"`
-	IAM         *IAMConfig                 `yaml:"iam_conf"`
-	Credentials map[string][]*Credential   `yaml:"-"`
-	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
-	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
-	Web         *WebConf                   `yaml:"web"`
-	QueryStore  *QueryStoreConf            `yaml:"query_store_conf"`
+	Base        *BaseConf                `yaml:"base_conf"`
+	Redis       *RedisConf               `yaml:"redis"`
+	Mongo       *MongoConf               `yaml:"mongo"`
+	StoreGWList []*StoreConf             `yaml:"storegw"`
+	Logging     *LogConf                 `yaml:"logging"`
+	BKAPIGW     *BKAPIGWConf             `yaml:"bkapigw_conf"`
+	BKMonitor   *BKMonitorConf           `yaml:"bk_monitor_conf"`
+	BKLog       *BKLogConf               `yaml:"bk_log_conf"`
+	BCS         *BCSConf                 `yaml:"bcs_conf"`
+	IAM         *IAMConfig               `yaml:"iam_conf"`
+	Credentials map[string][]*Credential `yaml:"-"`
+	Web         *WebConf                 `yaml:"web"`
+	QueryStore  *QueryStoreConf          `yaml:"query_store_conf"`
 }
 
 // init 初始化
@@ -65,11 +63,6 @@ func (c *Configuration) init() error {
 
 	if err := c.BKAPIGW.InitJWTPubKey(); err != nil {
 		return err
-	}
-
-	// 把列表类型转换为map，方便检索
-	for _, conf := range c.BCSEnvConf {
-		c.BCSEnvMap[conf.ClusterEnv] = conf
 	}
 
 	if err := c.BKMonitor.init(); err != nil {
@@ -104,9 +97,6 @@ func newConfiguration() (*Configuration, error) {
 	// BCS Config
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
-
-	c.BCSEnvConf = []*BCSConf{}
-	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
 
 	c.QueryStore = &QueryStoreConf{}
 
@@ -184,16 +174,10 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	}
 	if c.BCS.Token == "" {
 		c.BCS.Token = BCS_APIGW_TOKEN
-		for _, v := range c.BCSEnvConf {
-			v.Token = BCS_APIGW_TOKEN
-		}
 	}
 
 	if c.BCS.JWTPubKey == "" {
 		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
-		for _, v := range c.BCSEnvConf {
-			v.JWTPubKey = BCS_APIGW_PUBLIC_KEY
-		}
 	}
 
 	// iam env
