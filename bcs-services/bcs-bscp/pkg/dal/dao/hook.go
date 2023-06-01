@@ -177,8 +177,8 @@ func (dao *hookDao) Delete(kit *kit.Kit, g *table.Hook) error {
 			return e
 		}
 
-		if err = dao.hookReleaseDao.DeleteByHookIDWithTx(kit, tx, hookRelease); err != nil {
-			return err
+		if e := dao.hookReleaseDao.DeleteByHookIDWithTx(kit, tx, hookRelease); e != nil {
+			return e
 		}
 
 		if e := ad.Do(tx); e != nil {
