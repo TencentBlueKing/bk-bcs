@@ -5,7 +5,7 @@
   import { EScriptType, IScriptEditingForm } from '../../../../types/script'
   import { createScript } from '../../../api/script'
   import DetailLayout from './components/detail-layout.vue'
-  import CodeEditor from '../../../components/code-editor/index.vue'
+  import ScriptEditor from './components/script-editor.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
@@ -63,20 +63,19 @@
             <bk-input v-model="formData.release_name" />
           </bk-form-item>
           <bk-form-item label="脚本内容"  property="content" required>
-            <div class="script-content">
-              <div class="language-tabs">
-                <div
-                  v-for="item in SCRIPT_TYPE"
-                  :key="item.id"
-                  :class="['tab', { actived: formData.type === item.id }]"
-                  @click="formData.type = item.id">
-                  {{ item.name }}
+            <ScriptEditor v-model="formData.content" :language="formData.type">
+              <template #header>
+                <div class="language-tabs">
+                  <div
+                    v-for="item in SCRIPT_TYPE"
+                    :key="item.id"
+                    :class="['tab', { actived: formData.type === item.id }]"
+                    @click="formData.type = item.id">
+                    {{ item.name }}
+                  </div>
                 </div>
-              </div>
-              <div class="content-editor">
-                <CodeEditor v-model="formData.content" :language="formData.type" />
-              </div>
-            </div>
+              </template>
+            </ScriptEditor>
           </bk-form-item>
         </bk-form>
       </div>
@@ -99,28 +98,24 @@
   .fixed-width-form {
     width: 520px;
   }
-  .script-content {
-    .language-tabs {
-      display: flex;
-      align-items: center;
-      background: #2e2e2e;
-      .tab {
-        padding: 10px 24px;
-        line-height: 20px;
-        font-size: 14px;
-        color: #8a8f99;
-        border-top: 3px solid #2e2e2e;
-        cursor: pointer;
-        &.actived {
-          color: #c4c6cc;
-          font-weight: 700;
-          background: #1a1a1a;
-          border-color: #3a84ff;
-        }
+  
+  .language-tabs {
+    display: flex;
+    align-items: center;
+    background: #2e2e2e;
+    .tab {
+      padding: 10px 24px;
+      line-height: 20px;
+      font-size: 14px;
+      color: #8a8f99;
+      border-top: 3px solid #2e2e2e;
+      cursor: pointer;
+      &.actived {
+        color: #c4c6cc;
+        font-weight: 700;
+        background: #1a1a1a;
+        border-color: #3a84ff;
       }
-    }
-    .content-editor {
-      height: 600px;
     }
   }
   .actions-wrapper {

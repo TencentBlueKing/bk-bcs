@@ -34,7 +34,7 @@
     language: ''
   })
 
-  const emit = defineEmits(['update:modelValue'])
+  const emit = defineEmits(['update:modelValue', 'change'])
 
   const codeEditorRef = ref()
   let editor: monaco.editor.IStandaloneCodeEditor
@@ -63,6 +63,7 @@
     editor.onDidChangeModelContent((val:any) => {
       localVal.value = editor.getValue();
       emit('update:modelValue', localVal.value)
+      emit('change', localVal.value)
     })
   })
 

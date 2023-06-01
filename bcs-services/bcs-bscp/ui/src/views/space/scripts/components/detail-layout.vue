@@ -21,7 +21,7 @@
     <div :class="['layout-content', { 'without-footer': !props.showFooter }]">
       <slot name="content"></slot>
     </div>
-    <footer v-if="showFooter" class="layout-footer">
+    <footer v-if="props.showFooter" class="layout-footer">
       <slot name="footer"></slot>
     </footer>
   </section>

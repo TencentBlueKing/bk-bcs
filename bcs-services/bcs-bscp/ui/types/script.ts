@@ -20,7 +20,7 @@ export interface IScriptItem {
       tag: string;
       publish_num: number;
       momo: string;
-  },
+  };
   attachment: {
       biz_id: number;
   },
@@ -30,4 +30,32 @@ export interface IScriptItem {
       create_at: string;
       update_at: string;
   }
+}
+
+export interface IScriptVersion {
+  id: number;
+  spec: {
+      name: string;
+      content: string;
+      publish_num: number;
+      pub_state : string;
+      momo: string;
+  };
+  attachment: {
+      biz_id: number;
+      hook_id: number;
+  };
+  revision: {
+      creator: string;
+      reviser: string;
+      create_at: string;
+      update_at: string;
+  }
+}
+
+// 脚本被引用列表查询参数
+export interface IScriptCiteQuery {
+  start: number;
+  limit: number;
+  searchKey?: string;
 }

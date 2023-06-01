@@ -10,6 +10,7 @@
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
   import EditConfig from './edit-config.vue'
+  import InitScript from './init-script/index.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
   import CreateVersion from './create-version/index.vue'
@@ -141,6 +142,7 @@
           class="version-desc" />
       </section>
       <section class="version-operations">
+        <InitScript />
         <CreateVersion
           v-if="versionData.status.publish_status === 'editing'"
           ref="publishVersionRef"
@@ -246,6 +248,9 @@
     .version-operations {
       display: flex;
       align-items: center;
+      :deep(> .bk-button) {
+        margin-left: 8px;
+      }
     }
   }
   .operate-area {

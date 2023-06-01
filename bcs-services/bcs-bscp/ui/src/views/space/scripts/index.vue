@@ -1,17 +1,22 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
-  import { storeToRefs } from 'pinia'
   import { Plus, Search } from 'bkui-vue/lib/icon'
+  import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../store/global'
   import { getScriptList } from '../../../api/script'
   import { IScriptItem } from '../../../../types/script'
   import CreateScript from './create-script.vue'
+  import ScriptCited from './script-cited.vue'
+  import VersionManage from './version-manage/index.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
   const showCreateScript = ref(false)
+  const showVersionManage = ref(false)
+  const showCiteSlider = ref(false)
   const scriptsData = ref<IScriptItem[]>([])
   const scriptsLoading = ref(false)
+  const currentId = ref(0)
   const pagination = ref({
     current: 1,
     count: 0,
@@ -56,7 +61,9 @@
     <div class="script-list-wrapper">
       <div class="operate-area">
         <bk-button theme="primary" @click="showCreateScript = true"><Plus class="button-icon" />新建脚本</bk-button>
-        <bk-input class="search-group-input" placeholder="脚本名称">
+        <bk-button theme="primary" @click="showVersionManage = true"><Plus class="button-icon" />版本管理</bk-button>
+        <bk-button theme="primary" @click="showCiteSlider = true"><Plus class="button-icon" />被引用</bk-button>
+        <bk-input class="search-script-input" placeholder="脚本名称">
            <template #suffix>
               <Search class="search-input-icon" />
            </template>
@@ -69,7 +76,13 @@
         <bk-table-column label="被引用"></bk-table-column>
         <bk-table-column label="更新人"></bk-table-column>
         <bk-table-column label="更新时间"></bk-table-column>
-        <bk-table-column label="操作"></bk-table-column>
+        <bk-table-column label="操作">
+          <template #defaut="{ row }">
+            <bk-button text theme="primary">编辑</bk-button>
+            <bk-button text theme="primary">版本管理</bk-button>
+            <bk-button text theme="primary">删除</bk-button>
+          </template>
+        </bk-table-column>
       </bk-table>
       <bk-pagination
         class="table-list-pagination"
@@ -81,7 +94,9 @@
         @change="refreshList"
         @limit-change="handlePageLimitChange"/>
     </div>
-    <create-script v-if="showCreateScript" v-model:show="showCreateScript" @created="refreshList"></create-script>
+    <CreateScript v-if="showCreateScript" v-model:show="showCreateScript" @created="refreshList" />
+    <ScriptCited v-model:show="showCiteSlider" :id="currentId" />
+    <VersionManage v-if="showVersionManage" v-model:show="showVersionManage" />
   </section>
 </template>
 <style lang="scss" scoped>
@@ -132,7 +147,7 @@
       font-size: 18px;
     }
   }
-  .search-group-input {
+  .search-script-input {
     width: 320px;
   }
   .search-input-icon {

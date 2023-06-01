@@ -14,7 +14,7 @@
 
   const tabs = ref([
     { name: 'config', label: '配置管理', routeName: 'service-config' },
-    // { name: 'group', label: '分组管理', routeName: 'service-group' },
+    // { name: 'script', label: '初始化脚本', routeName: 'init-script' },
     // { name: 'client', label: '客户端统计', routeName: 'service-client' },
   ])
 
