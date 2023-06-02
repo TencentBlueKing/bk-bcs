@@ -18,7 +18,8 @@ import (
 	"crypto/tls"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
