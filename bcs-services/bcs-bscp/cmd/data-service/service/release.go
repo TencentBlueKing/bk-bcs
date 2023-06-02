@@ -76,8 +76,20 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		return nil, err
 	}
 	// step4: create release, and create release and released config item need to begin tx.
+	hook, err := s.dao.ConfigHook().GetByAppID(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil {
+		return nil, err
+	}
+	spec := req.Spec.ReleaseSpec()
+	spec.Hook = &table.ReleaseHook{
+		PreHookID:         hook.Spec.PreHookID,
+		PreHookReleaseID:  hook.Spec.PreHookReleaseID,
+		PostHookID:        hook.Spec.PostHookID,
+		PostHookReleaseID: hook.Spec.PostHookReleaseID,
+	}
+
 	release := &table.Release{
-		Spec:       req.Spec.ReleaseSpec(),
+		Spec:       spec,
 		Attachment: req.Attachment.ReleaseAttachment(),
 		Revision: &table.CreatedRevision{
 			Creator:   grpcKit.User,

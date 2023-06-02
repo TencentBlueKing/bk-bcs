@@ -30,6 +30,10 @@ func main() {
 		table.IDGenerator{},
 		table.Audit{},
 		table.TemplateSpace{},
+		table.Hook{},
+		table.HookRelease{},
+		table.Release{},
+		table.ConfigHook{},
 	)
 
 	g.Execute()
