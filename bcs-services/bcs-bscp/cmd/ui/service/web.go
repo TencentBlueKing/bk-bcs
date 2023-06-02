@@ -15,6 +15,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -43,6 +44,7 @@ type WebServer struct {
 	addrIPv6          string
 	embedWebServer    bscp.EmbedWebServer
 	discover          serviced.Discover
+	state             serviced.State
 	authorizer        auth.Authorizer
 	webAuthentication func(next http.Handler) http.Handler
 }
@@ -60,6 +62,11 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 		return nil, fmt.Errorf("new discovery faield, err: %v", err)
 	}
 
+	state, ok := dis.(serviced.State)
+	if !ok {
+		return nil, errors.New("discover convert state failed")
+	}
+
 	// 鉴权器
 	authorizer, err := auth.NewAuthorizer(dis, cc.TLSConfig{})
 	if err != nil {
@@ -73,6 +80,7 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 		ctx:               ctx,
 		addrIPv6:          addrIPv6,
 		discover:          dis,
+		state:             state,
 		embedWebServer:    bscp.NewEmbedWeb(),
 		authorizer:        authorizer,
 		webAuthentication: webAuthentication,
@@ -115,9 +123,9 @@ func (w *WebServer) newRouter() http.Handler {
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	// 注册 HTTP 请求
-	r.Get("/-/healthy", HealthyHandler)
-	r.Get("/-/ready", ReadyHandler)
-	r.Get("/healthz", HealthzHandler)
+	r.Get("/-/healthy", w.HealthyHandler)
+	r.Get("/-/ready", w.ReadyHandler)
+	r.Get("/healthz", w.HealthzHandler)
 
 	// init metrics
 	metrics.InitMetrics(w.srv.Addr)
@@ -171,16 +179,22 @@ func (w *WebServer) subRouter() http.Handler {
 // @Success  200  {string}  string
 // @Router   /healthz [get]
 // HealthzHandler Healthz 接口
-func HealthzHandler(w http.ResponseWriter, r *http.Request) {
+func (s *WebServer) HealthzHandler(w http.ResponseWriter, r *http.Request) {
+	if err := s.state.Healthz(); err != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	w.Write([]byte("OK"))
 }
 
 // HealthyHandler 健康检查
-func HealthyHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+func (s *WebServer) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	s.HealthzHandler(w, r)
 }
 
 // ReadyHandler 健康检查
-func ReadyHandler(w http.ResponseWriter, r *http.Request) {
+func (s *WebServer) ReadyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
