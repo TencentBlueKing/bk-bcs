@@ -29,9 +29,9 @@ import (
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 
+	"bscp.io/cmd/ui/service"
 	"bscp.io/pkg/config"
 	"bscp.io/pkg/version"
-	"bscp.io/pkg/web"
 )
 
 var (
@@ -87,7 +87,7 @@ func RunCmd() error {
 	})
 
 	addrIPv6 := getIPv6AddrFromEnv(httpAddress)
-	svr, err := web.NewWebServer(ctx, httpAddress, addrIPv6)
+	svr, err := service.NewWebServer(ctx, httpAddress, addrIPv6)
 	if err != nil {
 		klog.Errorf("init web server err: %s, exited", err)
 		os.Exit(1)

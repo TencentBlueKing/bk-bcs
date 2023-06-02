@@ -11,7 +11,7 @@
  *
  */
 
-package web
+package service
 
 import (
 	"context"
