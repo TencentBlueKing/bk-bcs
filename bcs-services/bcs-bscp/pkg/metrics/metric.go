@@ -73,8 +73,8 @@ const (
 	LabelHost        = "host"
 )
 
-// GrpcBuckets defines the grpc server's metric buckets.
 var (
+	// GrpcBuckets defines the grpc server's metric buckets.
 	GrpcBuckets = gprm.WithHistogramBuckets([]float64{0.001, 0.003, 0.005, 0.007, 0.01, 0.015, 0.02, 0.025, 0.03,
 		0.04, 0.05, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2.5, 5, 10})
 
