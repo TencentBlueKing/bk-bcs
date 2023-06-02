@@ -131,6 +131,7 @@ func (s *WebServer) newRouter() http.Handler {
 
 	// init metrics
 	metrics.InitMetrics(s.addr)
+	metrics.RegisterHTTPMetrics()
 	r.Get("/metrics", metrics.Handler().ServeHTTP)
 
 	if config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != "" {
@@ -170,8 +171,8 @@ func (s *WebServer) subRouter() http.Handler {
 	}
 
 	// vue 模版渲染
-	r.With(s.webAuthentication).Get("/", s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
-	r.NotFound(s.webAuthentication(s.embedWebServer.RenderIndexHandler(conf)).ServeHTTP)
+	r.With(metrics.RequestCollect("index"), s.webAuthentication).Get("/", s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
+	r.With(metrics.RequestCollect("index")).NotFound(s.webAuthentication(s.embedWebServer.RenderIndexHandler(conf)).ServeHTTP)
 
 	return r
 }
