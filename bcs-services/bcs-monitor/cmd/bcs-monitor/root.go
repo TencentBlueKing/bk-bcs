@@ -80,6 +80,8 @@ func init() {
 	rootCmd.AddCommand(APIServerCmd())
 	rootCmd.AddCommand(QueryCmd())
 	rootCmd.AddCommand(StoreGWCmd())
+	// 打印配置文件
+	rootCmd.AddCommand(ConfigViewCmd())
 	rootCmd.AddCommand(VersionCmd())
 	rootCmd.Version = printVersion()
 	rootCmd.SetVersionTemplate(`{{printf "%s" .Version}}`)
@@ -154,4 +156,24 @@ func VersionCmd() *cobra.Command {
 func printVersion() string {
 	v := appName + ", " + version.GetVersion()
 	return v
+}
+
+// ConfigViewCmd 打印配置文件
+func ConfigViewCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "config",
+		Short: "Show application config",
+		Long:  `Print the bcs-monitor configuration file`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if cfgFile != "" {
+				content, err := os.ReadFile(cfgFile)
+				if err != nil {
+					panic(err)
+				}
+				fmt.Println(string(content))
+			}
+			stopCmd(cmd)
+		},
+	}
+	return cmd
 }

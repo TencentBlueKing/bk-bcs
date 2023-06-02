@@ -31,7 +31,7 @@ import (
 
 func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface, error) {
 	clusterId := c.Param("clusterId")
-	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
+	bcsConf := k8sclient.GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	k8sconfig := &k8srest.Config{
 		Host:        host,
