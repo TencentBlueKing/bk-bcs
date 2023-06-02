@@ -16,12 +16,10 @@ package main
 import (
 	"context"
 	"errors"
-	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/oklog/run"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,19 +27,23 @@ import (
 	"gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 
+	"bscp.io/cmd/ui/service"
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/config"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/version"
-	"bscp.io/pkg/web"
+)
+
+const (
+	appName = "bscp-ui"
 )
 
 var (
 	// Used for flags.
-	cfgFile       string
-	httpAddress   string
-	appName       = "bscp-ui"
-	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
-	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
-	outConfInfo   bool
+	cfgFile     string
+	bindAddr    string
+	port        int
+	outConfInfo bool
 
 	rootCmd = &cobra.Command{
 		Use:   appName,
@@ -86,8 +88,9 @@ func RunCmd() error {
 		stop()
 	})
 
-	addrIPv6 := getIPv6AddrFromEnv(httpAddress)
-	svr, err := web.NewWebServer(ctx, httpAddress, addrIPv6)
+	addrIPv6 := tools.GetIPv6AddrFromEnv()
+	httpAddress := tools.GetListenAddr(bindAddr, port)
+	svr, err := service.NewWebServer(ctx, httpAddress, tools.GetListenAddr(addrIPv6, port))
 	if err != nil {
 		klog.Errorf("init web server err: %s, exited", err)
 		os.Exit(1)
@@ -101,13 +104,15 @@ func RunCmd() error {
 }
 
 func init() {
+	cc.InitService(cc.UIName)
 	cobra.OnInitialize(initConfig)
 
 	// 不开启 completion 子命令
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 
 	rootCmd.Flags().StringVar(&cfgFile, "config", "", "config file path")
-	rootCmd.Flags().StringVar(&httpAddress, "http-address", "127.0.0.1:8080", `listen http address`)
+	rootCmd.Flags().StringVar(&bindAddr, "bind-address", "127.0.0.1", "the IP address on which to listen")
+	rootCmd.Flags().IntVar(&port, "port", 8080, "http/metrics port")
 	rootCmd.Flags().BoolVarP(&outConfInfo, "confinfo", "o", false, "print init confinfo to stdout")
 
 	// 添加版本
@@ -140,40 +145,4 @@ func initConfig() {
 
 	// 日志配置已经Ready, 后面都需要使用日志
 	klog.Infof("Using config file:%s", viper.ConfigFileUsed())
-}
-
-// getIPv6AddrFromEnv 解析ipv6
-func getIPv6AddrFromEnv(ipv4 string) string {
-	host, listenPort, _ := net.SplitHostPort(ipv4)
-	// ipv4 已经绑定了0.0.0.0 ipv6也不启动
-	if ip := net.ParseIP(host); ip != nil && ip.IsUnspecified() {
-		return ""
-	}
-
-	if listenPort == "" {
-		return ""
-	}
-
-	podIPs := os.Getenv(podIPsEnv)
-	if podIPs == "" {
-		return ""
-	}
-
-	ipv6 := util.GetIPv6Address(podIPs)
-	if ipv6 == "" {
-		return ""
-	}
-
-	// 在实际中，ipv6不能是回环地址
-	if v := net.ParseIP(ipv6); v == nil || v.IsLoopback() {
-		return ""
-	}
-
-	// local link ipv6 需要带上 interface， 格式如::%eth0
-	ipv6Interface = os.Getenv(ipv6Interface)
-	if ipv6Interface != "" {
-		ipv6 = ipv6 + "%" + ipv6Interface
-	}
-
-	return net.JoinHostPort(ipv6, listenPort)
 }
