@@ -81,13 +81,13 @@ var (
 	// http 请求总量
 	httpRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "http_requests_total",
-		Help: "Counter of HTTP requests to prime",
+		Help: "Counter of HTTP requests to bscp",
 	}, []string{"handler", "method", "code"})
 
 	// http 请求耗时
 	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "http_request_duration_seconds",
-		Help:    "Histogram of latencies for HTTP requests to prime.",
+		Help:    "Histogram of latencies for HTTP requests to bscp.",
 		Buckets: []float64{0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1},
 	}, []string{"handler", "method", "code"})
 )
