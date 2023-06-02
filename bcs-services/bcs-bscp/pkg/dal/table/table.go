@@ -300,10 +300,6 @@ func (r Revision) ValidateCreate() error {
 		return errors.New("creator can not be empty")
 	}
 
-	// now := time.Now().Unix()
-	// if (r.CreatedAt.Unix() <= (now - lagSeconds)) || (r.CreatedAt.Unix() >= (now + lagSeconds)) {
-	// 	return errors.New("invalid create time")
-	// }
 	return nil
 }
 
@@ -319,11 +315,6 @@ func (r Revision) ValidateUpdate() error {
 
 	if !r.CreatedAt.IsZero() {
 		return errors.New("create_time can not be updated")
-	}
-
-	now := time.Now().Unix()
-	if (r.UpdatedAt.Unix() <= (now - lagSeconds)) || (r.UpdatedAt.Unix() >= (now + lagSeconds)) {
-		return errors.New("invalid update time")
 	}
 
 	return nil
