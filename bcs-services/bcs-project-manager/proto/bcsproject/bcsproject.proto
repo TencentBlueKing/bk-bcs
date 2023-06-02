@@ -109,6 +109,16 @@ service BCSProject {
       summary : "查询有权限项目列表"
     };
   }
+
+  rpc ListProjectsForIAM(ListProjectsForIAMReq) returns (ListProjectsForIAMResp){
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects_for_iam"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询开启容器服务的项目列表用于IAM授权"
+      summary : "查询开启容器服务的项目列表用于IAM授权"
+    };
+  }
 }
 
 message Project {
@@ -561,6 +571,64 @@ message ListAuthorizedProjResp{
     description: "返回错误信息"
   }];
   ListProjectData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回项目信息, 包含总量及项目列表"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+message ListProjectsForIAMReq{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectsForIAMReq"
+      description : "查询开启容器服务的项目列表用于IAM授权"
+    }
+  };
+}
+
+message ListProjectsForIAMResp{
+  message Project {
+    string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "name",
+      description: "项目中文名称, 长度不能超过64字符"
+    }];
+    string projectID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "projectID",
+      description: "项目ID, 全局唯一, 长度为32位字符串, 自动生成"
+    }];
+    string projectCode = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "projectCode",
+      description: "项目编码(英文缩写), 全局唯一, 长度不能超过32字符"
+    }];
+    string businessID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "businessID",
+      description: "项目绑定的蓝鲸CMDB中业务ID信息"
+    }];
+    string managers = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "managers",
+      description: "项目管理人员，默认为创建者+更新者"
+    }];
+    int32 bkmSpaceBizID = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "bkmSpaceBizID",
+      description: "项目绑定的蓝鲸监控的空间业务ID"
+    }];
+    string bkmSpaceName = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "bkmSpaceName",
+      description: "项目绑定的蓝鲸监控的空间名称"
+    }];
+  }
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  repeated Project data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "data", 
     description: "返回项目信息, 包含总量及项目列表"
   }];

@@ -172,6 +172,18 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 	return nil
 }
 
+// ListProjectsForIAM list projects with k8s enabled for iam grant
+func (p *ProjectHandler) ListProjectsForIAM(ctx context.Context,
+	req *proto.ListProjectsForIAMReq, resp *proto.ListProjectsForIAMResp) error {
+	lap := project.NewListForIAMActionAction(p.model)
+	projects, e := lap.Do(ctx, req)
+	if e != nil {
+		return e
+	}
+	resp.Data = projects
+	return nil
+}
+
 // getProjectIDs 获取项目ID
 func getProjectIDs(p *map[string]interface{}) []string {
 	var ids []string

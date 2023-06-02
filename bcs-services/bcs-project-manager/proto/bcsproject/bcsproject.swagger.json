@@ -1590,6 +1590,30 @@
           "BCSProject"
         ]
       }
+    },
+    "/bcsproject/v1/projects_for_iam": {
+      "get": {
+        "summary": "查询开启容器服务的项目列表用于IAM授权",
+        "description": "查询开启容器服务的项目列表用于IAM授权",
+        "operationId": "BCSProject_ListProjectsForIAM",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListProjectsForIAMResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "tags": [
+          "BCSProject"
+        ]
+      }
     }
   },
   "definitions": {
@@ -2518,6 +2542,76 @@
       },
       "description": "项目列表数据",
       "title": "ListProjectData"
+    },
+    "bcsprojectListProjectsForIAMResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectListProjectsForIAMRespProject"
+          },
+          "description": "返回项目信息, 包含总量及项目列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        }
+      }
+    },
+    "bcsprojectListProjectsForIAMRespProject": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID, 全局唯一, 长度为32位字符串, 自动生成",
+          "title": "projectID"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过32字符",
+          "title": "projectCode"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "managers": {
+          "type": "string",
+          "description": "项目管理人员，默认为创建者+更新者",
+          "title": "managers"
+        },
+        "bkmSpaceBizID": {
+          "type": "integer",
+          "format": "int32",
+          "description": "项目绑定的蓝鲸监控的空间业务ID",
+          "title": "bkmSpaceBizID"
+        },
+        "bkmSpaceName": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸监控的空间名称",
+          "title": "bkmSpaceName"
+        }
+      }
     },
     "bcsprojectListProjectsResponse": {
       "type": "object",

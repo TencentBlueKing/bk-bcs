@@ -118,6 +118,12 @@ type ITSMConfig struct {
 	DeleteNamespaceServiceID int    `yaml:"deleteNsSvcID" usage:"service id for delete ns service"`
 }
 
+// BkMonitorConfig 蓝鲸监控操作需要的配置
+type BkMonitorConfig struct {
+	Enable                   bool   `yaml:"enable" usage:"enable bk monitor"`
+	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
+}
+
 // ClientActionsConfig Client级别的访问
 type ClientActionsConfig struct {
 	ClientID         string   `yaml:"clientID" usage:"client id"`
@@ -167,6 +173,7 @@ type ProjectConfig struct {
 	JWT                    JWTConfig                    `yaml:"jwt"`
 	IAM                    IAMConfig                    `yaml:"iam"`
 	ITSM                   ITSMConfig                   `yaml:"itsm"`
+	Bkmonitor              BkMonitorConfig              `yaml:"bkmonitor"`
 	ClientActionExemptPerm ClientActionExemptPermConfig `yaml:"clientActionExemptPerm"`
 	CMDB                   CMDBConfig                   `yaml:"cmdb"`
 	BCSCC                  BCSCCConfig                  `yaml:"bcscc"`

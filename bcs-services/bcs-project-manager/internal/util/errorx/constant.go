@@ -78,6 +78,10 @@ const (
 	RequestBCSCCErrMsg = "request bcs cc api error"
 	// RequestITSMErr TODO
 	RequestITSMErr = commErr.AdditionErrorCode + 512
+	// RequestBkMonitorErr TODO
+	RequestBkMonitorErr = commErr.AdditionErrorCode + 513
+	// RequestBkMonitorErrMsg TODO
+	RequestBkMonitorErrMsg = "request bk monitor api error"
 	// RequestITSMErrMsg TODO
 	RequestITSMErrMsg = "request bk itsm api error"
 	// NoPermissionErr 无权限
