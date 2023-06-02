@@ -37,7 +37,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 			Namespace: request.PathParameter("namespace"),
 		}, ingress); err != nil {
 			if k8serrors.IsNotFound(err) {
-				blog.Infof("ingress %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
+				blog.Errorf("ingress %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
 				data = CreateResponseData(err, "failed", nil)
 				break
 			}
@@ -64,7 +64,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 			Namespace: request.PathParameter("namespace"),
 		}, portPool); err != nil {
 			if k8serrors.IsNotFound(err) {
-				blog.Infof("portpool %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
+				blog.Errorf("portpool %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
 				data = CreateResponseData(err, "failed", nil)
 				break
 			}
