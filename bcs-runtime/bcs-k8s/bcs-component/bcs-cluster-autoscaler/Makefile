@@ -21,11 +21,13 @@ endif
 
 
 build: clean
-	cd ${WORKSPACE}/bcs-cluster-autoscaler-1.16 && go mod tidy && go build ${LDFLAGS_FLAG} ${TAGS_FLAG} -o ${WORKSPACE}/bcs-ca-1.16
-	cd ${WORKSPACE}/bcs-cluster-autoscaler-1.22 && go mod tidy && go build ${LDFLAGS_FLAG} ${TAGS_FLAG} -o ${WORKSPACE}/bcs-ca-1.22
+	cd ${WORKSPACE}/bcs-cluster-autoscaler-1.16 && go mod tidy && go build ${LDFLAGS_FLAG} ${TAGS_FLAG} -o ${WORKSPACE}/hyper/bcs-ca-1.16
+	cd ${WORKSPACE}/bcs-cluster-autoscaler-1.22 && go mod tidy && go build ${LDFLAGS_FLAG} ${TAGS_FLAG} -o ${WORKSPACE}/hyper/bcs-ca-1.22
+	touch ${WORKSPACE}/bcs-cluster-autoscaler && chmod a+x ${WORKSPACE}/bcs-cluster-autoscaler
 
 clean:
-	rm -f ${WORKSPACE}/bcs-ca-1.16 ${WORKSPACE}/bcs-ca-1.22
+	rm -f bcs-cluster-autoscaler 
+	rm -r hyper/
 
 make-image:
 ifdef BASEIMAGE
