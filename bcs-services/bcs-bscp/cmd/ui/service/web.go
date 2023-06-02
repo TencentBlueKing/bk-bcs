@@ -41,6 +41,7 @@ import (
 type WebServer struct {
 	ctx               context.Context
 	srv               *http.Server
+	addr              string
 	addrIPv6          string
 	embedWebServer    bscp.EmbedWebServer
 	discover          serviced.Discover
@@ -78,6 +79,7 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 
 	s := &WebServer{
 		ctx:               ctx,
+		addr:              addr,
 		addrIPv6:          addrIPv6,
 		discover:          dis,
 		state:             state,
@@ -93,28 +95,28 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 }
 
 // Run :
-func (w *WebServer) Run() error {
+func (s *WebServer) Run() error {
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListenerWithAddr(w.srv.Addr); err != nil {
+	if err := dualStackListener.AddListenerWithAddr(s.addr); err != nil {
 		return err
 	}
 
-	if w.addrIPv6 != "" && w.addrIPv6 != w.srv.Addr {
-		if err := dualStackListener.AddListenerWithAddr(w.addrIPv6); err != nil {
+	if s.addrIPv6 != "" && s.addrIPv6 != s.addr {
+		if err := dualStackListener.AddListenerWithAddr(s.addrIPv6); err != nil {
 			return err
 		}
-		klog.Infof("api serve dualStackListener with ipv6: %s", w.addrIPv6)
+		klog.Infof("api serve dualStackListener with ipv6: %s", s.addrIPv6)
 	}
 
-	return w.srv.Serve(dualStackListener)
+	return s.srv.Serve(dualStackListener)
 }
 
 // Close :
-func (w *WebServer) Close() error {
-	return w.srv.Shutdown(w.ctx)
+func (s *WebServer) Close() error {
+	return s.srv.Shutdown(s.ctx)
 }
 
-func (w *WebServer) newRouter() http.Handler {
+func (s *WebServer) newRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -123,23 +125,23 @@ func (w *WebServer) newRouter() http.Handler {
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	// 注册 HTTP 请求
-	r.Get("/-/healthy", w.HealthyHandler)
-	r.Get("/-/ready", w.ReadyHandler)
-	r.Get("/healthz", w.HealthzHandler)
+	r.Get("/-/healthy", s.HealthyHandler)
+	r.Get("/-/ready", s.ReadyHandler)
+	r.Get("/healthz", s.HealthzHandler)
 
 	// init metrics
-	metrics.InitMetrics(w.srv.Addr)
+	metrics.InitMetrics(s.addr)
 	r.Get("/metrics", metrics.Handler().ServeHTTP)
 
 	if config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != "" {
-		r.With(w.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
+		r.With(s.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
 			httpSwagger.URL(config.G.Web.RoutePrefix+"/swagger/doc.json"),
 		))
-		r.Mount(config.G.Web.RoutePrefix, http.StripPrefix(config.G.Web.RoutePrefix, w.subRouter()))
+		r.Mount(config.G.Web.RoutePrefix, http.StripPrefix(config.G.Web.RoutePrefix, s.subRouter()))
 	}
 
-	r.With(w.webAuthentication).Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
-	r.Mount("/", w.subRouter())
+	r.With(s.webAuthentication).Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
+	r.Mount("/", s.subRouter())
 
 	return r
 }
@@ -147,11 +149,11 @@ func (w *WebServer) newRouter() http.Handler {
 // subRouter xxx
 // @Title     BSCP-UI OpenAPI
 // @BasePath  /bscp
-func (w *WebServer) subRouter() http.Handler {
+func (s *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
 
-	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
-	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
+	r.Get("/favicon.ico", s.embedWebServer.FaviconHandler)
+	r.Get("/web/*", s.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 
 	shouldProxyAPI := config.G.IsDevMode()
 	conf := &bscp.IndexConfig{
@@ -168,8 +170,8 @@ func (w *WebServer) subRouter() http.Handler {
 	}
 
 	// vue 模版渲染
-	r.With(w.webAuthentication).Get("/", w.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
-	r.NotFound(w.webAuthentication(w.embedWebServer.RenderIndexHandler(conf)).ServeHTTP)
+	r.With(s.webAuthentication).Get("/", s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
+	r.NotFound(s.webAuthentication(s.embedWebServer.RenderIndexHandler(conf)).ServeHTTP)
 
 	return r
 }

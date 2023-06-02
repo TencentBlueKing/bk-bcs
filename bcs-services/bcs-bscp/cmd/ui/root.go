@@ -104,7 +104,7 @@ func RunCmd() error {
 }
 
 func init() {
-	cc.InitService(cc.APIServerName)
+	cc.InitService(cc.UIName)
 	cobra.OnInitialize(initConfig)
 
 	// 不开启 completion 子命令
