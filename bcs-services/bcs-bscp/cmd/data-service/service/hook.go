@@ -52,7 +52,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		Revision:   res,
 	}
 
-	hookID, err := s.dao.Hook().CreateWithTx(kt, tx, hook)
+	id, err := s.dao.Hook().CreateWithTx(kt, tx, hook)
 	if err != nil {
 		logs.Errorf("create hook failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
@@ -68,11 +68,11 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		},
 		Attachment: &table.HookReleaseAttachment{
 			BizID:  req.Attachment.BizId,
-			HookID: hookID,
+			HookID: id,
 		},
 		Revision: res,
 	}
-	id, err := s.dao.HookRelease().CreateWithTx(kt, tx, release)
+	_, err = s.dao.HookRelease().CreateWithTx(kt, tx, release)
 	if err != nil {
 		logs.Errorf("create hook release failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()

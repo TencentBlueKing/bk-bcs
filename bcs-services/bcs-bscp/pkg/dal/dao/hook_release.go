@@ -212,8 +212,8 @@ func (dao *hookReleaseDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, g
 	}
 
 	// 删除操作, 获取当前记录做审计
-	m := dao.genQ.HookRelease
-	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
+	m := tx.HookRelease
+	q := tx.HookRelease.WithContext(kit.Ctx)
 
 	oldOne, err := q.Where(m.HookID.Eq(g.Attachment.HookID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {

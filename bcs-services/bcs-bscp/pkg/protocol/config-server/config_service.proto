@@ -233,12 +233,12 @@ service Config {
     }
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
         option (google.api.http) = {
-            get :  "/api/v1/config/biz/{biz_id}/hooks/list"
+            get :  "/api/v1/config/biz/{biz_id}/hooks"
         };
     }
     rpc ListHookTags(ListHookTagsReq) returns (ListHookTagsResp) {
         option (google.api.http) = {
-            get :  "/api/v1/config/biz/{biz_id}/hooks/hook_tags/list"
+            get :  "/api/v1/config/biz/{biz_id}/hooks/hook_tags"
         };
     }
     rpc GetHook(GetHookReq) returns (pbhook.Hook){
@@ -255,7 +255,7 @@ service Config {
     }
     rpc ListHookRelease(ListHookReleaseReq) returns (ListHookReleaseResp){
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/list"
+            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases"
         };
     }
     rpc DeleteHookRelease(DeleteHookReleaseReq) returns (DeleteHookReleaseResp){

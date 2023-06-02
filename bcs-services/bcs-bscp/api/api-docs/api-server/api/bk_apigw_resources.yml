@@ -1067,6 +1067,31 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+
+    get:
+      operationId: list_hook
+      description: hook脚本列表
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /api/v1/config/biz/{biz_id}/hooks/list
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+
   /api/v1/config/biz/{biz_id}/hooks/{hook_id}:
     get:
       operationId: get_hook
@@ -1115,31 +1140,8 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/hooks/list:
-    get:
-      operationId: list_hook
-      description: hook脚本列表
-      tags:
-        - hook脚本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: get
-          path: /api/v1/config/biz/{biz_id}/hooks/list
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-  /api/v1/config/biz/{biz_id}/hooks/hook_tags/list:
+
+  /api/v1/config/biz/{biz_id}/hooks/hook_tags:
     get:
       operationId: list_hook_tag
       description: hook脚本标签列表
@@ -1156,31 +1158,6 @@ paths:
           type: HTTP
           method: get
           path: /api/v1/config/biz/{biz_id}/hooks/hook_tags/list
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
-  /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/list:
-    get:
-      operationId: list_hook_release
-      description: hook版本列表
-      tags:
-        - hook脚本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/list
           matchSubpath: false
           timeout: 0
           upstreams: { }
@@ -1255,6 +1232,30 @@ paths:
           type: HTTP
           method: post
           path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+
+    get:
+      operationId: list_hook_release
+      description: hook版本列表
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/list
           matchSubpath: false
           timeout: 0
           upstreams: { }

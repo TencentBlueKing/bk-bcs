@@ -31,7 +31,7 @@ type Hook interface {
 	// CountHookTag count hook tag
 	CountHookTag(kit *kit.Kit, bizID uint32) ([]*types.HookTagCount, error)
 	// DeleteWithTx delete hook instance with transaction.
-	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, strategy *table.Hook) error
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error
 	// GetByID get hook only with id.
 	GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error)
 	// GetByName get hook by name
