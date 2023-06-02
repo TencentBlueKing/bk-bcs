@@ -221,7 +221,7 @@ func (dao *hookReleaseDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, g
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
-	if _, e := tx.HookRelease.WithContext(kit.Ctx).Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Delete(g); e != nil {
+	if _, e := q.Where(m.BizID.Eq(g.Attachment.BizID), m.HookID.Eq(g.Attachment.HookID)).Delete(g); e != nil {
 		return e
 	}
 

@@ -63,6 +63,7 @@ func PbHookSpec(spec *table.HookSpec) (*HookSpec, error) {
 		Type:        string(spec.Type),
 		Tag:         spec.Tag,
 		Memo:        spec.Memo,
+		PublishNum:  spec.PublishNum,
 	}, nil
 }
 
