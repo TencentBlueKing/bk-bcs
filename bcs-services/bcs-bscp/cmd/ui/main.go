@@ -13,6 +13,10 @@
 
 package main
 
+import "bscp.io/pkg/cc"
+
 func main() {
+	cc.InitService(cc.UIName)
+
 	rootCmd.Execute()
 }

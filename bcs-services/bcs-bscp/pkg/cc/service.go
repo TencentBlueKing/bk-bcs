@@ -52,6 +52,8 @@ const (
 	FeedServerName Name = "feed-server"
 	// AuthServerName is the auth server's service name
 	AuthServerName Name = "auth-server"
+	// UIName is the ui service name
+	UIName Name = "ui"
 	// SidecarName is the sidecar's service name
 	SidecarName Name = "sidecar"
 )

@@ -31,6 +31,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/config"
 	"bscp.io/pkg/iam/auth"
+	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/serviced"
 )
@@ -90,7 +91,7 @@ func (w *WebServer) Run() error {
 		return err
 	}
 
-	if w.addrIPv6 != "" {
+	if w.addrIPv6 != "" && w.addrIPv6 != w.srv.Addr {
 		if err := dualStackListener.AddListenerWithAddr(w.addrIPv6); err != nil {
 			return err
 		}
@@ -117,7 +118,10 @@ func (w *WebServer) newRouter() http.Handler {
 	r.Get("/-/healthy", HealthyHandler)
 	r.Get("/-/ready", ReadyHandler)
 	r.Get("/healthz", HealthzHandler)
-	// r.Mount("/", handler.RegisterCommonHandler())
+
+	// init metrics
+	metrics.InitMetrics(w.srv.Addr)
+	r.Get("/metrics", metrics.Handler().ServeHTTP)
 
 	if config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != "" {
 		r.With(w.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
