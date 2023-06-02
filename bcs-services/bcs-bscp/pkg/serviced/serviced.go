@@ -315,6 +315,10 @@ type HealthInfo struct {
 
 // Healthz checks the etcd health state.
 func (s *serviced) Healthz() error {
+	if len(s.cfg.Endpoints) == 0 {
+		return errors.New("has no etcd endpoints")
+	}
+
 	scheme := "http"
 	if s.cfg.TLS != nil {
 		scheme = "https"

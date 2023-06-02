@@ -13,7 +13,6 @@ limitations under the License.
 package cc
 
 import (
-	"fmt"
 	"net"
 	"sync"
 )
@@ -28,7 +27,6 @@ var (
 // InitService set the initial service.
 func InitService(sn Name) {
 	initOnce.Do(func() {
-		fmt.Println("lejiaomin", sn)
 		serviceName = sn
 	})
 }
