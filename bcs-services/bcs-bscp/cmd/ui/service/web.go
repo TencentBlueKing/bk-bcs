@@ -11,10 +11,11 @@
  *
  */
 
-package web
+package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -31,6 +32,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/config"
 	"bscp.io/pkg/iam/auth"
+	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/serviced"
 )
@@ -39,9 +41,11 @@ import (
 type WebServer struct {
 	ctx               context.Context
 	srv               *http.Server
+	addr              string
 	addrIPv6          string
 	embedWebServer    bscp.EmbedWebServer
 	discover          serviced.Discover
+	state             serviced.State
 	authorizer        auth.Authorizer
 	webAuthentication func(next http.Handler) http.Handler
 }
@@ -59,6 +63,11 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 		return nil, fmt.Errorf("new discovery faield, err: %v", err)
 	}
 
+	state, ok := dis.(serviced.State)
+	if !ok {
+		return nil, errors.New("discover convert state failed")
+	}
+
 	// 鉴权器
 	authorizer, err := auth.NewAuthorizer(dis, cc.TLSConfig{})
 	if err != nil {
@@ -70,8 +79,10 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 
 	s := &WebServer{
 		ctx:               ctx,
+		addr:              addr,
 		addrIPv6:          addrIPv6,
 		discover:          dis,
+		state:             state,
 		embedWebServer:    bscp.NewEmbedWeb(),
 		authorizer:        authorizer,
 		webAuthentication: webAuthentication,
@@ -84,28 +95,28 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 }
 
 // Run :
-func (w *WebServer) Run() error {
+func (s *WebServer) Run() error {
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListenerWithAddr(w.srv.Addr); err != nil {
+	if err := dualStackListener.AddListenerWithAddr(s.addr); err != nil {
 		return err
 	}
 
-	if w.addrIPv6 != "" {
-		if err := dualStackListener.AddListenerWithAddr(w.addrIPv6); err != nil {
+	if s.addrIPv6 != "" && s.addrIPv6 != s.addr {
+		if err := dualStackListener.AddListenerWithAddr(s.addrIPv6); err != nil {
 			return err
 		}
-		klog.Infof("api serve dualStackListener with ipv6: %s", w.addrIPv6)
+		klog.Infof("api serve dualStackListener with ipv6: %s", s.addrIPv6)
 	}
 
-	return w.srv.Serve(dualStackListener)
+	return s.srv.Serve(dualStackListener)
 }
 
 // Close :
-func (w *WebServer) Close() error {
-	return w.srv.Shutdown(w.ctx)
+func (s *WebServer) Close() error {
+	return s.srv.Shutdown(s.ctx)
 }
 
-func (w *WebServer) newRouter() http.Handler {
+func (s *WebServer) newRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -114,20 +125,24 @@ func (w *WebServer) newRouter() http.Handler {
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	// 注册 HTTP 请求
-	r.Get("/-/healthy", HealthyHandler)
-	r.Get("/-/ready", ReadyHandler)
-	r.Get("/healthz", HealthzHandler)
-	// r.Mount("/", handler.RegisterCommonHandler())
+	r.Get("/-/healthy", s.HealthyHandler)
+	r.Get("/-/ready", s.ReadyHandler)
+	r.Get("/healthz", s.HealthzHandler)
+
+	// init metrics
+	metrics.InitMetrics(s.addr)
+	metrics.RegisterHTTPMetrics()
+	r.Get("/metrics", metrics.Handler().ServeHTTP)
 
 	if config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != "" {
-		r.With(w.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
+		r.With(s.webAuthentication).Get(config.G.Web.RoutePrefix+"/swagger/*", httpSwagger.Handler(
 			httpSwagger.URL(config.G.Web.RoutePrefix+"/swagger/doc.json"),
 		))
-		r.Mount(config.G.Web.RoutePrefix, http.StripPrefix(config.G.Web.RoutePrefix, w.subRouter()))
+		r.Mount(config.G.Web.RoutePrefix, http.StripPrefix(config.G.Web.RoutePrefix, s.subRouter()))
 	}
 
-	r.With(w.webAuthentication).Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
-	r.Mount("/", w.subRouter())
+	r.With(s.webAuthentication).Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
+	r.Mount("/", s.subRouter())
 
 	return r
 }
@@ -135,11 +150,11 @@ func (w *WebServer) newRouter() http.Handler {
 // subRouter xxx
 // @Title     BSCP-UI OpenAPI
 // @BasePath  /bscp
-func (w *WebServer) subRouter() http.Handler {
+func (s *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
 
-	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
-	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
+	r.Get("/favicon.ico", s.embedWebServer.FaviconHandler)
+	r.Get("/web/*", s.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 
 	shouldProxyAPI := config.G.IsDevMode()
 	conf := &bscp.IndexConfig{
@@ -156,8 +171,8 @@ func (w *WebServer) subRouter() http.Handler {
 	}
 
 	// vue 模版渲染
-	r.With(w.webAuthentication).Get("/", w.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
-	r.NotFound(w.webAuthentication(w.embedWebServer.RenderIndexHandler(conf)).ServeHTTP)
+	r.With(metrics.RequestCollect("index"), s.webAuthentication).Get("/", s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
+	r.With(metrics.RequestCollect("index")).NotFound(s.webAuthentication(s.embedWebServer.RenderIndexHandler(conf)).ServeHTTP)
 
 	return r
 }
@@ -167,16 +182,22 @@ func (w *WebServer) subRouter() http.Handler {
 // @Success  200  {string}  string
 // @Router   /healthz [get]
 // HealthzHandler Healthz 接口
-func HealthzHandler(w http.ResponseWriter, r *http.Request) {
+func (s *WebServer) HealthzHandler(w http.ResponseWriter, r *http.Request) {
+	if err := s.state.Healthz(); err != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
 	w.Write([]byte("OK"))
 }
 
 // HealthyHandler 健康检查
-func HealthyHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+func (s *WebServer) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	s.HealthzHandler(w, r)
 }
 
 // ReadyHandler 健康检查
-func ReadyHandler(w http.ResponseWriter, r *http.Request) {
+func (s *WebServer) ReadyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }

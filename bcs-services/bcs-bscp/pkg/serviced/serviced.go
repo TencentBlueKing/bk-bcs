@@ -133,6 +133,7 @@ func NewDiscovery(cfg etcd3.Config) (Discover, error) {
 	resolver.Register(newEtcdBuilder(cli))
 	return &serviced{
 		cli:        cli,
+		cfg:        cfg,
 		httpClient: httpClient,
 	}, nil
 }
@@ -315,6 +316,10 @@ type HealthInfo struct {
 
 // Healthz checks the etcd health state.
 func (s *serviced) Healthz() error {
+	if len(s.cfg.Endpoints) == 0 {
+		return errors.New("has no etcd endpoints")
+	}
+
 	scheme := "http"
 	if s.cfg.TLS != nil {
 		scheme = "https"

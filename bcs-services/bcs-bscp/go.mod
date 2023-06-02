@@ -1,6 +1,6 @@
 module bscp.io
 
-go 1.17
+go 1.20
 
 replace (
 	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.0.8
