@@ -85,7 +85,7 @@ func matchContainerById(pod *v1.Pod, containerId string) (*types.Container, erro
 
 // GetContainerById 通过 containerID 获取pod, namespace
 func (m *StartupManager) GetContainerById(containerId string) (*types.Container, error) {
-	// TODO 大集群可能比较慢, 可以通过bcs的storage获取namespace优化
+	// 大集群可能比较慢, 可以通过bcs的storage获取namespace优化
 	pods, err := m.k8sClient.CoreV1().Pods("").List(m.ctx, metav1.ListOptions{})
 
 	if err != nil {
