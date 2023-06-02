@@ -135,8 +135,12 @@ func (s ConfigHook) ValidateUpdate() error {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateUpdate(); err != nil {
-		return err
+	if len(s.Revision.Reviser) == 0 {
+		return errors.New("reviser can not be empty")
+	}
+
+	if len(s.Revision.Creator) != 0 {
+		return errors.New("creator can not be updated")
 	}
 
 	return nil

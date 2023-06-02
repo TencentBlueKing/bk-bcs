@@ -154,6 +154,7 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 		return nil, err
 	}
 
+	tx.Commit()
 	return new(pbbase.EmptyResp), nil
 }
 
