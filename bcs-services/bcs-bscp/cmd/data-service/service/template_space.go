@@ -77,7 +77,7 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 // UpdateTemplateSpace update template space.
 func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTemplateSpaceReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
-	
+
 	TemplateSpace := &table.TemplateSpace{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSpaceSpec(),
