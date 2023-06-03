@@ -15,7 +15,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -45,13 +44,11 @@ func (s *Service) CreateTemplateRelease(ctx context.Context, req *pbds.CreateTem
 	// keep the release's name and path same with template
 	spec.Name = template.Spec.Name
 	spec.Path = template.Spec.Path
-	now := time.Now()
 	TemplateRelease := &table.TemplateRelease{
 		Spec:       spec,
 		Attachment: req.Attachment.TemplateReleaseAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   kt.User,
-			CreatedAt: now,
+			Creator: kt.User,
 		},
 	}
 	id, err := s.dao.TemplateRelease().Create(kt, TemplateRelease)

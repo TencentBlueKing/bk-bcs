@@ -91,10 +91,6 @@ func (dao *templateReleaseDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *ta
 		return 0, err
 	}
 
-	if err := dao.validateAttachmentExistWithTx(kit, tx, g.Attachment); err != nil {
-		return 0, err
-	}
-
 	// generate a TemplateRelease id and update to TemplateRelease.
 	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
@@ -183,24 +179,6 @@ func (dao *templateReleaseDao) GetByUniqueKey(kit *kit.Kit, bizID, templateID ui
 func (dao *templateReleaseDao) validateAttachmentExist(kit *kit.Kit, am *table.TemplateReleaseAttachment) error {
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
-
-	if _, err := q.Where(m.ID.Eq(am.TemplateID)).Take(); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("template release attached template %d is not exist", am.TemplateID)
-		}
-		return fmt.Errorf("get template release attached template failed, err: %v", err)
-	}
-
-	return nil
-}
-
-// validateAttachmentExistWithTx validate if attachment resource exists before operating template release
-// this method is used in the scene：create one template with its first template release in the same transaction
-// so that when it validates, the template just created in the transaction could be found
-func (dao *templateReleaseDao) validateAttachmentExistWithTx(kit *kit.Kit, tx *gen.QueryTx,
-	am *table.TemplateReleaseAttachment) error {
-	m := tx.Template
-	q := tx.Template.WithContext(kit.Ctx)
 
 	if _, err := q.Where(m.ID.Eq(am.TemplateID)).Take(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

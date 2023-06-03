@@ -15,7 +15,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -34,15 +33,12 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTempl
 		return nil, fmt.Errorf("template space's same name %s already exists", req.Spec.Name)
 	}
 
-	now := time.Now()
 	TemplateSpace := &table.TemplateSpace{
 		Spec:       req.Spec.TemplateSpaceSpec(),
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
 		Revision: &table.Revision{
-			Creator:   kt.User,
-			Reviser:   kt.User,
-			CreatedAt: now,
-			UpdatedAt: now,
+			Creator: kt.User,
+			Reviser: kt.User,
 		},
 	}
 	id, err := s.dao.TemplateSpace().Create(kt, TemplateSpace)
@@ -82,14 +78,12 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTemplateSpaceReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	now := time.Now()
 	TemplateSpace := &table.TemplateSpace{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSpaceSpec(),
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
 		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
+			Reviser: kt.User,
 		},
 	}
 	if err := s.dao.TemplateSpace().Update(kt, TemplateSpace); err != nil {

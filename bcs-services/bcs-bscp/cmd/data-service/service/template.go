@@ -38,15 +38,12 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	tx := s.dao.GenQuery().Begin()
 
 	// 1. create template
-	now := time.Now()
 	template := &table.Template{
 		Spec:       req.Spec.TemplateSpec(),
 		Attachment: req.Attachment.TemplateAttachment(),
 		Revision: &table.Revision{
-			Creator:   kt.User,
-			Reviser:   kt.User,
-			CreatedAt: now,
-			UpdatedAt: now,
+			Creator: kt.User,
+			Reviser: kt.User,
 		},
 	}
 	id, err := s.dao.Template().CreateWithTx(kt, tx, template)
@@ -65,8 +62,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			TemplateID:      id,
 		},
 		Revision: &table.CreatedRevision{
-			Creator:   kt.User,
-			CreatedAt: now,
+			Creator: kt.User,
 		},
 	}
 	_, err = s.dao.TemplateRelease().CreateWithTx(kt, tx, TemplateRelease)
