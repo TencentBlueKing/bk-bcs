@@ -15,11 +15,15 @@
 package formatter
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 
+	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/TencentBlueKing/gopkg/collection/set"
 	"github.com/mitchellh/mapstructure"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
@@ -31,6 +35,7 @@ import (
 func FormatWorkloadRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	ret["images"] = parseContainerImages(manifest, "spec.template.spec.containers")
+	ret["resources"] = parseContainersResources(manifest, "spec.template.spec.containers")
 	return ret
 }
 
@@ -120,7 +125,41 @@ func FormatPo(manifest map[string]interface{}) map[string]interface{} {
 			ret["podIPv6"] = ip
 		}
 	}
+	ret["resources"] = parseContainersResources(manifest, "spec.containers")
 	return ret
+}
+
+// 解析容器资源
+func parseContainersResources(manifest map[string]interface{}, path string) (res map[string]interface{}) {
+	containers := mapx.GetList(manifest, path)
+	containerArray := []v1.Container{}
+	marshal, err := json.Marshal(containers)
+	if err != nil {
+		log.Error(context.TODO(), "JSON marshaling error:: %s", err)
+		return
+	}
+	err = json.Unmarshal(marshal, &containerArray)
+	if err != nil {
+		log.Error(context.TODO(), "JSON unmarshaling error:: %s", err)
+		return
+	}
+	// 累加 CPU 和内存配置
+	var totalLimCPU, totalReqCPU, totalReqMemory, totalLimMemory resource.Quantity
+	for _, container := range containerArray {
+		reqCPU := container.Resources.Requests[v1.ResourceCPU]
+		reqMemory := container.Resources.Requests[v1.ResourceMemory]
+		limCPU := container.Resources.Limits[v1.ResourceCPU]
+		limMemory := container.Resources.Limits[v1.ResourceMemory]
+		totalReqCPU.Add(reqCPU)
+		totalReqMemory.Add(reqMemory)
+		totalLimCPU.Add(limCPU)
+		totalLimMemory.Add(limMemory)
+	}
+	res = map[string]interface{}{
+		"limits":   map[string]interface{}{"cpu": totalLimCPU.String(), "memory": totalLimMemory.String()},
+		"requests": map[string]interface{}{"cpu": totalReqCPU.String(), "memory": totalReqMemory.String()},
+	}
+	return res
 }
 
 // 工具方法/解析器
