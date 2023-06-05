@@ -1141,7 +1141,7 @@ paths:
           userVerifiedRequired: true
         disabledStages: [ ]
 
-  /api/v1/config/biz/{biz_id}/hooks/hook_tags:
+  /api/v1/config/biz/{biz_id}/hook_tags:
     get:
       operationId: list_hook_tag
       description: hook脚本标签列表

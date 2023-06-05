@@ -238,7 +238,7 @@ service Config {
     }
     rpc ListHookTags(ListHookTagsReq) returns (ListHookTagsResp) {
         option (google.api.http) = {
-            get :  "/api/v1/config/biz/{biz_id}/hooks/hook_tags"
+            get :  "/api/v1/config/biz/{biz_id}/hook_tags"
         };
     }
     rpc GetHook(GetHookReq) returns (pbhook.Hook){
