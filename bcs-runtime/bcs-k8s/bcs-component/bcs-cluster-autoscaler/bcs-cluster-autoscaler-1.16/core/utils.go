@@ -278,9 +278,9 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 
 	// processNode returns information whether the nodeTemplate was generated and if there was an error.
 	processNode := func(node *apiv1.Node) (bool, string, errors.AutoscalerError) {
-		nodeGroup, err := cloudProvider.NodeGroupForNode(node)
-		if err != nil {
-			return false, "", errors.ToAutoscalerError(errors.CloudProviderError, err)
+		nodeGroup, getErr := cloudProvider.NodeGroupForNode(node)
+		if getErr != nil {
+			return false, "", errors.ToAutoscalerError(errors.CloudProviderError, getErr)
 		}
 		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
 			return false, "", nil
@@ -288,13 +288,13 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		id := nodeGroup.Id()
 		if _, found := result[id]; !found {
 			// Build nodeInfo.
-			nodeInfo, err := simulator.BuildNodeInfoForNode(node, podsForNodes)
-			if err != nil {
-				return false, "", err
+			nodeInfo, buildErr := simulator.BuildNodeInfoForNode(node, podsForNodes)
+			if buildErr != nil {
+				return false, "", buildErr
 			}
-			sanitizedNodeInfo, err := sanitizeNodeInfo(nodeInfo, id, ignoredTaints)
-			if err != nil {
-				return false, "", err
+			sanitizedNodeInfo, sanErr := sanitizeNodeInfo(nodeInfo, id, ignoredTaints)
+			if sanErr != nil {
+				return false, "", sanErr
 			}
 			result[id] = sanitizedNodeInfo
 			return true, id, nil
