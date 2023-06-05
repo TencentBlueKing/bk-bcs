@@ -50,6 +50,8 @@ const (
 	Template ResourceType = "template"
 	// TemplateRelease resource's bscp auth resource type
 	TemplateRelease ResourceType = "template_release"
+	// TemplateSet resource's bscp auth resource type
+	TemplateSet ResourceType = "template_set"
 	// Group resource's bscp auth resource type
 	Group ResourceType = "group"
 	// PSH resource's bscp auth resource type

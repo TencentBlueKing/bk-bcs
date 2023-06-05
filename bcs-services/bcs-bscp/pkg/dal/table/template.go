@@ -27,52 +27,52 @@ type Template struct {
 }
 
 // TableName is the Template's database table name.
-func (s *Template) TableName() string {
+func (t *Template) TableName() string {
 	return "templates"
 }
 
 // AppID AuditRes interface
-func (s *Template) AppID() uint32 {
+func (t *Template) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (s *Template) ResID() uint32 {
-	return s.ID
+func (t *Template) ResID() uint32 {
+	return t.ID
 }
 
 // ResType AuditRes interface
-func (s *Template) ResType() string {
+func (t *Template) ResType() string {
 	return "template"
 }
 
 // ValidateCreate validate Template is valid or not when create it.
-func (s Template) ValidateCreate() error {
-	if s.ID > 0 {
+func (t *Template) ValidateCreate() error {
+	if t.ID > 0 {
 		return errors.New("id should not be set")
 	}
 
-	if s.Spec == nil {
+	if t.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	if err := s.Spec.ValidateCreate(); err != nil {
+	if err := t.Spec.ValidateCreate(); err != nil {
 		return err
 	}
 
-	if s.Attachment == nil {
+	if t.Attachment == nil {
 		return errors.New("attachment not set")
 	}
 
-	if err := s.Attachment.Validate(); err != nil {
+	if err := t.Attachment.Validate(); err != nil {
 		return err
 	}
 
-	if s.Revision == nil {
+	if t.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateCreate(); err != nil {
+	if err := t.Revision.ValidateCreate(); err != nil {
 		return err
 	}
 
@@ -80,31 +80,31 @@ func (s Template) ValidateCreate() error {
 }
 
 // ValidateUpdate validate Template is valid or not when update it.
-func (s Template) ValidateUpdate() error {
+func (t *Template) ValidateUpdate() error {
 
-	if s.ID <= 0 {
+	if t.ID <= 0 {
 		return errors.New("id should be set")
 	}
 
-	if s.Spec != nil {
-		if err := s.Spec.ValidateUpdate(); err != nil {
+	if t.Spec != nil {
+		if err := t.Spec.ValidateUpdate(); err != nil {
 			return err
 		}
 	}
 
-	if s.Attachment == nil {
+	if t.Attachment == nil {
 		return errors.New("attachment should be set")
 	}
 
-	if err := s.Attachment.Validate(); err != nil {
+	if err := t.Attachment.Validate(); err != nil {
 		return err
 	}
 
-	if s.Revision == nil {
+	if t.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateUpdate(); err != nil {
+	if err := t.Revision.ValidateUpdate(); err != nil {
 		return err
 	}
 
@@ -112,12 +112,16 @@ func (s Template) ValidateUpdate() error {
 }
 
 // ValidateDelete validate the Template's info when delete it.
-func (s Template) ValidateDelete() error {
-	if s.ID <= 0 {
+func (t *Template) ValidateDelete() error {
+	if t.ID <= 0 {
 		return errors.New("Template id should be set")
 	}
 
-	if err := s.Attachment.Validate(); err != nil {
+	if t.Attachment == nil {
+		return errors.New("attachment should be set")
+	}
+
+	if err := t.Attachment.Validate(); err != nil {
 		return err
 	}
 
@@ -135,12 +139,12 @@ type TemplateSpec struct {
 type TemplateType string
 
 // ValidateCreate validate Template spec when it is created.
-func (s TemplateSpec) ValidateCreate() error {
-	if err := validator.ValidateCfgItemName(s.Name); err != nil {
+func (t *TemplateSpec) ValidateCreate() error {
+	if err := validator.ValidateCfgItemName(t.Name); err != nil {
 		return err
 	}
 
-	if err := ValidatePath(s.Path, Unix); err != nil {
+	if err := ValidatePath(t.Path, Unix); err != nil {
 		return err
 	}
 
@@ -148,8 +152,8 @@ func (s TemplateSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate Template spec when it is updated.
-func (s TemplateSpec) ValidateUpdate() error {
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+func (t *TemplateSpec) ValidateUpdate() error {
+	if err := validator.ValidateMemo(t.Memo, false); err != nil {
 		return err
 	}
 
@@ -163,12 +167,12 @@ type TemplateAttachment struct {
 }
 
 // Validate whether Template attachment is valid or not.
-func (s TemplateAttachment) Validate() error {
-	if s.BizID <= 0 {
+func (t *TemplateAttachment) Validate() error {
+	if t.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
 	}
 
-	if s.TemplateSpaceID <= 0 {
+	if t.TemplateSpaceID <= 0 {
 		return errors.New("invalid attachment template space id")
 	}
 

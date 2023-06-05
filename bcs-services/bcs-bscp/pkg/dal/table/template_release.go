@@ -85,6 +85,10 @@ func (t *TemplateRelease) ValidateDelete() error {
 		return errors.New("TemplateRelease id should be set")
 	}
 
+	if t.Attachment == nil {
+		return errors.New("attachment should be set")
+	}
+
 	if err := t.Attachment.Validate(); err != nil {
 		return err
 	}

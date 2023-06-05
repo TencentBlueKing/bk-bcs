@@ -40,14 +40,13 @@ func main() {
 		table.GroupAppBind{},
 		table.Release{},
 		table.ReleasedConfigItem{},
-		table.TemplateSpace{},
 		table.Hook{},
 		table.HookRelease{},
-		table.Release{},
 		table.ConfigHook{},
-		table.App{},
+		table.TemplateSpace{},
 		table.Template{},
 		table.TemplateRelease{},
+		table.TemplateSet{},
 	)
 
 	g.Execute()

@@ -17,6 +17,7 @@ all:
 	@cd config-hook && make
 	@cd template && make
 	@cd template-release && make
+	@cd template-set && make
 
 clean:
 	@cd base && make clean
@@ -37,3 +38,4 @@ clean:
 	@cd config-hook && make clean
 	@cd template && make clean
 	@cd template-release && make clean
+	@cd template-set && make clean

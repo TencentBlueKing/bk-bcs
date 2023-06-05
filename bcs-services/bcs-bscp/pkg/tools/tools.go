@@ -44,3 +44,21 @@ func GetUint32List(value string) ([]uint32, error) {
 	}
 	return result, nil
 }
+
+// SliceDiff get the difference between two slices, return slice1-slice2
+func SliceDiff(slice1, slice2 []uint32) []uint32 {
+	set := make(map[uint32]struct{})
+	diff := make([]uint32, 0)
+
+	for _, v := range slice2 {
+		set[v] = struct{}{}
+	}
+
+	for _, v := range slice1 {
+		if _, ok := set[v]; !ok {
+			diff = append(diff, v)
+		}
+	}
+
+	return diff
+}
