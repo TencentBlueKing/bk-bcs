@@ -39,12 +39,10 @@ export const resolveUrlPrefix = (url, { domain = window.DEVOPS_BCS_API_URL, pref
 
 export const parseUrl = (reqMethod, url, body = {}) => {
   let params = JSON.parse(JSON.stringify(body));
-  const storage = JSON.parse(localStorage.getItem('__bcs_vuex_stroage__') || '{}');
   // 全局URL变量替换
   const variableData = {
-    $projectId: storage.curProject?.projectID,
-    // $clusterId: storage.curCluster?.clusterID, // 自动加上集群ID变量在路由上有集群ID时容易出错, 最好手动传递，数据流向也清晰
-    $projectCode: storage.curProject?.projectCode,
+    $projectId: sessionStorage.getItem('_project_id_'),
+    $projectCode: sessionStorage.getItem('_project_code_'),
   };
   Object.keys(params).forEach((key) => {
     // 自定义url变量
