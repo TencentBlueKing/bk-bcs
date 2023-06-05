@@ -1,15 +1,53 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, onMounted } from 'vue'
+  import { useRouter, useRoute } from 'vue-router'
   import { Plus, Search } from 'bkui-vue/lib/icon'
+  import { storeToRefs } from 'pinia'
+  import { useGlobalStore } from '../../../../store/global'
+  import { IScriptVersion } from '../../../../../types/script'
+  import { getScriptDetail, getScriptVersionList } from '../../../../api/script'
   import DetailLayout from '../components/detail-layout.vue'
 
-  const emits = defineEmits(['update:show'])
+  const { spaceId } = storeToRefs(useGlobalStore())
+  const router = useRouter()
+  const route = useRoute()
 
+  const scriptId = ref(Number(route.params.spaceId))
+  const detailLoading = ref(true)
+  const scriptDetail = ref({ spec: { name: '' } })
+  const versionLoading = ref(true)
+  const versionList = ref<IScriptVersion[]>([])
+  const searchStr = ref('')
   const pagination = ref({
     current: 1,
     count: 0,
     limit: 10,
   })
+
+  onMounted(() => {
+    getScriptDetailData()
+    getVersionList()
+  })
+
+  const getScriptDetailData = async() => {
+    detailLoading.value = true
+    scriptDetail.value = await getScriptDetail(spaceId.value, scriptId.value)
+    detailLoading.value = false
+  }
+
+  const getVersionList = async() => {
+    versionLoading.value = true
+    const params: { start: number; limit: number; searchKey?: string } = {
+      start: (pagination.value.current - 1) * pagination.value.limit,
+      limit: pagination.value.limit
+    }
+    if (searchStr.value) {
+      params.searchKey = searchStr.value
+    }
+    const res = await getScriptVersionList(spaceId.value, scriptId.value, params)
+    versionList.value = res.details
+    pagination.value.count = res.count
+  }
 
   const refreshList = (val: number = 1) => {
     pagination.value.current = 1
@@ -20,12 +58,12 @@
   }
 
   const handleClose = () => {
-    emits('update:show', false)
+    router.push({ name: 'script-list', params: { spaceId: spaceId.value } })
   }
 
 </script>
 <template>
-  <DetailLayout name="版本管理" :show-footer="false" @close="handleClose">
+  <DetailLayout v-if="!detailLoading" :name="`版本管理 - ${scriptDetail.spec.name}`" :show-footer="false" @close="handleClose">
     <template #content>
       <div class="script-version-manage">
         <div class="operation-area">
@@ -36,13 +74,32 @@
               </template>
           </bk-input>
         </div>
-        <bk-table :border="['outer']">
-          <bk-table-column label="版本号"></bk-table-column>
-          <bk-table-column label="版本说明"></bk-table-column>
-          <bk-table-column label="被引用"></bk-table-column>
-          <bk-table-column label="更新人"></bk-table-column>
-          <bk-table-column label="更新时间"></bk-table-column>
-          <bk-table-column label="操作"></bk-table-column>
+        <bk-table :border="['outer']" :data="versionList">
+          <bk-table-column label="版本号" prop="spec.name" show-overflow-tooltip></bk-table-column>
+          <bk-table-column label="版本说明">
+            <template #default="{ row }">
+              <span>{{ (row.spec && row.spec.memo) || '--' }}</span>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="被引用" prop="spec.publish_num"></bk-table-column>
+          <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
+          <bk-table-column label="更新时间" prop="revision.update_at"></bk-table-column>
+          <bk-table-column label="状态">
+            <template #default="{ row }">
+              <span v-if="row.spec">{{ row.spec.pub_state }}</span>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="操作" width="240">
+            <template #default="{ row }">
+              <div class="action-btns">
+                <bk-button text theme="primary">上线</bk-button>
+                <bk-button text theme="primary">编辑</bk-button>
+                <bk-button text theme="primary">版本对比</bk-button>
+                <bk-button text theme="primary">复制并新建</bk-button>
+                <bk-button text theme="primary">删除</bk-button>
+              </div>
+            </template>
+          </bk-table-column>
         </bk-table>
         <bk-pagination
           class="table-list-pagination"
@@ -68,6 +125,9 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    .button-icon {
+      font-size: 18px;
+    }
     .search-input {
       width: 320px;
     }
@@ -77,8 +137,14 @@
       background: #ffffff;
     }
   }
+  .action-btns {
+    .bk-button {
+      margin-right: 8px;
+    }
+  }
   .table-list-pagination {
     padding: 12px;
+    background: #ffffff;
     border: 1px solid #dcdee5;
     border-top: none;
     border-radius: 0 0 2px 2px;

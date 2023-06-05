@@ -142,7 +142,7 @@
           class="version-desc" />
       </section>
       <section class="version-operations">
-        <InitScript />
+        <InitScript :app-id="props.appId" />
         <CreateVersion
           v-if="versionData.status.publish_status === 'editing'"
           ref="publishVersionRef"
@@ -248,9 +248,6 @@
     .version-operations {
       display: flex;
       align-items: center;
-      :deep(> .bk-button) {
-        margin-left: 8px;
-      }
     }
   }
   .operate-area {

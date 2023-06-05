@@ -3,6 +3,7 @@ export const enum EScriptType {
   Python = 'python'
 }
 
+// 新建脚本编辑参数
 export interface IScriptEditingForm {
   name: string;
   tag: string;
@@ -12,6 +13,7 @@ export interface IScriptEditingForm {
   content: string;
 }
 
+// 脚本
 export interface IScriptItem {
   id: number;
   spec: {
@@ -32,6 +34,13 @@ export interface IScriptItem {
   }
 }
 
+// 脚本标签
+export interface IScriptTagItem {
+  tag: string;
+  counts: number;
+}
+
+// 脚本版本
 export interface IScriptVersion {
   id: number;
   spec: {
@@ -58,4 +67,12 @@ export interface IScriptCiteQuery {
   start: number;
   limit: number;
   searchKey?: string;
+}
+
+// 服务配置项初始化脚本配置
+export interface IConfigInitScript {
+  pre_hook_id: number|string;
+  pre_hook_release_id: number|string;
+  post_hook_id: number|string;
+  post_hook_release_id: number|string;
 }

@@ -5,10 +5,13 @@
   import ReadFileContent from '../../service/detail/config/components/read-file-content.vue';
   import CodeEditor from '../../../../components/code-editor/index.vue'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: string;
     language?: string;
-  }>()
+    editable?: boolean;
+  }>(), {
+    editable: true
+  })
 
   const emits = defineEmits(['update:modelValue'])
 
@@ -77,7 +80,7 @@
         </div>
       </div>
       <div class="content-wrapper">
-        <CodeEditor :model-value="props.modelValue" :language="props.language" @change="emits('update:modelValue', $event)" />
+        <CodeEditor :model-value="props.modelValue" :editable="props.editable" :language="props.language" @change="emits('update:modelValue', $event)" />
       </div>
     </div>
   </Teleport>

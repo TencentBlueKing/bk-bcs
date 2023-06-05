@@ -1,11 +1,26 @@
 <script setup lang="ts">
-  import { ref, computed } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
+  import { storeToRefs } from 'pinia'
+  import { useGlobalStore } from '../../../../../../../../store/global'
+  import { IConfigInitScript } from '../../../../../../../../../types/script'
+  import { getConfigInitScript } from '../../../../../../../../api/script'
   import ScriptConfigForm from './script-config-form.vue'
 
+  const { spaceId } = storeToRefs(useGlobalStore())
+
+  const props = defineProps<{
+    appId: number;
+  }>()
+
   const show = ref(false)
+  const scriptData = ref<IConfigInitScript>({
+    pre_hook_id: '',
+  	pre_hook_release_id: '',
+  	post_hook_id: '',
+  	post_hook_release_id: ''
+  })
+  const loading = ref(false)
   const currentType = ref('post')
-  const preHookId = ref(0)
-  const postHookId = ref(0)
 
   const TYPES = [
     { id: 'pre', name: '前置脚本' },
@@ -16,8 +31,38 @@
     return currentType.value === 'post' ? '后置脚本：下载配置文件后执行脚本，一般用于二进制重新 reload 配置文件。' : '前置脚本：下载配置文件前执行脚本，一般用于文件备份等前置准备工作。'
   })
 
+  const scriptId = computed(() => {
+    return currentType.value === 'post' ? scriptData.value.post_hook_id : scriptData.value.pre_hook_id
+  })
+
+  const versionId = computed(() => {
+    return currentType.value === 'post' ? scriptData.value.post_hook_release_id : scriptData.value.pre_hook_release_id
+  })
+
+  onMounted(() => {
+    // getData()
+  })
+
+  const getData = async () => {
+    loading.value = true
+    const res = await getConfigInitScript(spaceId.value, props.appId)
+    console.log(res)
+    loading.value = false
+  }
+
   const handleOpenSlider = () => {
     show.value = true
+  }
+
+  const handleFormChange = (data: { scriptId: number; versionId: number }) => {
+    const { scriptId, versionId } = data
+    if (currentType.value === 'post') {
+      scriptData.value.post_hook_id = scriptId
+      scriptData.value.post_hook_release_id = versionId
+    } else {
+      scriptData.value.pre_hook_id = scriptId
+      scriptData.value.pre_hook_release_id = versionId
+    }
   }
   
   const handleClose = () => {
@@ -44,7 +89,7 @@
     </div>
     <div class="script-config">
       <bk-alert theme="info" :title="tips"></bk-alert>
-      <ScriptConfigForm />
+      <ScriptConfigForm :key="currentType" :scriptId="scriptId" :versionId="versionId" @change="handleFormChange" />
     </div>
     <div class="actions-btns">
       <bk-button theme="primary">保存</bk-button>

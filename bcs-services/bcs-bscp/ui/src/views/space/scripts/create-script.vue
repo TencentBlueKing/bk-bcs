@@ -63,7 +63,7 @@
             <bk-input v-model="formData.release_name" />
           </bk-form-item>
           <bk-form-item label="脚本内容"  property="content" required>
-            <ScriptEditor v-model="formData.content" :language="formData.type">
+            <ScriptEditor v-model="formData.content" class="script-content-wrapper" :language="formData.type">
               <template #header>
                 <div class="language-tabs">
                   <div
@@ -98,6 +98,9 @@
   .fixed-width-form {
     width: 520px;
   }
+  .script-content-wrapper {
+    min-width: 520px;
+  }
   
   .language-tabs {
     display: flex;
@@ -121,7 +124,7 @@
   .actions-wrapper {
     .bk-button {
       margin-right: 8px;
-      min-width: 80px;
+      min-width: 88px;
     }
   }
 </style>
