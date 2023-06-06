@@ -30,12 +30,8 @@ func InitOptions() *Option {
 	fs := pflag.CommandLine
 	sysOpt := flags.SysFlags(fs)
 
-	var (
-		grpcPort uint
-		port     uint
-	)
-	fs.UintVar(&grpcPort, "grpc-port", 9514, "grpc service port")
-	fs.UintVar(&port, "port", 9614, "http/metrics port")
+	fs.UintVar(&sysOpt.GRPCPort, "grpc-port", 9514, "grpc service port")
+	fs.UintVar(&sysOpt.Port, "port", 9614, "http/metrics port")
 
 	// parses the command-line flags from os.Args[1:]. must be called after all flags are defined
 	// and before flags are accessed by the program.

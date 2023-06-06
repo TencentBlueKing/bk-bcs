@@ -581,6 +581,18 @@ func (n *Network) trySetFlagBindIP(ip net.IP) error {
 	return nil
 }
 
+// trySetFlagPort bind http and grpc port
+func (n *Network) trySetFlagPort(port, grpcPort uint) error {
+	if port != 0 {
+		n.HttpPort = port
+	}
+	if grpcPort != 0 {
+		n.RpcPort = grpcPort
+	}
+
+	return nil
+}
+
 // trySetDefault set the network's default value if user not configured.
 func (n *Network) trySetDefault() {
 	if len(n.BindIP) == 0 {
@@ -658,7 +670,9 @@ func (tls TLSConfig) validate() error {
 type SysOption struct {
 	ConfigFiles []string
 	// BindIP Setting startup bind ip.
-	BindIP net.IP
+	BindIP   net.IP
+	Port     uint
+	GRPCPort uint
 	// Versioned Setting if show current version info.
 	Versioned bool
 }

@@ -42,15 +42,13 @@ func Execute() {
 func init() {
 	// add system flags
 	fs := pflag.CommandLine
-	var (
-		grpcPort uint
-		port     uint
-	)
-	fs.UintVar(&grpcPort, "grpc-port", 9511, "grpc service port")
-	fs.UintVar(&port, "port", 9611, "http/metrics port")
 
 	SysOpt = flags.SysFlags(fs)
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.Flags().AddFlagSet(fs)
+
+	fs.UintVar(&SysOpt.GRPCPort, "grpc-port", 9511, "grpc service port")
+	fs.UintVar(&SysOpt.Port, "port", 9611, "http/metrics port")
 
 	cc.InitService(cc.DataServiceName)
 }

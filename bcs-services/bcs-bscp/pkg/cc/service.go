@@ -61,6 +61,7 @@ const (
 // Setting defines all service Setting interface.
 type Setting interface {
 	trySetFlagBindIP(ip net.IP) error
+	trySetFlagPort(port, grpcPort uint) error
 	trySetDefault()
 	Validate() error
 }
@@ -76,6 +77,11 @@ type ApiServerSetting struct {
 // trySetFlagBindIP try set flag bind ip.
 func (s *ApiServerSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort bind http and grpc port
+func (s *ApiServerSetting) trySetFlagPort(port, grpcPort uint) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
 }
 
 // trySetDefault set the ApiServerSetting default value if user not configured.
@@ -129,6 +135,11 @@ func (s *AuthServerSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort bind http and grpc port
+func (s *AuthServerSetting) trySetFlagPort(port, grpcPort uint) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
 // trySetDefault set the AuthServerSetting default value if user not configured.
 func (s *AuthServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
@@ -170,6 +181,11 @@ type CacheServiceSetting struct {
 // trySetFlagBindIP try set flag bind ip.
 func (s *CacheServiceSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort bind http and grpc port
+func (s *CacheServiceSetting) trySetFlagPort(port, grpcPort uint) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
 }
 
 // trySetDefault set the CacheServiceSetting default value if user not configured.
@@ -220,6 +236,11 @@ func (s *ConfigServerSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort bind http and grpc port
+func (s *ConfigServerSetting) trySetFlagPort(port, grpcPort uint) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
 // trySetDefault set the ConfigServerSetting default value if user not configured.
 func (s *ConfigServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
@@ -265,6 +286,11 @@ type DataServiceSetting struct {
 // trySetFlagBindIP try set flag bind ip.
 func (s *DataServiceSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort bind http and grpc port
+func (s *DataServiceSetting) trySetFlagPort(port, grpcPort uint) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
 }
 
 // trySetDefault set the DataServiceSetting default value if user not configured.
@@ -314,6 +340,11 @@ type FeedServerSetting struct {
 // trySetFlagBindIP try set flag bind ip.
 func (s *FeedServerSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
+}
+
+// trySetFlagPort bind http and grpc port
+func (s *FeedServerSetting) trySetFlagPort(port, grpcPort uint) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
 }
 
 // trySetDefault set the FeedServerSetting default value if user not configured.
