@@ -31,6 +31,10 @@ func InitOptions() *Option {
 	sysOpt := flags.SysFlags(fs)
 	opt := &Option{Sys: sysOpt}
 
+	var port uint
+
+	fs.UintVar(&port, "port", 8080, "http/metrics port")
+
 	// parses the command-line flags from os.Args[1:]. must be called after all flags are defined
 	// and before flags are accessed by the program.
 	pflag.Parse()
