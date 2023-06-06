@@ -16,12 +16,12 @@ import (
 	"errors"
 	"fmt"
 
-	"bscp.io/pkg/tools"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 )
 
@@ -206,7 +206,7 @@ func (dao *templateSetDao) validateAttachmentExist(kit *kit.Kit, am *table.Templ
 	return nil
 }
 
-// validateTemplatesExist validate if all templates resource exists before operating template
+// validateTemplatesExist validate if all templates resource exists before operating template set
 func (dao *templateSetDao) validateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error {
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)

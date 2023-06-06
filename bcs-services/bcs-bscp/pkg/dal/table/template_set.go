@@ -19,7 +19,7 @@ import (
 	"bscp.io/pkg/dal/types"
 )
 
-// TemplateSet 模版空间
+// TemplateSet 模版套餐
 type TemplateSet struct {
 	ID         uint32                 `json:"id" gorm:"primaryKey"`
 	Spec       *TemplateSetSpec       `json:"spec" gorm:"embedded"`
