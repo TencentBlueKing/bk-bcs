@@ -581,13 +581,13 @@ func (n *Network) trySetFlagBindIP(ip net.IP) error {
 	return nil
 }
 
-// trySetFlagPort bind http and grpc port
-func (n *Network) trySetFlagPort(port, grpcPort uint) error {
-	if port != 0 {
-		n.HttpPort = port
+// trySetFlagPort set http and grpc port
+func (n *Network) trySetFlagPort(port, grpcPort int) error {
+	if port > 0 {
+		n.HttpPort = uint(port)
 	}
-	if grpcPort != 0 {
-		n.RpcPort = grpcPort
+	if grpcPort > 0 {
+		n.RpcPort = uint(grpcPort)
 	}
 
 	return nil
@@ -671,8 +671,8 @@ type SysOption struct {
 	ConfigFiles []string
 	// BindIP Setting startup bind ip.
 	BindIP   net.IP
-	Port     uint
-	GRPCPort uint
+	Port     int
+	GRPCPort int
 	// Versioned Setting if show current version info.
 	Versioned bool
 }

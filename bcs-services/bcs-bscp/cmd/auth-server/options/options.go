@@ -34,8 +34,8 @@ func InitOptions() *Option {
 	fs := pflag.CommandLine
 	sysOpt := flags.SysFlags(fs)
 
-	fs.UintVar(&sysOpt.GRPCPort, "grpc-port", 9513, "grpc service port")
-	fs.UintVar(&sysOpt.Port, "port", 9613, "http/metrics port")
+	fs.IntVar(&sysOpt.GRPCPort, "grpc-port", 9513, "grpc service port")
+	fs.IntVar(&sysOpt.Port, "port", 9613, "http/metrics port")
 
 	disableAuth := true
 	fs.BoolVar(&disableAuth, "disable-auth", false, "defines whether iam authorization is disabled. Auth is enabled "+

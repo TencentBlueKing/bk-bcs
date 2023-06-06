@@ -47,8 +47,8 @@ func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.Flags().AddFlagSet(fs)
 
-	fs.UintVar(&SysOpt.GRPCPort, "grpc-port", 9511, "grpc service port")
-	fs.UintVar(&SysOpt.Port, "port", 9611, "http/metrics port")
+	fs.IntVar(&SysOpt.GRPCPort, "grpc-port", 9511, "grpc service port")
+	fs.IntVar(&SysOpt.Port, "port", 9611, "http/metrics port")
 
 	cc.InitService(cc.DataServiceName)
 }
