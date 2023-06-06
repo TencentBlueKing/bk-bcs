@@ -16,44 +16,54 @@ import (
 )
 
 var (
-	Q             = new(Query)
-	Audit         *audit
-	IDGenerator   *iDGenerator
-	TemplateSpace *templateSpace
+	Q               = new(Query)
+	Audit           *audit
+	IDGenerator     *iDGenerator
+	Template        *template
+	TemplateRelease *templateRelease
+	TemplateSpace   *templateSpace
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Audit = &Q.Audit
 	IDGenerator = &Q.IDGenerator
+	Template = &Q.Template
+	TemplateRelease = &Q.TemplateRelease
 	TemplateSpace = &Q.TemplateSpace
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:            db,
-		Audit:         newAudit(db, opts...),
-		IDGenerator:   newIDGenerator(db, opts...),
-		TemplateSpace: newTemplateSpace(db, opts...),
+		db:              db,
+		Audit:           newAudit(db, opts...),
+		IDGenerator:     newIDGenerator(db, opts...),
+		Template:        newTemplate(db, opts...),
+		TemplateRelease: newTemplateRelease(db, opts...),
+		TemplateSpace:   newTemplateSpace(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	Audit         audit
-	IDGenerator   iDGenerator
-	TemplateSpace templateSpace
+	Audit           audit
+	IDGenerator     iDGenerator
+	Template        template
+	TemplateRelease templateRelease
+	TemplateSpace   templateSpace
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:            db,
-		Audit:         q.Audit.clone(db),
-		IDGenerator:   q.IDGenerator.clone(db),
-		TemplateSpace: q.TemplateSpace.clone(db),
+		db:              db,
+		Audit:           q.Audit.clone(db),
+		IDGenerator:     q.IDGenerator.clone(db),
+		Template:        q.Template.clone(db),
+		TemplateRelease: q.TemplateRelease.clone(db),
+		TemplateSpace:   q.TemplateSpace.clone(db),
 	}
 }
 
@@ -67,24 +77,30 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:            db,
-		Audit:         q.Audit.replaceDB(db),
-		IDGenerator:   q.IDGenerator.replaceDB(db),
-		TemplateSpace: q.TemplateSpace.replaceDB(db),
+		db:              db,
+		Audit:           q.Audit.replaceDB(db),
+		IDGenerator:     q.IDGenerator.replaceDB(db),
+		Template:        q.Template.replaceDB(db),
+		TemplateRelease: q.TemplateRelease.replaceDB(db),
+		TemplateSpace:   q.TemplateSpace.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	Audit         IAuditDo
-	IDGenerator   IIDGeneratorDo
-	TemplateSpace ITemplateSpaceDo
+	Audit           IAuditDo
+	IDGenerator     IIDGeneratorDo
+	Template        ITemplateDo
+	TemplateRelease ITemplateReleaseDo
+	TemplateSpace   ITemplateSpaceDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		Audit:         q.Audit.WithContext(ctx),
-		IDGenerator:   q.IDGenerator.WithContext(ctx),
-		TemplateSpace: q.TemplateSpace.WithContext(ctx),
+		Audit:           q.Audit.WithContext(ctx),
+		IDGenerator:     q.IDGenerator.WithContext(ctx),
+		Template:        q.Template.WithContext(ctx),
+		TemplateRelease: q.TemplateRelease.WithContext(ctx),
+		TemplateSpace:   q.TemplateSpace.WithContext(ctx),
 	}
 }
 

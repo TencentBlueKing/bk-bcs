@@ -86,9 +86,7 @@ func (s TemplateSpace) ValidateUpdate() error {
 		return errors.New("id should be set")
 	}
 
-	changed := false
 	if s.Spec != nil {
-		changed = true
 		if err := s.Spec.ValidateUpdate(); err != nil {
 			return err
 		}
@@ -98,12 +96,8 @@ func (s TemplateSpace) ValidateUpdate() error {
 		return errors.New("attachment should be set")
 	}
 
-	if s.Attachment.BizID <= 0 {
-		return errors.New("biz id should be set")
-	}
-
-	if !changed {
-		return errors.New("nothing is found to be change")
+	if err := s.Attachment.Validate(); err != nil {
+		return err
 	}
 
 	if s.Revision == nil {
@@ -145,10 +139,6 @@ func (s TemplateSpaceSpec) ValidateCreate() error {
 		return err
 	}
 
-	if err := validator.ValidateAppName(s.Name); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -168,11 +158,6 @@ func (s TemplateSpaceSpec) ValidateUpdate() error {
 // TemplateSpaceAttachment defines the TemplateSpace attachments.
 type TemplateSpaceAttachment struct {
 	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
-}
-
-// IsEmpty test whether TemplateSpace attachment is empty or not.
-func (s TemplateSpaceAttachment) IsEmpty() bool {
-	return s.BizID == 0
 }
 
 // Validate whether TemplateSpace attachment is valid or not.

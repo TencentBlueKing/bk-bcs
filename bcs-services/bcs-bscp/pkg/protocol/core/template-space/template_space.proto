@@ -6,7 +6,7 @@ package pbts;
 
 option go_package = "bscp.io/pkg/protocol/core/template-space;pbts";
 
-// TemplateSpace source resource reference: pkg/dal/table/template-space.go
+// TemplateSpace source resource reference: pkg/dal/table/template_space.go
 message TemplateSpace {
     uint32                  id         = 1;
     TemplateSpaceSpec       spec       = 2;
@@ -14,13 +14,13 @@ message TemplateSpace {
     pbbase.Revision         revision   = 4;
 }
 
-// TemplateSpaceSpec source resource reference: pkg/dal/table/template-space.go
+// TemplateSpaceSpec source resource reference: pkg/dal/table/template_space.go
 message TemplateSpaceSpec {
     string name = 1;
     string memo = 2;
 }
 
-// TemplateSpaceAttachment source resource reference: pkg/dal/table/template-space.go
+// TemplateSpaceAttachment source resource reference: pkg/dal/table/template_space.go
 message TemplateSpaceAttachment {
     uint32 biz_id = 1;
 }

@@ -296,20 +296,18 @@ func (r Revision) IsEmpty() bool {
 const lagSeconds = 5 * 60
 
 // ValidateCreate validate revision when created
+// no need to validate time here, because the time is injected by gorm automatically
 func (r Revision) ValidateCreate() error {
 
 	if len(r.Creator) == 0 {
 		return errors.New("creator can not be empty")
 	}
 
-	// now := time.Now().Unix()
-	// if (r.CreatedAt.Unix() <= (now - lagSeconds)) || (r.CreatedAt.Unix() >= (now + lagSeconds)) {
-	// 	return errors.New("invalid create time")
-	// }
 	return nil
 }
 
 // ValidateUpdate validate revision when updated
+// no need to validate time here, because the time is injected by gorm automatically
 func (r Revision) ValidateUpdate() error {
 	if len(r.Reviser) == 0 {
 		return errors.New("reviser can not be empty")
@@ -317,15 +315,6 @@ func (r Revision) ValidateUpdate() error {
 
 	if len(r.Creator) != 0 {
 		return errors.New("creator can not be updated")
-	}
-
-	if !r.CreatedAt.IsZero() {
-		return errors.New("create_time can not be updated")
-	}
-
-	now := time.Now().Unix()
-	if (r.UpdatedAt.Unix() <= (now - lagSeconds)) || (r.UpdatedAt.Unix() >= (now + lagSeconds)) {
-		return errors.New("invalid update time")
 	}
 
 	return nil

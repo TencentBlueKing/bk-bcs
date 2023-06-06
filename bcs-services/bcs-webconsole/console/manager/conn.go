@@ -118,8 +118,8 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 第一个字符串为 channel
 	channel := string(msg[0])
 	if channel == ResizeChannel {
-		resizeMsg, err := r.bindMgr.HandleResizeMsg(decodeMsg)
-		if err != nil {
+		resizeMsg, resizeErr := r.bindMgr.HandleResizeMsg(decodeMsg)
+		if resizeErr != nil {
 			return nil, nil
 		}
 
