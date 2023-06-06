@@ -46,6 +46,10 @@ const (
 	Hook ResourceType = "hook"
 	// TemplateSpace resource's bscp auth resource type
 	TemplateSpace ResourceType = "template_space"
+	// Template resource's bscp auth resource type
+	Template ResourceType = "template"
+	// TemplateRelease resource's bscp auth resource type
+	TemplateRelease ResourceType = "template_release"
 	// Group resource's bscp auth resource type
 	Group ResourceType = "group"
 	// PSH resource's bscp auth resource type

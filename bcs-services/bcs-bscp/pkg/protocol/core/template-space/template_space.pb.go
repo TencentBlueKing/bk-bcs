@@ -21,7 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// TemplateSpace source resource reference: pkg/dal/table/template-space.go
+// TemplateSpace source resource reference: pkg/dal/table/template_space.go
 type TemplateSpace struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -93,7 +93,7 @@ func (x *TemplateSpace) GetRevision() *base.Revision {
 	return nil
 }
 
-// TemplateSpaceSpec source resource reference: pkg/dal/table/template-space.go
+// TemplateSpaceSpec source resource reference: pkg/dal/table/template_space.go
 type TemplateSpaceSpec struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -149,7 +149,7 @@ func (x *TemplateSpaceSpec) GetMemo() string {
 	return ""
 }
 
-// TemplateSpaceAttachment source resource reference: pkg/dal/table/template-space.go
+// TemplateSpaceAttachment source resource reference: pkg/dal/table/template_space.go
 type TemplateSpaceAttachment struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

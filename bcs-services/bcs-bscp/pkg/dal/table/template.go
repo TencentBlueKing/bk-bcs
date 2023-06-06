@@ -18,36 +18,36 @@ import (
 	"bscp.io/pkg/criteria/validator"
 )
 
-// TemplateSpace 模版空间
-type TemplateSpace struct {
-	ID         uint32                   `json:"id" gorm:"primaryKey"`
-	Spec       *TemplateSpaceSpec       `json:"spec" gorm:"embedded"`
-	Attachment *TemplateSpaceAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *Revision                `json:"revision" gorm:"embedded"`
+// Template is template config item
+type Template struct {
+	ID         uint32              `json:"id" gorm:"primaryKey"`
+	Spec       *TemplateSpec       `json:"spec" gorm:"embedded"`
+	Attachment *TemplateAttachment `json:"attachment" gorm:"embedded"`
+	Revision   *Revision           `json:"revision" gorm:"embedded"`
 }
 
-// TableName is the TemplateSpace's database table name.
-func (s *TemplateSpace) TableName() string {
-	return "template_spaces"
+// TableName is the Template's database table name.
+func (s *Template) TableName() string {
+	return "templates"
 }
 
 // AppID AuditRes interface
-func (s *TemplateSpace) AppID() uint32 {
+func (s *Template) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (s *TemplateSpace) ResID() uint32 {
+func (s *Template) ResID() uint32 {
 	return s.ID
 }
 
 // ResType AuditRes interface
-func (s *TemplateSpace) ResType() string {
-	return "template_space"
+func (s *Template) ResType() string {
+	return "template"
 }
 
-// ValidateCreate validate TemplateSpace is valid or not when create it.
-func (s TemplateSpace) ValidateCreate() error {
+// ValidateCreate validate Template is valid or not when create it.
+func (s Template) ValidateCreate() error {
 	if s.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -79,8 +79,8 @@ func (s TemplateSpace) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate TemplateSpace is valid or not when update it.
-func (s TemplateSpace) ValidateUpdate() error {
+// ValidateUpdate validate Template is valid or not when update it.
+func (s Template) ValidateUpdate() error {
 
 	if s.ID <= 0 {
 		return errors.New("id should be set")
@@ -111,43 +111,44 @@ func (s TemplateSpace) ValidateUpdate() error {
 	return nil
 }
 
-// ValidateDelete validate the TemplateSpace's info when delete it.
-func (s TemplateSpace) ValidateDelete() error {
+// ValidateDelete validate the Template's info when delete it.
+func (s Template) ValidateDelete() error {
 	if s.ID <= 0 {
-		return errors.New("TemplateSpace id should be set")
+		return errors.New("Template id should be set")
 	}
 
-	if s.Attachment.BizID <= 0 {
-		return errors.New("biz id should be set")
+	if err := s.Attachment.Validate(); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-// TemplateSpaceSpec defines all the specifics for TemplateSpace set by user.
-type TemplateSpaceSpec struct {
+// TemplateSpec defines all the specifics for Template set by user.
+type TemplateSpec struct {
 	Name string `json:"name" gorm:"column:name"`
+	Path string `json:"path" gorm:"column:path"`
 	Memo string `json:"memo" gorm:"column:memo"`
 }
 
-// TemplateSpaceType is the type of TemplateSpace
-type TemplateSpaceType string
+// TemplateType is the type of Template
+type TemplateType string
 
-// ValidateCreate validate TemplateSpace spec when it is created.
-func (s TemplateSpaceSpec) ValidateCreate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
+// ValidateCreate validate Template spec when it is created.
+func (s TemplateSpec) ValidateCreate() error {
+	if err := validator.ValidateCfgItemName(s.Name); err != nil {
+		return err
+	}
+
+	if err := ValidatePath(s.Path, Unix); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// ValidateUpdate validate TemplateSpace spec when it is updated.
-func (s TemplateSpaceSpec) ValidateUpdate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
-		return err
-	}
-
+// ValidateUpdate validate Template spec when it is updated.
+func (s TemplateSpec) ValidateUpdate() error {
 	if err := validator.ValidateMemo(s.Memo, false); err != nil {
 		return err
 	}
@@ -155,15 +156,20 @@ func (s TemplateSpaceSpec) ValidateUpdate() error {
 	return nil
 }
 
-// TemplateSpaceAttachment defines the TemplateSpace attachments.
-type TemplateSpaceAttachment struct {
-	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
+// TemplateAttachment defines the Template attachments.
+type TemplateAttachment struct {
+	BizID           uint32 `json:"biz_id" gorm:"column:biz_id"`
+	TemplateSpaceID uint32 `json:"template_space_id" gorm:"column:template_space_id"`
 }
 
-// Validate whether TemplateSpace attachment is valid or not.
-func (s TemplateSpaceAttachment) Validate() error {
+// Validate whether Template attachment is valid or not.
+func (s TemplateAttachment) Validate() error {
 	if s.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
+	}
+
+	if s.TemplateSpaceID <= 0 {
+		return errors.New("invalid attachment template space id")
 	}
 
 	return nil

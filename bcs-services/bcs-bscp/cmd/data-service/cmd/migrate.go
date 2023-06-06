@@ -174,7 +174,7 @@ var migrateStatusCmd = &cobra.Command{
 }
 
 func init() {
-	// Add "--debug-gorm" flag to all migrate sub commands
+	// Add "--debug" flag to all migrate sub commands
 	migrateCmd.PersistentFlags().BoolP("debug", "d", false, "whether debug gorm to print sql, default is false")
 
 	// Add "--name" flag to "create" command

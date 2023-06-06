@@ -58,6 +58,13 @@ const (
 	Config_DeleteTemplateSpace_FullMethodName            = "/pbcs.Config/DeleteTemplateSpace"
 	Config_UpdateTemplateSpace_FullMethodName            = "/pbcs.Config/UpdateTemplateSpace"
 	Config_ListTemplateSpaces_FullMethodName             = "/pbcs.Config/ListTemplateSpaces"
+	Config_CreateTemplate_FullMethodName                 = "/pbcs.Config/CreateTemplate"
+	Config_DeleteTemplate_FullMethodName                 = "/pbcs.Config/DeleteTemplate"
+	Config_UpdateTemplate_FullMethodName                 = "/pbcs.Config/UpdateTemplate"
+	Config_ListTemplates_FullMethodName                  = "/pbcs.Config/ListTemplates"
+	Config_CreateTemplateRelease_FullMethodName          = "/pbcs.Config/CreateTemplateRelease"
+	Config_ListTemplateReleases_FullMethodName           = "/pbcs.Config/ListTemplateReleases"
+	Config_DeleteTemplateRelease_FullMethodName          = "/pbcs.Config/DeleteTemplateRelease"
 	Config_CreateGroup_FullMethodName                    = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                    = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                    = "/pbcs.Config/UpdateGroup"
@@ -123,6 +130,13 @@ type ConfigClient interface {
 	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*DeleteTemplateSpaceResp, error)
 	UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...grpc.CallOption) (*UpdateTemplateSpaceResp, error)
 	ListTemplateSpaces(ctx context.Context, in *ListTemplateSpacesReq, opts ...grpc.CallOption) (*ListTemplateSpacesResp, error)
+	CreateTemplate(ctx context.Context, in *CreateTemplateReq, opts ...grpc.CallOption) (*CreateTemplateResp, error)
+	DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*DeleteTemplateResp, error)
+	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*UpdateTemplateResp, error)
+	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
+	CreateTemplateRelease(ctx context.Context, in *CreateTemplateReleaseReq, opts ...grpc.CallOption) (*CreateTemplateReleaseResp, error)
+	ListTemplateReleases(ctx context.Context, in *ListTemplateReleasesReq, opts ...grpc.CallOption) (*ListTemplateReleasesResp, error)
+	DeleteTemplateRelease(ctx context.Context, in *DeleteTemplateReleaseReq, opts ...grpc.CallOption) (*DeleteTemplateReleaseResp, error)
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
@@ -494,6 +508,69 @@ func (c *configClient) ListTemplateSpaces(ctx context.Context, in *ListTemplateS
 	return out, nil
 }
 
+func (c *configClient) CreateTemplate(ctx context.Context, in *CreateTemplateReq, opts ...grpc.CallOption) (*CreateTemplateResp, error) {
+	out := new(CreateTemplateResp)
+	err := c.cc.Invoke(ctx, Config_CreateTemplate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*DeleteTemplateResp, error) {
+	out := new(DeleteTemplateResp)
+	err := c.cc.Invoke(ctx, Config_DeleteTemplate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*UpdateTemplateResp, error) {
+	out := new(UpdateTemplateResp)
+	err := c.cc.Invoke(ctx, Config_UpdateTemplate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error) {
+	out := new(ListTemplatesResp)
+	err := c.cc.Invoke(ctx, Config_ListTemplates_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) CreateTemplateRelease(ctx context.Context, in *CreateTemplateReleaseReq, opts ...grpc.CallOption) (*CreateTemplateReleaseResp, error) {
+	out := new(CreateTemplateReleaseResp)
+	err := c.cc.Invoke(ctx, Config_CreateTemplateRelease_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListTemplateReleases(ctx context.Context, in *ListTemplateReleasesReq, opts ...grpc.CallOption) (*ListTemplateReleasesResp, error) {
+	out := new(ListTemplateReleasesResp)
+	err := c.cc.Invoke(ctx, Config_ListTemplateReleases_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteTemplateRelease(ctx context.Context, in *DeleteTemplateReleaseReq, opts ...grpc.CallOption) (*DeleteTemplateReleaseResp, error) {
+	out := new(DeleteTemplateReleaseResp)
+	err := c.cc.Invoke(ctx, Config_DeleteTemplateRelease_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error) {
 	out := new(CreateGroupResp)
 	err := c.cc.Invoke(ctx, Config_CreateGroup_FullMethodName, in, out, opts...)
@@ -709,6 +786,13 @@ type ConfigServer interface {
 	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*DeleteTemplateSpaceResp, error)
 	UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq) (*UpdateTemplateSpaceResp, error)
 	ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error)
+	CreateTemplate(context.Context, *CreateTemplateReq) (*CreateTemplateResp, error)
+	DeleteTemplate(context.Context, *DeleteTemplateReq) (*DeleteTemplateResp, error)
+	UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error)
+	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
+	CreateTemplateRelease(context.Context, *CreateTemplateReleaseReq) (*CreateTemplateReleaseResp, error)
+	ListTemplateReleases(context.Context, *ListTemplateReleasesReq) (*ListTemplateReleasesResp, error)
+	DeleteTemplateRelease(context.Context, *DeleteTemplateReleaseReq) (*DeleteTemplateReleaseResp, error)
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
@@ -847,6 +931,27 @@ func (UnimplementedConfigServer) UpdateTemplateSpace(context.Context, *UpdateTem
 }
 func (UnimplementedConfigServer) ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSpaces not implemented")
+}
+func (UnimplementedConfigServer) CreateTemplate(context.Context, *CreateTemplateReq) (*CreateTemplateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplate not implemented")
+}
+func (UnimplementedConfigServer) DeleteTemplate(context.Context, *DeleteTemplateReq) (*DeleteTemplateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplate not implemented")
+}
+func (UnimplementedConfigServer) UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplate not implemented")
+}
+func (UnimplementedConfigServer) ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplates not implemented")
+}
+func (UnimplementedConfigServer) CreateTemplateRelease(context.Context, *CreateTemplateReleaseReq) (*CreateTemplateReleaseResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateRelease not implemented")
+}
+func (UnimplementedConfigServer) ListTemplateReleases(context.Context, *ListTemplateReleasesReq) (*ListTemplateReleasesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateReleases not implemented")
+}
+func (UnimplementedConfigServer) DeleteTemplateRelease(context.Context, *DeleteTemplateReleaseReq) (*DeleteTemplateReleaseResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateRelease not implemented")
 }
 func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
@@ -1601,6 +1706,132 @@ func _Config_ListTemplateSpaces_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CreateTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTemplateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateTemplate(ctx, req.(*CreateTemplateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTemplateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteTemplate(ctx, req.(*DeleteTemplateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTemplateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateTemplate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateTemplate(ctx, req.(*UpdateTemplateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListTemplates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplatesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTemplates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTemplates_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTemplates(ctx, req.(*ListTemplatesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_CreateTemplateRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTemplateReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateTemplateRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateTemplateRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateTemplateRelease(ctx, req.(*CreateTemplateReleaseReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListTemplateReleases_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateReleasesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTemplateReleases(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTemplateReleases_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTemplateReleases(ctx, req.(*ListTemplateReleasesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteTemplateRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTemplateReleaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteTemplateRelease(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteTemplateRelease_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteTemplateRelease(ctx, req.(*DeleteTemplateReleaseReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateGroupReq)
 	if err := dec(in); err != nil {
@@ -2101,6 +2332,34 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateSpaces",
 			Handler:    _Config_ListTemplateSpaces_Handler,
+		},
+		{
+			MethodName: "CreateTemplate",
+			Handler:    _Config_CreateTemplate_Handler,
+		},
+		{
+			MethodName: "DeleteTemplate",
+			Handler:    _Config_DeleteTemplate_Handler,
+		},
+		{
+			MethodName: "UpdateTemplate",
+			Handler:    _Config_UpdateTemplate_Handler,
+		},
+		{
+			MethodName: "ListTemplates",
+			Handler:    _Config_ListTemplates_Handler,
+		},
+		{
+			MethodName: "CreateTemplateRelease",
+			Handler:    _Config_CreateTemplateRelease_Handler,
+		},
+		{
+			MethodName: "ListTemplateReleases",
+			Handler:    _Config_ListTemplateReleases_Handler,
+		},
+		{
+			MethodName: "DeleteTemplateRelease",
+			Handler:    _Config_DeleteTemplateRelease_Handler,
 		},
 		{
 			MethodName: "CreateGroup",

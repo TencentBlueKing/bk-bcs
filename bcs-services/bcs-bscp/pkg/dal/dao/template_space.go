@@ -21,18 +21,18 @@ import (
 	"bscp.io/pkg/types"
 )
 
-// TemplateSpace supplies all the TemplateSpace related operations.
+// TemplateSpace supplies all the template space related operations.
 type TemplateSpace interface {
-	// Create one TemplateSpace instance.
-	Create(kit *kit.Kit, TemplateSpace *table.TemplateSpace) (uint32, error)
-	// Update one TemplateSpace's info.
-	Update(kit *kit.Kit, TemplateSpace *table.TemplateSpace) error
-	// List TemplateSpaces with options.
+	// Create one template space instance.
+	Create(kit *kit.Kit, templateSpace *table.TemplateSpace) (uint32, error)
+	// Update one template space's info.
+	Update(kit *kit.Kit, templateSpace *table.TemplateSpace) error
+	// List template spaces with options.
 	List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error)
-	// Delete one strategy instance.
-	Delete(kit *kit.Kit, strategy *table.TemplateSpace) error
-	// GetByName get templateSpace by name.
-	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error)
+	// Delete one template space instance.
+	Delete(kit *kit.Kit, templateSpace *table.TemplateSpace) error
+	// GetByUniqueKey get template space by unique key.
+	GetByUniqueKey(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error)
 }
 
 var _ TemplateSpace = new(templateSpaceDao)
@@ -43,13 +43,13 @@ type templateSpaceDao struct {
 	auditDao AuditDao
 }
 
-// Create one TemplateSpace instance.
+// Create one template space instance.
 func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
 		return 0, err
 	}
 
-	// generate a TemplateSpace id and update to TemplateSpace.
+	// generate a template space id and update to template space.
 	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
 		return 0, err
@@ -78,7 +78,7 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 	return g.ID, nil
 }
 
-// Update one TemplateSpace instance.
+// Update one template space instance.
 func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error {
 	if err := g.ValidateUpdate(); err != nil {
 		return err
@@ -113,7 +113,7 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 	return nil
 }
 
-// List TemplateSpaces with options.
+// List template spaces with options.
 func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error) {
 	m := dao.genQ.TemplateSpace
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
@@ -126,7 +126,7 @@ func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePag
 	return result, count, nil
 }
 
-// Delete one TemplateSpace instance.
+// Delete one template space instance.
 func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error {
 	// 参数校验
 	if err := g.ValidateDelete(); err != nil {
@@ -161,8 +161,8 @@ func (dao *templateSpaceDao) Delete(kit *kit.Kit, g *table.TemplateSpace) error 
 	return nil
 }
 
-// GetByName get by name
-func (dao *templateSpaceDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error) {
+// GetByUniqueKey get template space by unique key
+func (dao *templateSpaceDao) GetByUniqueKey(kit *kit.Kit, bizID uint32, name string) (*table.TemplateSpace, error) {
 	m := dao.genQ.TemplateSpace
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 
