@@ -400,10 +400,10 @@ binary-extensions@^2.0.0:
   resolved "https://mirrors.tencent.com/npm/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
 
-bkui-vue@0.0.1-beta.414:
-  version "0.0.1-beta.414"
-  resolved "https://mirrors.tencent.com/npm/bkui-vue/-/bkui-vue-0.0.1-beta.414.tgz#50137ec5ce70347087f32dbb23f8ea7cf0a8441c"
-  integrity sha512-mF4Xb0wKNzFw9AP+uy73nd8Gd7p7FW0CwHn4qrfV883rzIK8u/hceZQHyi7kXJYS0OeJxHwHtaajvKMqD3SCiQ==
+bkui-vue@0.0.1-beta.422:
+  version "0.0.1-beta.422"
+  resolved "https://registry.yarnpkg.com/bkui-vue/-/bkui-vue-0.0.1-beta.422.tgz#24fc56c54c6067ba1b9a33910f099b3276659df5"
+  integrity sha512-k/DOYifxnvcuFqsTGoALKBop3LCkQfwsRK4bD2mS92ejsMxpfcj4RQHZz+Ga/3WJUv1lAkXH3H0qJlRJoLAzYQ==
   dependencies:
     "@floating-ui/dom" "~0.5.2"
     "@popperjs/core" "~2.11.5"
@@ -1450,10 +1450,10 @@ vite-plugin-compression@^0.5.1:
     debug "^4.3.3"
     fs-extra "^10.0.0"
 
-vite@^3.0.7:
-  version "3.2.5"
-  resolved "https://mirrors.tencent.com/npm/vite/-/vite-3.2.5.tgz#dee5678172a8a0ab3e547ad4148c3d547f90e86a"
-  integrity sha512-4mVEpXpSOgrssFZAOmGIr85wPHKvaDAcXqxVxVRZhljkJOMZi1ibLibzjLHzJvcok8BMguLc7g1W6W/GqZbLdQ==
+vite@^3.2.7:
+  version "3.2.7"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-3.2.7.tgz#35a62826bd4d6b778ae5db8766d023bcd4e7bef3"
+  integrity sha512-29pdXjk49xAP0QBr0xXqu2s5jiQIXNvE/xwd0vUizYT2Hzqe4BksNNoWllFVXJf4eLZ+UlVQmXfB4lWrc+t18g==
   dependencies:
     esbuild "^0.15.9"
     postcss "^8.4.18"
