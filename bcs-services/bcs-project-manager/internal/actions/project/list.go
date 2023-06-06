@@ -121,15 +121,18 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 	var total int64
 	authUser, err := middleware.GetUserFromContext(ctx)
 	if err == nil && authUser.Username != "" {
-		// with username
+		// username 为空时，该接口请求没有意义
 		ids, any, err := auth.ListAuthorizedProjectIDs(authUser.Username)
-		// 没有权限的项目时，返回为空，并记录信息
 		if err != nil {
 			logging.Error("get user project permissions failed, err: %s", err.Error())
 			return nil, nil
 		}
-		// 通过 project id 获取项目详情
-		if any {
+		if req.All {
+			// all 为 true 时，返回所有项目并排序和分页，支持模糊查询
+			projects, total, err = lap.model.SearchProjects(ctx, ids, req.SearchKey,
+				&page.Pagination{Offset: req.Offset, Limit: req.Limit})
+		} else if any {
+			// all 为 false 时，直接返回所有有权限的项目，分页和模糊查询无效
 			projects, total, err = lap.model.ListProjects(ctx, operator.EmptyCondition, &page.Pagination{All: true})
 		} else {
 			projects, total, err = lap.model.ListProjectByIDs(ctx, ids, &page.Pagination{All: true})
