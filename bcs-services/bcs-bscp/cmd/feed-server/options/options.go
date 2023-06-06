@@ -38,6 +38,9 @@ func InitOptions() (*Option, error) {
 	sysOpt := flags.SysFlags(fs)
 	opt := &Option{Sys: sysOpt}
 
+	fs.IntVar(&sysOpt.Port, "grpc-port", 9510, "grpc service port")
+	fs.IntVar(&sysOpt.GRPCPort, "port", 9610, "http/metrics port")
+
 	fs.StringVarP(&opt.Name, "name", "n", "", "feed server instance name, that is the only one of all feed server. "+
 		"And only allows to include english、numbers, and must start and end with an english")
 

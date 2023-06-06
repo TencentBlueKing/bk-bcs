@@ -46,6 +46,10 @@ func LoadSettings(sys *SysOption) error {
 		return err
 	}
 
+	if err = s.trySetFlagPort(sys.Port, sys.GRPCPort); err != nil {
+		return err
+	}
+
 	// set the default value if user not configured.
 	s.trySetDefault()
 
