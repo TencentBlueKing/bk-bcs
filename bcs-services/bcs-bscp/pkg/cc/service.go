@@ -59,6 +59,7 @@ const (
 // Setting defines all service Setting interface.
 type Setting interface {
 	trySetFlagBindIP(ip net.IP) error
+	trySetFlagPort(port, grpcPort int) error
 	trySetDefault()
 	Validate() error
 }
@@ -76,14 +77,17 @@ func (s *ApiServerSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort set http and grpc port
+func (s *ApiServerSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
 // trySetDefault set the ApiServerSetting default value if user not configured.
 func (s *ApiServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Repo.trySetDefault()
-
-	return
 }
 
 // Validate ApiServerSetting option.
@@ -127,13 +131,16 @@ func (s *AuthServerSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort set http and grpc port
+func (s *AuthServerSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
 // trySetDefault set the AuthServerSetting default value if user not configured.
 func (s *AuthServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
-
-	return
 }
 
 // Validate AuthServerSetting option.
@@ -170,6 +177,11 @@ func (s *CacheServiceSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort set http and grpc port
+func (s *CacheServiceSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
 // trySetDefault set the CacheServiceSetting default value if user not configured.
 func (s *CacheServiceSetting) trySetDefault() {
 	s.Network.trySetDefault()
@@ -177,8 +189,6 @@ func (s *CacheServiceSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.Sharding.trySetDefault()
 	s.RedisCluster.trySetDefault()
-
-	return
 }
 
 // Validate CacheServiceSetting option.
@@ -218,13 +228,16 @@ func (s *ConfigServerSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort set http and grpc port
+func (s *ConfigServerSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
 // trySetDefault set the ConfigServerSetting default value if user not configured.
 func (s *ConfigServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
-
-	return
 }
 
 // Validate ConfigServerSetting option.
@@ -265,14 +278,17 @@ func (s *DataServiceSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort set http and grpc port
+func (s *DataServiceSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
 // trySetDefault set the DataServiceSetting default value if user not configured.
 func (s *DataServiceSetting) trySetDefault() {
 	s.Network.trySetDefault()
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Sharding.trySetDefault()
-
-	return
 }
 
 // Validate DataServiceSetting option.
@@ -314,6 +330,11 @@ func (s *FeedServerSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort set http and grpc port
+func (s *FeedServerSetting) trySetFlagPort(port, grpcPort int) error {
+	return s.Network.trySetFlagPort(port, grpcPort)
+}
+
 // trySetDefault set the FeedServerSetting default value if user not configured.
 func (s *FeedServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
@@ -322,8 +343,6 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.FSLocalCache.trySetDefault()
 	s.Downstream.trySetDefault()
 	s.MRLimiter.trySetDefault()
-
-	return
 }
 
 // Validate FeedServerSetting option.
