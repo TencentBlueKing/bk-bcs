@@ -63,9 +63,10 @@ func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 
 // Build ...
 func (b *ManifestRespBuilder) Build() (map[string]interface{}, error) {
+	apiVersion := mapx.GetStr(b.manifest, "apiVersion")
 	return map[string]interface{}{
 		"manifest":    b.manifest,
-		"manifestExt": formatter.GetFormatFunc(b.kind, "")(b.manifest),
+		"manifestExt": formatter.GetFormatFunc(b.kind, apiVersion)(b.manifest),
 	}, nil
 }
 
