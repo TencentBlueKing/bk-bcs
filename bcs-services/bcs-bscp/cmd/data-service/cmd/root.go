@@ -40,11 +40,11 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
 	// add system flags
 	fs := pflag.CommandLine
-
 	SysOpt = flags.SysFlags(fs)
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
 	rootCmd.Flags().AddFlagSet(fs)
 
 	fs.IntVar(&SysOpt.GRPCPort, "grpc-port", 9511, "grpc service port")
