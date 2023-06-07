@@ -13,8 +13,6 @@ limitations under the License.
 package repository
 
 import (
-	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -26,7 +24,6 @@ import (
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -103,21 +100,50 @@ func (s *S3Client) uploadFile(w http.ResponseWriter, r *http.Request) (*ObjectMe
 		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
 	}
 
-	repoName := s.s3Cli.Config.S3.BucketName
-
-	if record, err := s.s3CreatedRecords.Get(repoName); err != nil || record == nil {
-
-		req := &repo.CreateRepoReq{
-			Name:        repoName,
-			Description: fmt.Sprintf("bscp %d business repository", kt.BizID),
-		}
-		if err = s.s3Cli.CreateRepo(r.Context(), req); err != nil {
-			return nil, errors.Wrap(err, "create repo failed")
-		}
-
-		// set cache, to flag this biz repository already created.
-		s.s3CreatedRecords.SetWithExpire(repoName, true, RepoRecordCacheExpiration)
+	s3pathName, err := repo.GenRepoName(kt.BizID)
+	if err != nil {
+		return nil, errors.Wrap(err, "generate s3 path name failed")
 	}
+
+	fullPath, err := repo.GenS3NodeFullPath(s3pathName, sha256)
+	if err != nil {
+		return nil, errors.Wrap(err, "create S3 FullPath failed")
+	}
+
+	repoName := s.s3Cli.Config.S3.BucketName
+	info, err := s.s3Cli.Client.PutObject(r.Context(), repoName, fullPath, r.Body, r.ContentLength, minio.PutObjectOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "upload S3 file failed")
+	}
+
+	// cos only have etag, not for validate
+	metadata := &ObjectMetadata{
+		ByteSize: info.Size,
+		Sha256:   info.ETag,
+	}
+
+	return metadata, nil
+}
+
+// FileMetadata get s3 head data
+func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
+	metadata, err := s.fileMetadata(w, r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+	render.JSON(w, r, rest.OKRender(metadata))
+
+}
+func (s S3Client) fileMetadata(w http.ResponseWriter, r *http.Request) (*ObjectMetadata, error) {
+	kt := kit.MustGetKit(r.Context())
+
+	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+	if len(sha256) != 64 {
+		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
+	}
+
+	config := cc.ApiServer().Repo
 
 	s3pathName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
@@ -129,47 +155,18 @@ func (s *S3Client) uploadFile(w http.ResponseWriter, r *http.Request) (*ObjectMe
 		return nil, errors.Wrap(err, "create S3 FullPath failed")
 	}
 
-	info, err := s.s3Cli.Client.PutObject(r.Context(), repoName, fullPath, r.Body, r.ContentLength, minio.PutObjectOptions{})
+	fileMetadata, err := s.s3Cli.FileMetadataHead(kt.Ctx, config.S3.BucketName, fullPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "uploader S3 file failed")
+		return nil, errors.Wrap(err, "get file metadata failed")
 	}
 
+	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
-		ByteSize: info.Size,
-		Sha256:   info.ChecksumSHA256,
+		ByteSize: fileMetadata.ByteSize,
+		Sha256:   fileMetadata.Sha256,
 	}
 
 	return metadata, nil
-}
-
-// FileMetadata get s3 head data
-func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
-	kt := kit.MustGetKit(r.Context())
-
-	config := cc.ApiServer().Repo
-
-	s3PathName, err := repo.GenRepoName(kt.BizID)
-	if err != nil {
-		logs.Errorf("generate S3 repository name failed, err: %v, rid: %s", err, kt.Rid)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	fullPath, err := repo.GenS3NodeFullPath(s3PathName, sha256)
-	if err != nil {
-		logs.Errorf("create S3 FullPath failed, err: %v, err")
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
-
-	fileMetadata, err := s.s3Cli.FileMetadataHead(kt.Ctx, config.S3.BucketName, fullPath)
-	if err != nil {
-		logs.Errorf("get file metadata information failed, err: %v, rid: %s", err)
-		return
-	}
-	fileMetadata.Sha256 = sha256
-	msg, _ := json.Marshal(fileMetadata)
-	w.Write(msg)
 }
 
 // NewS3Service new s3 service
