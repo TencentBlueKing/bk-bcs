@@ -248,7 +248,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			BizID: req.BizId,
 			AppID: req.AppId,
 			Filter: &filter.Expression{
-				Op:    filter.And,
+				Op:    filter.Or,
 				Rules: []filter.RuleFactory{},
 			},
 			Page: &types.BasePage{
@@ -256,13 +256,28 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 				Limit: uint(req.Limit),
 			},
 		}
+		if req.SearchKey != "" {
+			query.Filter.Rules = append(query.Filter.Rules, &filter.AtomRule{
+				Field: "name",
+				Op:    filter.ContainsInsensitive.Factory(),
+				Value: req.SearchKey,
+			}, &filter.AtomRule{
+				Field: "creator",
+				Op:    filter.ContainsInsensitive.Factory(),
+				Value: req.SearchKey,
+			}, &filter.AtomRule{
+				Field: "reviser",
+				Op:    filter.ContainsInsensitive.Factory(),
+				Value: req.SearchKey,
+			})
+		}
 		details, err := s.dao.ConfigItem().List(grpcKit, query)
 		if err != nil {
 			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
 
-		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId)
+		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId, req.SearchKey)
 		if err != nil {
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err

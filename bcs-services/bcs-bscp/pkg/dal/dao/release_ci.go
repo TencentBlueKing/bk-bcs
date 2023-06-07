@@ -13,6 +13,7 @@ limitations under the License.
 package dao
 
 import (
+	"bytes"
 	"fmt"
 	"strconv"
 
@@ -33,7 +34,7 @@ type ReleasedCI interface {
 	// Get released config item by id and released id
 	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
 	// GetReleasedLately released config item by app id and biz id
-	GetReleasedLately(kit *kit.Kit, appId, bizID uint32) ([]*table.ReleasedConfigItem, error)
+	GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) ([]*table.ReleasedConfigItem, error)
 	// List released config items with options.
 	List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (*types.ListReleasedCIsDetails, error)
 }
@@ -171,19 +172,26 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 }
 
 // GetReleasedLately
-func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32) ([]*table.ReleasedConfigItem, error) {
+func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) (
+	[]*table.ReleasedConfigItem, error) {
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
 
-	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", table.ReleasedConfigItemTable.Name(),
-		" WHERE  biz_id = ", strconv.Itoa(int(bizID)), " AND app_id = ", strconv.Itoa(int(appId)), " AND release_id = (SELECT release_id from ", table.ReleasedConfigItemTable.Name(),
-		" where app_id = ", strconv.Itoa(int(appId)), " ORDER BY release_id desc limit 1)")
-	sql := filter.SqlJoint(sqlSentenceCount)
+	var sqlBuf bytes.Buffer
+	sqlBuf.WriteString("SELECT ")
+	sqlBuf.WriteString(table.ReleasedConfigItemColumns.NamedExpr())
+	sqlBuf.WriteString(" FROM ")
+	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
+	sqlBuf.WriteString(" WHERE biz_id = ? AND app_id = ?")
+	sqlBuf.WriteString(" AND (name like ? OR creator like ? OR reviser like ?)")
+	sqlBuf.WriteString(" AND release_id = (SELECT release_id from ")
+	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
+	sqlBuf.WriteString(" WHERE app_id = ? ORDER BY release_id desc limit 1)")
 
 	fileInfo := make([]*table.ReleasedConfigItem, 0)
-	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sql)
+	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sqlBuf.String(),
+		bizID, appId, "%"+searchKey+"%", "%"+searchKey+"%", "%"+searchKey+"%", appId)
 	if err != nil {
 		return nil, err
 	}
