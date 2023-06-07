@@ -295,17 +295,35 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	}
 	// list released config items
 	query := &types.ListReleasedCIsOption{
-		BizID: req.BizId,
+		BizID:     req.BizId,
+		ReleaseID: req.ReleaseId,
 		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{Field: "release_id", Op: filter.Equal.Factory(), Value: req.ReleaseId},
-			},
+			Op:    filter.Or,
+			Rules: []filter.RuleFactory{},
 		},
 		Page: &types.BasePage{
 			Start: req.Start,
 			Limit: uint(req.Limit),
 		},
+	}
+	if req.SearchKey != "" {
+		query.Filter.Rules = append(query.Filter.Rules, &filter.AtomRule{
+			Field: "name",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		}, &filter.AtomRule{
+			Field: "creator",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		}, &filter.AtomRule{
+			Field: "reviser",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		})
+	}
+	if req.All {
+		query.Page.Start = 0
+		query.Page.Limit = 0
 	}
 	details, err := s.dao.ReleasedCI().List(grpcKit, query)
 	if err != nil {

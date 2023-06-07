@@ -80,16 +80,11 @@ func (s *Service) BenchReleasedCI(ctx context.Context, req *pbcs.BenchReleasedCI
 	}
 
 	opts := &types.ListReleasedCIsOption{
-		BizID: req.BizId,
+		BizID:     req.BizId,
+		ReleaseID: req.ReleaseId,
 		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "release_id",
-					Op:    filter.Equal.Factory(),
-					Value: req.ReleaseId,
-				},
-			},
+			Op:    filter.And,
+			Rules: []filter.RuleFactory{},
 		},
 		// use unlimited page.
 		Page: &types.BasePage{Start: 0, Limit: 0},
