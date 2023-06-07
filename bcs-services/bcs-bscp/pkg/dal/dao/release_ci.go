@@ -140,6 +140,13 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 			},
 		},
 	}
+	if opts.ReleaseID != 0 {
+		sqlOpt.CrownedOption.Rules = append(sqlOpt.CrownedOption.Rules, &filter.AtomRule{
+			Field: "release_id",
+			Op:    filter.Equal.Factory(),
+			Value: opts.ReleaseID,
+		})
+	}
 	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
