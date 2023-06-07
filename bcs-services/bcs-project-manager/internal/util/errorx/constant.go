@@ -45,44 +45,43 @@ const (
 	PermDeniedErrMsg = "no permission"
 	// IAMClientErr 构建 iam client异常
 	IAMClientErr = commErr.AdditionErrorCode + 506
-	// IAMClientErrMsg TODO
+	// IAMClientErrMsg 构建 iam client 异常消息
 	IAMClientErrMsg = "make iam client error"
 	// IAMOPErr 错误的iam operation
 	IAMOPErr = commErr.AdditionErrorCode + 507
-	// IAMOPErrMsg TODO
+	// IAMOPErrMsg 错误的 iam operation 异常信息
 	IAMOPErrMsg = "iam op error"
 	// RequestIAMErr 请求 IAM api 异常
 	RequestIAMErr = commErr.AdditionErrorCode + 508
-	// RequestIAMErrMsg TODO
+	// RequestIAMErrMsg 请求 IAM api 异常信息
 	RequestIAMErrMsg = "request iam api error"
 	// NotFoundHeaderUserErr header中没有发现username
 	NotFoundHeaderUserErr = commErr.AdditionErrorCode + 406
-	// NotFoundHeaderUserErrMsg TODO
-	// NotFoundUserFromHeaderMsg
+	// NotFoundHeaderUserErrMsg header 中没有发现 username 异常信息
 	NotFoundHeaderUserErrMsg = "not found username from header"
 	// RequestCMDBErr 请求 cmdb api 异常
 	RequestCMDBErr = commErr.AdditionErrorCode + 509
-	// RequestCMDBErrMsg TODO
+	// RequestCMDBErrMsg 请求 cmdb api 异常信息
 	RequestCMDBErrMsg = "request cmdb api error"
 	// NoMaintainerRoleErr 用户不为运维角色
 	NoMaintainerRoleErr = commErr.AdditionErrorCode + 407
-	// NoMaintainerRoleErrMsg TODO
+	// NoMaintainerRoleErrMsg 用户不为运维角色异常信息
 	NoMaintainerRoleErrMsg = "user is not biz maintainer role"
-	// RequestBCSCCErr TODO
+	// RequestBKSSMErr 请求 bk-ssm api 异常
 	RequestBKSSMErr = commErr.AdditionErrorCode + 510
-	// RequestBCSCCErrMsg TODO
+	// RequestBCSCCErrMsg 请求 bk-ssm api 异常信息
 	RequestBKSSMMsg = "request bk ssm api error"
-	// RequestBCSCCErr TODO
+	// RequestBCSCCErr 请求 bcs cc api 异常
 	RequestBCSCCErr = commErr.AdditionErrorCode + 511
-	// RequestBCSCCErrMsg TODO
+	// RequestBCSCCErrMsg 请求 bcs cc api 异常信息
 	RequestBCSCCErrMsg = "request bcs cc api error"
-	// RequestITSMErr TODO
+	// RequestITSMErr 请求 bk itsm api 异常
 	RequestITSMErr = commErr.AdditionErrorCode + 512
-	// RequestBkMonitorErr TODO
+	// RequestBkMonitorErr 请求 bk monitor api 异常
 	RequestBkMonitorErr = commErr.AdditionErrorCode + 513
-	// RequestBkMonitorErrMsg TODO
+	// RequestBkMonitorErrMsg 请求 bk monitor api 异常信息
 	RequestBkMonitorErrMsg = "request bk monitor api error"
-	// RequestITSMErrMsg TODO
+	// RequestITSMErrMsg 请求 bk itsm api 异常信息
 	RequestITSMErrMsg = "request bk itsm api error"
 	// NoPermissionErr 无权限
 	NoPermissionErr = 40403

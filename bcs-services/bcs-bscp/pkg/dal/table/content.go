@@ -90,10 +90,10 @@ var ContentSpecColumnDescriptor = ColumnDescriptors{
 type ContentSpec struct {
 	// Signature is the sha256 value of a configuration file's
 	// content, it can not be updated.
-	Signature string `json:"signature" gorm:"column:signature"`
+	Signature string `db:"signature" json:"signature" gorm:"column:signature"`
 	// ByteSize is the size of this content in byte.
 	// can not be updated
-	ByteSize uint64 `json:"byte_size" gorm:"column:byte_size"`
+	ByteSize uint64 `db:"byte_size" json:"byte_size" gorm:"column:byte_size"`
 }
 
 // Validate content's spec
