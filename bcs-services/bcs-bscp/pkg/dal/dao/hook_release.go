@@ -152,18 +152,30 @@ func (dao *hookReleaseDao) List(kit *kit.Kit,
 	opt *types.ListHookReleasesOption) ([]*table.HookRelease, int64, error) {
 
 	m := dao.genQ.HookRelease
-	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
-
-	result, count, err := q.Where(
+	q := dao.genQ.HookRelease.WithContext(kit.Ctx).Where(
 		m.BizID.Eq(opt.BizID),
-		m.HookID.Eq(opt.HookID),
-		m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey))).
-		FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
-	if err != nil {
-		return nil, 0, err
+		m.HookID.Eq(opt.HookID))
+
+	if opt.SearchKey != "" {
+		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey)))
 	}
 
-	return result, count, nil
+	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
+		result, err := q.Find()
+		if err != nil {
+			return nil, 0, err
+		}
+
+		return result, int64(len(result)), err
+
+	} else {
+		result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
+		if err != nil {
+			return nil, 0, err
+		}
+
+		return result, count, err
+	}
 
 }
 

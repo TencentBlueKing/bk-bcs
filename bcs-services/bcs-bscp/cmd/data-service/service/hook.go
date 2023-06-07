@@ -38,6 +38,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+	spec.PubState = table.NotReleased
 	res := &table.Revision{
 		Creator: kt.User,
 		Reviser: kt.User,
@@ -92,13 +93,18 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 
 	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
 	opt := &types.ListHooksOption{
-		BizID: req.BizId,
-		Name:  req.Name,
-		Tag:   req.Tag,
-		All:   req.All,
-		Page:  page,
+		BizID:  req.BizId,
+		Name:   req.Name,
+		Tag:    req.Tag,
+		All:    req.All,
+		NotTag: req.NotTag,
+		Page:   page,
 	}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
+
+	po := &types.PageOption{
+		EnableUnlimitedLimit: true,
+	}
+	if err := opt.Validate(po); err != nil {
 		return nil, err
 	}
 
@@ -139,6 +145,7 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 	}
 	if err := s.dao.Hook().DeleteWithTx(kt, tx, hook); err != nil {
 		logs.Errorf("delete hook failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -151,6 +158,7 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 	}
 	if err := s.dao.HookRelease().DeleteByHookIDWithTx(kt, tx, release); err != nil {
 		logs.Errorf("delete hook release failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
 		return nil, err
 	}
 

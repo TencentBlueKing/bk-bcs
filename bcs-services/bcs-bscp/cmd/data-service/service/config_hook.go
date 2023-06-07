@@ -13,6 +13,12 @@ limitations under the License.
 package service
 
 import (
+	"context"
+	"errors"
+	"fmt"
+
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -20,8 +26,6 @@ import (
 	pbch "bscp.io/pkg/protocol/core/config-hook"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
-	"context"
-	"fmt"
 )
 
 // CreateConfigHook create configHook.
@@ -123,10 +127,10 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		req.Spec.PostHookReleaseId = 0
 	}
 
-	spec, err := req.Spec.ConfigHookSpec()
-	if err != nil {
-		logs.Errorf("get ConfigHookSpec spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+	spec, e := req.Spec.ConfigHookSpec()
+	if e != nil {
+		logs.Errorf("get ConfigHookSpec spec from pb failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 	hook := &table.ConfigHook{
 		ID:         req.Id,
@@ -150,6 +154,9 @@ func (s *Service) GetConfigHook(ctx context.Context, req *pbds.GetConfigHookReq)
 	kt := kit.FromGrpcContext(ctx)
 
 	hook, err := s.dao.ConfigHook().GetByAppID(kt, req.BizId, req.AppId)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return pbch.PbConfigHook(genNilConfigHook()), nil
+	}
 	if err != nil {
 		logs.Errorf("get ConfigHook failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -157,4 +164,37 @@ func (s *Service) GetConfigHook(ctx context.Context, req *pbds.GetConfigHookReq)
 
 	return pbch.PbConfigHook(hook), err
 
+}
+
+func (s *Service) EnableConfigHook(ctx context.Context, req *pbds.EnableConfigHookReq) (*pbbase.EmptyResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	g := &table.ConfigHook{
+		Spec: &table.ConfigHookSpec{
+			Enable: req.Enable,
+		},
+		Attachment: &table.ConfigHookAttachment{
+			BizID: req.BizId,
+			AppID: req.AppId,
+		},
+		Revision: &table.Revision{
+			Reviser: kt.User,
+		},
+	}
+
+	if err := s.dao.ConfigHook().Enable(kt, g); err != nil {
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+
+}
+
+func genNilConfigHook() *table.ConfigHook {
+	return &table.ConfigHook{
+		Spec:       &table.ConfigHookSpec{},
+		Attachment: &table.ConfigHookAttachment{},
+		Revision:   &table.Revision{},
+	}
 }

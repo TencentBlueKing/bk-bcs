@@ -48,6 +48,7 @@ service Data {
     rpc CreateConfigHook(CreateConfigHookReq) returns (CreateResp) {}
     rpc UpdateConfigHook(UpdateConfigHookReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigHook(GetConfigHookReq) returns (pbch.ConfigHook) {}
+    rpc EnableConfigHook(EnableConfigHookReq) returns (pbbase.EmptyResp) {}
 
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
@@ -220,6 +221,12 @@ message UpdateConfigHookReq {
 message GetConfigHookReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
+}
+
+message EnableConfigHookReq {
+    uint32 app_id = 1;
+    uint32 biz_id = 2;
+    bool   enable = 3;
 }
 
 message CreateAppReq {
@@ -488,12 +495,13 @@ message GetHookReq {
 }
 
 message ListHooksReq {
-    uint32 biz_id = 1;
-    string name   = 2;
-    string tag    = 3;
-    bool   all    = 5;
-    uint32 start  = 6;
-    uint32 limit  = 7;
+    uint32 biz_id  = 1;
+    string name    = 2;
+    string tag     = 3;
+    bool   all     = 5;
+    bool   not_tag = 6;
+    uint32 start   = 7;
+    uint32 limit   = 8;
 }
 
 message ListHooksResp {
@@ -521,6 +529,7 @@ message ListHookReleasesReq {
     string search_key   = 3;
     uint32 start        = 4;
     uint32 limit        = 5;
+    bool   all          = 6;
 }
 
 message ListHookReleasesResp {

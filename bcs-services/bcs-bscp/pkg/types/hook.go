@@ -20,11 +20,12 @@ import (
 
 // ListHooksOption defines options to list group.
 type ListHooksOption struct {
-	BizID uint32    `json:"biz_id"`
-	Name  string    `json:"name"`
-	Tag   string    `json:"tag"`
-	All   bool      `json:"all"`
-	Page  *BasePage `json:"page"`
+	BizID  uint32    `json:"biz_id"`
+	Name   string    `json:"name"`
+	Tag    string    `json:"tag"`
+	All    bool      `json:"all"`
+	NotTag bool      `json:"not_tag"`
+	Page   *BasePage `json:"page"`
 }
 
 // Validate the list group options

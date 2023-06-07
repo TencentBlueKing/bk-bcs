@@ -78,7 +78,10 @@ func (s *Service) ListHookReleases(ctx context.Context,
 		SearchKey: req.SearchKey,
 		Page:      page,
 	}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
+	po := &types.PageOption{
+		EnableUnlimitedLimit: true,
+	}
+	if err := opt.Validate(po); err != nil {
 		return nil, err
 	}
 
@@ -143,6 +146,17 @@ func (s *Service) DeleteHookRelease(ctx context.Context,
 func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookReleaseReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
+
+	hook, err := s.dao.Hook().GetByID(kt, req.BizId, req.HookId)
+	if err != nil {
+		logs.Errorf("get hook (%d) failed, err: %v, rid: %s", req.HookId, err, kt.Rid)
+		return nil, err
+	}
+
+	revision := &table.Revision{
+		Reviser: kt.User,
+	}
+
 	r := &table.HookRelease{
 		Attachment: &table.HookReleaseAttachment{
 			BizID:  req.BizId,
@@ -151,9 +165,7 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 		Spec: &table.HookReleaseSpec{
 			PubState: table.FullReleased,
 		},
-		Revision: &table.Revision{
-			Reviser: kt.User,
-		},
+		Revision: revision,
 	}
 
 	tx := s.dao.GenQuery().Begin()
@@ -179,7 +191,19 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 	r.Spec.PubState = table.PartialReleased
 	if e := s.dao.HookRelease().UpdatePubStateWithTx(kt, tx, r); e != nil {
 		logs.Errorf("update HookRelease PubState failed, err: %v, rid: %s", e, kt.Rid)
+		tx.Rollback()
 		return nil, err
+	}
+
+	// 3. 变更hook状态
+	if hook.Spec.PubState == table.NotReleased {
+		hook.Revision = revision
+		hook.Spec.PubState = table.PartialReleased
+		if e := s.dao.Hook().UpdatePubStateWithTx(kt, tx, hook); e != nil {
+			logs.Errorf("update HookRelease PubState failed, err: %v, rid: %s", e, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
 	tx.Commit()

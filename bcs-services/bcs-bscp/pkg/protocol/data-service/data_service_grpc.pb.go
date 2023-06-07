@@ -46,6 +46,7 @@ const (
 	Data_CreateConfigHook_FullMethodName               = "/pbds.Data/CreateConfigHook"
 	Data_UpdateConfigHook_FullMethodName               = "/pbds.Data/UpdateConfigHook"
 	Data_GetConfigHook_FullMethodName                  = "/pbds.Data/GetConfigHook"
+	Data_EnableConfigHook_FullMethodName               = "/pbds.Data/EnableConfigHook"
 	Data_CreateContent_FullMethodName                  = "/pbds.Data/CreateContent"
 	Data_GetContent_FullMethodName                     = "/pbds.Data/GetContent"
 	Data_ListContents_FullMethodName                   = "/pbds.Data/ListContents"
@@ -128,6 +129,7 @@ type DataClient interface {
 	CreateConfigHook(ctx context.Context, in *CreateConfigHookReq, opts ...grpc.CallOption) (*CreateResp, error)
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	GetConfigHook(ctx context.Context, in *GetConfigHookReq, opts ...grpc.CallOption) (*config_hook.ConfigHook, error)
+	EnableConfigHook(ctx context.Context, in *EnableConfigHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// content related interface.
 	CreateContent(ctx context.Context, in *CreateContentReq, opts ...grpc.CallOption) (*CreateResp, error)
 	GetContent(ctx context.Context, in *GetContentReq, opts ...grpc.CallOption) (*content.Content, error)
@@ -366,6 +368,15 @@ func (c *dataClient) UpdateConfigHook(ctx context.Context, in *UpdateConfigHookR
 func (c *dataClient) GetConfigHook(ctx context.Context, in *GetConfigHookReq, opts ...grpc.CallOption) (*config_hook.ConfigHook, error) {
 	out := new(config_hook.ConfigHook)
 	err := c.cc.Invoke(ctx, Data_GetConfigHook_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) EnableConfigHook(ctx context.Context, in *EnableConfigHookReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_EnableConfigHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -892,6 +903,7 @@ type DataServer interface {
 	CreateConfigHook(context.Context, *CreateConfigHookReq) (*CreateResp, error)
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*base.EmptyResp, error)
 	GetConfigHook(context.Context, *GetConfigHookReq) (*config_hook.ConfigHook, error)
+	EnableConfigHook(context.Context, *EnableConfigHookReq) (*base.EmptyResp, error)
 	// content related interface.
 	CreateContent(context.Context, *CreateContentReq) (*CreateResp, error)
 	GetContent(context.Context, *GetContentReq) (*content.Content, error)
@@ -1023,6 +1035,9 @@ func (UnimplementedDataServer) UpdateConfigHook(context.Context, *UpdateConfigHo
 }
 func (UnimplementedDataServer) GetConfigHook(context.Context, *GetConfigHookReq) (*config_hook.ConfigHook, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfigHook not implemented")
+}
+func (UnimplementedDataServer) EnableConfigHook(context.Context, *EnableConfigHookReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnableConfigHook not implemented")
 }
 func (UnimplementedDataServer) CreateContent(context.Context, *CreateContentReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateContent not implemented")
@@ -1521,6 +1536,24 @@ func _Data_GetConfigHook_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GetConfigHook(ctx, req.(*GetConfigHookReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_EnableConfigHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnableConfigHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).EnableConfigHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_EnableConfigHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).EnableConfigHook(ctx, req.(*EnableConfigHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2593,6 +2626,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetConfigHook",
 			Handler:    _Data_GetConfigHook_Handler,
+		},
+		{
+			MethodName: "EnableConfigHook",
+			Handler:    _Data_EnableConfigHook_Handler,
 		},
 		{
 			MethodName: "CreateContent",

@@ -32,6 +32,7 @@ func newConfigHook(db *gorm.DB, opts ...gen.DOOption) configHook {
 	_configHook.PreHookReleaseID = field.NewUint32(tableName, "pre_hook_release_id")
 	_configHook.PostHookID = field.NewUint32(tableName, "post_hook_id")
 	_configHook.PostHookReleaseID = field.NewUint32(tableName, "post_hook_release_id")
+	_configHook.Enable = field.NewBool(tableName, "enable")
 	_configHook.BizID = field.NewUint32(tableName, "biz_id")
 	_configHook.AppID = field.NewUint32(tableName, "app_id")
 	_configHook.Creator = field.NewString(tableName, "creator")
@@ -53,6 +54,7 @@ type configHook struct {
 	PreHookReleaseID  field.Uint32
 	PostHookID        field.Uint32
 	PostHookReleaseID field.Uint32
+	Enable            field.Bool
 	BizID             field.Uint32
 	AppID             field.Uint32
 	Creator           field.String
@@ -80,6 +82,7 @@ func (c *configHook) updateTableName(table string) *configHook {
 	c.PreHookReleaseID = field.NewUint32(table, "pre_hook_release_id")
 	c.PostHookID = field.NewUint32(table, "post_hook_id")
 	c.PostHookReleaseID = field.NewUint32(table, "post_hook_release_id")
+	c.Enable = field.NewBool(table, "enable")
 	c.BizID = field.NewUint32(table, "biz_id")
 	c.AppID = field.NewUint32(table, "app_id")
 	c.Creator = field.NewString(table, "creator")
@@ -110,12 +113,13 @@ func (c *configHook) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (c *configHook) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 11)
+	c.fieldMap = make(map[string]field.Expr, 12)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["pre_hook_id"] = c.PreHookID
 	c.fieldMap["pre_hook_release_id"] = c.PreHookReleaseID
 	c.fieldMap["post_hook_id"] = c.PostHookID
 	c.fieldMap["post_hook_release_id"] = c.PostHookReleaseID
+	c.fieldMap["enable"] = c.Enable
 	c.fieldMap["biz_id"] = c.BizID
 	c.fieldMap["app_id"] = c.AppID
 	c.fieldMap["creator"] = c.Creator
