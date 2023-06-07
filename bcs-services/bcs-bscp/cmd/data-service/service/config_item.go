@@ -271,6 +271,10 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 				Value: req.SearchKey,
 			})
 		}
+		if req.All {
+			query.Page.Start = 0
+			query.Page.Limit = 0
+		}
 		details, err := s.dao.ConfigItem().List(grpcKit, query)
 		if err != nil {
 			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
@@ -282,7 +286,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-		configItems, count := s.queryConfigItemsWithDeleted(details, fileReleased, req.Start, req.Limit)
+		configItems, count := s.queryConfigItemsWithDeleted(details, fileReleased, req.Start, req.Limit, req.All)
 		resp := &pbds.ListConfigItemsResp{
 			Count:   count,
 			Details: configItems,
@@ -355,9 +359,14 @@ func (s *Service) queryAppConfigItemList(kit *kit.Kit, bizID, appID uint32) ([]*
 
 // queryAppConfigItemList query config item list under specific app.
 func (s *Service) queryConfigItemsWithDeleted(details *types.ListConfigItemDetails,
-	released []*table.ReleasedConfigItem, start, limit uint32) ([]*pbci.ConfigItem, uint32) {
+	released []*table.ReleasedConfigItem, start, limit uint32, all bool) ([]*pbci.ConfigItem, uint32) {
 	configItems, deleted := pbrci.PbConfigItemState(details.Details, released)
 	count := details.Count + uint32(len(deleted))
+	// if all, return configItems and all deleted
+	if all {
+		configItems = append(configItems, deleted...)
+		return configItems, count
+	}
 	// 1. req.Start > details.Count
 	if start > uint32(details.Count) {
 		deletedStart := len(deleted)

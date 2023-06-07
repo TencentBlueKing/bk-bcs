@@ -361,6 +361,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		ReleaseId: req.ReleaseId,
 		Start:     req.Start,
 		Limit:     req.Limit,
+		All:       req.All,
 		SearchKey: req.SearchKey,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)

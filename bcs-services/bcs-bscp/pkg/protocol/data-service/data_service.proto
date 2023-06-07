@@ -297,7 +297,8 @@ message ListConfigItemsReq {
     uint32 release_id = 3;
     uint32 start      = 4;
     uint32 limit      = 5;
-    string searchKey  = 6;
+    bool   all        = 6;
+    string searchKey  = 7;
 }
 
 message ListConfigItemsResp {
