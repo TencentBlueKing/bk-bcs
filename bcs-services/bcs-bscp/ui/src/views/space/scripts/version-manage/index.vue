@@ -1,12 +1,13 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
-  import { Plus, Search } from 'bkui-vue/lib/icon'
+  import { Search } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
   import { IScriptVersion } from '../../../../../types/script'
   import { getScriptDetail, getScriptVersionList } from '../../../../api/script'
   import DetailLayout from '../components/detail-layout.vue'
+  import CreateVersion from './create-version.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const router = useRouter()
@@ -29,12 +30,14 @@
     getVersionList()
   })
 
+  // 获取脚本详情
   const getScriptDetailData = async() => {
     detailLoading.value = true
     scriptDetail.value = await getScriptDetail(spaceId.value, scriptId.value)
     detailLoading.value = false
   }
 
+  // 获取版本列表
   const getVersionList = async() => {
     versionLoading.value = true
     const params: { start: number; limit: number; searchKey?: string } = {
@@ -49,12 +52,16 @@
     pagination.value.count = res.count
   }
 
+  const handleOpenScriptPanel = () => {}
+
   const refreshList = (val: number = 1) => {
-    pagination.value.current = 1
+    pagination.value.current = val
+    getVersionList()
   }
 
   const handlePageLimitChange = (val: number) => {
     pagination.value.limit = val
+    refreshList()
   }
 
   const handleClose = () => {
@@ -63,11 +70,15 @@
 
 </script>
 <template>
-  <DetailLayout v-if="!detailLoading" :name="`版本管理 - ${scriptDetail.spec.name}`" :show-footer="false" @close="handleClose">
+  <DetailLayout
+    v-if="!detailLoading"
+    :name="`版本管理 - ${scriptDetail.spec.name}`"
+    :show-footer="false"
+    @close="handleClose">
     <template #content>
       <div class="script-version-manage">
         <div class="operation-area">
-          <bk-button theme="primary"><Plus class="button-icon" />新建版本</bk-button>
+          <CreateVersion :script-id="scriptId" @create="handleOpenScriptPanel" />
           <bk-input class="search-input" placeholder="版本号/版本说明/更新人">
               <template #suffix>
                 <Search class="search-input-icon" />
@@ -89,7 +100,7 @@
               <span v-if="row.spec">{{ row.spec.pub_state }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column label="操作" width="240">
+          <bk-table-column label="操作" width="280">
             <template #default="{ row }">
               <div class="action-btns">
                 <bk-button text theme="primary">上线</bk-button>
@@ -125,9 +136,6 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
-    .button-icon {
-      font-size: 18px;
-    }
     .search-input {
       width: 320px;
     }

@@ -14,9 +14,9 @@
 
   const show = ref(false)
   const scriptData = ref<IConfigInitScript>({
-    pre_hook_id: '',
+    pre_hook_id: 0,
   	pre_hook_release_id: '',
-  	post_hook_id: '',
+  	post_hook_id: 0,
   	post_hook_release_id: ''
   })
   const loading = ref(false)

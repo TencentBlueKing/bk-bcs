@@ -25,6 +25,7 @@
   const scriptsData = ref<IScriptItem[]>([])
   const scriptVersionsLoading = ref(false)
   const scriptVersions = ref<IScriptVersion[]>([])
+  const formRef = ref()
 
   onMounted(() => {
     getScripts()
@@ -89,12 +90,12 @@
   }
 </script>
 <template>
-  <bk-form form-type="vertical">
+  <bk-form ref="formRef" form-type="vertical">
     <bk-form-item label="脚本引用" :required="true">
       <div class="script-cite">
         <bk-select
           class="script-selector"
-          :value="props.scriptId"
+          :model-value="props.scriptId"
           :clearable="false"
           :loading="scriptsLoading"
           @change="handleScriptChange">
@@ -107,7 +108,7 @@
         </bk-select>
         <bk-select
           class="version-selector"
-          :value="props.versionId"
+          :model-value="props.versionId"
           :clearable="false"
           :loading="scriptVersionsLoading"
           @change="handleVersionChange">
