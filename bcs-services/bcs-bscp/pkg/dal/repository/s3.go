@@ -17,11 +17,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/bluele/gcache"
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/minio/minio-go/v7"
 	"github.com/pkg/errors"
@@ -86,66 +84,62 @@ func (s *S3Client) downloadFile(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// UploadFile
+func (s *S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
+	metadata, err := s.uploadFile(w, r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+	render.JSON(w, r, rest.OKRender(metadata))
+}
+
 // UploadFile upload file
-func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
+func (s *S3Client) uploadFile(w http.ResponseWriter, r *http.Request) (*ObjectMetadata, error) {
 	kt := kit.MustGetKit(r.Context())
 
-	bizIDStr := chi.URLParam(r, "biz_id")
-	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
-	if err != nil {
-		logs.Errorf("biz_id parse uint failed, err: %v, rid: %s", err, kt.Rid)
-		fmt.Fprintf(w, errf.New(errf.InvalidParameter, err.Error()).Error())
-		return
+	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+	if len(sha256) != 64 {
+		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
 	}
 
-	if bizID == 0 {
-		fmt.Fprintf(w, errf.New(errf.InvalidParameter, "biz_id should > 0").Error())
-		return
-	}
 	repoName := s.s3Cli.Config.S3.BucketName
 
 	if record, err := s.s3CreatedRecords.Get(repoName); err != nil || record == nil {
 
 		req := &repo.CreateRepoReq{
 			Name:        repoName,
-			Description: fmt.Sprintf("bscp %d business repository", bizID),
+			Description: fmt.Sprintf("bscp %d business repository", kt.BizID),
 		}
 		if err = s.s3Cli.CreateRepo(r.Context(), req); err != nil {
-			logs.Errorf("create repository failed, err: %v, rid: %s", err, kt.Rid)
-			fmt.Fprintf(w, errf.Error(err).Error())
-			return
+			return nil, errors.Wrap(err, "create repo failed")
 		}
 
 		// set cache, to flag this biz repository already created.
 		s.s3CreatedRecords.SetWithExpire(repoName, true, RepoRecordCacheExpiration)
 	}
-	s3pathName, err := repo.GenRepoName(uint32(bizID))
+
+	s3pathName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
-		logs.Errorf("generate s3 path name failed, err: %v, rid: %s", err, kt.Rid)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
+		return nil, errors.Wrap(err, "generate s3 path name failed")
 	}
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+
 	fullPath, err := repo.GenS3NodeFullPath(s3pathName, sha256)
 	if err != nil {
-		logs.Errorf("create S3 FullPath failed, err: %v, err")
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
+		return nil, errors.Wrap(err, "create S3 FullPath failed")
 	}
-	_, err = s.s3Cli.Client.PutObject(r.Context(), repoName, fullPath, r.Body, r.ContentLength, minio.PutObjectOptions{})
+
+	info, err := s.s3Cli.Client.PutObject(r.Context(), repoName, fullPath, r.Body, r.ContentLength, minio.PutObjectOptions{})
 	if err != nil {
-		logs.Errorf("uploader S3 file failed, err: %v, err")
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
+		return nil, errors.Wrap(err, "uploader S3 file failed")
 	}
-	ok, _ := s.s3Cli.IsNodeExist(r.Context(), repoName, fullPath)
-	if !ok {
-		logs.Errorf("Failed to check artifact sha256 digest")
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
+
+	metadata := &ObjectMetadata{
+		ByteSize: info.Size,
+		Sha256:   info.ChecksumSHA256,
 	}
-	msg, _ := json.Marshal(ResponseBody{Code: 200, Message: "success"})
-	w.Write(msg)
+
+	return metadata, nil
 }
 
 // FileMetadata get s3 head data
@@ -154,13 +148,7 @@ func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
 
 	config := cc.ApiServer().Repo
 
-	bizID, _, err := GetBizIDAndAppID(nil, r)
-	if err != nil {
-		logs.Errorf("get biz_id and app_id from request failed, err: %v, rid: %s", err, kt.Rid)
-		return
-	}
-
-	s3PathName, err := repo.GenRepoName(bizID)
+	s3PathName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
 		logs.Errorf("generate S3 repository name failed, err: %v, rid: %s", err, kt.Rid)
 		fmt.Fprintf(w, errf.Error(err).Error())

@@ -37,9 +37,10 @@ type FileApiType interface {
 	UploadFile(w http.ResponseWriter, r *http.Request)
 }
 
-type ResponseBody struct {
-	Code    int
-	Message string
+// ObjectMetadata 文件元数据
+type ObjectMetadata struct {
+	ByteSize int64  `json:"byte_size"`
+	Sha256   string `json:"sha256"`
 }
 
 // AuthResp http response with need apply permission.
