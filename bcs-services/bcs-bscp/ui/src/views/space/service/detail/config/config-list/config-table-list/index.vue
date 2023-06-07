@@ -180,7 +180,7 @@
           {{ group.name }}
         </div>
       </div>
-      <bk-input v-model="searchStr" class="search-config-input" placeholder="配置文件名/创建人/修改人" @enter="refreshConfigList" @clear="refreshConfigList" @change="handleSearchInputChange">
+      <bk-input v-model="searchStr" class="search-config-input" placeholder="配置文件名/创建人/修改人" @enter="refreshConfigList()" @clear="refreshConfigList()" @change="handleSearchInputChange">
         <template #suffix>
             <Search class="search-input-icon" />
         </template>
