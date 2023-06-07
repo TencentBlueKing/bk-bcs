@@ -21,12 +21,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/compute"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/federation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/prometheus"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/vcluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
 )
 
 // ClientFactory 自动切换Prometheus/蓝鲸监控
 func ClientFactory(ctx context.Context, clusterId string, source clientutil.MonitorSourceType,
-	dispatch map[string]clientutil.DispatchConf) (base.MetricHandler, error) {
+	dispatch map[string]clientutil.DispatchConf, isVCluster bool) (base.MetricHandler, error) {
 	switch source {
 	case clientutil.MonitorSourceCompute:
 		return compute.NewCompute(), nil
@@ -38,6 +39,9 @@ func ClientFactory(ctx context.Context, clusterId string, source clientutil.Moni
 			return nil, err
 		}
 		if ok {
+			if isVCluster {
+				return vcluster.NewVCluster(), nil
+			}
 			return bkmonitor.NewBKMonitor(), nil
 		}
 		return prometheus.NewPrometheus(), nil

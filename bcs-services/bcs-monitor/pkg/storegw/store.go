@@ -30,7 +30,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system"
+	bcssystem "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system"
 	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bk_monitor"
 	prom "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/prometheus"
 )
@@ -67,7 +67,7 @@ func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.Store
 	case string(BKMONITOR):
 		return bkmonitor.NewBKMonitorStore(config)
 	case string(BCS_SYSTEM):
-		return bcs_system.NewBCSSystemStore(config)
+		return bcssystem.NewBCSSystemStore(config)
 	case string(PROMETHEUS):
 		return prom.NewPromStore(config)
 	default:

@@ -224,6 +224,7 @@ func chunkSlice(nodeList []string, nodeNameList []string, chunkSize int) []*Resu
 	return res
 }
 
+// ResultTuple result tuple
 type ResultTuple struct {
 	NodeMatch     string
 	NodeNameMatch string
@@ -286,6 +287,19 @@ func DivideSeries(series1, series2 []*prompb.TimeSeries) []*prompb.TimeSeries {
 	return []*prompb.TimeSeries{result}
 }
 
+// DivideSeriesByValue divide same metrics series
+func DivideSeriesByValue(series []*prompb.TimeSeries, values float64) []*prompb.TimeSeries {
+	if len(series) == 0 || values == 0 {
+		return nil
+	}
+	for i := range series {
+		for j := range series[i].Samples {
+			series[i].Samples[j].Value = series[i].Samples[j].Value / values * 100
+		}
+	}
+	return series
+}
+
 // DivideSamples samples1 divide samples2
 func DivideSamples(samples1, samples2 []prompb.Sample) []prompb.Sample {
 	if len(samples1) == 0 || len(samples2) == 0 {
@@ -304,4 +318,23 @@ func DivideSamples(samples1, samples2 []prompb.Sample) []prompb.Sample {
 		}
 	}
 	return samples1
+}
+
+// GetSameSeries divide same metrics series, series1 divide series2, series must only have one element
+func GetSameSeries(start, end time.Time, step time.Duration, values float64,
+	labels []prompb.Label) []*prompb.TimeSeries {
+	result := &prompb.TimeSeries{
+		Labels:  labels,
+		Samples: make([]prompb.Sample, 0),
+	}
+	if step == 0 {
+		return []*prompb.TimeSeries{result}
+	}
+	for cur := start; cur.Before(end); cur = cur.Add(step) {
+		result.Samples = append(result.Samples, prompb.Sample{
+			Value:     values,
+			Timestamp: cur.UnixMilli(),
+		})
+	}
+	return []*prompb.TimeSeries{result}
 }
