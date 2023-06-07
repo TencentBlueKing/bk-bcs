@@ -339,10 +339,10 @@ var ColumnDescriptorColumnDescriptor = ColumnDescriptors{
 
 // FilePermission defines a config's permission details.
 type FilePermission struct {
-	User      string `json:"user" gorm:"column:user"`
-	UserGroup string `json:"user_group" gorm:"column:user_group"`
+	User      string `db:"user" json:"user" gorm:"column:user"`
+	UserGroup string `db:"user_group" json:"user_group" gorm:"column:user_group"`
 	// config file's privilege
-	Privilege string `json:"privilege" gorm:"column:privilege"`
+	Privilege string `db:"privilege" json:"privilege" gorm:"column:privilege"`
 }
 
 const (
