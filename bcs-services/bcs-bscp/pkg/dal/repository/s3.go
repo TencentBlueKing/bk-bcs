@@ -20,18 +20,21 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bluele/gcache"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
+	"github.com/minio/minio-go/v7"
+	"github.com/pkg/errors"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/auth"
-	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
+	"bscp.io/pkg/rest"
 	"bscp.io/pkg/thirdparty/repo"
-	"github.com/bluele/gcache"
-	"github.com/go-chi/chi/v5"
-	"github.com/minio/minio-go/v7"
 )
 
 // S3Client s3 client struct
@@ -45,59 +48,47 @@ type S3Client struct {
 }
 
 // DownloadFile download file
-func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
+func (s *S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
+	err := s.downloadFile(w, r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+	}
+}
+
+func (s *S3Client) downloadFile(w http.ResponseWriter, r *http.Request) error {
 	kt := kit.MustGetKit(r.Context())
 
-	authRes, needReturn := s.authorize(kt, r)
-	if needReturn {
-		fmt.Fprintf(w, authRes)
-		return
-	}
-
-	bizIDStr := chi.URLParam(r, "biz_id")
-	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
-	if err != nil {
-		logs.Errorf("biz_id parse uint failed, err: %v, rid: %s", err, kt.Rid)
-		fmt.Fprintf(w, errf.New(errf.InvalidParameter, err.Error()).Error())
-		return
-	}
-
-	if bizID == 0 {
-		fmt.Fprintf(w, errf.New(errf.InvalidParameter, "biz_id should > 0").Error())
-		return
-	}
 	repoName := s.s3Cli.Config.S3.BucketName
-	s3PathName, err := repo.GenRepoName(uint32(bizID))
+	s3PathName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
-		logs.Errorf("generate S3 repository name failed, err: %v, rid: %s", err, kt.Rid)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
+		return errors.Wrap(err, "generate S3 repository name failed")
 	}
+
 	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
 	fullPath, err := repo.GenS3NodeFullPath(s3PathName, sha256)
 	if err != nil {
-		logs.Errorf("create S3 FullPath failed, err: %v, err")
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
+		return errors.Wrap(err, "create S3 FullPath failed")
 	}
+
 	reader, err := s.s3Cli.Client.GetObject(r.Context(), repoName, fullPath, minio.GetObjectOptions{})
 	if err != nil {
-		logs.Errorf("download S3 file failed, err: %v, err")
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
+		return errors.Wrap(err, "download S3 file failed")
 	}
-	io.Copy(w, reader)
+	if _, err := reader.Stat(); err != nil {
+		return errors.Wrap(err, "get file stat failed")
+	}
+
+	defer reader.Close()
+	if _, err := io.Copy(w, reader); err != nil {
+		logs.Errorf("download file failed when io.Copy, err: %v, rid: %s", err, kt.Rid)
+	}
+
+	return nil
 }
 
 // UploadFile upload file
 func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
-
-	authRes, needReturn := s.authorize(kt, r)
-	if needReturn {
-		fmt.Fprintf(w, authRes)
-		return
-	}
 
 	bizIDStr := chi.URLParam(r, "biz_id")
 	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
@@ -161,11 +152,6 @@ func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
-	authRes, needReturn := s.authorize(kt, r)
-	if needReturn {
-		fmt.Fprintf(w, authRes)
-		return
-	}
 	config := cc.ApiServer().Repo
 
 	bizID, _, err := GetBizIDAndAppID(nil, r)
@@ -196,34 +182,6 @@ func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	fileMetadata.Sha256 = sha256
 	msg, _ := json.Marshal(fileMetadata)
 	w.Write(msg)
-}
-
-// authorize the request, returns error response and if the response needs return.
-func (s S3Client) authorize(kt *kit.Kit, r *http.Request) (string, bool) {
-	bizID, appID, err := GetBizIDAndAppID(kt, r)
-	if err != nil {
-		logs.Errorf("get biz_id and app_id from request failed, err: %v, rid: %s", err, kt.Rid)
-		return errf.New(errf.InvalidParameter, err.Error()).Error(), true
-	}
-
-	var authRes *meta.ResourceAttribute
-	switch r.Method {
-	case http.MethodPut:
-		authRes = &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Content, Action: meta.Upload,
-			ResourceID: appID}, BizID: bizID}
-	case http.MethodGet:
-		authRes = &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Content, Action: meta.Download,
-			ResourceID: appID}, BizID: bizID}
-	}
-
-	resp := new(AuthResp)
-	err = s.authorizer.AuthorizeWithResp(kt, resp, authRes)
-	if err != nil {
-		respJson, _ := json.Marshal(resp)
-		return string(respJson), true
-	}
-
-	return "", false
 }
 
 // NewS3Service new s3 service
