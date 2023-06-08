@@ -61,3 +61,17 @@ mgrGuideMessage: "Support common Bash shortcuts; Ctrl-W in Windows is to close t
 下载: "Download"
 
 语言: "en"
+
+项目不正确: "Project_id Incorrect"
+
+项目或者集群Id不正确: "ProjectId or ClusterId Incorrect"
+
+用户未登入: "User not logged in"
+
+没有权限: "No permission"
+
+参数不合法: "Invalid parameter"
+
+session不合法: "Invalid session"
+
+BCS Console 服务端连接断开，请重新登录: "The BCS Console server is disconnected, please log in again"

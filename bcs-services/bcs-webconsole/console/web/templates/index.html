@@ -149,7 +149,11 @@
                             operator: 'The action will refresh the page!',
                             uploadSuccess: 'UploadSuccess',
                             uploadFailed: 'UploadFailed',
-                            downloadFailed: 'Download request failed'
+                            downloadFailed: 'Download request failed',
+                            connect: 'The connection is disconnected',
+                            reconnect: 'Reconnect',
+                            requestFailed: 'Request failed',
+                            apply: 'Go to apply'
                         }
                     },
                     zh: {
@@ -163,7 +167,11 @@
                             operator: '操作将会刷新页面！',
                             uploadSuccess: '上传成功',
                             uploadFailed: '上传失败',
-                            downloadFailed: '下载请求失败'
+                            downloadFailed: '下载请求失败',
+                            connect: '连接已断开',
+                            reconnect: '重新连接',
+                            requestFailed: '请求失败',
+                            apply: '前往申请'
                         }
                     }
                 }
@@ -316,14 +324,14 @@
                                                 window.open(self.permRequestUrl);
                                             }
                                         }
-                                    }, '前往申请'),
+                                    }, self.$t('message.apply')),
                                 ]),
                                 delay: 0
                             })
                         } else {
                             self.$bkInfo({
                                 type: 'error',
-                                title: '请求失败',
+                                title: self.$t('message.requestFailed'),
                                 subTitle: result.responseJSON.message,
                                 showFooter: false,
                                 maskClose: false,
@@ -397,13 +405,13 @@
 
                     const h = self.$createElement
                     self.ws.onclose = function (e) {
-                        result = "连接已断开"
+                        let result = self.$t('message.connect')
                         if (e.reason != "") {
                             result = e.reason
                         }
                         self.$bkInfo({
                             type: 'warning',
-                            title: '连接已断开',
+                            title: self.$t('message.connect'),
                             showFooter: false,
                             maskClose: false,
                             subHeader: h('div', {}, [
@@ -415,14 +423,14 @@
                                 h('bk-button', {
                                     attrs: {
                                         theme: "primary",
-                                        title: "重新连接",
+                                        title: self.$t("message.reconnect"),
                                     },
                                     on: {
                                         click: () => {
                                             location.reload();
                                         }
                                     }
-                                }, '重新连接'),
+                                }, self.$t("message.reconnect")),
                             ]),
                             delay: 0
                         })

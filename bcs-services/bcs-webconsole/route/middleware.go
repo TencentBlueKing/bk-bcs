@@ -15,6 +15,7 @@ package route
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"net/http"
 	"os"
 	"strings"
@@ -125,7 +126,7 @@ func APIAuthRequired() gin.HandlerFunc {
 		default:
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
 				Code:      types.ApiErrorCode,
-				Message:   UnauthorizedError.Error(),
+				Message:   i18n.GetMessage(c, UnauthorizedError.Error()),
 				RequestID: authCtx.RequestId,
 			})
 			return

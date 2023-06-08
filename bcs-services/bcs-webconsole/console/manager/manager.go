@@ -17,7 +17,8 @@ package manager
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/gin-gonic/gin"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/storage"
@@ -94,7 +95,7 @@ func (c *ConsoleManager) HandleOutputMsg(msg []byte) ([]byte, error) {
 }
 
 // Run : Manager 后台任务等
-func (c *ConsoleManager) Run() error {
+func (c *ConsoleManager) Run(ctx *gin.Context) error {
 	interval := time.NewTicker(10 * time.Second)
 	defer interval.Stop()
 
@@ -104,7 +105,7 @@ func (c *ConsoleManager) Run() error {
 			logger.Infof("close %s ConsoleManager done", c.PodCtx.PodName)
 			return nil
 		case <-interval.C:
-			if err := c.handleIdleTimeout(); err != nil {
+			if err := c.handleIdleTimeout(ctx); err != nil {
 				return err
 			}
 			// 自定义函数
@@ -117,12 +118,12 @@ func (c *ConsoleManager) Run() error {
 	}
 }
 
-func (c *ConsoleManager) handleIdleTimeout() error {
+func (c *ConsoleManager) handleIdleTimeout(ctx *gin.Context) error {
 	nowTime := time.Now()
 	idleTime := nowTime.Sub(c.LastInputTime)
 	if idleTime > c.PodCtx.GetConnIdleTimeout() {
 		// BCS Console 已经分钟无操作
-		msg := fmt.Sprintf("BCS Console 已经 %d 分钟无操作", int64(idleTime.Minutes()))
+		msg := i18n.GetMessage(ctx, "BCS Console 已经{}分钟无操作", map[string]int64{"time": int64(idleTime.Minutes())})
 		logger.Infof("conn idle timeout, close session %s, idle time, %s", c.PodCtx.PodName, idleTime)
 		return errors.New(msg)
 	}
@@ -130,7 +131,7 @@ func (c *ConsoleManager) handleIdleTimeout() error {
 	loginTime := nowTime.Sub(c.ConnTime).Seconds()
 	if loginTime > LoginTimeout {
 		// BCS Console 使用已经超过{}小时，请重新登录
-		msg := fmt.Sprintf("BCS Console 使用已经超过 %d 小时，请重新登录", LoginTimeout/60)
+		msg := i18n.GetMessage(ctx, "BCS Console 使用已经超过{}小时，请重新登录", map[string]int{"time": LoginTimeout / 60})
 		logger.Infof("tick timeout, close session %s, login time, %.2f", c.PodCtx.PodName, loginTime)
 		return errors.New(msg)
 	}
