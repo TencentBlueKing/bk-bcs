@@ -9,8 +9,10 @@
     modelValue: string;
     language?: string;
     editable?: boolean;
+    uploadIcon?: boolean;
   }>(), {
-    editable: true
+    editable: true,
+    uploadIcon: true
   })
 
   const emits = defineEmits(['update:modelValue'])
@@ -52,6 +54,7 @@
         </div>
         <div class="actions">
           <ReadFileContent
+            v-if="props.uploadIcon"
             v-bk-tooltips="{
               content: '上传',
               placement: 'top',
@@ -80,7 +83,12 @@
         </div>
       </div>
       <div class="content-wrapper">
-        <CodeEditor :model-value="props.modelValue" :editable="props.editable" :language="props.language" @change="emits('update:modelValue', $event)" />
+        <slot name="preContent" :fullscreen="isOpenFullScreen"></slot>
+        <CodeEditor
+          :model-value="props.modelValue"
+          :editable="props.editable"
+          :language="props.language"
+          @change="emits('update:modelValue', $event)" />
       </div>
     </div>
   </Teleport>
@@ -115,5 +123,8 @@
   }
   .content-wrapper {
     height: 600px;
+  }
+  .pre-content {
+    height: 100%;
   }
 </style>

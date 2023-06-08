@@ -5,12 +5,14 @@
   import { Plus, Search } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
+  import { useScriptStore } from '../../../../store/script'
   import { getScriptList, getScriptTagList, deleteScript } from '../../../../api/script'
-  import { IScriptItem, IScriptTagItem } from '../../../../../types/script'
+  import { IScriptItem, IScriptTagItem, IScriptListQuery} from '../../../../../types/script'
   import CreateScript from '../create-script.vue'
   import ScriptCited from '../script-cited.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
+  const {versionListPageShouldOpenEdit } = storeToRefs(useScriptStore())
   const router = useRouter()
 
   const showCreateScript = ref(false)
@@ -19,7 +21,10 @@
   const scriptsLoading = ref(false)
   const tagsData = ref<IScriptTagItem[]>([])
   const tagsLoading = ref(false)
+  const showAllTag = ref(true) // 全部脚本
+  const selectedTag = ref('') // 未分类或具体tag下脚本
   const currentId = ref(0)
+  const searchStr = ref('')
   const pagination = ref({
     current: 1,
     count: 0,
@@ -34,10 +39,21 @@
   // 获取脚本列表
   const getScripts = async () => {
     scriptsLoading.value = true
-    const params = {
+    const params: IScriptListQuery = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit,
-      all: true
+    }
+    if (showAllTag.value) {
+      params.all = true
+    } else {
+      if (selectedTag.value === '') {
+        params.not_tag = true
+      } else {
+        params.tag = selectedTag.value
+      }
+    }
+    if (searchStr.value) {
+      params.name = searchStr.value
     }
     const res = await getScriptList(spaceId.value, params)
     scriptsData.value = res.details
@@ -49,9 +65,21 @@
   const getTags = async () => {
     tagsLoading.value = true
     const res = await getScriptTagList(spaceId.value)
-    scriptsData.value = res.details
+    tagsData.value = res.details
     pagination.value.count = res.count
-    scriptsLoading.value = false
+    tagsLoading.value = false
+  }
+
+  const handleSelectTag = (tag: string, all: boolean = false) => {
+    searchStr.value = ''
+    selectedTag.value = tag
+    showAllTag.value = all
+    refreshList()
+  }
+
+  const handleEditClick = (script: IScriptItem) => {
+    router.push({ name: 'script-version-manage', params: { spaceId: spaceId.value, scriptId: script.id } })
+    versionListPageShouldOpenEdit.value = true
   }
 
   // 删除分组
@@ -71,7 +99,13 @@
     } as any)
   }
 
-  const refreshList = (val: number = 1) => {
+  const handleNameInputChange = (val: string) => {
+    if (!val) {
+      refreshList()
+    }
+  }
+
+  const refreshList = () => {
     pagination.value.current = 1
     getScripts()
   }
@@ -85,18 +119,35 @@
   <section class="scripts-manange-page">
     <div class="side-menu">
       <div class="group-wrapper">
-        <li><i class="bk-bscp-icon icon-block-shape"></i>全部脚本</li>
-        <li><i class="bk-bscp-icon icon-tags"></i>未分类</li>
+        <li :class="['group-item', { actived: showAllTag }]" @click="handleSelectTag('', true)">
+          <i class="bk-bscp-icon icon-block-shape group-icon"></i>全部脚本
+        </li>
+        <li :class="['group-item', { actived: !showAllTag && selectedTag === '' }]"  @click="handleSelectTag('')">
+          <i class="bk-bscp-icon icon-tags group-icon"></i>未分类
+        </li>
       </div>
-      <div class="group-wrapper">
-        <li v-for="(item, index) in tagsData" :key="index"><i class="bk-bscp-icon icon-tags"></i>{{ item.tag }}</li>
+      <div class="custom-tag-list">
+        <li
+          v-for="(item, index) in tagsData" :key="index"
+          :class="['group-item', { actived: selectedTag === item.tag }]"
+          @click="handleSelectTag(item.tag)">
+          <i class="bk-bscp-icon icon-tags group-icon"></i>
+          <span class="name">{{ item.tag }}</span>
+          <span class="num">{{ item.counts }}</span>
+        </li>
       </div>
     </div>
     <div class="script-list-wrapper">
       <div class="operate-area">
         <bk-button theme="primary" @click="showCreateScript = true"><Plus class="button-icon" />新建脚本</bk-button>
-        <bk-button theme="primary" @click="showCiteSlider = true">被引用</bk-button>
-        <bk-input class="search-script-input" placeholder="脚本名称">
+        <bk-input
+          v-model="searchStr"
+          class="search-script-input"
+          placeholder="脚本名称"
+          :clearable="true"
+          @enter="refreshList"
+          @clear="refreshList"
+          @change="handleNameInputChange">
            <template #suffix>
               <Search class="search-input-icon" />
            </template>
@@ -109,7 +160,7 @@
         <bk-table-column label="被引用" width="100">
           <template #default="{ row }">
             <template v-if="row.spec">
-              <bk-button v-if="row.spec.publish_num > 0" text theme="primary">{{ row.spec.publish_num }}</bk-button>
+              <bk-button v-if="row.spec.publish_num > 0" text theme="primary" @click="showCiteSlider = true">{{ row.spec.publish_num }}</bk-button>
               <span v-else>0</span>
             </template>
           </template>
@@ -119,7 +170,7 @@
         <bk-table-column label="操作">
           <template #default="{ row }" width="180">
             <div class="action-btns">
-              <bk-button text theme="primary">编辑</bk-button>
+              <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button>
               <bk-button text theme="primary" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.id } })">版本管理</bk-button>
               <bk-button text theme="primary" @click="handleDeleteScript(row)">删除</bk-button>
             </div>
@@ -157,20 +208,61 @@
     .group-wrapper {
       padding-bottom: 16px;
       border-bottom: 1px solid #dcdee5;
-      & > li {
-        padding: 8px 22px;
-        color: #313238;
-        font-size: 12px;
-        cursor: pointer;
-        &:hover {
-          color: #348aff;
-        }
-        i {
-          margin-right: 8px;
-          font-size: 14px;
-          color: #979ba5;
+    }
+    .group-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px 8px 44px;
+      color: #313238;
+      font-size: 12px;
+      cursor: pointer;
+      &:hover {
+        color: #348aff;
+        .group-icon {
+          color: #3a84ff;
         }
       }
+      &.actived {
+        background: #e1ecff;
+        color: #3a84ff;
+        .group-icon {
+          color: #3a84ff;
+        }
+        .num {
+          color: #ffffff;
+          background: #a3c5fd;
+        }
+      }
+      .group-icon {
+        position: absolute;
+        top: 9px;
+        left: 22px;
+        margin-right: 8px;
+        font-size: 14px;
+        color: #979ba5;
+      }
+      .name {
+        flex: 0 1 auto;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+      .num {
+        flex: 0 0 auto;
+        padding: 0 8px;
+        height: 16px;
+        line-height: 16px;
+        color: #979ba5;
+        background: #f0f1f5;
+        border-radius: 2px;
+      }
+    }
+    .custom-tag-list {
+      padding: 16px 0;
+      height: calc(100% - 82px);
+      overflow: auto;
     }
   }
   .script-list-wrapper {

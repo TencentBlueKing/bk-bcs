@@ -3,6 +3,16 @@ export const enum EScriptType {
   Python = 'python'
 }
 
+// 脚本列表查询请求参数
+export interface IScriptListQuery {
+  start: number;
+  limit?: number;
+  all?: boolean;
+  tag?: string;
+  not_tag?: boolean;
+  name?: string;
+}
+
 // 新建脚本编辑参数
 export interface IScriptEditingForm {
   name: string;
@@ -48,7 +58,7 @@ export interface IScriptVersion {
       content: string;
       publish_num: number;
       pub_state : string;
-      momo: string;
+      memo: string;
   };
   attachment: {
       biz_id: number;
@@ -60,6 +70,14 @@ export interface IScriptVersion {
       create_at: string;
       update_at: string;
   }
+}
+
+// 脚本版本新建、编辑表单
+export interface IScriptVersionForm {
+  id: number;
+  name: string;
+  memo: string;
+  content: string;
 }
 
 // 脚本被引用列表查询参数

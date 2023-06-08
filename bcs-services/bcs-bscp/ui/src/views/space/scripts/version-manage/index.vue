@@ -1,23 +1,40 @@
 <script setup lang="ts">
   import { ref, onMounted } from 'vue'
   import { useRouter, useRoute } from 'vue-router'
-  import { Search } from 'bkui-vue/lib/icon'
+  import { InfoBox } from 'bkui-vue'
+  import { Search, AngleDoubleRightLine } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../store/global'
+  import { useScriptStore } from '../../../../store/script'
   import { IScriptVersion } from '../../../../../types/script'
-  import { getScriptDetail, getScriptVersionList } from '../../../../api/script'
+  import { getScriptDetail, getScriptVersionList, deleteScriptVersion, publishVersion } from '../../../../api/script'
   import DetailLayout from '../components/detail-layout.vue'
+  import VersionListFullTable from './version-list-full-table.vue'
+  import VersionListSimpleTable from './version-list-simple-table.vue'
   import CreateVersion from './create-version.vue'
+  import ScriptContent from './script-content.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
+  const {versionListPageShouldOpenEdit } = storeToRefs(useScriptStore())
   const router = useRouter()
   const route = useRoute()
 
-  const scriptId = ref(Number(route.params.spaceId))
+  const scriptId = ref(Number(route.params.scriptId))
   const detailLoading = ref(true)
-  const scriptDetail = ref({ spec: { name: '' } })
+  const scriptDetail = ref({ spec: { name: '', type: '' } })
   const versionLoading = ref(true)
   const versionList = ref<IScriptVersion[]>([])
+  const unPublishVersion = ref<IScriptVersion|null>(null) // 未发布版本
+  const versionEditData = ref({
+    panelOpen: false,
+    editable: true,
+    form: { // 版本编辑、新建、查看数据
+      id: 0,
+      name: '',
+      memo: '',
+      content: ''
+    }
+  })
   const searchStr = ref('')
   const pagination = ref({
     current: 1,
@@ -25,9 +42,17 @@
     limit: 10,
   })
 
-  onMounted(() => {
+  onMounted(async() => {
     getScriptDetailData()
-    getVersionList()
+    await getVersionList()
+    if (versionListPageShouldOpenEdit.value) {
+      versionListPageShouldOpenEdit.value = false
+      if (unPublishVersion.value) {
+        handleEditVersionClick()
+      } else {
+        handleCreateVersionClick('')
+      }
+    }
   })
 
   // 获取脚本详情
@@ -50,12 +75,117 @@
     const res = await getScriptVersionList(spaceId.value, scriptId.value, params)
     versionList.value = res.details
     pagination.value.count = res.count
+    if (pagination.value.current === 1) {
+      const version = versionList.value.find(item => item.spec.pub_state === 'not_released')
+      if (version) {
+        unPublishVersion.value = version
+      }
+    }
+    versionLoading.value = false
   }
 
-  const handleOpenScriptPanel = () => {}
+  // 点击新建版本
+  const handleCreateVersionClick = (content: string) => {
+    versionEditData.value = {
+      panelOpen: true,
+      editable: true,
+      form: {
+        id: 0,
+        name: '',
+        memo: '',
+        content
+      }
+    }
+  }
 
-  const refreshList = (val: number = 1) => {
-    pagination.value.current = val
+  // 编辑未上线版本
+  const handleEditVersionClick = () => {
+    if (unPublishVersion.value) {
+      const { name, memo, content } = unPublishVersion.value.spec
+      versionEditData.value = {
+        panelOpen: true,
+        editable: true,
+        form: {
+          id: unPublishVersion.value?.id,
+          name,
+          memo,
+          content
+        }
+      }
+    }
+  }
+
+  // 查看版本
+  const handleViewVersionClick = (version: IScriptVersion) => {
+    const { name, memo, content } = version.spec
+    versionEditData.value = {
+      panelOpen: true,
+      editable: false,
+      form: {
+        id: version.id,
+        name,
+        memo,
+        content
+      }
+    }
+  }
+
+  // 上线版本
+  const handlePublishClick = (version: IScriptVersion) => {
+    InfoBox({
+      title: '确定上线此版本？',
+      subTitle: '上线后，之前的线上版本将被置为「已下线」状态',
+      // infoType: 'warning',
+      confirmText: '确定',
+      onConfirm: async () => {
+        await publishVersion(spaceId.value, scriptId.value, version.id)
+        refreshList()
+        unPublishVersion.value = null
+        
+      },
+    } as any)
+  }
+
+  // 删除版本
+  const handleDelClick = (version: IScriptVersion) => {
+    InfoBox({
+      title: `确认是否删除版本【${version.spec.name}?】`,
+      infoType: "danger",
+      headerAlign: "center" as const,
+      footerAlign: "center" as const,
+      onConfirm: async () => {
+        await deleteScriptVersion(spaceId.value, scriptId.value, version.id)
+        if (versionList.value.length === 1 && pagination.value.current > 1) {
+          pagination.value.current = pagination.value.current - 1
+        }
+        getVersionList()
+      },
+    } as any)
+  }
+
+  // 宽窄表视图下选择脚本
+  const handleSelectVersion = (version: IScriptVersion) => {
+    const { name, memo, content, pub_state } = version.spec
+    versionEditData.value = {
+      panelOpen: true,
+      editable: pub_state === 'not_released',
+      form: {
+        id: version.id,
+        name,
+        memo,
+        content
+      }
+    }
+  }
+
+  const handleSearchInputChange = (val: string) => {
+    if (!val) {
+      refreshList()
+    }
+  }
+
+  const refreshList = () => {
+    pagination.value.current = 1
     getVersionList()
   }
 
@@ -78,49 +208,72 @@
     <template #content>
       <div class="script-version-manage">
         <div class="operation-area">
-          <CreateVersion :script-id="scriptId" @create="handleOpenScriptPanel" />
-          <bk-input class="search-input" placeholder="版本号/版本说明/更新人">
+          <CreateVersion :script-id="scriptId" @create="handleCreateVersionClick" @edit="handleEditVersionClick" />
+          <bk-input
+            v-model.trim="searchStr"
+            class="search-input"
+            placeholder="版本号/版本说明/更新人"
+            :clearable="true"
+            @enter="refreshList"
+            @clear="refreshList"
+            @change="handleSearchInputChange">
               <template #suffix>
                 <Search class="search-input-icon" />
               </template>
           </bk-input>
         </div>
-        <bk-table :border="['outer']" :data="versionList">
-          <bk-table-column label="版本号" prop="spec.name" show-overflow-tooltip></bk-table-column>
-          <bk-table-column label="版本说明">
-            <template #default="{ row }">
-              <span>{{ (row.spec && row.spec.memo) || '--' }}</span>
-            </template>
-          </bk-table-column>
-          <bk-table-column label="被引用" prop="spec.publish_num"></bk-table-column>
-          <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
-          <bk-table-column label="更新时间" prop="revision.update_at"></bk-table-column>
-          <bk-table-column label="状态">
-            <template #default="{ row }">
-              <span v-if="row.spec">{{ row.spec.pub_state }}</span>
-            </template>
-          </bk-table-column>
-          <bk-table-column label="操作" width="280">
-            <template #default="{ row }">
-              <div class="action-btns">
-                <bk-button text theme="primary">上线</bk-button>
-                <bk-button text theme="primary">编辑</bk-button>
-                <bk-button text theme="primary">版本对比</bk-button>
-                <bk-button text theme="primary">复制并新建</bk-button>
-                <bk-button text theme="primary">删除</bk-button>
+        <div :class="['version-data-container', { 'script-panel-open': versionEditData.panelOpen }]">
+          <div class="table-data-area">
+            <VersionListFullTable
+              v-if="!versionEditData.panelOpen"
+              :list="versionList"
+              :pagination="pagination"
+              @view="handleViewVersionClick"
+              @page-change="refreshList"
+              @page-limit-change="handlePageLimitChange">
+              <template #operations="{ data }">
+                <div v-if="data.spec" class="action-btns">
+                  <bk-button v-if="data.spec.pub_state === 'not_released'" text theme="primary" @click="handlePublishClick(data)">上线</bk-button>
+                  <bk-button v-if="data.spec.pub_state === 'not_released'" text theme="primary" @click="handleEditVersionClick">编辑</bk-button>
+                  <bk-button text theme="primary">版本对比</bk-button>
+                  <bk-button
+                    v-if="data.spec.pub_state !== 'not_released'"
+                    text
+                    theme="primary"
+                    :disabled="!!unPublishVersion"
+                    @click="handleCreateVersionClick(data.spec.content)">
+                    复制并新建
+                  </bk-button>
+                  <bk-button v-if="data.spec.pub_state === 'not_released'" text theme="primary" @click="handleDelClick(data)">删除</bk-button>
               </div>
+              </template>
+            </VersionListFullTable>
+            <template v-else>
+              <bk-button
+                class="back-table-btn"
+                text
+                theme="primary"
+                @click="versionEditData.panelOpen = false">
+                展开列表
+                <AngleDoubleRightLine class="arrow-icon" />
+              </bk-button>
+              <VersionListSimpleTable
+                :version-id="versionEditData.form.id"
+                :list="versionList"
+                :pagination="pagination"
+                @select="handleSelectVersion"
+                @page-change="refreshList" />
             </template>
-          </bk-table-column>
-        </bk-table>
-        <bk-pagination
-          class="table-list-pagination"
-          v-model="pagination.current"
-          location="left"
-          :layout="['total', 'limit', 'list']"
-          :count="pagination.count"
-          :limit="pagination.limit"
-          @change="refreshList"
-          @limit-change="handlePageLimitChange"/>
+          </div>
+          <div v-if="versionEditData.panelOpen" class="script-edit-area">
+            <ScriptContent
+              :type="scriptDetail.spec.type"
+              :version-data=versionEditData.form
+              :script-id="scriptId"
+              :editable="versionEditData.editable"
+              @close="versionEditData.panelOpen = false" />
+          </div>
+        </div>
       </div>
     </template>
   </DetailLayout>
@@ -150,14 +303,35 @@
       margin-right: 8px;
     }
   }
-  .table-list-pagination {
-    padding: 12px;
-    background: #ffffff;
-    border: 1px solid #dcdee5;
-    border-top: none;
-    border-radius: 0 0 2px 2px;
-    :deep(.bk-pagination-list.is-last) {
-      margin-left: auto;
+  .version-data-container {
+    height: calc(100% - 48px);
+    border-radius: 2px;
+    &.script-panel-open {
+      display: flex;
+      align-items: flex-start;
+      background: #ffffff;
+      .table-data-area {
+        width: 216px;
+        border: 1px solid #dcdee5;
+      }
+    }
+    .table-data-area {
+      position: relative;
+      height: 100%;
+      .back-table-btn {
+        position: absolute;
+        top: 18px;
+        right: 10px;
+        font-size: 12px;
+        z-index: 1;
+        .arrow-icon {
+          margin-left: 4px;
+        }
+      }
+    }
+    .script-edit-area {
+      width: calc(100% - 216px);
+      height: 100%;
     }
   }
 </style>

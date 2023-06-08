@@ -253,8 +253,11 @@
   }
   .bk-table {
     :deep(.bk-table-body) {
-      tr.selected td {
-        background: #e1ecff !important;
+      tr {
+        cursor: pointer;
+        &.selected td {
+          background: #e1ecff !important;
+        }
       }
     }
   }

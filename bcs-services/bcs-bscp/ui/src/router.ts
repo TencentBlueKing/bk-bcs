@@ -81,7 +81,7 @@ const routes = [
             path: 'version_manage/:scriptId',
             name: 'script-version-manage',
             meta: {
-              navModule: 'scripts'
+              navModule: 'scripts',
             },
             component: () => import('./views/space/scripts/version-manage/index.vue')
           }

@@ -1,5 +1,5 @@
 import http from "../request"
-import { IScriptEditingForm, IScriptCiteQuery } from '../../types/script'
+import { IScriptEditingForm, IScriptCiteQuery, IScriptListQuery } from '../../types/script'
 
 /**
  * 创建脚本
@@ -16,14 +16,6 @@ export const createScript = (biz_id: string, params: IScriptEditingForm) => {
  * @param params 查询参数
  * @returns 
  */
-
-interface IScriptListQuery {
-  start: number;
-  limit?: number;
-  tag?: string;
-  all?: boolean;
-  name?: string;
-}
 
 export const getScriptList = (biz_id: string, params: IScriptListQuery) => {
   return http.get(`/config/biz/${biz_id}/hooks`, { params }).then(res => res.data);
@@ -67,7 +59,7 @@ export const deleteScript = (biz_id: string, id: number) => {
  * @returns 
  */
 export const getScriptTagList = (biz_id: string) => {
-  return http.get(`/config/biz/${biz_id}/hooks/hook_tags`).then(res => res.data);
+  return http.get(`/config/biz/${biz_id}/hook_tags`).then(res => res.data);
 }
 
 /**
@@ -79,6 +71,50 @@ export const getScriptTagList = (biz_id: string) => {
  */
 export const getScriptVersionList = (biz_id: string, hook_id: number, params: { start: number; limit?: number; searchKey?: string; }) => {
   return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, { params }).then(res => res.data);
+}
+
+/**
+ * 创建脚本版本
+ * @param biz_id 空间ID
+ * @param hook_id 脚本ID
+ * @param params 查询参数
+ * @returns 
+ */
+export const createScriptVersion = (biz_id: string, hook_id: number, params: { name: string; memo: string; content: string; }) => {
+  return http.post(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, params).then(res => res.data);
+}
+
+/**
+ * 更新脚本版本
+ * @param biz_id 空间ID
+ * @param hook_id 脚本ID
+ * @param params 查询参数
+ * @returns 
+ */
+export const updateScriptVersion = (biz_id: string, hook_id: number, params: { name: string; memo: string; content: string; }) => {
+  return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, params).then(res => res.data);
+}
+
+/**
+ * 删除脚本版本
+ * @param biz_id 空间ID
+ * @param hook_id 脚本ID
+ * @param release_id 版本ID
+ * @returns 
+ */
+export const deleteScriptVersion = (biz_id: string, hook_id: number, release_id: number) => {
+  return http.delete(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}`).then(res => res.data);
+}
+
+/**
+ * 上线版本
+ * @param biz_id 空间ID
+ * @param hook_id 脚本ID
+ * @param release_id 版本ID
+ * @returns 
+ */
+export const publishVersion = (biz_id: string, hook_id: number, release_id: number) => {
+  return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}/publish`).then(res => res.data);
 }
 
 /**

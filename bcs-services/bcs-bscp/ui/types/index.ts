@@ -9,6 +9,13 @@ export interface ISpaceDetail {
   space_uid: number;
 }
 
+// 分页参数
+export interface IPagination {
+  current: number;
+  limit: number;
+  count: number;
+}
+
 // 权限查询参数
 export interface IPermissionQuery {
   biz_id: number|string;
