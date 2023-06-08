@@ -186,19 +186,24 @@ func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32, s
 	}
 
 	var sqlBuf bytes.Buffer
+	args := []interface{}{}
 	sqlBuf.WriteString("SELECT ")
 	sqlBuf.WriteString(table.ReleasedConfigItemColumns.NamedExpr())
 	sqlBuf.WriteString(" FROM ")
 	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
 	sqlBuf.WriteString(" WHERE biz_id = ? AND app_id = ?")
-	sqlBuf.WriteString(" AND (name like ? OR creator like ? OR reviser like ?)")
+	args = append(args, bizID, appId)
+	if searchKey != "" {
+		sqlBuf.WriteString(" AND (name like ? OR creator like ? OR reviser like ?)")
+		args = append(args, "%"+searchKey+"%", "%"+searchKey+"%", "%"+searchKey+"%")
+	}
 	sqlBuf.WriteString(" AND release_id = (SELECT release_id from ")
 	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
 	sqlBuf.WriteString(" WHERE app_id = ? ORDER BY release_id desc limit 1)")
+	args = append(args, appId)
 
 	fileInfo := make([]*table.ReleasedConfigItem, 0)
-	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sqlBuf.String(),
-		bizID, appId, "%"+searchKey+"%", "%"+searchKey+"%", "%"+searchKey+"%", appId)
+	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sqlBuf.String(), args...)
 	if err != nil {
 		return nil, err
 	}

@@ -13,6 +13,7 @@ limitations under the License.
 package dao
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -42,6 +43,8 @@ type ConfigItem interface {
 	List(kit *kit.Kit, opts *types.ListConfigItemsOption) (*types.ListConfigItemDetails, error)
 	// Delete one configItem instance.
 	Delete(kit *kit.Kit, configItem *table.ConfigItem) error
+	// Delete one configItem instance with transaction.
+	DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, configItem *table.ConfigItem) error
 	// GetCount bizID config count
 	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
 	// TruncateWithTx truncate app config items with transaction.
@@ -305,6 +308,48 @@ func (dao *configItemDao) Delete(kit *kit.Kit, ci *table.ConfigItem) error {
 	if err != nil {
 		logs.Errorf("delete config item: %d failed, err: %v, rid: %v", ci.ID, err, kit.Rid)
 		return fmt.Errorf("delete config item, but run txn failed, err: %v", err)
+	}
+
+	return nil
+}
+
+// DeleteWithTx one configItem instance with transaction.
+func (dao *configItemDao) DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, ci *table.ConfigItem) error {
+
+	if ci == nil {
+		return errf.New(errf.InvalidParameter, "config item is nil")
+	}
+
+	if err := ci.ValidateDelete(); err != nil {
+		return errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	if err := dao.validateAttachmentAppExist(kit, ci.Attachment); err != nil {
+		return err
+	}
+
+	ab := dao.auditDao.Decorator(kit, ci.Attachment.BizID, enumor.ConfigItem).PrepareDelete(ci.ID)
+
+	var sqlBuf bytes.Buffer
+	sqlBuf.WriteString("DELETE FROM ")
+	sqlBuf.WriteString(table.ConfigItemTable.Name())
+	sqlBuf.WriteString(" WHERE id = ? AND biz_id = ?")
+
+	// delete the config item at first.
+	if err := dao.orm.Txn(tx.Tx()).Delete(kit.Ctx, sqlBuf.String(), ci.ID, ci.Attachment.BizID); err != nil {
+		return err
+	}
+
+	// audit this delete config item details.
+	auditOpt := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
+	if err := ab.Do(auditOpt); err != nil {
+		return fmt.Errorf("audit delete config item failed, err: %v", err)
+	}
+
+	// decrease the config item lock count after the deletion
+	lock := lockKey.ConfigItem(ci.Attachment.BizID, ci.Attachment.AppID)
+	if err := dao.lock.DecreaseCount(kit, lock, &LockOption{Txn: tx.Tx()}); err != nil {
+		return err
 	}
 
 	return nil
