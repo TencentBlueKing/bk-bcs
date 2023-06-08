@@ -34,6 +34,39 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "all",
+            "description": "all. 表示查询所有项目并且携带权限信息",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "searchKey",
+            "description": "businessID. 仅在all为true时生效, 表示通过项目名称或项目英文名模糊查询或项目ID精确查询",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 分页数据, 表示偏移量，仅在 all 为 true 时生效",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 分页数据, 表示每页数量，仅在 all 为 true 时生效",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
         "tags": [
           "BCSProject"
         ]
@@ -2313,6 +2346,11 @@
           "type": "string",
           "description": "请求 ID",
           "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "web_annotations"
         }
       }
     },

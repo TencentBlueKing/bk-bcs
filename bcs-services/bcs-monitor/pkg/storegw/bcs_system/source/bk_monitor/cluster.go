@@ -50,8 +50,8 @@ func NewBKMonitor() *BKMonitor {
 	return &BKMonitor{}
 }
 
-// handleClusterMetric Cluster 处理公共函数
-func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterId string, promql string, start,
+// HandleBKMonitorClusterMetric bkmonitor metrics 处理
+func HandleBKMonitorClusterMetric(ctx context.Context, projectId, clusterId string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	nodeSlice, err := base.GetNodeMatchWithScale(ctx, clusterId, scale)
 	if err != nil {
@@ -104,6 +104,12 @@ func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterI
 	}
 	// 对分片数据进行合并返回
 	return base.MergeSameSeries(series), nil
+}
+
+// handleClusterMetric Cluster 处理公共函数
+func (m *BKMonitor) handleClusterMetric(ctx context.Context, projectId, clusterId string, promql string, start,
+	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+	return HandleBKMonitorClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
 }
 
 // GetClusterCPUTotal 获取集群CPU核心总量

@@ -39,3 +39,5 @@ ENV FORM_TMPL_FILE_BASE_DIR=/data/workspace/form_tmpl
 COPY lc_msgs.yaml /data/workspace/lc_msgs.yaml
 
 ENV LOCALIZE_FILE_PATH=/data/workspace/lc_msgs.yaml
+
+ENV GODEBUG x509sha1=1

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package bcs_system
+package bcssystem
 
 // AvailableNodeMetrics 蓝鲸监控节点的metrics
 var AvailableNodeMetrics = []string{

@@ -12,7 +12,7 @@
  */
 
 // Package bcs_system xxx
-package bcs_system
+package bcssystem
 
 import (
 	"context"

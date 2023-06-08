@@ -21,7 +21,7 @@ import (
 	"net"
 	"os"
 
-	jwtGo "github.com/dgrijalva/jwt-go"
+	jwtGo "github.com/golang-jwt/jwt/v4"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 

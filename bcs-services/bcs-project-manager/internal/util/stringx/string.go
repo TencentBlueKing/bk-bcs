@@ -33,6 +33,15 @@ func JoinString(str ...string) string {
 	return strings.Join(strList, ",")
 }
 
+// JoinStringWithQuote 拼接字符串，并且每个字符串用双引号包裹
+func JoinStringWithQuote(str ...string) string {
+	var strList []string
+	for _, s := range str {
+		strList = append(strList, "\""+s+"\"")
+	}
+	return strings.Join(strList, ",")
+}
+
 // Errs2String error array to string
 func Errs2String(errs []error) string {
 	var strList []string
