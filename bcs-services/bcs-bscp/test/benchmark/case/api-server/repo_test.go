@@ -16,9 +16,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
+	"time"
+
+	"bscp.io/pkg/tools"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -35,12 +40,20 @@ func upload(ctx context.Context, filename, host string, bizID, appID string) (*h
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Set("X-Bkapi-File-Content-Id", tools.ByteSHA256(d))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%d != 200", resp.StatusCode)
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("%d != 200", resp.StatusCode)
+		}
+		return nil, fmt.Errorf("%d != 200, body: %s", resp.StatusCode, body)
 	}
 	return resp, nil
 }
@@ -53,12 +66,41 @@ func TestUpload(t *testing.T) {
 	}
 	bizID := os.Getenv("biz_id")
 	appID := os.Getenv("app_id")
-	resp, err := upload(context.Background(), filename, host, bizID, appID)
 
+	resp, err := upload(context.Background(), filename, host, bizID, appID)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 }
 
 func TestDownload(t *testing.T) {
 
+}
+
+func main() {
+	filename := os.Getenv("filename")
+	host := os.Getenv("host")
+	if host == "" {
+		host = "localhost:8080"
+	}
+	bizID := os.Getenv("biz_id")
+	appID := os.Getenv("app_id")
+
+	wg := &sync.WaitGroup{}
+
+	c := 10
+	for i := 0; i < c; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				resp, err := upload(context.Background(), filename, host, bizID, appID)
+				if err != nil {
+					fmt.Println(err, resp)
+				}
+				time.Sleep(time.Millisecond * 100)
+			}
+
+		}()
+	}
+	wg.Wait()
 }
