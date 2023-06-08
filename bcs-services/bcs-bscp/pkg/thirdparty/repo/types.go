@@ -232,19 +232,19 @@ type NodeOption struct {
 // normal path format: /generic/{project}/bscp-{version}-{biz_id}/file/{file sha256}
 func GenNodePath(opt *NodeOption) (string, error) {
 	if opt == nil {
-		return "", errf.New(errf.InvalidParameter, "option is nil")
+		return "", errors.New("option is nil")
 	}
 
 	if len(opt.Project) == 0 {
-		return "", errf.New(errf.InvalidParameter, "project should > 0")
+		return "", errors.New("project should > 0")
 	}
 
 	if opt.BizID == 0 {
-		return "", errf.New(errf.InvalidParameter, "biz_id should > 0")
+		return "", errors.New("biz_id should > 0")
 	}
 
 	if len(opt.Sign) != 64 {
-		return "", errf.New(errf.InvalidParameter, "file sha256 is not standard format")
+		return "", errors.New("file sha256 is not standard format")
 	}
 
 	repoName, err := GenRepoName(opt.BizID)
@@ -414,13 +414,13 @@ type RepositoryTypeInter interface {
 func GenS3NodeFullPath(path, sign string) (string, error) {
 
 	if len(path) == 0 {
-		return "", errf.New(errf.InvalidParameter, "path is required")
+		return "", errors.New("path is required")
 	}
 	if len(sign) == 0 {
-		return "", errf.New(errf.InvalidParameter, "sign is required")
+		return "", errors.New("sign is required")
 	}
 	if len(sign) != 64 {
-		return "", errf.New(errf.InvalidParameter, "file sha256 is not standard format")
+		return "", errors.New("file sha256 is not standard format")
 	}
 
 	return fmt.Sprintf("/%s%s%s", path, nodeFrontPath, sign), nil
