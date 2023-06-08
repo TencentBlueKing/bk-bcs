@@ -22,10 +22,12 @@ import (
 	"sync"
 	"time"
 
+	"k8s.io/klog/v2"
+
 	"bscp.io/pkg/tools"
 )
 
-// dd if=/dev/urandom of=/tmp/10Mib.bin bs=1M count=10
+// dd if=/dev/urandom of=/tmp/100Mib.bin bs=1M count=100
 func upload(ctx context.Context, host string, bizID, appID string, fileContentID string, body io.Reader) (*http.Response, error) {
 	u := fmt.Sprintf("http://%s/api/v1/api/create/content/upload/biz_id/%s/app_id/%s", host, bizID, appID)
 	req, err := http.NewRequestWithContext(ctx, "PUT", u, body)
@@ -52,6 +54,9 @@ func upload(ctx context.Context, host string, bizID, appID string, fileContentID
 
 func main() {
 	filename := os.Getenv("filename")
+	if filename == "" {
+		filename = "/tmp/100Mib.bin"
+	}
 	host := os.Getenv("host")
 	if host == "" {
 		host = "localhost:8080"
@@ -66,17 +71,20 @@ func main() {
 		panic(err)
 	}
 	fileContentID := tools.ByteSHA256(d)
+	klog.InfoS("file", "id", fileContentID)
 
-	c := 20
+	c := 1
 	for i := 0; i < c; i++ {
 		wg.Add(1)
 		go func(idx int) {
 			defer wg.Done()
 			for {
+				st := time.Now()
 				resp, err := upload(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
 				if err != nil {
-					fmt.Println(idx, err, resp)
+					klog.ErrorS(err, "idx", idx, "resp", resp)
 				}
+				klog.InfoS("resp", "idx", idx, "duration", time.Since(st))
 				time.Sleep(time.Millisecond * 100)
 			}
 
