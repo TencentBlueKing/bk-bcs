@@ -94,16 +94,11 @@ func (c *client) getReleasedCIFromCache(kt *kit.Kit, bizID uint32, releaseID uin
 // refreshReleasedCICache get a release's all the config items and cached them.
 func (c *client) refreshReleasedCICache(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error) {
 	opts := &types.ListReleasedCIsOption{
-		BizID: bizID,
+		BizID:     bizID,
+		ReleaseID: releaseID,
 		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "release_id",
-					Op:    filter.Equal.Factory(),
-					Value: releaseID,
-				},
-			},
+			Op:    filter.And,
+			Rules: []filter.RuleFactory{},
 		},
 		// use unlimited page.
 		Page: &types.BasePage{Start: 0, Limit: 0},

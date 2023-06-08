@@ -20,9 +20,10 @@ import (
 
 // ListReleasedCIsOption defines options to list released config item.
 type ListReleasedCIsOption struct {
-	BizID  uint32             `json:"biz_id"`
-	Filter *filter.Expression `json:"filter"`
-	Page   *BasePage          `json:"page"`
+	BizID     uint32             `json:"biz_id"`
+	ReleaseID uint32             `json:"release_id"`
+	Filter    *filter.Expression `json:"filter"`
+	Page      *BasePage          `json:"page"`
 }
 
 // Validate the list released config item options
