@@ -136,3 +136,4 @@ bcs-ui/support-files/iam/
 build.yml
 # bscp 软连接
 bcs-services/bscp.io
+.vscode

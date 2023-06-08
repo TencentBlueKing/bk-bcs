@@ -33,7 +33,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs v1.20.11
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220329091816-5b868e90d386
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
 	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager v0.0.0-00010101000000-000000000000

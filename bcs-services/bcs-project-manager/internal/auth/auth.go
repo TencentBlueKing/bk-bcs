@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	jwtGo "github.com/dgrijalva/jwt-go"
+	jwtGo "github.com/golang-jwt/jwt/v4"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
