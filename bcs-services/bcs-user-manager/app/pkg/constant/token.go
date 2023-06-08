@@ -25,4 +25,14 @@ const (
 	TokenKeyPrefix = "bcs_auth:token:"
 	// TokenLimits for token
 	TokenLimits = 1
+
+	// RequestIDHeaderKey X-Request-Id
+	RequestIDHeaderKey = "X-Request-Id"
+	// RequestIDKey requestID
+	RequestIDKey = "requestID"
+	// TracerName go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
+	// ClusterUrl cluster manager url
+	ClusterUrl = "/clustermanager/v1/cluster/%s"
 )
