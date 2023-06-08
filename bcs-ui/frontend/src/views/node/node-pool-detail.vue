@@ -248,7 +248,8 @@ export default defineComponent({
       }
     };
     const cloudList = ref<any[]>([]);
-    const cloud = computed(() => cloudList.value.find(item => item.bk_cloud_id === nodePoolData.value.bkCloudID) || {});
+    const cloud = computed(() => cloudList.value
+      .find(item => item.bk_cloud_id === nodePoolData.value.area?.bkCloudID) || {});
     const handleGetNodeGroupDetail = async () => {
       loading.value = true;
       await getNodeGroupDetail();

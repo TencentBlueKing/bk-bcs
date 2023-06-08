@@ -87,6 +87,7 @@
       <bcs-select
         :clearable="false"
         :loading="cloudLoading"
+        searchable
         v-model="nodePoolInfo.bkCloudID">
         <bcs-option
           v-for="item in cloudList"
@@ -139,6 +140,7 @@ import $router from '@/router/index';
 import $i18n from '@/i18n/i18n-setup';
 import Schema from './resolve-schema';
 import { nodemanCloudList, ccTopology } from '@/api/base';
+import { sortBy } from 'lodash';
 
 export default defineComponent({
   components: { KeyValue, Taints },
@@ -183,7 +185,8 @@ export default defineComponent({
           scaleOutModuleName: defaultValues.value.nodeTemplate?.module?.scaleOutModuleName || '',
         },
       },
-      bkCloudID: defaultValues.value.bkCloudID || 0,
+      bkCloudID: defaultValues.value.area?.bkCloudID || 0,
+      bkCloudName: defaultValues.value.area?.bkCloudName || '',
     });
 
     const nodePoolInfoRules = ref({
@@ -243,6 +246,7 @@ export default defineComponent({
       const result = await formRef.value?.validate();
       if (!result) return;
 
+      nodePoolInfo.value.bkCloudName = cloudList.value.find(item => item.bk_cloud_id === nodePoolInfo.value.bkCloudID);
       ctx.emit('next', nodePoolInfo.value);
     };
     const handleCancel = () => {
@@ -255,7 +259,11 @@ export default defineComponent({
     const cloudLoading = ref(false);
     const handleGetCloudList = async () => {
       cloudLoading.value = true;
-      cloudList.value = await nodemanCloudList().catch(() => []);
+      const data = await nodemanCloudList().catch(() => []);
+      cloudList.value = sortBy(data, 'bk_cloud_name').sort((item) => {
+        if (item.bk_cloud_id === 0) return -1;
+        return 0;
+      });
       cloudLoading.value = false;
     };
     // 模块
