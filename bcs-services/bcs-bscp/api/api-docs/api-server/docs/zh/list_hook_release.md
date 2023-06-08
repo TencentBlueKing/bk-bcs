@@ -13,6 +13,7 @@
 | searchKey | string   | 否   | 版本号、版本说明、创建人 |
 | start     | uint32   | 否   | 分页起始值               |
 | limit     | uint32   | 否   | 分页大小                 |
+| all       | bool     | 否   | 是否拉取全量数据         |
 
 #### 调用示例
 

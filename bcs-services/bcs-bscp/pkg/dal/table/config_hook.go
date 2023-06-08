@@ -51,6 +51,7 @@ type ConfigHookSpec struct {
 	PreHookReleaseID  uint32 `json:"pre_hook_release_id" gorm:"pre_hook_release_id"`
 	PostHookID        uint32 `json:"post_hook_id" gorm:"post_hook_id"`
 	PostHookReleaseID uint32 `json:"post_hook_release_id" gorm:"post_hook_release_id"`
+	Enable            bool   `json:"enable" gorm:"enable"`
 }
 
 // ConfigHookAttachment defines the ConfigHook attachments.
@@ -118,6 +119,36 @@ func (s ConfigHookAttachment) Validate() error {
 
 // ValidateUpdate validate ConfigHook is valid or not when update it.
 func (s ConfigHook) ValidateUpdate() error {
+
+	if s.Attachment == nil {
+		return errors.New("attachment should be set")
+	}
+
+	if s.Attachment.AppID <= 0 {
+		return errors.New("app id should be set")
+	}
+
+	if s.Attachment.BizID <= 0 {
+		return errors.New("biz id should be set")
+	}
+
+	if s.Revision == nil {
+		return errors.New("revision not set")
+	}
+
+	if len(s.Revision.Reviser) == 0 {
+		return errors.New("reviser can not be empty")
+	}
+
+	if len(s.Revision.Creator) != 0 {
+		return errors.New("creator can not be updated")
+	}
+
+	return nil
+}
+
+// ValidateEnable validate ConfigHook is valid or not when update it.
+func (s ConfigHook) ValidateEnable() error {
 
 	if s.Attachment == nil {
 		return errors.New("attachment should be set")

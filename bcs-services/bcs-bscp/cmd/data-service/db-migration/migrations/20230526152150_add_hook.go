@@ -40,6 +40,7 @@ func mig20230526152150GormTestUp(tx *gorm.DB) error {
 		Name       string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_name,priority:2"`
 		Memo       string `gorm:"type:varchar(256) default ''"`
 		PublishNum uint   `gorm:"type:bigint(1) unsigned not null"`
+		PubState   string `gorm:"type:varchar(64) not null"`
 		Type       string `gorm:"type:varchar(64) not null"`
 		Tag        string `gorm:"type:varchar(64) not null"`
 
@@ -84,6 +85,7 @@ func mig20230526152150GormTestUp(tx *gorm.DB) error {
 		PreHookReleaseID  uint `gorm:"type:bigint(1) unsigned not null"`
 		PostHookID        uint `gorm:"type:bigint(1) unsigned not null"`
 		PostHookReleaseID uint `gorm:"type:bigint(1) unsigned not null"`
+		Enable            bool `gorm:"type:tinyint(1) unsigned not null;default(1)"`
 
 		// Attachment is attachment info of the resource
 		BizID uint `gorm:"type:bigint(1) unsigned not null"`

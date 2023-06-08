@@ -123,12 +123,6 @@ service Config {
         };
     }
 
-    rpc CreateConfigHook(CreateConfigHookReq) returns (CreateConfigHookResp) {
-        option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks"
-            body : "*"
-        };
-    }
     rpc UpdateConfigHook(UpdateConfigHookReq) returns (UpdateConfigHookResp) {
         option (google.api.http) = {
             put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks"
@@ -138,6 +132,12 @@ service Config {
     rpc GetConfigHook(GetConfigHookReq) returns (GetConfigHookResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks"
+        };
+    }
+    rpc EnableConfigHook(EnableConfigHookReq) returns (EnableConfigHookResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks/enable"
+            body : "*"
         };
     }
 
@@ -238,7 +238,7 @@ service Config {
     }
     rpc ListHookTags(ListHookTagsReq) returns (ListHookTagsResp) {
         option (google.api.http) = {
-            get :  "/api/v1/config/biz/{biz_id}/hooks/hook_tags"
+            get :  "/api/v1/config/biz/{biz_id}/hook_tags"
         };
     }
     rpc GetHook(GetHookReq) returns (pbhook.Hook){
@@ -685,6 +685,7 @@ message UpdateConfigHookReq {
     uint32 app_id                 = 2;
     uint32 pre_hook_id            = 3;
     uint32 post_hook_id           = 4;
+    bool   enable                 = 5;
 }
 
 message UpdateConfigHookResp {}
@@ -697,6 +698,14 @@ message GetConfigHookReq {
 message  GetConfigHookResp {
     pbch.ConfigHook config_hook   = 1;
 }
+
+message EnableConfigHookReq {
+    uint32 app_id = 1;
+    uint32 biz_id = 2;
+    bool   enable = 3;
+}
+
+message EnableConfigHookResp {}
 
 message CreateCommitReq {
     uint32 biz_id         = 1;
@@ -872,12 +881,13 @@ message DeleteHookReq {
 message DeleteHookResp {}
 
 message ListHooksReq {
-    uint32 biz_id = 1;
-    string name   = 2;
-    string tag    = 3;
-    bool   all    = 4;
-    uint32 start  = 5;
-    uint32 limit  = 6;
+    uint32 biz_id  = 1;
+    string name    = 2;
+    string tag     = 3;
+    bool   all     = 4;
+    bool   not_tag = 5;
+    uint32 start   = 6;
+    uint32 limit   = 7;
 }
 
 message ListHooksResp {
@@ -911,6 +921,7 @@ message ListHookReleaseReq {
     string search_key   = 3;
     uint32 start        = 4;
     uint32 limit        = 5;
+    bool   all          = 6;
 }
 
 message ListHookReleaseResp {

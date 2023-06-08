@@ -1141,7 +1141,7 @@ paths:
           userVerifiedRequired: true
         disabledStages: [ ]
 
-  /api/v1/config/biz/{biz_id}/hooks/hook_tags:
+  /api/v1/config/biz/{biz_id}/hook_tags:
     get:
       operationId: list_hook_tag
       description: hook脚本标签列表
@@ -1552,30 +1552,6 @@ paths:
         disabledStages: [ ]
 
   /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks:
-    post:
-      operationId: create_config_hook
-      description: 创建配置脚本
-      tags:
-        - 配置脚本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
     put:
       operationId: update_config_hook
       description: 更新配置脚本
@@ -1592,6 +1568,31 @@ paths:
           type: HTTP
           method: put
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+
+  /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks/enable:
+    put:
+      operationId: update_config_hook
+      description: 是否启用配置脚本
+      tags:
+        - 配置脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks/enable
           matchSubpath: false
           timeout: 0
           upstreams: { }

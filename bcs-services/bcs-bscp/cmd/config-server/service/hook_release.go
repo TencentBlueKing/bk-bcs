@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -77,8 +78,20 @@ func (s *Service) ListHookRelease(ctx context.Context, req *pbcs.ListHookRelease
 		HookId:    req.HookId,
 		SearchKey: req.SearchKey,
 		BizId:     grpcKit.BizID,
-		Start:     req.Start,
-		Limit:     req.Limit,
+		All:       req.All,
+	}
+
+	if !req.All {
+		if req.Start < 0 {
+			return nil, errors.New("start has to be greater than 0")
+		}
+
+		if req.Limit < 0 {
+			return nil, errors.New("limit has to be greater than 0")
+		}
+
+		r.Start = req.Start
+		r.Limit = req.Limit
 	}
 
 	rp, err := s.client.DS.ListHookReleases(grpcKit.RpcCtx(), r)

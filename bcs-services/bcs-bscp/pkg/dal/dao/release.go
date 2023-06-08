@@ -18,6 +18,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
@@ -67,27 +68,24 @@ func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *tabl
 	if err != nil {
 		return 0, err
 	}
+
 	release.ID = id
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ReleaseTable.Name(), " (", table.ReleaseColumns.ColumnExpr(),
+		")  VALUES(", table.ReleaseColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
 
-	ad := dao.auditDao.DecoratorV2(kit, release.Attachment.BizID).PrepareCreate(release)
-	createTx := func(tx *gen.Query) error {
-		q := tx.Release.WithContext(kit.Ctx)
-		if err := q.Create(release); err != nil {
-			return err
-		}
-
-		if err := ad.Do(tx); err != nil {
-			return err
-		}
-
-		return nil
-	}
-	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+	if err = dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, release); err != nil {
+		return 0, err
 	}
 
-	return release.ID, nil
+	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
+	if err := dao.auditDao.Decorator(kit, release.Attachment.BizID,
+		enumor.Release).AuditCreate(release, au); err != nil {
+		return 0, fmt.Errorf("audit create release failed, err: %v", err)
+	}
 
+	return id, nil
 }
 
 // GetByName 通过名称获取, 可以做唯一性校验
@@ -106,24 +104,43 @@ func (dao *releaseDao) GetByName(kit *kit.Kit, bizID uint32, appID uint32, name 
 func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 	*types.ListReleaseDetails, error) {
 
-	m := dao.genQ.Release
-	q := dao.genQ.Release.WithContext(kit.Ctx)
+	if opts == nil {
+		return nil, errf.New(errf.InvalidParameter, "list releases options null")
+	}
 
-	result, count, err := q.Where(
-		m.BizID.Eq(opts.BizID),
-		m.AppID.Eq(opts.AppID),
-		m.Deprecated.Is(opts.Deprecated)).
-		FindByPage(opts.Page.Offset(), opts.Page.LimitInt())
-	if err != nil {
+	po := &types.PageOption{
+		EnableUnlimitedLimit: true,
+		DisabledSort:         false,
+	}
+
+	if err := opts.Validate(po); err != nil {
 		return nil, err
 	}
 
-	ListReleaseDetails := &types.ListReleaseDetails{
-		Count:   uint32(count),
-		Details: result,
+	m := dao.genQ.Release
+	q := dao.genQ.Release.WithContext(kit.Ctx).Where(
+		m.BizID.Eq(opts.BizID),
+		m.AppID.Eq(opts.AppID),
+		m.Deprecated.Is(opts.Deprecated))
+
+	if opts.Page.Start == 0 && opts.Page.Limit == 0 {
+		result, err := q.Find()
+		if err != nil {
+			return nil, err
+		}
+
+		return &types.ListReleaseDetails{Count: uint32(len(result)), Details: result}, nil
+
+	} else {
+		result, count, err := q.FindByPage(opts.Page.Offset(), opts.Page.LimitInt())
+		if err != nil {
+			return nil, err
+		}
+
+		return &types.ListReleaseDetails{Count: uint32(count), Details: result}, nil
+
 	}
 
-	return ListReleaseDetails, nil
 }
 
 // validateAttachmentResExist validate if attachment resource exists before creating release.

@@ -23,6 +23,7 @@ message HookSpec {
     string memo         = 5;
     string content      = 6;
     uint32 publish_num  = 7;
+    string pub_state    = 8;
 }
 
 // HookAttachment source resource reference: pkg/dal/table/hook.go

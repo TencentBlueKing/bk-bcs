@@ -31,7 +31,7 @@ func newHookRelease(db *gorm.DB, opts ...gen.DOOption) hookRelease {
 	_hookRelease.Name = field.NewString(tableName, "name")
 	_hookRelease.PublishNum = field.NewUint32(tableName, "publish_num")
 	_hookRelease.PubState = field.NewString(tableName, "pub_state")
-	_hookRelease.Contents = field.NewString(tableName, "contents")
+	_hookRelease.Content = field.NewString(tableName, "content")
 	_hookRelease.Memo = field.NewString(tableName, "memo")
 	_hookRelease.BizID = field.NewUint32(tableName, "biz_id")
 	_hookRelease.HookID = field.NewUint32(tableName, "hook_id")
@@ -53,7 +53,7 @@ type hookRelease struct {
 	Name       field.String
 	PublishNum field.Uint32
 	PubState   field.String
-	Contents   field.String
+	Content    field.String
 	Memo       field.String
 	BizID      field.Uint32
 	HookID     field.Uint32
@@ -81,7 +81,7 @@ func (h *hookRelease) updateTableName(table string) *hookRelease {
 	h.Name = field.NewString(table, "name")
 	h.PublishNum = field.NewUint32(table, "publish_num")
 	h.PubState = field.NewString(table, "pub_state")
-	h.Contents = field.NewString(table, "contents")
+	h.Content = field.NewString(table, "content")
 	h.Memo = field.NewString(table, "memo")
 	h.BizID = field.NewUint32(table, "biz_id")
 	h.HookID = field.NewUint32(table, "hook_id")
@@ -118,7 +118,7 @@ func (h *hookRelease) fillFieldMap() {
 	h.fieldMap["name"] = h.Name
 	h.fieldMap["publish_num"] = h.PublishNum
 	h.fieldMap["pub_state"] = h.PubState
-	h.fieldMap["contents"] = h.Contents
+	h.fieldMap["content"] = h.Content
 	h.fieldMap["memo"] = h.Memo
 	h.fieldMap["biz_id"] = h.BizID
 	h.fieldMap["hook_id"] = h.HookID

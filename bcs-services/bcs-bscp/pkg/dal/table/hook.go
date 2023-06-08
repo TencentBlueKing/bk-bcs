@@ -115,8 +115,12 @@ func (h Hook) ValidateUpdate() error {
 		return errors.New("revision not set")
 	}
 
-	if err := h.Revision.ValidateUpdate(); err != nil {
-		return err
+	if len(h.Revision.Reviser) == 0 {
+		return errors.New("reviser can not be empty")
+	}
+
+	if len(h.Revision.Creator) != 0 {
+		return errors.New("creator can not be updated")
 	}
 
 	return nil
@@ -139,8 +143,9 @@ func (h Hook) ValidateDelete() error {
 type HookSpec struct {
 	Name string `json:"name" gorm:"column:name"`
 	// Type is the hook type of hook
-	Type       HookType `json:"type" gorm:"column:type"`
-	PublishNum uint32   `json:"publish_num" gorm:"column:publish_num"`
+	Type       HookType      `json:"type" gorm:"column:type"`
+	PublishNum uint32        `json:"publish_num" gorm:"column:publish_num"`
+	PubState   ReleaseStatus `json:"pub_state" gorm:"column:pub_state"`
 	// Tag
 	Tag  string `json:"tag" gorm:"column:tag"`
 	Memo string `json:"memo" gorm:"column:memo"`
