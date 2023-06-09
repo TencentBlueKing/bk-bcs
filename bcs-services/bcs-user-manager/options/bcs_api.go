@@ -24,6 +24,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+var client *http.Client
+
+func init() {
+	client = &http.Client{}
+}
+
 // BcsAPI bcs api config
 type BcsAPI struct {
 	Host  string `json:"host" usage:"enable http host"`
@@ -38,8 +44,7 @@ func (bcsAPI *BcsAPI) HttpRequest(method, url string, request, response interfac
 		return fmt.Errorf("url failed %v", err)
 	}
 	url = bcsAPI.Host + url
-	// http client
-	client := &http.Client{}
+
 	byteRequest, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -61,18 +66,7 @@ func (bcsAPI *BcsAPI) HttpRequest(method, url string, request, response interfac
 	}
 
 	// defer close the resp body
-	defer func() {
-		err2 := resp.Body.Close()
-		if err2 != nil && err != nil {
-			err = fmt.Errorf("http request error:%s and http close error: %s", err, err2)
-			return
-		}
-
-		if err2 != nil {
-			err = err2
-			return
-		}
-	}()
+	defer resp.Body.Close()
 
 	// Non 200 status returned error
 	if resp.StatusCode != http.StatusOK {

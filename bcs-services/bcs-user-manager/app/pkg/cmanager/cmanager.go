@@ -26,9 +26,9 @@ import (
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
@@ -122,7 +122,7 @@ func (cm *ClusterManagerClient) GetProjectIDByClusterID(clusterID string) (strin
 	blog.V(3).Infof("GetProjectIDByClusterID miss clusterID cache")
 
 	// calling clustermanager through http
-	resp := clustermanager.GetClusterResp{}
+	resp := models.GetClusterResp{}
 	bcsApi := config.GetGlobalConfig().BcsAPI
 	url := fmt.Sprintf(constant.ClusterUrl, clusterID)
 	err := bcsApi.HttpRequest(http.MethodGet, url, nil, &resp)
@@ -162,7 +162,7 @@ func (cm *ClusterManagerClient) GetBusinessIDByClusterID(clusterID string) (stri
 	}
 	blog.V(3).Infof("GetBusinessIDByClusterID miss clusterID cache")
 
-	resp := &clustermanager.GetClusterResp{}
+	resp := &models.GetClusterResp{}
 	bcsApi := config.GetGlobalConfig().BcsAPI
 	url := fmt.Sprintf(constant.ClusterUrl, clusterID)
 	err := bcsApi.HttpRequest(http.MethodGet, url, nil, resp)

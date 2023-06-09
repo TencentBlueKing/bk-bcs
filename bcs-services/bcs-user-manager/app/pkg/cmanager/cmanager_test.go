@@ -22,7 +22,7 @@ import (
 
 	"github.com/patrickmn/go-cache"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
@@ -58,16 +58,13 @@ func Test_GetProjectIDByClusterID(t *testing.T) {
 
 func mockHttpRequest() {
 	// 定义一个测试用例
-	tests := clustermanager.GetClusterResp{
+	tests := models.GetClusterResp{
 		Code:    0,
 		Message: "ok",
 		Result:  true,
-		Data: &clustermanager.Cluster{
+		Data: &models.Cluster{
 			ClusterID: "123455",
 			ProjectID: "78946132784",
-		},
-		Extra: &clustermanager.ExtraClusterInfo{
-			ProviderType: "123",
 		},
 	}
 
