@@ -15,17 +15,17 @@ package route
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 // PermissionRequired 权限控制，必须都为真才可以

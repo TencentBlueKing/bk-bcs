@@ -15,22 +15,22 @@ package api
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"net/http"
 	"time"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/rest"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
 var upgrader = websocket.Upgrader{

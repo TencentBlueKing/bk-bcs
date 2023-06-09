@@ -139,4 +139,4 @@ replace (
 )
 
 // concurrency safe
-replace github.com/gin-contrib/i18n v0.0.1 => github.com/jonesyang12/i18n v0.0.0-20230607125203-d138c3f0b0eb
+replace github.com/gin-contrib/i18n v0.0.1 => github.com/ifooth/i18n v0.0.0-20230609093731-5838804173a5
