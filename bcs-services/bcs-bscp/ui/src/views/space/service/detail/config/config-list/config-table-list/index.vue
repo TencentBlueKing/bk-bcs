@@ -1,16 +1,15 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted, nextTick } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useServiceStore } from '../../../../../../../store/service'
   import { useConfigStore } from '../../../../../../../store/config'
   import { InfoBox } from "bkui-vue/lib";
   import { Search } from 'bkui-vue/lib/icon';
-  import { IConfigItem, IConfigListQueryParams } from '../../../../../../../../types/config'
+  import { IConfigItem, IConfigListQueryParams, IConfigVersion } from '../../../../../../../../types/config'
   import { CONFIG_STATUS_MAP } from '../../../../../../../constants/config'
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
   import EditConfig from './edit-config.vue'
-  import InitScript from './init-script/index.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
   import CreateVersion from './create-version/index.vue'
@@ -29,6 +28,7 @@
 
   const loading = ref(false)
   const configList = ref<IConfigItem[]>([])
+  const searchStr = ref('')
   const pagination = ref({
     current: 1,
     count: 0,
@@ -55,6 +55,9 @@
         start: (pagination.value.current - 1) * pagination.value.limit,
         limit: pagination.value.limit
       }
+      if (searchStr.value) {
+        params.searchKey = searchStr.value
+      }
       if (versionData.value.id !== 0) {
         params.release_id = versionData.value.id
       }
@@ -66,6 +69,12 @@
       console.error(e)
     } finally {
       loading.value = false
+    }
+  }
+
+  const handleSearchInputChange = (val: string) => {
+    if (!val) {
+      refreshConfigList()
     }
   }
 
@@ -101,14 +110,12 @@
   }
 
   // 创建版本成功后，刷新版本列表，若选择同时上线，则打开选择分组面板
-  const handleVersionCreated = (versionId: number, isPublish: boolean) => {
-    versionData.value.id = versionId
+  const handleVersionCreated = (version: IConfigVersion, isPublish: boolean) => {
     refreshVesionList()
-    nextTick(() => {
-      if (isPublish && publishVersionRef.value) {
+    if (isPublish && publishVersionRef.value) {
+        versionData.value = version
         publishVersionRef.value.handleOpenSelectGroupPanel()
       }
-    })
   }
 
   const handlePageLimitChange = (limit: number) => {
@@ -129,32 +136,30 @@
 <template>
   <section class="config-list-wrapper">
     <section class="version-operations">
-      <!-- <InitScript :app-id="props.appId" /> -->
-      <CreateVersion
-        v-if="versionData.status.publish_status === 'editing'"
-        ref="publishVersionRef"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :config-count="pagination.count"
-        @confirm="handleVersionCreated" />
-      <PublishVersion
-        v-if="versionData.status.publish_status === 'not_released'"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :release-id="versionData.id"
-        :app-name="appData.spec.name"
-        :version-name="versionData.spec.name"
-        :config-list="configList"
-        @confirm="refreshVesionList" />
-      <ModifyGroupPublish
-        v-if="versionData.status.publish_status === 'partial_released'"
-        :bk-biz-id="props.bkBizId"
-        :app-id="props.appId"
-        :release-id="versionData.id"
-        :app-name="appData.spec.name"
-        :version-name="versionData.spec.name"
-        :config-list="configList"
-        @confirm="refreshVesionList" />
+      <section class="version-operations">
+        <CreateVersion
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :config-count="pagination.count"
+          @confirm="handleVersionCreated" />
+        <PublishVersion
+          ref="publishVersionRef"
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :release-id="versionData.id"
+          :app-name="appData.spec.name"
+          :version-name="versionData.spec.name"
+          :config-list="configList"
+          @confirm="refreshVesionList" />
+        <ModifyGroupPublish
+          :bk-biz-id="props.bkBizId"
+          :app-id="props.appId"
+          :release-id="versionData.id"
+          :app-name="appData.spec.name"
+          :version-name="versionData.spec.name"
+          :config-list="configList"
+          @confirm="refreshVesionList" />
+      </section>
     </section>
     <div class="operate-area">
       <CreateConfig v-if="versionData.status.publish_status === 'editing'" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
@@ -163,7 +168,7 @@
           {{ group.name }}
         </div>
       </div>
-      <bk-input class="search-config-input" placeholder="配置项名称/创建人/修改人">
+      <bk-input v-model="searchStr" class="search-config-input" placeholder="配置文件名/创建人/修改人" @enter="refreshConfigList" @clear="refreshConfigList" @change="handleSearchInputChange">
         <template #suffix>
             <Search class="search-input-icon" />
         </template>
@@ -172,13 +177,13 @@
     <section class="config-list-table">
       <bk-loading :loading="loading">
         <bk-table v-if="!loading" :border="['outer']" :data="configList">
-          <bk-table-column label="配置项名称" prop="spec.name" :sort="true" :min-width="240"></bk-table-column>
-          <bk-table-column label="配置格式">
+          <bk-table-column label="配置文件名" prop="spec.name" :sort="true" :min-width="240"></bk-table-column>
+          <bk-table-column label="配置文件路径" prop="spec.path"></bk-table-column>
+          <bk-table-column label="配置文件格式">
             <template #default="{ row }">
               {{ getConfigTypeName(row.spec?.file_type) }}
             </template>
           </bk-table-column>
-          <bk-table-column label="配置路径" prop="spec.path"></bk-table-column>
           <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
           <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
           <bk-table-column label="修改时间" prop="revision.update_at" :sort="true" :width="180"></bk-table-column>

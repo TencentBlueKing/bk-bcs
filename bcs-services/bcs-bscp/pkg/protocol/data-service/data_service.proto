@@ -10,11 +10,13 @@ import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
+import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/instance/instance.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
+import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -41,6 +43,12 @@ service Data {
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
+
+    // config hook related interface.
+    rpc CreateConfigHook(CreateConfigHookReq) returns (CreateResp) {}
+    rpc UpdateConfigHook(UpdateConfigHookReq) returns (pbbase.EmptyResp) {}
+    rpc GetConfigHook(GetConfigHookReq) returns (pbch.ConfigHook) {}
+    rpc EnableConfigHook(EnableConfigHookReq) returns (pbbase.EmptyResp) {}
 
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
@@ -75,8 +83,17 @@ service Data {
     // hook related interface.
     rpc CreateHook(CreateHookReq) returns (CreateResp) {}
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
-    rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
+    rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
+    rpc GetHook(GetHookReq) returns (pbhook.Hook) {}
+
+    // hook release interface.
+    rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateResp) {}
+    rpc ListHookReleases(ListHookReleasesReq) returns (ListHookReleasesResp) {}
+    rpc GetHookReleaseByID(GetHookReleaseByIdReq) returns (pbhr.HookRelease){}
+    rpc DeleteHookRelease(DeleteHookReleaseReq) returns (pbbase.EmptyResp){}
+    rpc PublishHookRelease(PublishHookReleaseReq) returns (pbbase.EmptyResp){}
+    rpc GetHookReleaseByPubState(GetByPubStateReq) returns (pbhr.HookRelease){}
 
     // template-space related interface.
     rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CreateResp) {}
@@ -195,6 +212,23 @@ message CreateResp {
     uint32 id = 1;
 }
 
+message UpdateConfigHookReq {
+    uint32                    id         = 1;
+    pbch.ConfigHookAttachment attachment = 2;
+    pbch.ConfigHookSpec       spec       = 3;
+}
+
+message GetConfigHookReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message EnableConfigHookReq {
+    uint32 app_id = 1;
+    uint32 biz_id = 2;
+    bool   enable = 3;
+}
+
 message CreateAppReq {
     uint32        biz_id = 1;
     pbapp.AppSpec spec   = 2;
@@ -298,6 +332,11 @@ message ListConfigItemCountReq {
 
 message ListConfigItemCountResp {
     repeated pbci.ListConfigItemCounts details = 1;
+}
+
+message CreateConfigHookReq {
+    pbch.ConfigHookAttachment attachment = 1;
+    pbch.ConfigHookSpec       spec       = 2;
 }
 
 message CreateContentReq {
@@ -446,11 +485,23 @@ message CreateHookReq {
     pbhook.HookSpec       spec       = 2;
 }
 
+message ListHookTagReq {
+    uint32 biz_id = 1;
+}
+
+message GetHookReq {
+    uint32 biz_id  = 1;
+    uint32 hook_id = 2;
+}
+
 message ListHooksReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    uint32 biz_id  = 1;
+    string name    = 2;
+    string tag     = 3;
+    bool   all     = 5;
+    bool   not_tag = 6;
+    uint32 start   = 7;
+    uint32 limit   = 8;
 }
 
 message ListHooksResp {
@@ -458,15 +509,56 @@ message ListHooksResp {
     repeated pbhook.Hook details = 2;
 }
 
-message UpdateHookReq {
-    uint32                id         = 1;
-    pbhook.HookAttachment attachment = 2;
-    pbhook.HookSpec       spec       = 3;
+message ListHookTagResp {
+    repeated pbhook.CountHookTags details = 1;
 }
 
 message DeleteHookReq {
     uint32                id         = 1;
     pbhook.HookAttachment attachment = 2;
+}
+
+message CreateHookReleaseReq {
+    pbhr.HookReleaseAttachment attachment = 1;
+    pbhr.HookReleaseSpec       spec       = 2;
+}
+
+message ListHookReleasesReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    string search_key   = 3;
+    uint32 start        = 4;
+    uint32 limit        = 5;
+    bool   all          = 6;
+}
+
+message ListHookReleasesResp {
+    uint32                    count   = 1;
+    repeated pbhr.HookRelease details = 2;
+}
+
+message GetHookReleaseByIdReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
+}
+
+message DeleteHookReleaseReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
+}
+
+message PublishHookReleaseReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
+}
+
+message GetByPubStateReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    string pub_state     = 3;
 }
 
 message CreateTemplateSpaceReq {

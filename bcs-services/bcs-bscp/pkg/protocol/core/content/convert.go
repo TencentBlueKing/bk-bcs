@@ -70,7 +70,7 @@ func PbContentAttachment(at *table.ContentAttachment) *ContentAttachment {
 	}
 }
 
-// PbContents convert table Contents to pb Contents
+// PbContents convert table Content to pb Content
 func PbContents(cs []*table.Content) []*Content {
 	if cs == nil {
 		return make([]*Content, 0)

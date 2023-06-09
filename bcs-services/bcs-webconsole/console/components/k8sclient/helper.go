@@ -13,27 +13,21 @@ package k8sclient
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-)
 
-// GetBCSConfByClusterId 通过集群ID, 获取不同admin token 信息
-func GetBCSConfByClusterId(clusterId string) *config.BCSConf {
-	// 只保留prod环境,不再通过集群ID选取不同环境配置
-	// 默认返回bcs配置
-	return config.G.BCS
-}
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+)
 
 // GetK8SConfigByClusterId 通过集群 ID 获取 K8S Rest Config
 func GetK8SConfigByClusterId(clusterId string) *rest.Config {
-	bcsConf := GetBCSConfByClusterId(clusterId)
-	host := fmt.Sprintf("%s/clusters/%s", bcsConf.InnerHost, clusterId)
+	host := fmt.Sprintf("%s/clusters/%s", config.G.BCS.InnerHost, clusterId)
 	config := &rest.Config{
 		Host:        host,
-		BearerToken: bcsConf.Token,
+		BearerToken: config.G.BCS.Token,
 		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: bcsConf.InsecureSkipVerify,
+			Insecure: true, // 内部接口, 默认不校验证书
 		},
 	}
 	return config

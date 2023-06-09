@@ -237,13 +237,14 @@ func (s IAM) validate() error {
 	return nil
 }
 
-//StorageMode :
-
+// StorageMode :
 type StorageMode string
 
 const (
+	// BkRepo Type
 	BkRepo StorageMode = "BKREPO"
-	S3     StorageMode = "S3"
+	// S3 type
+	S3 StorageMode = "S3"
 )
 
 // Repository defines all the repo related runtime.
@@ -252,6 +253,8 @@ type Repository struct {
 	S3          S3Storage     `yaml:"s3"`
 	BkRepo      BkRepoStorage `yaml:"bkRepo"`
 }
+
+// BkRepoStorage BKRepo 存储类型
 type BkRepoStorage struct {
 	// Endpoints is a seed list of host:port addresses of repo nodes.
 	Endpoints []string `yaml:"endpoints"`
@@ -265,6 +268,7 @@ type BkRepoStorage struct {
 	TLS TLSConfig `yaml:"tls"`
 }
 
+// S3Storage s3 存储类型
 type S3Storage struct {
 	Endpoint        string `yaml:"endpoint"`
 	AccessKeyID     string `yaml:"accessKeyID"`
@@ -295,7 +299,7 @@ func (s Repository) OneEndpoint() (string, error) {
 	return addr, nil
 }
 
-func (s Repository) trySetDefault() {
+func (s *Repository) trySetDefault() {
 	if len(s.StorageType) == 0 {
 		s.StorageType = BkRepo
 	}
@@ -469,6 +473,10 @@ func (ds *Database) trySetDefault() {
 	if ds.MaxIdleConn == 0 {
 		ds.MaxIdleConn = 5
 	}
+
+	if ds.MaxIdleTimeoutMin == 0 {
+		ds.MaxIdleTimeoutMin = 60
+	}
 }
 
 // validate database runtime.
@@ -577,6 +585,18 @@ func (n *Network) trySetFlagBindIP(ip net.IP) error {
 	return nil
 }
 
+// trySetFlagPort set http and grpc port
+func (n *Network) trySetFlagPort(port, grpcPort int) error {
+	if port > 0 {
+		n.HttpPort = uint(port)
+	}
+	if grpcPort > 0 {
+		n.RpcPort = uint(grpcPort)
+	}
+
+	return nil
+}
+
 // trySetDefault set the network's default value if user not configured.
 func (n *Network) trySetDefault() {
 	if len(n.BindIP) == 0 {
@@ -654,7 +674,9 @@ func (tls TLSConfig) validate() error {
 type SysOption struct {
 	ConfigFiles []string
 	// BindIP Setting startup bind ip.
-	BindIP net.IP
+	BindIP   net.IP
+	Port     int
+	GRPCPort int
 	// Versioned Setting if show current version info.
 	Versioned bool
 }
@@ -816,8 +838,6 @@ func (fc *FSLocalCache) trySetDefault() {
 	if fc.CredentialCacheTTLSec == 0 {
 		fc.CredentialCacheTTLSec = 1
 	}
-
-	return
 }
 
 // Downstream define feed server downStream related settings.
@@ -860,8 +880,6 @@ func (f *Downstream) trySetDefault() {
 	if f.NotifyMaxLimit == 0 {
 		f.NotifyMaxLimit = 50
 	}
-
-	return
 }
 
 // MatchReleaseLimiter defines the request limit options for match release.

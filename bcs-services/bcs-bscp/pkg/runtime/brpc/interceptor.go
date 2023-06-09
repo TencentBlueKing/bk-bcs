@@ -18,52 +18,23 @@ import (
 	"runtime/debug"
 	"time"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/runtime/jsoni"
 	"k8s.io/klog/v2"
-
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"google.golang.org/grpc"
 )
 
-// UnaryServerInterceptorWithMetrics returns default grpc interceptor with metrics
-func UnaryServerInterceptorWithMetrics(mc *gprm.ServerMetrics) grpc.UnaryServerInterceptor {
-	// EnableHandlingTimeHistogram enables grpc server's histograms
-	mc.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
+// RecoveryHandlerFuncContext 异常日志输出
+func RecoveryHandlerFuncContext(ctx context.Context, p interface{}) (err error) {
+	kt := kit.FromGrpcContext(ctx)
+	logs.Errorf("[bscp server panic], err: %v, rid: %s, debug strace: %s", p, kt.Rid,
+		debug.Stack())
+	logs.CloseLogs()
 
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (
-		resp interface{}, err error) {
-
-		mi := mc.UnaryServerInterceptor()
-
-		return mi(ctx, req, info, func(ctx context.Context, req interface{}) (interface{}, error) {
-
-			kt := kit.FromGrpcContext(ctx)
-			defer func() {
-				if fatalErr := recover(); fatalErr != nil {
-					logs.Errorf("[bscp server panic], err: %v, rid: %s, debug strace: %s", fatalErr, kt.Rid,
-						debug.Stack())
-					logs.CloseLogs()
-				}
-			}()
-
-			if logs.V(4) {
-				js, _ := jsoni.Marshal(req)
-				logs.Infof("request method: %v, app_code: %s, user: %s, req: %s, rid: %s",
-					info.FullMethod, kt.AppCode, kt.User, string(js), kt.Rid)
-			}
-
-			resp, err := handler(ctx, req)
-
-			if logs.V(5) {
-				logs.Infof("resp: %v, err: %v, rid: %s", resp, err, kt.Rid)
-			}
-
-			return resp, err
-		})
-	}
+	return status.Errorf(codes.Internal, "%v", p)
 }
 
 // LogUnaryServerInterceptor 添加请求日志
@@ -75,7 +46,7 @@ func LogUnaryServerInterceptor() grpc.UnaryServerInterceptor {
 		method := path.Base(info.FullMethod)
 
 		defer func() {
-			klog.InfoS("grpc", "rid", kt.Rid, "system", "grpc", "span.kind", "grpc.service", "service", service, "method", method, "grpc.duration", time.Since(st))
+			klog.InfoS("grpc", "rid", kt.Rid, "system", "grpc", "span.kind", "grpc.service", "service", service, "method", method, "grpc.duration", time.Since(st), "error", err)
 		}()
 
 		resp, err = handler(ctx, req)

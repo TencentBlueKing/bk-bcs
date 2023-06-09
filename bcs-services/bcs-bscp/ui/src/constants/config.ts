@@ -35,7 +35,9 @@ export const GET_UNNAMED_VERSION_DATE = () => {
         post_hook_release_id: 0,
         pre_hook_id: 0,
         pre_hook_release_id: 0,
-      }
+      },
+      deprecated: false,
+      publish_num: 0,
     },
     status: {
       publish_status: 'editing',

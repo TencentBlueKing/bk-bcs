@@ -16,7 +16,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -31,6 +30,7 @@ import (
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/metrics"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
 )
 
 // WebServer :
@@ -131,6 +131,7 @@ func (w *WebServer) subRouter() http.Handler {
 	})
 	r.NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
 
+	r.Put("/switch_language", w.CookieSwitchLanguage)
 	return r
 }
 

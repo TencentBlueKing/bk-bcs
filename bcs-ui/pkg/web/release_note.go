@@ -31,26 +31,26 @@ import (
 const (
 	changelogPath = "CHANGELOG"
 	featurePath   = "frontend/static/features"
-	defaultLang   = "zh_cn" // viper 默认不区分大小写
 )
 
 var changelogNamePattern = regexp.MustCompile(`^(?P<version>v1.\d+.\d+)_(?P<date>[\w-]+).md$`)
 
-// ChangeLog
+// ChangeLog change log
 type ChangeLog struct {
 	Content string `json:"content"`
 	Date    string `json:"date"`
 	Version string `json:"version"`
 }
 
-// Feature
+// Feature feature content
 type Feature struct {
 	Content string `json:"content"`
 }
 
+// ReleaseNoteLang map of ReleaseNote
 type ReleaseNoteLang map[language.Tag]ReleaseNote
 
-// ReleaseNote  release_note
+// ReleaseNote release_note
 type ReleaseNote struct {
 	ChangeLogs []*ChangeLog `json:"changelog"`
 	Feature    *Feature     `json:"feature"`
@@ -72,7 +72,7 @@ func parseChangelogName(value string) map[string]string {
 	return result
 }
 
-// initReleaseNote
+// initReleaseNote :
 func (s *WebServer) initReleaseNote() error {
 	// obtain the folder under CHANGELOG
 	entries, err := s.embedWebServer.RootFS().ReadDir(changelogPath)

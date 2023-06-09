@@ -35,6 +35,11 @@ func (s *SidecarSetting) trySetFlagBindIP(ip net.IP) error {
 	return s.Network.trySetFlagBindIP(ip)
 }
 
+// trySetFlagPort set http and grpc port
+func (s *SidecarSetting) trySetFlagPort(port, grpcPort int) error {
+	return nil
+}
+
 func (s *SidecarSetting) trySetDefault() {
 	s.Network.trySetDefault()
 	s.Log.trySetDefault()

@@ -223,10 +223,14 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 				continue
 			}
 		}
-		blog.Infof("%s %s/%s hooked by plugin %s",
+
+		startTime := time.Now()
+		blog.Infof("start %s %s/%s hook by plugin %s",
 			tmpUnstructKind, tmpUnstructName, tmpUnstructNs, pluginNames[index])
 		// do webhook
 		tmpResponse := p.Handle(ar)
+		blog.Infof("end %s %s/%s hook by plugin %s, cost %d Milliseconds", tmpUnstructKind, tmpUnstructName, tmpUnstructNs, pluginNames[index], time.Since(startTime).Milliseconds())
+
 		// when one plugin is not allowed, just return response
 		if !tmpResponse.Allowed {
 			return tmpResponse

@@ -75,7 +75,7 @@
 </script>
 <template>
     <section class="create-version">
-        <bk-button class="trigger-button" theme="primary" @click="handleOpenSelectGroupPanel">上线版本</bk-button>
+        <bk-button v-if="versionData.status.publish_status === 'not_released'" class="trigger-button" theme="primary" @click="handleOpenSelectGroupPanel">上线版本</bk-button>
         <VersionLayout v-if="openSelectGroupPanel">
             <template #header>
                 <section class="header-wrapper">
