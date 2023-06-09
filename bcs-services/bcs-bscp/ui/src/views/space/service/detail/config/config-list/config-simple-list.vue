@@ -61,7 +61,6 @@
 <template>
   <section class="current-config-list">
     <bk-loading :loading="loading">
-      <h4 class="version-name">{{ versionData.spec.name }}</h4>
       <div v-if="configList.length > 0" class="config-list-wrapper">
         <div v-for="config in configList" class="config-item" :key="config.id" @click="handleEditConfigOpen(config.id)">
           <div class="config-name">{{ config.spec.name }}</div>
@@ -82,13 +81,7 @@
     padding: 24px;
     height: 100%;
     background: #fafbfd;
-  }
-  .version-name {
-    margin: 0 0 16px 0;
-    height: 19px;
-    font-size: 14px;
-    font-weight: 700;
-    color: #63656e;
+    overflow: auto;
   }
   .config-item {
     display: flex;
