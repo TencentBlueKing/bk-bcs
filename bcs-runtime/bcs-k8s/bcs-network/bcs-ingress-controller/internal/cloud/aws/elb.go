@@ -177,18 +177,18 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 
 	// 4. delete all listeners' rules
 	for _, rule := range rules {
-		out, err := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{RuleArns: []string{rule}})
-		if err != nil {
-			blog.Warnf("DescribeRules failed, err %s", err.Error())
+		out, inErr := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{RuleArns: []string{rule}})
+		if inErr != nil {
+			blog.Warnf("DescribeRules failed, err %s", inErr.Error())
 			continue
 		}
 		// default rule cannot be deleted
 		if out.Rules != nil && out.Rules[0].IsDefault {
 			continue
 		}
-		_, err = e.sdkWrapper.DeleteRule(region, &elbv2.DeleteRuleInput{RuleArn: &rule})
-		if err != nil {
-			return fmt.Errorf("DeleteRule failed, err %s", err.Error())
+		_, inErr = e.sdkWrapper.DeleteRule(region, &elbv2.DeleteRuleInput{RuleArn: &rule})
+		if inErr != nil {
+			return fmt.Errorf("DeleteRule failed, err %s", inErr.Error())
 		}
 	}
 

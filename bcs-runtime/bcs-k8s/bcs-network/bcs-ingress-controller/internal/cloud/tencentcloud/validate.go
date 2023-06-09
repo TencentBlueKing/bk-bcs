@@ -152,27 +152,37 @@ func (cv *ClbValidater) validateListenerAttribute(attr *networkextensionv1.Ingre
 			return false, fmt.Sprintf("invalid lb policy %s, available [WRR, LEAST_CONN]", attr.LbPolicy)
 		}
 	}
-	if attr.HealthCheck != nil && attr.HealthCheck.Enabled {
-		if attr.HealthCheck.HealthNum != 0 && (attr.HealthCheck.HealthNum < 2 || attr.HealthCheck.HealthNum > 10) {
-			return false, fmt.Sprintf("invalid healthNum %d, available [2, 10]", attr.HealthCheck.HealthNum)
-		}
-		if attr.HealthCheck.UnHealthNum != 0 &&
-			(attr.HealthCheck.UnHealthNum < 2 || attr.HealthCheck.UnHealthNum > 10) {
-			return false, fmt.Sprintf("invalid unHealthNum %d, available [2, 10]", attr.HealthCheck.UnHealthNum)
-		}
-		if attr.HealthCheck.Timeout != 0 &&
-			(attr.HealthCheck.Timeout < 2 || attr.HealthCheck.Timeout > 60) {
-			return false, fmt.Sprintf("invalid timeout %d, available [2, 60]", attr.HealthCheck.Timeout)
-		}
-		if attr.HealthCheck.IntervalTime != 0 &&
-			(attr.HealthCheck.IntervalTime < 5 || attr.HealthCheck.IntervalTime > 300) {
-			return false, fmt.Sprintf("invalid interval time %d, available [5, 300]", attr.HealthCheck.IntervalTime)
-		}
-		if attr.HealthCheck.HTTPCode != 0 &&
-			(attr.HealthCheck.HTTPCode < 1 || attr.HealthCheck.HTTPCode > 31) {
-			return false, fmt.Sprintf("invalid httpCode %d, available [1, 31]", attr.HealthCheck.HTTPCode)
-		}
+	if valid, msg := cv.validateHealthCheck(attr.HealthCheck); !valid {
+		return false, msg
 	}
+	return true, ""
+}
+
+func (cv *ClbValidater) validateHealthCheck(healthCheck *networkextensionv1.ListenerHealthCheck) (bool, string) {
+	if healthCheck == nil || healthCheck.Enabled == false {
+		return true, ""
+	}
+
+	if healthCheck.HealthNum != 0 && (healthCheck.HealthNum < 2 || healthCheck.HealthNum > 10) {
+		return false, fmt.Sprintf("invalid healthNum %d, available [2, 10]", healthCheck.HealthNum)
+	}
+	if healthCheck.UnHealthNum != 0 &&
+		(healthCheck.UnHealthNum < 2 || healthCheck.UnHealthNum > 10) {
+		return false, fmt.Sprintf("invalid unHealthNum %d, available [2, 10]", healthCheck.UnHealthNum)
+	}
+	if healthCheck.Timeout != 0 &&
+		(healthCheck.Timeout < 2 || healthCheck.Timeout > 60) {
+		return false, fmt.Sprintf("invalid timeout %d, available [2, 60]", healthCheck.Timeout)
+	}
+	if healthCheck.IntervalTime != 0 &&
+		(healthCheck.IntervalTime < 5 || healthCheck.IntervalTime > 300) {
+		return false, fmt.Sprintf("invalid interval time %d, available [5, 300]", healthCheck.IntervalTime)
+	}
+	if healthCheck.HTTPCode != 0 &&
+		(healthCheck.HTTPCode < 1 || healthCheck.HTTPCode > 31) {
+		return false, fmt.Sprintf("invalid httpCode %d, available [1, 31]", healthCheck.HTTPCode)
+	}
+
 	return true, ""
 }
 
