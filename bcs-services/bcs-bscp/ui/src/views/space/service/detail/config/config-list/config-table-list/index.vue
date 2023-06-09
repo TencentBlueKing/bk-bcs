@@ -136,30 +136,28 @@
 <template>
   <section class="config-list-wrapper">
     <section class="version-operations">
-      <section class="version-operations">
-        <CreateVersion
-          :bk-biz-id="props.bkBizId"
-          :app-id="props.appId"
-          :config-count="pagination.count"
-          @confirm="handleVersionCreated" />
-        <PublishVersion
-          ref="publishVersionRef"
-          :bk-biz-id="props.bkBizId"
-          :app-id="props.appId"
-          :release-id="versionData.id"
-          :app-name="appData.spec.name"
-          :version-name="versionData.spec.name"
-          :config-list="configList"
-          @confirm="refreshVesionList" />
-        <ModifyGroupPublish
-          :bk-biz-id="props.bkBizId"
-          :app-id="props.appId"
-          :release-id="versionData.id"
-          :app-name="appData.spec.name"
-          :version-name="versionData.spec.name"
-          :config-list="configList"
-          @confirm="refreshVesionList" />
-      </section>
+      <CreateVersion
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        :config-count="pagination.count"
+        @confirm="handleVersionCreated" />
+      <PublishVersion
+        ref="publishVersionRef"
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        :release-id="versionData.id"
+        :app-name="appData.spec.name"
+        :version-name="versionData.spec.name"
+        :config-list="configList"
+        @confirm="refreshVesionList" />
+      <ModifyGroupPublish
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        :release-id="versionData.id"
+        :app-name="appData.spec.name"
+        :version-name="versionData.spec.name"
+        :config-list="configList"
+        @confirm="refreshVesionList" />
     </section>
     <div class="operate-area">
       <CreateConfig v-if="versionData.status.publish_status === 'editing'" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
