@@ -18,6 +18,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/podmanager"
@@ -25,11 +31,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
-
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
 )
 
 var upgrader = websocket.Upgrader{
@@ -79,14 +80,14 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 
 	query := &wsQuery{}
 	if err := c.BindQuery(query); err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "参数不合法"))
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.GetMessage(c, "参数不合法")))
 		return
 	}
 
 	sessionId := route.GetSessionId(c)
 	podCtx, err := sessions.NewStore().WebSocketScope().Get(ctx, sessionId)
 	if err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, "session不合法"))
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.GetMessage(c, "session不合法")))
 		return
 	}
 	// 赋值session id
@@ -106,14 +107,14 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 		defer stop()
 
 		// 定时检查任务等
-		return consoleMgr.Run()
+		return consoleMgr.Run(c)
 	})
 
 	eg.Go(func() error {
 		defer stop()
 
 		// 定时发送心跳等, 保持连接的活跃
-		return remoteStreamConn.Run()
+		return remoteStreamConn.Run(c)
 	})
 
 	eg.Go(func() error {
@@ -146,5 +147,5 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	}
 
 	// 正常退出, 如使用 Exit 命令主动退出返回提示
-	manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New("BCS Console 服务端连接断开，请重新登录"))
+	manager.GracefulCloseWebSocket(ctx, ws, connected, errors.New(i18n.GetMessage(c, "BCS Console 服务端连接断开，请重新登录")))
 }

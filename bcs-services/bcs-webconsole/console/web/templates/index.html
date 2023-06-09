@@ -82,7 +82,7 @@
         <div class="footer-container">
             <div class="shell-selector" style="margin-right: 30px;">
                 <bk-select size="small" :disabled="false" v-model="shell" style="width: 100px;" ext-cls="select-custom" ext-popover-cls="select-popover-custom">
-                    <bk-popconfirm width="288" trigger="click" title="是否切换shell类型?" content="操作将会刷新页面！" @confirm="handleConfirmChangeShell" @cancel="handleCancelChangeShell">
+                    <bk-popconfirm width="288" trigger="click" :title="$t('message.shell')" :content="$t('message.operator')" @confirm="handleConfirmChangeShell" @cancel="handleCancelChangeShell">
                         <bk-option v-for="option in shellList" :key="option.key" :id="option.id" :name="option.name"> </bk-option>
                     </bk-popconfirm>
                 </bk-select>
@@ -111,7 +111,7 @@
                         <div class="download-panel-input">
                             <bk-input :clearable="true" v-model="downloadPath" :placeholder="$t('message.downloadPath')"></bk-input>
                         </div>
-                        <bk-button theme="primary" :title="$t('message.download')" icon="download" :disabled="downloadDisabled" :loading="downloadBtnLoading" @click="handleClickDownload">{{ .download }}</bk-button>
+                        <bk-button theme="primary" :title="$t('message.download')" icon="download" :disabled="downloadDisabled" :loading="downloadBtnLoading" @click="handleClickDownload"> {{ .download }}</bk-button>
                     </div>
                 </bk-tab-panel>
             </bk-tab>
@@ -127,6 +127,13 @@
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/vue-i18n.js"></script>
     <script src="{{ .settings.SITE_STATIC_URL }}/web/static/assets/vue/bk-magic-vue.min.js"></script>
     <script type="text/javascript" defer>
+        var localeLang = "{{ .Language }}"
+        if (localeLang == "en") {
+            localeLang = "enUS"
+        }else {
+            localeLang = "zhCN"
+        }
+        window.bkMagicVue.locale.use(window.bkMagicVue.locale.lang[localeLang])
         var app = new Vue({
             i18n: new VueI18n({
                 locale: '{{ .Language }}',
@@ -137,7 +144,16 @@
                             uploadPath: 'Please enter the upload path first',
                             uploadLimit: 'File limit is less than 30Mb, and folder upload is not supported.',
                             download: 'Download',
-                            downloadPath: 'Please enter the download path first. Folder download is not supported.'
+                            downloadPath: 'Please enter the download path first. Folder download is not supported.',
+                            shell: 'Switch the shell type?',
+                            operator: 'The action will refresh the page!',
+                            uploadSuccess: 'UploadSuccess',
+                            uploadFailed: 'UploadFailed',
+                            downloadFailed: 'Download request failed',
+                            connect: 'The connection is disconnected',
+                            reconnect: 'Reconnect',
+                            requestFailed: 'Request failed',
+                            apply: 'Go to apply'
                         }
                     },
                     zh: {
@@ -146,7 +162,16 @@
                             uploadPath: '请先输入上传路径',
                             uploadLimit: '文件限制小于30Mb, 暂不支持文件夹上传',
                             download: '下载',
-                            downloadPath: '请先输入下载路径,暂不支持文件夹下载'
+                            downloadPath: '请先输入下载路径,暂不支持文件夹下载',
+                            shell: '是否切换shell类型?',
+                            operator: '操作将会刷新页面！',
+                            uploadSuccess: '上传成功',
+                            uploadFailed: '上传失败',
+                            downloadFailed: '下载请求失败',
+                            connect: '连接已断开',
+                            reconnect: '重新连接',
+                            requestFailed: '请求失败',
+                            apply: '前往申请'
                         }
                     }
                 }
@@ -174,6 +199,7 @@
                     downloadPath: "",
                     downloadBtnLoading: false,
                     key: "downloadKey",
+                    lang: '{{ .Language }}',
                 }
             },
             computed: {
@@ -197,7 +223,7 @@
             methods: {
                 handleClickDownload() {
                     this.downloadBtnLoading = true;
-                    axios.get("{{ .settings.SITE_STATIC_URL }}/api/sessions/" + this.sessionID + "/download/check/?download_path=" + this.downloadPath)
+                    axios.get("{{ .settings.SITE_STATIC_URL }}/api/sessions/" + this.sessionID + "/download/check/?download_path=" + this.downloadPath + "&lang=" + this.lang)
                         .then((res) => {
                             if (res.data.code === 0) {
                                 window.location.href = "{{ .settings.SITE_STATIC_URL }}/api/sessions/" + this.sessionID + "/download/?download_path=" + this.downloadPath
@@ -206,14 +232,14 @@
                             }
                         })
                         .catch(() => {
-                            this.$bkMessage({ theme: 'error', message: "下载请求失败" })
+                            this.$bkMessage({ theme: 'error', message: this.$t('message.downloadFailed') })
                         })
                         .finally(() => {
                             this.downloadBtnLoading = false;
                         });
                 },
                 uploadSuccess() {
-                    this.$bkMessage({ theme: 'success', message: "上传成功" })
+                    this.$bkMessage({ theme: 'success', message: this.$t('message.uploadSuccess') })
                 },
                 uploadProgress() {
                     // this.$bkMessage({ theme: 'info', message: "上传中"})
@@ -222,7 +248,7 @@
                     // this.$bkMessage({ theme: 'success', message: "上传完成"})
                 },
                 uploadError() {
-                    this.$bkMessage({ theme: 'error', message: "上传失败" })
+                    this.$bkMessage({ theme: 'error', message: this.$t('message.uploadFailed') })
                 },
                 resetShell() {
                     url = new URL(window.location.href);
@@ -298,14 +324,14 @@
                                                 window.open(self.permRequestUrl);
                                             }
                                         }
-                                    }, '前往申请'),
+                                    }, self.$t('message.apply')),
                                 ]),
                                 delay: 0
                             })
                         } else {
                             self.$bkInfo({
                                 type: 'error',
-                                title: '请求失败',
+                                title: self.$t('message.requestFailed'),
                                 subTitle: result.responseJSON.message,
                                 showFooter: false,
                                 maskClose: false,
@@ -379,13 +405,13 @@
 
                     const h = self.$createElement
                     self.ws.onclose = function (e) {
-                        result = "连接已断开"
+                        let result = self.$t('message.connect')
                         if (e.reason != "") {
                             result = e.reason
                         }
                         self.$bkInfo({
                             type: 'warning',
-                            title: '连接已断开',
+                            title: self.$t('message.connect'),
                             showFooter: false,
                             maskClose: false,
                             subHeader: h('div', {}, [
@@ -397,14 +423,14 @@
                                 h('bk-button', {
                                     attrs: {
                                         theme: "primary",
-                                        title: "重新连接",
+                                        title: self.$t("message.reconnect"),
                                     },
                                     on: {
                                         click: () => {
                                             location.reload();
                                         }
                                     }
-                                }, '重新连接'),
+                                }, self.$t("message.reconnect")),
                             ]),
                             delay: 0
                         })
