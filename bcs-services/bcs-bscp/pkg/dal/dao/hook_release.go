@@ -37,14 +37,18 @@ type HookRelease interface {
 	List(kit *kit.Kit, opt *types.ListHookReleasesOption) ([]*table.HookRelease, int64, error)
 	// Delete one strategy instance.
 	Delete(kit *kit.Kit, g *table.HookRelease) error
-	// GetByPubState hook release by PubState
+	// GetByPubState hook release by State
 	GetByPubState(kit *kit.Kit, opt *types.GetByPubStateOption) (*table.HookRelease, error)
 	// DeleteByHookIDWithTx  delete release revision with transaction
 	DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.HookRelease) error
 	// PublishNumPlusOneWithTx PublishNum +1 revision with transaction
 	PublishNumPlusOneWithTx(kit *kit.Kit, tx *gen.Query) error
-	// UpdatePubStateWithTx update hookRelease PubState instance with transaction.
+	// UpdatePubStateWithTx update hookRelease State instance with transaction.
 	UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.HookRelease) error
+	// Update one HookRelease's info.
+	Update(kit *kit.Kit, g *table.HookRelease) error
+	// ListHookReleasesReferences 获取被引用脚本版本列表
+	ListHookReleasesReferences(kit *kit.Kit, opt *types.ListHookReleasesReferencesOption) ([]*types.ListHookReleasesReferences, int64, error)
 }
 
 var _ HookRelease = new(hookReleaseDao)
@@ -154,10 +158,14 @@ func (dao *hookReleaseDao) List(kit *kit.Kit,
 	m := dao.genQ.HookRelease
 	q := dao.genQ.HookRelease.WithContext(kit.Ctx).Where(
 		m.BizID.Eq(opt.BizID),
-		m.HookID.Eq(opt.HookID))
+		m.HookID.Eq(opt.HookID)).Order(m.ID.Desc())
 
 	if opt.SearchKey != "" {
 		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.SearchKey)))
+	}
+
+	if opt.State != "" {
+		q = q.Where(m.State.Eq(opt.State.String()))
 	}
 
 	if opt.Page.Start == 0 && opt.Page.Limit == 0 {
@@ -244,7 +252,7 @@ func (dao *hookReleaseDao) DeleteByHookIDWithTx(kit *kit.Kit, tx *gen.QueryTx, g
 	return nil
 }
 
-// GetByPubState hook release by PubState
+// GetByPubState hook release by State
 func (dao *hookReleaseDao) GetByPubState(kit *kit.Kit,
 	opt *types.GetByPubStateOption) (*table.HookRelease, error) {
 
@@ -259,7 +267,7 @@ func (dao *hookReleaseDao) GetByPubState(kit *kit.Kit,
 	release, err := q.Where(
 		m.BizID.Eq(opt.BizID),
 		m.HookID.Eq(opt.HookID),
-		m.PubState.Eq(opt.State.String()),
+		m.State.Eq(opt.State.String()),
 	).Take()
 	if err != nil {
 		return nil, err
@@ -277,7 +285,7 @@ func (dao *hookReleaseDao) PublishNumPlusOneWithTx(kit *kit.Kit, tx *gen.Query) 
 	return err
 }
 
-// UpdatePubStateWithTx update hookRelease PubState instance with transaction.
+// UpdatePubStateWithTx update hookRelease State instance with transaction.
 func (dao *hookReleaseDao) UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.HookRelease) error {
 
 	if err := g.ValidatePublish(); err != nil {
@@ -293,7 +301,7 @@ func (dao *hookReleaseDao) UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, g
 	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 
-	if _, e := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Select(m.PubState, m.Reviser).Updates(g); e != nil {
+	if _, e := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Select(m.State, m.Reviser).Updates(g); e != nil {
 		return e
 	}
 
@@ -302,4 +310,70 @@ func (dao *hookReleaseDao) UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, g
 	}
 
 	return nil
+}
+
+// Update one HookRelease's info.
+func (dao *hookReleaseDao) Update(kit *kit.Kit, g *table.HookRelease) error {
+	if err := g.ValidatePublish(); err != nil {
+		return err
+	}
+
+	q := dao.genQ.HookRelease.WithContext(kit.Ctx)
+	m := dao.genQ.HookRelease
+
+	oldOne, err := q.Where(m.HookID.Eq(g.Attachment.HookID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+
+	// 多个使用事务处理
+	updateTx := func(tx *gen.Query) error {
+		q = tx.HookRelease.WithContext(kit.Ctx)
+		if _, e := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Select(m.Name, m.Memo, m.Content, m.Reviser).Updates(g); e != nil {
+			return e
+		}
+
+		if e := ad.Do(tx); e != nil {
+			return e
+		}
+		return nil
+	}
+	if e := dao.genQ.Transaction(updateTx); e != nil {
+		return e
+	}
+
+	return nil
+}
+
+// ListHookReleasesReferences 获取被引用脚本版本列表
+func (dao *hookReleaseDao) ListHookReleasesReferences(kit *kit.Kit,
+	opt *types.ListHookReleasesReferencesOption) ([]*types.ListHookReleasesReferences, int64, error) {
+
+	release := dao.genQ.Release
+	hr := dao.genQ.HookRelease.As("hr")
+
+	r := release.As("r")
+	app := dao.genQ.App.As("app")
+
+	var results []*types.ListHookReleasesReferences
+
+	count, err := r.WithContext(kit.Ctx).
+		Select(r.ID.As("config_release_id"), r.Name.As("config_release_name"),
+			hr.HookID.As("hook_id"), app.ID.As("app_id"), hr.Name.As("hook_release_name"),
+			hr.ID.As("hook_release_id"), app.Name.As("app_name")).
+		LeftJoin(hr, r.PreHookReleaseID.EqCol(hr.ID)).
+		LeftJoin(app, r.AppID.EqCol(app.ID)).
+		Where(r.PreHookReleaseID.Eq(opt.HookReleasesID)).
+		Or(r.PostHookReleaseID.Eq(opt.HookReleasesID)).
+		Group(r.ID, r.Name, r.Deprecated, hr.Name, hr.Name, app.Name).
+		Order(r.ID.Desc()).
+		ScanByPage(&results, opt.Page.Offset(), opt.Page.LimitInt())
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return results, count, nil
+
 }

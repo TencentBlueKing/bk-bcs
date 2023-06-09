@@ -21,7 +21,7 @@ message HookReleaseSpec {
     string name         = 1;
     string content      = 2;
     uint32 publish_num  = 3;
-    string pub_state    = 4;
+    string state    = 4;
     string memo         = 5;
 }
 
@@ -31,3 +31,11 @@ message HookReleaseAttachment {
     uint32 hook_id = 2;
 }
 
+// HookReleaseAttachment source resource reference: pkg/types/hook_release.go
+message ListHookReleasesReferencesDetails {
+    string hook_release_name      = 1;
+    string app_name               = 2;
+    string config_release_name    = 3;
+    uint32 config_release_id      = 4;
+    string state                  = 5;
+}

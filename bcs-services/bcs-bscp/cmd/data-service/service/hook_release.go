@@ -13,8 +13,11 @@ limitations under the License.
 package service
 
 import (
+	"bscp.io/pkg/runtime/filter"
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -42,6 +45,7 @@ func (s *Service) CreateHookRelease(ctx context.Context,
 	}
 
 	spec, err := req.Spec.HookReleaseSpec()
+	spec.State = table.NotDeployedHookReleased
 	if err != nil {
 		logs.Errorf("get HookReleaseSpec spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -77,6 +81,7 @@ func (s *Service) ListHookReleases(ctx context.Context,
 		HookID:    req.HookId,
 		SearchKey: req.SearchKey,
 		Page:      page,
+		State:     table.HookReleaseStatus(req.State),
 	}
 	po := &types.PageOption{
 		EnableUnlimitedLimit: true,
@@ -147,25 +152,17 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 
 	kt := kit.FromGrpcContext(ctx)
 
-	hook, err := s.dao.Hook().GetByID(kt, req.BizId, req.HookId)
-	if err != nil {
-		logs.Errorf("get hook (%d) failed, err: %v, rid: %s", req.HookId, err, kt.Rid)
-		return nil, err
-	}
-
-	revision := &table.Revision{
-		Reviser: kt.User,
-	}
-
 	r := &table.HookRelease{
 		Attachment: &table.HookReleaseAttachment{
 			BizID:  req.BizId,
 			HookID: req.HookId,
 		},
 		Spec: &table.HookReleaseSpec{
-			PubState: table.FullReleased,
+			State: table.NotDeployedHookReleased,
 		},
-		Revision: revision,
+		Revision: &table.Revision{
+			Reviser: kt.User,
+		},
 	}
 
 	tx := s.dao.GenQuery().Begin()
@@ -174,13 +171,13 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 	opt := &types.GetByPubStateOption{
 		BizID:  req.BizId,
 		HookID: req.HookId,
-		State:  table.PartialReleased,
+		State:  table.DeployedHookReleased,
 	}
 	old, err := s.dao.HookRelease().GetByPubState(kt, opt)
 	if err == nil {
 		r.ID = old.ID
 		if e := s.dao.HookRelease().UpdatePubStateWithTx(kt, tx, r); e != nil {
-			logs.Errorf("update HookRelease PubState failed, err: %v, rid: %s", err, kt.Rid)
+			logs.Errorf("update HookRelease State failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback()
 			return nil, e
 		}
@@ -188,22 +185,11 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 
 	// 2. 未上线的版本上线
 	r.ID = req.Id
-	r.Spec.PubState = table.PartialReleased
+	r.Spec.State = table.DeployedHookReleased
 	if e := s.dao.HookRelease().UpdatePubStateWithTx(kt, tx, r); e != nil {
-		logs.Errorf("update HookRelease PubState failed, err: %v, rid: %s", e, kt.Rid)
+		logs.Errorf("update HookRelease State failed, err: %v, rid: %s", e, kt.Rid)
 		tx.Rollback()
 		return nil, err
-	}
-
-	// 3. 变更hook状态
-	if hook.Spec.PubState == table.NotReleased {
-		hook.Revision = revision
-		hook.Spec.PubState = table.PartialReleased
-		if e := s.dao.Hook().UpdatePubStateWithTx(kt, tx, hook); e != nil {
-			logs.Errorf("update HookRelease PubState failed, err: %v, rid: %s", e, kt.Rid)
-			tx.Rollback()
-			return nil, err
-		}
 	}
 
 	tx.Commit()
@@ -212,7 +198,7 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 
 }
 
-// GetHookReleaseByPubState get a HookRelease by PubState
+// GetHookReleaseByPubState get a HookRelease by State
 func (s *Service) GetHookReleaseByPubState(ctx context.Context,
 	req *pbds.GetByPubStateReq) (*hr.HookRelease, error) {
 
@@ -221,7 +207,7 @@ func (s *Service) GetHookReleaseByPubState(ctx context.Context,
 	opt := &types.GetByPubStateOption{
 		BizID:  req.BizId,
 		HookID: req.HookId,
-		State:  table.ReleaseStatus(req.PubState),
+		State:  table.HookReleaseStatus(req.State),
 	}
 
 	release, err := s.dao.HookRelease().GetByPubState(kt, opt)
@@ -233,4 +219,95 @@ func (s *Service) GetHookReleaseByPubState(ctx context.Context,
 	resp, _ := hr.PbHookRelease(release)
 
 	return resp, nil
+}
+
+func (s *Service) UpdateHookRelease(ctx context.Context, req *pbds.UpdateHookReleaseReq) (*pbbase.EmptyResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	hookRelease, err := s.dao.HookRelease().Get(kt, req.Attachment.BizId, req.Attachment.HookId, req.Id)
+	if err != nil {
+		logs.Errorf("update HookRelease spec from pb failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	if hookRelease.Spec.State != table.NotDeployedHookReleased {
+		logs.Errorf("update HookRelease spec from pb failed, err: HookRelease state is not not_released, rid: %s", kt.Rid)
+		return nil, errors.New("the HookRelease pubState is not not_released, and cannot be updated")
+	}
+
+	spec, err := req.Spec.HookReleaseSpec()
+	if err != nil {
+		logs.Errorf("update HookRelease spec from pb failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	now := time.Now()
+	hookRelease = &table.HookRelease{
+		ID:         req.Id,
+		Spec:       spec,
+		Attachment: req.Attachment.HookReleaseAttachment(),
+		Revision: &table.Revision{
+			Reviser:   kt.User,
+			UpdatedAt: now,
+		},
+	}
+	if e := s.dao.HookRelease().Update(kt, hookRelease); e != nil {
+		logs.Errorf("update hookRelease failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+func (s *Service) ListHookReleasesReferences(ctx context.Context,
+	req *pbds.ListHookReleasesReferencesReq) (*pbds.ListHookReleasesReferencesResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+
+	page := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
+	opt := &types.ListHookReleasesReferencesOption{
+		BizID:          req.BizId,
+		HookID:         req.HookId,
+		HookReleasesID: req.ReleasesId,
+		Page:           page,
+	}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
+	results, count, err := s.dao.HookRelease().ListHookReleasesReferences(kt, opt)
+	if err != nil {
+		logs.Errorf("list TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	gcrs, err := s.dao.ReleasedGroup().List(kt, &types.ListReleasedGroupsOption{
+		BizID: req.BizId,
+		Filter: &filter.Expression{
+			Op:    filter.And,
+			Rules: []filter.RuleFactory{},
+		},
+	})
+	if err != nil {
+		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	for _, result := range results {
+		status, _ := s.queryPublishStatus(gcrs, result.ConfigReleaseID)
+		result.PubSate = status
+	}
+
+	if err != nil {
+		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListHookReleasesReferencesResp{
+		Count:   uint32(count),
+		Details: pbhr.PbListHookReleasesReferencesDetails(results),
+	}
+
+	return resp, nil
+
 }

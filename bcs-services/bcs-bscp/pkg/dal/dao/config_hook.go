@@ -26,8 +26,6 @@ type ConfigHook interface {
 	Update(kit *kit.Kit, g *table.ConfigHook) error
 	// GetByAppID get configHook by name.
 	GetByAppID(kit *kit.Kit, bizID, appID uint32) (*table.ConfigHook, error)
-	// Enable update configHook enable
-	Enable(kit *kit.Kit, g *table.ConfigHook) error
 }
 
 var _ ConfigHook = new(configHookDao)
@@ -120,43 +118,5 @@ func (dao *configHookDao) GetByAppID(kit *kit.Kit, bizID, appID uint32) (*table.
 		return nil, err
 	}
 	return hook, nil
-
-}
-
-// Enable update configHook enable
-func (dao *configHookDao) Enable(kit *kit.Kit, g *table.ConfigHook) error {
-
-	if err := g.ValidateEnable(); err != nil {
-		return err
-	}
-
-	m := dao.genQ.ConfigHook
-	q := dao.genQ.ConfigHook.WithContext(kit.Ctx)
-
-	// 更新操作, 获取当前记录做审计
-	oldOne, err := q.Where(m.AppID.Eq(g.Attachment.AppID), m.BizID.Eq(g.Attachment.BizID)).Take()
-	if err != nil {
-		return err
-	}
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
-
-	// 多个使用事务处理
-	updateTx := func(tx *gen.Query) error {
-		q = tx.ConfigHook.WithContext(kit.Ctx)
-		if _, e := q.Where(m.AppID.Eq(g.Attachment.AppID), m.BizID.Eq(g.Attachment.BizID)).
-			Select(m.Enable, m.Reviser).Updates(g); e != nil {
-			return e
-		}
-
-		if e := ad.Do(tx); e != nil {
-			return e
-		}
-		return nil
-	}
-	if e := dao.genQ.Transaction(updateTx); e != nil {
-		return e
-	}
-
-	return nil
 
 }

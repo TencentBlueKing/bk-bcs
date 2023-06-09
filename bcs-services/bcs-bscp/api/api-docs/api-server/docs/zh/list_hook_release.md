@@ -14,6 +14,7 @@
 | start     | uint32   | 否   | 分页起始值               |
 | limit     | uint32   | 否   | 分页大小                 |
 | all       | bool     | 否   | 是否拉取全量数据         |
+| state     | string   | 否   | 版本状态查询             |
 
 #### 调用示例
 

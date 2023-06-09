@@ -14,7 +14,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -38,7 +40,6 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		logs.Errorf("get hook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	spec.PubState = table.NotReleased
 	res := &table.Revision{
 		Creator: kt.User,
 		Reviser: kt.User,
@@ -63,9 +64,9 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 	// 2. create hook release
 	release := &table.HookRelease{
 		Spec: &table.HookReleaseSpec{
-			Name:     req.Spec.ReleaseName,
-			Content:  req.Spec.Content,
-			PubState: table.NotReleased,
+			Name:    req.Spec.ReleaseName,
+			Content: req.Spec.Content,
+			State:   table.NotDeployedHookReleased,
 		},
 		Attachment: &table.HookReleaseAttachment{
 			BizID:  req.Attachment.BizId,
@@ -190,7 +191,7 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbds.ListHookTagReq) (*
 }
 
 // GetHook get a hook
-func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbhook.Hook, error) {
+func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbds.GetHookResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
 
@@ -200,7 +201,36 @@ func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbhook.Ho
 		return nil, err
 	}
 
-	resp, _ := pbhook.PbHook(h)
+	opt := &types.GetByPubStateOption{
+		BizID:  req.BizId,
+		HookID: req.HookId,
+		State:  table.ShutdownHookReleased,
+	}
+	var releaseID uint32
+	release, err := s.dao.HookRelease().GetByPubState(kt, opt)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get hook failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		releaseID = 0
+	} else {
+		releaseID = release.ID
+	}
+
+	resp := &pbds.GetHookResp{
+		Id: h.ID,
+		Spec: &pbds.GetHookInfoSpec{
+			Name:       h.Spec.Name,
+			Type:       string(h.Spec.Type),
+			Tag:        h.Spec.Tag,
+			Memo:       h.Spec.Memo,
+			PublishNum: h.Spec.PublishNum,
+			Releases:   &pbds.GetHookInfoSpec_Releases{NotReleaseId: releaseID},
+		},
+		Attachment: pbhook.PbHookAttachment(h.Attachment),
+		Revision:   pbbase.PbRevision(h.Revision),
+	}
 
 	return resp, nil
 }

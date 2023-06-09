@@ -16,6 +16,7 @@ import (
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	"bscp.io/pkg/runtime/selector"
+	"bscp.io/pkg/types"
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
@@ -46,7 +47,6 @@ func (m *HookReleaseSpec) HookReleaseSpec() (*table.HookReleaseSpec, error) {
 	return &table.HookReleaseSpec{
 		Name:       m.Name,
 		PublishNum: 0,
-		PubState:   table.NotReleased,
 		Content:    m.Content,
 		Memo:       m.Memo,
 	}, nil
@@ -62,7 +62,7 @@ func PbHookReleaseSpec(spec *table.HookReleaseSpec) (*HookReleaseSpec, error) {
 		Name:       spec.Name,
 		Content:    spec.Content,
 		PublishNum: spec.PublishNum,
-		PubState:   spec.PubState.String(),
+		State:      spec.State.String(),
 		Memo:       spec.Memo,
 	}, nil
 }
@@ -141,4 +141,33 @@ func UnmarshalSelector(pb *pbstruct.Struct) (*selector.Selector, error) {
 	}
 
 	return s, nil
+}
+
+// PbListHookReleasesReferencesDetails ..
+func PbListHookReleasesReferencesDetails(
+	resp []*types.ListHookReleasesReferences) []*ListHookReleasesReferencesDetails {
+	if resp == nil {
+		return nil
+	}
+
+	result := make([]*ListHookReleasesReferencesDetails, 0)
+	for _, one := range resp {
+		hook := PbListHookReleasesReferences(one)
+
+		result = append(result, hook)
+	}
+
+	return result
+
+}
+
+// PbListHookReleasesReferences ...
+func PbListHookReleasesReferences(h *types.ListHookReleasesReferences) *ListHookReleasesReferencesDetails {
+	return &ListHookReleasesReferencesDetails{
+		HookReleaseName:   h.HookReleaseName,
+		AppName:           h.AppName,
+		ConfigReleaseName: h.ConfigReleaseName,
+		ConfigReleaseId:   h.HookReleaseID,
+		State:             h.PubSate,
+	}
 }

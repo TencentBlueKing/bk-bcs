@@ -20,7 +20,6 @@ message ConfigHookSpec {
     uint32 pre_hook_release_id  = 2;
     uint32 post_hook_id         = 3;
     uint32 post_hook_release_id = 4;
-    bool enable                 = 5;
 }
 
 message ConfigHookAttachment {

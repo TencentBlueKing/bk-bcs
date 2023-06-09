@@ -79,6 +79,7 @@ func (s *Service) ListHookRelease(ctx context.Context, req *pbcs.ListHookRelease
 		SearchKey: req.SearchKey,
 		BizId:     grpcKit.BizID,
 		All:       req.All,
+		State:     req.State,
 	}
 
 	if !req.All {
@@ -98,6 +99,15 @@ func (s *Service) ListHookRelease(ctx context.Context, req *pbcs.ListHookRelease
 	if err != nil {
 		logs.Errorf("list HookReleases failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
+	}
+
+	for _, detail := range rp.Details {
+		content, e := base64.StdEncoding.DecodeString(detail.Spec.Content)
+		if e != nil {
+			logs.Errorf("base64 decode release content failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
+		}
+		detail.Spec.Content = string(content)
 	}
 
 	resp = &pbcs.ListHookReleaseResp{
@@ -193,4 +203,71 @@ func (s *Service) GetHookRelease(ctx context.Context, req *pbcs.GetHookReleaseRe
 	release.Spec.Content = string(content)
 
 	return release, nil
+}
+
+// UpdateHookRelease update a HookRelease
+func (s *Service) UpdateHookRelease(ctx context.Context, req *pbcs.UpdateHookReleaseReq) (*pbcs.UpdateHookReleaseResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.UpdateHookReleaseResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update,
+		ResourceID: req.ReleaseId}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.UpdateHookReleaseReq{
+		Id: req.ReleaseId,
+		Attachment: &pbhr.HookReleaseAttachment{
+			BizId:  req.BizId,
+			HookId: req.HookId,
+		},
+		Spec: &pbhr.HookReleaseSpec{
+			Name:    req.Name,
+			Content: req.Content,
+			Memo:    req.Memo,
+		},
+	}
+	if _, err := s.client.DS.UpdateHookRelease(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("update HookRelease failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return resp, nil
+
+}
+
+// ListHookReleasesReferences 查询hook版本被引用列表
+func (s *Service) ListHookReleasesReferences(ctx context.Context,
+	req *pbcs.ListHookReleasesReferencesReq) (*pbcs.ListHookReleasesReferencesResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListHookReleasesReferencesResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListHookReleasesReferencesReq{
+		BizId:      req.BizId,
+		HookId:     req.HookId,
+		ReleasesId: req.ReleaseId,
+		Limit:      req.Limit,
+		Start:      req.Start,
+	}
+
+	rp, err := s.client.DS.ListHookReleasesReferences(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list TemplateSpaces failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListHookReleasesReferencesResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+
+	return resp, nil
+
 }
