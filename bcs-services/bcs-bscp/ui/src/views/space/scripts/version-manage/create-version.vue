@@ -9,13 +9,13 @@
   const { spaceId } = storeToRefs(useGlobalStore())
 
   const props = withDefaults(defineProps<{
-    edit?: boolean; // 是否编辑当前未上线版本
+    creatable?: boolean; // 是否编辑当前未上线版本
     scriptId: number
   }>(), {
-    edit: false
+    creatable: false
   })
 
-  const emits = defineEmits(['create'])
+  const emits = defineEmits(['create', 'edit'])
 
   const popoverShow = ref(false)
   const dialogShow = ref(false)
@@ -34,16 +34,19 @@
     }
   }
 
-  const afterPopoverHidden = () => {
-    popoverShow.value = false
-  }
-
   const handleCreateClick = () => {
-    if (props.edit) {
-      popoverShow.value = true
+    if (!props.creatable) {
+      setTimeout(() => {
+        popoverShow.value = true
+      }, 100)
       return
     }
     dialogShow.value = true
+  }
+
+  const handleEditClick = () => {
+    emits('edit')
+    closePopover()
   }
 
   const handleLoadScript = async() => {
@@ -54,6 +57,11 @@
       emits('create', script.spec.content)
     }
   }
+
+  const closePopover = () => {
+    popoverShow.value = false
+  }
+
 </script>
 <template>
   <bk-popover
@@ -61,9 +69,9 @@
     theme="light"
     trigger="click"
     placement="bottom-start"
-    :disabled="!props.edit"
+    :disabled="props.creatable"
     :is-show="popoverShow"
-    @after-hidden="afterPopoverHidden">
+    @after-hidden="closePopover">
     <bk-button
       theme="primary"
       @click="handleCreateClick">
@@ -73,8 +81,8 @@
     <template #content>
       <h3 class="tips">当前已有「未上线」版本</h3>
       <div class="actions">
-        <bk-button theme="primary" size="small">前往编辑</bk-button>
-        <bk-button size="small" @click="popoverShow = false">取消</bk-button>
+        <bk-button theme="primary" size="small" @click="handleEditClick">前往编辑</bk-button>
+        <bk-button size="small" @click="closePopover">取消</bk-button>
       </div>
     </template>
   </bk-popover>

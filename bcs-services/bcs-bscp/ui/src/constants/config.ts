@@ -29,7 +29,13 @@ export const GET_UNNAMED_VERSION_DATE = () => {
     },
     spec: {
       name: '未命名版本',
-      memo: ''
+      memo: '',
+      hook: {
+        post_hook_id: 0,
+        post_hook_release_id: 0,
+        pre_hook_id: 0,
+        pre_hook_release_id: 0,
+      }
     },
     status: {
       publish_status: 'editing',

@@ -3,9 +3,9 @@
   import { IPagination } from '../../../../../types/index';
 
   const STATUS_MAP = {
-    'not_released': '未上线',
-    'partial_released': '已上线',
-    'full_released': '已下线',
+    'not_deployed': '未上线',
+    'deployed': '已上线',
+    'shutdown': '已下线',
   }
 
   const props = defineProps<{
@@ -35,8 +35,8 @@
     <bk-table-column label="状态">
       <template #default="{ row }">
         <span v-if="row.spec">
-          <span :class="['status-dot', row.spec.pub_state]"></span>
-          {{ STATUS_MAP[row.spec.pub_state as keyof typeof STATUS_MAP] }}
+          <span :class="['status-dot', row.spec.state]"></span>
+          {{ STATUS_MAP[row.spec.state as keyof typeof STATUS_MAP] }}
         </span>
       </template>
     </bk-table-column>
@@ -73,11 +73,11 @@
     border-radius: 50%;
     border: 1px solid #c4c6cc;
     background: #f0f1f5;
-    &.partial_released {
+    &.deployed {
       border: 1px solid #3fc06d;
       background: #e5f6ea;
     }
-    &.not_released {
+    &.not_deployed {
       border: 1px solid #ff9c01;
       background: #ffe8c3;
     }

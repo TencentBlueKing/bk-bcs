@@ -57,7 +57,7 @@ export interface IScriptVersion {
       name: string;
       content: string;
       publish_num: number;
-      pub_state : string;
+      state : string;
       memo: string;
   };
   attachment: {

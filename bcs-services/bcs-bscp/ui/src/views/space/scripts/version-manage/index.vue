@@ -13,6 +13,7 @@
   import VersionListSimpleTable from './version-list-simple-table.vue'
   import CreateVersion from './create-version.vue'
   import ScriptContent from './script-content.vue'
+  import ScriptVersionDiff from './script-version-diff.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const {versionListPageShouldOpenEdit } = storeToRefs(useScriptStore())
@@ -25,6 +26,8 @@
   const versionLoading = ref(true)
   const versionList = ref<IScriptVersion[]>([])
   const unPublishVersion = ref<IScriptVersion|null>(null) // 未发布版本
+  const showVersionDiff = ref(false)
+  const crtVersion = ref<IScriptVersion|null>(null)
   const versionEditData = ref({
     panelOpen: false,
     editable: true,
@@ -76,7 +79,7 @@
     versionList.value = res.details
     pagination.value.count = res.count
     if (pagination.value.current === 1) {
-      const version = versionList.value.find(item => item.spec.pub_state === 'not_released')
+      const version = versionList.value.find(item => item.spec.state === 'not_deployed')
       if (version) {
         unPublishVersion.value = version
       }
@@ -165,10 +168,10 @@
 
   // 宽窄表视图下选择脚本
   const handleSelectVersion = (version: IScriptVersion) => {
-    const { name, memo, content, pub_state } = version.spec
+    const { name, memo, content, state } = version.spec
     versionEditData.value = {
       panelOpen: true,
-      editable: pub_state === 'not_released',
+      editable: state === 'not_deployed',
       form: {
         id: version.id,
         name,
@@ -176,6 +179,18 @@
         content
       }
     }
+  }
+
+  // 新建、编辑脚本后回调
+  const handleVersionEditDataUpdate = (data: { id: number; name: string; memo: string; content: string; }) => {
+    versionEditData.value.form = { ...data }
+    refreshList()
+  }
+
+  // 版本对比
+  const handleVersionDiff = (version: IScriptVersion) => {
+    crtVersion.value = version
+    showVersionDiff.value = true
   }
 
   const handleSearchInputChange = (val: string) => {
@@ -201,14 +216,17 @@
 </script>
 <template>
   <DetailLayout
-    v-if="!detailLoading"
     :name="`版本管理 - ${scriptDetail.spec.name}`"
     :show-footer="false"
     @close="handleClose">
     <template #content>
       <div class="script-version-manage">
         <div class="operation-area">
-          <CreateVersion :script-id="scriptId" @create="handleCreateVersionClick" @edit="handleEditVersionClick" />
+          <CreateVersion
+            :script-id="scriptId"
+            :creatable="!unPublishVersion"
+            @create="handleCreateVersionClick"
+            @edit="handleEditVersionClick" />
           <bk-input
             v-model.trim="searchStr"
             class="search-input"
@@ -233,18 +251,18 @@
               @page-limit-change="handlePageLimitChange">
               <template #operations="{ data }">
                 <div v-if="data.spec" class="action-btns">
-                  <bk-button v-if="data.spec.pub_state === 'not_released'" text theme="primary" @click="handlePublishClick(data)">上线</bk-button>
-                  <bk-button v-if="data.spec.pub_state === 'not_released'" text theme="primary" @click="handleEditVersionClick">编辑</bk-button>
-                  <bk-button text theme="primary">版本对比</bk-button>
+                  <bk-button v-if="data.spec.state === 'not_deployed'" text theme="primary" @click="handlePublishClick(data)">上线</bk-button>
+                  <bk-button v-if="data.spec.state === 'not_deployed'" text theme="primary" @click="handleEditVersionClick">编辑</bk-button>
+                  <bk-button text theme="primary" @click="handleVersionDiff(data)">版本对比</bk-button>
                   <bk-button
-                    v-if="data.spec.pub_state !== 'not_released'"
+                    v-if="data.spec.state !== 'not_deployed'"
                     text
                     theme="primary"
                     :disabled="!!unPublishVersion"
                     @click="handleCreateVersionClick(data.spec.content)">
                     复制并新建
                   </bk-button>
-                  <bk-button v-if="data.spec.pub_state === 'not_released'" text theme="primary" @click="handleDelClick(data)">删除</bk-button>
+                  <bk-button v-if="data.spec.state === 'not_deployed'" text theme="primary" @click="handleDelClick(data)">删除</bk-button>
               </div>
               </template>
             </VersionListFullTable>
@@ -271,12 +289,19 @@
               :version-data=versionEditData.form
               :script-id="scriptId"
               :editable="versionEditData.editable"
+              @update="handleVersionEditDataUpdate"
               @close="versionEditData.panelOpen = false" />
           </div>
         </div>
       </div>
     </template>
   </DetailLayout>
+  <ScriptVersionDiff
+    v-if="showVersionDiff"
+    v-model:show="showVersionDiff"
+    :crt-version="<IScriptVersion>crtVersion"
+    :space-id="spaceId"
+    :script-id="scriptId" />
 </template>
 <style lang="scss" scoped>
   .script-version-manage {

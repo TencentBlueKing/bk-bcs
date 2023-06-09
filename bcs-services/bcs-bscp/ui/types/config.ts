@@ -14,6 +14,12 @@ export interface IConfigVersion {
   spec: {
     name: string;
     memo: string;
+    hook: {
+      post_hook_id: number;
+      post_hook_release_id: number;
+      pre_hook_id: number;
+      pre_hook_release_id: number;
+    }
   };
   status: {
     publish_status: string;

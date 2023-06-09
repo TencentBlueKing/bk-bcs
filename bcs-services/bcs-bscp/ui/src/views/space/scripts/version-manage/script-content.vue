@@ -18,7 +18,7 @@
     editable: true
   })
 
-  const emits = defineEmits(['close'])
+  const emits = defineEmits(['close', 'update'])
   
   const localVal = ref<IScriptVersionForm>({
     id: 0,
@@ -53,10 +53,12 @@
       pending.value = true
       if (localVal.value.id) {
         await updateScriptVersion(spaceId.value, props.scriptId, localVal.value)
+        emits('update', { ...localVal.value })
       } else {
         const { name, memo, content } = localVal.value
         const params = { name, memo, content }
-        await createScriptVersion(spaceId.value, props.scriptId, params)
+        const res = await createScriptVersion(spaceId.value, props.scriptId, params)
+        emits('update', { ...localVal.value, id: res.id })
       }
     } catch (e) {
       console.error(e)
