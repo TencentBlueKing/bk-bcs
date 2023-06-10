@@ -130,7 +130,7 @@ func (hpi *HostPortInjector) Init(configFilePath string) error {
 			return fmt.Errorf("pod cache synced failed")
 		}
 	}
-	blog.Infof("randhostport plugin wait k8s informer cache synced successfullly")
+	blog.Infof("randhostport plugin wait k8s informer cache synced successfully")
 	return nil
 }
 

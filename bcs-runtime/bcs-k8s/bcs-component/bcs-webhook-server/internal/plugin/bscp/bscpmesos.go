@@ -170,7 +170,8 @@ func (bi *MesosInject) retrieveEnvFromContainer(containers []commtypes.Container
 	if len(cfgPath) == 0 {
 		return nil, nil, fmt.Errorf("bscp SideCar environment BSCP_BCSSIDECAR_APPCFG_PATH is empty")
 	}
-	if modValue, ok := envMap[SideCarMod]; !ok {
+	modValue, ok := envMap[SideCarMod]
+	if !ok {
 		// for single app
 		if !ValidateEnvs(envMap) {
 			return nil, nil, fmt.Errorf("bscp SideCar envs are invalid")
@@ -178,11 +179,11 @@ func (bi *MesosInject) retrieveEnvFromContainer(containers []commtypes.Container
 	} else {
 		// for multiple app, inject BSCP_BCSSIDECAR_APPCFG_PATH into every app path
 		// if BSCP_BCSSideCar_APPINFO_MOD's value is invlaid, cannot do inject;
-		modValue, err := AddPathIntoAppInfoMode(modValue, cfgPath)
+		newModValue, err := AddPathIntoAppInfoMode(modValue, cfgPath)
 		if err != nil {
-			return nil, nil, fmt.Errorf("env %s:%s is invalid", SideCarMod, modValue)
+			return nil, nil, fmt.Errorf("env %s:%s is invalid", SideCarMod, newModValue)
 		}
-		envMap[SideCarMod] = modValue
+		envMap[SideCarMod] = newModValue
 	}
 	return retContainers, envMap, nil
 }

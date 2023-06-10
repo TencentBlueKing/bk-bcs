@@ -20,7 +20,7 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ControllerRef refference for egress controller
+// ControllerRef reference for egress controller
 type ControllerRef struct {
 	// +kubebuilder:default=bcs-system
 	Namespace string `json:"namespace"`
@@ -82,7 +82,7 @@ const (
 
 // BCSEgressStatus defines the observed state of BCSEgress
 type BCSEgressStatus struct {
-	// State refference EgressState above
+	// State reference EgressState above
 	// +kubebuilder:default=Pending
 	State       string `json:"state"`
 	HTTPActives uint   `json:"httpActives"`
