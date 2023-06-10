@@ -197,6 +197,7 @@ func (a authorizer) AppVerified(next http.Handler) http.Handler {
 			return
 		}
 
+		kt.AppID = uint32(appID)
 		kt.SpaceID = space.SpaceId
 		kt.SpaceTypeID = space.SpaceTypeId
 		ctx := kit.WithKit(r.Context(), kt)
@@ -278,7 +279,7 @@ func dummyVerified(next http.Handler) http.Handler {
 			Ctx:         r.Context(),
 			User:        "",
 			Rid:         components.RequestIDValue(r.Context()),
-			AppId:       "",
+			AppID:       0,
 			AppCode:     "dummyApp", // 测试 App
 			SpaceID:     "",
 			SpaceTypeID: "",

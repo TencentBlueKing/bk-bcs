@@ -96,8 +96,100 @@ func (s *bkrepo) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (s *bkrepo) ensureRepo(kt *kit.Kit) error {
+
+	repoName, err := repo.GenRepoName(kt.BizID)
+	if err != nil {
+		return err
+	}
+	if _, ok := s.repoCreated[repoName]; ok {
+		return nil
+	}
+	repoReq := &repo.CreateRepoReq{
+		ProjectID:     cc.ApiServer().Repo.BkRepo.Project,
+		Name:          repoName,
+		Type:          repo.RepositoryType,
+		Category:      repo.CategoryType,
+		Configuration: repo.Configuration{Type: repo.RepositoryCfgType},
+		Description:   fmt.Sprintf("bscp %d business repository", kt.BizID),
+	}
+	if err := s.cli.CreateRepo(kt.Ctx, repoReq); err != nil {
+		return err
+	}
+
+	s.repoCreated[repoName] = struct{}{}
+	return nil
+}
+
+// getNodeMetadata If the node already exists, this appID will be added to the metadata of the current node.
+// If not exist, will create new metadata with this bizID and appID.
+func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID uint32) (string, error) {
+	metadata, err := cli.QueryMetadata(kt.Ctx, opt)
+	if err != nil {
+		return "", err
+	}
+
+	if len(metadata) == 0 {
+		meta := repo.NodeMeta{
+			BizID: opt.BizID,
+			AppID: []uint32{appID},
+		}
+
+		return meta.String()
+	}
+
+	// validate already node metadata.
+	bizID, exist := metadata["biz_id"]
+	if !exist {
+		return "", errors.New("node metadata not has biz id")
+	}
+
+	if bizID != strconv.Itoa(int(opt.BizID)) {
+		return "", fmt.Errorf("node metadata %s biz id is different from the request %d biz id", bizID, opt.BizID)
+	}
+
+	appIDStr, exist := metadata["app_id"]
+	if !exist {
+		return "", errors.New("node metadata not has app id")
+	}
+
+	appIDs := make([]uint32, 0)
+	if err = json.Unmarshal([]byte(appIDStr), &appIDs); err != nil {
+		return "", fmt.Errorf("unmarshal node metadata appID failed, err: %v", err)
+	}
+
+	// judge current app if already upload this node.
+	var idExist bool
+	for index := range appIDs {
+		if appIDs[index] == appID {
+			idExist = true
+			break
+		}
+	}
+
+	if !idExist {
+		appIDs = append(appIDs, appID)
+	}
+
+	meta := &repo.NodeMeta{
+		BizID: opt.BizID,
+		AppID: appIDs,
+	}
+	return meta.String()
+}
+
 func (s *bkrepo) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
-	node, err := repo.GenNodePath(&repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID})
+	if err := s.ensureRepo(kt); err != nil {
+		return nil, errors.Wrap(err, "ensure repo failed")
+	}
+
+	opt := &repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID}
+	nodeMeta, err := getNodeMetadata(kt, s.cli, opt, kt.AppID)
+	if err != nil {
+		return nil, errors.Wrap(err, "get node metadata")
+	}
+
+	node, err := repo.GenNodePath(opt)
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +199,7 @@ func (s *bkrepo) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader) 
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set(repo.HeaderKeyMETA, nodeMeta)
 	req.Header.Set(repo.HeaderKeyOverwrite, "true")
 
 	resp, err := s.client.Do(req)
@@ -250,10 +343,11 @@ func NewBKRepoService(settings cc.Repository, authorizer auth.Authorizer) (FileA
 	host := settings.BkRepo.Endpoints[0]
 
 	p := &bkrepo{
-		cli:        s,
-		authorizer: authorizer,
-		host:       host,
-		project:    settings.BkRepo.Project,
+		cli:         s,
+		authorizer:  authorizer,
+		host:        host,
+		project:     settings.BkRepo.Project,
+		repoCreated: map[string]struct{}{},
 	}
 
 	transport := &bkrepoAuthTransport{
