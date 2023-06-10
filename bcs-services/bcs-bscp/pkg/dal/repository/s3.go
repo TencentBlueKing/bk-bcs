@@ -85,14 +85,25 @@ func (s *s3Client) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader
 	if err != nil {
 		return nil, err
 	}
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
+	io.Copy(io.Discard, resp.Body)
+
 	if resp.StatusCode != 200 {
 		return nil, errors.Errorf("upload status %d != 200", resp.StatusCode)
 	}
-	return &ObjectMetadata{}, nil
+
+	// cos return not have metadata
+	metadata := &ObjectMetadata{
+		Sha256: fileContentID,
+	}
+
+	return metadata, nil
 }
 
 func (s *s3Client) downloadFile(w http.ResponseWriter, r *http.Request) error {
