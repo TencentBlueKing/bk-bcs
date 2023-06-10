@@ -11,7 +11,7 @@
  *
  */
 
-package custom_scheduler
+package customscheduler
 
 import (
 	"fmt"

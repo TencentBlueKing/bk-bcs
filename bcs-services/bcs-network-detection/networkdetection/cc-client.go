@@ -11,7 +11,7 @@
  *
  */
 
-package network_detection
+package networkdetection
 
 import (
 	"encoding/json"

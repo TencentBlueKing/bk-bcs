@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	// DEFAULT_CHECK_INTERVAL TODO
+	// DEFAULT_CHECK_INTERVAL default check interval
 	DEFAULT_CHECK_INTERVAL = 60
 )
 

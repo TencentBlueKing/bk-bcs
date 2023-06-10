@@ -11,7 +11,7 @@
  *
  */
 
-package network_detection
+package networkdetection
 
 import (
 	"encoding/json"
@@ -69,7 +69,7 @@ type ContainerPlatform interface {
 	GetNodes(clusterid string) ([]*types.NodeInfo, error)
 	// CeateDeployment xxx
 	// deploy application
-	// deploy is defination json
+	// deploy is definition json
 	CeateDeployment(clusterid string, deploy []byte) error
 	// FetchDeployment xxx
 	// fetch deployed deployment info
@@ -311,7 +311,7 @@ func (n *NetworkDetection) regDiscover() {
 	host, err := os.Hostname()
 	if err != nil {
 		blog.Error("network-detection get hostname err: %s", err.Error())
-		host = "UNKOWN"
+		host = "UNKNOWN"
 	}
 	var regInfo commtypes.NetworkDetectionServInfo
 	regInfo.ServerInfo.IP = n.conf.Address

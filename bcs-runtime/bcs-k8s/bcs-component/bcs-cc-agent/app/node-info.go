@@ -27,34 +27,34 @@ import (
 )
 
 const (
-	// IdcId TODO
+	// IdcId idc id
 	IdcId = "bcs_idc_id"
-	// IdcName TODO
+	// IdcName idc name
 	IdcName = "bcs_idc_name"
-	// IdcUnitId TODO
+	// IdcUnitId idc unit id
 	IdcUnitId = "bcs_idc_unit_id"
-	// IdcUnitName TODO
+	// IdcUnitName idc unit name
 	IdcUnitName = "bcs_idc_unit_name"
-	// Rack TODO
+	// Rack rack
 	Rack = "bcs_rack"
-	// SvrTypeName TODO
+	// SvrTypeName server type name
 	SvrTypeName = "bcs_svr_type_name"
-	// CvmRegion TODO
+	// CvmRegion cvm region
 	CvmRegion = "bcs_cvm_region"
-	// CvmZone TODO
+	// CvmZone cvm zone
 	CvmZone = "bcs_cvm_zone"
 
-	// LabelOfIdcId TODO
+	// LabelOfIdcId label of idc id
 	LabelOfIdcId = "bkbcs.tencent.com/idc-id"
-	// LabelOfIdcName TODO
+	// LabelOfIdcName label of idc name
 	LabelOfIdcName = "bkbcs.tencent.com/idc-name"
-	// LabelOfIdcUnitId TODO
+	// LabelOfIdcUnitId label of idc unit id
 	LabelOfIdcUnitId = "bkbcs.tencent.com/idc-unit-id"
-	// LabelOfIdcUnitName TODO
+	// LabelOfIdcUnitName label of idc unit name
 	LabelOfIdcUnitName = "bkbcs.tencent.com/idc-unit-name"
-	// LabelOfRack TODO
+	// LabelOfRack label of rack
 	LabelOfRack = "bkbcs.tencent.com/rack"
-	// LabelOfSvrTypeName TODO
+	// LabelOfSvrTypeName label of server type name
 	LabelOfSvrTypeName = "bkbcs.tencent.com/svr-type-name"
 )
 

@@ -11,7 +11,7 @@
  *
  */
 
-package cpuset_device
+package cpusetdevice
 
 import (
 	"fmt"

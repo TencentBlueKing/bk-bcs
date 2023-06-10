@@ -11,7 +11,7 @@
  *
  */
 
-package cpuset_device
+package cpusetdevice
 
 // #cgo LDFLAGS: -lnuma
 // #include <numa.h>
