@@ -29,7 +29,7 @@
                     "name": "v2",
                     "content": "#!/bin/bash\n\nnow=$(date +'%Y-%m-%d %H:%M:%S')\necho \"hello, start at $now\"\n",
                     "publish_num": 21,
-                    "pub_state" : "not_released",
+                    "state" : "deployed",
                     "momo": "v2 memo",
                 },
                 "attachment": {

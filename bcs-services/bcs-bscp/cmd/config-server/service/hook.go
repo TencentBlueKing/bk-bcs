@@ -21,6 +21,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbhook "bscp.io/pkg/protocol/core/hook"
 	pbds "bscp.io/pkg/protocol/data-service"
 )
@@ -160,10 +161,10 @@ func (s *Service) ListHookTags(ctx context.Context, req *pbcs.ListHookTagsReq) (
 }
 
 // GetHook get a hook
-func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbhook.Hook, error) {
+func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetHookResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbhook.Hook)
+	resp := new(pbcs.GetHookResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
@@ -175,11 +176,30 @@ func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbhook.Ho
 		HookId: req.HookId,
 	}
 
-	h, err := s.client.DS.GetHook(grpcKit.RpcCtx(), r)
+	hook, err := s.client.DS.GetHook(grpcKit.RpcCtx(), r)
 	if err != nil {
 		logs.Errorf("get hook failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return h, nil
+	resp = &pbcs.GetHookResp{
+		Id: hook.Id,
+		Spec: &pbcs.GetHookInfoSpec{
+			Name:       hook.Spec.Name,
+			Type:       hook.Spec.Type,
+			Tag:        hook.Spec.Tag,
+			Memo:       hook.Spec.Memo,
+			PublishNum: hook.Spec.PublishNum,
+			Releases:   &pbcs.GetHookInfoSpec_Releases{NotReleaseId: hook.Spec.Releases.NotReleaseId},
+		},
+		Attachment: &pbhook.HookAttachment{BizId: hook.Attachment.BizId},
+		Revision: &pbbase.Revision{
+			Creator:  hook.Revision.CreateAt,
+			Reviser:  hook.Revision.Reviser,
+			CreateAt: hook.Revision.Creator,
+			UpdateAt: hook.Revision.UpdateAt,
+		},
+	}
+
+	return resp, nil
 }

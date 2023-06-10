@@ -48,7 +48,6 @@ service Data {
     rpc CreateConfigHook(CreateConfigHookReq) returns (CreateResp) {}
     rpc UpdateConfigHook(UpdateConfigHookReq) returns (pbbase.EmptyResp) {}
     rpc GetConfigHook(GetConfigHookReq) returns (pbch.ConfigHook) {}
-    rpc EnableConfigHook(EnableConfigHookReq) returns (pbbase.EmptyResp) {}
 
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
@@ -85,7 +84,7 @@ service Data {
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
     rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
-    rpc GetHook(GetHookReq) returns (pbhook.Hook) {}
+    rpc GetHook(GetHookReq) returns (GetHookResp) {}
 
     // hook release interface.
     rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateResp) {}
@@ -94,6 +93,8 @@ service Data {
     rpc DeleteHookRelease(DeleteHookReleaseReq) returns (pbbase.EmptyResp){}
     rpc PublishHookRelease(PublishHookReleaseReq) returns (pbbase.EmptyResp){}
     rpc GetHookReleaseByPubState(GetByPubStateReq) returns (pbhr.HookRelease){}
+    rpc UpdateHookRelease(UpdateHookReleaseReq) returns (pbbase.EmptyResp) {}
+    rpc ListHookReleasesReferences(ListHookReleasesReferencesReq) returns (ListHookReleasesReferencesResp) {}
 
     // template-space related interface.
     rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CreateResp) {}
@@ -221,12 +222,6 @@ message UpdateConfigHookReq {
 message GetConfigHookReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
-}
-
-message EnableConfigHookReq {
-    uint32 app_id = 1;
-    uint32 biz_id = 2;
-    bool   enable = 3;
 }
 
 message CreateAppReq {
@@ -494,6 +489,25 @@ message GetHookReq {
     uint32 hook_id = 2;
 }
 
+message GetHookResp {
+    uint32 id = 1;
+    GetHookInfoSpec spec = 2;
+    pbhook.HookAttachment attachment = 3;
+    pbbase.Revision revision = 4;
+}
+
+message GetHookInfoSpec {
+    string name         = 1;
+    string type         = 3;
+    string tag          = 4;
+    string memo         = 5;
+    uint32 publish_num  = 7;
+    message Releases  {
+        uint32 not_release_id = 1;
+    }
+    Releases releases  = 8;
+}
+
 message ListHooksReq {
     uint32 biz_id  = 1;
     string name    = 2;
@@ -530,6 +544,7 @@ message ListHookReleasesReq {
     uint32 start        = 4;
     uint32 limit        = 5;
     bool   all          = 6;
+    string state        = 7;
 }
 
 message ListHookReleasesResp {
@@ -558,7 +573,26 @@ message PublishHookReleaseReq {
 message GetByPubStateReq {
     uint32 biz_id       = 1;
     uint32 hook_id      = 2;
-    string pub_state     = 3;
+    string state        = 3;
+}
+
+message UpdateHookReleaseReq {
+    uint32                       id         = 1;
+    pbhr.HookReleaseAttachment   attachment = 2;
+    pbhr.HookReleaseSpec         spec       = 3;
+}
+
+message ListHookReleasesReferencesReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 releases_id  = 3;
+    uint32 start        = 4;
+    uint32 limit        = 5;
+}
+
+message ListHookReleasesReferencesResp {
+    uint32   count                    = 1;
+    repeated pbhr.ListHookReleasesReferencesDetails details = 2;
 }
 
 message CreateTemplateSpaceReq {

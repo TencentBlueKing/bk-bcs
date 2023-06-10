@@ -53,7 +53,6 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbcs.UpdateConfigHo
 			Spec: &pbch.ConfigHookSpec{
 				PreHookId:  req.PreHookId,
 				PostHookId: req.PostHookId,
-				Enable:     true,
 			},
 		}
 
@@ -107,26 +106,4 @@ func (s *Service) GetConfigHook(ctx context.Context, req *pbcs.GetConfigHookReq)
 
 	return &pbcs.GetConfigHookResp{ConfigHook: hook}, nil
 
-}
-
-func (s *Service) EnableConfigHook(ctx context.Context, req *pbcs.EnableConfigHookReq) (*pbcs.EnableConfigHookResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.EnableConfigHookResp)
-
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
-		return nil, err
-	}
-
-	r := &pbds.EnableConfigHookReq{
-		AppId:  req.AppId,
-		BizId:  req.BizId,
-		Enable: req.Enable,
-	}
-	if _, err := s.client.DS.EnableConfigHook(grpcKit.RpcCtx(), r); err != nil {
-		logs.Errorf("enable ConfigHook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	return new(pbcs.EnableConfigHookResp), nil
 }

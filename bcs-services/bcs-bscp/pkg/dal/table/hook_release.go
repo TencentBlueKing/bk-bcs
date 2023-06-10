@@ -14,6 +14,7 @@ package table
 
 import (
 	"errors"
+	"fmt"
 
 	"bscp.io/pkg/criteria/validator"
 )
@@ -30,11 +31,11 @@ type HookRelease struct {
 
 // HookReleaseSpec defines all the specifics for hook set by user.
 type HookReleaseSpec struct {
-	Name       string        `json:"name" gorm:"column:name"`
-	PublishNum uint32        `json:"publish_num" gorm:"column:publish_num"`
-	PubState   ReleaseStatus `json:"pub_state" gorm:"column:pub_state"`
-	Content    string        `json:"content" gorm:"column:content"`
-	Memo       string        `json:"memo" gorm:"column:memo"`
+	Name       string            `json:"name" gorm:"column:name"`
+	PublishNum uint32            `json:"publish_num" gorm:"column:publish_num"`
+	State      HookReleaseStatus `json:"state" gorm:"column:state"`
+	Content    string            `json:"content" gorm:"column:content"`
+	Memo       string            `json:"memo" gorm:"column:memo"`
 }
 
 // HookReleaseAttachment defines the hook attachments.
@@ -165,6 +166,38 @@ func (r HookRelease) ValidatePublish() error {
 
 	if r.Attachment.HookID <= 0 {
 		return errors.New("hook id should be set")
+	}
+
+	return nil
+}
+
+const (
+	// NotDeployedHookReleased ....
+	NotDeployedHookReleased HookReleaseStatus = "not_deployed"
+
+	// DeployedHookReleased ...
+	DeployedHookReleased HookReleaseStatus = "deployed"
+
+	// ShutdownHookReleased ...
+	ShutdownHookReleased HookReleaseStatus = "shutdown"
+)
+
+// HookReleaseStatus defines hook release status.
+type HookReleaseStatus string
+
+// String returns hook release status string.
+func (s HookReleaseStatus) String() string {
+	return string(s)
+}
+
+// Validate strategy set type.
+func (s HookReleaseStatus) Validate() error {
+	switch s {
+	case ShutdownHookReleased:
+	case NotDeployedHookReleased:
+	case DeployedHookReleased:
+	default:
+		return fmt.Errorf("unsupported hook release released status: %s", s)
 	}
 
 	return nil

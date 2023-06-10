@@ -19,7 +19,6 @@
 {
   "pre_hook_id": 79,
   "post_hook_id": 79,
-  "enable": true
 }
 ```
 

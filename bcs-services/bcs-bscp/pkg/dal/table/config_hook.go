@@ -51,7 +51,6 @@ type ConfigHookSpec struct {
 	PreHookReleaseID  uint32 `json:"pre_hook_release_id" gorm:"pre_hook_release_id"`
 	PostHookID        uint32 `json:"post_hook_id" gorm:"post_hook_id"`
 	PostHookReleaseID uint32 `json:"post_hook_release_id" gorm:"post_hook_release_id"`
-	Enable            bool   `json:"enable" gorm:"enable"`
 }
 
 // ConfigHookAttachment defines the ConfigHook attachments.

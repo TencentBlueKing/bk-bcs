@@ -36,8 +36,6 @@ type Hook interface {
 	GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error)
 	// GetByName get hook by name
 	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Hook, error)
-	// UpdatePubStateWithTx create one hook instance with transaction.
-	UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, hook *table.Hook) error
 }
 
 var _ Hook = new(hookDao)
@@ -85,7 +83,7 @@ func (dao *hookDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) (
 func (dao *hookDao) List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hook, int64, error) {
 
 	m := dao.genQ.Hook
-	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID))
+	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(m.BizID.Eq(opt.BizID)).Order(m.ID.Desc())
 
 	if opt.Name != "" {
 		q = q.Where(m.Name.Like(fmt.Sprintf("%%%s%%", opt.Name)))
@@ -189,31 +187,4 @@ func (dao *hookDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.H
 	}
 
 	return hook, nil
-}
-
-func (dao *hookDao) UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error {
-
-	if err := g.ValidateUpdate(); err != nil {
-		return err
-	}
-
-	m := dao.genQ.Hook
-	q := dao.genQ.Hook.WithContext(kit.Ctx)
-
-	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
-	if err != nil {
-		return err
-	}
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
-
-	if _, e := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Select(m.PubState, m.Reviser).Updates(g); e != nil {
-		return e
-	}
-
-	if e := ad.Do(tx.Query); e != nil {
-		return e
-	}
-
-	return nil
-
 }

@@ -1191,6 +1191,30 @@ paths:
           userVerifiedRequired: true
         disabledStages: [ ]
 
+    put:
+      operationId: update_hook_release
+      description: 更新hook版本
+      tags:
+        - hook脚本管理
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/{release_id}
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+
     delete:
       operationId: delete_hook_release
       description: 删除hook版本
@@ -1568,31 +1592,6 @@ paths:
           type: HTTP
           method: put
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks
-          matchSubpath: false
-          timeout: 0
-          upstreams: { }
-          transformHeaders: { }
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: [ ]
-
-  /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks/enable:
-    put:
-      operationId: update_config_hook
-      description: 是否启用配置脚本
-      tags:
-        - 配置脚本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks/enable
           matchSubpath: false
           timeout: 0
           upstreams: { }

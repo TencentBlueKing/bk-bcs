@@ -37,18 +37,33 @@ var AppColumnDescriptor = mergeColumnDescriptors("",
 type App struct {
 	// ID is an auto-increased value, which is an application's
 	// unique identity.
-	ID uint32 `db:"id" json:"id"`
+	ID uint32 `db:"id" json:"id" gorm:"primaryKey"`
 	// BizID is the business is which this app belongs to
-	BizID uint32 `db:"biz_id" json:"biz_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id" gorm:"primaryKey"`
 	// Spec is a collection of app's specifics defined with user
-	Spec *AppSpec `db:"spec" json:"spec"`
+	Spec *AppSpec `db:"spec" json:"spec" gorm:"embedded"`
 	// Revision record this app's revision information
-	Revision *Revision `db:"revision" json:"revision"`
+	Revision *Revision `db:"revision" gorm:"embedded"`
 }
 
-// TableName is the app's database table name.
-func (a App) TableName() Name {
-	return AppTable
+// TableName is the Hook's database table name.
+func (h *App) TableName() string {
+	return "applications"
+}
+
+// AppID HookRes interface
+func (h *App) AppID() uint32 {
+	return h.ID
+}
+
+// ResID HookRes interface
+func (h *App) ResID() uint32 {
+	return h.ID
+}
+
+// ResType HookRes interface
+func (h *App) ResType() string {
+	return "application"
 }
 
 // ValidateCreate validate app's info when created.
@@ -141,12 +156,12 @@ type AppSpec struct {
 	Name string `db:"name" json:"name"`
 	// ConfigType defines which type is this configuration, different type has the
 	// different ways to be consumed.
-	ConfigType ConfigType `db:"config_type" json:"config_type"`
+	ConfigType ConfigType `db:"config_type" json:"config_type" gorm:"embedded"`
 	// Mode defines what mode of this app works at.
 	// Mode can not be updated once it is created.
 	Mode   AppMode `db:"mode" json:"mode"`
 	Memo   string  `db:"memo" json:"memo"`
-	Reload *Reload `db:"reload" json:"reload"`
+	Reload *Reload `db:"reload" json:"reload" gorm:"embedded"`
 }
 
 const (
@@ -270,7 +285,7 @@ var ReloadColumnDescriptor = mergeColumnDescriptors("",
 // Reload is used to control how bscp sidecar notifies applications to go to reload config files.
 type Reload struct {
 	ReloadType     AppReloadType   `db:"reload_type" json:"reload_type"`
-	FileReloadSpec *FileReloadSpec `db:"file_reload_spec" json:"file_reload_spec"`
+	FileReloadSpec *FileReloadSpec `db:"file_reload_spec" json:"file_reload_spec" gorm:"embedded"`
 }
 
 // IsEmpty reload.

@@ -35,8 +35,8 @@ func (m *ReleaseSpec) ReleaseSpec() *table.ReleaseSpec {
 // ReleaseSpecHook convert pb ReleaseSpecHook to table ReleaseSpecHook
 func (h *Hook) ReleaseSpecHook() *table.ReleaseHook {
 
-	if h != nil {
-		return nil
+	if h == nil {
+		return &table.ReleaseHook{}
 	}
 
 	return &table.ReleaseHook{

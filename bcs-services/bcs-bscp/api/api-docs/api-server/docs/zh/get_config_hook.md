@@ -17,12 +17,27 @@
 
 ```json
 {
-  "data":{ 
-    "pre_hook_id": 1,
-  	"pre_hook_release_id": 2,
-  	"post_hook_id": 3,
-  	"post_hook_release_id": 4
-  } 
+    "data": {
+        "config_hook": {
+            "id": 1,
+            "spec": {
+                "pre_hook_id": 1,
+                "pre_hook_release_id": 1,
+                "post_hook_id": 0,
+                "post_hook_release_id": 0
+            },
+            "attachment": {
+                "biz_id": 5,
+                "app_id": 34
+            },
+            "revision": {
+                "creator": "joelei",
+                "reviser": "joelei",
+                "create_at": "2023-06-09 16:37:43",
+                "update_at": "2023-06-09 16:55:27"
+            }
+        }
+    }
 }
 ```
 

@@ -24,7 +24,10 @@
             "type": "shell",
             "tag": "自动化脚本",
             "memo": "from datetime import datetime\nprint(\"hello, end at\", datetime.now())\n",
-          	"publish_num": 21
+          	"publish_num": 21,
+          	"releases": {
+            	    "not_release_id": 0
+            }
         },
         "attachment": {
             "biz_id": 5

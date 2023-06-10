@@ -11,6 +11,7 @@ all:
 	@cd strategy-set && make
 	@cd event && make
 	@cd hook && make
+	@cd hook-release && make
 	@cd group && make
 	@cd released-group && make
 	@cd credential && make
@@ -31,6 +32,7 @@ clean:
 	@cd strategy-set && make clean
 	@cd event && make clean
 	@cd hook && make
+	@cd hook-release && make clean
 	@cd group && make clean
 	@cd released-group && make clean
 	@cd credential && make clean

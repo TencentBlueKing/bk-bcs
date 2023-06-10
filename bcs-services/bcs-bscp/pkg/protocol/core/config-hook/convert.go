@@ -46,7 +46,6 @@ func (m *ConfigHookSpec) ConfigHookSpec() (*table.ConfigHookSpec, error) {
 		PreHookReleaseID:  m.PreHookReleaseId,
 		PostHookID:        m.PostHookId,
 		PostHookReleaseID: m.PostHookReleaseId,
-		Enable:            m.Enable,
 	}, nil
 }
 
@@ -86,7 +85,6 @@ func PbConfigHookSpec(spec *table.ConfigHookSpec) *ConfigHookSpec {
 		PreHookReleaseId:  spec.PreHookReleaseID,
 		PostHookId:        spec.PostHookID,
 		PostHookReleaseId: spec.PostHookReleaseID,
-		Enable:            spec.Enable,
 	}
 
 }

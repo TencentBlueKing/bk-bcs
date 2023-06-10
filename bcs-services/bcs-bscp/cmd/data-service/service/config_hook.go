@@ -40,12 +40,12 @@ func (s *Service) CreateConfigHook(ctx context.Context, req *pbds.CreateConfigHo
 		opt := &types.GetByPubStateOption{
 			BizID:  req.Attachment.BizId,
 			HookID: req.Spec.PreHookId,
-			State:  table.PartialReleased,
+			State:  table.DeployedHookReleased,
 		}
 		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
 		if err != nil {
-			logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
+			logs.Errorf("no released releases of the pre-hook, err: %v, rid: %s", err, kt.Rid)
+			return nil, errors.New("no released releases of the pre-hook")
 		}
 		req.Spec.PreHookReleaseId = hr.ID
 	}
@@ -54,12 +54,12 @@ func (s *Service) CreateConfigHook(ctx context.Context, req *pbds.CreateConfigHo
 		opt := &types.GetByPubStateOption{
 			BizID:  req.Attachment.BizId,
 			HookID: req.Spec.PostHookId,
-			State:  table.PartialReleased,
+			State:  table.DeployedHookReleased,
 		}
 		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
 		if err != nil {
-			logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
+			logs.Errorf("no released releases of the post-hook, err: %v, rid: %s", err, kt.Rid)
+			return nil, errors.New("no released releases of the post-hook")
 		}
 		req.Spec.PostHookReleaseId = hr.ID
 	}
@@ -97,12 +97,12 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		opt := &types.GetByPubStateOption{
 			BizID:  req.Attachment.BizId,
 			HookID: req.Spec.PreHookId,
-			State:  table.PartialReleased,
+			State:  table.DeployedHookReleased,
 		}
 		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
 		if err != nil {
-			logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
+			logs.Errorf("no released releases of the pre-hook, err: %v, rid: %s", err, kt.Rid)
+			return nil, errors.New("no released releases of the pre-hook")
 		}
 		req.Spec.PreHookReleaseId = hr.ID
 	} else {
@@ -114,12 +114,12 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbds.UpdateConfigHo
 		opt := &types.GetByPubStateOption{
 			BizID:  req.Attachment.BizId,
 			HookID: req.Spec.PostHookId,
-			State:  table.PartialReleased,
+			State:  table.DeployedHookReleased,
 		}
 		hr, err := s.dao.HookRelease().GetByPubState(kt, opt)
 		if err != nil {
-			logs.Errorf("get configHook spec from pb failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
+			logs.Errorf("no released releases of the post-hook, err: %v, rid: %s", err, kt.Rid)
+			return nil, errors.New("no released releases of the post-hook")
 		}
 		req.Spec.PostHookReleaseId = hr.ID
 	} else {
@@ -163,31 +163,6 @@ func (s *Service) GetConfigHook(ctx context.Context, req *pbds.GetConfigHookReq)
 	}
 
 	return pbch.PbConfigHook(hook), err
-
-}
-
-func (s *Service) EnableConfigHook(ctx context.Context, req *pbds.EnableConfigHookReq) (*pbbase.EmptyResp, error) {
-
-	kt := kit.FromGrpcContext(ctx)
-
-	g := &table.ConfigHook{
-		Spec: &table.ConfigHookSpec{
-			Enable: req.Enable,
-		},
-		Attachment: &table.ConfigHookAttachment{
-			BizID: req.BizId,
-			AppID: req.AppId,
-		},
-		Revision: &table.Revision{
-			Reviser: kt.User,
-		},
-	}
-
-	if err := s.dao.ConfigHook().Enable(kt, g); err != nil {
-		return nil, err
-	}
-
-	return new(pbbase.EmptyResp), nil
 
 }
 

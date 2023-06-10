@@ -34,6 +34,7 @@ func main() {
 		table.HookRelease{},
 		table.Release{},
 		table.ConfigHook{},
+		table.App{},
 	)
 
 	g.Execute()
