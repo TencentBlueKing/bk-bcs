@@ -27,6 +27,7 @@ type ServiceFilter struct {
 
 const serviceNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t ServiceFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, serviceNestedTimeLayout)
 }

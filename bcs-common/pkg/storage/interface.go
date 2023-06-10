@@ -15,6 +15,7 @@ package storage
 
 import (
 	"errors"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 
@@ -68,6 +69,6 @@ type Storage interface {
 	// param ignoreNotFound: no error returns when setting true even nil object
 	// param selector: filter for origin data in storage, nil means no filter
 	List(ctx context.Context, key string, selector Selector) (objs []meta.Object, err error)
-	// Close storage conenction, clean resource
+	// Close storage connection, clean resource
 	Close()
 }

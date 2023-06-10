@@ -93,6 +93,7 @@ func reportToBke(kubeClient *kubernetes.Clientset, cfg *rest.Config) {
 		var request *gorequest.SuperAgent
 		insecureSkipVerify := viper.GetBool("agent.insecureSkipVerify")
 		if insecureSkipVerify {
+			// NOCC:gas/tls(设计如此:此处需要跳过验证)
 			request = gorequest.New().TLSClientConfig(&tls.Config{InsecureSkipVerify: insecureSkipVerify})
 		} else {
 			var tlsConfig *tls.Config
@@ -265,6 +266,7 @@ func pingEndpoint(host string) error {
 
 func dialTLS(host string) error {
 	conf := &tls.Config{
+		// NOCC:gas/tls(设计如此:此处需要跳过验证)
 		InsecureSkipVerify: true,
 	}
 	conn, err := tls.Dial("tcp", host, conf)

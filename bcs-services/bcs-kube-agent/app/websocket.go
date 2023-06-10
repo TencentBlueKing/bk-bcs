@@ -36,6 +36,7 @@ const (
 	// Module model field for http header
 	Module = "BCS-API-Tunnel-Module"
 	// RegisterToken register token field for http header
+	// NOCC:gas/crypto(工具误报:此处只是token的命名)
 	RegisterToken = "BCS-API-Tunnel-Token"
 	// Params parameters field for http header
 	Params = "BCS-API-Tunnel-Params"
@@ -103,6 +104,7 @@ func buildWebsocketToBke(cfg *rest.Config) error {
 	var tlsConfig *tls.Config
 	insecureSkipVerify := viper.GetBool("agent.insecureSkipVerify")
 	if insecureSkipVerify {
+		// NOCC:gas/tls(设计如此:此处需要跳过验证)
 		tlsConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify}
 	} else {
 		caCrtFile := os.Getenv("CLIENT_CA")

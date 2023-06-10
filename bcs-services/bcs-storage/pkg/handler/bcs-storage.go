@@ -38,16 +38,22 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// Storage storage struct, which include operations of alarm,
+// cluster config, dynamic, dynamic-query, dynamic-watch, events,
+// host config, metric, metric watch, watch k8s.
+// operations include get, put, list, watch, delete,
+// batch get, batch put, batch list...
 type Storage struct {
 }
 
+// New new storage, return pointer of storage
 func New() *Storage {
 	return new(Storage)
 }
 
 // **** Alarm(告警) ****
 
-// PostAlarm 创建告警
+// PostAlarm 创建告警 the function of create alarm
 func (s *Storage) PostAlarm(ctx context.Context, req *storage.PostAlarmRequest, rsp *storage.PostAlarmResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -72,7 +78,7 @@ func (s *Storage) PostAlarm(ctx context.Context, req *storage.PostAlarmRequest, 
 	return nil
 }
 
-// ListAlarm 查询告警
+// ListAlarm 查询告警 list all alarms
 func (s *Storage) ListAlarm(ctx context.Context, req *storage.ListAlarmRequest, rsp *storage.ListAlarmResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -108,7 +114,7 @@ func (s *Storage) ListAlarm(ctx context.Context, req *storage.ListAlarmRequest, 
 
 // ****  Cluster Config(集群配置) ****
 
-// GetClusterConfig 获取集群配置
+// GetClusterConfig 获取集群配置 get config of cluster
 func (s *Storage) GetClusterConfig(ctx context.Context, req *storage.GetClusterConfigRequest,
 	rsp *storage.GetClusterConfigResponse) error {
 	if err := req.Validate(); err != nil {
@@ -142,7 +148,7 @@ func (s *Storage) GetClusterConfig(ctx context.Context, req *storage.GetClusterC
 	return nil
 }
 
-// PutClusterConfig 保存集群配置
+// PutClusterConfig 保存集群配置 put config of cluster
 func (s *Storage) PutClusterConfig(ctx context.Context, req *storage.PutClusterConfigRequest,
 	rsp *storage.PutClusterConfigResponse) error {
 	if err := req.Validate(); err != nil {
@@ -157,7 +163,7 @@ func (s *Storage) PutClusterConfig(ctx context.Context, req *storage.PutClusterC
 	return nil
 }
 
-// GetServiceConfig 获取集群配置
+// GetServiceConfig 获取集群配置 get config of service
 func (s *Storage) GetServiceConfig(ctx context.Context, req *storage.GetServiceConfigRequest,
 	rsp *storage.GetServiceConfigResponse) error {
 	if (req.ClusterId == "" && req.ClusterIdNot == "") || req.Service == "" {
@@ -192,7 +198,7 @@ func (s *Storage) GetServiceConfig(ctx context.Context, req *storage.GetServiceC
 	return nil
 }
 
-// GetStableVersion 获取稳定版本
+// GetStableVersion 获取稳定版本 get stable version
 func (s *Storage) GetStableVersion(ctx context.Context, req *storage.GetStableVersionRequest,
 	rsp *storage.GetStableVersionResponse) error {
 	if err := req.Validate(); err != nil {
@@ -220,7 +226,7 @@ func (s *Storage) GetStableVersion(ctx context.Context, req *storage.GetStableVe
 	return nil
 }
 
-// PutStableVersion 创建稳定版本
+// PutStableVersion 创建稳定版本 create stable version
 func (s *Storage) PutStableVersion(ctx context.Context, req *storage.PutStableVersionRequest,
 	rsp *storage.PutStableVersionResponse) error {
 	if err := req.Validate(); err != nil {
@@ -249,7 +255,7 @@ func (s *Storage) PutStableVersion(ctx context.Context, req *storage.PutStableVe
 // **** dynamic(动态) *****
 //k8s namespace resources
 
-// GetK8SNamespaceResources 获取k8s命名空间资源
+// GetK8SNamespaceResources 获取k8s命名空间资源 get k8s namespace resources
 func (s *Storage) GetK8SNamespaceResources(ctx context.Context, req *storage.GetNamespaceResourcesRequest,
 	rsp *storage.GetNamespaceResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -260,7 +266,7 @@ func (s *Storage) GetK8SNamespaceResources(ctx context.Context, req *storage.Get
 	}
 	blog.Infof("GetK8SNamespaceResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerGetNamespaceResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerGetNsResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageGetResourceFail
@@ -290,7 +296,7 @@ func (s *Storage) GetK8SNamespaceResources(ctx context.Context, req *storage.Get
 	return nil
 }
 
-// PutK8SNamespaceResources 创建k8s命名空间资源
+// PutK8SNamespaceResources 创建k8s命名空间资源 create k8s namespace resources
 func (s *Storage) PutK8SNamespaceResources(ctx context.Context, req *storage.PutNamespaceResourcesRequest,
 	rsp *storage.PutNamespaceResourcesResponse) error {
 	if req.ClusterId == "" || req.Namespace == "" || req.ResourceType == "" || req.ResourceName == "" {
@@ -309,7 +315,7 @@ func (s *Storage) PutK8SNamespaceResources(ctx context.Context, req *storage.Put
 	}
 	blog.Infof("PutK8SNamespaceResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerPutNamespaceResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerPutNsResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStoragePutResourceFail
@@ -327,7 +333,7 @@ func (s *Storage) PutK8SNamespaceResources(ctx context.Context, req *storage.Put
 	return nil
 }
 
-// DeleteK8SNamespaceResources 删除k8s命名空间资源
+// DeleteK8SNamespaceResources 删除k8s命名空间资源 delete k8s namespace resources
 func (s *Storage) DeleteK8SNamespaceResources(ctx context.Context, req *storage.DeleteNamespaceResourcesRequest,
 	rsp *storage.DeleteNamespaceResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -338,7 +344,7 @@ func (s *Storage) DeleteK8SNamespaceResources(ctx context.Context, req *storage.
 	}
 	blog.Infof("DeleteK8SNamespaceResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerDeleteNamespaceResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerDelNsResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
@@ -356,7 +362,7 @@ func (s *Storage) DeleteK8SNamespaceResources(ctx context.Context, req *storage.
 	return nil
 }
 
-// ListK8SNamespaceResources 批量查询k8s命名空间资源
+// ListK8SNamespaceResources 批量查询k8s命名空间资源 batch list k8s namespaces resources
 func (s *Storage) ListK8SNamespaceResources(ctx context.Context, req *storage.ListNamespaceResourcesRequest,
 	rsp *storage.ListNamespaceResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -367,7 +373,7 @@ func (s *Storage) ListK8SNamespaceResources(ctx context.Context, req *storage.Li
 	}
 	blog.Infof("ListK8SNamespaceResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerListNamespaceResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerListNsResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageListResourceFail
@@ -390,7 +396,7 @@ func (s *Storage) ListK8SNamespaceResources(ctx context.Context, req *storage.Li
 	return nil
 }
 
-// DeleteBatchK8SNamespaceResource 批量删除k8s命名空间资源
+// DeleteBatchK8SNamespaceResource 批量删除k8s命名空间资源 batch delete k8s namespaces
 func (s *Storage) DeleteBatchK8SNamespaceResource(ctx context.Context, req *storage.DeleteBatchNamespaceResourceRequest,
 	rsp *storage.DeleteBatchNamespaceResourceResponse) error {
 	if err := req.Validate(); err != nil {
@@ -401,7 +407,7 @@ func (s *Storage) DeleteBatchK8SNamespaceResource(ctx context.Context, req *stor
 	}
 	blog.Infof("DeleteBatchK8SNamespaceResource req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerDeleteBatchNamespaceResourceRequest(ctx, req)
+	data, err := dynamic.HandlerDelBatchNsResourceReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
@@ -421,7 +427,7 @@ func (s *Storage) DeleteBatchK8SNamespaceResource(ctx context.Context, req *stor
 
 // k8s cluster resources
 
-// GetK8SClusterResources 获取k8s集群资源
+// GetK8SClusterResources 获取k8s集群资源 get k8s cluster resources
 func (s *Storage) GetK8SClusterResources(ctx context.Context, req *storage.GetClusterResourcesRequest,
 	rsp *storage.GetClusterResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -432,7 +438,7 @@ func (s *Storage) GetK8SClusterResources(ctx context.Context, req *storage.GetCl
 	}
 	blog.Infof("GetK8SClusterResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerGetClusterResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerGetClusterResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageGetResourceFail
@@ -462,7 +468,7 @@ func (s *Storage) GetK8SClusterResources(ctx context.Context, req *storage.GetCl
 	return nil
 }
 
-// PutK8SClusterResources 创建k8s集群资源
+// PutK8SClusterResources 创建k8s集群资源 create k8s cluster resources
 func (s *Storage) PutK8SClusterResources(ctx context.Context, req *storage.PutClusterResourcesRequest,
 	rsp *storage.PutClusterResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -473,7 +479,7 @@ func (s *Storage) PutK8SClusterResources(ctx context.Context, req *storage.PutCl
 	}
 	blog.Infof("PutK8SClusterResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerPutClusterResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerPutClusterResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStoragePutResourceFail
@@ -491,7 +497,7 @@ func (s *Storage) PutK8SClusterResources(ctx context.Context, req *storage.PutCl
 	return nil
 }
 
-// DeleteK8SClusterResources 删除k8s集群资源
+// DeleteK8SClusterResources 删除k8s集群资源 delete k8s cluster resources
 func (s *Storage) DeleteK8SClusterResources(ctx context.Context, req *storage.DeleteClusterResourcesRequest,
 	rsp *storage.DeleteClusterResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -502,7 +508,7 @@ func (s *Storage) DeleteK8SClusterResources(ctx context.Context, req *storage.De
 	}
 	blog.Infof("DeleteK8SClusterResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerDeleteClusterResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerDelClusterResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
@@ -520,7 +526,7 @@ func (s *Storage) DeleteK8SClusterResources(ctx context.Context, req *storage.De
 	return nil
 }
 
-// ListK8SClusterResources 批量查询k8s集群资源
+// ListK8SClusterResources 批量查询k8s集群资源 list k8s cluster resources
 func (s *Storage) ListK8SClusterResources(ctx context.Context, req *storage.ListClusterResourcesRequest,
 	rsp *storage.ListClusterResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -531,7 +537,7 @@ func (s *Storage) ListK8SClusterResources(ctx context.Context, req *storage.List
 	}
 	blog.Infof("ListK8SClusterResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerListClusterResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerListClusterResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageListResourceFail
@@ -554,7 +560,7 @@ func (s *Storage) ListK8SClusterResources(ctx context.Context, req *storage.List
 	return nil
 }
 
-// ListK8SClusterAllResources 批量查询k8s集群资源
+// ListK8SClusterAllResources 批量查询k8s集群资源 list k8s cluster all resources
 func (s *Storage) ListK8SClusterAllResources(ctx context.Context, req *storage.ListClusterResourcesRequest,
 	rsp *storage.ListClusterResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -565,7 +571,7 @@ func (s *Storage) ListK8SClusterAllResources(ctx context.Context, req *storage.L
 	}
 	blog.Infof("ListK8SClusterAllResources req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerListClusterResourcesRequest(ctx, req)
+	data, err := dynamic.HandlerListClusterResourcesReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageListResourceFail
@@ -588,7 +594,7 @@ func (s *Storage) ListK8SClusterAllResources(ctx context.Context, req *storage.L
 	return nil
 }
 
-// DeleteBatchK8SClusterResource 批量删除k8s集群资源
+// DeleteBatchK8SClusterResource 批量删除k8s集群资源 batch delete k8s cluster resource
 func (s *Storage) DeleteBatchK8SClusterResource(ctx context.Context, req *storage.DeleteBatchClusterResourceRequest,
 	rsp *storage.DeleteBatchClusterResourceResponse) error {
 	if err := req.Validate(); err != nil {
@@ -599,7 +605,7 @@ func (s *Storage) DeleteBatchK8SClusterResource(ctx context.Context, req *storag
 	}
 	blog.Infof("DeleteBatchK8SClusterResource req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerDeleteBatchClusterResourceRequest(ctx, req)
+	data, err := dynamic.HandlerDelBatchClusterResourceReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
@@ -617,7 +623,7 @@ func (s *Storage) DeleteBatchK8SClusterResource(ctx context.Context, req *storag
 	return nil
 }
 
-// DeleteBatchK8SClusterAllResource 批量删除k8s集群资源
+// DeleteBatchK8SClusterAllResource 批量删除k8s集群资源 batch delete k8s cluster all resource
 func (s *Storage) DeleteBatchK8SClusterAllResource(ctx context.Context, req *storage.DeleteBatchClusterResourceRequest,
 	rsp *storage.DeleteBatchClusterResourceResponse) error {
 	if err := req.Validate(); err != nil {
@@ -628,7 +634,7 @@ func (s *Storage) DeleteBatchK8SClusterAllResource(ctx context.Context, req *sto
 	}
 	blog.Infof("DeleteBatchK8SClusterAllResource req: %v", util.PrettyStruct(req))
 
-	data, err := dynamic.HandlerDeleteBatchClusterResourceRequest(ctx, req)
+	data, err := dynamic.HandlerDelBatchClusterResourceReq(ctx, req)
 	if err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
@@ -649,7 +655,7 @@ func (s *Storage) DeleteBatchK8SClusterAllResource(ctx context.Context, req *sto
 // Custom resource
 // Custom resources OPs
 
-// GetCustomResources 查询自定义资源
+// GetCustomResources 查询自定义资源 get custom resources
 func (s *Storage) GetCustomResources(ctx context.Context, req *storage.GetCustomResourcesRequest,
 	rsp *storage.GetCustomResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -686,7 +692,7 @@ func (s *Storage) GetCustomResources(ctx context.Context, req *storage.GetCustom
 	return nil
 }
 
-// DeleteCustomResources 删除自定义资源
+// DeleteCustomResources 删除自定义资源 delete custom resources
 func (s *Storage) DeleteCustomResources(ctx context.Context, req *storage.DeleteCustomResourcesRequest,
 	rsp *storage.DeleteCustomResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -697,7 +703,7 @@ func (s *Storage) DeleteCustomResources(ctx context.Context, req *storage.Delete
 	}
 	blog.Infof("DeleteCustomResources req: %v", util.PrettyStruct(req))
 
-	if err := dynamic.HandlerDeleteCustomResources(ctx, req); err != nil {
+	if err := dynamic.HandlerDelCustomResources(ctx, req); err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
 		rsp.Message = common.BcsErrStorageDeleteResourceFailStr
@@ -712,7 +718,7 @@ func (s *Storage) DeleteCustomResources(ctx context.Context, req *storage.Delete
 	return nil
 }
 
-// PutCustomResources 创建自定义资源
+// PutCustomResources 创建自定义资源 create custom resources
 func (s *Storage) PutCustomResources(ctx context.Context, req *storage.PutCustomResourcesRequest,
 	rsp *storage.PutCustomResourcesResponse) error {
 	if err := req.Validate(); err != nil {
@@ -739,7 +745,7 @@ func (s *Storage) PutCustomResources(ctx context.Context, req *storage.PutCustom
 	return nil
 }
 
-// CreateCustomResourcesIndex 创建自定义资源索引
+// CreateCustomResourcesIndex 创建自定义资源索引 create custom resources index
 func (s *Storage) CreateCustomResourcesIndex(ctx context.Context, req *storage.CreateCustomResourcesIndexRequest,
 	rsp *storage.CreateCustomResourcesIndexResponse) error {
 	if err := req.Validate(); err != nil {
@@ -765,7 +771,7 @@ func (s *Storage) CreateCustomResourcesIndex(ctx context.Context, req *storage.C
 	return nil
 }
 
-// DeleteCustomResourcesIndex 删除自定义资源索引
+// DeleteCustomResourcesIndex 删除自定义资源索引 delete custom resources index
 func (s *Storage) DeleteCustomResourcesIndex(ctx context.Context, req *storage.DeleteCustomResourcesIndexRequest,
 	rsp *storage.DeleteCustomResourcesIndexResponse) error {
 	if err := req.Validate(); err != nil {
@@ -776,7 +782,7 @@ func (s *Storage) DeleteCustomResourcesIndex(ctx context.Context, req *storage.D
 	}
 	blog.Infof("DeleteCustomResourcesIndex req: %v", util.PrettyStruct(req))
 
-	if err := dynamic.HandlerDeleteCustomResourcesIndex(ctx, req); err != nil {
+	if err := dynamic.HandlerDelCustomResourcesIndex(ctx, req); err != nil {
 		rsp.Result = false
 		rsp.Code = common.BcsErrStorageDeleteResourceFail
 		rsp.Message = common.BcsErrStorageDeleteResourceFailStr
@@ -793,7 +799,7 @@ func (s *Storage) DeleteCustomResourcesIndex(ctx context.Context, req *storage.D
 
 // **** dynamic-query(动态查询) ****
 
-// GetK8SIPPoolStatic 查询K8SIPPoolStatic
+// GetK8SIPPoolStatic 查询K8SIPPoolStatic get k8s IPPoolStatic
 func (s *Storage) GetK8SIPPoolStatic(ctx context.Context, req *storage.IPPoolStaticRequest,
 	rsp *storage.IPPoolStaticResponse) error {
 	if err := req.Validate(); err != nil {
@@ -827,7 +833,7 @@ func (s *Storage) GetK8SIPPoolStatic(ctx context.Context, req *storage.IPPoolSta
 	return nil
 }
 
-// PostK8SIPPoolStatic 查询K8SIPPoolStatic
+// PostK8SIPPoolStatic 查询K8SIPPoolStatic get k8s IPPoolStatic
 func (s *Storage) PostK8SIPPoolStatic(ctx context.Context, req *storage.IPPoolStaticRequest,
 	rsp *storage.IPPoolStaticResponse) error {
 	if err := req.Validate(); err != nil {
@@ -861,7 +867,7 @@ func (s *Storage) PostK8SIPPoolStatic(ctx context.Context, req *storage.IPPoolSt
 	return nil
 }
 
-// GetK8SIPPoolStaticDetail 查询K8SIPPoolStaticDetail
+// GetK8SIPPoolStaticDetail 查询K8SIPPoolStaticDetail get k8s IPPoolStatic
 func (s *Storage) GetK8SIPPoolStaticDetail(ctx context.Context, req *storage.IPPoolStaticDetailRequest,
 	rsp *storage.IPPoolStaticDetailResponse) error {
 	if err := req.Validate(); err != nil {
@@ -895,7 +901,7 @@ func (s *Storage) GetK8SIPPoolStaticDetail(ctx context.Context, req *storage.IPP
 	return nil
 }
 
-// PostK8SIPPoolStaticDetail 查询K8SIPPoolStaticDetail
+// PostK8SIPPoolStaticDetail 查询K8SIPPoolStaticDetail get k8s IPPoolStatic
 func (s *Storage) PostK8SIPPoolStaticDetail(ctx context.Context, req *storage.IPPoolStaticDetailRequest,
 	rsp *storage.IPPoolStaticDetailResponse) error {
 	if err := req.Validate(); err != nil {
@@ -931,7 +937,7 @@ func (s *Storage) PostK8SIPPoolStaticDetail(ctx context.Context, req *storage.IP
 
 // k8s
 
-// GetPod 查询Pod
+// GetPod 查询Pod get pod
 func (s *Storage) GetPod(ctx context.Context, req *storage.PodRequest, rsp *storage.PodResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -964,7 +970,7 @@ func (s *Storage) GetPod(ctx context.Context, req *storage.PodRequest, rsp *stor
 	return nil
 }
 
-// PostPod 查询Pod
+// PostPod 查询Pod get pod
 func (s *Storage) PostPod(ctx context.Context, req *storage.PodRequest, rsp *storage.PodResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -997,7 +1003,7 @@ func (s *Storage) PostPod(ctx context.Context, req *storage.PodRequest, rsp *sto
 	return nil
 }
 
-// GetReplicaSet 查询ReplicaSet
+// GetReplicaSet 查询ReplicaSet get ReplicaSet
 func (s *Storage) GetReplicaSet(ctx context.Context, req *storage.ReplicaSetRequest, rsp *storage.ReplicaSetResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -1031,7 +1037,7 @@ func (s *Storage) GetReplicaSet(ctx context.Context, req *storage.ReplicaSetRequ
 	return nil
 }
 
-// PostReplicaSet 查询ReplicaSet
+// PostReplicaSet 查询ReplicaSet get ReplicaSet
 func (s *Storage) PostReplicaSet(ctx context.Context, req *storage.ReplicaSetRequest, rsp *storage.ReplicaSetResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -1065,7 +1071,7 @@ func (s *Storage) PostReplicaSet(ctx context.Context, req *storage.ReplicaSetReq
 	return nil
 }
 
-// GetDeploymentK8S 查询DeploymentK8S
+// GetDeploymentK8S 查询DeploymentK8S get Deployment
 func (s *Storage) GetDeploymentK8S(ctx context.Context, req *storage.DeploymentK8SRequest,
 	rsp *storage.DeploymentK8SResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1099,7 +1105,7 @@ func (s *Storage) GetDeploymentK8S(ctx context.Context, req *storage.DeploymentK
 	return nil
 }
 
-// PostDeploymentK8S 查询DeploymentK8S
+// PostDeploymentK8S 查询DeploymentK8S get Deployment
 func (s *Storage) PostDeploymentK8S(ctx context.Context, req *storage.DeploymentK8SRequest,
 	rsp *storage.DeploymentK8SResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1133,7 +1139,7 @@ func (s *Storage) PostDeploymentK8S(ctx context.Context, req *storage.Deployment
 	return nil
 }
 
-// GetServiceK8S 查询ServiceK8S
+// GetServiceK8S 查询ServiceK8S get Service
 func (s *Storage) GetServiceK8S(ctx context.Context, req *storage.ServiceK8SRequest, rsp *storage.ServiceK8SResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -1167,7 +1173,7 @@ func (s *Storage) GetServiceK8S(ctx context.Context, req *storage.ServiceK8SRequ
 	return nil
 }
 
-// PostServiceK8S 查询ServiceK8S
+// PostServiceK8S 查询ServiceK8S get Service
 func (s *Storage) PostServiceK8S(ctx context.Context, req *storage.ServiceK8SRequest, rsp *storage.ServiceK8SResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -1201,7 +1207,7 @@ func (s *Storage) PostServiceK8S(ctx context.Context, req *storage.ServiceK8SReq
 	return nil
 }
 
-// GetConfigMapK8S 查询ConfigMapK8S
+// GetConfigMapK8S 查询ConfigMapK8S get configmap
 func (s *Storage) GetConfigMapK8S(ctx context.Context, req *storage.ConfigMapK8SRequest,
 	rsp *storage.ConfigMapK8SResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1235,7 +1241,7 @@ func (s *Storage) GetConfigMapK8S(ctx context.Context, req *storage.ConfigMapK8S
 	return nil
 }
 
-// PostConfigMapK8S 查询ConfigMapK8S
+// PostConfigMapK8S 查询ConfigMapK8S get configmap
 func (s *Storage) PostConfigMapK8S(ctx context.Context, req *storage.ConfigMapK8SRequest,
 	rsp *storage.ConfigMapK8SResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1269,7 +1275,7 @@ func (s *Storage) PostConfigMapK8S(ctx context.Context, req *storage.ConfigMapK8
 	return nil
 }
 
-// GetSecretK8S 查询SecretK8S
+// GetSecretK8S 查询SecretK8S get secret
 func (s *Storage) GetSecretK8S(ctx context.Context, req *storage.SecretK8SRequest, rsp *storage.SecretK8SResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -1303,7 +1309,7 @@ func (s *Storage) GetSecretK8S(ctx context.Context, req *storage.SecretK8SReques
 	return nil
 }
 
-// PostSecretK8S 查询SecretK8S
+// PostSecretK8S 查询SecretK8S get secret
 func (s *Storage) PostSecretK8S(ctx context.Context, req *storage.SecretK8SRequest, rsp *storage.SecretK8SResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -1337,7 +1343,7 @@ func (s *Storage) PostSecretK8S(ctx context.Context, req *storage.SecretK8SReque
 	return nil
 }
 
-// GetEndpointsK8S 查询EndpointsK8S
+// GetEndpointsK8S 查询EndpointsK8S get secret
 func (s *Storage) GetEndpointsK8S(ctx context.Context, req *storage.EndpointsK8SRequest,
 	rsp *storage.EndpointsK8SResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1371,7 +1377,7 @@ func (s *Storage) GetEndpointsK8S(ctx context.Context, req *storage.EndpointsK8S
 	return nil
 }
 
-// PostEndpointsK8S 查询EndpointsK8S
+// PostEndpointsK8S 查询EndpointsK8S get secret
 func (s *Storage) PostEndpointsK8S(ctx context.Context, req *storage.EndpointsK8SRequest,
 	rsp *storage.EndpointsK8SResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1405,7 +1411,7 @@ func (s *Storage) PostEndpointsK8S(ctx context.Context, req *storage.EndpointsK8
 	return nil
 }
 
-// GetIngress 查询Ingress
+// GetIngress 查询Ingress get ingress
 func (s *Storage) GetIngress(ctx context.Context, req *storage.IngressRequest, rsp *storage.IngressResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -1438,7 +1444,7 @@ func (s *Storage) GetIngress(ctx context.Context, req *storage.IngressRequest, r
 	return nil
 }
 
-// PostIngress 查询Ingress
+// PostIngress 查询Ingress get ingress
 func (s *Storage) PostIngress(ctx context.Context, req *storage.IngressRequest, rsp *storage.IngressResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -1471,7 +1477,7 @@ func (s *Storage) PostIngress(ctx context.Context, req *storage.IngressRequest, 
 	return nil
 }
 
-// GetNamespaceK8S 查询NamespaceK8S
+// GetNamespaceK8S 查询NamespaceK8S get namespace
 func (s *Storage) GetNamespaceK8S(ctx context.Context, req *storage.NamespaceK8SRequest,
 	rsp *storage.NamespaceK8SResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1487,7 +1493,7 @@ func (s *Storage) GetNamespaceK8S(ctx context.Context, req *storage.NamespaceK8S
 	return nil
 }
 
-// PostNamespaceK8S 查询NamespaceK8S
+// PostNamespaceK8S 查询NamespaceK8S get namespace
 func (s *Storage) PostNamespaceK8S(ctx context.Context, req *storage.NamespaceK8SRequest,
 	rsp *storage.NamespaceK8SResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1503,7 +1509,7 @@ func (s *Storage) PostNamespaceK8S(ctx context.Context, req *storage.NamespaceK8
 	return nil
 }
 
-// GetNode 查询Node
+// GetNode 查询Node get node
 func (s *Storage) GetNode(ctx context.Context, req *storage.NodeRequest, rsp *storage.NodeResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -1536,7 +1542,7 @@ func (s *Storage) GetNode(ctx context.Context, req *storage.NodeRequest, rsp *st
 	return nil
 }
 
-// PostNode 查询Node
+// PostNode 查询Node get node
 func (s *Storage) PostNode(ctx context.Context, req *storage.NodeRequest, rsp *storage.NodeResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -1569,7 +1575,7 @@ func (s *Storage) PostNode(ctx context.Context, req *storage.NodeRequest, rsp *s
 	return nil
 }
 
-// GetDaemonSet 查询DaemonSet
+// GetDaemonSet 查询DaemonSet get daemonset
 func (s *Storage) GetDaemonSet(ctx context.Context, req *storage.DaemonSetRequest, rsp *storage.DaemonSetResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -1603,7 +1609,7 @@ func (s *Storage) GetDaemonSet(ctx context.Context, req *storage.DaemonSetReques
 	return nil
 }
 
-// PostDaemonSet 查询DaemonSet
+// PostDaemonSet 查询DaemonSet get daemonset
 func (s *Storage) PostDaemonSet(ctx context.Context, req *storage.DaemonSetRequest, rsp *storage.DaemonSetResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -1637,7 +1643,7 @@ func (s *Storage) PostDaemonSet(ctx context.Context, req *storage.DaemonSetReque
 	return nil
 }
 
-// GetJob 查询Job
+// GetJob 查询Job get job
 func (s *Storage) GetJob(ctx context.Context, req *storage.JobRequest, rsp *storage.JobResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -1670,7 +1676,7 @@ func (s *Storage) GetJob(ctx context.Context, req *storage.JobRequest, rsp *stor
 	return nil
 }
 
-// PostJob 查询Job
+// PostJob 查询Job get job
 func (s *Storage) PostJob(ctx context.Context, req *storage.JobRequest, rsp *storage.JobResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -1703,7 +1709,7 @@ func (s *Storage) PostJob(ctx context.Context, req *storage.JobRequest, rsp *sto
 	return nil
 }
 
-// GetStatefulSet 查询StatefulSet
+// GetStatefulSet 查询StatefulSet get statefulset
 func (s *Storage) GetStatefulSet(ctx context.Context, req *storage.StatefulSetRequest,
 	rsp *storage.StatefulSetResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1737,7 +1743,7 @@ func (s *Storage) GetStatefulSet(ctx context.Context, req *storage.StatefulSetRe
 	return nil
 }
 
-// PostStatefulSet 查询StatefulSet
+// PostStatefulSet 查询StatefulSet get statefulset
 func (s *Storage) PostStatefulSet(ctx context.Context, req *storage.StatefulSetRequest,
 	rsp *storage.StatefulSetResponse) error {
 	if err := req.Validate(); err != nil {
@@ -1881,7 +1887,7 @@ func (s *Storage) WatchContainer(ctx context.Context, req *storage.WatchContaine
 
 // **** events(事件) *****
 
-//PutEvent 创建事件
+// PutEvent 创建事件 create event
 func (s *Storage) PutEvent(ctx context.Context, req *storage.PutEventRequest, rsp *storage.PutEventResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -1906,7 +1912,7 @@ func (s *Storage) PutEvent(ctx context.Context, req *storage.PutEventRequest, rs
 	return nil
 }
 
-// ListEvent 查询事件
+// ListEvent 查询事件 list event
 func (s *Storage) ListEvent(ctx context.Context, req *storage.ListEventRequest, rsp *storage.ListEventResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -1942,6 +1948,7 @@ func (s *Storage) ListEvent(ctx context.Context, req *storage.ListEventRequest, 
 	return nil
 }
 
+// WatchEvent watch event
 func (s *Storage) WatchEvent(ctx context.Context, req *storage.WatchEventRequest,
 	stream storage.Storage_WatchEventStream) error {
 	defer stream.Close()
@@ -1996,7 +2003,7 @@ func (s *Storage) WatchEvent(ctx context.Context, req *storage.WatchEventRequest
 
 // **** host config(主机配置) *****
 
-// GetHost 获取主机配置
+// GetHost 获取主机配置 get host
 func (s *Storage) GetHost(ctx context.Context, req *storage.GetHostRequest, rsp *storage.GetHostResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -2030,7 +2037,7 @@ func (s *Storage) GetHost(ctx context.Context, req *storage.GetHostRequest, rsp 
 	return nil
 }
 
-// PutHost 创建主机配置
+// PutHost 创建主机配置 put host
 func (s *Storage) PutHost(ctx context.Context, req *storage.PutHostRequest, rsp *storage.PutHostResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -2055,7 +2062,7 @@ func (s *Storage) PutHost(ctx context.Context, req *storage.PutHostRequest, rsp 
 	return nil
 }
 
-// DeleteHost 删除主机配置
+// DeleteHost 删除主机配置 delete host
 func (s *Storage) DeleteHost(ctx context.Context, req *storage.DeleteHostRequest, rsp *storage.DeleteHostResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -2081,7 +2088,7 @@ func (s *Storage) DeleteHost(ctx context.Context, req *storage.DeleteHostRequest
 	return nil
 }
 
-// ListHost 批量查询主机配置
+// ListHost 批量查询主机配置 list host
 func (s *Storage) ListHost(ctx context.Context, req *storage.ListHostRequest, rsp *storage.ListHostResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -2114,7 +2121,7 @@ func (s *Storage) ListHost(ctx context.Context, req *storage.ListHostRequest, rs
 	return nil
 }
 
-// PutClusterRelation 修改集群关系
+// PutClusterRelation 修改集群关系 update cluster relation
 func (s *Storage) PutClusterRelation(ctx context.Context, req *storage.PutClusterRelationRequest,
 	rsp *storage.PutClusterRelationResponse) error {
 	if err := req.Validate(); err != nil {
@@ -2140,7 +2147,7 @@ func (s *Storage) PutClusterRelation(ctx context.Context, req *storage.PutCluste
 	return nil
 }
 
-// PostClusterRelation 创建集群关系
+// PostClusterRelation 创建集群关系 create cluster relation
 func (s *Storage) PostClusterRelation(ctx context.Context, req *storage.PostClusterRelationRequest,
 	rsp *storage.PostClusterRelationResponse) error {
 	if err := req.Validate(); err != nil {
@@ -2168,7 +2175,7 @@ func (s *Storage) PostClusterRelation(ctx context.Context, req *storage.PostClus
 
 // **** metric(指标)  ****
 
-// GetMetric 查询警告指标
+// GetMetric 查询警告指标 get metric
 func (s *Storage) GetMetric(ctx context.Context, req *storage.GetMetricRequest, rsp *storage.GetMetricResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -2208,7 +2215,7 @@ func (s *Storage) GetMetric(ctx context.Context, req *storage.GetMetricRequest, 
 	return nil
 }
 
-// PutMetric 修改指标
+// PutMetric 修改指标 update metric
 func (s *Storage) PutMetric(ctx context.Context, req *storage.PutMetricRequest, rsp *storage.PutMetricResponse) error {
 	if err := req.Validate(); err != nil {
 		rsp.Result = false
@@ -2233,7 +2240,7 @@ func (s *Storage) PutMetric(ctx context.Context, req *storage.PutMetricRequest, 
 	return nil
 }
 
-// DeleteMetric 删除指标
+// DeleteMetric 删除指标 delete metrics
 func (s *Storage) DeleteMetric(ctx context.Context, req *storage.DeleteMetricRequest, rsp *storage.DeleteMetricResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -2259,7 +2266,7 @@ func (s *Storage) DeleteMetric(ctx context.Context, req *storage.DeleteMetricReq
 	return nil
 }
 
-// QueryMetric 查询指标
+// QueryMetric 查询指标 get metric
 func (s *Storage) QueryMetric(ctx context.Context, req *storage.QueryMetricRequest, rsp *storage.QueryMetricResponse,
 ) error {
 	if err := req.Validate(); err != nil {
@@ -2300,7 +2307,7 @@ func (s *Storage) QueryMetric(ctx context.Context, req *storage.QueryMetricReque
 	return nil
 }
 
-// ListMetricTables 查询警告表
+// ListMetricTables 查询警告表 list metric tables
 func (s *Storage) ListMetricTables(ctx context.Context, req *storage.ListMetricTablesRequest,
 	rsp *storage.ListMetricTablesResponse) error {
 	blog.Infof("ListMetricTables req: %v", util.PrettyStruct(req))
@@ -2391,7 +2398,7 @@ func (s *Storage) WatchMetric(ctx context.Context, req *storage.WatchMetricReque
 // **** watch k8s ****
 // k8s
 
-// K8SGetWatchResource 查询watch资源
+// K8SGetWatchResource 查询watch资源 get watch resources
 func (s *Storage) K8SGetWatchResource(ctx context.Context, req *storage.K8SGetWatchResourceRequest,
 	rsp *storage.K8SGetWatchResourceResponse) error {
 	if err := req.Validate(); err != nil {
@@ -2419,7 +2426,7 @@ func (s *Storage) K8SGetWatchResource(ctx context.Context, req *storage.K8SGetWa
 	return nil
 }
 
-// K8SPutWatchResource 修改watch资源
+// K8SPutWatchResource 修改watch资源 update watch resource
 func (s *Storage) K8SPutWatchResource(ctx context.Context, req *storage.K8SPutWatchResourceRequest,
 	rsp *storage.K8SPutWatchResourceResponse) error {
 	if err := req.Validate(); err != nil {
@@ -2445,7 +2452,7 @@ func (s *Storage) K8SPutWatchResource(ctx context.Context, req *storage.K8SPutWa
 	return nil
 }
 
-// K8SDeleteWatchResource 删除watch资源
+// K8SDeleteWatchResource 删除watch资源 delete watch resource
 func (s *Storage) K8SDeleteWatchResource(ctx context.Context, req *storage.K8SDeleteWatchResourceRequest,
 	rsp *storage.K8SDeleteWatchResourceResponse) error {
 	if err := req.Validate(); err != nil {
@@ -2471,7 +2478,7 @@ func (s *Storage) K8SDeleteWatchResource(ctx context.Context, req *storage.K8SDe
 	return nil
 }
 
-// K8SListWatchResource 批量查询watch资源
+// K8SListWatchResource 批量查询watch资源 batch get watch resource
 func (s *Storage) K8SListWatchResource(ctx context.Context, req *storage.K8SListWatchResourceRequest,
 	rsp *storage.K8SListWatchResourceResponse) error {
 	if err := req.Validate(); err != nil {

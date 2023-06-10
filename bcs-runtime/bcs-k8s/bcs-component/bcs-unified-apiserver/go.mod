@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220123082150-ac3c90791ab4
 	github.com/clusternet/clusternet v0.9.1
+	//NOCC:horus-dependency-security(工具误报:未使用github.com/dgrijalva/jwt-go)
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/mux v1.8.0
