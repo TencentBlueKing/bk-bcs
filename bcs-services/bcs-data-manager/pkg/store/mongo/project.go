@@ -112,7 +112,7 @@ func NewModelProject(db drivers.DB) *ModelProject {
 	}}
 }
 
-// GetProjectList get project list
+// GetProjectList get project list, if startTime or endTime is empty, return metrics with default time range
 func (m *ModelProject) GetProjectList(ctx context.Context,
 	req *bcsdatamanager.GetAllProjectListRequest) ([]*bcsdatamanager.Project, int64, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -185,7 +185,7 @@ func (m *ModelProject) GetProjectList(ctx context.Context,
 	return response, total, nil
 }
 
-// GetProjectInfo get project info data
+// GetProjectInfo get project info data, if startTime or endTime is empty, return metrics with default time range
 func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	request *bcsdatamanager.GetProjectInfoRequest) (*bcsdatamanager.Project, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -264,7 +264,7 @@ func (m *ModelProject) GetProjectInfo(ctx context.Context,
 	return m.generateProjectResponse(projectMetrics, projectMetricsMap[0], startTime, endTime), nil
 }
 
-// InsertProjectInfo insert project info data
+// InsertProjectInfo insert project info data, pre aggregate before insert
 func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *types.ProjectMetrics,
 	opts *types.JobCommonOpts) error {
 	err := ensureTable(ctx, &m.Public)
@@ -319,7 +319,7 @@ func (m *ModelProject) InsertProjectInfo(ctx context.Context, metrics *types.Pro
 		Update(ctx, cond, operator.M{"$set": retProject})
 }
 
-// GetRawProjectInfo get raw project info data
+// GetRawProjectInfo get raw project info data，如果不指定bucket返回全部
 func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string) ([]*types.ProjectData, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -346,6 +346,7 @@ func (m *ModelProject) GetRawProjectInfo(ctx context.Context, opts *types.JobCom
 	return retProject, nil
 }
 
+// generateProjectResponse 构造response，将storage结构转化为proto结构
 func (m *ModelProject) generateProjectResponse(metricSlice []*types.ProjectMetrics,
 	data *types.ProjectData, startTime, endTime string) *bcsdatamanager.Project {
 	response := &bcsdatamanager.Project{
@@ -383,6 +384,7 @@ func (m *ModelProject) generateProjectResponse(metricSlice []*types.ProjectMetri
 	return response
 }
 
+// preAggregate 预聚合project统计类数值
 func (m *ModelProject) preAggregate(data *types.ProjectData, newMetric *types.ProjectMetrics) {
 	if data.MaxNode == nil {
 		data.MaxNode = newMetric.MaxNode

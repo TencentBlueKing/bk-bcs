@@ -239,15 +239,15 @@ func (g *MetricGetter) GetWorkloadCPUMetrics(opts *types.JobCommonOpts, clients 
 }
 
 // GetWorkloadMemoryMetrics get workload memory metrics
-func (g *MetricGetter) GetWorkloadMemoryMetrics(opts *types.JobCommonOpts, clients *types.Clients) (*types.MemoryMetrics,
+func (g *MetricGetter) GetWorkloadMemoryMetrics(opt *types.JobCommonOpts, clients *types.Clients) (*types.MemoryMetrics,
 	error) {
-	switch opts.ClusterType {
+	switch opt.ClusterType {
 	case types.Kubernetes:
-		return g.getK8sWorkloadMemory(opts, clients)
+		return g.getK8sWorkloadMemory(opt, clients)
 	case types.Mesos:
-		return g.getMesosWorkloadMemory(opts, clients)
+		return g.getMesosWorkloadMemory(opt, clients)
 	default:
-		return nil, fmt.Errorf("wrong clusterType :%s", opts.ClusterType)
+		return nil, fmt.Errorf("wrong clusterType :%s", opt.ClusterType)
 	}
 }
 
@@ -322,9 +322,9 @@ func (g *MetricGetter) GetPodAutoscalerCount(opts *types.JobCommonOpts, clients 
 	if len(startMetric.Data.Result) == 0 {
 		return GetInt64Data(currentMetric), nil
 	} else if len(currentMetric.Data.Result) == 0 {
-		maxMetric, err := clients.MonitorClient.QueryByPost(maxQuery, opts.CurrentTime)
+		maxMetric, queryErr := clients.MonitorClient.QueryByPost(maxQuery, opts.CurrentTime)
 		if err != nil {
-			return 0, fmt.Errorf("query max count error:%v", err)
+			return 0, fmt.Errorf("query max count error:%v", queryErr)
 		}
 		return GetInt64Data(maxMetric) - GetInt64Data(startMetric), nil
 	}
@@ -336,14 +336,17 @@ func (g *MetricGetter) GetPodAutoscalerCount(opts *types.JobCommonOpts, clients 
 	// 最小值等于1，判断是否连续，如果不连续，metric被delete过或exporter重启过；如果连续，终点-1
 	rangeMetrics, err := clients.MonitorClient.QueryRangeByPost(countQuery, opts.CurrentTime.Add(-30*time.Minute),
 		opts.CurrentTime, 30*time.Second)
+	if err != nil {
+		return 0, fmt.Errorf(err.Error())
+	}
 	var rangeLength int
 	for _, result := range rangeMetrics.Data.Result {
 		rangeLength += len(result.Values)
 	}
 	if rangeLength != 61 {
-		maxMetric, err := clients.MonitorClient.QueryByPost(maxQuery, opts.CurrentTime)
+		maxMetric, queryErr := clients.MonitorClient.QueryByPost(maxQuery, opts.CurrentTime)
 		if err != nil {
-			return 0, fmt.Errorf("query max count error:%v", err)
+			return 0, fmt.Errorf("query max count error:%v", queryErr)
 		}
 		if GetInt64Data(maxMetric) > GetInt64Data(startMetric) {
 			return GetInt64Data(maxMetric) - GetInt64Data(startMetric), nil
