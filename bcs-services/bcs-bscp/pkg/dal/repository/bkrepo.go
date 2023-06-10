@@ -200,6 +200,7 @@ func (s *bkrepo) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader) 
 		return nil, err
 	}
 	req.Header.Set(repo.HeaderKeyMETA, nodeMeta)
+	req.Header.Set(constant.RidKey, kt.Rid)
 	req.Header.Set(repo.HeaderKeyOverwrite, "true")
 
 	resp, err := s.client.Do(req)
