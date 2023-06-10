@@ -664,6 +664,7 @@ func TestInjectPod(t *testing.T) {
 		}
 		hpi := &HostPortInjector{
 			portCache: portCache,
+			conf:      &HostPortInjectorConfig{},
 		}
 		patches, err := hpi.injectToPod(test.Pod)
 		if err == nil {
