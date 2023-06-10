@@ -120,8 +120,8 @@ type ITSMConfig struct {
 
 // BkMonitorConfig 蓝鲸监控操作需要的配置
 type BkMonitorConfig struct {
-	Enable                   bool   `yaml:"enable" usage:"enable bk monitor"`
-	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
+	Enable      bool   `yaml:"enable" usage:"enable bk monitor"`
+	GatewayHost string `yaml:"gatewayHost" usage:"gateway host"`
 }
 
 // ClientActionsConfig Client级别的访问

@@ -38,13 +38,11 @@ import (
 )
 
 const (
-	saasVariableTableName            = "variable_variable"
-	saasClusterVariableTableName     = "variable_clustervariable"
-	saasNamespaceVariableTableName   = "variable_namespacevariable"
-	paasCcNamespaceTableName         = "kubernetes_namespaces"
-	mongoVariableDefinitionTableName = "bcsproject_variable_definition"
-	mongoVariableValueTableName      = "bcsproject_variable_value"
-	timeLayout                       = "2006-01-02T15:04:05Z"
+	saasVariableTableName          = "variable_variable"
+	saasClusterVariableTableName   = "variable_clustervariable"
+	saasNamespaceVariableTableName = "variable_namespacevariable"
+	paasCcNamespaceTableName       = "kubernetes_namespaces"
+	timeLayout                     = "2006-01-02T15:04:05Z"
 )
 
 var (
@@ -61,7 +59,6 @@ var (
 	ccDBName string
 
 	mongoAddr   string
-	mongoPort   uint
 	mongoUser   string
 	mongoPwd    string
 	mongoDBName string

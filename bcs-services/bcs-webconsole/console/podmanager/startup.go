@@ -141,10 +141,10 @@ func (m *StartupManager) ensureNamespace(name string) error {
 
 	if k8sErr.IsNotFound(err) {
 		// 命名空间不存在，创建命名空间
-		if _, err := m.k8sClient.CoreV1().Namespaces().Create(m.ctx, namespace, metav1.CreateOptions{}); err != nil {
+		if _, e := m.k8sClient.CoreV1().Namespaces().Create(m.ctx, namespace, metav1.CreateOptions{}); e != nil {
 			// 创建失败
-			logger.Errorf("create namespace %s failed, err: %s", name, err)
-			return err
+			logger.Errorf("create namespace %s failed, err: %s", name, e)
+			return e
 		}
 		return nil
 	}
@@ -163,10 +163,10 @@ func (m *StartupManager) ensureConfigmap(namespace, name, uid string, kubeConfig
 	_, err = m.k8sClient.CoreV1().ConfigMaps(namespace).Get(m.ctx, name, metav1.GetOptions{})
 	// 不存在，创建
 	if k8sErr.IsNotFound(err) {
-		if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Create(m.ctx, configMap, metav1.CreateOptions{}); err != nil {
+		if _, e := m.k8sClient.CoreV1().ConfigMaps(namespace).Create(m.ctx, configMap, metav1.CreateOptions{}); e != nil {
 			// 创建失败
-			logger.Errorf("create configmap failed, err :%s", err)
-			return err
+			logger.Errorf("create configmap failed, err :%s", e)
+			return e
 		}
 		return nil
 	}
@@ -468,6 +468,7 @@ func IsContainerReady(container *v1.ContainerStatus) (string, bool) {
 	return "", true
 }
 
+// NOCC:deadcode/unused(设计如此:)
 func hasPodReadyCondition(conditions []v1.PodCondition) bool {
 	for _, condition := range conditions {
 		if condition.Type == v1.PodReady && condition.Status == v1.ConditionTrue {

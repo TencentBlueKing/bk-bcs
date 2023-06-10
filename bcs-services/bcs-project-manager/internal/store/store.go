@@ -38,7 +38,8 @@ type ProjectModel interface {
 	UpdateProject(ctx context.Context, project *project.Project) error
 	ListProjects(ctx context.Context, cond *operator.Condition, opt *page.Pagination) ([]project.Project, int64, error)
 	ListProjectByIDs(ctx context.Context, ids []string, opt *page.Pagination) ([]project.Project, int64, error)
-	SearchProjects(ctx context.Context, ids []string, searchKey string, opt *page.Pagination) ([]project.Project, int64, error)
+	SearchProjects(ctx context.Context, ids []string, searchKey string, opt *page.Pagination) (
+		[]project.Project, int64, error)
 
 	GetNamespace(ctx context.Context, projectCode, clusterID, name string) (*nsm.Namespace, error)
 	GetNamespaceByItsmTicketType(ctx context.Context,

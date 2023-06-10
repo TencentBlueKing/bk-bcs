@@ -34,6 +34,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
 	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/micro/go-micro/v2/server"
 	serverGrpc "github.com/micro/go-micro/v2/server/grpc"
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
@@ -332,6 +333,17 @@ func (p *ProjectService) initMicro() error {
 		return err
 	}
 
+	// register grpc handlers
+	if err := p.registerHandlers(grpcServer); err != nil {
+		return err
+	}
+
+	p.microSvc = svc
+	logging.Info("success to register project service handler to micro")
+	return nil
+}
+
+func (p *ProjectService) registerHandlers(grpcServer server.Server) error {
 	// 添加项目相关handler
 	if err := proto.RegisterBCSProjectHandler(grpcServer, handler.NewProject(p.model)); err != nil {
 		logging.Error("register project handler failed, err: %s", err.Error())
@@ -357,9 +369,6 @@ func (p *ProjectService) initMicro() error {
 		logging.Error("register healthz handler failed, err: %s", err.Error())
 		return err
 	}
-
-	p.microSvc = svc
-	logging.Info("success to register project service handler to micro")
 	return nil
 }
 

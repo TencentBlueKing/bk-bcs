@@ -61,7 +61,7 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		return errorx.NewDBErr(err.Error())
 	}
 	lock := &sync.Mutex{}
-	g, ctx := errgroup.WithContext(ctx)
+	g, _ := errgroup.WithContext(ctx)
 	retDatas := []*proto.NamespaceData{}
 	for _, item := range nsList.Items {
 		ns := item

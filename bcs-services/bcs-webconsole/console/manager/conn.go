@@ -82,8 +82,8 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 	return conn
 }
 
-// ReadInputMsg xxx
-func (r *RemoteStreamConn) ReadInputMsg() <-chan wsMessage {
+// readInputMsg xxx
+func (r *RemoteStreamConn) readInputMsg() <-chan wsMessage {
 	inputMsgChan := make(chan wsMessage)
 	go func() {
 		defer close(inputMsgChan)
@@ -130,7 +130,8 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 打印日志
 	if channel == LogChannel {
 		inputMsg, _ := r.bindMgr.HandleInputMsg(decodeMsg)
-		logger.Infof("UserName=%s  SessionID=%s  Command=%s", r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
+		logger.Infof("UserName=%s  SessionID=%s  Command=%s",
+			r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
 		return nil, nil
 	}
 
@@ -263,7 +264,7 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	}
 
 	// start reading
-	r.inputMsgChan = r.ReadInputMsg()
+	r.inputMsgChan = r.readInputMsg()
 
 	// Stream Copy IO, Wait Here
 	err = executor.Stream(remotecommand.StreamOptions{
