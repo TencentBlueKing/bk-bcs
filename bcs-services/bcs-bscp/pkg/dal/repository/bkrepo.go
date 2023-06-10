@@ -162,12 +162,12 @@ func (s *bkrepo) downloadFile(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *bkrepo) downloadFil2(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	rawURL := fmt.Sprintf("%s/%s", s.host, node)
+	rawURL := fmt.Sprintf("%s%s", s.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, 0, err
@@ -209,12 +209,12 @@ func (s *bkrepo) fileMetadata(w http.ResponseWriter, r *http.Request) (*ObjectMe
 }
 
 func (s *bkrepo) fileMetadata2(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID})
 	if err != nil {
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("%s/%s", s.host, node)
+	rawURL := fmt.Sprintf("%s%s", s.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodHead, rawURL, nil)
 	if err != nil {
 		return nil, err
@@ -234,7 +234,7 @@ func (s *bkrepo) fileMetadata2(kt *kit.Kit, fileContentID string) (*ObjectMetada
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
 		ByteSize: 0,
-		Sha256:   fileContentID,
+		Sha256:   resp.Header.Get("Etag"),
 	}
 
 	return metadata, nil
