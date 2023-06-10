@@ -15,6 +15,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"net/http"
@@ -41,6 +42,29 @@ func upload(ctx context.Context, host string, bizID, appID string, fileContentID
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("%d != 200", resp.StatusCode)
+		}
+		return nil, fmt.Errorf("%d != 200, body: %s", resp.StatusCode, body)
+	}
+	return resp, nil
+}
+
+func download(ctx context.Context, host string, bizID, appID string, fileContentID string, body io.Reader) (*http.Response, error) {
+	u := fmt.Sprintf("http://%s/api/v1/api/get/content/download/biz_id/%s/app_id/%s", host, bizID, appID)
+	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("X-Bkapi-File-Content-Id", fileContentID)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
 	if resp.StatusCode != 200 {
 		body, err := io.ReadAll(resp.Body)
@@ -80,11 +104,18 @@ func main() {
 			defer wg.Done()
 			for {
 				st := time.Now()
-				resp, err := upload(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
+				// resp, err := upload(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
+				resp, err := download(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
 				if err != nil {
 					klog.ErrorS(err, "idx", idx, "resp", resp)
+					continue
 				}
-				klog.InfoS("resp", "idx", idx, "duration", time.Since(st))
+
+				hasher := sha256.New()
+				io.Copy(hasher, resp.Body)
+				klog.InfoS("resp", "idx", idx, "duration", time.Since(st), "id", fmt.Sprintf("%x", hasher.Sum(nil)))
+				resp.Body.Close()
+
 				time.Sleep(time.Millisecond * 100)
 			}
 

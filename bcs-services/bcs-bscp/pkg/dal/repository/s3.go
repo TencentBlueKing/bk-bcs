@@ -16,18 +16,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/render"
-	"github.com/minio/minio-go/v7"
 	"github.com/pkg/errors"
 	cos "github.com/tencentyun/cos-go-sdk-v5"
+	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/thirdparty/repo"
@@ -109,27 +109,50 @@ func (s *s3Client) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader
 func (s *s3Client) downloadFile(w http.ResponseWriter, r *http.Request) error {
 	kt := kit.MustGetKit(r.Context())
 
-	repoName := s.s3Cli.Config.S3.BucketName
 	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	fullPath, err := repo.GenS3NodeFullPath(kt.BizID, sha256)
-	if err != nil {
-		return errors.Wrap(err, "create S3 FullPath failed")
+	if len(sha256) != 64 {
+		return errors.New("not valid X-Bkapi-File-Content-Id in header")
 	}
 
-	reader, err := s.s3Cli.Client.GetObject(r.Context(), repoName, fullPath, minio.GetObjectOptions{})
+	resp, contentLength, err := s.downloadFil2(kt, sha256)
 	if err != nil {
-		return errors.Wrap(err, "download S3 file failed")
+		return err
 	}
-	if _, err := reader.Stat(); err != nil {
-		return errors.Wrap(err, "get file stat failed")
-	}
+	defer resp.Close()
 
-	defer reader.Close()
-	if _, err := io.Copy(w, reader); err != nil {
-		logs.Errorf("download file failed when io.Copy, err: %v, rid: %s", err, kt.Rid)
+	w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
+	w.Header().Set("Content-Type", "application/octet-stream; charset=UTF-8")
+	_, err = io.Copy(w, resp)
+	if err != nil {
+		klog.ErrorS(err, "download file", "fileContentID", sha256)
 	}
 
 	return nil
+}
+
+func (s *s3Client) downloadFil2(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	rawURL := fmt.Sprintf("%s/%s", s.host, node)
+	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodGet, rawURL, nil)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if resp.StatusCode != 200 {
+		resp.Body.Close()
+		return nil, 0, errors.Errorf("download status %d != 200", resp.StatusCode)
+	}
+
+	return resp.Body, resp.ContentLength, nil
 }
 
 // FileMetadata get s3 head data

@@ -29,7 +29,7 @@ func TestUpload(t *testing.T) {
 	bizID := os.Getenv("biz_id")
 	appID := os.Getenv("app_id")
 
-	resp, err := upload(context.Background(), filename, host, bizID, appID)
+	resp, err := upload(context.Background(), filename, host, bizID, appID, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 }
