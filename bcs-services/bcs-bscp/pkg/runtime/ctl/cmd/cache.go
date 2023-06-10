@@ -27,7 +27,7 @@ func WithRefreshCache(op client.Interface) Cmd {
 		op: op,
 		cmd: &Command{
 			Name:  "refresh-cache",
-			Usage: "force refresh cache of an app, including app meta & released instance & strategy & released ci",
+			Usage: "force refresh cache of an app, including app meta & released group & released ci",
 			Parameters: []Parameter{{
 				Name:  "biz_id",
 				Usage: "defines the biz id of the app to refresh",

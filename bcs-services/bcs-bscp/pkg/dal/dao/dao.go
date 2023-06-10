@@ -40,9 +40,6 @@ type Set interface {
 	Content() Content
 	Release() Release
 	ReleasedCI() ReleasedCI
-	StrategySet() StrategySet
-	CRInstance() CRInstance
-	Strategy() Strategy
 	Hook() Hook
 	TemplateSpace() TemplateSpace
 	Template() Template
@@ -200,41 +197,6 @@ func (s *set) ReleasedCI() ReleasedCI {
 		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
-	}
-}
-
-// CRInstance returns the current released instance's DAO
-func (s *set) CRInstance() CRInstance {
-	return &crInstanceDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		event:    s.event,
-		lock:     s.lock,
-	}
-}
-
-// StrategySet returns the strategy set's DAO
-func (s *set) StrategySet() StrategySet {
-	return &strategySetDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		lock:     s.lock,
-	}
-}
-
-// Strategy returns the strategy's DAO
-func (s *set) Strategy() Strategy {
-	return &strategyDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		event:    s.event,
-		lock:     s.lock,
 	}
 }
 

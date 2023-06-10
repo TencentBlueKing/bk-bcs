@@ -20,70 +20,57 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Config_CreateApp_FullMethodName                      = "/pbcs.Config/CreateApp"
-	Config_UpdateApp_FullMethodName                      = "/pbcs.Config/UpdateApp"
-	Config_DeleteApp_FullMethodName                      = "/pbcs.Config/DeleteApp"
-	Config_GetApp_FullMethodName                         = "/pbcs.Config/GetApp"
-	Config_GetAppByName_FullMethodName                   = "/pbcs.Config/GetAppByName"
-	Config_ListApps_FullMethodName                       = "/pbcs.Config/ListApps"
-	Config_ListAppsRest_FullMethodName                   = "/pbcs.Config/ListAppsRest"
-	Config_ListAppsBySpaceRest_FullMethodName            = "/pbcs.Config/ListAppsBySpaceRest"
-	Config_CreateConfigItem_FullMethodName               = "/pbcs.Config/CreateConfigItem"
-	Config_BatchUpsertConfigItems_FullMethodName         = "/pbcs.Config/BatchUpsertConfigItems"
-	Config_UpdateConfigItem_FullMethodName               = "/pbcs.Config/UpdateConfigItem"
-	Config_DeleteConfigItem_FullMethodName               = "/pbcs.Config/DeleteConfigItem"
-	Config_GetConfigItem_FullMethodName                  = "/pbcs.Config/GetConfigItem"
-	Config_ListConfigItems_FullMethodName                = "/pbcs.Config/ListConfigItems"
-	Config_ListConfigItemCount_FullMethodName            = "/pbcs.Config/ListConfigItemCount"
-	Config_CreateContent_FullMethodName                  = "/pbcs.Config/CreateContent"
-	Config_ListContents_FullMethodName                   = "/pbcs.Config/ListContents"
-	Config_CreateCommit_FullMethodName                   = "/pbcs.Config/CreateCommit"
-	Config_ListCommits_FullMethodName                    = "/pbcs.Config/ListCommits"
-	Config_CreateRelease_FullMethodName                  = "/pbcs.Config/CreateRelease"
-	Config_ListReleases_FullMethodName                   = "/pbcs.Config/ListReleases"
-	Config_ListReleasedConfigItems_FullMethodName        = "/pbcs.Config/ListReleasedConfigItems"
-	Config_CreateStrategySet_FullMethodName              = "/pbcs.Config/CreateStrategySet"
-	Config_UpdateStrategySet_FullMethodName              = "/pbcs.Config/UpdateStrategySet"
-	Config_DeleteStrategySet_FullMethodName              = "/pbcs.Config/DeleteStrategySet"
-	Config_ListStrategySets_FullMethodName               = "/pbcs.Config/ListStrategySets"
-	Config_CreateStrategy_FullMethodName                 = "/pbcs.Config/CreateStrategy"
-	Config_UpdateStrategy_FullMethodName                 = "/pbcs.Config/UpdateStrategy"
-	Config_DeleteStrategy_FullMethodName                 = "/pbcs.Config/DeleteStrategy"
-	Config_ListStrategies_FullMethodName                 = "/pbcs.Config/ListStrategies"
-	Config_CreateHook_FullMethodName                     = "/pbcs.Config/CreateHook"
-	Config_DeleteHook_FullMethodName                     = "/pbcs.Config/DeleteHook"
-	Config_UpdateHook_FullMethodName                     = "/pbcs.Config/UpdateHook"
-	Config_ListHooks_FullMethodName                      = "/pbcs.Config/ListHooks"
-	Config_CreateTemplateSpace_FullMethodName            = "/pbcs.Config/CreateTemplateSpace"
-	Config_DeleteTemplateSpace_FullMethodName            = "/pbcs.Config/DeleteTemplateSpace"
-	Config_UpdateTemplateSpace_FullMethodName            = "/pbcs.Config/UpdateTemplateSpace"
-	Config_ListTemplateSpaces_FullMethodName             = "/pbcs.Config/ListTemplateSpaces"
-	Config_CreateTemplate_FullMethodName                 = "/pbcs.Config/CreateTemplate"
-	Config_DeleteTemplate_FullMethodName                 = "/pbcs.Config/DeleteTemplate"
-	Config_UpdateTemplate_FullMethodName                 = "/pbcs.Config/UpdateTemplate"
-	Config_ListTemplates_FullMethodName                  = "/pbcs.Config/ListTemplates"
-	Config_CreateTemplateRelease_FullMethodName          = "/pbcs.Config/CreateTemplateRelease"
-	Config_ListTemplateReleases_FullMethodName           = "/pbcs.Config/ListTemplateReleases"
-	Config_DeleteTemplateRelease_FullMethodName          = "/pbcs.Config/DeleteTemplateRelease"
-	Config_CreateGroup_FullMethodName                    = "/pbcs.Config/CreateGroup"
-	Config_DeleteGroup_FullMethodName                    = "/pbcs.Config/DeleteGroup"
-	Config_UpdateGroup_FullMethodName                    = "/pbcs.Config/UpdateGroup"
-	Config_ListAllGroups_FullMethodName                  = "/pbcs.Config/ListAllGroups"
-	Config_ListAppGroups_FullMethodName                  = "/pbcs.Config/ListAppGroups"
-	Config_ListGroupReleasedApps_FullMethodName          = "/pbcs.Config/ListGroupReleasedApps"
-	Config_Publish_FullMethodName                        = "/pbcs.Config/Publish"
-	Config_GenerateReleaseAndPublish_FullMethodName      = "/pbcs.Config/GenerateReleaseAndPublish"
-	Config_FinishPublish_FullMethodName                  = "/pbcs.Config/FinishPublish"
-	Config_ListPublishedStrategyHistories_FullMethodName = "/pbcs.Config/ListPublishedStrategyHistories"
-	Config_PublishInstance_FullMethodName                = "/pbcs.Config/PublishInstance"
-	Config_DeletePublishedInstance_FullMethodName        = "/pbcs.Config/DeletePublishedInstance"
-	Config_ListPublishedInstance_FullMethodName          = "/pbcs.Config/ListPublishedInstance"
-	Config_CreateCredentials_FullMethodName              = "/pbcs.Config/CreateCredentials"
-	Config_ListCredentials_FullMethodName                = "/pbcs.Config/ListCredentials"
-	Config_DeleteCredential_FullMethodName               = "/pbcs.Config/DeleteCredential"
-	Config_UpdateCredential_FullMethodName               = "/pbcs.Config/UpdateCredential"
-	Config_ListCredentialScopes_FullMethodName           = "/pbcs.Config/ListCredentialScopes"
-	Config_UpdateCredentialScope_FullMethodName          = "/pbcs.Config/UpdateCredentialScope"
+	Config_CreateApp_FullMethodName                 = "/pbcs.Config/CreateApp"
+	Config_UpdateApp_FullMethodName                 = "/pbcs.Config/UpdateApp"
+	Config_DeleteApp_FullMethodName                 = "/pbcs.Config/DeleteApp"
+	Config_GetApp_FullMethodName                    = "/pbcs.Config/GetApp"
+	Config_GetAppByName_FullMethodName              = "/pbcs.Config/GetAppByName"
+	Config_ListApps_FullMethodName                  = "/pbcs.Config/ListApps"
+	Config_ListAppsRest_FullMethodName              = "/pbcs.Config/ListAppsRest"
+	Config_ListAppsBySpaceRest_FullMethodName       = "/pbcs.Config/ListAppsBySpaceRest"
+	Config_CreateConfigItem_FullMethodName          = "/pbcs.Config/CreateConfigItem"
+	Config_BatchUpsertConfigItems_FullMethodName    = "/pbcs.Config/BatchUpsertConfigItems"
+	Config_UpdateConfigItem_FullMethodName          = "/pbcs.Config/UpdateConfigItem"
+	Config_DeleteConfigItem_FullMethodName          = "/pbcs.Config/DeleteConfigItem"
+	Config_GetConfigItem_FullMethodName             = "/pbcs.Config/GetConfigItem"
+	Config_ListConfigItems_FullMethodName           = "/pbcs.Config/ListConfigItems"
+	Config_ListConfigItemCount_FullMethodName       = "/pbcs.Config/ListConfigItemCount"
+	Config_CreateContent_FullMethodName             = "/pbcs.Config/CreateContent"
+	Config_ListContents_FullMethodName              = "/pbcs.Config/ListContents"
+	Config_CreateCommit_FullMethodName              = "/pbcs.Config/CreateCommit"
+	Config_ListCommits_FullMethodName               = "/pbcs.Config/ListCommits"
+	Config_CreateRelease_FullMethodName             = "/pbcs.Config/CreateRelease"
+	Config_ListReleases_FullMethodName              = "/pbcs.Config/ListReleases"
+	Config_ListReleasedConfigItems_FullMethodName   = "/pbcs.Config/ListReleasedConfigItems"
+	Config_CreateHook_FullMethodName                = "/pbcs.Config/CreateHook"
+	Config_DeleteHook_FullMethodName                = "/pbcs.Config/DeleteHook"
+	Config_UpdateHook_FullMethodName                = "/pbcs.Config/UpdateHook"
+	Config_ListHooks_FullMethodName                 = "/pbcs.Config/ListHooks"
+	Config_CreateTemplateSpace_FullMethodName       = "/pbcs.Config/CreateTemplateSpace"
+	Config_DeleteTemplateSpace_FullMethodName       = "/pbcs.Config/DeleteTemplateSpace"
+	Config_UpdateTemplateSpace_FullMethodName       = "/pbcs.Config/UpdateTemplateSpace"
+	Config_ListTemplateSpaces_FullMethodName        = "/pbcs.Config/ListTemplateSpaces"
+	Config_CreateTemplate_FullMethodName            = "/pbcs.Config/CreateTemplate"
+	Config_DeleteTemplate_FullMethodName            = "/pbcs.Config/DeleteTemplate"
+	Config_UpdateTemplate_FullMethodName            = "/pbcs.Config/UpdateTemplate"
+	Config_ListTemplates_FullMethodName             = "/pbcs.Config/ListTemplates"
+	Config_CreateTemplateRelease_FullMethodName     = "/pbcs.Config/CreateTemplateRelease"
+	Config_ListTemplateReleases_FullMethodName      = "/pbcs.Config/ListTemplateReleases"
+	Config_DeleteTemplateRelease_FullMethodName     = "/pbcs.Config/DeleteTemplateRelease"
+	Config_CreateGroup_FullMethodName               = "/pbcs.Config/CreateGroup"
+	Config_DeleteGroup_FullMethodName               = "/pbcs.Config/DeleteGroup"
+	Config_UpdateGroup_FullMethodName               = "/pbcs.Config/UpdateGroup"
+	Config_ListAllGroups_FullMethodName             = "/pbcs.Config/ListAllGroups"
+	Config_ListAppGroups_FullMethodName             = "/pbcs.Config/ListAppGroups"
+	Config_ListGroupReleasedApps_FullMethodName     = "/pbcs.Config/ListGroupReleasedApps"
+	Config_Publish_FullMethodName                   = "/pbcs.Config/Publish"
+	Config_GenerateReleaseAndPublish_FullMethodName = "/pbcs.Config/GenerateReleaseAndPublish"
+	Config_CreateCredentials_FullMethodName         = "/pbcs.Config/CreateCredentials"
+	Config_ListCredentials_FullMethodName           = "/pbcs.Config/ListCredentials"
+	Config_DeleteCredential_FullMethodName          = "/pbcs.Config/DeleteCredential"
+	Config_UpdateCredential_FullMethodName          = "/pbcs.Config/UpdateCredential"
+	Config_ListCredentialScopes_FullMethodName      = "/pbcs.Config/ListCredentialScopes"
+	Config_UpdateCredentialScope_FullMethodName     = "/pbcs.Config/UpdateCredentialScope"
 )
 
 // ConfigClient is the client API for Config service.
@@ -114,14 +101,6 @@ type ConfigClient interface {
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
-	CreateStrategySet(ctx context.Context, in *CreateStrategySetReq, opts ...grpc.CallOption) (*CreateStrategySetResp, error)
-	UpdateStrategySet(ctx context.Context, in *UpdateStrategySetReq, opts ...grpc.CallOption) (*UpdateStrategySetResp, error)
-	DeleteStrategySet(ctx context.Context, in *DeleteStrategySetReq, opts ...grpc.CallOption) (*DeleteStrategySetResp, error)
-	ListStrategySets(ctx context.Context, in *ListStrategySetsReq, opts ...grpc.CallOption) (*ListStrategySetsResp, error)
-	CreateStrategy(ctx context.Context, in *CreateStrategyReq, opts ...grpc.CallOption) (*CreateStrategyResp, error)
-	UpdateStrategy(ctx context.Context, in *UpdateStrategyReq, opts ...grpc.CallOption) (*UpdateStrategyResp, error)
-	DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, opts ...grpc.CallOption) (*DeleteStrategyResp, error)
-	ListStrategies(ctx context.Context, in *ListStrategiesReq, opts ...grpc.CallOption) (*ListStrategiesResp, error)
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
 	UpdateHook(ctx context.Context, in *UpdateHookReq, opts ...grpc.CallOption) (*UpdateHookResp, error)
@@ -145,11 +124,6 @@ type ConfigClient interface {
 	ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
-	FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error)
-	ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error)
-	PublishInstance(ctx context.Context, in *PublishInstanceReq, opts ...grpc.CallOption) (*PublishInstanceResp, error)
-	DeletePublishedInstance(ctx context.Context, in *DeletePublishedInstanceReq, opts ...grpc.CallOption) (*DeletePublishedInstanceResp, error)
-	ListPublishedInstance(ctx context.Context, in *ListPublishedInstanceReq, opts ...grpc.CallOption) (*ListPublishedInstanceResp, error)
 	CreateCredentials(ctx context.Context, in *CreateCredentialReq, opts ...grpc.CallOption) (*CreateCredentialResp, error)
 	ListCredentials(ctx context.Context, in *ListCredentialsReq, opts ...grpc.CallOption) (*ListCredentialsResp, error)
 	DeleteCredential(ctx context.Context, in *DeleteCredentialsReq, opts ...grpc.CallOption) (*DeleteCredentialsResp, error)
@@ -364,78 +338,6 @@ func (c *configClient) ListReleasedConfigItems(ctx context.Context, in *ListRele
 	return out, nil
 }
 
-func (c *configClient) CreateStrategySet(ctx context.Context, in *CreateStrategySetReq, opts ...grpc.CallOption) (*CreateStrategySetResp, error) {
-	out := new(CreateStrategySetResp)
-	err := c.cc.Invoke(ctx, Config_CreateStrategySet_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) UpdateStrategySet(ctx context.Context, in *UpdateStrategySetReq, opts ...grpc.CallOption) (*UpdateStrategySetResp, error) {
-	out := new(UpdateStrategySetResp)
-	err := c.cc.Invoke(ctx, Config_UpdateStrategySet_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) DeleteStrategySet(ctx context.Context, in *DeleteStrategySetReq, opts ...grpc.CallOption) (*DeleteStrategySetResp, error) {
-	out := new(DeleteStrategySetResp)
-	err := c.cc.Invoke(ctx, Config_DeleteStrategySet_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) ListStrategySets(ctx context.Context, in *ListStrategySetsReq, opts ...grpc.CallOption) (*ListStrategySetsResp, error) {
-	out := new(ListStrategySetsResp)
-	err := c.cc.Invoke(ctx, Config_ListStrategySets_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) CreateStrategy(ctx context.Context, in *CreateStrategyReq, opts ...grpc.CallOption) (*CreateStrategyResp, error) {
-	out := new(CreateStrategyResp)
-	err := c.cc.Invoke(ctx, Config_CreateStrategy_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) UpdateStrategy(ctx context.Context, in *UpdateStrategyReq, opts ...grpc.CallOption) (*UpdateStrategyResp, error) {
-	out := new(UpdateStrategyResp)
-	err := c.cc.Invoke(ctx, Config_UpdateStrategy_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) DeleteStrategy(ctx context.Context, in *DeleteStrategyReq, opts ...grpc.CallOption) (*DeleteStrategyResp, error) {
-	out := new(DeleteStrategyResp)
-	err := c.cc.Invoke(ctx, Config_DeleteStrategy_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) ListStrategies(ctx context.Context, in *ListStrategiesReq, opts ...grpc.CallOption) (*ListStrategiesResp, error) {
-	out := new(ListStrategiesResp)
-	err := c.cc.Invoke(ctx, Config_ListStrategies_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error) {
 	out := new(CreateHookResp)
 	err := c.cc.Invoke(ctx, Config_CreateHook_FullMethodName, in, out, opts...)
@@ -643,51 +545,6 @@ func (c *configClient) GenerateReleaseAndPublish(ctx context.Context, in *Genera
 	return out, nil
 }
 
-func (c *configClient) FinishPublish(ctx context.Context, in *FinishPublishReq, opts ...grpc.CallOption) (*FinishPublishResp, error) {
-	out := new(FinishPublishResp)
-	err := c.cc.Invoke(ctx, Config_FinishPublish_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) ListPublishedStrategyHistories(ctx context.Context, in *ListPubStrategyHistoriesReq, opts ...grpc.CallOption) (*ListPubStrategyHistoriesResp, error) {
-	out := new(ListPubStrategyHistoriesResp)
-	err := c.cc.Invoke(ctx, Config_ListPublishedStrategyHistories_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) PublishInstance(ctx context.Context, in *PublishInstanceReq, opts ...grpc.CallOption) (*PublishInstanceResp, error) {
-	out := new(PublishInstanceResp)
-	err := c.cc.Invoke(ctx, Config_PublishInstance_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) DeletePublishedInstance(ctx context.Context, in *DeletePublishedInstanceReq, opts ...grpc.CallOption) (*DeletePublishedInstanceResp, error) {
-	out := new(DeletePublishedInstanceResp)
-	err := c.cc.Invoke(ctx, Config_DeletePublishedInstance_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) ListPublishedInstance(ctx context.Context, in *ListPublishedInstanceReq, opts ...grpc.CallOption) (*ListPublishedInstanceResp, error) {
-	out := new(ListPublishedInstanceResp)
-	err := c.cc.Invoke(ctx, Config_ListPublishedInstance_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) CreateCredentials(ctx context.Context, in *CreateCredentialReq, opts ...grpc.CallOption) (*CreateCredentialResp, error) {
 	out := new(CreateCredentialResp)
 	err := c.cc.Invoke(ctx, Config_CreateCredentials_FullMethodName, in, out, opts...)
@@ -770,14 +627,6 @@ type ConfigServer interface {
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
-	CreateStrategySet(context.Context, *CreateStrategySetReq) (*CreateStrategySetResp, error)
-	UpdateStrategySet(context.Context, *UpdateStrategySetReq) (*UpdateStrategySetResp, error)
-	DeleteStrategySet(context.Context, *DeleteStrategySetReq) (*DeleteStrategySetResp, error)
-	ListStrategySets(context.Context, *ListStrategySetsReq) (*ListStrategySetsResp, error)
-	CreateStrategy(context.Context, *CreateStrategyReq) (*CreateStrategyResp, error)
-	UpdateStrategy(context.Context, *UpdateStrategyReq) (*UpdateStrategyResp, error)
-	DeleteStrategy(context.Context, *DeleteStrategyReq) (*DeleteStrategyResp, error)
-	ListStrategies(context.Context, *ListStrategiesReq) (*ListStrategiesResp, error)
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
 	UpdateHook(context.Context, *UpdateHookReq) (*UpdateHookResp, error)
@@ -801,11 +650,6 @@ type ConfigServer interface {
 	ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
 	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
-	FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error)
-	ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error)
-	PublishInstance(context.Context, *PublishInstanceReq) (*PublishInstanceResp, error)
-	DeletePublishedInstance(context.Context, *DeletePublishedInstanceReq) (*DeletePublishedInstanceResp, error)
-	ListPublishedInstance(context.Context, *ListPublishedInstanceReq) (*ListPublishedInstanceResp, error)
 	CreateCredentials(context.Context, *CreateCredentialReq) (*CreateCredentialResp, error)
 	ListCredentials(context.Context, *ListCredentialsReq) (*ListCredentialsResp, error)
 	DeleteCredential(context.Context, *DeleteCredentialsReq) (*DeleteCredentialsResp, error)
@@ -884,30 +728,6 @@ func (UnimplementedConfigServer) ListReleases(context.Context, *ListReleasesReq)
 func (UnimplementedConfigServer) ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedConfigItems not implemented")
 }
-func (UnimplementedConfigServer) CreateStrategySet(context.Context, *CreateStrategySetReq) (*CreateStrategySetResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateStrategySet not implemented")
-}
-func (UnimplementedConfigServer) UpdateStrategySet(context.Context, *UpdateStrategySetReq) (*UpdateStrategySetResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateStrategySet not implemented")
-}
-func (UnimplementedConfigServer) DeleteStrategySet(context.Context, *DeleteStrategySetReq) (*DeleteStrategySetResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteStrategySet not implemented")
-}
-func (UnimplementedConfigServer) ListStrategySets(context.Context, *ListStrategySetsReq) (*ListStrategySetsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListStrategySets not implemented")
-}
-func (UnimplementedConfigServer) CreateStrategy(context.Context, *CreateStrategyReq) (*CreateStrategyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateStrategy not implemented")
-}
-func (UnimplementedConfigServer) UpdateStrategy(context.Context, *UpdateStrategyReq) (*UpdateStrategyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateStrategy not implemented")
-}
-func (UnimplementedConfigServer) DeleteStrategy(context.Context, *DeleteStrategyReq) (*DeleteStrategyResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteStrategy not implemented")
-}
-func (UnimplementedConfigServer) ListStrategies(context.Context, *ListStrategiesReq) (*ListStrategiesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListStrategies not implemented")
-}
 func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHook not implemented")
 }
@@ -976,21 +796,6 @@ func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*Publish
 }
 func (UnimplementedConfigServer) GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateReleaseAndPublish not implemented")
-}
-func (UnimplementedConfigServer) FinishPublish(context.Context, *FinishPublishReq) (*FinishPublishResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FinishPublish not implemented")
-}
-func (UnimplementedConfigServer) ListPublishedStrategyHistories(context.Context, *ListPubStrategyHistoriesReq) (*ListPubStrategyHistoriesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListPublishedStrategyHistories not implemented")
-}
-func (UnimplementedConfigServer) PublishInstance(context.Context, *PublishInstanceReq) (*PublishInstanceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PublishInstance not implemented")
-}
-func (UnimplementedConfigServer) DeletePublishedInstance(context.Context, *DeletePublishedInstanceReq) (*DeletePublishedInstanceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeletePublishedInstance not implemented")
-}
-func (UnimplementedConfigServer) ListPublishedInstance(context.Context, *ListPublishedInstanceReq) (*ListPublishedInstanceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListPublishedInstance not implemented")
 }
 func (UnimplementedConfigServer) CreateCredentials(context.Context, *CreateCredentialReq) (*CreateCredentialResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCredentials not implemented")
@@ -1418,150 +1223,6 @@ func _Config_ListReleasedConfigItems_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_CreateStrategySet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateStrategySetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).CreateStrategySet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_CreateStrategySet_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).CreateStrategySet(ctx, req.(*CreateStrategySetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_UpdateStrategySet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateStrategySetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).UpdateStrategySet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_UpdateStrategySet_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).UpdateStrategySet(ctx, req.(*UpdateStrategySetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_DeleteStrategySet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteStrategySetReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).DeleteStrategySet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_DeleteStrategySet_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).DeleteStrategySet(ctx, req.(*DeleteStrategySetReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_ListStrategySets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListStrategySetsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListStrategySets(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListStrategySets_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListStrategySets(ctx, req.(*ListStrategySetsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_CreateStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateStrategyReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).CreateStrategy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_CreateStrategy_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).CreateStrategy(ctx, req.(*CreateStrategyReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_UpdateStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateStrategyReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).UpdateStrategy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_UpdateStrategy_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).UpdateStrategy(ctx, req.(*UpdateStrategyReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_DeleteStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteStrategyReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).DeleteStrategy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_DeleteStrategy_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).DeleteStrategy(ctx, req.(*DeleteStrategyReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_ListStrategies_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListStrategiesReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListStrategies(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListStrategies_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListStrategies(ctx, req.(*ListStrategiesReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_CreateHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateHookReq)
 	if err := dec(in); err != nil {
@@ -1976,96 +1637,6 @@ func _Config_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_FinishPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FinishPublishReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).FinishPublish(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_FinishPublish_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).FinishPublish(ctx, req.(*FinishPublishReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_ListPublishedStrategyHistories_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListPubStrategyHistoriesReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListPublishedStrategyHistories(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListPublishedStrategyHistories_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListPublishedStrategyHistories(ctx, req.(*ListPubStrategyHistoriesReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_PublishInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PublishInstanceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).PublishInstance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_PublishInstance_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).PublishInstance(ctx, req.(*PublishInstanceReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_DeletePublishedInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeletePublishedInstanceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).DeletePublishedInstance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_DeletePublishedInstance_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).DeletePublishedInstance(ctx, req.(*DeletePublishedInstanceReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_ListPublishedInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListPublishedInstanceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListPublishedInstance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListPublishedInstance_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListPublishedInstance(ctx, req.(*ListPublishedInstanceReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_CreateCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateCredentialReq)
 	if err := dec(in); err != nil {
@@ -2270,38 +1841,6 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListReleasedConfigItems_Handler,
 		},
 		{
-			MethodName: "CreateStrategySet",
-			Handler:    _Config_CreateStrategySet_Handler,
-		},
-		{
-			MethodName: "UpdateStrategySet",
-			Handler:    _Config_UpdateStrategySet_Handler,
-		},
-		{
-			MethodName: "DeleteStrategySet",
-			Handler:    _Config_DeleteStrategySet_Handler,
-		},
-		{
-			MethodName: "ListStrategySets",
-			Handler:    _Config_ListStrategySets_Handler,
-		},
-		{
-			MethodName: "CreateStrategy",
-			Handler:    _Config_CreateStrategy_Handler,
-		},
-		{
-			MethodName: "UpdateStrategy",
-			Handler:    _Config_UpdateStrategy_Handler,
-		},
-		{
-			MethodName: "DeleteStrategy",
-			Handler:    _Config_DeleteStrategy_Handler,
-		},
-		{
-			MethodName: "ListStrategies",
-			Handler:    _Config_ListStrategies_Handler,
-		},
-		{
 			MethodName: "CreateHook",
 			Handler:    _Config_CreateHook_Handler,
 		},
@@ -2392,26 +1931,6 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GenerateReleaseAndPublish",
 			Handler:    _Config_GenerateReleaseAndPublish_Handler,
-		},
-		{
-			MethodName: "FinishPublish",
-			Handler:    _Config_FinishPublish_Handler,
-		},
-		{
-			MethodName: "ListPublishedStrategyHistories",
-			Handler:    _Config_ListPublishedStrategyHistories_Handler,
-		},
-		{
-			MethodName: "PublishInstance",
-			Handler:    _Config_PublishInstance_Handler,
-		},
-		{
-			MethodName: "DeletePublishedInstance",
-			Handler:    _Config_DeletePublishedInstance_Handler,
-		},
-		{
-			MethodName: "ListPublishedInstance",
-			Handler:    _Config_ListPublishedInstance_Handler,
 		},
 		{
 			MethodName: "CreateCredentials",
