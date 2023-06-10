@@ -194,7 +194,8 @@ func newRepoProxy(authorizer auth.Authorizer) (repository.FileApiType, error) {
 	case string(cc.S3):
 		return repository.NewS3Service(settings, authorizer)
 	case string(cc.BkRepo):
-		return NewRepoService(settings, authorizer)
+		// return NewRepoService(settings, authorizer)
+		return repository.NewBKRepoService(settings, authorizer)
 	}
 	return nil, fmt.Errorf("store with type %s is not supported", settings.StorageType)
 }

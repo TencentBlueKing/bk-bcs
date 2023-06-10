@@ -104,8 +104,8 @@ func main() {
 			defer wg.Done()
 			for {
 				st := time.Now()
-				// resp, err := upload(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
-				resp, err := download(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
+				resp, err := upload(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
+				// resp, err := download(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
 				if err != nil {
 					klog.ErrorS(err, "idx", idx, "resp", resp)
 					continue

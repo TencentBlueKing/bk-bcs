@@ -133,6 +133,20 @@ type UploadFileReq struct {
 	Content string `json:"content"`
 }
 
+// UploadResp upload response
+// Docs https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/generic/simple.md
+type UploadResp struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    *UploadData `json:"data"`
+}
+
+// UploadResp upload data
+type UploadData struct {
+	Size   int64  `json:"size"` // bkrepo always return 0
+	Sha256 string `json:"sha256"`
+}
+
 // DownloadFileReq is repo download file request struct
 type DownloadFileReq struct {
 	// BizID is business ID
