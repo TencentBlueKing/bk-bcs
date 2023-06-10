@@ -85,11 +85,16 @@ func (c *client) RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error 
 		return err
 	}
 	kt.Ctx = context.TODO()
+	done := make(map[uint32]bool)
 	for _, group := range releaseGroups {
+		if done[group.ReleaseID] {
+			continue
+		}
 		if _, err = c.refreshReleasedCICache(kt, bizID, group.ReleaseID); err != nil {
 			logs.Errorf("refresh released ci cache failed, err: %v, rid: %s", err, kt.Rid)
 			return err
 		}
+		done[group.ReleaseID] = true
 		kt.Ctx = context.TODO()
 	}
 
