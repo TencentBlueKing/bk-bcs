@@ -25,9 +25,9 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220901090711-36bfa115011f
 	github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch v0.0.0-00010101000000-000000000000
 	github.com/emicklei/go-restful v2.15.0+incompatible
+	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/json-iterator/go v1.1.12
 	github.com/parnurzeal/gorequest v0.2.16
-	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2

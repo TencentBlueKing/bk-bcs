@@ -36,7 +36,7 @@ type PrometheusController struct {
 	clusterID      string
 	conf           *config.Config
 
-	discoverys     map[string]discovery.Discovery
+	discovers      map[string]discovery.Discovery
 	mesosModules   []string
 	serviceModules []string
 	nodeModules    []string
@@ -49,7 +49,7 @@ func NewPrometheusController(conf *config.Config) *PrometheusController {
 		conf:           conf,
 		clusterID:      conf.ClusterID,
 		promFilePrefix: conf.PromFilePrefix,
-		discoverys:     make(map[string]discovery.Discovery),
+		discovers:      make(map[string]discovery.Discovery),
 		mesosModules: []string{commtypes.BCS_MODULE_SCHEDULER, commtypes.BCS_MODULE_MESOSDATAWATCH,
 			commtypes.BCS_MODULE_MESOSAPISERVER,
 			commtypes.BCS_MODULE_DNS, commtypes.BCS_MODULE_LOADBALANCE},
@@ -80,7 +80,7 @@ func (prom *PrometheusController) Start() error {
 		// register event handle function
 		dis.RegisterEventFunc(prom.handleDiscoveryEvent)
 		for _, module := range prom.mesosModules {
-			prom.discoverys[module] = dis
+			prom.discovers[module] = dis
 		}
 		err = dis.Start()
 		if err != nil {
@@ -109,7 +109,7 @@ func (prom *PrometheusController) Start() error {
 			}
 			// register event handle function
 			nodeDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
-			prom.discoverys[module] = nodeDiscovery
+			prom.discovers[module] = nodeDiscovery
 			err = nodeDiscovery.Start()
 			if err != nil {
 				blog.Errorf("nodeDiscovery start failed: %s", err.Error())
@@ -127,7 +127,7 @@ func (prom *PrometheusController) Start() error {
 		// register event handle function
 		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
 		for _, module := range prom.serviceModules {
-			prom.discoverys[module] = serviceDiscovery
+			prom.discovers[module] = serviceDiscovery
 		}
 		err = serviceDiscovery.Start()
 		if err != nil {
@@ -145,7 +145,7 @@ func (prom *PrometheusController) Start() error {
 		}
 		// register event handle function
 		serviceDiscovery.RegisterEventFunc(prom.handleDiscoveryEvent)
-		prom.discoverys[prom.serviceMonitor] = serviceDiscovery
+		prom.discovers[prom.serviceMonitor] = serviceDiscovery
 		err = serviceDiscovery.Start()
 		if err != nil {
 			blog.Errorf("serviceDiscovery start failed: %s", err.Error())
@@ -158,7 +158,7 @@ func (prom *PrometheusController) Start() error {
 
 func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Info) {
 	blog.Infof("discovery %s service discovery config changed", dInfo.Module)
-	disc, ok := prom.discoverys[dInfo.Module]
+	disc, ok := prom.discovers[dInfo.Module]
 	if !ok {
 		blog.Errorf("not found discovery %s", dInfo.Module)
 		return
@@ -198,7 +198,7 @@ func (prom *PrometheusController) handleDiscoveryEvent(dInfo discovery.Info) {
 }
 
 func (prom *PrometheusController) deletePrometheusConfigFile(dInfo discovery.Info) {
-	disc, ok := prom.discoverys[dInfo.Module]
+	disc, ok := prom.discovers[dInfo.Module]
 	if !ok {
 		blog.Errorf("not found discovery %s", dInfo.Module)
 		return

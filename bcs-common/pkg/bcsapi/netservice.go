@@ -40,7 +40,8 @@ const (
 	envVarNameNetservice    = "NETSVR_ADDR"
 )
 
-// Netservice define http client for bcs-netservice
+// Netservice define http client for bcs-netservice. The interface used to operate
+// netservice with the crud of pool.
 type Netservice interface {
 	RegisterPool(pool *types.NetPool) error
 	UpdatePool(pool *types.NetPool) error
@@ -57,7 +58,7 @@ type Netservice interface {
 	TransferIPAttr(input *types.TranIPAttrInput) error
 }
 
-// NetserviceCli netservice http client
+// NetserviceCli netservice http client, will handle all operations with netservice
 type NetserviceCli struct {
 	httpClientTimeout int
 	tlsConfig         *tls.Config
@@ -66,7 +67,7 @@ type NetserviceCli struct {
 	random  *rand.Rand
 }
 
-// NewNetserviceCli create new client
+// NewNetserviceCli create new client for netservice cli
 func NewNetserviceCli() *NetserviceCli {
 	return &NetserviceCli{
 		httpClientTimeout: 3,
@@ -149,7 +150,7 @@ func (nc *NetserviceCli) GetNetService(zkHost []string) error {
 	return nil
 }
 
-// RegisterPool register pool info to bcs-netservice
+// RegisterPool register pool info to bcs-netservice, will register pool info to netservice
 func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 	if len(pool.Cluster) == 0 {
 		return fmt.Errorf("lost cluster info")
@@ -196,7 +197,7 @@ func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 	return nil
 }
 
-// UpdatePool update pool info
+// UpdatePool update pool info, will update pool information to netservice
 func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	if len(pool.Cluster) == 0 {
 		return fmt.Errorf("lost cluster info")
@@ -245,7 +246,7 @@ func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	return nil
 }
 
-// GetPool get pool info from netservice
+// GetPool get pool info from netservice, will return pool information from netservice
 func (nc *NetserviceCli) GetPool(cluster, net string) ([]*types.NetPool, error) {
 	if len(cluster) == 0 || len(net) == 0 {
 		return nil, fmt.Errorf("Lost cluster or network segment in request")
@@ -291,7 +292,7 @@ func (nc *NetserviceCli) GetPool(cluster, net string) ([]*types.NetPool, error) 
 	return netRes.Pool, nil
 }
 
-// ListAllPool list all pools
+// ListAllPool list all pools, it will return all pools from netservice
 func (nc *NetserviceCli) ListAllPool() ([]*types.NetPool, error) {
 	if len(nc.netSvrs) == 0 {
 		return nil, fmt.Errorf("no available bcs-netservice")
@@ -334,7 +335,7 @@ func (nc *NetserviceCli) ListAllPool() ([]*types.NetPool, error) {
 	return netRes.Pool, nil
 }
 
-// ListAllPoolWithCluster list all pool with cluster
+// ListAllPoolWithCluster list all pool with cluster, it will list all pools by clusterid
 func (nc *NetserviceCli) ListAllPoolWithCluster(cluster string) ([]*types.NetPool, error) {
 	if len(nc.netSvrs) == 0 {
 		return nil, fmt.Errorf("no available bcs-netservice")
@@ -378,7 +379,7 @@ func (nc *NetserviceCli) ListAllPoolWithCluster(cluster string) ([]*types.NetPoo
 	return netRes.Pool, nil
 }
 
-// DeletePool delete pool
+// DeletePool delete pool, it will delete pool by cluster and net info
 func (nc *NetserviceCli) DeletePool(cluster, net string) error {
 	if len(cluster) == 0 || len(net) == 0 {
 		return fmt.Errorf("neither cluster nor net can be empty")
@@ -415,6 +416,7 @@ func (nc *NetserviceCli) DeletePool(cluster, net string) error {
 }
 
 // RegisterHost register host info to bcs-netservice
+// It will register host to netservice
 func (nc *NetserviceCli) RegisterHost(host *types.HostInfo) error {
 	if len(nc.netSvrs) == 0 {
 		return fmt.Errorf("no available bcs-netservice")
@@ -457,6 +459,7 @@ func (nc *NetserviceCli) RegisterHost(host *types.HostInfo) error {
 }
 
 // DeleteHost when host has container or any ip belongs to the host is active, it can't be deleted
+// It will delete hosts from netservice
 func (nc *NetserviceCli) DeleteHost(host string, ips []string) error {
 	if len(nc.netSvrs) == 0 {
 		return fmt.Errorf("no available bcs-netservice")
@@ -506,7 +509,7 @@ func (nc *NetserviceCli) DeleteHost(host string, ips []string) error {
 	return fmt.Errorf(hostRes.Message)
 }
 
-// GetHostInfo Get host info by host ip address
+// GetHostInfo Get host info by host ip address. It will get host info from netservice
 func (nc *NetserviceCli) GetHostInfo(host string, timeout int) (*types.HostInfo, error) {
 	if len(host) == 0 {
 		return nil, fmt.Errorf("host ip address lost")
@@ -560,7 +563,7 @@ func (nc *NetserviceCli) GetHostInfo(host string, timeout int) (*types.HostInfo,
 	return nil, fmt.Errorf("get host info all netservice failed, %s", lastErr)
 }
 
-// LeaseIPAddr lease one ip address from bcs-netservice
+// LeaseIPAddr lease one ip address from bcs-netservice. It will lease ip address from netservice
 func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.IPInfo, error) {
 	// create net request
 	request := &types.NetRequest{
@@ -620,7 +623,6 @@ func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.
 		ipInfo := response.Info[0]
 		// check if response ip addr is what we need
 		if lease.IPAddr != "" && lease.IPAddr != ipInfo.IPAddr {
-			// todo(DeveloperJim): Get unexpect ip address, need to release
 			return nil, fmt.Errorf("lease ip addr expect ipaddr %s, but got %s", lease.IPAddr, ipInfo.IPAddr)
 		}
 		if len(ipInfo.Gateway) == 0 || ipInfo.Mask == 0 {
@@ -631,7 +633,8 @@ func (nc *NetserviceCli) LeaseIPAddr(lease *types.IPLease, timeout int) (*types.
 	return nil, fmt.Errorf("lease ip addr all netservice failed, %s", lastErr)
 }
 
-// ReleaseIPAddr release ip address to bcs-netservice
+// ReleaseIPAddr release ip address to bcs-netservice. It will release the ip address
+// from netservice
 func (nc *NetserviceCli) ReleaseIPAddr(release *types.IPRelease, ipInfo *types.IPInfo, timeout int) error {
 	// create net request
 	request := &types.NetRequest{
@@ -732,7 +735,7 @@ func (nc *NetserviceCli) UpdateIPInstance(inst *types.IPInst) error {
 	return fmt.Errorf(res.Message)
 }
 
-// TransferIPAttr transfer ip attribution
+// TransferIPAttr transfer ip attribution. It will transfer the ip status for source to target status
 func (nc *NetserviceCli) TransferIPAttr(input *types.TranIPAttrInput) error {
 	if input == nil {
 		return fmt.Errorf("input can not be nil")

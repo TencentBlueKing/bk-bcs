@@ -11,7 +11,7 @@
  *
  */
 
-package proc_daemon
+package procdaemon
 
 import (
 	"fmt"
@@ -21,9 +21,10 @@ import (
 	"time"
 
 	"encoding/json"
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	bhttp "github.com/Tencent/bk-bcs/bcs-common/common/http"
-	"strings"
 )
 
 const (

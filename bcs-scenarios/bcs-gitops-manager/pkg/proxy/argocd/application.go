@@ -71,7 +71,7 @@ type AppPlugin struct {
 //
 
 // Init all project sub path handler
-// project plugin is a subRouter, all path registed is relative
+// project plugin is a subRouter, all path registered is relative
 func (plugin *AppPlugin) Init() error {
 	// POST /api/v1/applications, create new application
 	plugin.Path("").Methods("POST").
@@ -93,8 +93,8 @@ func (plugin *AppPlugin) Init() error {
 	appRouter.PathPrefix("").Methods("GET").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationViewsHandler))
 
-	// todo(DeveloperJim): GET /api/v1/stream/applications?project={project}
-	// todo(DeveloperJim): GET /api/v1/stream/applications/{name}/resource-tree
+	// NOTE: GET /api/v1/stream/applications?project={project}
+	// NOTE: GET /api/v1/stream/applications/{name}/resource-tree
 	blog.Infof("argocd application plugin init successfully")
 	return nil
 }

@@ -65,7 +65,7 @@ func (c *ClientConfig) Complete() error {
 	if err != nil {
 		return fmt.Errorf("loading client side tls configuration failed, %s", err.Error())
 	}
-	// todo(DeveloperJim): clean setting when releasing office verion
+	// NOTE: clean setting when releasing office version
 	c.ClientTLS = cliConfig
 	c.ClientTLS.ClientAuth = tls.NoClientCert
 	c.ClientTLS.InsecureSkipVerify = true

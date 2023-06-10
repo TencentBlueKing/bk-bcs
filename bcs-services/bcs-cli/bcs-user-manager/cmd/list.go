@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newListCmd create the resource list command
 func newListCmd() *cobra.Command {
 	listCmd := &cobra.Command{
 		Use:   "list",

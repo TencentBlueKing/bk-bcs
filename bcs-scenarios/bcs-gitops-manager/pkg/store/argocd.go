@@ -66,8 +66,8 @@ func (cd *argo) GetOptions() *Options {
 
 // CreateProject interface
 func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
-	// todo(DeveloperJim): create new single connection per request
-	// ! please make more attension to performance issue
+	// NOTE: create new single connection per request
+	// ! please make more attention to performance issue
 	connection, client, err := cd.basicClient.NewProjectClient()
 	if err != nil {
 		return errors.Wrapf(err, "argocd init project client failed")
@@ -128,8 +128,8 @@ func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, err
 
 // CreateCluster interface
 func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error {
-	// todo(DeveloperJim): create new single connection per request
-	// ! please make more attension to performance issue
+	// NOTE: create new single connection per request
+	// ! please make more attention to performance issue
 	connection, client, err := cd.basicClient.NewClusterClient()
 	if err != nil {
 		return errors.Wrapf(err, "argocd init cluster client failed")
@@ -164,7 +164,7 @@ func (cd *argo) DeleteCluster(ctx context.Context, name string) error {
 // GetCluster interface
 func (cd *argo) GetCluster(ctx context.Context, name string) (*v1alpha1.Cluster, error) {
 	// create new single connection per request
-	// ! please make more attension to performance issue
+	// ! please make more attention to performance issue
 	connection, client, err := cd.basicClient.NewClusterClient()
 	if err != nil {
 		return nil, errors.Wrapf(err, "argocd init cluster client failed")
@@ -264,7 +264,7 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 		return nil, errors.Wrapf(err, "get repository failed with decode repo '%s'", repo)
 	}
 	// create new single connection per request
-	// ! please make more attension to performance issue
+	// ! please make more attention to performance issue
 	connection, client, err := cd.basicClient.NewRepoClient()
 	if err != nil {
 		return nil, errors.Wrapf(err, "argocd init repo client failed")
@@ -298,7 +298,7 @@ func (cd *argo) ListRepository(ctx context.Context) (*v1alpha1.RepositoryList, e
 // GetApplication will return application by name
 func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error) {
 	// create new single connection per request
-	// ! please make more attension to performance issue
+	// ! please make more attention to performance issue
 	connection, client, err := cd.basicClient.NewApplicationClient()
 	if err != nil {
 		return nil, errors.Wrapf(err, "argocd init application client failed")
@@ -382,12 +382,12 @@ func (cd *argo) initToken() error {
 	}
 	client := http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
 		},
 	}
-	url := fmt.Sprintf("https://%s/api/v1/session", cd.option.Service)
+	argoUrl := fmt.Sprintf("https://%s/api/v1/session", cd.option.Service)
 	response, err := client.Post(
-		url,
+		argoUrl,
 		"application/json",
 		bytes.NewBuffer(reqBytes),
 	)

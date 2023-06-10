@@ -47,9 +47,11 @@ type httpResponse struct {
 	err        error
 }
 
+type ContextKey string
+
 const (
-	ctxKeyRequestID = "requestID"
-	ctxKeyUser      = "user"
+	ctxKeyRequestID ContextKey = "requestID"
+	ctxKeyUser      ContextKey = "user"
 )
 
 // ServeHTTP 接收请求的入口，获取请求登录态信息并设置到 context 中
@@ -92,7 +94,7 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 // MiddlewareInterface defines the middleware interface
 type MiddlewareInterface interface {
-	HttpWrapper(handler httpHandler) *httpWrapper
+	HttpWrapper(handler httpHandler) http.Handler
 
 	ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error)
 	CheckProjectPermission(ctx context.Context, projectName string,
@@ -132,7 +134,7 @@ func NewMiddlewareHandler(option *proxy.GitOpsOptions, session *Session) Middlew
 }
 
 // HttpWrapper 创建 http wrapper 中间件
-func (h *MiddlewareHandler) HttpWrapper(handler httpHandler) *httpWrapper {
+func (h *MiddlewareHandler) HttpWrapper(handler httpHandler) http.Handler {
 	return &httpWrapper{
 		handler: handler,
 		option:  h.option,
@@ -253,7 +255,7 @@ func (h *MiddlewareHandler) CheckClusterPermission(ctx context.Context, clusterN
 	}
 	projectID := common.GetBCSProjectID(argoCluster.Annotations)
 	if projectID == "" {
-		return http.StatusForbidden, errors.Errorf("cluster no project control infomation")
+		return http.StatusForbidden, errors.Errorf("cluster no project control information")
 	}
 
 	var permit bool

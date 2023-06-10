@@ -15,7 +15,7 @@ package manager
 
 import (
 	"compress/gzip"
-	"crypto/md5"
+	"crypto/md5" // nolint
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -87,7 +87,7 @@ func (m *manager) downloadAndTarProcessPackages(processInfo *types.ProcessInfo) 
 	_, err = os.Stat(uriPack.ExtractDir)
 	if err != nil {
 		blog.Errorf("process %s ExtractDir %s not exist, and need mkdir", processInfo.Id, uriPack.ExtractDir)
-		err = os.MkdirAll(filepath.Dir(uriPack.ExtractDir), 0755)
+		err = os.MkdirAll(filepath.Dir(uriPack.ExtractDir), 0755) // nolint
 		if err != nil {
 			blog.Errorf("process %s mkdir %s error %s", processInfo.Id, filepath.Dir(uriPack.OutputDir), err.Error())
 			return err
@@ -210,7 +210,7 @@ func (m *manager) downloadProcessPackages(processInfo *types.ProcessInfo) (bool,
 	}*/
 
 	var packMd5 string
-	h := md5.New()
+	h := md5.New() // nolint
 	f, err := os.Open(uriPack.PackagesFile)
 	if err != nil {
 		blog.Errorf("process %s open PackagesFile %s error %s", processInfo.Id, uriPack.PackagesFile, err.Error())
@@ -234,7 +234,7 @@ func (m *manager) downloadProcessPackages(processInfo *types.ProcessInfo) (bool,
 DownloadRESP:
 	blog.Errorf("process %s PackagesFile %s md5 %s is invalid, and need download", processInfo.Id, uriPack.PackagesFile,
 		packMd5)
-	err = os.MkdirAll(filepath.Dir(uriPack.PackagesFile), 0755)
+	err = os.MkdirAll(filepath.Dir(uriPack.PackagesFile), 0755) // nolint
 	if err != nil {
 		blog.Errorf("process %s mkdir %s error %s", processInfo.Id, filepath.Dir(uriPack.PackagesFile), err.Error())
 		return false, err
