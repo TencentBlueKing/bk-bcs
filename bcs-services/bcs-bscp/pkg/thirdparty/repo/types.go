@@ -411,11 +411,8 @@ type RepositoryTypeInter interface {
 	QueryMetadata(ctx context.Context, opt *NodeOption) (map[string]string, error)
 }
 
-func GenS3NodeFullPath(path, sign string) (string, error) {
-
-	if len(path) == 0 {
-		return "", errors.New("path is required")
-	}
+// GenS3NodeFullPath
+func GenS3NodeFullPath(bizID uint32, sign string) (string, error) {
 	if len(sign) == 0 {
 		return "", errors.New("sign is required")
 	}
@@ -423,7 +420,8 @@ func GenS3NodeFullPath(path, sign string) (string, error) {
 		return "", errors.New("file sha256 is not standard format")
 	}
 
-	return fmt.Sprintf("/%s%s%s", path, nodeFrontPath, sign), nil
+	repoName := fmt.Sprintf("bscp-%s-biz-%d", version, bizID)
+	return fmt.Sprintf("/%s%s%s", repoName, nodeFrontPath, sign), nil
 }
 
 type UriDecoratorInter interface {

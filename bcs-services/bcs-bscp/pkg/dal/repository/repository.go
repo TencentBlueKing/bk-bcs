@@ -13,6 +13,7 @@ limitations under the License.
 package repository
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -43,11 +44,29 @@ type ObjectMetadata struct {
 	Sha256   string `json:"sha256"`
 }
 
+// ObjectDownload 文件下载
+type ObjectDownload interface {
+	DownloadLink(kt *kit.Kit, fileContentID string) (string, error)
+	AsyncDownload(kt *kit.Kit, fileContentID string) (string, error)
+	AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error)
+}
+
+// Repo
+type Repo interface {
+	ObjectDownload
+	Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error)
+	Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error)
+	Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error)
+}
+
 // AuthResp http response with need apply permission.
 type AuthResp struct {
 	Code       int32               `json:"code"`
 	Message    string              `json:"message"`
 	Permission *pbas.IamPermission `json:"permission,omitempty"`
+}
+
+type RepoClient interface {
 }
 
 // GetBizIDAndAppID get biz_id and app_id from req path.

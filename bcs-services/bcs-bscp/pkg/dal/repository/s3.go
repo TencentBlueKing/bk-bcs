@@ -13,14 +13,15 @@ limitations under the License.
 package repository
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
-	"github.com/bluele/gcache"
 	"github.com/go-chi/render"
 	"github.com/minio/minio-go/v7"
 	"github.com/pkg/errors"
+	cos "github.com/tencentyun/cos-go-sdk-v5"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
@@ -32,35 +33,74 @@ import (
 	"bscp.io/pkg/thirdparty/repo"
 )
 
-// S3Client s3 client struct
-type S3Client struct {
+// s3Client s3 client struct
+type s3Client struct {
 	// repoCli s3 client.
-	s3Cli *repo.ClientS3
-	// s3CreatedRecords memory LRU cache used for re-create repo repository.
-	s3CreatedRecords gcache.Cache
+	client *http.Client
+	s3Cli  *repo.ClientS3
 	// authorizer auth related operations.
 	authorizer auth.Authorizer
+	host       string
 }
 
 // DownloadFile download file
-func (s *S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
+func (s *s3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	err := s.downloadFile(w, r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 	}
 }
 
-func (s *S3Client) downloadFile(w http.ResponseWriter, r *http.Request) error {
+// UploadFile upload file
+func (s *s3Client) uploadFile(r *http.Request) (*ObjectMetadata, error) {
+	kt := kit.MustGetKit(r.Context())
+
+	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+	if len(sha256) != 64 {
+		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
+	}
+
+	return s.uploadFile2(kt, sha256, r.Body)
+}
+
+// UploadFile
+func (s *s3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
+	metadata, err := s.uploadFile(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+	render.JSON(w, r, rest.OKRender(metadata))
+
+}
+
+func (s *s3Client) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+	if err != nil {
+		return nil, err
+	}
+
+	rawURL := fmt.Sprintf("%s/%s", s.host, node)
+	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodPut, rawURL, body)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, errors.Errorf("upload status %d != 200", resp.StatusCode)
+	}
+	return &ObjectMetadata{}, nil
+}
+
+func (s *s3Client) downloadFile(w http.ResponseWriter, r *http.Request) error {
 	kt := kit.MustGetKit(r.Context())
 
 	repoName := s.s3Cli.Config.S3.BucketName
-	s3PathName, err := repo.GenRepoName(kt.BizID)
-	if err != nil {
-		return errors.Wrap(err, "generate S3 repository name failed")
-	}
-
 	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	fullPath, err := repo.GenS3NodeFullPath(s3PathName, sha256)
+	fullPath, err := repo.GenS3NodeFullPath(kt.BizID, sha256)
 	if err != nil {
 		return errors.Wrap(err, "create S3 FullPath failed")
 	}
@@ -81,52 +121,8 @@ func (s *S3Client) downloadFile(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// UploadFile
-func (s *S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
-	metadata, err := s.uploadFile(w, r)
-	if err != nil {
-		render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-	render.JSON(w, r, rest.OKRender(metadata))
-}
-
-// UploadFile upload file
-func (s *S3Client) uploadFile(w http.ResponseWriter, r *http.Request) (*ObjectMetadata, error) {
-	kt := kit.MustGetKit(r.Context())
-
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	if len(sha256) != 64 {
-		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
-	}
-
-	s3pathName, err := repo.GenRepoName(kt.BizID)
-	if err != nil {
-		return nil, errors.Wrap(err, "generate s3 path name failed")
-	}
-
-	fullPath, err := repo.GenS3NodeFullPath(s3pathName, sha256)
-	if err != nil {
-		return nil, errors.Wrap(err, "create S3 FullPath failed")
-	}
-
-	repoName := s.s3Cli.Config.S3.BucketName
-	info, err := s.s3Cli.Client.PutObject(r.Context(), repoName, fullPath, r.Body, r.ContentLength, minio.PutObjectOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "upload S3 file failed")
-	}
-
-	// cos only have etag, not for validate
-	metadata := &ObjectMetadata{
-		ByteSize: info.Size,
-		Sha256:   info.ETag,
-	}
-
-	return metadata, nil
-}
-
 // FileMetadata get s3 head data
-func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
+func (s *s3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	metadata, err := s.fileMetadata(w, r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
@@ -135,7 +131,8 @@ func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, rest.OKRender(metadata))
 
 }
-func (s S3Client) fileMetadata(w http.ResponseWriter, r *http.Request) (*ObjectMetadata, error) {
+
+func (s *s3Client) fileMetadata(w http.ResponseWriter, r *http.Request) (*ObjectMetadata, error) {
 	kt := kit.MustGetKit(r.Context())
 
 	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
@@ -145,12 +142,7 @@ func (s S3Client) fileMetadata(w http.ResponseWriter, r *http.Request) (*ObjectM
 
 	config := cc.ApiServer().Repo
 
-	s3pathName, err := repo.GenRepoName(kt.BizID)
-	if err != nil {
-		return nil, errors.Wrap(err, "generate s3 path name failed")
-	}
-
-	fullPath, err := repo.GenS3NodeFullPath(s3pathName, sha256)
+	fullPath, err := repo.GenS3NodeFullPath(kt.BizID, sha256)
 	if err != nil {
 		return nil, errors.Wrap(err, "create S3 FullPath failed")
 	}
@@ -171,14 +163,25 @@ func (s S3Client) fileMetadata(w http.ResponseWriter, r *http.Request) (*ObjectM
 
 // NewS3Service new s3 service
 func NewS3Service(settings cc.Repository, authorizer auth.Authorizer) (FileApiType, error) {
-	s3Client, err := repo.NewClientS3(&settings, metrics.Register())
+	s, err := repo.NewClientS3(&settings, metrics.Register())
 	if err != nil {
 		return nil, err
 	}
-	p := &S3Client{
-		s3Cli:            s3Client,
-		s3CreatedRecords: gcache.New(1000).EvictType(gcache.TYPE_LRU).Build(), // total size < 8k
-		authorizer:       authorizer,
+
+	host := fmt.Sprintf("https://%s.%s", settings.S3.BucketName, settings.S3.Endpoint)
+
+	p := &s3Client{
+		s3Cli:      s,
+		authorizer: authorizer,
+		host:       host,
 	}
+
+	transport := &cos.AuthorizationTransport{
+		SecretID:  settings.S3.AccessKeyID,
+		SecretKey: settings.S3.SecretAccessKey,
+	}
+
+	p.client = &http.Client{Transport: transport}
+
 	return p, nil
 }
