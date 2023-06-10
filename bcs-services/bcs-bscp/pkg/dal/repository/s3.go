@@ -174,22 +174,36 @@ func (s *s3Client) fileMetadata(w http.ResponseWriter, r *http.Request) (*Object
 		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
 	}
 
-	config := cc.ApiServer().Repo
+	return s.fileMetadata2(kt, sha256)
+}
 
-	fullPath, err := repo.GenS3NodeFullPath(kt.BizID, sha256)
+func (s *s3Client) fileMetadata2(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
-		return nil, errors.Wrap(err, "create S3 FullPath failed")
+		return nil, err
 	}
 
-	fileMetadata, err := s.s3Cli.FileMetadataHead(kt.Ctx, config.S3.BucketName, fullPath)
+	rawURL := fmt.Sprintf("%s/%s", s.host, node)
+	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodHead, rawURL, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "get file metadata failed")
+		return nil, err
 	}
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.Errorf("download status %d != 200", resp.StatusCode)
+	}
+	fmt.Println(resp.Header)
 
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
-		ByteSize: fileMetadata.ByteSize,
-		Sha256:   fileMetadata.Sha256,
+		ByteSize: 0,
+		Sha256:   fileContentID,
 	}
 
 	return metadata, nil
