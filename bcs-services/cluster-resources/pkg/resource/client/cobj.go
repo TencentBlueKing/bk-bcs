@@ -58,7 +58,8 @@ func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[stri
 		return nil, err
 	}
 	if clusterInfo.Type == cluster.ClusterTypeShared {
-		ret, err := c.ResClient.cli.Resource(c.res).List(ctx, opts)
+		var ret *unstructured.UnstructuredList
+		ret, err = c.ResClient.cli.Resource(c.res).List(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +94,8 @@ func (c *CRDClient) Get(ctx context.Context, name string, opts metav1.GetOptions
 			return nil, errorx.New(errcode.Unsupported, i18n.GetMsg(ctx, "共享集群中不支持查看 CRD %s 信息"), name)
 		}
 
-		ret, err := c.ResClient.cli.Resource(c.res).Get(ctx, name, opts)
+		var ret *unstructured.Unstructured
+		ret, err = c.ResClient.cli.Resource(c.res).Get(ctx, name, opts)
 		if err != nil {
 			return nil, err
 		}

@@ -22,7 +22,7 @@ const (
 	// we can refer to http://coolaf.com/tool/rd when testing
 	DefaultTokenLength = 32
 	// TokenKeyPrefix is the redis key for token
-	TokenKeyPrefix = "bcs_auth:token:"
+	TokenKeyPrefix = "bcs_auth:token:" // NOCC:gas/crypto(误报)
 	// TokenLimits for token
 	TokenLimits = 1
 )

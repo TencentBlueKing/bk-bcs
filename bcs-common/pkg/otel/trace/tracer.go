@@ -159,7 +159,7 @@ func InitTracingProvider(serviceName string, opt ...Option) (func(context.Contex
 		resource.WithAttributes(defaultOptions.ResourceAttrs...),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create resource: %w", err)
+		return nil, fmt.Errorf("failed to create resource: %s", err.Error())
 	}
 
 	// If the OpenTelemetry Collector is running on a local cluster (minikube or
@@ -175,13 +175,13 @@ func InitTracingProvider(serviceName string, opt ...Option) (func(context.Contex
 		grpc.WithBlock(),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector: %w", err)
+		return nil, fmt.Errorf("failed to create gRPC connection to collector: %s", err.Error())
 	}
 
 	// Set up a trace exporter
 	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
+		return nil, fmt.Errorf("failed to create trace exporter: %s", err.Error())
 	}
 
 	// Register the trace exporter with a TracerProvider, using a batch

@@ -161,9 +161,9 @@ func GetNodeMatchByName(ctx context.Context, clusterId, nodeName string) (string
 	return utils.StringJoinIPWithRegex(nodeIPList, "|", ".*"), strings.Join(nodeIPList, ","), nil
 }
 
-// GetNodeContainerRuntimeVersionByName 通过节点名称获取容器运行时版本
-func GetNodeContainerRuntimeVersionByName(ctx context.Context, clusterId, nodeName string) (string, error) {
-	version, err := k8sclient.GetNodeContainerRuntimeVersionByName(ctx, clusterId, nodeName)
+// GetNodeCRVersionByName 通过节点名称获取容器运行时版本
+func GetNodeCRVersionByName(ctx context.Context, clusterId, nodeName string) (string, error) {
+	version, err := k8sclient.GetNodeCRVersionByName(ctx, clusterId, nodeName)
 	if err != nil {
 		return "", err
 	}

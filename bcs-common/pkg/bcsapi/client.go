@@ -79,7 +79,7 @@ func (a *Authentication) RequireTransportSecurity() bool {
 	return !a.Insecure
 }
 
-// NewTokenAuth impelmentation of grpc credentials interface
+// NewTokenAuth impelmentations of grpc credentials interface
 func NewTokenAuth(t string) *GrpcTokenAuth {
 	return &GrpcTokenAuth{
 		Token: t,

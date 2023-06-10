@@ -45,8 +45,8 @@ func (m *Compute) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, 
 }
 
 // GetNodeMemoryRequestUsage 节点内存装箱率
-func (m *Compute) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
+func (m *Compute) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, node string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 

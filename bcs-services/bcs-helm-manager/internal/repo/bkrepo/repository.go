@@ -47,7 +47,7 @@ func (rh *repositoryHandler) getRepository(ctx context.Context) (*repo.Repositor
 	if r.Code != respCodeOK {
 		blog.Errorf("get repository from bk-repo get resp with error code %d, message: %s, traceID: %s",
 			r.Code, r.Message, r.TraceID)
-		// TODO: use code to identify
+		// check repo is existed
 		if strings.Contains(r.Message, "not found") {
 			return nil, errNotExist
 		}
@@ -99,7 +99,7 @@ func (rh *repositoryHandler) createRepository(ctx context.Context, rp *repo.Repo
 		blog.Errorf("create repository to bk-repo get resp with error code %d, message %s, traceID %s",
 			r.Code, r.Message, r.TraceID)
 
-		// TODO: use code to identify
+		// check repo is existed
 		if strings.Contains(r.Message, "existed") {
 			blog.Infof("repository exist, skip create, data %v, traceID %s", rp, r.TraceID)
 			return rh.getRepoURL(), nil

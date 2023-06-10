@@ -24,7 +24,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 var (
@@ -98,12 +100,14 @@ func ReleaseResourcePermCheck(username, projectCode, projectID, clusterID string
 			return false, "", nil, fmt.Errorf("共享集群不支持通过 Helm 创建集群域资源")
 		}
 		// 检测命名空间是否属于该项目
-		client, err := component.GetK8SClientByClusterID(clusterID)
+		var client *kubernetes.Clientset
+		client, err = component.GetK8SClientByClusterID(clusterID)
 		if err != nil {
 			return false, "", nil, err
 		}
 		for _, v := range namespaces {
-			ns, err := client.CoreV1().Namespaces().Get(context.TODO(), v, v1.GetOptions{})
+			var ns *corev1.Namespace
+			ns, err = client.CoreV1().Namespaces().Get(context.TODO(), v, v1.GetOptions{})
 			if err != nil {
 				return false, "", nil, err
 			}
