@@ -328,9 +328,9 @@ func getListenAddr(addr, port string) string {
 
 	if util.IsIPv6(addr) {
 		// local link ipv6 需要带上 interface， 格式如::%eth0
-		ipv6Interface := os.Getenv(ipv6Interface)
-		if ipv6Interface != "" {
-			addr = addr + "%" + ipv6Interface
+		value := os.Getenv(ipv6Interface)
+		if value != "" {
+			addr = addr + "%" + value
 		}
 	}
 

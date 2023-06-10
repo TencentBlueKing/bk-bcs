@@ -46,23 +46,27 @@ const (
 )
 
 var (
+	// saas db config
 	saasDBHost string
 	saasDBPort uint
 	saasDBUser string
 	saasDBPwd  string
 	saasDBName string
 
+	// bcs-cc db config
 	ccDBHost string
 	ccDBPort uint
 	ccDBUser string
 	ccDBPwd  string
 	ccDBName string
 
+	// bcs mongodb config
 	mongoAddr   string
 	mongoUser   string
 	mongoPwd    string
 	mongoDBName string
 
+	// db instance
 	ccDB   *gorm.DB
 	saasDB *gorm.DB
 	model  store.ProjectModel
@@ -246,6 +250,7 @@ func migrateVariableDefinition() error {
 			fmt.Printf("get project %s failed, err: %s\n", variable.ProjectID, err.Error())
 			continue
 		}
+		// 跳过已删除的变量
 		if variable.IsDeleted {
 			continue
 		}
@@ -264,6 +269,7 @@ func migrateVariableDefinition() error {
 		if err := json.Unmarshal([]byte(variable.Default), temp); err != nil {
 			fmt.Printf("unmarshal default value for variable key [%s] in project [%s] failed, err: %s\n",
 				variable.Key, project.ProjectCode, err.Error())
+			// 跳过解析失败的变量
 			continue
 		}
 		vd.Default = temp.Value
@@ -298,6 +304,7 @@ func migrateClusterVariables() error {
 			fmt.Printf("get variable definition [%d] failed, err: %s\n", variable.VarID, result.Error.Error())
 			continue
 		}
+		// 跳过已删除的变量
 		if orgninalDef.IsDeleted {
 			continue
 		}
@@ -361,6 +368,7 @@ func migrateNamespaceVariables() error {
 			fmt.Printf("get variable definition [%d] failed, err: %s\n", variable.VarID, result.Error.Error())
 			continue
 		}
+		// 跳过已删除的变量
 		if orgninalDef.IsDeleted {
 			continue
 		}
@@ -412,7 +420,7 @@ func migrateNamespaceVariables() error {
 	return nil
 }
 
-// saas 中查询数据
+// fetchSaasVariableDefinitions 拉取 saas 中所有的变量定义
 func fetchSaasVariableDefinitions() ([]SaasVariableDefinition, error) {
 	var variables []SaasVariableDefinition
 	if result := saasDB.Table(saasVariableTableName).Select("*").Scan(&variables); result.Error != nil {
@@ -421,6 +429,7 @@ func fetchSaasVariableDefinitions() ([]SaasVariableDefinition, error) {
 	return variables, nil
 }
 
+// fetchSaasClusterVariables 拉取 saas 中所有的集群变量
 func fetchSaasClusterVariables() ([]SaasClusterVariable, error) {
 	var variables []SaasClusterVariable
 	if result := saasDB.Table(saasClusterVariableTableName).Select("*").Scan(&variables); result.Error != nil {
@@ -429,6 +438,7 @@ func fetchSaasClusterVariables() ([]SaasClusterVariable, error) {
 	return variables, nil
 }
 
+// fetchSaasNamespaceVariables 拉取 saas 中所有的命名空间变量
 func fetchSaasNamespaceVariables() ([]SaasNamespaceVariable, error) {
 	var variables []SaasNamespaceVariable
 	if result := saasDB.Table(saasNamespaceVariableTableName).Select("*").Scan(&variables); result.Error != nil {
@@ -437,11 +447,12 @@ func fetchSaasNamespaceVariables() ([]SaasNamespaceVariable, error) {
 	return variables, nil
 }
 
+// doUpsertVariableDefinition do upsert variable definition
 func doUpsertVariableDefinition(model store.ProjectModel, new *vdm.VariableDefinition) error {
 	old, err := model.GetVariableDefinitionByKey(context.Background(), new.ProjectCode, new.Key)
 	if err != nil {
 		if err == drivers.ErrTableRecordNotFound {
-			return tryGenerateIDAndCreateVariableDefinition(model, new)
+			return tryGenerateIDAndCreateVD(model, new)
 		}
 		return err
 	}
@@ -449,7 +460,8 @@ func doUpsertVariableDefinition(model store.ProjectModel, new *vdm.VariableDefin
 	return model.UpsertVariableDefinition(context.Background(), new)
 }
 
-func tryGenerateIDAndCreateVariableDefinition(model store.ProjectModel, definition *vdm.VariableDefinition) error {
+// tryGenerateIDAndCreateVD try to generate a new id and create variable definition
+func tryGenerateIDAndCreateVD(model store.ProjectModel, definition *vdm.VariableDefinition) error {
 	var count = 3
 	var err error
 	for i := 0; i < count; i++ {

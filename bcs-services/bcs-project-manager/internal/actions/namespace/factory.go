@@ -26,12 +26,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
-//NamespaceFactory namespace faction factory
+// NamespaceFactory namespace faction factory
 type NamespaceFactory struct {
 	model store.ProjectModel
 }
 
-//NewNamespaceFactory new namespace faction factory
+// NewNamespaceFactory new namespace faction factory
 func NewNamespaceFactory(model store.ProjectModel) *NamespaceFactory {
 	return &NamespaceFactory{
 		model: model,

@@ -15,6 +15,7 @@ package iam
 
 import (
 	"context"
+	// NOCC:gas/crypto(设计如此:)
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -219,6 +220,7 @@ func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, namespaceNa
 
 // md5Digest 字符串转 MD5
 func md5Digest(key string) string {
+	// NOCC:gas/crypto(设计如此:)
 	hash := md5.New()
 	hash.Write([]byte(key))
 	return hex.EncodeToString(hash.Sum(nil))
