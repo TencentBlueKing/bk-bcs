@@ -141,11 +141,13 @@ func (s *set) ID() IDGenInterface {
 // App returns the application's DAO
 func (s *set) App() App {
 	return &appDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
-		event:    s.event,
+		genQ:     s.genQ,
+
+		orm:   s.orm,
+		sd:    s.sd,
+		event: s.event,
 	}
 }
 
@@ -305,9 +307,12 @@ func (s *set) IAM() IAM {
 // Event returns the event operation related DAO
 func (s *set) Event() Event {
 	return &eventDao{
-		orm:   s.orm,
-		sd:    s.sd,
-		idGen: s.idGen,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+
+		orm: s.orm,
+		sd:  s.sd,
 	}
 }
 
@@ -319,11 +324,13 @@ func (s *set) Healthz() error {
 // Credential returns the Credential's DAO
 func (s *set) Credential() Credential {
 	return &credentialDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+
 		orm:               s.orm,
 		sd:                s.sd,
 		credentialSetting: s.credentialSetting,
-		idGen:             s.idGen,
-		auditDao:          s.auditDao,
 		event:             s.event,
 	}
 }
@@ -331,9 +338,11 @@ func (s *set) Credential() Credential {
 // CredentialScope returns the Credential scope's DAO
 func (s *set) CredentialScope() CredentialScope {
 	return &credentialScopeDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+		genQ:     s.genQ,
+
+		orm: s.orm,
+		sd:  s.sd,
 	}
 }

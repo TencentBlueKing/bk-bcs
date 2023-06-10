@@ -13,14 +13,16 @@ limitations under the License.
 package dao
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
+	rawgen "gorm.io/gen"
+
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -46,7 +48,7 @@ type App interface {
 	// get app by name.
 	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.App, error)
 	// List apps with options.
-	List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListAppDetails, error)
+	List(kit *kit.Kit, bizList []uint32, name, operator string, opt *types.BasePage) ([]*table.App, int64, error)
 	// ListAppsByGroupID list apps by group id.
 	ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.App, error)
 	// Delete one app instance.
@@ -58,138 +60,113 @@ type App interface {
 var _ App = new(appDao)
 
 type appDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
-	event    Event
+
+	orm   orm.Interface
+	sd    *sharding.Sharding
+	event Event
 }
 
 // List app's detail info with the filter's expression.
-func (ap *appDao) List(kit *kit.Kit, opts *types.ListAppsOption) (*types.ListAppDetails, error) {
+func (dao *appDao) List(kit *kit.Kit, bizList []uint32, name, operator string, opt *types.BasePage) (
+	[]*table.App, int64, error) {
+	m := dao.genQ.App
+	q := dao.genQ.App.WithContext(kit.Ctx)
 
-	if opts == nil {
-		return nil, errf.New(errf.InvalidParameter, "list app options is nil")
+	var conds []rawgen.Condition
+	// 当len(bizList) > 1时，适用于导航查询场景
+	conds = append(conds, m.BizID.In(bizList...))
+	if operator != "" {
+		conds = append(conds, m.Creator.Eq(operator))
+	}
+	if name != "" {
+		// 按名称模糊搜索
+		conds = append(conds, m.Name.Regexp("(?i)"+name))
 	}
 
-	po := &types.PageOption{
-		EnableUnlimitedLimit: true,
-		DisabledSort:         false,
-	}
-
-	if err := opts.Validate(po); err != nil {
-		return nil, err
-	}
-
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"id", "biz_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules:     []filter.RuleFactory{},
-		},
-	}
-
-	// 导航查询场景
-	if len(opts.BizList) > 1 {
-		sqlOpt.CrownedOption.Rules = []filter.RuleFactory{
-			&filter.AtomRule{
-				Field: "biz_id",
-				Op:    filter.OpFactory(filter.In),
-				Value: opts.BizList,
-			},
-		}
-	} else {
-		sqlOpt.CrownedOption.Rules = []filter.RuleFactory{
-			&filter.AtomRule{
-				Field: "biz_id",
-				Op:    filter.OpFactory(filter.Equal),
-				Value: opts.BizID,
-			},
-		}
-	}
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
+	result, count, err := q.Where(conds...).FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	// 如果 app 有分库分表, 跨 spaces 查询将不可用
-	// do count operation only.
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.AppTable.Name(), whereExpr)
-	countSql := filter.SqlJoint(sqlSentence)
-	count, err := ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	// query app list for now.
-	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
-	if err != nil {
-		return nil, err
-	}
-
-	var sqlQuery []string
-	sqlQuery = append(sqlQuery, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(), whereExpr, pageExpr)
-	querySql := filter.SqlJoint(sqlQuery)
-
-	list := make([]*table.App, 0)
-	err = ap.orm.Do(ap.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, querySql, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.ListAppDetails{Count: count, Details: list}, nil
+	return result, count, nil
 }
 
 // ListAppsByGroupID list apps by group id.
-func (ap *appDao) ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.App, error) {
-
+func (dao *appDao) ListAppsByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.App, error) {
 	if bizID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "biz id is 0")
+		return nil, errors.New("biz id is 0")
 	}
 	if groupID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "group id is 0")
+		return nil, errors.New("group id is 0")
 	}
 
-	group := &table.Group{}
-	var sqlBuf bytes.Buffer
-	sqlBuf.WriteString("SELECT ")
-	sqlBuf.WriteString(table.GroupColumns.NamedExpr())
-	sqlBuf.WriteString(" FROM ")
-	sqlBuf.WriteString(table.GroupTable.Name())
-	sqlBuf.WriteString(" WHERE biz_id = ? AND id = ?")
+	gM := dao.genQ.Group
+	gQ := dao.genQ.Group.WithContext(kit.Ctx)
+	group, err := gQ.Where(gM.BizID.Eq(bizID), gM.ID.Eq(groupID)).Take()
+	if err != nil {
+		return nil, fmt.Errorf("get group failed, err: %v", err)
+	}
 
-	err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, group, sqlBuf.String(), bizID, groupID)
+	bM := dao.genQ.GroupAppBind
+	bQ := dao.genQ.GroupAppBind.WithContext(kit.Ctx)
+	aM := dao.genQ.App
+	aQ := dao.genQ.App.WithContext(kit.Ctx)
+	var conds []rawgen.Condition
+	conds = append(conds, aM.BizID.Eq(bizID))
+
+	if !group.Spec.Public {
+		conds = append(conds, aQ.Columns(aM.ID).In(bQ.Select(bM.AppID).Where(bM.GroupID.Eq(groupID))))
+	}
+
+	result, err := aQ.Where(conds...).Find()
 	if err != nil {
 		return nil, err
 	}
-	list := make([]*table.App, 0)
 
-	if group.Spec.Public {
-		var sqlSentence []string
-		sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
-			" WHERE biz_id = ?")
-		sql := filter.SqlJoint(sqlSentence)
-
-		if err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &list, sql, bizID); err != nil {
-			return nil, err
-		}
-	} else {
-		var sqlSentence []string
-		sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
-			" WHERE biz_id = ? AND id IN (SELECT app_id FROM ", table.GroupAppBindTable.Name(), " WHERE group_id = ?)")
-		sql := filter.SqlJoint(sqlSentence)
-
-		err := ap.orm.Do(ap.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &list, sql, bizID, groupID)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return list, nil
+	return result, nil
 }
 
 // Create one app instance
-func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
+func (dao *appDao) Create(kit *kit.Kit, g *table.App) (uint32, error) {
+	if err := g.ValidateCreate(); err != nil {
+		return 0, err
+	}
+
+	// generate an app id and update to app.
+	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
+	if err != nil {
+		return 0, err
+	}
+	g.ID = id
+
+	ad := dao.auditDao.DecoratorV2(kit, g.BizID).PrepareCreate(g)
+
+	// 多个使用事务处理
+	createTx := func(tx *gen.Query) error {
+		q := tx.App.WithContext(kit.Ctx)
+		if err := q.Create(g); err != nil {
+			return err
+		}
+
+		eQ := tx.Event.WithContext(kit.Ctx)
+		if err := eQ.Create(g); err != nil {
+			return err
+		}
+
+		if err := ad.Do(tx); err != nil {
+			return err
+		}
+
+		return nil
+	}
+	if err := dao.genQ.Transaction(createTx); err != nil {
+		return 0, nil
+	}
+
+	//return g.ID, nil
 
 	if app == nil {
 		return 0, errf.New(errf.InvalidParameter, "app is nil")
@@ -211,15 +188,15 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 	sqlSentence = append(sqlSentence, "INSERT INTO ", table.AppTable.Name(),
 		" (", table.AppColumns.ColumnExpr(), ") ", "VALUES(", table.AppColumns.ColonNameExpr(), ")")
 	sql := filter.SqlJoint(sqlSentence)
-	eDecorator := ap.event.Eventf(kit)
-	err = ap.sd.ShardingOne(app.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-		if err := ap.orm.Txn(txn).Insert(kit.Ctx, sql, app); err != nil {
+	eDecorator := dao.event.Eventf(kit)
+	err = dao.sd.ShardingOne(app.BizID).AutoTxn(kit, func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
+		if err := dao.orm.Txn(txn).Insert(kit.Ctx, sql, app); err != nil {
 			return err
 		}
 
 		// audit this to be create app details.
 		au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-		if err = ap.auditDao.Decorator(kit, app.BizID, enumor.App).AuditCreate(app, au); err != nil {
+		if err = dao.auditDao.Decorator(kit, app.BizID, enumor.App).AuditCreate(app, au); err != nil {
 			return fmt.Errorf("audit create app failed, err: %v", err)
 		}
 
@@ -251,13 +228,13 @@ func (ap *appDao) Create(kit *kit.Kit, app *table.App) (uint32, error) {
 }
 
 // Update an app instance.
-func (ap *appDao) Update(kit *kit.Kit, app *table.App) error {
+func (dao *appDao) Update(kit *kit.Kit, app *table.App) error {
 
 	if app == nil {
 		return errf.New(errf.InvalidParameter, "app is nil")
 	}
 
-	updateApp, err := ap.Get(kit, app.BizID, app.ID)
+	updateApp, err := dao.Get(kit, app.BizID, app.ID)
 	if err != nil {
 		return fmt.Errorf("get update app failed, err: %v", err)
 	}
@@ -329,7 +306,7 @@ func (ap *appDao) Update(kit *kit.Kit, app *table.App) error {
 }
 
 // Delete an app instance.
-func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
+func (dao *appDao) Delete(kit *kit.Kit, app *table.App) error {
 
 	if app == nil {
 		return errf.New(errf.InvalidParameter, "app is nil")
@@ -398,7 +375,7 @@ func (ap *appDao) Delete(kit *kit.Kit, app *table.App) error {
 	return nil
 }
 
-func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, error) {
+func (dao *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, error) {
 
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ",
@@ -415,7 +392,7 @@ func (ap *appDao) Get(kit *kit.Kit, bizID uint32, appID uint32) (*table.App, err
 }
 
 // GetByID 通过 AppId 查询
-func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
+func (dao *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
 		" WHERE id = ", strconv.Itoa(int(appID)))
@@ -430,7 +407,7 @@ func (ap *appDao) GetByID(kit *kit.Kit, appID uint32) (*table.App, error) {
 }
 
 // GetByName 通过 name 查询
-func (ap *appDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.App, error) {
+func (dao *appDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.App, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.AppColumns.NamedExpr(), " FROM ", table.AppTable.Name(),
 		" WHERE name = '", name, "' AND biz_id = ", strconv.Itoa(int(bizID)))
@@ -463,7 +440,7 @@ func getAppMode(kit *kit.Kit, orm orm.Interface, sd *sharding.Sharding, bizID, a
 	return one.Spec.Mode, nil
 }
 
-func (ap *appDao) archiveApp(kit *kit.Kit, txn *sqlx.Tx, app *table.App) error {
+func (dao *appDao) archiveApp(kit *kit.Kit, txn *sqlx.Tx, app *table.App) error {
 
 	id, err := ap.idGen.One(kit, table.ArchivedAppTable)
 	if err != nil {
@@ -490,7 +467,7 @@ func (ap *appDao) archiveApp(kit *kit.Kit, txn *sqlx.Tx, app *table.App) error {
 }
 
 // ListAppMetaForCache list app's basic meta info.
-func (ap *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32) (
+func (dao *appDao) ListAppMetaForCache(kt *kit.Kit, bizID uint32, appIDs []uint32) (
 	map[uint32]*types.AppCacheMeta, error) {
 
 	if bizID <= 0 || len(appIDs) == 0 {

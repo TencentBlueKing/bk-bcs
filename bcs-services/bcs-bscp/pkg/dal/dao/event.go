@@ -22,6 +22,7 @@ import (
 
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -63,9 +64,12 @@ type Event interface {
 var _ Event = new(eventDao)
 
 type eventDao struct {
-	orm   orm.Interface
-	sd    *sharding.Sharding
-	idGen IDGenInterface
+	genQ     *gen.Query
+	idGen    IDGenInterface
+	auditDao AuditDao
+
+	orm orm.Interface
+	sd  *sharding.Sharding
 }
 
 // Eventf initialize an event decorator instance to fire the event and
@@ -73,9 +77,11 @@ type eventDao struct {
 func (ed *eventDao) Eventf(kt *kit.Kit) *EDecorator {
 	return &EDecorator{
 		kt:    kt,
-		orm:   ed.orm,
-		sd:    ed.sd,
 		idGen: ed.idGen,
+		genQ:  ed.genQ,
+
+		orm: ed.orm,
+		sd:  ed.sd,
 	}
 }
 
@@ -86,9 +92,11 @@ type EDecorator struct {
 	kt *kit.Kit
 	// the event id list.
 	idList []uint32
-	orm    orm.Interface
-	sd     *sharding.Sharding
 	idGen  IDGenInterface
+	genQ   *gen.Query
+
+	orm orm.Interface
+	sd  *sharding.Sharding
 }
 
 // Fire a resource's operate(Create/Update/Delete) event.
@@ -141,6 +149,11 @@ func (ef *EDecorator) Fire(es ...types.Event) error {
 			Attachment: one.Attachment,
 			Revision:   one.Revision,
 		}
+	}
+
+	q := tx.Template.WithContext(kit.Ctx)
+	if err := q.Create(g); err != nil {
+		return err
 	}
 
 	one := ef.sd.Event()

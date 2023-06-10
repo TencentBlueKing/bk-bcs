@@ -29,6 +29,12 @@ func main() {
 	g.ApplyBasic(
 		table.IDGenerator{},
 		table.Audit{},
+		table.App{},
+		table.Event{},
+		table.Credential{},
+		table.CredentialScope{},
+		table.Group{},
+		table.GroupAppBind{},
 		table.TemplateSpace{},
 		table.Template{},
 		table.TemplateRelease{},

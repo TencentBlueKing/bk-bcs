@@ -54,10 +54,3 @@ func (lao *ListAppsOption) Validate(po *PageOption) error {
 
 	return nil
 }
-
-// ListAppDetails defines the response details of
-// requested ListAppsOption
-type ListAppDetails struct {
-	Count   uint32       `json:"count"`
-	Details []*table.App `json:"details"`
-}

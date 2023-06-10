@@ -6,6 +6,7 @@ import (
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -32,10 +33,12 @@ type CredentialScope interface {
 var _ CredentialScope = new(credentialScopeDao)
 
 type credentialScopeDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+
+	orm orm.Interface
+	sd  *sharding.Sharding
 }
 
 // CreateWithTx create credential scope with transaction

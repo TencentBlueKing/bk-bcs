@@ -11,6 +11,7 @@ import (
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -42,11 +43,13 @@ type Credential interface {
 var _ Credential = new(credentialDao)
 
 type credentialDao struct {
+	genQ     *gen.Query
+	idGen    IDGenInterface
+	auditDao AuditDao
+
 	orm               orm.Interface
 	sd                *sharding.Sharding
 	credentialSetting cc.Credential
-	idGen             IDGenInterface
-	auditDao          AuditDao
 	event             Event
 }
 

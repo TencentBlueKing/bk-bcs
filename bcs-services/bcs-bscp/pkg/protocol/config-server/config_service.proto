@@ -48,12 +48,6 @@ service Config {
             get: "/api/v1/config/biz/{biz_id}/apps/query/name/{app_name}"
         };
     }
-    rpc ListApps(ListAppsReq) returns (ListAppsResp) {
-        option (google.api.http) = {
-            post : "/api/v1/config/list/app/app/biz_id/{biz_id}"
-            body : "*"
-        };
-    }
 
     // 获取用户有权限的 spaces 所有的 apps
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {
@@ -426,12 +420,6 @@ message GetAppReq {
 message GetAppByNameReq {
     uint32 biz_id   = 1;
     string app_name = 2;
-}
-
-message ListAppsReq {
-    uint32                 biz_id = 1;
-    google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
 }
 
 message ListAppsRestReq {
