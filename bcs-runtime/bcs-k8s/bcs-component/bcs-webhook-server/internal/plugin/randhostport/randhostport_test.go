@@ -74,8 +74,9 @@ func TestInjectPod(t *testing.T) {
 						"31000" + podHostportLabelSuffix: "31000",
 					},
 					Annotations: map[string]string{
-						pluginAnnotationKey:      pluginAnnotationValue,
-						pluginPortsAnnotationKey: "8080",
+						pluginAnnotationKey:                    pluginAnnotationValue,
+						pluginPortsAnnotationKey:               "8080",
+						annotationsRandHostportPrefix + "8080": "31000",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -178,9 +179,10 @@ func TestInjectPod(t *testing.T) {
 						"31000" + podHostportLabelSuffix: "31000",
 					},
 					Annotations: map[string]string{
-						pluginAnnotationKey:               pluginAnnotationValue,
-						pluginPortsAnnotationKey:          "8080",
-						pluginContainerPortsAnnotationKey: pluginAnnotationValue,
+						pluginAnnotationKey:                     pluginAnnotationValue,
+						pluginPortsAnnotationKey:                "8080",
+						pluginContainerPortsAnnotationKey:       pluginAnnotationValue,
+						annotationsRandHostportPrefix + "31000": "31000",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -299,8 +301,10 @@ func TestInjectPod(t *testing.T) {
 						"31001" + podHostportLabelSuffix: "31001",
 					},
 					Annotations: map[string]string{
-						pluginAnnotationKey:      pluginAnnotationValue,
-						pluginPortsAnnotationKey: "8080,http",
+						pluginAnnotationKey:                    pluginAnnotationValue,
+						pluginPortsAnnotationKey:               "8080,http",
+						annotationsRandHostportPrefix + "8080": "31000",
+						annotationsRandHostportPrefix + "8081": "31001",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -477,8 +481,10 @@ func TestInjectPod(t *testing.T) {
 						"31001" + podHostportLabelSuffix: "31001",
 					},
 					Annotations: map[string]string{
-						pluginAnnotationKey:      pluginAnnotationValue,
-						pluginPortsAnnotationKey: "8080,http",
+						pluginAnnotationKey:                    pluginAnnotationValue,
+						pluginPortsAnnotationKey:               "8080,http",
+						annotationsRandHostportPrefix + "8080": "31000",
+						annotationsRandHostportPrefix + "8081": "31001",
 					},
 				},
 				Spec: corev1.PodSpec{

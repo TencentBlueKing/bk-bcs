@@ -279,8 +279,12 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	retPatches = append(retPatches, hpi.generateLabelPatch(pod, hostPorts))
 	// patch container port
 	hostPortCount := 0
+
+	// containerPort=>hostPort
+	hostPortMapping := make(map[uint64]uint64, len(containerPortsIndexList))
 	for containerIndex, portIndexList := range containerPortsIndexList {
 		for _, portIndex := range portIndexList {
+			containerPort := pod.Spec.Containers[containerIndex].Ports[portIndex].ContainerPort
 			// inject hostport into container port
 			retPatches = append(retPatches, types.PatchOperation{
 				Path:  fmt.Sprintf(PatchPathContainerHostPort, containerIndex, portIndex),
@@ -293,6 +297,9 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 					Op:    PatchOperationAdd,
 					Value: hostPorts[hostPortCount].Port,
 				})
+				hostPortMapping[hostPorts[hostPortCount].Port] = uint64(hostPorts[hostPortCount].Port)
+			} else {
+				hostPortMapping[uint64(containerPort)] = uint64(hostPorts[hostPortCount].Port)
 			}
 			hostPortCount++
 		}
@@ -308,7 +315,29 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 		retPatches = append(retPatches, envPatch)
 	}
 
+	// inject hostport into pod annotations
+	retPatches = append(retPatches, hpi.generateAnnotationsPatch(pod, hostPortMapping))
+	fmt.Println(retPatches)
+
 	return retPatches, nil
+}
+
+// generateAnnotationsPatch generate patch for pod annotations
+func (hpi *HostPortInjector) generateAnnotationsPatch(pod *corev1.Pod, hostPortMapping map[uint64]uint64) types.PatchOperation {
+	annotations := pod.Annotations
+	op := PatchOperationReplace
+	if len(annotations) == 0 {
+		op = PatchOperationAdd
+		annotations = make(map[string]string)
+	}
+	for containerPort, hostPort := range hostPortMapping {
+		annotations[fmt.Sprintf(annotationsRandHostportPrefix+"%d", containerPort)] = strconv.FormatUint(hostPort, 10)
+	}
+	return types.PatchOperation{
+		Path:  PatchPathPodAnnotations,
+		Op:    op,
+		Value: annotations,
+	}
 }
 
 func (hpi *HostPortInjector) generateEnvPatch(
