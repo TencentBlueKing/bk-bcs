@@ -79,8 +79,8 @@ func (s *service) BCSWebSocketHandler(c *gin.Context) {
 	connected := false
 
 	query := &wsQuery{}
-	if err := c.BindQuery(query); err != nil {
-		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(err, i18n.GetMessage(c, "参数不合法")))
+	if e := c.BindQuery(query); e != nil {
+		manager.GracefulCloseWebSocket(ctx, ws, connected, errors.Wrap(e, i18n.GetMessage(c, "参数不合法")))
 		return
 	}
 
