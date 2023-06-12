@@ -94,6 +94,11 @@ func (c *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, 
 		return nil, 0, err
 	}
 
+	if resp.StatusCode == http.StatusNotFound {
+		resp.Body.Close()
+		return nil, 0, errors.New("config item not found")
+	}
+
 	if resp.StatusCode != 200 {
 		resp.Body.Close()
 		return nil, 0, errors.Errorf("download status %d != 200", resp.StatusCode)
@@ -121,6 +126,10 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, errors.New("config item not found")
+	}
 
 	if resp.StatusCode != 200 {
 		return nil, errors.Errorf("download status %d != 200", resp.StatusCode)
