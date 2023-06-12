@@ -203,6 +203,7 @@ replace (
 	github.com/google/cadvisor => github.com/google/cadvisor v0.39.2
 	github.com/google/uuid => github.com/google/uuid v1.1.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.13.0
+	// NOCC:horus-dependency-security(已replace)
 	github.com/satori/go.uuid v1.2.0 => github.com/gofrs/uuid v4.4.0+incompatible
 	google.golang.org/api => google.golang.org/api v0.20.0
 	google.golang.org/grpc => google.golang.org/grpc v1.38.0

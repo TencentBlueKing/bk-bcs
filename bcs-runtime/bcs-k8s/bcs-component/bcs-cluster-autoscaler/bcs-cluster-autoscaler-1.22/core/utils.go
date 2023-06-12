@@ -60,6 +60,8 @@ const (
 
 	// How long should Cluster Autoscaler wait for nodes to become ready after start.
 	nodesNotReadyAfterStartTimeout = 10 * time.Minute
+
+	valueTrue = "true"
 )
 
 var (
@@ -523,7 +525,7 @@ func getNodeCoresAndMemory(node *apiv1.Node) (int64, int64) {
 	if node.Labels[nodeInstanceTypeLabelKey] == nodeInstanceTypeEklet {
 		return 0, 0
 	}
-	if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+	if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 		return 0, 0
 	}
 	cores := getNodeResource(node, apiv1.ResourceCPU)
@@ -608,7 +610,7 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 		if nodeTemplate.Node().Annotations == nil {
 			nodeTemplate.Node().Annotations = make(map[string]string)
 		}
-		nodeTemplate.Node().Annotations[NodeUpcomingAnnotation] = "true"
+		nodeTemplate.Node().Annotations[NodeUpcomingAnnotation] = valueTrue
 
 		for i := 0; i < numberOfNodes; i++ {
 			// Ensure new nodes have different names because nodeName
@@ -635,13 +637,13 @@ func checkResourceNotEnough(nodes map[string]*schedulerframework.NodeInfo,
 		if node.Labels[apiv1.LabelInstanceTypeStable] == "eklet" {
 			continue
 		}
-		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 			continue
 		}
-		if node.Labels[nodeLabel.LabelNodeRoleControlPlane] == "true" {
+		if node.Labels[nodeLabel.LabelNodeRoleControlPlane] == valueTrue {
 			continue
 		}
-		if node.Labels[nodeLabel.LabelNodeRoleOldControlPlane] == "true" {
+		if node.Labels[nodeLabel.LabelNodeRoleOldControlPlane] == valueTrue {
 			continue
 		}
 		sumResources.Add(scheduler.ResourceToResourceList(nodeInfo.Allocatable))

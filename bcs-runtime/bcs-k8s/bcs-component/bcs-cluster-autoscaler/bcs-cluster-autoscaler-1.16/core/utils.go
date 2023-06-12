@@ -65,6 +65,8 @@ const (
 	unschedulablePodWithGpuTimeBuffer = 30 * time.Second
 	// How long should Cluster Autoscaler wait for nodes to become ready after start.
 	nodesNotReadyAfterStartTimeout = 10 * time.Minute
+
+	valueTrue = "true"
 )
 
 var (
@@ -675,7 +677,7 @@ func getNodeCoresAndMemory(node *apiv1.Node) (int64, int64) {
 	if node.Labels[nodeInstanceTypeLabelKey] == nodeInstanceTypeEklet {
 		return 0, 0
 	}
-	if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+	if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 		return 0, 0
 	}
 	cores := getNodeResource(node, apiv1.ResourceCPU)
@@ -785,10 +787,10 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
 		if node.Labels["node.kubernetes.io/instance-type"] == "eklet" {
 			continue
 		}
-		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 			continue
 		}
-		if node.Labels[nodeLabel.LabelNodeRoleMaster] == "true" {
+		if node.Labels[nodeLabel.LabelNodeRoleMaster] == valueTrue {
 			continue
 		}
 		klog.V(6).Infof("resource: %+v", node.Status.Allocatable)

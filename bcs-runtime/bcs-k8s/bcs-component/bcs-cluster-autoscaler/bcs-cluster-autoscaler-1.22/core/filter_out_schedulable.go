@@ -33,6 +33,7 @@ type filterOutSchedulablePodListProcessor struct {
 }
 
 // NewFilterOutSchedulablePodListProcessor creates a PodListProcessor filtering out schedulable pods
+// NOCC:golint/ret(设计如此)
 func NewFilterOutSchedulablePodListProcessor() *filterOutSchedulablePodListProcessor {
 	return &filterOutSchedulablePodListProcessor{
 		schedulablePodsNodeHints: make(map[types.UID]string),
