@@ -330,8 +330,8 @@ var CreatedRevisionColumnDescriptor = ColumnDescriptors{
 
 // CreatedRevision is a resource's reversion information being created.
 type CreatedRevision struct {
-	Creator   string    `db:"creator" json:"creator"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	Creator   string    `db:"creator" json:"creator" gorm:"column:creator"`
+	CreatedAt time.Time `db:"created_at" json:"created_at" gorm:"column:created_at"`
 }
 
 // Validate revision when created

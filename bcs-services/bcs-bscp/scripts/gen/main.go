@@ -32,6 +32,10 @@ func main() {
 		table.TemplateSpace{},
 		table.Template{},
 		table.TemplateRelease{},
+		table.ConfigItem{},
+		table.ReleasedConfigItem{},
+		table.Commit{},
+		table.Content{},
 	)
 
 	g.Execute()

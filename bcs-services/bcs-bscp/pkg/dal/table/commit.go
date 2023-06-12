@@ -34,10 +34,25 @@ var CommitsColumnDescriptor = mergeColumnDescriptors("", ColumnDescriptors{
 type Commit struct {
 	// ID is an auto-increased value, which is a unique identity
 	// of a commit.
-	ID         uint32            `db:"id" json:"id"`
-	Spec       *CommitSpec       `db:"spec" json:"spec"`
-	Attachment *CommitAttachment `db:"attachment" json:"attachment"`
-	Revision   *CreatedRevision  `db:"revision" json:"revision"`
+	ID         uint32            `db:"id" json:"id" gorm:"primaryKey"`
+	Spec       *CommitSpec       `db:"spec" json:"spec" gorm:"embedded"`
+	Attachment *CommitAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
+	Revision   *CreatedRevision  `db:"revision" json:"revision" gorm:"embedded"`
+}
+
+// AppID AuditRes interface
+func (s *Commit) AppID() uint32 {
+	return 0
+}
+
+// ResID AuditRes interface
+func (s *Commit) ResID() uint32 {
+	return s.ID
+}
+
+// ResType AuditRes interface
+func (s *Commit) ResType() string {
+	return "commit"
 }
 
 // TableName is the commits' database table name.
@@ -90,9 +105,9 @@ var CommitSpecColumnDescriptor = mergeColumnDescriptors("", ColumnDescriptors{
 // CommitSpec is the specifics of this committed configuration file.
 type CommitSpec struct {
 	// ContentID is the identity id of a content.
-	ContentID uint32       `db:"content_id" json:"content_id"`
-	Content   *ContentSpec `db:"content" json:"content"`
-	Memo      string       `db:"memo" json:"memo"`
+	ContentID uint32       `db:"content_id" json:"content_id" gorm:"column:content_id"`
+	Content   *ContentSpec `db:"content" json:"content" gorm:"embedded"`
+	Memo      string       `db:"memo" json:"memo" gorm:"column:memo"`
 }
 
 // Validate commit specifics.
@@ -124,9 +139,9 @@ var CommitAttachmentColumnDescriptor = ColumnDescriptors{
 
 // CommitAttachment is the related information of this commit.
 type CommitAttachment struct {
-	BizID        uint32 `db:"biz_id" json:"biz_id"`
-	AppID        uint32 `db:"app_id" json:"app_id"`
-	ConfigItemID uint32 `db:"config_item_id" json:"config_item_id"`
+	BizID        uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
+	AppID        uint32 `db:"app_id" json:"app_id" gorm:"column:app_id"`
+	ConfigItemID uint32 `db:"config_item_id" json:"config_item_id" gorm:"column:config_item_id"`
 }
 
 // Validate commit related information.

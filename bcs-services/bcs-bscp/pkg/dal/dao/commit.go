@@ -18,6 +18,7 @@ import (
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -33,7 +34,11 @@ type Commit interface {
 	// Create one commit instance.
 	Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 	// CreateWithTx create one commit instance with transaction
-	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, commit *table.Commit) (uint32, error)
+	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commit *table.Commit) (uint32, error)
+	// BatchCreateWithTx batch create commit instances with transaction.
+	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commits []*table.Commit) error
+	// BatchListLatestCommits batch list config itmes' latest commit.
+	BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, ids []uint32) ([]*table.Commit, error)
 	// List commits with options.
 	List(kit *kit.Kit, opts *types.ListCommitsOption) (*types.ListCommitDetails, error)
 }
@@ -43,6 +48,7 @@ var _ Commit = new(commitDao)
 type commitDao struct {
 	orm      orm.Interface
 	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 }
@@ -100,7 +106,7 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 }
 
 // CreateWithTx create one commit instance with transaction
-func (dao *commitDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, commit *table.Commit) (uint32, error) {
+func (dao *commitDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commit *table.Commit) (uint32, error) {
 
 	if commit == nil {
 		return 0, errf.New(errf.InvalidParameter, "commit is nil")
@@ -112,29 +118,57 @@ func (dao *commitDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, commit *table.
 
 	// generate an commit id and update to commit.
 	id, err := dao.idGen.One(kit, table.CommitsTable)
+
 	if err != nil {
 		return 0, err
 	}
 
 	commit.ID = id
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CommitsTable.Name(),
-		" (", table.CommitsColumns.ColumnExpr(), ")  VALUES(", table.CommitsColumns.ColonNameExpr(), ")")
-
-	sql := filter.SqlJoint(sqlSentence)
-
-	if e := dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, commit); e != nil {
+	if err := tx.Query.Commit.WithContext(kit.Ctx).Create(commit); err != nil {
 		return 0, err
 	}
 
-	// audit this to be create commit details.
-	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
-	if err = dao.auditDao.Decorator(kit, commit.Attachment.BizID,
-		enumor.Content).AuditCreate(commit, au); err != nil {
+	ad := dao.auditDao.DecoratorV2(kit, commit.Attachment.BizID).PrepareCreate(commit)
+	if err := ad.Do(tx.Query); err != nil {
 		return 0, fmt.Errorf("audit create commit failed, err: %v", err)
 	}
 
 	return id, nil
+}
+
+// BatchCreateWithTx batch create commit instances with transaction.
+// NOTE: 1. this method won't audit, because it's batch operation.
+// 2. this method won't validate attachment resource exist, because it's batch operation.
+func (dao *commitDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commits []*table.Commit) error {
+	if len(commits) == 0 {
+		return nil
+	}
+	ids, err := dao.idGen.Batch(kit, table.CommitsTable, len(commits))
+	if err != nil {
+		return err
+	}
+	for i, commit := range commits {
+		if err := commit.ValidateCreate(); err != nil {
+			return err
+		}
+		commit.ID = ids[i]
+	}
+	if err := tx.Query.Commit.WithContext(kit.Ctx).Save(commits...); err != nil {
+		return err
+	}
+	return nil
+}
+
+// BatchListLatestCommits batch list config itmes' latest commit.
+func (dao *commitDao) BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, ids []uint32) ([]*table.Commit, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	m := dao.genQ.Commit
+	subQuery := dao.genQ.Commit.WithContext(kit.Ctx).Select(m.ID.Max().As("commit_id")).Where(
+		m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ConfigItemID.In(ids...)).Group(m.ConfigItemID)
+	return dao.genQ.Commit.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
+		dao.genQ.Commit.WithContext(kit.Ctx).Columns(m.ID).In(subQuery)).Find()
 }
 
 // List commits with options.

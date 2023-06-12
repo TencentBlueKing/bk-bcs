@@ -39,28 +39,28 @@ var ReleasedCIColumnDescriptor = mergeColumnDescriptors("",
 type ReleasedConfigItem struct {
 	// ID is an auto-increased value, which is a unique identity
 	// of a released app config items.
-	ID uint32 `db:"id" json:"id"`
+	ID uint32 `db:"id" json:"id" gorm:"primaryKey"`
 
 	// ReleaseID is this app's config item's release id
-	ReleaseID uint32 `db:"release_id" json:"release_id"`
+	ReleaseID uint32 `db:"release_id" json:"release_id" gorm:"column:release_id"`
 
 	// CommitID is this config item's commit id when it is released.
-	CommitID uint32 `db:"commit_id" json:"commit_id"`
+	CommitID uint32 `db:"commit_id" json:"commit_id" gorm:"column:commit_id"`
 
 	// ConfigItemID is the config item's origin id when it is released.
-	ConfigItemID uint32 `db:"config_item_id" json:"config_item_id"`
+	ConfigItemID uint32 `db:"config_item_id" json:"config_item_id" gorm:"column:config_item_id"`
 
 	// CommitSpec is this config item's commit spec when it is released.
 	// which is same with the commits' spec information with the upper
 	// CommitID
-	CommitSpec *CommitSpec `db:"commit_spec" json:"commit_spec"`
+	CommitSpec *CommitSpec `db:"commit_spec" json:"commit_spec" gorm:"embedded"`
 
 	// ConfigItemSpec is this config item's spec when it is released, which
 	// means it is same with the config item's spec information when it is
 	// released.
-	ConfigItemSpec *ConfigItemSpec       `db:"config_item_spec" json:"config_item_spec"`
-	Attachment     *ConfigItemAttachment `db:"attachment" json:"attachment"`
-	Revision       *Revision             `db:"revision" json:"revision"`
+	ConfigItemSpec *ConfigItemSpec       `db:"config_item_spec" json:"config_item_spec" gorm:"embedded"`
+	Attachment     *ConfigItemAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
+	Revision       *Revision             `db:"revision" json:"revision" gorm:"embedded"`
 }
 
 // TableName is the released app config's database table name.

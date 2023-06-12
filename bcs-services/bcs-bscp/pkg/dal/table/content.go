@@ -33,10 +33,25 @@ var ContentColumnDescriptor = mergeColumnDescriptors("",
 type Content struct {
 	// ID is an auto-increased value, which is this content's
 	// unique identity.
-	ID         uint32             `db:"id" json:"id"`
-	Spec       *ContentSpec       `db:"spec" json:"spec"`
-	Attachment *ContentAttachment `db:"attachment" json:"attachment"`
-	Revision   *CreatedRevision   `db:"revision" json:"revision"`
+	ID         uint32             `db:"id" json:"id" gorm:"primaryKey"`
+	Spec       *ContentSpec       `db:"spec" json:"spec" gorm:"embedded"`
+	Attachment *ContentAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
+	Revision   *CreatedRevision   `db:"revision" json:"revision" gorm:"embedded"`
+}
+
+// AppID AuditRes interface
+func (s *Content) AppID() uint32 {
+	return 0
+}
+
+// ResID AuditRes interface
+func (s *Content) ResID() uint32 {
+	return s.ID
+}
+
+// ResType AuditRes interface
+func (s *Content) ResType() string {
+	return "content"
 }
 
 // TableName is the content's database table name.
@@ -126,9 +141,9 @@ var ContentAttachmentColumnDescriptor = ColumnDescriptors{
 
 // ContentAttachment defines content's attachment information
 type ContentAttachment struct {
-	BizID        uint32 `db:"biz_id" json:"biz_id"`
-	AppID        uint32 `db:"app_id" json:"app_id"`
-	ConfigItemID uint32 `db:"config_item_id" json:"config_item_id"`
+	BizID        uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
+	AppID        uint32 `db:"app_id" json:"app_id" gorm:"column:app_id"`
+	ConfigItemID uint32 `db:"config_item_id" json:"config_item_id" gorm:"column:config_item_id"`
 }
 
 // Validate content attachment.
