@@ -26,6 +26,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/thirdparty/repo"
+	"bscp.io/pkg/tools"
 )
 
 // bkrepoAuthTransport 给请求增加 Authorization header
@@ -273,7 +274,7 @@ func NewBKRepoService(settings cc.Repository) (Provider, error) {
 	transport := &bkrepoAuthTransport{
 		Username:  settings.BkRepo.Username,
 		Password:  settings.BkRepo.Password,
-		Transport: defaultTransport,
+		Transport: tools.NewCurlLogTransport(defaultTransport),
 	}
 
 	p.client = &http.Client{Transport: transport}

@@ -25,6 +25,7 @@ import (
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/thirdparty/repo"
+	"bscp.io/pkg/tools"
 )
 
 const (
@@ -140,7 +141,7 @@ func newCosProvider(conf cc.S3Storage) (Provider, error) {
 	transport := &cos.AuthorizationTransport{
 		SecretID:  conf.AccessKeyID,
 		SecretKey: conf.SecretAccessKey,
-		Transport: defaultTransport,
+		Transport: tools.NewCurlLogTransport(defaultTransport),
 	}
 
 	p := &cosClient{
