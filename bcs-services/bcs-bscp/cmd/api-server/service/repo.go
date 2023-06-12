@@ -27,7 +27,7 @@ import (
 	"bscp.io/pkg/rest"
 )
 
-// repoService is http reverse proxy for bkrepo.
+// repoService is http handler for repo services.
 type repoService struct {
 	// authorizer auth related operations.
 	authorizer auth.Authorizer
