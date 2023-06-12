@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -27,8 +28,9 @@ import (
 	"time"
 
 	"github.com/bluele/gcache"
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 	"github.com/tidwall/gjson"
+	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
@@ -61,102 +63,69 @@ type repoProxy struct {
 	repoCreatedRecords gcache.Cache
 	// authorizer auth related operations.
 	authorizer auth.Authorizer
+	provider   repository.Provider
+}
+
+// UploadFile upload to repo provider
+func (p *repoProxy) UploadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	fileContentID, err := repository.GetFileContentID(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	metadata, err := p.provider.Upload(kt, fileContentID, r.Body)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	render.Render(w, r, rest.OKRender(metadata))
+}
+
+// DownloadFile download file from provider repo
+func (p *repoProxy) DownloadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.MustGetKit(r.Context())
+
+	fileContentID, err := repository.GetFileContentID(r)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	body, contentLength, err := p.provider.Download(kt, fileContentID)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
+	w.Header().Set("Content-Type", "application/octet-stream; charset=UTF-8")
+	_, err = io.Copy(w, body)
+	if err != nil {
+		klog.ErrorS(err, "download file", "fileContentID", contentLength)
+	}
 }
 
 // FileMetadata get repo head data
-func (p repoProxy) FileMetadata(w http.ResponseWriter, r *http.Request) {
+func (p *repoProxy) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
-	authRes, needReturn := p.authorize(kt, r)
-	if needReturn {
-		fmt.Fprintf(w, authRes)
-		return
-	}
-	config := cc.ApiServer().Repo
-
-	bizID, _, err := repository.GetBizIDAndAppID(nil, r)
+	fileContentID, err := repository.GetFileContentID(r)
 	if err != nil {
-		logs.Errorf("get biz_id and app_id from request failed, err: %v, rid: %s", err, kt.Rid)
+		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	opt := &repo.NodeOption{
-		Project: config.BkRepo.Project,
-		BizID:   bizID,
-		Sign:    sha256,
-	}
-	path, _ := repo.GenNodePath(opt)
-	fileMetadata, err := p.repoCli.FileMetadataHead(kt.Ctx, path)
+	metadata, err := p.provider.Metadata(kt, fileContentID)
 	if err != nil {
-		logs.Errorf("get file metadata information failed, err: %v, rid: %s", err, kt.Rid)
-		return
-	}
-	msg, _ := json.Marshal(fileMetadata)
-	w.Write(msg)
-}
-
-func (p repoProxy) DownloadFile(w http.ResponseWriter, r *http.Request) {
-	kt := kit.MustGetKit(r.Context())
-
-	authRes, needReturn := p.authorize(kt, r)
-	if needReturn {
-		fmt.Fprintf(w, authRes)
-		return
-	}
-	p.proxy.ServeHTTP(w, r)
-}
-
-func (p repoProxy) UploadFile(w http.ResponseWriter, r *http.Request) {
-	kt := kit.MustGetKit(r.Context())
-
-	authRes, needReturn := p.authorize(kt, r)
-	if needReturn {
-		fmt.Fprintf(w, authRes)
+		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	// parse biz_id.
-	bizIDStr := chi.URLParam(r, "biz_id")
-	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
-	if err != nil {
-		logs.Errorf("biz_id parse uint failed, err: %v, rid: %s", err, kt.Rid)
-		fmt.Fprintf(w, errf.New(errf.InvalidParameter, err.Error()).Error())
-		return
-	}
-
-	if bizID == 0 {
-		fmt.Fprintf(w, errf.New(errf.InvalidParameter, "biz_id should > 0").Error())
-		return
-	}
-
-	if record, err := p.repoCreatedRecords.Get(bizID); err != nil || record == nil {
-		repoName, err := repo.GenRepoName(uint32(bizID))
-		if err != nil {
-			logs.Errorf("generate repository name failed, err: %v, rid: %s", err, kt.Rid)
-			fmt.Fprintf(w, errf.Error(err).Error())
-			return
-		}
-
-		req := &repo.CreateRepoReq{
-			ProjectID:     cc.ApiServer().Repo.BkRepo.Project,
-			Name:          repoName,
-			Type:          repo.RepositoryType,
-			Category:      repo.CategoryType,
-			Configuration: repo.Configuration{Type: repo.RepositoryCfgType},
-			Description:   fmt.Sprintf("bscp %d business repository", bizID),
-		}
-		if err = p.repoCli.CreateRepo(r.Context(), req); err != nil {
-			logs.Errorf("create repository failed, err: %v, rid: %s", err, kt.Rid)
-			fmt.Fprintf(w, errf.Error(err).Error())
-			return
-		}
-
-		// set cache, to flag this biz repository already created.
-		p.repoCreatedRecords.SetWithExpire(bizID, true, repository.RepoRecordCacheExpiration)
-	}
-
-	p.proxy.ServeHTTP(w, r)
+	render.Render(w, r, rest.OKRender(metadata))
 }
 
 // authorize the request, returns error response and if the response needs return.

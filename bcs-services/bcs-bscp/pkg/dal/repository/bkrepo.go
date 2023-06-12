@@ -40,6 +40,7 @@ type bkrepoAuthTransport struct {
 	Transport http.RoundTripper
 }
 
+// RoundTrip Transport
 func (t *bkrepoAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.SetBasicAuth(t.Username, t.Password)
 	resp, err := t.transport(req).RoundTrip(req)
@@ -53,9 +54,9 @@ func (t *bkrepoAuthTransport) transport(req *http.Request) http.RoundTripper {
 	return http.DefaultTransport
 }
 
-// bkrepo s3 client struct
+// bkrepo client struct
 type bkrepo struct {
-	// repoCli s3 client.
+	// repoCli client.
 	client *http.Client
 	cli    *repo.Client
 	// authorizer auth related operations.
@@ -97,7 +98,6 @@ func (s *bkrepo) UploadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *bkrepo) ensureRepo(kt *kit.Kit) error {
-
 	repoName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
 		return err

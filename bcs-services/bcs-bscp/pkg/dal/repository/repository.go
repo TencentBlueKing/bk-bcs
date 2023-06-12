@@ -16,10 +16,13 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/pkg/errors"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -51,8 +54,8 @@ type ObjectDownload interface {
 	AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error)
 }
 
-// Repo
-type Repo interface {
+// Provider
+type Provider interface {
 	ObjectDownload
 	Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error)
 	Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error)
@@ -94,4 +97,14 @@ func GetBizIDAndAppID(kt *kit.Kit, req *http.Request) (uint32, uint32, error) {
 	}
 
 	return uint32(bizID), uint32(appID), nil
+}
+
+// GetFileContentID get file sha256
+func GetFileContentID(r *http.Request) (string, error) {
+	fileContentID := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+	if len(fileContentID) != 64 {
+		return "", errors.New("not valid X-Bkapi-File-Content-Id in header")
+	}
+
+	return fileContentID, nil
 }
