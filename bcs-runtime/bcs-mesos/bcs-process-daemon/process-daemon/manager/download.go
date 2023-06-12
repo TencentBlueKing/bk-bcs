@@ -240,7 +240,7 @@ DownloadRESP:
 		return false, err
 	}
 
-	file, err := os.OpenFile(uriPack.PackagesFile, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(uriPack.PackagesFile, os.O_RDWR|os.O_CREATE, 0644) // nolint
 	if err != nil {
 		blog.Errorf("process %s openfile %s error %s", processInfo.Id, uriPack.PackagesFile, err.Error())
 		return false, err

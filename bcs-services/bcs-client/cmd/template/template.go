@@ -24,7 +24,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-// NewTemplateCommand xxx
+// NewTemplateCommand will create template command. It will handle the json
+// template of application/service and so on.
 func NewTemplateCommand() cli.Command {
 	return cli.Command{
 		Name:  "template",
@@ -44,6 +45,7 @@ func NewTemplateCommand() cli.Command {
 	}
 }
 
+// template will return the template of every resource
 func template(c *utils.ClientContext) error {
 	if err := c.MustSpecified(utils.OptionType); err != nil {
 		return err

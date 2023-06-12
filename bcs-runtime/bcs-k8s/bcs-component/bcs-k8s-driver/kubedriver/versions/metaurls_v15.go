@@ -13,6 +13,27 @@
 
 package versions
 
+// apiSetV15 defines the api urls of kubernetes v1.15 version. We define these urls
+// to check url specifications and create the client for kubernetes. All urls of kubernetes
+// are defined, users don't need to care about the details.
+// These urls contain the following resources:
+// - componentstatuses
+// - configmaps
+// - endpoints
+// - secrets
+// - services
+// - events
+// - limitranges
+// - namespaces
+// - bindings
+// - pv/pvcs
+// - pods
+// - replicationcontrollers
+// - and so on.
+// The k8s driver will return the urls under control to handle request.
+// These apis map all the original apis and are used to verify the user's
+// api request. It is adapted to different versions of k8s, and users do not
+//need to pay attention to details
 var apiSetV15 = []string{
 	"/api/v1/componentstatuses",
 	"/api/v1/componentstatuses/{name}",

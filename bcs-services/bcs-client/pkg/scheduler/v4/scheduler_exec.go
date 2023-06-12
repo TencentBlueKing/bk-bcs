@@ -60,6 +60,9 @@ func (bs *bcsScheduler) CreateContainerExec(clusterId, containerId, hostIp strin
 		data,
 		getClusterIDHeader(clusterId),
 	)
+	if err != nil {
+		return "", err
+	}
 
 	var execResp CreatExecResp
 	err = codec.DecJson(resp, &execResp)

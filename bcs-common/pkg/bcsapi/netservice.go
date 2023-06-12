@@ -59,6 +59,7 @@ type Netservice interface {
 }
 
 // NetserviceCli netservice http client, will handle all operations with netservice
+// It can be used as the cli to handle every operation of netservice
 type NetserviceCli struct {
 	httpClientTimeout int
 	tlsConfig         *tls.Config
@@ -103,7 +104,8 @@ func (nc *NetserviceCli) SetHosts(svrs []string) {
 	nc.netSvrs = svrs
 }
 
-// GetNetService get netservice server addresses from zookeeper or from envs
+// GetNetService get netservice server addresses from zookeeper or from envs. It
+// will return error if netservice not exist.
 func (nc *NetserviceCli) GetNetService(zkHost []string) error {
 	// get netservice addresses from env
 	netSvrStr := os.Getenv(envVarNameNetservice)
@@ -151,6 +153,7 @@ func (nc *NetserviceCli) GetNetService(zkHost []string) error {
 }
 
 // RegisterPool register pool info to bcs-netservice, will register pool info to netservice
+// The pool inf will be saved in store.
 func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 	if len(pool.Cluster) == 0 {
 		return fmt.Errorf("lost cluster info")
@@ -198,6 +201,7 @@ func (nc *NetserviceCli) RegisterPool(pool *types.NetPool) error {
 }
 
 // UpdatePool update pool info, will update pool information to netservice
+// will update poll info to store.
 func (nc *NetserviceCli) UpdatePool(pool *types.NetPool) error {
 	if len(pool.Cluster) == 0 {
 		return fmt.Errorf("lost cluster info")

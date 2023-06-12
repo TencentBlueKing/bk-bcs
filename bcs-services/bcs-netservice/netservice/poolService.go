@@ -216,7 +216,7 @@ func (srv *NetService) initPoolPath(pool *types.NetPool, poolPath string, poolDa
 	return nil
 }
 
-// DeletePool will delete the pool by netservice key
+// DeletePool will delete the pool by netservice key. It will delete from store
 func (srv *NetService) DeletePool(netKey string) error {
 	started := time.Now()
 	// check pool existence
@@ -294,7 +294,8 @@ func (srv *NetService) DeletePool(netKey string) error {
 	return nil
 }
 
-// UpdatePool update Pool info will update by netservice key
+// UpdatePool update Pool info will update by netservice key. It will update poll
+// info to store
 func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 	started := time.Now()
 	// check & construct data
@@ -488,7 +489,8 @@ func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPo
 	return nil
 }
 
-// ListPool will list all the pools from store
+// ListPool will list all the pools from store. It will return the netpools, and it
+// will return error if list from store failed.
 func (srv *NetService) ListPool() ([]*types.NetPool, error) {
 	started := time.Now()
 	// list all pool from defaultPoolPath
@@ -519,8 +521,8 @@ func (srv *NetService) ListPool() ([]*types.NetPool, error) {
 	return pools, nil
 }
 
-// ListPoolByKey Get pool info by net from store
-// It will return the net pool
+// ListPoolByKey Get pool info by net from store. It will query from store
+// by key, and return error if store query failed.
 func (srv *NetService) ListPoolByKey(net string) (*types.NetPool, error) {
 	started := time.Now()
 	blog.Info("try to get pool %s info.", net)

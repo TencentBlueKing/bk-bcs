@@ -379,7 +379,7 @@ func (m *manager) symlinkWorkdir(processInfo *types.ProcessInfo) error {
 	_, err := os.Stat(uriPack.OutputDir)
 	if err != nil {
 		blog.Errorf("process %s stat file %s error %s", processInfo.Id, uriPack.User, err.Error())
-		err = os.MkdirAll(filepath.Dir(uriPack.OutputDir), 0755)
+		err = os.MkdirAll(filepath.Dir(uriPack.OutputDir), 0755) // nolint
 		if err != nil {
 			blog.Errorf("process %s mkdir %s error %s", processInfo.Id, filepath.Dir(uriPack.OutputDir), err.Error())
 			return err

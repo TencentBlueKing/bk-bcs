@@ -317,6 +317,7 @@ func (s *taskGroupController) convertTaskGroupToAppNode(taskGroup *TaskGroup) *v
 }
 
 func (s *taskGroupController) convertPortMapping(ports []*schetypes.PortMapping) (out []v1.NodePort) {
+	out = make([]v1.NodePort, 0)
 	for _, port := range ports {
 		nport := v1.NodePort{
 			Name:      port.Name,
@@ -326,7 +327,7 @@ func (s *taskGroupController) convertPortMapping(ports []*schetypes.PortMapping)
 		}
 		out = append(out, nport)
 	}
-	return
+	return out
 }
 
 func newTaskGroupCache(hosts []string) (*taskGroupController, error) {

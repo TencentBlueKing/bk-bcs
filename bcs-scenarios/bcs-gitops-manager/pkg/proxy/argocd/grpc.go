@@ -168,6 +168,7 @@ func (plugin *GrpcPlugin) rewriteRequestBody(req *http.Request, body interface{}
 	return len(result), nil
 }
 
+// handleProjectList will handle the grpc request of list project
 func (plugin *GrpcPlugin) handleProjectList(ctx context.Context, req *http.Request) *httpResponse {
 	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
 	if statusCode != http.StatusOK {
@@ -183,6 +184,7 @@ func (plugin *GrpcPlugin) handleProjectList(ctx context.Context, req *http.Reque
 	}
 }
 
+// handleProjectGet will return project details by project name
 func (plugin *GrpcPlugin) handleProjectGet(ctx context.Context, req *http.Request) *httpResponse {
 	query := &project.ProjectQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -201,6 +203,7 @@ func (plugin *GrpcPlugin) handleProjectGet(ctx context.Context, req *http.Reques
 	return nil
 }
 
+// handleRepoList will return repo list
 func (plugin *GrpcPlugin) handleRepoList(ctx context.Context, req *http.Request) *httpResponse {
 	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
 	if statusCode != http.StatusOK {
@@ -227,6 +230,7 @@ func (plugin *GrpcPlugin) handleRepoList(ctx context.Context, req *http.Request)
 	}
 }
 
+// handleRepoGet will return repo details by repo name
 func (plugin *GrpcPlugin) handleRepoGet(ctx context.Context, req *http.Request) *httpResponse {
 	query := &argorepo.RepoQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -249,6 +253,7 @@ func (plugin *GrpcPlugin) handleRepoGet(ctx context.Context, req *http.Request) 
 	}
 }
 
+// handleRepoAccess will check repo access
 func (plugin *GrpcPlugin) handleRepoAccess(ctx context.Context, req *http.Request) *httpResponse {
 	repoAccess := &argorepo.RepoAccessQuery{}
 	if err := plugin.readRequestBody(ctx, req, repoAccess); err != nil {
@@ -273,6 +278,7 @@ func (plugin *GrpcPlugin) handleRepoAccess(ctx context.Context, req *http.Reques
 	return nil
 }
 
+// handleRepoCreate will create repo to argocd
 func (plugin *GrpcPlugin) handleRepoCreate(ctx context.Context, req *http.Request) *httpResponse {
 	repoCreate := &argorepo.RepoCreateRequest{}
 	if err := plugin.readRequestBody(ctx, req, repoCreate); err != nil {
@@ -297,6 +303,7 @@ func (plugin *GrpcPlugin) handleRepoCreate(ctx context.Context, req *http.Reques
 	return nil
 }
 
+// handleRepoDelete will delete repo from argocd
 func (plugin *GrpcPlugin) handleRepoDelete(ctx context.Context, req *http.Request) *httpResponse {
 	query := &argorepo.RepoQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -321,6 +328,7 @@ func (plugin *GrpcPlugin) handleRepoDelete(ctx context.Context, req *http.Reques
 	return nil
 }
 
+// handleRepoListRefs will list repo refs from argocd
 func (plugin *GrpcPlugin) handleRepoListRefs(ctx context.Context, req *http.Request) *httpResponse {
 	query := &argorepo.RepoQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -345,6 +353,7 @@ func (plugin *GrpcPlugin) handleRepoListRefs(ctx context.Context, req *http.Requ
 	return nil
 }
 
+// handleRepoListApps will handle repo list apps
 func (plugin *GrpcPlugin) handleRepoListApps(ctx context.Context, req *http.Request) *httpResponse {
 	query := &argorepo.RepoAppsQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -369,6 +378,7 @@ func (plugin *GrpcPlugin) handleRepoListApps(ctx context.Context, req *http.Requ
 	return nil
 }
 
+// handleRepoGetAppDetails will handle repo get application details
 func (plugin *GrpcPlugin) handleRepoGetAppDetails(ctx context.Context, req *http.Request) *httpResponse {
 	query := &argorepo.RepoAppDetailsQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -393,6 +403,7 @@ func (plugin *GrpcPlugin) handleRepoGetAppDetails(ctx context.Context, req *http
 	return nil
 }
 
+// handleRepoGetHelmCharts will handle repo get helm charts
 func (plugin *GrpcPlugin) handleRepoGetHelmCharts(ctx context.Context, req *http.Request) *httpResponse {
 	query := &argorepo.RepoQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -417,6 +428,7 @@ func (plugin *GrpcPlugin) handleRepoGetHelmCharts(ctx context.Context, req *http
 	return nil
 }
 
+// handleClusterList will handle cluster list
 func (plugin *GrpcPlugin) handleClusterList(ctx context.Context, req *http.Request) *httpResponse {
 	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
 	if statusCode != http.StatusOK {
@@ -444,6 +456,7 @@ func (plugin *GrpcPlugin) handleClusterList(ctx context.Context, req *http.Reque
 	}
 }
 
+// parseClusterName will parse cluster name and check it
 func (plugin *GrpcPlugin) parseClusterName(server string) (string, error) {
 	arr := strings.Split(server, "/")
 	clusterID := arr[len(arr)-1]
@@ -453,6 +466,7 @@ func (plugin *GrpcPlugin) parseClusterName(server string) (string, error) {
 	return clusterID, nil
 }
 
+// handleClusterGet will handle cluster get, return cluster details
 func (plugin *GrpcPlugin) handleClusterGet(ctx context.Context, req *http.Request) *httpResponse {
 	query := &cluster.ClusterQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -482,6 +496,7 @@ func (plugin *GrpcPlugin) handleClusterSettingGet(ctx context.Context, req *http
 	return nil
 }
 
+// handleAppList will handle application list, return applications
 func (plugin *GrpcPlugin) handleAppList(ctx context.Context, req *http.Request) *httpResponse {
 	projectList, statusCode, err := plugin.middleware.ListProjects(ctx)
 	if statusCode != http.StatusOK {
@@ -509,6 +524,7 @@ func (plugin *GrpcPlugin) handleAppList(ctx context.Context, req *http.Request) 
 	}
 }
 
+// handleAppGet handle application get, return application details
 func (plugin *GrpcPlugin) handleAppGet(ctx context.Context, req *http.Request) *httpResponse {
 	query := &application.ApplicationQuery{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -527,6 +543,7 @@ func (plugin *GrpcPlugin) handleAppGet(ctx context.Context, req *http.Request) *
 	return nil
 }
 
+// handleAppCreate handle application create
 func (plugin *GrpcPlugin) handleAppCreate(ctx context.Context, req *http.Request) *httpResponse {
 	appCreate := &application.ApplicationCreateRequest{}
 	if err := plugin.readRequestBody(ctx, req, appCreate); err != nil {
@@ -573,6 +590,7 @@ func (plugin *GrpcPlugin) handleAppCreate(ctx context.Context, req *http.Request
 	return nil
 }
 
+// handleAppSync will handle application sync
 func (plugin *GrpcPlugin) handleAppSync(ctx context.Context, req *http.Request) *httpResponse {
 	query := &application.ApplicationSyncRequest{}
 	if err := plugin.readRequestBody(ctx, req, query); err != nil {
@@ -584,6 +602,7 @@ func (plugin *GrpcPlugin) handleAppSync(ctx context.Context, req *http.Request) 
 	return plugin.handleAppCommon(ctx, *query.Name, iam.ProjectEdit)
 }
 
+// handleAppDelete will handle application delete
 func (plugin *GrpcPlugin) handleAppDelete(ctx context.Context, req *http.Request) *httpResponse {
 	appDelete := &application.ApplicationDeleteRequest{}
 	if err := plugin.readRequestBody(ctx, req, appDelete); err != nil {
@@ -595,6 +614,7 @@ func (plugin *GrpcPlugin) handleAppDelete(ctx context.Context, req *http.Request
 	return plugin.handleAppCommon(ctx, *appDelete.Name, iam.ProjectEdit)
 }
 
+// handleAppWatch will handle application watch
 func (plugin *GrpcPlugin) handleAppWatch(ctx context.Context, req *http.Request) *httpResponse {
 	appWatch := new(application.ApplicationQuery)
 	if err := plugin.readRequestBody(ctx, req, appWatch); err != nil {
@@ -603,6 +623,7 @@ func (plugin *GrpcPlugin) handleAppWatch(ctx context.Context, req *http.Request)
 	return plugin.handleAppCommon(ctx, *appWatch.Name, iam.ProjectEdit)
 }
 
+// handleAppUpdate will handle application update
 func (plugin *GrpcPlugin) handleAppUpdate(ctx context.Context, req *http.Request) *httpResponse {
 	appUpdate := &application.ApplicationUpdateRequest{}
 	if err := plugin.readRequestBody(ctx, req, appUpdate); err != nil {
@@ -611,6 +632,7 @@ func (plugin *GrpcPlugin) handleAppUpdate(ctx context.Context, req *http.Request
 	return plugin.handleAppCommon(ctx, appUpdate.Application.Name, iam.ProjectEdit)
 }
 
+// handleAppUpdateSpec will handle application update spec information
 func (plugin *GrpcPlugin) handleAppUpdateSpec(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationUpdateSpecRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -619,6 +641,7 @@ func (plugin *GrpcPlugin) handleAppUpdateSpec(ctx context.Context, req *http.Req
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppPatch handle application patch
 func (plugin *GrpcPlugin) handleAppPatch(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationPatchRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -627,6 +650,7 @@ func (plugin *GrpcPlugin) handleAppPatch(ctx context.Context, req *http.Request)
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppListResourceEvents handle application list resource events
 func (plugin *GrpcPlugin) handleAppListResourceEvents(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationResourceEventsQuery)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -635,6 +659,7 @@ func (plugin *GrpcPlugin) handleAppListResourceEvents(ctx context.Context, req *
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppGetApplicationSyncWindows handle application sync windows
 func (plugin *GrpcPlugin) handleAppGetApplicationSyncWindows(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationSyncWindowsQuery)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -643,6 +668,7 @@ func (plugin *GrpcPlugin) handleAppGetApplicationSyncWindows(ctx context.Context
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppRevisionMetadata handle application revision metadata
 func (plugin *GrpcPlugin) handleAppRevisionMetadata(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.RevisionMetadataQuery)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -650,6 +676,8 @@ func (plugin *GrpcPlugin) handleAppRevisionMetadata(ctx context.Context, req *ht
 	}
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
+
+// handleAppGetManifests handle application get manifests
 func (plugin *GrpcPlugin) handleAppGetManifests(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationManifestQuery)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -658,6 +686,7 @@ func (plugin *GrpcPlugin) handleAppGetManifests(ctx context.Context, req *http.R
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppManagedResources handle application managed resources
 func (plugin *GrpcPlugin) handleAppManagedResources(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ResourcesQuery)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -666,6 +695,7 @@ func (plugin *GrpcPlugin) handleAppManagedResources(ctx context.Context, req *ht
 	return plugin.handleAppCommon(ctx, *appReq.ApplicationName, iam.ProjectEdit)
 }
 
+// handleAppResourceTree handle application resource tree
 func (plugin *GrpcPlugin) handleAppResourceTree(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ResourcesQuery)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -674,6 +704,7 @@ func (plugin *GrpcPlugin) handleAppResourceTree(ctx context.Context, req *http.R
 	return plugin.handleAppCommon(ctx, *appReq.ApplicationName, iam.ProjectEdit)
 }
 
+// handleAppRollback handle application rollback
 func (plugin *GrpcPlugin) handleAppRollback(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationRollbackRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -682,6 +713,7 @@ func (plugin *GrpcPlugin) handleAppRollback(ctx context.Context, req *http.Reque
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppTerminateOperation handle application termination operator
 func (plugin *GrpcPlugin) handleAppTerminateOperation(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.OperationTerminateRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -690,6 +722,7 @@ func (plugin *GrpcPlugin) handleAppTerminateOperation(ctx context.Context, req *
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppGetResource handle application get resource
 func (plugin *GrpcPlugin) handleAppGetResource(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationResourceRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -698,6 +731,7 @@ func (plugin *GrpcPlugin) handleAppGetResource(ctx context.Context, req *http.Re
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppPatchResource handle application patch resource
 func (plugin *GrpcPlugin) handleAppPatchResource(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationResourcePatchRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -706,6 +740,7 @@ func (plugin *GrpcPlugin) handleAppPatchResource(ctx context.Context, req *http.
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppListResourceActions handle application list resource actions
 func (plugin *GrpcPlugin) handleAppListResourceActions(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationResourceRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -714,6 +749,7 @@ func (plugin *GrpcPlugin) handleAppListResourceActions(ctx context.Context, req 
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppRunResourceAction handle application run resource action
 func (plugin *GrpcPlugin) handleAppRunResourceAction(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ResourceActionRunRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -722,6 +758,7 @@ func (plugin *GrpcPlugin) handleAppRunResourceAction(ctx context.Context, req *h
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppDeleteResource handle application delete resource
 func (plugin *GrpcPlugin) handleAppDeleteResource(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationResourceDeleteRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -730,6 +767,7 @@ func (plugin *GrpcPlugin) handleAppDeleteResource(ctx context.Context, req *http
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppPodLogs handle application pod logs
 func (plugin *GrpcPlugin) handleAppPodLogs(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationPodLogsQuery)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -738,6 +776,7 @@ func (plugin *GrpcPlugin) handleAppPodLogs(ctx context.Context, req *http.Reques
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppListLinks handle application list links
 func (plugin *GrpcPlugin) handleAppListLinks(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ListAppLinksRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -746,6 +785,7 @@ func (plugin *GrpcPlugin) handleAppListLinks(ctx context.Context, req *http.Requ
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppListResourceLinks handle application list resource links
 func (plugin *GrpcPlugin) handleAppListResourceLinks(ctx context.Context, req *http.Request) *httpResponse {
 	appReq := new(application.ApplicationResourceRequest)
 	if err := plugin.readRequestBody(ctx, req, appReq); err != nil {
@@ -754,6 +794,7 @@ func (plugin *GrpcPlugin) handleAppListResourceLinks(ctx context.Context, req *h
 	return plugin.handleAppCommon(ctx, *appReq.Name, iam.ProjectEdit)
 }
 
+// handleAppCommon handle application common handler
 func (plugin *GrpcPlugin) handleAppCommon(ctx context.Context, appName string, actionID iam.ActionID) *httpResponse {
 	_, statusCode, err := plugin.middleware.CheckApplicationPermission(ctx, appName, actionID)
 	if statusCode != http.StatusOK {

@@ -285,7 +285,7 @@ type GameDeploymentCondition struct {
 // +kubebuilder:printcolumn:JSONPath=.status.updatedReadyReplicas,name=UPDATED_READY,type=integer,description=The number of pods updated and ready.
 // +kubebuilder:printcolumn:JSONPath=.status.readyReplicas,name=READY,type=integer,description=The number of pods ready.
 // +kubebuilder:printcolumn:JSONPath=.status.replicas,name=TOTAL,type=integer,description=The number of currently all pods.
-// +kubebuilder:printcolumn:JSONPath=.metadata.creationTimestamp,name=Age,type=date,description=CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC. // nolint
+// +kubebuilder:printcolumn:JSONPath=.metadata.creationTimestamp,name=Age,type=date,description=CreationTimestamp is a timestamp representing the server time when this object was created. It is not guaranteed to be set in happens-before order across separate operations. Clients may not set this value. It is represented in RFC3339 form and is in UTC.
 // +kubebuilder:subresource:status
 // +kubebuilder:subresource:scale:selectorpath=.status.labelSelector,specpath=.spec.replicas,statuspath=.status.replicas
 type GameDeployment struct {
