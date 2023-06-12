@@ -74,7 +74,7 @@ func (s *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 	_, err = io.Copy(w, body)
 	if err != nil {
-		klog.ErrorS(err, "download file", "fileContentID", contentLength)
+		klog.ErrorS(err, "download file", "fileContentID", fileContentID)
 	}
 }
 
