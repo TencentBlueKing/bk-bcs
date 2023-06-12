@@ -16,20 +16,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
-	"strings"
 
-	"github.com/go-chi/render"
 	"github.com/pkg/errors"
 	cos "github.com/tencentyun/cos-go-sdk-v5"
-	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/rest"
 	"bscp.io/pkg/thirdparty/repo"
 )
 
@@ -43,38 +37,8 @@ type s3Client struct {
 	host       string
 }
 
-// DownloadFile download file
-func (s *s3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
-	err := s.downloadFile(w, r)
-	if err != nil {
-		render.Render(w, r, rest.BadRequest(err))
-	}
-}
-
-// UploadFile upload file
-func (s *s3Client) uploadFile(r *http.Request) (*ObjectMetadata, error) {
-	kt := kit.MustGetKit(r.Context())
-
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	if len(sha256) != 64 {
-		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
-	}
-
-	return s.uploadFile2(kt, sha256, r.Body)
-}
-
-// UploadFile
-func (s *s3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
-	metadata, err := s.uploadFile(r)
-	if err != nil {
-		render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-	render.JSON(w, r, rest.OKRender(metadata))
-
-}
-
-func (s *s3Client) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+// Upload
+func (s *s3Client) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, err
@@ -106,31 +70,8 @@ func (s *s3Client) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader
 	return metadata, nil
 }
 
-func (s *s3Client) downloadFile(w http.ResponseWriter, r *http.Request) error {
-	kt := kit.MustGetKit(r.Context())
-
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	if len(sha256) != 64 {
-		return errors.New("not valid X-Bkapi-File-Content-Id in header")
-	}
-
-	resp, contentLength, err := s.downloadFil2(kt, sha256)
-	if err != nil {
-		return err
-	}
-	defer resp.Close()
-
-	w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
-	w.Header().Set("Content-Type", "application/octet-stream; charset=UTF-8")
-	_, err = io.Copy(w, resp)
-	if err != nil {
-		klog.ErrorS(err, "download file", "fileContentID", sha256)
-	}
-
-	return nil
-}
-
-func (s *s3Client) downloadFil2(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
+// Download
+func (s *s3Client) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, 0, err
@@ -155,29 +96,8 @@ func (s *s3Client) downloadFil2(kt *kit.Kit, fileContentID string) (io.ReadClose
 	return resp.Body, resp.ContentLength, nil
 }
 
-// FileMetadata get s3 head data
-func (s *s3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
-	metadata, err := s.fileMetadata(w, r)
-	if err != nil {
-		render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-	render.JSON(w, r, rest.OKRender(metadata))
-
-}
-
-func (s *s3Client) fileMetadata(w http.ResponseWriter, r *http.Request) (*ObjectMetadata, error) {
-	kt := kit.MustGetKit(r.Context())
-
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	if len(sha256) != 64 {
-		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
-	}
-
-	return s.fileMetadata2(kt, sha256)
-}
-
-func (s *s3Client) fileMetadata2(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
+// Metadata
+func (s *s3Client) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, err
@@ -198,7 +118,6 @@ func (s *s3Client) fileMetadata2(kt *kit.Kit, fileContentID string) (*ObjectMeta
 	if resp.StatusCode != 200 {
 		return nil, errors.Errorf("download status %d != 200", resp.StatusCode)
 	}
-	fmt.Println(resp.Header)
 
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
@@ -210,7 +129,7 @@ func (s *s3Client) fileMetadata2(kt *kit.Kit, fileContentID string) (*ObjectMeta
 }
 
 // NewS3Service new s3 service
-func NewS3Service(settings cc.Repository, authorizer auth.Authorizer) (FileApiType, error) {
+func NewS3Service(settings cc.Repository, authorizer auth.Authorizer) (Provider, error) {
 	s, err := repo.NewClientS3(&settings, metrics.Register())
 	if err != nil {
 		return nil, err

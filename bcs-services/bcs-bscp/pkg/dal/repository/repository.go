@@ -13,33 +13,17 @@ limitations under the License.
 package repository
 
 import (
+	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
-	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/pkg/errors"
 
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	pbas "bscp.io/pkg/protocol/auth-server"
 )
-
-const (
-	// repoRecordCacheExpiration repo created record cache expiration.
-	RepoRecordCacheExpiration = time.Hour
-)
-
-// FileApiType file api type
-type FileApiType interface {
-	DownloadFile(w http.ResponseWriter, r *http.Request)
-	FileMetadata(w http.ResponseWriter, r *http.Request)
-	UploadFile(w http.ResponseWriter, r *http.Request)
-}
 
 // ObjectMetadata 文件元数据
 type ObjectMetadata struct {
@@ -56,47 +40,9 @@ type ObjectDownload interface {
 
 // Provider
 type Provider interface {
-	ObjectDownload
 	Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error)
 	Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error)
 	Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error)
-}
-
-// AuthResp http response with need apply permission.
-type AuthResp struct {
-	Code       int32               `json:"code"`
-	Message    string              `json:"message"`
-	Permission *pbas.IamPermission `json:"permission,omitempty"`
-}
-
-type RepoClient interface {
-}
-
-// GetBizIDAndAppID get biz_id and app_id from req path.
-func GetBizIDAndAppID(kt *kit.Kit, req *http.Request) (uint32, uint32, error) {
-	bizIDStr := chi.URLParam(req, "biz_id")
-	bizID, err := strconv.ParseUint(bizIDStr, 10, 64)
-	if err != nil {
-		logs.Errorf("biz id parse uint failed, err: %v, rid: %s", err, kt.Rid)
-		return 0, 0, err
-	}
-
-	if bizID == 0 {
-		return 0, 0, errf.New(errf.InvalidParameter, "biz_id should > 0")
-	}
-
-	appIDStr := chi.URLParam(req, "app_id")
-	appID, err := strconv.ParseUint(appIDStr, 10, 64)
-	if err != nil {
-		logs.Errorf("app id parse uint failed, err: %v, rid: %s", err, kt.Rid)
-		return 0, 0, err
-	}
-
-	if appID == 0 {
-		return 0, 0, errf.New(errf.InvalidParameter, "app_id should > 0")
-	}
-
-	return uint32(bizID), uint32(appID), nil
 }
 
 // GetFileContentID get file sha256
@@ -107,4 +53,16 @@ func GetFileContentID(r *http.Request) (string, error) {
 	}
 
 	return fileContentID, nil
+}
+
+// NewProvider init provider factory by storage type
+func NewProvider(conf cc.Repository) (Provider, error) {
+	switch strings.ToUpper(string(conf.StorageType)) {
+	case string(cc.S3):
+		return NewS3Service(conf, nil)
+	case string(cc.BkRepo):
+		// return NewRepoService(settings, authorizer)
+		return NewBKRepoService(conf, nil)
+	}
+	return nil, fmt.Errorf("store with type %s is not supported", conf.StorageType)
 }

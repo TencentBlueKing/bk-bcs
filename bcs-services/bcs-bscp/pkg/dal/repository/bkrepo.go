@@ -18,18 +18,14 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"strings"
 
-	"github.com/go-chi/render"
 	"github.com/pkg/errors"
-	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/rest"
 	"bscp.io/pkg/thirdparty/repo"
 )
 
@@ -64,37 +60,6 @@ type bkrepo struct {
 	host        string
 	project     string
 	repoCreated map[string]struct{}
-}
-
-// DownloadFile download file
-func (s *bkrepo) DownloadFile(w http.ResponseWriter, r *http.Request) {
-	err := s.downloadFile(w, r)
-	if err != nil {
-		render.Render(w, r, rest.BadRequest(err))
-	}
-}
-
-// UploadFile upload file
-func (s *bkrepo) uploadFile(r *http.Request) (*ObjectMetadata, error) {
-	kt := kit.MustGetKit(r.Context())
-
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	if len(sha256) != 64 {
-		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
-	}
-
-	return s.uploadFile2(kt, sha256, r.Body)
-}
-
-// UploadFile
-func (s *bkrepo) UploadFile(w http.ResponseWriter, r *http.Request) {
-	metadata, err := s.uploadFile(r)
-	if err != nil {
-		render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-	render.JSON(w, r, rest.OKRender(metadata))
-
 }
 
 func (s *bkrepo) ensureRepo(kt *kit.Kit) error {
@@ -178,7 +143,7 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 	return meta.String()
 }
 
-func (s *bkrepo) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+func (s *bkrepo) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
 	if err := s.ensureRepo(kt); err != nil {
 		return nil, errors.Wrap(err, "ensure repo failed")
 	}
@@ -231,31 +196,7 @@ func (s *bkrepo) uploadFile2(kt *kit.Kit, fileContentID string, body io.Reader) 
 	return metadata, nil
 }
 
-func (s *bkrepo) downloadFile(w http.ResponseWriter, r *http.Request) error {
-	kt := kit.MustGetKit(r.Context())
-
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	if len(sha256) != 64 {
-		return errors.New("not valid X-Bkapi-File-Content-Id in header")
-	}
-
-	resp, contentLength, err := s.downloadFil2(kt, sha256)
-	if err != nil {
-		return err
-	}
-	defer resp.Close()
-
-	w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
-	w.Header().Set("Content-Type", "application/octet-stream; charset=UTF-8")
-	_, err = io.Copy(w, resp)
-	if err != nil {
-		klog.ErrorS(err, "download file", "fileContentID", sha256)
-	}
-
-	return nil
-}
-
-func (s *bkrepo) downloadFil2(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
+func (s *bkrepo) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
 	node, err := repo.GenNodePath(&repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID})
 	if err != nil {
 		return nil, 0, err
@@ -280,29 +221,7 @@ func (s *bkrepo) downloadFil2(kt *kit.Kit, fileContentID string) (io.ReadCloser,
 	return resp.Body, resp.ContentLength, nil
 }
 
-// FileMetadata get s3 head data
-func (s *bkrepo) FileMetadata(w http.ResponseWriter, r *http.Request) {
-	metadata, err := s.fileMetadata(w, r)
-	if err != nil {
-		render.Render(w, r, rest.BadRequest(err))
-		return
-	}
-	render.JSON(w, r, rest.OKRender(metadata))
-
-}
-
-func (s *bkrepo) fileMetadata(w http.ResponseWriter, r *http.Request) (*ObjectMetadata, error) {
-	kt := kit.MustGetKit(r.Context())
-
-	sha256 := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	if len(sha256) != 64 {
-		return nil, errors.New("not valid X-Bkapi-File-Content-Id in header")
-	}
-
-	return s.fileMetadata2(kt, sha256)
-}
-
-func (s *bkrepo) fileMetadata2(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
+func (s *bkrepo) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
 	node, err := repo.GenNodePath(&repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID})
 	if err != nil {
 		return nil, err
@@ -335,7 +254,7 @@ func (s *bkrepo) fileMetadata2(kt *kit.Kit, fileContentID string) (*ObjectMetada
 }
 
 // NewBKRepoService new s3 service
-func NewBKRepoService(settings cc.Repository, authorizer auth.Authorizer) (FileApiType, error) {
+func NewBKRepoService(settings cc.Repository, authorizer auth.Authorizer) (Provider, error) {
 	s, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err
