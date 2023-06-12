@@ -16,7 +16,7 @@ package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
 )
 
 // UserManagerOptions cmd option for user-manager
