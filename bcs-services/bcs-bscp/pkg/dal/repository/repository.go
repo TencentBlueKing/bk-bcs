@@ -15,14 +15,38 @@ package repository
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
+)
+
+const (
+	// defaultWriteBufferSize is default write buffer size, 4KB.
+	defaultWriteBufferSize = 4 << 10
+
+	// defaultReadBufferSize is default read buffer size, 4KB.
+	defaultReadBufferSize = 4 << 10
+)
+
+var (
+	// The transport used to perform proxy requests. If nil,
+	// http.DefaultTransport is used.
+	defaultTransport http.RoundTripper = &http.Transport{
+		Proxy:               http.ProxyFromEnvironment,
+		Dial:                (&net.Dialer{Timeout: 10 * time.Second}).Dial,
+		MaxConnsPerHost:     200,
+		MaxIdleConnsPerHost: 10,
+		IdleConnTimeout:     time.Minute,
+		WriteBufferSize:     defaultWriteBufferSize,
+		ReadBufferSize:      defaultReadBufferSize,
+	}
 )
 
 // ObjectMetadata 文件元数据
@@ -38,7 +62,7 @@ type ObjectDownload interface {
 	AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error)
 }
 
-// Provider
+// Provider repo provider interface
 type Provider interface {
 	Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error)
 	Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error)

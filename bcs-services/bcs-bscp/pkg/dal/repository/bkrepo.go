@@ -238,7 +238,6 @@ func (s *bkrepo) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, e
 	if resp.StatusCode != 200 {
 		return nil, errors.Errorf("download status %d != 200", resp.StatusCode)
 	}
-	fmt.Println(resp.Header)
 
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
@@ -266,8 +265,9 @@ func NewBKRepoService(settings cc.Repository) (Provider, error) {
 	}
 
 	transport := &bkrepoAuthTransport{
-		Username: settings.BkRepo.Username,
-		Password: settings.BkRepo.Password,
+		Username:  settings.BkRepo.Username,
+		Password:  settings.BkRepo.Password,
+		Transport: defaultTransport,
 	}
 
 	p.client = &http.Client{Transport: transport}

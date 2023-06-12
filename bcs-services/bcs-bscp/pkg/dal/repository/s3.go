@@ -135,6 +135,7 @@ func newCosProvider(conf cc.S3Storage) (Provider, error) {
 	transport := &cos.AuthorizationTransport{
 		SecretID:  conf.AccessKeyID,
 		SecretKey: conf.SecretAccessKey,
+		Transport: defaultTransport,
 	}
 
 	p := &cosClient{
