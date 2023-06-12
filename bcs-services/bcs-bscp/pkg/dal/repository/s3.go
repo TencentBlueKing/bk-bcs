@@ -25,14 +25,19 @@ import (
 	"bscp.io/pkg/thirdparty/repo"
 )
 
-// s3Client s3 client struct
-type s3Client struct {
-	client *http.Client
+const (
+	// cosSchema 请求使用 https 协议
+	cosSchema = "https"
+)
+
+// cosClient tencentcloud cos client struct
+type cosClient struct {
 	host   string
+	client *http.Client
 }
 
-// Upload
-func (s *s3Client) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+// Upload upload file to cos
+func (s *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, err
@@ -64,8 +69,8 @@ func (s *s3Client) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*O
 	return metadata, nil
 }
 
-// Download
-func (s *s3Client) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
+// Download download file from cos
+func (s *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, 0, err
@@ -90,8 +95,8 @@ func (s *s3Client) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, i
 	return resp.Body, resp.ContentLength, nil
 }
 
-// Metadata
-func (s *s3Client) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
+// Metadata cos file metadata
+func (s *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, err
@@ -122,20 +127,20 @@ func (s *s3Client) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata,
 	return metadata, nil
 }
 
-// NewS3Service new s3 service
-func NewS3Service(conf cc.S3Storage) (Provider, error) {
-	host := fmt.Sprintf("https://%s.%s", conf.BucketName, conf.Endpoint)
+// newCosProvider new cos provider
+func newCosProvider(conf cc.S3Storage) (Provider, error) {
+	host := fmt.Sprintf("%s://%s.%s", cosSchema, conf.BucketName, conf.Endpoint)
 
-	p := &s3Client{
-		host: host,
-	}
-
+	// cos 鉴权签名
 	transport := &cos.AuthorizationTransport{
 		SecretID:  conf.AccessKeyID,
 		SecretKey: conf.SecretAccessKey,
 	}
 
-	p.client = &http.Client{Transport: transport}
+	p := &cosClient{
+		host:   host,
+		client: &http.Client{Transport: transport},
+	}
 
 	return p, nil
 }
