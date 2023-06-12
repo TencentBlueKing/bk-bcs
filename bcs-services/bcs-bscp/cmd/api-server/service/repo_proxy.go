@@ -68,6 +68,7 @@ func (p *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
+	defer body.Close()
 
 	w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
 	w.Header().Set("Content-Type", "application/octet-stream; charset=UTF-8")

@@ -49,21 +49,21 @@ func (t *bkrepoAuthTransport) transport(req *http.Request) http.RoundTripper {
 	return http.DefaultTransport
 }
 
-// bkrepo client struct
-type bkrepo struct {
-	client      *http.Client
-	cli         *repo.Client
+// bkrepoClient client struct
+type bkrepoClient struct {
 	host        string
 	project     string
+	client      *http.Client
+	cli         *repo.Client
 	repoCreated map[string]struct{}
 }
 
-func (s *bkrepo) ensureRepo(kt *kit.Kit) error {
+func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 	repoName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
 		return err
 	}
-	if _, ok := s.repoCreated[repoName]; ok {
+	if _, ok := c.repoCreated[repoName]; ok {
 		return nil
 	}
 	repoReq := &repo.CreateRepoReq{
@@ -74,11 +74,11 @@ func (s *bkrepo) ensureRepo(kt *kit.Kit) error {
 		Configuration: repo.Configuration{Type: repo.RepositoryCfgType},
 		Description:   fmt.Sprintf("bscp %d business repository", kt.BizID),
 	}
-	if err := s.cli.CreateRepo(kt.Ctx, repoReq); err != nil {
+	if err := c.cli.CreateRepo(kt.Ctx, repoReq); err != nil {
 		return err
 	}
 
-	s.repoCreated[repoName] = struct{}{}
+	c.repoCreated[repoName] = struct{}{}
 	return nil
 }
 
@@ -139,13 +139,14 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 	return meta.String()
 }
 
-func (s *bkrepo) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
-	if err := s.ensureRepo(kt); err != nil {
+// Upload file to bkrepo
+func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+	if err := c.ensureRepo(kt); err != nil {
 		return nil, errors.Wrap(err, "ensure repo failed")
 	}
 
-	opt := &repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID}
-	nodeMeta, err := getNodeMetadata(kt, s.cli, opt, kt.AppID)
+	opt := &repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID}
+	nodeMeta, err := getNodeMetadata(kt, c.cli, opt, kt.AppID)
 	if err != nil {
 		return nil, errors.Wrap(err, "get node metadata")
 	}
@@ -155,7 +156,7 @@ func (s *bkrepo) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*Obj
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("%s%s", s.host, node)
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodPut, rawURL, body)
 	if err != nil {
 		return nil, err
@@ -164,7 +165,7 @@ func (s *bkrepo) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*Obj
 	req.Header.Set(constant.RidKey, kt.Rid)
 	req.Header.Set(repo.HeaderKeyOverwrite, "true")
 
-	resp, err := s.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -192,19 +193,20 @@ func (s *bkrepo) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*Obj
 	return metadata, nil
 }
 
-func (s *bkrepo) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
-	node, err := repo.GenNodePath(&repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID})
+// Download download file from bkrepo
+func (c *bkrepoClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	rawURL := fmt.Sprintf("%s%s", s.host, node)
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	resp, err := s.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -217,19 +219,20 @@ func (s *bkrepo) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int
 	return resp.Body, resp.ContentLength, nil
 }
 
-func (s *bkrepo) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
-	node, err := repo.GenNodePath(&repo.NodeOption{Project: s.project, BizID: kt.BizID, Sign: fileContentID})
+// Metadata bkrepo file metadata
+func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID})
 	if err != nil {
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("%s%s", s.host, node)
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodHead, rawURL, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -250,15 +253,15 @@ func (s *bkrepo) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, e
 
 // NewBKRepoService new s3 service
 func NewBKRepoService(settings cc.Repository) (Provider, error) {
-	s, err := repo.NewClient(settings, metrics.Register())
+	cli, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err
 	}
 
 	host := settings.BkRepo.Endpoints[0]
 
-	p := &bkrepo{
-		cli:         s,
+	p := &bkrepoClient{
+		cli:         cli,
 		host:        host,
 		project:     settings.BkRepo.Project,
 		repoCreated: map[string]struct{}{},

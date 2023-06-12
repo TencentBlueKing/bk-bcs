@@ -37,19 +37,19 @@ type cosClient struct {
 }
 
 // Upload upload file to cos
-func (s *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("%s/%s", s.host, node)
+	rawURL := fmt.Sprintf("%s/%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodPut, rawURL, body)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -70,19 +70,19 @@ func (s *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*
 }
 
 // Download download file from cos
-func (s *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
+func (c *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	rawURL := fmt.Sprintf("%s/%s", s.host, node)
+	rawURL := fmt.Sprintf("%s/%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	resp, err := s.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -96,19 +96,19 @@ func (s *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, 
 }
 
 // Metadata cos file metadata
-func (s *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
+func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("%s/%s", s.host, node)
+	rawURL := fmt.Sprintf("%s/%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodHead, rawURL, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
