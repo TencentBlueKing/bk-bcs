@@ -46,7 +46,7 @@ func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader, co
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("%s/%s", c.host, node)
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodPut, rawURL, body)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (c *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, 
 		return nil, 0, err
 	}
 
-	rawURL := fmt.Sprintf("%s/%s", c.host, node)
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, 0, err
@@ -114,7 +114,7 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("%s/%s", c.host, node)
+	rawURL := fmt.Sprintf("%s%s", c.host, node)
 	req, err := http.NewRequestWithContext(kt.Ctx, http.MethodHead, rawURL, nil)
 	if err != nil {
 		return nil, err
