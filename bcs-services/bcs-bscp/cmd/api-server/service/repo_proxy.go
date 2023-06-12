@@ -35,7 +35,7 @@ type repoService struct {
 }
 
 // UploadFile upload to repo provider
-func (p *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
+func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
 	fileContentID, err := repository.GetFileContentID(r)
@@ -44,7 +44,7 @@ func (p *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metadata, err := p.provider.Upload(kt, fileContentID, r.Body, r.ContentLength)
+	metadata, err := s.provider.Upload(kt, fileContentID, r.Body, r.ContentLength)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
@@ -54,7 +54,7 @@ func (p *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 // DownloadFile download file from provider repo
-func (p *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
+func (s *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
 	fileContentID, err := repository.GetFileContentID(r)
@@ -63,7 +63,7 @@ func (p *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, contentLength, err := p.provider.Download(kt, fileContentID)
+	body, contentLength, err := s.provider.Download(kt, fileContentID)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
@@ -79,7 +79,7 @@ func (p *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 // FileMetadata get repo head data
-func (p *repoService) FileMetadata(w http.ResponseWriter, r *http.Request) {
+func (s *repoService) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
 	fileContentID, err := repository.GetFileContentID(r)
@@ -88,7 +88,7 @@ func (p *repoService) FileMetadata(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metadata, err := p.provider.Metadata(kt, fileContentID)
+	metadata, err := s.provider.Metadata(kt, fileContentID)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
