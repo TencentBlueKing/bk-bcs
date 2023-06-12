@@ -735,6 +735,11 @@ message ListBusinessRequest{
       description : "查询业务列表"
     }
   };
+
+  bool useBCS = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "useBCS",
+    description: "业务是否开启BCS容器服务"
+  }];
 }
 
 message ListBusinessResponse{

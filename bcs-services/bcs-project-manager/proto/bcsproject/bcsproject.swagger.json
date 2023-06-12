@@ -45,7 +45,7 @@
           },
           {
             "name": "searchKey",
-            "description": "businessID. 仅在all为true时生效, 表示通过项目名称或项目英文名模糊查询或项目ID精确查询",
+            "description": "businessID. 仅在all为true时生效, 表示通过项目名称/项目英文名模糊查询或项目ID/业务ID精确查询",
             "in": "query",
             "required": false,
             "type": "string"
@@ -91,6 +91,16 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "useBCS",
+            "description": "useBCS. 业务是否开启BCS容器服务",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
         "tags": [
           "Business"
         ]

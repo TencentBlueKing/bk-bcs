@@ -18,6 +18,8 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -45,6 +47,11 @@ func (ga *ListAction) Do(ctx context.Context, req *proto.ListBusinessRequest) ([
 	ga.ctx = ctx
 	ga.req = req
 
+	// list all business that enable bcs
+	if req.UseBCS {
+		return ga.listBusinessEnabledBCS()
+	}
+	// list business that user has business maintainer permission
 	authUser, err := middleware.GetUserFromContext(ctx)
 	if err != nil || authUser.Username == "" {
 		return nil, errorx.NewReadableErr(errorx.ParamErr, "username is empty")
@@ -64,6 +71,41 @@ func (ga *ListAction) Do(ctx context.Context, req *proto.ListBusinessRequest) ([
 		}
 		retDatas = append(retDatas, retData)
 	}
+	return retDatas, nil
+}
 
+func (ga *ListAction) listBusinessEnabledBCS() ([]*proto.BusinessData, error) {
+	searchData, err := cmdb.SearchBusiness("", "")
+	if err != nil {
+		return nil, errorx.NewRequestCMDBErr(err.Error())
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"kind": "k8s",
+	})
+	// 查询所有开启了容器服务的项目
+	projects, _, err := ga.model.ListProjects(ga.ctx, cond, &page.Pagination{All: true})
+	if err != nil {
+		return nil, err
+	}
+	businessUsed := map[string]bool{}
+	for _, project := range projects {
+		if project.BusinessID != "0" && project.BusinessID != "" {
+			businessUsed[project.BusinessID] = true
+		}
+	}
+
+	retDatas := []*proto.BusinessData{}
+
+	for _, business := range searchData.Info {
+		if businessUsed[strconv.Itoa(int(business.BKBizID))] {
+			retData := &proto.BusinessData{
+				BusinessID: strconv.Itoa(int(business.BKBizID)),
+				Name:       business.BKBizName,
+				Maintainer: stringx.SplitString(business.BKBizMaintainer),
+			}
+			retDatas = append(retDatas, retData)
+		}
+	}
 	return retDatas, nil
 }

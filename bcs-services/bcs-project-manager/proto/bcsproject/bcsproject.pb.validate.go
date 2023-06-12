@@ -2376,6 +2376,8 @@ func (m *ListBusinessRequest) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for UseBCS
+
 	if len(errors) > 0 {
 		return ListBusinessRequestMultiError(errors)
 	}
