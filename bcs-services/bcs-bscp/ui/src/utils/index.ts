@@ -32,3 +32,14 @@ export const copyToClipBoard = (content: string) => {
     document.body.removeChild($textarea)
   }
 }
+
+// 将数字拆分为单个数字组成的数组
+export const splitToDigit = (n: number) => {
+  let num = n
+  const list = []
+  while (num > 0) {
+    list.push(num % 10)
+    num = Math.floor(num / 10)
+  }
+  return list.reverse()
+}
