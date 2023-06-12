@@ -162,6 +162,12 @@ type BCSGatewayConfig struct {
 	Token string `yaml:"token" usage:"bcs api gateway token"`
 }
 
+// ListForIAMConfig iam 拉取项目列表灰度配置
+type ListForIAMConfig struct {
+	Bizs []string `yaml:"bizs" usage:"filter projects by biz id"`
+	All  bool     `yaml:"all" usage:"list all projects"`
+}
+
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
 	Etcd                   EtcdConfig                   `yaml:"etcd"`
@@ -179,6 +185,7 @@ type ProjectConfig struct {
 	BCSCC                  BCSCCConfig                  `yaml:"bcscc"`
 	App                    AppConfig                    `yaml:"app"`
 	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
+	ListForIAM             ListForIAMConfig             `yaml:"listForIAM"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {

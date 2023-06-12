@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
@@ -74,6 +75,10 @@ func (la *ListForIAMAction) Do(ctx context.Context, req *proto.ListProjectsForIA
 			})
 		}
 	}
+	lfiConf := config.GlobalConf.ListForIAM
+	if !lfiConf.All {
+		filtered = la.filterByBizs(filtered, lfiConf.Bizs)
+	}
 	return filtered, nil
 }
 
@@ -92,4 +97,19 @@ func (la *ListForIAMAction) listProjects() ([]*pm.Project, int64, error) {
 		projectList = append(projectList, &projects[i])
 	}
 	return projectList, total, nil
+}
+
+func (la *ListForIAMAction) filterByBizs(
+	projects []*proto.ListProjectsForIAMResp_Project, bizs []string) []*proto.ListProjectsForIAMResp_Project {
+	bizMap := make(map[string]bool)
+	for _, biz := range bizs {
+		bizMap[biz] = true
+	}
+	filtered := []*proto.ListProjectsForIAMResp_Project{}
+	for _, project := range projects {
+		if _, ok := bizMap[project.BusinessID]; ok {
+			filtered = append(filtered, project)
+		}
+	}
+	return filtered
 }
