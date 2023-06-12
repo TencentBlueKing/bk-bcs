@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220919094211-a1b246e54e5a
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220923140150-350b3bc988eb
-	github.com/argoproj/argo-cd/v2 v2.6.2
+	github.com/argoproj/argo-cd/v2 v2.6.7
 	github.com/asim/go-micro/plugins/client/grpc/v4 v4.7.0
 	github.com/asim/go-micro/plugins/registry/etcd/v4 v4.7.0
 	github.com/asim/go-micro/plugins/server/grpc/v4 v4.7.0
@@ -13,7 +13,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.6.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3
 	github.com/pkg/errors v0.9.1
