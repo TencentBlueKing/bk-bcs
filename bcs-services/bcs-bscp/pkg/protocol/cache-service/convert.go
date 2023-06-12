@@ -16,7 +16,6 @@ import (
 	"bscp.io/pkg/dal/table"
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbevent "bscp.io/pkg/protocol/core/event"
-	pbstrategy "bscp.io/pkg/protocol/core/strategy"
 	"bscp.io/pkg/types"
 )
 
@@ -39,51 +38,6 @@ func PbAppMetaMap(m map[ /*appID*/ uint32]*types.AppCacheMeta) map[ /*appID*/ ui
 	}
 
 	return meta
-}
-
-// PbAppCRIMetas convert app current released instance meta.
-func PbAppCRIMetas(m []*types.AppCRIMeta) []*AppCRIMeta {
-	if len(m) == 0 {
-		return make([]*AppCRIMeta, 0)
-	}
-
-	meta := make([]*AppCRIMeta, len(m))
-
-	for idx := range m {
-		meta[idx] = &AppCRIMeta{
-			Uid:       m[idx].Uid,
-			ReleaseId: m[idx].ReleaseID,
-		}
-	}
-
-	return meta
-}
-
-// PbPublishedStrategies convert published strategies.
-func PbPublishedStrategies(ss []*types.PublishedStrategyCache) ([]*PublishedStrategy, error) {
-
-	if len(ss) == 0 {
-		return make([]*PublishedStrategy, 0), nil
-	}
-
-	ps := make([]*PublishedStrategy, len(ss))
-	for idx := range ss {
-		scope, err := pbstrategy.PbScope(ss[idx].Scope)
-		if err != nil {
-			return nil, err
-		}
-
-		ps[idx] = &PublishedStrategy{
-			StrategyId: ss[idx].StrategyID,
-			ReleaseId:  ss[idx].ReleaseID,
-			AsDefault:  ss[idx].AsDefault,
-			Scope:      scope,
-			Mode:       string(ss[idx].Mode),
-			Namespace:  ss[idx].Namespace,
-		}
-	}
-
-	return ps, nil
 }
 
 // PbEventMeta convert event meta to pb event meta

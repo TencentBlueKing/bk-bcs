@@ -75,66 +75,6 @@ func (s *Service) GetReleasedCI(ctx context.Context, req *pbcs.GetReleasedCIReq)
 	}, nil
 }
 
-// GetAppInstanceRelease get an app instance's specific release if it has.
-func (s *Service) GetAppInstanceRelease(ctx context.Context, req *pbcs.GetAppInstanceReleaseReq) (
-	*pbcs.GetAppInstanceReleaseResp, error) {
-
-	if req.BizId <= 0 || req.AppId <= 0 || len(req.Uid) == 0 {
-		return nil, errf.New(errf.InvalidParameter, "invalid biz id, app id or app instance uid")
-	}
-
-	kt := kit.FromGrpcContext(ctx)
-	meta, err := s.dao.CRInstance().GetAppCRIMeta(kt, req.BizId, req.AppId, req.Uid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pbcs.GetAppInstanceReleaseResp{ReleaseId: meta.ReleaseID}, nil
-}
-
-// GetAppCpsID get app's latest published strategy id.
-func (s *Service) GetAppCpsID(ctx context.Context, req *pbcs.GetAppCpsIDReq) (*pbcs.GetAppCpsIDResp, error) {
-
-	if req.BizId <= 0 || req.AppId <= 0 {
-		return nil, errf.New(errf.InvalidParameter, "invalid biz id or app id")
-	}
-
-	kt := kit.FromGrpcContext(ctx)
-
-	opt := &types.GetAppCpsIDOption{
-		BizID:     req.BizId,
-		AppID:     req.AppId,
-		Namespace: req.Namespace,
-	}
-	list, err := s.dao.Publish().GetAppCpsID(kt, opt)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := &pbcs.GetAppCpsIDResp{
-		CpsId: list,
-	}
-
-	return resp, nil
-}
-
-// GetAppReleasedStrategy get app's latest published strategies with different rules.
-func (s *Service) GetAppReleasedStrategy(ctx context.Context, req *pbcs.GetAppReleasedStrategyReq) (
-	*pbcs.JsonArrayRawResp, error) {
-
-	if req.BizId <= 0 || req.AppId <= 0 {
-		return nil, errf.New(errf.InvalidParameter, "invalid biz id or app id")
-	}
-
-	kt := kit.FromGrpcContext(ctx)
-	list, err := s.op.GetAppReleasedStrategies(kt, req.BizId, req.AppId, req.CpsId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pbcs.JsonArrayRawResp{JsonRaw: list}, nil
-}
-
 // ListAppReleasedGroups list app's released groups.
 func (s *Service) ListAppReleasedGroups(ctx context.Context, req *pbcs.ListAppReleasedGroupsReq) (
 	*pbcs.JsonRawResp, error) {

@@ -175,31 +175,6 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/create/instance/publish/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: publish_with_instance
-      description: 发布实例级版本
-      tags:
-      - 发布管理
-      - 实例版本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/create/instance/publish/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
   /api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}:
     post:
       operationId: create_release
@@ -217,54 +192,6 @@ paths:
           type: HTTP
           method: post
           path: /api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/create/strategy/strategy/strategy_set_id/{strategy_set_id}/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: create_strategy
-      description: 创建策略
-      tags:
-      - 策略管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/create/strategy/strategy/strategy_set_id/{strategy_set_id}/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/create/strategy_set/strategy_set/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: create_strategy_set
-      description: 创建策略集
-      tags:
-      - 策略集管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/create/strategy_set/strategy_set/app_id/{app_id}/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -313,55 +240,6 @@ paths:
           type: HTTP
           method: delete
           path: /api/v1/config/delete/config_item/config_item/config_item_id/{id}/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/delete/instance/publish/id/{id}/app_id/{app_id}/biz_id/{biz_id}:
-    delete:
-      operationId: delete_publish_with_instance
-      description: 删除实例级发布
-      tags:
-      - 发布管理
-      - 实例版本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: delete
-          path: /api/v1/config/delete/instance/publish/id/{id}/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/delete/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
-    delete:
-      operationId: delete_strategy
-      description: 删除策略
-      tags:
-      - 策略管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: delete
-          path: /api/v1/config/delete/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -585,31 +463,6 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/list/instance/publish/biz_id/{biz_id}:
-    post:
-      operationId: list_app_instance_publish
-      description: 查询处于发布状态的实例级发布
-      tags:
-      - 发布管理
-      - 实例版本管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/list/instance/publish/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
   /api/v1/config/apps/{app_id}/releases:
     get:
       operationId: list_releases
@@ -627,103 +480,6 @@ paths:
           type: HTTP
           method: get
           path: /api/v1/config/apps/{app_id}/releases
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/list/strategy/publish/history/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: list_strategy_publish_history
-      description: 查询策略发布历史
-      tags:
-      - 策略管理
-      - 发布管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/list/strategy/publish/history/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/list/strategy/strategy/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: list_strategy
-      description: 查询策略列表
-      tags:
-      - 策略管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/list/strategy/strategy/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/list/strategy_set/strategy_set/app_id/{app_id}/biz_id/{biz_id}:
-    post:
-      operationId: list_strategy_set
-      description: 查询策略集详情信息
-      tags:
-      - 策略集管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: post
-          path: /api/v1/config/list/strategy_set/strategy_set/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/delete/strategy_set/strategy_set/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
-    delete:
-      operationId: delete_strategy_set
-      description: 删除策略集
-      tags:
-        - 策略集管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: delete
-          path: /api/v1/config/delete/strategy_set/strategy_set/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}
           matchSubpath: false
           timeout: 0
           upstreams: {}
@@ -779,55 +535,6 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
-  /api/v1/config/update/strategy/publish/finish/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
-    put:
-      operationId: finish_publish_with_strategy
-      description: 结束策略发布
-      tags:
-      - 策略管理
-      - 发布管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/update/strategy/publish/finish/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
-  /api/v1/config/update/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
-    put:
-      operationId: update_strategy
-      description: 更新策略
-      tags:
-      - 策略管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/update/strategy/strategy/strategy_id/{id}/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
-        disabledStages: []
   /api/v1/config/update/strategy/publish/publish/release_id/{release_id}/app_id/{app_id}/biz_id/{biz_id}:
     post:
       operationId: publish
@@ -875,31 +582,6 @@ paths:
           transformHeaders: {}
         authConfig:
           userVerifiedRequired: false
-        disabledStages: []
-
-  /api/v1/config/update/strategy_set/strategy_set/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}:
-    put:
-      operationId: update_strategy_set
-      description: 更新策略集
-      tags:
-      - 策略集管理
-      responses:
-        default:
-          description: ''
-      x-bk-apigateway-resource:
-        isPublic: true
-        allowApplyPermission: true
-        matchSubpath: false
-        backend:
-          type: HTTP
-          method: put
-          path: /api/v1/config/update/strategy_set/strategy_set/strategy_set_id/{id}/app_id/{app_id}/biz_id/{biz_id}
-          matchSubpath: false
-          timeout: 0
-          upstreams: {}
-          transformHeaders: {}
-        authConfig:
-          userVerifiedRequired: true
         disabledStages: []
   /api/v1/config/biz/{biz_id}/groups:
     post:

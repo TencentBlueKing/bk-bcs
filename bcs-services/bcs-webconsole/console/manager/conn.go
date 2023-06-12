@@ -16,6 +16,7 @@ package manager
 import (
 	"context"
 	"encoding/base64"
+	"github.com/gin-gonic/gin"
 	"strings"
 	"sync"
 	"time"
@@ -198,11 +199,11 @@ func (r *RemoteStreamConn) Close() {
 }
 
 // Run xxx
-func (r *RemoteStreamConn) Run() error {
+func (r *RemoteStreamConn) Run(c *gin.Context) error {
 	pingInterval := time.NewTicker(10 * time.Second)
 	defer pingInterval.Stop()
 
-	guideMessages := helloMessage(r.bindMgr.PodCtx.Source)
+	guideMessages := helloMessage(c, r.bindMgr.PodCtx.Source)
 	notSendMsg := true
 
 	for {
@@ -319,16 +320,16 @@ func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected b
 	<-ctx.Done()
 }
 
-func helloMessage(source string) string {
+func helloMessage(c *gin.Context, source string) string {
 
 	var guideMsg []string
 	var messages []string
 
 	if source == "mgr" {
-		guideMsg = []string{i18n.GetMessage("mgrGuideMessage")}
+		guideMsg = []string{i18n.GetMessage(c, "mgrGuideMessage")}
 		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	} else {
-		guideMsg = []string{i18n.GetMessage("guideMessage")}
+		guideMsg = []string{i18n.GetMessage(c, "guideMessage")}
 		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	}
 

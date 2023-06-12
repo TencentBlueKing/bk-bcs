@@ -120,7 +120,6 @@ func (er EventResource) Validate() error {
 	case CursorReminder:
 		return errors.New("event reminder resource is not allowed to be created")
 	case Publish:
-	case PublishInstance:
 	case Application:
 	case CredentialEvent:
 	default:
@@ -139,9 +138,6 @@ const (
 	CursorReminder EventResource = "cursorReminder"
 	// Publish means this is an event which represent a strategy has been published.
 	Publish EventResource = "Publish"
-	// PublishInstance means this is an event which represent an
-	// instance has been published.
-	PublishInstance EventResource = "publishInstance"
 	// Application means this is an event which represent an application resource.
 	Application EventResource = "application"
 	// CredentialEvent means this is an event which represent a credential resource.

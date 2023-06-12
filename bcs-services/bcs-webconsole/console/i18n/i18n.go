@@ -95,40 +95,28 @@ func getMatchLangByHeader(lng string) (string, error) {
 // GetMessage accepts values in following formats:
 //   - GetMessage("MessageID")
 //   - GetMessage("MessageID", error)
-//   - GetMessage("MessageID", "value")
-//   - GetMessage("MessageID",map[string]string{}{"key1": "value1", "key2": "value2"})
-func GetMessage(messageID string, values ...interface{}) string {
+//   - GetMessage("MessageID", any)
+func GetMessage(ctx *gin.Context, messageID string, values ...interface{}) string {
 	// 如果messageID 没有国际化, 默认原样返回
-	if _, err := ginI18n.GetMessage(messageID); err != nil {
+	if _, err := ginI18n.GetMessage(ctx, messageID); err != nil {
 		return messageID
 	}
 
 	if values == nil {
-		return ginI18n.MustGetMessage(messageID)
+		return ginI18n.MustGetMessage(ctx, messageID)
 	}
 
 	switch param := values[0].(type) {
 	case error:
 		// - Must("MessageID", error)
-		return ginI18n.MustGetMessage(&i18n.LocalizeConfig{
+		return ginI18n.MustGetMessage(ctx, &i18n.LocalizeConfig{
 			MessageID:    messageID,
 			TemplateData: map[string]string{"err": param.Error()},
 		})
-	case string:
-		// - Must("MessageID", "value")
-		return ginI18n.MustGetMessage(&i18n.LocalizeConfig{
-			MessageID:    messageID,
-			TemplateData: param,
-		})
-	case map[string]string:
-		// - Must("MessageID",map[string]string{}{"key1": "value1", "key2": "value2"})
-		return ginI18n.MustGetMessage(&i18n.LocalizeConfig{
-			MessageID:    messageID,
-			TemplateData: param,
-		})
 	default:
-		return ginI18n.MustGetMessage(&i18n.LocalizeConfig{
-			MessageID: messageID,
+		return ginI18n.MustGetMessage(ctx, &i18n.LocalizeConfig{
+			MessageID:    messageID,
+			TemplateData: param,
 		})
 	}
 

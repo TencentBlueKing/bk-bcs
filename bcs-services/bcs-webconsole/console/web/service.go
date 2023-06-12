@@ -83,7 +83,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 		"SITE_STATIC_URL":      s.opts.RoutePrefix,
 		"COMMON_EXCEPTION_MSG": "",
 	}
-	language, download := i18n.GetMessage("语言"), i18n.GetMessage("下载")
+	language, download := i18n.GetMessage(c, "语言"), i18n.GetMessage(c, "下载")
 
 	data := gin.H{
 		"title":            clusterId,
@@ -103,6 +103,7 @@ func (s *service) IndexPageHandler(c *gin.Context) {
 // MgrPageHandler 多集群页面
 func (s *service) MgrPageHandler(c *gin.Context) {
 	projectId := c.Param("projectId")
+	lang := c.Query("lang")
 
 	settings := map[string]string{"SITE_URL": s.opts.RoutePrefix}
 
@@ -115,6 +116,7 @@ func (s *service) MgrPageHandler(c *gin.Context) {
 		"settings":         settings,
 		"project_id":       projectId,
 		"perm_request_url": promRequestUrl,
+		"Language":         lang,
 	}
 
 	c.HTML(http.StatusOK, "mgr.html", data)
@@ -130,7 +132,7 @@ func (s *service) ContainerGatePageHandler(c *gin.Context) {
 	}
 
 	sessionUrl := path.Join(s.opts.RoutePrefix, fmt.Sprintf("/api/portal/sessions/%s/", sessionId)) + "/"
-	lang, download := i18n.GetMessage("语言"), i18n.GetMessage("下载")
+	lang, download := i18n.GetMessage(c, "语言"), i18n.GetMessage(c, "下载")
 	sessionUrl = fmt.Sprintf("%s?lang=%s", sessionUrl, lang)
 
 	settings := map[string]string{

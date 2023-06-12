@@ -23,18 +23,13 @@ const (
 	Cache_GetAppID_FullMethodName                 = "/pbcs.Cache/GetAppID"
 	Cache_GetAppMeta_FullMethodName               = "/pbcs.Cache/GetAppMeta"
 	Cache_GetReleasedCI_FullMethodName            = "/pbcs.Cache/GetReleasedCI"
-	Cache_GetAppInstanceRelease_FullMethodName    = "/pbcs.Cache/GetAppInstanceRelease"
-	Cache_GetAppReleasedStrategy_FullMethodName   = "/pbcs.Cache/GetAppReleasedStrategy"
 	Cache_ListAppReleasedGroups_FullMethodName    = "/pbcs.Cache/ListAppReleasedGroups"
-	Cache_GetAppCpsID_FullMethodName              = "/pbcs.Cache/GetAppCpsID"
 	Cache_GetCurrentCursorReminder_FullMethodName = "/pbcs.Cache/GetCurrentCursorReminder"
 	Cache_ListEventsMeta_FullMethodName           = "/pbcs.Cache/ListEventsMeta"
 	Cache_GetCredential_FullMethodName            = "/pbcs.Cache/GetCredential"
 	Cache_ListCredentialMatchedCI_FullMethodName  = "/pbcs.Cache/ListCredentialMatchedCI"
 	Cache_BenchAppMeta_FullMethodName             = "/pbcs.Cache/BenchAppMeta"
-	Cache_BenchAppCRIMeta_FullMethodName          = "/pbcs.Cache/BenchAppCRIMeta"
 	Cache_BenchReleasedCI_FullMethodName          = "/pbcs.Cache/BenchReleasedCI"
-	Cache_BenchAppCPS_FullMethodName              = "/pbcs.Cache/BenchAppCPS"
 )
 
 // CacheClient is the client API for Cache service.
@@ -44,19 +39,14 @@ type CacheClient interface {
 	GetAppID(ctx context.Context, in *GetAppIDReq, opts ...grpc.CallOption) (*GetAppIDResp, error)
 	GetAppMeta(ctx context.Context, in *GetAppMetaReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	GetReleasedCI(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error)
-	GetAppInstanceRelease(ctx context.Context, in *GetAppInstanceReleaseReq, opts ...grpc.CallOption) (*GetAppInstanceReleaseResp, error)
-	GetAppReleasedStrategy(ctx context.Context, in *GetAppReleasedStrategyReq, opts ...grpc.CallOption) (*JsonArrayRawResp, error)
 	ListAppReleasedGroups(ctx context.Context, in *ListAppReleasedGroupsReq, opts ...grpc.CallOption) (*JsonRawResp, error)
-	GetAppCpsID(ctx context.Context, in *GetAppCpsIDReq, opts ...grpc.CallOption) (*GetAppCpsIDResp, error)
 	GetCurrentCursorReminder(ctx context.Context, in *base.EmptyReq, opts ...grpc.CallOption) (*CurrentCursorReminderResp, error)
 	ListEventsMeta(ctx context.Context, in *ListEventsReq, opts ...grpc.CallOption) (*ListEventsResp, error)
 	GetCredential(ctx context.Context, in *GetCredentialReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	ListCredentialMatchedCI(ctx context.Context, in *ListCredentialMatchedCIReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	// only stress test use.
 	BenchAppMeta(ctx context.Context, in *BenchAppMetaReq, opts ...grpc.CallOption) (*BenchAppMetaResp, error)
-	BenchAppCRIMeta(ctx context.Context, in *BenchAppCRIMetaReq, opts ...grpc.CallOption) (*BenchAppCRIMetaResp, error)
 	BenchReleasedCI(ctx context.Context, in *BenchReleasedCIReq, opts ...grpc.CallOption) (*BenchReleasedCIResp, error)
-	BenchAppCPS(ctx context.Context, in *BenchAppCPSReq, opts ...grpc.CallOption) (*BenchAppCPSResp, error)
 }
 
 type cacheClient struct {
@@ -94,36 +84,9 @@ func (c *cacheClient) GetReleasedCI(ctx context.Context, in *GetReleasedCIReq, o
 	return out, nil
 }
 
-func (c *cacheClient) GetAppInstanceRelease(ctx context.Context, in *GetAppInstanceReleaseReq, opts ...grpc.CallOption) (*GetAppInstanceReleaseResp, error) {
-	out := new(GetAppInstanceReleaseResp)
-	err := c.cc.Invoke(ctx, Cache_GetAppInstanceRelease_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *cacheClient) GetAppReleasedStrategy(ctx context.Context, in *GetAppReleasedStrategyReq, opts ...grpc.CallOption) (*JsonArrayRawResp, error) {
-	out := new(JsonArrayRawResp)
-	err := c.cc.Invoke(ctx, Cache_GetAppReleasedStrategy_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *cacheClient) ListAppReleasedGroups(ctx context.Context, in *ListAppReleasedGroupsReq, opts ...grpc.CallOption) (*JsonRawResp, error) {
 	out := new(JsonRawResp)
 	err := c.cc.Invoke(ctx, Cache_ListAppReleasedGroups_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *cacheClient) GetAppCpsID(ctx context.Context, in *GetAppCpsIDReq, opts ...grpc.CallOption) (*GetAppCpsIDResp, error) {
-	out := new(GetAppCpsIDResp)
-	err := c.cc.Invoke(ctx, Cache_GetAppCpsID_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -175,27 +138,9 @@ func (c *cacheClient) BenchAppMeta(ctx context.Context, in *BenchAppMetaReq, opt
 	return out, nil
 }
 
-func (c *cacheClient) BenchAppCRIMeta(ctx context.Context, in *BenchAppCRIMetaReq, opts ...grpc.CallOption) (*BenchAppCRIMetaResp, error) {
-	out := new(BenchAppCRIMetaResp)
-	err := c.cc.Invoke(ctx, Cache_BenchAppCRIMeta_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *cacheClient) BenchReleasedCI(ctx context.Context, in *BenchReleasedCIReq, opts ...grpc.CallOption) (*BenchReleasedCIResp, error) {
 	out := new(BenchReleasedCIResp)
 	err := c.cc.Invoke(ctx, Cache_BenchReleasedCI_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *cacheClient) BenchAppCPS(ctx context.Context, in *BenchAppCPSReq, opts ...grpc.CallOption) (*BenchAppCPSResp, error) {
-	out := new(BenchAppCPSResp)
-	err := c.cc.Invoke(ctx, Cache_BenchAppCPS_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -209,19 +154,14 @@ type CacheServer interface {
 	GetAppID(context.Context, *GetAppIDReq) (*GetAppIDResp, error)
 	GetAppMeta(context.Context, *GetAppMetaReq) (*JsonRawResp, error)
 	GetReleasedCI(context.Context, *GetReleasedCIReq) (*JsonRawResp, error)
-	GetAppInstanceRelease(context.Context, *GetAppInstanceReleaseReq) (*GetAppInstanceReleaseResp, error)
-	GetAppReleasedStrategy(context.Context, *GetAppReleasedStrategyReq) (*JsonArrayRawResp, error)
 	ListAppReleasedGroups(context.Context, *ListAppReleasedGroupsReq) (*JsonRawResp, error)
-	GetAppCpsID(context.Context, *GetAppCpsIDReq) (*GetAppCpsIDResp, error)
 	GetCurrentCursorReminder(context.Context, *base.EmptyReq) (*CurrentCursorReminderResp, error)
 	ListEventsMeta(context.Context, *ListEventsReq) (*ListEventsResp, error)
 	GetCredential(context.Context, *GetCredentialReq) (*JsonRawResp, error)
 	ListCredentialMatchedCI(context.Context, *ListCredentialMatchedCIReq) (*JsonRawResp, error)
 	// only stress test use.
 	BenchAppMeta(context.Context, *BenchAppMetaReq) (*BenchAppMetaResp, error)
-	BenchAppCRIMeta(context.Context, *BenchAppCRIMetaReq) (*BenchAppCRIMetaResp, error)
 	BenchReleasedCI(context.Context, *BenchReleasedCIReq) (*BenchReleasedCIResp, error)
-	BenchAppCPS(context.Context, *BenchAppCPSReq) (*BenchAppCPSResp, error)
 }
 
 // UnimplementedCacheServer should be embedded to have forward compatible implementations.
@@ -237,17 +177,8 @@ func (UnimplementedCacheServer) GetAppMeta(context.Context, *GetAppMetaReq) (*Js
 func (UnimplementedCacheServer) GetReleasedCI(context.Context, *GetReleasedCIReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedCI not implemented")
 }
-func (UnimplementedCacheServer) GetAppInstanceRelease(context.Context, *GetAppInstanceReleaseReq) (*GetAppInstanceReleaseResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAppInstanceRelease not implemented")
-}
-func (UnimplementedCacheServer) GetAppReleasedStrategy(context.Context, *GetAppReleasedStrategyReq) (*JsonArrayRawResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAppReleasedStrategy not implemented")
-}
 func (UnimplementedCacheServer) ListAppReleasedGroups(context.Context, *ListAppReleasedGroupsReq) (*JsonRawResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppReleasedGroups not implemented")
-}
-func (UnimplementedCacheServer) GetAppCpsID(context.Context, *GetAppCpsIDReq) (*GetAppCpsIDResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAppCpsID not implemented")
 }
 func (UnimplementedCacheServer) GetCurrentCursorReminder(context.Context, *base.EmptyReq) (*CurrentCursorReminderResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentCursorReminder not implemented")
@@ -264,14 +195,8 @@ func (UnimplementedCacheServer) ListCredentialMatchedCI(context.Context, *ListCr
 func (UnimplementedCacheServer) BenchAppMeta(context.Context, *BenchAppMetaReq) (*BenchAppMetaResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BenchAppMeta not implemented")
 }
-func (UnimplementedCacheServer) BenchAppCRIMeta(context.Context, *BenchAppCRIMetaReq) (*BenchAppCRIMetaResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BenchAppCRIMeta not implemented")
-}
 func (UnimplementedCacheServer) BenchReleasedCI(context.Context, *BenchReleasedCIReq) (*BenchReleasedCIResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BenchReleasedCI not implemented")
-}
-func (UnimplementedCacheServer) BenchAppCPS(context.Context, *BenchAppCPSReq) (*BenchAppCPSResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BenchAppCPS not implemented")
 }
 
 // UnsafeCacheServer may be embedded to opt out of forward compatibility for this service.
@@ -339,42 +264,6 @@ func _Cache_GetReleasedCI_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Cache_GetAppInstanceRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAppInstanceReleaseReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CacheServer).GetAppInstanceRelease(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Cache_GetAppInstanceRelease_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServer).GetAppInstanceRelease(ctx, req.(*GetAppInstanceReleaseReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Cache_GetAppReleasedStrategy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAppReleasedStrategyReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CacheServer).GetAppReleasedStrategy(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Cache_GetAppReleasedStrategy_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServer).GetAppReleasedStrategy(ctx, req.(*GetAppReleasedStrategyReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Cache_ListAppReleasedGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListAppReleasedGroupsReq)
 	if err := dec(in); err != nil {
@@ -389,24 +278,6 @@ func _Cache_ListAppReleasedGroups_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CacheServer).ListAppReleasedGroups(ctx, req.(*ListAppReleasedGroupsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Cache_GetAppCpsID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAppCpsIDReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CacheServer).GetAppCpsID(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Cache_GetAppCpsID_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServer).GetAppCpsID(ctx, req.(*GetAppCpsIDReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -501,24 +372,6 @@ func _Cache_BenchAppMeta_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Cache_BenchAppCRIMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BenchAppCRIMetaReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CacheServer).BenchAppCRIMeta(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Cache_BenchAppCRIMeta_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServer).BenchAppCRIMeta(ctx, req.(*BenchAppCRIMetaReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Cache_BenchReleasedCI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BenchReleasedCIReq)
 	if err := dec(in); err != nil {
@@ -533,24 +386,6 @@ func _Cache_BenchReleasedCI_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CacheServer).BenchReleasedCI(ctx, req.(*BenchReleasedCIReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Cache_BenchAppCPS_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BenchAppCPSReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CacheServer).BenchAppCPS(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Cache_BenchAppCPS_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CacheServer).BenchAppCPS(ctx, req.(*BenchAppCPSReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -575,20 +410,8 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Cache_GetReleasedCI_Handler,
 		},
 		{
-			MethodName: "GetAppInstanceRelease",
-			Handler:    _Cache_GetAppInstanceRelease_Handler,
-		},
-		{
-			MethodName: "GetAppReleasedStrategy",
-			Handler:    _Cache_GetAppReleasedStrategy_Handler,
-		},
-		{
 			MethodName: "ListAppReleasedGroups",
 			Handler:    _Cache_ListAppReleasedGroups_Handler,
-		},
-		{
-			MethodName: "GetAppCpsID",
-			Handler:    _Cache_GetAppCpsID_Handler,
 		},
 		{
 			MethodName: "GetCurrentCursorReminder",
@@ -611,16 +434,8 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Cache_BenchAppMeta_Handler,
 		},
 		{
-			MethodName: "BenchAppCRIMeta",
-			Handler:    _Cache_BenchAppCRIMeta_Handler,
-		},
-		{
 			MethodName: "BenchReleasedCI",
 			Handler:    _Cache_BenchReleasedCI_Handler,
-		},
-		{
-			MethodName: "BenchAppCPS",
-			Handler:    _Cache_BenchAppCPS_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
