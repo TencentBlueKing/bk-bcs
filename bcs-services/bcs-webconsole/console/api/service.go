@@ -487,7 +487,7 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 	}
 
 	if e := consoleQuery.Validate(); e != nil {
-		msg := i18n.GetMessage("请求参数错误{}", e)
+		msg := i18n.GetMessage(c, "请求参数错误{}", e)
 		APIError(c, msg)
 		return
 	}
