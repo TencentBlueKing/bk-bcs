@@ -13,17 +13,19 @@ limitations under the License.
 package tools
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/dustin/go-humanize"
+	"k8s.io/klog/v2"
 
 	"bscp.io/pkg/criteria/constant"
-	"k8s.io/klog/v2"
 )
 
 var (
+	// maskKeys 敏感参数和头部key
 	maskKeys = map[string]struct{}{
 		"bk_app_secret": {},
 		"bk_token":      {},
@@ -40,16 +42,6 @@ func RequestIDValue(req *http.Request) string {
 		}
 	}
 	return ""
-}
-
-// curlLogTransport print curl log transport
-type curlLogTransport struct {
-	Transport http.RoundTripper
-}
-
-// NewCurlLogTransport make a new curl log transport, default transport can be nil
-func NewCurlLogTransport(transport http.RoundTripper) http.RoundTripper {
-	return &curlLogTransport{Transport: transport}
 }
 
 // reqToCurl curl 格式的请求日志
@@ -76,18 +68,9 @@ func reqToCurl(r *http.Request) string {
 
 	reqMsg := fmt.Sprintf("curl -X %s '%s'%s", r.Method, rawURL.String(), headers)
 	if r.Body != nil {
-		switch body := r.Body.(type) {
-		case io.Reader:
-			reqMsg += " -d (io.Reader)"
-		default:
-			prtBodyBytes, err := json.Marshal(body)
-			if err != nil {
-				reqMsg += fmt.Sprintf(" -d %q (MarshalErr %s)", body, err)
-			} else {
-				reqMsg += fmt.Sprintf(" -d '%s'", prtBodyBytes)
-			}
-		}
+		reqMsg += " -d (io.Reader)"
 	}
+
 	if r.Form.Encode() != "" {
 		encodeStr := r.Form.Encode()
 		reqMsg += fmt.Sprintf(" -d %q", encodeStr)
@@ -98,10 +81,31 @@ func reqToCurl(r *http.Request) string {
 	return reqMsg
 }
 
-// RoundTrip Transport
+// respToCurl 返回日志
+func respToCurl(resp *http.Response, st time.Time) string {
+	respMsg := fmt.Sprintf("[%s] size=%s waiting=%s", resp.Status, humanize.Bytes(uint64(resp.ContentLength)), time.Since(st))
+	return respMsg
+}
+
+// curlLogTransport print curl log transport
+type curlLogTransport struct {
+	Transport http.RoundTripper
+}
+
+// RoundTrip curlLog Transport
 func (t *curlLogTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	klog.Infof("[%s] REQ: %s", RequestIDValue(req), reqToCurl(req))
+	st := time.Now()
+	rid := RequestIDValue(req)
+	klog.Infof("[%s] REQ: %s", rid, reqToCurl(req))
+
 	resp, err := t.transport(req).RoundTrip(req)
+
+	if err != nil {
+		klog.Infof("[%s] RESP: [err] %s", rid, err)
+	} else {
+		klog.Infof("[%s] RESP: %s", rid, respToCurl(resp, st))
+	}
+
 	return resp, err
 }
 
@@ -110,4 +114,9 @@ func (t *curlLogTransport) transport(req *http.Request) http.RoundTripper {
 		return t.Transport
 	}
 	return http.DefaultTransport
+}
+
+// NewCurlLogTransport make a new curl log transport, default transport can be nil
+func NewCurlLogTransport(transport http.RoundTripper) http.RoundTripper {
+	return &curlLogTransport{Transport: transport}
 }

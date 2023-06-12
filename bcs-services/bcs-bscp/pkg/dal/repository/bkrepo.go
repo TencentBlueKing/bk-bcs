@@ -209,6 +209,7 @@ func (c *bkrepoClient) Download(kt *kit.Kit, fileContentID string) (io.ReadClose
 	if err != nil {
 		return nil, 0, err
 	}
+	req.Header.Set(constant.RidKey, kt.Rid)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -235,6 +236,7 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetad
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set(constant.RidKey, kt.Rid)
 
 	resp, err := c.client.Do(req)
 	if err != nil {

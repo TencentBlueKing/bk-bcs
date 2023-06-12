@@ -87,6 +87,7 @@ func (c *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, 
 	if err != nil {
 		return nil, 0, err
 	}
+	req.Header.Set(constant.RidKey, kt.Rid)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -113,6 +114,7 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set(constant.RidKey, kt.Rid)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
