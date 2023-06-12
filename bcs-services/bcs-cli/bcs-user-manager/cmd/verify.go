@@ -71,7 +71,8 @@ func verifyPermissionV2Cmd() *cobra.Command {
 		Aliases: []string{"permissionv2", "psv2"},
 		Short:   "verify permission v2",
 		Long:    "verify permission v2 from user manager",
-		Example: "kubectl-bcs-user-manager verify permissionv2 --form {\"user_token\":\"\",\"resource_type\":\"\",\"cluster_type\":\"\",\"cluster_type\":\"\",\"project_id\":\"\",\"cluster_id\":\"\",\"request_url\":\"\",\"resource\":\"\",\"action\":\"\"}",
+		Example: "kubectl-bcs-user-manager verify permissionv2 --form {\"user_token\":\"\",\"resource_type\":\"\",\"cluster_type\":\"\"," +
+			"\"cluster_type\":\"\",\"project_id\":\"\",\"cluster_id\":\"\",\"request_url\":\"\",\"resource\":\"\",\"action\":\"\"}",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())

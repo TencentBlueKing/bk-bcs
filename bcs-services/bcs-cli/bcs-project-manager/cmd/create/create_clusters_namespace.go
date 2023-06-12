@@ -94,6 +94,9 @@ func createClustersNamespace() *cobra.Command {
 					requestParam interface{}
 					marshal      []byte
 					original     []byte
+					created      []byte
+					createdJson  []byte
+					path         string
 				)
 				// 判断是否有文件路径
 				if filename != "" {
@@ -133,7 +136,7 @@ func createClustersNamespace() *cobra.Command {
 					}
 					create := editor.NewDefaultEditor([]string{})
 					// created
-					created, path, err := create.LaunchTempFile(fmt.Sprintf("%s-create-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
+					created, path, err = create.LaunchTempFile(fmt.Sprintf("%s-create-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
 					if err != nil {
 						klog.Infoln("unexpected error: %v", err)
 						return
@@ -143,7 +146,7 @@ func createClustersNamespace() *cobra.Command {
 						return
 					}
 					// 把创建的内容yaml转成json
-					createdJson, err := yaml.YAMLToJSON(created)
+					createdJson, err = yaml.YAMLToJSON(created)
 					if err != nil {
 						klog.Infoln("json to yaml failed: %v", err)
 						return

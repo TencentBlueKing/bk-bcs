@@ -205,7 +205,7 @@ func createAgentPool(rootCtx context.Context, info *cloudprovider.CloudDependBas
 	if err = client.NodeGroupToAgentPool(group, pool); err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call NodeGroupToAgentPool failed", taskID)
 	}
-	if pool, err = client.CreatePoolAndReturn(ctx, pool, cluster.SystemID, group.CloudNodeGroupID); err != nil {
+	if _, err = client.CreatePoolAndReturn(ctx, pool, cluster.SystemID, group.CloudNodeGroupID); err != nil {
 		return errors.Wrapf(err, "createAgentPool[%s]: call CreatePoolAndReturn[%s][%s] falied", taskID,
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
@@ -229,6 +229,7 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 	group := info.NodeGroup
 	cluster := info.Cluster
 	lc := group.LaunchTemplate
+
 	taskID := cloudprovider.GetTaskIDFromContext(rootCtx)
 	if lc == nil || (lc.SystemDisk == nil && len(lc.DataDisks) == 0 && len(lc.InitLoginUsername) == 0 &&
 		len(lc.InitLoginPassword) == 0) {
@@ -244,11 +245,13 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 	if !ok {
 		ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 		defer cancel()
-		cluster, err := client.GetCluster(ctx, info)
+
+		var cloudCluster *armcontainerservice.ManagedCluster
+		cloudCluster, err = client.GetCluster(ctx, info)
 		if err != nil {
 			return errors.Wrapf(err, "createAgentPool[%s]: call GetCluster falied", taskID)
 		}
-		nodeGroupResource = *cluster.Properties.NodeResourceGroup
+		nodeGroupResource = *cloudCluster.Properties.NodeResourceGroup
 	}
 
 	ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
@@ -382,11 +385,11 @@ func cloudDataToNodeGroup(rootCtx context.Context, pool *armcontainerservice.Age
 	// 尝试获取nodeGroupResource
 	nodeGroupResource, ok := info.Cluster.ExtraInfo[api.NodeResourceGroup]
 	if !ok {
-		cluster, err := client.GetCluster(ctx, info)
+		cloudCluster, err := client.GetCluster(ctx, info)
 		if err != nil {
 			return errors.Wrapf(err, "checkNodeGroup[%s]: call GetCluster falied", taskID)
 		}
-		nodeGroupResource = *cluster.Properties.NodeResourceGroup
+		nodeGroupResource = *cloudCluster.Properties.NodeResourceGroup
 	}
 	// 查询节点池与VMSSs映射
 	ctx, cancel = context.WithTimeout(rootCtx, 30*time.Second)

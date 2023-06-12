@@ -55,7 +55,8 @@ func NewDataManagerCli(ctx context.Context, config *Config) (datamanager.DataMan
 	md := metadata.New(header)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
-	opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))) // nolint
+	// NOCC:gas/tls(client工具)
+	opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(config.APIServer, opts...)
 	if err != nil {

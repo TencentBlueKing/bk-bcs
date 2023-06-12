@@ -82,6 +82,7 @@ func (la *ListAction) validate() error {
 	return nil
 }
 
+// getSharedCluster shared cluster
 func (la *ListAction) getSharedCluster() error {
 	condM := make(operator.M)
 	condM["isshared"] = true
@@ -236,6 +237,7 @@ func (la *ListAction) GetProjectClustersV3Perm(user actions.PermInfo, clusterLis
 	return v3ResultPerm, nil
 }
 
+// getUserClusterPermList user cluster perms
 func (la *ListAction) getUserClusterPermList(user actions.PermInfo, clusterList []string) (
 	map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
@@ -270,6 +272,7 @@ func (la *ListAction) GetCloudProviderEngine(cls cmproto.Cluster) string {
 	return cloud.GetEngineType()
 }
 
+// returnClusterExtraInfo cluster extra info
 func (la *ListAction) returnClusterExtraInfo(clusterList []cmproto.Cluster) {
 	if la.resp.ClusterExtraInfo == nil {
 		la.resp.ClusterExtraInfo = make(map[string]*cmproto.ExtraInfo)
@@ -286,6 +289,7 @@ func (la *ListAction) returnClusterExtraInfo(clusterList []cmproto.Cluster) {
 	return
 }
 
+// setResp resp body
 func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
@@ -293,7 +297,7 @@ func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.Data = la.clusterList
 }
 
-// Handle handle list cluster request
+// Handle list cluster request
 func (la *ListAction) Handle(ctx context.Context, req *cmproto.ListClusterReq, resp *cmproto.ListClusterResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("list cluster failed, req or resp is empty")
@@ -339,6 +343,7 @@ func (la *ListCommonClusterAction) validate() error {
 	return nil
 }
 
+// listCluster cluster list
 func (la *ListCommonClusterAction) listCluster() error {
 	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
 		"isshared": true,
@@ -371,6 +376,7 @@ func (la *ListCommonClusterAction) listCluster() error {
 	return nil
 }
 
+// setResp resp body
 func (la *ListCommonClusterAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
@@ -378,7 +384,7 @@ func (la *ListCommonClusterAction) setResp(code uint32, msg string) {
 	la.resp.Data = la.clusterList
 }
 
-// Handle handle list common cluster request
+// Handle list common cluster request
 func (la *ListCommonClusterAction) Handle(ctx context.Context,
 	req *cmproto.ListCommonClusterReq, resp *cmproto.ListCommonClusterResp) {
 	if req == nil || resp == nil {
@@ -427,6 +433,7 @@ func (la *ListNodesInClusterAction) validate() error {
 	return nil
 }
 
+// listNodes merge cluster and db nodes
 func (la *ListNodesInClusterAction) listNodes() error {
 	condM := make(operator.M)
 	if len(la.req.ClusterID) != 0 {
@@ -468,6 +475,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	return nil
 }
 
+// getK8sNodes get cluster nodes
 func (la *ListNodesInClusterAction) getK8sNodes() []*corev1.Node {
 	k8sNodes, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
 	if err != nil {
@@ -477,6 +485,7 @@ func (la *ListNodesInClusterAction) getK8sNodes() []*corev1.Node {
 	return k8sNodes
 }
 
+// setResp resp body
 func (la *ListNodesInClusterAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
@@ -533,6 +542,7 @@ func (la *ListMastersInClusterAction) validate() error {
 	return nil
 }
 
+// listNodes list cluster nodes
 func (la *ListMastersInClusterAction) listNodes() error {
 	_, err := la.model.GetCluster(la.ctx, la.req.ClusterID)
 	if err != nil {
@@ -552,6 +562,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 	return nil
 }
 
+// appendHostInfo host info
 func (la *ListMastersInClusterAction) appendHostInfo() {
 	ips := make([]string, 0)
 	for _, v := range la.nodes {
@@ -579,6 +590,7 @@ func (la *ListMastersInClusterAction) appendHostInfo() {
 	}
 }
 
+// setResp resp body
 func (la *ListMastersInClusterAction) setResp(code uint32, msg string) {
 	la.resp.Code = code
 	la.resp.Message = msg
@@ -586,7 +598,7 @@ func (la *ListMastersInClusterAction) setResp(code uint32, msg string) {
 	la.resp.Data = la.nodes
 }
 
-// Handle handle list cluster request
+// Handle list cluster request
 func (la *ListMastersInClusterAction) Handle(ctx context.Context,
 	req *cmproto.ListMastersInClusterRequest, resp *cmproto.ListMastersInClusterResponse) {
 	if req == nil || resp == nil {

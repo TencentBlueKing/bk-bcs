@@ -3,14 +3,13 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-alert-manager
 go 1.17
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230612022433-f63b3b850fe2
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/golang/glog v1.0.0
 	github.com/golang/protobuf v1.5.2
@@ -58,7 +57,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
-	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/micro/cli/v2 v2.1.2 // indirect
 	github.com/micro/go-plugins/broker/rabbitmq/v2 v2.9.1 // indirect

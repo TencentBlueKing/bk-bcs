@@ -32,6 +32,7 @@ const (
 )
 
 type (
+	// ListProjectsRequest list projects
 	ListProjectsRequest struct {
 		ProjectIDs  string `url:"projectIDs,omitempty"`
 		ProjectCode string `url:"projectCode,omitempty"`
@@ -42,6 +43,7 @@ type (
 		All         bool   `url:"all,omitempty"`
 	}
 
+	// UpdateProjectRequest update project
 	UpdateProjectRequest struct {
 		BGID        string `json:"BGID"`
 		BGName      string `json:"BGName"`

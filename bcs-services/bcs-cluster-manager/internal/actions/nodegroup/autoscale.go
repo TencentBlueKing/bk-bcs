@@ -116,7 +116,7 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 	// set nodegroup to updating
 	ua.group.Status = common.StatusNodeGroupUpdating
 	ua.group.EnableAutoscale = true
-	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
+	if err = ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
 		blog.Errorf("update nodegroup %s status to updating failed, err %s", ua.group.NodeGroupID, err.Error())
 		return err
 	}
@@ -133,13 +133,13 @@ func (ua *EnableNodeGroupAutoScaleAction) enableNodeGroupAutoScale() error {
 	if task != nil {
 		taskID = task.TaskID
 		// create task and dispatch task
-		if err := ua.model.CreateTask(ua.ctx, task); err != nil {
+		if err = ua.model.CreateTask(ua.ctx, task); err != nil {
 			blog.Errorf("save enable nodegroup auto scale task for nodegroup %s failed, %s",
 				ua.group.NodeGroupID, err.Error(),
 			)
 			return err
 		}
-		if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 			blog.Errorf("dispatch enable nodegroup auto scale task for nodegroup %s failed, %s",
 				ua.group.NodeGroupID, err.Error(),
 			)
@@ -288,7 +288,7 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 	// set nodegroup to updating
 	ua.group.Status = common.StatusNodeGroupUpdating
 	ua.group.EnableAutoscale = false
-	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
+	if err = ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
 		blog.Errorf("update nodegroup %s status to updating failed, err %s", ua.group.NodeGroupID, err.Error())
 		return err
 	}
@@ -306,13 +306,13 @@ func (ua *DisableNodeGroupAutoScaleAction) disableNodeGroupAutoScale() error {
 	if task != nil {
 		taskID = task.TaskID
 		// create task and dispatch task
-		if err := ua.model.CreateTask(ua.ctx, task); err != nil {
+		if err = ua.model.CreateTask(ua.ctx, task); err != nil {
 			blog.Errorf("save disable nodegroup auto scale task for nodegroup %s failed, %s",
 				ua.group.NodeGroupID, err.Error(),
 			)
 			return err
 		}
-		if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 			blog.Errorf("dispatch disable nodegroup auto scale task for nodegroup %s failed, %s",
 				ua.group.NodeGroupID, err.Error(),
 			)

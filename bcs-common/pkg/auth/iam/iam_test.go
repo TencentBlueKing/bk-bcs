@@ -164,7 +164,7 @@ func TestIamClient_AddUserGroupMembers(t *testing.T) {
 	t.Log("success")
 }
 
-func TestIamClient_DeleteUserGroupMembers(t *testing.T) {
+func TestDeleteUserGroupMembers(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -181,7 +181,7 @@ func TestIamClient_DeleteUserGroupMembers(t *testing.T) {
 	t.Log("success")
 }
 
-func TestIamClient_CreateUserGroupPolicies(t *testing.T) {
+func TestCreateUserGroupPolicies(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -211,7 +211,7 @@ func TestIamClient_CreateUserGroupPolicies(t *testing.T) {
 	t.Log("success")
 }
 
-func TestIamClient_IsAllowedWithoutResource(t *testing.T) {
+func TestIsAllowedWithoutResource(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -231,7 +231,7 @@ func TestIamClient_IsAllowedWithoutResource(t *testing.T) {
 	t.Log(allow)
 }
 
-func TestIamClient_IsAllowedWithResource(t *testing.T) {
+func TestIsAllowedWithResource(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -280,7 +280,7 @@ func TestIamClient_IsAllowedWithResource(t *testing.T) {
 	t.Log(allow)
 }
 
-func TestIamClient_BatchResourceIsAllowed(t *testing.T) {
+func TestBatchResourceIsAllowed(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -323,7 +323,7 @@ func TestIamClient_BatchResourceIsAllowed(t *testing.T) {
 	t.Log(permission) // map[BCS-K8S-15200:true BCS-K8S-15201:true]
 }
 
-func TestIamClient_ResourceMultiActionsAllowed(t *testing.T) {
+func TestResourceMultiAllowed(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -360,7 +360,7 @@ type Resource struct {
 	ResourceID   string
 }
 
-func TestIamClient_BatchResourceMultiActionsAllowed(t *testing.T) {
+func TestBatchResourceMultiAllowed(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -511,7 +511,7 @@ func TestIamClient_GetApplyURL(t *testing.T) {
 	t.Log(url)
 }
 
-func TestIamClient_AuthResourceCreatorPerm(t *testing.T) {
+func TestAuthResourceCreatorPerm(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)

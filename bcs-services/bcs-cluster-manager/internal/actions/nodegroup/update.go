@@ -48,6 +48,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 	}
 }
 
+// setResp resp body
 func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
@@ -108,6 +109,7 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	ua.group = group
 }
 
+// modifyNodeGroupAutoScaling autoscaling field
 func (ua *UpdateAction) modifyNodeGroupAutoScaling(group *cmproto.NodeGroup) {
 	if ua.req.AutoScaling != nil {
 		if ua.req.AutoScaling.MaxSize != 0 {
@@ -132,6 +134,7 @@ func (ua *UpdateAction) modifyNodeGroupAutoScaling(group *cmproto.NodeGroup) {
 	}
 }
 
+// modifyNodeGroupLaunchTemplate launchTemplate field
 func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) {
 	if ua.req.LaunchTemplate != nil {
 		if ua.req.LaunchTemplate.InstanceType != "" {
@@ -166,6 +169,7 @@ func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) 
 	}
 }
 
+// modifyNodeGroupNodeTemplate nodeTemplate field
 func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 	if ua.req.NodeTemplate != nil {
 		if ua.req.NodeTemplate.NodeTemplateID != "" {
@@ -213,6 +217,7 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 	}
 }
 
+// getRelativeResource relative resource
 func (ua *UpdateAction) getRelativeResource() error {
 	group, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
@@ -240,6 +245,7 @@ func (ua *UpdateAction) getRelativeResource() error {
 	return nil
 }
 
+// updateCloudNodeGroup update cloud nodeGroup
 func (ua *UpdateAction) updateCloudNodeGroup() error {
 	// get credential for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
@@ -382,6 +388,7 @@ func NewMoveNodeAction(model store.ClusterManagerModel) *MoveNodeAction {
 	}
 }
 
+// setResp resp body
 func (ua *MoveNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
@@ -585,6 +592,7 @@ func NewUpdateDesiredNodeAction(model store.ClusterManagerModel) *UpdateDesiredN
 	}
 }
 
+// setResp resp body
 func (ua *UpdateDesiredNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
@@ -619,6 +627,7 @@ func (ua *UpdateDesiredNodeAction) validate() error {
 	return nil
 }
 
+// handleTask task handle
 func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 	mgr, err := cloudprovider.GetTaskManager(ua.cloud.CloudProvider)
 	if err != nil {
@@ -718,6 +727,7 @@ func (ua *UpdateDesiredNodeAction) returnCurrentScaleNodesNum() (uint32, error) 
 	return scaleResp.ScalingUp, nil
 }
 
+// updateNodeGroupDesiredSize update desired size
 func (ua *UpdateDesiredNodeAction) updateNodeGroupDesiredSize(desiredNode uint32) error {
 	ua.group.AutoScaling.DesiredSize = desiredNode
 	ua.group.Updater = ua.req.Operator
@@ -733,7 +743,7 @@ func (ua *UpdateDesiredNodeAction) updateNodeGroupDesiredSize(desiredNode uint32
 	return nil
 }
 
-// Handle handle update cluster credential
+// Handle update cluster credential
 func (ua *UpdateDesiredNodeAction) Handle(
 	ctx context.Context, req *cmproto.UpdateGroupDesiredNodeRequest, resp *cmproto.UpdateGroupDesiredNodeResponse) {
 
@@ -810,6 +820,7 @@ func NewUpdateDesiredSizeAction(model store.ClusterManagerModel) *UpdateDesiredS
 	}
 }
 
+// setResp resp body
 func (ua *UpdateDesiredSizeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
@@ -841,7 +852,7 @@ func (ua *UpdateDesiredSizeAction) Handle(
 	}
 	destGroup.AutoScaling.DesiredSize = req.DesiredSize
 
-	if err := ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
+	if err = ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
 		blog.Errorf("nodegroup %s update desiredSize failed in local storage, %s",
 			destGroup.NodeGroupID, err.Error())
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

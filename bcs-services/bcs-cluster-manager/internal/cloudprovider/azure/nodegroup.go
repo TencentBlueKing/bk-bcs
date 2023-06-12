@@ -313,7 +313,7 @@ func (ng *NodeGroup) CreateAutoScalingOption(scalingOption *proto.ClusterAutoSca
 		)
 		return nil, err
 	}
-	task, err := mgr.BuildSwitchAutoScalingOptionStatusTask(scalingOption, true, &opt.CommonOption)
+	task, err := mgr.BuildSwitchAsOptionStatusTask(scalingOption, true, &opt.CommonOption)
 	if err != nil {
 		blog.Errorf("build CreateAutoScalingOption task for cluster %s with cloudprovider %s failed, %s",
 			scalingOption.ClusterID, cloudName, err.Error(),
@@ -334,7 +334,7 @@ func (ng *NodeGroup) DeleteAutoScalingOption(scalingOption *proto.ClusterAutoSca
 		)
 		return nil, err
 	}
-	task, err := mgr.BuildSwitchAutoScalingOptionStatusTask(scalingOption, false, &opt.CommonOption)
+	task, err := mgr.BuildSwitchAsOptionStatusTask(scalingOption, false, &opt.CommonOption)
 	if err != nil {
 		blog.Errorf("build DeleteAutoScalingOption task for cluster %s with cloudprovider %s failed, %s",
 			scalingOption.ClusterID, cloudName, err.Error(),
@@ -376,7 +376,7 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 		)
 		return nil, err
 	}
-	task, err := mgr.BuildSwitchAutoScalingOptionStatusTask(scalingOption, enable, opt)
+	task, err := mgr.BuildSwitchAsOptionStatusTask(scalingOption, enable, opt)
 	if err != nil {
 		blog.Errorf("build SwitchAutoScalingOptionStatus task for cluster %s with cloudprovider %s failed, %s",
 			scalingOption.ClusterID, cloudName, err.Error(),

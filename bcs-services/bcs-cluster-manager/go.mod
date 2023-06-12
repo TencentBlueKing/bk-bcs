@@ -26,7 +26,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.18
 	github.com/Azure/go-autorest/autorest/adal v0.9.13
 	github.com/RichardKnop/machinery/v2 v2.0.11
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230612022433-f63b3b850fe2
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230607093333-1f5cd2719e19
 	github.com/avast/retry-go v2.7.0+incompatible
 	github.com/coreos/etcd v3.3.25+incompatible

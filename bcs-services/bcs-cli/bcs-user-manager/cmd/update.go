@@ -105,7 +105,8 @@ func updateCredentialsCmd() *cobra.Command {
 		Aliases: []string{"c"},
 		Short:   "update credentials",
 		Long:    "update cluster credentials according cluster ID",
-		Example: "kubectl-bcs-user-manager update credentials --cluster_id [cluster_id] --credentials_form '{\"register_token\":\"\",\"server_addresses\":\"\",\"cacert_data\":\"\",\"user_token\":\"\"}'",
+		Example: "kubectl-bcs-user-manager update credentials --cluster_id [cluster_id] --credentials_form '{\"register_token\":\"\"," +
+			"\"server_addresses\":\"\",\"cacert_data\":\"\",\"user_token\":\"\"}'",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())

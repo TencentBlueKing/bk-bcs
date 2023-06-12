@@ -42,6 +42,7 @@ func newCreateCmd() *cobra.Command {
 	return createCmd
 }
 
+// createAdminUserCmd fro admin user
 func createAdminUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -71,6 +72,7 @@ func createAdminUserCmd() *cobra.Command {
 	return subCmd
 }
 
+// createSaasUserCmd for saas user
 func createSaasUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -100,6 +102,7 @@ func createSaasUserCmd() *cobra.Command {
 	return subCmd
 }
 
+// createPlainUserCmd for plain user
 func createPlainUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -129,6 +132,7 @@ func createPlainUserCmd() *cobra.Command {
 	return subCmd
 }
 
+// createClusterCmd for create cluster
 func createClusterCmd() *cobra.Command {
 	var clusterCreateBody string
 	subCmd := &cobra.Command{
@@ -158,6 +162,7 @@ func createClusterCmd() *cobra.Command {
 	return subCmd
 }
 
+// createRegisterTokenCmd register token
 func createRegisterTokenCmd() *cobra.Command {
 	var clusterId string
 	subCmd := &cobra.Command{
@@ -187,6 +192,7 @@ func createRegisterTokenCmd() *cobra.Command {
 	return subCmd
 }
 
+// createTokenCmd create token
 func createTokenCmd() *cobra.Command {
 	var tokenForm string
 	subCmd := &cobra.Command{
@@ -216,6 +222,7 @@ func createTokenCmd() *cobra.Command {
 	return subCmd
 }
 
+// createTempTokenCmd create temp token
 func createTempTokenCmd() *cobra.Command {
 	var tokenForm string
 	subCmd := &cobra.Command{
@@ -245,6 +252,7 @@ func createTempTokenCmd() *cobra.Command {
 	return subCmd
 }
 
+// createClientTokenCmd create client token
 func createClientTokenCmd() *cobra.Command {
 	var tokenForm string
 	subCmd := &cobra.Command{
@@ -274,6 +282,7 @@ func createClientTokenCmd() *cobra.Command {
 	return subCmd
 }
 
+// addTkeCidrCmd add tke cidr block
 func addTkeCidrCmd() *cobra.Command {
 	var tkeCidrForm string
 	subCmd := &cobra.Command{
@@ -281,7 +290,8 @@ func addTkeCidrCmd() *cobra.Command {
 		Aliases: []string{"tkecidrs"},
 		Short:   "init tke cidrs",
 		Long:    "init tke cidrs from user manager",
-		Example: "kubectl-bcs-user-manager create tkecidrs --tkecidr_form '{\n  \"vpc\": \"\",\n  \"tke_cidrs\": [\n    {\n      \"cidr\": \"\",\n      \"ip_number\": \"\",\n      \"status\": \"\"\n    }\n  ]\n}' ",
+		Example: "kubectl-bcs-user-manager create tkecidrs --tkecidr_form '{\n  \"vpc\": \"\",\n  \"tke_cidrs\": " +
+			"[\n    {\n      \"cidr\": \"\",\n      \"ip_number\": \"\",\n      \"status\": \"\"\n    }\n  ]\n}' ",
 		Run: func(cmd *cobra.Command, args []string) {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())

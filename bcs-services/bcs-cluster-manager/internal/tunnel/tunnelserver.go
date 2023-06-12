@@ -30,8 +30,6 @@ import (
 const (
 	// Module http tunnel header
 	Module = "BCS-API-Tunnel-Module"
-	// RegisterToken http tunnel header
-	RegisterToken = "BCS-API-Tunnel-Token"
 	// Params http tunnel header
 	Params = "BCS-API-Tunnel-Params"
 	// Cluster http tunnel header
@@ -40,6 +38,9 @@ const (
 	KubeAgentModule = "kubeagent"
 	// MesosDriverModule http tunnel header
 	MesosDriverModule = "mesosdriver"
+
+	// RegisterToken http tunnel header
+	// RegisterToken = "BCS-API-Tunnel-Token"
 )
 
 // RegisterCluster definition of tunnel cluster info
@@ -140,8 +141,8 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 		// for mesos, the registerCluster.Address is mesos-driver url.
 		// one mesos cluster may have 3 or more mesos-driver,
 		// so we should distinguish them, so use {clusterID}-{ip:port} as serverKey
-		url, err := url.Parse(registerCluster.Address)
-		if err != nil {
+		url, errParse := url.Parse(registerCluster.Address)
+		if errParse != nil {
 			return "", false, nil
 		}
 		serverKey := clusterID + "-" + url.Host
@@ -168,5 +169,5 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 func (wts *WsTunnelServerCallback) cleanCredential(serverKey string) {
 	// when multiple kube-agent connect to cluster-manager with same clientKey,
 	// delete credential will make connection unusable
-	// wts.model.DeleteClusterCredential(context.TODO(), serverKey)
+	// wts.model.DeleteClusterCredential(context.Background(), serverKey)
 }

@@ -177,10 +177,10 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 
 	cloudNodeGroup := &container.NodePool{}
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		np, err := containerCli.GetClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
-		if err != nil {
+		np, errPool := containerCli.GetClusterNodePool(context.Background(), cluster.SystemID, group.CloudNodeGroupID)
+		if errPool != nil {
 			blog.Errorf("taskID[%s] GetClusterNodePool[%s/%s] failed: %v", taskID, cluster.SystemID,
-				group.CloudNodeGroupID, err)
+				group.CloudNodeGroupID, errPool)
 			return nil
 		}
 		if np == nil {
@@ -230,7 +230,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CheckCloudNodeGroupStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}

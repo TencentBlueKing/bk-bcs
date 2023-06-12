@@ -14,13 +14,7 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
-	"github.com/pkg/errors"
 	"net"
 	"regexp"
 	"strconv"
@@ -28,20 +22,15 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 )
 
-// DeepCopyByJson 深度拷贝
-func DeepCopyByJson[T any](src T) (*T, error) {
-	b, err := json.Marshal(src)
-	if err != nil {
-		return nil, errors.Wrapf(err, "deep copy failed")
-	}
-	dst := new(T)
-	err = json.Unmarshal(b, dst)
-	return dst, err
-}
-
-//  nodeGroupToPool agentPool 转换器
+//	nodeGroupToPool agentPool 转换器
+//
 // bcs nodeGroup 转换为 aks agentPool
 type nodeGroupToPool struct {
 	group *proto.NodeGroup

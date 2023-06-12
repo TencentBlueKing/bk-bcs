@@ -304,7 +304,7 @@ type UpdateScalingOption struct {
 	CommonOption
 }
 
-// StepPara step parameter
+// StepInfo step parameter
 type StepInfo struct {
 	StepMethod string
 	StepName   string
