@@ -16,11 +16,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/pkg/errors"
 	cos "github.com/tencentyun/cos-go-sdk-v5"
 
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/thirdparty/repo"
 )
@@ -37,7 +39,7 @@ type cosClient struct {
 }
 
 // Upload upload file to cos
-func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader, contentLength int64) (*ObjectMetadata, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
 	if err != nil {
 		return nil, err
@@ -48,6 +50,9 @@ func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Length", strconv.FormatInt(contentLength, 10))
+	req.Header.Set("Content-Type", "application/octet-stream")
+	req.Header.Set(constant.RidKey, kt.Rid)
 
 	resp, err := c.client.Do(req)
 	if err != nil {

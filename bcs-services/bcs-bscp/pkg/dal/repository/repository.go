@@ -64,7 +64,7 @@ type ObjectDownload interface {
 
 // Provider repo provider interface
 type Provider interface {
-	Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error)
+	Upload(kt *kit.Kit, fileContentID string, body io.Reader, contentLength int64) (*ObjectMetadata, error)
 	Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error)
 	Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error)
 }

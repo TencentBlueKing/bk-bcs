@@ -44,7 +44,7 @@ func (p *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metadata, err := p.provider.Upload(kt, fileContentID, r.Body)
+	metadata, err := p.provider.Upload(kt, fileContentID, r.Body, r.ContentLength)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
@@ -71,7 +71,7 @@ func (p *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	defer body.Close()
 
 	w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
-	w.Header().Set("Content-Type", "application/octet-stream; charset=UTF-8")
+	w.Header().Set("Content-Type", "application/octet-stream")
 	_, err = io.Copy(w, body)
 	if err != nil {
 		klog.ErrorS(err, "download file", "fileContentID", contentLength)

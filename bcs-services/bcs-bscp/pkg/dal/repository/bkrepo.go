@@ -140,7 +140,7 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 }
 
 // Upload file to bkrepo
-func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader, contentLength int64) (*ObjectMetadata, error) {
 	if err := c.ensureRepo(kt); err != nil {
 		return nil, errors.Wrap(err, "ensure repo failed")
 	}
@@ -161,8 +161,11 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set(repo.HeaderKeyMETA, nodeMeta)
+
+	req.Header.Set("Content-Length", strconv.FormatInt(contentLength, 10))
+	req.Header.Set("Content-Type", "application/octet-stream")
 	req.Header.Set(constant.RidKey, kt.Rid)
+	req.Header.Set(repo.HeaderKeyMETA, nodeMeta)
 	req.Header.Set(repo.HeaderKeyOverwrite, "true")
 
 	resp, err := c.client.Do(req)
