@@ -21,20 +21,14 @@ import (
 	cos "github.com/tencentyun/cos-go-sdk-v5"
 
 	"bscp.io/pkg/cc"
-	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/thirdparty/repo"
 )
 
 // s3Client s3 client struct
 type s3Client struct {
-	// repoCli s3 client.
 	client *http.Client
-	s3Cli  *repo.ClientS3
-	// authorizer auth related operations.
-	authorizer auth.Authorizer
-	host       string
+	host   string
 }
 
 // Upload
@@ -129,23 +123,16 @@ func (s *s3Client) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata,
 }
 
 // NewS3Service new s3 service
-func NewS3Service(settings cc.Repository, authorizer auth.Authorizer) (Provider, error) {
-	s, err := repo.NewClientS3(&settings, metrics.Register())
-	if err != nil {
-		return nil, err
-	}
-
-	host := fmt.Sprintf("https://%s.%s", settings.S3.BucketName, settings.S3.Endpoint)
+func NewS3Service(conf cc.S3Storage) (Provider, error) {
+	host := fmt.Sprintf("https://%s.%s", conf.BucketName, conf.Endpoint)
 
 	p := &s3Client{
-		s3Cli:      s,
-		authorizer: authorizer,
-		host:       host,
+		host: host,
 	}
 
 	transport := &cos.AuthorizationTransport{
-		SecretID:  settings.S3.AccessKeyID,
-		SecretKey: settings.S3.SecretAccessKey,
+		SecretID:  conf.AccessKeyID,
+		SecretKey: conf.SecretAccessKey,
 	}
 
 	p.client = &http.Client{Transport: transport}

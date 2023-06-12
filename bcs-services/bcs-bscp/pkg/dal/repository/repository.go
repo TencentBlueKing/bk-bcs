@@ -59,10 +59,10 @@ func GetFileContentID(r *http.Request) (string, error) {
 func NewProvider(conf cc.Repository) (Provider, error) {
 	switch strings.ToUpper(string(conf.StorageType)) {
 	case string(cc.S3):
-		return NewS3Service(conf, nil)
+		return NewS3Service(conf.S3)
 	case string(cc.BkRepo):
 		// return NewRepoService(settings, authorizer)
-		return NewBKRepoService(conf, nil)
+		return NewBKRepoService(conf)
 	}
 	return nil, fmt.Errorf("store with type %s is not supported", conf.StorageType)
 }

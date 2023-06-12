@@ -23,7 +23,6 @@ import (
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/thirdparty/repo"
@@ -52,11 +51,8 @@ func (t *bkrepoAuthTransport) transport(req *http.Request) http.RoundTripper {
 
 // bkrepo client struct
 type bkrepo struct {
-	// repoCli client.
-	client *http.Client
-	cli    *repo.Client
-	// authorizer auth related operations.
-	authorizer  auth.Authorizer
+	client      *http.Client
+	cli         *repo.Client
 	host        string
 	project     string
 	repoCreated map[string]struct{}
@@ -254,7 +250,7 @@ func (s *bkrepo) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, e
 }
 
 // NewBKRepoService new s3 service
-func NewBKRepoService(settings cc.Repository, authorizer auth.Authorizer) (Provider, error) {
+func NewBKRepoService(settings cc.Repository) (Provider, error) {
 	s, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err
@@ -264,7 +260,6 @@ func NewBKRepoService(settings cc.Repository, authorizer auth.Authorizer) (Provi
 
 	p := &bkrepo{
 		cli:         s,
-		authorizer:  authorizer,
 		host:        host,
 		project:     settings.BkRepo.Project,
 		repoCreated: map[string]struct{}{},
