@@ -61,7 +61,6 @@ type AuditDecorator interface {
 	PrepareUpdate(updatedTo interface{}) AuditDecorator
 	PrepareDelete(resID uint32) AuditDecorator
 	AuditPublish(cur interface{}, opt *AuditOption) error
-	AuditFinishPublish(strID, appID uint32, opt *AuditOption) error
 	Do(opt *AuditOption) error
 }
 
@@ -120,11 +119,6 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 		strategy := cur.(*table.Strategy)
 		ab.toAudit.AppID = strategy.Attachment.AppID
 		ab.toAudit.ResourceID = strategy.ID
-
-	case *table.StrategySet:
-		sset := cur.(*table.StrategySet)
-		ab.toAudit.AppID = sset.Attachment.AppID
-		ab.toAudit.ResourceID = sset.ID
 
 	case *table.Hook:
 		sset := cur.(*table.Hook)
@@ -189,11 +183,6 @@ func (ab *AuditBuilder) AuditPublish(cur interface{}, opt *AuditOption) error {
 		ab.toAudit.AppID = strategy.Attachment.AppID
 		ab.toAudit.ResourceID = strategy.ID
 
-	case *table.CurrentReleasedInstance:
-		cri := cur.(*table.CurrentReleasedInstance)
-		ab.toAudit.AppID = cri.Attachment.AppID
-		ab.toAudit.ResourceID = cri.ID
-
 	default:
 		logs.Errorf("unsupported audit publish resource: %s, type: %s, rid: %v", ab.toAudit.ResourceType,
 			reflect.TypeOf(cur), ab.toAudit.Rid)
@@ -202,32 +191,6 @@ func (ab *AuditBuilder) AuditPublish(cur interface{}, opt *AuditOption) error {
 
 	detail := &table.AuditBasicDetail{
 		Prev:    ab.prev,
-		Changed: nil,
-	}
-	js, err := json.Marshal(detail)
-	if err != nil {
-		return fmt.Errorf("marshal audit detail failed, err: %v", err)
-	}
-	ab.toAudit.Detail = string(js)
-
-	return ab.ad.One(ab.kit, ab.toAudit, opt)
-}
-
-// AuditFinishPublish set finish publish strategy id.
-// Note:
-// 1. must call this after the resource has already been finish published.
-func (ab *AuditBuilder) AuditFinishPublish(strID, appID uint32, opt *AuditOption) error {
-	if ab.hitErr != nil {
-		return ab.hitErr
-	}
-
-	ab.toAudit.Action = enumor.FinishPublish
-
-	ab.toAudit.AppID = appID
-	ab.toAudit.ResourceID = strID
-
-	detail := &table.AuditBasicDetail{
-		Prev:    nil,
 		Changed: nil,
 	}
 	js, err := json.Marshal(detail)
@@ -262,13 +225,6 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 	case *table.ConfigItem:
 		ci := updatedTo.(*table.ConfigItem)
 		if err := ab.decorateConfigItemUpdate(ci); err != nil {
-			ab.hitErr = err
-			return ab
-		}
-
-	case *table.StrategySet:
-		ss := updatedTo.(*table.StrategySet)
-		if err := ab.decorateStrategySetUpdate(ss); err != nil {
 			ab.hitErr = err
 			return ab
 		}
@@ -366,27 +322,6 @@ func (ab *AuditBuilder) decorateConfigItemUpdate(ci *table.ConfigItem) error {
 	if err != nil {
 		ab.hitErr = err
 		return fmt.Errorf("parse config item changed spec field failed, err: %v", err)
-	}
-
-	ab.changed = changed
-	return nil
-}
-
-func (ab *AuditBuilder) decorateStrategySetUpdate(ss *table.StrategySet) error {
-	ab.toAudit.AppID = ss.Attachment.AppID
-	ab.toAudit.ResourceID = ss.ID
-
-	prevSS, err := ab.getStrategySet(ss.ID)
-	if err != nil {
-		return err
-	}
-
-	ab.prev = prevSS
-
-	changed, err := parseChangedSpecFields(prevSS, ss)
-	if err != nil {
-		ab.hitErr = err
-		return fmt.Errorf("parse strategy set changed spec field failed, err: %v", err)
 	}
 
 	ab.changed = changed
@@ -536,16 +471,6 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.ResourceID = strategy.ID
 		ab.prev = strategy
 
-	case enumor.StrategySet:
-		ss, err := ab.getStrategySet(resID)
-		if err != nil {
-			ab.hitErr = err
-			return ab
-		}
-		ab.toAudit.AppID = ss.Attachment.AppID
-		ab.toAudit.ResourceID = ss.ID
-		ab.prev = ss
-
 	case enumor.Group:
 		group, err := ab.getGroup(resID)
 		if err != nil {
@@ -564,16 +489,6 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.AppID = hook.Attachment.AppID
 		ab.toAudit.ResourceID = hook.ID
 		ab.prev = hook
-
-	case enumor.CRInstance:
-		cri, err := ab.getCRInstance(resID)
-		if err != nil {
-			ab.hitErr = err
-			return ab
-		}
-		ab.toAudit.AppID = cri.Attachment.AppID
-		ab.toAudit.ResourceID = cri.ID
-		ab.prev = cri
 
 	case enumor.Credential:
 		credential, err := ab.getCredential(resID)
@@ -653,21 +568,6 @@ func (ab *AuditBuilder) getConfigItem(configItemID uint32) (*table.ConfigItem, e
 	return one, nil
 }
 
-func (ab *AuditBuilder) getStrategySet(strategySetID uint32) (*table.StrategySet, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.StrategySetColumns.NamedExpr(), " FROM ", table.StrategySetTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(strategySetID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
-	filter := filter2.SqlJoint(sqlSentence)
-
-	one := new(table.StrategySet)
-	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
-	if err != nil {
-		return nil, fmt.Errorf("get strategy set details failed, err: %v", err)
-	}
-
-	return one, nil
-}
-
 func (ab *AuditBuilder) getStrategy(strategyID uint32) (*table.Strategy, error) {
 	var sqlSentence []string
 	sqlSentence = append(sqlSentence, "SELECT ", table.StrategyColumns.NamedExpr(), " FROM ", table.StrategyTable.Name(),
@@ -708,22 +608,6 @@ func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get hook details failed, err: %v", err)
-	}
-
-	return one, nil
-}
-
-func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInstance, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.CurrentReleasedInstanceColumns.NamedExpr(),
-		" FROM ", table.CurrentReleasedInstanceTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(criID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
-	filter := filter2.SqlJoint(sqlSentence)
-
-	one := new(table.CurrentReleasedInstance)
-	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
-	if err != nil {
-		return nil, fmt.Errorf("get current released instance details failed, err: %v", err)
 	}
 
 	return one, nil

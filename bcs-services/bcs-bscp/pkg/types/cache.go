@@ -29,21 +29,6 @@ type AppCacheMeta struct {
 	Reload *table.Reload `json:"reload"`
 }
 
-// PublishedStrategyCacheColumn define all the PublishedStrategyCache structs' column in db.
-var PublishedStrategyCacheColumn = "id, strategy_id, release_id, as_default, scope, mode, namespace"
-
-// PublishedStrategyCache is the published strategy info which will be
-// stored in cache.
-type PublishedStrategyCache struct {
-	ID         uint32        `db:"id" json:"id"`
-	StrategyID uint32        `db:"strategy_id" json:"sid"`
-	ReleaseID  uint32        `db:"release_id" json:"rid"`
-	AsDefault  bool          `db:"as_default" json:"dft"`
-	Scope      *table.Scope  `db:"scope" json:"scope"`
-	Mode       table.AppMode `db:"mode" json:"mode"`
-	Namespace  string        `db:"namespace" json:"ns"`
-}
-
 // ReleasedGroupCache is the released group info which will be stored in cache.
 type ReleasedGroupCache struct {
 	// ID is an auto-increased value, which is a group app's

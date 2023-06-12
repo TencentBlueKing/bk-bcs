@@ -22,8 +22,6 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	pbbase "bscp.io/pkg/protocol/core/base"
-	pbstrategy "bscp.io/pkg/protocol/core/strategy"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/types"
 )
@@ -191,65 +189,6 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	}
 
 	resp := &pbds.PublishResp{PublishedStrategyHistoryId: pshID}
-	return resp, nil
-}
-
-// FinishPublish finish publish strategy.
-func (s *Service) FinishPublish(ctx context.Context, req *pbds.FinishPublishReq) (
-	*pbbase.EmptyResp, error) {
-
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	opt := &types.FinishPublishOption{
-		BizID:      req.BizId,
-		AppID:      req.AppId,
-		StrategyID: req.StrategyId,
-	}
-	err := s.dao.Publish().FinishPublish(grpcKit, opt)
-	if err != nil {
-		logs.Errorf("finish publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	return new(pbbase.EmptyResp), nil
-}
-
-// ListPublishedStrategyHistories list published strategy histories.
-func (s *Service) ListPublishedStrategyHistories(ctx context.Context, req *pbds.ListPubStrategyHistoriesReq) (
-	*pbds.ListPubStrategyHistoriesResp, error) {
-
-	kt := kit.FromGrpcContext(ctx)
-
-	// parse pb struct filter to filter.Expression.
-	ft, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
-	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	query := &types.ListPSHistoriesOption{
-		BizID:  req.BizId,
-		AppID:  req.AppId,
-		Filter: ft,
-		Page:   req.Page.BasePage(),
-	}
-
-	details, err := s.dao.Publish().ListPSHistory(kt, query)
-	if err != nil {
-		logs.Errorf("list published strategy history failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	strategies, err := pbstrategy.PbPubStrategyHistories(details.Details)
-	if err != nil {
-		logs.Errorf("get pb strategy histories failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	resp := &pbds.ListPubStrategyHistoriesResp{
-		Count:   details.Count,
-		Details: strategies,
-	}
 	return resp, nil
 }
 

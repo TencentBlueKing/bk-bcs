@@ -30,7 +30,6 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 	return &Cache{
 		App:           newApp(mc, cs),
 		ReleasedCI:    newReleasedCI(mc, cs),
-		Strategy:      newStrategy(mc, cs),
 		ReleasedGroup: newReleasedGroup(mc, cs),
 		Credential:    newCredential(mc, cs),
 		Auth:          newAuth(mc, cs.Authorizer()),
@@ -41,7 +40,6 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 type Cache struct {
 	App           *App
 	ReleasedCI    *ReleasedCI
-	Strategy      *Strategy
 	ReleasedGroup *ReleasedGroup
 	Credential    *Credential
 	Auth          *Auth
@@ -65,13 +63,10 @@ func (c *Cache) Purge(kt *kit.Kit, es []*types.EventMeta) {
 			switch one.Spec.OpType {
 			case table.InsertOp, table.DeleteOp:
 				c.ReleasedGroup.client.Purge()
-				c.Strategy.client.Purge()
 			default:
 				logs.V(1).Infof("skip publish strategy event op, %s, rid: %s", formatEvent(one), kt.Rid)
 				continue
 			}
-
-		case table.PublishInstance:
 
 		case table.Application:
 			switch one.Spec.OpType {
