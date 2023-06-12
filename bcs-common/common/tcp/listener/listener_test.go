@@ -68,8 +68,8 @@ func index(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprint(w, string(res))
 }
 
-// TestDualStackListener_AddListener 测试AddListener
-func TestDualStackListener_AddListener(t *testing.T) {
+// TestAddListener 测试AddListener
+func TestAddListener(t *testing.T) {
 	dualStackListener := NewDualStackListener()
 	defer dualStackListener.Close()
 	err := dualStackListener.AddListener(IPv4, Port)
@@ -84,8 +84,8 @@ func TestDualStackListener_AddListener(t *testing.T) {
 	}
 }
 
-// TestDualStackListener_AcceptToHttpServer 测试http server使用
-func TestDualStackListener_AcceptToHttpServer(t *testing.T) {
+// TestAcceptToHttpServer 测试http server使用
+func TestAcceptToHttpServer(t *testing.T) {
 	// 创建双栈
 	dualStackListener := NewDualStackListener()
 	err := dualStackListener.AddListener(IPv4, Port)
@@ -112,8 +112,8 @@ func TestDualStackListener_AcceptToHttpServer(t *testing.T) {
 	}
 }
 
-// TestDualStackListener_AcceptToIPv6Server1 测试IPv6 server使用
-func TestDualStackListener_AcceptToIPv6Server1(t *testing.T) {
+// TestAcceptToIPv6Server1 测试IPv6 server使用
+func TestAcceptToIPv6Server1(t *testing.T) {
 	// 创建双栈
 	dualStackListener := NewDualStackListener()
 	err := dualStackListener.AddListener(IPv4, Port)
@@ -140,8 +140,8 @@ func TestDualStackListener_AcceptToIPv6Server1(t *testing.T) {
 	}
 }
 
-// TestDualStackListener_AcceptToIPv6Server2 测试IPv6 server使用
-func TestDualStackListener_AcceptToIPv6Server2(t *testing.T) {
+// TestAcceptToIPv6Server2 测试IPv6 server使用
+func TestAcceptToIPv6Server2(t *testing.T) {
 	// 创建双栈
 	dualStackListener := NewDualStackListener()
 	err := dualStackListener.AddListener(IPv4, Port)
@@ -211,8 +211,8 @@ func getTLSFiles() (certFile, keyFile string) {
 	return certfile.Name(), keyfile.Name()
 }
 
-// TestDualStackListener_AcceptToIPv6ServerTLS1
-func TestDualStackListener_AcceptToIPv6ServerTLS1(t *testing.T) {
+// TestAcceptToIPv6ServerTLS1
+func TestAcceptToIPv6ServerTLS1(t *testing.T) {
 	tt = t
 
 	//handler := http.NewServeMux()
@@ -252,8 +252,8 @@ func TestDualStackListener_AcceptToIPv6ServerTLS1(t *testing.T) {
 	}
 }
 
-// TestDualStackListener_AcceptToIPv6ServerTLS2
-func TestDualStackListener_AcceptToIPv6ServerTLS2(t *testing.T) {
+// TestAcceptToIPv6ServerTLS2
+func TestAcceptToIPv6ServerTLS2(t *testing.T) {
 	tt = t
 
 	//handler := http.NewServeMux()
@@ -292,8 +292,8 @@ func TestDualStackListener_AcceptToIPv6ServerTLS2(t *testing.T) {
 	}
 }
 
-// TestDualStackListener_Close 测试Close
-func TestDualStackListener_Close(t *testing.T) {
+// TestClose 测试Close
+func TestClose(t *testing.T) {
 	// 创建双栈
 	dualStackListener := NewDualStackListener()
 	err := dualStackListener.AddListener(IPv4, Port)
@@ -331,8 +331,8 @@ func TestDualStackListener_Close(t *testing.T) {
 	}
 }
 
-// TestDualStackListener_Addr 测试Addr
-func TestDualStackListener_Addr(t *testing.T) {
+// TestAddr 测试Addr
+func TestAddr(t *testing.T) {
 	// 创建双栈
 	dualStackListener := NewDualStackListener()
 	err := dualStackListener.AddListener(IPv4, Port)
@@ -360,7 +360,7 @@ func (gs *GreeterServer) SayHello(ctx context.Context, request *helloworld.Hello
 	return &helloworld.HelloReply{Message: "hello " + value}, nil
 }
 
-func TestDualStackListener_GrpcServer(t *testing.T) {
+func TestGrpcServer(t *testing.T) {
 	tt = t
 	dualStackListener := NewDualStackListener()
 	err := dualStackListener.AddListener(IPv4, Port)
@@ -408,12 +408,12 @@ func gRPCRequest(ip string) {
 	tt.Log(reply)
 }
 
-func TestDualStackListener_GrpcClientIPv4(t *testing.T) {
+func TestGrpcClientIPv4(t *testing.T) {
 	tt = t
 	gRPCRequest(net.JoinHostPort(IPv4, Port))
 }
 
-func TestDualStackListener_GrpcClientIPv6(t *testing.T) {
+func TestGrpcClientIPv6(t *testing.T) {
 	tt = t
 	gRPCRequest(net.JoinHostPort(IPv6, Port))
 }
