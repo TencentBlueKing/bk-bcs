@@ -458,6 +458,7 @@ func getNodeInfoFromTemplate(nodeGroup cloudprovider.NodeGroup, daemonsets []*ap
 
 // filterOutNodesFromNotAutoscaledGroups return subset of input nodes for which cloud provider does not
 // return autoscaled node group.
+// NOCC:tosa/fn_length(设计如此)
 func filterOutNodesFromNotAutoscaledGroups(nodes []*apiv1.Node, cloudProvider cloudprovider.CloudProvider) (
 	[]*apiv1.Node, errors.AutoscalerError) {
 	result := make([]*apiv1.Node, 0)

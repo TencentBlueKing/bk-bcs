@@ -54,6 +54,7 @@ var (
 	name            = flag.String("name", "", "name of this pod")
 )
 
+// testConfig config of test
 type testConfig struct {
 	desiredReplicas int32
 	client          kubernetes.Interface
@@ -62,6 +63,7 @@ type testConfig struct {
 	podTemplateSpec v1.PodTemplateSpec
 }
 
+// newConfig news testConfig
 func newConfig() *testConfig {
 	kubeConfig, err := restclient.InClusterConfig()
 	if err != nil {
@@ -100,6 +102,7 @@ func newConfig() *testConfig {
 	}
 }
 
+// produceName produce name
 func (tc *testConfig) produceName() {
 	name := fmt.Sprintf("ca-%v", string(uuid.NewUUID()))
 	tc.name = name
@@ -180,6 +183,7 @@ func (tc *testConfig) ScaleDownWorkLoad(deploy *appsv1.Deployment, lister v12.No
 	return nil
 }
 
+// changeScale change scale
 func (tc *testConfig) changeScale(deploy *appsv1.Deployment, desired int32) error {
 	return wait.PollImmediate(1*time.Second, 5*time.Second, func() (done bool, err error) {
 		scale, err := tc.client.AppsV1().Deployments(deploy.Namespace).GetScale(context.TODO(), deploy.Name, metav1.GetOptions{})
@@ -271,6 +275,7 @@ func (tc *testConfig) ReconcileScaleDown(lister v12.NodeLister, desired int) boo
 	return len(nodes) <= desired
 }
 
+// getNodeCount return count of nodes
 func (tc *testConfig) getNodeCount(lister v12.NodeLister) int {
 	nodes, err := lister.List(labels.Everything())
 	if err != nil {

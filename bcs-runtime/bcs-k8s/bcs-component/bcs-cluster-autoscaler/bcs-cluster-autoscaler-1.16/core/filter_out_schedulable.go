@@ -33,6 +33,7 @@ import (
 type filterOutSchedulablePodListProcessor struct{}
 
 // NewFilterOutSchedulablePodListProcessor creates a PodListProcessor filtering out schedulable pods
+// NOCC:golint/ret(设计如此),tosa/fn_length(设计如此)
 func NewFilterOutSchedulablePodListProcessor() pods.PodListProcessor {
 	return &filterOutSchedulablePodListProcessor{}
 }

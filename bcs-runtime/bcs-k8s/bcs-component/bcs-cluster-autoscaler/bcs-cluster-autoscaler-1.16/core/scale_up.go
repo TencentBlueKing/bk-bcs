@@ -696,6 +696,7 @@ type podsPredicatePassingCheckFunctions struct {
 }
 
 // getPodsPredicatePassingCheckFunctions returns PodsPredicatePassingCheckFunctions
+// NOCC:tosa/fn_length(设计如此)
 func getPodsPredicatePassingCheckFunctions(
 	context *context.AutoscalingContext,
 	unschedulablePods []*apiv1.Pod,

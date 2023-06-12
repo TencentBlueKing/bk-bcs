@@ -33,6 +33,8 @@ source:
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22/go.mod"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/go.mod"
+      - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22/cloudprovider/bcs/clustermanager/clustermanager.pb.go"
+      - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/cloudprovider/bcs/clustermanager/clustermanager.pb.go"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-csi-tencentcloud/driver/cbs/controller.go"
       - ".*/bcs-runtime/bcs-k8s/kubedeprecated/.*"
       - ".*/bcs-runtime/bcs-k8s/kubernetes/.*"
