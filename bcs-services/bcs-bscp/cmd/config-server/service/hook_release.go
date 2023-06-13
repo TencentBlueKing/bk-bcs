@@ -216,6 +216,7 @@ func (s *Service) UpdateHookRelease(ctx context.Context, req *pbcs.UpdateHookRel
 		return nil, err
 	}
 
+	contentBase64 := base64.StdEncoding.EncodeToString([]byte(req.Content))
 	r := &pbds.UpdateHookReleaseReq{
 		Id: req.ReleaseId,
 		Attachment: &pbhr.HookReleaseAttachment{
@@ -224,7 +225,7 @@ func (s *Service) UpdateHookRelease(ctx context.Context, req *pbcs.UpdateHookRel
 		},
 		Spec: &pbhr.HookReleaseSpec{
 			Name:    req.Name,
-			Content: req.Content,
+			Content: contentBase64,
 			Memo:    req.Memo,
 		},
 	}
