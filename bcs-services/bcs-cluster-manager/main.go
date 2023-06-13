@@ -122,9 +122,9 @@ func main() {
 
 	clusterManager := app.NewClusterManager(opt)
 	if err := clusterManager.Init(); err != nil {
-		blog.Fatalf("init cluster manager failed, err %s", err.Error())
+		blog.Fatalf("init cluster manager failed, err: %s", err.Error())
 	}
 	if err := clusterManager.Run(); err != nil {
-		blog.Fatalf("run cluster manager failed, err %s", err.Error())
+		blog.Fatalf("run cluster manager failed, err: %s", err.Error())
 	}
 }
