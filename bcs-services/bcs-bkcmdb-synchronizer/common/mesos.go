@@ -67,7 +67,7 @@ func ConvertMesosPod(mesosPod *commtypes.BcsPodStatus) (*Pod, error) {
 		newPod.PodLabels = "{}"
 	}
 
-	// TODO: to fullfill annotations
+	// to fulfill annotations in future
 	newPod.PodAnnotations = "{}"
 
 	newPod.PodIP = mesosPod.PodIP

@@ -14,9 +14,11 @@
 package api
 
 import (
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/pkg/errors"
 )
 
 // getAuthorizer get azure authorizer
@@ -31,4 +33,15 @@ func getAuthorizer(tenantID, clientID, clientSecret string) (autorest.Authorizer
 		return nil, err
 	}
 	return autorest.NewBearerAuthorizer(spToken), nil
+}
+
+// getClientCredential crate azure SDK authorizer
+func getClientCredential(tenantID, clientID, clientSecret string) (*azidentity.ClientSecretCredential, error) {
+	credential, err := azidentity.NewClientSecretCredential(tenantID, clientID, clientSecret,
+		&azidentity.ClientSecretCredentialOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to obtain a credential,tenantID:%s,clientID:%s,clientSecret:%s",
+			tenantID, clientID, clientSecret)
+	}
+	return credential, nil
 }

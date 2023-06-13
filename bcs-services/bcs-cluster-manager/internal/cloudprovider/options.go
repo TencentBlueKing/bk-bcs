@@ -14,30 +14,7 @@
 package cloudprovider
 
 import (
-	"errors"
-
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-)
-
-var (
-	// ErrCloudCredentialLost credential lost in option
-	ErrCloudCredentialLost = errors.New("credential info lost")
-	// ErrCloudRegionLost region information lost in option
-	ErrCloudRegionLost = errors.New("region info lost")
-	// ErrCloudLostResponse lost response information in cloud response
-	ErrCloudLostResponse = errors.New("lost response information")
-	// ErrCloudNoHost no specified instance
-	ErrCloudNoHost = errors.New("no such host in region")
-	// ErrCloudNoProvider no specified cloud provider
-	ErrCloudNoProvider = errors.New("no such cloudprovider")
-	// ErrCloudNotImplemented no implementation
-	ErrCloudNotImplemented = errors.New("not implemented")
-	// ErrCloudInitFailed init failed
-	ErrCloudInitFailed = errors.New("failed to init cloud client")
-	// ErrServerIsNil server nil
-	ErrServerIsNil = errors.New("server is nil")
-	// ErrCloudNodeVPCDiffWithClusterResponse for node VPC different cluster VPC
-	ErrCloudNodeVPCDiffWithClusterResponse = "node[%s] VPC is different from cluster VPC"
 )
 
 const (

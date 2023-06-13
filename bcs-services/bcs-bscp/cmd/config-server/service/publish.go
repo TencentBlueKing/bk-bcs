@@ -15,13 +15,11 @@ package service
 import (
 	"context"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/types"
 )
 
 // Publish publish a strategy
@@ -44,11 +42,12 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 		ReleaseId: req.ReleaseId,
 		Memo:      req.Memo,
 		All:       req.All,
+		Default:   req.Default,
 		Groups:    req.Groups,
 	}
 	rp, err := s.client.DS.Publish(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("publish failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -58,71 +57,36 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 	return resp, nil
 }
 
-// FinishPublish finish the published strategy
-func (s *Service) FinishPublish(ctx context.Context, req *pbcs.FinishPublishReq) (
-	*pbcs.FinishPublishResp, error) {
+// GenerateReleaseAndPublish generate release and publish
+func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbcs.GenerateReleaseAndPublishReq) (
+	*pbcs.PublishResp, error) {
 
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.FinishPublishResp)
+	resp := new(pbcs.PublishResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.FinishPublish,
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Strategy, Action: meta.Publish,
 		ResourceID: req.AppId}, BizID: req.BizId}
 	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
 	if err != nil {
 		return nil, err
 	}
 
-	r := &pbds.FinishPublishReq{
-		BizId:      req.BizId,
-		AppId:      req.AppId,
-		StrategyId: req.Id,
+	r := &pbds.GenerateReleaseAndPublishReq{
+		BizId:       req.BizId,
+		AppId:       req.AppId,
+		ReleaseName: req.ReleaseName,
+		ReleaseMemo: req.ReleaseMemo,
+		All:         req.All,
+		Groups:      req.Groups,
 	}
-	_, err = s.client.DS.FinishPublish(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.GenerateReleaseAndPublish(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("finish publish strategy failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("generate release and publish failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	return resp, nil
-}
-
-// ListPublishedStrategyHistories list the published strategy histories.
-func (s *Service) ListPublishedStrategyHistories(ctx context.Context, req *pbcs.ListPubStrategyHistoriesReq) (
-	*pbcs.ListPubStrategyHistoriesResp, error) {
-
-	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListPubStrategyHistoriesResp)
-
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.PSH, Action: meta.Find,
-		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res)
-	if err != nil {
-		return nil, err
-	}
-
-	if req.Page == nil {
-		return nil, errf.New(errf.InvalidParameter, "page is null")
-	}
-
-	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
-		return nil, err
-	}
-
-	r := &pbds.ListPubStrategyHistoriesReq{
-		BizId:  req.BizId,
-		AppId:  req.AppId,
-		Filter: req.Filter,
-		Page:   req.Page,
-	}
-	rp, err := s.client.DS.ListPublishedStrategyHistories(grpcKit.RpcCtx(), r)
-	if err != nil {
-		logs.Errorf("list published strategy histories failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	resp = &pbcs.ListPubStrategyHistoriesResp{
-		Count:   rp.Count,
-		Details: rp.Details,
+	resp = &pbcs.PublishResp{
+		Id: rp.PublishedStrategyHistoryId,
 	}
 	return resp, nil
 }

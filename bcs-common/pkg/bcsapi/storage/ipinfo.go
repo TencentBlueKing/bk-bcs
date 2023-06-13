@@ -13,29 +13,6 @@
 
 package storage
 
-/*
-  {
-    "active": [
-      "127.0.0.2"
-    ],
-    "available": [
-      "127.0.0.3",
-    ],
-    "cluster": "BCS-MESOS-00001",
-    "created": "2018-11-21 15:01:35",
-    "gateway": "127.0.0.1",
-    "hosts": [
-      "127.0.0.1"
-    ],
-    "mask": 21,
-    "net": "127.0.0.0",
-    "reserved": [
-      "127.0.0.245"
-    ],
-    "update": "2018-11-21 15:01:35"
-  }
-*/
-
 // IPPoolDetailResponse response from storage
 type IPPoolDetailResponse struct {
 	ID         string    `json:"_id"`

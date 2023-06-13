@@ -81,6 +81,12 @@ func NewBCSProjectEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		&api.Endpoint{
+			Name:    "BCSProject.ListProjectsForIAM",
+			Path:    []string{"/bcsproject/v1/projects_for_iam"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -93,6 +99,7 @@ type BCSProjectService interface {
 	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...client.CallOption) (*ProjectResponse, error)
 	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...client.CallOption) (*ListProjectsResponse, error)
 	ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, opts ...client.CallOption) (*ListAuthorizedProjResp, error)
+	ListProjectsForIAM(ctx context.Context, in *ListProjectsForIAMReq, opts ...client.CallOption) (*ListProjectsForIAMResp, error)
 }
 
 type bCSProjectService struct {
@@ -167,6 +174,16 @@ func (c *bCSProjectService) ListAuthorizedProjects(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *bCSProjectService) ListProjectsForIAM(ctx context.Context, in *ListProjectsForIAMReq, opts ...client.CallOption) (*ListProjectsForIAMResp, error) {
+	req := c.c.NewRequest(c.name, "BCSProject.ListProjectsForIAM", in)
+	out := new(ListProjectsForIAMResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for BCSProject service
 
 type BCSProjectHandler interface {
@@ -176,6 +193,7 @@ type BCSProjectHandler interface {
 	DeleteProject(context.Context, *DeleteProjectRequest, *ProjectResponse) error
 	ListProjects(context.Context, *ListProjectsRequest, *ListProjectsResponse) error
 	ListAuthorizedProjects(context.Context, *ListAuthorizedProjReq, *ListAuthorizedProjResp) error
+	ListProjectsForIAM(context.Context, *ListProjectsForIAMReq, *ListProjectsForIAMResp) error
 }
 
 func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...server.HandlerOption) error {
@@ -186,6 +204,7 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		DeleteProject(ctx context.Context, in *DeleteProjectRequest, out *ProjectResponse) error
 		ListProjects(ctx context.Context, in *ListProjectsRequest, out *ListProjectsResponse) error
 		ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, out *ListAuthorizedProjResp) error
+		ListProjectsForIAM(ctx context.Context, in *ListProjectsForIAMReq, out *ListProjectsForIAMResp) error
 	}
 	type BCSProject struct {
 		bCSProject
@@ -230,6 +249,12 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProject.ListProjectsForIAM",
+		Path:    []string{"/bcsproject/v1/projects_for_iam"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&BCSProject{h}, opts...))
 }
 
@@ -259,6 +284,10 @@ func (h *bCSProjectHandler) ListProjects(ctx context.Context, in *ListProjectsRe
 
 func (h *bCSProjectHandler) ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, out *ListAuthorizedProjResp) error {
 	return h.BCSProjectHandler.ListAuthorizedProjects(ctx, in, out)
+}
+
+func (h *bCSProjectHandler) ListProjectsForIAM(ctx context.Context, in *ListProjectsForIAMReq, out *ListProjectsForIAMResp) error {
+	return h.BCSProjectHandler.ListProjectsForIAM(ctx, in, out)
 }
 
 // Api Endpoints for Business service

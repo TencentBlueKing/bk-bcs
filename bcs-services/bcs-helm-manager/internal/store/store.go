@@ -35,6 +35,9 @@ type HelmManagerModel interface {
 	// GetRepository 根据主键查询仓库信息
 	GetRepository(ctx context.Context, projectID, name string) (*entity.Repository, error)
 
+	// GetProjectRepository 查询仓库信息，如果是公共仓库则直接拼装
+	GetProjectRepository(ctx context.Context, projectID, name string) (*entity.Repository, error)
+
 	// ListRepository 根据条件查询仓库列表
 	// 其中分页配置详见 utils.ListOption, 采用 page + size 的模式
 	ListRepository(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (

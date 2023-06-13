@@ -44,6 +44,9 @@ export LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.Zo
 export PACKAGEPATH=./build/bcs.${VERSION}
 export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 
+# bscp 应用自定义
+export BSCP_LDFLAG=-ldflags "-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} -X bscp.io/pkg/version.GITHASH=${GITHASH}"
+
 # options
 default:bcs-runtime bcs-scenarios bcs-services #TODO: bcs-resources
 
@@ -301,6 +304,19 @@ monitor:pre
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-monitor ${PACKAGEPATH}/bcs-services
 	cd bcs-services/bcs-monitor/ && go mod tidy -compat=1.17 && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-monitor/bcs-monitor ./cmd/bcs-monitor
 
+bscp:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bscp
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bscp ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-bscp && cd ui && npm install && npm run build && cd ../ && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bscp-ui ./cmd/ui
+	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-apiserver ./cmd/api-server
+	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-authserver ./cmd/auth-server
+	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-configserver ./cmd/config-server
+	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-dataservice ./cmd/data-service
+	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-feedserver ./cmd/feed-server
+	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-cacheservice ./cmd/cache-service
+	# alias docker image name to bk-bscp-hyper
+	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && ls -la ${PACKAGEPATH}/bcs-services/bcs-bscp/hyper
+
 k8s-watch:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-k8s-watch ${PACKAGEPATH}/bcs-services
@@ -332,9 +348,11 @@ general-pod-autoscaler:pre
 	cd ${BCS_COMPONENT_PATH}/bcs-general-pod-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/bcs-general-pod-autoscaler ./cmd/gpa/main.go
 
 cluster-autoscaler:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-cluster-autoscaler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler ./main.go
+	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16 && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/hyper/bcs-cluster-autoscaler-1.16 ./main.go
+	cd ${BCS_COMPONENT_PATH}/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22 && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/hyper/bcs-cluster-autoscaler-1.22 ./main.go
+	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler && ls -la ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/hyper
 
 # network plugins section
 networkpolicy:pre

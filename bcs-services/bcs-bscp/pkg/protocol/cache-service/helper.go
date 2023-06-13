@@ -29,19 +29,6 @@ func (m BenchAppMetaReq) Validate() error {
 	return nil
 }
 
-// Validate BenchAppCRIMetaReq.
-func (m BenchAppCRIMetaReq) Validate() error {
-	if m.BizId == 0 {
-		return errf.New(errf.InvalidParameter, "invalid biz_id, biz_id should > 0")
-	}
-
-	if m.AppId == 0 {
-		return errf.New(errf.InvalidParameter, "invalid app_id, app_id should > 0")
-	}
-
-	return nil
-}
-
 // Validate BenchReleasedCIReq.
 func (m BenchReleasedCIReq) Validate() error {
 	if m.BizId == 0 {
@@ -50,19 +37,6 @@ func (m BenchReleasedCIReq) Validate() error {
 
 	if m.ReleaseId == 0 {
 		return errf.New(errf.InvalidParameter, "invalid release_id, release_id should > 0")
-	}
-
-	return nil
-}
-
-// Validate BenchAppCPSReq.
-func (m BenchAppCPSReq) Validate() error {
-	if m.BizId == 0 {
-		return errf.New(errf.InvalidParameter, "invalid biz_id, biz_id should > 0")
-	}
-
-	if m.AppId == 0 {
-		return errf.New(errf.InvalidParameter, "invalid app_id, app_id should > 0")
 	}
 
 	return nil

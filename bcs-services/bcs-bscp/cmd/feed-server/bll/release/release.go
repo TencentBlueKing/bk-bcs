@@ -23,6 +23,7 @@ import (
 	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/kit"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	"bscp.io/pkg/thirdparty/repo"
@@ -84,15 +85,16 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 	ciList := make([]*types.ReleasedCIMeta, len(rci))
 	for idx, one := range rci {
 		ciList[idx] = &types.ReleasedCIMeta{
-			RciId: one.ID,
-			CommitSpec: &types.CommitSpec{
+			RciId:    one.ID,
+			CommitID: one.CommitID,
+			CommitSpec: &pbcommit.CommitSpec{
 				ContentId: one.CommitSpec.ContentID,
 				Content: &pbcontent.ContentSpec{
 					Signature: one.CommitSpec.Signature,
 					ByteSize:  one.CommitSpec.ByteSize,
 				},
 			},
-			ConfigItemSpec: &types.ConfigItemSpec{
+			ConfigItemSpec: &pbci.ConfigItemSpec{
 				Name:     one.ConfigItemSpec.Name,
 				Path:     one.ConfigItemSpec.Path,
 				FileType: string(one.ConfigItemSpec.FileType),
@@ -102,6 +104,10 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 					UserGroup: one.ConfigItemSpec.Permission.UserGroup,
 					Privilege: one.ConfigItemSpec.Permission.Privilege,
 				},
+			},
+			ConfigItemAttachment: &pbci.ConfigItemAttachment{
+				BizId: one.Attachment.AppID,
+				AppId: one.Attachment.AppID,
 			},
 			RepositorySpec: &types.RepositorySpec{Path: uriDec.Path(one.CommitSpec.Signature)},
 		}

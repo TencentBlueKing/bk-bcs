@@ -319,6 +319,7 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 
 // ListNodesInClusterNodePool list nodeGroup nodes
 func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, error) {
+	goodNodes := make([]*proto.Node, 0)
 	condM := make(operator.M)
 	condM["nodegroupid"] = nodePoolID
 	condM["clusterid"] = clusterID
@@ -330,9 +331,6 @@ func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, er
 	}
 
 	// sum running & creating nodes, these status are ready to serve workload
-	var (
-		goodNodes []*proto.Node
-	)
 	for _, node := range nodes {
 		if node.Status == common.StatusRunning || node.Status == common.StatusInitialization {
 			goodNodes = append(goodNodes, node)
@@ -381,6 +379,7 @@ func UpdateNodeGroupDesiredSize(groupID string, nodeNum int, scaleOut bool) erro
 	}
 
 	if scaleOut {
+		// 扩容失败
 		if group.AutoScaling.DesiredSize >= uint32(nodeNum) {
 			group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize - uint32(nodeNum)
 		} else {

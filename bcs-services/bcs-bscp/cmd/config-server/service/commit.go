@@ -27,12 +27,12 @@ import (
 
 // CreateCommit create commit with options
 func (s *Service) CreateCommit(ctx context.Context, req *pbcs.CreateCommitReq) (*pbcs.CreateCommitResp, error) {
-	kit := kit.FromGrpcContext(ctx)
+	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateCommitResp)
 
 	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Commit, Action: meta.Create,
 		ResourceID: req.AppId}, BizID: req.BizId}
-	err := s.authorizer.AuthorizeWithResp(kit, resp, authRes)
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +46,9 @@ func (s *Service) CreateCommit(ctx context.Context, req *pbcs.CreateCommitReq) (
 		ContentId: req.ContentId,
 		Memo:      req.Memo,
 	}
-	rp, err := s.client.DS.CreateCommit(kit.RpcCtx(), r)
+	rp, err := s.client.DS.CreateCommit(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("create commit failed, err: %v, rid: %s", err, kit.Rid)
+		logs.Errorf("create commit failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

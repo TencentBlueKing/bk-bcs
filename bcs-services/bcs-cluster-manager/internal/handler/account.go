@@ -80,7 +80,7 @@ func (cm *ClusterManager) ListCloudAccount(ctx context.Context,
 	ca := account.NewListAction(cm.model, cm.iam)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudAccount", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudAccount, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListCloudAccount, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudAccount, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -97,7 +97,7 @@ func (cm *ClusterManager) ListCloudAccountToPerm(ctx context.Context,
 	ca := account.NewListPermAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudAccountToPerm", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudAccountToPerm, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListCloudAccountToPerm, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudAccountToPerm, req %v, resp %v", reqID, req, resp)
 	return nil

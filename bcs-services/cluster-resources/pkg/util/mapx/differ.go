@@ -70,12 +70,21 @@ func NewDiffRet(action string, nodes []Node, old, new interface{}) DiffRet {
 		case NodeTypeKey:
 			// 若 key 中包含 `.`，这添加小括号以区分
 			if strings.Contains(n.Key, ".") {
-				b.WriteString(".(" + n.Key + ")")
+				_, err := b.WriteString(".(" + n.Key + ")")
+				if err != nil {
+					continue
+				}
 			} else {
-				b.WriteString("." + n.Key)
+				_, err := b.WriteString("." + n.Key)
+				if err != nil {
+					continue
+				}
 			}
 		case NodeTypeIndex:
-			b.WriteString("[" + n.Index + "]")
+			_, err := b.WriteString("[" + n.Index + "]")
+			if err != nil {
+				continue
+			}
 		}
 	}
 	dotted := strings.Trim(b.String(), ".")

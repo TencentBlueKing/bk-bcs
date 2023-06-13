@@ -24,5 +24,12 @@ spec:
             - '-c'
           args:
             - start_train.sh
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
       nodeSelector:
         beta.amd.com/gpu.family.AI: "1"

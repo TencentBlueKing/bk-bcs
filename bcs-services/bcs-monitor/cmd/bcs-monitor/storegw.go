@@ -31,6 +31,7 @@ import (
 	grpcserver "github.com/thanos-io/thanos/pkg/server/grpc"
 	httpserver "github.com/thanos-io/thanos/pkg/server/http"
 	"github.com/thanos-io/thanos/pkg/store"
+	"google.golang.org/grpc"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
@@ -64,9 +65,11 @@ func StoreGWCmd() *cobra.Command {
 	return cmd
 }
 
+// runStoreGW
 func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	kitLogger := gokit.NewLogger(logger.StandardLogger())
-	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, grpcAdvertiseIP, grpcAdvertisePortRangeStr, config.G.StoreGWList, storegw.GetStoreSvr)
+	gw, err := storegw.NewStoreGW(ctx, kitLogger, opt.reg, grpcAdvertiseIP, grpcAdvertisePortRangeStr,
+		config.G.StoreGWList, storegw.GetStoreSvr)
 	if err != nil {
 		return err
 	}
@@ -78,7 +81,8 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 		httpProbe := prober.NewHTTP()
 		statusProber := prober.Combine(
 			httpProbe,
-			prober.NewInstrumentation(component.Store, kitLogger, extprom.WrapRegistererWithPrefix("bcsmonitor_", opt.reg)),
+			prober.NewInstrumentation(component.Store, kitLogger,
+				extprom.WrapRegistererWithPrefix("bcsmonitor_", opt.reg)),
 		)
 
 		httpSrv := httpserver.New(kitLogger, opt.reg, component.Store, httpProbe,
@@ -105,7 +109,8 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	// Periodically update the store set with the addresses we see in our cluster.
 	var endpoints *query.EndpointSet
 	{
-		dialOpts, err := extgrpc.StoreClientGRPCOpts(kitLogger, opt.reg, opt.tracer, false, false, "", "", "", "")
+		var dialOpts []grpc.DialOption
+		dialOpts, err = extgrpc.StoreClientGRPCOpts(kitLogger, opt.reg, opt.tracer, false, false, "", "", "", "")
 		if err != nil {
 			return errors.Wrap(err, "building gRPC client")
 		}
@@ -120,7 +125,8 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 			time.Second*30,
 		)
 
-		ctx, cancel := context.WithCancel(ctx)
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithCancel(ctx)
 		g.Add(func() error {
 			return runutil.Repeat(5*time.Second, ctx.Done(), func() error {
 				endpoints.Update(ctx)
@@ -133,29 +139,7 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	}
 
 	// proxyStore grpc 服务
-	{
-
-		proxyStore := store.NewProxyStore(kitLogger, opt.reg, endpoints.GetStoreClients, component.Query, nil, time.Minute*2)
-		grpcProbe := prober.NewGRPC()
-		grpcSrv := grpcserver.New(kitLogger, opt.reg, nil, nil, nil, component.Store, grpcProbe,
-			grpcserver.WithServer(store.RegisterStoreServer(proxyStore)),
-			grpcserver.WithListen(utils.GetListenAddr(bindAddress, grpcPort)),
-			grpcserver.WithGracePeriod(time.Duration(0)),
-			grpcserver.WithMaxConnAge(time.Minute*5), // 5分钟主动重连, pod 扩容等需要
-		)
-
-		g.Add(func() error {
-			grpcProbe.Healthy()
-			grpcProbe.Ready()
-
-			return grpcSrv.ListenAndServe()
-		}, func(err error) {
-			defer grpcProbe.NotHealthy(err)
-			defer grpcProbe.NotReady(err)
-
-			grpcSrv.Shutdown(err)
-		})
-	}
+	registryProxyStore(g, kitLogger, opt, endpoints)
 
 	// 自定义 store grpc 服务
 	{
@@ -169,4 +153,30 @@ func runStoreGW(ctx context.Context, g *run.Group, opt *option) error {
 	bcs.CacheListClusters()
 
 	return err
+}
+
+// registryProxyStore registry proxy store
+func registryProxyStore(g *run.Group, kitLogger gokit.Logger, opt *option, endpoints *query.EndpointSet) {
+
+	proxyStore := store.NewProxyStore(kitLogger, opt.reg, endpoints.GetStoreClients, component.Query, nil,
+		time.Minute*2)
+	grpcProbe := prober.NewGRPC()
+	grpcSrv := grpcserver.New(kitLogger, opt.reg, nil, nil, nil, component.Store, grpcProbe,
+		grpcserver.WithServer(store.RegisterStoreServer(proxyStore)),
+		grpcserver.WithListen(utils.GetListenAddr(bindAddress, grpcPort)),
+		grpcserver.WithGracePeriod(time.Duration(0)),
+		grpcserver.WithMaxConnAge(time.Minute*5), // 5分钟主动重连, pod 扩容等需要
+	)
+
+	g.Add(func() error {
+		grpcProbe.Healthy()
+		grpcProbe.Ready()
+
+		return grpcSrv.ListenAndServe()
+	}, func(err error) {
+		defer grpcProbe.NotHealthy(err)
+		defer grpcProbe.NotReady(err)
+
+		grpcSrv.Shutdown(err)
+	})
 }

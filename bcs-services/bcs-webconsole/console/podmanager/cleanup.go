@@ -66,7 +66,8 @@ func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 	}
 
 	// 同步集群信息
-	if err := p.redisClient.ZAdd(p.ctx, p.clusterKey, &redis.Z{Score: float64(now), Member: podCtx.AdminClusterId}).Err(); err != nil {
+	err := p.redisClient.ZAdd(p.ctx, p.clusterKey, &redis.Z{Score: float64(now), Member: podCtx.AdminClusterId}).Err()
+	if err != nil {
 		return err
 	}
 
@@ -124,7 +125,8 @@ func (p *CleanUpManager) CleanupRes() error {
 }
 
 // cleanUserPodByCluster 清理用户下的相关集群pod
-func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string, alivePodMap map[string]struct{}) error {
+func (p *CleanUpManager) cleanUserPodByCluster(clusterId string, namespace string,
+	alivePodMap map[string]struct{}) error {
 	k8sClient, err := k8sclient.GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return err

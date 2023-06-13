@@ -22,7 +22,6 @@ import (
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
 	pbas "bscp.io/pkg/protocol/auth-server"
-	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/thirdparty/repo"
 )
 
@@ -31,21 +30,16 @@ const (
 	RepoRecordCacheExpiration = time.Hour
 )
 
-// FileApiType
+// FileApiType file api type
 type FileApiType interface {
 	DownloadFile(w http.ResponseWriter, r *http.Request)
 	FileMetadata(w http.ResponseWriter, r *http.Request)
 	UploadFile(w http.ResponseWriter, r *http.Request)
 }
 
-// DownloadFile
+// DownloadFile download file
 func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := s.authorize(kt, r)
 	if needReturn {
@@ -88,14 +82,9 @@ func (s S3Client) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, reader)
 }
 
-// UploadFile
+// UploadFile upload file
 func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := s.authorize(kt, r)
 	if needReturn {
@@ -163,12 +152,7 @@ func (s S3Client) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 // FileMetadata get s3 head data
 func (s S3Client) FileMetadata(w http.ResponseWriter, r *http.Request) {
-	kt, err := gwparser.Parse(r.Context(), r.Header)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, errf.Error(err).Error())
-		return
-	}
+	kt := kit.MustGetKit(r.Context())
 
 	authRes, needReturn := s.authorize(kt, r)
 	if needReturn {
@@ -212,7 +196,7 @@ type ResponseBody struct {
 	Message string
 }
 
-// S3Client
+// S3Client s3 client struct
 type S3Client struct {
 	// repoCli s3 client.
 	s3Cli *repo.ClientS3
@@ -257,7 +241,7 @@ type AuthResp struct {
 	Permission *pbas.IamPermission `json:"permission,omitempty"`
 }
 
-// NewS3Service
+// NewS3Service new s3 service
 func NewS3Service(settings cc.Repository, authorizer auth.Authorizer) (FileApiType, error) {
 	s3Client, err := repo.NewClientS3(&settings, metrics.Register())
 	if err != nil {

@@ -25,7 +25,7 @@ import (
 )
 
 // 从 manifest 生成 selectItem，部分资源在某些场景下，需要调整 label, disabled，tips 的属性
-// TODO 如果后续需要特殊处理的资源类型增多，可以考虑参考 formatter 抽离逻辑
+// 如果后续需要特殊处理的资源类型增多，可以考虑参考 formatter 抽离逻辑
 func genSelectItem(ctx context.Context, manifest map[string]interface{}, kind, scene string) map[string]interface{} {
 	name := mapx.GetStr(manifest, "metadata.name")
 	label, disabled, tips := name, false, ""

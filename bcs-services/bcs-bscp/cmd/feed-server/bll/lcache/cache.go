@@ -28,19 +28,21 @@ func NewLocalCache(cs *clientset.ClientSet) (*Cache, error) {
 	mc := initMetric()
 
 	return &Cache{
-		App:        newApp(mc, cs),
-		ReleasedCI: newReleasedCI(mc, cs),
-		Strategy:   newStrategy(mc, cs),
-		Auth:       newAuth(mc, cs.Authorizer()),
+		App:           newApp(mc, cs),
+		ReleasedCI:    newReleasedCI(mc, cs),
+		ReleasedGroup: newReleasedGroup(mc, cs),
+		Credential:    newCredential(mc, cs),
+		Auth:          newAuth(mc, cs.Authorizer()),
 	}, nil
 }
 
 // Cache defines a cache instance.
 type Cache struct {
-	App        *App
-	ReleasedCI *ReleasedCI
-	Strategy   *Strategy
-	Auth       *Auth
+	App           *App
+	ReleasedCI    *ReleasedCI
+	ReleasedGroup *ReleasedGroup
+	Credential    *Credential
+	Auth          *Auth
 }
 
 // Purge is used to clean the resource's cache with events.
@@ -60,12 +62,11 @@ func (c *Cache) Purge(kt *kit.Kit, es []*types.EventMeta) {
 		case table.Publish:
 			switch one.Spec.OpType {
 			case table.InsertOp, table.DeleteOp:
+				c.ReleasedGroup.client.Purge()
 			default:
 				logs.V(1).Infof("skip publish strategy event op, %s, rid: %s", formatEvent(one), kt.Rid)
 				continue
 			}
-
-		case table.PublishInstance:
 
 		case table.Application:
 			switch one.Spec.OpType {
@@ -75,6 +76,15 @@ func (c *Cache) Purge(kt *kit.Kit, es []*types.EventMeta) {
 				c.App.delete(one.Attachment.AppID)
 			default:
 				logs.V(1).Infof("skip app event op, %s, rid: %s", formatEvent(one), kt.Rid)
+				continue
+			}
+
+		case table.EventResource(table.CredentialTable):
+			switch one.Spec.OpType {
+			case table.UpdateOp, table.DeleteOp:
+				c.Auth.client.Purge()
+			default:
+				logs.V(1).Infof("skip credential event op, %s, rid: %s", formatEvent(one), kt.Rid)
 				continue
 			}
 

@@ -69,7 +69,7 @@ func (d *DownloadChartAction) downloadChart() error {
 	version := d.req.GetVersion()
 	username := auth.GetUserFromCtx(d.ctx)
 
-	repository, err := d.model.GetRepository(d.ctx, projectCode, repoName)
+	repository, err := d.model.GetProjectRepository(d.ctx, projectCode, repoName)
 	if err != nil {
 		blog.Errorf("download chart failed, %s, "+
 			"projectCode: %s, repository: %s, chartName: %s, version: %s, operator: %s",

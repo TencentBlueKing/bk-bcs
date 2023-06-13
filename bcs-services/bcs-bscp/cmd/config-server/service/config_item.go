@@ -14,7 +14,6 @@ package service
 
 import (
 	"context"
-	"strconv"
 
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
@@ -41,11 +40,11 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	}
 	// 1. create config_item
 	cciReq := &pbds.CreateConfigItemReq{
-		Attachment: &pbci.ConfigItemAttachment{
+		ConfigItemAttachment: &pbci.ConfigItemAttachment{
 			BizId: req.BizId,
 			AppId: req.AppId,
 		},
-		Spec: &pbci.ConfigItemSpec{
+		ConfigItemSpec: &pbci.ConfigItemSpec{
 			Name:     req.Name,
 			Path:     req.Path,
 			FileType: req.FileType,
@@ -57,6 +56,10 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 				Privilege: req.Privilege,
 			},
 		},
+		ContentSpec: &pbcontent.ContentSpec{
+			Signature: req.Sign,
+			ByteSize:  req.ByteSize,
+		},
 	}
 	cciResp, err := s.client.DS.CreateConfigItem(grpcKit.RpcCtx(), cciReq)
 	if err != nil {
@@ -64,42 +67,59 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 		return nil, err
 	}
 
-	// 2. create content
-	ccReq := &pbds.CreateContentReq{
-		Attachment: &pbcontent.ContentAttachment{
-			ConfigItemId: cciResp.Id,
-			BizId:        req.BizId,
-			AppId:        req.AppId,
-		},
-		Spec: &pbcontent.ContentSpec{
-			Signature: req.Sign,
-			ByteSize:  req.ByteSize,
-		},
-	}
-	ccResp, err := s.client.DS.CreateContent(grpcKit.RpcCtx(), ccReq)
-	if err != nil {
-		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	// 3. create commit
-	ccmReq := &pbds.CreateCommitReq{
-		Attachment: &pbcommit.CommitAttachment{
-			BizId:        req.BizId,
-			AppId:        req.AppId,
-			ConfigItemId: cciResp.Id,
-		},
-		ContentId: ccResp.Id,
-		Memo:      req.Memo,
-	}
-	_, err = s.client.DS.CreateCommit(grpcKit.RpcCtx(), ccmReq)
-	if err != nil {
-		logs.Errorf("create config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
 	resp = &pbcs.CreateConfigItemResp{
 		Id: cciResp.Id,
+	}
+
+	return resp, nil
+}
+
+// BatchUpsertConfigItems batch upsert config items with option
+func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUpsertConfigItemsReq) (
+	*pbcs.BatchUpsertConfigItemsResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.BatchUpsertConfigItemsResp)
+
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Update,
+		ResourceID: req.AppId}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
+	for _, item := range req.Items {
+		items = append(items, &pbds.BatchUpsertConfigItemsReq_ConfigItem{
+			ConfigItemAttachment: &pbci.ConfigItemAttachment{
+				BizId: req.BizId,
+				AppId: req.AppId,
+			},
+			ConfigItemSpec: &pbci.ConfigItemSpec{
+				Name:     item.Name,
+				Path:     item.Path,
+				FileType: item.FileType,
+				FileMode: item.FileMode,
+				Memo:     item.Memo,
+				Permission: &pbci.FilePermission{
+					User:      item.User,
+					UserGroup: item.UserGroup,
+					Privilege: item.Privilege,
+				},
+			},
+			ContentSpec: &pbcontent.ContentSpec{
+				Signature: item.Sign,
+				ByteSize:  item.ByteSize,
+			},
+		})
+	}
+	buReq := &pbds.BatchUpsertConfigItemsReq{
+		BizId: req.BizId,
+		AppId: req.AppId,
+		Items: items,
+	}
+	if _, e := s.client.DS.BatchUpsertConfigItems(grpcKit.RpcCtx(), buReq); e != nil {
+		logs.Errorf("batch upsert config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
 	}
 
 	return resp, nil
@@ -236,24 +256,20 @@ func (s *Service) GetConfigItem(ctx context.Context, req *pbcs.GetConfigItemReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.GetConfigItemResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
-		return nil, err
-	}
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
-	if err != nil {
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes); err != nil {
 		return nil, err
 	}
 
 	if req.ReleaseId == 0 {
-		return s.getEditingConfigItem(grpcKit, req.ConfigItemId, uint32(bizID), req.AppId)
+		return s.getEditingConfigItem(grpcKit, req.ConfigItemId, grpcKit.BizID, req.AppId)
 	}
 
-	return s.getReleasedConfigItem(grpcKit, req.ConfigItemId, uint32(bizID), req.AppId, req.ReleaseId)
+	return s.getReleasedConfigItem(grpcKit, req.ConfigItemId, grpcKit.BizID, req.AppId, req.ReleaseId)
 
 }
 
+// getEditingConfigItem get edit config item
 func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, appID uint32) (
 	*pbcs.GetConfigItemResp, error) {
 	// 1. get config item
@@ -299,6 +315,7 @@ func (s *Service) getEditingConfigItem(grpcKit *kit.Kit, configItemID, bizID, ap
 	return resp, nil
 }
 
+// getReleasedConfigItem get release config item
 func (s *Service) getReleasedConfigItem(grpcKit *kit.Kit, configItemID, bizID, appID, releaseID uint32) (
 	*pbcs.GetConfigItemResp, error) {
 	// 1. get config item
@@ -332,22 +349,20 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemsResp)
 
-	bizID, err := strconv.Atoi(grpcKit.SpaceID)
-	if err != nil {
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes); err != nil {
 		return nil, err
 	}
-	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.ConfigItem, Action: meta.Find}, BizID: uint32(bizID)}
-	err = s.authorizer.AuthorizeWithResp(grpcKit, resp, authRes)
-	if err != nil {
-		return nil, err
-	}
+
 	// TODO: list latest release and compare each config item exists and latest commit id to get changing status
 	r := &pbds.ListConfigItemsReq{
-		BizId:     uint32(bizID),
+		BizId:     grpcKit.BizID,
 		AppId:     req.AppId,
 		ReleaseId: req.ReleaseId,
 		Start:     req.Start,
 		Limit:     req.Limit,
+		All:       req.All,
+		SearchKey: req.SearchKey,
 	}
 	rp, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), r)
 	if err != nil {
@@ -362,7 +377,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 	return resp, nil
 }
 
-// ListConfigItemCount
+// ListConfigItemCount get config item count number
 func (s *Service) ListConfigItemCount(ctx context.Context, req *pbcs.ListConfigItemCountReq) (*pbcs.ListConfigItemCountResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListConfigItemCountResp)

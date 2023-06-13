@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	gocache "github.com/patrickmn/go-cache"
@@ -35,6 +34,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/listenercontroller"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
@@ -75,12 +75,14 @@ type IngressConverter struct {
 	// cloud e.g. tencentcloud aws gcp
 	cloud string
 
-	listenerHelper *listenerHelper
+	listenerHelper *listenercontroller.ListenerHelper
 }
 
 // NewIngressConverter create ingress generator
 func NewIngressConverter(opt *IngressConverterOpt,
-	cli client.Client, ingressValidater cloud.Validater, lbClient cloud.LoadBalance) (*IngressConverter, error) {
+	cli client.Client, ingressValidater cloud.Validater, lbClient cloud.LoadBalance,
+	listenerHelper *listenercontroller.ListenerHelper, lbIDCache, lbNameCache *gocache.Cache) (*IngressConverter,
+	error) {
 	if opt == nil {
 		return nil, fmt.Errorf("option cannot be empty")
 	}
@@ -92,9 +94,9 @@ func NewIngressConverter(opt *IngressConverterOpt,
 		ingressValidater:  ingressValidater,
 		lbClient:          lbClient,
 		// set cache expire time
-		lbIDCache:      gocache.New(60*time.Minute, 120*time.Minute),
-		lbNameCache:    gocache.New(60*time.Minute, 120*time.Minute),
-		listenerHelper: newListenerHelper(cli),
+		lbIDCache:      lbIDCache,
+		lbNameCache:    lbNameCache,
+		listenerHelper: listenerHelper,
 	}, nil
 }
 
@@ -414,7 +416,7 @@ func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace st
 		return false, nil
 	}
 
-	g.listenerHelper.setDeleteListeners(append(listenerList, segListenerList...))
+	g.listenerHelper.SetDeleteListeners(append(listenerList, segListenerList...))
 
 	return true, nil
 }
@@ -552,7 +554,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 		}
 
 		switch portMapping.WorkloadKind {
-		case networkextensionv1.WorkloadKindGameStatefulset:
+		case "GameStatefulSet":
 			gsts := &k8sunstruct.Unstructured{}
 			gsts.SetGroupVersionKind(schema.GroupVersionKind{
 				Group:   "tkex.tencent.com",
@@ -572,7 +574,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 					msgSet[fmt.Sprintf(constant.ValidateMsgUnknownErr, err)] = struct{}{}
 				}
 			}
-		case networkextensionv1.WorkloadKindStatefulset:
+		case "StatefulSet":
 			sts := &k8sappsv1.StatefulSet{}
 			err := g.cli.Get(context.TODO(), k8stypes.NamespacedName{
 				Namespace: portMapping.WorkloadNamespace,
@@ -592,7 +594,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 	}
 
 	var msgList []string
-	for msg, _ := range msgSet {
+	for msg := range msgSet {
 		msgList = append(msgList, msg)
 	}
 

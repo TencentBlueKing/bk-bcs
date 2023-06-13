@@ -28,12 +28,21 @@ var (
 		Short: "delete",
 		Long:  "delete resource",
 	}
-	deleteRepositoryCMD = &cobra.Command{
-		Use:     "repository",
-		Aliases: []string{"repo", "rp"},
-		Short:   "delete repository",
-		Long:    "delete repository",
-		Run:     DeleteRepository,
+	deleteChartCMD = &cobra.Command{
+		Use:     "chart",
+		Aliases: []string{"chart", "ch"},
+		Short:   "delete chart",
+		Long:    "delete chart",
+		Run:     DeleteChart,
+		Example: "helmctl delete chart -p <project_code> <chart_name>",
+	}
+	deleteChartVersionCMD = &cobra.Command{
+		Use:     "chartVersion",
+		Aliases: []string{"chart-version", "chv"},
+		Short:   "delete chart version",
+		Long:    "delete chart version",
+		Run:     DeleteChartVersion,
+		Example: "helmctl delete chartVersion -p <project_code> <chart_name> <version>",
 	}
 )
 
@@ -59,9 +68,68 @@ func DeleteRepository(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	deleteCMD.AddCommand(deleteRepositoryCMD)
-	deleteCMD.PersistentFlags().StringVarP(
-		&flagProject, "project", "p", "", "project id for operation")
-	deleteCMD.PersistentFlags().StringVarP(&jsonData, "data", "d", "", "resource json data")
-	deleteCMD.PersistentFlags().StringVarP(&jsonFile, "file", "f", "", "resource json file")
+	deleteCMD.AddCommand(deleteChartCMD)
+	deleteCMD.AddCommand(deleteChartVersionCMD)
+	deleteChartCMD.PersistentFlags().StringVarP(
+		&flagProject, "project", "p", "", "project code")
+	deleteChartVersionCMD.PersistentFlags().StringVarP(
+		&flagProject, "project", "p", "", "project code")
+	deleteChartCMD.MarkPersistentFlagRequired("project")
+	deleteChartCMD.MarkPersistentFlagRequired("repo")
+	deleteChartVersionCMD.MarkPersistentFlagRequired("project")
+	deleteChartVersionCMD.MarkPersistentFlagRequired("repo")
+}
+
+// DeleteChart provide the actions to do deleteChartCMD
+func DeleteChart(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		fmt.Printf("delete chart need specific chart name\n")
+		os.Exit(1)
+	}
+
+	if flagRepository == "" {
+		flagRepository = flagProject
+	}
+	req := &helmmanager.DeleteChartReq{
+		ProjectCode: &flagProject,
+		RepoName:    &flagRepository,
+		Name:        common.GetStringP(args[0]),
+	}
+
+	c := newClientWithConfiguration()
+	if err := c.Chart().DeleteChart(cmd.Context(), req); err != nil {
+		fmt.Printf("delete chart failed, %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	fmt.Printf("success to delete chart %s\n", req.GetName())
+}
+
+// DeleteChartVersion provide the actions to do deleteChartVersionCMD
+func DeleteChartVersion(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		fmt.Printf("delete chart version need specific chart name\n")
+		os.Exit(1)
+	}
+	if len(args) == 1 {
+		fmt.Printf("delete chart version need specific chart version\n")
+		os.Exit(1)
+	}
+	if flagRepository == "" {
+		flagRepository = flagProject
+	}
+	req := &helmmanager.DeleteChartVersionReq{
+		ProjectCode: &flagProject,
+		RepoName:    &flagRepository,
+		Name:        common.GetStringP(args[0]),
+		Version:     common.GetStringP(args[1]),
+	}
+
+	c := newClientWithConfiguration()
+	if err := c.Chart().DeleteChartVersion(cmd.Context(), req); err != nil {
+		fmt.Printf("delete chart version failed, %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	fmt.Printf("success to delete chart version %s\n", req.GetVersion())
 }

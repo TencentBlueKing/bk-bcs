@@ -1,4 +1,4 @@
-import { CONFIG_FILE_TYPE } from '../constants/index'
+import { CONFIG_FILE_TYPE } from '../constants/config'
 
 // 查询配置文件类型名称
 export const getConfigTypeName = (type: string) => {

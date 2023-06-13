@@ -9,6 +9,7 @@ the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
 either express or implied. See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package view
 
 import (
@@ -35,7 +36,7 @@ func (h GenericFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if errors.Is(err, errf.ErrPermissionDenied) {
-			render.Render(w, r, rest.PermissionDenied(err))
+			render.Render(w, r, rest.PermissionDenied(err, nil))
 		} else {
 			render.Render(w, r, rest.BadRequest(err))
 		}

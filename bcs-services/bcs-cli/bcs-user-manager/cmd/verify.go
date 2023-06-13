@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newVerifyCmd create verify command
 func newVerifyCmd() *cobra.Command {
 	verifyCmd := &cobra.Command{
 		Use:   "verify",

@@ -17,9 +17,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
@@ -33,18 +35,20 @@ type ReleaseUpgradeAction struct {
 	platform       repo.Platform
 	releaseHandler release.Handler
 
-	projectCode string
-	projectID   string
-	clusterID   string
-	name        string
-	namespace   string
-	repoName    string
-	chartName   string
-	version     string
-	values      []string
-	args        []string
-	createBy    string
-	updateBy    string
+	projectCode    string
+	projectID      string
+	clusterID      string
+	name           string
+	namespace      string
+	repoName       string
+	chartName      string
+	version        string
+	values         []string
+	args           []string
+	createBy       string
+	updateBy       string
+	AuthUser       string
+	IsShardCluster bool
 
 	contents []byte
 	result   *release.HelmUpgradeResult
@@ -56,18 +60,20 @@ type ReleaseUpgradeActionOption struct {
 	Platform       repo.Platform
 	ReleaseHandler release.Handler
 
-	ProjectCode string
-	ProjectID   string
-	ClusterID   string
-	Name        string
-	Namespace   string
-	RepoName    string
-	ChartName   string
-	Version     string
-	Values      []string
-	Args        []string
-	CreateBy    string
-	UpdateBy    string
+	ProjectCode    string
+	ProjectID      string
+	ClusterID      string
+	Name           string
+	Namespace      string
+	RepoName       string
+	ChartName      string
+	Version        string
+	Values         []string
+	Args           []string
+	CreateBy       string
+	UpdateBy       string
+	AuthUser       string
+	IsShardCluster bool
 }
 
 // NewReleaseUpgradeAction new release upgrade action
@@ -88,6 +94,8 @@ func NewReleaseUpgradeAction(o *ReleaseUpgradeActionOption) *ReleaseUpgradeActio
 		args:           o.Args,
 		createBy:       o.CreateBy,
 		updateBy:       o.UpdateBy,
+		AuthUser:       o.AuthUser,
+		IsShardCluster: o.IsShardCluster,
 	}
 }
 
@@ -103,14 +111,9 @@ func (r *ReleaseUpgradeAction) Name() string {
 	return fmt.Sprintf("upgrade-%s", r.name)
 }
 
-// Validate xxx
-func (r *ReleaseUpgradeAction) Validate() error {
-	return nil
-}
-
 // Prepare xxx
 func (r *ReleaseUpgradeAction) Prepare(ctx context.Context) error {
-	repository, err := r.model.GetRepository(ctx, r.projectCode, r.repoName)
+	repository, err := r.model.GetProjectRepository(ctx, r.projectCode, r.repoName)
 	if err != nil {
 		return fmt.Errorf("get %s/%s repo info in cluster %s error, %s",
 			r.namespace, r.name, r.clusterID, err.Error())
@@ -136,6 +139,51 @@ func (r *ReleaseUpgradeAction) Prepare(ctx context.Context) error {
 
 	r.contents = contents
 	return nil
+}
+
+// Validate xxx
+func (r *ReleaseUpgradeAction) Validate() error {
+	blog.V(5).Infof("start to validate release %s/%s upgrade", r.namespace, r.name)
+	// 非真实用户无法在权限中心鉴权，跳过检测
+	if len(r.AuthUser) == 0 {
+		return nil
+	}
+	// get manifest from helm dry run
+	result, err := release.UpgradeRelease(r.releaseHandler, r.projectID, r.projectCode, r.clusterID, r.name,
+		r.namespace, r.chartName, r.version, r.createBy, r.updateBy, r.args, nil, r.contents, r.values, true)
+	if err != nil {
+		return err
+	}
+	if result == nil || result.Release == nil || (result.Release.Manifest == "" && result.Release.Hooks == nil) {
+		blog.Infof("release %s/%s is nil in cluster %s", r.namespace, r.name, r.clusterID)
+		return nil
+	}
+	manifest, err := release.GetManifestSimpleHeadFromRelease(result.Release, r.namespace)
+	if err != nil {
+		return err
+	}
+	blog.V(5).Infof("release %s/%s has %d manifest", r.namespace, r.name, len(manifest))
+
+	// get server resources
+	client, err := component.GetK8SClientByClusterID(r.clusterID)
+	if err != nil {
+		return err
+	}
+	resources, err := client.DiscoveryClient.ServerPreferredResources()
+	if err != nil {
+		return err
+	}
+	blog.V(5).Infof("cluster %s has %d api-resources", r.clusterID, len(resources))
+
+	permInfo := basePermInfo{
+		username:       r.AuthUser,
+		projectCode:    r.projectCode,
+		projectID:      r.projectID,
+		clusterID:      r.clusterID,
+		isShardCluster: r.IsShardCluster,
+	}
+	// check access
+	return checkReleaseAccess(manifest, resources, permInfo)
 }
 
 // Execute xxx

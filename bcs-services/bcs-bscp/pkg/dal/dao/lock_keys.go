@@ -13,7 +13,6 @@ limitations under the License.
 package dao
 
 import (
-	"fmt"
 	"strconv"
 
 	"bscp.io/pkg/dal/table"
@@ -29,51 +28,6 @@ func (k lockKeyGenerator) ConfigItem(bizID uint32, appID uint32) *table.Resource
 	return &table.ResourceLock{
 		BizID:   bizID,
 		ResType: table.ConfigItemTable.String(),
-		ResKey:  strconv.FormatInt(int64(appID), 10),
-	}
-}
-
-// CurReleasedInst generate current released instance's lock ResKey
-func (k lockKeyGenerator) CurReleasedInst(bizID uint32, appID uint32) *table.ResourceLock {
-	return &table.ResourceLock{
-		BizID:   bizID,
-		ResType: table.CurrentReleasedInstanceTable.String(),
-		ResKey:  strconv.FormatInt(int64(appID), 10),
-	}
-}
-
-// Strategy generate strategy's lock ResKey
-func (k lockKeyGenerator) Strategy(bizID uint32, appID uint32) *table.ResourceLock {
-	return &table.ResourceLock{
-		BizID:   bizID,
-		ResType: table.StrategyTable.String(),
-		ResKey:  strconv.FormatInt(int64(appID), 10),
-	}
-}
-
-// DefaultStrategy generate default strategy's lock ResKey
-func (k lockKeyGenerator) DefaultStrategy(bizID uint32, strategySetID uint32) *table.ResourceLock {
-	return &table.ResourceLock{
-		BizID:   bizID,
-		ResType: table.StrategyTable.String(),
-		ResKey:  fmt.Sprintf("default-%d", strategySetID),
-	}
-}
-
-// NamespaceStrategy generate namespace strategy's lock ResKey
-func (k lockKeyGenerator) NamespaceStrategy(bizID uint32, strategySetID uint32, ns string) *table.ResourceLock {
-	return &table.ResourceLock{
-		BizID:   bizID,
-		ResType: table.StrategyTable.String(),
-		ResKey:  fmt.Sprintf("namespace-%d-%s", strategySetID, ns),
-	}
-}
-
-// StrategySet generate strategy set's lock ResKey
-func (k lockKeyGenerator) StrategySet(bizID uint32, appID uint32) *table.ResourceLock {
-	return &table.ResourceLock{
-		BizID:   bizID,
-		ResType: table.StrategySetTable.String(),
 		ResKey:  strconv.FormatInt(int64(appID), 10),
 	}
 }

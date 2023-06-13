@@ -16,19 +16,7 @@ package config
 import (
 	"crypto/rsa"
 
-	"github.com/dgrijalva/jwt-go"
-)
-
-// BCSClusterEnv xxx
-type BCSClusterEnv string
-
-const (
-	// ProdCluster xxx
-	ProdCluster BCSClusterEnv = "prod" // 正式环境
-	// DebugCLuster xxx
-	DebugCLuster BCSClusterEnv = "debug" // debug 环境
-	// UatCluster xxx
-	UatCluster BCSClusterEnv = "uat" // uat 环境
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // BCSConf :
@@ -38,7 +26,6 @@ type BCSConf struct {
 	Verify       bool           `yaml:"verify"`
 	JWTPubKey    string         `yaml:"jwt_public_key"`
 	JWTPubKeyObj *rsa.PublicKey `yaml:"-"`
-	ClusterEnv   BCSClusterEnv  `yaml:"cluster_env"`
 }
 
 // Init :
@@ -49,7 +36,6 @@ func (c *BCSConf) Init() error {
 	c.JWTPubKey = ""
 	c.JWTPubKeyObj = nil
 	c.Verify = false
-	c.ClusterEnv = ProdCluster
 	return nil
 }
 

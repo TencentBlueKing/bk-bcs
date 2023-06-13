@@ -14,6 +14,7 @@ package table
 
 import (
 	"errors"
+	"fmt"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/validator"
@@ -105,6 +106,38 @@ func (r ReleaseSpec) Validate() error {
 
 	if err := validator.ValidateMemo(r.Memo, false); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+const (
+	// FullReleased means that app all groups were released in this release,
+	// must include default group.
+	FullReleased ReleaseStatus = "full_released"
+
+	// PartialReleased means that app not all groups released in this release,
+	PartialReleased ReleaseStatus = "partial_released"
+
+	// NotReleased means that no group released in this release.
+	NotReleased ReleaseStatus = "not_released"
+)
+
+// ReleaseStatus defines release status.
+type ReleaseStatus string
+
+// String returns release status string.
+func (s ReleaseStatus) String() string {
+	return string(s)
+}
+
+// Validate strategy set type.
+func (s ReleaseStatus) Validate() error {
+	switch s {
+	case FullReleased:
+	case PartialReleased:
+	default:
+		return fmt.Errorf("unsupported release released status: %s", s)
 	}
 
 	return nil

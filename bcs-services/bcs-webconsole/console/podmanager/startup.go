@@ -85,7 +85,7 @@ func matchContainerById(pod *v1.Pod, containerId string) (*types.Container, erro
 
 // GetContainerById 通过 containerID 获取pod, namespace
 func (m *StartupManager) GetContainerById(containerId string) (*types.Container, error) {
-	// TODO 大集群可能比较慢, 可以通过bcs的storage获取namespace优化
+	// 大集群可能比较慢, 可以通过bcs的storage获取namespace优化
 	pods, err := m.k8sClient.CoreV1().Pods("").List(m.ctx, metav1.ListOptions{})
 
 	if err != nil {
@@ -141,10 +141,10 @@ func (m *StartupManager) ensureNamespace(name string) error {
 
 	if k8sErr.IsNotFound(err) {
 		// 命名空间不存在，创建命名空间
-		if _, err := m.k8sClient.CoreV1().Namespaces().Create(m.ctx, namespace, metav1.CreateOptions{}); err != nil {
+		if _, e := m.k8sClient.CoreV1().Namespaces().Create(m.ctx, namespace, metav1.CreateOptions{}); e != nil {
 			// 创建失败
-			logger.Errorf("create namespace %s failed, err: %s", name, err)
-			return err
+			logger.Errorf("create namespace %s failed, err: %s", name, e)
+			return e
 		}
 		return nil
 	}
@@ -163,10 +163,10 @@ func (m *StartupManager) ensureConfigmap(namespace, name, uid string, kubeConfig
 	_, err = m.k8sClient.CoreV1().ConfigMaps(namespace).Get(m.ctx, name, metav1.GetOptions{})
 	// 不存在，创建
 	if k8sErr.IsNotFound(err) {
-		if _, err := m.k8sClient.CoreV1().ConfigMaps(namespace).Create(m.ctx, configMap, metav1.CreateOptions{}); err != nil {
+		if _, e := m.k8sClient.CoreV1().ConfigMaps(namespace).Create(m.ctx, configMap, metav1.CreateOptions{}); e != nil {
 			// 创建失败
-			logger.Errorf("create configmap failed, err :%s", err)
-			return err
+			logger.Errorf("create configmap failed, err :%s", e)
+			return e
 		}
 		return nil
 	}
@@ -207,8 +207,7 @@ func (m *StartupManager) ensurePod(namespace, name string, podManifest *v1.Pod) 
 
 // getExternalKubeConfig 外部集群鉴权
 func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string) (*clientcmdv1.Config, error) {
-	bcsConf := k8sclient.GetBCSConfByClusterId(targetClusterId)
-	tokenObj, err := bcs.CreateTempToken(m.ctx, bcsConf, username, targetClusterId)
+	tokenObj, err := bcs.CreateTempToken(m.ctx, username, targetClusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -216,8 +215,8 @@ func (m *StartupManager) getExternalKubeConfig(targetClusterId, username string)
 	authInfo := &clusterAuth{
 		Token: tokenObj.Token,
 		Cluster: clientcmdv1.Cluster{
-			Server:                fmt.Sprintf("%s/clusters/%s", bcsConf.Host, targetClusterId),
-			InsecureSkipTLSVerify: bcsConf.InsecureSkipVerify,
+			Server:                fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, targetClusterId),
+			InsecureSkipTLSVerify: config.G.BCS.InsecureSkipVerify,
 		},
 	}
 
@@ -469,6 +468,7 @@ func IsContainerReady(container *v1.ContainerStatus) (string, bool) {
 	return "", true
 }
 
+// NOCC:deadcode/unused(设计如此:)
 func hasPodReadyCondition(conditions []v1.PodCondition) bool {
 	for _, condition := range conditions {
 		if condition.Type == v1.PodReady && condition.Status == v1.ConditionTrue {

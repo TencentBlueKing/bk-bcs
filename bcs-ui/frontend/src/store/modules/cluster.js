@@ -29,10 +29,9 @@ import _ from 'lodash';
 import http from '@/api';
 import { json2Query, sort } from '@/common/util';
 import {
-  fetchClusterList,
   fetchNodePodsData,
 } from '@/api/base';
-import { userInfo } from '@/api/modules/user-manager';
+import { fetchClusterList } from '@/api/modules/cluster-manager';
 import { projectBusiness } from '@/api/modules/project';
 
 export default {
@@ -43,6 +42,7 @@ export default {
     clusterList: [],
     isClusterDataReady: false,
     clusterWebAnnotations: { perms: {} },
+    maintainers: [],
   },
   mutations: {
     /**
@@ -65,6 +65,9 @@ export default {
     updateClusterWebAnnotations(state, data) {
       state.clusterWebAnnotations = data;
     },
+    updateMaintainers(state, data) {
+      state.maintainers = data;
+    },
   },
   actions: {
     /**
@@ -76,17 +79,8 @@ export default {
          *
          * @return {Promise} promise 对象
          */
-    async getClusterList(context, projectID) {
-      let userData = {};
-      if (!context.rootState.user?.username) {
-        // 修复username偶尔拿不到问题
-        console.warn('failed to get rootState username');
-        userData = await userInfo().catch(() => ({}));
-      }
-      const res = await fetchClusterList({
-        projectID,
-        operator: context.rootState.user?.username || userData.username,
-      }, {
+    async getClusterList(context) {
+      const res = await fetchClusterList({}, {
         needRes: true,
         cancelWhenRouteChange: false,
       }).catch(() => ({ data: [] }));
@@ -1052,6 +1046,7 @@ export default {
       const data = await projectBusiness(params, config).catch(() => ({
         maintainer: [],
       }));
+      context.commit('updateMaintainers', data.maintainer || []);
       return data;
     },
 

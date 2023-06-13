@@ -36,7 +36,7 @@ func init() {
 type NodeManager struct {
 }
 
-// GetNodeByIP get specified Node by innerIP address
+// GetNodeByIP 通过IP查询节点 - get specified Node by innerIP address
 func (n *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

@@ -77,7 +77,7 @@
   </LayoutContent>
 </template>
 <script lang="ts">
-import { defineComponent, watch, ref } from '@vue/composition-api';
+import { defineComponent, watch, ref } from 'vue';
 import LayoutContent from '@/components/layout/Content.vue';
 import LayoutRow from '@/components/layout/Row.vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
@@ -86,12 +86,12 @@ import useLog from './use-log';
 import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'LogCollector',
   components: { LayoutContent, LayoutRow, ClusterSelect, StatusIcon },
-  setup(props, ctx) {
-    const { $bkInfo } = ctx.root;
+  setup() {
     const clusterID = ref('');
     const loading = ref(false);
     const list = ref<any[]>([]);

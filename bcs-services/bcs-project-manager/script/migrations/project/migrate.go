@@ -42,7 +42,6 @@ import (
 
 const (
 	mysqlTableName = "projects"
-	mongoTableName = "bcsproject_project"
 	timeLayout     = "2006-01-02T15:04:05Z"
 )
 
@@ -322,9 +321,8 @@ func getStrKind(kind uint) string {
 func getBusinessID(ccAppID uint) string {
 	if ccAppID == 0 {
 		return ""
-	} else {
-		return strconv.Itoa(int(ccAppID))
 	}
+	return strconv.Itoa(int(ccAppID))
 }
 
 func stringInSlice(str string, list []string) bool {

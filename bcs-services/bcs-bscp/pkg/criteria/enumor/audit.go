@@ -38,21 +38,30 @@ const (
 	Strategy AuditResourceType = "strategy"
 	// Hook hook脚本资源
 	Hook AuditResourceType = "hook"
+	// TemplateSpace 模版空间
+	TemplateSpace AuditResourceType = "template_space"
 	// Group 分组资源
 	Group AuditResourceType = "group"
+	// Credential 凭据资源
+	Credential AuditResourceType = "credential"
+	// CredentialScope 凭据规则资源
+	CredentialScope AuditResourceType = "credential_scope"
 )
 
 // AuditResourceTypeEnums resource type map.
 var AuditResourceTypeEnums = map[AuditResourceType]bool{
-	App:           true,
-	ConfigItem:    true,
-	Commit:        true,
-	Content:       true,
-	Release:       true,
-	StrategySet:   true,
-	Strategy:      true,
-	Hook:          true,
-	Group:         true,
+	App:             true,
+	ConfigItem:      true,
+	Commit:          true,
+	Content:         true,
+	Release:         true,
+	StrategySet:     true,
+	Strategy:        true,
+	Hook:            true,
+	TemplateSpace:   true,
+	Group:           true,
+	Credential:      true,
+	CredentialScope: true,
 }
 
 // Exist judge enum value exist.

@@ -58,7 +58,7 @@ func RemoveNodesFromClusterTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// get data info
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params["CloudID"]
 	deleteMode := step.Params["DeleteMode"]
 

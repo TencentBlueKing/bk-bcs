@@ -22,7 +22,7 @@
                         </bk-button>
                     </div>
                     <div class="right">
-                        <ClusterSearch 
+                        <ClusterSelectComb 
                             :cluster-id.sync="searchClusterId"
                             :placeholder="$t('输入名称，按Enter搜索')"
                             :search.sync="searchKeyWord"
@@ -325,13 +325,13 @@
     import Header from '@/components/layout/Header.vue';
     import CreateMetric from './create'
     import EditMetric from './edit'
-    import ClusterSearch from '@/components/cluster-selector/cluster-search.vue'
+    import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue'
 
     export default {
         components: {
             CreateMetric,
             EditMetric,
-            ClusterSearch,
+            ClusterSelectComb,
             Header
         },
         data () {

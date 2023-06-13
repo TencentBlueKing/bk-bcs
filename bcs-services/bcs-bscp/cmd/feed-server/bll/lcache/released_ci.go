@@ -17,6 +17,9 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/bluele/gcache"
+	prm "github.com/prometheus/client_golang/prometheus"
+
 	clientset "bscp.io/cmd/feed-server/bll/client-set"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/kit"
@@ -25,9 +28,6 @@ import (
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
-
-	"github.com/bluele/gcache"
-	prm "github.com/prometheus/client_golang/prometheus"
 )
 
 // newReleasedCI create released config item's cache instance.

@@ -15,11 +15,13 @@ package tencentcloud
 import (
 	"reflect"
 	"strconv"
+	"strings"
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -75,6 +77,9 @@ func convertListenerAttribute(lis *tclb.Listener) *networkextensionv1.IngressLis
 	}
 	if lis.SniSwitch != nil {
 		attr.SniSwitch = int(*lis.SniSwitch)
+	}
+	if lis.KeepaliveEnable != nil {
+		attr.KeepAliveEnable = int(*lis.KeepaliveEnable)
 	}
 	return attr
 }
@@ -186,10 +191,12 @@ func transIngressCertificate(tc *networkextensionv1.IngressListenerCertificate) 
 	return certInput
 }
 
+// getIPPortKey return certain format
 func getIPPortKey(ip string, port int) string {
 	return ip + ":" + strconv.Itoa(port)
 }
 
+// getTargets transfer crd targetGroup to clb request field
 func getTargets(tg *networkextensionv1.ListenerTargetGroup) []*tclb.Target {
 	if tg == nil {
 		return nil
@@ -205,6 +212,11 @@ func getTargets(tg *networkextensionv1.ListenerTargetGroup) []*tclb.Target {
 	return retTargets
 }
 
+// getDiffBetweenTargetGroup compare targetGroup between cloud and local
+// return addTarget/delTarget/updateTarget
+// addTarget: in local but not in cloud
+// delTarget: in cloud but not in local
+// updateTarget: ip&port both in cloud and local, but weight different
 func getDiffBetweenTargetGroup(existedTg, newTg *networkextensionv1.ListenerTargetGroup) (
 	[]*tclb.Target, []*tclb.Target, []*tclb.Target) {
 
@@ -258,7 +270,8 @@ func getDiffBetweenTargetGroup(existedTg, newTg *networkextensionv1.ListenerTarg
 	return addTargets, delTargets, updateWeightTargets
 }
 
-func getDiffBackendListBetweenTargetGroup(existedTg, newTg *networkextensionv1.ListenerTargetGroup) (
+// compareTargetGroup
+func compareTargetGroup(existedTg, newTg *networkextensionv1.ListenerTargetGroup) (
 	[]networkextensionv1.ListenerBackend, []networkextensionv1.ListenerBackend, []networkextensionv1.ListenerBackend) {
 
 	existedBackendsMap := make(map[string]networkextensionv1.ListenerBackend)
@@ -300,6 +313,7 @@ func getDiffBackendListBetweenTargetGroup(existedTg, newTg *networkextensionv1.L
 	return addBackends, delBackends, updateWeightBackends
 }
 
+// getDomainPathKey return certain format
 func getDomainPathKey(domain, path string) string {
 	return domain + path
 }
@@ -322,8 +336,12 @@ func needUpdateAttribute(oldAttr, newAttr *networkextensionv1.IngressListenerAtt
 	if oldAttr.HealthCheck == nil {
 		return true
 	}
-	newHealth := newAttr.HealthCheck
-	oldHealth := oldAttr.HealthCheck
+
+	return needUpdateHealthCheck(newAttr.HealthCheck, oldAttr.HealthCheck)
+}
+
+// needUpdateHealthCheck return true if health check need update
+func needUpdateHealthCheck(newHealth, oldHealth *networkextensionv1.ListenerHealthCheck) bool {
 	if newHealth.Enabled != oldHealth.Enabled {
 		return true
 	}
@@ -336,9 +354,16 @@ func needUpdateAttribute(oldAttr, newAttr *networkextensionv1.IngressListenerAtt
 		(newHealth.Timeout != 0 && newHealth.Timeout != oldHealth.Timeout) {
 		return true
 	}
+
 	return false
 }
 
+// getDiffBetweenListenerRule compare listener Rule in cloud and local
+// return  addRules, delRules, updateOldRules, updatedRules
+// - addRule: in local but not in cloud
+// - delRule: in cloud but not in local
+// - updatedRule: both in cloud and local, but attr different
+// - updateOldRules: localRule before update, have same order of updatedRule
 func getDiffBetweenListenerRule(existedListener, newListener *networkextensionv1.Listener) (
 	[]networkextensionv1.ListenerRule, []networkextensionv1.ListenerRule,
 	[]networkextensionv1.ListenerRule, []networkextensionv1.ListenerRule) {
@@ -388,6 +413,7 @@ func getDiffBetweenListenerRule(existedListener, newListener *networkextensionv1
 	return addRules, delRules, updateOldRules, updatedRules
 }
 
+// splitListenersToDiffProtocol split listener by its protocol
 func splitListenersToDiffProtocol(listenerList []*networkextensionv1.Listener) [][]*networkextensionv1.Listener {
 	retMap := make(map[string][]*networkextensionv1.Listener)
 	for _, li := range listenerList {
@@ -439,6 +465,7 @@ func splitListenersToDiffBatch(listenerList []*networkextensionv1.Listener) [][]
 	return retList
 }
 
+// getListenerNames return []string of listener name
 func getListenerNames(listenerList []*networkextensionv1.Listener) []string {
 	var retList []string
 	for _, li := range listenerList {
@@ -447,6 +474,7 @@ func getListenerNames(listenerList []*networkextensionv1.Listener) []string {
 	return retList
 }
 
+// convertHealthStatus transfer cloud status to local
 func convertHealthStatus(status string) string {
 	var statusStr string
 	switch status {
@@ -458,4 +486,67 @@ func convertHealthStatus(status string) string {
 		statusStr = cloud.BackendHealthStatusUnknown
 	}
 	return statusStr
+}
+
+// transferCloudListener transfer cloud listener to local listener
+func transferCloudListener(lbID string, cloudLiResp *tclb.DescribeListenersResponse, portMap map[int]struct{}) (
+	[]string, map[string]*networkextensionv1.Listener, map[string]*networkextensionv1.IngressListenerAttribute,
+	map[string]*networkextensionv1.IngressListenerCertificate) {
+	var listenerIDs []string
+	retListenerMap := make(map[string]*networkextensionv1.Listener)
+	ruleIDAttrMap := make(map[string]*networkextensionv1.IngressListenerAttribute)
+	ruleIDCertMap := make(map[string]*networkextensionv1.IngressListenerCertificate)
+
+	for _, cloudLi := range cloudLiResp.Response.Listeners {
+		// only care about listener with given ports
+		if _, ok := portMap[int(*cloudLi.Port)]; !ok {
+			continue
+		}
+		listenerIDs = append(listenerIDs, *cloudLi.ListenerId)
+		li := &networkextensionv1.Listener{}
+		li.Spec.LoadbalancerID = lbID
+		li.Spec.Port = int(*cloudLi.Port)
+		// get segment listener end port
+		if cloudLi.EndPort != nil && *cloudLi.EndPort > 0 {
+			li.Spec.EndPort = int(*cloudLi.EndPort)
+		}
+		li.Spec.Protocol = strings.ToLower(*cloudLi.Protocol)
+		li.Spec.Certificate = convertCertificate(cloudLi.Certificate)
+		li.Spec.ListenerAttribute = convertListenerAttribute(cloudLi)
+		if len(cloudLi.Rules) != 0 {
+			for _, respRule := range cloudLi.Rules {
+				if respRule.LocationId != nil {
+					ruleIDAttrMap[*respRule.LocationId] = convertRuleAttribute(respRule)
+					ruleIDCertMap[*respRule.LocationId] = convertCertificate(respRule.Certificate)
+				}
+			}
+		}
+		li.Status.ListenerID = *cloudLi.ListenerId
+		retListenerMap[common.GetListenerNameWithProtocol(lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)] = li
+	}
+
+	return listenerIDs, retListenerMap, ruleIDAttrMap, ruleIDCertMap
+}
+
+// compareListener compare listener of cloud and local
+func compareListener(lbID string, cloudListenerMap map[string]*networkextensionv1.Listener,
+	localListener []*networkextensionv1.Listener) ([]*networkextensionv1.Listener, []*networkextensionv1.Listener, []*networkextensionv1.Listener) {
+	addListeners := make([]*networkextensionv1.Listener, 0)
+	updatedListeners := make([]*networkextensionv1.Listener, 0)
+	deleteCloudListeners := make([]*networkextensionv1.Listener, 0)
+	for _, li := range localListener {
+		cloudLi, ok := cloudListenerMap[common.GetListenerNameWithProtocol(
+			lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)]
+		if !ok {
+			addListeners = append(addListeners, li)
+		} else {
+			if strings.ToLower(cloudLi.Spec.Protocol) != strings.ToLower(li.Spec.Protocol) {
+				deleteCloudListeners = append(deleteCloudListeners, cloudLi)
+				addListeners = append(addListeners, li)
+			} else {
+				updatedListeners = append(updatedListeners, li)
+			}
+		}
+	}
+	return addListeners, updatedListeners, deleteCloudListeners
 }

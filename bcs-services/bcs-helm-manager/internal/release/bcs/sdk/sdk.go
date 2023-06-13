@@ -100,9 +100,9 @@ func (g *group) getClient(clusterID string) Client {
 	c, ok = g.groups[clusterID]
 	if !ok {
 		flags := genericclioptions.NewConfigFlags(false)
-		bcsConfig := options.GetBCSAPIConfigByClusterID(clusterID)
-		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, bcsConfig.URL, clusterID))
-		flags.BearerToken = common.GetStringP(bcsConfig.Token)
+		apiserver := options.GlobalOptions.Release.APIServer
+		flags.APIServer = common.GetStringP(fmt.Sprintf(bcsAPIGWK8SBaseURI, apiserver, clusterID))
+		flags.BearerToken = common.GetStringP(options.GlobalOptions.Release.Token)
 		flags.Insecure = common.GetBoolP(true)
 
 		c = &client{
@@ -178,7 +178,8 @@ func (c *client) List(_ context.Context, option release.ListOption) ([]*rspb.Rel
 
 // Install helm release through helm client
 func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) (*release.HelmInstallResult, error) {
-	blog.Infof("sdk client try install release name %s, namespace %s", config.Name, config.Namespace)
+	blog.Infof("sdk client try install release name %s, namespace %s, dryrun %v", config.Name, config.Namespace,
+		config.DryRun)
 
 	conf := new(action.Configuration)
 	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, "", blog.Infof); err != nil {
@@ -231,31 +232,18 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	if err != nil {
 		blog.Errorf("sdk client install failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
-		return nil, err
+		return getHelmInstallResult(r), err
 	}
 
-	var status, appVersion, lastDeployed string
-	if r.Info != nil {
-		status = r.Info.Status.String()
-		lastDeployed = r.Info.LastDeployed.Local().String()
-	}
-	if r.Chart != nil && r.Chart.Metadata != nil {
-		appVersion = r.Chart.Metadata.AppVersion
-	}
 	blog.Infof("sdk client install release successfully name %s, namespace %s, revision: %d, dryrun: %t",
 		config.Name, config.Namespace, r.Version, config.DryRun)
-	return &release.HelmInstallResult{
-		Release:    r,
-		Revision:   r.Version,
-		Status:     status,
-		AppVersion: appVersion,
-		UpdateTime: lastDeployed,
-	}, nil
+	return getHelmInstallResult(r), nil
 }
 
 // Upgrade helm release through helm client
 func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) (*release.HelmUpgradeResult, error) {
-	blog.Infof("sdk client try upgrade release name %s, namespace %s", config.Name, config.Namespace)
+	blog.Infof("sdk client try upgrade release name %s, namespace %s, dryrun %v", config.Name, config.Namespace,
+		config.DryRun)
 
 	conf := new(action.Configuration)
 	if err := conf.Init(c.getConfigFlag(config.Namespace), config.Namespace, "", blog.Infof); err != nil {
@@ -307,9 +295,10 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 		if e, ok := err.(*driver.StorageDriverError); ok && upgrader.Install &&
 			errors.Is(e.Unwrap(), driver.ErrNoDeployedReleases) {
 			blog.Infof("%s of namespace %s, installing it now.", e.Error(), config.Namespace)
-			result, err := c.Install(context.Background(), config.ToInstallConfig())
+			result := &release.HelmInstallResult{}
+			result, err = c.Install(context.Background(), config.ToInstallConfig())
 			if err != nil {
-				return nil, err
+				return result.ToUpgradeResult(), err
 			}
 			blog.Infof("sdk client upgrade release successfully name %s, namespace %s, revision: %d",
 				config.Name, config.Namespace, result.Release.Version)
@@ -317,26 +306,12 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 		}
 		blog.Errorf("sdk client upgrade failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
-		return nil, err
+		return getHelmUpgradeResult(r), err
 	}
 
-	var status, appVersion, lastDeployed string
-	if r.Info != nil {
-		status = r.Info.Status.String()
-		lastDeployed = r.Info.LastDeployed.Local().String()
-	}
-	if r.Chart != nil && r.Chart.Metadata != nil {
-		appVersion = r.Chart.Metadata.AppVersion
-	}
 	blog.Infof("sdk client upgrade release successfully name %s, namespace %s, revision: %d",
 		config.Name, config.Namespace, r.Version)
-	return &release.HelmUpgradeResult{
-		Release:    r,
-		Revision:   r.Version,
-		Status:     status,
-		AppVersion: appVersion,
-		UpdateTime: lastDeployed,
-	}, nil
+	return getHelmUpgradeResult(r), nil
 }
 
 // Uninstall helm release through helm client
@@ -661,4 +636,46 @@ func addValueOptionsFlags(f *pflag.FlagSet, v *values.Options) {
 	f.StringArrayVar(&v.FileValues, "set-file", []string{},
 		"set values from respective files specified via the command line (can specify multiple or separate "+
 			"values with commas: key1=path1,key2=path2)")
+}
+
+func getHelmUpgradeResult(rl *rspb.Release) *release.HelmUpgradeResult {
+	if rl == nil {
+		return nil
+	}
+	var status, appVersion, lastDeployed string
+	if rl.Info != nil {
+		status = rl.Info.Status.String()
+		lastDeployed = rl.Info.LastDeployed.Local().String()
+	}
+	if rl.Chart != nil && rl.Chart.Metadata != nil {
+		appVersion = rl.Chart.Metadata.AppVersion
+	}
+	return &release.HelmUpgradeResult{
+		Release:    rl,
+		Revision:   rl.Version,
+		Status:     status,
+		AppVersion: appVersion,
+		UpdateTime: lastDeployed,
+	}
+}
+
+func getHelmInstallResult(rl *rspb.Release) *release.HelmInstallResult {
+	if rl == nil {
+		return nil
+	}
+	var status, appVersion, lastDeployed string
+	if rl.Info != nil {
+		status = rl.Info.Status.String()
+		lastDeployed = rl.Info.LastDeployed.Local().String()
+	}
+	if rl.Chart != nil && rl.Chart.Metadata != nil {
+		appVersion = rl.Chart.Metadata.AppVersion
+	}
+	return &release.HelmInstallResult{
+		Release:    rl,
+		Revision:   rl.Version,
+		Status:     status,
+		AppVersion: appVersion,
+		UpdateTime: lastDeployed,
+	}
 }

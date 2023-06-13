@@ -29,11 +29,11 @@ import (
 
 var (
 	updateClusterExample = templates.Examples(i18n.T(`create cluster from json file. file template:
-	{"clusterID":"BCS-K8S-40007","projectID":"b363e23b1b354928a0f3e461196ac653","businessID":"3",
+	{"clusterID":"BCS-K8S-xxx","projectID":"b363e23b1b354928xxxxxxxxxxxxxxxxxxxxxxxx","businessID":"3",
 	"engineType":"k8s","isExclusive":true,"clusterType":"single","creator":"bcs","manageType":"INDEPENDENT_CLUSTER",
 	"clusterName":"test002","environment":"prod","provider":"bluekingCloud","description":"update创建测试集群",
-	"clusterBasicSettings":{"version":"v1.20.11"},"networkType":"overlay","region":"default","vpcID":"",
-	"networkSettings":{},"master":["11.143.254.xx","11.143.254.xx"]}`))
+	"clusterBasicSettings":{"version":"v1.20.xx"},"networkType":"overlay","region":"default","vpcID":"",
+	"networkSettings":{},"master":["xxx.xxx.xxx.xxx","xxx.xxx.xxx.xxx"]}`))
 )
 
 func newUpdateClusterCmd() *cobra.Command {
@@ -64,5 +64,5 @@ func updateCluster(cmd *cobra.Command, args []string) {
 		klog.Fatalf("update cluster failed: %v", err)
 	}
 
-	fmt.Printf("update cluster succeed")
+	fmt.Println("update cluster succeed")
 }

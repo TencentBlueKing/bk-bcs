@@ -23,8 +23,8 @@ import (
 	mesostype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/metastream"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 
 	"github.com/urfave/cli"
 )
@@ -139,7 +139,7 @@ func clean(cxt *utils.ClientContext) error {
 				return scheduler.DeleteCustomResourceDefinition(cluster, name)
 			}
 		default:
-			// unkown type, try custom resource
+			// unknown type, try custom resource
 			crdapiVersion, plural, crdErr := utils.GetCustomResourceTypeByKind(scheduler, cxt.ClusterID(), info.kind)
 			if err != nil {
 				fmt.Printf("resource %s/%s %s clean failed, %s\n", info.apiVersion, info.kind, info.name, crdErr.Error())

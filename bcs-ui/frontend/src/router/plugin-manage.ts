@@ -4,7 +4,7 @@ const DBList = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-mana
 const LogList = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/log_list.vue');
 const Detail = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/detail.vue');
 const BcsPolaris = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/polaris_list.vue');
-const MetricManage = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/metric/index.vue');
+const MetricManage = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/metric/metric-manage.vue');
 const LoadBalance = () => import(/* webpackChunkName: 'plugin' */'@/views/deploy-manage/templateset/network/loadbalance.vue');
 const LoadBalanceDetail = () => import(/* webpackChunkName: 'plugin' */'@/views/deploy-manage/templateset/network/loadbalance-detail.vue');
 

@@ -129,8 +129,8 @@ func main() {
 	actionConfig := new(action.Configuration)
 	clientGetter := genericclioptions.NewConfigFlags(false)
 	clientGetter.KubeConfig = flags.KubeConfig
-	if err := actionConfig.Init(clientGetter, "", "", blog.Info); err != nil {
-		blog.Fatalf("init helm action config failed: %v", err)
+	if e := actionConfig.Init(clientGetter, "", "", blog.Info); e != nil {
+		blog.Fatalf("init helm action config failed: %v", e)
 
 	}
 	controller := instancecontroller.NewController(kubeConfig, opt.Plugin, kubeClient, tkexClient,

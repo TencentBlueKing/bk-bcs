@@ -27,6 +27,8 @@ const (
 	AzureProtocolTCP = "TCP"
 	// AzureProtocolUDP elb udp protocol
 	AzureProtocolUDP = "UDP"
+	// AzureProtocolTLS elb tls protocol
+	AzureProtocolTLS = "TLS"
 
 	// DefaultRequestTimeout seconds that application wait for backend's response
 	DefaultRequestTimeout = 20

@@ -22,8 +22,11 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/validator"
 	"bscp.io/pkg/dal/table"
+	pbbase "bscp.io/pkg/protocol/core/base"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
+	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/jsoni"
 )
 
@@ -119,6 +122,7 @@ func (s SideWatchPayload) Validate() error {
 // SideAppMeta defines an app's metadata within the sidecar.
 type SideAppMeta struct {
 	AppID     uint32            `json:"appID"`
+	App       string            `json:"app"`
 	Namespace string            `json:"namespace"`
 	Uid       string            `json:"uid"`
 	Labels    map[string]string `json:"labels"`
@@ -150,19 +154,73 @@ func (s SideAppMeta) Validate() error {
 // ConfigItemMetaV1 defines the released configure item's metadata.
 type ConfigItemMetaV1 struct {
 	// ID is released configuration item identity id.
-	ID             uint32                 `json:"id"`
-	ContentSpec    *pbcontent.ContentSpec `json:"contentSpec"`
-	ConfigItemSpec *pbci.ConfigItemSpec   `json:"configItemSpec"`
-	RepositoryPath *RepositorySpecV1      `json:"repositoryPath"`
+	ID                   uint32                     `json:"id"`
+	CommitID             uint32                     `json:"commentID"`
+	ContentSpec          *pbcontent.ContentSpec     `json:"contentSpec"`
+	ConfigItemSpec       *pbci.ConfigItemSpec       `json:"configItemSpec"`
+	ConfigItemAttachment *pbci.ConfigItemAttachment `json:"configItemAttachment"`
+	RepositoryPath       string                     `json:"repositoryPath"`
+}
+
+// PbFileMeta returns the pb file meta.
+func (cim *ConfigItemMetaV1) PbFileMeta() *pbfs.FileMeta {
+	return &pbfs.FileMeta{
+		Id:       cim.ID,
+		CommitId: cim.CommitID,
+		CommitSpec: &pbcommit.CommitSpec{
+			Content: &pbcontent.ContentSpec{
+				Signature: cim.ContentSpec.Signature,
+				ByteSize:  cim.ContentSpec.ByteSize,
+			},
+		},
+		ConfigItemSpec:       cim.ConfigItemSpec,
+		ConfigItemAttachment: cim.ConfigItemAttachment,
+	}
 }
 
 // ReleaseEventMetaV1 defines the event details when the sidecar watch the feed server to
 // get the latest release.
 type ReleaseEventMetaV1 struct {
 	AppID      uint32              `json:"appID"`
+	App        string              `json:"app"`
 	ReleaseID  uint32              `json:"releaseID"`
 	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
 	Repository *RepositoryV1       `json:"repository"`
+}
+
+// InstanceSpec defines the specifics for an app instance to watch the event.
+type InstanceSpec struct {
+	BizID  uint32            `json:"bizID"`
+	AppID  uint32            `json:"appID"`
+	App    string            `json:"app"`
+	Uid    string            `json:"uid"`
+	Labels map[string]string `json:"labels"`
+}
+
+// Validate the instance spec is valid or not
+func (is InstanceSpec) Validate() error {
+	if is.BizID <= 0 {
+		return errors.New("invalid biz id")
+	}
+
+	if is.App == "" {
+		return errors.New("invalid app")
+	}
+
+	if len(is.Uid) == 0 {
+		return errors.New("invalid uid")
+	}
+
+	if err := validator.ValidateLabel(is.Labels); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Format the instance spec's basic info to string.
+func (is *InstanceSpec) Format() string {
+	return fmt.Sprintf("biz: %d, app: %s, uid: %s", is.BizID, is.App, is.Uid)
 }
 
 // RepositoryV1 defines repository related metas.
@@ -291,10 +349,18 @@ type RepositorySpecV1 struct {
 	Path string `json:"path"`
 }
 
+// ReleaseChangeEvent defines the release change event's detail information.
+type ReleaseChangeEvent struct {
+	Rid        string
+	APIVersion *pbbase.Versioning
+	Payload    []byte
+}
+
 // ReleaseChangePayload defines the details when the sidecar's app instance's related
 // release has been changed.
 type ReleaseChangePayload struct {
 	ReleaseMeta *ReleaseEventMetaV1 `json:"releaseMeta"`
+	Instance    *InstanceSpec       `json:"instance"`
 	CursorID    uint32              `json:"cursorID"`
 }
 
@@ -330,6 +396,7 @@ type SidecarRuntimeOption struct {
 	// reconnect stream server instance.
 	BounceIntervalHour uint                          `json:"bounceInterval"`
 	RepositoryTLS      *TLSBytes                     `json:"repositoryTLS"`
+	Repository         *RepositoryV1                 `json:"repository"`
 	AppReloads         map[ /*appID*/ uint32]*Reload `json:"reload"`
 }
 
@@ -358,7 +425,7 @@ type OfflinePayload struct {
 
 // AppMeta start sidecar bind app meta info.
 type AppMeta struct {
-	AppID     uint32            `json:"appID"`
+	App       string            `json:"app"`
 	Namespace string            `json:"namespace"`
 	Uid       string            `json:"uid"`
 	Labels    map[string]string `json:"labels"`
@@ -383,8 +450,12 @@ func (o *OfflinePayload) Encode() ([]byte, error) {
 	return jsoni.Marshal(o)
 }
 
-// HeartbeatPayload defines sidecar heartbeat to send payload to feed server.
+// HeartbeatPayload defines sdk heartbeat to send payload to feed server.
 type HeartbeatPayload struct {
+	// FingerPrint sdk instance fingerprint, reference: pkg/dal/sf-share/fingerprint.go
+	FingerPrint string `json:"fingerprint"`
+	// Applications sdk instance bind app meta info,include app,namespace,uid,labels and app current release id.
+	Applications []SideAppMeta `json:"applications"`
 }
 
 // MessagingType return the payload related sidecar message type.

@@ -7,7 +7,7 @@
       <template>
         <div class="biz-panel-header">
           <div class="right">
-            <ClusterSearch
+            <ClusterSelectComb
               :search.sync="searchKeyword"
               :cluster-id.sync="searchScope"
               :show-search="false"
@@ -346,9 +346,16 @@
       :is-show.sync="valueSlider.isShow"
       :title="valueSlider.title"
       :width="900">
+      <template #header>
+        <div class="flex place-content-between">
+          <div>{{ valueSlider.title }}</div>
+          <div>
+            <bk-button class="bk-button bk-primary save-crd-btn" @click.stop.prevent="enableCrdController">{{$t('启用')}}</bk-button>
+            <bk-button class="bk-button bk-default hide-crd-btn" @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
+          </div>
+        </div>
+      </template>
       <div class="p0" slot="content">
-        <bk-button class="bk-button bk-primary save-crd-btn" @click.stop.prevent="enableCrdController">{{$t('启用')}}</bk-button>
-        <bk-button class="bk-button bk-default hide-crd-btn" @click.stop.prevent="hideApplicationJson">{{$t('取消')}}</bk-button>
         <div :class="['diff-editor-box', { 'editor-fullscreen': editorOptions.fullScreen }]" style="position: relative;">
           <monaco-editor
             ref="yamlEditor"
@@ -372,13 +379,13 @@
 import { catchErrorHandler } from '@/common/util';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
 import Header from '@/components/layout/Header.vue';
-import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 
 export default {
   components: {
     MonacoEditor,
     Header,
-    ClusterSearch,
+    ClusterSelectComb,
   },
   data() {
     return {

@@ -14,11 +14,15 @@ package component
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	goReq "github.com/parnurzeal/gorequest"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 )
 
@@ -48,4 +52,18 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 		return "", errors.New(stringx.Errs2String(errs))
 	}
 	return body, nil
+}
+
+// GetK8SClientByClusterID 通过集群 ID 获取 k8s client 对象
+func GetK8SClientByClusterID(clusterID string) (*kubernetes.Clientset, error) {
+	host := fmt.Sprintf("%s/clusters/%s", options.GlobalOptions.Release.APIServer, clusterID)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: options.GlobalOptions.Release.Token,
+	}
+	k8sClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return k8sClient, nil
 }

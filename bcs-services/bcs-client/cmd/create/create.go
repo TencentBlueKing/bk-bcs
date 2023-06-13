@@ -88,7 +88,7 @@ func create(c *utils.ClientContext) error {
 	case "meshcluster":
 		return createMeshCluster(c)
 	default:
-		// unkown type, try CustomResource
+		// unknown type, try CustomResource
 		return createCustomResource(c)
 	}
 }

@@ -19,6 +19,12 @@ import (
 	"net/http"
 	"strconv"
 
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
+
 	"bscp.io/cmd/feed-server/options"
 	"bscp.io/cmd/feed-server/service"
 	"bscp.io/pkg/cc"
@@ -28,15 +34,9 @@ import (
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/brpc"
 	"bscp.io/pkg/runtime/ctl"
-	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // Run start the feed server
@@ -85,19 +85,9 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 	metrics.InitMetrics(net.JoinHostPort(cc.FeedServer().Network.BindIP,
 		strconv.Itoa(int(cc.FeedServer().Network.RpcPort))))
 
-	if err := gwparser.Init(opt.DisableJWT, opt.PublicKey); err != nil {
-		return err
-	}
-	logs.Infof("jwt disable state: %v", opt.DisableJWT)
-
 	etcdOpt, err := cc.FeedServer().Service.Etcd.ToConfig()
 	if err != nil {
 		return fmt.Errorf("get etcd config failed, err: %v", err)
-	}
-
-	etcdCli, err := etcd3.New(etcdOpt)
-	if err != nil {
-		return fmt.Errorf("new etcd client failed, err: %v", err)
 	}
 
 	// register data service.
@@ -107,7 +97,7 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 		Port: cc.FeedServer().Network.RpcPort,
 		Uid:  uuid.UUID(),
 	}
-	sd, err := serviced.NewServiceD(etcdCli, svcOpt)
+	sd, err := serviced.NewServiceD(etcdOpt, svcOpt)
 	if err != nil {
 		return fmt.Errorf("new service discovery failed, err: %v", err)
 	}
@@ -131,12 +121,23 @@ func (fs *feedServer) prepare(opt *options.Option) error {
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
 func (fs *feedServer) listenAndServe() error {
 	// generate standard grpc server grpcMetrics.
-	grpcMetrics := gprm.NewServerMetrics()
+	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
+
+	recoveryOpt := grpc_recovery.WithRecoveryHandlerContext(brpc.RecoveryHandlerFuncContext)
 
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(1 * 1024 * 1024),
 		// add bscp unary interceptor and standard grpc server metrics interceptor.
-		grpc.UnaryInterceptor(brpc.UnaryServerInterceptorWithMetrics(grpcMetrics)),
-		grpc.StreamInterceptor(grpcMetrics.StreamServerInterceptor())}
+		grpc.ChainUnaryInterceptor(
+			brpc.LogUnaryServerInterceptor(),
+			grpcMetrics.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
+		),
+		grpc.ChainStreamInterceptor(
+			grpcMetrics.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(recoveryOpt),
+		),
+	}
 
 	network := cc.FeedServer().Network
 	if network.TLS.Enable() {
@@ -154,6 +155,8 @@ func (fs *feedServer) listenAndServe() error {
 
 	serve := grpc.NewServer(opts...)
 	pbfs.RegisterUpstreamServer(serve, fs.service)
+	// Register reflection service on gRPC server.
+	reflection.Register(serve)
 
 	// initialize and register standard grpc server grpcMetrics.
 	grpcMetrics.InitializeMetrics(serve)

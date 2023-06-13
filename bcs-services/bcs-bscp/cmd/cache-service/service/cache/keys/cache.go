@@ -24,12 +24,13 @@ var oneDaySeconds = 24 * oneHourSeconds
 
 // Key is an instance of the keyFactory
 var Key = &keyGenerator{
-	nullKeyTTLRange:      [2]int{60, 120},
-	cpStrategyTTLRange:   [2]int{30 * 60, 60 * 60},
-	releasedCITTLRange:   [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
-	releasedInstTTLRange: [2]int{15 * 60, 30 * 60},
-	appMetaTTLRange:      [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
-	appHasRITTLRange:     [2]int{5 * 60, 10 * 60},
+	nullKeyTTLRange:             [2]int{60, 120},
+	releasedGroupTTLRange:       [2]int{30 * 60, 60 * 60},
+	credentialMatchedCITTLRange: [2]int{30 * 60, 60 * 60},
+	credentialTTLRange:          [2]int{1, 5},
+	releasedCITTLRange:          [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
+	appMetaTTLRange:             [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
+	appHasRITTLRange:            [2]int{5 * 60, 10 * 60},
 }
 
 type namespace string
@@ -37,39 +38,84 @@ type namespace string
 const (
 	cacheHead string = "bscp"
 
-	cpStrategy         namespace = "cp-strategy"
-	releasedConfigItem namespace = "released-ci"
-	appMeta            namespace = "app-meta"
+	releasedConfigItem  namespace = "released-ci"
+	releasedGroup       namespace = "released-group"
+	credentialMatchedCI namespace = "credential-matched-ci"
+	credential          namespace = "credential"
+	appMeta             namespace = "app-meta"
+	appID               namespace = "app-id"
 )
 
 type keyGenerator struct {
-	nullKeyTTLRange      [2]int
-	cpStrategyTTLRange   [2]int
-	releasedCITTLRange   [2]int
-	releasedInstTTLRange [2]int
-	appMetaTTLRange      [2]int
-	appHasRITTLRange     [2]int
+	nullKeyTTLRange             [2]int
+	releasedGroupTTLRange       [2]int
+	credentialMatchedCITTLRange [2]int
+	credentialTTLRange          [2]int
+	releasedCITTLRange          [2]int
+	appMetaTTLRange             [2]int
+	appHasRITTLRange            [2]int
 }
 
-// CPStrategy generate current published strategy's cache key
-func (k keyGenerator) CPStrategy(bizID uint32, cpsID uint32) string {
+// ReleasedGroup generate a release's released group cache key to save all the released groups under this release
+func (k keyGenerator) ReleasedGroup(bizID uint32, appID uint32) string {
 	return element{
 		biz: bizID,
-		ns:  cpStrategy,
-		key: strconv.FormatUint(uint64(cpsID), 10),
+		ns:  releasedGroup,
+		key: strconv.FormatUint(uint64(appID), 10),
 	}.String()
 }
 
-// CPStrategyTtlSec return the current published strategy's TTL seconds
-func (k keyGenerator) CPStrategyTtlSec(withRange bool) int {
+// ReleasedCITtlSec generate the current released config item's TTL seconds
+func (k keyGenerator) ReleasedGroupTtlSec(withRange bool) int {
 
 	if withRange {
 		rand.Seed(time.Now().UnixNano())
-		seconds := rand.Intn(k.cpStrategyTTLRange[1]-k.cpStrategyTTLRange[0]) + k.cpStrategyTTLRange[0]
+		seconds := rand.Intn(k.releasedGroupTTLRange[1]-k.releasedGroupTTLRange[0]) + k.releasedGroupTTLRange[0]
 		return seconds
 	}
 
-	return k.cpStrategyTTLRange[1]
+	return k.releasedGroupTTLRange[1]
+}
+
+// CredentialMatchedCI generate a biz's credential matched ci key to save all the ci ids that matched by credential
+func (k keyGenerator) CredentialMatchedCI(bizID uint32, credential string) string {
+	return element{
+		biz: bizID,
+		ns:  credentialMatchedCI,
+		key: credential,
+	}.String()
+}
+
+// CredentialMatchedCITtlSec generate the credential matched ci's TTL seconds
+func (k keyGenerator) CredentialMatchedCITtlSec(withRange bool) int {
+
+	if withRange {
+		rand.Seed(time.Now().UnixNano())
+		seconds := rand.Intn(k.credentialMatchedCITTLRange[1]-
+			k.credentialMatchedCITTLRange[0]) + k.credentialMatchedCITTLRange[0]
+		return seconds
+	}
+
+	return k.credentialMatchedCITTLRange[1]
+}
+
+// Credential generate a biz's credential key to save the credential
+func (k keyGenerator) Credential(bizID uint32, str string) string {
+	return element{
+		biz: bizID,
+		ns:  credential,
+		key: str,
+	}.String()
+}
+
+// CredentialTtlSec generate the credential's TTL seconds
+func (k keyGenerator) CredentialTtlSec(withRange bool) int {
+	if withRange {
+		rand.Seed(time.Now().UnixNano())
+		seconds := rand.Intn(k.credentialTTLRange[1]-k.credentialTTLRange[0]) + k.credentialTTLRange[0]
+		return seconds
+	}
+	return k.credentialTTLRange[0]
 }
 
 // ReleasedCI generate a release's CI cache key to save all the CIs under
@@ -92,6 +138,15 @@ func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 	}
 
 	return k.releasedCITTLRange[1]
+}
+
+// AppMeta generate the app id cache key.
+func (k keyGenerator) AppID(bizID uint32, appName string) string {
+	return element{
+		biz: bizID,
+		ns:  appID,
+		key: appName,
+	}.String()
 }
 
 // AppMeta generate the app meta cache key.

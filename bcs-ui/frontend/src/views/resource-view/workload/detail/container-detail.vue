@@ -141,9 +141,10 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, toRefs, computed, onMounted, ref } from '@vue/composition-api';
+import { defineComponent, toRefs, computed, onMounted, ref } from 'vue';
 import { bkOverflowTips } from 'bk-magic-vue';
 import Metric from '@/components/metric.vue';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'ContainerDetail',
@@ -183,9 +184,8 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props, ctx) {
+  setup(props) {
     const { name, namespace, pod, clusterId } = toRefs(props);
-    const { $store } = ctx.root;
 
     // 详情loading
     const isLoading = ref(false);

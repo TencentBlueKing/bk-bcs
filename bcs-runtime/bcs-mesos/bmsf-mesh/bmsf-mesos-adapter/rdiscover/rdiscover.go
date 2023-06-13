@@ -159,7 +159,7 @@ func (ad *AdapterDiscover) registerAdapter() error {
 	host, err := os.Hostname()
 	if err != nil {
 		blog.Error("mesos adapter get hostname err: %s", err.Error())
-		host = "UNKOWN"
+		host = "UNKNOWN"
 	}
 	serverInfo := types.ServerInfo{}
 	serverInfo.IP = ad.ip
@@ -169,7 +169,6 @@ func (ad *AdapterDiscover) registerAdapter() error {
 	serverInfo.Version = version.GetVersion()
 	serverInfo.Cluster = ad.clusterID
 	serverInfo.HostName = host
-	// TODO: support https
 	serverInfo.Scheme = "http"
 	serverInfoByte, err := json.Marshal(serverInfo)
 	if err != nil {

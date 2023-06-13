@@ -4,8 +4,8 @@
       <Validate
         :rules="[
           {
-            message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
-            validator: KEY_REGEXP,
+            message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+            validator: '^[A-Za-z0-9._/-]+$',
           },
           {
             message: $i18n.t('重复键'),
@@ -25,8 +25,8 @@
       <Validate
         :rules="[
           {
-            message: $i18n.t('仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾'),
-            validator: VALUE_REGEXP,
+            message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+            validator: '^[A-Za-z0-9._/-]+$',
           },
         ]"
         :value="item.value"
@@ -59,7 +59,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from '@vue/composition-api';
+import { computed, defineComponent, ref, watch } from 'vue';
 import Validate from '@/components/validate.vue';
 import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
 

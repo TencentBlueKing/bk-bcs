@@ -25,4 +25,7 @@ var (
 	BCS_APIGW_PUBLIC_KEY = os.Getenv("BCS_APIGW_PUBLIC_KEY")
 	BCS_ETCD_HOST        = os.Getenv("bcsEtcdHost")
 	BKIAM_GATEWAY_SERVER = os.Getenv("BKIAM_GATEWAY_SERVER")
+	MONGO_ADDRESS        = os.Getenv("MONGO_ADDRESS")
+	MONGO_USERNAME       = os.Getenv("MONGO_USERNAME")
+	MONGO_PASSWORD       = os.Getenv("MONGO_PASSWORD")
 )

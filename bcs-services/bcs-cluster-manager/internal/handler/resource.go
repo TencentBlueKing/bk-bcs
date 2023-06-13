@@ -86,7 +86,7 @@ func (cm *ClusterManager) ListCloudInstanceTypes(ctx context.Context,
 	fa := cloudresource.NewListNodeTypeAction(cm.model)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudInstanceTypes", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -103,7 +103,7 @@ func (cm *ClusterManager) ListCloudOsImage(ctx context.Context,
 	fa := cloudresource.NewListCloudOsImageAction(cm.model)
 	fa.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudOsImage", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudOsImage, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListCloudOsImage, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudOsImage, req %v, resp %v", reqID, req, resp)
 	return nil

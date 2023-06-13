@@ -15,9 +15,7 @@ package serviced
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -26,32 +24,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer/roundrobin"
 	"google.golang.org/grpc/resolver"
 
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/tools"
 )
-
-// ServiceDiscover defines all the service and discovery
-// related operations.
-type ServiceDiscover interface {
-	Service
-	Discover
-}
-
-// Service defines all the service and discovery
-// related operations.
-type Service interface {
-	// Register the service
-	Register() error
-	// Deregister the service
-	Deregister() error
-	State
-}
 
 // State defines the service's state related operations.
 type State interface {
@@ -62,7 +42,17 @@ type State interface {
 	// if disabled, treat this service as a slave instead of checking if it is master from service discovery.
 	DisableMasterSlave(disable bool)
 	// Healthz etcd health check.
-	Healthz(etcd cc.Etcd) error
+	Healthz() error
+}
+
+// Service defines all the service and discovery
+// related operations.
+type Service interface {
+	State
+	// Register the service
+	Register() error
+	// Deregister the service
+	Deregister() error
 }
 
 // Discover defines service discovery related operations.
@@ -70,18 +60,33 @@ type Discover interface {
 	LBRoundRobin() grpc.DialOption
 }
 
+// ServiceDiscover defines all the service and discovery
+// related operations.
+type ServiceDiscover interface {
+	Service
+	Discover
+}
+
 // NewService create a service instance.
-func NewService(cli *etcd3.Client, opt ServiceOption) (Service, error) {
+func NewService(cfg etcd3.Config, opt ServiceOption) (Service, error) {
 	if err := opt.Validate(); err != nil {
 		return nil, err
 	}
 
+	cli, err := etcd3.New(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "init etcd client")
+	}
+
+	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: cfg.TLS}}
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &serviced{
-		cli:    cli,
-		svcOpt: opt,
-		ctx:    ctx,
-		cancel: cancel,
+		cli:        cli,
+		cfg:        cfg,
+		svcOpt:     opt,
+		ctx:        ctx,
+		cancel:     cancel,
+		httpClient: httpClient,
 	}
 
 	// keep synchronizing current node's master state.
@@ -90,17 +95,25 @@ func NewService(cli *etcd3.Client, opt ServiceOption) (Service, error) {
 }
 
 // NewServiceD create a service and discovery instance.
-func NewServiceD(cli *etcd3.Client, opt ServiceOption) (ServiceDiscover, error) {
+func NewServiceD(cfg etcd3.Config, opt ServiceOption) (ServiceDiscover, error) {
 	if err := opt.Validate(); err != nil {
 		return nil, err
 	}
 
+	cli, err := etcd3.New(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "init etcd client")
+	}
+
+	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: cfg.TLS}}
 	ctx, cancel := context.WithCancel(context.Background())
 	s := &serviced{
-		cli:    cli,
-		svcOpt: opt,
-		ctx:    ctx,
-		cancel: cancel,
+		cli:        cli,
+		cfg:        cfg,
+		svcOpt:     opt,
+		ctx:        ctx,
+		cancel:     cancel,
+		httpClient: httpClient,
 	}
 
 	resolver.Register(newEtcdBuilder(cli))
@@ -110,15 +123,24 @@ func NewServiceD(cli *etcd3.Client, opt ServiceOption) (ServiceDiscover, error) 
 }
 
 // NewDiscovery create a service discovery instance.
-func NewDiscovery(cli *etcd3.Client) (Discover, error) {
+func NewDiscovery(cfg etcd3.Config) (Discover, error) {
+	cli, err := etcd3.New(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "init etcd client")
+	}
+
+	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: cfg.TLS}}
 	resolver.Register(newEtcdBuilder(cli))
 	return &serviced{
-		cli: cli,
+		cli:        cli,
+		cfg:        cfg,
+		httpClient: httpClient,
 	}, nil
 }
 
 type serviced struct {
 	cli    *etcd3.Client
+	cfg    etcd3.Config
 	svcOpt ServiceOption
 
 	// isRegisteredFlag service register flag.
@@ -139,8 +161,9 @@ type serviced struct {
 	// watchChan is watch etcd service path's watch channel.
 	watchChan etcd3.WatchChan
 
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx        context.Context
+	cancel     context.CancelFunc
+	httpClient *http.Client
 }
 
 // LBRoundRobin returns a load balance based on all the
@@ -292,24 +315,22 @@ type HealthInfo struct {
 }
 
 // Healthz checks the etcd health state.
-func (s *serviced) Healthz(config cc.Etcd) error {
-	var tlsConf *tls.Config
-	var err error
+func (s *serviced) Healthz() error {
+	if len(s.cfg.Endpoints) == 0 {
+		return errors.New("has no etcd endpoints")
+	}
+
 	scheme := "http"
-	if config.TLS.Enable() {
-		if tlsConf, err = tools.ClientTLSConfVerify(config.TLS.InsecureSkipVerify, config.TLS.CAFile,
-			config.TLS.CertFile, config.TLS.KeyFile, config.TLS.Password); err != nil {
-			return err
-		}
+	if s.cfg.TLS != nil {
 		scheme = "https"
 	}
-	client := &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConf}}
 
-	for _, endpoint := range config.Endpoints {
-		resp, err := client.Get(fmt.Sprintf("%s://%s/health", scheme, endpoint))
+	for _, endpoint := range s.cfg.Endpoints {
+		resp, err := s.httpClient.Get(fmt.Sprintf("%s://%s/health", scheme, endpoint))
 		if err != nil {
 			return fmt.Errorf("get etcd health failed, err: %v", err)
 		}
+		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("response status: %d", resp.StatusCode)
@@ -328,7 +349,6 @@ func (s *serviced) Healthz(config cc.Etcd) error {
 		if info.Health != "true" {
 			return fmt.Errorf("endpoint %s etcd not healthy", endpoint)
 		}
-		resp.Body.Close()
 	}
 
 	return nil

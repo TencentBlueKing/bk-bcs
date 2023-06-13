@@ -24,12 +24,9 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
-	"bscp.io/pkg/runtime/gwparser"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 // Run start the api server
@@ -64,11 +61,6 @@ func (as *apiServer) prepare(opt *options.Option) error {
 
 	logs.Infof("load settings from config file success.")
 
-	if err := gwparser.Init(opt.DisableJWT, opt.PublicKey); err != nil {
-		return err
-	}
-	logs.Infof("jwt disable state: %v", opt.DisableJWT)
-
 	// init metrics
 	metrics.InitMetrics(net.JoinHostPort(cc.ApiServer().Network.BindIP,
 		strconv.Itoa(int(cc.ApiServer().Network.HttpPort))))
@@ -78,13 +70,8 @@ func (as *apiServer) prepare(opt *options.Option) error {
 		return fmt.Errorf("get etcd config failed, err: %v", err)
 	}
 
-	etcdCli, err := etcd3.New(etcdOpt)
-	if err != nil {
-		return fmt.Errorf("new etcd client failed, err: %v", err)
-	}
-
 	// new discovery client.
-	dis, err := serviced.NewDiscovery(etcdCli)
+	dis, err := serviced.NewDiscovery(etcdOpt)
 	if err != nil {
 		return fmt.Errorf("new discovery faield, err: %v", err)
 	}

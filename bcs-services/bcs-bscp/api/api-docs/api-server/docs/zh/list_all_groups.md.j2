@@ -9,7 +9,6 @@
 | ------------ | ------------ | ------ | ---------------- |
 | biz_id      | uint32      | 是     | 业务ID     |
 
-```
 
 ### 响应示例
 ```json
@@ -91,11 +90,11 @@
 #### data.detail[n]
 | 参数名称     | 参数类型   | 描述                           |
 | ------------ | ---------- | ------------------------------ |
-| id           | uint32       |            应用ID                    |
-| name         | string       | 应用名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线，且必须以中文、英文、数字开头和结尾 |
+| id           | uint32       | 分组ID  |
+| name         | string       | 分组名称 |
 | public       | bool         | 是否为公共分组 |
 | bind_apps    | []string     | 绑定的应用列表 |
-| mode         | string       | 分组枚举类型：custom,debug     |
+| mode         | string       | 分组枚举类型：custom,debug,default   |
 | selector     | selector     | 分组选择器   |
 | uid          | string       | debug UID  |
 | released_apps_num | uint32 | 已上线应用数量 |

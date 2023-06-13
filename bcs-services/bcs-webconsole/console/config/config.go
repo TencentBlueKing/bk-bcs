@@ -24,19 +24,16 @@ import (
 // Configurations : manage all configurations
 type Configurations struct {
 	mtx         sync.Mutex
-	Base        *BaseConf                  `yaml:"base_conf"`
-	Auth        *AuthConf                  `yaml:"auth_conf"`
-	BkLogin     *BKLoginConf               `yaml:"bklogin_conf"`
-	Logging     *LogConf                   `yaml:"logging"`
-	BKAPIGW     *BKAPIGWConf               `yaml:"bkapigw_conf"`
-	BCS         *BCSConf                   `yaml:"bcs_conf"`
-	BCSCC       *BCSCCConf                 `yaml:"bcs_cc_conf"`
-	BCSEnvConf  []*BCSConf                 `yaml:"bcs_env_conf"`
-	Credentials map[string][]*Credential   `yaml:"-"`
-	BCSEnvMap   map[BCSClusterEnv]*BCSConf `yaml:"-"`
-	Redis       *RedisConf                 `yaml:"redis"`
-	WebConsole  *WebConsoleConf            `yaml:"webconsole"`
-	Web         *WebConf                   `yaml:"web"`
+	Base        *BaseConf                `yaml:"base_conf"`
+	Auth        *AuthConf                `yaml:"auth_conf"`
+	Logging     *LogConf                 `yaml:"logging"`
+	BKAPIGW     *BKAPIGWConf             `yaml:"bkapigw_conf"`
+	BCS         *BCSConf                 `yaml:"bcs_conf"`
+	Credentials map[string][]*Credential `yaml:"-"`
+	Redis       *RedisConf               `yaml:"redis"`
+	WebConsole  *WebConsoleConf          `yaml:"webconsole"`
+	Web         *WebConf                 `yaml:"web"`
+	Etcd        *EtcdConf                `yaml:"etcd"`
 }
 
 // newConfigurations 新增配置
@@ -50,10 +47,6 @@ func newConfigurations() (*Configurations, error) {
 	c.Auth = &AuthConf{}
 	c.Auth.Init()
 
-	// BkLogin Config
-	c.BkLogin = &BKLoginConf{}
-	c.BkLogin.Init()
-
 	c.BKAPIGW = &BKAPIGWConf{}
 	c.BKAPIGW.Init()
 
@@ -65,18 +58,14 @@ func newConfigurations() (*Configurations, error) {
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
 
-	// BCS-CC Config
-	c.BCSCC = &BCSCCConf{}
-	c.BCSCC.Init()
-
-	c.BCSEnvConf = []*BCSConf{}
-	c.BCSEnvMap = map[BCSClusterEnv]*BCSConf{}
-
 	c.Redis = &RedisConf{}
 	c.Redis.Init()
 
 	c.WebConsole = &WebConsoleConf{}
 	c.WebConsole.Init()
+
+	c.Etcd = &EtcdConf{}
+	c.Etcd.Init()
 
 	c.Credentials = map[string][]*Credential{}
 
@@ -192,16 +181,9 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	}
 	if c.BCS.Token == "" {
 		c.BCS.Token = BCS_APIGW_TOKEN
-		for _, v := range c.BCSEnvConf {
-			v.Token = BCS_APIGW_TOKEN
-		}
 	}
-
 	if c.BCS.JWTPubKey == "" {
 		c.BCS.JWTPubKey = BCS_APIGW_PUBLIC_KEY
-		for _, v := range c.BCSEnvConf {
-			v.JWTPubKey = BCS_APIGW_PUBLIC_KEY
-		}
 	}
 
 	if err := c.init(); err != nil {
@@ -210,11 +192,7 @@ func (c *Configurations) ReadFrom(content []byte) error {
 
 	c.Logging.InitBlog()
 	c.Base.InitManagers()
-
-	// 把列表类型转换为map，方便检索
-	for _, conf := range c.BCSEnvConf {
-		c.BCSEnvMap[conf.ClusterEnv] = conf
-	}
+	c.BCS.initInnerHost()
 
 	if err := c.WebConsole.InitTagPatterns(); err != nil {
 		return err

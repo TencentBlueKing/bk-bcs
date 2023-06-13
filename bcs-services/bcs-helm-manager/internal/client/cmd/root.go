@@ -13,11 +13,13 @@
 package cmd
 
 import (
-	"fmt"
+	"flag"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"k8s.io/klog"
 )
 
 const defaultCfgFile = "/etc/bcs/helmctl.yaml"
@@ -29,15 +31,14 @@ var (
 
 	rootCMD = &cobra.Command{
 		Use:   "helmctl",
-		Short: "kubectl plugin for bcs helm manager",
-		Long:  "kubectl plugin for bcs helm manager",
+		Short: "helm for bcs",
+		Long:  "helm for bcs",
 	}
 )
 
 // Execute is the entrance for cmd tools
 func Execute() {
 	if err := rootCMD.Execute(); err != nil {
-		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 }
@@ -50,8 +51,7 @@ func ensureConfig() {
 	viper.SetConfigFile(cfgFile)
 	viper.AutomaticEnv()
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Printf("read config from %s failed, %s\n", cfgFile, err.Error())
-		os.Exit(1)
+		klog.Fatalf("read config from %s failed, %s", cfgFile, err.Error())
 	}
 }
 
@@ -59,13 +59,16 @@ func init() {
 	cobra.OnInitialize(ensureConfig)
 	rootCMD.AddCommand(availableCMD)
 	rootCMD.AddCommand(getCMD)
-	rootCMD.AddCommand(createCMD)
-	rootCMD.AddCommand(updateCMD)
 	rootCMD.AddCommand(deleteCMD)
+	rootCMD.AddCommand(historyCMD)
 	rootCMD.AddCommand(installCMD)
 	rootCMD.AddCommand(uninstallCMD)
 	rootCMD.AddCommand(upgradeCMD)
 	rootCMD.AddCommand(rollbackCMD)
+	flag.StringVar(&cfgFile, "config", defaultCfgFile, "config file, yaml mode")
 	rootCMD.PersistentFlags().StringVarP(
-		&cfgFile, "config", "c", defaultCfgFile, "config file")
+		&flagOutput, "output", "o", "", "output format, one of json|wide")
+	klog.InitFlags(nil)
+	flag.Parse()
+	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 }

@@ -15,31 +15,47 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 var (
 	flagValueFile []string
-	flagArgs      string
-	sysVarFile    string
-
-	installCMD = &cobra.Command{
+	flagArgs      []string
+	installCMD    = &cobra.Command{
 		Use:   "install",
 		Short: "install",
 		Long:  "install chart release",
 		Run:   Install,
+		Example: "helmctl install -p <project_code> -c <cluster_id> -n <namespace> <release_name> <chart_name> " +
+			"<version> -f values.yaml",
 	}
 )
 
+func init() {
+	installCMD.PersistentFlags().StringVarP(
+		&flagProject, "project", "p", "", "project code")
+	installCMD.PersistentFlags().StringVarP(
+		&flagRepository, "repo", "r", "", "repository name")
+	installCMD.PersistentFlags().StringVarP(
+		&flagCluster, "cluster", "c", "", "release cluster id")
+	installCMD.PersistentFlags().StringVarP(
+		&flagNamespace, "namespace", "n", "", "release namespace")
+	installCMD.PersistentFlags().StringSliceVarP(
+		&flagValueFile, "file", "f", nil, "value file for installation, -f values.yaml")
+	installCMD.PersistentFlags().StringSliceVarP(
+		&flagArgs, "args", "", nil, "--args=--wait=true --args=--timeout=600s")
+	installCMD.MarkPersistentFlagRequired("project")
+	installCMD.MarkPersistentFlagRequired("cluster")
+	installCMD.MarkPersistentFlagRequired("namespace")
+}
+
 // Install provide the actions to do installCMD
 func Install(cmd *cobra.Command, args []string) {
-	req := &helmmanager.InstallReleaseReq{}
+	req := &helmmanager.InstallReleaseV1Req{}
 
 	if len(args) < 3 {
 		fmt.Printf("install args need at least 3, install [name] [chart] [version]\n")
@@ -54,27 +70,24 @@ func Install(cmd *cobra.Command, args []string) {
 	req.Name = common.GetStringP(args[0])
 	req.Namespace = &flagNamespace
 	req.ClusterID = &flagCluster
-	req.ProjectID = &flagProject
+	req.ProjectCode = &flagProject
+	if flagRepository == "" {
+		flagRepository = flagProject
+	}
 	req.Repository = &flagRepository
 	req.Chart = common.GetStringP(args[1])
 	req.Version = common.GetStringP(args[2])
 	req.Values = values
-	req.BcsSysVar = getSysVar()
-	if flagArgs != "" {
-		req.Args = strings.Split(flagArgs, " ")
-	}
+	req.Args = flagArgs
 
 	c := newClientWithConfiguration()
-	data, err := c.Release().Install(cmd.Context(), req)
+	err = c.Release().Install(cmd.Context(), req)
 	if err != nil {
 		fmt.Printf("install release failed, %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to install release %s in version %s namespace %s cluster %s "+
-		"with appVersion %s revision %d\n",
-		req.GetName(), req.GetVersion(), req.GetNamespace(), req.GetClusterID(),
-		data.GetAppVersion(), data.GetRevision())
+	fmt.Printf("success to install release %s", req.GetName())
 }
 
 func getValues() ([]string, error) {
@@ -88,41 +101,4 @@ func getValues() ([]string, error) {
 	}
 
 	return values, nil
-}
-
-func getSysVar() map[string]string {
-	if sysVarFile == "" {
-		return nil
-	}
-
-	f, err := os.Open(sysVarFile)
-	if err != nil {
-		fmt.Printf("open sys var file from %s failed, %s\n", sysVarFile, err.Error())
-		os.Exit(1)
-	}
-
-	var r map[string]string
-	if err = yaml.NewYAMLOrJSONDecoder(f, 20).Decode(&r); err != nil {
-		fmt.Printf("load sys var file from %s failed, %s\n", sysVarFile, err.Error())
-		os.Exit(1)
-	}
-
-	return r
-}
-
-func init() {
-	installCMD.PersistentFlags().StringVarP(
-		&flagProject, "project", "p", "", "project id for operation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagRepository, "repository", "r", "", "repository name for operation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagNamespace, "namespace", "n", "", "release namespace for operation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagCluster, "cluster", "", "", "release cluster id for operation")
-	installCMD.PersistentFlags().StringSliceVarP(
-		&flagValueFile, "file", "f", nil, "value file for installation")
-	installCMD.PersistentFlags().StringVarP(
-		&flagArgs, "args", "", "", "args to append to helm command")
-	installCMD.PersistentFlags().StringVarP(
-		&sysVarFile, "sysvar", "", "", "sys var file")
 }

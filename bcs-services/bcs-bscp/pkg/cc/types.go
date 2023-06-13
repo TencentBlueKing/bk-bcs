@@ -237,13 +237,14 @@ func (s IAM) validate() error {
 	return nil
 }
 
-//StorageMode :
-
+// StorageMode :
 type StorageMode string
 
 const (
+	// BkRepo Type
 	BkRepo StorageMode = "BKREPO"
-	S3     StorageMode = "S3"
+	// S3 type
+	S3 StorageMode = "S3"
 )
 
 // Repository defines all the repo related runtime.
@@ -252,18 +253,22 @@ type Repository struct {
 	S3          S3Storage     `yaml:"s3"`
 	BkRepo      BkRepoStorage `yaml:"bkRepo"`
 }
+
+// BkRepoStorage BKRepo 存储类型
 type BkRepoStorage struct {
 	// Endpoints is a seed list of host:port addresses of repo nodes.
 	Endpoints []string `yaml:"endpoints"`
-	// Token plat authority authentication of repo.
-	Token string `yaml:"token"`
 	// Project bscp project name in repo.
 	Project string `yaml:"project"`
-	// User bscp project admin user in repo.
-	User string    `yaml:"user"`
-	TLS  TLSConfig `yaml:"tls"`
+	// User basic auth username.
+	Username string `yaml:"username"`
+	// Password basic auth password.
+	Password string `yaml:"password"`
+	// TLS defines the tls config for repo.
+	TLS TLSConfig `yaml:"tls"`
 }
 
+// S3Storage s3 存储类型
 type S3Storage struct {
 	Endpoint        string `yaml:"endpoint"`
 	AccessKeyID     string `yaml:"accessKeyID"`
@@ -294,7 +299,7 @@ func (s Repository) OneEndpoint() (string, error) {
 	return addr, nil
 }
 
-func (s Repository) trySetDefault() {
+func (s *Repository) trySetDefault() {
 	if len(s.StorageType) == 0 {
 		s.StorageType = BkRepo
 	}
@@ -323,16 +328,16 @@ func (s Repository) validate() error {
 			return errors.New("bk_repo endpoints is not set")
 		}
 
-		if len(s.BkRepo.Token) == 0 {
-			return errors.New("repo token is not set")
+		if len(s.BkRepo.Username) == 0 {
+			return errors.New("repo basic auth username is not set")
+		}
+
+		if len(s.BkRepo.Password) == 0 {
+			return errors.New("repo basic auth password is not set")
 		}
 
 		if len(s.BkRepo.Project) == 0 {
 			return errors.New("repo project is not set")
-		}
-
-		if len(s.BkRepo.User) == 0 {
-			return errors.New("repo user is not set")
 		}
 
 		if err := s.BkRepo.TLS.validate(); err != nil {
@@ -469,6 +474,9 @@ func (ds *Database) trySetDefault() {
 		ds.MaxIdleConn = 5
 	}
 
+	if ds.MaxIdleTimeoutMin == 0 {
+		ds.MaxIdleTimeoutMin = 60
+	}
 }
 
 // validate database runtime.
@@ -577,6 +585,18 @@ func (n *Network) trySetFlagBindIP(ip net.IP) error {
 	return nil
 }
 
+// trySetFlagPort set http and grpc port
+func (n *Network) trySetFlagPort(port, grpcPort int) error {
+	if port > 0 {
+		n.HttpPort = uint(port)
+	}
+	if grpcPort > 0 {
+		n.RpcPort = uint(grpcPort)
+	}
+
+	return nil
+}
+
 // trySetDefault set the network's default value if user not configured.
 func (n *Network) trySetDefault() {
 	if len(n.BindIP) == 0 {
@@ -654,7 +674,9 @@ func (tls TLSConfig) validate() error {
 type SysOption struct {
 	ConfigFiles []string
 	// BindIP Setting startup bind ip.
-	BindIP net.IP
+	BindIP   net.IP
+	Port     int
+	GRPCPort int
 	// Versioned Setting if show current version info.
 	Versioned bool
 }
@@ -662,7 +684,7 @@ type SysOption struct {
 // CheckV check if show current version info.
 func (s SysOption) CheckV() {
 	if s.Versioned {
-		version.ShowVersion()
+		version.ShowVersion("", version.Row)
 		os.Exit(0)
 	}
 }
@@ -729,10 +751,20 @@ type FSLocalCache struct {
 	// the large of value, the longer it takes for the published app strategy take effected. should <= 120.
 	PublishedStrategyCacheTTLSec uint `yaml:"publishedStrategyCacheTTLSec"`
 
+	// ReleasedGroupCacheSize defines how many released groups can be cached.
+	ReleasedGroupCacheSize uint `yaml:"releasedGroupCacheSize"`
+	// ReleasedGroupCacheTTLSec defines how long will this released group can be cached in seconds.
+	ReleasedGroupCacheTTLSec uint `yaml:"releasedGroupCacheTTLSec"`
+
 	// AuthCacheSize defines how many auth results can be cached.
 	AuthCacheSize uint `yaml:"authCacheSize"`
 	// AuthCacheTTLSec defines how long this auth result with permission can be cached in seconds.
 	AuthCacheTTLSec uint `yaml:"authCacheTTLSec"`
+
+	// CredentialCacheSize defines how many credentials can be cached.
+	CredentialCacheSize uint `yaml:"credentialCacheSize"`
+	// CredentialCacheTTLSec defines how long this credential can be cached in seconds.
+	CredentialCacheTTLSec uint `yaml:"credentialCacheTTLSec"`
 }
 
 // validate if the feed server's local cache runtime is valid or not.
@@ -783,6 +815,14 @@ func (fc *FSLocalCache) trySetDefault() {
 		fc.PublishedStrategyCacheTTLSec = 120
 	}
 
+	if fc.ReleasedGroupCacheSize == 0 {
+		fc.ReleasedGroupCacheSize = 100
+	}
+
+	if fc.ReleasedGroupCacheTTLSec == 0 {
+		fc.ReleasedGroupCacheTTLSec = 120
+	}
+
 	if fc.AuthCacheSize == 0 {
 		fc.AuthCacheSize = 1000
 	}
@@ -791,7 +831,13 @@ func (fc *FSLocalCache) trySetDefault() {
 		fc.AuthCacheTTLSec = 300
 	}
 
-	return
+	if fc.CredentialCacheSize == 0 {
+		fc.CredentialCacheSize = 5000
+	}
+
+	if fc.CredentialCacheTTLSec == 0 {
+		fc.CredentialCacheTTLSec = 1
+	}
 }
 
 // Downstream define feed server downStream related settings.
@@ -834,8 +880,6 @@ func (f *Downstream) trySetDefault() {
 	if f.NotifyMaxLimit == 0 {
 		f.NotifyMaxLimit = 50
 	}
-
-	return
 }
 
 // MatchReleaseLimiter defines the request limit options for match release.
@@ -878,4 +922,24 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 	if lm.WaitTimeMil == 0 {
 		lm.WaitTimeMil = 50
 	}
+}
+
+// Credential credential encryption algorithm and master key
+type Credential struct {
+	MasterKey           string `yaml:"master_key"`
+	EncryptionAlgorithm string `yaml:"encryption_algorithm"`
+}
+
+// validate credential options
+func (c Credential) validate() error {
+
+	if len(c.MasterKey) == 0 {
+		return errors.New("credential master key is not set")
+	}
+
+	if len(c.EncryptionAlgorithm) == 0 {
+		return errors.New("credential Encryption Algorithm is not set")
+	}
+
+	return nil
 }

@@ -48,7 +48,7 @@ func newPermManagerClient() (*PermManager, error) {
 	}, nil
 }
 
-func TestPermManager_CreateProjectGradeManager(t *testing.T) {
+func TestCreateProjectGradeManager(t *testing.T) {
 	cli, err := newPermManagerClient()
 	if err != nil {
 		t.Fatal(err)
@@ -71,7 +71,7 @@ func TestPermManager_CreateProjectGradeManager(t *testing.T) {
 	t.Log(managerID) // 445
 }
 
-func TestPermManager_CreateProjectUserGroup(t *testing.T) {
+func TestCreateProjectUserGroup(t *testing.T) {
 	cli, err := newPermManagerClient()
 	if err != nil {
 		t.Fatal(err)

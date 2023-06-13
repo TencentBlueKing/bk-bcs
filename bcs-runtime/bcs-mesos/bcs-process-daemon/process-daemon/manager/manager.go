@@ -17,13 +17,7 @@ package manager
 import (
 	"bytes"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-daemon/process-daemon/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-daemon/process-daemon/store"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
 	"io/ioutil"
-	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json"
 	"os"
 	"os/exec"
 	"os/user"
@@ -34,6 +28,14 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-daemon/process-daemon/config"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-daemon/process-daemon/store"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
 )
 
 const (
@@ -377,7 +379,7 @@ func (m *manager) symlinkWorkdir(processInfo *types.ProcessInfo) error {
 	_, err := os.Stat(uriPack.OutputDir)
 	if err != nil {
 		blog.Errorf("process %s stat file %s error %s", processInfo.Id, uriPack.User, err.Error())
-		err = os.MkdirAll(filepath.Dir(uriPack.OutputDir), 0755)
+		err = os.MkdirAll(filepath.Dir(uriPack.OutputDir), 0755) // nolint
 		if err != nil {
 			blog.Errorf("process %s mkdir %s error %s", processInfo.Id, filepath.Dir(uriPack.OutputDir), err.Error())
 			return err
@@ -435,7 +437,8 @@ func (m *manager) startProcess(processInfo *types.ProcessInfo) {
 
 	// lookup proc user, example user00
 	if processInfo.User != "" {
-		u, err := user.Lookup(processInfo.User)
+		var u *user.User
+		u, err = user.Lookup(processInfo.User)
 		if err != nil {
 			blog.Errorf("process %s lookup user %s error %s", processInfo.Id, processInfo.User, err.Error())
 		} else {
@@ -485,7 +488,6 @@ func (m *manager) loopCheckProcess() {
 
 		m.Lock()
 		for _, process := range m.processInfos {
-			// todo
 			/*if time.Now().Unix()-process.ExecutorHeartBeatTime>ProcessHeartBeatPeriodSeconds {
 				if process.StatusInfo.Status==types.ProcessStatusStopped {
 					blog.Errorf("process %s status %s heartbeat timeout, and delete it",process.Id,

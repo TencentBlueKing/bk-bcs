@@ -106,12 +106,13 @@ func (b *bcsUserManager) GrantOrRevokePermission(method string, data []byte) err
 		method,
 		data,
 	)
-
 	if err != nil {
 		return err
 	}
 
-	code, msg, data, err := parseResponse(resp)
+	var code int
+	var msg string
+	code, msg, _, err = parseResponse(resp)
 	if err != nil {
 		return err
 	}

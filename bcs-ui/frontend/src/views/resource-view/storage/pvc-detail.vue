@@ -67,7 +67,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref } from '@vue/composition-api';
+import { defineComponent, onMounted, ref } from 'vue';
 import $store from '@/store';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 

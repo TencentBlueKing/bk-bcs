@@ -12,10 +12,16 @@ limitations under the License.
 
 package types
 
-import "bscp.io/pkg/dal/table"
+import (
+	"time"
+
+	"bscp.io/pkg/dal/table"
+	"bscp.io/pkg/runtime/selector"
+)
 
 // AppCacheMeta defines app's basic meta info
 type AppCacheMeta struct {
+	Name       string           `json:"name"`
 	ConfigType table.ConfigType `json:"cft"`
 	// the current effected strategy set's type under this app.
 	// only one strategy set is effected at one time.
@@ -23,19 +29,20 @@ type AppCacheMeta struct {
 	Reload *table.Reload `json:"reload"`
 }
 
-// PublishedStrategyCacheColumn define all the PublishedStrategyCache structs' column in db.
-var PublishedStrategyCacheColumn = "id, strategy_id, release_id, as_default, scope, mode, namespace"
-
-// PublishedStrategyCache is the published strategy info which will be
-// stored in cache.
-type PublishedStrategyCache struct {
-	ID         uint32        `db:"id" json:"id"`
-	StrategyID uint32        `db:"strategy_id" json:"sid"`
-	ReleaseID  uint32        `db:"release_id" json:"rid"`
-	AsDefault  bool          `db:"as_default" json:"dft"`
-	Scope      *table.Scope  `db:"scope" json:"scope"`
-	Mode       table.AppMode `db:"mode" json:"mode"`
-	Namespace  string        `db:"namespace" json:"ns"`
+// ReleasedGroupCache is the released group info which will be stored in cache.
+type ReleasedGroupCache struct {
+	// ID is an auto-increased value, which is a group app's
+	// unique identity.
+	ID         uint32             `db:"id" json:"id"`
+	GroupID    uint32             `db:"group_id" json:"group_id"`
+	AppID      uint32             `db:"app_id" json:"app_id"`
+	ReleaseID  uint32             `db:"release_id" json:"release_id"`
+	StrategyID uint32             `db:"strategy_id" json:"strategy_id"`
+	Mode       table.GroupMode    `db:"mode" json:"mode"`
+	Selector   *selector.Selector `db:"selector" json:"selector"`
+	UID        string             `db:"uid" json:"uid"`
+	BizID      uint32             `db:"biz_id" json:"biz_id"`
+	UpdatedAt  time.Time          `db:"updated_at" json:"updated_at"`
 }
 
 // EventMeta is an event's meta info which is used by feed server to gc cache.
@@ -84,6 +91,12 @@ type FilePermissionCache struct {
 	User      string `json:"user"`
 	UserGroup string `json:"group"`
 	Privilege string `json:"priv"`
+}
+
+// CredentialCache cache struct.
+type CredentialCache struct {
+	Enabled bool     `json:"enabled"`
+	Scope   []string `json:"scope"`
 }
 
 // ReleaseCICaches convert ReleasedConfigItem to ReleaseCICache.

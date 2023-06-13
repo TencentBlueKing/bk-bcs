@@ -11,7 +11,7 @@
           </bk-button>
         </div>
         <div class="right">
-          <ClusterSearch
+          <ClusterSelectComb
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
             cluster-type="all"
@@ -121,13 +121,13 @@
 import { catchErrorHandler } from '@/common/util';
 import Header from '@/components/layout/Header.vue';
 import ConditionsDialog from './conditions-dialog';
-import ClusterSearch from '@/components/cluster-selector/cluster-search.vue';
+import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 
 export default {
   components: {
     ConditionsDialog,
     Header,
-    ClusterSearch,
+    ClusterSelectComb,
   },
   data() {
     return {

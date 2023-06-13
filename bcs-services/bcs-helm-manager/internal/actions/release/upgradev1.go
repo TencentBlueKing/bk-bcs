@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
@@ -88,6 +89,10 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 	if err := u.saveDB(); err != nil {
 		return fmt.Errorf("db error, %s", err.Error())
 	}
+	cls, err := clustermanager.GetCluster(u.req.GetClusterID())
+	if err != nil {
+		return err
+	}
 
 	// dispatch release
 	options := &actions.ReleaseUpgradeActionOption{
@@ -106,9 +111,11 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 		Args:           u.req.GetArgs(),
 		CreateBy:       u.createBy,
 		UpdateBy:       u.updateBy,
+		AuthUser:       auth.GetRealUserFromCtx(u.ctx),
+		IsShardCluster: cls.IsShared,
 	}
 	action := actions.NewReleaseUpgradeAction(options)
-	_, err := operation.GlobalOperator.Dispatch(action, releaseDefaultTimeout)
+	_, err = operation.GlobalOperator.Dispatch(action, releaseDefaultTimeout)
 	if err != nil {
 		return fmt.Errorf("dispatch failed, %s", err.Error())
 	}
@@ -152,6 +159,15 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 	} else {
 		u.createBy = old.CreateBy
 		u.updateBy = createBy
+		if u.req.GetRepository() == "" {
+			u.req.Repository = &old.Repo
+		}
+		if u.req.GetChart() == "" {
+			u.req.Chart = &old.ChartName
+		}
+		if u.req.GetVersion() == "" {
+			u.req.Version = &old.ChartVersion
+		}
 		rl := entity.M{
 			entity.FieldKeyRepoName:     u.req.GetRepository(),
 			entity.FieldKeyChartName:    u.req.GetChart(),

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newCreateCmd create the resource create command
 func newCreateCmd() *cobra.Command {
 	createCmd := &cobra.Command{
 		Use:   "create",

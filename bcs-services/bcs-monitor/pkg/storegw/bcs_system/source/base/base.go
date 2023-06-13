@@ -26,14 +26,15 @@ import (
 
 // NodeInfo 节点信息
 type NodeInfo struct {
-	CPUCount      string `json:"cpu_count"`     // CPU
-	Memory        string `json:"memory"`        // 内存, 单位 Byte
-	Disk          string `json:"disk"`          // 存储, 单位 Byte
-	Provider      string `json:"provider"`      // IP来源, BKMonitor / Prometheus
-	Release       string `json:"release"`       // 内核, 3.10.107-1-tlinux2_kvm_guest-0052
-	DockerVersion string `json:"dockerVersion"` // Docker, 18.6.3-ce-tke.1
-	Sysname       string `json:"sysname"`       // 操作系统, linux
-	IP            string `json:"ip"`            // ip，多个使用 , 分隔
+	CPUCount                string `json:"cpu_count"`                 // CPU
+	Memory                  string `json:"memory"`                    // 内存, 单位 Byte
+	Disk                    string `json:"disk"`                      // 存储, 单位 Byte
+	Provider                string `json:"provider"`                  // IP来源, BKMonitor / Prometheus
+	Release                 string `json:"release"`                   // 内核, 3.10.107-1-tlinux2_kvm_guest-0052
+	DockerVersion           string `json:"dockerVersion"`             // Docker, 18.6.3-ce-tke.1
+	Sysname                 string `json:"sysname"`                   // 操作系统, linux
+	IP                      string `json:"ip"`                        // ip，多个使用 , 分隔
+	ContainerRuntimeVersion string `json:"container_runtime_version"` // 容器运行时版本
 }
 
 // PromSeries 给 series
@@ -47,6 +48,7 @@ func (n *NodeInfo) PromSeries(t time.Time) []*prompb.TimeSeries {
 		{Name: "dockerVersion", Value: n.DockerVersion},
 		{Name: "sysname", Value: n.Sysname},
 		{Name: "ip", Value: n.IP},
+		{Name: "container_runtime_version", Value: n.ContainerRuntimeVersion},
 	}
 
 	sample := []prompb.Sample{
@@ -159,6 +161,15 @@ func GetNodeMatchByName(ctx context.Context, clusterId, nodeName string) (string
 	return utils.StringJoinIPWithRegex(nodeIPList, "|", ".*"), strings.Join(nodeIPList, ","), nil
 }
 
+// GetNodeCRVersionByName 通过节点名称获取容器运行时版本
+func GetNodeCRVersionByName(ctx context.Context, clusterId, nodeName string) (string, error) {
+	version, err := k8sclient.GetNodeCRVersionByName(ctx, clusterId, nodeName)
+	if err != nil {
+		return "", err
+	}
+	return version, nil
+}
+
 func sampleStreamToSeries(m *model.SampleStream) *prompb.TimeSeries {
 	series := &prompb.TimeSeries{}
 	for k, v := range m.Metric {
@@ -183,4 +194,147 @@ func MatrixToSeries(matrix model.Matrix) []*prompb.TimeSeries {
 		series = append(series, sampleStreamToSeries(m))
 	}
 	return series
+}
+
+// GetNodeMatchWithScale 处理集群的节点列表，按照给定的粒度划分
+func GetNodeMatchWithScale(ctx context.Context, clusterId string, scale int) ([]*ResultTuple, error) {
+	nodeList, nodeNameList, err := k8sclient.GetNodeList(ctx, clusterId, true)
+	if err != nil {
+		return nil, err
+	}
+	resslice := chunkSlice(nodeList, nodeNameList, scale)
+	return resslice, nil
+}
+
+func chunkSlice(nodeList []string, nodeNameList []string, chunkSize int) []*ResultTuple {
+	var res []*ResultTuple
+	res = make([]*ResultTuple, 0)
+	for i := 0; i < len(nodeList); i += chunkSize {
+		end := i + chunkSize
+		if end > len(nodeList) {
+			end = len(nodeList)
+		}
+		res = append(res, &ResultTuple{
+			utils.StringJoinWithRegex(nodeList[i:end], "|", ":9101$"),
+			utils.StringJoinWithRegex(nodeNameList[i:end], "|", "$"),
+			nil,
+		})
+	}
+
+	return res
+}
+
+// ResultTuple result tuple
+type ResultTuple struct {
+	NodeMatch     string
+	NodeNameMatch string
+	Err           error
+}
+
+// MatrixsToSeries prom返回转换为时序对象
+func MatrixsToSeries(matrixs []model.Matrix) []*prompb.TimeSeries {
+	series := make([]*prompb.TimeSeries, 0)
+	for _, matrix := range matrixs {
+		for _, m := range matrix {
+			series = append(series, sampleStreamToSeries(m))
+		}
+	}
+	return series
+}
+
+// MergeSameSeries merge same metrics series
+func MergeSameSeries(series []*prompb.TimeSeries) []*prompb.TimeSeries {
+	if len(series) == 0 {
+		return nil
+	}
+	result := &prompb.TimeSeries{
+		Labels:  make([]prompb.Label, 0),
+		Samples: make([]prompb.Sample, 0),
+	}
+	for _, s := range series {
+		result.Labels = s.Labels
+		result.Samples = MergeSameSamples(result.Samples, s.Samples)
+	}
+	return []*prompb.TimeSeries{result}
+}
+
+// MergeSameSamples merge same samples
+func MergeSameSamples(samples1, samples2 []prompb.Sample) []prompb.Sample {
+	if len(samples1) == 0 {
+		return samples2
+	}
+	for i := range samples1 {
+		for j := range samples2 {
+			if samples1[i].Timestamp == samples2[j].Timestamp {
+				samples1[i].Value += samples2[j].Value
+				break
+			}
+		}
+	}
+	return samples1
+}
+
+// DivideSeries divide same metrics series, series1 divide series2, series must only have one element
+func DivideSeries(series1, series2 []*prompb.TimeSeries) []*prompb.TimeSeries {
+	if len(series1) == 0 || len(series2) == 0 {
+		return nil
+	}
+	result := &prompb.TimeSeries{
+		Labels:  series1[0].Labels,
+		Samples: make([]prompb.Sample, 0),
+	}
+	result.Samples = DivideSamples(series1[0].Samples, series2[0].Samples)
+	return []*prompb.TimeSeries{result}
+}
+
+// DivideSeriesByValue divide same metrics series
+func DivideSeriesByValue(series []*prompb.TimeSeries, values float64) []*prompb.TimeSeries {
+	if len(series) == 0 || values == 0 {
+		return nil
+	}
+	for i := range series {
+		for j := range series[i].Samples {
+			series[i].Samples[j].Value = series[i].Samples[j].Value / values * 100
+		}
+	}
+	return series
+}
+
+// DivideSamples samples1 divide samples2
+func DivideSamples(samples1, samples2 []prompb.Sample) []prompb.Sample {
+	if len(samples1) == 0 || len(samples2) == 0 {
+		return nil
+	}
+	for i := range samples1 {
+		for j := range samples2 {
+			if samples1[i].Timestamp == samples2[j].Timestamp {
+				if samples2[j].Value == 0 {
+					samples1[i].Value = 0
+				} else {
+					samples1[i].Value = samples1[i].Value / samples2[j].Value * 100
+				}
+				break
+			}
+		}
+	}
+	return samples1
+}
+
+// GetSameSeries divide same metrics series, series1 divide series2, series must only have one element
+func GetSameSeries(start, end time.Time, step time.Duration, values float64,
+	labels []prompb.Label) []*prompb.TimeSeries {
+	result := &prompb.TimeSeries{
+		Labels:  labels,
+		Samples: make([]prompb.Sample, 0),
+	}
+	if step == 0 {
+		return []*prompb.TimeSeries{result}
+	}
+	for cur := start; cur.Before(end); cur = cur.Add(step) {
+		result.Samples = append(result.Samples, prompb.Sample{
+			Value:     values,
+			Timestamp: cur.UnixMilli(),
+		})
+	}
+	return []*prompb.TimeSeries{result}
 }

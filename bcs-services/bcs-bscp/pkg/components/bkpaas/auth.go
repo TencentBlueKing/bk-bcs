@@ -1,5 +1,3 @@
-//go:build !bk_login
-
 /*
 Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
 Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
@@ -22,11 +20,33 @@ import (
 
 	"github.com/pkg/errors"
 
+	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components"
 )
 
+type userInfo struct {
+	Username string `json:"username"`
+}
+
+type bkPaaSAuthClient struct {
+	conf *cc.LoginAuthSettings
+}
+
+// GetLoginCredentialFromCookies 从 cookie 获取 LoginCredential
+func (b *bkPaaSAuthClient) GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error) {
+	token, err := r.Cookie("bk_token")
+	if err != nil {
+		if errors.Is(err, http.ErrNoCookie) {
+			return nil, fmt.Errorf("%s cookie not present", "bk_token")
+		}
+		return nil, err
+	}
+
+	return &LoginCredential{UID: "", Token: token.Value}, nil
+}
+
 // GetUserInfoByToken BK_PAAS 服务 bk_token 鉴权
-func GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error) {
+func (b *bkPaaSAuthClient) GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error) {
 	url := fmt.Sprintf("%s/login/accounts/is_login/", host)
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
@@ -50,7 +70,12 @@ func GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, e
 }
 
 // BuildLoginRedirectURL 登入跳转URL
-func BuildLoginRedirectURL(r *http.Request, webHost, Loginhost string) string {
-	redirectURL := fmt.Sprintf("%s/login/?c_url=%s", Loginhost, url.QueryEscape(buildAbsoluteUri(webHost, r)))
+func (b *bkPaaSAuthClient) BuildLoginRedirectURL(r *http.Request, webHost string) string {
+	redirectURL := fmt.Sprintf("%s/?c_url=%s", b.conf.Host, url.QueryEscape(buildAbsoluteUri(webHost, r)))
 	return redirectURL
+}
+
+// BuildLoginURL API未登入访问URL
+func (b *bkPaaSAuthClient) BuildLoginURL(r *http.Request) (string, string) {
+	return buildLoginURL(r, b.conf.Host), buildLoginPlainURL(r, b.conf.Host)
 }

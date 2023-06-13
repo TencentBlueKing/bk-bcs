@@ -15,7 +15,10 @@
 package utils
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -151,4 +154,16 @@ func getResourceType(env string) string {
 	}
 
 	return auth.ClusterTest
+}
+
+// ObjToPrettyJson obj to json
+func ObjToPrettyJson(obj interface{}) string {
+	marshal, _ := json.MarshalIndent(obj, "", "    ")
+	return bytes.NewBuffer(marshal).String()
+}
+
+// ObjToJson obj to json
+func ObjToJson(obj interface{}) string {
+	marshal, _ := json.Marshal(obj)
+	return bytes.NewBuffer(marshal).String()
 }

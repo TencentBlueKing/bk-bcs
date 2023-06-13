@@ -66,6 +66,7 @@ func Map2pbStruct(m map[string]interface{}) *spb.Struct {
 }
 
 // InterfaceToValue convert interface to value
+// NOCC:golint/fnsize(设计如此：无法拆分代码行数)
 func InterfaceToValue(v interface{}) *spb.Value {
 	switch v := v.(type) {
 	case nil:
@@ -154,6 +155,7 @@ func InterfaceToValue(v interface{}) *spb.Value {
 	}
 }
 
+// NOCC:golint/fnsize(设计如此：无法拆分代码行数),CCN_threshold(设计如此)
 func toValue(v reflect.Value) *spb.Value {
 	switch v.Kind() {
 	case reflect.Bool:

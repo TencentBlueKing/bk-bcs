@@ -15,102 +15,284 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2022-03-01/containerservice"
+	"github.com/pkg/errors"
+
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
-// ContainerServiceClient container service client
-type ContainerServiceClient struct {
-	resourceGroupName     string
-	managedClustersClient containerservice.ManagedClustersClient
+type AksServiceImpl struct {
+	resourcesGroup       string
+	netClient            *armnetwork.InterfacesClient
+	resourceClient       *armcompute.ResourceSKUsClient
+	poolClient           *armcontainerservice.AgentPoolsClient
+	setClient            *armcompute.VirtualMachineScaleSetsClient
+	vmClient             *armcompute.VirtualMachineScaleSetVMsClient
+	vnetClient           *armnetwork.VirtualNetworksClient
+	clustersClient       *armcontainerservice.ManagedClustersClient
+	securityGroupsClient *armnetwork.SecurityGroupsClient
 }
 
-// NewContainerServiceClient create container service client
-func NewContainerServiceClient(opt *cloudprovider.CommonOption) (*ContainerServiceClient, error) {
-	if opt == nil || opt.Account == nil {
+// NewAksServiceImplWithCommonOption 从 CommonOption 创建 AksService
+func NewAksServiceImplWithCommonOption(opt *cloudprovider.CommonOption) (AksService, error) {
+	account := opt.Account
+	if opt == nil || account == nil {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
-	if len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 ||
-		len(opt.Account.ClientID) == 0 || len(opt.Account.ClientSecret) == 0 ||
-		len(opt.Account.ResourceGroupName) == 0 {
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
+		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 ||
+		len(account.ResourceGroupName) == 0 {
+		return nil, cloudprovider.ErrCloudCredentialLost
+	}
+	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret,
+		account.ResourceGroupName)
+}
+
+// NewAksServiceImplWithAccount 从 Account 创建 AksService
+func NewAksServiceImplWithAccount(account *proto.Account) (AksService, error) {
+	if account == nil {
+		return nil, cloudprovider.ErrCloudCredentialLost
+	}
+	if len(account.SubscriptionID) == 0 || len(account.TenantID) == 0 ||
+		len(account.ClientID) == 0 || len(account.ClientSecret) == 0 ||
+		len(account.ResourceGroupName) == 0 {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
 
-	// get Authorizer
-	authorizer, err := getAuthorizer(opt.Account.TenantID, opt.Account.ClientID, opt.Account.ClientSecret)
+	return NewAKsServiceImpl(account.SubscriptionID, account.TenantID, account.ClientID, account.ClientSecret,
+		account.ResourceGroupName)
+}
+
+// NewAKsServiceImpl 创建AksService
+func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret, resourceGroupName string) (AksService, error) {
+	if len(subscriptionID) == 0 || len(tenantID) == 0 || len(clientID) == 0 || len(clientSecret) == 0 {
+		return nil, cloudprovider.ErrCloudCredentialLost
+	}
+	cred, err := getClientCredential(tenantID, clientID, clientSecret)
 	if err != nil {
-		return nil, fmt.Errorf("get authorizer error: %v", err)
+		return nil, errors.Wrapf(err, "get Azure Credential failed,TenantID:%s", tenantID)
+	}
+	poolClient, err := armcontainerservice.NewAgentPoolsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create pool client,SubscriptionID:%s,", subscriptionID)
+	}
+	clustersClient, err := armcontainerservice.NewManagedClustersClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create cluster client,SubscriptionID:%s", subscriptionID)
+	}
+	setClient, err := armcompute.NewVirtualMachineScaleSetsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create vmScaleSets client,SubscriptionID:%s", subscriptionID)
+	}
+	vmClient, err := armcompute.NewVirtualMachineScaleSetVMsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create vmScaleSetVMs client,SubscriptionID:%s", subscriptionID)
+	}
+	netClient, err := armnetwork.NewInterfacesClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create networkInterfaces client,SubscriptionID:%s", subscriptionID)
+	}
+	resourceClient, err := armcompute.NewResourceSKUsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create resource sku client,SubscriptionID:%s", subscriptionID)
+	}
+	vnetClient, err := armnetwork.NewVirtualNetworksClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create virtual networks client,SubscriptionID:%s",
+			subscriptionID)
+	}
+	securityGroupsClient, err := armnetwork.NewSecurityGroupsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create security groups client,SubscriptionID:%s",
+			subscriptionID)
 	}
 
-	// new ManagedClustersClient
-	managedClustersClient := containerservice.NewManagedClustersClient(opt.Account.SubscriptionID)
-	managedClustersClient.Authorizer = authorizer
-	return &ContainerServiceClient{
-		managedClustersClient: managedClustersClient,
-		resourceGroupName:     opt.Account.ResourceGroupName,
+	return &AksServiceImpl{
+		resourcesGroup:       resourceGroupName,
+		vmClient:             vmClient,
+		setClient:            setClient,
+		netClient:            netClient,
+		poolClient:           poolClient,
+		clustersClient:       clustersClient,
+		resourceClient:       resourceClient,
+		vnetClient:           vnetClient,
+		securityGroupsClient: securityGroupsClient,
 	}, nil
 }
 
-// ListCluster list clusters
-func (cs *ContainerServiceClient) ListCluster(ctx context.Context, location string) ([]containerservice.ManagedCluster,
-	error) {
-	pager, err := cs.managedClustersClient.ListByResourceGroup(ctx, cs.resourceGroupName)
+// GetCluster 查询集群
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) GetCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+	*armcontainerservice.ManagedCluster, error) {
+	resourceGroupName := info.CmOption.Account.ResourceGroupName
+	return aks.GetClusterWithName(ctx, resourceGroupName, info.Cluster.SystemID)
+}
+
+// GetClusterWithName 查询集群
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) GetClusterWithName(ctx context.Context, resourceGroupName, resourceName string) (
+	*armcontainerservice.ManagedCluster, error) {
+	resp, err := aks.clustersClient.Get(ctx, resourceGroupName, resourceName, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to finish the request")
 	}
-	result := make([]containerservice.ManagedCluster, 0)
-	for pager.NotDone() {
-		for _, v := range pager.Values() {
-			if len(location) != 0 && *v.Location != location {
-				continue
-			}
-			result = append(result, v)
+	return &resp.ManagedCluster, nil
+}
+
+// ListClusterByLocation 根据位置查询该地区下的所有集群(不区分资源组)
+//
+// location - 位置
+func (aks *AksServiceImpl) ListClusterByLocation(ctx context.Context, location string) (
+	[]*armcontainerservice.ManagedCluster, error) {
+	result := make([]*armcontainerservice.ManagedCluster, 0)
+	pager := aks.clustersClient.NewListPager(nil)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
 		}
-		if err := pager.NextWithContext(ctx); err != nil {
-			return nil, err
+		for i, v := range next.Value {
+			if strings.ToLower(*v.Location) == strings.ToLower(location) {
+				result = append(result, next.Value[i])
+			}
 		}
 	}
 	return result, nil
 }
 
-func getClusterIDFromARM(arm string) string {
-	s := strings.Split(arm, "/")
-	return s[len(s)-1]
+// ListClusterByResourceGroupName 查询集群列表
+//
+// location - 位置
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+func (aks *AksServiceImpl) ListClusterByResourceGroupName(ctx context.Context, location, resourceGroupName string) (
+	[]*armcontainerservice.ManagedCluster, error) {
+	result := make([]*armcontainerservice.ManagedCluster, 0)
+	pager := aks.clustersClient.NewListByResourceGroupPager(resourceGroupName, nil)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+		for i, v := range next.Value {
+			if strings.ToLower(*v.Location) == strings.ToLower(location) {
+				result = append(result, next.Value[i])
+			}
+		}
+	}
+	return result, nil
 }
 
-// GetCluster get cluster
-func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName string) (containerservice.ManagedCluster,
-	error) {
-	return cs.managedClustersClient.Get(ctx, cs.resourceGroupName, getClusterIDFromARM(clusterName))
+// DeleteCluster 删除集群
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) DeleteCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
+	resourceGroupName := info.CmOption.Account.ResourceGroupName
+	return aks.DeleteClusterWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
-// GetClusterCredentials get cluster credentials
-func (cs *ContainerServiceClient) GetClusterCredentials(ctx context.Context, clusterName string) (
-	[]containerservice.CredentialResult, error) {
-	resp, err := cs.managedClustersClient.ListClusterAdminCredentials(ctx, cs.resourceGroupName,
-		getClusterIDFromARM(clusterName), "")
+// DeleteClusterWithName 删除集群
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) DeleteClusterWithName(ctx context.Context, resourceGroupName, resourceName string) error {
+	poller, err := aks.clustersClient.BeginDelete(ctx, resourceGroupName, resourceName, nil)
 	if err != nil {
-		return nil, err
+		return errors.Wrapf(err, "failed to finish the request, resourcesGroupName: %s, cluster name: %s",
+			resourceGroupName, resourceName)
 	}
-	if resp.Kubeconfigs == nil || len(*resp.Kubeconfigs) == 0 {
-		return nil, fmt.Errorf("kubeconfigs is empty")
+	if _, err = poller.PollUntilDone(ctx, pollFrequency4); err != nil {
+		return errors.Wrapf(err, "failed to finish the request, resourcesGroupName: %s, cluster name: %s",
+			resourceGroupName, resourceName)
 	}
-	return *resp.Kubeconfigs, nil
+	return nil
 }
 
-// DeleteCluster delete cluster
-func (cs *ContainerServiceClient) DeleteCluster(ctx context.Context, clusterName string) error {
-	future, err := cs.managedClustersClient.Delete(ctx, cs.resourceGroupName, getClusterIDFromARM(clusterName))
+// GetClusterAdminCredentials 获取集群管理凭证
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) GetClusterAdminCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+	[]*armcontainerservice.CredentialResult, error) {
+	resourceGroupName := info.CmOption.Account.ResourceGroupName
+	return aks.GetClusterAdminCredentialsWithName(ctx, resourceGroupName, info.Cluster.SystemID)
+}
+
+// GetClusterAdminCredentialsWithName 获取集群管理凭证
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) GetClusterAdminCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
+	[]*armcontainerservice.CredentialResult, error) {
+	credentials, err := aks.clustersClient.ListClusterAdminCredentials(ctx, resourceGroupName, resourceName, nil)
 	if err != nil {
-		return err
+		return nil, errors.Wrapf(err, "failed to finish the request")
 	}
-	err = future.WaitForCompletionRef(ctx, cs.managedClustersClient.Client)
+	return credentials.Kubeconfigs, nil
+}
+
+// GetClusterUserCredentials 获取集群用户凭证
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) GetClusterUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+	[]*armcontainerservice.CredentialResult, error) {
+	resourceGroupName := info.CmOption.Account.ResourceGroupName
+	return aks.GetClusterUserCredentialsWithName(ctx, resourceGroupName, info.Cluster.SystemID)
+}
+
+// GetClusterUserCredentialsWithName 获取集群用户凭证
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) GetClusterUserCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
+	[]*armcontainerservice.CredentialResult, error) {
+	credentials, err := aks.clustersClient.ListClusterUserCredentials(ctx, resourceGroupName, resourceName, nil)
 	if err != nil {
-		return err
+		return nil, errors.Wrapf(err, "failed to finish the request")
 	}
-	_, err = future.Result(cs.managedClustersClient)
-	return err
+	return credentials.Kubeconfigs, nil
+}
+
+// GetClusterMonitoringUserCredentials 获取集群监控凭证
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) GetClusterMonitoringUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
+	[]*armcontainerservice.CredentialResult, error) {
+	resourceGroupName := info.CmOption.Account.ResourceGroupName
+	return aks.GetClusterMonitoringUserCredentialsWithName(ctx, resourceGroupName, info.Cluster.SystemID)
+}
+
+// GetClusterMonitoringUserCredentialsWithName 获取集群监控凭证
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// resourceName - K8S名称(Cluster.SystemID).
+func (aks *AksServiceImpl) GetClusterMonitoringUserCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
+	[]*armcontainerservice.CredentialResult, error) {
+	credentials, err := aks.clustersClient.ListClusterMonitoringUserCredentials(ctx, resourceGroupName, resourceName, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to finish the request")
+	}
+	return credentials.Kubeconfigs, nil
 }

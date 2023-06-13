@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -60,6 +61,7 @@ func (pbh *portBindingHandler) ensurePortBinding(
 	var newBindingStatusList []*networkextensionv1.PortBindingStatusItem
 	for _, item := range portBinding.Spec.PortBindingList {
 		var curStatus *networkextensionv1.PortBindingStatusItem
+		// 找到和spec中item对应的status
 		for _, tmpStatus := range portBinding.Status.PortBindingStatusList {
 			if tmpStatus.PoolName == item.PoolName &&
 				tmpStatus.PoolNamespace == item.PoolNamespace &&
@@ -75,6 +77,7 @@ func (pbh *portBindingHandler) ensurePortBinding(
 	portBinding.Status.PortBindingStatusList = newBindingStatusList
 	retry := false
 	unreadyNum := 0
+	// 不断重试等待所有item对应的监听器就绪
 	for _, status := range portBinding.Status.PortBindingStatusList {
 		if status.Status != constant.PortBindingItemStatusReady {
 			unreadyNum++
@@ -98,6 +101,7 @@ func (pbh *portBindingHandler) ensurePortBinding(
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}
 
+	// 根据portBinding status更新相关状态
 	if err := pbh.postPortBindingUpdateStatus(rawStatus, updateStatus, portBinding); err != nil {
 		return true, err
 	}
@@ -108,6 +112,7 @@ func (pbh *portBindingHandler) ensurePortBinding(
 		return true, err
 	}
 
+	// 当portBinding的部分字段发生变化时，需要同步更新pod上的注解
 	if err := pbh.ensurePod(pod, portBinding); err != nil {
 		return true, errors.Wrapf(err, "ensurePod[%s/%s] failed", pod.GetNamespace(), pod.GetName())
 	}
@@ -117,6 +122,7 @@ func (pbh *portBindingHandler) ensurePortBinding(
 	return retry, nil
 }
 
+// updatePodCondition 在pod.condition上记录portBinding的绑定状态
 func (pbh *portBindingHandler) updatePodCondition(pod *k8scorev1.Pod, status string) error {
 	if _, ok := pod.Annotations[constant.AnnotationForPortPoolReadinessGate]; !ok {
 		return nil
@@ -215,6 +221,7 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 	}
 	portBinding.Status.PortBindingStatusList = nil
 	for _, item := range portBinding.Spec.PortBindingList {
+		// 将item对应监听器的targetGroup重新设置为空
 		itemStatus := pbh.itemHandler.deleteItem(item)
 		portBinding.Status.PortBindingStatusList = append(portBinding.Status.PortBindingStatusList, itemStatus)
 	}
@@ -242,6 +249,7 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 	return notCleanedNum != 0, nil
 }
 
+// ensurePod update pod annotation if portBinding related field changed
 func (pbh *portBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) error {
 	portBindingItemMap := make(map[string]*networkextensionv1.PortBindingItem)
 	for _, portBindingItem := range portBinding.Spec.PortBindingList {
@@ -271,6 +279,14 @@ func (pbh *portBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *networ
 			podPortBindingList[idx].External = portBindingItem.External
 			changed = true
 		}
+		if !reflect.DeepEqual(podPortBindingItem.LoadBalancerIDs, portBindingItem.LoadBalancerIDs) {
+			podPortBindingList[idx].LoadBalancerIDs = portBindingItem.LoadBalancerIDs
+			changed = true
+		}
+		if !reflect.DeepEqual(podPortBindingItem.PoolItemLoadBalancers, portBindingItem.PoolItemLoadBalancers) {
+			podPortBindingList[idx].PoolItemLoadBalancers = portBindingItem.PoolItemLoadBalancers
+			changed = true
+		}
 	}
 	if changed {
 		blog.Info("pod[%s/%s] PortBindingItem.External changed", pod.GetNamespace(), pod.GetName())
@@ -283,12 +299,14 @@ func (pbh *portBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *networ
 	return nil
 }
 
+// patchPortBindingAnnotation patch annotation to portbinding
 func (pbh *portBindingHandler) patchPortBindingAnnotation(
 	portbinding *networkextensionv1.PortBinding, notReadyTimestamp string,
 ) error {
 	patchStruct := map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"annotations": map[string]interface{}{
+				// 记录portBinding最近一次变为NotReady的时间
 				constant.AnnotationForPortBindingNotReadyTimestamp: notReadyTimestamp,
 			},
 		},
@@ -326,6 +344,7 @@ func (pbh *portBindingHandler) postPortBindingUpdateStatus(rawStatus, updateStat
 			if notReadyTime, err := time.Parse(time.RFC3339Nano, notReadyTimeStr); err != nil {
 				blog.Warnf("parse not ready timestamp failed, err: %s", err.Error())
 			} else {
+				// 上报绑定时间到Metric
 				metrics.ReportPortBindMetric(notReadyTime)
 			}
 			if err := pbh.patchPortBindingAnnotation(portBinding, ""); err != nil {

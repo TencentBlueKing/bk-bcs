@@ -76,13 +76,13 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(quota)
 	}
 	// get variables
-	if variables, lErr := listNamespaceVariables(ctx, projectCode, clusterID, namespace.GetName()); lErr != nil {
+	variables, err := listNamespaceVariables(ctx, projectCode, clusterID, namespace.GetName())
+	if err != nil {
 		logging.Error("get namespace %s/%s variables failed, err: %s",
-			clusterID, namespace.GetName(), lErr.Error())
-		return errorx.NewDBErr(lErr.Error())
-	} else {
-		retData.Variables = variables
+			clusterID, namespace.GetName(), err.Error())
+		return errorx.NewDBErr(err.Error())
 	}
+	retData.Variables = variables
 	if staging != nil {
 		retData.ItsmTicketType = staging.ItsmTicketType
 		retData.ItsmTicketSN = staging.ItsmTicketSN

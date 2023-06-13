@@ -16,3 +16,30 @@ export const byteUnitConverse = (size: number) => {
 export const stringLengthInBytes = (content: string) => {
   return (new TextEncoder().encode(content)).length
 }
+
+export const copyToClipBoard = (content: string) => {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(content)
+  } else {
+    const $textarea = document.createElement('textarea')
+    document.body.appendChild($textarea)
+    $textarea.style.position = 'fixed'
+    $textarea.style.clip = 'rect(0 0 0 0)'
+    $textarea.style.top = '10px'
+    $textarea.value = content
+    $textarea.select()
+    document.execCommand('copy', true)
+    document.body.removeChild($textarea)
+  }
+}
+
+// 将数字拆分为单个数字组成的数组
+export const splitToDigit = (n: number) => {
+  let num = n
+  const list = []
+  while (num > 0) {
+    list.push(num % 10)
+    num = Math.floor(num / 10)
+  }
+  return list.reverse()
+}

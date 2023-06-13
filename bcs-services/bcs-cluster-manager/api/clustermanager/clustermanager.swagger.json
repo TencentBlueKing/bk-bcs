@@ -9170,6 +9170,11 @@
           "type": "string",
           "description": "经过 Base64 编码后的自定义数据，最大长度不超过16KB。",
           "title": "userData"
+        },
+        "initLoginUsername": {
+          "type": "string",
+          "description": "新实例初始设置username",
+          "title": "initLoginUsername"
         }
       },
       "title": "LaunchConfigure template for scaling node"
@@ -10421,6 +10426,11 @@
           "type": "string",
           "description": "节点ipv6地址",
           "title": "innerIPv6"
+        },
+        "username": {
+          "type": "string",
+          "description": "实例初始化用户名",
+          "title": "username"
         }
       },
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",

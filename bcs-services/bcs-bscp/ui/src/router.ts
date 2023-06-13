@@ -1,65 +1,94 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useGlobalStore } from './store/global';
+import { ISpaceDetail } from '../types/index';
+
 const routes = [
-  { path: '/', component: () => import('./views/home.vue') },
   {
-    path: '/serving',
-    name: 'serving',
-    component: () => import('./views/serving/index.vue'),
+    path: '/',
+    name: 'home',
+    redirect: () => { // 访问首页，默认调到服务管理列表页
+      const { spaceList } = useGlobalStore()
+      const firstHasPermSpace = spaceList.find((item: ISpaceDetail) => item.permission)
+      const spaceId = firstHasPermSpace ? firstHasPermSpace.space_id : spaceList[0]?.space_id
+      return ({ name: 'service-mine', params: { spaceId } })
+    }
+  },
+  {
+    path: '/space/:spaceId',
+    name: 'space',
+    component: () => import('./views/space/index.vue'),
     children: [
       {
-        path: 'mine/',
-        name: 'serving-mine',
-        component: () => import('./views/serving/serving-mine.vue'),
+        path: 'service',
+        children: [
+          {
+            path: 'mine',
+            name: 'service-mine',
+            meta: {
+              navModule: 'service'
+            },
+            component: () => import('./views/space/service/list/index.vue'),
+          },
+          {
+            path: 'all',
+            name: 'service-all',
+            meta: {
+              navModule: 'service'
+            },
+            component: () => import('./views/space/service/list/index.vue'),
+          },
+          {
+            path: ':appId(\\d+)',
+            component: () => import('./views/space/service/detail/index.vue'),
+            children: [
+              {
+                path: 'config',
+                name: 'service-config',
+                meta: {
+                  navModule: 'service'
+                },
+                component: () => import('./views/space/service/detail/config/index.vue')
+              }
+            ]
+          },
+        ]
       },
       {
-        path: 'all/',
-        name: 'serving-all',
-        component: () => import('./views/serving/serving-all.vue'),
+        path: 'groups',
+        name: 'groups-management',
+        meta: {
+          navModule: 'groups'
+        },
+        component: () => import('./views/space/groups/index.vue')
+      },
+      {
+        path: 'scripts',
+        name: 'scripts-management',
+        meta: {
+          navModule: 'scripts'
+        },
+        component: () => import('./views/space/scripts/index.vue')
+      },
+      {
+        path: 'credentials',
+        name: 'credentials-management',
+        meta: {
+          navModule: 'credentials'
+        },
+        component: () => import('./views/space/credentials/index.vue')
       },
     ]
   },
   {
-    path: '/serving/:spaceId/app/:appId',
-    name: 'serving-detail',
-    component: () => import('./views/serving/detail/index.vue'),
-    children: [
-      {
-        path: 'config/',
-        name: 'serving-config',
-        component: () => import('./views/serving/detail/config/index.vue')
-      },
-      {
-        path: 'group/',
-        name: 'serving-group',
-        component: () => import('./views/serving/detail/group/index.vue')
-      },
-      {
-        path: 'client/',
-        name: 'serving-client',
-        component: () => import('./views/serving/detail/client/index.vue')
-      }
-    ]
-  },
-  {
-    path: '/groups',
-    name: 'groups-management',
-    component: () => import('./views/groups/index.vue')
-  },
-  {
-    path: '/scripts',
-    name: 'scripts-management',
-    component: () => import('./views/scripts/index.vue')
-  },
-  {
-    path: '/keys',
-    name: 'keys-management',
-    component: () => import('./views/keys/index.vue')
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('./views/404.vue')
   }
 ]
 
 const router = createRouter({
   history: createWebHistory((<any>window).SITE_URL),
-  routes, // `routes: routes` 的缩写
+  routes,
 });
 
 export default router;

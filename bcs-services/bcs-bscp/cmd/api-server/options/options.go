@@ -23,13 +23,6 @@ import (
 // Option defines the app's runtime flag options.
 type Option struct {
 	Sys *cc.SysOption
-	// PublicKey used to api gateway jwt token.
-	PublicKey string
-	// DisableJWT whether to enable blueking api-gateway jwt parser.if disable-tgw = false, api-service
-	// parse request will api-gateway parser, requests from other parties will not be parsed.if
-	// disable-tgw = true, api-service parse requests for direct access that have not been processed by
-	// the gateway. Parse rule details：pkg/runtime/parser/parser.go
-	DisableJWT bool
 }
 
 // InitOptions init api server's options from command flags.
@@ -38,9 +31,7 @@ func InitOptions() *Option {
 	sysOpt := flags.SysFlags(fs)
 	opt := &Option{Sys: sysOpt}
 
-	fs.StringVarP(&opt.PublicKey, "public-key", "", "", "the api gateway public key path")
-	fs.BoolVarP(&opt.DisableJWT, "disable-jwt", "", false, "to disable jwt authorize for "+
-		"all the incoming request. Note: disable jwt authorize may cause security problems.")
+	fs.IntVar(&sysOpt.Port, "port", 8080, "http/metrics port")
 
 	// parses the command-line flags from os.Args[1:]. must be called after all flags are defined
 	// and before flags are accessed by the program.

@@ -24,6 +24,23 @@ import (
 	"bscp.io/pkg/types"
 )
 
+// GetAppID get app id by app name.
+func (s *Service) GetAppID(ctx context.Context, req *pbcs.GetAppIDReq) (*pbcs.GetAppIDResp, error) {
+	if req.BizId <= 0 || req.AppName == "" {
+		return nil, errf.New(errf.InvalidParameter, "invalid biz id or app name")
+	}
+
+	kt := kit.FromGrpcContext(ctx)
+	appID, err := s.op.GetAppID(kt, req.BizId, req.AppName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.GetAppIDResp{
+		AppId: appID,
+	}, nil
+}
+
 // GetAppMeta get app's basic info.
 func (s *Service) GetAppMeta(ctx context.Context, req *pbcs.GetAppMetaReq) (*pbcs.JsonRawResp, error) {
 	if req.BizId <= 0 || req.AppId <= 0 {
@@ -58,64 +75,61 @@ func (s *Service) GetReleasedCI(ctx context.Context, req *pbcs.GetReleasedCIReq)
 	}, nil
 }
 
-// GetAppInstanceRelease get an app instance's specific release if it has.
-func (s *Service) GetAppInstanceRelease(ctx context.Context, req *pbcs.GetAppInstanceReleaseReq) (
-	*pbcs.GetAppInstanceReleaseResp, error) {
-
-	if req.BizId <= 0 || req.AppId <= 0 || len(req.Uid) == 0 {
-		return nil, errf.New(errf.InvalidParameter, "invalid biz id, app id or app instance uid")
-	}
-
-	kt := kit.FromGrpcContext(ctx)
-	meta, err := s.dao.CRInstance().GetAppCRIMeta(kt, req.BizId, req.AppId, req.Uid)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pbcs.GetAppInstanceReleaseResp{ReleaseId: meta.ReleaseID}, nil
-}
-
-// GetAppCpsID get app's latest published strategy id.
-func (s *Service) GetAppCpsID(ctx context.Context, req *pbcs.GetAppCpsIDReq) (*pbcs.GetAppCpsIDResp, error) {
+// ListAppReleasedGroups list app's released groups.
+func (s *Service) ListAppReleasedGroups(ctx context.Context, req *pbcs.ListAppReleasedGroupsReq) (
+	*pbcs.JsonRawResp, error) {
 
 	if req.BizId <= 0 || req.AppId <= 0 {
 		return nil, errf.New(errf.InvalidParameter, "invalid biz id or app id")
 	}
 
 	kt := kit.FromGrpcContext(ctx)
-
-	opt := &types.GetAppCpsIDOption{
-		BizID:     req.BizId,
-		AppID:     req.AppId,
-		Namespace: req.Namespace,
-	}
-	list, err := s.dao.Publish().GetAppCpsID(kt, opt)
+	list, err := s.op.ListAppReleasedGroups(kt, req.BizId, req.AppId)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := &pbcs.GetAppCpsIDResp{
-		CpsId: list,
-	}
-
-	return resp, nil
+	return &pbcs.JsonRawResp{JsonRaw: list}, nil
 }
 
-// GetAppReleasedStrategy get app's latest published strategies with different rules.
-func (s *Service) GetAppReleasedStrategy(ctx context.Context, req *pbcs.GetAppReleasedStrategyReq) (
-	*pbcs.JsonArrayRawResp, error) {
+// ListCredentialMatchedCI list all config item ids which can be matched by credential.
+func (s *Service) ListCredentialMatchedCI(ctx context.Context, req *pbcs.ListCredentialMatchedCIReq) (
+	*pbcs.JsonRawResp, error) {
 
-	if req.BizId <= 0 || req.AppId <= 0 {
-		return nil, errf.New(errf.InvalidParameter, "invalid biz id or app id")
+	if req.BizId <= 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz id can't be empty")
+	}
+
+	if req.Credential == "" {
+		return nil, errf.New(errf.InvalidParameter, "credential can't be empty")
 	}
 
 	kt := kit.FromGrpcContext(ctx)
-	list, err := s.op.GetAppReleasedStrategies(kt, req.BizId, req.AppId, req.CpsId)
+	list, err := s.op.ListCredentialMatchedCI(kt, req.BizId, req.Credential)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pbcs.JsonArrayRawResp{JsonRaw: list}, nil
+	return &pbcs.JsonRawResp{JsonRaw: list}, nil
+}
+
+// GetCredential get credential by credential string.
+func (s *Service) GetCredential(ctx context.Context, req *pbcs.GetCredentialReq) (*pbcs.JsonRawResp, error) {
+	if req.BizId <= 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz id can't be empty")
+	}
+
+	if req.Credential == "" {
+		return nil, errf.New(errf.InvalidParameter, "credential can't be empty")
+	}
+
+	kt := kit.FromGrpcContext(ctx)
+	credential, err := s.op.GetCredential(kt, req.BizId, req.Credential)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.JsonRawResp{JsonRaw: credential}, nil
 }
 
 // GetCurrentCursorReminder get the current consumed event's id, which is the cursor reminder's resource id.

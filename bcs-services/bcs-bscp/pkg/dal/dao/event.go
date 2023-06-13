@@ -161,6 +161,53 @@ func (ef *EDecorator) Fire(es ...types.Event) error {
 	return nil
 }
 
+// FireWithTx is used to fire the event with the given transaction.
+// Note: FireWithTx would make event to success state directly
+func (ef *EDecorator) FireWithTx(tx *sharding.Tx, es ...types.Event) error {
+	if len(es) == 0 {
+		return nil
+	}
+
+	for _, one := range es {
+		if err := one.Validate(); err != nil {
+			return err
+		}
+	}
+
+	num := len(es)
+
+	ids, err := ef.idGen.Batch(ef.kt, table.EventTable, num)
+	if err != nil {
+		return errf.New(errf.DBOpFailed, "generate event id failed, err: "+err.Error())
+	}
+
+	list := make([]table.Event, num)
+	for idx := range es {
+		one := es[idx]
+		list[idx] = table.Event{
+			ID:   ids[idx],
+			Spec: one.Spec,
+			State: &table.EventState{
+				FinalStatus: table.SuccessFS,
+			},
+			Attachment: one.Attachment,
+			Revision:   one.Revision,
+		}
+	}
+
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "INSERT INTO ", table.EventTable.Name(), " (", table.EventColumns.ColumnExpr(), ") VALUES(", table.EventColumns.ColonNameExpr(), ")")
+	sql := filter.SqlJoint(sqlSentence)
+	if err := ef.orm.Txn(tx.Tx()).BulkInsert(ef.kt.Ctx, sql, list); err != nil {
+		return errf.New(errf.InvalidParameter, "insert events failed, err: "+err.Error())
+	}
+
+	// remember the event id list for the following finalize operation use.
+	ef.idList = ids
+
+	return nil
+}
+
 // Finalizer do the event finalize work, if the txnError is nil, then update the
 // related events final state with success, otherwise update it with failed.
 func (ef *EDecorator) Finalizer(txnError error) {

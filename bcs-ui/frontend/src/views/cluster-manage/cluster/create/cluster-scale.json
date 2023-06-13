@@ -1,0 +1,76 @@
+{
+  "data": [
+    {
+      "level": "L5",
+      "scale": {
+        "maxNodePodNum": 150,
+        "maxServiceNum": 128,
+        "cidrStep": 150
+      }
+    },
+    {
+      "level": "L20",
+      "scale": {
+        "maxNodePodNum": 600,
+        "maxServiceNum": 256,
+        "cidrStep": 600
+      }
+    },
+    {
+      "level": "L50",
+      "scale": {
+        "maxNodePodNum": 1500,
+        "maxServiceNum": 512,
+        "cidrStep": 1250
+      }
+    },
+    {
+      "level": "L100",
+      "scale": {
+        "maxNodePodNum": 3000,
+        "maxServiceNum": 1024,
+        "cidrStep": 2500
+      }
+    },
+    {
+      "level": "L200",
+      "scale": {
+        "maxNodePodNum": 6000,
+        "maxServiceNum": 2048,
+        "cidrStep": 5000
+      }
+    },
+    {
+      "level": "L500",
+      "scale": {
+        "maxNodePodNum": 15000,
+        "maxServiceNum": 4096,
+        "cidrStep": 10000
+      }
+    },
+    {
+      "level": "L1000",
+      "scale": {
+        "maxNodePodNum": 30000,
+        "maxServiceNum": 6144,
+        "cidrStep": 20000
+      }
+    },
+    {
+      "level": "L3000",
+      "scale": {
+        "maxNodePodNum": 90000,
+        "maxServiceNum": 8192,
+        "cidrStep": 50000
+      }
+    },
+    {
+      "level": "L5000",
+      "scale": {
+        "maxNodePodNum": 150000,
+        "maxServiceNum": 10240,
+        "cidrStep": 100000
+      }
+    }
+  ]
+}

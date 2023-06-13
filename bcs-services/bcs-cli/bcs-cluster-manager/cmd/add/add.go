@@ -20,8 +20,7 @@ import (
 )
 
 var (
-	addLong = templates.LongDesc(i18n.T(`
-    add a resource from stdin.`))
+	addLong = templates.LongDesc(i18n.T(`add a resource from stdin.`))
 
 	addExample = templates.Examples(i18n.T(`
 	# add a node to cluster

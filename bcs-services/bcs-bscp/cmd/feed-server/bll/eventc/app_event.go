@@ -14,6 +14,7 @@ package eventc
 
 import (
 	"context"
+	"errors"
 
 	btyp "bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/criteria/errf"
@@ -95,11 +96,11 @@ func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, u
 	cursor := ae.cursor.ID()
 
 	meta := &btyp.AppInstanceMeta{
-		BizID:     subSpec.InstSpec.BizID,
-		AppID:     subSpec.InstSpec.AppID,
-		Namespace: subSpec.InstSpec.Namespace,
-		Uid:       subSpec.InstSpec.Uid,
-		Labels:    subSpec.InstSpec.Labels,
+		BizID:  subSpec.InstSpec.BizID,
+		AppID:  subSpec.InstSpec.AppID,
+		App:    subSpec.InstSpec.App,
+		Uid:    subSpec.InstSpec.Uid,
+		Labels: subSpec.InstSpec.Labels,
 	}
 
 	matchedRelease, err := ae.sch.handler.GetMatchedRelease(kt, meta)
@@ -109,7 +110,9 @@ func (ae *appEvent) doFirstMatch(kt *kit.Kit, subSpec *SubscribeSpec) (uint32, u
 		if errf.Error(err).Code == errf.RecordNotFound {
 			return 0, 0, nil
 		}
-		return 0, 0, err
+		if errors.Is(err, errf.ErrAppInstanceNotMatchedRelease) {
+			return 0, 0, nil
+		}
 	}
 
 	return matchedRelease, cursor, nil
@@ -154,13 +157,6 @@ func (ae *appEvent) eventHandler(events []*types.EventMeta) {
 
 			// app level publish operation, all the sidecar instance should be notified.
 			ae.notifyWithApp(kt, one.ID)
-
-		case table.PublishInstance:
-			logs.Infof("start do biz: %d, app: %d publish broadcast to the sidecar with uid: %s, event id: %d, rid: %s",
-				ae.bizID, ae.appID, one.Spec.ResourceUid, one.ID, kt.Rid)
-
-			// sidecar instance level publish, only one sidecar need to be notified.
-			ae.notifyWithInstance(kt, one.ID, one.Spec.ResourceUid)
 
 		case table.Application:
 			logs.Infof("start handle biz: %d, app: %d app event, event id: %d, rid: %s", ae.bizID, ae.appID,

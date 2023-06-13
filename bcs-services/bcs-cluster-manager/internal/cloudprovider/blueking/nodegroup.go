@@ -74,7 +74,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// SwitchNodeGroupAutoScaling switch nodegroup autoscaling
+// SwitchNodeGroupAutoScaling 开/关CA - switch nodegroup auto scaling
 func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool,
 	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented

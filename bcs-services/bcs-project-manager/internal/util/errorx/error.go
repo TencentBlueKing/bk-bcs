@@ -113,6 +113,11 @@ func NewRequestITSMErr(msg string) *ProjectError {
 	return NewProjectError(RequestITSMErr, RequestITSMErrMsg, fmt.Sprint(msg))
 }
 
+// NewRequestBkMonitorErr xxx
+func NewRequestBkMonitorErr(msg string) *ProjectError {
+	return NewProjectError(RequestBkMonitorErr, RequestBkMonitorErrMsg, fmt.Sprint(msg))
+}
+
 // NewReadableErr return user-friendly error
 func NewReadableErr(code uint32, msg string) *ProjectError {
 	return NewProjectError(code, msg, "")

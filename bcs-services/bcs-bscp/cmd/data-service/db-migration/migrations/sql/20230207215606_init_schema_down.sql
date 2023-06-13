@@ -9,7 +9,7 @@ drop table if exists `published_strategy_histories`;
 drop table if exists `current_published_strategies`;
 drop table if exists `groups`;
 drop table if exists `group_app_binds`;
-drop table if exists `group_current_releases`;
+drop table if exists `released_groups`;
 drop table if exists `hooks`;
 drop table if exists `released_config_items`;
 drop table if exists `releases`;

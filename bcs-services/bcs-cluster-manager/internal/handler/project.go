@@ -98,7 +98,7 @@ func (cm *ClusterManager) ListProject(ctx context.Context,
 	ca := project.NewListAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListProject", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListProject, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListProject, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListProject, req %v, resp %v", reqID, req, resp)
 	return nil

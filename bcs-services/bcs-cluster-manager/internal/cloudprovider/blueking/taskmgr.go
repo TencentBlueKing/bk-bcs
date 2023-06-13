@@ -145,7 +145,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		TaskMethod: updateCreateClusterDBInfoTask,
 		TaskName:   "更新任务状态",
 	}
-	updateStep.Params["ClusterID"] = cls.ClusterID
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	updateStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[updateCreateClusterDBInfoTask] = updateStep
@@ -209,7 +209,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		TaskMethod: importClusterNodesTask,
 		TaskName:   "导入集群节点",
 	}
-	importNodesStep.Params["ClusterID"] = cls.ClusterID
+	importNodesStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	importNodesStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[importClusterNodesTask] = importNodesStep
@@ -302,7 +302,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 		TaskMethod: cleanClusterDBInfoTask,
 		TaskName:   "更新任务状态",
 	}
-	updateStep.Params["ClusterID"] = cls.ClusterID
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	updateStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[cleanClusterDBInfoTask] = updateStep
@@ -408,7 +408,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		TaskMethod: updateAddNodeDBInfoTask,
 		TaskName:   "更新任务状态",
 	}
-	updateStep.Params["ClusterID"] = cls.ClusterID
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	updateStep.Params["CloudID"] = opt.Cloud.CloudID
 	updateStep.Params["NodeIPs"] = strings.Join(nodeIPs, ",")
 
@@ -513,7 +513,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		TaskMethod: updateRemoveNodeDBInfoTask,
 		TaskName:   "更新任务状态",
 	}
-	updateDBStep.Params["ClusterID"] = cls.ClusterID
+	updateDBStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	updateDBStep.Params["CloudID"] = cls.Provider
 	updateDBStep.Params["NodeIPs"] = strings.Join(nodeIPs, ",")
 

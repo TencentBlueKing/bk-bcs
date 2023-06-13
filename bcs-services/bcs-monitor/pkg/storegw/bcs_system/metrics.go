@@ -11,8 +11,8 @@
  *
  */
 
-// Package bcs_system xxx
-package bcs_system
+// Package bcssystem xxx
+package bcssystem
 
 import (
 	"context"
@@ -22,9 +22,12 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 )
 
+// metricsParams
 type metricsParams struct {
-	client         base.MetricHandler
-	ctx            context.Context
+	// metrics handler client
+	client base.MetricHandler
+	ctx    context.Context
+	// metrics handler params
 	projectID      string
 	clusterID      string
 	namespace      string
@@ -37,9 +40,13 @@ type metricsParams struct {
 	stepDuration   time.Duration
 }
 
+// metricsFn
 type metricsFn func(metricsParams) ([]*prompb.TimeSeries, error)
 
-var metricsMaps map[string]metricsFn = map[string]metricsFn{
+// metrics maps
+// map metrics to metrics func
+var metricsMaps = map[string]metricsFn{
+	// cluster metrics
 	"bcs:cluster:cpu:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPUTotal(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
@@ -104,7 +111,9 @@ var metricsMaps map[string]metricsFn = map[string]metricsFn{
 		return mp.client.GetClusterDiskioTotal(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// node metrics
 	"bcs:node:info": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		// get nodeinfo from k8s api
 		nodeInfo, err := mp.client.GetNodeInfo(mp.ctx, mp.projectID, mp.clusterID, mp.node, mp.endTime)
 		return nodeInfo.PromSeries(mp.endTime), err
 	},
@@ -148,6 +157,7 @@ var metricsMaps map[string]metricsFn = map[string]metricsFn{
 		return mp.client.GetNodeNetworkReceive(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// pod metrics
 	"bcs:pod:cpu_usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetPodCPUUsage(mp.ctx, mp.projectID, mp.clusterID, mp.namespace,
 			mp.podNames, mp.startTime, mp.endTime, mp.stepDuration)
@@ -164,6 +174,7 @@ var metricsMaps map[string]metricsFn = map[string]metricsFn{
 		return mp.client.GetPodNetworkTransmit(mp.ctx, mp.projectID, mp.clusterID, mp.namespace,
 			mp.podNames, mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// container metrics
 	"bcs:container:cpu_usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetContainerCPUUsage(mp.ctx, mp.projectID, mp.clusterID, mp.namespace,
 			mp.podName, mp.containerNames, mp.startTime, mp.endTime, mp.stepDuration)

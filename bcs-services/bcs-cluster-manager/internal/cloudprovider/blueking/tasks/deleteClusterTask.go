@@ -57,7 +57,7 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: get cluster for %s failed", taskID, clusterID)

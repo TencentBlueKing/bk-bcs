@@ -14,19 +14,22 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
 const (
-	urlChartList        = "/helmmanager/v1/chart/%s/%s"
-	urlChartVersionList = "/helmmanager/v1/chart/%s/%s/%s/version"
-	urlChartDetailGet   = "/helmmanager/v1/chart/%s/%s/%s/detail/%s"
+	urlChartList          = "/projects/%s/repos/%s/charts"
+	urlChartDetailGet     = "/projects/%s/repos/%s/charts/%s"
+	urlChartDelete        = "/projects/%s/repos/%s/charts/%s"
+	urlChartVersionList   = "/projects/%s/repos/%s/charts/%s/versions"
+	urlChartVersionDetail = "/projects/%s/repos/%s/charts/%s/versions/%s"
+	urlChartVersionDelete = "/projects/%s/repos/%s/charts/%s/versions/%s"
 )
 
 // Chart return a pkg.ChartClient instance
@@ -38,68 +41,15 @@ type chart struct {
 	*Client
 }
 
-// List chart
-func (ct *chart) List(ctx context.Context, req *helmmanager.ListChartReq) (*helmmanager.ChartListData, error) {
-	if req == nil {
-		return nil, fmt.Errorf("list chart request is empty")
-	}
-
-	req.Operator = common.GetStringP(ct.conf.Operator)
-	projectID := req.GetProjectID()
-	if projectID == "" {
-		return nil, fmt.Errorf("chart project can not be empty")
-	}
-	repo := req.GetRepository()
-	if repo == "" {
-		return nil, fmt.Errorf("chart repository can not be empty")
-	}
-
-	resp, err := ct.get(
-		ctx,
-		urlPrefix+fmt.Sprintf(urlChartList, projectID, repo)+"?"+ct.listChartQuery(req).Encode(),
-		nil,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	var r helmmanager.ListChartResp
-	if err = unmarshalPB(resp.Reply, &r); err != nil {
-		return nil, err
-	}
-
-	if r.GetCode() != resultCodeSuccess {
-		return nil, fmt.Errorf("list chart get result code %d, message: %s", r.GetCode(), r.GetMessage())
-	}
-
-	return r.Data, nil
-}
-
-func (ct *chart) listChartQuery(req *helmmanager.ListChartReq) url.Values {
-	query := url.Values{}
-	if req.Page != nil {
-		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
-	}
-	if req.Size != nil {
-		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
-	}
-	if req.Operator != nil {
-		query.Set("operator", req.GetOperator())
-	}
-	return query
-}
-
 // Versions list chart version
-func (ct *chart) Versions(ctx context.Context, req *helmmanager.ListChartVersionReq) (
+func (ct *chart) Versions(ctx context.Context, req *helmmanager.ListChartVersionV1Req) (
 	*helmmanager.ChartVersionListData, error) {
 
-	req.Operator = common.GetStringP(ct.conf.Operator)
-	projectID := req.GetProjectID()
-	if projectID == "" {
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
 		return nil, fmt.Errorf("chart project can not be empty")
 	}
-	repo := req.GetRepository()
+	repo := req.GetRepoName()
 	if repo == "" {
 		return nil, fmt.Errorf("chart repository can not be empty")
 	}
@@ -110,7 +60,7 @@ func (ct *chart) Versions(ctx context.Context, req *helmmanager.ListChartVersion
 
 	resp, err := ct.get(
 		ctx,
-		urlPrefix+fmt.Sprintf(urlChartVersionList, projectID, repo, chartName)+"?"+
+		urlPrefix+fmt.Sprintf(urlChartVersionList, projectCode, repo, chartName)+"?"+
 			ct.listChartVersionQuery(req).Encode(),
 		nil,
 		nil,
@@ -119,7 +69,7 @@ func (ct *chart) Versions(ctx context.Context, req *helmmanager.ListChartVersion
 		return nil, err
 	}
 
-	var r helmmanager.ListChartVersionResp
+	var r helmmanager.ListChartVersionV1Resp
 	if err = unmarshalPB(resp.Reply, &r); err != nil {
 		return nil, err
 	}
@@ -131,7 +81,7 @@ func (ct *chart) Versions(ctx context.Context, req *helmmanager.ListChartVersion
 	return r.Data, nil
 }
 
-func (ct *chart) listChartVersionQuery(req *helmmanager.ListChartVersionReq) url.Values {
+func (ct *chart) listChartVersionQuery(req *helmmanager.ListChartVersionV1Req) url.Values {
 	query := url.Values{}
 	if req.Page != nil {
 		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
@@ -139,20 +89,54 @@ func (ct *chart) listChartVersionQuery(req *helmmanager.ListChartVersionReq) url
 	if req.Size != nil {
 		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
 	}
-	if req.Operator != nil {
-		query.Set("operator", req.GetOperator())
-	}
 	return query
 }
 
-// Detail get chart version detail
-func (ct *chart) Detail(ctx context.Context, req *helmmanager.GetVersionDetailReq) (*helmmanager.ChartDetail, error) {
-	req.Operator = common.GetStringP(ct.conf.Operator)
-	projectID := req.GetProjectID()
-	if projectID == "" {
+// Detail get chart detail
+func (ct *chart) GetChartDetail(ctx context.Context, req *helmmanager.GetChartDetailV1Req) (*helmmanager.Chart, error) {
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
 		return nil, fmt.Errorf("chart project can not be empty")
 	}
-	repo := req.GetRepository()
+	repo := req.GetRepoName()
+	if repo == "" {
+		return nil, fmt.Errorf("chart repository can not be empty")
+	}
+	chartName := req.GetName()
+	if chartName == "" {
+		return nil, fmt.Errorf("chart name can not be empty")
+	}
+
+	resp, err := ct.get(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlChartDetailGet, projectCode, repo, chartName),
+		nil,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var r helmmanager.GetChartDetailV1Resp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return nil, err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return nil, fmt.Errorf("get chart detail result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return r.Data, nil
+}
+
+// Detail get version detail
+func (ct *chart) GetVersionDetail(ctx context.Context, req *helmmanager.GetVersionDetailV1Req) (
+	*helmmanager.ChartDetail, error) {
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return nil, fmt.Errorf("chart project can not be empty")
+	}
+	repo := req.GetRepoName()
 	if repo == "" {
 		return nil, fmt.Errorf("chart repository can not be empty")
 	}
@@ -162,12 +146,12 @@ func (ct *chart) Detail(ctx context.Context, req *helmmanager.GetVersionDetailRe
 	}
 	version := req.GetVersion()
 	if version == "" {
-		return nil, fmt.Errorf("version can not be empty")
+		return nil, fmt.Errorf("chart version can not be empty")
 	}
 
 	resp, err := ct.get(
 		ctx,
-		urlPrefix+fmt.Sprintf(urlChartDetailGet, projectID, repo, chartName, version)+"?operator="+req.GetOperator(),
+		urlPrefix+fmt.Sprintf(urlChartVersionDetail, projectCode, repo, chartName, version),
 		nil,
 		nil,
 	)
@@ -175,7 +159,7 @@ func (ct *chart) Detail(ctx context.Context, req *helmmanager.GetVersionDetailRe
 		return nil, err
 	}
 
-	var r helmmanager.GetVersionDetailResp
+	var r helmmanager.GetVersionDetailV1Resp
 	if err = unmarshalPB(resp.Reply, &r); err != nil {
 		return nil, err
 	}
@@ -185,4 +169,133 @@ func (ct *chart) Detail(ctx context.Context, req *helmmanager.GetVersionDetailRe
 	}
 
 	return r.Data, nil
+}
+
+// Detail delete chart
+func (ct *chart) DeleteChart(ctx context.Context, req *helmmanager.DeleteChartReq) error {
+	projectID := req.GetProjectCode()
+	if projectID == "" {
+		return fmt.Errorf("chart project can not be empty")
+	}
+	repo := req.GetRepoName()
+	if repo == "" {
+		return fmt.Errorf("chart repository can not be empty")
+	}
+	chartName := req.GetName()
+	if chartName == "" {
+		return fmt.Errorf("chart name can not be empty")
+	}
+
+	data, _ := json.Marshal(req)
+
+	resp, err := ct.delete(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlChartDelete, projectID, repo, chartName),
+		nil,
+		data,
+	)
+	if err != nil {
+		return err
+	}
+
+	var r helmmanager.DeleteChartResp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return fmt.Errorf("delete chart get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return nil
+}
+
+// Detail delete chart version
+func (ct *chart) DeleteChartVersion(ctx context.Context, req *helmmanager.DeleteChartVersionReq) error {
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return fmt.Errorf("chart project can not be empty")
+	}
+	repo := req.GetRepoName()
+	if repo == "" {
+		return fmt.Errorf("chart repository can not be empty")
+	}
+	chartName := req.GetName()
+	if chartName == "" {
+		return fmt.Errorf("chart name can not be empty")
+	}
+	version := req.GetVersion()
+	if version == "" {
+		return fmt.Errorf("chart version can not be empty")
+	}
+	data, _ := json.Marshal(req)
+
+	resp, err := ct.delete(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlChartVersionDelete, projectCode, repo, chartName, version),
+		nil,
+		data,
+	)
+	if err != nil {
+		return err
+	}
+
+	var r helmmanager.DeleteChartVersionResp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return fmt.Errorf("delete chart version get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return nil
+}
+
+// List chart
+func (ct *chart) List(ctx context.Context, req *helmmanager.ListChartV1Req) (*helmmanager.ChartListData, error) {
+	if req == nil {
+		return nil, fmt.Errorf("list chart request is empty")
+	}
+
+	projectCode := req.GetProjectCode()
+	if projectCode == "" {
+		return nil, fmt.Errorf("chart project can not be empty")
+	}
+	repositoryName := req.GetRepoName()
+	if repositoryName == "" {
+		return nil, fmt.Errorf("chart repository can not be empty")
+	}
+
+	resp, err := ct.get(
+		ctx,
+		urlPrefix+fmt.Sprintf(urlChartList, projectCode, repositoryName)+"?"+ct.listChartQuery(req).Encode(),
+		nil,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var r helmmanager.ListChartV1Resp
+	if err = unmarshalPB(resp.Reply, &r); err != nil {
+		return nil, err
+	}
+
+	if r.GetCode() != resultCodeSuccess {
+		return nil, fmt.Errorf("list chart get result code %d, message: %s", r.GetCode(), r.GetMessage())
+	}
+
+	return r.Data, nil
+}
+
+func (ct *chart) listChartQuery(req *helmmanager.ListChartV1Req) url.Values {
+	query := url.Values{}
+	if req.Page != nil {
+		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
+	}
+	if req.Size != nil {
+		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
+	}
+	return query
 }

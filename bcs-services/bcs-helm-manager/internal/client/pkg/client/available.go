@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	urlAvailable = "/helmmanager/v1/available"
+	urlAvailable = "/available"
 )
 
 // Available check if helm manager service is available, nil for yes

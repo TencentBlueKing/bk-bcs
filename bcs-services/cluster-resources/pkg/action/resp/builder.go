@@ -50,7 +50,9 @@ type ManifestRespBuilder struct {
 // BuildList ...
 func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 	manifestExt := map[string]interface{}{}
-	formatFunc := formatter.GetFormatFunc(b.kind)
+	// 获取 apiVersion
+	apiVersion := mapx.GetStr(b.manifest, "apiVersion")
+	formatFunc := formatter.GetFormatFunc(b.kind, apiVersion)
 	// 遍历列表中的每个资源，生成 manifestExt
 	for _, item := range mapx.GetList(b.manifest, "items") {
 		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
@@ -61,9 +63,10 @@ func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 
 // Build ...
 func (b *ManifestRespBuilder) Build() (map[string]interface{}, error) {
+	apiVersion := mapx.GetStr(b.manifest, "apiVersion")
 	return map[string]interface{}{
 		"manifest":    b.manifest,
-		"manifestExt": formatter.GetFormatFunc(b.kind)(b.manifest),
+		"manifestExt": formatter.GetFormatFunc(b.kind, apiVersion)(b.manifest),
 	}, nil
 }
 

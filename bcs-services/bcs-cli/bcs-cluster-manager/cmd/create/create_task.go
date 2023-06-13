@@ -29,21 +29,21 @@ import (
 
 var (
 	createTaskExample = templates.Examples(i18n.T(`create task from json file. file template: 
-	{"taskID":"feec6ed2-c3e3-481f-a58b-xxxxxx","taskType":"blueking-AddNodesToCluster","status":"FAILED",
-	"message":"step bksopsjob-createTask running failed","start":"2022-11-11T18:23:32+08:00",
-	"end":"2022-11-11T18:24:03+08:00","executionTime":31,"currentStep":"bksopsjob-createTask",
-	"stepSequence":["bksopsjob-createTask","blueking-UpdateAddNodeDBInfoTask"],"steps":{"bksopsjob-createTask":
-	{"name":"bksopsjob-createTask","system":"bksops","link":"","params":{"taskUrl":"http://apps.site.bktencent.com"},
+	{"taskID":"feec6ed2-c3e3-481f-a58b-xxxxxx","taskType":"blueking-xxxxxxxxxxxx","status":"FAILED",
+	"message":"step bksopsjob-xxxxxxxxxx running failed","start":"2022-11-11T18:23:32+08:00",
+	"end":"2022-11-11T18:24:03+08:00","executionTime":31,"currentStep":"bksopsjob-xxxxxxxxxx",
+	"stepSequence":["bksopsjob-xxxxxxxxxx","blueking-xxxxxxxxxxxxxxxxxxxxxx"],"steps":{"bksopsjob-xxxxxxxxxx":
+	{"name":"bksopsjob-xxxxxxxxxx","system":"bksops","link":"","params":{"taskUrl":"http://apps.xxx.com"},
 	"retry":0,"start":"2022-11-11T18:23:32+08:00","end":"2022-11-11T18:24:03+08:00","executionTime":31,
-	"status":"FAILURE","message":"running fialed","lastUpdate":"2022-11-11T18:24:03+08:00","taskMethod":"bksopsjob",
-	"taskName":"标准运维任务","skipOnFailed":false},"blueking-UpdateAddNodeDBInfoTask":{"name":
-	"blueking-UpdateAddNodeDBInfoTask","system":"api","link":"","params":null,"retry":0,"start":"","end":"",
+	"status":"FAILURE","message":"running fialed","lastUpdate":"2022-11-11T18:24:03+08:00","taskMethod":"xxx",
+	"taskName":"标准运维任务","skipOnFailed":false},"blueking-xxxxxxxxxxxxxxxxxxxxxx":{"name":
+	"blueking-xxxxxxxxxxxxxxxxxxxxxx","system":"api","link":"","params":null,"retry":0,"start":"","end":"",
 	"executionTime":0,"status":"NOTSTARTED","message":"","lastUpdate":"","taskMethod":
-	"blueking-UpdateAddNodeDBInfoTask","taskName":"更新任务状态","skipOnFailed":false}},"clusterID":"BCS-K8S-40003",
-	"projectID":"b363e23b1b354928a0f3exxxxxx","creator":"frodomei","lastUpdate":"2022-11-11T18:24:03+08:00",
-	"updater":"frodomei","forceTerminate":false,"commonParams":{"jobType":"add-node","nodeIPs":"182.17.0.xx",
-	"operator":"frodomei","taskName":"blueking-add nodes: BCS-K8S-40003","user":"frodomei"},
-	"taskName":"集群添加节点任务","nodeIPList":["182.17.0.xxx"],"nodeGroupID":""}`))
+	"blueking-xxxxxxxxxxxxxxxxxxxxxx","taskName":"更新任务状态","skipOnFailed":false}},"clusterID":"BCS-K8S-xxx",
+	"projectID":"b363e23b1b354928a0f3exxxxxx","creator":"bcs","lastUpdate":"2022-11-11T18:24:03+08:00",
+	"updater":"bcs","forceTerminate":false,"commonParams":{"jobType":"add-node","nodeIPs":"xxx.xxx.xxx.xxx",
+	"operator":"bcs","taskName":"blueking-add nodes: BCS-K8S-xxxxxxxxx","user":"bcs"},
+	"taskName":"集群添加节点任务","nodeIPList":["xxx.xxx.xxx.xxx"],"nodeGroupID":"xxx"}`))
 )
 
 func newCreateTaskCmd() *cobra.Command {
@@ -74,5 +74,5 @@ func createTask(cmd *cobra.Command, args []string) {
 		klog.Fatalf("create task failed: %v", err)
 	}
 
-	fmt.Printf("create task succeed: taskID: %v", resp.TaskID)
+	fmt.Printf("create task succeed: taskID: %v\n", resp.TaskID)
 }

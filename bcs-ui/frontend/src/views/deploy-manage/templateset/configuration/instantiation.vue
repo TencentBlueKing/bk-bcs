@@ -5,7 +5,7 @@
     <Header :title="$t('模板实例化')" />
     <div class="biz-content-wrapper pt0">
       <div class="biz-configuration-instantiation-wrapper">
-        <div class="biz-tip mt20 mb15">{{$t('模板实例化操作即平台通过用户配置的模板，生成对应的资源YAML文件，并将它们下发到指定集群的命名空间下。资源创建成功后，可在"应用"和"网络"中查看资源实例详情。')}}</div>
+        <div class="biz-tip mt20 mb15">{{$t('模板实例化操作即平台通过用户配置的模板，生成对应的资源YAML文件，并将它们下发到指定集群的命名空间下。资源创建成功后，可在 应用 和 网络 中查看资源实例详情。')}}</div>
         <div class="biz-configuration-instantiation-header">
           <div class="left">
             <svg style="display: none;">
@@ -250,7 +250,7 @@
             <span class="bk-outline"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('未实例化过')}}</span>
             <span class="bk-default"><i class="bcs-icon bcs-icon-circle-shape"></i>{{$t('已实例化过')}}</span>
           </div>
-          <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList" v-show="!curClusterId || (curClusterId && item.cluster_id === curClusterId)">
+          <div :key="index" class="content-trigger-wrapper" :class="item.isOpen ? 'open' : ''" v-for="(item, index) in candidateNamespaceList">
             <div class="content-trigger" @click="triggerHandler(item, index)">
               <div class="left-area" style="border-right: none;">
                 <div class="label">
@@ -310,7 +310,7 @@
                     </bcs-popover>
                   </div>
                 </template>
-                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')" v-if="!isSharedCluster">
+                <div class="candidate-namespace add-namespace" :title="$t('新增命名空间')" v-if="!isSharedCluster(item.cluster_id)">
                   <bcs-popover ref="addNamespaceNode" theme="light" :delay="120000" placement="top-end" ext-cls="add-namespace-popover" :controlled="true" @on-show="showAddNamespace(index)">
                     <div class="candidate-namespace-name" @click="triggerAddNamespace(index)">
                       <img src="@/images/plus.svg" class="add-btn" />
@@ -539,8 +539,8 @@ export default {
     isEn() {
       return this.$store.state.isEn;
     },
-    isSharedCluster() {
-      return this.$store.getters.isSharedCluster;
+    clusterList() {
+      return this.$store.state.cluster.clusterList;
     },
   },
   created() {
@@ -572,6 +572,9 @@ export default {
     }
   },
   methods: {
+    isSharedCluster(clusterID) {
+      return this.clusterList.find(item => item.clusterID === clusterID)?.is_shared;
+    },
     /**
              * 模板集的排序，顺序依次为：
              * Application/app
@@ -968,8 +971,6 @@ export default {
         });
         this.existList.splice(0, this.existList.length, ...existList);
         this.candidateNamespaceList.splice(0, this.candidateNamespaceList.length, ...list);
-        // eslint-disable-next-line max-len
-        this.candidateNamespaceList = this.isSharedCluster ? this.candidateNamespaceList.filter(i => i.is_shared) : this.candidateNamespaceList.filter(i => !i.is_shared);
       } catch (e) {
         console.error(e);
       } finally {
@@ -2031,20 +2032,15 @@ export default {
     },
 
     gotoDeployments(hasNoProd) {
-      if (this.isSharedCluster) {
-        const route = this.$router.resolve({ name: 'dashboardWorkload' });
-        window.location.href = route.href;
-      } else {
-        this.$router.push({
-          name: 'deployments',
-          params: {
-            isProdCluster: !hasNoProd,
-            projectId: this.projectId,
-            projectCode: this.projectCode,
-            tplsetId: this.templateId,
-          },
-        });
-      }
+      this.$router.push({
+        name: 'deployments',
+        params: {
+          isProdCluster: !hasNoProd,
+          projectId: this.projectId,
+          projectCode: this.projectCode,
+          tplsetId: this.templateId,
+        },
+      });
     },
 
     /**

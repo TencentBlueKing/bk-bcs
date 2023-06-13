@@ -160,6 +160,8 @@ const (
 	// Debug means that this group can noly set UID,
 	// in other word can only select specific instance
 	Debug GroupMode = "debug"
+	// Default will select instances that won't be selected by any other released groups
+	Default GroupMode = "default"
 	// BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
 	// TODO: BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
 	BuiltIn GroupMode = "builtin"
@@ -168,11 +170,17 @@ const (
 // GroupMode is the mode of an group works in
 type GroupMode string
 
+// String returns the string value of GroupMode.
+func (s GroupMode) String() string {
+	return string(s)
+}
+
 // Validate strategy set type.
 func (s GroupMode) Validate() error {
 	switch s {
 	case Custom:
 	case Debug:
+	case Default:
 	default:
 		return fmt.Errorf("unsupported group working mode: %s", s)
 	}
@@ -191,7 +199,7 @@ func (s GroupSpec) ValidateCreate() error {
 	switch s.Mode {
 	case Custom:
 		if s.Selector == nil || s.Selector.IsEmpty() {
-			return errors.New("group works in debug mode, uid should be set")
+			return errors.New("group works in custom mode, selector should be set")
 		}
 	case Debug:
 		if s.UID == "" {

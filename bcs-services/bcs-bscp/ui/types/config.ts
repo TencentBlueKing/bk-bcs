@@ -1,3 +1,5 @@
+import { IGroupRuleItem } from "./group";
+
 // 单个版本详情
 export interface IConfigVersion {
   id: number;
@@ -13,6 +15,10 @@ export interface IConfigVersion {
     name: string;
     memo: string;
   };
+  status: {
+    publish_status: string;
+    released_groups: IReleasedGroup[];
+  }
 }
 
 // 单个配置详情
@@ -80,6 +86,7 @@ export interface IConfigDiffDetail {
 
 // 配置项列表查询接口请求参数
 export interface IConfigListQueryParams {
+  searchKey?: string;
   release_id?: number;
   start?: number;
   limit?: number
@@ -92,4 +99,19 @@ export interface IConfigVersionQueryParams {
   limit?: number;
   all?: boolean;
   deprecated?: boolean;
+}
+
+// 分组发布到某个版本数据
+export interface IReleasedGroup {
+  edited: boolean;
+  id: number;
+  mode: string;
+  name: string;
+  new_selector: {
+    labels_and: IGroupRuleItem[]
+  };
+  old_selector: {
+    labels_and: IGroupRuleItem[]
+  };
+  uid: string;
 }

@@ -19,13 +19,14 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { defineComponent, toRef, reactive, computed, onMounted, ref } from '@vue/composition-api';
+import { defineComponent, toRef, reactive, computed, onMounted, ref, onErrorCaptured } from 'vue';
 import $router from '@/router';
 import Terminal from '@/views/app/terminal.vue';
 import Unregistry from '@/views/app/unregistry.vue';
 import ContentHeader from '@/components/layout/Header.vue';
 import useProjects from './project-manage/project/use-project';
 import $store from '@/store';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   name: 'AppViews',
@@ -34,7 +35,7 @@ export default defineComponent({
     Unregistry,
     ContentHeader,
   },
-  setup(props, ctx) {
+  setup() {
     const { projectList, getAllProjectList } = useProjects();
     const loading = ref(true);// 默认不加载视图，等待集群接口加载完
     const currentRoute = computed(() => toRef(reactive($router), 'currentRoute').value);
@@ -70,8 +71,8 @@ export default defineComponent({
         // 缓存当前项目信息
         $store.commit('updateCurProject', project);
         // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
-        ctx.root.$route.params.projectId = project.project_id;
-        ctx.root.$route.params.projectCode = project.project_code;
+        currentRoute.value.params.projectId = project.project_id;
+        currentRoute.value.params.projectCode = project.project_code;
       }
       return !!project;
     };
@@ -92,10 +93,14 @@ export default defineComponent({
       if (!await validateProjectCode()) return;
 
       loading.value = true;
-      const data = await Promise.all([
+      const list = [
         $store.dispatch('getProject', { projectId: curProject.value?.project_id }),
         $store.dispatch('cluster/getClusterList', curProject.value?.project_id),
-      ]).catch((err) => {
+      ];
+      if (curProject.value?.kind) {
+        list.push($store.dispatch('cluster/getBizMaintainers'));
+      }
+      const data = await Promise.all(list).catch((err) => {
         console.error(err);
       });
       // 校验集群ID是否正确
@@ -105,13 +110,13 @@ export default defineComponent({
       loading.value = false;
     });
 
-    // onErrorCaptured((err: Error, vm, info: string) => {
-    //   ctx.root.$bkMessage({
-    //     theme: 'warning',
-    //     message: `Something is wrong with the component ${vm.$options.name} ${info}`,
-    //   });
-    //   return true;
-    // });
+    onErrorCaptured((err: Error, vm, info: string) => {
+      process.env.NODE_ENV === 'development' && $bkMessage({
+        theme: 'warning',
+        message: `Something is wrong with the component ${vm.$options.name} ${info}`,
+      });
+      return true;
+    });
 
     return {
       loading,

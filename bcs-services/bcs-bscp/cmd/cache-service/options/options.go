@@ -27,7 +27,11 @@ type Option struct {
 
 // InitOptions init config server's options from command flags.
 func InitOptions() *Option {
-	sysOpt := flags.SysFlags(pflag.CommandLine)
+	fs := pflag.CommandLine
+	sysOpt := flags.SysFlags(fs)
+
+	fs.IntVar(&sysOpt.GRPCPort, "grpc-port", 9514, "grpc service port")
+	fs.IntVar(&sysOpt.Port, "port", 9614, "http/metrics port")
 
 	// parses the command-line flags from os.Args[1:]. must be called after all flags are defined
 	// and before flags are accessed by the program.

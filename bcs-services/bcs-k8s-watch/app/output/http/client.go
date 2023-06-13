@@ -246,7 +246,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 	request, err := client.NewRequest()
 	if err != nil {
 		status = metrics.ErrStatus
-		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodGet, status, start)
 		return
 	}
@@ -267,7 +267,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 		status = metrics.ErrStatus
 	}
 
-	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodGet, status, start)
 	return
 }
@@ -282,7 +282,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 	request, err := client.NewRequest()
 	if err != nil {
 		status = metrics.ErrStatus
-		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodDelete, status, start)
 		return
 	}
@@ -303,7 +303,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 		status = metrics.ErrStatus
 	}
 
-	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodDelete, status, start)
 	return
 }
@@ -321,8 +321,9 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 
 	body, err := client.GetBody(data)
 	if err != nil {
+		// todo 这里报错
 		status = metrics.ErrStatus
-		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodPut, status, start)
 		return
 	}
@@ -351,7 +352,7 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 		status = metrics.ErrStatus
 	}
 
-	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodPut, status, start)
 	return
 }
@@ -364,7 +365,7 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 	)
 
 	defer func() {
-		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.Namespace, client.ResourceType,
+		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodGet, status, start)
 	}()
 
@@ -405,15 +406,16 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 
 // ListNamespaceResource list namespace resource
 func (client *StorageClient) ListNamespaceResource() (data []interface{}, err error) {
-	return client.ListNamespaceResourceWithLabelSelector("")
+	return client.ListNsResourceWithLabelSelector("")
 }
 
-// ListNamespaceResourceWithLabelSelector list namespace resource with label selector
-func (client *StorageClient) ListNamespaceResourceWithLabelSelector(labelSelector string) (
+// ListNsResourceWithLabelSelector list namespace resource with label selector
+func (client *StorageClient) ListNsResourceWithLabelSelector(labelSelector string) (
 	[]interface{}, error) {
 	const (
 		handlerName = HandlerListNamespaceName
 	)
+	// NOCC:ineffassign/assign(设计如此:此处仅初始化为空字符串)
 	urlWithParams := ""
 	if client.ResourceType == ResourceTypeEvent {
 		url, _ := client.GetURL()
@@ -442,6 +444,7 @@ func (client *StorageClient) ListNamespaceResourceWithLabelSelector(labelSelecto
 	offset := 0
 	var data []interface{}
 	for {
+		// NOCC:ineffassign/assign(设计如此:此处仅初始化为空字符串)
 		urlWithLimit := ""
 		if client.ResourceType == ResourceTypeEvent {
 			urlWithLimit = fmt.Sprintf("%s&length=%d&offset=%d", urlWithParams, StorageRequestLimit, offset)
@@ -479,6 +482,7 @@ func (client *StorageClient) ListClusterResource() (data []interface{}, err erro
 	return client.ListClusterResourceWithLabelSelector("")
 }
 
+// NOCC:tosa/fn_length(设计如此:无法再缩短)
 // ListClusterResourceWithLabelSelector list cluster resource with label selector
 func (client *StorageClient) ListClusterResourceWithLabelSelector(labelSelector string) ([]interface{}, error) {
 	const (

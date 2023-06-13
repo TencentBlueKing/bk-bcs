@@ -30,12 +30,12 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
+	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
-	view "bscp.io/pkg/rest/view"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
-	sfs "bscp.io/pkg/sf-share"
+	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/tools"
 )
 
@@ -46,13 +46,13 @@ type Service struct {
 	authorizer auth.Authorizer
 	serve      *http.Server
 	state      serviced.State
+	repoCli    *repo.Client
 	// name feed server instance name.
 	name string
 	// dsSetting down stream related setting.
-	dsSetting cc.Downstream
-	// repositoryTLS used send to sidecar to download file. if repository not in use tls, repositoryTLS is nil.
-	repositoryTLS *sfs.TLSBytes
-	mc            *metric
+	dsSetting    cc.Downstream
+	uriDecorator repo.UriDecoratorInter
+	mc           *metric
 }
 
 // NewService create a service instance.
@@ -73,19 +73,30 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("initialize business logical layer failed, err: %v", err)
 	}
 
-	tlsBytes, err := sfs.LoadTLSBytes(cc.FeedServer().Repository)
+	// tlsBytes, err := sfs.LoadTLSBytes(cc.FeedServer().Repository)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("conv tls to tls bytes failed, err: %v", err)
+	// }
+
+	uriDecorator, err := repo.NewUriDecorator(cc.FeedServer().Repository)
 	if err != nil {
-		return nil, fmt.Errorf("conv tls to tls bytes failed, err: %v", err)
+		return nil, fmt.Errorf("new repository uri decorator failed, err: %v", err)
+	}
+
+	repoCli, err := repo.NewClient(cc.FeedServer().Repository, metrics.Register())
+	if err != nil {
+		return nil, err
 	}
 
 	return &Service{
-		bll:           bl,
-		authorizer:    authorizer,
-		state:         state,
-		name:          name,
-		dsSetting:     cc.FeedServer().Downstream,
-		repositoryTLS: tlsBytes,
-		mc:            initMetric(name),
+		bll:          bl,
+		repoCli:      repoCli,
+		authorizer:   authorizer,
+		state:        state,
+		name:         name,
+		dsSetting:    cc.FeedServer().Downstream,
+		uriDecorator: uriDecorator,
+		mc:           initMetric(name),
 	}, nil
 }
 
@@ -149,18 +160,22 @@ func (s *Service) handler() http.Handler {
 	r.Use(middleware.Recoverer)
 
 	// 公共方法
+	r.Get("/-/healthy", s.HealthyHandler)
+	r.Get("/-/ready", s.ReadyHandler)
 	r.Get("/healthz", s.Healthz)
+
 	r.Mount("/", handler.RegisterCommonToolHandler())
-
-	// feedserver方法
-	r.Route("/api/v1/feed", func(r chi.Router) {
-		r.Use(auth.BKRepoVerified)
-		r.Use(view.Generic(s.authorizer))
-		r.Method("POST", "/list/app/release/type/file/latest", view.GenericFunc(s.ListFileAppLatestReleaseMetaRest))
-		r.Method("POST", "/auth/repository/file_pull", view.GenericFunc(s.AuthRepoRest))
-	})
-
 	return r
+}
+
+// HealthyHandler livenessProbe 健康检查
+func (s *Service) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// ReadyHandler ReadinessProbe 健康检查
+func (s *Service) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	s.Healthz(w, r)
 }
 
 // Healthz check whether the service is healthy.
@@ -172,12 +187,11 @@ func (s *Service) Healthz(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := s.state.Healthz(cc.FeedServer().Service.Etcd); err != nil {
+	if err := s.state.Healthz(); err != nil {
 		logs.Errorf("etcd healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return
 	}
 
 	rest.WriteResp(w, rest.NewBaseResp(errf.OK, "healthy"))
-	return
 }

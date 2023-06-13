@@ -41,9 +41,13 @@ func (cls NamespaceInstances) BuildInstances() [][]iam.Instance {
 	if cls.IsClusterPerm && len(cls.Data) > 0 {
 		for i := range cls.Data {
 			iamInstances = append(iamInstances, []iam.Instance{
-				iam.Instance{
+				{
 					ResourceType: string(project.SysProject),
 					ResourceID:   cls.Data[i].Project,
+				},
+				{
+					ResourceType: string(cluster.SysCluster),
+					ResourceID:   cls.Data[i].Cluster,
 				},
 			})
 		}
@@ -53,15 +57,15 @@ func (cls NamespaceInstances) BuildInstances() [][]iam.Instance {
 
 	for i := range cls.Data {
 		iamInstances = append(iamInstances, []iam.Instance{
-			iam.Instance{
+			{
 				ResourceType: string(project.SysProject),
 				ResourceID:   cls.Data[i].Project,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(cluster.SysCluster),
 				ResourceID:   cls.Data[i].Cluster,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(SysNamespace),
 				ResourceID:   cls.Data[i].Namespace,
 			},
@@ -82,15 +86,15 @@ func (cls NamespaceScopedInstances) BuildInstances() [][]iam.Instance {
 
 	for i := range cls.Data {
 		iamInstances = append(iamInstances, []iam.Instance{
-			iam.Instance{
+			{
 				ResourceType: string(project.SysProject),
 				ResourceID:   cls.Data[i].Project,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(cluster.SysCluster),
 				ResourceID:   cls.Data[i].Cluster,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(SysNamespace),
 				ResourceID:   cls.Data[i].Namespace,
 			},
@@ -131,8 +135,8 @@ type NamespaceScopedApplicationAction struct {
 	Data     []ProjectNamespaceData
 }
 
-// BuildNamespaceScopedApplicationInstance build namespace scoped resource application
-func BuildNamespaceScopedApplicationInstance(nsAppAction NamespaceScopedApplicationAction) iam.ApplicationAction {
+// BuildNSScopedAppInstance build namespace scoped resource application
+func BuildNSScopedAppInstance(nsAppAction NamespaceScopedApplicationAction) iam.ApplicationAction {
 	nsApp := utils.ClusterApplication{ActionID: nsAppAction.ActionID}
 	// namespace resource support one system, need to build multi instances if use extra system resource
 	instances := NamespaceScopedInstances{

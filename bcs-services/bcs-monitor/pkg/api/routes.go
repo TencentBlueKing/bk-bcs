@@ -29,6 +29,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs" // docs xxx
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logcollector"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
 	service_monitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/servicemonitor"
@@ -142,6 +143,15 @@ func registerRoutes(engine *gin.RouterGroup) {
 
 		// 蓝鲸监控采集器
 		route.GET("/telemetry/bkmonitor_agent/", rest.STDRestHandlerFunc(telemetry.IsBKMonitorAgent))
+
+		// bk-log 日志采集规则
+		route.POST("/log_collector/entrypoints", rest.RestHandlerFunc(logcollector.GetEntrypoints))
+		route.GET("/log_collector/rules", rest.RestHandlerFunc(logcollector.ListLogCollectors))
+		route.POST("/log_collector/rules", rest.RestHandlerFunc(logcollector.CreateLogCollector))
+		route.GET("/log_collector/rules/:id", rest.RestHandlerFunc(logcollector.GetCollector))
+		route.PUT("/log_collector/rules/:id", rest.RestHandlerFunc(logcollector.UpdateLogCollector))
+		route.DELETE("/log_collector/rules/:id", rest.RestHandlerFunc(logcollector.DeleteLogCollector))
+		route.POST("/log_collector/rules/:id/conversion", rest.RestHandlerFunc(logcollector.ConvertLogCollector))
 	}
 }
 
@@ -202,6 +212,8 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 			rest.RestHandlerFunc(service_monitor.UpdateServiceMonitor))
 		route.DELETE("/namespaces/:namespace/service_monitors/:name",
 			rest.RestHandlerFunc(service_monitor.DeleteServiceMonitor))
+		route.GET("/service_monitors",
+			rest.RestHandlerFunc(service_monitor.ListServiceMonitors))
 		route.POST("/service_monitors/batchdelete",
 			rest.RestHandlerFunc(service_monitor.BatchDeleteServiceMonitor))
 	}

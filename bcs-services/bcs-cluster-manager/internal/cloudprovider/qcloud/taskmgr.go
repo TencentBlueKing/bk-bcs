@@ -171,7 +171,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		TaskMethod: createTKEClusterTask,
 		TaskName:   "创建集群",
 	}
-	createStep.Params["ClusterID"] = cls.ClusterID
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	createStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[createTKEClusterTask] = createStep
@@ -187,7 +187,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		TaskMethod: checkTKEClusterStatusTask,
 		TaskName:   "检测集群状态",
 	}
-	checkStep.Params["ClusterID"] = cls.ClusterID
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	checkStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[checkTKEClusterStatusTask] = checkStep
@@ -203,7 +203,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		TaskMethod: enableTkeClusterVpcCniTask,
 		TaskName:   "开启VPC-CNI网络模式",
 	}
-	enableVpcCniStep.Params["ClusterID"] = cls.ClusterID
+	enableVpcCniStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	enableVpcCniStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[enableTkeClusterVpcCniTask] = enableVpcCniStep
@@ -219,7 +219,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		TaskMethod: updateCreateClusterDBInfoTask,
 		TaskName:   "更新任务状态",
 	}
-	updateStep.Params["ClusterID"] = cls.ClusterID
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	updateStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[updateCreateClusterDBInfoTask] = updateStep
@@ -306,7 +306,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		TaskMethod: importClusterNodesTask,
 		TaskName:   "导入集群节点",
 	}
-	importNodesStep.Params["ClusterID"] = cls.ClusterID
+	importNodesStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	importNodesStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[importClusterNodesTask] = importNodesStep
@@ -324,7 +324,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		TaskMethod: registerClusterKubeConfigTask,
 		TaskName:   "注册集群kubeConfig认证",
 	}
-	registerKubeConfigStep.Params["ClusterID"] = cls.ClusterID
+	registerKubeConfigStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	registerKubeConfigStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[registerClusterKubeConfigTask] = registerKubeConfigStep
@@ -412,7 +412,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 		TaskMethod: deleteTKEClusterTask,
 		TaskName:   "删除集群",
 	}
-	deleteStep.Params["ClusterID"] = cls.ClusterID
+	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	deleteStep.Params["CloudID"] = cls.Provider
 	deleteStep.Params["DeleteMode"] = opt.DeleteMode.String()
 
@@ -429,7 +429,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 		TaskMethod: cleanClusterDBInfoTask,
 		TaskName:   "更新任务状态",
 	}
-	updateStep.Params["ClusterID"] = cls.ClusterID
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	updateStep.Params["CloudID"] = cls.Provider
 
 	task.Steps[cleanClusterDBInfoTask] = updateStep
@@ -513,7 +513,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		TaskMethod: addNodesToClusterTask,
 		TaskName:   "添加节点",
 	}
-	addStep.Params["ClusterID"] = cls.ClusterID
+	addStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	addStep.Params["CloudID"] = opt.Cloud.CloudID
 	addStep.Params["NodeGroupID"] = opt.NodeGroupID
 	addStep.Params["InitPasswd"] = opt.InitPassword
@@ -533,7 +533,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		TaskMethod: checkAddNodesStatusTask,
 		TaskName:   "检测节点状态",
 	}
-	checkStep.Params["ClusterID"] = cls.ClusterID
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	checkStep.Params["CloudID"] = opt.Cloud.CloudID
 	checkStep.Params["NodeGroupID"] = opt.NodeGroupID
 	checkStep.Params["NodeIPs"] = strings.Join(nodeIPs, ",")
@@ -552,7 +552,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		TaskMethod: updateAddNodeDBInfoTask,
 		TaskName:   "更新任务状态",
 	}
-	updateStep.Params["ClusterID"] = cls.ClusterID
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	updateStep.Params["CloudID"] = opt.Cloud.CloudID
 	updateStep.Params["NodeIPs"] = strings.Join(nodeIPs, ",")
 	updateStep.Params["NodeIDs"] = strings.Join(nodeIDs, ",")
@@ -679,7 +679,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		TaskMethod: removeNodesFromClusterTask,
 		TaskName:   "删除节点",
 	}
-	removeStep.Params["ClusterID"] = cls.ClusterID
+	removeStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	removeStep.Params["CloudID"] = opt.Cloud.CloudID
 	removeStep.Params["DeleteMode"] = opt.DeleteMode
 	removeStep.Params["NodeIPs"] = strings.Join(nodeIPs, ",")
@@ -698,7 +698,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		TaskMethod: updateRemoveNodeDBInfoTask,
 		TaskName:   "更新任务状态",
 	}
-	updateDBStep.Params["ClusterID"] = cls.ClusterID
+	updateDBStep.Params[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
 	updateDBStep.Params["CloudID"] = cls.Provider
 	updateDBStep.Params["NodeIPs"] = strings.Join(nodeIPs, ",")
 	updateDBStep.Params["NodeIDs"] = strings.Join(nodeIDs, ",")
@@ -718,7 +718,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 	return task, nil
 }
 
-// BuildCreateNodeGroupTask build create node group task
+// BuildCreateNodeGroupTask build create node group task - 创建节点池
 func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
 	*proto.Task, error) {
 	// validate request params
@@ -764,7 +764,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 		TaskMethod: createCloudNodeGroupTask,
 		TaskName:   "创建 NodeGroup",
 	}
-	createStep.Params["ClusterID"] = group.ClusterID
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = group.ClusterID
 	createStep.Params["NodeGroupID"] = group.NodeGroupID
 	createStep.Params["CloudID"] = group.Provider
 
@@ -781,7 +781,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 		TaskMethod: checkCloudNodeGroupStatusTask,
 		TaskName:   "检测 NodeGroup 状态",
 	}
-	checkStep.Params["ClusterID"] = group.ClusterID
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = group.ClusterID
 	checkStep.Params["NodeGroupID"] = group.NodeGroupID
 	checkStep.Params["CloudID"] = group.Provider
 
@@ -803,7 +803,7 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 }
 
 // BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
-// including remove nodes from NodeGroup, clean data in nodes
+// including remove nodes from NodeGroup, clean data in nodes - 缩容，不保留节点
 func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
 
@@ -952,7 +952,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 // BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
 // task to clean all nodes in nodegroup, release all resource in cloudprovider,
 // finnally delete nodes information in local storage.
-// @param group: need to delete
+// @param group: need to delete - 删除节点池
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
 	// validate request params
@@ -998,7 +998,7 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 		TaskMethod: deleteNodeGroupTask,
 		TaskName:   "删除云 NodeGroup",
 	}
-	deleteStep.Params["ClusterID"] = group.ClusterID
+	deleteStep.Params[cloudprovider.ClusterIDKey.String()] = group.ClusterID
 	deleteStep.Params["NodeGroupID"] = group.NodeGroupID
 	deleteStep.Params["CloudID"] = group.Provider
 	deleteStep.Params["KeepInstance"] = "true"
@@ -1024,13 +1024,13 @@ func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.N
 	return task, nil
 }
 
-// BuildMoveNodesToGroupTask build move nodes to group task
+// BuildMoveNodesToGroupTask build move nodes to group task - 节点移入节点池
 func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
 	opt *cloudprovider.MoveNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// BuildUpdateDesiredNodesTask build update desired nodes task
+// BuildUpdateDesiredNodesTask build update desired nodes task - 扩容节点
 func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
 	// validate request params
@@ -1201,7 +1201,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	return task, nil
 }
 
-// BuildSwitchNodeGroupAutoScalingTask ensure auto scaler status and update nodegroup status to normal
+// BuildSwitchNodeGroupAutoScalingTask ensure auto scaler status and update nodegroup status to normal - 开启/关闭 节点池
 func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool,
 	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
 	// validate request params
@@ -1248,7 +1248,7 @@ func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enabl
 	return task, nil
 }
 
-// BuildUpdateAutoScalingOptionTask build update auto scaler option task
+// BuildUpdateAutoScalingOptionTask build update auto scaler option task - 更新集群扩缩容配置
 func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption,
 	opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
 	// validate request params
@@ -1294,7 +1294,7 @@ func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAuto
 	return task, nil
 }
 
-// BuildSwitchAutoScalingOptionStatusTask build switch auto scaler option status task
+// BuildSwitchAutoScalingOptionStatusTask build switch auto scaler option status task - 开启/关闭集群自动扩缩容
 func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	// validate request params

@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Upstream_Handshake_FullMethodName = "/pbfs.Upstream/Handshake"
-	Upstream_Watch_FullMethodName     = "/pbfs.Upstream/Watch"
-	Upstream_Messaging_FullMethodName = "/pbfs.Upstream/Messaging"
+	Upstream_Handshake_FullMethodName       = "/pbfs.Upstream/Handshake"
+	Upstream_Watch_FullMethodName           = "/pbfs.Upstream/Watch"
+	Upstream_Messaging_FullMethodName       = "/pbfs.Upstream/Messaging"
+	Upstream_PullAppFileMeta_FullMethodName = "/pbfs.Upstream/PullAppFileMeta"
+	Upstream_GetDownloadURL_FullMethodName  = "/pbfs.Upstream/GetDownloadURL"
 )
 
 // UpstreamClient is the client API for Upstream service.
@@ -32,6 +34,8 @@ type UpstreamClient interface {
 	Handshake(ctx context.Context, in *HandshakeMessage, opts ...grpc.CallOption) (*HandshakeResp, error)
 	Watch(ctx context.Context, in *SideWatchMeta, opts ...grpc.CallOption) (Upstream_WatchClient, error)
 	Messaging(ctx context.Context, in *MessagingMeta, opts ...grpc.CallOption) (*MessagingResp, error)
+	PullAppFileMeta(ctx context.Context, in *PullAppFileMetaReq, opts ...grpc.CallOption) (*PullAppFileMetaResp, error)
+	GetDownloadURL(ctx context.Context, in *GetDownloadURLReq, opts ...grpc.CallOption) (*GetDownloadURLResp, error)
 }
 
 type upstreamClient struct {
@@ -92,6 +96,24 @@ func (c *upstreamClient) Messaging(ctx context.Context, in *MessagingMeta, opts 
 	return out, nil
 }
 
+func (c *upstreamClient) PullAppFileMeta(ctx context.Context, in *PullAppFileMetaReq, opts ...grpc.CallOption) (*PullAppFileMetaResp, error) {
+	out := new(PullAppFileMetaResp)
+	err := c.cc.Invoke(ctx, Upstream_PullAppFileMeta_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *upstreamClient) GetDownloadURL(ctx context.Context, in *GetDownloadURLReq, opts ...grpc.CallOption) (*GetDownloadURLResp, error) {
+	out := new(GetDownloadURLResp)
+	err := c.cc.Invoke(ctx, Upstream_GetDownloadURL_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UpstreamServer is the server API for Upstream service.
 // All implementations should embed UnimplementedUpstreamServer
 // for forward compatibility
@@ -100,6 +122,8 @@ type UpstreamServer interface {
 	Handshake(context.Context, *HandshakeMessage) (*HandshakeResp, error)
 	Watch(*SideWatchMeta, Upstream_WatchServer) error
 	Messaging(context.Context, *MessagingMeta) (*MessagingResp, error)
+	PullAppFileMeta(context.Context, *PullAppFileMetaReq) (*PullAppFileMetaResp, error)
+	GetDownloadURL(context.Context, *GetDownloadURLReq) (*GetDownloadURLResp, error)
 }
 
 // UnimplementedUpstreamServer should be embedded to have forward compatible implementations.
@@ -114,6 +138,12 @@ func (UnimplementedUpstreamServer) Watch(*SideWatchMeta, Upstream_WatchServer) e
 }
 func (UnimplementedUpstreamServer) Messaging(context.Context, *MessagingMeta) (*MessagingResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Messaging not implemented")
+}
+func (UnimplementedUpstreamServer) PullAppFileMeta(context.Context, *PullAppFileMetaReq) (*PullAppFileMetaResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PullAppFileMeta not implemented")
+}
+func (UnimplementedUpstreamServer) GetDownloadURL(context.Context, *GetDownloadURLReq) (*GetDownloadURLResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDownloadURL not implemented")
 }
 
 // UnsafeUpstreamServer may be embedded to opt out of forward compatibility for this service.
@@ -184,6 +214,42 @@ func _Upstream_Messaging_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Upstream_PullAppFileMeta_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PullAppFileMetaReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpstreamServer).PullAppFileMeta(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Upstream_PullAppFileMeta_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpstreamServer).PullAppFileMeta(ctx, req.(*PullAppFileMetaReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Upstream_GetDownloadURL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDownloadURLReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpstreamServer).GetDownloadURL(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Upstream_GetDownloadURL_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpstreamServer).GetDownloadURL(ctx, req.(*GetDownloadURLReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Upstream_ServiceDesc is the grpc.ServiceDesc for Upstream service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -198,6 +264,14 @@ var Upstream_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Messaging",
 			Handler:    _Upstream_Messaging_Handler,
+		},
+		{
+			MethodName: "PullAppFileMeta",
+			Handler:    _Upstream_PullAppFileMeta_Handler,
+		},
+		{
+			MethodName: "GetDownloadURL",
+			Handler:    _Upstream_GetDownloadURL_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

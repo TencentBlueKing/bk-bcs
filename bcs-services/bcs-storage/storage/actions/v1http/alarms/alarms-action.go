@@ -132,7 +132,7 @@ func CleanAlarm() {
 	maxTime := apiserver.GetAPIResource().Conf.AlarmMaxTime
 	cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), tableName, time.Hour)
 	cleaner.WithMaxEntryNum(maxCap)
-	cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, createTimeTag)
+	cleaner.WithMaxDuration(time.Duration(maxTime*24)*time.Hour, time.Duration(0), createTimeTag)
 	cleaner.Run(context.TODO())
 }
 

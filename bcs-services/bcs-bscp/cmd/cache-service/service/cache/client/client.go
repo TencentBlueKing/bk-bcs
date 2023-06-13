@@ -16,21 +16,24 @@ package client
 import (
 	"context"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/bedis"
 	"bscp.io/pkg/dal/dao"
+	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/runtime/lock"
-	"bscp.io/pkg/types"
 )
 
 // Interface defines all the supported operations to get resource cache.
 type Interface interface {
+	GetAppID(kt *kit.Kit, bizID uint32, appName string) (uint32, error)
 	GetAppMeta(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
 	GetReleasedCI(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error)
-	GetAppReleasedStrategies(kt *kit.Kit, bizID uint32, appID uint32, cpsID []uint32) ([]string, error)
+	ListAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) (string, error)
+	ListCredentialMatchedCI(kt *kit.Kit, bizID uint32, credential string) (string, error)
+	GetCredential(kt *kit.Kit, bizID uint32, credential string) (string, error)
 	RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error
 }
 
@@ -54,6 +57,7 @@ func New(op dao.Set, bds bedis.Client) (Interface, error) {
 // client do all the read cache related operations.
 type client struct {
 	op  dao.Set
+	db  pbds.DataClient
 	bds bedis.Client
 	// rLock is the resource's lock
 	rLock lock.Interface
@@ -67,37 +71,30 @@ func (c *client) RefreshAppCache(kt *kit.Kit, bizID uint32, appID uint32) error 
 		logs.Errorf("refresh app meta cache failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
-	kt.Ctx = context.TODO()
 
-	opt := &types.GetAppCpsIDOption{
-		BizID: bizID,
-		AppID: appID,
-	}
-	cpsIDs, err := c.op.Publish().GetAppCpsID(kt, opt)
+	// refresh app released group related cache, including itself & released ci in it
+	groupsJs, err := c.refreshAppReleasedGroupCache(kt, bizID, appID)
 	if err != nil {
-		logs.Errorf("query app cps id list failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("refresh app released group cache failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}
 
-	// refresh app strategy related cache, including itself & released ci in it
-	strategies, err := c.refreshAppStrategyCache(kt, bizID, appID, cpsIDs)
-	if err != nil && err != errf.ErrCPSInconsistent {
-		logs.Errorf("refresh app strategy cache failed, err: %v, rid: %s", err, kt.Rid)
+	var releaseGroups []*table.ReleasedGroup
+	if err = jsoni.Unmarshal([]byte(groupsJs), &releaseGroups); err != nil {
+		logs.Errorf("unmarshal groups %s failed, err: %v, rid: %s", groupsJs, err, kt.Rid)
 		return err
 	}
 	kt.Ctx = context.TODO()
-
-	for _, strategyJs := range strategies {
-		strategy := new(types.PublishedStrategyCache)
-		if err = jsoni.Unmarshal([]byte(strategyJs), strategy); err != nil {
-			logs.Errorf("unmarshal strategy %s failed, err: %v, rid: %s", strategyJs, err, kt.Rid)
-			return err
+	done := make(map[uint32]bool)
+	for _, group := range releaseGroups {
+		if done[group.ReleaseID] {
+			continue
 		}
-
-		if _, err = c.refreshReleasedCICache(kt, bizID, strategy.ReleaseID); err != nil {
+		if _, err = c.refreshReleasedCICache(kt, bizID, group.ReleaseID); err != nil {
 			logs.Errorf("refresh released ci cache failed, err: %v, rid: %s", err, kt.Rid)
 			return err
 		}
+		done[group.ReleaseID] = true
 		kt.Ctx = context.TODO()
 	}
 

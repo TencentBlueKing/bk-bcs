@@ -17,6 +17,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 )
 
 var availableCMD = &cobra.Command{
@@ -29,10 +30,11 @@ var availableCMD = &cobra.Command{
 // Available provide the actions to do availableCMD
 func Available(cmd *cobra.Command, _ []string) {
 	c := newClientWithConfiguration()
-	if err := c.Available(cmd.Context()); err != nil {
-		fmt.Printf("check bcs-helm-manager available failed, %s\n", err.Error())
+	err := c.Available(cmd.Context())
+	if err != nil {
+		klog.Fatalf("check bcs-helm-manager available failed, %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	fmt.Printf("bcs-helm-manager is available\n")
+	fmt.Println("ok")
 }

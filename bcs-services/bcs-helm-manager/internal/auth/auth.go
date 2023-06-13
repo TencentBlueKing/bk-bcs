@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	jwtGo "github.com/dgrijalva/jwt-go"
+	jwtGo "github.com/golang-jwt/jwt/v4"
 	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -73,6 +73,12 @@ func GetJWTClient() *jwt.JWTClient {
 func GetUserFromCtx(ctx context.Context) string {
 	authUser, _ := middleauth.GetUserFromContext(ctx)
 	return authUser.GetUsername()
+}
+
+// GetRealUserFromCtx 通过 ctx 判断当前用户是否是真实用户
+func GetRealUserFromCtx(ctx context.Context) string {
+	authUser, _ := middleauth.GetUserFromContext(ctx)
+	return authUser.Username
 }
 
 func getJWTOpt(c JWTClientConfig) (*jwt.JWTOptions, error) {
@@ -187,7 +193,8 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID options.CredentialScope) (bool, string, []authutils.ResourceAction, error) {
+func callIAM(username, action string, resourceID options.CredentialScope) (bool, string,
+	[]authutils.ResourceAction, error) {
 	// related actions
 	switch action {
 	case cluster.CanManageClusterOperation:

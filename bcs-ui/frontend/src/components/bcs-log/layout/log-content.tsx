@@ -1,10 +1,11 @@
 /* eslint-disable no-unused-expressions */
-import { defineComponent, ref, computed, PropType, watch, onMounted } from '@vue/composition-api';
+import { defineComponent, ref, computed, PropType, watch, onMounted } from 'vue';
 import AnsiParser from '../common/ansi-parser';
 import TransformStringPixel from '../common/transform-string-pixel';
 import { debounce } from 'throttle-debounce';
 import { formatTime } from '@/common/util';
 import '../style/log.css';
+import $i18n from '@/i18n/i18n-setup';
 
 export interface ILogData {
   log: string;
@@ -138,7 +139,7 @@ export default defineComponent({
       index > -1 && hoverIds.value.splice(index, 1);
     };
 
-    const lastText = computed(() => (showLastContainer.value ? ctx.root.$i18n.t('返回最新日志') : ctx.root.$i18n.t('最近一次重启日志')));
+    const lastText = computed(() => (showLastContainer.value ? $i18n.t('返回最新日志') : $i18n.t('最近一次重启日志')));
 
     const handleToggleLast = () => {
       showLastContainer.value = !showLastContainer.value;
@@ -227,7 +228,7 @@ export default defineComponent({
                                     }
                                     <span class="log-item-content"
                                         style={{ 'margin-left': this.showTimeStamp && data.breakLine ? '150px' : '' }}
-                                        domPropsInnerHTML={data.html}>
+                                        domProps-InnerHTML={data.html}>
                                     </span>
                                 </div>
                           ),

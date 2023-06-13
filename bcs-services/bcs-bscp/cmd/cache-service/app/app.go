@@ -19,6 +19,11 @@ import (
 	"net/http"
 	"strconv"
 
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+
 	"bscp.io/cmd/cache-service/options"
 	"bscp.io/cmd/cache-service/service"
 	"bscp.io/cmd/cache-service/service/cache/client"
@@ -35,11 +40,6 @@ import (
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
-
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // Run start the cache service
@@ -96,11 +96,6 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 		return fmt.Errorf("get etcd config failed, err: %v", err)
 	}
 
-	etcdCli, err := etcd3.New(etcdOpt)
-	if err != nil {
-		return fmt.Errorf("new etcd client failed, err: %v", err)
-	}
-
 	// register cache service.
 	svcOpt := serviced.ServiceOption{
 		Name: cc.CacheServiceName,
@@ -108,7 +103,7 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 		Port: cc.CacheService().Network.RpcPort,
 		Uid:  uuid.UUID(),
 	}
-	sd, err := serviced.NewServiceD(etcdCli, svcOpt)
+	sd, err := serviced.NewServiceD(etcdOpt, svcOpt)
 	if err != nil {
 		return fmt.Errorf("new service discovery faield, err: %v", err)
 	}
@@ -123,7 +118,7 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 	cs.bds = bds
 
 	// initial DAO set
-	set, err := dao.NewDaoSet(cc.CacheService().Sharding)
+	set, err := dao.NewDaoSet(cc.CacheService().Sharding, cc.CacheService().Credential)
 	if err != nil {
 		return fmt.Errorf("initial dao set failed, err: %v", err)
 	}
@@ -146,12 +141,22 @@ func (cs *cacheService) prepare(opt *options.Option) error {
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
 func (cs *cacheService) listenAndServe() error {
 	// generate standard grpc server grpcMetrics.
-	grpcMetrics := gprm.NewServerMetrics()
+	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
+
+	recoveryOpt := grpc_recovery.WithRecoveryHandlerContext(brpc.RecoveryHandlerFuncContext)
 
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(4 * 1024 * 1024),
 		// add bscp unary interceptor and standard grpc server metrics interceptor.
-		grpc.UnaryInterceptor(brpc.UnaryServerInterceptorWithMetrics(grpcMetrics)),
-		grpc.StreamInterceptor(grpcMetrics.StreamServerInterceptor()),
+		grpc.ChainUnaryInterceptor(
+			brpc.LogUnaryServerInterceptor(),
+			grpcMetrics.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
+		),
+		grpc.ChainStreamInterceptor(
+			grpcMetrics.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(recoveryOpt),
+		),
 		grpc.ReadBufferSize(8 * 1024 * 1024),
 		grpc.WriteBufferSize(16 * 1024 * 1024),
 		grpc.InitialConnWindowSize(16 * 1024 * 1024),

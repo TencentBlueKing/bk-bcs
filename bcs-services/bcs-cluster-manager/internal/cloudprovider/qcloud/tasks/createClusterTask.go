@@ -298,7 +298,7 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {
 		blog.Errorf("CreateClusterShieldAlarmTask[%s]: get cluster for %s failed", taskID, clusterID)
@@ -360,7 +360,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params["CloudID"]
 
 	operator := state.Task.CommonParams["operator"]
@@ -529,7 +529,7 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params["CloudID"]
 	systemID := state.Task.CommonParams["SystemID"]
 
@@ -654,7 +654,7 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params["CloudID"]
 	systemID := state.Task.CommonParams["SystemID"]
 
@@ -796,7 +796,7 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
-	clusterID := step.Params["ClusterID"]
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	SystemID := state.Task.CommonParams["SystemID"]
 
 	// need to generate master Nodes and update DB if auto generate machines

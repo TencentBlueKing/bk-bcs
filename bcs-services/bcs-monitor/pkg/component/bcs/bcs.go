@@ -15,6 +15,8 @@
 package bcs
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,19 +27,54 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 )
 
+const (
+	// VirtualClusterType vcluster
+	VirtualClusterType = "virtual"
+)
+
 // Cluster 集群信息
 type Cluster struct {
-	ProjectId   string `json:"projectID"`
-	ClusterId   string `json:"clusterID"`
-	ClusterName string `json:"clusterName"`
-	BKBizID     string `json:"businessID"`
-	Status      string `json:"status"`
-	IsShared    bool   `json:"is_shared"`
+	ProjectId       string `json:"projectID"`
+	ClusterId       string `json:"clusterID"`
+	ClusterName     string `json:"clusterName"`
+	BKBizID         string `json:"businessID"`
+	Status          string `json:"status"`
+	IsShared        bool   `json:"is_shared"`
+	ClusterType     string `json:"clusterType"`
+	NetworkSettings struct {
+		MaxNodePodNum int `json:"maxNodePodNum"`
+		MaxServiceNum int `json:"maxServiceNum"`
+	} `json:"networkSettings"`
+	ExtraInfo struct {
+		NamespaceInfo   string `json:"namespaceInfo"`
+		Provider        string `json:"provider"`
+		VclusterNetwork string `json:"vclusterNetwork"`
+	} `json:"extraInfo"`
+	VclusterInfo VclusterInfo `json:"-"`
+}
+
+// VclusterInfo vcluster info, parse from extraInfo.namespaceInfo
+type VclusterInfo struct {
+	Name  string        `json:"name"`
+	Quota VclusterQuota `json:"quota"`
+}
+
+// VclusterQuota vcluster quota, parse from extraInfo.namespaceInfo
+type VclusterQuota struct {
+	CPURequests    string `json:"cpuRequests"`
+	CPULimits      string `json:"cpuLimits"`
+	MemoryRequests string `json:"MemoryRequests"`
+	MemoryLimits   string `json:"memoryLimits"`
 }
 
 // String :
 func (c *Cluster) String() string {
 	return fmt.Sprintf("cluster<%s, %s>", c.ClusterName, c.ClusterId)
+}
+
+// IsVirtual check cluster is vcluster
+func (c *Cluster) IsVirtual() bool {
+	return c.ClusterType == VirtualClusterType
 }
 
 // CacheListClusters 定时同步 cluster 列表
@@ -63,31 +100,48 @@ func ListClusters() {
 		Get(url)
 
 	if err != nil {
-		klog.Infof("list clusters error, %s", err.Error())
+		klog.Errorf("list clusters error, %s", err.Error())
 		return
 	}
 
 	var result []*Cluster
-	if err := component.UnmarshalBKResult(resp, &result); err != nil {
-		klog.Infof("unmarshal clusters error, %s", err.Error())
+	if err = component.UnmarshalBKResult(resp, &result); err != nil {
+		klog.Errorf("unmarshal clusters error, %s", err.Error())
 		return
 	}
 
 	clusterMap := map[string]*Cluster{}
 	for _, cluster := range result {
-		// 过滤掉共享集群
-		if cluster.IsShared {
-			continue
-		}
-		// 集群状态 https://github.com/Tencent/bk-bcs/blob/master/bcs-services/bcs-cluster-manager/api/clustermanager/clustermanager.proto#L1003
+		// 集群状态 https://github.com/Tencent/bk-bcs/blob/master/bcs-services/bcs-cluster-manager/
+		// api/clustermanager/clustermanager.proto#L1003
 		if cluster.Status != "RUNNING" {
 			continue
 		}
-		clusterMap[cluster.ClusterId] = cluster
+		cls := cluster
+		if cls.IsVirtual() {
+			cls.VclusterInfo, err = parseVClusterInfo(cls.ExtraInfo.NamespaceInfo)
+			if err != nil {
+				klog.Errorf("parse clusters %s namespaceInfo %s error, %s", cls.ClusterId, cls.ExtraInfo.NamespaceInfo,
+					err.Error())
+			}
+		}
+		clusterMap[cluster.ClusterId] = cls
 	}
 
 	storage.LocalCache.Slot.Set(listClustersCacheKey, clusterMap, -1)
 	return
+}
+
+func parseVClusterInfo(s string) (VclusterInfo, error) {
+	info := VclusterInfo{}
+	if s == "" {
+		return info, nil
+	}
+	err := json.Unmarshal([]byte(s), &info)
+	if err != nil {
+		return info, err
+	}
+	return info, nil
 }
 
 // GetClusterMap 获取全部集群数据, map格式
@@ -98,15 +152,33 @@ func GetClusterMap() (map[string]*Cluster, error) {
 	return nil, fmt.Errorf("not found clusters")
 }
 
+var errNotFoundCluster = errors.New("not found cluster")
+
 // GetCluster 获取集群详情
 func GetCluster(clusterID string) (*Cluster, error) {
-	var cacheResult interface{}
-	var ok bool
-	if cacheResult, ok = storage.LocalCache.Slot.Get(listClustersCacheKey); !ok {
-		return nil, fmt.Errorf("not found cluster")
+	getCluster := func() (*Cluster, error) {
+		var cacheResult interface{}
+		var ok bool
+		if cacheResult, ok = storage.LocalCache.Slot.Get(listClustersCacheKey); !ok {
+			return nil, fmt.Errorf("not found cluster")
+		}
+		if clusterMap, ok := cacheResult.(map[string]*Cluster); ok {
+			if cls, ok := clusterMap[clusterID]; ok {
+				return cls, nil
+			}
+			return nil, errNotFoundCluster
+		}
+		return nil, fmt.Errorf("cluster cache is invalid")
 	}
-	if clusterMap, ok := cacheResult.(map[string]*Cluster); ok {
-		return clusterMap[clusterID], nil
+
+	cls, err := getCluster()
+	if err != nil {
+		// 新创建的集群，未在缓存中，刷新一下缓存
+		if errors.Is(err, errNotFoundCluster) {
+			ListClusters()
+			return getCluster()
+		}
+		return nil, err
 	}
-	return nil, fmt.Errorf("cluster cache is invalid")
+	return cls, nil
 }

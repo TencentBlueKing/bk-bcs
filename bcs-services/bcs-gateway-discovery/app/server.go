@@ -22,7 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
-	discoverys "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
+	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/module-discovery"
 	modulediscovery "github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-gateway-discovery/register/apisix"
@@ -65,7 +65,7 @@ type DiscoveryServer struct {
 	// adapter for service structure conversion
 	adapter *Adapter
 	// bk-bcs modules discovery for backend service list
-	discovery discoverys.ModuleDiscovery
+	discovery discovery.ModuleDiscovery
 	// go micro version discovery
 	microDiscovery modulediscovery.Discovery
 	// exit func
@@ -113,7 +113,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 	}
 
 	// init etcd registry feature with modulediscovery base on micro.Registry
-	if err := s.turnOnEtcdFeature(option); err != nil {
+	if err = s.turnOnEtcdFeature(option); err != nil {
 		return err
 	}
 
@@ -121,7 +121,7 @@ func (s *DiscoveryServer) Init(option *ServerOptions) error {
 	// init service data adapter
 	s.adapter = NewAdapter(option)
 	// init module disovery
-	s.discovery, err = discoverys.NewDiscoveryV2(option.ZkConfig.BCSZk, defaultModules)
+	s.discovery, err = discovery.NewDiscoveryV2(option.ZkConfig.BCSZk, defaultModules)
 	if err != nil {
 		blog.Errorf("gateway init services discovery failed, %s", err.Error())
 		return err

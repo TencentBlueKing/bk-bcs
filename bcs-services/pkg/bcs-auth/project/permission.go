@@ -16,6 +16,7 @@ package project
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
@@ -93,6 +94,7 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 		Operation: CanEditProjectOperation,
 		User:      user,
 	}, resources, perms)
+	defer audit.AddEvent(ProjectEdit.String(), string(SysProject), projectID, user, allow, nil)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -110,7 +112,8 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 }
 
 // CanDeleteProject check user deleteProject perm
-func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool, string, []utils.ResourceAction, error) {
+func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool, string,
+	[]utils.ResourceAction, error) {
 	if bpp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -140,6 +143,7 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool
 		Operation: CanDeleteProjectOperation,
 		User:      user,
 	}, resources, perms)
+	defer audit.AddEvent(ProjectDelete.String(), string(SysProject), projectID, user, allow, nil)
 
 	if err != nil {
 		return false, "", nil, err
@@ -186,6 +190,7 @@ func (bpp *BCSProjectPerm) CanViewProject(user string, projectID string) (bool, 
 		Operation: CanViewProjectOperation,
 		User:      user,
 	}, resources, perms)
+	defer audit.AddEvent(ProjectView.String(), string(SysProject), projectID, user, allow, nil)
 
 	if err != nil {
 		return false, "", nil, err
@@ -239,8 +244,8 @@ func (bpp *BCSProjectPerm) GetProjectMultiActionPermission(user, projectID strin
 		UserName: user}, projectNode)
 }
 
-// GetMultiProjectMultiActionPermission only support same instanceSelection
-func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPermission(user string, projectIDs,
+// GetMultiProjectMultiActionPerm only support same instanceSelection
+func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPerm(user string, projectIDs,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bpp == nil {
 		return nil, utils.ErrServerNotInited

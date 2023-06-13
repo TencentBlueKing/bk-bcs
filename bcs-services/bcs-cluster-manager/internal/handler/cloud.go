@@ -98,7 +98,7 @@ func (cm *ClusterManager) ListCloud(ctx context.Context,
 	ca := cloud.NewListAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloud", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloud, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
+	blog.Infof("reqID: %s, action: ListCloud, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloud, req %v, resp %v", reqID, req, resp)
 	return nil

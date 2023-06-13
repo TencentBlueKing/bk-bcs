@@ -35,9 +35,9 @@
             </bk-form-item>
           </FormGroup>
           <FormGroup class="mt15" :title="$t('标签 & 污点')" :allow-toggle="false">
-            <bk-form-item :label="$t('标签')">
+            <bk-form-item :label="$t('标签')" property="labels" error-display-type="normal">
               <KeyValue
-                style="max-width: 420px;"
+                class="max-w-[420px]"
                 :disable-delete-item="false"
                 :min-item="0"
                 v-model="formData.labels">
@@ -57,11 +57,11 @@
                 v-model="formData.taints"
                 @add="handleValidateForm"
                 @delete="handleValidateForm"
-              ></Taints>
+              />
             </bk-form-item>
-            <bk-form-item :label="$t('注解')">
+            <bk-form-item :label="$t('注解')" property="annotations" error-display-type="normal">
               <KeyValue
-                style="max-width: 420px;"
+                class="max-w-[420px]"
                 :disable-delete-item="false"
                 :min-item="0"
                 v-model="formData.annotations.values">
@@ -330,7 +330,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, watch } from '@vue/composition-api';
+import { defineComponent, ref, computed, onMounted, watch, getCurrentInstance } from 'vue';
 import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';
@@ -342,6 +342,7 @@ import $i18n from '@/i18n/i18n-setup';
 import useInterval from '@/composables/use-interval';
 import InputType from '@/views/cluster-manage/components/input-type.vue';
 import ActionDoc from '../components/action-doc.vue';
+import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
   components: { FormGroup, KeyValue, Taints, InputType, ActionDoc },
@@ -351,8 +352,7 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $bkMessage } = ctx.root;
+  setup(props) {
     const curProject = computed(() => $store.state.curProject);
     const user = computed(() => $store.state.user);
     const isEdit = computed(() => !!props.nodeTemplateID);
@@ -386,12 +386,67 @@ export default defineComponent({
         message: $i18n.t('必填项'),
         trigger: 'blur',
       }],
-      taints: [{
-        validator: () => formData.value.taints.every((item: any) => item.key && item.value && item.effect),
-        message: $i18n.t('污点键、值和effect不能为空'),
-        trigger: 'custom',
-
-      }],
+      labels: [
+        {
+          message: $i18n.t('标签值不能为空'),
+          trigger: 'custom',
+          // eslint-disable-next-line max-len
+          validator: () => Object.keys(formData.value.labels).every(key => !!formData.value.labels[key]),
+        },
+        {
+          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          trigger: 'custom',
+          validator: () => {
+            const keys = Object.keys(formData.value.labels);
+            const values = keys.map(key => formData.value.labels[key]);
+            return keys.every(v => /^[A-Za-z0-9._/-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9._/-]+$/.test(v));
+          },
+        },
+      ],
+      taints: [
+        {
+          validator: () => formData.value.taints.every((item: any) => item.key && item.value && item.effect),
+          message: $i18n.t('污点键、值和effect不能为空'),
+          trigger: 'custom',
+        },
+        {
+          message: $i18n.t('重复键'),
+          trigger: 'custom',
+          validator: () => {
+            const data = (formData.value.taints as any[]).reduce((pre, item) => {
+              if (item.key) {
+                pre.push(item.key);
+              }
+              return pre;
+            }, []);
+            const removeDuplicateData = new Set(data);
+            return data.length === removeDuplicateData.size;
+          },
+        },
+        {
+          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          trigger: 'custom',
+          validator: () => (formData.value.taints as any[])
+            .every(item => /^[A-Za-z0-9._/-]+$/.test(item.key) && /^[A-Za-z0-9._/-]+$/.test(item.value)),
+        },
+      ],
+      annotations: [
+        {
+          message: $i18n.t('注解值不能为空'),
+          trigger: 'custom',
+          // eslint-disable-next-line max-len
+          validator: () => Object.keys(formData.value.annotations.values).every(key => !!formData.value.annotations.values[key]),
+        },
+        {
+          message: $i18n.t('仅支持字母，数字和字符(-_./)'),
+          trigger: 'custom',
+          validator: () => {
+            const keys = Object.keys(formData.value.annotations.values);
+            const values = keys.map(key => formData.value.annotations.values[key]);
+            return keys.every(v => /^[A-Za-z0-9._/-]+$/.test(v)) && values.every(v => /^[A-Za-z0-9._/-]+$/.test(v));
+          },
+        },
+      ],
     });
     const handleValidateForm = async () => {
       await formRef.value?.validate();
@@ -438,10 +493,12 @@ export default defineComponent({
     const handlekubeletMouseEnter = (index, event, row) => {
       activeKubeletFlagName.value = row.flagName;
     };
+    const { proxy } = getCurrentInstance() || { proxy: null };
     const handleEditkubelet = (row) => {
       editKey.value = row.flagName;
+      const $refs = proxy?.$refs || {};
       setTimeout(() => {
-        (ctx.refs.editInputRef as any).focus();
+        ($refs.editInputRef as any)?.focus();
       }, 0);
     };
     const handleEditBlur = () => {
@@ -484,7 +541,7 @@ export default defineComponent({
     const handleGetbkSopsList = async () => {
       bkSopsLoading.value = true;
       bkSopsList.value = await $store.dispatch('clustermanager/bkSopsList', {
-        $businessID: curProject.value.cc_app_id,
+        $businessID: curProject.value.businessID,
         operator: user.value.username,
         templateSource: 'business',
         scope: 'cmdb_biz',
@@ -507,7 +564,7 @@ export default defineComponent({
       sopsParamsLoading.value = true;
       const data = await $store.dispatch('clustermanager/bkSopsParamsList', {
         $templateID: bkSopsTemplateID.value,
-        $businessID: curProject.value.cc_app_id,
+        $businessID: curProject.value.businessID,
         operator: user.value.username,
         templateSource: 'business',
         scope: 'cmdb_biz',
@@ -555,7 +612,7 @@ export default defineComponent({
     const { start, stop } = useInterval(handlePollTask, 5000, true);
     const handleDebug = async () => {
       const { task } = await $store.dispatch('clustermanager/bkSopsDebug', {
-        businessID: String(curProject.value.cc_app_id),
+        businessID: String(curProject.value.businessID),
         templateID: String(bkSopsTemplateID.value),
         operator: user.value.username,
         templateSource: 'business',
@@ -596,7 +653,7 @@ export default defineComponent({
           plugins: {
             [bkSopsTemplateID.value]: {
               params: {
-                template_biz_id: String(curProject.value.cc_app_id),
+                template_biz_id: String(curProject.value.businessID),
                 template_id: bkSopsTemplateID.value,
                 template_user: user.value.username,
                 ...sopsParams.value,

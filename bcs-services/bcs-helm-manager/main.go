@@ -16,31 +16,34 @@ import (
 	"flag"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
-
 	microCfg "github.com/micro/go-micro/v2/config"
-	"github.com/micro/go-micro/v2/config/encoder/yaml"
+	microYaml "github.com/micro/go-micro/v2/config/encoder/yaml"
 	"github.com/micro/go-micro/v2/config/reader"
-	"github.com/micro/go-micro/v2/config/reader/json"
+	microJson "github.com/micro/go-micro/v2/config/reader/json"
 	"github.com/micro/go-micro/v2/config/source/env"
 	microFile "github.com/micro/go-micro/v2/config/source/file"
-	microFlg "github.com/micro/go-micro/v2/config/source/flag"
+)
+
+var (
+	conf        string
+	credentials string
 )
 
 func parseFlags() {
 	// config file path
-	flag.String("conf", "", "config file path")
+	flag.StringVar(&conf, "conf", "", "config file path")
+	flag.StringVar(&credentials, "credentials", "", "credential config file path")
 	flag.Parse()
 }
-
 func main() {
 	parseFlags()
 
 	opt := &options.HelmManagerOptions{}
-	config, err := microCfg.NewConfig(microCfg.WithReader(json.NewReader(
-		reader.WithEncoder(yaml.NewEncoder()),
+	config, err := microCfg.NewConfig(microCfg.WithReader(microJson.NewReader(
+		reader.WithEncoder(microYaml.NewEncoder()),
 	)))
 	if err != nil {
 		blog.Fatalf("create config failed, %s", err.Error())
@@ -50,26 +53,30 @@ func main() {
 		env.WithStrippedPrefix("HELM"),
 	)
 
-	if err = config.Load(
-		microFlg.NewSource(
-			microFlg.IncludeUnset(true),
-		),
-	); err != nil {
-		blog.Fatalf("load config from flag failed, %s", err.Error())
-	}
-
-	if len(config.Get("conf").String("")) > 0 {
-		err = config.Load(microFile.NewSource(microFile.WithPath(config.Get("conf").String(""))), envSource)
+	// 加载主配置
+	if len(conf) > 0 {
+		err = config.Load(microFile.NewSource(microFile.WithPath(conf)), envSource)
 		if err != nil {
 			blog.Fatalf("load config from file failed, err %s", err.Error())
 		}
+	}
+
+	credConf, _ := microCfg.NewConfig()
+	if len(credentials) > 0 {
+		credConf, err = makeMicroCredConf(credentials)
+		if err != nil {
+			blog.Fatalf("load credentials from file failed, err %s", err.Error())
+		}
+		// 设置白名单配置
+		config.Set(credConf.Get("credentials"), "credentials")
+
 	}
 
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
 	}
 
-	blog.InitLogs(conf.LogConfig{
+	blog.InitLogs(commonConf.LogConfig{
 		LogDir:          opt.BcsLog.LogDir,
 		LogMaxSize:      opt.BcsLog.LogMaxSize,
 		LogMaxNum:       opt.BcsLog.LogMaxNum,
@@ -83,7 +90,7 @@ func main() {
 
 	blog.Info(string(config.Bytes()))
 	options.GlobalOptions = opt
-	helmManager := app.NewHelmManager(opt)
+	helmManager := app.NewHelmManager(opt, credConf)
 	if err := helmManager.Init(); err != nil {
 		blog.Fatalf("init helm manager failed, %s", err.Error())
 	}
@@ -92,4 +99,18 @@ func main() {
 	if err := helmManager.Run(); err != nil {
 		blog.Fatalf("run helm manager failed, %s", err.Error())
 	}
+}
+
+func makeMicroCredConf(filePath string) (microCfg.Config, error) {
+	config, err := microCfg.NewConfig(
+		microCfg.WithReader(microJson.NewReader(reader.WithEncoder(microYaml.NewEncoder()))),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := config.Load(microFile.NewSource(microFile.WithPath(filePath))); err != nil {
+		return nil, err
+	}
+	return config, nil
 }

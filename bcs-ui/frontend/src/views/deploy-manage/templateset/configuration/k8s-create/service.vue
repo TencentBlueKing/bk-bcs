@@ -956,7 +956,7 @@ export default {
           const type = item.split('|')[1];
           this.$bkMessage({
             theme: 'error',
-            message: this.$t('"{name}"中关联应用：原已经关联的{type}已经删除，请重新选择', {
+            message: this.$t('{name}中关联应用：原已经关联的{type}已经删除，请重新选择', {
               name: this.curService.config.metadata.name,
               type,
             }),

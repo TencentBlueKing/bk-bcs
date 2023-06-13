@@ -21,8 +21,8 @@ import (
 	"os"
 	"strconv"
 
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -103,11 +103,6 @@ func (ds *dataService) prepare(opt *options.Option) error {
 		return fmt.Errorf("get etcd config failed, err: %v", err)
 	}
 
-	etcdCli, err := etcd3.New(etcdOpt)
-	if err != nil {
-		return fmt.Errorf("new etcd client failed, err: %v", err)
-	}
-
 	// register data service.
 	svcOpt := serviced.ServiceOption{
 		Name: cc.DataServiceName,
@@ -115,7 +110,7 @@ func (ds *dataService) prepare(opt *options.Option) error {
 		Port: cc.DataService().Network.RpcPort,
 		Uid:  uuid.UUID(),
 	}
-	sd, err := serviced.NewService(etcdCli, svcOpt)
+	sd, err := serviced.NewService(etcdOpt, svcOpt)
 	if err != nil {
 		return fmt.Errorf("new service faield, err: %v", err)
 	}
@@ -128,7 +123,7 @@ func (ds *dataService) prepare(opt *options.Option) error {
 	}
 
 	// initial DAO set
-	set, err := dao.NewDaoSet(cc.DataService().Sharding)
+	set, err := dao.NewDaoSet(cc.DataService().Sharding, cc.DataService().Credential)
 	if err != nil {
 		return fmt.Errorf("initial dao set failed, err: %v", err)
 	}
@@ -141,12 +136,22 @@ func (ds *dataService) prepare(opt *options.Option) error {
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
 func (ds *dataService) listenAndServe() error {
 	// generate standard grpc server grpcMetrics.
-	grpcMetrics := gprm.NewServerMetrics()
+	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
+
+	recoveryOpt := grpc_recovery.WithRecoveryHandlerContext(brpc.RecoveryHandlerFuncContext)
 
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(math.MaxInt32),
-		// add bscp unary interceptor and standard grpc server metrics interceptor.
-		grpc.UnaryInterceptor(brpc.UnaryServerInterceptorWithMetrics(grpcMetrics)),
-		grpc.StreamInterceptor(grpcMetrics.StreamServerInterceptor())}
+		grpc.ChainUnaryInterceptor(
+			brpc.LogUnaryServerInterceptor(),
+			grpcMetrics.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
+		),
+		grpc.ChainStreamInterceptor(
+			grpcMetrics.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(recoveryOpt),
+		),
+	}
 
 	network := cc.DataService().Network
 	if network.TLS.Enable() {

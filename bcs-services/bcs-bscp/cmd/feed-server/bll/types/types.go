@@ -18,14 +18,15 @@ import (
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/validator"
+	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
-	content "bscp.io/pkg/protocol/core/content"
 )
 
 // AppInstanceMeta defines an app instance's metadata information.
 type AppInstanceMeta struct {
 	BizID     uint32            `json:"bizID"`
 	AppID     uint32            `json:"appID"`
+	App       string            `json:"app"`
 	Namespace string            `json:"namespace"`
 	Uid       string            `json:"uid"`
 	Labels    map[string]string `json:"labels"`
@@ -68,25 +69,12 @@ func (op *ListFileAppLatestReleaseMetaReq) Validate() error {
 
 // ReleasedCIMeta defines a release's released config item metadata
 type ReleasedCIMeta struct {
-	RciId          uint32          `json:"rci_id,omitempty"`
-	CommitSpec     *CommitSpec     `json:"commit_spec,omitempty"`
-	ConfigItemSpec *ConfigItemSpec `json:"config_item_spec,omitempty"`
-	RepositorySpec *RepositorySpec `json:"repository_spec,omitempty"`
-}
-
-// ConfigItemSpec config item spec.
-type ConfigItemSpec struct {
-	Name       string               `json:"name,omitempty"`
-	Path       string               `json:"path,omitempty"`
-	FileType   string               `json:"file_type,omitempty"`
-	FileMode   string               `json:"file_mode,omitempty"`
-	Permission *pbci.FilePermission `json:"permission,omitempty"`
-}
-
-// CommitSpec commit spec.
-type CommitSpec struct {
-	ContentId uint32               `json:"content_id,omitempty"`
-	Content   *content.ContentSpec `json:"content,omitempty"`
+	RciId                uint32                     `json:"rci_id,omitempty"`
+	CommitID             uint32                     `json:"commit_id,omitempty"`
+	CommitSpec           *pbcommit.CommitSpec       `json:"commit_spec,omitempty"`
+	ConfigItemSpec       *pbci.ConfigItemSpec       `json:"config_item_spec,omitempty"`
+	ConfigItemAttachment *pbci.ConfigItemAttachment `json:"config_item_attachment,omitempty"`
+	RepositorySpec       *RepositorySpec            `json:"repository_spec,omitempty"`
 }
 
 // RepositorySpec repository spec.

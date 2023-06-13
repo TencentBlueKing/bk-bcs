@@ -35,6 +35,466 @@ var (
 	_ = sort.Sort
 )
 
+// Validate checks the field values on CommonResp with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CommonResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CommonResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CommonRespMultiError, or
+// nil if none found.
+func (m *CommonResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CommonResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CommonRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// CommonRespMultiError is an error wrapping multiple validation errors
+// returned by CommonResp.ValidateAll() if the designated constraints aren't met.
+type CommonRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CommonRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CommonRespMultiError) AllErrors() []error { return m }
+
+// CommonRespValidationError is the validation error returned by
+// CommonResp.Validate if the designated constraints aren't met.
+type CommonRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CommonRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CommonRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CommonRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CommonRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CommonRespValidationError) ErrorName() string { return "CommonRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CommonRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCommonResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CommonRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CommonRespValidationError{}
+
+// Validate checks the field values on CommonListResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CommonListResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CommonListResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CommonListRespMultiError,
+// or nil if none found.
+func (m *CommonListResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CommonListResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonListRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CommonListRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CommonListRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CommonListRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// CommonListRespMultiError is an error wrapping multiple validation errors
+// returned by CommonListResp.ValidateAll() if the designated constraints
+// aren't met.
+type CommonListRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CommonListRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CommonListRespMultiError) AllErrors() []error { return m }
+
+// CommonListRespValidationError is the validation error returned by
+// CommonListResp.Validate if the designated constraints aren't met.
+type CommonListRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CommonListRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CommonListRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CommonListRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CommonListRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CommonListRespValidationError) ErrorName() string { return "CommonListRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CommonListRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCommonListResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CommonListRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CommonListRespValidationError{}
+
+// Validate checks the field values on WebAnnotations with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *WebAnnotations) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on WebAnnotations with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in WebAnnotationsMultiError,
+// or nil if none found.
+func (m *WebAnnotations) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *WebAnnotations) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetPerms()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, WebAnnotationsValidationError{
+					field:  "Perms",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, WebAnnotationsValidationError{
+					field:  "Perms",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetPerms()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return WebAnnotationsValidationError{
+				field:  "Perms",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return WebAnnotationsMultiError(errors)
+	}
+
+	return nil
+}
+
+// WebAnnotationsMultiError is an error wrapping multiple validation errors
+// returned by WebAnnotations.ValidateAll() if the designated constraints
+// aren't met.
+type WebAnnotationsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m WebAnnotationsMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m WebAnnotationsMultiError) AllErrors() []error { return m }
+
+// WebAnnotationsValidationError is the validation error returned by
+// WebAnnotations.Validate if the designated constraints aren't met.
+type WebAnnotationsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e WebAnnotationsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e WebAnnotationsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e WebAnnotationsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e WebAnnotationsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e WebAnnotationsValidationError) ErrorName() string { return "WebAnnotationsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e WebAnnotationsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sWebAnnotations.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = WebAnnotationsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = WebAnnotationsValidationError{}
+
 // Validate checks the field values on AvailableReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1824,270 +2284,6 @@ var _ interface {
 	ErrorName() string
 } = RepositoryValidationError{}
 
-// Validate checks the field values on ListChartReq with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *ListChartReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ListChartReq with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in ListChartReqMultiError, or
-// nil if none found.
-func (m *ListChartReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ListChartReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Page
-
-	// no validation rules for Size
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		err := ListChartReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := ListChartReqValidationError{
-			field:  "Repository",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	// no validation rules for Operator
-
-	if len(errors) > 0 {
-		return ListChartReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// ListChartReqMultiError is an error wrapping multiple validation errors
-// returned by ListChartReq.ValidateAll() if the designated constraints aren't met.
-type ListChartReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ListChartReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ListChartReqMultiError) AllErrors() []error { return m }
-
-// ListChartReqValidationError is the validation error returned by
-// ListChartReq.Validate if the designated constraints aren't met.
-type ListChartReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListChartReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListChartReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListChartReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListChartReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListChartReqValidationError) ErrorName() string { return "ListChartReqValidationError" }
-
-// Error satisfies the builtin error interface
-func (e ListChartReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListChartReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListChartReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListChartReqValidationError{}
-
-// Validate checks the field values on ListChartResp with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *ListChartResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ListChartResp with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in ListChartRespMultiError, or
-// nil if none found.
-func (m *ListChartResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ListChartResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListChartRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, ListChartRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ListChartRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for RequestID
-
-	if len(errors) > 0 {
-		return ListChartRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// ListChartRespMultiError is an error wrapping multiple validation errors
-// returned by ListChartResp.ValidateAll() if the designated constraints
-// aren't met.
-type ListChartRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ListChartRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ListChartRespMultiError) AllErrors() []error { return m }
-
-// ListChartRespValidationError is the validation error returned by
-// ListChartResp.Validate if the designated constraints aren't met.
-type ListChartRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListChartRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListChartRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListChartRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListChartRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListChartRespValidationError) ErrorName() string { return "ListChartRespValidationError" }
-
-// Error satisfies the builtin error interface
-func (e ListChartRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListChartResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListChartRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListChartRespValidationError{}
-
 // Validate checks the field values on ChartListData with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -2354,286 +2550,6 @@ var _ interface {
 	ErrorName() string
 } = ChartValidationError{}
 
-// Validate checks the field values on ListChartVersionReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListChartVersionReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ListChartVersionReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// ListChartVersionReqMultiError, or nil if none found.
-func (m *ListChartVersionReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ListChartVersionReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Page
-
-	// no validation rules for Size
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		err := ListChartVersionReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := ListChartVersionReqValidationError{
-			field:  "Repository",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetName()) < 1 {
-		err := ListChartVersionReqValidationError{
-			field:  "Name",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	// no validation rules for Operator
-
-	if len(errors) > 0 {
-		return ListChartVersionReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// ListChartVersionReqMultiError is an error wrapping multiple validation
-// errors returned by ListChartVersionReq.ValidateAll() if the designated
-// constraints aren't met.
-type ListChartVersionReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ListChartVersionReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ListChartVersionReqMultiError) AllErrors() []error { return m }
-
-// ListChartVersionReqValidationError is the validation error returned by
-// ListChartVersionReq.Validate if the designated constraints aren't met.
-type ListChartVersionReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListChartVersionReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListChartVersionReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListChartVersionReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListChartVersionReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListChartVersionReqValidationError) ErrorName() string {
-	return "ListChartVersionReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ListChartVersionReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListChartVersionReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListChartVersionReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListChartVersionReqValidationError{}
-
-// Validate checks the field values on ListChartVersionResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListChartVersionResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ListChartVersionResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// ListChartVersionRespMultiError, or nil if none found.
-func (m *ListChartVersionResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ListChartVersionResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListChartVersionRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, ListChartVersionRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ListChartVersionRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for RequestID
-
-	if len(errors) > 0 {
-		return ListChartVersionRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// ListChartVersionRespMultiError is an error wrapping multiple validation
-// errors returned by ListChartVersionResp.ValidateAll() if the designated
-// constraints aren't met.
-type ListChartVersionRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ListChartVersionRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ListChartVersionRespMultiError) AllErrors() []error { return m }
-
-// ListChartVersionRespValidationError is the validation error returned by
-// ListChartVersionResp.Validate if the designated constraints aren't met.
-type ListChartVersionRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListChartVersionRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListChartVersionRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListChartVersionRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListChartVersionRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListChartVersionRespValidationError) ErrorName() string {
-	return "ListChartVersionRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ListChartVersionRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListChartVersionResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListChartVersionRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListChartVersionRespValidationError{}
-
 // Validate checks the field values on ChartVersionListData with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -2892,293 +2808,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ChartVersionValidationError{}
-
-// Validate checks the field values on GetVersionDetailReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetVersionDetailReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GetVersionDetailReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GetVersionDetailReqMultiError, or nil if none found.
-func (m *GetVersionDetailReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GetVersionDetailReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		err := GetVersionDetailReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := GetVersionDetailReqValidationError{
-			field:  "Repository",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetName()) < 1 {
-		err := GetVersionDetailReqValidationError{
-			field:  "Name",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetVersion()) < 1 {
-		err := GetVersionDetailReqValidationError{
-			field:  "Version",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	// no validation rules for Operator
-
-	if len(errors) > 0 {
-		return GetVersionDetailReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// GetVersionDetailReqMultiError is an error wrapping multiple validation
-// errors returned by GetVersionDetailReq.ValidateAll() if the designated
-// constraints aren't met.
-type GetVersionDetailReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GetVersionDetailReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GetVersionDetailReqMultiError) AllErrors() []error { return m }
-
-// GetVersionDetailReqValidationError is the validation error returned by
-// GetVersionDetailReq.Validate if the designated constraints aren't met.
-type GetVersionDetailReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetVersionDetailReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetVersionDetailReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetVersionDetailReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetVersionDetailReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetVersionDetailReqValidationError) ErrorName() string {
-	return "GetVersionDetailReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetVersionDetailReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetVersionDetailReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetVersionDetailReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetVersionDetailReqValidationError{}
-
-// Validate checks the field values on GetVersionDetailResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetVersionDetailResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GetVersionDetailResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GetVersionDetailRespMultiError, or nil if none found.
-func (m *GetVersionDetailResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GetVersionDetailResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetVersionDetailRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, GetVersionDetailRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return GetVersionDetailRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for RequestID
-
-	if len(errors) > 0 {
-		return GetVersionDetailRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// GetVersionDetailRespMultiError is an error wrapping multiple validation
-// errors returned by GetVersionDetailResp.ValidateAll() if the designated
-// constraints aren't met.
-type GetVersionDetailRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GetVersionDetailRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GetVersionDetailRespMultiError) AllErrors() []error { return m }
-
-// GetVersionDetailRespValidationError is the validation error returned by
-// GetVersionDetailResp.Validate if the designated constraints aren't met.
-type GetVersionDetailRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetVersionDetailRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetVersionDetailRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetVersionDetailRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetVersionDetailRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetVersionDetailRespValidationError) ErrorName() string {
-	return "GetVersionDetailRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetVersionDetailRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetVersionDetailResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetVersionDetailRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetVersionDetailRespValidationError{}
 
 // Validate checks the field values on ChartDetail with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -5663,594 +5292,6 @@ var _ interface {
 	ErrorName() string
 } = GetChartReleaseRespValidationError{}
 
-// Validate checks the field values on ListReleaseReq with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *ListReleaseReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ListReleaseReq with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in ListReleaseReqMultiError,
-// or nil if none found.
-func (m *ListReleaseReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ListReleaseReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Page
-
-	// no validation rules for Size
-
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		err := ListReleaseReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	// no validation rules for Namespace
-
-	// no validation rules for Name
-
-	if len(errors) > 0 {
-		return ListReleaseReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// ListReleaseReqMultiError is an error wrapping multiple validation errors
-// returned by ListReleaseReq.ValidateAll() if the designated constraints
-// aren't met.
-type ListReleaseReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ListReleaseReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ListReleaseReqMultiError) AllErrors() []error { return m }
-
-// ListReleaseReqValidationError is the validation error returned by
-// ListReleaseReq.Validate if the designated constraints aren't met.
-type ListReleaseReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListReleaseReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListReleaseReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListReleaseReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListReleaseReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListReleaseReqValidationError) ErrorName() string { return "ListReleaseReqValidationError" }
-
-// Error satisfies the builtin error interface
-func (e ListReleaseReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListReleaseReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListReleaseReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListReleaseReqValidationError{}
-
-// Validate checks the field values on ListReleaseResp with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *ListReleaseResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ListReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// ListReleaseRespMultiError, or nil if none found.
-func (m *ListReleaseResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ListReleaseResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListReleaseRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, ListReleaseRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ListReleaseRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for RequestID
-
-	if all {
-		switch v := interface{}(m.GetWebAnnotations()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListReleaseRespValidationError{
-					field:  "WebAnnotations",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, ListReleaseRespValidationError{
-					field:  "WebAnnotations",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return ListReleaseRespValidationError{
-				field:  "WebAnnotations",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return ListReleaseRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// ListReleaseRespMultiError is an error wrapping multiple validation errors
-// returned by ListReleaseResp.ValidateAll() if the designated constraints
-// aren't met.
-type ListReleaseRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ListReleaseRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ListReleaseRespMultiError) AllErrors() []error { return m }
-
-// ListReleaseRespValidationError is the validation error returned by
-// ListReleaseResp.Validate if the designated constraints aren't met.
-type ListReleaseRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ListReleaseRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ListReleaseRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ListReleaseRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ListReleaseRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ListReleaseRespValidationError) ErrorName() string { return "ListReleaseRespValidationError" }
-
-// Error satisfies the builtin error interface
-func (e ListReleaseRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sListReleaseResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ListReleaseRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ListReleaseRespValidationError{}
-
-// Validate checks the field values on GetReleaseDetailReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetReleaseDetailReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GetReleaseDetailReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GetReleaseDetailReqMultiError, or nil if none found.
-func (m *GetReleaseDetailReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GetReleaseDetailReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		err := GetReleaseDetailReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		err := GetReleaseDetailReqValidationError{
-			field:  "Namespace",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetName()) < 1 {
-		err := GetReleaseDetailReqValidationError{
-			field:  "Name",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if len(errors) > 0 {
-		return GetReleaseDetailReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// GetReleaseDetailReqMultiError is an error wrapping multiple validation
-// errors returned by GetReleaseDetailReq.ValidateAll() if the designated
-// constraints aren't met.
-type GetReleaseDetailReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GetReleaseDetailReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GetReleaseDetailReqMultiError) AllErrors() []error { return m }
-
-// GetReleaseDetailReqValidationError is the validation error returned by
-// GetReleaseDetailReq.Validate if the designated constraints aren't met.
-type GetReleaseDetailReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetReleaseDetailReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetReleaseDetailReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetReleaseDetailReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetReleaseDetailReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetReleaseDetailReqValidationError) ErrorName() string {
-	return "GetReleaseDetailReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetReleaseDetailReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetReleaseDetailReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetReleaseDetailReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetReleaseDetailReqValidationError{}
-
-// Validate checks the field values on GetReleaseDetailResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetReleaseDetailResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on GetReleaseDetailResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// GetReleaseDetailRespMultiError, or nil if none found.
-func (m *GetReleaseDetailResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *GetReleaseDetailResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetReleaseDetailRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, GetReleaseDetailRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return GetReleaseDetailRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for RequestID
-
-	if all {
-		switch v := interface{}(m.GetWebAnnotations()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetReleaseDetailRespValidationError{
-					field:  "WebAnnotations",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, GetReleaseDetailRespValidationError{
-					field:  "WebAnnotations",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return GetReleaseDetailRespValidationError{
-				field:  "WebAnnotations",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return GetReleaseDetailRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// GetReleaseDetailRespMultiError is an error wrapping multiple validation
-// errors returned by GetReleaseDetailResp.ValidateAll() if the designated
-// constraints aren't met.
-type GetReleaseDetailRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m GetReleaseDetailRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m GetReleaseDetailRespMultiError) AllErrors() []error { return m }
-
-// GetReleaseDetailRespValidationError is the validation error returned by
-// GetReleaseDetailResp.Validate if the designated constraints aren't met.
-type GetReleaseDetailRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e GetReleaseDetailRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e GetReleaseDetailRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e GetReleaseDetailRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e GetReleaseDetailRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e GetReleaseDetailRespValidationError) ErrorName() string {
-	return "GetReleaseDetailRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e GetReleaseDetailRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sGetReleaseDetailResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = GetReleaseDetailRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = GetReleaseDetailRespValidationError{}
-
 // Validate checks the field values on ReleaseListData with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -6648,1146 +5689,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ReleaseDetailValidationError{}
-
-// Validate checks the field values on InstallReleaseReq with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *InstallReleaseReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on InstallReleaseReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// InstallReleaseReqMultiError, or nil if none found.
-func (m *InstallReleaseReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *InstallReleaseReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if utf8.RuneCountInString(m.GetName()) < 1 {
-		err := InstallReleaseReqValidationError{
-			field:  "Name",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		err := InstallReleaseReqValidationError{
-			field:  "Namespace",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		err := InstallReleaseReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		err := InstallReleaseReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := InstallReleaseReqValidationError{
-			field:  "Repository",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetChart()) < 1 {
-		err := InstallReleaseReqValidationError{
-			field:  "Chart",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetVersion()) < 1 {
-		err := InstallReleaseReqValidationError{
-			field:  "Version",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	// no validation rules for Operator
-
-	// no validation rules for BcsSysVar
-
-	if len(errors) > 0 {
-		return InstallReleaseReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// InstallReleaseReqMultiError is an error wrapping multiple validation errors
-// returned by InstallReleaseReq.ValidateAll() if the designated constraints
-// aren't met.
-type InstallReleaseReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m InstallReleaseReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m InstallReleaseReqMultiError) AllErrors() []error { return m }
-
-// InstallReleaseReqValidationError is the validation error returned by
-// InstallReleaseReq.Validate if the designated constraints aren't met.
-type InstallReleaseReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e InstallReleaseReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e InstallReleaseReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e InstallReleaseReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e InstallReleaseReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e InstallReleaseReqValidationError) ErrorName() string {
-	return "InstallReleaseReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e InstallReleaseReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sInstallReleaseReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = InstallReleaseReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = InstallReleaseReqValidationError{}
-
-// Validate checks the field values on InstallReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *InstallReleaseResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on InstallReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// InstallReleaseRespMultiError, or nil if none found.
-func (m *InstallReleaseResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *InstallReleaseResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, InstallReleaseRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, InstallReleaseRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return InstallReleaseRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for RequestID
-
-	if len(errors) > 0 {
-		return InstallReleaseRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// InstallReleaseRespMultiError is an error wrapping multiple validation errors
-// returned by InstallReleaseResp.ValidateAll() if the designated constraints
-// aren't met.
-type InstallReleaseRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m InstallReleaseRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m InstallReleaseRespMultiError) AllErrors() []error { return m }
-
-// InstallReleaseRespValidationError is the validation error returned by
-// InstallReleaseResp.Validate if the designated constraints aren't met.
-type InstallReleaseRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e InstallReleaseRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e InstallReleaseRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e InstallReleaseRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e InstallReleaseRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e InstallReleaseRespValidationError) ErrorName() string {
-	return "InstallReleaseRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e InstallReleaseRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sInstallReleaseResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = InstallReleaseRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = InstallReleaseRespValidationError{}
-
-// Validate checks the field values on UninstallReleaseReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *UninstallReleaseReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on UninstallReleaseReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// UninstallReleaseReqMultiError, or nil if none found.
-func (m *UninstallReleaseReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *UninstallReleaseReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if utf8.RuneCountInString(m.GetName()) < 1 {
-		err := UninstallReleaseReqValidationError{
-			field:  "Name",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		err := UninstallReleaseReqValidationError{
-			field:  "Namespace",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		err := UninstallReleaseReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	// no validation rules for Operator
-
-	if len(errors) > 0 {
-		return UninstallReleaseReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// UninstallReleaseReqMultiError is an error wrapping multiple validation
-// errors returned by UninstallReleaseReq.ValidateAll() if the designated
-// constraints aren't met.
-type UninstallReleaseReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m UninstallReleaseReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m UninstallReleaseReqMultiError) AllErrors() []error { return m }
-
-// UninstallReleaseReqValidationError is the validation error returned by
-// UninstallReleaseReq.Validate if the designated constraints aren't met.
-type UninstallReleaseReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e UninstallReleaseReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e UninstallReleaseReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e UninstallReleaseReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e UninstallReleaseReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e UninstallReleaseReqValidationError) ErrorName() string {
-	return "UninstallReleaseReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e UninstallReleaseReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sUninstallReleaseReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = UninstallReleaseReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = UninstallReleaseReqValidationError{}
-
-// Validate checks the field values on UninstallReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *UninstallReleaseResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on UninstallReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// UninstallReleaseRespMultiError, or nil if none found.
-func (m *UninstallReleaseResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *UninstallReleaseResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	// no validation rules for RequestID
-
-	if len(errors) > 0 {
-		return UninstallReleaseRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// UninstallReleaseRespMultiError is an error wrapping multiple validation
-// errors returned by UninstallReleaseResp.ValidateAll() if the designated
-// constraints aren't met.
-type UninstallReleaseRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m UninstallReleaseRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m UninstallReleaseRespMultiError) AllErrors() []error { return m }
-
-// UninstallReleaseRespValidationError is the validation error returned by
-// UninstallReleaseResp.Validate if the designated constraints aren't met.
-type UninstallReleaseRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e UninstallReleaseRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e UninstallReleaseRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e UninstallReleaseRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e UninstallReleaseRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e UninstallReleaseRespValidationError) ErrorName() string {
-	return "UninstallReleaseRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e UninstallReleaseRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sUninstallReleaseResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = UninstallReleaseRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = UninstallReleaseRespValidationError{}
-
-// Validate checks the field values on UpgradeReleaseReq with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *UpgradeReleaseReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on UpgradeReleaseReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// UpgradeReleaseReqMultiError, or nil if none found.
-func (m *UpgradeReleaseReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *UpgradeReleaseReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if utf8.RuneCountInString(m.GetName()) < 1 {
-		err := UpgradeReleaseReqValidationError{
-			field:  "Name",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		err := UpgradeReleaseReqValidationError{
-			field:  "Namespace",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		err := UpgradeReleaseReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetProjectID()); l < 1 || l > 64 {
-		err := UpgradeReleaseReqValidationError{
-			field:  "ProjectID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := UpgradeReleaseReqValidationError{
-			field:  "Repository",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetChart()) < 1 {
-		err := UpgradeReleaseReqValidationError{
-			field:  "Chart",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if utf8.RuneCountInString(m.GetVersion()) < 1 {
-		err := UpgradeReleaseReqValidationError{
-			field:  "Version",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	// no validation rules for Operator
-
-	// no validation rules for BcsSysVar
-
-	if len(errors) > 0 {
-		return UpgradeReleaseReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// UpgradeReleaseReqMultiError is an error wrapping multiple validation errors
-// returned by UpgradeReleaseReq.ValidateAll() if the designated constraints
-// aren't met.
-type UpgradeReleaseReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m UpgradeReleaseReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m UpgradeReleaseReqMultiError) AllErrors() []error { return m }
-
-// UpgradeReleaseReqValidationError is the validation error returned by
-// UpgradeReleaseReq.Validate if the designated constraints aren't met.
-type UpgradeReleaseReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e UpgradeReleaseReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e UpgradeReleaseReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e UpgradeReleaseReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e UpgradeReleaseReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e UpgradeReleaseReqValidationError) ErrorName() string {
-	return "UpgradeReleaseReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e UpgradeReleaseReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sUpgradeReleaseReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = UpgradeReleaseReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = UpgradeReleaseReqValidationError{}
-
-// Validate checks the field values on UpgradeReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *UpgradeReleaseResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on UpgradeReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// UpgradeReleaseRespMultiError, or nil if none found.
-func (m *UpgradeReleaseResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *UpgradeReleaseResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, UpgradeReleaseRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, UpgradeReleaseRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return UpgradeReleaseRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	// no validation rules for RequestID
-
-	if len(errors) > 0 {
-		return UpgradeReleaseRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// UpgradeReleaseRespMultiError is an error wrapping multiple validation errors
-// returned by UpgradeReleaseResp.ValidateAll() if the designated constraints
-// aren't met.
-type UpgradeReleaseRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m UpgradeReleaseRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m UpgradeReleaseRespMultiError) AllErrors() []error { return m }
-
-// UpgradeReleaseRespValidationError is the validation error returned by
-// UpgradeReleaseResp.Validate if the designated constraints aren't met.
-type UpgradeReleaseRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e UpgradeReleaseRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e UpgradeReleaseRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e UpgradeReleaseRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e UpgradeReleaseRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e UpgradeReleaseRespValidationError) ErrorName() string {
-	return "UpgradeReleaseRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e UpgradeReleaseRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sUpgradeReleaseResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = UpgradeReleaseRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = UpgradeReleaseRespValidationError{}
-
-// Validate checks the field values on RollbackReleaseReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *RollbackReleaseReq) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on RollbackReleaseReq with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// RollbackReleaseReqMultiError, or nil if none found.
-func (m *RollbackReleaseReq) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *RollbackReleaseReq) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if utf8.RuneCountInString(m.GetName()) < 1 {
-		err := RollbackReleaseReqValidationError{
-			field:  "Name",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		err := RollbackReleaseReqValidationError{
-			field:  "Namespace",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
-		err := RollbackReleaseReqValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	// no validation rules for Revision
-
-	// no validation rules for Operator
-
-	if len(errors) > 0 {
-		return RollbackReleaseReqMultiError(errors)
-	}
-
-	return nil
-}
-
-// RollbackReleaseReqMultiError is an error wrapping multiple validation errors
-// returned by RollbackReleaseReq.ValidateAll() if the designated constraints
-// aren't met.
-type RollbackReleaseReqMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m RollbackReleaseReqMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m RollbackReleaseReqMultiError) AllErrors() []error { return m }
-
-// RollbackReleaseReqValidationError is the validation error returned by
-// RollbackReleaseReq.Validate if the designated constraints aren't met.
-type RollbackReleaseReqValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e RollbackReleaseReqValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e RollbackReleaseReqValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e RollbackReleaseReqValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e RollbackReleaseReqValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e RollbackReleaseReqValidationError) ErrorName() string {
-	return "RollbackReleaseReqValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e RollbackReleaseReqValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sRollbackReleaseReq.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = RollbackReleaseReqValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = RollbackReleaseReqValidationError{}
-
-// Validate checks the field values on RollbackReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *RollbackReleaseResp) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on RollbackReleaseResp with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// RollbackReleaseRespMultiError, or nil if none found.
-func (m *RollbackReleaseResp) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *RollbackReleaseResp) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Code
-
-	// no validation rules for Message
-
-	// no validation rules for Result
-
-	// no validation rules for RequestID
-
-	if len(errors) > 0 {
-		return RollbackReleaseRespMultiError(errors)
-	}
-
-	return nil
-}
-
-// RollbackReleaseRespMultiError is an error wrapping multiple validation
-// errors returned by RollbackReleaseResp.ValidateAll() if the designated
-// constraints aren't met.
-type RollbackReleaseRespMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m RollbackReleaseRespMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m RollbackReleaseRespMultiError) AllErrors() []error { return m }
-
-// RollbackReleaseRespValidationError is the validation error returned by
-// RollbackReleaseResp.Validate if the designated constraints aren't met.
-type RollbackReleaseRespValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e RollbackReleaseRespValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e RollbackReleaseRespValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e RollbackReleaseRespValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e RollbackReleaseRespValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e RollbackReleaseRespValidationError) ErrorName() string {
-	return "RollbackReleaseRespValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e RollbackReleaseRespValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sRollbackReleaseResp.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = RollbackReleaseRespValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = RollbackReleaseRespValidationError{}
 
 // Validate checks the field values on ListReleaseV1Req with the rules defined
 // in the proto definition for this message. If any rules are violated, the
@@ -9074,38 +6975,11 @@ func (m *UpgradeReleaseV1Req) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if l := utf8.RuneCountInString(m.GetRepository()); l < 1 || l > 64 {
-		err := UpgradeReleaseV1ReqValidationError{
-			field:  "Repository",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Repository
 
-	if utf8.RuneCountInString(m.GetChart()) < 1 {
-		err := UpgradeReleaseV1ReqValidationError{
-			field:  "Chart",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Chart
 
-	if utf8.RuneCountInString(m.GetVersion()) < 1 {
-		err := UpgradeReleaseV1ReqValidationError{
-			field:  "Version",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Version
 
 	// no validation rules for ValueFile
 
@@ -10870,22 +8744,1434 @@ var _ interface {
 	ErrorName() string
 } = GetReleasePodsReqValidationError{}
 
-// Validate checks the field values on CommonResp with the rules defined in the
+// Validate checks the field values on ListAddonsReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ListAddonsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListAddonsReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ListAddonsReqMultiError, or
+// nil if none found.
+func (m *ListAddonsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListAddonsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := ListAddonsReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := ListAddonsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListAddonsReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListAddonsReqMultiError is an error wrapping multiple validation errors
+// returned by ListAddonsReq.ValidateAll() if the designated constraints
+// aren't met.
+type ListAddonsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListAddonsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListAddonsReqMultiError) AllErrors() []error { return m }
+
+// ListAddonsReqValidationError is the validation error returned by
+// ListAddonsReq.Validate if the designated constraints aren't met.
+type ListAddonsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAddonsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAddonsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAddonsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAddonsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAddonsReqValidationError) ErrorName() string { return "ListAddonsReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListAddonsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAddonsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAddonsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAddonsReqValidationError{}
+
+// Validate checks the field values on ListAddonsResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ListAddonsResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListAddonsResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ListAddonsRespMultiError,
+// or nil if none found.
+func (m *ListAddonsResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListAddonsResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListAddonsRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListAddonsRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListAddonsRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListAddonsRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListAddonsRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListAddonsRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ListAddonsRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListAddonsRespMultiError is an error wrapping multiple validation errors
+// returned by ListAddonsResp.ValidateAll() if the designated constraints
+// aren't met.
+type ListAddonsRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListAddonsRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListAddonsRespMultiError) AllErrors() []error { return m }
+
+// ListAddonsRespValidationError is the validation error returned by
+// ListAddonsResp.Validate if the designated constraints aren't met.
+type ListAddonsRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListAddonsRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListAddonsRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListAddonsRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListAddonsRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListAddonsRespValidationError) ErrorName() string { return "ListAddonsRespValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListAddonsRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListAddonsResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListAddonsRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListAddonsRespValidationError{}
+
+// Validate checks the field values on Addons with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
-func (m *CommonResp) Validate() error {
+func (m *Addons) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CommonResp with the rules defined in
-// the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in CommonRespMultiError, or
+// ValidateAll checks the field values on Addons with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in AddonsMultiError, or nil if none found.
+func (m *Addons) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Addons) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for ChartName
+
+	// no validation rules for Description
+
+	// no validation rules for Logo
+
+	// no validation rules for DocsLink
+
+	// no validation rules for Version
+
+	// no validation rules for CurrentVersion
+
+	// no validation rules for Namespace
+
+	// no validation rules for DefaultValues
+
+	// no validation rules for CurrentValues
+
+	// no validation rules for Status
+
+	// no validation rules for Message
+
+	if len(errors) > 0 {
+		return AddonsMultiError(errors)
+	}
+
+	return nil
+}
+
+// AddonsMultiError is an error wrapping multiple validation errors returned by
+// Addons.ValidateAll() if the designated constraints aren't met.
+type AddonsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AddonsMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AddonsMultiError) AllErrors() []error { return m }
+
+// AddonsValidationError is the validation error returned by Addons.Validate if
+// the designated constraints aren't met.
+type AddonsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AddonsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AddonsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AddonsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AddonsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AddonsValidationError) ErrorName() string { return "AddonsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e AddonsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAddons.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AddonsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AddonsValidationError{}
+
+// Validate checks the field values on GetAddonsDetailReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetAddonsDetailReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetAddonsDetailReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetAddonsDetailReqMultiError, or nil if none found.
+func (m *GetAddonsDetailReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAddonsDetailReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetAddonsDetailReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := GetAddonsDetailReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := GetAddonsDetailReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetAddonsDetailReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAddonsDetailReqMultiError is an error wrapping multiple validation errors
+// returned by GetAddonsDetailReq.ValidateAll() if the designated constraints
+// aren't met.
+type GetAddonsDetailReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAddonsDetailReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAddonsDetailReqMultiError) AllErrors() []error { return m }
+
+// GetAddonsDetailReqValidationError is the validation error returned by
+// GetAddonsDetailReq.Validate if the designated constraints aren't met.
+type GetAddonsDetailReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAddonsDetailReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAddonsDetailReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAddonsDetailReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAddonsDetailReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAddonsDetailReqValidationError) ErrorName() string {
+	return "GetAddonsDetailReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAddonsDetailReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAddonsDetailReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAddonsDetailReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAddonsDetailReqValidationError{}
+
+// Validate checks the field values on GetAddonsDetailResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetAddonsDetailResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetAddonsDetailResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetAddonsDetailRespMultiError, or nil if none found.
+func (m *GetAddonsDetailResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetAddonsDetailResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetAddonsDetailRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetAddonsDetailRespValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetAddonsDetailRespValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetAddonsDetailRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetAddonsDetailRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetAddonsDetailRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetAddonsDetailRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetAddonsDetailRespMultiError is an error wrapping multiple validation
+// errors returned by GetAddonsDetailResp.ValidateAll() if the designated
+// constraints aren't met.
+type GetAddonsDetailRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetAddonsDetailRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetAddonsDetailRespMultiError) AllErrors() []error { return m }
+
+// GetAddonsDetailRespValidationError is the validation error returned by
+// GetAddonsDetailResp.Validate if the designated constraints aren't met.
+type GetAddonsDetailRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetAddonsDetailRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetAddonsDetailRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetAddonsDetailRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetAddonsDetailRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetAddonsDetailRespValidationError) ErrorName() string {
+	return "GetAddonsDetailRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetAddonsDetailRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetAddonsDetailResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetAddonsDetailRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetAddonsDetailRespValidationError{}
+
+// Validate checks the field values on InstallAddonsReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *InstallAddonsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InstallAddonsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// InstallAddonsReqMultiError, or nil if none found.
+func (m *InstallAddonsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InstallAddonsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := InstallAddonsReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := InstallAddonsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := InstallAddonsReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
+		err := InstallAddonsReqValidationError{
+			field:  "Version",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Values
+
+	if len(errors) > 0 {
+		return InstallAddonsReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// InstallAddonsReqMultiError is an error wrapping multiple validation errors
+// returned by InstallAddonsReq.ValidateAll() if the designated constraints
+// aren't met.
+type InstallAddonsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InstallAddonsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InstallAddonsReqMultiError) AllErrors() []error { return m }
+
+// InstallAddonsReqValidationError is the validation error returned by
+// InstallAddonsReq.Validate if the designated constraints aren't met.
+type InstallAddonsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InstallAddonsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InstallAddonsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InstallAddonsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InstallAddonsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InstallAddonsReqValidationError) ErrorName() string { return "InstallAddonsReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e InstallAddonsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInstallAddonsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InstallAddonsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InstallAddonsReqValidationError{}
+
+// Validate checks the field values on InstallAddonsResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *InstallAddonsResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InstallAddonsResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// InstallAddonsRespMultiError, or nil if none found.
+func (m *InstallAddonsResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InstallAddonsResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, InstallAddonsRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, InstallAddonsRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return InstallAddonsRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return InstallAddonsRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// InstallAddonsRespMultiError is an error wrapping multiple validation errors
+// returned by InstallAddonsResp.ValidateAll() if the designated constraints
+// aren't met.
+type InstallAddonsRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InstallAddonsRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InstallAddonsRespMultiError) AllErrors() []error { return m }
+
+// InstallAddonsRespValidationError is the validation error returned by
+// InstallAddonsResp.Validate if the designated constraints aren't met.
+type InstallAddonsRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InstallAddonsRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InstallAddonsRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InstallAddonsRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InstallAddonsRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InstallAddonsRespValidationError) ErrorName() string {
+	return "InstallAddonsRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e InstallAddonsRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInstallAddonsResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InstallAddonsRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InstallAddonsRespValidationError{}
+
+// Validate checks the field values on UpgradeAddonsReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *UpgradeAddonsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpgradeAddonsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpgradeAddonsReqMultiError, or nil if none found.
+func (m *UpgradeAddonsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpgradeAddonsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := UpgradeAddonsReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := UpgradeAddonsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := UpgradeAddonsReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Version
+
+	// no validation rules for Values
+
+	if len(errors) > 0 {
+		return UpgradeAddonsReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpgradeAddonsReqMultiError is an error wrapping multiple validation errors
+// returned by UpgradeAddonsReq.ValidateAll() if the designated constraints
+// aren't met.
+type UpgradeAddonsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpgradeAddonsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpgradeAddonsReqMultiError) AllErrors() []error { return m }
+
+// UpgradeAddonsReqValidationError is the validation error returned by
+// UpgradeAddonsReq.Validate if the designated constraints aren't met.
+type UpgradeAddonsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpgradeAddonsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpgradeAddonsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpgradeAddonsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpgradeAddonsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpgradeAddonsReqValidationError) ErrorName() string { return "UpgradeAddonsReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UpgradeAddonsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpgradeAddonsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpgradeAddonsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpgradeAddonsReqValidationError{}
+
+// Validate checks the field values on UpgradeAddonsResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *UpgradeAddonsResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpgradeAddonsResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpgradeAddonsRespMultiError, or nil if none found.
+func (m *UpgradeAddonsResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpgradeAddonsResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpgradeAddonsRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpgradeAddonsRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpgradeAddonsRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return UpgradeAddonsRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpgradeAddonsRespMultiError is an error wrapping multiple validation errors
+// returned by UpgradeAddonsResp.ValidateAll() if the designated constraints
+// aren't met.
+type UpgradeAddonsRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpgradeAddonsRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpgradeAddonsRespMultiError) AllErrors() []error { return m }
+
+// UpgradeAddonsRespValidationError is the validation error returned by
+// UpgradeAddonsResp.Validate if the designated constraints aren't met.
+type UpgradeAddonsRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpgradeAddonsRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpgradeAddonsRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpgradeAddonsRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpgradeAddonsRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpgradeAddonsRespValidationError) ErrorName() string {
+	return "UpgradeAddonsRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpgradeAddonsRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpgradeAddonsResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpgradeAddonsRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpgradeAddonsRespValidationError{}
+
+// Validate checks the field values on StopAddonsReq with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *StopAddonsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on StopAddonsReq with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in StopAddonsReqMultiError, or
 // nil if none found.
-func (m *CommonResp) ValidateAll() error {
+func (m *StopAddonsReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CommonResp) validate(all bool) error {
+func (m *StopAddonsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := StopAddonsReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := StopAddonsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := StopAddonsReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return StopAddonsReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// StopAddonsReqMultiError is an error wrapping multiple validation errors
+// returned by StopAddonsReq.ValidateAll() if the designated constraints
+// aren't met.
+type StopAddonsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m StopAddonsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m StopAddonsReqMultiError) AllErrors() []error { return m }
+
+// StopAddonsReqValidationError is the validation error returned by
+// StopAddonsReq.Validate if the designated constraints aren't met.
+type StopAddonsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e StopAddonsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e StopAddonsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e StopAddonsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e StopAddonsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e StopAddonsReqValidationError) ErrorName() string { return "StopAddonsReqValidationError" }
+
+// Error satisfies the builtin error interface
+func (e StopAddonsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sStopAddonsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = StopAddonsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = StopAddonsReqValidationError{}
+
+// Validate checks the field values on StopAddonsResp with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *StopAddonsResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on StopAddonsResp with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in StopAddonsRespMultiError,
+// or nil if none found.
+func (m *StopAddonsResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *StopAddonsResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -10898,42 +10184,13 @@ func (m *CommonResp) validate(all bool) error {
 
 	// no validation rules for Result
 
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CommonRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CommonRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CommonRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	// no validation rules for RequestID
 
 	if all {
 		switch v := interface{}(m.GetWebAnnotations()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CommonRespValidationError{
+				errors = append(errors, StopAddonsRespValidationError{
 					field:  "WebAnnotations",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -10941,7 +10198,7 @@ func (m *CommonResp) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, CommonRespValidationError{
+				errors = append(errors, StopAddonsRespValidationError{
 					field:  "WebAnnotations",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -10950,7 +10207,7 @@ func (m *CommonResp) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return CommonRespValidationError{
+			return StopAddonsRespValidationError{
 				field:  "WebAnnotations",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -10959,18 +10216,19 @@ func (m *CommonResp) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return CommonRespMultiError(errors)
+		return StopAddonsRespMultiError(errors)
 	}
 
 	return nil
 }
 
-// CommonRespMultiError is an error wrapping multiple validation errors
-// returned by CommonResp.ValidateAll() if the designated constraints aren't met.
-type CommonRespMultiError []error
+// StopAddonsRespMultiError is an error wrapping multiple validation errors
+// returned by StopAddonsResp.ValidateAll() if the designated constraints
+// aren't met.
+type StopAddonsRespMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CommonRespMultiError) Error() string {
+func (m StopAddonsRespMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -10979,11 +10237,11 @@ func (m CommonRespMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CommonRespMultiError) AllErrors() []error { return m }
+func (m StopAddonsRespMultiError) AllErrors() []error { return m }
 
-// CommonRespValidationError is the validation error returned by
-// CommonResp.Validate if the designated constraints aren't met.
-type CommonRespValidationError struct {
+// StopAddonsRespValidationError is the validation error returned by
+// StopAddonsResp.Validate if the designated constraints aren't met.
+type StopAddonsRespValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -10991,22 +10249,22 @@ type CommonRespValidationError struct {
 }
 
 // Field function returns field value.
-func (e CommonRespValidationError) Field() string { return e.field }
+func (e StopAddonsRespValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CommonRespValidationError) Reason() string { return e.reason }
+func (e StopAddonsRespValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CommonRespValidationError) Cause() error { return e.cause }
+func (e StopAddonsRespValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CommonRespValidationError) Key() bool { return e.key }
+func (e StopAddonsRespValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CommonRespValidationError) ErrorName() string { return "CommonRespValidationError" }
+func (e StopAddonsRespValidationError) ErrorName() string { return "StopAddonsRespValidationError" }
 
 // Error satisfies the builtin error interface
-func (e CommonRespValidationError) Error() string {
+func (e StopAddonsRespValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -11018,14 +10276,14 @@ func (e CommonRespValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCommonResp.%s: %s%s",
+		"invalid %sStopAddonsResp.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CommonRespValidationError{}
+var _ error = StopAddonsRespValidationError{}
 
 var _ interface {
 	Field() string
@@ -11033,24 +10291,159 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CommonRespValidationError{}
+} = StopAddonsRespValidationError{}
 
-// Validate checks the field values on CommonListResp with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *CommonListResp) Validate() error {
+// Validate checks the field values on UninstallAddonsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UninstallAddonsReq) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on CommonListResp with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in CommonListRespMultiError,
-// or nil if none found.
-func (m *CommonListResp) ValidateAll() error {
+// ValidateAll checks the field values on UninstallAddonsReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UninstallAddonsReqMultiError, or nil if none found.
+func (m *UninstallAddonsReq) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *CommonListResp) validate(all bool) error {
+func (m *UninstallAddonsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := UninstallAddonsReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 64 {
+		err := UninstallAddonsReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 32 {
+		err := UninstallAddonsReqValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return UninstallAddonsReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// UninstallAddonsReqMultiError is an error wrapping multiple validation errors
+// returned by UninstallAddonsReq.ValidateAll() if the designated constraints
+// aren't met.
+type UninstallAddonsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UninstallAddonsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UninstallAddonsReqMultiError) AllErrors() []error { return m }
+
+// UninstallAddonsReqValidationError is the validation error returned by
+// UninstallAddonsReq.Validate if the designated constraints aren't met.
+type UninstallAddonsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UninstallAddonsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UninstallAddonsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UninstallAddonsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UninstallAddonsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UninstallAddonsReqValidationError) ErrorName() string {
+	return "UninstallAddonsReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UninstallAddonsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUninstallAddonsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UninstallAddonsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UninstallAddonsReqValidationError{}
+
+// Validate checks the field values on UninstallAddonsResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UninstallAddonsResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UninstallAddonsResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UninstallAddonsRespMultiError, or nil if none found.
+func (m *UninstallAddonsResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UninstallAddonsResp) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -11063,42 +10456,13 @@ func (m *CommonListResp) validate(all bool) error {
 
 	// no validation rules for Result
 
-	if all {
-		switch v := interface{}(m.GetData()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CommonListRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CommonListRespValidationError{
-					field:  "Data",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CommonListRespValidationError{
-				field:  "Data",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	// no validation rules for RequestID
 
 	if all {
 		switch v := interface{}(m.GetWebAnnotations()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CommonListRespValidationError{
+				errors = append(errors, UninstallAddonsRespValidationError{
 					field:  "WebAnnotations",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -11106,7 +10470,7 @@ func (m *CommonListResp) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, CommonListRespValidationError{
+				errors = append(errors, UninstallAddonsRespValidationError{
 					field:  "WebAnnotations",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -11115,7 +10479,7 @@ func (m *CommonListResp) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return CommonListRespValidationError{
+			return UninstallAddonsRespValidationError{
 				field:  "WebAnnotations",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -11124,19 +10488,19 @@ func (m *CommonListResp) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return CommonListRespMultiError(errors)
+		return UninstallAddonsRespMultiError(errors)
 	}
 
 	return nil
 }
 
-// CommonListRespMultiError is an error wrapping multiple validation errors
-// returned by CommonListResp.ValidateAll() if the designated constraints
-// aren't met.
-type CommonListRespMultiError []error
+// UninstallAddonsRespMultiError is an error wrapping multiple validation
+// errors returned by UninstallAddonsResp.ValidateAll() if the designated
+// constraints aren't met.
+type UninstallAddonsRespMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m CommonListRespMultiError) Error() string {
+func (m UninstallAddonsRespMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -11145,11 +10509,11 @@ func (m CommonListRespMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m CommonListRespMultiError) AllErrors() []error { return m }
+func (m UninstallAddonsRespMultiError) AllErrors() []error { return m }
 
-// CommonListRespValidationError is the validation error returned by
-// CommonListResp.Validate if the designated constraints aren't met.
-type CommonListRespValidationError struct {
+// UninstallAddonsRespValidationError is the validation error returned by
+// UninstallAddonsResp.Validate if the designated constraints aren't met.
+type UninstallAddonsRespValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -11157,22 +10521,24 @@ type CommonListRespValidationError struct {
 }
 
 // Field function returns field value.
-func (e CommonListRespValidationError) Field() string { return e.field }
+func (e UninstallAddonsRespValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e CommonListRespValidationError) Reason() string { return e.reason }
+func (e UninstallAddonsRespValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e CommonListRespValidationError) Cause() error { return e.cause }
+func (e UninstallAddonsRespValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e CommonListRespValidationError) Key() bool { return e.key }
+func (e UninstallAddonsRespValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e CommonListRespValidationError) ErrorName() string { return "CommonListRespValidationError" }
+func (e UninstallAddonsRespValidationError) ErrorName() string {
+	return "UninstallAddonsRespValidationError"
+}
 
 // Error satisfies the builtin error interface
-func (e CommonListRespValidationError) Error() string {
+func (e UninstallAddonsRespValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -11184,14 +10550,14 @@ func (e CommonListRespValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sCommonListResp.%s: %s%s",
+		"invalid %sUninstallAddonsResp.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = CommonListRespValidationError{}
+var _ error = UninstallAddonsRespValidationError{}
 
 var _ interface {
 	Field() string
@@ -11199,133 +10565,4 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = CommonListRespValidationError{}
-
-// Validate checks the field values on WebAnnotations with the rules defined in
-// the proto definition for this message. If any rules are violated, the first
-// error encountered is returned, or nil if there are no violations.
-func (m *WebAnnotations) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on WebAnnotations with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// result is a list of violation errors wrapped in WebAnnotationsMultiError,
-// or nil if none found.
-func (m *WebAnnotations) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *WebAnnotations) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if all {
-		switch v := interface{}(m.GetPerms()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, WebAnnotationsValidationError{
-					field:  "Perms",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, WebAnnotationsValidationError{
-					field:  "Perms",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetPerms()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return WebAnnotationsValidationError{
-				field:  "Perms",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if len(errors) > 0 {
-		return WebAnnotationsMultiError(errors)
-	}
-
-	return nil
-}
-
-// WebAnnotationsMultiError is an error wrapping multiple validation errors
-// returned by WebAnnotations.ValidateAll() if the designated constraints
-// aren't met.
-type WebAnnotationsMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m WebAnnotationsMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m WebAnnotationsMultiError) AllErrors() []error { return m }
-
-// WebAnnotationsValidationError is the validation error returned by
-// WebAnnotations.Validate if the designated constraints aren't met.
-type WebAnnotationsValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e WebAnnotationsValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e WebAnnotationsValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e WebAnnotationsValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e WebAnnotationsValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e WebAnnotationsValidationError) ErrorName() string { return "WebAnnotationsValidationError" }
-
-// Error satisfies the builtin error interface
-func (e WebAnnotationsValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sWebAnnotations.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = WebAnnotationsValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = WebAnnotationsValidationError{}
+} = UninstallAddonsRespValidationError{}

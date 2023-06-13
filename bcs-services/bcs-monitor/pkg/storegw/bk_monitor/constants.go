@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package bk_monitor
+package bkmonitor
 
 // AvailableNodeMetrics 蓝鲸监控节点的metrics
 var AvailableNodeMetrics = []string{

@@ -30,6 +30,7 @@ type ServiceK8sFilter struct {
 
 const serviceK8sNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t ServiceK8sFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, serviceK8sNestedTimeLayout)
 }

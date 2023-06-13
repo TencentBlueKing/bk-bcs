@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -59,7 +60,18 @@ var (
 
 	// DEBUG if enable debug.
 	DEBUG = "false"
+
+	// GoVersion Go 版本号
+	GoVersion = runtime.Version()
+
+	// Row print version info by row.
+	Row VersionFormat = "row"
+	// JSON print version info by json.
+	JSON VersionFormat = "json"
 )
+
+// VersionFormat defines the format to print version.
+type VersionFormat string
 
 // Debug show the version if enable debug.
 func Debug() bool {
@@ -71,27 +83,41 @@ func Debug() bool {
 }
 
 // ShowVersion shows the version info.
-func ShowVersion() {
-	fmt.Println(FormatVersion())
+func ShowVersion(prefix string, format VersionFormat) {
+	fmt.Println(FormatVersion(prefix, format))
 }
 
 // FormatVersion returns service's version.
-func FormatVersion() string {
-	return fmt.Sprintf("Version: %s\nBuildTime: %s\nGitHash: %s\n", VERSION, BUILDTIME, GITHASH)
+func FormatVersion(prefix string, format VersionFormat) string {
+	if prefix != "" {
+		prefix = prefix + " "
+	}
+	rawFormat := fmt.Sprintf("%sVersion  : %s\nBuildTime: %s\nGitHash  : %s\nGoVersion: %s", prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
+	jsonFormat := fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s", "GoVersion": "%s"}`, prefix, VERSION, BUILDTIME, GITHASH, GoVersion)
+
+	switch format {
+	case Row:
+		return rawFormat
+	case JSON:
+		return jsonFormat
+	default:
+		return rawFormat
+	}
 }
 
 // GetStartInfo returns start info that includes version and logo.
 func GetStartInfo() string {
-	startInfo := fmt.Sprintf("%s\n\n%s\n", LOGO, FormatVersion())
+	startInfo := fmt.Sprintf("%s\n\n%s\n", LOGO, FormatVersion("", Row))
 	return startInfo
 }
 
 // Version NOTES
 func Version() *SysVersion {
 	return &SysVersion{
-		Version: VERSION,
-		Hash:    GITHASH,
-		Time:    BUILDTIME,
+		Version:   VERSION,
+		Hash:      GITHASH,
+		Time:      BUILDTIME,
+		GoVersion: GoVersion,
 	}
 }
 
@@ -139,7 +165,8 @@ func parseVersion() ([3]uint32, error) {
 
 // SysVersion describe a binary version
 type SysVersion struct {
-	Version string `json:"version"`
-	Hash    string `json:"hash"`
-	Time    string `json:"time"`
+	Version   string `json:"version"`
+	Hash      string `json:"hash"`
+	Time      string `json:"time"`
+	GoVersion string `json:"go_version"`
 }

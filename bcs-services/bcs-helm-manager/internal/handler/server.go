@@ -37,3 +37,24 @@ func NewHelmManager(model store.HelmManagerModel, platform repo.Platform, opt *o
 		releaseHandler: releaseHandler,
 	}
 }
+
+// AddonsHandler provides a manager server for addons
+type AddonsHandler struct {
+	opt            *options.HelmManagerOptions
+	model          store.HelmManagerModel
+	addons         release.AddonsSlice
+	platform       repo.Platform
+	releaseHandler release.Handler
+}
+
+// NewAddonsHandler return a new AddonsHandler instance
+func NewAddonsHandler(model store.HelmManagerModel, opt *options.HelmManagerOptions, platform repo.Platform,
+	addons release.AddonsSlice, releaseHandler release.Handler) *AddonsHandler {
+	return &AddonsHandler{
+		opt:            opt,
+		model:          model,
+		addons:         addons,
+		platform:       platform,
+		releaseHandler: releaseHandler,
+	}
+}

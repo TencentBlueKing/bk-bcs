@@ -15,7 +15,6 @@ package webhookserver
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -119,8 +118,7 @@ func (s *Server) checkPortPoolChanges(newPool, oldPool *networkextensionv1.PortP
 		lbIDMap := make(map[string]string)
 		for _, oldItem := range oldPool.Spec.PoolItems {
 			if newItem.ItemName == oldItem.ItemName {
-				if !reflect.DeepEqual(newItem.LoadBalancerIDs, oldItem.LoadBalancerIDs) ||
-					newItem.SegmentLength != oldItem.SegmentLength ||
+				if newItem.SegmentLength != oldItem.SegmentLength ||
 					newItem.StartPort != oldItem.StartPort {
 					return fmt.Errorf(
 						"loadBalancerIDs, startPort, endPort or segmentLength of item %s cannot be changeed",

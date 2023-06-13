@@ -1,4 +1,4 @@
-import { ref } from '@vue/composition-api';
+import { ref } from 'vue';
 import * as monaco from 'monaco-editor';
 import BcsEditorTheme from './theme.json';
 
@@ -64,7 +64,7 @@ export default function useEditor(config?: Partial<IConfig>) {
       readOnly: readonly,
       automaticLayout: true,
       scrollbar: {
-        alwaysConsumeMouseWheel: !readonly,
+        alwaysConsumeMouseWheel: false,
       },
       contextmenu: !readonly,
       ...options,

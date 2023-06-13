@@ -128,6 +128,11 @@ const (
 	MetricResMem = "memory"
 )
 
+const (
+	// CustomApiVersion 自定义apiVersion
+	CustomApiVersion = "networkextension.bkbcs.tencent.com/v1"
+)
+
 // RemoveResVersionKinds 更新时强制移除 resourceVersion 的资源类型
 // 添加 HPA 原因是，HPA 每次做扩缩容操作，集群均会更新资源（rv），过于频繁导致用户编辑态的 rv 过期 & 冲突导致无法更新
 // 理论上所有资源都可能会有这样的问题，不止其他用户操作，集群也可能操作导致 rv 过期，但是因 HPA 过于频繁，因此这里配置需要移除 rv

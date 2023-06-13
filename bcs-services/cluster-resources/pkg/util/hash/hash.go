@@ -16,13 +16,17 @@
 package hash
 
 import (
-	"crypto/md5"
+	"crypto/md5" // NOCC:gas/crypto(误报)
 	"encoding/hex"
 )
 
 // MD5Digest 字符串转 MD5
 func MD5Digest(key string) string {
+	// NOCC:gas/crypto(误报)
 	hash := md5.New()
-	hash.Write([]byte(key))
+	_, err := hash.Write([]byte(key))
+	if err != nil {
+		return ""
+	}
 	return hex.EncodeToString(hash.Sum(nil))
 }

@@ -35,6 +35,9 @@ const (
 	// NeverExpiredDuration is a very large number that represents a time duration,
 	// when user create a never expired token, the token expiration will be 10 years.
 	NeverExpiredDuration = time.Hour * 24 * 365 * 10
+
+	// seconds, 1000 days
+	maxExpiredDuration = 60 * 60 * 24 * 1000
 )
 
 // NeverExpired mean when user's expiration time less than NeverExpired time,
@@ -125,6 +128,13 @@ func (t *TokenHandler) CreateToken(request *restful.Request, response *restful.R
 		blog.Errorf("formation of creating token request from %s is invalid, %s", request.Request.RemoteAddr, err.Error())
 		metrics.ReportRequestAPIMetrics("CreateToken", request.Request.Method, metrics.ErrStatus, start)
 		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
+		return
+	}
+
+	if form.Expiration > maxExpiredDuration {
+		blog.Infof("user %s create token with %d expiration", form.Username, form.Expiration)
+		metrics.ReportRequestAPIMetrics("CreateToken", request.Request.Method, metrics.ErrStatus, start)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, "expiration must <= 1000 days")
 		return
 	}
 
@@ -298,6 +308,13 @@ func (t *TokenHandler) UpdateToken(request *restful.Request, response *restful.R
 		blog.Errorf("formation of update token request from %s is invalid, %s", request.Request.RemoteAddr, err.Error())
 		metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.ErrStatus, start)
 		_ = response.WriteHeaderAndEntity(400, utils.FormatValidationError(err))
+		return
+	}
+
+	if form.Expiration > maxExpiredDuration {
+		blog.Infof("user create token with %d expiration", form.Expiration)
+		metrics.ReportRequestAPIMetrics("UpdateToken", request.Request.Method, metrics.ErrStatus, start)
+		utils.WriteClientError(response, common.BcsErrApiBadRequest, "expiration must <= 1000 days")
 		return
 	}
 

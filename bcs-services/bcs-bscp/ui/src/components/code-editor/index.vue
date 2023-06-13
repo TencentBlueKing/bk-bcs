@@ -1,13 +1,34 @@
 <script setup lang="ts">
-  import { ref, withDefaults, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
   import * as monaco from 'monaco-editor'
+  import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
+  import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
+  import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
+  import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
+  import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
+
+  self.MonacoEnvironment = {
+    getWorker(_, label) {
+      if (label === 'json') {
+        return new jsonWorker()
+      }
+      if (label === 'css' || label === 'scss' || label === 'less') {
+        return new cssWorker()
+      }
+      if (label === 'html' || label === 'handlebars' || label === 'razor') {
+        return new htmlWorker()
+      }
+      if (label === 'typescript' || label === 'javascript') {
+        return new tsWorker()
+      }
+      return new editorWorker()
+    }
+  }
 
   const props = withDefaults(defineProps<{
-    height?: number,
     modelValue: string,
     editable?: boolean
   }>(), {
-    height: 400,
     editable: true
   })
 
@@ -15,21 +36,27 @@
 
   const codeEditorRef = ref()
   let editor: monaco.editor.IStandaloneCodeEditor
-  const val = ref(props.modelValue)
+  const localVal = ref(props.modelValue)
+
+  watch(() => props.modelValue, (val) => {
+    if (val !== localVal.value) {
+      editor.setValue(val)
+    }
+  })
 
   onMounted(() => {
     if (!editor) {
-        editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
-          value: val.value,
-          theme: 'vs-dark',
-          automaticLayout: true,
-          readOnly: !props.editable
-        })
-      }
-      editor.onDidChangeModelContent((val:any) => {
-          val.value = editor.getValue();
-          emit('update:modelValue', val.value)
+      editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
+        value: localVal.value,
+        theme: 'vs-dark',
+        automaticLayout: true,
+        readOnly: !props.editable
       })
+    }
+    editor.onDidChangeModelContent((val:any) => {
+      localVal.value = editor.getValue();
+      emit('update:modelValue', localVal.value)
+    })
   })
 
   onBeforeUnmount(() => {
@@ -37,10 +64,11 @@
   })
 </script>
 <template>
-  <section class="code-editor-wrapper" :style="`height: ${props.height}px`" ref="codeEditorRef"></section>
+  <section class="code-editor-wrapper" ref="codeEditorRef"></section>
 </template>
 <style lang="scss" scoped>
   .code-editor-wrapper {
+    height: 100%;
     .monaco-editor {
       width: 100%;
     }

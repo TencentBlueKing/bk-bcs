@@ -245,7 +245,7 @@
                                 <button class="biz-template-btn disabled" v-bk-tooltips="$t('请先保存模板集版本再导出')"><i class="bcs-icon bcs-icon-download"></i>{{$t('导出')}}</button>
                             </template>
                             <button class="biz-template-btn" @click.stop.prevent="handleToggleVarPanel">{{$t('变量列表')}}</button>
-                            <button class="biz-template-btn" @click.stop.prevent="handleToggleImagePanel">{{$t('镜像查询')}}</button>
+                            <!-- <button class="biz-template-btn" @click.stop.prevent="handleToggleImagePanel">{{$t('镜像查询')}}</button> -->
                         </div>
                     </div>
                     <div class="yaml-content">
@@ -699,7 +699,7 @@
                     isShow: false,
                     fileName: ''
                 },
-                zipTooltipText: this.$t('请选择zip压缩包导入，包中的文件名以.yaml结尾。其中的yaml文件(非"_常用Manifest"目录下的文件)将会统一导入到自定义Manifest分类下。注意：同名文件会被覆盖'),
+                zipTooltipText: this.$t('请选择zip压缩包导入，包中的文件名以.yaml结尾。其中的yaml文件(非常用Manifest目录下的文件)将会统一导入到自定义Manifest分类下。注意：同名文件会被覆盖'),
                 curVersionNotes: '',
                 displayVersionNotes: '--',
                 webAnnotations: { perms: {} }

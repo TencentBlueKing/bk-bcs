@@ -37,6 +37,7 @@ type ProcessFilter struct {
 
 const processNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t ProcessFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, processNestedTimeLayout)
 }

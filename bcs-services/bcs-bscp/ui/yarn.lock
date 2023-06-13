@@ -168,6 +168,11 @@
   resolved "https://mirrors.tencent.com/npm/@types%2flodash/-/lodash-4.14.191.tgz#09511e7f7cba275acd8b419ddac8da9a6a79e2fa"
   integrity sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==
 
+"@vitejs/plugin-basic-ssl@^1.0.1":
+  version "1.0.1"
+  resolved "https://mirrors.tencent.com/npm/@vitejs%2fplugin-basic-ssl/-/plugin-basic-ssl-1.0.1.tgz#48c46eab21e0730921986ce742563ae83fe7fe34"
+  integrity sha512-pcub+YbFtFhaGRTo1832FQHQSHvMrlb43974e2eS8EKleR3p1cDdkJFPci1UhwkEf1J9Bz+wKBSzqpKp7nNj2A==
+
 "@vitejs/plugin-vue@^3.0.3":
   version "3.2.0"
   resolved "https://mirrors.tencent.com/npm/@vitejs%2fplugin-vue/-/plugin-vue-3.2.0.tgz#a1484089dd85d6528f435743f84cdd0d215bbb54"
@@ -395,10 +400,10 @@ binary-extensions@^2.0.0:
   resolved "https://mirrors.tencent.com/npm/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
 
-bkui-vue@0.0.1-beta.367:
-  version "0.0.1-beta.367"
-  resolved "https://mirrors.tencent.com/npm/bkui-vue/-/bkui-vue-0.0.1-beta.367.tgz#6456e346e2e3d499f9a1dd8c699a205f58c51a2d"
-  integrity sha512-Lu7sjLMEkE27MkLYJc/r/MV41X4Up9LSwztVIBE/x95p2sEo3yRnAI4TXD7HFM4/T+9vIB5aYXkJNQYx/QM3FA==
+bkui-vue@0.0.1-beta.414:
+  version "0.0.1-beta.414"
+  resolved "https://mirrors.tencent.com/npm/bkui-vue/-/bkui-vue-0.0.1-beta.414.tgz#50137ec5ce70347087f32dbb23f8ea7cf0a8441c"
+  integrity sha512-mF4Xb0wKNzFw9AP+uy73nd8Gd7p7FW0CwHn4qrfV883rzIK8u/hceZQHyi7kXJYS0OeJxHwHtaajvKMqD3SCiQ==
   dependencies:
     "@floating-ui/dom" "~0.5.2"
     "@popperjs/core" "~2.11.5"
@@ -938,10 +943,10 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-highlight.js@^11.7.0:
-  version "11.7.0"
-  resolved "https://mirrors.tencent.com/npm/highlight.js/-/highlight.js-11.7.0.tgz#3ff0165bc843f8c9bce1fd89e2fda9143d24b11e"
-  integrity sha512-1rRqesRFhMO/PRF+G86evnyJkCgaZFOI+Z6kdj15TA18funfoqJXvgPCLSf0SWq3SRfg1j3HlDs8o4s3EGq1oQ==
+highlight.js@~11.5.0:
+  version "11.5.1"
+  resolved "https://mirrors.tencent.com/npm/highlight.js/-/highlight.js-11.5.1.tgz#027c24e4509e2f4dcd00b4a6dda542ce0a1f7aea"
+  integrity sha512-LKzHqnxr4CrD2YsNoIf/o5nJ09j4yi/GcH5BnYz9UnVpZdS4ucMgvP61TDty5xJcFGRjnH4DpujkS9bHT3hq0Q==
 
 ignore@^5.2.0:
   version "5.2.4"

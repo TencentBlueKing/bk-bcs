@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"bscp.io/cmd/auth-server/types"
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/uuid"
@@ -84,6 +83,16 @@ func (g *gateway) setFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// HealthyHandler livenessProbe 健康检查
+func (g *gateway) HealthyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("OK"))
+}
+
+// ReadyHandler ReadinessProbe 健康检查
+func (g *gateway) ReadyHandler(w http.ResponseWriter, r *http.Request) {
+	g.Healthz(w, r)
+}
+
 // Healthz service health check.
 func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 	if shutdown.IsShuttingDown() {
@@ -93,14 +102,13 @@ func (g *gateway) Healthz(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := g.state.Healthz(cc.AuthServer().Service.Etcd); err != nil {
+	if err := g.state.Healthz(); err != nil {
 		logs.Errorf("etcd healthz check failed, err: %v", err)
 		rest.WriteResp(w, rest.NewBaseResp(errf.UnHealth, "etcd healthz error, "+err.Error()))
 		return
 	}
 
 	rest.WriteResp(w, rest.NewBaseResp(errf.OK, "healthy"))
-	return
 }
 
 // iamRequestFilter setups all api filters here. All request would cross here, and we filter request base on URL.

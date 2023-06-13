@@ -15,10 +15,14 @@ package release
 
 import (
 	"context"
+	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/release"
 	helmrelease "helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/releaseutil"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/resource"
 
@@ -220,6 +224,9 @@ type HelmInstallResult struct {
 
 // ToUpgradeResult transfer to upgrade result
 func (h *HelmInstallResult) ToUpgradeResult() *HelmUpgradeResult {
+	if h == nil {
+		return nil
+	}
 	return &HelmUpgradeResult{
 		Release:    h.Release,
 		Revision:   h.Revision,
@@ -306,4 +313,121 @@ type HelmHistoryOption struct {
 	Name      string
 	Namespace string
 	Max       int
+}
+
+// InstallRelease install release
+func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, releaseName,
+	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
+	contents []byte, values []string, dryRun, replace, clientOnly bool) (*HelmInstallResult, error) {
+	vls := make([]*File, 0, len(values))
+	for index, v := range values {
+		vls = append(vls, &File{
+			Name:    "values-" + strconv.Itoa(index) + ".yaml",
+			Content: []byte(v),
+		})
+	}
+	return releaseHandler.Cluster(clusterID).Install(
+		context.Background(),
+		HelmInstallConfig{
+			DryRun:      dryRun,
+			Replace:     replace,
+			ClientOnly:  clientOnly,
+			ProjectCode: projectCode,
+			Name:        releaseName,
+			Namespace:   releaseNamespace,
+			Chart: &File{
+				Name:    chartName + "-" + version + ".tgz",
+				Content: contents,
+			},
+			Args:   args,
+			Values: vls,
+			PatchTemplateValues: map[string]string{
+				common.PTKProjectID: projectID,
+				common.PTKClusterID: clusterID,
+				common.PTKNamespace: releaseNamespace,
+				common.PTKCreator:   creator,
+				common.PTKUpdator:   updator,
+				common.PTKVersion:   version,
+				common.PTKName:      releaseName,
+			},
+		})
+}
+
+// UpgradeRelease upgrade release
+func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, releaseName,
+	releaseNamespace, chartName, version, creator, updator string, args []string, bcsSysVar map[string]string,
+	contents []byte, values []string, dryRun bool) (*HelmUpgradeResult, error) {
+	vls := make([]*File, 0, len(values))
+	for index, v := range values {
+		vls = append(vls, &File{
+			Name:    "values-" + strconv.Itoa(index) + ".yaml",
+			Content: []byte(v),
+		})
+	}
+	return releaseHandler.Cluster(clusterID).Upgrade(
+		context.Background(),
+		HelmUpgradeConfig{
+			DryRun:      dryRun,
+			ProjectCode: projectCode,
+			Name:        releaseName,
+			Namespace:   releaseNamespace,
+			Chart: &File{
+				Name:    chartName + "-" + version + ".tgz",
+				Content: contents,
+			},
+			Args:   args,
+			Values: vls,
+			PatchTemplateValues: map[string]string{
+				common.PTKProjectID: projectID,
+				common.PTKClusterID: clusterID,
+				common.PTKNamespace: releaseNamespace,
+				common.PTKCreator:   creator,
+				common.PTKUpdator:   updator,
+				common.PTKVersion:   version,
+				common.PTKName:      releaseName,
+			},
+		})
+}
+
+// SimpleHead defines what the structure of the head of a manifest file
+type SimpleHead struct {
+	Version  string `json:"apiVersion" yaml:"apiVersion"`
+	Kind     string `json:"kind,omitempty" yaml:"kind"`
+	Metadata *struct {
+		Namespace string `json:"namespace" yaml:"namespace"`
+		Name      string `json:"name" yaml:"name"`
+	} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+}
+
+// GetManifestSimpleHeadFromRelease get SimpleHead from release manifest
+/**
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+	namespace: default
+	name: deploy
+**/
+func GetManifestSimpleHeadFromRelease(rl *release.Release, releaseNamespace string) ([]SimpleHead, error) {
+	manifest := rl.Manifest
+	for _, v := range rl.Hooks {
+		manifest += "\n---\n" + v.Manifest
+	}
+	manifests := releaseutil.SplitManifests(manifest)
+	heads := make([]SimpleHead, 0)
+	for i := range manifests {
+		content := manifests[i]
+		var entry SimpleHead
+		if err := yaml.Unmarshal([]byte(content), &entry); err != nil {
+			blog.Errorf("YAML parse error, %s", err)
+			return nil, err
+		}
+		if entry.Metadata == nil {
+			continue
+		}
+		if entry.Metadata.Namespace == "" {
+			entry.Metadata.Namespace = releaseNamespace
+		}
+		heads = append(heads, entry)
+	}
+	return heads, nil
 }

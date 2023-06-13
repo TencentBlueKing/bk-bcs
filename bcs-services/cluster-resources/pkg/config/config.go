@@ -21,7 +21,7 @@ import (
 	"net"
 	"os"
 
-	jwtGo "github.com/dgrijalva/jwt-go"
+	jwtGo "github.com/golang-jwt/jwt/v4"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -129,7 +129,7 @@ type ClusterResourcesConf struct {
 type TracingConf struct {
 	Enabled       bool              `yaml:"enabled" usage:"enable trace"`
 	Endpoint      string            `yaml:"endpoint" usage:"Collector service endpoint"`
-	Token         string            `yaml:"token" usage:"token for collector sevice"`
+	Token         string            `yaml:"token" usage:"token for collector service"`
 	ResourceAttrs map[string]string `yaml:"resourceAttrs" usage:"attributes of traced service"`
 }
 

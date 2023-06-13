@@ -16,8 +16,15 @@ package dao
 import (
 	"fmt"
 
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/plugin/opentelemetry/tracing"
+	"gorm.io/plugin/prometheus"
+
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/kit"
@@ -25,6 +32,7 @@ import (
 
 // Set defines all the DAO to be operated.
 type Set interface {
+	GenQuery() *gen.Query
 	ID() IDGenInterface
 	App() App
 	Commit() Commit
@@ -32,54 +40,97 @@ type Set interface {
 	Content() Content
 	Release() Release
 	ReleasedCI() ReleasedCI
-	StrategySet() StrategySet
-	CRInstance() CRInstance
-	Strategy() Strategy
 	Hook() Hook
+	TemplateSpace() TemplateSpace
+	Template() Template
+	TemplateRelease() TemplateRelease
 	Group() Group
 	GroupAppBind() GroupAppBind
-	GroupCurrentRelease() GroupCurrentRelease
+	ReleasedGroup() ReleasedGroup
 	Publish() Publish
 	IAM() IAM
 	Event() Event
 	BeginTx(kit *kit.Kit, bizID uint32) (*sharding.Tx, error)
 	Healthz() error
+	Credential() Credential
+	CredentialScope() CredentialScope
 }
 
 // NewDaoSet create the DAO set instance.
-func NewDaoSet(opt cc.Sharding) (Set, error) {
+func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
 	sd, err := sharding.InitSharding(&opt)
 	if err != nil {
 		return nil, fmt.Errorf("init sharding failed, err: %v", err)
 	}
 
+	adminDB, err := gorm.Open(mysql.Open(sharding.URI(opt.AdminDatabase)), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	if err != nil {
+		return nil, err
+	}
+
+	if e := adminDB.Use(tracing.NewPlugin(tracing.WithoutMetrics())); e != nil {
+		return nil, err
+	}
+
+	// 会定期执行 SHOW STATUS; 拿状态数据
+	// metricsCollector := []prometheus.MetricsCollector{
+	// 	&prometheus.MySQL{VariableNames: []string{"Threads_running"}},
+	// }
+
+	if e := adminDB.Use(prometheus.New(prometheus.Config{})); e != nil {
+		return nil, err
+	}
+
+	// auditor 分库, 注意需要在分表前面
+	// auditorDB := sharding.MustShardingAuditor(adminDB)
+
+	// biz 分表 mysql.Dialector -> sharding.ShardingDialector
+	// 不支持 sqlparser.QualifiedRef, 暂时去掉, 参考 issue https://github.com/go-gorm/sharding/pull/32
+	// if err := sharding.InitBizSharding(adminDB); err != nil {
+	// 	return nil, err
+	// }
+
+	// 初始化 Gen 配置
+	genQ := gen.Use(adminDB)
+
 	ormInst := orm.Do(opt)
-	idDao := &idGenerator{sd: sd}
-	auditDao, err := NewAuditDao(ormInst, sd, idDao)
+	idDao := &idGenerator{sd: sd, genQ: genQ}
+	auditDao, err := NewAuditDao(adminDB, ormInst, sd, idDao)
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
 
 	s := &set{
-		orm:      ormInst,
-		sd:       sd,
-		idGen:    idDao,
-		auditDao: auditDao,
-		event:    &eventDao{orm: ormInst, sd: sd, idGen: idDao},
-		lock:     &lockDao{orm: ormInst, idGen: idDao},
+		orm:               ormInst,
+		db:                adminDB,
+		genQ:              genQ,
+		sd:                sd,
+		credentialSetting: credentialSetting,
+		idGen:             idDao,
+		auditDao:          auditDao,
+		event:             &eventDao{orm: ormInst, sd: sd, idGen: idDao},
+		lock:              &lockDao{orm: ormInst, idGen: idDao},
 	}
 
 	return s, nil
 }
 
 type set struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
-	idGen    IDGenInterface
-	auditDao AuditDao
-	event    Event
-	lock     LockDao
+	orm               orm.Interface
+	genQ              *gen.Query
+	db                *gorm.DB
+	sd                *sharding.Sharding
+	credentialSetting cc.Credential
+	idGen             IDGenInterface
+	auditDao          AuditDao
+	event             Event
+	lock              LockDao
+}
+
+// GenQuery returns the gen Query object
+func (s *set) GenQuery() *gen.Query {
+	return s.genQ
 }
 
 // ID returns the resource id generator DAO
@@ -149,48 +200,40 @@ func (s *set) ReleasedCI() ReleasedCI {
 	}
 }
 
-// CRInstance returns the current released instance's DAO
-func (s *set) CRInstance() CRInstance {
-	return &crInstanceDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		event:    s.event,
-		lock:     s.lock,
-	}
-}
-
-// StrategySet returns the strategy set's DAO
-func (s *set) StrategySet() StrategySet {
-	return &strategySetDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		lock:     s.lock,
-	}
-}
-
-// Strategy returns the strategy's DAO
-func (s *set) Strategy() Strategy {
-	return &strategyDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		event:    s.event,
-		lock:     s.lock,
-	}
-}
-
-// Hook returns the group's DAO
+// Hook returns the hook's DAO
 func (s *set) Hook() Hook {
 	return &hookDao{
 		orm:      s.orm,
 		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+	}
+}
+
+// TemplateSpace returns the template space's DAO
+func (s *set) TemplateSpace() TemplateSpace {
+	return &templateSpaceDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// Template returns the template's DAO
+func (s *set) Template() Template {
+	return &templateDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// TemplateRelease returns the template release's DAO
+func (s *set) TemplateRelease() TemplateRelease {
+	return &templateReleaseDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
 	}
 }
 
@@ -216,9 +259,9 @@ func (s *set) GroupAppBind() GroupAppBind {
 	}
 }
 
-// GroupCurrentRelease returns the currnet release's DAO
-func (s *set) GroupCurrentRelease() GroupCurrentRelease {
-	return &currentReleaseDao{
+// ReleasedGroup returns the currnet release's DAO
+func (s *set) ReleasedGroup() ReleasedGroup {
+	return &releasedGroupDao{
 		orm:      s.orm,
 		sd:       s.sd,
 		idGen:    s.idGen,
@@ -271,4 +314,26 @@ func (s *set) Event() Event {
 // Healthz check mysql healthz.
 func (s *set) Healthz() error {
 	return s.sd.Healthz()
+}
+
+// Credential returns the Credential's DAO
+func (s *set) Credential() Credential {
+	return &credentialDao{
+		orm:               s.orm,
+		sd:                s.sd,
+		credentialSetting: s.credentialSetting,
+		idGen:             s.idGen,
+		auditDao:          s.auditDao,
+		event:             s.event,
+	}
+}
+
+// CredentialScope returns the Credential scope's DAO
+func (s *set) CredentialScope() CredentialScope {
+	return &credentialScopeDao{
+		orm:      s.orm,
+		sd:       s.sd,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+	}
 }

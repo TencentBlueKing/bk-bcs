@@ -13,8 +13,11 @@
           :cluster-id="params.clusterId"
           :clearable="false"
           required
+          :list="namespaceList"
+          :loading="namespaceLoading"
           v-model="params.namespace"
-          class="w-[180px] ml-[5px]">
+          class="w-[180px] ml-[5px]"
+          @change="handleInitEventData">
         </NamespaceSelect>
       </template>
       <bcs-date-picker
@@ -25,7 +28,8 @@
         placement="bottom"
         shortcut-close
         transfer
-        v-model="params.date">
+        v-model="params.date"
+        @change="handleInitEventData">
       </bcs-date-picker>
       <bcs-search-select
         class="flex-1 ml-[5px] bg-[#fff]"
@@ -36,7 +40,8 @@
         :placeholder="hideClusterAndNamespace ? $t('搜索组件、资源名称、事件级别') : $t('搜索组件、资源类型、资源名称、事件级别')"
         :show-popover-tag-change="false"
         :popover-zindex="9999"
-        v-model="params.searchSelect">
+        v-model="params.searchSelect"
+        @change="handleInitEventData">
       </bcs-search-select>
     </div>
     <bcs-table
@@ -71,13 +76,14 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, toRefs, watch } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import { storageEvents, uatStorageEvents } from '@/api/modules/storage';
 import { formatDate } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
 import { useCluster } from '@/composables/use-app';
+import { useSelectItemsNamespace } from '@/views/resource-view/namespace/use-namespace';
 
 export default defineComponent({
   name: 'EventQuery',
@@ -131,6 +137,7 @@ export default defineComponent({
     } = toRefs(props);
 
     const { curClusterId, clusterList } = useCluster();
+    const { namespaceList, namespaceLoading, getNamespaceData } = useSelectItemsNamespace();
 
     const isDebugCluster = computed(() => clusterList.value.find(item => item.clusterID === params.value.clusterId || item.clusterID === curClusterId.value)?.environment !== 'prod');
     const shortcuts = ref([
@@ -307,6 +314,13 @@ export default defineComponent({
       return !params.value.searchSelect.some(data => data.id === item.id);
     }));
 
+    // 获取事件信息
+    const handleInitEventData = () => {
+      events.value = [];
+      pagination.value.current = 1;
+      handleGetEventList();
+    };
+
     watch(name, (newValue, oldValue) => {
       if (JSON.stringify(newValue) === JSON.stringify(oldValue)) return;
       if (!hideClusterAndNamespace.value) {
@@ -323,18 +337,17 @@ export default defineComponent({
         }
       } else {
         // 具体某一个资源时，不展示name过滤信息
-        pagination.value.current = 1;
-        handleGetEventList();
+        handleInitEventData();
       }
     });
-    watch(params, () => {
-      pagination.value.current = 1;
-      handleGetEventList();
-    }, { deep: true });
 
     // cluster change
-    const handleClusterChange = () => {
-      params.value.namespace = '';
+    const handleClusterChange = async () => {
+      eventLoading.value = true;
+      await getNamespaceData({ clusterId: params.value.clusterId });
+      params.value.namespace = namespaceList.value[0]?.name;
+      await handleInitEventData();
+      eventLoading.value = false;
     };
     // 事件列表
     const events = ref([]);
@@ -345,6 +358,9 @@ export default defineComponent({
       limit: 10,
     });
     const handleGetEventList = async () => {
+      const clusterId = params.value.clusterId || curClusterId.value;
+      const cluster = clusterList.value.find(item => item.clusterID === clusterId);
+      if (cluster.is_shared && !params.value.namespace) return; // 共享集群没有命名空间时，不请求
       eventLoading.value = true;
       const [start, end] = params.value.date;
       // todo 临时处理
@@ -352,7 +368,7 @@ export default defineComponent({
       const { data = [], total = 0 } = await eventAction({
         offset: (pagination.value.current - 1) * pagination.value.limit,
         length: pagination.value.limit,
-        clusterId: params.value.clusterId || curClusterId.value,
+        clusterId,
         env: 'k8s',
         kind: parseSearchSelectValue.value.kinds.join(',') || (Array.isArray(kinds.value) ? kinds.value : [kinds.value]).join(','), // 对象
         'extraInfo.namespace': params.value.namespace, // 命名空间
@@ -411,6 +427,11 @@ export default defineComponent({
       params.value.searchSelect = [];
     };
 
+    onMounted(async () => {
+      await getNamespaceData({ clusterId: params.value.clusterId || curClusterId.value });
+      handleGetEventList();
+    });
+
     return {
       isDebugCluster,
       kindList,
@@ -421,11 +442,14 @@ export default defineComponent({
       eventLoading,
       shortcuts,
       searchEmpty,
+      namespaceList,
+      namespaceLoading,
       handleClearSearchData,
       formatDate,
       handlePageChange,
       handlePageLimitChange,
       handleClusterChange,
+      handleInitEventData,
     };
   },
 });

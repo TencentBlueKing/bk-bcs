@@ -302,3 +302,21 @@ func RefreshSaasToken(request *restful.Request, response *restful.Response) {
 
 	metrics.ReportRequestAPIMetrics("RefreshSaasToken", request.Request.Method, metrics.SucStatus, start)
 }
+
+// GetCurrentUserInfo get the current login user information
+func GetCurrentUserInfo(request *restful.Request, response *restful.Response) {
+	start := time.Now()
+
+	userInfo := &models.Userinfo{
+		UserName:  "",
+		AvatarUrl: "",
+	}
+	if user, ok := request.Attribute(constant.CurrentUserAttr).(*models.BcsUser); ok {
+		userInfo.UserName = user.Name
+	}
+
+	data := utils.CreateResponseData(nil, "success", *userInfo)
+	_, _ = response.Write([]byte(data))
+
+	metrics.ReportRequestAPIMetrics("GetCurrentUserInfo", request.Request.Method, metrics.SucStatus, start)
+}

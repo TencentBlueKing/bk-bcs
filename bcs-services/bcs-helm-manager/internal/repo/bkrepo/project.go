@@ -14,11 +14,11 @@ package bkrepo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 )
 
@@ -61,7 +61,7 @@ func (ph *projectHandler) getProject(ctx context.Context, name string) (*repo.Pr
 	}
 
 	var r getProjectResp
-	if err := codec.DecJson(resp.Reply, &r); err != nil {
+	if err := json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf("get project from bk-repo decode resp failed, %s, with resp %s", err.Error(), resp.Reply)
 		return nil, err
 	}
@@ -91,7 +91,8 @@ func (ph *projectHandler) createProject(ctx context.Context, prj *repo.Project) 
 	blog.Infof("create project to bk-repo with data %v", prj)
 
 	var data []byte
-	if err := codec.EncJson((&project{}).load(prj), &data); err != nil {
+	var err error
+	if data, err = json.Marshal((&project{}).load(prj)); err != nil {
 		blog.Errorf("create project to bk-repo encode json failed, %s, with data %v", err.Error(), prj)
 		return err
 	}
@@ -103,7 +104,7 @@ func (ph *projectHandler) createProject(ctx context.Context, prj *repo.Project) 
 	}
 
 	var r createProjectResp
-	if err := codec.DecJson(resp.Reply, &r); err != nil {
+	if err := json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf("create project to bk-repo decode resp failed, %s, with resp %s", err.Error(), resp.Reply)
 		return err
 	}
@@ -111,7 +112,7 @@ func (ph *projectHandler) createProject(ctx context.Context, prj *repo.Project) 
 		blog.Errorf("create project to bk-repo get resp with error code %d, message %s, traceID %s",
 			r.Code, r.Message, r.TraceID)
 
-		// TODO: use code to identify
+		// check user is existed
 		if strings.Contains(r.Message, "existed") {
 			return errAlreadyExist
 		}

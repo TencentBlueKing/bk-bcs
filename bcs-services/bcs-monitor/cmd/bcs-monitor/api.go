@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
@@ -55,6 +56,9 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 	if err != nil {
 		return err
 	}
+
+	// init storage
+	storage.InitStorage()
 
 	// 启动 apiserver
 	g.Add(server.Run, func(err error) { server.Close() })

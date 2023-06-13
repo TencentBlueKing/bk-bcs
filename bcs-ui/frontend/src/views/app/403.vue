@@ -6,12 +6,12 @@
         {{ $t('容器管理平台') }}
       </bk-table-column>
       <bk-table-column :label="$t('需要申请的权限')" prop="auth" min-width="220">
-        <template slot-scope="{ row }">
+        <template #default="{ row }">
           {{ actionsMap[row.action_id] || '--' }}
         </template>
       </bk-table-column>
       <bk-table-column :label="$t('关联的资源实例')" prop="resource" min-width="220">
-        <template slot-scope="{ row }">
+        <template #default="{ row }">
           {{ row.resource_name || '--' }}
         </template>
       </bk-table-column>
@@ -24,10 +24,11 @@
     >{{$t('去申请')}}</bk-button>
   </bk-exception>
 </template>
-<script>
-import { defineComponent, onBeforeMount, ref, computed } from '@vue/composition-api';
+<script lang="ts">
+import { defineComponent, onBeforeMount, ref, computed } from 'vue';
 import { userPermsByAction } from '@/api/base';
 import actionsMap from '@/views/app/actions-map';
+import $store from '@/store';
 
 export default defineComponent({
   name: 'AuthForbidden',
@@ -53,9 +54,8 @@ export default defineComponent({
       default: '',
     },
   },
-  setup(props, ctx) {
-    const { $store } = ctx.root;
-    const tableData = ref([]);
+  setup(props) {
+    const tableData = ref<any[]>([]);
     const href = ref('');
     const isLoading = ref(false);
     const handleGotoIAM = () => {

@@ -73,7 +73,7 @@ func (s *Selector) Scan(raw interface{}) error {
 // Value encode the scope selector to a json raw, so that it can be stored to db with json raw.
 func (s *Selector) Value() (driver.Value, error) {
 	if s == nil {
-		return nil, errors.New("scope selector is not initialized, can not be encoded")
+		return nil, errors.New("selector is not initialized, can not be encoded")
 	}
 
 	return json.Marshal(s)
@@ -81,6 +81,10 @@ func (s *Selector) Value() (driver.Value, error) {
 
 // Unmarshal json to Selector.
 func (s *Selector) Unmarshal(bytes []byte) error {
+	if err := ValidateBeforeUnmarshal(bytes); err != nil {
+		return err
+	}
+
 	if err := jsoni.Unmarshal(bytes, &s); err != nil {
 		return err
 	}

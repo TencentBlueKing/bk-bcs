@@ -19,6 +19,8 @@ from rest_framework.response import Response
 from backend.bcs_web.audit_log.audit.decorators import log_audit_on_view
 from backend.bcs_web.audit_log.constants import ActivityType
 from backend.bcs_web.viewsets import SystemViewSet
+from backend.components.base import ComponentAuth
+from backend.components.paas_cc import PaaSCCClient
 from backend.container_service.clusters.permissions import AccessClusterPermMixin
 from backend.dashboard.auditors import DashboardAuditor
 from backend.dashboard.exceptions import CreateResourceError, DeleteResourceError, UpdateResourceError
@@ -36,6 +38,7 @@ from backend.resources.constants import NATIVE_CLUSTER_SCOPE_RES_KINDS
 from backend.utils.basic import getitems
 from backend.utils.response import BKAPIResponse
 from backend.utils.url_slug import KUBE_NAME_REGEX
+from backend.utils.error_codes import error_codes
 
 from .constants import DashboardAction
 from .exceptions import ActionUnsupported
@@ -45,6 +48,12 @@ class ListAndRetrieveMixin:
     """查询类接口通用逻辑"""
 
     def list(self, request, project_id, cluster_id, namespace):
+        # TODO 优化实现(序列化中校验)
+        cc_client = PaaSCCClient(auth=ComponentAuth(request.user.token.access_token))
+        resp = cc_client.get_cluster(project_id, cluster_id)
+        if resp['result'] is False:
+            raise error_codes.APIError((f"获取集群信息失败，错误信息：{resp['message']}"))
+
         self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         params = self.params_validate(ListResourceSLZ)
         client = self.resource_client(request.ctx_cluster)
@@ -54,6 +63,12 @@ class ListAndRetrieveMixin:
         return BKAPIResponse(response_data, web_annotations=web_annotations)
 
     def retrieve(self, request, project_id, cluster_id, namespace, name):
+        # TODO 优化实现(序列化中校验)
+        cc_client = PaaSCCClient(auth=ComponentAuth(request.user.token.access_token))
+        resp = cc_client.get_cluster(project_id, cluster_id)
+        if resp['result'] is False:
+            raise error_codes.APIError((f"获取集群信息失败，错误信息：{resp['message']}"))
+
         self._validate_perm(request.user.username, project_id, cluster_id, namespace, DashboardAction.View)
         client = self.resource_client(request.ctx_cluster)
         response_data = RetrieveApiRespBuilder(client, namespace, name).build()

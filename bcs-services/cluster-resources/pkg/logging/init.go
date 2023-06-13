@@ -91,7 +91,7 @@ func newZapJSONLogger(conf *config.LogConf) *zap.Logger {
 }
 
 // GetLogger xxx
-// TODO: 是否分为不同的类型，比如请求第三方、API等，根据不同的配置，设置不同的日志
+// : 是否分为不同的类型，比如请求第三方、API等，根据不同的配置，设置不同的日志
 func GetLogger() *zap.Logger {
 	// 未执行日志组件初始化时，日志输出到 stderr
 	if logger == nil {
@@ -105,11 +105,14 @@ func GetLogger() *zap.Logger {
 // 使用默认 logger，避免使用时手动 GetLogger，可按需添加 Panic 等
 // 参考用法：
 // import (
-// 		log ".../pkg/logging"
+//
+//	log ".../pkg/logging"
+//
 // )
-// func main() {
-// 		log.Info(ctx, "log content: %s", content)
-// }
+//
+//	func main() {
+//			log.Info(ctx, "log content: %s", content)
+//	}
 func Info(ctx context.Context, msg string, vars ...interface{}) {
 	GetLogger().Info(wrapLogMsg(ctx, fmt.Sprintf(msg, vars...)))
 }

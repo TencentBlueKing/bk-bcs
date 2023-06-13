@@ -1,6 +1,7 @@
 # version
 PRO_DIR   = $(shell pwd)
 BUILDTIME = $(shell date +%Y-%m-%dT%T%z)
+GITHASH   = $(shell git rev-parse HEAD)
 VERSION   = $(shell echo ${ENV_BK_BSCP_VERSION})
 DEBUG     = $(shell echo ${ENV_BK_BSCP_ENABLE_DEBUG})
 PREFIX   ?= $(shell pwd)
@@ -14,9 +15,9 @@ GOBUILD=CGO_ENABLED=0 go build -trimpath
 ifeq ("$(VERSION)", "")
 	export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp
 	export LDVersionFLAG = "-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} \
+    	-X bscp.io/pkg/version.GITHASH=${GITHASH} \
 		-X bscp.io/pkg/version.DEBUG=${DEBUG}"
 else
-	GITHASH   = $(shell git rev-parse HEAD)
 	export OUTPUT_DIR = ${PRO_DIR}/build/bk-bscp-${VERSION}
 	export LDVersionFLAG = "-X bscp.io/pkg/version.VERSION=${VERSION} \
     	-X bscp.io/pkg/version.BUILDTIME=${BUILDTIME} \
@@ -25,12 +26,6 @@ else
 endif
 
 include ./scripts/makefile/uname.mk
-
-LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
- -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
- -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
- -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
- -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
 
 default: all
 
@@ -80,6 +75,10 @@ pb:
 	@echo -e "\e[34;1mMake Protocol...\033[0m"
 	@cd pkg/protocol && make clean && make
 	@echo -e "\e[34;1mMake Protocol Done\n\033[0m"
+
+.PHONY: gen
+gen:
+	@go run scripts/gen/main.go
 
 test: pre
 	@cd test/suite && make && cp -rf suite-test ${OUTPUT_DIR}/ && rm -rf suite-test
@@ -144,8 +143,9 @@ build_frontend:
 
 .PHONY: build_ui
 build_ui:
-	${GOBUILD} ${LDFLAG} -o bscp-ui ./cmd/ui
+	${GOBUILD} -ldflags ${LDVersionFLAG} -o bscp-ui ./cmd/ui
 
 .PHONY: docker
 docker:
 	@docker build -t bcs-bscp:latest .
+

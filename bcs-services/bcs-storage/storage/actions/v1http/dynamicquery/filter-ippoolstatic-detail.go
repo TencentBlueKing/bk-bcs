@@ -24,6 +24,7 @@ type IPPoolStaticDetailFilter struct {
 
 const ipPoolStaticDetailNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t IPPoolStaticDetailFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, ipPoolStaticDetailNestedTimeLayout)
 }

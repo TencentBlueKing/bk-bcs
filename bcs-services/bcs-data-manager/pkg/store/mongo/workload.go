@@ -307,6 +307,7 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 }
 
 // GetWorkloadInfoList get workload list data by cluster id, namespace and workload type
+// if startTime or endTime is empty, return metrics with default time range
 func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoListRequest) ([]*bcsdatamanager.Workload, int64, error) {
 	var total int64
@@ -406,6 +407,7 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 }
 
 // GetWorkloadInfo get workload data with default time range by cluster id, namespace, workload type and name
+// if startTime or endTime is empty, return metrics with default time range
 func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoRequest) (*bcsdatamanager.Workload, error) {
 	newTableInfo := &Public{
@@ -589,6 +591,7 @@ func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCom
 	return int64(len(retWorkload)), nil
 }
 
+// generateWorkloadResponse 构造response，将storage结构转化为proto结构
 func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetrics,
 	metricSlice []*types.WorkloadMetrics, data *types.WorkloadData, startTime,
 	endTime string) *bcsdatamanager.Workload {
@@ -636,6 +639,7 @@ func (m *ModelWorkload) generateWorkloadResponse(public types.WorkloadPublicMetr
 
 // preAggregateMax xxx
 // pre aggregate max value before update
+// 预聚合最大值
 func (m *ModelWorkload) preAggregateMax(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MaxInstanceTime != nil && newMetric.MaxInstanceTime != nil {
 		data.MaxInstanceTime = getMax(data.MaxInstanceTime, newMetric.MaxInstanceTime)
@@ -670,6 +674,7 @@ func (m *ModelWorkload) preAggregateMax(data *types.WorkloadData, newMetric *typ
 
 // preAggregateMin xxx
 // pre aggregate min value before update
+// 预聚合最小值
 func (m *ModelWorkload) preAggregateMin(data *types.WorkloadData, newMetric *types.WorkloadMetrics) {
 	if data.MinInstanceTime != nil && newMetric.MinInstanceTime != nil {
 		data.MinInstanceTime = getMin(data.MinInstanceTime, newMetric.MinInstanceTime)
@@ -702,6 +707,7 @@ func (m *ModelWorkload) preAggregateMin(data *types.WorkloadData, newMetric *typ
 	}
 }
 
+// getMax 获取最大值
 func getMax(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumRecord) *bcsdatamanager.ExtremumRecord {
 	if old.Value > new.Value {
 		return old
@@ -709,6 +715,7 @@ func getMax(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumReco
 	return new
 }
 
+// getMin 获取最小值
 func getMin(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumRecord) *bcsdatamanager.ExtremumRecord {
 	if old.Value < new.Value {
 		return old
@@ -717,6 +724,7 @@ func getMin(old *bcsdatamanager.ExtremumRecord, new *bcsdatamanager.ExtremumReco
 }
 
 // generateCond cond according to job options
+// 构造查询条件，需要按顺序
 func (m *ModelWorkload) generateCond(opts *types.JobCommonOpts, bucket string) []*operator.Condition {
 	cond := make([]*operator.Condition, 0)
 	if opts.ClusterID != "" {

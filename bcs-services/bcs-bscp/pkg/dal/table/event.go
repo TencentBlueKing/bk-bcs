@@ -120,8 +120,8 @@ func (er EventResource) Validate() error {
 	case CursorReminder:
 		return errors.New("event reminder resource is not allowed to be created")
 	case Publish:
-	case PublishInstance:
 	case Application:
+	case CredentialEvent:
 	default:
 		return fmt.Errorf("unsupported event resource: %s", er)
 	}
@@ -138,11 +138,10 @@ const (
 	CursorReminder EventResource = "cursorReminder"
 	// Publish means this is an event which represent a strategy has been published.
 	Publish EventResource = "Publish"
-	// PublishInstance means this is an event which represent an
-	// instance has been published.
-	PublishInstance EventResource = "publishInstance"
 	// Application means this is an event which represent an application resource.
 	Application EventResource = "application"
+	// CredentialEvent means this is an event which represent a credential resource.
+	CredentialEvent EventResource = "credential"
 )
 
 // EventSpecColumns defines EventSpec's columns
@@ -177,10 +176,6 @@ func (e EventSpec) Validate() error {
 		return errors.New("invalid resource id or uid")
 	}
 
-	if e.ResourceID > 0 && len(e.ResourceUid) > 0 {
-		return errors.New("invalid resource id or uid, only one is needed")
-	}
-
 	if err := e.OpType.Validate(); err != nil {
 		return err
 	}
@@ -206,10 +201,6 @@ type EventAttachment struct {
 func (ea EventAttachment) Validate() error {
 	if ea.BizID <= 0 {
 		return errors.New("invalid biz id")
-	}
-
-	if ea.AppID <= 0 {
-		return errors.New("invalid app id")
 	}
 
 	return nil

@@ -12,7 +12,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230206125210-0ebb6b53363b
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230519085527-b0ca9cb924c7
 	github.com/deckarep/golang-set v1.8.0
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/google/uuid v1.3.0
@@ -125,6 +125,7 @@ require (
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.4 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.4 // indirect
+	go.uber.org/goleak v1.1.12 // indirect
 	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/sync v0.0.0-20220907140024-f12130a52804 // indirect

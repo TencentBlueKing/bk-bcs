@@ -16,6 +16,7 @@ package manager
 import (
 	"context"
 	"encoding/base64"
+	"github.com/gin-gonic/gin"
 	"strings"
 	"sync"
 	"time"
@@ -82,8 +83,8 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 	return conn
 }
 
-// ReadInputMsg xxx
-func (r *RemoteStreamConn) ReadInputMsg() <-chan wsMessage {
+// readInputMsg xxx
+func (r *RemoteStreamConn) readInputMsg() <-chan wsMessage {
 	inputMsgChan := make(chan wsMessage)
 	go func() {
 		defer close(inputMsgChan)
@@ -118,8 +119,8 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 第一个字符串为 channel
 	channel := string(msg[0])
 	if channel == ResizeChannel {
-		resizeMsg, err := r.bindMgr.HandleResizeMsg(decodeMsg)
-		if err != nil {
+		resizeMsg, resizeErr := r.bindMgr.HandleResizeMsg(decodeMsg)
+		if resizeErr != nil {
 			return nil, nil
 		}
 
@@ -130,7 +131,8 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 打印日志
 	if channel == LogChannel {
 		inputMsg, _ := r.bindMgr.HandleInputMsg(decodeMsg)
-		logger.Infof("UserName=%s  SessionID=%s  Command=%s", r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
+		logger.Infof("UserName=%s  SessionID=%s  Command=%s",
+			r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
 		return nil, nil
 	}
 
@@ -197,11 +199,11 @@ func (r *RemoteStreamConn) Close() {
 }
 
 // Run xxx
-func (r *RemoteStreamConn) Run() error {
+func (r *RemoteStreamConn) Run(c *gin.Context) error {
 	pingInterval := time.NewTicker(10 * time.Second)
 	defer pingInterval.Stop()
 
-	guideMessages := helloMessage(r.bindMgr.PodCtx.Source)
+	guideMessages := helloMessage(c, r.bindMgr.PodCtx.Source)
 	notSendMsg := true
 
 	for {
@@ -263,7 +265,7 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	}
 
 	// start reading
-	r.inputMsgChan = r.ReadInputMsg()
+	r.inputMsgChan = r.readInputMsg()
 
 	// Stream Copy IO, Wait Here
 	err = executor.Stream(remotecommand.StreamOptions{
@@ -318,16 +320,16 @@ func GracefulCloseWebSocket(ctx context.Context, ws *websocket.Conn, connected b
 	<-ctx.Done()
 }
 
-func helloMessage(source string) string {
+func helloMessage(c *gin.Context, source string) string {
 
 	var guideMsg []string
 	var messages []string
 
 	if source == "mgr" {
-		guideMsg = []string{i18n.GetMessage("mgrGuideMessage")}
+		guideMsg = []string{i18n.GetMessage(c, "mgrGuideMessage")}
 		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	} else {
-		guideMsg = []string{i18n.GetMessage("guideMessage")}
+		guideMsg = []string{i18n.GetMessage(c, "guideMessage")}
 		guideMsg = append(guideMsg, config.G.WebConsole.GuideDocLinks...)
 	}
 

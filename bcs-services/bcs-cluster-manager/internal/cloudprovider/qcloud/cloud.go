@@ -38,7 +38,7 @@ func init() {
 	})
 }
 
-// CloudInfoManager blueKingCloud management cluster info
+// CloudInfoManager TKE management cluster info
 type CloudInfoManager struct {
 }
 

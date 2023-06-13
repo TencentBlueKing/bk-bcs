@@ -17,12 +17,12 @@ import (
 	"fmt"
 
 	"bscp.io/pkg/criteria/enumor"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
+	"gorm.io/gorm"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -32,6 +32,7 @@ type AuditDao interface {
 	// Decorator is used to handle the audit process as a pipeline
 	// according CUD scenarios.
 	Decorator(kit *kit.Kit, bizID uint32, res enumor.AuditResourceType) AuditDecorator
+	DecoratorV2(kit *kit.Kit, bizID uint32) AuditPrepare
 	// One insert one resource's audit.
 	One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error
 }
@@ -42,13 +43,16 @@ type AuditOption struct {
 	Txn *sqlx.Tx
 	// ResShardingUid is the resource's sharding instance.
 	ResShardingUid string
+	genQ           *gen.Query
 }
 
 var _ AuditDao = new(audit)
 
 // NewAuditDao create the audit DAO
-func NewAuditDao(orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface) (AuditDao, error) {
+func NewAuditDao(db *gorm.DB, orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface) (AuditDao, error) {
 	return &audit{
+		db:         db,
+		genQ:       gen.Use(db),
 		orm:        orm,
 		sd:         sd,
 		adSharding: sd.Audit(),
@@ -57,7 +61,9 @@ func NewAuditDao(orm orm.Interface, sd *sharding.Sharding, idGen IDGenInterface)
 }
 
 type audit struct {
-	orm orm.Interface
+	db   *gorm.DB
+	genQ *gen.Query
+	orm  orm.Interface
 	// sd is the common resource's sharding manager.
 	sd *sharding.Sharding
 	// adSharding is the audit's sharding instance
@@ -68,6 +74,11 @@ type audit struct {
 // Decorator return audit decorator for to record audit.
 func (au *audit) Decorator(kit *kit.Kit, bizID uint32, res enumor.AuditResourceType) AuditDecorator {
 	return initAuditBuilder(kit, bizID, res, au)
+}
+
+// DecoratorV2 return audit decorator for to record audit.
+func (au *audit) DecoratorV2(kit *kit.Kit, bizID uint32) AuditPrepare {
+	return initAuditBuilderV2(kit, bizID, au)
 }
 
 // One audit one resource's operation.
@@ -84,27 +95,18 @@ func (au *audit) One(kit *kit.Kit, audit *table.Audit, opt *AuditOption) error {
 
 	audit.ID = id
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.AuditTable.Name(), " (", table.AuditColumns.ColumnExpr(), ") VALUES (", table.AuditColumns.ColonNameExpr(), ")")
-	sql := filter.SqlJoint(sqlSentence)
+	var q gen.IAuditDo
 
-	if au.adSharding.ShardingUid() != opt.ResShardingUid {
-		// audit db is different with the resource's db, then do without transaction
-		if err := au.orm.Do(au.adSharding.DB()).Insert(kit.Ctx, sql, audit); err != nil {
-			logs.Errorf("audit %s resource: %s, id: %s failed, err: %v, rid: %s",
-				audit.Action, audit.ResourceType, audit.ResourceID, err, kit.Rid)
-			// skip return this error to ensue the resource's transaction can be executed successfully.
-			// this may miss the audit log, it's acceptable.
-		}
-
-		return nil
+	if opt.genQ != nil && au.db.Migrator().CurrentDatabase() == opt.genQ.CurrentDatabase() {
+		// 使用同一个库，事务处理
+		q = opt.genQ.Audit.WithContext(kit.Ctx)
+	} else {
+		// 使用独立的 DB
+		q = au.genQ.Audit.WithContext(kit.Ctx)
 	}
 
-	// do with the same transaction with the resource, this transaction
-	// is launched by resource's owner.
-	if err := au.orm.Txn(opt.Txn).Insert(kit.Ctx, sql, audit); err != nil {
+	if err := q.Create(audit); err != nil {
 		return fmt.Errorf("insert audit failed, err: %v", err)
 	}
-
 	return nil
 }

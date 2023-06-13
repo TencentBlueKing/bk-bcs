@@ -31,9 +31,12 @@ func Tracer(name string, opts ...trace.TracerOption) trace.Tracer {
 // If none is registered then an instance of NoopTracerProvider is returned.
 //
 // Use the trace provider to create a named tracer. E.g.
-//     tracer := utils.GetTracerProvider().Tracer("example.com/foo")
+//
+//	tracer := utils.GetTracerProvider().Tracer("example.com/foo")
+//
 // or
-//     tracer := utils.Tracer("example.com/foo")
+//
+//	tracer := utils.Tracer("example.com/foo")
 func GetTracerProvider() trace.TracerProvider {
 	return otel.GetTracerProvider()
 }
@@ -46,10 +49,10 @@ func SetTracerProvider(tp trace.TracerProvider) {
 // NewTracerProvider returns a new and configured TracerProvider.
 //
 // By default the returned TracerProvider is configured with:
-//  - a ParentBased(AlwaysSample) Sampler
-//  - a random number IDGenerator
-//  - the resource.Default() Resource
-//  - the default SpanLimits.
+//   - a ParentBased(AlwaysSample) Sampler
+//   - a random number IDGenerator
+//   - the resource.Default() Resource
+//   - the default SpanLimits.
 //
 // The passed opts are used to override these default values and configure the
 // returned TracerProvider appropriately.

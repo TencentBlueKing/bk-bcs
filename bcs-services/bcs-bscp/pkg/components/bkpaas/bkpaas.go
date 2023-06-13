@@ -13,12 +13,33 @@ limitations under the License.
 package bkpaas
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+
+	"bscp.io/pkg/cc"
 )
 
-type userInfo struct {
-	Username string `json:"username"`
+// LoginCredential uid/token for grpc auth
+type LoginCredential struct {
+	UID   string
+	Token string
+}
+
+// AuthLoginClient 登入鉴权
+type AuthLoginClient interface {
+	GetLoginCredentialFromCookies(r *http.Request) (*LoginCredential, error)
+	GetUserInfoByToken(ctx context.Context, host, uid, token string) (string, error)
+	BuildLoginRedirectURL(r *http.Request, webHost string) string
+	BuildLoginURL(r *http.Request) (string, string)
+}
+
+// NewAuthLoginClient init client
+func NewAuthLoginClient(conf *cc.LoginAuthSettings) AuthLoginClient {
+	if conf.Provider == "BK_LOGIN" {
+		return &bkLoginAuthClient{conf: conf}
+	}
+	return &bkPaaSAuthClient{conf: conf}
 }
 
 // BuildAbsoluteUri
@@ -31,14 +52,14 @@ func buildAbsoluteUri(webHost string, r *http.Request) string {
 	return fmt.Sprintf("%s%s", webHost, r.RequestURI)
 }
 
-// BuildLoginURL 返回前端的URL
-func BuildLoginURL(r *http.Request, Loginhost string) string {
+// buildLoginURL 返回前端的URL
+func buildLoginURL(r *http.Request, Loginhost string) string {
 	u := fmt.Sprintf("%s/login/?c_url=", Loginhost)
 	return u
 }
 
-// BuildLoginPlainURL 返回前端的URL
-func BuildLoginPlainURL(r *http.Request, Loginhost string) string {
+// buildLoginPlainURL 返回前端的URL
+func buildLoginPlainURL(r *http.Request, Loginhost string) string {
 	u := fmt.Sprintf("%s/login/plain/?c_url=", Loginhost)
 	return u
 }

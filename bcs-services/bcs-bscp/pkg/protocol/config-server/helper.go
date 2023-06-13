@@ -13,22 +13,13 @@ limitations under the License.
 package pbcs
 
 import (
-	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/criteria/validator"
 )
 
-// Validate delete strategy request param.
-func (r *DeleteStrategySetReq) Validate() error {
-	if r.Id == 0 {
-		return errf.New(errf.InvalidParameter, "invalid id, id should > 0")
+// Validate 新建服务校验
+func (r *CreateAppReq) Validate() error {
+	if err := validator.ValidateAppName(r.Name); err != nil {
+		return err
 	}
-
-	if r.BizId == 0 {
-		return errf.New(errf.InvalidParameter, "invalid biz_id, biz_id should > 0")
-	}
-
-	if r.AppId == 0 {
-		return errf.New(errf.InvalidParameter, "invalid app_id, app_id should > 0")
-	}
-
 	return nil
 }

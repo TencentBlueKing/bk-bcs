@@ -16,13 +16,14 @@ package k8sclient
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
+	bcsclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
 	clusternet "github.com/clusternet/clusternet/pkg/generated/clientset/versioned"
 	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	k8sVersion "k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
@@ -31,34 +32,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 )
 
-// GetEnvByClusterId 获取集群所属环境, 目前通过集群ID前缀判断
-func GetEnvByClusterId(clusterId string) config.BCSClusterEnv {
-	if strings.HasPrefix(clusterId, "BCS-K8S-1") {
-		return config.UatCluster
-	}
-	if strings.HasPrefix(clusterId, "BCS-K8S-2") {
-		return config.DebugCLuster
-	}
-	if strings.HasPrefix(clusterId, "BCS-K8S-4") {
-		return config.ProdEnv
-	}
-	return config.ProdEnv
-}
-
-// GetBCSConfByClusterId 通过集群ID, 获取不同admin token 信息
-func GetBCSConfByClusterId(clusterId string) *config.BCSConf {
-	env := GetEnvByClusterId(clusterId)
-	conf, ok := config.G.BCSEnvMap[env]
-	if ok {
-		return conf
-	}
+// GetBCSConf 返回BCS配置
+func GetBCSConf() *config.BCSConf {
 	// 默认返回bcs配置
 	return config.G.BCS
 }
 
 // GetK8SClientByClusterId 通过集群 ID 获取 k8s client 对象
 func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
-	bcsConf := GetBCSConfByClusterId(clusterId)
+	bcsConf := GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	config := &rest.Config{
 		Host:        host,
@@ -71,15 +53,45 @@ func GetK8SClientByClusterId(clusterId string) (*kubernetes.Clientset, error) {
 	return k8sClient, nil
 }
 
+// GetDynamicClientByClusterId 通过集群 ID 获取 k8s dynamic client 对象
+func GetDynamicClientByClusterId(clusterId string) (dynamic.Interface, error) {
+	bcsConf := GetBCSConf()
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: bcsConf.Token,
+	}
+	k8sClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return k8sClient, nil
+}
+
 // GetClusterNetClientByClusterId 通过集群 ID 获取 clusternet client 对象
 func GetClusterNetClientByClusterId(clusterId string) (*clusternet.Clientset, error) {
-	bcsConf := GetBCSConfByClusterId(clusterId)
+	bcsConf := GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	config := &rest.Config{
 		Host:        host,
 		BearerToken: bcsConf.Token,
 	}
 	k8sClient, err := clusternet.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return k8sClient, nil
+}
+
+// GetKubebkbcsClientByClusterID 通过集群 ID 获取 kube bcs 对象
+func GetKubebkbcsClientByClusterID(clusterID string) (*bcsclientset.Clientset, error) {
+	bcsConf := GetBCSConf()
+	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterID)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: bcsConf.Token,
+	}
+	k8sClient, err := bcsclientset.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}

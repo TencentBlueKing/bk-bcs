@@ -23,10 +23,12 @@ import (
 )
 
 var uninstallCMD = &cobra.Command{
-	Use:   "uninstall",
-	Short: "uninstall",
-	Long:  "uninstall chart release",
-	Run:   Uninstall,
+	Use:     "uninstall",
+	Aliases: []string{"un"},
+	Short:   "uninstall chart release",
+	Long:    "uninstall chart release",
+	Run:     Uninstall,
+	Example: "helmctl uninstall -p <project_code> -c <cluster_id> -n <namespace> <release_name>",
 }
 
 // Uninstall provide the actions to do uninstallCMD
@@ -36,7 +38,8 @@ func Uninstall(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	req := &helmmanager.UninstallReleaseReq{}
+	req := &helmmanager.UninstallReleaseV1Req{}
+	req.ProjectCode = &flagProject
 	req.ClusterID = &flagCluster
 	req.Namespace = &flagNamespace
 	req.Name = common.GetStringP(args[0])
@@ -47,13 +50,17 @@ func Uninstall(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("success to uninstall release %s namespace %s cluster %s\n",
-		req.GetName(), req.GetNamespace(), req.GetClusterID())
+	fmt.Printf("success to uninstall release %s\n", req.GetName())
 }
 
 func init() {
 	uninstallCMD.PersistentFlags().StringVarP(
-		&flagNamespace, "namespace", "n", "", "release namespace for operation")
+		&flagProject, "project", "p", "", "project code")
 	uninstallCMD.PersistentFlags().StringVarP(
-		&flagCluster, "cluster", "", "", "release cluster id for operation")
+		&flagCluster, "cluster", "c", "", "release cluster id")
+	uninstallCMD.PersistentFlags().StringVarP(
+		&flagNamespace, "namespace", "n", "", "release namespace")
+	uninstallCMD.MarkPersistentFlagRequired("project")
+	uninstallCMD.MarkPersistentFlagRequired("cluster")
+	uninstallCMD.MarkPersistentFlagRequired("namespace")
 }

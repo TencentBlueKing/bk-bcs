@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"sync"
 
-	gprm "github.com/grpc-ecosystem/go-grpc-prometheus"
-	etcd3 "go.etcd.io/etcd/client/v3"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -96,11 +96,6 @@ func (as *authService) prepare(opt *options.Option) error {
 		return fmt.Errorf("get etcd config failed, err: %v", err)
 	}
 
-	etcdCli, err := etcd3.New(etcdOpt)
-	if err != nil {
-		return fmt.Errorf("new etcd client failed, err: %v", err)
-	}
-
 	// register auth server.
 	svcOpt := serviced.ServiceOption{
 		Name: cc.AuthServerName,
@@ -108,7 +103,7 @@ func (as *authService) prepare(opt *options.Option) error {
 		Port: cc.AuthServer().Network.RpcPort,
 		Uid:  uuid.UUID(),
 	}
-	sd, err := serviced.NewServiceD(etcdCli, svcOpt)
+	sd, err := serviced.NewServiceD(etcdOpt, svcOpt)
 	if err != nil {
 		return fmt.Errorf("new service discovery faield, err: %v", err)
 	}
@@ -138,12 +133,23 @@ func (as *authService) prepare(opt *options.Option) error {
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
 func (as *authService) listenAndServe() error {
 	// generate standard grpc server grpcMetrics.
-	grpcMetrics := gprm.NewServerMetrics()
+	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
+
+	recoveryOpt := grpc_recovery.WithRecoveryHandlerContext(brpc.RecoveryHandlerFuncContext)
 
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(math.MaxInt32),
 		// add bscp unary interceptor and standard grpc server metrics interceptor.
-		grpc.ChainUnaryInterceptor(brpc.LogUnaryServerInterceptor(), brpc.UnaryServerInterceptorWithMetrics(grpcMetrics)),
-		grpc.StreamInterceptor(grpcMetrics.StreamServerInterceptor())}
+		grpc.ChainUnaryInterceptor(
+			brpc.LogUnaryServerInterceptor(),
+			grpcMetrics.UnaryServerInterceptor(),
+			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
+		),
+		grpc.ChainStreamInterceptor(
+			grpcMetrics.StreamServerInterceptor(),
+			grpc_recovery.StreamServerInterceptor(recoveryOpt),
+		),
+	}
 	network := cc.AuthServer().Network
 	if network.TLS.Enable() {
 		tls := network.TLS

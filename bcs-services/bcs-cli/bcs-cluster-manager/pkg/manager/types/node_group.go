@@ -146,12 +146,12 @@ type RemoveNodesFromGroupResp struct {
 	TaskID string `json:"taskID"`
 }
 
-// CleanNodeGroupResp 从节点池移除节点并清理资源reponse
+// CleanNodeGroupResp 从节点池移除节点并清理资源response
 type CleanNodeGroupResp struct {
 	TaskID string `json:"taskID"`
 }
 
-// CleanNodeGroupV2Resp 从节点池移除节点并清理资源reponse
+// CleanNodeGroupV2Resp 从节点池移除节点并清理资源response
 type CleanNodeGroupV2Resp struct {
 	TaskID string `json:"taskID"`
 }

@@ -34,7 +34,7 @@ type RepositoryPlugin struct {
 }
 
 // Init all project sub path handler
-// project plugin is a subRouter, all path registed is relative
+// project plugin is a subRouter, all path registered is relative
 func (plugin *RepositoryPlugin) Init() error {
 	plugin.UseEncodedPath()
 	// GET /api/v1/repositories?projects={projects}
@@ -63,7 +63,7 @@ func (plugin *RepositoryPlugin) Init() error {
 func (plugin *RepositoryPlugin) listRepositoryHandler(ctx context.Context, r *http.Request) *httpResponse {
 	projectName := r.URL.Query().Get("projects")
 	repositoryList, statusCode, err := plugin.middleware.
-		ListRepositories(ctx, []string{projectName}, false)
+		ListRepositories(ctx, []string{projectName}, true)
 	if statusCode != http.StatusOK {
 		return &httpResponse{
 			statusCode: statusCode,
@@ -94,7 +94,7 @@ func (plugin *RepositoryPlugin) repositoryCreateHandler(ctx context.Context, r *
 		}
 	}
 	localRepo := &repository{}
-	if err := json.Unmarshal(body, localRepo); err != nil {
+	if err = json.Unmarshal(body, localRepo); err != nil {
 		return &httpResponse{
 			err:        errors.Wrapf(err, "unmarshal body failed"),
 			statusCode: http.StatusBadRequest,

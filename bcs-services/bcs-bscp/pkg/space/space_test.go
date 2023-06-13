@@ -32,7 +32,7 @@ func TestBuildSpaceMap(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		r, err := BuildSpaceMap(tc.input)
+		r, err := buildSpaceMap(tc.input)
 		if tc.wantErr {
 			assert.True(t, err != nil)
 		} else {

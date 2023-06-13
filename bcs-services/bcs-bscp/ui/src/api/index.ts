@@ -1,5 +1,5 @@
 import http from "../request"
-import { ISpaceItem } from '../../types/index'
+import { ISpaceDetail } from '../../types/index'
 import { IAppListQuery } from '../../types/app'
 import { IPermissionQuery } from '../../types/index'
 
@@ -10,46 +10,54 @@ import { IPermissionQuery } from '../../types/index'
  * @returns 
  */
 
-export const getBizList = () => {
+export const getSpaceList = () => {
   return http.get('auth/user/spaces').then(resp => {
-    resp.data.items.forEach((item: ISpaceItem) => {
+    const permissioned: ISpaceDetail[] = []
+    const noPermissions: ISpaceDetail[] = []
+    resp.data.items.forEach((item: ISpaceDetail) => {
       const { space_id } = item
       // @ts-ignore
       item.permission = resp.web_annotations.perms[space_id].find_business_resource
+      if (item.permission) {
+        permissioned.push(item)
+      } else {
+        noPermissions.push(item)
+      }
     })
+    resp.data.items = [...permissioned, ...noPermissions]
     return resp.data
   });
 }
 
 /**
- * 获取所有业务下的应用列表
+ * 获取所有业务下的服务列表
  * @returns 
  */
-export const getAllApp = () => {
-  return http.get('config/apps').then(resp => resp.data);
+export const getAllApp = (bizId: string) => {
+  return http.get(`config/biz/${bizId}/apps`).then(resp => resp.data);
 }
 
 /**
- * 获取应用列表
+ * 获取服务列表
  * @param biz_id 业务ID
  * @param params 查询过滤条件
  * @returns 
  */
-export const getAppList = (biz_id: number, params: IAppListQuery = {}) => {
+export const getAppList = (biz_id: string, params: IAppListQuery = {}) => {
   return http.get(`config/list/app/app/biz_id/${biz_id}`, { params }).then(resp => resp.data);
 }
 
 /**
- * 获取应用下配置文件数量、更新时间等信息
+ * 获取服务下配置文件数量、更新时间等信息
  */
-export const getAppsConfigData = (biz_id: number, app_id: number[]) => {
+export const getAppsConfigData = (biz_id: string, app_id: number[]) => {
   return http.post(`/config/config_item_count/biz_id/${biz_id}`, { biz_id, app_id }).then(resp => resp.data);
 }
 
 /**
- * 
+ * 获取服务详情
  * @param biz_id 业务ID
- * @param app_id 应用ID
+ * @param app_id 服务ID
  * @returns 
  */
 export const getAppDetail = (biz_id: string, app_id: number) => {
@@ -57,8 +65,8 @@ export const getAppDetail = (biz_id: string, app_id: number) => {
 }
 
 /**
- * 删除应用
- * @param id 应用ID
+ * 删除服务
+ * @param id 服务ID
  * @param biz_id 业务ID
  * @returns 
  */
@@ -67,17 +75,17 @@ export const deleteApp = (id: number, biz_id: number) => {
 }
 
 /**
- * 创建应用
+ * 创建服务
  * @param biz_id 业务ID
  * @param params 
  * @returns 
  */
-export const createApp = (biz_id: number, params: any) => {
+export const createApp = (biz_id: string, params: any) => {
   return http.post(`config/create/app/app/biz_id/${biz_id}`, { biz_id, ...params }).then(resp => resp.data);
 }
 
 /**
- * 更新应用
+ * 更新服务
  * @param params { id, biz_id, name?, memo?, reload_type?, reload_file_path? }
  * @returns 
  */

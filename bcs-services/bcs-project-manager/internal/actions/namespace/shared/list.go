@@ -39,7 +39,7 @@ import (
 // ListNamespaces implement for ListNamespaces interface
 func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error {
-	retDatas := []*proto.NamespaceData{}
+	var retDatas []*proto.NamespaceData
 	// list staging creating namespaces from db
 	stagings, err := a.model.ListNamespacesByItsmTicketType(ctx, req.GetProjectCode(), req.GetClusterID(),
 		[]string{nsm.ItsmTicketTypeCreate, nsm.ItsmTicketTypeUpdate, nsm.ItsmTicketTypeDelete})
@@ -47,6 +47,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("list staging namespaces failed, err: %s", err.Error())
 		return errorx.NewDBErr(err.Error())
 	}
+	// filter staging namespaces by its type, create as creating, update and delete as existing in cluster
 	existns := map[string]nsm.Namespace{}
 	creatings := []nsm.Namespace{}
 	for _, staging := range stagings {
@@ -59,6 +60,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 			existns[staging.Name] = staging
 		}
 	}
+	// list creating namespaces from db and insert into retDatas first
 	for _, namespace := range creatings {
 		retDatas = append(retDatas, loadListRetDataFromDB(namespace))
 	}
@@ -73,14 +75,16 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("list namespaces in cluster %s failed, err: %s", req.GetClusterID(), err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
+	// list all quota in cluster
 	quotaMap := map[string]corev1.ResourceQuota{}
-	if quotaList, err := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); err == nil {
+	if quotaList, e := client.CoreV1().ResourceQuotas("").List(ctx, metav1.ListOptions{}); e == nil {
 		for _, quota := range quotaList.Items {
 			if quota.GetName() == quota.GetNamespace() {
 				quotaMap[quota.GetName()] = quota
 			}
 		}
 	}
+	// filter namespaces by project code
 	namespaces := nsutils.FilterNamespaces(nsList, true, req.GetProjectCode())
 	variablesMap, err := batchListNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespaces)
 	if err != nil {
@@ -91,6 +95,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	resp.Data = retDatas
 
 	go func() {
+		// sync namespaces to bcs-cc
 		if err := common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), namespaces); err != nil {
 			logging.Error("sync shared namespaces %s/%s failed, err:%s",
 				req.GetProjectCode(), req.GetClusterID(), err.Error())

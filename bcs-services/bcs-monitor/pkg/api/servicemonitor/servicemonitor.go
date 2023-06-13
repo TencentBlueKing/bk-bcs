@@ -11,14 +11,13 @@
  *
  */
 
-package service_monitor
+package servicemonitor
 
 import (
 	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
 
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1client "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
@@ -30,9 +29,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
+// GetMonitoringV1Client get monitoring client
 func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface, error) {
 	clusterId := c.Param("clusterId")
-	bcsConf := k8sclient.GetBCSConfByClusterId(clusterId)
+	bcsConf := k8sclient.GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	k8sconfig := &k8srest.Config{
 		Host:        host,
@@ -54,6 +54,10 @@ func ListServiceMonitors(c *rest.Context) (interface{}, error) {
 
 	limit := c.Query("limit")
 	offset := c.Query("offset")
+	namespace := c.Query("namespace")
+	if namespace == "" {
+		namespace = c.Param("namespace")
+	}
 	client, err := GetMonitoringV1Client(c)
 	if err != nil {
 		return nil, err
@@ -69,9 +73,13 @@ func ListServiceMonitors(c *rest.Context) (interface{}, error) {
 		Limit:    int64(limitInt),
 		Continue: offset,
 	}
-	serviceMonitors, err := client.ServiceMonitors("").List(c.Context, listOps)
+	data, err := client.ServiceMonitors(namespace).List(c.Context, listOps)
 	if err != nil {
 		return nil, err
+	}
+	serviceMonitors := make([]*v1.ServiceMonitor, 0)
+	for _, v := range data.Items {
+		serviceMonitors = append(serviceMonitors, v)
 	}
 	return serviceMonitors, nil
 }
@@ -86,7 +94,6 @@ func CreateServiceMonitor(c *rest.Context) (interface{}, error) {
 	if err := c.ShouldBindJSON(serviceMonitorReq); err != nil {
 		return nil, err
 	}
-	serviceMonitorReq.Name = serviceMonitorReq.ServiceName
 	serviceMonitorReq.Namespace = c.Param("namespace")
 
 	flag := serviceMonitorReq.Validate()
@@ -98,6 +105,10 @@ func CreateServiceMonitor(c *rest.Context) (interface{}, error) {
 	client, err := GetMonitoringV1Client(c)
 	if err != nil {
 		return nil, err
+	}
+	params := make(map[string][]string, 0)
+	for k, v := range serviceMonitorReq.Params {
+		params[k] = []string{v}
 	}
 
 	serviceMonitor := &v1.ServiceMonitor{}
@@ -116,7 +127,8 @@ func CreateServiceMonitor(c *rest.Context) (interface{}, error) {
 	initEndpoint := v1.Endpoint{
 		Port:     serviceMonitorReq.Port,
 		Path:     serviceMonitorReq.Path,
-		Interval: strconv.FormatInt(int64(serviceMonitorReq.Interval), 10),
+		Interval: serviceMonitorReq.Interval,
+		Params:   params,
 	}
 
 	endpoints = append(endpoints, initEndpoint)
@@ -128,12 +140,12 @@ func CreateServiceMonitor(c *rest.Context) (interface{}, error) {
 		},
 	}
 
-	created, err := client.ServiceMonitors(serviceMonitorReq.Namespace).Create(c.Context, nil, metav1.CreateOptions{})
+	_, err = client.ServiceMonitors(serviceMonitorReq.Namespace).Create(c.Context, serviceMonitor, metav1.CreateOptions{})
 
 	if err != nil {
 		return nil, err
 	}
-	return created, nil
+	return nil, nil
 }
 
 // DeleteServiceMonitor 删除ServiceMonitor
@@ -165,7 +177,7 @@ func DeleteServiceMonitor(c *rest.Context) (interface{}, error) {
 // @Success 200 {string} string
 // @Router  /service_monitors/batchdelete [delete]
 func BatchDeleteServiceMonitor(c *rest.Context) (interface{}, error) {
-	serviceMonitorDelReq := BatchDeleteServiceMonitorReq{}
+	serviceMonitorDelReq := &BatchDeleteServiceMonitorReq{}
 	if err := c.ShouldBindJSON(serviceMonitorDelReq); err != nil {
 		return nil, err
 	}
@@ -173,8 +185,8 @@ func BatchDeleteServiceMonitor(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	for i := range serviceMonitorDelReq.ServiceMonitors {
-		err = client.ServiceMonitors(serviceMonitorDelReq.ServiceMonitors[i].Namespace).Delete(c, serviceMonitorDelReq.ServiceMonitors[i].Name, metav1.DeleteOptions{})
+	for _, v := range serviceMonitorDelReq.ServiceMonitors {
+		err = client.ServiceMonitors(v.Namespace).Delete(c, v.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return nil, err
 		}
@@ -230,23 +242,29 @@ func UpdateServiceMonitor(c *rest.Context) (interface{}, error) {
 		return nil, err
 	}
 
-	serviceMonitor := &v1.ServiceMonitor{}
-	labels := map[string]string{
-		"release":                     "po",
-		"io.tencent.paas.source_type": "bcs",
-		"io.tencent.bcs.service_name": serviceMonitorReq.ServiceName,
+	exist, err := client.ServiceMonitors(serviceMonitorReq.Namespace).
+		Get(c.Context, serviceMonitorReq.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
 	}
 
-	serviceMonitor.ObjectMeta = metav1.ObjectMeta{
-		Labels:    labels,
-		Name:      serviceMonitorReq.Name,
-		Namespace: serviceMonitorReq.Namespace,
+	serviceMonitor := exist.DeepCopy()
+	labels := exist.Labels
+	labels["release"] = "po"
+	labels["io.tencent.paas.source_type"] = "bcs"
+	labels["io.tencent.bcs.service_name"] = serviceMonitorReq.ServiceName
+
+	params := make(map[string][]string, 0)
+	for k, v := range serviceMonitorReq.Params {
+		params[k] = []string{v}
 	}
+	serviceMonitor.Labels = labels
 	endpoints := make([]v1.Endpoint, 0)
 	initEndpoint := v1.Endpoint{
 		Port:     serviceMonitorReq.Port,
 		Path:     serviceMonitorReq.Path,
-		Interval: strconv.FormatInt(int64(serviceMonitorReq.Interval), 10),
+		Interval: serviceMonitorReq.Interval,
+		Params:   params,
 	}
 
 	endpoints = append(endpoints, initEndpoint)
@@ -258,11 +276,11 @@ func UpdateServiceMonitor(c *rest.Context) (interface{}, error) {
 		},
 	}
 	serviceMonitorClient := client.ServiceMonitors(serviceMonitorReq.Namespace)
-	updated, err := serviceMonitorClient.Update(c.Context, serviceMonitor, metav1.UpdateOptions{})
+	_, err = serviceMonitorClient.Update(c.Context, serviceMonitor, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
-	return updated, nil
+	return nil, nil
 }
 
 // validateName 校验name参数是否符合k8s资源名称格式并且长度不大于63位字符
@@ -270,35 +288,11 @@ func validateName(name string) bool {
 	if len(name) > 63 {
 		return false
 	}
-	//第一个正则表达式 ^[a-z][-a-z0-9]*$ 匹配以小写字母开头，后跟任意数量的小写字母、数字和短横线的字符串。这个正则表达式不允许字符串末尾有短横线，因为 [-a-z0-9]* 匹配任意数量的小写字母、数字和短横线，但它不需要匹配任何字符。
-	//
-	//第二个正则表达式 ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ 匹配以小写字母或数字开头，后跟任意数量的小写字母、数字和短横线的字符串。它允许字符串末尾有短横线，因为 ([-a-z0-9]*[a-z0-9])? 匹配任意数量的小写字母、数字和短横线，后跟一个小写字母或数字，这个组合出现零次或一次，因此字符串末尾可以是短横线或小写字母或数字。
-	//              ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
-	//因此，虽然这两个正则表达式都匹配以小写字母或数字开头，后跟任意数量的小写字母、数字和短横线的字符串，但是第二个正则表达式允许字符串末尾有短横线，因此与第一个正则表达式不完全相同。
 	if match, _ := regexp.MatchString("^[a-z][-a-z0-9]*$", name); !match {
 		return false
 	}
 
 	return true
-}
-
-// validateInterval 校验参数是否合法，num必须是在常量切片定义的值
-func validateInterval(num int) bool {
-	for _, val := range intervalSlice {
-		if val == num {
-			//fmt.Printf("%d is in the slice\n", num)
-			return true
-		}
-	}
-	return false
-}
-
-// validatePath 校验参数是否合法，必须是绝对路径
-func validatePath(path string) bool {
-	if strings.HasPrefix(path, "/") {
-		return true
-	}
-	return false
 }
 
 // validatePath 校验参数是否合法，不可为空
@@ -311,7 +305,7 @@ func validateSelector(selector map[string]string) bool {
 
 // validateSampleLimit 校验参数是否合法
 func validateSampleLimit(samplelimit int) bool {
-	if SM_SAMPLE_LIMIT_MAX >= samplelimit && samplelimit >= SM_SAMPLE_LIMIT_MIN {
+	if SampleLimitMax >= samplelimit && samplelimit >= SampleLimitMin {
 		return true
 	}
 	return false

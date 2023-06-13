@@ -37,13 +37,13 @@ const (
 	defaultRequestMemory = "64Mi"
 )
 
-// ResSpec
+// ResSpec 资源类型
 type ResSpec struct {
 	CPU    string `yaml:"cpu"`
 	Memory string `yaml:"memory"`
 }
 
-// Resource 资源限制
+// ResourceConf 资源配置
 type ResourceConf struct {
 	Limits   *ResSpec `yaml:"limits"`
 	Requests *ResSpec `yaml:"requests"`

@@ -1,70 +1,62 @@
 <template>
   <!-- 集群详情 -->
-  <div>
-    <ContentHeader :title="curCluster.name" :desc="`(${curCluster.clusterID})`" />
-    <div class="biz-content-wrapper">
-      <div class="cluster-detail">
-        <div class="cluster-detail-tab">
-          <div
-            v-for="item in tabItems"
-            :key="item.id"
-            :class="['item', { active: activeId === item.id }]"
-            @click="handleChangeActive(item.id)"
-          >
-            <span class="icon"><i :class="item.icon"></i></span>
-            {{item.title}}
-          </div>
-          <!-- 扩缩容 -->
-          <div
-            :class="['item px-[20px]', { active: activeId === 'AutoScaler' }]"
-            v-if="cloudDetail.confInfo && !cloudDetail.confInfo.disableNodeGroup"
-            v-authority="{
-              clickable: webAnnotations.perms[clusterId]
-                && webAnnotations.perms[clusterId].cluster_manage,
-              actionId: 'cluster_manage',
-              resourceName: clusterName,
-              disablePerms: true,
-              permCtx: {
-                project_id: projectID,
-                cluster_id: clusterId
-              }
-            }"
-            @click="handleChangeActive('AutoScaler')"
-          >
-            <span class="icon"><i class="bcs-icon bcs-icon-kuosuorong"></i></span>
-            {{ $t('弹性扩缩容') }}
-            <bk-tag theme="danger">NEW</bk-tag>
-          </div>
-        </div>
-        <div class="cluster-detail-content">
-          <component
-            :is="activeCom"
-            :node-menu="false"
-            :cluster-id="clusterId"
-            :hide-cluster-select="true"
-          ></component>
-        </div>
-      </div>
-    </div>
-  </div>
+  <BcsContent
+    :title="curCluster ? curCluster.clusterName : ''"
+    :desc="curCluster ? `(${curCluster.clusterID})` : ''"
+    v-bkloading="{ isLoading, opacity: 1 }">
+    <bcs-tab :label-height="42" :active.sync="activeTabName" :validate-active="false" @tab-change="handleTabChange">
+      <bcs-tab-panel name="overview" :label="$t('集群总览')" render-directive="if">
+        <Overview :cluster-id="clusterId" />
+      </bcs-tab-panel>
+      <bcs-tab-panel name="info" :label="$t('基本信息')" render-directive="if">
+        <Info :cluster-id="clusterId" />
+      </bcs-tab-panel>
+      <bcs-tab-panel name="network" :label="$t('网络配置')" render-directive="if">
+        <Network :cluster-id="clusterId" />
+      </bcs-tab-panel>
+      <bcs-tab-panel name="master" :label="$t('Master配置')" render-directive="if">
+        <Master :cluster-id="clusterId" />
+      </bcs-tab-panel>
+      <bcs-tab-panel name="node" :label="$t('节点列表')" render-directive="if">
+        <Node class="pb-[20px]" :cluster-id="clusterId" hide-cluster-select from-cluster />
+      </bcs-tab-panel>
+      <bcs-tab-panel
+        name="autoscaler"
+        :label="$t('弹性扩缩容')"
+        render-directive="if"
+        v-if="showAutoScaler">
+        <template #label>
+          {{ $t('弹性扩缩容') }}
+          <bk-tag theme="danger">NEW</bk-tag>
+        </template>
+        <InternalAutoScaler :cluster-id="clusterId" v-if="$INTERNAL" />
+        <AutoScaler :cluster-id="clusterId" v-else />
+      </bcs-tab-panel>
+    </bcs-tab>
+  </BcsContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref, toRefs } from '@vue/composition-api';
-import ContentHeader from '@/components/layout/Header.vue';
-import node from '../node-list/node.vue';
-import overview from '@/views/cluster-manage/cluster/overview/overview.vue';
-import info from '@/views/cluster-manage/cluster/info/info.vue';
-import $i18n from '@/i18n/i18n-setup';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+import BcsContent from '@/components/layout/Content.vue';
+import Node from '../node-list/node.vue';
+import Overview from '@/views/cluster-manage/cluster/overview/overview.vue';
+import Info from '@/views/cluster-manage/cluster/info/basic-info.vue';
+import Network from '@/views/cluster-manage/cluster/info/network.vue';
+import Master from '@/views/cluster-manage/cluster/info/master.vue';
 import AutoScaler from './autoscaler/tencent/autoscaler.vue';
 import InternalAutoScaler from './autoscaler/internal/autoscaler.vue';
-import { useCluster, useProject } from '@/composables/use-app';
+import $store from '@/store';
+import $router from '@/router';
+import { useCluster } from '@/composables/use-app';
 
 export default defineComponent({
   components: {
-    info,
-    node,
-    overview,
-    ContentHeader,
+    BcsContent,
+    Info,
+    Network,
+    Master,
+    Node,
+    Overview,
     AutoScaler,
     InternalAutoScaler,
   },
@@ -79,118 +71,53 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props, ctx) {
-    const { $store, $router, $INTERNAL } = ctx.root;
+  setup(props) {
     const { active, clusterId } = toRefs(props);
+    const activeTabName = ref(active.value);
+    const isLoading = ref(false);
 
     const { clusterList } = useCluster();
-    const { projectID } = useProject();
-    const clusterName = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value)?.clusterName);
-    const webAnnotations = computed(() => $store.state.cluster.clusterWebAnnotations);
-    const activeId = ref(active.value);
-    const activeCom = computed(() => {
-      if (activeId.value === 'AutoScaler') {
-        return $INTERNAL ? InternalAutoScaler : AutoScaler;
-      }
-      return tabItems.value.find(item => item.id === activeId.value)?.com;
-    });
-    const curCluster = computed(() => $store.state.cluster.clusterList
-      ?.find(item => item.clusterID === clusterId.value) || {});
-    const tabItems = ref([
-      {
-        icon: 'bcs-icon bcs-icon-bar-chart',
-        title: $i18n.t('总览'),
-        com: 'overview',
-        id: 'overview',
-      },
-      {
-        icon: 'bcs-icon bcs-icon-list',
-        title: $i18n.t('节点管理'),
-        com: 'node',
-        id: 'node',
-      },
-      {
-        icon: 'bcs-icon bcs-icon-machine',
-        title: $i18n.t('集群信息'),
-        com: 'info',
-        id: 'info',
-      },
-    ]);
-    const handleChangeActive = (activeID) => {
-      if (activeId.value === activeID) return;
-      activeId.value = activeID;
+    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value));
+    // 云区域详情
+    const cloudDetail = ref<Record<string, any>|null>(null);
+    const handleGetCloudDetail = async () => {
+      cloudDetail.value = await $store.dispatch('clustermanager/cloudDetail', {
+        $cloudId: curCluster.value?.provider,
+      });
+    };
+    const showAutoScaler = computed(() => cloudDetail.value && !cloudDetail.value?.confInfo?.disableNodeGroup);
+    // tab change事件
+    const handleTabChange = (name) => {
       $router.replace({
         name: 'clusterDetail',
         query: {
-          active: activeID,
+          active: name,
         },
       });
     };
-    const cloudDetail = ref<any>({});
-    const isLoading = ref(false);
-    const handleGetCloudDetail = async () => {
+
+    onMounted(async () => {
       isLoading.value = true;
-      cloudDetail.value = await $store.dispatch('clustermanager/cloudDetail', {
-        $cloudId: curCluster.value.provider,
-      });
+      await handleGetCloudDetail();
       isLoading.value = false;
-    };
-    handleGetCloudDetail();
+    });
+
     return {
-      projectID,
-      clusterName,
-      webAnnotations,
-      cloudDetail,
+      activeTabName,
+      showAutoScaler,
       isLoading,
       curCluster,
-      tabItems,
-      activeId,
-      activeCom,
-      handleChangeActive,
+      handleTabChange,
     };
   },
 });
 </script>
 <style lang="postcss" scoped>
-.cluster-detail {
-    border: 1px solid #dfe0e5;
-    &-tab {
-        display: flex;
-        height: 60px;
-        line-height: 60px;
-        border-bottom: 1px solid #dfe0e5;
-        font-size: 14px;
-        .item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 140px;
-            cursor: pointer;
-            &.active {
-                color: #3a84ff;
-                background-color: #fff;
-                border-right: 1px solid #dfe0e5;
-                border-left: 1px solid #dfe0e5;
-                font-weight: 700;
-                i {
-                    font-weight: 700;
-                }
-            }
-            &:first-child {
-                border-left: none;
-            }
-            .icon {
-                font-size: 16px;
-                margin-right: 8px;
-                width: 16px;
-                height: 16px;
-                display: flex;
-                align-items: center;
-            }
-        }
-    }
-    &-content {
-        background-color: #fff;
-    }
+>>> .bk-tab-section {
+  padding: 0;
+}
+>>> .bk-tab-content {
+  max-height: calc(100vh - 188px);
+  overflow: auto;
 }
 </style>

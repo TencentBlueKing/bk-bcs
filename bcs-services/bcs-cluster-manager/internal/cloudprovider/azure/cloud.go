@@ -16,12 +16,12 @@ package azure
 import (
 	"context"
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"sync"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/containerservice/mgmt/containerservice"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 )
@@ -35,18 +35,18 @@ func init() {
 	})
 }
 
-// CloudInfoManager management cluster info
+// CloudInfoManager Azure management cluster info
 type CloudInfoManager struct {
 }
 
 // InitCloudClusterDefaultInfo init cluster defaultConfig
-func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
+func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *proto.Cluster,
 	opt *cloudprovider.InitClusterConfigOption) error {
 	return nil
 }
 
 // SyncClusterCloudInfo get cluster cloudInfo by clusterID or kubeConfig
-func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
+func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 	opt *cloudprovider.SyncClusterCloudInfoOption) error {
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s SyncClusterCloudInfo request is empty", cloudName)
@@ -75,37 +75,42 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	return nil
 }
 
-func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*containerservice.ManagedCluster, error) {
-	cli, err := api.NewContainerServiceClient(opt.Common)
+func getCloudCluster(opt *cloudprovider.SyncClusterCloudInfoOption) (*armcontainerservice.ManagedCluster, error) {
+	client, err := api.NewAksServiceImplWithCommonOption(opt.Common)
 	if err != nil {
 		return nil, fmt.Errorf("%s getCloudCluster NewContainerServiceClient failed: %v", cloudName, err)
 	}
-	mc, err := cli.GetCluster(context.Background(), opt.ImportMode.CloudID)
+	mc, err := client.GetClusterWithName(context.Background(), opt.Common.Account.ResourceGroupName,
+		opt.ImportMode.CloudID)
 	if err != nil {
 		return nil, fmt.Errorf("%s getCloudCluster GetCluster failed: %v", cloudName, err)
 	}
-	return &mc, nil
+	return mc, nil
 }
 
-func clusterBasicSettingByQCloud(cls *cmproto.Cluster, cluster *containerservice.ManagedCluster) {
+func clusterBasicSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) {
 	clusterOs := ""
-	if cluster.AgentPoolProfiles != nil && len(*cluster.AgentPoolProfiles) > 0 {
-		p := *cluster.AgentPoolProfiles
-		clusterOs = string(*&p[0].OsSKU)
+	if len(cluster.Properties.AgentPoolProfiles) > 0 {
+		p := cluster.Properties.AgentPoolProfiles
+		clusterOs = string(*p[0].OSSKU)
 	}
-	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
+	cls.ClusterBasicSettings = &proto.ClusterBasicSetting{
 		OS:          clusterOs,
-		Version:     *cluster.KubernetesVersion,
-		VersionName: *cluster.KubernetesVersion,
+		Version:     *cluster.Properties.CurrentKubernetesVersion,
+		VersionName: *cluster.Properties.CurrentKubernetesVersion,
 	}
 }
 
-func clusterNetworkSettingByQCloud(cls *cmproto.Cluster, cluster *containerservice.ManagedCluster) error {
-	cls.NetworkSettings = &cmproto.NetworkSetting{
-		ClusterIPv4CIDR:  *cluster.NetworkProfile.PodCidr,
-		ServiceIPv4CIDR:  *cluster.NetworkProfile.ServiceCidr,
-		MultiClusterCIDR: *cluster.NetworkProfile.PodCidrs,
+func clusterNetworkSettingByQCloud(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) error {
+	cidrs := cluster.Properties.NetworkProfile.PodCidrs
+	podCidrs := make([]string, len(cidrs))
+	for i := range cidrs {
+		podCidrs[i] = *cidrs[i]
 	}
-
+	cls.NetworkSettings = &proto.NetworkSetting{
+		ClusterIPv4CIDR:  *cluster.Properties.NetworkProfile.PodCidr,
+		ServiceIPv4CIDR:  *cluster.Properties.NetworkProfile.ServiceCidr,
+		MultiClusterCIDR: podCidrs,
+	}
 	return nil
 }

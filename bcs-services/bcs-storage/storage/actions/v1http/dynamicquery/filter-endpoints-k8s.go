@@ -26,6 +26,7 @@ type EndpointsK8sFilter struct {
 
 const endpointsK8sNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t EndpointsK8sFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, endpointsK8sNestedTimeLayout)
 }

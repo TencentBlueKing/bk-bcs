@@ -254,11 +254,11 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 	// TODO: optimize this when a mount of instances have the same labels with same release id.
 	inst := one.InstSpec
 	meta := &btyp.AppInstanceMeta{
-		BizID:     inst.BizID,
-		AppID:     inst.AppID,
-		Namespace: inst.Namespace,
-		Uid:       inst.Uid,
-		Labels:    inst.Labels,
+		BizID:  inst.BizID,
+		AppID:  inst.AppID,
+		App:    inst.App,
+		Uid:    inst.Uid,
+		Labels: inst.Labels,
 	}
 	releaseID, err := sch.handler.GetMatchedRelease(kt, meta)
 	if err != nil {
@@ -287,7 +287,7 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 	}
 }
 
-func (sch *Scheduler) buildEvent(inst *InstanceSpec, ciList []*types.ReleaseCICache, releaseID uint32,
+func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.ReleaseCICache, releaseID uint32,
 	cursorID uint32) *Event {
 
 	uriD := sch.uriDecorator.Init(inst.BizID)
@@ -295,7 +295,8 @@ func (sch *Scheduler) buildEvent(inst *InstanceSpec, ciList []*types.ReleaseCICa
 	for idx, one := range ciList {
 		cis := one.ConfigItemSpec
 		ciMeta[idx] = &sfs.ConfigItemMetaV1{
-			ID: one.ID,
+			ID:       one.ID,
+			CommitID: one.CommitID,
 			ContentSpec: &pbct.ContentSpec{
 				Signature: one.CommitSpec.Signature,
 				ByteSize:  one.CommitSpec.ByteSize,
@@ -313,14 +314,17 @@ func (sch *Scheduler) buildEvent(inst *InstanceSpec, ciList []*types.ReleaseCICa
 					Privilege: cis.Permission.Privilege,
 				},
 			},
-			RepositoryPath: &sfs.RepositorySpecV1{
-				Path: uriD.Path(one.CommitSpec.Signature),
+			ConfigItemAttachment: &pbci.ConfigItemAttachment{
+				BizId: one.Attachment.BizID,
+				AppId: one.Attachment.AppID,
 			},
+			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
 		}
 	}
 
 	return &Event{
 		Change: &sfs.ReleaseEventMetaV1{
+			App:       inst.App,
 			AppID:     inst.AppID,
 			ReleaseID: releaseID,
 			CIMetas:   ciMeta,
@@ -332,6 +336,7 @@ func (sch *Scheduler) buildEvent(inst *InstanceSpec, ciList []*types.ReleaseCICa
 				RepositoryType:  uriD.GetRepositoryType(),
 			},
 		},
+		Instance: inst,
 		CursorID: cursorID,
 	}
 }

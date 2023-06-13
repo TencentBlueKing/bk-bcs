@@ -29,7 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 const (

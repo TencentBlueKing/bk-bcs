@@ -30,6 +30,7 @@ import (
 // +kubebuilder:printcolumn:JSONPath=.status.currentReplicas,name=Current,type=integer
 // +kubebuilder:printcolumn:JSONPath=.spec.scaleTargetRef.kind,name=TargetKind,type=string
 // +kubebuilder:printcolumn:JSONPath=.spec.scaleTargetRef.name,name=TargetName,type=string
+// +kubebuilder:printcolumn:JSONPath=.metadata.creationTimestamp,name=Age,type=date
 // +kubebuilder:subresource:status
 // +k8s:defaulter-gen=true
 

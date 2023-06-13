@@ -38,9 +38,9 @@ func Run() {
 	}
 
 	driver.Start()
-	interupt := make(chan os.Signal, 10)
-	signal.Notify(interupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
-	go handleSysSignal(interupt, bcsExecutor)
+	interrupt := make(chan os.Signal, 10)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
+	go handleSysSignal(interrupt, bcsExecutor)
 	go handleExecutorFinish(bcsExecutor)
 }
 

@@ -166,7 +166,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch, computed, toRefs, onMounted, set } from '@vue/composition-api';
+import { defineComponent, ref, watch, computed, toRefs, onMounted, set } from 'vue';
 import useInterval from '@/composables/use-interval';
 import $store from '@/store/index';
 

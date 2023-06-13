@@ -27,6 +27,7 @@ func InitCache() {
 	instance = cache.New(10*time.Minute, 10*time.Minute)
 }
 
+// GetCache 获取 cache 实例
 func GetCache() *cache.Cache {
 	return instance
 }

@@ -11,66 +11,62 @@
  *
  */
 
-package service_monitor
+package servicemonitor
 
-import (
-	"strconv"
-	"strings"
-)
+// SampleLimitMax xxx
+const SampleLimitMax = 100000
 
-// 注意：常量定义的切片必须是升序排列的
-const INTERVAL_VALUE = "30,60,120"
-const SM_SAMPLE_LIMIT_MAX = 100000
-const SM_SAMPLE_LIMIT_MIN = 1
+// SampleLimitMin xxx
+const SampleLimitMin = 1
 
-var intervalSlice = func() []int {
-	s := make([]int, 0, len(strings.Split(INTERVAL_VALUE, ",")))
-	for _, v := range strings.Split(INTERVAL_VALUE, ",") {
-		i, _ := strconv.Atoi(v)
-		s = append(s, i)
-	}
-	return s
-}()
-
+// CreateServiceMonitorReq create service monitor req
 type CreateServiceMonitorReq struct {
 	ServiceName string            `json:"service_name"`
 	Path        string            `json:"path"`
 	Selector    map[string]string `json:"selector"`
-	Interval    int               `json:"interval"`
+	Interval    string            `json:"interval"`
 	Port        string            `json:"port"`
 	SampleLimit int               `json:"sample_limit"`
 	Namespace   string            `json:"namespace"`
 	Name        string            `json:"name"`
+	Params      map[string]string `json:"params"`
 }
 
+// Validate validate
 func (r CreateServiceMonitorReq) Validate() bool {
-	if validateName(r.Name) && validateInterval(r.Interval) && validatePath(r.Path) && validateSelector(r.Selector) && validateSampleLimit(r.SampleLimit) {
+	if validateName(r.Name) && validateSelector(r.Selector) && validateSampleLimit(r.SampleLimit) {
 		return true
 	}
 	return false
 }
 
+// BatchDeleteServiceMonitorReq batch delete service monitor req
 type BatchDeleteServiceMonitorReq struct {
 	ServiceMonitors []ServiceMonitor `json:"service_monitors"`
 }
+
+// ServiceMonitor service monitor
 type ServiceMonitor struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 }
+
+// UpdateServiceMonitorReq update service monitor req
 type UpdateServiceMonitorReq struct {
 	ServiceName string            `json:"service_name"`
 	Path        string            `json:"path"`
 	Selector    map[string]string `json:"selector"`
-	Interval    int               `json:"interval"`
+	Interval    string            `json:"interval"`
 	Port        string            `json:"port"`
 	SampleLimit int               `json:"sample_limit"`
 	Namespace   string            `json:"namespace"`
 	Name        string            `json:"name"`
+	Params      map[string]string `json:"params"`
 }
 
 // Validate 校验参数
 func (r UpdateServiceMonitorReq) Validate() bool {
-	if validateName(r.Name) && validateInterval(r.Interval) && validatePath(r.Path) && validateSelector(r.Selector) && validateSampleLimit(r.SampleLimit) {
+	if validateName(r.Name) && validateSelector(r.Selector) {
 		return true
 	}
 	return false

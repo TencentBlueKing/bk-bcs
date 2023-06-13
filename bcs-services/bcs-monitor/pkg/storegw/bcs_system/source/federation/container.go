@@ -30,7 +30,8 @@ type handleContainerMetricFunc func(handler base.MetricHandler, ctx context.Cont
 	podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 
 func (m *Federation) handleContainerMetric(ctx context.Context, projectId, clusterId, namespace, podname string,
-	containerNameList []string, start, end time.Time, step time.Duration, fn handleContainerMetricFunc) ([]*prompb.TimeSeries, error) {
+	containerNameList []string, start, end time.Time, step time.Duration, fn handleContainerMetricFunc) (
+	[]*prompb.TimeSeries, error) {
 	// get managed clusters
 	clusters, err := k8sclient.GetManagedClusterList(ctx, clusterId)
 	if err != nil {

@@ -93,6 +93,10 @@
           <bk-form-item :label="$t('容器目录')">
             {{nodePoolData.nodeTemplate.dockerGraphPath || '--'}}
           </bk-form-item>
+          <bk-form-item :label="$t('可用区')" :desc="$t('一般无需指定可用区，当已有的资源（存储或者网络等）偏好甚至依赖特定可用区时，可以指定可用区范围')">
+            <LoadingIcon v-if="zoneLoading">{{ $t('加载中') }}...</LoadingIcon>
+            <span v-else>{{ zoneNames.join(',') || $t('任一可用区') }}</span>
+          </bk-form-item>
           <bk-form-item :label="$t('机型')">
             {{nodePoolData.launchTemplate.instanceType}}
           </bk-form-item>
@@ -103,7 +107,7 @@
             {{nodePoolData.launchTemplate.Mem}}G
           </bk-form-item>
           <bk-form-item label="系统盘">
-            {{`${diskTypeMap[nodePoolData.launchTemplate.systemDisk.diskType]} ${nodePoolData.launchTemplate.systemDisk.diskSize}G`}}
+            {{systemDisk || '--'}}
           </bk-form-item>
           <bk-form-item label="数据盘">
             <bk-button
@@ -115,7 +119,7 @@
           <bk-form-item
             :label="$t('支持子网')"
             :desc="$t('内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区')">
-            {{nodePoolData.autoScaling.subnetIDs.join(', ') || '--'}}
+            {{nodePoolData.autoScaling.subnetIDs.join(', ') || $t('系统自动分配')}}
           </bk-form-item>
           <bk-form-item :label="$t('安全组')">
             <LoadingIcon v-if="securityGroupLoading">{{ $t('加载中') }}...</LoadingIcon>
@@ -243,7 +247,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from '@vue/composition-api';
+import { defineComponent, computed, ref, onMounted } from 'vue';
 import BcsContent from '@/views/cluster-manage/components/bcs-content.vue';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
 import { useClusterList, useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
@@ -255,6 +259,8 @@ import LoadingIcon from '@/components/loading-icon.vue';
 import useInterval from '@/composables/use-interval';
 import kubeletParams from './kubelet-params.vue';
 import UserAction from './user-action.vue';
+import useChainingRef from '@/composables/use-chaining';
+import { cloudsZones } from '@/api/modules/cluster-manager';
 
 export default defineComponent({
   components: {
@@ -276,13 +282,21 @@ export default defineComponent({
       required: true,
     },
   },
-  setup(props, ctx) {
-    const { clusterList } = useClusterList(ctx);
+  setup(props) {
+    const { clusterList } = useClusterList();
     const showDataDisks = ref(false);
     const showLabels = ref(false);
     const showTaints = ref(false);
+    const nodePoolData = useChainingRef<any>({}, [
+      'autoScaling',
+      'nodeTemplate.extraArgs',
+      'launchTemplate.systemDisk',
+      {
+        path: 'subnetIDs',
+        type: 'array',
+      },
+    ]);
     const showAnnotations = ref(false);
-    const nodePoolData = ref<any>(null);
     const loading = ref(false);
     const statusTextMap = { // 节点规格状态
       RUNNING: $i18n.t('正常'),
@@ -329,7 +343,7 @@ export default defineComponent({
         link: {
           name: 'clusterDetail',
           query: {
-            active: 'AutoScaler',
+            active: 'autoscaler',
           },
         },
       },
@@ -405,14 +419,37 @@ export default defineComponent({
       securityGroupLoading.value = false;
     };
 
+    // 系统盘信息
+    const systemDisk = computed(() => {
+      if (!diskTypeMap[nodePoolData.value.launchTemplate?.systemDisk?.diskType]) return '';
+      return `${diskTypeMap[nodePoolData.value.launchTemplate?.systemDisk?.diskType]} ${nodePoolData.value.launchTemplate?.systemDisk?.diskSize}G`;
+    });
+
+    // 可用区
+    const zoneList = ref<any[]>([]);
+    const zoneLoading = ref(false);
+    const zoneNames = computed(() => nodePoolData.value?.autoScaling?.zones
+      ?.map(zone => zoneList.value.find(item => item.zone === zone)?.zoneName) || []);
+    const handleGetZoneList = async () => {
+      zoneLoading.value = true;
+      zoneList.value = await cloudsZones({
+        $cloudId: clusterData.value.provider,
+        region: clusterData.value.region,
+        accountID: clusterData.value.cloudAccountID,
+      });
+      zoneLoading.value = false;
+    };
+
     onMounted(async () => {
       loading.value = true;
       await handleGetNodeGroupDetail();
       await getClusterDetail(props.clusterId, true);
       loading.value = false;
       handleGetCloudSecurityGroups();
+      handleGetZoneList();
     });
     return {
+      systemDisk,
       securityGroupLoading,
       dataDisks,
       showDataDisks,
@@ -436,6 +473,8 @@ export default defineComponent({
       scalingModeMap,
       multiZoneSubnetPolicyMap,
       retryPolicyMap,
+      zoneNames,
+      zoneLoading,
     };
   },
 });

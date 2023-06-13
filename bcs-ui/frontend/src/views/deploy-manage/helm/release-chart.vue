@@ -18,7 +18,7 @@
           @confirm="handleCopyNotes">
           <bcs-button text size="small" :disabled="!releaseDetail.notes">{{$t('查看Notes')}}</bcs-button>
           <template #content>
-            <pre>{{releaseDetail.notes}}</pre>
+            <div class="break-all">{{releaseDetail.notes}}</div>
           </template>
         </bcs-popconfirm>
       </div>
@@ -62,6 +62,8 @@
             <ClusterSelect
               :disabled="isEdit"
               searchable
+              cluster-type="all"
+              class="!w-[auto]"
               v-model="clusterID">
             </ClusterSelect>
           </bk-form-item>
@@ -303,7 +305,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, toRefs, ref, watch, computed } from '@vue/composition-api';
+import { defineComponent, onMounted, toRefs, ref, watch, computed } from 'vue';
 import BcsContent from '@/components/layout/Content.vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';

@@ -71,6 +71,7 @@ type BusinessTopologyData struct {
 	Child      []BusinessTopologyData `json:"child"`
 }
 
+// TransferToProto transfer cmdb data to proto
 func (b *BusinessTopologyData) TransferToProto() *proto.TopologyData {
 	protoData := &proto.TopologyData{
 		Default:    uint32(b.Default),
@@ -174,6 +175,59 @@ func GetBusinessMaintainers(bizID string) ([]string, error) {
 	return maintainers, nil
 }
 
+// BatchSearchBusinessByBizIDs batch search business by bizIDs
+func BatchSearchBusinessByBizIDs(bizIDs []int) (*SearchBusinessData, error) {
+	// 获取超时时间
+	timeout := defaultTimeout
+	if config.GlobalConf.CMDB.Timeout != 0 {
+		timeout = config.GlobalConf.CMDB.Timeout
+	}
+	// 获取开发商账户
+	supplierAccount := defaultSupplierAccount
+	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
+		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
+	}
+	headers := map[string]string{"Content-Type": "application/json"}
+	// 组装请求参数
+	req := gorequest.SuperAgent{
+		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
+		Method: "POST",
+		Data: map[string]interface{}{
+			"biz_property_filter": map[string]interface{}{
+				"condition": "AND",
+				"rules": []map[string]interface{}{
+					{
+						"field":    "bk_biz_id",
+						"operator": "in",
+						"value":    bizIDs,
+					},
+				},
+			},
+			"bk_supplier_account": supplierAccount,
+			"bk_app_code":         config.GlobalConf.App.Code,
+			"bk_app_secret":       config.GlobalConf.App.Secret,
+			"bk_username":         config.GlobalConf.CMDB.BKUsername,
+		},
+		Debug: config.GlobalConf.CMDB.Debug,
+	}
+	// 获取返回数据
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
+	if err != nil {
+		return nil, errorx.NewRequestCMDBErr(err.Error())
+	}
+	// 解析返回的body
+	var resp SearchBusinessResp
+	if err := json.Unmarshal([]byte(body), &resp); err != nil {
+		logging.Error("parse search biz body error, body: %v", body)
+		return nil, err
+	}
+	if resp.Code != errorx.Success {
+		return nil, errorx.NewRequestCMDBErr(resp.Message)
+	}
+	return &resp.Data, nil
+}
+
+// GetBusinessTopology get business topology by bizID
 func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
 	// 获取超时时间
 	timeout := defaultTimeout

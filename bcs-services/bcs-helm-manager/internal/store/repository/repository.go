@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -151,6 +152,29 @@ func (m *ModelRepository) GetRepository(ctx context.Context, projectID, name str
 	}
 
 	return repository, nil
+}
+
+// GetProjectRepository get a specific entity.Repository from database
+func (m *ModelRepository) GetProjectRepository(ctx context.Context, projectID, name string) (
+	*entity.Repository, error) {
+	if projectID == "" || name == "" {
+		return nil, fmt.Errorf("can not get with empty projectID or name")
+	}
+
+	if name == common.PublicRepoName {
+		repo := options.GlobalOptions.Repo
+		publicRepoURL := common.GetPublicRepoURL(repo.URL, repo.PublicRepoProject, repo.PublicRepoName)
+		return &entity.Repository{
+			ProjectID:   projectID,
+			Name:        name,
+			DisplayName: common.PublicRepoDisplayName,
+			Public:      true,
+			Type:        "HELM",
+			RepoURL:     publicRepoURL,
+		}, nil
+	}
+
+	return m.GetRepository(ctx, projectID, name)
 }
 
 // ListRepository get a list of entity.Repository by condition and option from database

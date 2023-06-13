@@ -149,6 +149,56 @@ type Configuration struct {
 	Type string `json:"type"`
 }
 
+// GenerateTempDownloadURLReq is repo generate temp download url request struct.
+type GenerateTempDownloadURLReq struct {
+	// ProjectID is bscp project name in repo.
+	ProjectID string `json:"projectId"`
+	// RepoName is name of new repo.
+	RepoName string `json:"repoName"`
+	// FullPathSet is node full path set.
+	FullPathSet []string `json:"fullPathSet"`
+	// ExpireSeconds is expire seconds.
+	ExpireSeconds uint32 `json:"expireSeconds"`
+	// Permits is count limit for download.
+	Permits uint32 `json:"permits"`
+	// Type is download type.
+	Type string `json:"type"`
+}
+
+// GenerateTempDownloadURLResp is repo generate temp download url response struct.
+type GenerateTempDownloadURLResp struct {
+	// Code is response code.
+	Code int `json:"code"`
+	// Message is response message.
+	Message string `json:"message"`
+	// Data is response data.
+	Data []GenerateTempDownloadURLData `json:"data"`
+	// TraceID is trace id.
+	TraceID string `json:"traceId"`
+}
+
+// GenerateTempDownloadURLData is repo generate temp download url response data struct.
+type GenerateTempDownloadURLData struct {
+	// ProjectID is bscp project name in repo.
+	ProjectID string `json:"projectId"`
+	// RepoName is name of new repo.
+	RepoName string `json:"repoName"`
+	// FullPath is node full path.
+	FullPath string `json:"fullPath"`
+	// URL is temp download url.
+	URL string `json:"url"`
+	// AuthorizedUserList is authorized user list.
+	AuthorizedUserList []string `json:"authorizedUserList"`
+	// AuthorizedIpList is authorized ip list.
+	AuthorizedIpList []string `json:"authorizedIpList"`
+	// ExpireDate is expire date.
+	ExpireDate string `json:"expireDate"`
+	// Permits is count limit for download.
+	Permits uint32 `json:"permits"`
+	// Type is download type.
+	Type string `json:"type"`
+}
+
 // GenRepoName generate repo repository name, like "bscp-{version}-{biz_id}".
 func GenRepoName(bizID uint32) (string, error) {
 	if bizID == 0 {
@@ -280,8 +330,9 @@ func (ud *UriDecorator) Init(bizID uint32) DecoratorInter {
 	repoName := fmt.Sprintf("bscp-%s-biz-%d", version, bizID)
 
 	return &Decorator{
+		repoName:   repoName,
 		root:       ud.root() + repoName,
-		pathPrefix: nodeFrontPath,
+		pathPrefix: ud.root() + repoName + nodeFrontPath,
 	}
 }
 
@@ -302,6 +353,7 @@ func (ud *UriDecorator) root() string {
 
 // Decorator defines how to generate a repository uri, an configure item download uri: root + Path(sign).
 type Decorator struct {
+	repoName   string
 	root       string
 	pathPrefix string
 }
@@ -311,9 +363,19 @@ func (de *Decorator) Root() string {
 	return de.root
 }
 
+// RepoName return Decorator repo name.
+func (de *Decorator) RepoName() string {
+	return de.repoName
+}
+
 // Path generate the download sub path for an configure item.
 func (de *Decorator) Path(sign string) string {
 	return de.pathPrefix + sign
+}
+
+// RelativePath generate the download sub path for an configure item.
+func (de *Decorator) RelativePath(sign string) string {
+	return nodeFrontPath + sign
 }
 
 func (de *Decorator) Url() string {
@@ -331,7 +393,9 @@ func (de *Decorator) GetRepositoryType() cc.StorageMode {
 
 type DecoratorInter interface {
 	Root() string
+	RepoName() string
 	Path(sign string) string
+	RelativePath(sign string) string
 	Url() string
 	AccessKeyID() string
 	SecretAccessKey() string
@@ -415,9 +479,19 @@ func (de *DecoratorS3) Root() string {
 	return de.root
 }
 
+// RepoName return Decorator repo name.
+func (de *DecoratorS3) RepoName() string {
+	return ""
+}
+
 // Path generate the download sub path for an configure item.
 func (de *DecoratorS3) Path(sign string) string {
 	return de.pathPrefix + sign
+}
+
+// RelativePath generate the download sub path for an configure item.
+func (de *DecoratorS3) RelativePath(sign string) string {
+	return nodeFrontPath + sign
 }
 
 func (de *DecoratorS3) GetRepositoryType() cc.StorageMode {

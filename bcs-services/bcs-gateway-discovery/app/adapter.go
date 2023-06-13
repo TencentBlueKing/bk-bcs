@@ -865,11 +865,11 @@ func (adp *Adapter) microNetworkDetection(module string, svc *registry.Service) 
 }
 
 func intPtr(num int) *int {
-	var p int = num
+	var p = num
 	return &p
 }
 
 func strPtr(str string) *string {
-	var p string = str
+	var p = str
 	return &p
 }

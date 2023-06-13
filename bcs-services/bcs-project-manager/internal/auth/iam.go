@@ -16,9 +16,9 @@ package auth
 
 import (
 	bcsIAM "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/manager"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 )

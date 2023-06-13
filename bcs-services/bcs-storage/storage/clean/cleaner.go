@@ -16,14 +16,14 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/pkg/util"
 )
 
 const (
@@ -33,7 +33,8 @@ const (
 	databaseDynamic                  = "dynamic"
 	databaseAlarm                    = "alarm"
 
-	tableEvent = "Event"
+	tableEvent       = "Event"
+	tableEventPrefix = "event_"
 )
 
 // DBCleaner db cleaner
@@ -43,6 +44,7 @@ type DBCleaner struct {
 	tableName     string
 	maxEntryNum   int64
 	maxDuration   time.Duration
+	sleepDuration time.Duration
 	timeTagName   string
 }
 
@@ -61,9 +63,16 @@ func (dbc *DBCleaner) WithMaxEntryNum(num int64) {
 }
 
 // WithMaxDuration set max time duration
-func (dbc *DBCleaner) WithMaxDuration(maxDuration time.Duration, timeTagName string) {
+func (dbc *DBCleaner) WithMaxDuration(maxDuration time.Duration, maxRandomDuration time.Duration, timeTagName string) {
 	dbc.maxDuration = maxDuration
 	dbc.timeTagName = timeTagName
+
+	// 到达ticker触发时，延迟时间启动删除程序，避免多个cleaner同时启动删除造成高负载
+	if maxRandomDuration != time.Duration(0) {
+		maxRandomDuration = util.HashString2Time(dbc.tableName, maxRandomDuration)
+	}
+	dbc.sleepDuration = maxRandomDuration
+	blog.Infof("[todelete] set maxRandomDuration to %s for db [%s] table [%s]", maxRandomDuration.String(), dbc.db.DataBase(), dbc.tableName)
 }
 
 func (dbc *DBCleaner) doNumClean() error {
@@ -111,6 +120,9 @@ func (dbc *DBCleaner) doNumClean() error {
 }
 
 func (dbc *DBCleaner) doTimeClean() error {
+	// avoid high concurrency
+	time.Sleep(dbc.sleepDuration)
+
 	if dbc.maxDuration != 0 {
 		now := time.Now()
 		timeEdge := now.Add(-dbc.maxDuration)
@@ -145,7 +157,8 @@ func (dbc *DBCleaner) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			if dbc.db.DataBase() == databaseDynamic {
+			switch dbc.db.DataBase() {
+			case databaseDynamic:
 				if err := dbc.doSoftDeleteClean(); err != nil {
 					blog.Errorf("do soft delete clean failed, err %s", err.Error())
 				}
@@ -154,12 +167,14 @@ func (dbc *DBCleaner) Run(ctx context.Context) {
 						blog.Errorf("do time clean failed, err %s", err.Error())
 					}
 				}
-			} else if dbc.db.DataBase() == databaseAlarm || strings.HasPrefix(dbc.db.DataBase(), databaseEvent) {
-				if dbc.tableName != tableEvent {
-					if err := dbc.doNumClean(); err != nil {
-						blog.Errorf("do num clean failed, err %s", err.Error())
-					}
+			case databaseAlarm:
+				if err := dbc.doNumClean(); err != nil {
+					blog.Errorf("do num clean failed, err %s", err.Error())
 				}
+				if err := dbc.doTimeClean(); err != nil {
+					blog.Errorf("do time clean failed, err %s", err.Error())
+				}
+			case databaseEvent:
 				if err := dbc.doTimeClean(); err != nil {
 					blog.Errorf("do time clean failed, err %s", err.Error())
 				}

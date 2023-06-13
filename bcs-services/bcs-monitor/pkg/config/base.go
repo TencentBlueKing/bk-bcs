@@ -15,15 +15,15 @@ package config
 
 import (
 	"time"
-	_ "time/tzdata" // tzdata TODO
+	_ "time/tzdata" // tzdata xxx
 )
 
 const (
-	// DevEnv TODO
+	// DevEnv xxx
 	DevEnv = "dev"
-	// StagEnv TODO
+	// StagEnv xxx
 	StagEnv = "stag"
-	// ProdEnv TODO
+	// ProdEnv xxx
 	ProdEnv = "prod"
 )
 
@@ -32,6 +32,7 @@ type BaseConf struct {
 	AppCode      string              `yaml:"app_code"`
 	AppSecret    string              `yaml:"app_secret"`
 	SystemID     string              `yaml:"system_id"`
+	BKUsername   string              `yaml:"bk_username"`
 	TimeZone     string              `yaml:"time_zone"`
 	LanguageCode string              `yaml:"language_code"`
 	Managers     []string            `yaml:"managers"`

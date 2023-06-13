@@ -21,35 +21,35 @@ import (
 type HelmManagerError uint32
 
 const (
-	// ErrHelmManagerSuccess TODO
+	// ErrHelmManagerSuccess xxx
 	ErrHelmManagerSuccess HelmManagerError = iota
-	// ErrHelmManagerReqOrRespEmpty TODO
+	// ErrHelmManagerReqOrRespEmpty xxx
 	ErrHelmManagerReqOrRespEmpty
-	// ErrHelmManagerRequestParamInvalid TODO
+	// ErrHelmManagerRequestParamInvalid xxx
 	ErrHelmManagerRequestParamInvalid
-	// ErrHelmManagerCreateActionFailed TODO
+	// ErrHelmManagerCreateActionFailed xxx
 	ErrHelmManagerCreateActionFailed
-	// ErrHelmManagerUpdateActionFailed TODO
+	// ErrHelmManagerUpdateActionFailed xxx
 	ErrHelmManagerUpdateActionFailed
-	// ErrHelmManagerGetActionFailed TODO
+	// ErrHelmManagerGetActionFailed xxx
 	ErrHelmManagerGetActionFailed
-	// ErrHelmManagerListActionFailed TODO
+	// ErrHelmManagerListActionFailed xxx
 	ErrHelmManagerListActionFailed
-	// ErrHelmManagerDeleteActionFailed TODO
+	// ErrHelmManagerDeleteActionFailed xxx
 	ErrHelmManagerDeleteActionFailed
-	// ErrHelmManagerInstallActionFailed TODO
+	// ErrHelmManagerInstallActionFailed xxx
 	ErrHelmManagerInstallActionFailed
-	// ErrHelmManagerUninstallActionFailed TODO
+	// ErrHelmManagerUninstallActionFailed xxx
 	ErrHelmManagerUninstallActionFailed
-	// ErrHelmManagerUpgradeActionFailed TODO
+	// ErrHelmManagerUpgradeActionFailed xxx
 	ErrHelmManagerUpgradeActionFailed
-	// ErrHelmManagerRollbackActionFailed TODO
+	// ErrHelmManagerRollbackActionFailed xxx
 	ErrHelmManagerRollbackActionFailed
-	// ErrHelmManagerPreviewActionFailed TODO
+	// ErrHelmManagerPreviewActionFailed xxx
 	ErrHelmManagerPreviewActionFailed
-	// ErrHelmManagerAuthFailed TODO
+	// ErrHelmManagerAuthFailed xxx
 	ErrHelmManagerAuthFailed
-	// ErrHelmManagerRequestComponentFailed TODO
+	// ErrHelmManagerRequestComponentFailed xxx
 	ErrHelmManagerRequestComponentFailed
 	// NoPermissionErr auth faile
 	NoPermissionErr = 40403

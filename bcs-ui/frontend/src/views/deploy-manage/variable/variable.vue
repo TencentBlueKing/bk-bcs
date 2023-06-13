@@ -113,7 +113,7 @@
             <bk-radio
               v-for="item in scopeList"
               :key="item.id"
-              :disabled="currentRow"
+              :disabled="!!currentRow"
               :value="item.id">
               {{item.name}}
             </bk-radio>
@@ -123,7 +123,7 @@
           <bcs-input v-model="formData.name"></bcs-input>
         </BkFormItem>
         <BkFormItem :label="$t('KEY')" property="key" required>
-          <bcs-input v-model="formData.key" :disabled="currentRow"></bcs-input>
+          <bcs-input v-model="formData.key" :disabled="!!currentRow"></bcs-input>
         </BkFormItem>
         <BkFormItem :label="$t('默认值')">
           <bcs-input v-model="formData.default"></bcs-input>
@@ -163,7 +163,9 @@
     <!-- 变量设置 -->
     <bcs-sideslider
       :is-show.sync="showSetSlider"
-      :width="700">
+      :width="700"
+      :before-close="handleBeforeClose"
+      quick-close>
       <template #header>
         <LayoutRow>
           <template #left>{{currentRow && currentRow.name}}</template>
@@ -186,7 +188,7 @@
             </bcs-table-column>
             <bcs-table-column :label="$t('值')">
               <template #default="{ row }">
-                <bcs-input v-model="row.value"></bcs-input>
+                <bcs-input v-model="row.value" @change="setChanged(true)"></bcs-input>
               </template>
             </bcs-table-column>
           </bcs-table>
@@ -206,7 +208,7 @@
   </LayoutContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, watch } from '@vue/composition-api';
+import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 import LayoutContent from '@/components/layout/Content.vue';
 import LayoutRow from '@/components/layout/Row.vue';
 import useVariable, { IParams, Pick } from './use-variable';
@@ -215,8 +217,10 @@ import BkFormItem from 'bk-magic-vue/lib/form-item';
 import BkForm from 'bk-magic-vue/lib/form';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import exampleData from './variable.json';
-import $store from '@/store';
 import useDebouncedRef from '@/composables/use-debounce';
+import useSideslider from '@/composables/use-sideslider';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'VariableManager',
@@ -227,8 +231,8 @@ export default defineComponent({
     BkFormItem,
     CodeEditor,
   },
-  setup(props, ctx) {
-    const { $bkMessage, $bkInfo } = ctx.root;
+  setup() {
+    const { reset, setChanged, handleBeforeClose } = useSideslider();
     const showSideslider = ref(false);
     const scopeList = ref([
       {
@@ -469,7 +473,6 @@ export default defineComponent({
         mode.value = 'form';
       }
     });
-    const isSharedCluster = computed(() => $store.state.curCluster?.is_shared);
     async function handleSetVariable(row) {
       showSetSlider.value = true;
       currentRow.value = row;
@@ -478,16 +481,15 @@ export default defineComponent({
       if (row.scope === 'cluster') {
         data = await getClusterVariable({
           $variableID: row.id,
-          isShared: isSharedCluster.value || false,
         });
       } else {
         data = await getNamespaceVariable({
           $variableID: row.id,
-          isShared: isSharedCluster.value || false,
         });
       }
       setData.value = data.results || [];
       setSliderLoading.value = false;
+      reset();
     }
     async function handleSave() {
       setSliderLoading.value = true;
@@ -562,6 +564,8 @@ export default defineComponent({
       handleSetVariable,
       handleSave,
       handleJsonDataChange,
+      setChanged,
+      handleBeforeClose,
     };
   },
 });

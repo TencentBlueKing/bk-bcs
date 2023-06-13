@@ -14,7 +14,6 @@ package event
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"bscp.io/cmd/cache-service/service/cache/keys"
@@ -27,6 +26,9 @@ import (
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/types"
 )
+
+// MaxCacheConcurrent is the max concurrent(goroutine) number of cache.
+var MaxCacheConcurrent = 10
 
 // consumer is used to consume the produced events.
 type consumer struct {
@@ -92,7 +94,7 @@ func (c *consumer) consumeInsertEvent(kt *kit.Kit, events []*table.Event) error 
 
 	for _, event := range events {
 		switch event.Spec.Resource {
-		case table.PublishInstance, table.Publish:
+		case table.Publish:
 			publishEvent = append(publishEvent, event)
 		case table.Application:
 			insertAppEvent = append(insertAppEvent, event)
@@ -132,48 +134,19 @@ func (c *consumer) refreshAllCache(kt *kit.Kit, events []*table.Event) error {
 		return err
 	}
 
-	// step2: refresh strategy publish cache.
-	stgReleaseID, err := c.cacheAppStrategy(kt, appBizID)
+	// step2: refresh released group cache.
+	releaseBizID, err := c.cacheReleasedGroup(kt, appBizID)
 	if err != nil {
 		return err
 	}
 
-	// step3: query all instance release id.
-	instReleaseID, err := c.queryInstReleaseID(kt, appBizID)
-	if err != nil {
-		return err
-	}
-
-	// step4: refresh released config item cache.
-	releaseID := instReleaseID
-	for k, v := range stgReleaseID {
-		releaseID[k] = v
-	}
-	err = c.cacheReleasedCI(kt, releaseID)
+	// step3: refresh released config item cache.
+	err = c.cacheReleasedCI(kt, releaseBizID)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// queryInstReleaseID query all instance publish release id under app. when release matching, although the instance
-// publish is through db query, but instance publish's release ci is static data that can be cached and prewarmed
-// first.
-func (c *consumer) queryInstReleaseID(kt *kit.Kit, appBizID map[uint32]uint32) (map[uint32]uint32, error) {
-	releaseBizID := make(map[uint32]uint32, 0)
-	for appID, bizID := range appBizID {
-		meta, err := c.op.CRInstance().ListAppCRIMeta(kt, bizID, appID)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, one := range meta {
-			releaseBizID[one.ReleaseID] = bizID
-		}
-	}
-
-	return releaseBizID, nil
 }
 
 // consumeUpdateEvent consume update event.
@@ -205,7 +178,7 @@ func (c *consumer) consumeDeleteEvent(kt *kit.Kit, events []*table.Event) error 
 	delAppEvents := make([]*table.Event, 0)
 	for _, event := range events {
 		switch event.Spec.Resource {
-		case table.Publish, table.PublishInstance:
+		case table.Publish:
 			delPublishEvents = append(delPublishEvents, event)
 		case table.Application:
 			delAppEvents = append(delAppEvents, event)
@@ -304,13 +277,13 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 	return nil
 }
 
-// cacheAppStrategy cache all the event strategy's related app's all the strategies.
-func (c *consumer) cacheAppStrategy(kt *kit.Kit, appBizID map[uint32]uint32) (map[uint32]uint32, error) {
-	pipe := make(chan struct{}, 10)
+// cacheReleasedGroup cache the all released's group.
+func (c *consumer) cacheReleasedGroup(kt *kit.Kit, appBizID map[uint32]uint32) (map[uint32]uint32, error) {
+	pipe := make(chan struct{}, MaxCacheConcurrent)
 	releaseBizID := newReleaseBizID()
 	wg := sync.WaitGroup{}
 	var hitErr error
-	// get app's all the published strategies and cache them.
+	// get app's all released groups and cache them.
 	for appID, bizID := range appBizID {
 		pipe <- struct{}{}
 		wg.Add(1)
@@ -323,8 +296,7 @@ func (c *consumer) cacheAppStrategy(kt *kit.Kit, appBizID map[uint32]uint32) (ma
 
 			// in the namespace mode, an app has at most for 200 strategies,
 			// so we get strategies with app one by one.
-			rlID, err := c.cacheOneAppStrategy(kt, bizID, appID)
-
+			rlID, err := c.cacheOneReleasedGroup(kt, bizID, appID)
 			if err != nil {
 				hitErr = err
 				return
@@ -333,7 +305,7 @@ func (c *consumer) cacheAppStrategy(kt *kit.Kit, appBizID map[uint32]uint32) (ma
 			for releaseID, bID := range rlID {
 				releaseBizID.Put(releaseID, bID)
 			}
-			logs.Infof("event cache biz: %d, app: %d, strategies success, rid: %s", bizID, appID, kt.Rid)
+			logs.Infof("event cache biz: %d, app: %d, released groups success, rid: %s", bizID, appID, kt.Rid)
 
 		}(bizID, appID)
 	}
@@ -343,67 +315,43 @@ func (c *consumer) cacheAppStrategy(kt *kit.Kit, appBizID map[uint32]uint32) (ma
 	return releaseBizID.GetMap(), hitErr
 }
 
-// cacheOneAppStrategy cache one app's all strategy.
-// Because considering that if the redis is inserted in batches, there may be some failures.
-// So here is the plan to query it in batches, then insert the redis in full.
-func (c *consumer) cacheOneAppStrategy(kt *kit.Kit, bizID, appID uint32) (map[uint32]uint32, error) {
-	opts := &types.GetAppCPSOption{
+// cacheOneReleasedGroup cache one released group.
+func (c *consumer) cacheOneReleasedGroup(kt *kit.Kit, bizID, appID uint32) (map[uint32]uint32, error) {
+	groups, err := c.op.ReleasedGroup().List(kt, &types.ListReleasedGroupsOption{
 		BizID: bizID,
-		AppID: appID,
-		Page: &types.BasePage{
-			Count: false,
-			Start: 0,
-			Limit: types.GetCPSMaxPageLimit,
+		Filter: &filter.Expression{
+			Op: filter.And,
+			Rules: []filter.RuleFactory{
+				&filter.AtomRule{
+					Field: "app_id",
+					Op:    filter.Equal.Factory(),
+					Value: appID,
+				},
+			},
 		},
+	})
+	if err != nil {
+		logs.Errorf("get biz: %d, app: %d all the released groups failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
+		return nil, err
 	}
 	releaseBizID := make(map[uint32]uint32, 0)
-	kv := make(map[string]string)
-	for start := uint32(0); ; start += types.GetCPSMaxPageLimit {
-		opts.Page.Start = start
-		appStrategies, err := c.op.Publish().GetAppCPStrategies(kt, opts)
-		if err != nil {
-			logs.Errorf("get biz: %d, app: %d all the CPS failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
-			return nil, err
-		}
-
-		if len(appStrategies) == 0 {
-			break
-		}
-
-		mode := appStrategies[0].Mode
-		for _, one := range appStrategies {
-			if mode != one.Mode {
-				logs.Errorf("biz: %d, app: %d, got multiple mode, rid: %s", bizID, appID, kt.Rid)
-				return nil, fmt.Errorf("biz: %d, app: %d, got multiple mode", bizID, appID)
-			}
-
-			// record publish strategy's release id, these used to add released config item cache.
-			releaseBizID[one.ReleaseID] = bizID
-
-			js, err := jsoni.Marshal(one)
-			if err != nil {
-				logs.Errorf("biz: %d, marshal strategy: %d failed, err: %v, rid: %s", bizID, one.StrategyID, err, kt.Rid)
-				return nil, fmt.Errorf("biz: %d, mrashal strategy: %d failed, err: %v", bizID, one.StrategyID, err)
-			}
-
-			kv[keys.Key.CPStrategy(bizID, one.ID)] = string(js)
-		}
-
-		if len(appStrategies) < types.GetCPSMaxPageLimit {
-			break
-		}
+	for _, one := range groups {
+		// record published release id, these will be used to add released config item cache.
+		releaseBizID[one.ReleaseID] = bizID
 	}
 
-	if len(kv) == 0 {
-		return nil, nil
+	b, err := jsoni.Marshal(groups)
+	if err != nil {
+		logs.Errorf("marshal app: %d, released group list failed, err: %v", appID, err)
+		return nil, err
 	}
 
-	if err := c.bds.SetWithTxnPipe(kt.Ctx, kv, keys.Key.CPStrategyTtlSec(false)); err != nil {
+	if err := c.bds.Set(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID), string(b), keys.Key.ReleasedGroupTtlSec(false)); err != nil {
 		logs.Errorf("set biz: %d, app: %d, strategies cache failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
 		return nil, err
 	}
 
-	return releaseBizID, nil
+	return releaseBizID, err
 }
 
 func (c *consumer) listReleasedCI(kt *kit.Kit, bizID uint32, releaseIDs []uint32) ([]*table.ReleasedConfigItem, error) {

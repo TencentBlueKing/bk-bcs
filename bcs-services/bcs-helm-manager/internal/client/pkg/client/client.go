@@ -21,10 +21,11 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpclient"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
-
 	"github.com/golang/protobuf/jsonpb"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/pkg"
 )
 
 // Config describe the options Client need
@@ -34,15 +35,12 @@ type Config struct {
 
 	// AuthToken for bcs permission token
 	AuthToken string
-
-	// Operator for the bk-repo operations
-	Operator string
 }
 
 const (
 	resultCodeSuccess = 0
 
-	urlPrefix = "/bcsapi/v4"
+	urlPrefix = "/helmmanager/v1"
 )
 
 // New return a new Client instance
@@ -102,7 +100,7 @@ func (c *Client) request(_ context.Context, method, uri string, header http.Head
 		return nil, fmt.Errorf("unknown method %s", method)
 	}
 
-	fmt.Printf("request to %s\n", c.conf.APIServer+uri)
+	klog.V(6).Infof("request to %s\n", c.conf.APIServer+uri)
 	r, err := request(c.conf.APIServer+uri, header, data)
 	if err != nil {
 		return nil, err

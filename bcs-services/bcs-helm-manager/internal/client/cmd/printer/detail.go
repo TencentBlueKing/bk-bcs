@@ -13,13 +13,11 @@
 package printer
 
 import (
-	"fmt"
 	"os"
 
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/tidwall/pretty"
 )
 
 // PrintChartDetailInTable print chart detail data in table format
@@ -30,7 +28,7 @@ func PrintChartDetailInTable(wide bool, chartDetail *helmmanager.ChartDetail) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"FILE", "NAME", "IS_VALUES", "IS_README"}
+		r := []string{"PATH", "NAME", "IS_VALUES", "IS_README"}
 		if wide {
 			// nothing to do
 		}
@@ -77,15 +75,4 @@ func PrintChartDetailInTable(wide bool, chartDetail *helmmanager.ChartDetail) {
 		}())
 	}
 	table.Render()
-}
-
-// PrintChartDetailInJson print chart detail data in json format
-func PrintChartDetailInJson(chart *helmmanager.ChartDetail) {
-	if chart == nil {
-		return
-	}
-
-	var data []byte
-	_ = encodeJsonWithIndent(4, chart, &data)
-	fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
 }

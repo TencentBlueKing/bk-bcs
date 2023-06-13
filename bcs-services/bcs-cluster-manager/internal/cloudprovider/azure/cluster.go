@@ -77,13 +77,13 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 
 // ListCluster get cloud cluster list by region
 func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.CloudClusterInfo, error) {
-	client, err := api.NewContainerServiceClient(&opt.CommonOption)
+	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
 	if err != nil {
 		return nil, fmt.Errorf("create azure client failed, err %s", err.Error())
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	clusters, err := client.ListCluster(ctx, opt.Region)
+	clusters, err := client.ListClusterByResourceGroupName(ctx, opt.Region, opt.Account.ResourceGroupName)
 	if err != nil {
 		return nil, fmt.Errorf("list azure cluster failed, err %s", err.Error())
 	}
@@ -92,13 +92,13 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 		info := &proto.CloudClusterInfo{
 			ClusterID:      *v.Name,
 			ClusterName:    *v.Name,
-			ClusterVersion: *v.KubernetesVersion,
+			ClusterVersion: *v.Properties.CurrentKubernetesVersion,
 			ClusterType:    *v.Type,
-			ClusterStatus:  string(*&v.PowerState.Code),
+			ClusterStatus:  string(*v.Properties.PowerState.Code),
 		}
-		if v.AgentPoolProfiles != nil && len(*v.AgentPoolProfiles) > 0 {
-			p := *v.AgentPoolProfiles
-			info.ClusterOS = string(*&p[0].OsSKU)
+		if len(v.Properties.AgentPoolProfiles) > 0 {
+			p := v.Properties.AgentPoolProfiles
+			info.ClusterOS = string(*p[0].OSSKU)
 		}
 		result = append(result, info)
 	}

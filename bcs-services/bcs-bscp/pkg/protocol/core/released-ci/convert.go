@@ -120,32 +120,32 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 	}
 }
 
-// PbConfigItemState
-func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) []*pbci.ConfigItem {
+// PbConfigItemState convert config item state
+func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) (
+	[]*pbci.ConfigItem, []*pbci.ConfigItem) {
 	if cis == nil {
-		return make([]*pbci.ConfigItem, 0)
+		return make([]*pbci.ConfigItem, 0), nil
+	}
+
+	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
+	for _, release := range fileRelease {
+		releaseMap[release.ConfigItemID] = release
 	}
 
 	result := make([]*pbci.ConfigItem, 0)
+	deleted := make([]*pbci.ConfigItem, 0)
 	for _, ci := range cis {
 		var fileState string
 		if len(fileRelease) == 0 {
-			if ci.Revision.CreatedAt == ci.Revision.UpdatedAt {
-				fileState = ADD
-			} else {
-				fileState = REVISE
-			}
+			fileState = ADD
 		} else {
-			for key, value := range fileRelease {
-				if value.ConfigItemID == ci.ID {
-					if ci.Revision.UpdatedAt == value.Revision.UpdatedAt {
-						fileState = UNCHANGE
-					} else {
-						fileState = REVISE
-					}
-					fileRelease = append(fileRelease[:key], fileRelease[key+1:]...)
-					break
+			if _, ok := releaseMap[ci.ID]; ok {
+				if ci.Revision.UpdatedAt == releaseMap[ci.ID].Revision.UpdatedAt {
+					fileState = UNCHANGE
+				} else {
+					fileState = REVISE
 				}
+				delete(releaseMap, ci.ID)
 			}
 		}
 		if len(fileState) == 0 {
@@ -154,13 +154,13 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 		result = append(result, pbci.PbConfigItem(ci, fileState))
 	}
 
-	if len(fileRelease) != 0 {
-		for _, file := range fileRelease {
-			result = append(result, PbConfigItem(file, DELETE))
+	if len(releaseMap) != 0 {
+		for _, file := range releaseMap {
+			deleted = append(deleted, PbConfigItem(file, DELETE))
 		}
 	}
 
-	return result
+	return result, deleted
 }
 
 // 文件状态

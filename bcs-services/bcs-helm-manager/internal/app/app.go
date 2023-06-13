@@ -14,6 +14,9 @@
 package app
 
 import (
+	// pprof
+	_ "net/http/pprof"
+
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -29,6 +32,20 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/mux"
+	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	microCfg "github.com/micro/go-micro/v2/config"
+	"github.com/micro/go-micro/v2/config/source"
+	microRgt "github.com/micro/go-micro/v2/registry"
+	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
+	microSvc "github.com/micro/go-micro/v2/service"
+	microGrpc "github.com/micro/go-micro/v2/service/grpc"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
+	gCred "google.golang.org/grpc/credentials"
+	"gopkg.in/yaml.v2"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/ipv6server"
@@ -39,17 +56,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	"github.com/gorilla/mux"
-	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	microSvc "github.com/micro/go-micro/v2/service"
-	microGrpc "github.com/micro/go-micro/v2/service/grpc"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	gCred "google.golang.org/grpc/credentials"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
@@ -68,6 +74,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
 // HelmManager describe the helm-service manager instance
@@ -92,21 +99,24 @@ type HelmManager struct {
 	mongoOptions   *mongo.Options
 	model          store.HelmManagerModel
 	platform       repo.Platform
+	addons         release.AddonsSlice
 	releaseHandler release.Handler
 
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
 	stopCh        chan struct{}
+	CredConf      microCfg.Config
 }
 
 // NewHelmManager create a new helm manager
-func NewHelmManager(opt *options.HelmManagerOptions) *HelmManager {
+func NewHelmManager(opt *options.HelmManagerOptions, credConf microCfg.Config) *HelmManager {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &HelmManager{
 		opt:           opt,
 		ctx:           ctx,
 		ctxCancelFunc: cancel,
 		stopCh:        make(chan struct{}),
+		CredConf:      credConf,
 	}
 }
 
@@ -116,6 +126,7 @@ func (hm *HelmManager) Init() error {
 	for _, f := range []func() error{
 		hm.initTLSConfig,
 		hm.initModel,
+		hm.initAddons,
 		hm.initPlatform,
 		hm.initReleaseHandler,
 		hm.initRegistry,
@@ -132,16 +143,29 @@ func (hm *HelmManager) Init() error {
 		}
 	}
 
+	go func() {
+		blog.Infof("run pprof, %v", http.ListenAndServe(":6060", nil))
+	}()
+
 	return nil
 }
 
 // Run helm manager server
 func (hm *HelmManager) Run() error {
-	// run the service
-	if err := hm.microSvc.Run(); err != nil {
-		blog.Fatal(err)
+	eg, _ := errgroup.WithContext(hm.ctx)
+
+	eg.Go(func() error {
+		return hm.watch()
+	})
+	eg.Go(func() error {
+		// run the service
+		return hm.microSvc.Run()
+	})
+	// wait all svc to run
+	if err := eg.Wait(); err != nil {
+		defer blog.CloseLogs()
+		return err
 	}
-	blog.CloseLogs()
 	return nil
 }
 
@@ -166,6 +190,8 @@ func (hm *HelmManager) initModel() error {
 	if len(hm.opt.Mongo.Database) == 0 {
 		return fmt.Errorf("mongo database cannot be empty")
 	}
+
+	// get mongo password
 	password := hm.opt.Mongo.Password
 	if password != "" && hm.opt.Mongo.Encrypted {
 		realPwd, err := encrypt.DesDecryptFromBase([]byte(password))
@@ -188,6 +214,7 @@ func (hm *HelmManager) initModel() error {
 	}
 	hm.mongoOptions = mongoOptions
 
+	// init mongo db
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {
 		blog.Errorf("init mongo db failed, err %s", err.Error())
@@ -203,8 +230,32 @@ func (hm *HelmManager) initModel() error {
 	return nil
 }
 
+// initAddons get add-ons list from config
+func (hm *HelmManager) initAddons() error {
+	if hm.opt.Release.AddonsConfigFile == "" {
+		return nil
+	}
+
+	// Load the YAML file
+	configData, err := ioutil.ReadFile(hm.opt.Release.AddonsConfigFile)
+	if err != nil {
+		blog.Errorf("init addons read file failed, err %s", err.Error())
+		return err
+	}
+
+	// Parse the YAML data into addons
+	err = yaml.Unmarshal(configData, &hm.addons)
+	if err != nil {
+		blog.Errorf("init addons parse yaml failed, err %s", err.Error())
+		return err
+	}
+	blog.Infof("init addons successfully from %s", hm.opt.Release.AddonsConfigFile)
+	return nil
+}
+
 // initPlatform init a new repo.Platform, for handling operations to bk-repo
 func (hm *HelmManager) initPlatform() error {
+	// get bkrepo password
 	password := hm.opt.Repo.Password
 	if password != "" && hm.opt.Repo.Encrypted {
 		realPwd, err := encrypt.DesDecryptFromBase([]byte(password))
@@ -245,10 +296,12 @@ func (hm *HelmManager) initReleaseHandler() error {
 	return nil
 }
 
+// initRegistry int micro registry
 func (hm *HelmManager) initRegistry() error {
 	etcdEndpoints := common.SplitAddrString(hm.opt.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
+	// init etcd tls config
 	var etcdTLS *tls.Config
 	var err error
 	if len(hm.opt.Etcd.EtcdCa) != 0 && len(hm.opt.Etcd.EtcdCert) != 0 && len(hm.opt.Etcd.EtcdKey) != 0 {
@@ -272,6 +325,7 @@ func (hm *HelmManager) initRegistry() error {
 	return nil
 }
 
+// initDiscovery init svc discovery
 func (hm *HelmManager) initDiscovery() error {
 	hm.discovery = discovery.NewModuleDiscovery(common.ServiceDomain, hm.microRgt)
 	blog.Info("init discovery for helm manager successfully")
@@ -293,10 +347,13 @@ func (hm *HelmManager) initMicro() error {
 		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
 	}
 
+	// init micro auth middleware, middleware will check user perm
 	authWrapper := middleauth.NewGoMicroAuth(auth.GetJWTClient()).
 		EnableSkipHandler(auth.SkipHandler).
 		EnableSkipClient(auth.SkipClient).
 		SetCheckUserPerm(auth.CheckUserPerm)
+
+	// init micro service
 	svc := microGrpc.NewService(
 		microSvc.Name(common.ServiceDomain),
 		microSvc.Metadata(metadata),
@@ -336,9 +393,17 @@ func (hm *HelmManager) initMicro() error {
 	)
 	svc.Init()
 
+	// register helmmanager handler
 	if err := helmmanager.RegisterHelmManagerHandler(
 		svc.Server(), handler.NewHelmManager(hm.model, hm.platform, hm.opt, hm.releaseHandler)); err != nil {
-		blog.Errorf("register helm manager handler to micro failed: %s", err.Error())
+		blog.Errorf("register helm handler to micro failed: %s", err.Error())
+		return nil
+	}
+	// register cluster addons handler
+	if err := helmmanager.RegisterClusterAddonsHandler(
+		svc.Server(), handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, hm.addons,
+			hm.releaseHandler)); err != nil {
+		blog.Errorf("register addons handler to micro failed: %s", err.Error())
 		return nil
 	}
 
@@ -347,6 +412,7 @@ func (hm *HelmManager) initMicro() error {
 	return nil
 }
 
+// init grpc gatewasy
 func (hm *HelmManager) initHTTPService() error {
 	router := mux.NewRouter()
 	rmMux := ggRuntime.NewServeMux(
@@ -364,17 +430,30 @@ func (hm *HelmManager) initHTTPService() error {
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
+
+	// register helmmanager gatewasy
 	err := helmmanager.RegisterHelmManagerGwFromEndpoint(
 		context.TODO(),
 		rmMux,
 		net.JoinHostPort(hm.opt.Address, strconv.Itoa(int(hm.opt.Port))),
 		grpcDialOpts)
 	if err != nil {
-		blog.Errorf("register http service failed, err %s", err.Error())
-		return fmt.Errorf("register http service failed, err %s", err.Error())
+		blog.Errorf("register helm http service failed, err %s", err.Error())
+		return fmt.Errorf("register helm http service failed, err %s", err.Error())
+	}
+	// register cluster addons gateway
+	err = helmmanager.RegisterClusterAddonsGwFromEndpoint(
+		context.TODO(),
+		rmMux,
+		net.JoinHostPort(hm.opt.Address, strconv.Itoa(int(hm.opt.Port))),
+		grpcDialOpts)
+	if err != nil {
+		blog.Errorf("register addons http service failed, err %s", err.Error())
+		return fmt.Errorf("register addons http service failed, err %s", err.Error())
 	}
 	router.Handle("/{uri:.*}", rmMux)
 
+	// add swagger
 	mux := http.NewServeMux()
 	if len(hm.opt.Swagger.Dir) != 0 {
 		blog.Info("swagger doc is enabled")
@@ -461,6 +540,7 @@ func (hm *HelmManager) initTLSConfig() error {
 	return nil
 }
 
+// init jwt client
 func (hm *HelmManager) initJWTClient() error {
 	conf := auth.JWTClientConfig{
 		Enable:         hm.opt.JWT.Enable,
@@ -554,5 +634,38 @@ func (hm *HelmManager) InitComponentConfig() error {
 		return err
 	}
 	blog.Info("init all client successfully")
+	return nil
+}
+
+// 监听配置文件
+func (hm *HelmManager) watch() error {
+	var eg errgroup.Group
+	w, err := hm.CredConf.Watch("credentials")
+	if err != nil {
+		return err
+	}
+
+	eg.Go(func() error {
+		for {
+			value, err := w.Next()
+			if err != nil {
+				if err.Error() == source.ErrWatcherStopped.Error() {
+					return nil
+				}
+				return err
+			}
+			// watch 会传入 null 空值
+			if string(value.Bytes()) == "null" {
+				continue
+			}
+			cred := []options.Credential{}
+			err = value.Scan(&cred)
+			if err != nil {
+				blog.Errorf("reload credential error, %s", err)
+			}
+			options.GlobalOptions.Credentials = cred
+			blog.Infof("reload credential conf from %s", string(value.Bytes()))
+		}
+	})
 	return nil
 }

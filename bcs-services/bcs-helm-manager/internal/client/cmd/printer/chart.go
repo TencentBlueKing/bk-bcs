@@ -13,13 +13,11 @@
 package printer
 
 import (
-	"fmt"
 	"os"
 
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/tidwall/pretty"
 )
 
 // PrintChartInTable print chart data in table format
@@ -30,9 +28,9 @@ func PrintChartInTable(wide bool, chart *helmmanager.ChartListData) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader(func() []string {
-		r := []string{"NAME", "VERSION", "APP_VERSION", "DESCRIPTION"}
+		r := []string{"NAME", "VERSION", "APP_VERSION"}
 		if wide {
-			r = append(r, "KEY", "CREATE_BY", "CREATE_TIME", "UPDATE_BY", "UPDATE_TIME")
+			r = append(r, "UPDATE_BY", "UPDATE_TIME", "DESCRIPTION")
 		}
 		return r
 	}())
@@ -51,29 +49,15 @@ func PrintChartInTable(wide bool, chart *helmmanager.ChartListData) {
 	for _, ct := range chart.Data {
 		table.Append(func() []string {
 			r := []string{
-				ct.GetName(), ct.GetLatestVersion(), ct.GetLatestAppVersion(), cut(ct.GetLatestDescription(), 50),
+				ct.GetName(), ct.GetLatestVersion(), ct.GetLatestAppVersion(),
 			}
 
 			if wide {
-				r = append(r, ct.GetKey(), ct.GetCreateBy(), ct.GetCreateTime(), ct.GetUpdateBy(), ct.GetUpdateTime())
+				r = append(r, ct.GetUpdateBy(), ct.GetUpdateTime(), cut(ct.GetLatestDescription(), 50))
 			}
 
 			return r
 		}())
 	}
 	table.Render()
-}
-
-// PrintChartInJson print chart data in json format
-func PrintChartInJson(chart *helmmanager.ChartListData) {
-	if chart == nil {
-		return
-	}
-
-	for _, ct := range chart.Data {
-		var data []byte
-		_ = encodeJsonWithIndent(4, ct, &data)
-
-		fmt.Println(string(pretty.Color(pretty.Pretty(data), nil)))
-	}
 }

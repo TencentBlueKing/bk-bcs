@@ -86,8 +86,8 @@ func (p *Federation) GetClusterMemoryRequest(ctx context.Context, projectId, clu
 }
 
 // GetClusterMemoryRequestUsage 获取内存装箱率
-func (p *Federation) GetClusterMemoryRequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
+func (p *Federation) GetClusterMemoryRequestUsage(ctx context.Context, projectId, clusterId string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
