@@ -85,7 +85,7 @@ func NewProvider(conf cc.Repository) (Provider, error) {
 	case string(cc.S3):
 		return newCosProvider(conf.S3)
 	case string(cc.BkRepo):
-		return NewBKRepoService(conf)
+		return NewBKRepoProvider(conf)
 	}
 	return nil, fmt.Errorf("store with type %s is not supported", conf.StorageType)
 }

@@ -266,8 +266,8 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetad
 	return metadata, nil
 }
 
-// NewBKRepoService new s3 service
-func NewBKRepoService(settings cc.Repository) (Provider, error) {
+// NewBKRepoProvider new bkrepo provider
+func NewBKRepoProvider(settings cc.Repository) (Provider, error) {
 	cli, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err
