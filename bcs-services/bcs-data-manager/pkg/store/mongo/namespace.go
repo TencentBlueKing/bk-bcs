@@ -357,11 +357,13 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	}
 	startTime := namespaceMetrics[0].Time.Time().String()
 	endTime := namespaceMetrics[len(namespaceMetrics)-1].Time.Time().String()
-	return m.generateNamespaceResponse(namespacePublic, namespaceMetrics, namespaceMetricsMap[0], startTime, endTime), nil
+	return m.generateNamespaceResponse(namespacePublic, namespaceMetrics, namespaceMetricsMap[0],
+		startTime, endTime), nil
 }
 
 // GetRawNamespaceInfo is a function that retrieves raw namespace data without a time range.
-func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.NamespaceData, error) {
+func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *types.JobCommonOpts,
+	bucket string) ([]*types.NamespaceData, error) {
 	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
@@ -450,14 +452,17 @@ func (m *ModelNamespace) generateNamespaceResponse(public types.NamespacePublicM
 
 // preAggregate is a function that performs pre-aggregation to get the minimum and maximum values of various metrics.
 func (m *ModelNamespace) preAggregate(data *types.NamespaceData, newMetric *types.NamespaceMetrics) {
-	// If data.MaxInstanceTime is nil, update it to newMetric.MaxInstanceTime. Otherwise, if newMetric.MaxInstanceTime is greater than data.MaxInstanceTime, update data.MaxInstanceTime to newMetric.MaxInstanceTime.
+	// If data.MaxInstanceTime is nil, update it to newMetric.MaxInstanceTime.
+	// Otherwise, if newMetric.MaxInstanceTime is greater than data.MaxInstanceTime,
+	//update data.MaxInstanceTime to newMetric. MaxInstanceTime.
 	if data.MaxInstanceTime == nil {
 		data.MaxInstanceTime = newMetric.MaxInstanceTime
 	} else if newMetric.MaxInstanceTime.Value > data.MaxInstanceTime.Value {
 		data.MaxInstanceTime = newMetric.MaxInstanceTime
 	}
 
-	// Repeat the above process for MinInstanceTime, MaxCPUUsageTime, MinCPUUsageTime, MaxMemoryUsageTime, and MinMemoryUsageTime.
+	// Repeat the above process for MinInstanceTime, MaxCPUUsageTime, MinCPUUsageTime, MaxMemoryUsageTime,
+	// and MinMemoryUsageTime.
 	if data.MinInstanceTime == nil {
 		data.MinInstanceTime = newMetric.MinInstanceTime
 	} else if newMetric.MinInstanceTime.Value < data.MinInstanceTime.Value {
