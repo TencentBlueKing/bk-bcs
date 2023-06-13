@@ -1,0 +1,14 @@
+{{- if .Values.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "bcs-webconsole.confName" . }}
+  labels:
+    {{- include "bcs-webconsole.labels" . | nindent 4 }}
+data:
+  config.yaml: |-
+    {{- toYaml .Values.svcConf | nindent 4 }}
+
+  credentials.yaml: |-
+    {{- toYaml .Values.svcCR | nindent 4 }}
+{{- end }}

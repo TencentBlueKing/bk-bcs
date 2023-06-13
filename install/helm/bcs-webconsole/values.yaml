@@ -1,0 +1,187 @@
+## bcs-webconsole
+
+enabled: true
+
+replicaCount: 1
+
+image:
+  repository: bcs-webconsole
+  pullPolicy: Never
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-webconsole"
+
+## 服务配置
+svcConf:
+  ## 基础配置
+  base_conf:
+    app_code: ""
+    app_secret: ""
+    bk_paas_host: ""
+    time_zone: "Asia/Shanghai"
+    language_code: "zh-hans"
+    run_env: dev
+
+  ## 日志
+  logging:
+    level: info
+    file: ""
+    stderr: true
+
+  ## redis
+  redis:
+    host: "bcs-webconsole-redis-master"
+    port: 6379
+    password: ""
+    db: 0
+
+  bklogin_conf:
+    host: ""
+
+  auth_conf:
+    host: ""
+
+  bcs_cc_conf:
+    host: ""
+    stage: ""
+
+  ## BCS配置
+  bcs_conf:
+    host: ""
+    token: ""
+    jwt_public_key: ""
+    verify: false
+
+  bcs_env_conf: []
+
+  webconsole:
+    mode: internal # external
+    admin_cluster_id: "" # external 模式时的管理集群ID
+    guide_doc_link: "" # 使用文档链接
+    kubectld_image: "" # 镜像路径
+    kubectld_tag: "" # 镜像默认tag
+    kubectld_tag_match: # 镜像Tag对应关系
+
+  web:
+    route_prefix: ""
+    host: ""
+
+  etcd:
+    endpoints: "bcs-cluster-resources-etcd:2379"
+    ca: ""
+    cert: ""
+    key: ""
+
+## 证书配置
+svcCR:
+  credentials:
+    - project_id: ""
+      credential_type: app_code
+      credential: ""
+      enabled: false
+      operator: ""
+      scopes:
+        - cluster_id: RE_.*
+      comment: ""
+
+## 环境变量
+envs:
+#  WEBCONSOLE_USERNAME: "joelei"
+
+## 权限控制类
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+## Pod 注解配置
+podAnnotations: {}
+
+## Pod 安全性上下文
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+## 容器安全性上下文
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: NodePort
+  ports:
+    - name: http
+      port: 8083
+      targetPort: 8083
+      protocol: TCP
+
+## 网络配置类
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+## 资源配额
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 2Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+redis:
+  architecture: standalone
+  auth:
+    enabled: false
+
+etcd:
+  replicaCount: 3
+  auth:
+    rbac:
+      create: false
+    token:
+      type: simple
+  persistence:
+    enabled: false
