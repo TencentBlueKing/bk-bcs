@@ -323,27 +323,38 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 		protocolLayer = constant.ProtocolLayerApplication
 	}
 	// 删除时判断LB是否存在,避免监听器删除接口调用失败，进而导致相关资源无法释放
-	// TODO 需要判断是否使用Namespaced LB Client
-	if _, err = h.lbClient.DescribeLoadBalancer(h.region, h.lbID, "", protocolLayer); err != nil {
-		if err != cloud.ErrLoadbalancerNotFound {
-			blog.Errorf("cloud lb client DescribeLoadBalancer failed, err %s", err.Error())
-			return
-		}
+	if h.lbClient.IsNamespaced() {
+		_, err = h.lbClient.DescribeLoadBalancerWithNs(listeners[0].Namespace, h.region, h.lbID, "", protocolLayer)
 	} else {
-		err = h.lbClient.DeleteMultiListeners(h.region, h.lbID, listeners)
-		if err != nil {
-			blog.Warnf("delete listeners failed, requeue listeners, err: %s", err.Error())
-			for _, li := range listeners {
-				obj := k8stypes.NamespacedName{
-					Namespace: li.GetNamespace(),
-					Name:      li.GetName(),
-				}
-				h.recordListenerDeleteFailedEvent(li, err)
-				h.eventQueue.AddRateLimited(obj)
-				h.eventQueue.Done(obj)
+		_, err = h.lbClient.DescribeLoadBalancer(h.region, h.lbID, "", protocolLayer)
+	}
+	if err != nil && err != cloud.ErrLoadbalancerNotFound {
+		blog.Errorf("cloud lb client DescribeLoadBalancer failed, err %s", err.Error())
+		for _, li := range listeners {
+			obj := k8stypes.NamespacedName{
+				Namespace: li.GetNamespace(),
+				Name:      li.GetName(),
 			}
-			return
+			h.recordListenerDeleteFailedEvent(li, err)
+			h.eventQueue.AddRateLimited(obj)
+			h.eventQueue.Done(obj)
 		}
+		return
+	}
+
+	err = h.lbClient.DeleteMultiListeners(h.region, h.lbID, listeners)
+	if err != nil {
+		blog.Warnf("delete listeners failed, requeue listeners, err: %s", err.Error())
+		for _, li := range listeners {
+			obj := k8stypes.NamespacedName{
+				Namespace: li.GetNamespace(),
+				Name:      li.GetName(),
+			}
+			h.recordListenerDeleteFailedEvent(li, err)
+			h.eventQueue.AddRateLimited(obj)
+			h.eventQueue.Done(obj)
+		}
+		return
 	}
 
 	for _, li := range listeners {

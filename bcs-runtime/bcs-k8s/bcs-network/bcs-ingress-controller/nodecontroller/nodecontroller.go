@@ -82,7 +82,7 @@ func (r *NodeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	blog.Infof("update node %s ip list: %s", node.Name, externalIpList)
-	r.nodeCache.SetNodeIps(node.Name, externalIpList)
+	r.nodeCache.SetNodeIps(*node, externalIpList)
 
 	return ctrl.Result{}, nil
 }

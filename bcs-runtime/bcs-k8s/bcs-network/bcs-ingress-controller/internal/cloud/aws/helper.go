@@ -141,7 +141,7 @@ func (e *Elb) ensureListenerSelf(region string, listener *networkextensionv1.Lis
 	defaultTargetGroup string) (string, error) {
 	// get cloud listener
 	input := &elbv2.DescribeListenersInput{LoadBalancerArn: &listener.Spec.LoadbalancerID}
-	listeners, err := e.sdkWrapper.DescribeListeners(region, input)
+	listeners, err := e.sdkWrapper.DescribeListeners(region, input, 3)
 	if err != nil {
 		return "", fmt.Errorf("DescribeListeners failed, err %s", err.Error())
 	}
@@ -186,7 +186,7 @@ func (e *Elb) ensureRule(region string, listener *networkextensionv1.Listener, l
 		return err
 	}
 	exceptRules := e.generateExceptRules(listener.Spec.Rules, ruleTargetGroup)
-	rules, err := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{ListenerArn: &listenerArn})
+	rules, err := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{ListenerArn: &listenerArn}, 3)
 	if err != nil {
 		return fmt.Errorf("DescribeRules failed, err %s", err.Error())
 	}
@@ -228,9 +228,9 @@ func (e *Elb) compareRule(cloudRule *elbv2.DescribeRulesOutput, localRule []type
 			continue
 		}
 		var found *types.Rule
-		for _, v := range localRule {
+		for idx, v := range localRule {
 			if isSameRuleCondition(r.Conditions, v.Conditions) {
-				found = &v
+				found = &localRule[idx]
 			}
 		}
 		if found == nil {
@@ -728,9 +728,10 @@ func (e *Elb) ensureRuleTargetGroupAttributes(region string, rule networkextensi
 	return err
 }
 
-func (e *Elb) getAllListenerRulesAndTargetGroups(region, listenerArn string) ([]string, map[string]bool, error) {
+func (e *Elb) getAllListenerRulesAndTargetGroups(region, listenerArn string, logV int32) ([]string, map[string]bool,
+	error) {
 	ruleInput := &elbv2.DescribeRulesInput{ListenerArn: &listenerArn}
-	rules, err := e.sdkWrapper.DescribeRules(region, ruleInput)
+	rules, err := e.sdkWrapper.DescribeRules(region, ruleInput, logV)
 	if err != nil {
 		return nil, nil, fmt.Errorf("DescribeRules failed, err %s", err.Error())
 	}
@@ -769,19 +770,23 @@ func isSameRuleCondition(a, b []types.RuleCondition) bool {
 	if len(a) != len(b) {
 		return false
 	}
+	sameHost := false
+	samePath := false
 	for _, v := range a {
-		same := false
 		for _, v1 := range b {
-			if *v.Field == *v1.Field {
-				if reflect.DeepEqual(v.HostHeaderConfig, v1.HostHeaderConfig) ||
-					reflect.DeepEqual(v.PathPatternConfig, v1.PathPatternConfig) {
-					same = true
+			if *v.Field == "host-header" && *v1.Field == "host-header" {
+				if reflect.DeepEqual(v.HostHeaderConfig, v1.HostHeaderConfig) {
+					sameHost = true
 				}
+				break
+			}
+			if *v.Field == "path-pattern" && *v1.Field == "path-pattern" {
+				if reflect.DeepEqual(v.PathPatternConfig, v1.PathPatternConfig) {
+					samePath = true
+				}
+				break
 			}
 		}
-		if !same {
-			return false
-		}
 	}
-	return true
+	return sameHost && samePath
 }

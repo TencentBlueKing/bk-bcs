@@ -152,7 +152,7 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 	}
 	// 1. get listener id
 	input := &elbv2.DescribeListenersInput{LoadBalancerArn: &listener.Spec.LoadbalancerID}
-	listeners, err := e.sdkWrapper.DescribeListeners(region, input)
+	listeners, err := e.sdkWrapper.DescribeListeners(region, input, 3)
 	if err != nil {
 		return fmt.Errorf("DescribeListeners failed, err %s", err.Error())
 	}
@@ -163,7 +163,7 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 	}
 
 	// 2. get listener's rules and all target groups
-	rules, tgs, err := e.getAllListenerRulesAndTargetGroups(region, *found.ListenerArn)
+	rules, tgs, err := e.getAllListenerRulesAndTargetGroups(region, *found.ListenerArn, 3)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 
 	// 4. delete all listeners' rules
 	for _, rule := range rules {
-		out, inErr := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{RuleArns: []string{rule}})
+		out, inErr := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{RuleArns: []string{rule}}, 3)
 		if inErr != nil {
 			blog.Warnf("DescribeRules failed, err %s", inErr.Error())
 			continue
@@ -316,13 +316,13 @@ func (e *Elb) DescribeBackendStatus(region, ns string, lbIDs []string) (map[stri
 	for _, lbID := range lbIDs {
 		listeners, err := e.sdkWrapper.DescribeListeners(region, &elbv2.DescribeListenersInput{
 			LoadBalancerArn: &lbID,
-		})
+		}, 4)
 		if err != nil {
 			return nil, fmt.Errorf("DescribeListeners failed, err %s", err.Error())
 		}
 		// 2. get all listener's target groups
 		for _, listener := range listeners.Listeners {
-			_, targetGroups, err := e.getAllListenerRulesAndTargetGroups(region, *listener.ListenerArn)
+			_, targetGroups, err := e.getAllListenerRulesAndTargetGroups(region, *listener.ListenerArn, 4)
 			if err != nil {
 				return nil, err
 			}
