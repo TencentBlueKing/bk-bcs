@@ -19,7 +19,7 @@ const (
 	// HEADER_APPCODE TODO
 	HEADER_APPCODE = "Bcs-Api-AppCode"
 	// HEADER_APPTOKEN TODO
-	HEADER_APPTOKEN = "Bcs-Api-AppToken"
+	HEADER_APPTOKEN = "Bcs-Api-AppToken" // nolint
 	// HEADER_OPERATOR TODO
 	HEADER_OPERATOR = "Bcs-Api-Operator"
 )

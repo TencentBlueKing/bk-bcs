@@ -29,7 +29,7 @@ type Endpoint struct {
 	Ports       []ContainerPort `json:"ports,omitempty"`
 }
 
-// TargetRef referrence for endpoint
+// TargetRef reference for endpoint
 type TargetRef struct {
 	Kind      string `json:"kind"`
 	ID        string `json:"id"`

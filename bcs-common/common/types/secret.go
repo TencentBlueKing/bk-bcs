@@ -26,7 +26,7 @@ const (
 	// BcsSecretTypeOpaque TODO
 	BcsSecretTypeOpaque BcsSecretType = "Opaque"
 	// BcsSecretTypeServiceAccountToken TODO
-	BcsSecretTypeServiceAccountToken BcsSecretType = "kubernetes.io/service-account-token"
+	BcsSecretTypeServiceAccountToken BcsSecretType = "kubernetes.io/service-account-token" // nolint
 	// BcsSecretTypeDockercfg TODO
 	BcsSecretTypeDockercfg BcsSecretType = "kubernetes.io/dockercfg"
 	// BcsSecretTypeDockerConfigJson TODO

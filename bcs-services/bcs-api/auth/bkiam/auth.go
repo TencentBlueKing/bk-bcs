@@ -36,7 +36,7 @@ const (
 	// ApiGwJWTKey xxx
 	ApiGwJWTKey = "X-Bkapi-JWT"
 	// BcsUserTokenKey xxx
-	BcsUserTokenKey = "X-Bcs-User-Token"
+	BcsUserTokenKey = "X-Bcs-User-Token" // nolint
 )
 
 // NewAuth xxx

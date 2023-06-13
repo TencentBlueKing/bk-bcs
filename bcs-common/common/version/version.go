@@ -19,7 +19,7 @@ import (
 	"runtime"
 )
 
-// BcsVersion discribes version
+// BcsVersion describes version
 // BcsTag show the git tag for this version
 // BcsBuildTime show the compile time
 var (

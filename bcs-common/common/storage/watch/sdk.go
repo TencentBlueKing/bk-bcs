@@ -123,7 +123,7 @@ func (w *Watcher) Connect(storageURL []string) (err error) {
 	w.closed = false
 	w.nextSignal, w.receiveSignal = make(chan struct{}), make(chan struct{})
 	go w.watching()
-	return
+	return err
 }
 
 // connect : Try to connect the url list, if they are all unreachable, then return

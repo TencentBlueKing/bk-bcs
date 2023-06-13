@@ -25,7 +25,7 @@ import (
 // ClientTslConfNoVerity xxx
 func ClientTslConfNoVerity() *tls.Config {
 	return &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, // nolint
 	}
 }
 
@@ -56,7 +56,7 @@ func ClientTslConfVerity(caFile, certFile, keyFile, passwd string) (*tls.Config,
 	}
 
 	conf := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, // nolint
 		RootCAs:            caPool,
 		Certificates:       []tls.Certificate{*cert},
 	}
@@ -136,7 +136,8 @@ func loadCertificates(certFile, keyFile, passwd string) (*tls.Certificate, error
 			return nil, fmt.Errorf("decode private key failed")
 		}
 
-		priDecrPem, err := x509.DecryptPEMBlock(priPem, []byte(passwd))
+		var priDecrPem []byte
+		priDecrPem, err = x509.DecryptPEMBlock(priPem, []byte(passwd))
 		if err != nil {
 			return nil, err
 		}

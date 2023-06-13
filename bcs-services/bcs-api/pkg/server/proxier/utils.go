@@ -15,11 +15,13 @@ package proxier
 
 import (
 	"crypto/tls"
-	restclient "k8s.io/client-go/rest"
 	"net/url"
 	"strings"
 
+	restclient "k8s.io/client-go/rest"
+
 	"fmt"
+
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 )
 
@@ -69,7 +71,7 @@ func CheckTcpConn(addr string) error {
 
 func dialTls(host string) error {
 	conf := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, // nolint
 	}
 	conn, err := tls.Dial("tcp", host, conf)
 	if err != nil {

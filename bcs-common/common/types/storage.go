@@ -157,7 +157,7 @@ func (render *BcsStorageRenderIf) GetData() (dc *DeployConfig, err error) {
 	if err = codec.DecJson(tmp, dc); err != nil {
 		return
 	}
-	return
+	return dc, err
 }
 
 // BcsStorageAlarmIf define storage alarm interface data interaction
