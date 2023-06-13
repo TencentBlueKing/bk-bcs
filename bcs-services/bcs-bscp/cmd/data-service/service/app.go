@@ -181,6 +181,26 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 	return resp, nil
 }
 
+// ListAppsByIDs list apps by query condition.
+func (s *Service) ListAppsByIDs(ctx context.Context, req *pbds.ListAppsByIDsReq) (*pbds.ListAppsByIDsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if len(req.Ids) == 0 {
+		return nil, fmt.Errorf("app ids is empty")
+	}
+
+	details, err := s.dao.App().ListAppsByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListAppsByIDsResp{
+		Details: pbapp.PbApps(details),
+	}
+	return resp, nil
+}
+
 // validateBizExist validate if biz exists in cmdb before create app.
 func (s *Service) validateBizExist(kt *kit.Kit, bizID uint32) error {
 	// if build version is debug mode, not need to validate biz exist in cmdb.

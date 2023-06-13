@@ -100,6 +100,8 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
+	eventDao := &eventDao{genQ: genQ, idGen: idDao, auditDao: auditDao}
+	lockDao := &lockDao{orm: ormInst, idGen: idDao}
 
 	s := &set{
 		orm:               ormInst,
@@ -109,8 +111,8 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		credentialSetting: credentialSetting,
 		idGen:             idDao,
 		auditDao:          auditDao,
-		event:             &eventDao{orm: ormInst, sd: sd, idGen: idDao},
-		lock:              &lockDao{orm: ormInst, idGen: idDao},
+		event:             eventDao,
+		lock:              lockDao,
 	}
 
 	return s, nil
@@ -144,10 +146,6 @@ func (s *set) App() App {
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
-
-		orm:   s.orm,
-		sd:    s.sd,
-		event: s.event,
 	}
 }
 
@@ -279,6 +277,7 @@ func (s *set) Publish() Publish {
 		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+		genQ:     s.genQ,
 		event:    s.event,
 	}
 }
@@ -310,9 +309,6 @@ func (s *set) Event() Event {
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
-
-		orm: s.orm,
-		sd:  s.sd,
 	}
 }
 
@@ -327,11 +323,6 @@ func (s *set) Credential() Credential {
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
-
-		orm:               s.orm,
-		sd:                s.sd,
-		credentialSetting: s.credentialSetting,
-		event:             s.event,
 	}
 }
 
@@ -341,8 +332,5 @@ func (s *set) CredentialScope() CredentialScope {
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
-
-		orm: s.orm,
-		sd:  s.sd,
 	}
 }

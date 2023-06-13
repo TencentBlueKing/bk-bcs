@@ -35,15 +35,30 @@ var ReleaseColumnDescriptor = mergeColumnDescriptors("",
 type Release struct {
 	// ID is an auto-increased value, which is a unique identity
 	// of a commit.
-	ID         uint32             `db:"id" json:"id"`
-	Spec       *ReleaseSpec       `db:"spec" json:"spec"`
-	Attachment *ReleaseAttachment `db:"attachment" json:"attachment"`
-	Revision   *CreatedRevision   `db:"revision" json:"revision"`
+	ID         uint32             `db:"id" json:"id" gorm:"primaryKey"`
+	Spec       *ReleaseSpec       `db:"spec" json:"spec" gorm:"embedded"`
+	Attachment *ReleaseAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
+	Revision   *CreatedRevision   `db:"revision" json:"revision" gorm:"embedded"`
 }
 
 // TableName is the release's database table name.
-func (r Release) TableName() Name {
+func (r *Release) TableName() Name {
 	return ReleaseTable
+}
+
+// AppID AuditRes interface
+func (r *Release) AppID() uint32 {
+	return r.Attachment.AppID
+}
+
+// ResID AuditRes interface
+func (r *Release) ResID() uint32 {
+	return r.ID
+}
+
+// ResType AuditRes interface
+func (r *Release) ResType() string {
+	return "release"
 }
 
 // ValidateCreate a release's information
@@ -92,10 +107,10 @@ var ReleaseSpecColumnDescriptor = ColumnDescriptors{
 // ReleaseSpec defines all the specifics related with a release, which is
 // set by user.
 type ReleaseSpec struct {
-	Name       string `db:"name" json:"name"`
-	Memo       string `db:"memo" json:"memo"`
-	Deprecated bool   `db:"deprecated" json:"deprecated"`
-	PublishNum uint32 `db:"publish_num" json:"publish_num"`
+	Name       string `db:"name" json:"name" gorm:"column:name"`
+	Memo       string `db:"memo" json:"memo" gorm:"column:memo"`
+	Deprecated bool   `db:"deprecated" json:"deprecated" gorm:"column:deprecated"`
+	PublishNum uint32 `db:"publish_num" json:"publish_num" gorm:"column:publish_num"`
 }
 
 // Validate a release specifics when it is created.
@@ -153,8 +168,8 @@ var ReleaseAttachmentColumnDescriptor = ColumnDescriptors{
 
 // ReleaseAttachment defines release related information.
 type ReleaseAttachment struct {
-	BizID uint32 `db:"biz_id" json:"biz_id"`
-	AppID uint32 `db:"app_id" json:"app_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
+	AppID uint32 `db:"app_id" json:"app_id" gorm:"column:app_id"`
 }
 
 // IsEmpty test whether this release attachment is empty or not.

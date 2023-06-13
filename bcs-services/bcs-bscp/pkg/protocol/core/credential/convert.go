@@ -6,9 +6,9 @@ import (
 )
 
 // CredentialSpec  convert pb CredentialSpec to table CredentialSpec
-func (c *CredentialSpec) CredentialSpec() (*table.CredentialSpec, error) {
+func (c *CredentialSpec) CredentialSpec() *table.CredentialSpec {
 	if c == nil {
-		return nil, nil
+		return nil
 	}
 
 	return &table.CredentialSpec{
@@ -17,7 +17,7 @@ func (c *CredentialSpec) CredentialSpec() (*table.CredentialSpec, error) {
 		EncAlgorithm:   c.EncAlgorithm,
 		Memo:           c.Memo,
 		Enable:         c.Enable,
-	}, nil
+	}
 }
 
 // CredentialAttachment convert pb CredentialAttachment to table CredentialAttachment
@@ -32,46 +32,37 @@ func (m *CredentialAttachment) CredentialAttachment() *table.CredentialAttachmen
 }
 
 // PbCredentials Credentials
-func PbCredentials(s []*table.Credential) ([]*CredentialList, error) {
+func PbCredentials(s []*table.Credential) []*CredentialList {
 	if s == nil {
-		return make([]*CredentialList, 0), nil
+		return make([]*CredentialList, 0)
 	}
 
 	result := make([]*CredentialList, 0)
 	for _, one := range s {
-		credential, err := PbCredential(one)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, credential)
+		result = append(result, PbCredential(one))
 	}
 
-	return result, nil
+	return result
 }
 
 // PbCredential convert table Credential to pb Credential
-func PbCredential(s *table.Credential) (*CredentialList, error) {
+func PbCredential(s *table.Credential) *CredentialList {
 	if s == nil {
-		return nil, nil
-	}
-
-	spec, err := PbCredentialSpec(s.Spec)
-	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	return &CredentialList{
 		Id:         s.ID,
-		Spec:       spec,
+		Spec:       PbCredentialSpec(s.Spec),
 		Attachment: PbCredentialAttachment(s.Attachment),
 		Revision:   pbbase.PbRevision(s.Revision),
-	}, nil
+	}
 }
 
 // PbCredentialSpec convert table CredentialSpec to pb CredentialSpec
-func PbCredentialSpec(spec *table.CredentialSpec) (*CredentialSpec, error) {
+func PbCredentialSpec(spec *table.CredentialSpec) *CredentialSpec {
 	if spec == nil {
-		return nil, nil
+		return nil
 	}
 
 	return &CredentialSpec{
@@ -80,7 +71,7 @@ func PbCredentialSpec(spec *table.CredentialSpec) (*CredentialSpec, error) {
 		EncAlgorithm:   spec.EncAlgorithm,
 		Enable:         spec.Enable,
 		Memo:           spec.Memo,
-	}, nil
+	}
 }
 
 // PbCredentialAttachment convert table CredentialAttachment to pb CredentialAttachment

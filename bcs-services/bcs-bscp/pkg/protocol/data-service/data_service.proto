@@ -30,6 +30,7 @@ service Data {
     rpc GetAppByID(GetAppByIDReq) returns (pbapp.App) {}
     rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {}
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
+    rpc ListAppsByIDs(ListAppsByIDsReq) returns (ListAppsByIDsResp) {}
 
     // config item related interface.
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
@@ -154,9 +155,10 @@ message CreateCredentialReq {
 }
 
 message ListCredentialReq {
-    uint32                 biz_id = 1;
-    pbbase.BasePage        page   = 2;
-    google.protobuf.Struct filter = 3;
+    uint32 biz_id    = 1;
+    string searchKey = 2;
+    uint32 start     = 3;
+    uint32 limit     = 4;
 }
 
 message ListCredentialResp{
@@ -226,6 +228,14 @@ message ListAppsRestReq {
 message ListAppsResp {
     uint32             count   = 1;
     repeated pbapp.App details = 2;
+}
+
+message ListAppsByIDsReq {
+    repeated uint32 ids   = 1;
+}
+
+message ListAppsByIDsResp {
+    repeated pbapp.App details = 1;
 }
 
 message CreateConfigItemReq {
