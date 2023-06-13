@@ -36,7 +36,7 @@
     return props.versionData.id ? '编辑版本' : '新建版本'
   })
 
-  watch(props.versionData, val => {
+  watch(() => props.versionData, val => {
     localVal.value = { ...val }
   }, { immediate: true })
 
@@ -51,14 +51,22 @@
     }
     try {
       pending.value = true
+      const { name, memo, content } = localVal.value
+      const params = { name, memo, content }
       if (localVal.value.id) {
-        await updateScriptVersion(spaceId.value, props.scriptId, localVal.value)
+        await updateScriptVersion(spaceId.value, props.scriptId, localVal.value.id, params)
         emits('update', { ...localVal.value })
+        BkMessage({
+          theme: 'success',
+          message: '编辑版本成功'
+        })
       } else {
-        const { name, memo, content } = localVal.value
-        const params = { name, memo, content }
         const res = await createScriptVersion(spaceId.value, props.scriptId, params)
         emits('update', { ...localVal.value, id: res.id })
+        BkMessage({
+          theme: 'success',
+          message: '新建版本成功'
+        })
       }
     } catch (e) {
       console.error(e)
@@ -73,6 +81,7 @@
     <ScriptEditor
       v-model="localVal.content" class="script-content-wrapper"
       :language="props.type"
+      :editable="props.editable"
       :upload-icon="props.editable">
       <template #header>
         <div class="title">{{ title }}</div>

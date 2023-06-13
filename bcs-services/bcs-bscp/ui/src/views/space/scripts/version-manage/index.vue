@@ -12,7 +12,7 @@
   import VersionListFullTable from './version-list-full-table.vue'
   import VersionListSimpleTable from './version-list-simple-table.vue'
   import CreateVersion from './create-version.vue'
-  import ScriptContent from './script-content.vue'
+  import VersionEdit from './version-edit.vue'
   import ScriptVersionDiff from './script-version-diff.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -284,7 +284,7 @@
             </template>
           </div>
           <div v-if="versionEditData.panelOpen" class="script-edit-area">
-            <ScriptContent
+            <VersionEdit
               :type="scriptDetail.spec.type"
               :version-data=versionEditData.form
               :script-id="scriptId"

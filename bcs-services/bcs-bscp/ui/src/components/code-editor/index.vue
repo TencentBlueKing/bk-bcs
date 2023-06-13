@@ -50,6 +50,10 @@
     monaco.editor.setModelLanguage(<monaco.editor.ITextModel>editor.getModel(), val)
   })
 
+  watch(() => props.editable, val => {
+    editor.updateOptions({ readOnly: !val })
+  })
+
   onMounted(() => {
     if (!editor) {
       editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
