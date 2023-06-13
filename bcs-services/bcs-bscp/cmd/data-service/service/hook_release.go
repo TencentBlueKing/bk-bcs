@@ -176,6 +176,7 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 	old, err := s.dao.HookRelease().GetByPubState(kt, opt)
 	if err == nil {
 		r.ID = old.ID
+		r.Spec.State = table.ShutdownHookReleased
 		if e := s.dao.HookRelease().UpdatePubStateWithTx(kt, tx, r); e != nil {
 			logs.Errorf("update HookRelease State failed, err: %v, rid: %s", err, kt.Rid)
 			tx.Rollback()
