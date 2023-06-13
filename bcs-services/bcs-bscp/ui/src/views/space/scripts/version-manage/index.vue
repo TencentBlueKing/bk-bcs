@@ -299,7 +299,7 @@
   <ScriptVersionDiff
     v-if="showVersionDiff"
     v-model:show="showVersionDiff"
-    :crt-version="<IScriptVersion>crtVersion"
+    :crt-version="(crtVersion as IScriptVersion)"
     :space-id="spaceId"
     :script-id="scriptId" />
 </template>
