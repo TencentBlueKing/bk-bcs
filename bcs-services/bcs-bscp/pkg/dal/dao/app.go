@@ -19,8 +19,6 @@ import (
 	rawgen "gorm.io/gen"
 
 	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -57,10 +55,7 @@ type appDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
-
-	orm   orm.Interface
-	sd    *sharding.Sharding
-	event Event
+	event    Event
 }
 
 // List app's detail info with the filter's expression.

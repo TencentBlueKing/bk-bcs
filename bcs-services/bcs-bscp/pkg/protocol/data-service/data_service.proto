@@ -231,7 +231,7 @@ message ListAppsResp {
 }
 
 message ListAppsByIDsReq {
-    repeated uint32 ids   = 1;
+    repeated uint32 ids = 1;
 }
 
 message ListAppsByIDsResp {

@@ -146,6 +146,7 @@ func (s *set) App() App {
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
+		event:    s.event,
 	}
 }
 
