@@ -2,9 +2,9 @@
   import { ref } from 'vue'
   import { Search } from 'bkui-vue/lib/icon'
   import { storeToRefs } from 'pinia'
-  import { useGlobalStore } from '../../../store/global'
-  import { IScriptCiteQuery } from '../../../../types/script'
-  import { getScriptCiteList } from '../../../api/script'
+  import { useGlobalStore } from '../../../../store/global'
+  import { IScriptCiteQuery } from '../../../../../types/script'
+  import { getScriptCiteList } from '../../../../api/script'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 

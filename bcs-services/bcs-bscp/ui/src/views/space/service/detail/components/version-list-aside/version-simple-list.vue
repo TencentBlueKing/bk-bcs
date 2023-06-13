@@ -109,7 +109,7 @@
           @click="handleSelectVersion(version)">
           <div :class="['dot', version.status.publish_status]"></div>
           <div class="version-name">{{ version.spec.name }}</div>
-          <bk-dropdown v-if="version.status.publish_status !== 'editing'" class="action-area">
+          <bk-dropdown v-if="version.status.publish_status !== 'editing'" class="action-area" :popoverOptions="{ popoverDelay: 300 }">
             <Ellipsis class="action-more-icon" />
             <template #content>
               <bk-dropdown-menu placement="bottom-end">

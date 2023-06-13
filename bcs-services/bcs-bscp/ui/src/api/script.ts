@@ -91,8 +91,8 @@ export const createScriptVersion = (biz_id: string, hook_id: number, params: { n
  * @param params 查询参数
  * @returns 
  */
-export const updateScriptVersion = (biz_id: string, hook_id: number, params: { name: string; memo: string; content: string; }) => {
-  return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases`, params).then(res => res.data);
+export const updateScriptVersion = (biz_id: string, hook_id: number, release_id: number, params: { name: string; memo: string; content: string; }) => {
+  return http.put(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/${release_id}`, params).then(res => res.data);
 }
 
 /**

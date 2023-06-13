@@ -8,8 +8,8 @@
   import { useScriptStore } from '../../../../store/script'
   import { getScriptList, getScriptTagList, deleteScript } from '../../../../api/script'
   import { IScriptItem, IScriptTagItem, IScriptListQuery} from '../../../../../types/script'
-  import CreateScript from '../create-script.vue'
-  import ScriptCited from '../script-cited.vue'
+  import CreateScript from './create-script.vue'
+  import ScriptCited from './script-cited.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
   const {versionListPageShouldOpenEdit } = storeToRefs(useScriptStore())
@@ -66,7 +66,6 @@
     tagsLoading.value = true
     const res = await getScriptTagList(spaceId.value)
     tagsData.value = res.details
-    pagination.value.count = res.count
     tagsLoading.value = false
   }
 
@@ -103,6 +102,11 @@
     if (!val) {
       refreshList()
     }
+  }
+
+  const handleCreatedScript = () => {
+    refreshList()
+    getTags()
   }
 
   const refreshList = () => {
@@ -187,7 +191,7 @@
         @change="refreshList"
         @limit-change="handlePageLimitChange"/>
     </div>
-    <CreateScript v-if="showCreateScript" v-model:show="showCreateScript" @created="refreshList" />
+    <CreateScript v-if="showCreateScript" v-model:show="showCreateScript" @created="handleCreatedScript" />
     <ScriptCited v-model:show="showCiteSlider" :id="currentId" />
   </section>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
+  import { ref } from 'vue'
   import { FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon'
   import BkMessage from 'bkui-vue/lib/message';
   import ReadFileContent from '../../service/detail/config/components/read-file-content.vue';

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { ref, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { useGlobalStore } from '../../../store/global'
-  import { EScriptType, IScriptEditingForm } from '../../../../types/script'
-  import { createScript } from '../../../api/script'
-  import DetailLayout from './components/detail-layout.vue'
-  import ScriptEditor from './components/script-editor.vue'
+  import BkMessage from 'bkui-vue/lib/message'
+  import { useGlobalStore } from '../../../../store/global'
+  import { EScriptType, IScriptEditingForm, IScriptTagItem } from '../../../../../types/script'
+  import { createScript, getScriptTagList } from '../../../../api/script'
+  import DetailLayout from '../components/detail-layout.vue'
+  import ScriptEditor from '../components/script-editor.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
 
@@ -26,12 +27,30 @@
   })
   const formRef = ref()
   const pending = ref(false)
+  const tagsLoading = ref(false)
+  const tagsData = ref<IScriptTagItem[]>([])
+
+  onMounted(() => {
+    getTags()
+  })
+
+  // 获取标签列表
+  const getTags = async () => {
+    tagsLoading.value = true
+    const res = await getScriptTagList(spaceId.value)
+    tagsData.value = res.details
+    tagsLoading.value = false
+  }
 
   const handleCreate = async() => {
     await formRef.value.validate()
     try {
       pending.value = true
       await createScript(spaceId.value, formData.value)
+      BkMessage({
+        theme: 'success',
+        message: '脚本创建成功'
+      })
       handleClose()
       emits('created')
     } catch (e) {
@@ -54,7 +73,15 @@
             <bk-input v-model="formData.name"/>
           </bk-form-item>
           <bk-form-item class="fixed-width-form"  property="tag" label="分类标签">
-            <bk-input v-model="formData.tag" />
+            <!-- <bk-input v-model="formData.tag" /> -->
+            <bk-select
+              v-model="formData.tag"
+              placeholder="请选择标签或输入新标签按Enter结束"
+              :loading="tagsLoading"
+              :allow-create="true"
+              :filterable="true">
+              <bk-option v-for="option in tagsData" :key="option.tag" :value="option.tag" :label="option.tag"></bk-option>
+            </bk-select>
           </bk-form-item>
           <bk-form-item class="fixed-width-form"  property="memo" label="脚本描述">
             <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" />

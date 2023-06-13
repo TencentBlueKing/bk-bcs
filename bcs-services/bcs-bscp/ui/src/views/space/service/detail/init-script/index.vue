@@ -1,7 +1,8 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, watch } from 'vue'
   import { storeToRefs } from 'pinia'
-  import { IScriptVersion } from '../../../../../../types/script'
+  import BkMessage from 'bkui-vue/lib/message';
+  import { IScriptItem } from '../../../../../../types/script'
   import { useGlobalStore } from '../../../../../store/global'
   import { useConfigStore } from '../../../../../store/config'
   import { getScriptList, getScriptVersionList, getScriptVersionDetail } from '../../../../../api/script'
@@ -16,9 +17,10 @@
   }>()
 
   const scriptsLoading = ref(false)
-  const scriptsData = ref<{ id: number; name: string; }[]>([])
+  const scriptsData = ref<{ id: number; name: string; type: string; }[]>([])
   const previewConfig = ref({
     open: false,
+    type: '',
     name: '',
     content: ''
   })
@@ -48,7 +50,7 @@
     return pre_hook_id !== pre || post_hook_id !== post
   })
 
-  watch(() => versionData.value.id, val => {
+  watch(() => versionData.value.id, () => {
     getScriptSetting()
     previewConfig.value.open = false
   })
@@ -65,8 +67,8 @@
       all: true
     }
     const res = await getScriptList(spaceId.value, params)
-    const list = res.details.map((item: IScriptVersion) => {
-      return { id: item.id, name: item.spec.name }
+    const list = res.details.map((item: IScriptItem) => {
+      return { id: item.id, name: item.spec.name, type: item.spec.type }
     })
     scriptsData.value = [{ id: 0, name: '<不使用脚本>' }, ...list]
     scriptsLoading.value = false
@@ -100,8 +102,8 @@
         state: 'deployed'
       }
       const res = await getScriptVersionList(spaceId.value, scriptId, params)
-      if (res[0]) {
-        previewConfig.value.content = res[0].spec.content
+      if (res.details[0]) {
+        previewConfig.value.content = res.details[0].spec.content
       }
     }
     contentLoading.value = false
@@ -122,6 +124,7 @@
       previewConfig.value = {
         open: true,
         name: script.name,
+        type: script.type,
         content: ''
       }
       getPreviewContent(script.id, versionId)
@@ -138,6 +141,10 @@
         post_hook_id: post
       }
       await updateConfigInitScript(spaceId.value, props.appId, params)
+      BkMessage({
+        theme: 'success',
+        message: '初始化脚本设置成功'
+      })
     } catch (e) {
       console.error(e)
     } finally {
@@ -196,17 +203,18 @@
         class="submit-button"
         theme="primary"
         :disabled="!dataChanged"
+        :loading="pending"
         @click="handleSubmit">
         保存设置
       </bk-button>
     </div>
-    <div v-if="previewConfig.open" v-bkloading="{ loading: contentLoading }" class="preview-area">
-      <ScriptEditor :model-value="previewConfig.content" :editable="false" :upload-icon="false">
+    <bk-loading v-if="previewConfig.open" class="preview-area" :loading="contentLoading">
+      <ScriptEditor :model-value="previewConfig.content" :editable="false" :upload-icon="false" :language="previewConfig.type">
         <template #header>
           <div class="script-preview-title">{{ `脚本预览 - ${previewConfig.name}` }}</div>
         </template>
       </ScriptEditor>
-    </div>
+    </bk-loading>
   </div>
 </template>
 <style lang="scss" scoped>
