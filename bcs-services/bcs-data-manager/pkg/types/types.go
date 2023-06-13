@@ -181,6 +181,8 @@ type PublicData struct {
 }
 
 // WorkloadData for workload table
+// metrics contains detail of every minute/hour/day
+// ExtremumRecord records the max/min value
 type WorkloadData struct {
 	CreateTime         primitive.DateTime             `json:"createTime" bson:"create_time"`
 	UpdateTime         primitive.DateTime             `json:"updateTime" bson:"update_time"`
@@ -209,6 +211,8 @@ type WorkloadData struct {
 }
 
 // PodAutoscalerData for podAutoscaler table
+// metrics contains detail of every minute/hour/day
+// ExtremumRecord records the max/min value
 type PodAutoscalerData struct {
 	CreateTime        primitive.DateTime      `json:"createTime" bson:"create_time"`
 	UpdateTime        primitive.DateTime      `json:"updateTime" bson:"update_time"`
@@ -230,6 +234,8 @@ type PodAutoscalerData struct {
 }
 
 // ProjectData for project table
+// metrics contains detail of every minute/hour/day
+// ExtremumRecord records the max/min value
 type ProjectData struct {
 	CreateTime  primitive.DateTime             `json:"createTime" bson:"create_time"`
 	UpdateTime  primitive.DateTime             `json:"updateTime" bson:"update_time"`
@@ -245,6 +251,8 @@ type ProjectData struct {
 }
 
 // NamespaceData for namespace table
+// metrics contains detail of every minute/hour/day
+// ExtremumRecord records the max/min value
 type NamespaceData struct {
 	CreateTime         primitive.DateTime             `json:"createTime" bson:"create_time"`
 	UpdateTime         primitive.DateTime             `json:"updateTime" bson:"update_time"`
@@ -269,6 +277,8 @@ type NamespaceData struct {
 }
 
 // ClusterData for cluster table
+// metrics contains detail of every minute/hour/day
+// ExtremumRecord records the max/min value
 type ClusterData struct {
 	CreateTime   primitive.DateTime             `json:"createTime" bson:"create_time"`
 	UpdateTime   primitive.DateTime             `json:"updateTime" bson:"update_time"`

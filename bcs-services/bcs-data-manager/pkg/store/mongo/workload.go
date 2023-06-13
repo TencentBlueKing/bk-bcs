@@ -208,6 +208,8 @@ func NewModelWorkload(db drivers.DB) *ModelWorkload {
 }
 
 // InsertWorkloadInfo insert workload info
+// It takes in the ctx, metrics, and opts parameters.
+// It inserts the workload information into the database.
 func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.WorkloadMetrics,
 	opts *types.JobCommonOpts) error {
 	newTableInfo := &Public{
@@ -308,6 +310,9 @@ func (m *ModelWorkload) InsertWorkloadInfo(ctx context.Context, metrics *types.W
 
 // GetWorkloadInfoList get workload list data by cluster id, namespace and workload type
 // if startTime or endTime is empty, return metrics with default time range
+// It takes in the ctx and request parameters.
+// If the startTime or endTime parameters are empty, it returns metrics with the default time range.
+// It retrieves the workload data from the database and returns it along with the count of workloads.
 func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoListRequest) ([]*bcsdatamanager.Workload, int64, error) {
 	var total int64
@@ -407,7 +412,9 @@ func (m *ModelWorkload) GetWorkloadInfoList(ctx context.Context,
 }
 
 // GetWorkloadInfo get workload data with default time range by cluster id, namespace, workload type and name
-// if startTime or endTime is empty, return metrics with default time range
+// It takes in the ctx and request parameters.
+// If the startTime or endTime parameters are empty, it returns metrics with the default time range.
+// It retrieves the workload data from the database and returns it.
 func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 	request *bcsdatamanager.GetWorkloadInfoRequest) (*bcsdatamanager.Workload, error) {
 	newTableInfo := &Public{
@@ -529,6 +536,9 @@ func (m *ModelWorkload) GetWorkloadInfo(ctx context.Context,
 }
 
 // GetRawWorkloadInfo get raw workload data
+// It takes in the ctx, opts, and bucket parameters.
+// It generates a condition based on the opts and bucket parameters.
+// It retrieves the workload data from the database and returns it.
 func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string) ([]*types.WorkloadData, error) {
 	newTableInfo := &Public{
@@ -536,6 +546,7 @@ func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *types.JobC
 		Indexes:   newModelWorkloadIndexes,
 		DB:        m.DB,
 	}
+	// Ensure that the table exists.
 	err := ensureTable(ctx, newTableInfo)
 	if err != nil {
 		return nil, err
@@ -561,6 +572,10 @@ func (m *ModelWorkload) GetRawWorkloadInfo(ctx context.Context, opts *types.JobC
 }
 
 // GetWorkloadCount get workload count
+// It takes in the ctx, opts, bucket, and after parameters.
+// It generates a condition based on the opts and bucket parameters.
+// If the after parameter is not zero, it adds a condition to only retrieve data after that time.
+// It retrieves the workload data from the database and returns the count.
 func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string, after time.Time) (int64, error) {
 	newTableInfo := &Public{
@@ -568,6 +583,7 @@ func (m *ModelWorkload) GetWorkloadCount(ctx context.Context, opts *types.JobCom
 		Indexes:   newModelWorkloadIndexes,
 		DB:        m.DB,
 	}
+	// Ensure that the table exists.
 	err := ensureTable(ctx, newTableInfo)
 	if err != nil {
 		return 0, err
