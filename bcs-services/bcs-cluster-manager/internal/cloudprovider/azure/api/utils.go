@@ -1055,8 +1055,8 @@ func setUltraSSD(set *armcompute.VirtualMachineScaleSet) {
 	set.Properties.AdditionalCapabilities.UltraSSDEnabled = to.Ptr(true)
 }
 
-// ParseSetReturnNodeGroupResourcesName 解析 VMSSs 资源名称
-func ParseSetReturnNodeGroupResourcesName(set *armcompute.VirtualMachineScaleSet) string {
+// ParseSetReturnNgResourcesName 解析 VMSSs 资源名称(ParseSetReturnNodeGroupResourcesName)
+func ParseSetReturnNgResourcesName(set *armcompute.VirtualMachineScaleSet) string {
 	return regexpSetNodeGroupResourcesName(set)
 }
 
@@ -1075,8 +1075,8 @@ func ParseSetReturnSubnetIDs(set *armcompute.VirtualMachineScaleSet) []string {
 	return matchSubnetID(set)
 }
 
-// ParseSecurityGroupsInVirtualNetworks 解析 安全组
-func ParseSecurityGroupsInVirtualNetworks(vnet *armnetwork.VirtualNetwork) []string {
+// ParseSecurityGroupsInVpc 解析 安全组(ParseSecurityGroupsInVpc)
+func ParseSecurityGroupsInVpc(vnet *armnetwork.VirtualNetwork) []string {
 	return regexpVNetSecurityGroups(vnet)
 }
 

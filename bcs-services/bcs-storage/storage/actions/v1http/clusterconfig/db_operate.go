@@ -53,6 +53,7 @@ func PutData(ctx context.Context, resourceType string, data operator.M, opt *lib
 /*
 	业务方法
 */
+
 // GenerateData 生成数据
 func GenerateData(ctx context.Context, opt *lib.StoreGetOption, clsConfig []operator.M, service string) (config *types.DeployConfig, err error) {
 	var stableVersion string

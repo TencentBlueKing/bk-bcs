@@ -114,17 +114,8 @@ func (ua *UpdateAction) validateBaseInfo() {
 	if len(ua.req.Creator) > 0 {
 		ua.cluster.Creator = ua.req.Creator
 	}
-	if len(ua.req.ExtraClusterID) > 0 {
-		ua.cluster.ExtraClusterID = ua.req.ExtraClusterID
-	}
-	if ua.req.NodeSettings != nil {
-		ua.cluster.NodeSettings = ua.req.NodeSettings
-	}
 	if len(ua.req.SystemID) != 0 {
 		ua.cluster.SystemID = ua.req.SystemID
-	}
-	if len(ua.req.NetworkType) != 0 {
-		ua.cluster.NetworkType = ua.req.NetworkType
 	}
 	if len(ua.req.ModuleID) != 0 {
 		ua.cluster.ModuleID = ua.req.ModuleID
@@ -177,6 +168,15 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	}
 	if len(ua.req.ClusterCategory) > 0 {
 		ua.cluster.ClusterCategory = ua.req.ClusterCategory
+	}
+	if len(ua.req.NetworkType) != 0 {
+		ua.cluster.NetworkType = ua.req.NetworkType
+	}
+	if len(ua.req.ExtraClusterID) > 0 {
+		ua.cluster.ExtraClusterID = ua.req.ExtraClusterID
+	}
+	if ua.req.NodeSettings != nil {
+		ua.cluster.NodeSettings = ua.req.NodeSettings
 	}
 }
 

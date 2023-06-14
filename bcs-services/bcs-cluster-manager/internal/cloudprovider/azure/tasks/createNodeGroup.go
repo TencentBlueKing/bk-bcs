@@ -415,7 +415,7 @@ func syncSecurityGroups(ctx context.Context, client api.AksService, group *proto
 	if err != nil {
 		return
 	}
-	securityGroups := api.ParseSecurityGroupsInVirtualNetworks(virtualNetworks)
+	securityGroups := api.ParseSecurityGroupsInVpc(virtualNetworks)
 	if len(securityGroups) == 0 {
 		return
 	}
