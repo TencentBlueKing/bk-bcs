@@ -24,7 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/micro/go-micro/v2/registry"
+	"go-micro.dev/v4/registry"
 )
 
 // Discovery discovery interface
