@@ -153,11 +153,11 @@ func (dao *appDao) Create(kit *kit.Kit, g *table.App) (uint32, error) {
 	// 多个使用事务处理
 	createTx := func(tx *gen.Query) error {
 		q := tx.App.WithContext(kit.Ctx)
-		if err := q.Create(g); err != nil {
+		if err = q.Create(g); err != nil {
 			return err
 		}
 
-		if err := ad.Do(tx); err != nil {
+		if err = ad.Do(tx); err != nil {
 			return err
 		}
 
@@ -200,7 +200,7 @@ func (dao *appDao) Update(kit *kit.Kit, g *table.App) error {
 		return fmt.Errorf("get update app failed, err: %v", err)
 	}
 
-	if err := g.ValidateUpdate(oldOne.Spec.ConfigType); err != nil {
+	if err = g.ValidateUpdate(oldOne.Spec.ConfigType); err != nil {
 		return err
 	}
 
@@ -213,12 +213,12 @@ func (dao *appDao) Update(kit *kit.Kit, g *table.App) error {
 	// 多个使用事务处理
 	updateTx := func(tx *gen.Query) error {
 		q = tx.App.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).
+		if _, err = q.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).
 			Select(m.Memo, m.Reviser).Updates(g); err != nil {
 			return err
 		}
 
-		if err := ad.Do(tx); err != nil {
+		if err = ad.Do(tx); err != nil {
 			return err
 		}
 
@@ -232,7 +232,7 @@ func (dao *appDao) Update(kit *kit.Kit, g *table.App) error {
 			Attachment: &table.EventAttachment{BizID: g.BizID, AppID: g.ID},
 			Revision:   &table.CreatedRevision{Creator: kit.User},
 		}
-		if err := eDecorator.Fire(one); err != nil {
+		if err = eDecorator.Fire(one); err != nil {
 			logs.Errorf("fire update app: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
 			return errors.New("fire event failed, " + err.Error())
 		}
@@ -272,16 +272,16 @@ func (dao *appDao) Delete(kit *kit.Kit, g *table.App) error {
 	// 多个使用事务处理
 	deleteTx := func(tx *gen.Query) error {
 		q = tx.App.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.BizID)).Delete(g); err != nil {
+		if _, err = q.Where(m.BizID.Eq(g.BizID)).Delete(g); err != nil {
 			return err
 		}
 
 		// archived this deleted app to archive table.
-		if err := dao.archiveApp(kit, tx, oldOne); err != nil {
+		if err = dao.archiveApp(kit, tx, oldOne); err != nil {
 			return err
 		}
 
-		if err := ad.Do(tx); err != nil {
+		if err = ad.Do(tx); err != nil {
 			return err
 		}
 
@@ -295,7 +295,7 @@ func (dao *appDao) Delete(kit *kit.Kit, g *table.App) error {
 			Attachment: &table.EventAttachment{BizID: g.BizID, AppID: g.ID},
 			Revision:   &table.CreatedRevision{Creator: kit.User},
 		}
-		if err := eDecorator.Fire(one); err != nil {
+		if err = eDecorator.Fire(one); err != nil {
 			logs.Errorf("fire delete app: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
 			return errors.New("fire event failed, " + err.Error())
 		}
@@ -364,7 +364,7 @@ func (dao *appDao) archiveApp(kit *kit.Kit, tx *gen.Query, g *table.App) error {
 	}
 
 	q := tx.ArchivedApp.WithContext(kit.Ctx)
-	if err := q.Create(archivedApp); err != nil {
+	if err = q.Create(archivedApp); err != nil {
 		return fmt.Errorf("archived delete app failed, err: %v", err)
 	}
 

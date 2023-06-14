@@ -47,7 +47,7 @@ var migrateCreateCmd = &cobra.Command{
 			return
 		}
 
-		if err := migrator.Create(name, mode); err != nil {
+		if err = migrator.Create(name, mode); err != nil {
 			fmt.Println("Unable to create migration, err:", err)
 			return
 		}
@@ -112,7 +112,7 @@ var migrateDownCmd = &cobra.Command{
 			return
 		}
 
-		if err := cc.LoadSettings(SysOpt); err != nil {
+		if err = cc.LoadSettings(SysOpt); err != nil {
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
@@ -147,7 +147,7 @@ var migrateStatusCmd = &cobra.Command{
 			return
 		}
 
-		if err := cc.LoadSettings(SysOpt); err != nil {
+		if err = cc.LoadSettings(SysOpt); err != nil {
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
@@ -164,7 +164,7 @@ var migrateStatusCmd = &cobra.Command{
 			return
 		}
 
-		if err := migrator.MigrationStatus(); err != nil {
+		if err = migrator.MigrationStatus(); err != nil {
 			fmt.Println("Unable to fetch migration status, err:", err)
 			return
 		}

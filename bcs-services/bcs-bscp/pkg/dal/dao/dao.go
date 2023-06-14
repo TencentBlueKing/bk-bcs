@@ -274,8 +274,6 @@ func (s *set) ReleasedGroup() ReleasedGroup {
 // Publish returns the publish operation related DAO
 func (s *set) Publish() Publish {
 	return &pubDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

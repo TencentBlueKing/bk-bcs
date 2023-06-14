@@ -342,7 +342,7 @@ func getMigrationSQLs() (map[string]string, error) {
 	dir := "migrations/sql"
 	getAllSQLFiles(dir)
 	for _, file := range allSQLFiles {
-		content, err := db_migration.SQLFiles.ReadFile(file)
+		content, err := dbmigration.SQLFiles.ReadFile(file)
 		if err != nil {
 			fmt.Printf("read file %s err: %s", file, err)
 			return nil, fmt.Errorf("read file %s err: %s", file, err)
@@ -355,7 +355,7 @@ func getMigrationSQLs() (map[string]string, error) {
 }
 
 func getAllSQLFiles(dir string) error {
-	entries, err := db_migration.SQLFiles.ReadDir(dir)
+	entries, err := dbmigration.SQLFiles.ReadDir(dir)
 	if err != nil {
 		return err
 	}

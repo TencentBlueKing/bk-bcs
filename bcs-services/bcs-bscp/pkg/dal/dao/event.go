@@ -35,10 +35,10 @@ type Event interface {
 	Eventf(kit *kit.Kit) *EDecorator
 
 	// List events with options.
-	List(kit *kit.Kit, StartCursor uint32, opt *types.BasePage) ([]*table.Event, int64, error)
+	List(kit *kit.Kit, startCursor uint32, opt *types.BasePage) ([]*table.Event, int64, error)
 
 	// ListConsumedEvents list events with options that is handle event by cache service.
-	ListConsumedEvents(kit *kit.Kit, StartCursor uint32, opt *types.BasePage) ([]*table.Event, int64, error)
+	ListConsumedEvents(kit *kit.Kit, startCursor uint32, opt *types.BasePage) ([]*table.Event, int64, error)
 
 	// LatestCursor get the latest event cursor which is the last already
 	// consumed event's id.

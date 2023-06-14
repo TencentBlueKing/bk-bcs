@@ -346,7 +346,7 @@ func (c *consumer) cacheOneReleasedGroup(kt *kit.Kit, bizID, appID uint32) (map[
 		return nil, err
 	}
 
-	if err := c.bds.Set(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID), string(b), keys.Key.ReleasedGroupTtlSec(false)); err != nil {
+	if err = c.bds.Set(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID), string(b), keys.Key.ReleasedGroupTtlSec(false)); err != nil {
 		logs.Errorf("set biz: %d, app: %d, strategies cache failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
 		return nil, err
 	}

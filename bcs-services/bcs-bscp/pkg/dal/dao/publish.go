@@ -17,8 +17,6 @@ import (
 	"time"
 
 	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -44,9 +42,6 @@ type pubDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	event    Event
-
-	orm orm.Interface
-	sd  *sharding.Sharding
 }
 
 // Publish publish an app's release with its strategy.
