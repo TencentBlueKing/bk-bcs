@@ -1,15 +1,14 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
 
 package util
 
@@ -25,6 +24,7 @@ import (
 
 // LogConfig is log config
 type LogConfig struct {
+	// Verbosity is verbosity of log
 	Verbosity uint
 }
 
@@ -60,54 +60,28 @@ func NewDB(dbCfg DBConfig) *sqlx.DB {
 
 // ClearDB clear bscp database
 func ClearDB(db *sqlx.DB) error {
-	if _, err := db.Exec("truncate table " + table.AppTable.Name()); err != nil {
-		return err
+	// get all tables to delete
+	tables := []string{
+		table.AppTable.Name(),
+		table.ArchivedAppTable.Name(),
+		string(table.HookTable),
+		string(table.ContentTable),
+		table.ConfigItemTable.Name(),
+		table.CommitsTable.Name(),
+		table.ReleaseTable.Name(),
+		table.ReleasedConfigItemTable.Name(),
+		table.StrategyTable.Name(),
+		table.EventTable.Name(),
+		table.AuditTable.Name(),
+		table.ResourceLockTable.Name(),
 	}
-	if _, err := db.Exec("truncate table " + table.ArchivedAppTable.Name()); err != nil {
-		return err
+
+	for _, t := range tables {
+		if _, err := db.Exec("truncate table " + t); err != nil {
+			return err
+		}
 	}
-	if _, err := db.Exec("truncate table " + string(table.HookTable)); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + string(table.ContentTable)); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ConfigItemTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.CommitsTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ReleaseTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ReleasedConfigItemTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.StrategySetTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.StrategyTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.CurrentPublishedStrategyTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.PublishedStrategyHistoryTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.CurrentReleasedInstanceTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.EventTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.AuditTable.Name()); err != nil {
-		return err
-	}
-	if _, err := db.Exec("truncate table " + table.ResourceLockTable.Name()); err != nil {
-		return err
-	}
+
 	if _, err := db.Exec("update " + table.IDGeneratorTable.Name() +
 		" t1 set t1.max_id = 0 where resource != 'events'"); err != nil {
 		return err

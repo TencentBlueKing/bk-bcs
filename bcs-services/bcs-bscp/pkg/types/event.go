@@ -15,9 +15,7 @@ package types
 import (
 	"errors"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/runtime/filter"
 )
 
 // Event defines a event's details info.
@@ -54,42 +52,4 @@ func (e Event) Validate() error {
 	}
 
 	return nil
-}
-
-// ListEventsOption defines options to list event.
-type ListEventsOption struct {
-	Filter *filter.Expression `json:"filter"`
-	Page   *BasePage          `json:"page"`
-}
-
-// Validate the list event options
-func (lao *ListEventsOption) Validate(po *PageOption) error {
-
-	if lao.Filter == nil {
-		return errf.New(errf.InvalidParameter, "filter is nil")
-	}
-
-	exprOpt := &filter.ExprOption{
-		// remove biz_id because it's a required field in the option.
-		RuleFields: table.EventColumns.WithoutColumn("biz_id"),
-	}
-	if err := lao.Filter.Validate(exprOpt); err != nil {
-		return err
-	}
-
-	if lao.Page == nil {
-		return errf.New(errf.InvalidParameter, "page is null")
-	}
-
-	if err := lao.Page.Validate(po); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// ListEventDetails defines the response details of requested ListEventsOption
-type ListEventDetails struct {
-	Count   uint32         `json:"count"`
-	Details []*table.Event `json:"details"`
 }

@@ -340,13 +340,14 @@ func (c *consumer) cacheOneReleasedGroup(kt *kit.Kit, bizID, appID uint32) (map[
 		releaseBizID[one.ReleaseID] = bizID
 	}
 
-	b, err := jsoni.Marshal(groups)
+	var b []byte
+	b, err = jsoni.Marshal(groups)
 	if err != nil {
 		logs.Errorf("marshal app: %d, released group list failed, err: %v", appID, err)
 		return nil, err
 	}
 
-	if err := c.bds.Set(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID), string(b), keys.Key.ReleasedGroupTtlSec(false)); err != nil {
+	if err = c.bds.Set(kt.Ctx, keys.Key.ReleasedGroup(bizID, appID), string(b), keys.Key.ReleasedGroupTtlSec(false)); err != nil {
 		logs.Errorf("set biz: %d, app: %d, strategies cache failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
 		return nil, err
 	}

@@ -23,6 +23,7 @@ import (
 const mig20230418102723 = "20230418102723_add_credential"
 
 func init() {
+	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
 		Version: "20230418102723",
 		Name:    "20230418102723_add_credential",
@@ -32,6 +33,7 @@ func init() {
 	})
 }
 
+// mig20230418102723AddCredentialUp for up migration
 func mig20230418102723AddCredentialUp(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetUpSQLKey(mig20230418102723)], ";")
 	for _, sql := range sqlArr {
@@ -48,6 +50,7 @@ func mig20230418102723AddCredentialUp(tx *gorm.DB) error {
 
 }
 
+// mig20230418102723AddCredentialDown for down migration
 func mig20230418102723AddCredentialDown(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetDownSQLKey(mig20230418102723)], ";")
 	for _, sql := range sqlArr {
