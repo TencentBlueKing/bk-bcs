@@ -184,7 +184,7 @@ type BcsUserMgrServInfo struct {
 	ServerInfo
 }
 
-// NetworkDetectionServInfo netwrok-detection server information
+// NetworkDetectionServInfo network-detection server information
 type NetworkDetectionServInfo struct {
 	ServerInfo
 }

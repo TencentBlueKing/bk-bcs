@@ -14,6 +14,9 @@ source:
   auto_generate_source:
     # 自动生成代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
     filepath_regex:
+      - ".*.pb.go"
+      - ".*.pb.micro.go"
+      - ".*/bcs-common/pkg/third_party/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core/scale_up.go"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator/drain.go"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/.*"

@@ -25,10 +25,10 @@ type RegDiscvServer interface {
 	RegisterAndWatch(key string, data []byte) error
 	// Discover server from the registe-discover service platform
 	Discover(key string) (<-chan *DiscoverEvent, error)
-	// DiscoverNodes TODO
+	// DiscoverNodes xx
 	// discover nodes from path
 	DiscoverNodes(path string) (*DiscoverEvent, error)
-	// DiscoverNodesV2 TODO
+	// DiscoverNodesV2 xx
 	// discover nodes from path v2
 	DiscoverNodesV2(path string) (*DiscoverEvent, error)
 }

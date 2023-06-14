@@ -148,13 +148,13 @@ type Table interface {
 	// CreateIndex create index
 	CreateIndex(ctx context.Context, index Index) error
 
-	// DropIndex TODO
+	// DropIndex xx
 	DropIndex(ctx context.Context, indexName string) error
 
-	// HasIndex TODO
+	// HasIndex xx
 	HasIndex(ctx context.Context, indexName string) (bool, error)
 
-	// Indexes TODO
+	// Indexes xx
 	Indexes(ctx context.Context) ([]Index, error)
 
 	// Find get find object

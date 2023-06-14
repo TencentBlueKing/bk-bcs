@@ -460,7 +460,7 @@ func (e *Watch) eventProxy() {
 			return
 		}
 		if watchRes.Code != 0 {
-			// todo(DeveloperJim): error code classification for recovery
+			// Note(DeveloperJim): error code classification for recovery
 			blog.V(3).Infof("http watch %s failed, code: %d, message: %s", e.url, watchRes.Code, watchRes.Message)
 			return
 		}

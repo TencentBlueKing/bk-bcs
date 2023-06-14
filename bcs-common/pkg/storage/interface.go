@@ -50,7 +50,7 @@ type Storage interface {
 	// param selector: filter for origin data in storage, nil means no filter
 	// return watch.Interface: interface instance for watch
 	Watch(ctx context.Context, key, version string, selector Selector) (watch.Interface, error)
-	// WatchList TODO
+	// WatchList xx
 	// Watch begin to watch all items under key directory
 	// param ctx: reserved
 	// param key: specified key for watching

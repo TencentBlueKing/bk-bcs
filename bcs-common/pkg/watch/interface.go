@@ -39,7 +39,7 @@ const (
 type Interface interface {
 	// Stop watch channel
 	Stop()
-	// WatchEvent TODO
+	// WatchEvent xx
 	// get watch events, if watch stopped/error, watch must close
 	// channel and exit, watch user must read channel like
 	// e, ok := <-channel
