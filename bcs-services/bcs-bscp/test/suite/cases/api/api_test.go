@@ -42,7 +42,7 @@ func TestApi(t *testing.T) {
 	TestCommit(t)
 	TestRelease(t)
 	TestStrategySet(t)
-	// TODO: strategy related test depends on group, add group test first
+	// NOTE: strategy related test depends on group, add group test first
 	//TestStrategy(t)
 	//TestPublish(t)
 	TestInstance(t)

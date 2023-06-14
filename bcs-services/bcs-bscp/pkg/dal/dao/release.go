@@ -34,7 +34,7 @@ type Release interface {
 	// CreateWithTx create one release instance with tx.
 	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *table.Release) (uint32, error)
 	// CreateWithTxV2 create one release instance with tx.
-	// TODO: unify CreateWithTxV2 and CreateWithTx to be one with gorm/gen
+	// NOTE: unify CreateWithTxV2 and CreateWithTx to be one with gorm/gen
 	CreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, release *table.Release) (uint32, error)
 	// List releases with options.
 	List(kit *kit.Kit, opts *types.ListReleasesOption) (*types.ListReleaseDetails, error)

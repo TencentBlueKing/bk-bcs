@@ -79,9 +79,12 @@ func TestContent(t *testing.T) {
 
 			// due to byte_size in response is string type, so it will cause unmarshal err, we skip it for a while
 			// verify by list content
-			listReq, err := cases.GenListContentByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
+			var listReq *pbcs.ListContentsReq
+			listReq, err = cases.GenListContentByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
+			So(err, ShouldBeNil)
 			ctx, header = cases.GenApiCtxHeader()
-			listResp, err := cli.Content.List(ctx, header, listReq)
+			var listResp *pbcs.ListContentsResp
+			listResp, err = cli.Content.List(ctx, header, listReq)
 			So(err, ShouldBeNil)
 			So(listResp, ShouldNotBeNil)
 			So(len(listResp.Details), ShouldEqual, 1)

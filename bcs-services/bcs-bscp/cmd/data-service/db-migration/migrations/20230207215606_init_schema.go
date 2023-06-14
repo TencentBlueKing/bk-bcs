@@ -23,6 +23,7 @@ import (
 const mig20230207215606 = "20230207215606_init_schema"
 
 func init() {
+	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
 		Version: "20230207215606",
 		Name:    "20230207215606_init_schema",
@@ -32,6 +33,7 @@ func init() {
 	})
 }
 
+// mig20230511114513GormTestUp for up migration
 func mig20230207215606InitSchemaUp(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetUpSQLKey(mig20230207215606)], ";")
 	for _, sql := range sqlArr {
@@ -47,6 +49,7 @@ func mig20230207215606InitSchemaUp(tx *gorm.DB) error {
 
 }
 
+// mig20230207215606InitSchemaDown for down migration
 func mig20230207215606InitSchemaDown(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetDownSQLKey(mig20230207215606)], ";")
 	for _, sql := range sqlArr {

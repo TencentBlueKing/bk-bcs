@@ -340,7 +340,8 @@ func (c *consumer) cacheOneReleasedGroup(kt *kit.Kit, bizID, appID uint32) (map[
 		releaseBizID[one.ReleaseID] = bizID
 	}
 
-	b, err := jsoni.Marshal(groups)
+	var b []byte
+	b, err = jsoni.Marshal(groups)
 	if err != nil {
 		logs.Errorf("marshal app: %d, released group list failed, err: %v", appID, err)
 		return nil, err

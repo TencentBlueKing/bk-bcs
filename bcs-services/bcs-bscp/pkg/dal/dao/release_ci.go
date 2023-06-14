@@ -34,7 +34,7 @@ type ReleasedCI interface {
 	// BulkCreateWithTx bulk create released config items with tx.
 	BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.ReleasedConfigItem) error
 	// BulkCreateWithTxV2 bulk create released config items with tx.
-	// TODO: unify BulkCreateWithTxV2 and BulkCreateWithTx to be one with gorm/gen
+	// NOTE: unify BulkCreateWithTxV2 and BulkCreateWithTx to be one with gorm/gen
 	BulkCreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error
 	// Get released config item by id and released id
 	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
