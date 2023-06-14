@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"context"
+
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newGetCmd create get command
 func newGetCmd() *cobra.Command {
 	getCmd := &cobra.Command{
 		Use:   "get",
@@ -39,6 +41,7 @@ func newGetCmd() *cobra.Command {
 	return getCmd
 }
 
+// getAdminUserCmd return admin user command
 func getAdminUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -68,6 +71,7 @@ func getAdminUserCmd() *cobra.Command {
 	return subCmd
 }
 
+// getSaasUserCmd get saas user command
 func getSaasUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -97,6 +101,7 @@ func getSaasUserCmd() *cobra.Command {
 	return subCmd
 }
 
+// getPlainUserCmd get plain user command
 func getPlainUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -126,6 +131,7 @@ func getPlainUserCmd() *cobra.Command {
 	return subCmd
 }
 
+// getRegisterTokenCmd get register token command
 func getRegisterTokenCmd() *cobra.Command {
 	var clusterId string
 	subCmd := &cobra.Command{
@@ -155,6 +161,7 @@ func getRegisterTokenCmd() *cobra.Command {
 	return subCmd
 }
 
+// getCredentialsCmd get credentials command
 func getCredentialsCmd() *cobra.Command {
 	var clusterId string
 	subCmd := &cobra.Command{
@@ -184,6 +191,7 @@ func getCredentialsCmd() *cobra.Command {
 	return subCmd
 }
 
+// getPermissionCmd get permission command
 func getPermissionCmd() *cobra.Command {
 	var permissionForm string
 	subCmd := &cobra.Command{
@@ -213,6 +221,7 @@ func getPermissionCmd() *cobra.Command {
 	return subCmd
 }
 
+// getTokenCmd get token command
 func getTokenCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -242,6 +251,7 @@ func getTokenCmd() *cobra.Command {
 	return subCmd
 }
 
+// getTokenByUserAndClusterIDCmd get token by user and clusterID command
 func getTokenByUserAndClusterIDCmd() *cobra.Command {
 	var request pkg.GetTokenByUserAndClusterIDRequest
 	subCmd := &cobra.Command{

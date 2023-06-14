@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	jwtGo "github.com/dgrijalva/jwt-go"
+	jwtGo "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	goAttr "github.com/ssrathi/go-attr"
 	"go-micro.dev/v4/metadata"

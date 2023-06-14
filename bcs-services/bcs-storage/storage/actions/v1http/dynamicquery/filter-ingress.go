@@ -28,6 +28,7 @@ type IngressFilter struct {
 
 const ingressNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t IngressFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, ingressNestedTimeLayout)
 }

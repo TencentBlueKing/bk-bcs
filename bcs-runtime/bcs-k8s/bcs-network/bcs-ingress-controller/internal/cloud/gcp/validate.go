@@ -81,11 +81,8 @@ func (g *GclbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 	if rule.Port <= 0 || rule.Port >= 65536 {
 		return false, fmt.Sprintf("invalid port %d, available [1-65535]", rule.Port)
 	}
-	if rule.Protocol != ProtocolHTTP &&
-		rule.Protocol != ProtocolHTTPS &&
-		rule.Protocol != ProtocolTCP &&
-		rule.Protocol != ProtocolUDP {
-		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", rule.Protocol)
+	if ok, msg := g.validateProtocol(rule.Protocol); !ok {
+		return false, msg
 	}
 	if rule.Protocol == ProtocolHTTP && (rule.Port != 80 && rule.Port != 8080) {
 		return false, fmt.Sprintf("invalid port %d for protocol %s, available [80, 8080]", rule.Port, rule.Protocol)
@@ -94,9 +91,6 @@ func (g *GclbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 		if rule.Port != 443 {
 			return false, "https protocol only support 443 port"
 		}
-		if rule.Certificate == nil {
-			return false, "certificate cannot be empty for protocol https"
-		}
 		if ok, msg := g.validateCertificate(rule.Certificate); !ok {
 			return ok, msg
 		}
@@ -104,10 +98,8 @@ func (g *GclbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 
 	switch rule.Protocol {
 	case ProtocolHTTP, ProtocolHTTPS:
-		if rule.ListenerAttribute != nil {
-			if ok, msg := g.validateApplicationListenerAttribute(rule.ListenerAttribute); !ok {
-				return ok, msg
-			}
+		if ok, msg := g.validateApplicationListenerAttr(rule.ListenerAttribute); !ok {
+			return ok, msg
 		}
 		for i := range rule.Routes {
 			if ok, msg := g.validateListenerRoute(&rule.Routes[i]); !ok {
@@ -115,10 +107,8 @@ func (g *GclbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 			}
 		}
 	case ProtocolTCP, ProtocolUDP:
-		if rule.ListenerAttribute != nil {
-			if ok, msg := g.validateNetworkListenerAttribute(rule.ListenerAttribute); !ok {
-				return ok, msg
-			}
+		if ok, msg := g.validateNetworkListenerAttribute(rule.ListenerAttribute); !ok {
+			return ok, msg
 		}
 		for i := range rule.Services {
 			if ok, msg := g.validateListenerService(&rule.Services[i]); !ok {
@@ -129,8 +119,11 @@ func (g *GclbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 	return true, ""
 }
 
-// validateAppListenerAttribute check application lb listener attribute
-func (g *GclbValidater) validateApplicationListenerAttribute(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
+// validateApplicationListenerAttr check application lb listener attribute
+func (g *GclbValidater) validateApplicationListenerAttr(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
+	if attr == nil {
+		return true, ""
+	}
 	// validate health check
 	if attr.HealthCheck == nil {
 		return true, ""
@@ -157,11 +150,17 @@ func (g *GclbValidater) validateApplicationListenerAttribute(attr *networkextens
 
 // validateNetworkListenerAttribute check network lb listener attribute
 func (g *GclbValidater) validateNetworkListenerAttribute(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
+	if attr == nil {
+		return true, ""
+	}
 	return true, ""
 }
 
 // validateCertificate check listener certificate
 func (g *GclbValidater) validateCertificate(certs *networkextensionv1.IngressListenerCertificate) (bool, string) {
+	if certs == nil {
+		return false, "certificate cannot be empty for protocol https"
+	}
 	if len(certs.CertID) == 0 {
 		return false, "certID cannot be empty"
 	}
@@ -210,7 +209,7 @@ func (g *GclbValidater) validateListenerRoute(r *networkextensionv1.Layer7Route)
 		return false, "domain cannot be empty for 7 layer listener"
 	}
 	if r.ListenerAttribute != nil {
-		if ok, msg := g.validateApplicationListenerAttribute(r.ListenerAttribute); !ok {
+		if ok, msg := g.validateApplicationListenerAttr(r.ListenerAttribute); !ok {
 			return ok, msg
 		}
 	}
@@ -227,7 +226,7 @@ func (g *GclbValidater) validatePortMappingRoute(r *networkextensionv1.IngressPo
 		return false, "domain cannot be empty for 7 layer listener"
 	}
 	if r.ListenerAttribute != nil {
-		if ok, msg := g.validateApplicationListenerAttribute(r.ListenerAttribute); !ok {
+		if ok, msg := g.validateApplicationListenerAttr(r.ListenerAttribute); !ok {
 			return ok, msg
 		}
 	}
@@ -244,6 +243,16 @@ func (g *GclbValidater) validateListenerService(svc *networkextensionv1.ServiceR
 	// trans nodeport to pod ip:port
 	if !svc.IsDirectConnect {
 		svc.IsDirectConnect = true
+	}
+	return true, ""
+}
+
+func (g *GclbValidater) validateProtocol(protocol string) (bool, string) {
+	if protocol != ProtocolHTTP &&
+		protocol != ProtocolHTTPS &&
+		protocol != ProtocolTCP &&
+		protocol != ProtocolUDP {
+		return false, fmt.Sprintf("invalid protocol %s, available [http, https, tcp, udp]", protocol)
 	}
 	return true, ""
 }

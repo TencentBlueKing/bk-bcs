@@ -60,6 +60,8 @@ const (
 
 	// How long should Cluster Autoscaler wait for nodes to become ready after start.
 	nodesNotReadyAfterStartTimeout = 10 * time.Minute
+
+	valueTrue = "true"
 )
 
 var (
@@ -185,9 +187,9 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 
 	// processNode returns information whether the nodeTemplate was generated and if there was an error.
 	processNode := func(node *apiv1.Node) (bool, string, errors.AutoscalerError) {
-		nodeGroup, err := cloudProvider.NodeGroupForNode(node)
-		if err != nil {
-			return false, "", errors.ToAutoscalerError(errors.CloudProviderError, err)
+		nodeGroup, getErr := cloudProvider.NodeGroupForNode(node)
+		if getErr != nil {
+			return false, "", errors.ToAutoscalerError(errors.CloudProviderError, getErr)
 		}
 		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
 			return false, "", nil
@@ -195,13 +197,13 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		id := nodeGroup.Id()
 		if _, found := result[id]; !found {
 			// Build nodeInfo.
-			nodeInfo, err := simulator.BuildNodeInfoForNode(node, podsForNodes)
-			if err != nil {
-				return false, "", err
+			nodeInfo, buildErr := simulator.BuildNodeInfoForNode(node, podsForNodes)
+			if buildErr != nil {
+				return false, "", buildErr
 			}
-			sanitizedNodeInfo, err := sanitizeNodeInfo(nodeInfo, id, ignoredTaints)
-			if err != nil {
-				return false, "", err
+			sanitizedNodeInfo, sanErr := sanitizeNodeInfo(nodeInfo, id, ignoredTaints)
+			if sanErr != nil {
+				return false, "", sanErr
 			}
 			result[id] = sanitizedNodeInfo
 			return true, id, nil
@@ -523,7 +525,7 @@ func getNodeCoresAndMemory(node *apiv1.Node) (int64, int64) {
 	if node.Labels[nodeInstanceTypeLabelKey] == nodeInstanceTypeEklet {
 		return 0, 0
 	}
-	if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+	if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 		return 0, 0
 	}
 	cores := getNodeResource(node, apiv1.ResourceCPU)
@@ -608,7 +610,7 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 		if nodeTemplate.Node().Annotations == nil {
 			nodeTemplate.Node().Annotations = make(map[string]string)
 		}
-		nodeTemplate.Node().Annotations[NodeUpcomingAnnotation] = "true"
+		nodeTemplate.Node().Annotations[NodeUpcomingAnnotation] = valueTrue
 
 		for i := 0; i < numberOfNodes; i++ {
 			// Ensure new nodes have different names because nodeName
@@ -635,13 +637,13 @@ func checkResourceNotEnough(nodes map[string]*schedulerframework.NodeInfo,
 		if node.Labels[apiv1.LabelInstanceTypeStable] == "eklet" {
 			continue
 		}
-		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 			continue
 		}
-		if node.Labels[nodeLabel.LabelNodeRoleControlPlane] == "true" {
+		if node.Labels[nodeLabel.LabelNodeRoleControlPlane] == valueTrue {
 			continue
 		}
-		if node.Labels[nodeLabel.LabelNodeRoleOldControlPlane] == "true" {
+		if node.Labels[nodeLabel.LabelNodeRoleOldControlPlane] == valueTrue {
 			continue
 		}
 		sumResources.Add(scheduler.ResourceToResourceList(nodeInfo.Allocatable))

@@ -139,10 +139,39 @@
         </div>
     </div>
     <script src="{{ .settings.SITE_URL }}/web/static/assets/vue/vue.js"></script>
+    <script src="{{ .settings.SITE_URL }}/web/static/assets/vue/vue-i18n.js"></script>
     <script src="{{ .settings.SITE_URL }}/web/static/assets/vue/bk-magic-vue.min.js"></script>
     <script src="{{ .settings.SITE_URL }}/web/static/assets/jquery.min.js"></script>
     <script type="text/javascript" defer>
+        var localeLang = "{{ .Language }}"
+        if (localeLang == "en") {
+            localeLang = "enUS"
+        }else {
+            localeLang = "zhCN"
+        }
+        window.bkMagicVue.locale.use(window.bkMagicVue.locale.lang[localeLang])
         var app = new Vue({
+            i18n: new VueI18n({
+                locale: '{{ .Language }}',
+                messages: {
+                    en: {
+                        message: {
+                            requestFailed: 'Request failed',
+                            apply: 'Go to apply',
+                            noCluster: 'There are no available clusters under the project',
+                            connect: 'The connection is disconnected'
+                        }
+                    },
+                    zh: {
+                        message: {
+                            requestFailed: '请求失败',
+                            apply: '前往申请',
+                            noCluster: '项目下没有可用集群',
+                            connect: '连接已断开'
+                        }
+                    }
+                }
+            }),
             delimiters: ['$[', ']'],
             el: '#app',
             data() {
@@ -155,7 +184,6 @@
                     winHeight: 500,
                     projectId: "{{ .project_id }}",
                     siteUrl: "{{ .settings.SITE_URL }}",
-                    loginUrl: "{{ .login_url }}",
                     permRequestUrl: "{{ .perm_request_url }}",
                     dropdownLeft: 0,
                     isDropdownShow: false,
@@ -163,6 +191,7 @@
                     selectIndex: -1,
                     position: 'middle',
                     search: "",
+                    lang: "{{ .Language }}"
                 }
             },
             computed: {
@@ -204,7 +233,7 @@
                     // const params = this.parseUrlQuery()
                     const url = window.location.href
                     const clusterMatcher = url.match(/#cluster=([\w\d-]*)/)
-                    const cluster_url = `${this.siteUrl}/api/projects/${this.projectId}/clusters/`
+                    const cluster_url = `${this.siteUrl}/api/projects/${this.projectId}/clusters/?lang=${this.lang}`
                     this.watchMessage()
                     this.watchShortcut()
                     self = this
@@ -214,7 +243,7 @@
                             self.$bkMessage({ theme: 'error', message: result.message, delay: 0 })
                         } else if (result.data.length == 0) {
                             self.$bkMessage({
-                                theme: 'error', message: '项目下没有可用集群', delay: 0
+                                theme: 'error', message: self.$t('message.noCluster'), delay: 0
                             })
                         } else {
                             self.clusterList = result.data
@@ -223,27 +252,7 @@
                             })
                         }
                     }).fail(function (result) {
-                        if (result.status == 401) {
-                            self.$bkInfo({
-                                type: 'warning',
-                                title: result.responseJSON.message,
-                                showFooter: false,
-                                maskClose: false,
-                                subHeader: h('div', {}, [
-                                    h('bk-button', {
-                                        attrs: {
-                                            theme: "primary",
-                                        },
-                                        on: {
-                                            click: () => {
-                                                window.open(self.loginUrl);
-                                            }
-                                        }
-                                    }, '前往登录'),
-                                ]),
-                                delay: 0
-                            })
-                        } else if (result.status == 403) {
+                        if (result.status == 403) {
                             self.$bkInfo({
                                 type: 'warning',
                                 title: result.responseJSON.message,
@@ -259,14 +268,14 @@
                                                 window.open(self.permRequestUrl);
                                             }
                                         }
-                                    }, '前往申请'),
+                                    }, self.$t('message.apply')),
                                 ]),
                                 delay: 0
                             })
                         } else {
                             self.$bkInfo({
                                 type: 'error',
-                                title: '发生未知错误',
+                                title: self.$t('message.requestFailed'),
                                 subTitle: result.responseJSON.message,
                                 showFooter: false,
                                 maskClose: false,
@@ -347,7 +356,7 @@
                     const self = this
                     const clusterId = data.clusterId
                     let clusterName = 'default'
-                    const url = `${this.siteUrl}/projects/${this.projectId}/clusters/${clusterId}/?source=mgr&shell=bash`
+                    const url = `${this.siteUrl}/projects/${this.projectId}/clusters/${clusterId}/?source=mgr&shell=bash&lang=${this.lang}`
                     const tabKeys = self.panels.map(item => {
                         return item.clusterName
                     })
@@ -416,7 +425,7 @@
                         theme: 'primary',
                         offsetY: 80,
                         position: 'top-right',
-                        message: `${panel.label} 连接已经断开`
+                        message: `${panel.label} this.$t('message.connect')`
                     })
                     this.isDropdownShow = false
                     this.selectIndex = -1

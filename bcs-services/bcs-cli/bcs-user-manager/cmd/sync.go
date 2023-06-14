@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newSyncCmd create the sync tke cidrs command
 func newSyncCmd() *cobra.Command {
 	syncCmd := &cobra.Command{
 		Use:   "sync",

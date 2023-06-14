@@ -28,13 +28,19 @@ import (
 )
 
 const (
-	repositoryListHelmURI      = "/repository/api/package/page"
-	repositorySearchHelmURI    = "/repository/api/package/search"
-	repositoryGetHelmURI       = "/repository/api/package/info"
+	// repositoryListHelmURI list chart
+	repositoryListHelmURI = "/repository/api/package/page"
+	// repositorySearchHelmURI search chart
+	repositorySearchHelmURI = "/repository/api/package/search"
+	// get helm chart detail
+	repositoryGetHelmURI = "/repository/api/package/info"
+	// delete helm chart
 	repositoryDeletePackageURI = "/helm/ext/package/delete"
+	// delete helm chart version
 	repositoryDeleteVersionURI = "/helm/ext/version/delete"
 )
 
+// list chart
 func (rh *repositoryHandler) listChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
 	if option.Size == 0 {
 		option.Size = 10
@@ -50,10 +56,12 @@ func (rh *repositoryHandler) listChart(ctx context.Context, option repo.ListOpti
 	}
 }
 
+// list oci chart
 func (rh *repositoryHandler) listOCIChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
 	return rh.listHelmChart(ctx, option)
 }
 
+// list helm chart
 func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
 	resp, err := rh.handler.get(ctx, rh.getListHelmChartURI(option), nil, nil)
 	if err != nil {
@@ -73,6 +81,7 @@ func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.List
 		return nil, err
 	}
 
+	// parse chart
 	var data []*repo.Chart
 	for _, item := range r.Data.Records {
 		data = append(data, item.convert2Chart())
@@ -85,12 +94,14 @@ func (rh *repositoryHandler) listHelmChart(ctx context.Context, option repo.List
 	}, nil
 }
 
+// get list helm chart uri
 func (rh *repositoryHandler) getListHelmChartURI(option repo.ListOption) string {
 	return fmt.Sprintf("%s/%s/%s/?pageNumber=%s&pageSize=%s&packageName=%s", repositoryListHelmURI,
 		rh.projectID, rh.repository, strconv.FormatInt(option.Page, 10), strconv.FormatInt(option.Size, 10),
 		option.PackageName)
 }
 
+// search chart
 func (rh *repositoryHandler) searchChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
 	if option.Size == 0 {
 		option.Size = 10
@@ -106,10 +117,12 @@ func (rh *repositoryHandler) searchChart(ctx context.Context, option repo.ListOp
 	}
 }
 
+// searchOCIChart
 func (rh *repositoryHandler) searchOCIChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
 	return rh.listHelmChart(ctx, option)
 }
 
+// searchHelmChart
 func (rh *repositoryHandler) searchHelmChart(ctx context.Context, option repo.ListOption) (*repo.ListChartData, error) {
 	req := searchChartReq{
 		Fields: []string{"projectId", "name", "key", "type", "latest", "downloads", "versions", "description",
@@ -137,6 +150,7 @@ func (rh *repositoryHandler) searchHelmChart(ctx context.Context, option repo.Li
 		return nil, err
 	}
 
+	// parse list resp
 	var r listPackResp
 	if err = json.Unmarshal(resp.Reply, &r); err != nil {
 		blog.Errorf("search helm chart from bk-repo decode failed, %s, with resp %s", err.Error(), resp.Reply)
@@ -160,6 +174,7 @@ func (rh *repositoryHandler) searchHelmChart(ctx context.Context, option repo.Li
 	}, nil
 }
 
+// get chart detail
 func (rh *repositoryHandler) getChartDetail(ctx context.Context, name string) (
 	*repo.Chart, error) {
 	switch rh.repoType {
@@ -172,6 +187,7 @@ func (rh *repositoryHandler) getChartDetail(ctx context.Context, name string) (
 	}
 }
 
+// get helm chart
 func (rh *repositoryHandler) getHelmChart(ctx context.Context, name string) (*repo.Chart, error) {
 	resp, err := rh.handler.get(ctx, rh.getHelmChartURI(name), nil, nil)
 	if err != nil {
@@ -194,10 +210,12 @@ func (rh *repositoryHandler) getHelmChart(ctx context.Context, name string) (*re
 	return r.Data.convert2Chart(), nil
 }
 
+// getHelmChartURI
 func (rh *repositoryHandler) getHelmChartURI(name string) string {
 	return fmt.Sprintf("%s/%s/%s?packageKey=helm://%s", repositoryGetHelmURI, rh.projectID, rh.repository, name)
 }
 
+// getOCIChart
 func (rh *repositoryHandler) getOCIChart(ctx context.Context, name string) (*repo.Chart, error) {
 	resp, err := rh.handler.get(ctx, rh.getOCIChartURI(name), nil, nil)
 	if err != nil {
@@ -220,6 +238,7 @@ func (rh *repositoryHandler) getOCIChart(ctx context.Context, name string) (*rep
 	return r.Data.convert2Chart(), nil
 }
 
+// getOCIChartURI
 func (rh *repositoryHandler) getOCIChartURI(name string) string {
 	return fmt.Sprintf("%s/%s/%s?packageKey=oci://%s", repositoryGetHelmURI, rh.projectID, rh.repository, name)
 }
@@ -277,6 +296,7 @@ type listPackData struct {
 	Records []*pack `json:"records"`
 }
 
+// pack helm package
 type pack struct {
 	ProjectID        string          `json:"projectId"`
 	Name             string          `json:"name"`
@@ -328,11 +348,11 @@ func getDateFromRawMessage(raw json.RawMessage) string {
 	i, err := strconv.Atoi(string(data))
 	if err != nil {
 		return string(data)
-	} else {
-		return time.UnixMilli(int64(i)).Format(common.TimeFormat)
 	}
+	return time.UnixMilli(int64(i)).Format(common.TimeFormat)
 }
 
+// deleteChart
 func (ch *chartHandler) deleteChart(ctx context.Context) error {
 	resp, err := ch.handler.delete(ctx, ch.getDeletePackageURI(), nil, nil)
 	if err != nil {
@@ -356,11 +376,13 @@ func (ch *chartHandler) deleteChart(ctx context.Context) error {
 	return nil
 }
 
+// getDeletePackageURI
 func (ch *chartHandler) getDeletePackageURI() string {
 	return fmt.Sprintf("%s/%s/%s?packageKey=%s://%s", repositoryDeletePackageURI, ch.projectID, ch.repository,
 		ch.repoType.PackageKey(), ch.chartName)
 }
 
+// deleteChartVersion
 func (ch *chartHandler) deleteChartVersion(ctx context.Context, version string) error {
 	resp, err := ch.handler.delete(ctx, ch.getDeleteVersionURI(version), nil, nil)
 	if err != nil {
@@ -384,6 +406,7 @@ func (ch *chartHandler) deleteChartVersion(ctx context.Context, version string) 
 	return nil
 }
 
+// getDeleteVersionURI
 func (ch *chartHandler) getDeleteVersionURI(version string) string {
 	u, _ := url.ParseRequestURI(fmt.Sprintf("%s/%s/%s", repositoryDeleteVersionURI, ch.projectID, ch.repository))
 	q := u.Query()

@@ -187,6 +187,7 @@ func (sd *ServiceDiscovery) GetRandomServiceInstance() (*registry.Node, error) {
 		blog.V(3).Infof("discovery found no node information of %s", sd.service)
 		return nil, errors.New("allServiceNodes is empty")
 	}
+	// NOCC:gas/crypto(设计如此)
 	selected := rand.Int() % nodeLength
 	return allServiceNodes[selected], nil
 }

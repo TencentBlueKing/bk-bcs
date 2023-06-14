@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newGrantCmd create the grant permission command
 func newGrantCmd() *cobra.Command {
 	grantCmd := &cobra.Command{
 		Use:   "grant",

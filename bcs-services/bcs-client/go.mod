@@ -13,6 +13,7 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager => github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager v0.0.0-20220329091816-5b868e90d386
 	github.com/Tencent/bk-bcs/bcs-services/bcs-webhook-server => ../bcs-webhook-server
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/mholt/caddy => github.com/caddyserver/caddy v0.11.1
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20180801171038-322a19404e37
@@ -29,11 +30,12 @@ replace (
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20200410145947-61e04a5be9a6
 	k8s.io/kubectl => k8s.io/kubectl v0.16.15
 	k8s.io/kubernetes => k8s.io/kubernetes v1.13.1
+
 )
 
 require (
 	github.com/Tencent/bk-bcs v1.20.11
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220329091816-5b868e90d386
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
 	github.com/Tencent/bk-bcs/bcs-services/bcs-log-manager v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager v0.0.0-00010101000000-000000000000
 	github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager v0.0.0-00010101000000-000000000000
@@ -71,6 +73,7 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect

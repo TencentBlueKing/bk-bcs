@@ -165,7 +165,7 @@ func (tm *TunnelManager) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 // lookupBackendTransport according clusterID, transport is entry point
 // for backend cluster. Transport will be cache for reuse.
-// todo(DeveloperJim): health check for transport?
+// NOTE: health check for transport?
 func (tm *TunnelManager) lookupBackendEntryPoint(clusterID string) (*proxy.UpgradeAwareHandler, error) {
 	if !tm.tunnelSvr.HasSession(clusterID) {
 		return nil, fmt.Errorf("no session in tunnel")
@@ -235,7 +235,7 @@ func (tm *TunnelManager) authorizer(req *http.Request) (string, bool, error) {
 		return clusterID, true, nil
 	}
 	if oldCls.ServerAddress != serverAddr {
-		// backend cluster instance switchs,
+		// backend cluster instance switches,
 		// reset tranport for reconnection
 		oldCls.ServerAddress = serverAddr
 		if oldCls.MiddleTransport != nil {

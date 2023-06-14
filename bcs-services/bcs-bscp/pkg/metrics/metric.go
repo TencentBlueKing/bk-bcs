@@ -13,8 +13,6 @@ limitations under the License.
 package metrics
 
 import (
-	"net/http"
-
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/version"
 
@@ -32,19 +30,6 @@ var globalRegister prometheus.Registerer
 func init() {
 	// set default global register
 	globalRegister = prometheus.DefaultRegisterer
-}
-
-// Register must only be called after the metric service is started.
-func Register() prometheus.Registerer {
-	return globalRegister
-}
-
-// httpHandler used to expose the metrics to prometheus.
-var httpHandler http.Handler
-
-// Handler returns the http handler with metrics.
-func Handler() http.Handler {
-	return httpHandler
 }
 
 const (
@@ -88,9 +73,24 @@ const (
 	LabelHost        = "host"
 )
 
-// GrpcBuckets defines the grpc server's metric buckets.
-var GrpcBuckets = gprm.WithHistogramBuckets([]float64{0.001, 0.003, 0.005, 0.007, 0.01, 0.015, 0.02, 0.025, 0.03,
-	0.04, 0.05, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2.5, 5, 10})
+var (
+	// GrpcBuckets defines the grpc server's metric buckets.
+	GrpcBuckets = gprm.WithHistogramBuckets([]float64{0.001, 0.003, 0.005, 0.007, 0.01, 0.015, 0.02, 0.025, 0.03,
+		0.04, 0.05, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2.5, 5, 10})
+
+	// http 请求总量
+	httpRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "http_requests_total",
+		Help: "Counter of HTTP requests to bscp",
+	}, []string{"handler", "method", "code"})
+
+	// http 请求耗时
+	httpRequestDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "http_request_duration_seconds",
+		Help:    "Histogram of latencies for HTTP requests to bscp.",
+		Buckets: []float64{0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1},
+	}, []string{"handler", "method", "code"})
+)
 
 // InitMetrics init metrics registerer and http handler
 func InitMetrics(endpoint string) {

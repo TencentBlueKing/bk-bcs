@@ -89,7 +89,6 @@ type ReconcileAppNode struct {
 
 // Reconcile reads that state of the cluster for a AppNode object and makes changes based on the state read
 // and what is in the AppNode.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  The scaffolding writes
 // a Deployment as an example
 // Automatically generate RBAC rules to allow the Controller to read and write Deployments
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
@@ -143,13 +142,11 @@ func (r *ReconcileAppNode) handleQueue() {
 			default:
 				blog.Warnf("ReconcileAppNode get unknown Event Type: %s.", event.Type)
 			}
-			// todo(DeveloperJim) default info for timeout?
 		}
 	}
 }
 
 // onAdd add new AppSvc to kube-apiserver
-// todo(DeveloperJim): push event queue back when operation failed?
 func (r *ReconcileAppNode) onAdd(node *meshv1.AppNode) {
 	instance := &meshv1.AppNode{}
 	key, kerr := client.ObjectKeyFromObject(node)
@@ -166,7 +163,7 @@ func (r *ReconcileAppNode) onAdd(node *meshv1.AppNode) {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Object not found, create new one directly
-			if err := r.Create(context.TODO(), node); err != nil {
+			if err = r.Create(context.TODO(), node); err != nil {
 				blog.Errorf("ReconcileAppNode create new AppNode %s failed, %s", key.String(), err.Error())
 				return
 			}
@@ -210,7 +207,7 @@ func (r *ReconcileAppNode) onUpdate(node *meshv1.AppNode) {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Object not found, create new one directly
-			if err := r.Create(context.TODO(), node); err != nil {
+			if err = r.Create(context.TODO(), node); err != nil {
 				blog.Errorf("ReconcileAppNode create new AppNode %s on EventUpated failed, %s", key.String(), err.Error())
 				return
 			}

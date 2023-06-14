@@ -82,7 +82,7 @@ func Start() {
 	}
 	if shutdown != nil {
 		defer func() {
-			if err := shutdown(context.Background()); err != nil {
+			if err = shutdown(context.Background()); err != nil {
 				logging.Info(context.Background(), fmt.Sprintf("failed to shutdown TracerProvider: %s", err.Error()))
 			}
 		}()

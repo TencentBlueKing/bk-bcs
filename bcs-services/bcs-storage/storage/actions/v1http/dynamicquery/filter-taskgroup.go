@@ -38,6 +38,7 @@ type TaskGroupFilter struct {
 
 const taskGroupNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t TaskGroupFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, taskGroupNestedTimeLayout)
 }

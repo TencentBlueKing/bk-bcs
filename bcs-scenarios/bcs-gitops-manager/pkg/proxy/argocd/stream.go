@@ -36,7 +36,7 @@ type StreamPlugin struct {
 }
 
 // Init all project sub path handler
-// project plugin is a subRouter, all path registed is relative
+// project plugin is a subRouter, all path registered is relative
 func (plugin *StreamPlugin) Init() error {
 	// done(DeveloperJim): GET /api/v1/stream/applications?projects={projects}
 	plugin.Path("").Methods("GET").Queries("projects", "{projects}").

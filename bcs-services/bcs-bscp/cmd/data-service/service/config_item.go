@@ -248,7 +248,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			BizID: req.BizId,
 			AppID: req.AppId,
 			Filter: &filter.Expression{
-				Op:    filter.And,
+				Op:    filter.Or,
 				Rules: []filter.RuleFactory{},
 			},
 			Page: &types.BasePage{
@@ -256,18 +256,37 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 				Limit: uint(req.Limit),
 			},
 		}
+		if req.SearchKey != "" {
+			query.Filter.Rules = append(query.Filter.Rules, &filter.AtomRule{
+				Field: "name",
+				Op:    filter.ContainsInsensitive.Factory(),
+				Value: req.SearchKey,
+			}, &filter.AtomRule{
+				Field: "creator",
+				Op:    filter.ContainsInsensitive.Factory(),
+				Value: req.SearchKey,
+			}, &filter.AtomRule{
+				Field: "reviser",
+				Op:    filter.ContainsInsensitive.Factory(),
+				Value: req.SearchKey,
+			})
+		}
+		if req.All {
+			query.Page.Start = 0
+			query.Page.Limit = 0
+		}
 		details, err := s.dao.ConfigItem().List(grpcKit, query)
 		if err != nil {
 			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
 
-		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId)
+		fileReleased, err := s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.AppId, req.BizId, req.SearchKey)
 		if err != nil {
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-		configItems, count := s.queryConfigItemsWithDeleted(details, fileReleased, req.Start, req.Limit)
+		configItems, count := s.queryConfigItemsWithDeleted(details, fileReleased, req.Start, req.Limit, req.All)
 		resp := &pbds.ListConfigItemsResp{
 			Count:   count,
 			Details: configItems,
@@ -276,17 +295,35 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	}
 	// list released config items
 	query := &types.ListReleasedCIsOption{
-		BizID: req.BizId,
+		BizID:     req.BizId,
+		ReleaseID: req.ReleaseId,
 		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{Field: "release_id", Op: filter.Equal.Factory(), Value: req.ReleaseId},
-			},
+			Op:    filter.Or,
+			Rules: []filter.RuleFactory{},
 		},
 		Page: &types.BasePage{
 			Start: req.Start,
 			Limit: uint(req.Limit),
 		},
+	}
+	if req.SearchKey != "" {
+		query.Filter.Rules = append(query.Filter.Rules, &filter.AtomRule{
+			Field: "name",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		}, &filter.AtomRule{
+			Field: "creator",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		}, &filter.AtomRule{
+			Field: "reviser",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		})
+	}
+	if req.All {
+		query.Page.Start = 0
+		query.Page.Limit = 0
 	}
 	details, err := s.dao.ReleasedCI().List(grpcKit, query)
 	if err != nil {
@@ -340,9 +377,14 @@ func (s *Service) queryAppConfigItemList(kit *kit.Kit, bizID, appID uint32) ([]*
 
 // queryAppConfigItemList query config item list under specific app.
 func (s *Service) queryConfigItemsWithDeleted(details *types.ListConfigItemDetails,
-	released []*table.ReleasedConfigItem, start, limit uint32) ([]*pbci.ConfigItem, uint32) {
+	released []*table.ReleasedConfigItem, start, limit uint32, all bool) ([]*pbci.ConfigItem, uint32) {
 	configItems, deleted := pbrci.PbConfigItemState(details.Details, released)
 	count := details.Count + uint32(len(deleted))
+	// if all, return configItems and all deleted
+	if all {
+		configItems = append(configItems, deleted...)
+		return configItems, count
+	}
 	// 1. req.Start > details.Count
 	if start > uint32(details.Count) {
 		deletedStart := len(deleted)

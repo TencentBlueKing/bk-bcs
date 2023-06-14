@@ -155,7 +155,8 @@ func (m *ModelRepository) GetRepository(ctx context.Context, projectID, name str
 }
 
 // GetProjectRepository get a specific entity.Repository from database
-func (m *ModelRepository) GetProjectRepository(ctx context.Context, projectID, name string) (*entity.Repository, error) {
+func (m *ModelRepository) GetProjectRepository(ctx context.Context, projectID, name string) (
+	*entity.Repository, error) {
 	if projectID == "" || name == "" {
 		return nil, fmt.Errorf("can not get with empty projectID or name")
 	}

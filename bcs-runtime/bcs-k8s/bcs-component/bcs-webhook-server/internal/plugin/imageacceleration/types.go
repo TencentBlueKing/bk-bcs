@@ -23,7 +23,7 @@ const (
 	// configMapName defines the name of configmap that can enable image acceleration
 	configMapName = "bcs-image-acceleration"
 	// secretImagePullItem defines the image pull data of secret
-	secretImagePullItem = ".dockerconfigjson"
+	secretImagePullItem = ".dockerconfigjson" // // NOCC:gas/crypto(设计如此)
 
 	// configMapKeyEnabled key of configmap, namespace will enable image acceleration if value is "true"
 	configMapKeyEnabled = "enabled"

@@ -19,11 +19,13 @@ import (
 	"net/http"
 
 	"fmt"
+	"time"
+
+	docker "github.com/fsouza/go-dockerclient"
+	"github.com/gorilla/websocket"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-consoleproxy/console-proxy/types"
-	"github.com/fsouza/go-dockerclient"
-	"github.com/gorilla/websocket"
-	"time"
 )
 
 // ConsoleCopywritingFailed is a response string
@@ -116,8 +118,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 			blog.Warnf("container %s has established connection", conf.ContainerID)
 
 			for _, i := range ConsoleCopywritingFailed {
-				err := ws.WriteMessage(websocket.TextMessage, []byte(i))
-				if err != nil {
+				if err = ws.WriteMessage(websocket.TextMessage, []byte(i)); err != nil {
 					m.Unlock()
 					ResponseJSON(w, http.StatusInternalServerError, errMsg{err.Error()})
 					return
@@ -153,7 +154,7 @@ func (m *manager) StartExec(w http.ResponseWriter, r *http.Request, conf *types.
 		for {
 			select {
 			case <-ticker.C:
-				if err := ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+				if err = ws.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 					return
 				}
 			}

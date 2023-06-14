@@ -1,6 +1,6 @@
 ARG BASEIMAGE=centos:centos7
 FROM $BASEIMAGE
 
-COPY bcs-cluster-autoscaler-1.16 /
-COPY bcs-cluster-autoscaler-1.22 /
+COPY hyper/bcs-cluster-autoscaler-1.16 /bcs-cluster-autoscaler-1.16
+COPY hyper/bcs-cluster-autoscaler-1.22 /bcs-cluster-autoscaler-1.22
 CMD ["/bcs-cluster-autoscaler-1.22"]

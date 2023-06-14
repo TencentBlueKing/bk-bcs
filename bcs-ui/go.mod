@@ -5,15 +5,16 @@ go 1.17
 replace github.com/cenkalti/backoff/v4 => github.com/cenkalti/backoff/v4 v4.1.3
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230523073344-2f30db996644
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230523073344-2f30db996644
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/render v1.0.2
 	github.com/go-micro/plugins/v4/registry/etcd v1.2.0
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/oklog/run v1.1.0
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
@@ -25,6 +26,7 @@ require (
 	go.opentelemetry.io/otel/metric v0.26.0
 	go.opentelemetry.io/otel/trace v1.14.0
 	go.uber.org/automaxprocs v1.5.1
+	golang.org/x/text v0.8.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/klog/v2 v2.90.1
 )
@@ -80,7 +82,6 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
@@ -117,7 +118,6 @@ require (
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
 	google.golang.org/grpc v1.53.0 // indirect

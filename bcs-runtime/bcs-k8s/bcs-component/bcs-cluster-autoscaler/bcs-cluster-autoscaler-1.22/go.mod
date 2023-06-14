@@ -203,14 +203,15 @@ replace (
 	github.com/google/cadvisor => github.com/google/cadvisor v0.39.2
 	github.com/google/uuid => github.com/google/uuid v1.1.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.13.0
+	// NOCC:horus-dependency-security(已replace)
+	github.com/satori/go.uuid v1.2.0 => github.com/gofrs/uuid v4.4.0+incompatible
 	google.golang.org/api => google.golang.org/api v0.20.0
 	google.golang.org/grpc => google.golang.org/grpc v1.38.0
 	k8s.io/api => k8s.io/api v0.22.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.22.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.22.0
 	k8s.io/apiserver => k8s.io/apiserver v0.22.0
-	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20230202081332-3b703816dceb
-	// k8s.io/autoscaler/cluster-autoscaler => k8s.io/autoscaler/cluster-autoscaler v0.0.0-20220613131812-a28edd0f3d24
+	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20230605062414-0c6b329e9ef7
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.22.0
 	k8s.io/client-go => k8s.io/client-go v0.22.0
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.22.0

@@ -11,8 +11,8 @@
  *
  */
 
-// Package bcs_system xxx
-package bcs_system
+// Package bcssystem xxx
+package bcssystem
 
 import (
 	"context"
@@ -165,7 +165,8 @@ func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return err
 	}
 
-	client, err := source.ClientFactory(ctx, cluster.ClusterId, s.dispatch[clusterID].SourceType, s.dispatch)
+	client, err := source.ClientFactory(ctx, cluster.ClusterId, s.dispatch[clusterID].SourceType, s.dispatch,
+		cluster.IsVirtual())
 	if err != nil {
 		return err
 	}

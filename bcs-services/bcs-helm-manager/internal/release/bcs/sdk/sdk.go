@@ -295,7 +295,8 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 		if e, ok := err.(*driver.StorageDriverError); ok && upgrader.Install &&
 			errors.Is(e.Unwrap(), driver.ErrNoDeployedReleases) {
 			blog.Infof("%s of namespace %s, installing it now.", e.Error(), config.Namespace)
-			result, err := c.Install(context.Background(), config.ToInstallConfig())
+			result := &release.HelmInstallResult{}
+			result, err = c.Install(context.Background(), config.ToInstallConfig())
 			if err != nil {
 				return result.ToUpgradeResult(), err
 			}

@@ -47,7 +47,7 @@ properties:
             else:
               state:
                 disabled: false
-          # TODO 目前只支持 qcloud 的重定向，nginx 后续支持了再开放
+          # 目前只支持 qcloud 的重定向，nginx 后续支持了再开放
           - target: spec.cert.autoRewriteHttp
             if: "{{`{{`}} $self.value === 'qcloud' {{`}}`}}"
             then:

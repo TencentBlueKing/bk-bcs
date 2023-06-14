@@ -423,7 +423,7 @@ func (f *Finder) WithLimit(limit int64) drivers.Find {
 	return f
 }
 
-// WithReadPreference set readPreference of find
+// WithDatabaseOptions set readPreference of find
 func (f *Finder) WithDatabaseOptions(opt interface{}) drivers.Find {
 	if dbOpt, ok := opt.(*mopt.DatabaseOptions); ok {
 		f.databaseOptions = dbOpt

@@ -18,15 +18,16 @@ import (
 	"strings"
 	"testing"
 
-	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
-	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/fake"
-	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	core "k8s.io/client-go/testing"
 	schedulerapi "k8s.io/kubernetes/pkg/scheduler/api"
+
+	cloudv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/apis/cloud/v1"
+	"github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/clientset/versioned/fake"
+	informers "github.com/Tencent/bk-bcs/bcs-k8s/kubernetes/generated/informers/externalversions"
 )
 
 var (

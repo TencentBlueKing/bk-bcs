@@ -36,6 +36,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 )
 
+// getExtra get extra
 func getExtra(req *restful.Request) operator.M {
 	raw := req.QueryParameter(extraTag)
 	if raw == "" {
@@ -50,6 +51,7 @@ func getExtra(req *restful.Request) operator.M {
 	return extra
 }
 
+// getExtraContain get extracontain
 func getExtraContain(req *restful.Request) operator.M {
 	raw := req.QueryParameter(extraConTag)
 	if raw == "" {
@@ -64,6 +66,7 @@ func getExtraContain(req *restful.Request) operator.M {
 	return extraContain
 }
 
+// getCondition get condition
 func getCondition(req *restful.Request) *operator.Condition {
 	timeConds := getTimeConds(req)
 	commonConds := getCommonConds(req)
@@ -110,6 +113,7 @@ func getCondition(req *restful.Request) *operator.Condition {
 	return condition
 }
 
+// getCommonConds get common conds
 func getCommonConds(req *restful.Request) []*operator.Condition {
 	var condList []*operator.Condition
 	for _, k := range conditionTagList {
@@ -121,6 +125,7 @@ func getCommonConds(req *restful.Request) []*operator.Condition {
 	return condList
 }
 
+// getTimeConds get time conds
 func getTimeConds(req *restful.Request) []*operator.Condition {
 	var condList []*operator.Condition
 	if tmp, _ := strconv.ParseInt(req.QueryParameter(timeBeginTag), 10, 64); tmp > 0 {
@@ -136,6 +141,7 @@ func getTimeConds(req *restful.Request) []*operator.Condition {
 	return condList
 }
 
+// listEvent list event
 func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 	clusterIDs := lib.GetQueryParamStringArray(req, clusterIDTag, ",")
 	if clusterIDs == nil {
@@ -176,6 +182,7 @@ func listEvent(req *restful.Request) ([]operator.M, int64, error) {
 	return GetEventList(req.Request.Context(), clusterIDs, opt)
 }
 
+// get json extra
 func getJsonExtra(params map[string]string) operator.M {
 	raw := params[extraTag]
 
@@ -187,6 +194,7 @@ func getJsonExtra(params map[string]string) operator.M {
 	return extra
 }
 
+// getJsonExtraContain get json extra contain
 func getJsonExtraContain(params map[string]string) operator.M {
 	raw := params[extraConTag]
 
@@ -198,6 +206,7 @@ func getJsonExtraContain(params map[string]string) operator.M {
 	return extraContain
 }
 
+// getJsonCondition get json condition
 func getJsonCondition(params map[string]string) *operator.Condition {
 	timeConds := getJsonTimeConds(params)
 	commonConds := getJsonCommonConds(params)
@@ -244,6 +253,7 @@ func getJsonCondition(params map[string]string) *operator.Condition {
 	return condition
 }
 
+// getJsonCommonConds get json common conds
 func getJsonCommonConds(params map[string]string) []*operator.Condition {
 	var condList []*operator.Condition
 	for _, k := range conditionTagList {
@@ -255,6 +265,7 @@ func getJsonCommonConds(params map[string]string) []*operator.Condition {
 	return condList
 }
 
+// getJsonTimeConds get json time conds
 func getJsonTimeConds(params map[string]string) []*operator.Condition {
 	var condList []*operator.Condition
 	if tmp, _ := strconv.ParseInt(params[timeBeginTag], 10, 64); tmp > 0 {
@@ -270,6 +281,7 @@ func getJsonTimeConds(params map[string]string) []*operator.Condition {
 	return condList
 }
 
+// post event
 func postEvent(req *restful.Request) ([]operator.M, int64, error) {
 	eventParams := map[string]string{}
 	if err := codec.DecJsonReader(req.Request.Body, eventParams); err != nil {
@@ -315,6 +327,7 @@ func postEvent(req *restful.Request) ([]operator.M, int64, error) {
 	return GetEventList(req.Request.Context(), clusterIDs, opt)
 }
 
+// getReqData get req data
 func getReqData(req *restful.Request) (operator.M, error) {
 	var tmp types.BcsStorageEventIf
 	if err := codec.DecJsonReader(req.Request.Body, &tmp); err != nil {
@@ -336,6 +349,7 @@ func getReqData(req *restful.Request) (operator.M, error) {
 	return data, nil
 }
 
+// insert 插入
 func insert(req *restful.Request) error {
 	// 参数
 	data, err := getReqData(req)
@@ -352,6 +366,7 @@ func insert(req *restful.Request) error {
 	return AddEvent(req.Request.Context(), resourceType, data, opt)
 }
 
+// watch
 func watch(req *restful.Request, resp *restful.Response) {
 	clusterID := req.QueryParameter(clusterIDTag)
 	if clusterID == "" {
@@ -379,6 +394,7 @@ func urlPath(oldURL string) string {
 	return oldURL
 }
 
+// isExistResourceQueue is exist resource queue
 func isExistResourceQueue(features map[string]string) bool {
 	if len(features) == 0 {
 		return false
@@ -396,6 +412,7 @@ func isExistResourceQueue(features map[string]string) bool {
 	return true
 }
 
+// publishEventResourceToQueue publish event resource to queue
 func publishEventResourceToQueue(data operator.M, featTags []string, event msgqueue.EventKind) error {
 	var (
 		err     error
@@ -436,6 +453,7 @@ func publishEventResourceToQueue(data operator.M, featTags []string, event msgqu
 	return nil
 }
 
+// typeofToString convert type of to string
 func typeofToString(v interface{}) string {
 	switch t := v.(type) {
 	case string:

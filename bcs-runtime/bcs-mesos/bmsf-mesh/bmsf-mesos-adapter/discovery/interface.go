@@ -20,7 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
-// Cluster maintance resource for specified cluster, offer cluster api for
+// Cluster maintenance resource for specified cluster, offer cluster api for
 // getting & listing all discovery datas
 type Cluster interface {
 	// GetName get cluster name

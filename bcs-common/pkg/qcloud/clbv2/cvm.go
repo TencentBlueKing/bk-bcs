@@ -74,7 +74,7 @@ type PlaceMent struct {
 	ProjectID int    `json:"ProjectId,omitempty"`
 }
 
-// VPCRef VirtualPrivateCloud referrence
+// VPCRef VirtualPrivateCloud reference
 type VPCRef struct {
 	VpcID              string    `json:"VpcId"`
 	SubnetID           string    `json:"SubnetId"`

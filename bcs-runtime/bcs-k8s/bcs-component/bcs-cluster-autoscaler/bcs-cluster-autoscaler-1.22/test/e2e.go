@@ -18,9 +18,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"k8s.io/apimachinery/pkg/types"
 	"net/http"
 	"time"
+
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/pflag"
@@ -38,7 +39,7 @@ import (
 	v12 "k8s.io/client-go/listers/core/v1"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	klog "k8s.io/klog/v2" 
+	klog "k8s.io/klog/v2"
 )
 
 var (

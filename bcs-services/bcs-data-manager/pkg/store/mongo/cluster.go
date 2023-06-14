@@ -146,6 +146,7 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 	if err != nil {
 		return err
 	}
+	// generate essential condition
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ProjectIDKey:  opts.ProjectID,
 		ClusterIDKey:  opts.ClusterID,
@@ -209,6 +210,7 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	if dimension == "" {
 		dimension = types.DimensionMinute
 	}
+	// generate essential condition
 	cond := make([]*operator.Condition, 0)
 	if request.GetProject() != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
@@ -281,7 +283,7 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	return response, total, nil
 }
 
-// GetClusterInfo get cluster data for api, return metrics with default time range
+// GetClusterInfo get cluster data for api, if startTime or endTime is empty, return metrics with default time range
 func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	request *bcsdatamanager.GetClusterInfoRequest) (*bcsdatamanager.Cluster, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -302,6 +304,7 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 		metricEndTime = time.Unix(request.GetEndTime(), 0)
 	}
 	blog.Infof("get metric from %s to %s", metricStartTime, metricEndTime)
+	// 因为查询时有start time限制，所以需要用aggregate，从metrics里取出时间做筛选
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline,
 		map[string]interface{}{"$match": map[string]interface{}{
@@ -385,6 +388,7 @@ func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *types.JobCom
 	return retCluster, nil
 }
 
+// generateClusterResponse 构造cluster response，将storage转化为 proto数据结构
 func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetrics, data *types.ClusterData,
 	dimension, startTime, endTime string) *bcsdatamanager.Cluster {
 	response := &bcsdatamanager.Cluster{
@@ -436,6 +440,7 @@ func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetri
 	return response
 }
 
+// preAggregateMax 预聚合，获取最大值
 func (m *ModelCluster) preAggregateMax(data *types.ClusterData, newMetric *types.ClusterMetrics) {
 	if data.MaxInstance != nil && newMetric.MaxInstance != nil {
 		data.MaxInstance = getMax(data.MaxInstance, newMetric.MaxInstance)
@@ -462,6 +467,7 @@ func (m *ModelCluster) preAggregateMax(data *types.ClusterData, newMetric *types
 	}
 }
 
+// preAggregateMin 预聚合，获取最小值
 func (m *ModelCluster) preAggregateMin(data *types.ClusterData, newMetric *types.ClusterMetrics) {
 	if data.MinInstance != nil && newMetric.MinInstance != nil {
 		data.MinInstance = getMin(data.MinInstance, newMetric.MinInstance)

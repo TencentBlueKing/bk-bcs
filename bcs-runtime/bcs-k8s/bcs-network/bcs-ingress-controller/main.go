@@ -14,14 +14,13 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
+	gocache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/client-go/kubernetes"
@@ -29,6 +28,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
@@ -60,13 +66,6 @@ import (
 	portbindingctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
 	portpoolctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portpoolcontroller"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 var (
@@ -82,93 +81,14 @@ func init() {
 func main() {
 
 	opts := &option.ControllerOption{}
-	var verbosity int
-	var checkIntervalStr string
-	flag.StringVar(&opts.Address, "address", "127.0.0.1", "address for controller")
-	flag.IntVar(&opts.MetricPort, "metric_port", 8081, "metric port for controller")
-	flag.IntVar(&opts.Port, "port", 8080, "por for controller")
-	flag.StringVar(&opts.Cloud, "cloud", "tencentcloud", "cloud mode for controller")
-	flag.StringVar(&opts.Region, "region", "", "default cloud region for controller")
-	flag.StringVar(&opts.ElectionNamespace, "election_namespace", "bcs-system", "namespace for leader election")
-	flag.BoolVar(&opts.IsNamespaceScope, "is_namespace_scope", false,
-		"if the ingress can only be associated with the service and workload in the same namespace")
-	flag.StringVar(&checkIntervalStr, "portbinding_check_interval", "3m",
-		"check interval of port binding, golang time format")
-
-	flag.StringVar(&opts.LogDir, "log_dir", "./logs", "If non-empty, write log files in this directory")
-	flag.Uint64Var(&opts.LogMaxSize, "log_max_size", 500, "Max size (MB) per log file.")
-	flag.IntVar(&opts.LogMaxNum, "log_max_num", 10, "Max num of log file.")
-	flag.BoolVar(&opts.ToStdErr, "logtostderr", false, "log to standard error instead of files")
-	flag.BoolVar(&opts.AlsoToStdErr, "alsologtostderr", false, "log to standard error as well as files")
-
-	flag.IntVar(&verbosity, "v", 0, "log level for V logs")
-	flag.StringVar(&opts.StdErrThreshold, "stderrthreshold", "2", "logs at or above this threshold go to stderr")
-	flag.StringVar(&opts.VModule, "vmodule", "", "comma-separated list of pattern=N settings for file-filtered logging")
-	flag.StringVar(&opts.TraceLocation, "log_backtrace_at", "", "when logging hits line file:N, emit a stack trace")
-
-	flag.StringVar(&opts.ServerCertFile, "server_cert_file", "", "server cert file for webhook server")
-	flag.StringVar(&opts.ServerKeyFile, "server_key_file", "", "server key file for webhook server")
-
-	flag.IntVar(&opts.KubernetesQPS, "kubernetes_qps", 100, "the qps of k8s client request")
-	flag.IntVar(&opts.KubernetesBurst, "kubernetes_burst", 200, "the burst of k8s client request")
-
-	flag.BoolVar(&opts.ConflictCheckOpen, "conflict_check_open", true, "if false, "+
-		"skip all conflict checking about ingress and port pool")
-	flag.BoolVar(&opts.NodeInfoExporterOpen, "node_info_exporter_open", false, "if true, "+
-		"bcs-ingress-controller will record node info in cluster")
-
-	flag.UintVar(&opts.HttpServerPort, "http_svr_port", 8088, "port for ingress controller http server")
-
-	flag.Parse()
-
-	opts.Verbosity = int32(verbosity)
-	checkInterval, err := time.ParseDuration(checkIntervalStr)
-	if err != nil {
-		fmt.Printf("check interval %s invalid", checkIntervalStr)
-		os.Exit(1)
-	}
-	opts.PortBindingCheckInterval = checkInterval
+	opts.BindFromCommandLine()
 
 	blog.InitLogs(opts.LogConfig)
 	defer blog.CloseLogs()
 
 	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
 
-	// get env var name for tcp and udp port reuse
-	isTCPUDPPortReuseStr := os.Getenv(constant.EnvNameIsTCPUDPPortReuse)
-	if len(isTCPUDPPortReuseStr) != 0 {
-		blog.Infof("env option %s is %s", constant.EnvNameIsTCPUDPPortReuse, isTCPUDPPortReuseStr)
-		isTCPUDPPortReuse, err := strconv.ParseBool(isTCPUDPPortReuseStr)
-		if err != nil {
-			blog.Errorf("parse bool string %s failed, err %s", isTCPUDPPortReuseStr, err.Error())
-			os.Exit(1)
-		}
-		if isTCPUDPPortReuse {
-			opts.IsTCPUDPPortReuse = isTCPUDPPortReuse
-		}
-	}
-
-	// get env var name for bulk mode
-	isBulkModeStr := os.Getenv(constant.EnvNameIsBulkMode)
-	if len(isBulkModeStr) != 0 {
-		blog.Infof("env option %s is %s", constant.EnvNameIsBulkMode, isBulkModeStr)
-		isBulkMode, err := strconv.ParseBool(isBulkModeStr)
-		if err != nil {
-			blog.Errorf("parse bool string %s failed, err %s", isBulkModeStr, err.Error())
-			os.Exit(1)
-		}
-		if isBulkMode {
-			opts.IsBulkMode = isBulkMode
-		}
-	}
-
-	podIPs := os.Getenv(constant.EnvNamePodIPs)
-	if len(podIPs) == 0 {
-		blog.Errorf("empty pod ip")
-		podIPs = opts.Address
-	}
-	blog.Infof("pod ips: %s", podIPs)
-	opts.PodIPs = strings.Split(podIPs, ",")
+	opts.SetFromEnv()
 
 	// init port pool cache
 	portPoolCache := portpoolcache.NewCache()
@@ -176,11 +96,12 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                  scheme,
-		MetricsBindAddress:      "0",
+		MetricsBindAddress:      "0", // "0"表示禁用默认的Metric Service， 需要使用自己的实现支持IPV6
 		LeaderElection:          true,
 		LeaderElectionID:        "33fb49e.cloudlbconroller.bkbcs.tencent.com",
 		LeaderElectionNamespace: opts.ElectionNamespace,
 		NewClient: func(cache cache.Cache, config *rest.Config, options client.Options) (client.Client, error) {
+			// 调高对K8S client的QPS限制，优化大批量监听器时的处理效率
 			config.QPS = float32(opts.KubernetesQPS)
 			config.Burst = opts.KubernetesBurst
 			// Create the Client for Write operations.
@@ -216,68 +137,7 @@ func main() {
 	}
 	go eventWatcher.Start(context.Background())
 
-	var validater cloud.Validater
-	var lbClient cloud.LoadBalance
-	var nodeClient cloudnode.NodeClient
-	switch opts.Cloud {
-	case constant.CloudTencent:
-		validater = tencentcloud.NewClbValidater()
-		if !opts.IsNamespaceScope {
-			lbClient, err = tencentcloud.NewClb()
-			if err != nil {
-				blog.Errorf("init cloud failed, err %s", err.Error())
-				os.Exit(1)
-			}
-		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher,
-				tencentcloud.NewClbWithSecret)
-		}
-		nodeClient = native.NewNativeNodeClient()
-
-	case constant.CloudAWS:
-		validater = aws.NewELbValidater()
-		if !opts.IsNamespaceScope {
-			lbClient, err = aws.NewElb()
-			if err != nil {
-				blog.Errorf("init cloud failed, err %s", err.Error())
-				os.Exit(1)
-			}
-		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher, aws.NewElbWithSecret)
-		}
-		nodeClient = native.NewNativeNodeClient()
-
-	case constant.CloudGCP:
-		validater = gcp.NewGclbValidater()
-		if !opts.IsNamespaceScope {
-			lbClient, err = gcp.NewGclb(mgr.GetClient(), eventWatcher)
-			if err != nil {
-				blog.Errorf("init cloud failed, err %s", err.Error())
-				os.Exit(1)
-			}
-		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher,
-				gcp.NewGclbWithSecret)
-		}
-		nodeClient = native.NewNativeNodeClient()
-
-	case constant.CloudAzure:
-		validater = azure.NewAlbValidater()
-		if !opts.IsNamespaceScope {
-			lbClient, err = azure.NewAlb()
-			if err != nil {
-				blog.Errorf("init cloud failed, err %s", err.Error())
-				os.Exit(1)
-			}
-		} else {
-			lbClient = namespacedlb.NewNamespacedLB(mgr.GetClient(), eventWatcher, azure.NewAlbWithSecret)
-		}
-		nodeClient = native.NewNativeNodeClient()
-
-	default:
-		blog.Errorf("unknown cloud type '%s'", opts.Cloud)
-		os.Exit(1)
-	}
+	validater, lbClient, nodeClient := initClient(opts, mgr.GetClient(), eventWatcher)
 
 	if len(opts.Region) == 0 {
 		blog.Errorf("region cannot be empty")
@@ -285,11 +145,13 @@ func main() {
 	}
 
 	listenerHelper := listenerctrl.NewListenerHelper(mgr.GetClient())
+	lbIDCache := gocache.New(time.Duration(opts.LBCacheExpiration)*time.Minute, 120*time.Minute)
+	lbNameCache := gocache.New(time.Duration(opts.LBCacheExpiration)*time.Minute, 120*time.Minute)
 	ingressConverter, err := generator.NewIngressConverter(&generator.IngressConverterOpt{
 		DefaultRegion:     opts.Region,
 		IsTCPUDPPortReuse: opts.IsTCPUDPPortReuse,
 		Cloud:             opts.Cloud,
-	}, mgr.GetClient(), validater, lbClient, listenerHelper)
+	}, mgr.GetClient(), validater, lbClient, listenerHelper, lbIDCache, lbNameCache)
 	if err != nil {
 		blog.Errorf("create ingress converter failed, err %s", err.Error())
 		os.Exit(1)
@@ -381,6 +243,7 @@ func main() {
 	checkRunner.
 		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"))).
 		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper)).
+		Register(check.NewIngressChecker(mgr.GetClient(), lbClient, lbIDCache, lbNameCache, opts.LBCacheExpiration)).
 		Start()
 	blog.Infof("starting check runner")
 
@@ -395,11 +258,11 @@ func initInClusterClient() (*kubernetes.Clientset, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "get in-cluster config failed")
 	}
-	client, err := kubernetes.NewForConfig(cfg)
+	cli, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrapf(err, "create in-cluster client failed")
 	}
-	return client, nil
+	return cli, nil
 }
 
 // runPrometheusMetrics starting prometheus metrics handler
@@ -416,6 +279,9 @@ func runPrometheusMetrics(op *option.ControllerOption) {
 }
 
 // initHttpServer init ingress controller http server
+// httpServer提供
+// 1. 集群内Ingress/PortPool/PortBinding/Listener等信息的查询
+// 2. 维护节点信息，提供接口给Pod获取所在节点的信息
 func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache *nodecache.NodeCache) error {
 	server := httpserver.NewHttpServer(op.HttpServerPort, op.Address, "")
 	if op.Conf.ServCert.IsSSL {
@@ -439,4 +305,73 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 		return fmt.Errorf("http ListenAndServe error %s", err.Error())
 	}
 	return nil
+}
+
+// initClient 根据使用云厂商的不同，返回对应云厂商的实现
+func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
+	Validater, cloud.LoadBalance, cloudnode.NodeClient) {
+	var validater cloud.Validater
+	var lbClient cloud.LoadBalance
+	var nodeClient cloudnode.NodeClient
+	var err error
+	switch opts.Cloud {
+	case constant.CloudTencent:
+		validater = tencentcloud.NewClbValidater()
+		if !opts.IsNamespaceScope {
+			lbClient, err = tencentcloud.NewClb()
+			if err != nil {
+				blog.Errorf("init cloud failed, err %s", err.Error())
+				os.Exit(1)
+			}
+		} else {
+			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher,
+				tencentcloud.NewClbWithSecret)
+		}
+		nodeClient = native.NewNativeNodeClient()
+
+	case constant.CloudAWS:
+		validater = aws.NewELbValidater()
+		if !opts.IsNamespaceScope {
+			lbClient, err = aws.NewElb()
+			if err != nil {
+				blog.Errorf("init cloud failed, err %s", err.Error())
+				os.Exit(1)
+			}
+		} else {
+			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher, aws.NewElbWithSecret)
+		}
+		nodeClient = native.NewNativeNodeClient()
+
+	case constant.CloudGCP:
+		validater = gcp.NewGclbValidater()
+		if !opts.IsNamespaceScope {
+			lbClient, err = gcp.NewGclb(cli, eventWatcher)
+			if err != nil {
+				blog.Errorf("init cloud failed, err %s", err.Error())
+				os.Exit(1)
+			}
+		} else {
+			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher,
+				gcp.NewGclbWithSecret)
+		}
+		nodeClient = native.NewNativeNodeClient()
+
+	case constant.CloudAzure:
+		validater = azure.NewAlbValidater()
+		if !opts.IsNamespaceScope {
+			lbClient, err = azure.NewAlb()
+			if err != nil {
+				blog.Errorf("init cloud failed, err %s", err.Error())
+				os.Exit(1)
+			}
+		} else {
+			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher, azure.NewAlbWithSecret)
+		}
+		nodeClient = native.NewNativeNodeClient()
+
+	default:
+		blog.Errorf("unknown cloud type '%s'", opts.Cloud)
+		os.Exit(1)
+	}
+	return validater, lbClient, nodeClient
 }

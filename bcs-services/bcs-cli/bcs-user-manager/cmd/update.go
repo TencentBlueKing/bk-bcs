@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newUpdateCmd create update command
 func newUpdateCmd() *cobra.Command {
 	updateCmd := &cobra.Command{
 		Use:   "update",

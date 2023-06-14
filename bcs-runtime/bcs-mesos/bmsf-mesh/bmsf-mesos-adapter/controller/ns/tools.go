@@ -15,6 +15,7 @@ package ns
 
 import (
 	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	corev1 "k8s.io/api/core/v1"
@@ -38,7 +39,6 @@ func CheckNamespace(c cache.Cache, cli client.Client, name string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		// todo(DeveloperJim): add spec & status after testing
 	}
 	err := c.Get(context.TODO(), namespaceName, ns)
 	if err == nil {

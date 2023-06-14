@@ -17,16 +17,17 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/custom"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/options"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/versions"
 	"io/ioutil"
 	"net/http"
 	urllib "net/url"
 	"strings"
 
-	restful "github.com/emicklei/go-restful"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/custom"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/options"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/versions"
+
+	"github.com/emicklei/go-restful"
 	"github.com/parnurzeal/gorequest"
 )
 
@@ -47,10 +48,10 @@ type KubeSmartProxier struct {
 }
 
 // NewKubeSmartProxier xxx
-func NewKubeSmartProxier(kubeMasterURL string, TLSConfig options.TLSConfig) KubeSmartProxier {
+func NewKubeSmartProxier(kubeMasterURL string, tlsCfg options.TLSConfig) KubeSmartProxier {
 	return KubeSmartProxier{
 		KubeMasterURL: kubeMasterURL,
-		TLSConfig:     TLSConfig,
+		TLSConfig:     tlsCfg,
 		KubeURLPrefix: DefaultKubeURLPrefix,
 	}
 }

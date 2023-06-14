@@ -205,15 +205,20 @@ const (
 	// SelectedLabels selected labels
 	SelectedLabels ConfigSelected = "SelectedLabels"
 
-	// DefaultDataEncoding deafult data encoding
+	// DefaultDataEncoding default data encoding
 	DefaultDataEncoding = "UTF-8"
 )
 
 // LogCollectorSortByUpdateTime sort LogCollector by update time
 type LogCollectorSortByUpdateTime []*LogCollector
 
+// Len len
 func (l LogCollectorSortByUpdateTime) Len() int { return len(l) }
+
+// Less less
 func (l LogCollectorSortByUpdateTime) Less(i, j int) bool {
 	return l[i].UpdatedAt.After(l[j].UpdatedAt.Time)
 }
+
+// Swap swap
 func (l LogCollectorSortByUpdateTime) Swap(i, j int) { l[i], l[j] = l[j], l[i] }

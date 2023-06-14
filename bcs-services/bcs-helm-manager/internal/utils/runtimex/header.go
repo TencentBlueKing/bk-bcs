@@ -28,10 +28,10 @@ func CustomHeaderMatcher(key string) (string, bool) {
 		return middleware.CustomUsernameHeaderKey, true
 	case middleware.InnerClientHeaderKey:
 		return middleware.CustomUsernameHeaderKey, true
-	case "content-disposition":
-		return "Content-Disposition", true
-	case "Content-Disposition":
-		return "Content-Disposition", true
+	case contextx.ContentDispositionKey:
+		return contextx.ContentDispositionValue, true
+	case contextx.ContentDispositionCapKey:
+		return contextx.ContentDispositionValue, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

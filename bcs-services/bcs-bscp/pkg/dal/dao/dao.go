@@ -32,6 +32,7 @@ import (
 
 // Set defines all the DAO to be operated.
 type Set interface {
+	GenQuery() *gen.Query
 	ID() IDGenInterface
 	App() App
 	Commit() Commit
@@ -39,11 +40,10 @@ type Set interface {
 	Content() Content
 	Release() Release
 	ReleasedCI() ReleasedCI
-	StrategySet() StrategySet
-	CRInstance() CRInstance
-	Strategy() Strategy
 	Hook() Hook
 	TemplateSpace() TemplateSpace
+	Template() Template
+	TemplateRelease() TemplateRelease
 	Group() Group
 	GroupAppBind() GroupAppBind
 	ReleasedGroup() ReleasedGroup
@@ -128,6 +128,11 @@ type set struct {
 	lock              LockDao
 }
 
+// GenQuery returns the gen Query object
+func (s *set) GenQuery() *gen.Query {
+	return s.genQ
+}
+
 // ID returns the resource id generator DAO
 func (s *set) ID() IDGenInterface {
 	return s.idGen
@@ -195,41 +200,6 @@ func (s *set) ReleasedCI() ReleasedCI {
 	}
 }
 
-// CRInstance returns the current released instance's DAO
-func (s *set) CRInstance() CRInstance {
-	return &crInstanceDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		event:    s.event,
-		lock:     s.lock,
-	}
-}
-
-// StrategySet returns the strategy set's DAO
-func (s *set) StrategySet() StrategySet {
-	return &strategySetDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		lock:     s.lock,
-	}
-}
-
-// Strategy returns the strategy's DAO
-func (s *set) Strategy() Strategy {
-	return &strategyDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		event:    s.event,
-		lock:     s.lock,
-	}
-}
-
 // Hook returns the hook's DAO
 func (s *set) Hook() Hook {
 	return &hookDao{
@@ -240,9 +210,27 @@ func (s *set) Hook() Hook {
 	}
 }
 
-// TemplateSpace returns the templateSpace's DAO
+// TemplateSpace returns the template space's DAO
 func (s *set) TemplateSpace() TemplateSpace {
 	return &templateSpaceDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// Template returns the template's DAO
+func (s *set) Template() Template {
+	return &templateDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// TemplateRelease returns the template release's DAO
+func (s *set) TemplateRelease() TemplateRelease {
+	return &templateReleaseDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

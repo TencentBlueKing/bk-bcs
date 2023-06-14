@@ -15,20 +15,17 @@ package aws
 import (
 	"context"
 	"fmt"
-	"os"
-	"runtime"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
-	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 )
 
 // SdkWrapper wrapper for aws sdk
@@ -104,80 +101,13 @@ func NewSdkWrapperWithSecretIDKey(secretID, secretKey string) (*SdkWrapper, erro
 	return NewSdkWrapper()
 }
 
-// getRegionClient create region client
-func (sw *SdkWrapper) getRegionClient(region string) *elbv2.Client {
-	cli, ok := sw.elbClientMap[region]
-	if !ok {
-		credentials := aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
-			return aws.Credentials{
-				AccessKeyID:     sw.secretID,
-				SecretAccessKey: sw.secretKey,
-			}, nil
-		})
-		options := elbv2.Options{Region: region, Credentials: credentials}
-		options.Retryer = retry.NewStandard(RetryerWithDefaultOptions)
-		newCli := elbv2.New(options)
-		sw.elbClientMap[region] = newCli
-		return newCli
-	}
-	return cli
-}
-
-func (sw *SdkWrapper) loadEnv() error {
-	if len(sw.secretID) == 0 {
-		sw.secretID = os.Getenv(EnvNameAWSAccessKeyID)
-	}
-	if len(sw.secretKey) == 0 {
-		sw.secretKey = os.Getenv(EnvNameAWSAccessKey)
-	}
-
-	qpsStr := os.Getenv(EnvNameAWSRateLimitQPS)
-	if len(qpsStr) != 0 {
-		qps, err := strconv.ParseInt(qpsStr, 10, 64)
-		if err != nil {
-			blog.Warnf("parse rate limit qps %s failed, err %s, use default %d",
-				qpsStr, err.Error(), defaultThrottleQPS)
-			sw.ratelimitqps = int64(defaultThrottleQPS)
-		} else {
-			sw.ratelimitqps = qps
-		}
-	} else {
-		sw.ratelimitqps = int64(defaultThrottleQPS)
-	}
-
-	bucketSizeStr := os.Getenv(EnvNameAWSRateLimitBucketSize)
-	if len(bucketSizeStr) != 0 {
-		bucketSize, err := strconv.ParseInt(bucketSizeStr, 10, 64)
-		if err != nil {
-			blog.Warnf("parse rate limit bucket size %s failed, err %s, use default %d",
-				bucketSizeStr, err.Error(), defaultBucketSize)
-			sw.ratelimitbucketSize = int64(defaultBucketSize)
-		} else {
-			sw.ratelimitbucketSize = bucketSize
-		}
-	} else {
-		sw.ratelimitbucketSize = int64(defaultBucketSize)
-	}
-	return nil
-}
-
-// call tryThrottle before each api call
-func (sw *SdkWrapper) tryThrottle() {
-	now := time.Now()
-	sw.throttler.Accept()
-	if latency := time.Since(now); latency > maxLatency {
-		pc, _, _, _ := runtime.Caller(2)
-		callerName := runtime.FuncForPC(pc).Name()
-		blog.Infof("Throttling request took %d ms, function: %s", latency, callerName)
-	}
-}
-
 // DescribeLoadBalancers describe load balancers
 func (sw *SdkWrapper) DescribeLoadBalancers(region string, input *elbv2.DescribeLoadBalancersInput) (
 	*elbv2.DescribeLoadBalancersOutput, error) {
 	blog.V(3).Infof("DescribeLoadBalancers input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -213,6 +143,7 @@ func (sw *SdkWrapper) CreateListener(region string, input *elbv2.CreateListenerI
 	blog.V(3).Infof("CreateListener input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -249,6 +180,7 @@ func (sw *SdkWrapper) DescribeListeners(region string, input *elbv2.DescribeList
 	blog.V(3).Infof("DescribeListeners input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -285,6 +217,7 @@ func (sw *SdkWrapper) DeleteListener(region string, input *elbv2.DeleteListenerI
 	blog.V(3).Infof("DeleteListener input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -321,6 +254,7 @@ func (sw *SdkWrapper) ModifyListener(region string, input *elbv2.ModifyListenerI
 	blog.V(3).Infof("ModifyListener input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -357,6 +291,7 @@ func (sw *SdkWrapper) CreateRule(region string, input *elbv2.CreateRuleInput) (
 	blog.V(3).Infof("CreateRule input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -393,6 +328,7 @@ func (sw *SdkWrapper) DescribeRules(region string, input *elbv2.DescribeRulesInp
 	blog.V(3).Infof("DescribeRules input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -429,6 +365,7 @@ func (sw *SdkWrapper) DeleteRule(region string, input *elbv2.DeleteRuleInput) (
 	blog.V(3).Infof("DeleteRule input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -465,6 +402,7 @@ func (sw *SdkWrapper) ModifyRule(region string, input *elbv2.ModifyRuleInput) (
 	blog.V(3).Infof("ModifyRule input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -504,6 +442,7 @@ func (sw *SdkWrapper) CreateTargetGroup(region string, input *elbv2.CreateTarget
 	blog.V(3).Infof("CreateTargetGroup input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -540,6 +479,7 @@ func (sw *SdkWrapper) RegisterTargets(region string, input *elbv2.RegisterTarget
 	blog.V(3).Infof("RegisterTargets input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -576,6 +516,7 @@ func (sw *SdkWrapper) DeregisterTargets(region string, input *elbv2.DeregisterTa
 	blog.V(3).Infof("DeregisterTargets input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -612,6 +553,7 @@ func (sw *SdkWrapper) DescribeTargetGroups(region string, input *elbv2.DescribeT
 	blog.V(3).Infof("DescribeTargetGroups input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -652,6 +594,7 @@ func (sw *SdkWrapper) DeleteTargetGroup(region string, input *elbv2.DeleteTarget
 	blog.V(3).Infof("DeleteTargetGroup input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -688,6 +631,7 @@ func (sw *SdkWrapper) DescribeTargetGroupAttributes(region string, input *elbv2.
 	blog.V(3).Infof("DescribeTargetGroupAttributes input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -724,6 +668,7 @@ func (sw *SdkWrapper) ModifyTargetGroup(region string, input *elbv2.ModifyTarget
 	blog.V(3).Infof("ModifyTargetGroup input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -760,6 +705,7 @@ func (sw *SdkWrapper) ModifyTargetGroupAttributes(region string, input *elbv2.Mo
 	blog.V(3).Infof("ModifyTargetGroupAttributes input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -793,9 +739,11 @@ func (sw *SdkWrapper) ModifyTargetGroupAttributes(region string, input *elbv2.Mo
 // DescribeTargetHealth describe target health
 func (sw *SdkWrapper) DescribeTargetHealth(region string, input *elbv2.DescribeTargetHealthInput) (
 	*elbv2.DescribeTargetHealthOutput, error) {
-	blog.V(3).Infof("DescribeTargetHealth input: %s", common.ToJsonString(input))
+	// 定时调用，log v4避免日志量过大
+	blog.V(4).Infof("DescribeTargetHealth input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
+	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,

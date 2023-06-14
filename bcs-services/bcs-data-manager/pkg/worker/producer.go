@@ -72,6 +72,7 @@ func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *
 	}
 }
 
+// ImportKafkaConn import kafka conn
 func (p *Producer) ImportKafkaConn(conn kafka.KafkaInterface) {
 	p.kafkaConn = conn
 }
@@ -378,6 +379,7 @@ func (p *Producer) WorkloadProducer(dimension string) {
 		"currentTime:%v, cost:%v", totalWorkload, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
+// getSingleClusterWorkloadList get single cluster workload list
 func (p *Producer) getSingleClusterWorkloadList(jobTime time.Time, dimension string, countCh chan int,
 	clusterMeta *types.ClusterMeta) {
 	workloadList := make([]*types.WorkloadMeta, 0)
@@ -482,6 +484,7 @@ func (p *Producer) PodAutoscalerProducer(dimension string) {
 		"currentTime:%v, cost:%v", totalPodAutoscaler, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
+// getSingleClusterAutoscalerList get cluster pod autoscaler data list
 func (p *Producer) getSingleClusterAutoscalerList(jobTime time.Time, dimension string, countCh chan int,
 	clusterMeta *types.ClusterMeta) {
 	hpaList := make([]*types.PodAutoscalerMeta, 0)
@@ -518,6 +521,7 @@ func (p *Producer) getSingleClusterAutoscalerList(jobTime time.Time, dimension s
 }
 
 // SendJob is the function to send data job to msg queue
+// if need send kafka, send to particular kafka topic
 func (p *Producer) SendJob(opts types.JobCommonOpts) error {
 	var err error
 	defer func() {
@@ -554,6 +558,7 @@ func (p *Producer) SendJob(opts types.JobCommonOpts) error {
 	return nil
 }
 
+// genAndSendAutoscalerJob generate pod autoscaler calculate job
 func (p *Producer) genAndSendAutoscalerJob(autoscalerType, dimension string, jobTime time.Time,
 	list []*types.PodAutoscalerMeta) {
 	for _, autoscaler := range list {

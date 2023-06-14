@@ -30,7 +30,7 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
-// GetNamespaceResources get namespaced resources
+// GetNamespaceResources 获取命名空间域资源 get namespaced resources
 func GetNamespaceResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetNamespaceResources"
@@ -62,7 +62,7 @@ func GetNamespaceResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r[0]})
 }
 
-// PutNamespaceResources put namespaced resources
+// PutNamespaceResources put命名空间域资源 put namespaced resources
 func PutNamespaceResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutNamespaceResources"
@@ -82,7 +82,7 @@ func PutNamespaceResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// DeleteNamespaceResources delete namespaced resources
+// DeleteNamespaceResources 删除命名空间域资源 delete namespaced resources
 func DeleteNamespaceResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteNamespaceResources"
@@ -102,7 +102,7 @@ func DeleteNamespaceResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// GetClusterResources get cluster resources
+// GetClusterResources 获取集群域资源 get cluster resources
 func GetClusterResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetClusterResources"
@@ -133,7 +133,7 @@ func GetClusterResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r[0]})
 }
 
-// PutClusterResources put cluster resources
+// PutClusterResources put集群域资源 put cluster resources
 func PutClusterResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutClusterResources"
@@ -153,7 +153,7 @@ func PutClusterResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// DeleteClusterResources delete cluster resources
+// DeleteClusterResources 删除集群域资源 delete cluster resources
 func DeleteClusterResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteClusterResources"
@@ -173,7 +173,7 @@ func DeleteClusterResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// ListNamespaceResources list namespaced resources
+// ListNamespaceResources 列出命名空间域资源 list namespaced resources
 func ListNamespaceResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "ListNamespaceResources"
@@ -195,7 +195,7 @@ func ListNamespaceResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
 }
 
-// ListClusterResources list cluster resources
+// ListClusterResources 列出集群域资源 list cluster resources
 func ListClusterResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "ListClusterResources"
@@ -217,7 +217,7 @@ func ListClusterResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
 }
 
-// DeleteBatchNamespaceResource delete multiple namespaced resources
+// DeleteBatchNamespaceResource 删除多命名空间资源 delete multiple namespaced resources
 func DeleteBatchNamespaceResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteBatchNamespaceResource"
@@ -237,7 +237,7 @@ func DeleteBatchNamespaceResource(req *restful.Request, resp *restful.Response) 
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// DeleteBatchClusterResource delete multiple cluster resources
+// DeleteBatchClusterResource 批量删除集群域资源 delete multiple cluster resources
 func DeleteBatchClusterResource(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteBatchClusterResource"
@@ -257,7 +257,7 @@ func DeleteBatchClusterResource(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// GetCustomResources get custom resources
+// GetCustomResources 获取自定义资源 get custom resources
 func GetCustomResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "GetCustomResources"
@@ -278,7 +278,7 @@ func GetCustomResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r, Extra: extra})
 }
 
-// PutCustomResources put custom resources
+// PutCustomResources put自定义资源 put custom resources
 func PutCustomResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "PutCustomResources"
@@ -298,7 +298,7 @@ func PutCustomResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// DeleteCustomResources delete custom resources
+// DeleteCustomResources 删除自定义资源 delete custom resources
 func DeleteCustomResources(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "DeleteCustomResources"
@@ -318,7 +318,7 @@ func DeleteCustomResources(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// CreateCustomResourcesIndex create custom resource's index
+// CreateCustomResourcesIndex 创建自定义资源索引 create custom resource's index
 func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "CreateCustomResourcesIndex"
@@ -338,7 +338,7 @@ func CreateCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// DeleteCustomResourcesIndex delete custom resource's index
+// DeleteCustomResourcesIndex 删除自定义资源 delete custom resource's index
 func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	const (
 		handler = "CreateCustomResourcesIndex"
@@ -358,20 +358,25 @@ func DeleteCustomResourcesIndex(req *restful.Request, resp *restful.Response) {
 	lib.ReturnRest(&lib.RestResponse{Resp: resp})
 }
 
-// CleanDynamic xxx
+// CleanDynamic dynamic 资源清除逻辑，创建清理器
 func CleanDynamic() {
+	// Get the dynamic database client.
 	dynamicDBClient := apiserver.GetAPIResource().GetDBClient(dbConfig)
+	// Get all table names.
 	tables, err := dynamicDBClient.ListTableNames(context.TODO())
 	if err != nil {
 		blog.Errorf("list table name failed, err: %v", err)
 		return
 	}
+	// Loop through all tables.
 	for _, table := range tables {
+		// Create a cleaner.
 		cleaner := clean.NewDBCleaner(apiserver.GetAPIResource().GetDBClient(dbConfig), table, time.Hour)
 		if table == eventResourceType {
 			// create cleaner for Event table in dynamic DB
 			cleaner.WithMaxDuration(time.Duration(1)*time.Hour, time.Duration(0), eventTimeTag)
 		}
+		// Start the cleaner.
 		go cleaner.Run(context.TODO())
 	}
 }

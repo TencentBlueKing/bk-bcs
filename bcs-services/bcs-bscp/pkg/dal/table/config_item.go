@@ -195,7 +195,7 @@ func (ci ConfigItemSpec) ValidateCreate() error {
 		return err
 	}
 
-	if err := ci.validatePath(); err != nil {
+	if err := ValidatePath(ci.Path, ci.FileMode); err != nil {
 		return err
 	}
 
@@ -210,19 +210,19 @@ func (ci ConfigItemSpec) ValidateCreate() error {
 	return nil
 }
 
-// validatePath validate path.
-func (ci ConfigItemSpec) validatePath() error {
-	switch ci.FileMode {
+// ValidatePath validate path.
+func ValidatePath(path string, fileMode FileMode) error {
+	switch fileMode {
 	case Windows:
-		if err := validator.ValidateWinFilePath(ci.Path); err != nil {
+		if err := validator.ValidateWinFilePath(path); err != nil {
 			return err
 		}
 	case Unix:
-		if err := validator.ValidateUnixFilePath(ci.Path); err != nil {
+		if err := validator.ValidateUnixFilePath(path); err != nil {
 			return err
 		}
 	default:
-		return errors.New("unknown file mode " + string(ci.FileMode))
+		return errors.New("unknown file mode " + string(fileMode))
 	}
 
 	return nil
@@ -283,7 +283,7 @@ func (ci ConfigItemSpec) ValidateUpdate() error {
 		return err
 	}
 
-	if err := ci.validatePath(); err != nil {
+	if err := ValidatePath(ci.Path, ci.FileMode); err != nil {
 		return err
 	}
 
@@ -339,10 +339,10 @@ var ColumnDescriptorColumnDescriptor = ColumnDescriptors{
 
 // FilePermission defines a config's permission details.
 type FilePermission struct {
-	User      string `db:"user" json:"user"`
-	UserGroup string `db:"user_group" json:"user_group"`
+	User      string `db:"user" json:"user" gorm:"column:user"`
+	UserGroup string `db:"user_group" json:"user_group" gorm:"column:user_group"`
 	// config file's privilege
-	Privilege string `db:"privilege" json:"privilege"`
+	Privilege string `db:"privilege" json:"privilege" gorm:"column:privilege"`
 }
 
 const (

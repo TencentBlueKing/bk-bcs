@@ -46,29 +46,6 @@ func (s *Service) BenchAppMeta(ctx context.Context, req *pbcs.BenchAppMetaReq) (
 	return resp, nil
 }
 
-// BenchAppCRIMeta list app current released instance meta.
-func (s *Service) BenchAppCRIMeta(ctx context.Context, req *pbcs.BenchAppCRIMetaReq) (*pbcs.BenchAppCRIMetaResp,
-	error) {
-
-	kt := kit.FromGrpcContext(ctx)
-
-	if err := req.Validate(); err != nil {
-		return nil, err
-	}
-
-	metaMap, err := s.dao.CRInstance().ListAppCRIMeta(kt, req.BizId, req.AppId)
-	if err != nil {
-		logs.Errorf("benchmark list app current released instance failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	resp := &pbcs.BenchAppCRIMetaResp{
-		Meta: pbcs.PbAppCRIMetas(metaMap),
-	}
-
-	return resp, nil
-}
-
 // BenchReleasedCI list released config item.
 func (s *Service) BenchReleasedCI(ctx context.Context, req *pbcs.BenchReleasedCIReq) (*pbcs.BenchReleasedCIResp,
 	error) {
@@ -80,16 +57,11 @@ func (s *Service) BenchReleasedCI(ctx context.Context, req *pbcs.BenchReleasedCI
 	}
 
 	opts := &types.ListReleasedCIsOption{
-		BizID: req.BizId,
+		BizID:     req.BizId,
+		ReleaseID: req.ReleaseId,
 		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "release_id",
-					Op:    filter.Equal.Factory(),
-					Value: req.ReleaseId,
-				},
-			},
+			Op:    filter.And,
+			Rules: []filter.RuleFactory{},
 		},
 		// use unlimited page.
 		Page: &types.BasePage{Start: 0, Limit: 0},
@@ -106,52 +78,6 @@ func (s *Service) BenchReleasedCI(ctx context.Context, req *pbcs.BenchReleasedCI
 
 	resp := &pbcs.BenchReleasedCIResp{
 		Meta: pbrci.PbReleasedConfigItems(detail.Details),
-	}
-
-	return resp, nil
-}
-
-// BenchAppCPS list app current publish strategy.
-func (s *Service) BenchAppCPS(ctx context.Context, req *pbcs.BenchAppCPSReq) (*pbcs.BenchAppCPSResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	if err := req.Validate(); err != nil {
-		return nil, err
-	}
-
-	opts := &types.GetAppCPSOption{
-		BizID: req.BizId,
-		AppID: req.AppId,
-		Page: &types.BasePage{
-			Count: false,
-			Start: 0,
-			Limit: types.GetCPSMaxPageLimit,
-		},
-	}
-	appStrategies := make([]*types.PublishedStrategyCache, 0)
-	for start := uint32(0); ; start += types.GetCPSMaxPageLimit {
-		opts.Page.Start = start
-
-		list, err := s.dao.Publish().GetAppCPStrategies(kt, opts)
-		if err != nil {
-			logs.Errorf("benchmark list app current published strategy failed, err: %v, rid: %s", err, kt.Rid)
-			return nil, err
-		}
-
-		appStrategies = append(appStrategies, list...)
-
-		if len(list) < types.GetCPSMaxPageLimit {
-			break
-		}
-	}
-
-	strategies, err := pbcs.PbPublishedStrategies(appStrategies)
-	if err != nil {
-		logs.Errorf("benchmark convert pb publish strategies failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-	resp := &pbcs.BenchAppCPSResp{
-		Meta: strategies,
 	}
 
 	return resp, nil

@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/app/custom-scheduler"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/app/customscheduler"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/options"
 
@@ -30,7 +30,7 @@ import (
 
 // Run the customScheduler
 func Run(conf *config.CustomSchedulerConfig) {
-	customSched := custom_scheduler.NewCustomScheduler(conf)
+	customSched := customscheduler.NewCustomScheduler(conf)
 	// start customSched, and http service
 	err := customSched.Start()
 	if err != nil {

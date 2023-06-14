@@ -26,11 +26,9 @@ type Configurations struct {
 	mtx         sync.Mutex
 	Base        *BaseConf                `yaml:"base_conf"`
 	Auth        *AuthConf                `yaml:"auth_conf"`
-	BkLogin     *BKLoginConf             `yaml:"bklogin_conf"`
 	Logging     *LogConf                 `yaml:"logging"`
 	BKAPIGW     *BKAPIGWConf             `yaml:"bkapigw_conf"`
 	BCS         *BCSConf                 `yaml:"bcs_conf"`
-	BCSCC       *BCSCCConf               `yaml:"bcs_cc_conf"`
 	Credentials map[string][]*Credential `yaml:"-"`
 	Redis       *RedisConf               `yaml:"redis"`
 	WebConsole  *WebConsoleConf          `yaml:"webconsole"`
@@ -49,10 +47,6 @@ func newConfigurations() (*Configurations, error) {
 	c.Auth = &AuthConf{}
 	c.Auth.Init()
 
-	// BkLogin Config
-	c.BkLogin = &BKLoginConf{}
-	c.BkLogin.Init()
-
 	c.BKAPIGW = &BKAPIGWConf{}
 	c.BKAPIGW.Init()
 
@@ -63,10 +57,6 @@ func newConfigurations() (*Configurations, error) {
 	// BCS Config
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
-
-	// BCS-CC Config
-	c.BCSCC = &BCSCCConf{}
-	c.BCSCC.Init()
 
 	c.Redis = &RedisConf{}
 	c.Redis.Init()

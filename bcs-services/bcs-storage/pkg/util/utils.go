@@ -26,6 +26,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// StructToMap struct to map
 func StructToMap(v interface{}) operator.M {
 	data := make(operator.M)
 	bytes, _ := json.Marshal(v)
@@ -81,6 +82,7 @@ func RequestToMap(tags map[string]string, request interface{}) operator.M {
 		case reflect.String:
 			ans[value] = field.String()
 		case reflect.Ptr:
+			// NOCC: gas/calls(设计如此:设计如此)
 			ans[value] = (*structpb.Struct)(unsafe.Pointer(field.Pointer()))
 		}
 	}

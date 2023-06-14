@@ -8,10 +8,10 @@ option go_package = "bscp.io/pkg/protocol/core/content;pbcontent";
 
 // Content source resource reference: pkg/dal/table/content.go
 message Content {
-    uint32 id                       = 1;
-    ContentSpec spec                = 2;
-    ContentAttachment attachment    = 3;
-    pbbase.CreatedRevision revision = 4;
+    uint32                 id         = 1;
+    ContentSpec            spec       = 2;
+    ContentAttachment      attachment = 3;
+    pbbase.CreatedRevision revision   = 4;
 }
 
 // ContentSpec source resource reference: pkg/dal/table/content.go

@@ -33,19 +33,22 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-type listenerChecker struct {
+// ListenerChecker do listener related check
+type ListenerChecker struct {
 	cli            client.Client
 	listenerHelper *listenercontroller.ListenerHelper
 }
 
-func NewListenerChecker(cli client.Client, listenerHelp *listenercontroller.ListenerHelper) *listenerChecker {
-	return &listenerChecker{
+// NewListenerChecker return listener checker
+func NewListenerChecker(cli client.Client, listenerHelp *listenercontroller.ListenerHelper) *ListenerChecker {
+	return &ListenerChecker{
 		cli:            cli,
 		listenerHelper: listenerHelp,
 	}
 }
 
-func (l *listenerChecker) Run() {
+// Run start
+func (l *ListenerChecker) Run() {
 	listenerList := &networkextensionv1.ListenerList{}
 	if err := l.cli.List(context.TODO(), listenerList); err != nil {
 		blog.Errorf("list listener failed, err: %s", err.Error())
@@ -56,7 +59,7 @@ func (l *listenerChecker) Run() {
 	go l.deletePortPoolUnusedListener(listenerList)
 }
 
-func (l *listenerChecker) setMetric(listenerList *networkextensionv1.ListenerList) {
+func (l *ListenerChecker) setMetric(listenerList *networkextensionv1.ListenerList) {
 	cntMap := make(map[string]int)
 	for _, listener := range listenerList.Items {
 		status := listener.Status.Status
@@ -105,7 +108,7 @@ func (l *listenerChecker) setMetric(listenerList *networkextensionv1.ListenerLis
 }
 
 // deleteUnusedListener 端口池中修改item-lbID后，需要回收不需要的监听器
-func (l *listenerChecker) deletePortPoolUnusedListener(listenerList *networkextensionv1.ListenerList) {
+func (l *ListenerChecker) deletePortPoolUnusedListener(listenerList *networkextensionv1.ListenerList) {
 	portPoolList := &networkextensionv1.PortPoolList{}
 	if err := l.cli.List(context.TODO(), portPoolList); err != nil {
 		blog.Errorf("list portpool failed, err: %s", err.Error())

@@ -63,11 +63,11 @@ func (s *Schema) Review() (Sugs, error) {
 func (s *Schema) Diff() []mapx.DiffRet {
 	diffRets := []mapx.DiffRet{}
 	for _, ret := range mapx.NewDiffer(s.raw, s.rootSchema.AsMap()).Do() {
-		// TODO 支持比较 ui:rules
+		// 支持比较 ui:rules
 		if strings.Contains(ret.Dotted, keyUIRules) {
 			continue
 		}
-		// TODO 支持忽略 ui:component, props, reactions 新增 nil
+		// 支持忽略 ui:component, props, reactions 新增 nil
 		if ret.Action == mapx.ActionAdd && strings.Contains(ret.Dotted, keyUIComp) && ret.NewVal == nil {
 			continue
 		}
@@ -82,11 +82,13 @@ func (s *Schema) Diff() []mapx.DiffRet {
 	return diffRets
 }
 
+// parse
 func (s *Schema) parse(doc interface{}) error {
 	s.rootSchema = &subSchema{Property: SchemaSourceRoot, Source: SchemaSourceRoot}
 	return s.parseSchema(doc, s.rootSchema)
 }
 
+// parseSchema
 func (s *Schema) parseSchema(docNode interface{}, curSchema *subSchema) error {
 	// 节点数据不是 Map 类型，中止并抛出错误
 	if !isKind(docNode, reflect.Map) {
@@ -110,6 +112,7 @@ func (s *Schema) parseSchema(docNode interface{}, curSchema *subSchema) error {
 	return nil
 }
 
+// parseDesc
 func (s *Schema) parseDesc(curSchema *subSchema, m map[string]interface{}) error {
 	// type 只支持单类型，不支持复合类型，且必须存在
 	if !mapx.ExistsKey(m, keyType) {
@@ -161,6 +164,7 @@ func (s *Schema) parseDesc(curSchema *subSchema, m map[string]interface{}) error
 	return nil
 }
 
+// parseItems
 func (s *Schema) parseItems(curSchema *subSchema, m map[string]interface{}) error {
 	// minItems
 	if mapx.ExistsKey(m, keyMinItems) {
@@ -228,6 +232,7 @@ func (s *Schema) parseItems(curSchema *subSchema, m map[string]interface{}) erro
 	return nil
 }
 
+// parseProp
 func (s *Schema) parseProp(curSchema *subSchema, m map[string]interface{}) error {
 	// properties
 	if mapx.ExistsKey(m, keyProperties) {
@@ -280,6 +285,7 @@ func (s *Schema) parseProp(curSchema *subSchema, m map[string]interface{}) error
 	return nil
 }
 
+// parseProperties
 func (s *Schema) parseProperties(docNode interface{}, curSchema *subSchema) error {
 	if !isKind(docNode, reflect.Map) {
 		return NewInvalidTypeErr(curSchema, keyProperties, TypeObject)
@@ -301,6 +307,7 @@ func (s *Schema) parseProperties(docNode interface{}, curSchema *subSchema) erro
 	return nil
 }
 
+// parseUIComp
 func parseUIComp(docNode interface{}, curSchema *subSchema) error {
 	if !isKind(docNode, reflect.Map) {
 		return NewInvalidTypeErr(curSchema, keyUIComp, TypeObject)
@@ -356,6 +363,7 @@ func parseUIComp(docNode interface{}, curSchema *subSchema) error {
 	return nil
 }
 
+// parseUICompClearable
 func parseUICompClearable(curSchema *subSchema, p map[string]interface{}, propsSubPath string) error {
 	// ui:component.props.clearable
 	if mapx.ExistsKey(p, keyClearable) {
@@ -386,6 +394,7 @@ func parseUICompClearable(curSchema *subSchema, p map[string]interface{}, propsS
 	return nil
 }
 
+// parseUICompDatasource
 func parseUICompDatasource(curSchema *subSchema, p map[string]interface{}, propsSubPath string) error {
 	// ui:component.props.datasource
 	if mapx.ExistsKey(p, keyDataSource) {
@@ -445,6 +454,7 @@ func parseUICompDatasource(curSchema *subSchema, p map[string]interface{}, props
 	return nil
 }
 
+// parseUICompRemoteConf
 func parseUICompRemoteConf(curSchema *subSchema, p map[string]interface{}, propsSubPath string) error {
 	// ui:component.props.remoteconfig
 	if mapx.ExistsKey(p, keyRemoteConf) {
@@ -504,6 +514,7 @@ func parseUICompRemoteConf(curSchema *subSchema, p map[string]interface{}, props
 	return nil
 }
 
+// parseUICompDisabled
 func parseUICompDisabled(curSchema *subSchema, p map[string]interface{}, propsSubPath string) error {
 	// ui:component.props.disabled
 	if mapx.ExistsKey(p, keyDisabled) {
@@ -558,6 +569,7 @@ func parseUICompDisabled(curSchema *subSchema, p map[string]interface{}, propsSu
 	return nil
 }
 
+// parseUIProps
 func parseUIProps(docNode interface{}, curSchema *subSchema) error {
 	if !isKind(docNode, reflect.Map) {
 		return NewInvalidTypeErr(curSchema, keyUIProps, TypeObject)
@@ -592,6 +604,7 @@ func parseUIProps(docNode interface{}, curSchema *subSchema) error {
 	return nil
 }
 
+// parseUIReactions
 func parseUIReactions(docNode interface{}, curSchema *subSchema) error {
 	if !isKind(docNode, reflect.Slice) {
 		return NewInvalidTypeErr(curSchema, keyUIReactions, TypeArray)
@@ -656,6 +669,7 @@ func parseUIReactions(docNode interface{}, curSchema *subSchema) error {
 	return nil
 }
 
+// genUIEffect
 func genUIEffect(docNode interface{}, curSchema *subSchema, subPath, key string) (*uiEffect, error) {
 	keySubPath := genSubPath(subPath, key)
 	if !isKind(docNode, reflect.Map) {
@@ -723,6 +737,7 @@ func genUIEffect(docNode interface{}, curSchema *subSchema, subPath, key string)
 	return ue, nil
 }
 
+// parseUIRules
 func parseUIRules(docNode interface{}, curSchema *subSchema) error {
 	if !isKind(docNode, reflect.Slice) {
 		return NewInvalidTypeErr(curSchema, keyUIRules, TypeArray)
@@ -762,6 +777,7 @@ func parseUIRules(docNode interface{}, curSchema *subSchema) error {
 	return nil
 }
 
+// parseUIGroup
 func parseUIGroup(docNode interface{}, curSchema *subSchema) error {
 	if !isKind(docNode, reflect.Map) {
 		return NewInvalidTypeErr(curSchema, keyUIGroup, TypeObject)
@@ -787,77 +803,8 @@ func parseUIGroup(docNode interface{}, curSchema *subSchema) error {
 
 	// ui:group.props
 	if mapx.ExistsKey(g, keyProps) {
-		propsSubPath := genSubPath(keyUIGroup, keyProps)
-		if !isKind(g[keyProps], reflect.Map) {
-			return NewInvalidTypeErr(curSchema, propsSubPath, TypeObject)
-		}
-
-		p := cast.ToStringMap(g[keyProps])
-		if len(p) == 0 {
-			return NewEmptyMapErr(curSchema, propsSubPath)
-		}
-		curSchema.UIGroup.Props = &uiGroupProps{}
-
-		// ui:group.props.type
-		if mapx.ExistsKey(p, keyType) {
-			if !isKind(p[keyType], reflect.String) {
-				return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyType), TypeString)
-			}
-			_type := cast.ToString(p[keyType])
-			curSchema.UIGroup.Props.Type = &_type
-		}
-
-		// ui:group.props.showTitle
-		if mapx.ExistsKey(p, keyShowTitle) {
-			if !isKind(p[keyShowTitle], reflect.Bool) {
-				return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyShowTitle), TypeBoolean)
-			}
-			showTitle := cast.ToBool(p[keyShowTitle])
-			curSchema.UIGroup.Props.ShowTitle = &showTitle
-		}
-
-		// ui:group.props.border
-		if mapx.ExistsKey(p, keyBorder) {
-			if !isKind(p[keyBorder], reflect.Bool) {
-				return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyBorder), TypeBoolean)
-			}
-			border := cast.ToBool(p[keyBorder])
-			curSchema.UIGroup.Props.Border = &border
-		}
-
-		// ui:group.props.defaultActiveName
-		if mapx.ExistsKey(p, keyDefaultActiveName) {
-			if !isKind(p[keyDefaultActiveName], reflect.Slice) {
-				return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyDefaultActiveName), TypeArray)
-			}
-			for idx, n := range cast.ToSlice(p[keyDefaultActiveName]) {
-				if !isKind(n, reflect.String) {
-					return NewInvalidTypeErr(
-						curSchema, genSubPathWithIdx(propsSubPath, keyDefaultActiveName, idx), TypeString,
-					)
-				}
-				curSchema.UIGroup.Props.DefaultActiveName = append(
-					curSchema.UIGroup.Props.DefaultActiveName, n.(string),
-				)
-			}
-		}
-
-		// ui:group.props.verifiable
-		if mapx.ExistsKey(p, keyVerifiable) {
-			if !isKind(p[keyVerifiable], reflect.Bool) {
-				return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyVerifiable), TypeBoolean)
-			}
-			verifiable := cast.ToBool(p[keyVerifiable])
-			curSchema.UIGroup.Props.Verifiable = &verifiable
-		}
-
-		// ui:group.props.hideEmptyRow
-		if mapx.ExistsKey(p, keyHideEmptyRow) {
-			if !isKind(p[keyHideEmptyRow], reflect.Bool) {
-				return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyHideEmptyRow), TypeBoolean)
-			}
-			hideEmptyRow := cast.ToBool(p[keyHideEmptyRow])
-			curSchema.UIGroup.Props.HideEmptyRow = &hideEmptyRow
+		if err := parseProps(g, curSchema); err != nil {
+			return err
 		}
 	}
 
@@ -879,6 +826,83 @@ func parseUIGroup(docNode interface{}, curSchema *subSchema) error {
 	return nil
 }
 
+func parseProps(g map[string]interface{}, curSchema *subSchema) error {
+	propsSubPath := genSubPath(keyUIGroup, keyProps)
+	if !isKind(g[keyProps], reflect.Map) {
+		return NewInvalidTypeErr(curSchema, propsSubPath, TypeObject)
+	}
+
+	p := cast.ToStringMap(g[keyProps])
+	if len(p) == 0 {
+		return NewEmptyMapErr(curSchema, propsSubPath)
+	}
+	curSchema.UIGroup.Props = &uiGroupProps{}
+
+	// ui:group.props.type
+	if mapx.ExistsKey(p, keyType) {
+		if !isKind(p[keyType], reflect.String) {
+			return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyType), TypeString)
+		}
+		_type := cast.ToString(p[keyType])
+		curSchema.UIGroup.Props.Type = &_type
+	}
+
+	// ui:group.props.showTitle
+	if mapx.ExistsKey(p, keyShowTitle) {
+		if !isKind(p[keyShowTitle], reflect.Bool) {
+			return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyShowTitle), TypeBoolean)
+		}
+		showTitle := cast.ToBool(p[keyShowTitle])
+		curSchema.UIGroup.Props.ShowTitle = &showTitle
+	}
+
+	// ui:group.props.border
+	if mapx.ExistsKey(p, keyBorder) {
+		if !isKind(p[keyBorder], reflect.Bool) {
+			return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyBorder), TypeBoolean)
+		}
+		border := cast.ToBool(p[keyBorder])
+		curSchema.UIGroup.Props.Border = &border
+	}
+
+	// ui:group.props.defaultActiveName
+	if mapx.ExistsKey(p, keyDefaultActiveName) {
+		if !isKind(p[keyDefaultActiveName], reflect.Slice) {
+			return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyDefaultActiveName), TypeArray)
+		}
+		for idx, n := range cast.ToSlice(p[keyDefaultActiveName]) {
+			if !isKind(n, reflect.String) {
+				return NewInvalidTypeErr(
+					curSchema, genSubPathWithIdx(propsSubPath, keyDefaultActiveName, idx), TypeString,
+				)
+			}
+			curSchema.UIGroup.Props.DefaultActiveName = append(
+				curSchema.UIGroup.Props.DefaultActiveName, n.(string),
+			)
+		}
+	}
+
+	// ui:group.props.verifiable
+	if mapx.ExistsKey(p, keyVerifiable) {
+		if !isKind(p[keyVerifiable], reflect.Bool) {
+			return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyVerifiable), TypeBoolean)
+		}
+		verifiable := cast.ToBool(p[keyVerifiable])
+		curSchema.UIGroup.Props.Verifiable = &verifiable
+	}
+
+	// ui:group.props.hideEmptyRow
+	if mapx.ExistsKey(p, keyHideEmptyRow) {
+		if !isKind(p[keyHideEmptyRow], reflect.Bool) {
+			return NewInvalidTypeErr(curSchema, genSubPath(propsSubPath, keyHideEmptyRow), TypeBoolean)
+		}
+		hideEmptyRow := cast.ToBool(p[keyHideEmptyRow])
+		curSchema.UIGroup.Props.HideEmptyRow = &hideEmptyRow
+	}
+	return nil
+}
+
+// parseUIOrder
 func parseUIOrder(docNode interface{}, curSchema *subSchema) error {
 	if !isKind(docNode, reflect.Slice) {
 		return NewInvalidTypeErr(curSchema, keyUIOrder, TypeArray)

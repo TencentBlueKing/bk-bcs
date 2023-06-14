@@ -16,6 +16,8 @@ package encrypt
 import (
 	"bytes"
 	"crypto/cipher"
+
+	// NOCC:gas/crypto(设计如此)
 	"crypto/des"
 	"encoding/base64"
 )
@@ -37,6 +39,7 @@ func PKCS5UnPadding(origData []byte) []byte {
 // DesEncryptToBase encrypt with priKey simply, out base64 string
 func DesEncryptToBase(src []byte, priKey string) ([]byte, error) {
 	if len(priKey) != 0 {
+		// NOCC:gas/crypto(设计如此)
 		block, err := des.NewTripleDESCipher([]byte(priKey))
 		if err != nil {
 			return nil, err
@@ -54,8 +57,13 @@ func DesEncryptToBase(src []byte, priKey string) ([]byte, error) {
 // DesDecryptFromBase base64 decoding, and decrypt with priKey
 func DesDecryptFromBase(src []byte, priKey string) ([]byte, error) {
 	if len(priKey) != 0 {
-		ori, _ := base64.StdEncoding.DecodeString(string(src))
-		block, err := des.NewTripleDESCipher([]byte(priKey))
+		ori, err := base64.StdEncoding.DecodeString(string(src))
+		if err != nil {
+			return nil, err
+		}
+		var block cipher.Block
+		// NOCC:gas/crypto(设计如此)
+		block, err = des.NewTripleDESCipher([]byte(priKey))
 		if err != nil {
 			return nil, err
 		}

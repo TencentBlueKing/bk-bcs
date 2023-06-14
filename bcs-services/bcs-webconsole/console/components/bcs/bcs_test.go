@@ -76,7 +76,7 @@ func TestListClusters(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	clusters, err := ListClusters(ctx, config.G.BCS, getTestProjectId())
+	clusters, err := ListClusters(ctx, getTestProjectId())
 	assert.NoError(t, err)
 	assert.Equal(t, len(clusters), 0)
 }
@@ -85,7 +85,7 @@ func TestGetCluster(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	cluster, err := GetCluster(ctx, config.G.BCS, getTestProjectId(), getTestClusterId())
+	cluster, err := GetCluster(ctx, getTestProjectId(), getTestClusterId())
 	assert.NoError(t, err)
 	assert.Equal(t, cluster.ProjectId, getTestProjectId())
 }
@@ -94,7 +94,7 @@ func TestCreateTempToken(t *testing.T) {
 	initConf()
 	ctx := context.Background()
 
-	token, err := CreateTempToken(ctx, config.G.BCS, getTestUsername(), getTestClusterId())
+	token, err := CreateTempToken(ctx, getTestUsername(), getTestClusterId())
 	assert.NoError(t, err)
 	assert.Equal(t, len(token.Token), 32)
 }

@@ -1586,6 +1586,14 @@ func (m *ListAuthorizedProjReq) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for All
+
+	// no validation rules for SearchKey
+
+	// no validation rules for Offset
+
+	// no validation rules for Limit
+
 	if len(errors) > 0 {
 		return ListAuthorizedProjReqMultiError(errors)
 	}
@@ -1723,6 +1731,35 @@ func (m *ListAuthorizedProjResp) validate(all bool) error {
 
 	// no validation rules for RequestID
 
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListAuthorizedProjRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListAuthorizedProjRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListAuthorizedProjRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ListAuthorizedProjRespMultiError(errors)
 	}
@@ -1802,6 +1839,250 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListAuthorizedProjRespValidationError{}
+
+// Validate checks the field values on ListProjectsForIAMReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListProjectsForIAMReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListProjectsForIAMReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListProjectsForIAMReqMultiError, or nil if none found.
+func (m *ListProjectsForIAMReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListProjectsForIAMReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return ListProjectsForIAMReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListProjectsForIAMReqMultiError is an error wrapping multiple validation
+// errors returned by ListProjectsForIAMReq.ValidateAll() if the designated
+// constraints aren't met.
+type ListProjectsForIAMReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListProjectsForIAMReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListProjectsForIAMReqMultiError) AllErrors() []error { return m }
+
+// ListProjectsForIAMReqValidationError is the validation error returned by
+// ListProjectsForIAMReq.Validate if the designated constraints aren't met.
+type ListProjectsForIAMReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectsForIAMReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectsForIAMReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectsForIAMReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectsForIAMReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectsForIAMReqValidationError) ErrorName() string {
+	return "ListProjectsForIAMReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectsForIAMReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectsForIAMReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectsForIAMReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectsForIAMReqValidationError{}
+
+// Validate checks the field values on ListProjectsForIAMResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListProjectsForIAMResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListProjectsForIAMResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListProjectsForIAMRespMultiError, or nil if none found.
+func (m *ListProjectsForIAMResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListProjectsForIAMResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListProjectsForIAMRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListProjectsForIAMRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListProjectsForIAMRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return ListProjectsForIAMRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListProjectsForIAMRespMultiError is an error wrapping multiple validation
+// errors returned by ListProjectsForIAMResp.ValidateAll() if the designated
+// constraints aren't met.
+type ListProjectsForIAMRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListProjectsForIAMRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListProjectsForIAMRespMultiError) AllErrors() []error { return m }
+
+// ListProjectsForIAMRespValidationError is the validation error returned by
+// ListProjectsForIAMResp.Validate if the designated constraints aren't met.
+type ListProjectsForIAMRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectsForIAMRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectsForIAMRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectsForIAMRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectsForIAMRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectsForIAMRespValidationError) ErrorName() string {
+	return "ListProjectsForIAMRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectsForIAMRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectsForIAMResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectsForIAMRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectsForIAMRespValidationError{}
 
 // Validate checks the field values on GetBusinessRequest with the rules
 // defined in the proto definition for this message. If any rules are
@@ -11558,3 +11839,120 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = PingResponseValidationError{}
+
+// Validate checks the field values on ListProjectsForIAMResp_Project with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListProjectsForIAMResp_Project) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListProjectsForIAMResp_Project with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// ListProjectsForIAMResp_ProjectMultiError, or nil if none found.
+func (m *ListProjectsForIAMResp_Project) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListProjectsForIAMResp_Project) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for ProjectID
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for BusinessID
+
+	// no validation rules for Managers
+
+	// no validation rules for BkmSpaceBizID
+
+	// no validation rules for BkmSpaceName
+
+	if len(errors) > 0 {
+		return ListProjectsForIAMResp_ProjectMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListProjectsForIAMResp_ProjectMultiError is an error wrapping multiple
+// validation errors returned by ListProjectsForIAMResp_Project.ValidateAll()
+// if the designated constraints aren't met.
+type ListProjectsForIAMResp_ProjectMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListProjectsForIAMResp_ProjectMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListProjectsForIAMResp_ProjectMultiError) AllErrors() []error { return m }
+
+// ListProjectsForIAMResp_ProjectValidationError is the validation error
+// returned by ListProjectsForIAMResp_Project.Validate if the designated
+// constraints aren't met.
+type ListProjectsForIAMResp_ProjectValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListProjectsForIAMResp_ProjectValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListProjectsForIAMResp_ProjectValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListProjectsForIAMResp_ProjectValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListProjectsForIAMResp_ProjectValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListProjectsForIAMResp_ProjectValidationError) ErrorName() string {
+	return "ListProjectsForIAMResp_ProjectValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListProjectsForIAMResp_ProjectValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListProjectsForIAMResp_Project.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListProjectsForIAMResp_ProjectValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListProjectsForIAMResp_ProjectValidationError{}

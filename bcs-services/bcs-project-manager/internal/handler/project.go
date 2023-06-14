@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	projutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/project"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -153,10 +154,13 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 		}
 		// 处理返回
 		setListPermsResp(resp, projects, perms)
-		return nil
+	} else {
+		// without username
+		setListPermsResp(resp, projects, nil)
 	}
-	// without username
-	setListPermsResp(resp, projects, nil)
+	if err := projutil.PatchBusinessName(resp.Data.Results); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -168,7 +172,39 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 	if e != nil {
 		return e
 	}
-	setListResp(resp, projects)
+	if req.All {
+		authUser, err := middleware.GetUserFromContext(ctx)
+		if err == nil && authUser.Username != "" {
+			ids := getProjectIDs(projects)
+			perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPermission(
+				authUser.Username, ids,
+				[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
+			)
+			if err != nil {
+				return err
+			}
+			// set web_annotation
+			setListPermsResp(resp, projects, perms)
+		}
+	} else {
+		// list all authorized projects, so no need to set web_annotation
+		setListResp(resp, projects)
+	}
+	if err := projutil.PatchBusinessName(resp.Data.Results); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ListProjectsForIAM list projects with k8s enabled for iam grant
+func (p *ProjectHandler) ListProjectsForIAM(ctx context.Context,
+	req *proto.ListProjectsForIAMReq, resp *proto.ListProjectsForIAMResp) error {
+	lap := project.NewListForIAMActionAction(p.model)
+	projects, e := lap.Do(ctx, req)
+	if e != nil {
+		return e
+	}
+	resp.Data = projects
 	return nil
 }
 
