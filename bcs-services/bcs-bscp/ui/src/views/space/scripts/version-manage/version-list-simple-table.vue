@@ -43,6 +43,8 @@
     class="table-compact-pagination"
     small
     align="right"
+    :count="props.pagination.count"
+    :limit="props.pagination.limit"
     :show-limit="false"
     :show-total-count="false"
     @change="emits('pageChange', $event)" />

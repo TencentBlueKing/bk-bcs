@@ -7,6 +7,7 @@
   const props = defineProps<{
     spaceId: string;
     scriptId: number;
+    type: string;
     show: boolean;
     crtVersion: IScriptVersion;
   }>()
@@ -75,7 +76,11 @@
         <div class="current-title">{{ props.crtVersion.spec.name }}</div>
       </div>
       <div class="diff-code-content">
-        <DiffText :current="crtVersion.spec.content" :base="baseContent" />
+        <DiffText
+          :current="crtVersion.spec.content"
+          :current-language="props.type"
+          :base="baseContent"
+          :base-language="props.type" />
       </div>
     </div>
     <div class="actions-btn">
