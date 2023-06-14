@@ -66,6 +66,10 @@ type MetricHandler interface {
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterPodUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetClusterPodTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterCPURequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
@@ -112,6 +116,8 @@ type MetricHandler interface {
 	GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodePodCount(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+		step time.Duration) ([]*prompb.TimeSeries, error)
+	GetNodePodTotal(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)
 	GetNodeContainerCount(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
 		step time.Duration) ([]*prompb.TimeSeries, error)

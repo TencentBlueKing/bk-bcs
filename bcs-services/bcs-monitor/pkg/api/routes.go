@@ -174,6 +174,7 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 		route.GET("/memory_request_usage", rest.RestHandlerFunc(metrics.ClusterMemoryRequestUsage))
 		route.GET("/disk_usage", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
 		route.GET("/diskio_usage", rest.RestHandlerFunc(metrics.ClusterDiskioUsage))
+		route.GET("/pod_usage", rest.RestHandlerFunc(metrics.ClusterPodUsage))
 		route.GET("/nodes/:node/info", rest.RestHandlerFunc(metrics.GetNodeInfo))
 		route.GET("/nodes/:node/overview", rest.RestHandlerFunc(metrics.GetNodeOverview))
 		route.GET("/nodes/:node/cpu_usage", rest.RestHandlerFunc(metrics.GetNodeCPUUsage))

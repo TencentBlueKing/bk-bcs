@@ -80,8 +80,22 @@ func (p *Prometheus) GetClusterCPUUsed(ctx context.Context, projectId, clusterId
 	promql :=
 		`sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode!="idle", ` +
 			`instance=~"%<instance>s", %<provider>s}[2m]))`
-
 	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+}
+
+// GetClusterPodUsed 获取集群pod使用量
+func (p *Prometheus) GetClusterPodUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	// 获取pod使用率
+	promql :=
+		`sum (kubelet_running_pods{cluster_id="%<clusterId>s", %<provider>s})`
+	return p.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+}
+
+// GetClusterPodTotal 获取集群最大允许pod数
+func (p *Prometheus) GetClusterPodTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
 }
 
 // GetClusterCPUUsage 获取CPU核心使用量

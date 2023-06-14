@@ -68,6 +68,12 @@ func (m *Compute) GetNodePodCount(ctx context.Context, projectId, clusterId, nod
 	return nil, nil
 }
 
+// GetNodePodTotal PodTotal
+func (m *Compute) GetNodePodTotal(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // GetNodeContainerCount 容器数量
 func (m *Compute) GetNodeContainerCount(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {

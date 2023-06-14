@@ -44,6 +44,7 @@ type ClusterOverviewMetric struct {
 	DiskUsage   *UsageByte `json:"disk_usage"`
 	MemoryUsage *UsageByte `json:"memory_usage"`
 	DiskIOUsage *Usage     `json:"diskio_usage"`
+	PodUsage    *Usage     `json:"pod_usage"`
 }
 
 // handleClusterMetric Cluster 处理公共函数
@@ -92,6 +93,7 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 		"disk_total":     `bcs:cluster:disk:total{cluster_id="%<clusterId>s", %<provider>s}`,
 		"diskio_used":    `bcs:cluster:diskio:used{cluster_id="%<clusterId>s", %<provider>s}`,
 		"diskio_total":   `bcs:cluster:diskio:total{cluster_id="%<clusterId>s", %<provider>s}`,
+		"pod_total":      `bcs:cluster:pod:total{cluster_id="%<clusterId>s", %<provider>s}`,
 	}
 
 	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
@@ -118,9 +120,23 @@ func GetClusterOverview(c *rest.Context) (interface{}, error) {
 			Used:  result["diskio_used"],
 			Total: result["diskio_total"],
 		},
+		PodUsage: &Usage{
+			Total: result["pod_total"],
+		},
 	}
 
 	return m, nil
+}
+
+// ClusterPodUsage 集群 POD 使用率
+// @Summary 集群 POD 使用率
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /pod_usage [get]
+func ClusterPodUsage(c *rest.Context) (interface{}, error) {
+	// 获取集群中节点列表
+	promql := `bcs:cluster:pod:used{cluster_id="%<clusterId>s", %<provider>s}`
+	return handleClusterMetric(c, promql)
 }
 
 // ClusterCPUUsage 集群 CPU 使用率

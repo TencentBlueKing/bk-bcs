@@ -24,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/clientutil"
@@ -150,6 +151,30 @@ func (m *BKMonitor) GetClusterCPUUsage(ctx context.Context, projectID, clusterID
 	}
 
 	return base.DivideSeries(seriesA, seriesB), nil
+}
+
+// GetClusterPodUsed 获取集群pod使用量
+func (m *BKMonitor) GetClusterPodUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	// 获取pod使用率
+	promql :=
+		`sum (kubelet_running_pods{cluster_id="%<clusterId>s", %<provider>s})`
+	return m.handleClusterMetric(ctx, projectId, clusterId, promql, start, end, step)
+}
+
+// GetClusterPodTotal 获取集群最大允许pod数
+func (m *BKMonitor) GetClusterPodTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	// 获取集群中最大可用pod数
+	nodes, err := k8sclient.GetClusterNodeList(ctx, clusterId)
+	if err != nil {
+		return nil, err
+	}
+	var pod int64
+	for _, node := range nodes {
+		pod += node.Status.Allocatable.Pods().Value()
+	}
+	return base.GetSameSeries(start, end, step, float64(pod), nil), nil
 }
 
 // GetClusterCPURequest 获取CPU Rquest

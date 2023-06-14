@@ -191,6 +191,12 @@ func (m *Prometheus) GetNodePodCount(ctx context.Context, projectId, clusterId, 
 	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
 }
 
+// GetNodePodTotal PodTotal
+func (m *Prometheus) GetNodePodTotal(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // GetNodeContainerCount 容器数量
 func (m *Prometheus) GetNodeContainerCount(ctx context.Context, projectId, clusterId, nodeName string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {

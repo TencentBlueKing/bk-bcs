@@ -17,6 +17,7 @@ import (
 	"time"
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 	"github.com/prometheus/prometheus/prompb"
 )
@@ -189,6 +190,17 @@ func (m *BKMonitor) GetNodePodCount(ctx context.Context, projectID, clusterID, n
 		`max by (instance) (kubelet_running_pods{cluster_id="%<clusterID>s", bk_instance=~"%<ip>s", %<provider>s})`
 
 	return m.handleNodeMetric(ctx, projectID, clusterID, node, promql, start, end, step)
+}
+
+// GetNodePodTotal PodTotal
+func (m *BKMonitor) GetNodePodTotal(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	// 获取集群中最大可用pod数
+	nodes, err := k8sclient.GetNodeInfo(ctx, clusterId, node)
+	if err != nil {
+		return nil, err
+	}
+	return base.GetSameSeries(start, end, step, float64(nodes.Status.Allocatable.Pods().Value()), nil), nil
 }
 
 // GetNodeContainerCount 容器Count
