@@ -46,13 +46,20 @@ type metricsFn func(metricsParams) ([]*prompb.TimeSeries, error)
 // metrics maps
 // map metrics to metrics func
 var metricsMaps = map[string]metricsFn{
-	// cluster metrics
 	"bcs:cluster:cpu:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPUTotal(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:cluster:cpu:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPUUsed(mp.ctx, mp.projectID, mp.clusterID,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	"bcs:cluster:pod:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterPodTotal(mp.ctx, mp.projectID, mp.clusterID,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	"bcs:cluster:pod:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetClusterPodUsed(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:cluster:cpu:request": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
@@ -143,6 +150,10 @@ var metricsMaps = map[string]metricsFn{
 	},
 	"bcs:node:pod_count": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetNodePodCount(mp.ctx, mp.projectID, mp.clusterID, mp.node,
+			mp.startTime, mp.endTime, mp.stepDuration)
+	},
+	"bcs:node:pod_total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
+		return mp.client.GetNodePodTotal(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
 	"bcs:node:container_count": func(mp metricsParams) ([]*prompb.TimeSeries, error) {

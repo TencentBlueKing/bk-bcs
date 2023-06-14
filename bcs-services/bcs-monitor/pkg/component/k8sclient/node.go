@@ -81,3 +81,16 @@ func GetNodeCRVersionByName(ctx context.Context, clusterId, name string) (string
 	}
 	return node.Status.NodeInfo.ContainerRuntimeVersion, nil
 }
+
+// GetNodeInfo 获取节点信息 返回相应的节点对象
+func GetNodeInfo(ctx context.Context, clusterId, nodeName string) (*v1.Node, error) {
+	client, err := GetK8SClientByClusterId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	node, err := client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}

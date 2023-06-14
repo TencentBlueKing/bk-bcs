@@ -26,6 +26,18 @@ type Federation struct {
 	dispatch map[string]clientutil.DispatchConf
 }
 
+// GetClusterPodUsed 获取集群pod使用量
+func (p *Federation) GetClusterPodUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetClusterPodTotal 获取集群最大允许pod数
+func (p *Federation) GetClusterPodTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // NewFederation xxx
 func NewFederation(dispatch map[string]clientutil.DispatchConf) *Federation {
 	return &Federation{dispatch: dispatch}
