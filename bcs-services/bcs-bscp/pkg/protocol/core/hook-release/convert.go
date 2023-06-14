@@ -166,6 +166,7 @@ func PbListHookReleasesReferences(h *types.ListHookReleasesReferences) *ListHook
 	return &ListHookReleasesReferencesDetails{
 		HookReleaseName:   h.HookReleaseName,
 		AppName:           h.AppName,
+		AppId:             h.AppID,
 		ConfigReleaseName: h.ConfigReleaseName,
 		ConfigReleaseId:   h.HookReleaseID,
 		State:             h.PubSate,

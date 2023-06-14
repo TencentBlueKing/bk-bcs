@@ -275,7 +275,7 @@ service Config {
     }
     rpc ListHookReleasesReferences(ListHookReleasesReferencesReq) returns (ListHookReleasesReferencesResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/{release_id}/references"
+            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/references"
         };
     }
 
