@@ -51,7 +51,7 @@ test:
 
 .PHONY: openapi
 openapi:
-	@swag init --outputTypes go,json -g pkg/api/routes.go --exclude ./
+	@swag init --outputTypes go,json --parseDependency -g pkg/api/routes.go --exclude ./
 	@swag fmt -g pkg/api/routes.go --exclude ./
 
 .PHONY: build_benchmark

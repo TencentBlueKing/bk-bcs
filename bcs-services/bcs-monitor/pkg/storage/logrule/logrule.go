@@ -11,7 +11,7 @@
  *
  */
 
-package logcollector
+package logrule
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	tableName = "logcollector"
+	tableName = "logrule"
 )
 
 var (
@@ -39,6 +39,7 @@ var (
 			Name: tableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: entity.FieldKeyProjectID, Value: 1},
+				bson.E{Key: entity.FieldKeyClusterID, Value: 1},
 				bson.E{Key: entity.FieldKeyName, Value: 1},
 			},
 			Unique: true,
@@ -50,19 +51,11 @@ var (
 				bson.E{Key: entity.FieldKeyClusterID, Value: 1},
 			},
 		},
-		{
-			Name: tableName + "_project_cluster_name",
-			Key: bson.D{
-				bson.E{Key: entity.FieldKeyProjectID, Value: 1},
-				bson.E{Key: entity.FieldKeyClusterID, Value: 1},
-				bson.E{Key: entity.FieldKeyName, Value: 1},
-			},
-		},
 	}
 )
 
-// ModelLogCollector provides handling log collector operations to database
-type ModelLogCollector struct {
+// ModelLogRule provides handling log rule operations to database
+type ModelLogRule struct {
 	tableName           string
 	indexes             []drivers.Index
 	db                  drivers.DB
@@ -70,16 +63,16 @@ type ModelLogCollector struct {
 	isTableEnsuredMutex sync.Mutex
 }
 
-// New return a new ModelLogCollector instance
-func New(db drivers.DB) *ModelLogCollector {
-	return &ModelLogCollector{
+// New return a new ModelLogRule instance
+func New(db drivers.DB) *ModelLogRule {
+	return &ModelLogRule{
 		tableName: utils.DataTableNamePrefix + tableName,
 		indexes:   tableIndexes,
 		db:        db,
 	}
 }
 
-func (m *ModelLogCollector) ensureTable(ctx context.Context) error {
+func (m *ModelLogRule) ensureTable(ctx context.Context) error {
 	if m.isTableEnsured {
 		return nil
 	}
@@ -97,8 +90,8 @@ func (m *ModelLogCollector) ensureTable(ctx context.Context) error {
 	return nil
 }
 
-// CreateLogCollector create log collector
-func (m *ModelLogCollector) CreateLogCollector(ctx context.Context, lc *entity.LogCollector) error {
+// CreateLogRule create log rule
+func (m *ModelLogRule) CreateLogRule(ctx context.Context, lc *entity.LogRule) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -106,14 +99,17 @@ func (m *ModelLogCollector) CreateLogCollector(ctx context.Context, lc *entity.L
 	now := utils.JSONTime{Time: time.Now()}
 	lc.CreatedAt = now
 	lc.UpdatedAt = now
+	if lc.ID.IsZero() {
+		lc.ID = primitive.NewObjectIDFromTimestamp(now.Time)
+	}
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{lc}); err != nil {
 		return err
 	}
 	return nil
 }
 
-// UpdateLogCollector update log collector
-func (m *ModelLogCollector) UpdateLogCollector(ctx context.Context, id string, lc entity.M) error {
+// UpdateLogRule update log rule
+func (m *ModelLogRule) UpdateLogRule(ctx context.Context, id string, lc entity.M) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -126,10 +122,6 @@ func (m *ModelLogCollector) UpdateLogCollector(ctx context.Context, id string, l
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyObjectID: objectID,
 	})
-	old := &entity.LogCollector{}
-	if err := m.db.Table(m.tableName).Find(cond).One(ctx, old); err != nil {
-		return err
-	}
 
 	lc[entity.FieldKeyUpdatedAt] = utils.JSONTime{Time: time.Now()}
 	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": lc}); err != nil {
@@ -139,8 +131,8 @@ func (m *ModelLogCollector) UpdateLogCollector(ctx context.Context, id string, l
 	return nil
 }
 
-// DeleteLogCollector delete log collector
-func (m *ModelLogCollector) DeleteLogCollector(ctx context.Context, id string) error {
+// DeleteLogRule delete log rule
+func (m *ModelLogRule) DeleteLogRule(ctx context.Context, id string) error {
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -161,10 +153,14 @@ func (m *ModelLogCollector) DeleteLogCollector(ctx context.Context, id string) e
 	return nil
 }
 
-// ListLogCollectors list log collectors
-func (m *ModelLogCollector) ListLogCollectors(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (
-	int64, []*entity.LogCollector, error) {
-	l := make([]*entity.LogCollector, 0)
+// ListLogRules list log rules
+func (m *ModelLogRule) ListLogRules(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (
+	int64, []*entity.LogRule, error) {
+	if err := m.ensureTable(ctx); err != nil {
+		return 0, nil, err
+	}
+
+	l := make([]*entity.LogRule, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(opt.Sort)
@@ -185,11 +181,14 @@ func (m *ModelLogCollector) ListLogCollectors(ctx context.Context, cond *operato
 		return 0, nil, err
 	}
 
+	for i := range l {
+		l[i].FixStatus()
+	}
 	return total, l, nil
 }
 
-// GetLogCollector get log collector
-func (m *ModelLogCollector) GetLogCollector(ctx context.Context, id string) (*entity.LogCollector, error) {
+// GetLogRule get log rule
+func (m *ModelLogRule) GetLogRule(ctx context.Context, id string) (*entity.LogRule, error) {
 	if err := m.ensureTable(ctx); err != nil {
 		return nil, err
 	}
@@ -202,16 +201,17 @@ func (m *ModelLogCollector) GetLogCollector(ctx context.Context, id string) (*en
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyObjectID: objectID,
 	})
-	lc := &entity.LogCollector{}
+	lc := &entity.LogRule{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, lc); err != nil {
 		return nil, err
 	}
 
+	lc.FixStatus()
 	return lc, nil
 }
 
 // GetIndexSetID get index set id
-func (m *ModelLogCollector) GetIndexSetID(ctx context.Context, projectID, clusterID string) (int, int, error) {
+func (m *ModelLogRule) GetIndexSetID(ctx context.Context, projectID, clusterID string) (int, int, error) {
 	if err := m.ensureTable(ctx); err != nil {
 		return 0, 0, err
 	}
@@ -220,8 +220,11 @@ func (m *ModelLogCollector) GetIndexSetID(ctx context.Context, projectID, cluste
 		entity.FieldKeyProjectID: projectID,
 		entity.FieldKeyClusterID: clusterID,
 	})
-	l := make([]*entity.LogCollector, 0)
+	l := make([]*entity.LogRule, 0)
 	if err := m.db.Table(m.tableName).Find(cond).All(ctx, &l); err != nil {
+		if errors.Is(err, drivers.ErrTableRecordNotFound) {
+			return 0, 0, nil
+		}
 		return 0, 0, err
 	}
 	stdIndexSetID := 0
@@ -234,40 +237,4 @@ func (m *ModelLogCollector) GetIndexSetID(ctx context.Context, projectID, cluste
 		}
 	}
 	return stdIndexSetID, fileIndexSetID, nil
-}
-
-// CreateOldIndexSetID create index set id
-func (m *ModelLogCollector) CreateOldIndexSetID(ctx context.Context, logIndex *entity.LogIndex) error {
-	if err := m.ensureTable(ctx); err != nil {
-		return err
-	}
-
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyProjectID: logIndex.ProjectID,
-	})
-	l := &entity.LogIndex{}
-	if err := m.db.Table(m.tableName).Find(cond).One(ctx, &l); err != nil {
-		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			_, err = m.db.Table(m.tableName).Insert(ctx, []interface{}{l})
-			return err
-		}
-		return err
-	}
-	return nil
-}
-
-// GetOldIndexSetID get index set id
-func (m *ModelLogCollector) GetOldIndexSetID(ctx context.Context, projectID string) (*entity.LogIndex, error) {
-	if err := m.ensureTable(ctx); err != nil {
-		return nil, err
-	}
-
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyProjectID: projectID,
-	})
-	l := &entity.LogIndex{}
-	if err := m.db.Table(m.tableName).Find(cond).One(ctx, &l); err != nil {
-		return nil, err
-	}
-	return l, nil
 }

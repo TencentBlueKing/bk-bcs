@@ -11,19 +11,36 @@
  *
  */
 
-package entity
+package main
 
-// LogIndex for log index
-type LogIndex struct {
-	ProjectID      string `json:"project_id" bson:"projectID" gorm:"column:project_id"`
-	BizID          int    `json:"biz_id" bson:"bizID" gorm:"column:cc_app_id"`
-	STDDataID      int    `json:"std_data_id" bson:"stdDataID" gorm:"column:std_data_id"`
-	FileDataID     int    `json:"file_data_id" bson:"fileDataID" gorm:"column:file_data_id"`
-	STDIndexSetID  int    `json:"std_index_set_id" bson:"stdIndexSetID" gorm:"column:std_index_set_id"`
-	FileIndexSetID int    `json:"file_index_set_id" bson:"fileIndexSetID" gorm:"column:file_index_set_id"`
+import (
+	"context"
+
+	"github.com/oklog/run"
+	"github.com/spf13/cobra"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/migration"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
+)
+
+// MigrateCmd :
+func MigrateCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "migrate",
+		Short: "migrate monitor data",
+	}
+
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		runCmd(cmd, runMigrate)
+	}
+
+	return cmd
 }
 
-// TableName return log index table name
-func (LogIndex) TableName() string {
-	return "datalog_datalogplan"
+// 运行 migrate
+func runMigrate(ctx context.Context, g *run.Group, opt *option) error {
+	// init storage
+	storage.InitStorage()
+	g.Add(migration.MigrateLogRule, func(err error) {})
+	return nil
 }
