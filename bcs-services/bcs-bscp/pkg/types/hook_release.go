@@ -113,10 +113,6 @@ func (opt *ListHookReleasesReferencesOption) Validate(po *PageOption) error {
 		return errors.New("invalid hook id id, should >= 1")
 	}
 
-	if opt.HookReleasesID <= 0 {
-		return errors.New("invalid HookReleasesID id id, should >= 1")
-	}
-
 	if opt.Page == nil {
 		return errors.New("page is null")
 	}

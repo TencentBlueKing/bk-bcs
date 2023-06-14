@@ -204,7 +204,7 @@ func (s *Service) GetHook(ctx context.Context, req *pbds.GetHookReq) (*pbds.GetH
 	opt := &types.GetByPubStateOption{
 		BizID:  req.BizId,
 		HookID: req.HookId,
-		State:  table.ShutdownHookReleased,
+		State:  table.NotDeployedHookReleased,
 	}
 	var releaseID uint32
 	release, err := s.dao.HookRelease().GetByPubState(kt, opt)

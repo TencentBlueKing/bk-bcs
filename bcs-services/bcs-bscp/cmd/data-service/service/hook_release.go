@@ -278,7 +278,7 @@ func (s *Service) ListHookReleasesReferences(ctx context.Context,
 
 	results, count, err := s.dao.HookRelease().ListHookReleasesReferences(kt, opt)
 	if err != nil {
-		logs.Errorf("list TemplateSpace failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list hook references failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 

@@ -352,21 +352,26 @@ func (dao *hookReleaseDao) ListHookReleasesReferences(kit *kit.Kit,
 
 	release := dao.genQ.Release
 	hr := dao.genQ.HookRelease.As("hr")
-
 	r := release.As("r")
 	app := dao.genQ.App.As("app")
 
 	var results []*types.ListHookReleasesReferences
 
-	count, err := r.WithContext(kit.Ctx).
+	q := r.WithContext(kit.Ctx).
 		Select(r.ID.As("config_release_id"), r.Name.As("config_release_name"),
 			hr.HookID.As("hook_id"), app.ID.As("app_id"), hr.Name.As("hook_release_name"),
 			hr.ID.As("hook_release_id"), app.Name.As("app_name")).
 		LeftJoin(hr, r.PreHookReleaseID.EqCol(hr.ID)).
-		LeftJoin(app, r.AppID.EqCol(app.ID)).
-		Where(r.PreHookReleaseID.Eq(opt.HookReleasesID)).
-		Or(r.PostHookReleaseID.Eq(opt.HookReleasesID)).
-		Group(r.ID, r.Name, r.Deprecated, hr.Name, hr.Name, app.Name).
+		LeftJoin(app, r.AppID.EqCol(app.ID))
+
+	if opt.HookReleasesID > 0 {
+		q = q.Where(r.PreHookReleaseID.Eq(opt.HookReleasesID), r.PreHookID.Eq(opt.HookID)).
+			Or(r.PostHookReleaseID.Eq(opt.HookReleasesID), r.PostHookID.Eq(opt.HookID))
+	} else {
+		q.Where(r.PreHookID.Eq(opt.HookID)).Or(r.PostHookID.Eq(opt.HookID))
+	}
+
+	count, err := q.Group(r.ID, r.Name, hr.Name, hr.Name, app.Name).
 		Order(r.ID.Desc()).
 		ScanByPage(&results, opt.Page.Offset(), opt.Page.LimitInt())
 
