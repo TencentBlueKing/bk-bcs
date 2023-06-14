@@ -392,19 +392,27 @@ func (de *Decorator) RelativePath(sign string) string {
 	return nodeFrontPath + sign
 }
 
+// Url ..
 func (de *Decorator) Url() string {
 	return ""
 }
+
+// AccessKeyID ..
 func (de *Decorator) AccessKeyID() string {
 	return ""
 }
+
+// SecretAccessKey ..
 func (de *Decorator) SecretAccessKey() string {
 	return ""
 }
+
+// GetRepositoryType ..
 func (de *Decorator) GetRepositoryType() cc.StorageMode {
 	return cc.BkRepo
 }
 
+// DecoratorInter ..
 type DecoratorInter interface {
 	Root() string
 	RepoName() string
@@ -416,6 +424,7 @@ type DecoratorInter interface {
 	GetRepositoryType() cc.StorageMode
 }
 
+// RepositoryTypeInter ..
 type RepositoryTypeInter interface {
 	//IsProjectExist(ctx context.Context) error
 	CreateRepo(ctx context.Context, req *CreateRepoReq) error
@@ -425,7 +434,7 @@ type RepositoryTypeInter interface {
 	QueryMetadata(ctx context.Context, opt *NodeOption) (map[string]string, error)
 }
 
-// GenS3NodeFullPath
+// GenS3NodeFullPath ..
 func GenS3NodeFullPath(bizID uint32, sign string) (string, error) {
 	if len(sign) == 0 {
 		return "", errors.New("sign is required")
@@ -438,6 +447,7 @@ func GenS3NodeFullPath(bizID uint32, sign string) (string, error) {
 	return fmt.Sprintf("/%s%s%s", repoName, nodeFrontPath, sign), nil
 }
 
+// UriDecoratorInter ..
 type UriDecoratorInter interface {
 	Init(bizID uint32) DecoratorInter
 }
@@ -476,12 +486,17 @@ type DecoratorS3 struct {
 	secretAccessKey string
 }
 
+// Url ..
 func (de *DecoratorS3) Url() string {
 	return de.url
 }
+
+// AccessKeyID ..
 func (de *DecoratorS3) AccessKeyID() string {
 	return de.accessKeyID
 }
+
+// SecretAccessKey ..
 func (de *DecoratorS3) SecretAccessKey() string {
 	return de.secretAccessKey
 }
@@ -506,6 +521,7 @@ func (de *DecoratorS3) RelativePath(sign string) string {
 	return nodeFrontPath + sign
 }
 
+// GetRepositoryType ..
 func (de *DecoratorS3) GetRepositoryType() cc.StorageMode {
 	return cc.S3
 }
