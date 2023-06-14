@@ -90,19 +90,21 @@
             <bk-input v-model="formData.release_name" />
           </bk-form-item>
           <bk-form-item label="脚本内容"  property="content" required>
-            <ScriptEditor v-model="formData.content" class="script-content-wrapper" :language="formData.type">
-              <template #header>
-                <div class="language-tabs">
-                  <div
-                    v-for="item in SCRIPT_TYPE"
-                    :key="item.id"
-                    :class="['tab', { actived: formData.type === item.id }]"
-                    @click="formData.type = item.id">
-                    {{ item.name }}
+            <div class="script-content-wrapper">
+              <ScriptEditor v-model="formData.content" :language="formData.type">
+                <template #header>
+                  <div class="language-tabs">
+                    <div
+                      v-for="item in SCRIPT_TYPE"
+                      :key="item.id"
+                      :class="['tab', { actived: formData.type === item.id }]"
+                      @click="formData.type = item.id">
+                      {{ item.name }}
+                    </div>
                   </div>
-                </div>
-              </template>
-            </ScriptEditor>
+                </template>
+              </ScriptEditor>
+            </div>
           </bk-form-item>
         </bk-form>
       </div>

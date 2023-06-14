@@ -84,7 +84,18 @@ export interface IScriptVersionForm {
 export interface IScriptCiteQuery {
   start: number;
   limit: number;
+  release_id?: number;
   searchKey?: string;
+}
+
+// 脚本被引用数据
+export interface IScriptCitedItem {
+  hook_release_name: string;
+  app_id: number;
+  app_name: string;
+  config_release_name: string;
+  config_release_id: number;
+  pub_state: string;
 }
 
 // 服务配置项初始化脚本配置

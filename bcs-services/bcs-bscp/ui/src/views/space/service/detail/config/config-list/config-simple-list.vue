@@ -52,9 +52,12 @@
     }
   }
 
-  const handleEditConfigOpen = (id: number) => {
+  const handleEditConfigOpen = (config: IConfigItem) => {
+    if (config.file_state === 'DELETE') {
+      return
+    }
     editDialogShow.value = true
-    configId.value = id
+    configId.value = config.id
   }
 
 </script>
@@ -62,7 +65,11 @@
   <section class="current-config-list">
     <bk-loading :loading="loading">
       <div v-if="configList.length > 0" class="config-list-wrapper">
-        <div v-for="config in configList" class="config-item" :key="config.id" @click="handleEditConfigOpen(config.id)">
+        <div
+          v-for="config in configList"
+          :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
+          :key="config.id"
+          @click="handleEditConfigOpen(config)">
           <div class="config-name">{{ config.spec.name }}</div>
           <div class="config-type">{{ getConfigTypeName(config.spec.file_type) }}</div>
         </div>
@@ -92,7 +99,14 @@
     box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.06);
     border-radius: 2px;
     cursor: pointer;
-    &:hover {
+    &.disabled {
+      cursor: not-allowed;
+      .config-type,
+      .config-name {
+        color: #dcdee5;
+      }
+    }
+    &:not(.disabled):hover {
       background: #e1ecff;
     }
     .config-name {

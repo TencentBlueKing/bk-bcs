@@ -125,7 +125,7 @@ export const publishVersion = (biz_id: string, hook_id: number, release_id: numb
  * @returns 
  */
 export const getScriptCiteList = (biz_id: string, hook_id: number, params: IScriptCiteQuery) => {
-  return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/hook_releases/list`, { params }).then(res => res.data);
+  return http.get(`/config/biz/${biz_id}/hooks/${hook_id}/references`, { params }).then(res => res.data);
 }
 
 // 获取服务初始化脚本

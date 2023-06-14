@@ -160,7 +160,11 @@
       <bk-table :border="['outer']" :data="scriptsData">
         <bk-table-column label="脚本名称" prop="spec.name"></bk-table-column>
         <bk-table-column label="脚本语言" prop="spec.type" width="120"></bk-table-column>
-        <bk-table-column label="分类标签" prop="spec.tag"></bk-table-column>
+        <bk-table-column label="分类标签">
+          <template #default="{ row }">
+            <span v-if="row.spec">{{ row.spec.tag || '--' }}</span>
+          </template>
+        </bk-table-column>
         <bk-table-column label="被引用" width="100">
           <template #default="{ row }">
             <template v-if="row.spec">

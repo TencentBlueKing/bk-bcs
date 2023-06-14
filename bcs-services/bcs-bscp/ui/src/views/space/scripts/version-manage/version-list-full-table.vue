@@ -1,6 +1,8 @@
 <script setup lang="ts">
+  import { ref } from 'vue'
   import { IScriptVersion } from '../../../../../types/script';
   import { IPagination } from '../../../../../types/index';
+  import ScriptCited from '../list/script-cited.vue';
 
   const STATUS_MAP = {
     'not_deployed': '未上线',
@@ -9,11 +11,21 @@
   }
 
   const props = defineProps<{
+    scriptId: number;
     list: IScriptVersion[];
     pagination: IPagination;
   }>()
 
+  const showCiteSlider = ref(false)
+  const versionId = ref(0)
+
   const emits = defineEmits(['view', 'pageChange', 'pageLimitChange'])
+
+  const handleOpenCitedSlider = (version: IScriptVersion) => {
+    versionId.value = version.attachment.hook_id
+    showCiteSlider.value = true
+  }
+
 </script>
 <template>
   <bk-table
@@ -29,7 +41,14 @@
         <span>{{ (row.spec && row.spec.memo) || '--' }}</span>
       </template>
     </bk-table-column>
-    <bk-table-column label="被引用" prop="spec.publish_num" :width="80"></bk-table-column>
+    <bk-table-column label="被引用" prop="spec.publish_num" :width="80">
+      <template #default="{ row }">
+        <template v-if="row.spec">
+          <bk-button v-if="row.spec.publish_num > 0" text theme="primary" @click="handleOpenCitedSlider(row)">{{ row.spec.publish_num }}</bk-button>
+          <span v-else>0</span>
+        </template>
+      </template>
+    </bk-table-column>
     <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
     <bk-table-column label="更新时间" prop="revision.update_at"></bk-table-column>
     <bk-table-column label="状态">
@@ -55,6 +74,7 @@
     :limit="props.pagination.limit"
     @change="emits('pageChange', $event)"
     @limit-change="emits('pageLimitChange', $event)" />
+  <ScriptCited v-model:show="showCiteSlider" :id="props.scriptId" :version-id="versionId" />
 </template>
 <style scoped lang="scss">
   .version-name {
