@@ -76,9 +76,10 @@ func Start() {
 	}
 
 	//初始化 Tracer
-	shutdown, err := tracing.InitTracing(&crConf.Tracing)
-	if err != nil {
-		logger.Info(err.Error())
+
+	shutdown, traceErr := tracing.InitTracing(&crConf.Tracing)
+	if traceErr != nil {
+		logger.Info(traceErr.Error())
 	}
 	if shutdown != nil {
 		defer func() {
