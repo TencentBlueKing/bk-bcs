@@ -93,7 +93,6 @@ func createClustersNamespace() *cobra.Command {
 				var (
 					requestParam interface{}
 					marshal      []byte
-					original     []byte
 					created      []byte
 					createdJson  []byte
 					path         string
@@ -129,14 +128,15 @@ func createClustersNamespace() *cobra.Command {
 						return
 					}
 					// 把json转成yaml
-					original, err = yaml.JSONToYAML(marshal)
+					original, formatErr := yaml.JSONToYAML(marshal)
 					if err != nil {
-						klog.Infoln("json to yaml failed: %v", err)
+						klog.Infoln("json to yaml failed: %v", formatErr)
 						return
 					}
 					create := editor.NewDefaultEditor([]string{})
-					// created
+
 					created, path, err = create.LaunchTempFile(fmt.Sprintf("%s-create-", filepath.Base(os.Args[0])), ".yaml", bytes.NewBufferString(string(original)))
+
 					if err != nil {
 						klog.Infoln("unexpected error: %v", err)
 						return
@@ -159,7 +159,8 @@ func createClustersNamespace() *cobra.Command {
 				}
 			}
 			if parameters.Name == "" {
-				klog.Infoln("Namespace name is required, The length cannot exceed 63 characters, can only contain lowercase letters, numbers, and '-', must start with a letter, and cannot end with '-'")
+				klog.Infoln("Namespace name is required, The length cannot exceed 63 characters, can only contain lowercase letters, numbers, " +
+					"and '-', must start with a letter, and cannot end with '-'")
 				return
 			}
 			resp, err := client.CreateNamespace(parameters, projectCode, clusterID)

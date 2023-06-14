@@ -36,11 +36,11 @@ import (
 
 var (
 	// errSwitchType switch type error
-	errSwitchType error = errors.New("error switch type, please input: [on or off]")
+	errSwitchType = errors.New("error switch type, please input: [on or off]")
 	// errTracingType tracing type error
-	errTracingType error = errors.New("error tracing type, please input: [zipkin or jaeger]")
+	errTracingType = errors.New("error tracing type, please input: [zipkin or jaeger]")
 	// errServiceName for service name is null
-	errServiceName error = errors.New("error service name is null")
+	errServiceName = errors.New("error service name is null")
 )
 
 const (
