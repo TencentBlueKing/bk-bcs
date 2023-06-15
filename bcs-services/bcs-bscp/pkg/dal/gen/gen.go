@@ -17,20 +17,16 @@ import (
 
 var (
 	Q               = new(Query)
+	App             *app
 	Audit           *audit
+	ConfigHook      *configHook
+	Hook            *hook
+	HookRelease     *hookRelease
 	IDGenerator     *iDGenerator
+	Release         *release
 	Template        *template
 	TemplateRelease *templateRelease
 	TemplateSpace   *templateSpace
-	Q             = new(Query)
-	App           *app
-	Audit         *audit
-	ConfigHook    *configHook
-	Hook          *hook
-	HookRelease   *hookRelease
-	IDGenerator   *iDGenerator
-	Release       *release
-	TemplateSpace *templateSpace
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -49,18 +45,14 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:            db,
-		App:           newApp(db, opts...),
-		Audit:         newAudit(db, opts...),
-		ConfigHook:    newConfigHook(db, opts...),
-		Hook:          newHook(db, opts...),
-		HookRelease:   newHookRelease(db, opts...),
-		IDGenerator:   newIDGenerator(db, opts...),
-		Release:       newRelease(db, opts...),
-		TemplateSpace: newTemplateSpace(db, opts...),
 		db:              db,
+		App:             newApp(db, opts...),
 		Audit:           newAudit(db, opts...),
+		ConfigHook:      newConfigHook(db, opts...),
+		Hook:            newHook(db, opts...),
+		HookRelease:     newHookRelease(db, opts...),
 		IDGenerator:     newIDGenerator(db, opts...),
+		Release:         newRelease(db, opts...),
 		Template:        newTemplate(db, opts...),
 		TemplateRelease: newTemplateRelease(db, opts...),
 		TemplateSpace:   newTemplateSpace(db, opts...),
@@ -70,16 +62,13 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 type Query struct {
 	db *gorm.DB
 
-	App           app
-	Audit         audit
-	ConfigHook    configHook
-	Hook          hook
-	HookRelease   hookRelease
-	IDGenerator   iDGenerator
-	Release       release
-	TemplateSpace templateSpace
+	App             app
 	Audit           audit
+	ConfigHook      configHook
+	Hook            hook
+	HookRelease     hookRelease
 	IDGenerator     iDGenerator
+	Release         release
 	Template        template
 	TemplateRelease templateRelease
 	TemplateSpace   templateSpace
@@ -89,18 +78,14 @@ func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:            db,
-		App:           q.App.clone(db),
-		Audit:         q.Audit.clone(db),
-		ConfigHook:    q.ConfigHook.clone(db),
-		Hook:          q.Hook.clone(db),
-		HookRelease:   q.HookRelease.clone(db),
-		IDGenerator:   q.IDGenerator.clone(db),
-		Release:       q.Release.clone(db),
-		TemplateSpace: q.TemplateSpace.clone(db),
 		db:              db,
+		App:             q.App.clone(db),
 		Audit:           q.Audit.clone(db),
+		ConfigHook:      q.ConfigHook.clone(db),
+		Hook:            q.Hook.clone(db),
+		HookRelease:     q.HookRelease.clone(db),
 		IDGenerator:     q.IDGenerator.clone(db),
+		Release:         q.Release.clone(db),
 		Template:        q.Template.clone(db),
 		TemplateRelease: q.TemplateRelease.clone(db),
 		TemplateSpace:   q.TemplateSpace.clone(db),
@@ -117,18 +102,14 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:            db,
-		App:           q.App.replaceDB(db),
-		Audit:         q.Audit.replaceDB(db),
-		ConfigHook:    q.ConfigHook.replaceDB(db),
-		Hook:          q.Hook.replaceDB(db),
-		HookRelease:   q.HookRelease.replaceDB(db),
-		IDGenerator:   q.IDGenerator.replaceDB(db),
-		Release:       q.Release.replaceDB(db),
-		TemplateSpace: q.TemplateSpace.replaceDB(db),
 		db:              db,
+		App:             q.App.replaceDB(db),
 		Audit:           q.Audit.replaceDB(db),
+		ConfigHook:      q.ConfigHook.replaceDB(db),
+		Hook:            q.Hook.replaceDB(db),
+		HookRelease:     q.HookRelease.replaceDB(db),
 		IDGenerator:     q.IDGenerator.replaceDB(db),
+		Release:         q.Release.replaceDB(db),
 		Template:        q.Template.replaceDB(db),
 		TemplateRelease: q.TemplateRelease.replaceDB(db),
 		TemplateSpace:   q.TemplateSpace.replaceDB(db),
@@ -136,16 +117,13 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 }
 
 type queryCtx struct {
-	App           IAppDo
-	Audit         IAuditDo
-	ConfigHook    IConfigHookDo
-	Hook          IHookDo
-	HookRelease   IHookReleaseDo
-	IDGenerator   IIDGeneratorDo
-	Release       IReleaseDo
-	TemplateSpace ITemplateSpaceDo
+	App             IAppDo
 	Audit           IAuditDo
+	ConfigHook      IConfigHookDo
+	Hook            IHookDo
+	HookRelease     IHookReleaseDo
 	IDGenerator     IIDGeneratorDo
+	Release         IReleaseDo
 	Template        ITemplateDo
 	TemplateRelease ITemplateReleaseDo
 	TemplateSpace   ITemplateSpaceDo
@@ -153,16 +131,13 @@ type queryCtx struct {
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		App:           q.App.WithContext(ctx),
-		Audit:         q.Audit.WithContext(ctx),
-		ConfigHook:    q.ConfigHook.WithContext(ctx),
-		Hook:          q.Hook.WithContext(ctx),
-		HookRelease:   q.HookRelease.WithContext(ctx),
-		IDGenerator:   q.IDGenerator.WithContext(ctx),
-		Release:       q.Release.WithContext(ctx),
-		TemplateSpace: q.TemplateSpace.WithContext(ctx),
+		App:             q.App.WithContext(ctx),
 		Audit:           q.Audit.WithContext(ctx),
+		ConfigHook:      q.ConfigHook.WithContext(ctx),
+		Hook:            q.Hook.WithContext(ctx),
+		HookRelease:     q.HookRelease.WithContext(ctx),
 		IDGenerator:     q.IDGenerator.WithContext(ctx),
+		Release:         q.Release.WithContext(ctx),
 		Template:        q.Template.WithContext(ctx),
 		TemplateRelease: q.TemplateRelease.WithContext(ctx),
 		TemplateSpace:   q.TemplateSpace.WithContext(ctx),

@@ -314,7 +314,8 @@ func (dao *hookReleaseDao) UpdatePubStateWithTx(kit *kit.Kit, tx *gen.QueryTx, g
 
 // Update one HookRelease's info.
 func (dao *hookReleaseDao) Update(kit *kit.Kit, g *table.HookRelease) error {
-	if err := g.ValidatePublish(); err != nil {
+
+	if err := g.ValidateUpdate(); err != nil {
 		return err
 	}
 
