@@ -16,7 +16,7 @@ package config
 import (
 	"crypto/rsa"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // BCSClusterEnv xxx

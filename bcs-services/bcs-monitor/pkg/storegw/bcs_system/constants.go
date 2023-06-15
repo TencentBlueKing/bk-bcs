@@ -10,13 +10,15 @@
  * limitations under the License.
  */
 
-package bcs_system
+package bcssystem
 
 // AvailableNodeMetrics 蓝鲸监控节点的metrics
 var AvailableNodeMetrics = []string{
 	"bcs:cluster:cpu:usage",
 	"bcs:cluster:cpu:total",
 	"bcs:cluster:cpu:used",
+	"bcs:cluster:pod:total",
+	"bcs:cluster:pod:used",
 	"bcs:cluster:cpu:request",
 	"bcs:cluster:cpu_request:usage",
 	"bcs:cluster:memory:total",
@@ -39,6 +41,7 @@ var AvailableNodeMetrics = []string{
 	"bcs:node:memory_request:usage",
 	"bcs:node:container_count",
 	"bcs:node:pod_count",
+	"bcs:node:pod_total",
 	"bcs:node:network_transmit",
 	"bcs:node:network_receive",
 	"bcs:pod:cpu_usage",

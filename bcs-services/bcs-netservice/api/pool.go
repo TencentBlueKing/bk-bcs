@@ -15,13 +15,14 @@ package api
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 	"net/http"
 	"time"
 
-	restful "github.com/emicklei/go-restful"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
+
+	"github.com/emicklei/go-restful"
 )
 
 // RegisterPoolHandler create pool handler,
@@ -47,7 +48,6 @@ func RegisterPoolHandler(httpSvr *HTTPService, logic *netservice.NetService) *Po
 	// info:
 	//    static(default): static info for cluster
 	//    detail: all pool info under cluster
-	// sort: (todo feature)
 	webSvr.Route(webSvr.GET("/{cluster}").To(handler.Query))
 
 	httpSvr.Register(webSvr)

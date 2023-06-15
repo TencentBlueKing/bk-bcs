@@ -107,14 +107,14 @@ func init() {
 // TestReport perform routine stress tests and generate stress test reports.
 func TestReport(t *testing.T) {
 	TestBenchAppMeta(t)
-	// TODO: strategy related test depends on group, add group test first
+	// NOTE: strategy related test depends on group, add group test first
 	//TestBenchAppCPS(t)
 	TestBenchAppCRIMeta(t)
 	TestBenchReleasedCI(t)
 	TestGetAppMeta(t)
 	TestGetReleasedCI(t)
 	TestGetAppInstanceRelease(t)
-	// TODO: strategy related test depends on group, add group test first
+	// NOTE: strategy related test depends on group, add group test first
 	//TestGetAppReleasedStrategy(t)
 
 	if err := run.GenReport(outputPath); err != nil {

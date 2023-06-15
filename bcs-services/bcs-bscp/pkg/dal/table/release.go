@@ -186,8 +186,8 @@ var ReleaseAttachmentColumnDescriptor = ColumnDescriptors{
 
 // ReleaseAttachment defines release related information.
 type ReleaseAttachment struct {
-	BizID uint32 `db:"biz_id" json:"biz_id"`
-	AppID uint32 `db:"app_id" json:"app_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
+	AppID uint32 `db:"app_id" json:"app_id" gorm:"column:app_id"`
 }
 
 // IsEmpty test whether this release attachment is empty or not.

@@ -30,7 +30,8 @@ func listLogCollectionTask(c *utils.ClientContext) error {
 	}
 	var req proto.ListLogCollectionTaskReq
 	if c.IsSet(utils.OptionFile) {
-		data, err := c.FileData()
+		var data []byte
+		data, err = c.FileData()
 		if err != nil {
 			return err
 		}

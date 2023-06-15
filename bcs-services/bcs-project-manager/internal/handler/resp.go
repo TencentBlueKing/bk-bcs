@@ -52,6 +52,9 @@ func setListPermsResp(resp interface{}, data *map[string]interface{}, perm map[s
 	if listProjectResp, ok := resp.(*proto.ListProjectsResponse); ok {
 		listProjectResp.WebAnnotations = &proto.Perms{Perms: convert.MapBool2pbStruct(perm)}
 	}
+	if listAuthProjectResp, ok := resp.(*proto.ListAuthorizedProjResp); ok {
+		listAuthProjectResp.WebAnnotations = &proto.Perms{Perms: convert.MapBool2pbStruct(perm)}
+	}
 }
 
 func getProjectData(d *map[string]interface{}) *proto.ListProjectData {

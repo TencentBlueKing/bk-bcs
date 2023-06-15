@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bkmonitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -65,13 +65,11 @@ func (ua *UpdateAction) Do(ctx context.Context, req *proto.UpdateProjectRequest)
 		return nil, errorx.NewDBErr(err.Error())
 	}
 	if req.GetBusinessID() != "" && oldProject.BusinessID == "" || oldProject.BusinessID == "0" {
-		// 为业务的业务运维授予项目分级管理员权限
-		matainers, err := cmdb.GetBusinessMaintainers(req.GetBusinessID())
-		if err != nil {
-			logging.Error("get business %s maintainers failed, err: %s", req.GetBusinessID(), err.Error())
-		}
-		if err := iam.CreateProjectPermManager(p.ProjectID, p.Name, matainers); err != nil {
-			logging.Error("create project %s perm manager failed, err: %s", p.ProjectCode, err.Error())
+		// 开启容器服务
+		// 1. 在监控创建对应的容器项目空间
+		if err := bkmonitor.CreateSpace(p); err != nil {
+			logging.Error("[ALARM-BK-MONITOR] create space for %s/%s in bkmonitor failed, err: %s",
+				p.ProjectID, p.ProjectCode, err.Error())
 		}
 	}
 

@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
 // JSONTime format time in json marshal
@@ -28,7 +30,12 @@ const timeLayout = "2006-01-02 15:04:05"
 
 // MarshalJSON marshal json
 func (t *JSONTime) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("\"%s\"", t.Time.Format(timeLayout))), nil
+	loc, err := time.LoadLocation(config.G.Base.TimeZone)
+	if err != nil {
+		return nil, err
+	}
+	tt := t.Time.In(loc)
+	return []byte(fmt.Sprintf("\"%s\"", tt.Format(timeLayout))), nil
 }
 
 // UnmarshalJSON unmarshal json

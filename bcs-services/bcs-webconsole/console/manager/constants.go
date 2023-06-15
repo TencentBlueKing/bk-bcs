@@ -53,9 +53,6 @@ const (
 	// AnsiEscape bash 颜色标识
 	AnsiEscape = "r\"\\x1B\\[[0-?]*[ -/]*[@-~]\""
 
-	queueName = "bcs_web_console_record"
-	tags      = "bcs-web-console"
-
 	// StdinChannel xxx
 	StdinChannel = "0"
 	// StdoutChannel xxx
@@ -68,9 +65,6 @@ const (
 	ResizeChannel = "4"
 
 	LogChannel = "5"
-
-	// 审计上报、ws连接监测时间间隔
-	recordInterval = 10
 
 	helloBcsMessage = "Welcome to the BCS Console"
 

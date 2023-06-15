@@ -59,7 +59,8 @@ func NewBcsClusterCli(ctx context.Context, config *Config) (clustermanager.Clust
 	md := metadata.New(header)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
-	opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
+	// NOCC:gas/tls(client工具)
+	opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))) // nolint
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(config.APIServer, opts...)
 	if err != nil {

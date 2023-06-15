@@ -47,11 +47,15 @@ func NewMongoStore(mDriver drivers.DB) *Store {
 	}
 }
 
+// ensureCollection ensure collection
 func (s *Store) ensureCollection(ctx context.Context, obj *types.RawObject) error {
+	// Check if the collection is already in the cache, if so, return nil
 	colName := obj.GetObjectType()
 	if s.colCache.Contains(colName) {
 		return nil
 	}
+
+	// Check if the table exists in the database, if not, create it
 	hasTable, err := s.mDriver.HasTable(ctx, string(colName))
 	if err != nil {
 		return err
@@ -62,6 +66,8 @@ func (s *Store) ensureCollection(ctx context.Context, obj *types.RawObject) erro
 			return tErr
 		}
 	}
+
+	// Check if the index exists in the table, if not, create it
 	hasIndex, err := s.mDriver.Table(string(colName)).HasIndex(ctx, objectIndexName)
 	if err != nil {
 		return err
@@ -81,6 +87,8 @@ func (s *Store) ensureCollection(ctx context.Context, obj *types.RawObject) erro
 			return iErr
 		}
 	}
+
+	// Add the collection to the cache
 	s.colCache.Add(colName)
 	return nil
 }
@@ -89,39 +97,55 @@ func (s *Store) ensureCollection(ctx context.Context, obj *types.RawObject) erro
 func (s *Store) Get(ctx context.Context, resourceType types.ObjectType, key types.ObjectKey, opt *store.GetOptions) (
 	*types.RawObject, error) {
 
+	// Check if the resourceType is empty, if so, return an error
 	if len(resourceType) == 0 {
 		return nil, fmt.Errorf("object type cannot be empty")
 	}
 
+	// Create a new RawObject
 	rawObj := &types.RawObject{}
+
+	// Create a keyM map with the resource name, namespace, and cluster ID
 	keyM := operator.M{
 		types.TagResourceName: key.Name,
 		types.TagNamespace:    key.Namespace,
 		types.TagClusterID:    key.ClusterID,
 	}
+
+	// Find the RawObject in the database using the resourceType and keyM
 	err := s.mDriver.Table(string(resourceType)).
 		Find(operator.NewLeafCondition(operator.Eq, keyM)).One(ctx, rawObj)
 	if err != nil {
 		blog.Errorf("find one by object key %+v failed, err %s", key, err.Error())
 		return nil, fmt.Errorf("find one by object key %+v failed, err %s", key, err.Error())
 	}
+
+	// Return the RawObject and nil error
 	return rawObj, nil
 }
 
 // Create create object
 func (s *Store) Create(ctx context.Context, obj *types.RawObject, opt *store.CreateOptions) error {
+	// Check if the obj or object type is empty, if so, return an error
 	if obj == nil || len(obj.GetObjectType()) == 0 {
 		return fmt.Errorf("object or object type cannot be empty")
 	}
+
+	// Check if the create options are empty, if so, return an error
 	if opt == nil {
 		return fmt.Errorf("create options cannot be empty")
 	}
+
+	// Ensure that the collection exists in the database
 	if err := s.ensureCollection(ctx, obj); err != nil {
 		return err
 	}
 
+	// Create a new RawObject and set found to true
 	rawObj := types.RawObject{}
 	found := true
+
+	// Find the RawObject in the database using the object name, namespace, and cluster ID
 	if err := s.mDriver.Table(string(obj.GetObjectType())).
 		Find(operator.NewLeafCondition(operator.Eq, operator.M{
 			types.TagResourceName: obj.GetName(),
@@ -136,6 +160,8 @@ func (s *Store) Create(ctx context.Context, obj *types.RawObject, opt *store.Cre
 		}
 		found = false
 	}
+
+	// If the object already exists and update exists is false, return an error
 	if !opt.UpdateExists && found {
 		blog.Errorf("object %s/%s/%s to create already exists",
 			obj.GetName(), obj.GetNamespace(), obj.GetClusterID())
@@ -167,18 +193,24 @@ func (s *Store) Create(ctx context.Context, obj *types.RawObject, opt *store.Cre
 
 // Update update object
 func (s *Store) Update(ctx context.Context, obj *types.RawObject, opt *store.UpdateOptions) error {
+	// Check if the obj or object type is empty, if so, return an error
 	if obj == nil || len(obj.GetObjectType()) == 0 {
 		return fmt.Errorf("object or object type cannot be empty")
 	}
+
+	// Check if the update options are empty, if so, return an error
 	if opt == nil {
 		return fmt.Errorf("update options cannot be empty")
 	}
+
+	// Ensure that the collection exists in the database
 	if err := s.ensureCollection(ctx, obj); err != nil {
 		return err
 	}
 
 	rawObj := types.RawObject{}
 	found := true
+	// Find the RawObject in the database using the object name, namespace, and cluster ID
 	if err := s.mDriver.Table(string(obj.GetObjectType())).
 		Find(operator.NewLeafCondition(operator.Eq, operator.M{
 			types.TagResourceName: obj.GetName(),
@@ -224,18 +256,24 @@ func (s *Store) Update(ctx context.Context, obj *types.RawObject, opt *store.Upd
 
 // Delete delete object
 func (s *Store) Delete(ctx context.Context, obj *types.RawObject, opt *store.DeleteOptions) error {
+	// Check if the obj or object type is empty, if so, return an error
 	if obj == nil || len(obj.GetObjectType()) == 0 {
 		return fmt.Errorf("object or object type cannot be empty")
 	}
+
+	// Check if the delete options are empty, if so, return an error
 	if opt == nil {
 		return fmt.Errorf("update options cannot be empty")
 	}
+
+	// Ensure that the collection exists in the database
 	if err := s.ensureCollection(ctx, obj); err != nil {
 		return err
 	}
 
 	rawObj := types.RawObject{}
 	found := true
+	// Find the RawObject in the database using the object name, namespace, and cluster ID
 	if err := s.mDriver.Table(string(obj.GetObjectType())).
 		Find(operator.NewLeafCondition(operator.Eq, operator.M{
 			types.TagResourceName: obj.GetName(),
@@ -264,6 +302,7 @@ func (s *Store) Delete(ctx context.Context, obj *types.RawObject, opt *store.Del
 func (s *Store) List(ctx context.Context, objectType types.ObjectType, opts *store.ListOptions) (
 	[]*types.RawObject, error) {
 
+	// Create a conditionValue map and add any relevant conditions based on the ListOptions
 	conditionValue := operator.M{}
 	if len(opts.Cluster) != 0 {
 		conditionValue[types.TagClusterID] = opts.Cluster
@@ -277,8 +316,12 @@ func (s *Store) List(ctx context.Context, objectType types.ObjectType, opts *sto
 			conditionValue[path] = value
 		}
 	}
+
+	// Create a condition using the conditionValue map
 	condition := operator.NewLeafCondition(operator.Eq, conditionValue)
+	// Create a finder using the objectType and condition
 	finder := s.mDriver.Table(string(objectType)).Find(condition)
+	// Add any relevant options to the finder
 	if opts.Offset != 0 {
 		finder = finder.WithStart(opts.Offset)
 	}
@@ -286,6 +329,7 @@ func (s *Store) List(ctx context.Context, objectType types.ObjectType, opts *sto
 		finder = finder.WithLimit(opts.Limit)
 	}
 
+	// Create a slice of RawObjects and execute the finder
 	rawList := make([]*types.RawObject, 0)
 	err := finder.All(ctx, &rawList)
 	if err != nil {
@@ -297,9 +341,11 @@ func (s *Store) List(ctx context.Context, objectType types.ObjectType, opts *sto
 // Watch object with certain type
 func (s *Store) Watch(ctx context.Context, resourceType types.ObjectType, opt *store.WatchOptions) (chan *store.Event,
 	error) {
+	// Check if the watch options are empty, if so, return an error
 	if opt == nil {
 		return nil, fmt.Errorf("update options cannot be empty")
 	}
+	// Create a conditionValue map and add any relevant conditions based on the WatchOptions
 	conditionValue := operator.M{}
 	if opt.Selector != nil {
 		pairs := opt.Selector.GetPairs()
@@ -314,23 +360,27 @@ func (s *Store) Watch(ctx context.Context, resourceType types.ObjectType, opt *s
 		conditionList = append(conditionList, condition)
 	}
 
+	// Create a watcher using the resourceType and conditionList
 	watcher := s.mDriver.Table(string(resourceType)).Watch(conditionList)
 	if opt.BatchSize != 0 {
 		watcher.WithBatchSize(opt.BatchSize)
 	}
 	// always return full document
 	watcher.WithFullContent(true)
+	// Add any relevant options to the watcher
 	if opt.MaxAwaitTime != 0 {
 		watcher.WithMaxAwaitTime(opt.MaxAwaitTime)
 	}
 	if opt.StartTime != nil {
 		watcher.WithStartTimestamp(opt.StartTime.T, opt.StartTime.I)
 	}
+	// Execute the watcher and create a storeChannel to return
 	mongoChannel, err := watcher.DoWatch(ctx)
 	if err != nil {
 		return nil, err
 	}
 	storeChannel := make(chan *store.Event, 100)
+	// Start a goroutine to decode the mongo events and send them to the storeChannel
 	go func() {
 		for {
 			select {

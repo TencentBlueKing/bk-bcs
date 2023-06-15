@@ -40,12 +40,11 @@ type Set interface {
 	Content() Content
 	Release() Release
 	ReleasedCI() ReleasedCI
-	StrategySet() StrategySet
-	CRInstance() CRInstance
-	Strategy() Strategy
 	Hook() Hook
 	HookRelease() HookRelease
 	TemplateSpace() TemplateSpace
+	Template() Template
+	TemplateRelease() TemplateRelease
 	Group() Group
 	GroupAppBind() GroupAppBind
 	ReleasedGroup() ReleasedGroup
@@ -103,6 +102,8 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	if err != nil {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
+	eventDao := &eventDao{genQ: genQ, idGen: idDao, auditDao: auditDao}
+	lockDao := &lockDao{orm: ormInst, idGen: idDao}
 
 	s := &set{
 		orm:               ormInst,
@@ -112,8 +113,8 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		credentialSetting: credentialSetting,
 		idGen:             idDao,
 		auditDao:          auditDao,
-		event:             &eventDao{orm: ormInst, sd: sd, idGen: idDao},
-		lock:              &lockDao{orm: ormInst, idGen: idDao},
+		event:             eventDao,
+		lock:              lockDao,
 	}
 
 	return s, nil
@@ -144,10 +145,9 @@ func (s *set) ID() IDGenInterface {
 // App returns the application's DAO
 func (s *set) App() App {
 	return &appDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+		genQ:     s.genQ,
 		event:    s.event,
 	}
 }
@@ -204,41 +204,6 @@ func (s *set) ReleasedCI() ReleasedCI {
 	}
 }
 
-// CRInstance returns the current released instance's DAO
-func (s *set) CRInstance() CRInstance {
-	return &crInstanceDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		event:    s.event,
-		lock:     s.lock,
-	}
-}
-
-// StrategySet returns the strategy set's DAO
-func (s *set) StrategySet() StrategySet {
-	return &strategySetDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		lock:     s.lock,
-	}
-}
-
-// Strategy returns the strategy's DAO
-func (s *set) Strategy() Strategy {
-	return &strategyDao{
-		orm:      s.orm,
-		sd:       s.sd,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		event:    s.event,
-		lock:     s.lock,
-	}
-}
-
 // Hook returns the hook's DAO
 func (s *set) Hook() Hook {
 	return &hookDao{
@@ -257,9 +222,27 @@ func (s *set) HookRelease() HookRelease {
 	}
 }
 
-// TemplateSpace returns the templateSpace's DAO
+// TemplateSpace returns the template space's DAO
 func (s *set) TemplateSpace() TemplateSpace {
 	return &templateSpaceDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// Template returns the template's DAO
+func (s *set) Template() Template {
+	return &templateDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// TemplateRelease returns the template release's DAO
+func (s *set) TemplateRelease() TemplateRelease {
+	return &templateReleaseDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
@@ -302,10 +285,9 @@ func (s *set) ReleasedGroup() ReleasedGroup {
 // Publish returns the publish operation related DAO
 func (s *set) Publish() Publish {
 	return &pubDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+		genQ:     s.genQ,
 		event:    s.event,
 	}
 }
@@ -334,9 +316,9 @@ func (s *set) IAM() IAM {
 // Event returns the event operation related DAO
 func (s *set) Event() Event {
 	return &eventDao{
-		orm:   s.orm,
-		sd:    s.sd,
-		idGen: s.idGen,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
 	}
 }
 
@@ -348,22 +330,18 @@ func (s *set) Healthz() error {
 // Credential returns the Credential's DAO
 func (s *set) Credential() Credential {
 	return &credentialDao{
-		orm:               s.orm,
-		sd:                s.sd,
-		credentialSetting: s.credentialSetting,
-		idGen:             s.idGen,
-		auditDao:          s.auditDao,
-		event:             s.event,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
 	}
 }
 
 // CredentialScope returns the Credential scope's DAO
 func (s *set) CredentialScope() CredentialScope {
 	return &credentialScopeDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
+		genQ:     s.genQ,
 	}
 }
 

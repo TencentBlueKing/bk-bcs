@@ -121,7 +121,7 @@ func init() {
 // TestReport bench scene 1-10.
 func TestReport(t *testing.T) {
 	TestScene3(t)
-	//TODO: strategy related test depends on group, add group test first
+	// Note: strategy related test depends on group, add group test first
 	//TestScene12(t)
 
 	if err := run.GenReport(outputPath); err != nil {

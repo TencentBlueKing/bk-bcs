@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	gocache "github.com/patrickmn/go-cache"
@@ -82,7 +81,8 @@ type IngressConverter struct {
 // NewIngressConverter create ingress generator
 func NewIngressConverter(opt *IngressConverterOpt,
 	cli client.Client, ingressValidater cloud.Validater, lbClient cloud.LoadBalance,
-	listenerHelper *listenercontroller.ListenerHelper) (*IngressConverter, error) {
+	listenerHelper *listenercontroller.ListenerHelper, lbIDCache, lbNameCache *gocache.Cache) (*IngressConverter,
+	error) {
 	if opt == nil {
 		return nil, fmt.Errorf("option cannot be empty")
 	}
@@ -94,8 +94,8 @@ func NewIngressConverter(opt *IngressConverterOpt,
 		ingressValidater:  ingressValidater,
 		lbClient:          lbClient,
 		// set cache expire time
-		lbIDCache:      gocache.New(60*time.Minute, 120*time.Minute),
-		lbNameCache:    gocache.New(60*time.Minute, 120*time.Minute),
+		lbIDCache:      lbIDCache,
+		lbNameCache:    lbNameCache,
 		listenerHelper: listenerHelper,
 	}, nil
 }
@@ -594,7 +594,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 	}
 
 	var msgList []string
-	for msg, _ := range msgSet {
+	for msg := range msgSet {
 		msgList = append(msgList, msg)
 	}
 

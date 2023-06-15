@@ -23,19 +23,19 @@ type SecretDataItem struct {
 type BcsSecretType string
 
 const (
-	// BcsSecretTypeOpaque TODO
+	// BcsSecretTypeOpaque xx
 	BcsSecretTypeOpaque BcsSecretType = "Opaque"
-	// BcsSecretTypeServiceAccountToken TODO
-	BcsSecretTypeServiceAccountToken BcsSecretType = "kubernetes.io/service-account-token"
-	// BcsSecretTypeDockercfg TODO
+	// BcsSecretTypeServiceAccountToken xx
+	BcsSecretTypeServiceAccountToken BcsSecretType = "kubernetes.io/service-account-token" // nolint
+	// BcsSecretTypeDockercfg xx
 	BcsSecretTypeDockercfg BcsSecretType = "kubernetes.io/dockercfg"
-	// BcsSecretTypeDockerConfigJson TODO
+	// BcsSecretTypeDockerConfigJson xx
 	BcsSecretTypeDockerConfigJson BcsSecretType = "kubernetes.io/dockerconfigjson"
-	// BcsSecretTypeBasicAuth TODO
+	// BcsSecretTypeBasicAuth xx
 	BcsSecretTypeBasicAuth BcsSecretType = "kubernetes.io/basic-auth"
-	// BcsSecretTypeSSHAuth TODO
+	// BcsSecretTypeSSHAuth xx
 	BcsSecretTypeSSHAuth BcsSecretType = "kubernetes.io/ssh-auth"
-	// BcsSecretTypeTLS TODO
+	// BcsSecretTypeTLS xx
 	BcsSecretTypeTLS BcsSecretType = "kubernetes.io/tls"
 )
 

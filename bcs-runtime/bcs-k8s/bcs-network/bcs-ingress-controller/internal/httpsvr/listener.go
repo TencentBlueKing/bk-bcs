@@ -38,6 +38,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 		}, ingress); err != nil {
 			if k8serrors.IsNotFound(err) {
 				blog.Infof("ingress %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
+				// NOCC:ineffassign/assign(误报)
 				data = CreateResponseData(err, "failed", nil)
 				break
 			}
@@ -53,6 +54,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 		if err != nil {
 			blog.Errorf("list listeners filter by ingress %s failed, err %s",
 				request.PathParameter("name"), err.Error())
+			// NOCC:ineffassign/assign(误报)
 			data = CreateResponseData(err, "failed", nil)
 			break
 		}
@@ -65,6 +67,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 		}, portPool); err != nil {
 			if k8serrors.IsNotFound(err) {
 				blog.Infof("portpool %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
+				// NOCC:ineffassign/assign(误报)
 				data = CreateResponseData(err, "failed", nil)
 				break
 			}
@@ -82,6 +85,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 			if err != nil {
 				blog.Errorf("list listeners filter by port pool item %s failed, err %s",
 					portPool.Spec.PoolItems[i].ItemName, err.Error())
+				// NOCC:ineffassign/assign(误报)
 				data = CreateResponseData(err, "failed", nil)
 				break
 			}

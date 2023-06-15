@@ -31,8 +31,11 @@ import (
 
 // Release supplies all the release related operations.
 type Release interface {
-	// CreateWithTx one release instance with tx.
+	// CreateWithTx create one release instance with tx.
 	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *table.Release) (uint32, error)
+	// CreateWithTxV2 create one release instance with tx.
+	// NOTE: unify CreateWithTxV2 and CreateWithTx to be one with gorm/gen
+	CreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, release *table.Release) (uint32, error)
 	// List releases with options.
 	List(kit *kit.Kit, opts *types.ListReleasesOption) (*types.ListReleaseDetails, error)
 	// GetByName ..
@@ -49,7 +52,41 @@ type releaseDao struct {
 	auditDao AuditDao
 }
 
-// CreateWithTx one release instance with tx.
+// CreateWithTxV2 create one release instance with tx.
+func (dao *releaseDao) CreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, g *table.Release) (uint32, error) {
+	if g == nil {
+		return 0, errors.New("release is nil")
+	}
+
+	if err := g.ValidateCreate(); err != nil {
+		return 0, err
+	}
+
+	if err := dao.validateAttachmentResExist(kit, g.Attachment); err != nil {
+		return 0, err
+	}
+
+	// generate an release id and update to release.
+	id, err := dao.idGen.One(kit, table.ReleaseTable)
+	if err != nil {
+		return 0, err
+	}
+	g.ID = id
+
+	q := tx.Release.WithContext(kit.Ctx)
+	if err := q.Create(g); err != nil {
+		return 0, err
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+	if err := ad.Do(tx.Query); err != nil {
+		return 0, err
+	}
+
+	return g.ID, nil
+}
+
+// CreateWithTx create one release instance with tx.
 func (dao *releaseDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, release *table.Release) (uint32, error) {
 	if release == nil {
 		return 0, errf.New(errf.InvalidParameter, "release is nil")

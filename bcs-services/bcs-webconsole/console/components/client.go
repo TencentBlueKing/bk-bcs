@@ -51,7 +51,7 @@ var (
 	globalClient *resty.Client
 )
 
-// WithLabelMatchValue 设置 RequestId 值
+// WithRequestIDValue 设置 RequestId 值
 func WithRequestIDValue(ctx context.Context, id string) context.Context {
 	newCtx := context.WithValue(ctx, requestIDCtxKey, id)
 	return metadata.AppendToOutgoingContext(newCtx, requestIDHeaderKey, id)
@@ -179,6 +179,7 @@ func GetClient() *resty.Client {
 				OnAfterResponse(restyAfterResponseHook).
 				SetPreRequestHook(restyBeforeRequestHook).
 				OnError(restyErrHook).
+				// NOCC:gas/tls(设计如此:)
 				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true}).
 				SetHeader("User-Agent", userAgent)
 		})

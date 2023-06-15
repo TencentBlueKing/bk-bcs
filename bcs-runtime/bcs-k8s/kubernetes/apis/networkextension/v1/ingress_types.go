@@ -204,6 +204,14 @@ type IngressLoadBalancer struct {
 	AWSLBType        string   `json:"awsLBType,omitempty"`
 }
 
+func (in IngressLoadBalancer) BuildKeyID() string {
+	return in.Region + ":" + in.LoadbalancerID
+}
+
+func (in IngressLoadBalancer) BuildKeyName() string {
+	return in.Region + ":" + in.LoadbalancerName
+}
+
 // IngressStatus defines the observed state of Ingress
 type IngressStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster

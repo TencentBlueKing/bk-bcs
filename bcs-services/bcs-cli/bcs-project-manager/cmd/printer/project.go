@@ -136,8 +136,8 @@ func PrintProjectVariablesListInTable(flagOutput string, resp *bcsproject.ListVa
 	tw.Render()
 }
 
-// PrintProjectClustersNamespaceInTable prints the response that list projects clusters namespace
-func PrintProjectClustersNamespaceInTable(flagOutput string, resp *bcsproject.ListNamespacesResponse) {
+// PrintClusterNamespaceInTable prints the response that list projects clusters namespace
+func PrintClusterNamespaceInTable(flagOutput string, resp *bcsproject.ListNamespacesResponse) {
 	if flagOutput == outputTypeJSON {
 		if err := encodeJSON(resp); err != nil {
 			klog.Infoln("list projects output json to stdout failed: %s", err.Error())

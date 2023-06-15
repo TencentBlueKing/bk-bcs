@@ -40,14 +40,6 @@ func (o *ListInstancesOption) Validate(po *PageOption) error {
 		return errf.New(errf.InvalidParameter, "filter is required")
 	}
 
-	exprOpt := &filter.ExprOption{
-		// remove biz_id because it's a required field in the option.
-		RuleFields: table.AppColumns.WithoutColumn("biz_id"),
-	}
-	if err := o.Filter.Validate(exprOpt); err != nil {
-		return err
-	}
-
 	if o.Page == nil {
 		return errf.New(errf.InvalidParameter, "page is required")
 	}

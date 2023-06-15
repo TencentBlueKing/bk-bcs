@@ -174,6 +174,8 @@ const store = new Vuex.Store<{
      */
     updateCurProject(state, project) {
       state.curProject = project || {};
+      sessionStorage.setItem('_project_code_', project.projectCode);
+      sessionStorage.setItem('_project_id_', project.projectID);
     },
     /**
      * 更新 store 中的 projectList

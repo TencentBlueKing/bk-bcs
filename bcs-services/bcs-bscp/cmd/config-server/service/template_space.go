@@ -23,7 +23,7 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 )
 
-// CreateTemplateSpace create a TemplateSpace
+// CreateTemplateSpace create a template space
 func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbcs.CreateTemplateSpaceReq) (*pbcs.CreateTemplateSpaceResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateTemplateSpaceResp)
@@ -45,7 +45,7 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbcs.CreateTempl
 	}
 	rp, err := s.client.DS.CreateTemplateSpace(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("create TemplateSpace failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("create template space failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
@@ -55,7 +55,7 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbcs.CreateTempl
 	return resp, nil
 }
 
-// DeleteTemplateSpace delete a TemplateSpace
+// DeleteTemplateSpace delete a template space
 func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbcs.DeleteTemplateSpaceReq) (*pbcs.DeleteTemplateSpaceResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteTemplateSpaceResp)
@@ -73,14 +73,14 @@ func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbcs.DeleteTempl
 		},
 	}
 	if _, err := s.client.DS.DeleteTemplateSpace(grpcKit.RpcCtx(), r); err != nil {
-		logs.Errorf("delete TemplateSpace failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("delete template space failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	return resp, nil
 }
 
-// UpdateTemplateSpace update a TemplateSpace
+// UpdateTemplateSpace update a template space
 func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbcs.UpdateTemplateSpaceReq) (*pbcs.UpdateTemplateSpaceResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateTemplateSpaceResp)
@@ -102,14 +102,14 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbcs.UpdateTempl
 		},
 	}
 	if _, err := s.client.DS.UpdateTemplateSpace(grpcKit.RpcCtx(), r); err != nil {
-		logs.Errorf("update TemplateSpace failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("update template space failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	return resp, nil
 }
 
-// ListTemplateSpaces list TemplateSpaces with filter
+// ListTemplateSpaces list template spaces
 func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbcs.ListTemplateSpacesReq) (*pbcs.ListTemplateSpacesResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListTemplateSpacesResp)
@@ -127,7 +127,7 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbcs.ListTemplate
 
 	rp, err := s.client.DS.ListTemplateSpaces(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list TemplateSpaces failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 

@@ -26,6 +26,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
+// DBOperate DB operate options struct
 type DBOperate struct {
 	Data               operator.M
 	Context            context.Context
@@ -63,7 +64,7 @@ func CreateIndex(o *DBOperate) error {
 }
 
 // DeleteData 移除
-//func DeleteData(ctx context.Context, dbConfig, resourceType string, opt *lib.StoreRemoveOption) error {
+// func DeleteData(ctx context.Context, dbConfig, resourceType string, opt *lib.StoreRemoveOption) error {
 func DeleteData(o *DBOperate) error {
 	// 创建连接
 	db := lib.NewStore(
@@ -76,7 +77,8 @@ func DeleteData(o *DBOperate) error {
 }
 
 // DeleteBatchData 批量删除
-//func DeleteBatchData(ctx context.Context, dbConfig, resourceType string, getOption *lib.StoreGetOption,
+// func DeleteBatchData(ctx context.Context, dbConfig, resourceType string, getOption *lib.StoreGetOption,
+//
 //	rmOption *lib.StoreRemoveOption, needTimeFormatList []string
 func DeleteBatchData(o *DBOperate) ([]operator.M, error) {
 	mList, err := GetData(o)

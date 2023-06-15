@@ -237,9 +237,9 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 	// wait all nodes to be ready
 	err = cloudprovider.LoopDoFunc(timeCtx, func() error {
-		instances, err := cli.ListZoneInstanceWithFilter(ctx, api.InstanceNameFilter(instanceIDs))
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] ListZoneInstanceWithFilter failed: %v", taskID, err)
+		instances, errFilter := cli.ListZoneInstanceWithFilter(ctx, api.InstanceNameFilter(instanceIDs))
+		if errFilter != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] ListZoneInstanceWithFilter failed: %v", taskID, errFilter)
 			return nil
 		}
 
@@ -266,9 +266,9 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	// timeout error
 	if errors.Is(err, context.DeadlineExceeded) {
 		running, failure := make([]string, 0), make([]string, 0)
-		instances, err := cli.ListZoneInstanceWithFilter(ctx, api.InstanceNameFilter(instanceIDs))
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
+		instances, errFilter := cli.ListZoneInstanceWithFilter(ctx, api.InstanceNameFilter(instanceIDs))
+		if errFilter != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errFilter)
 			return nil, nil, err
 		}
 		for _, ins := range instances.Items {

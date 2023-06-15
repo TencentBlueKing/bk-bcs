@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newApplyCmd create new apply command
 func newApplyCmd() *cobra.Command {
 	applyCmd := &cobra.Command{
 		Use:   "apply",

@@ -35,8 +35,8 @@ func calcNamespaceID(clusterID, namespace string) string {
 	return clusterIDx + ":" + hash.MD5Digest(namespace)[8:16] + namespace[:basic.MinInt(2, len(namespace))]
 }
 
-// FetchBatchNSScopedResMultiActionPerm 获取对多个命名空间域资源的 CURD 权限信息
-func FetchBatchNSScopedResMultiActionPerm(
+// FetchBatchNSScopedResMultiActPerm 获取对多个命名空间域资源的 CURD 权限信息
+func FetchBatchNSScopedResMultiActPerm(
 	username, projectID, clusterID string, namespaces []string,
 ) (map[string]map[string]bool, error) {
 	// 命名空间域资源 CURD 操作

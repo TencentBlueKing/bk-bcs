@@ -227,12 +227,6 @@ const (
 	StrategySetTable Name = "strategy_sets"
 	// StrategyTable is strategy table's name
 	StrategyTable Name = "strategies"
-	// CurrentPublishedStrategyTable is current published strategy table's name
-	CurrentPublishedStrategyTable Name = "current_published_strategies"
-	// PublishedStrategyHistoryTable is published strategy history table's name
-	PublishedStrategyHistoryTable Name = "published_strategy_histories"
-	// CurrentReleasedInstanceTable is current released instance table's name
-	CurrentReleasedInstanceTable Name = "current_released_instances"
 	// EventTable is event table's name
 	EventTable Name = "events"
 	// ShardingDBTable is sharding db table's name
@@ -294,36 +288,21 @@ func (r Revision) IsEmpty() bool {
 const lagSeconds = 5 * 60
 
 // ValidateCreate validate revision when created
+// no need to validate time here, because the time is injected by gorm automatically
 func (r Revision) ValidateCreate() error {
 
 	if len(r.Creator) == 0 {
 		return errors.New("creator can not be empty")
 	}
 
-	// now := time.Now().Unix()
-	// if (r.CreatedAt.Unix() <= (now - lagSeconds)) || (r.CreatedAt.Unix() >= (now + lagSeconds)) {
-	// 	return errors.New("invalid create time")
-	// }
 	return nil
 }
 
 // ValidateUpdate validate revision when updated
+// no need to validate time here, because the time is injected by gorm automatically
 func (r Revision) ValidateUpdate() error {
 	if len(r.Reviser) == 0 {
 		return errors.New("reviser can not be empty")
-	}
-
-	if len(r.Creator) != 0 {
-		return errors.New("creator can not be updated")
-	}
-
-	if !r.CreatedAt.IsZero() {
-		return errors.New("create_time can not be updated")
-	}
-
-	now := time.Now().Unix()
-	if (r.UpdatedAt.Unix() <= (now - lagSeconds)) || (r.UpdatedAt.Unix() >= (now + lagSeconds)) {
-		return errors.New("invalid update time")
 	}
 
 	return nil
@@ -339,20 +318,16 @@ var CreatedRevisionColumnDescriptor = ColumnDescriptors{
 
 // CreatedRevision is a resource's reversion information being created.
 type CreatedRevision struct {
-	Creator   string    `db:"creator" json:"creator"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	Creator   string    `db:"creator" json:"creator" gorm:"column:creator"`
+	CreatedAt time.Time `db:"created_at" json:"created_at" gorm:"column:created_at"`
 }
 
 // Validate revision when created
+// no need to validate time here, because the time is injected by gorm automatically
 func (r CreatedRevision) Validate() error {
 
 	if len(r.Creator) == 0 {
 		return errors.New("creator can not be empty")
-	}
-
-	now := time.Now().Unix()
-	if (r.CreatedAt.Unix() <= (now - lagSeconds)) || (r.CreatedAt.Unix() >= (now + lagSeconds)) {
-		return errors.New("invalid create time")
 	}
 
 	return nil

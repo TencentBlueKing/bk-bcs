@@ -62,6 +62,7 @@ func (s *SidecarController) syncContainerCacheOnce() {
 func (s *SidecarController) inspectContainer(ID string) *dockertypes.ContainerJSON {
 	inspectChan := make(chan interface{}, 1)
 	timer := time.NewTimer(3 * time.Second)
+	// NOCC:vet/vet(工具误报:函数末尾有用到cancelFunc)
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go func() {
 		defer close(inspectChan)
@@ -80,6 +81,7 @@ func (s *SidecarController) inspectContainer(ID string) *dockertypes.ContainerJS
 		}
 		err, ok := obj.(error)
 		if ok {
+			// NOCC:vet/vet(设计如此:不需要使用cancelFunc)
 			blog.Errorf("docker InspectContainer %s failed: %s", ID, err.Error())
 			return nil
 		}

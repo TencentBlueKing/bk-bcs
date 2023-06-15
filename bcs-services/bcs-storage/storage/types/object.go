@@ -157,7 +157,10 @@ func (obj *RawObject) SetData(data map[string]interface{}) error {
 
 // ToString convert object to string
 func (obj *RawObject) ToString() string {
-	bytes, _ := json.Marshal(obj.GetData())
+	bytes, err := json.Marshal(obj.GetData())
+	if err != nil {
+		fmt.Printf("json marshal error, err: %s", err.Error())
+	}
 	return fmt.Sprintf("meta: %s/%s/%s, data: %s",
 		obj.GetClusterID(), obj.GetNamespace(), obj.GetName(), string(bytes))
 }

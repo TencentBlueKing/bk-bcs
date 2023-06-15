@@ -33,8 +33,8 @@ func (m *Federation) GetNodeCPUUsage(ctx context.Context, projectId, clusterId, 
 }
 
 // GetNodeCPURequestUsage 节点CPU装箱率
-func (m *Federation) GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
+func (m *Federation) GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, node string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
@@ -45,8 +45,8 @@ func (m *Federation) GetNodeMemoryUsage(ctx context.Context, projectId, clusterI
 }
 
 // GetNodeMemoryRequestUsage 节点内存装箱率
-func (m *Federation) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
+func (m *Federation) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, node string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
@@ -68,6 +68,12 @@ func (m *Federation) GetNodePodCount(ctx context.Context, projectId, clusterId, 
 	return nil, nil
 }
 
+// GetNodePodTotal PodTotal
+func (m *Federation) GetNodePodTotal(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // GetNodeContainerCount 容器数量
 func (m *Federation) GetNodeContainerCount(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
@@ -75,8 +81,8 @@ func (m *Federation) GetNodeContainerCount(ctx context.Context, projectId, clust
 }
 
 // GetNodeNetworkTransmit 网络发送量
-func (m *Federation) GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
+func (m *Federation) GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, node string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 

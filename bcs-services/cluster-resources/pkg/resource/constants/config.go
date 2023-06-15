@@ -19,7 +19,7 @@ const (
 	SecretTypeOpaque = "Opaque"
 
 	// SecretTypeDocker 镜像配置信息
-	SecretTypeDocker = "kubernetes.io/dockerconfigjson"
+	SecretTypeDocker = "kubernetes.io/dockerconfigjson" // NOCC:gas/crypto(误报)
 
 	// SecretTypeBasicAuth 基础认证信息
 	SecretTypeBasicAuth = "kubernetes.io/basic-auth"

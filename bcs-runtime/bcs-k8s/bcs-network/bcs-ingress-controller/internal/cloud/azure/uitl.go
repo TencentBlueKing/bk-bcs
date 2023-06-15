@@ -14,6 +14,7 @@
 package azure
 
 import (
+	// NOCC:gas/crypto(未用于生成密钥)
 	"crypto/md5"
 	"fmt"
 	"strings"
@@ -26,10 +27,10 @@ import (
 
 func transTransportProtocolPtr(str string) *armnetwork.TransportProtocol {
 	var protocol armnetwork.TransportProtocol
-	switch strings.ToLower(str) {
-	case "tcp":
+	switch strings.ToUpper(str) {
+	case AzureProtocolTCP:
 		protocol = armnetwork.TransportProtocolTCP
-	case "udp":
+	case AzureProtocolUDP:
 		protocol = armnetwork.TransportProtocolUDP
 	}
 
@@ -38,14 +39,14 @@ func transTransportProtocolPtr(str string) *armnetwork.TransportProtocol {
 
 func transAgProtocolPtr(str string) *armnetwork.ApplicationGatewayProtocol {
 	var protocol armnetwork.ApplicationGatewayProtocol
-	switch strings.ToLower(str) {
-	case "http":
+	switch strings.ToUpper(str) {
+	case AzureProtocolHTTP:
 		protocol = armnetwork.ApplicationGatewayProtocolHTTP
-	case "https":
+	case AzureProtocolHTTPS:
 		protocol = armnetwork.ApplicationGatewayProtocolHTTPS
-	case "tcp":
+	case AzureProtocolTCP:
 		protocol = armnetwork.ApplicationGatewayProtocolTCP
-	case "tls":
+	case AzureProtocolTLS:
 		protocol = armnetwork.ApplicationGatewayProtocolTLS
 	}
 
@@ -54,12 +55,12 @@ func transAgProtocolPtr(str string) *armnetwork.ApplicationGatewayProtocol {
 
 func transProbeProtocolPtr(str string) *armnetwork.ProbeProtocol {
 	var protocol armnetwork.ProbeProtocol
-	switch strings.ToLower(str) {
-	case "http":
+	switch strings.ToUpper(str) {
+	case AzureProtocolHTTP:
 		protocol = armnetwork.ProbeProtocolHTTP
-	case "https":
+	case AzureProtocolHTTPS:
 		protocol = armnetwork.ProbeProtocolHTTPS
-	case "tcp":
+	case AzureProtocolTCP:
 		protocol = armnetwork.ProbeProtocolTCP
 	}
 	return &protocol
@@ -67,7 +68,7 @@ func transProbeProtocolPtr(str string) *armnetwork.ProbeProtocol {
 
 // transAgProbeMatch translate healthCheck to azure entity
 func transAgProbeMatch(healthCheck *networkextensionv1.ListenerHealthCheck) *armnetwork.
-ApplicationGatewayProbeHealthResponseMatch {
+	ApplicationGatewayProbeHealthResponseMatch {
 	if healthCheck == nil || healthCheck.HTTPCode < 1 || healthCheck.HTTPCode > 31 {
 		return nil
 	}
@@ -87,11 +88,13 @@ ApplicationGatewayProbeHealthResponseMatch {
 
 // listenerName.md5(listenerName+domain+path)
 func getRuleTgName(listenerName, domain, path string, listenPort int) string {
+	// NOCC:gas/crypto(未用于生成密钥)
 	return fmt.Sprintf("%s.%x.%d", listenerName, md5.Sum([]byte(listenerName+domain+path)), listenPort)
 }
 
 // listenPort.md5(domain)
 func getHttpListenerName(listenPort int, domain string) string {
+	// NOCC:gas/crypto(未用于生成密钥)
 	return fmt.Sprintf("%d.%x", listenPort, md5.Sum([]byte(domain)))
 }
 
@@ -164,7 +167,7 @@ func splitListenersToDiffProtocol(listeners []*networkextensionv1.Listener) [][]
 
 		if li.Spec.EndPort != 0 {
 			listenerList = append(listenerList, splitSegListener([]*networkextensionv1.
-			Listener{li})...)
+				Listener{li})...)
 		} else {
 			listenerList = append(listenerList, li)
 		}

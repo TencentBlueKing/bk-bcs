@@ -43,9 +43,9 @@ func FormFloatOrString(val interface{}) (*FloatOrString, error) {
 type ValueType string
 
 const (
-	// Float TODO
+	// Float xx
 	Float ValueType = "Float"
-	// String TODO
+	// String xx
 	String ValueType = "String"
 )
 

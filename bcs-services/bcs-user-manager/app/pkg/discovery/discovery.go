@@ -24,7 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/micro/go-micro/v2/registry"
+	"go-micro.dev/v4/registry"
 )
 
 // Discovery discovery interface
@@ -187,6 +187,7 @@ func (sd *ServiceDiscovery) GetRandomServiceInstance() (*registry.Node, error) {
 		blog.V(3).Infof("discovery found no node information of %s", sd.service)
 		return nil, errors.New("allServiceNodes is empty")
 	}
+	// NOCC:gas/crypto(设计如此)
 	selected := rand.Int() % nodeLength
 	return allServiceNodes[selected], nil
 }

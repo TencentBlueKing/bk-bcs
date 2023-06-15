@@ -106,7 +106,7 @@ type CmdbConfig struct {
 	Debug      bool   `json:"debug"`
 }
 
-// NodemanConfig for nodeman
+// NodeManConfig for nodeman
 type NodeManConfig struct {
 	Enable     bool   `json:"enable"`
 	AppCode    string `json:"appCode"`

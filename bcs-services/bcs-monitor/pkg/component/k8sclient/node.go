@@ -69,8 +69,8 @@ func GetNodeByName(ctx context.Context, clusterId, name string) ([]string, error
 	return nodeIPList, nil
 }
 
-// GetNodeContainerRuntimeVersionByName 通过节点名称获取容器运行时版本
-func GetNodeContainerRuntimeVersionByName(ctx context.Context, clusterId, name string) (string, error) {
+// GetNodeCRVersionByName 通过节点名称获取容器运行时版本
+func GetNodeCRVersionByName(ctx context.Context, clusterId, name string) (string, error) {
 	client, err := GetK8SClientByClusterId(clusterId)
 	if err != nil {
 		return "", err
@@ -80,4 +80,17 @@ func GetNodeContainerRuntimeVersionByName(ctx context.Context, clusterId, name s
 		return "", err
 	}
 	return node.Status.NodeInfo.ContainerRuntimeVersion, nil
+}
+
+// GetNodeInfo 获取节点信息 返回相应的节点对象
+func GetNodeInfo(ctx context.Context, clusterId, nodeName string) (*v1.Node, error) {
+	client, err := GetK8SClientByClusterId(clusterId)
+	if err != nil {
+		return nil, err
+	}
+	node, err := client.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
 }

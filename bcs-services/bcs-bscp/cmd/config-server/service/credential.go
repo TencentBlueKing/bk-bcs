@@ -9,10 +9,8 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	pbbase "bscp.io/pkg/protocol/core/base"
 	pbcredential "bscp.io/pkg/protocol/core/credential"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/tools"
 )
 
@@ -75,36 +73,11 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 		return nil, err
 	}
 
-	page := &pbbase.BasePage{
-		Start: req.Start,
-		Limit: req.Limit,
-	}
-
-	ft := &filter.Expression{
-		Op:    filter.Or,
-		Rules: []filter.RuleFactory{},
-	}
-
-	if req.SearchKey != "" {
-		ft.Rules = append(ft.Rules, &filter.AtomRule{
-			Field: "memo",
-			Op:    filter.ContainsInsensitive.Factory(),
-			Value: req.SearchKey,
-		}, &filter.AtomRule{
-			Field: "reviser",
-			Op:    filter.ContainsInsensitive.Factory(),
-			Value: req.SearchKey,
-		})
-	}
-
-	ftpb, err := ft.MarshalPB()
-	if err != nil {
-		return nil, err
-	}
 	r := &pbds.ListCredentialReq{
-		BizId:  bizID,
-		Page:   page,
-		Filter: ftpb,
+		BizId:     bizID,
+		SearchKey: req.SearchKey,
+		Start:     req.Start,
+		Limit:     req.Limit,
 	}
 
 	rp, err := s.client.DS.ListCredentials(grpcKit.RpcCtx(), r)

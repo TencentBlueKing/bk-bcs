@@ -48,9 +48,9 @@ func TestInjectPod(t *testing.T) {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 8080,
 								},
 							},
@@ -59,7 +59,7 @@ func TestInjectPod(t *testing.T) {
 				},
 			},
 			PortsList: []*PortEntry{
-				&PortEntry{
+				{
 					Port:     31000,
 					Quantity: 0,
 				},
@@ -74,25 +74,26 @@ func TestInjectPod(t *testing.T) {
 						"31000" + podHostportLabelSuffix: "31000",
 					},
 					Annotations: map[string]string{
-						pluginAnnotationKey:      pluginAnnotationValue,
-						pluginPortsAnnotationKey: "8080",
+						pluginAnnotationKey:                    pluginAnnotationValue,
+						pluginPortsAnnotationKey:               "8080",
+						annotationsRandHostportPrefix + "8080": "31000",
 					},
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 8080,
 									HostPort:      31000,
 								},
 							},
 							Env: []corev1.EnvVar{
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8080",
 									Value: "31000",
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportHostIP,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -100,7 +101,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodName,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -108,7 +109,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodNamespace,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -122,7 +123,7 @@ func TestInjectPod(t *testing.T) {
 					Affinity: &corev1.Affinity{
 						PodAntiAffinity: &corev1.PodAntiAffinity{
 							RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-								corev1.PodAffinityTerm{
+								{
 									LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
 										"31000" + podHostportLabelSuffix: "31000",
 									})),
@@ -152,9 +153,9 @@ func TestInjectPod(t *testing.T) {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 8080,
 								},
 							},
@@ -163,7 +164,7 @@ func TestInjectPod(t *testing.T) {
 				},
 			},
 			PortsList: []*PortEntry{
-				&PortEntry{
+				{
 					Port:     31000,
 					Quantity: 0,
 				},
@@ -178,26 +179,27 @@ func TestInjectPod(t *testing.T) {
 						"31000" + podHostportLabelSuffix: "31000",
 					},
 					Annotations: map[string]string{
-						pluginAnnotationKey:               pluginAnnotationValue,
-						pluginPortsAnnotationKey:          "8080",
-						pluginContainerPortsAnnotationKey: pluginAnnotationValue,
+						pluginAnnotationKey:                     pluginAnnotationValue,
+						pluginPortsAnnotationKey:                "8080",
+						pluginContainerPortsAnnotationKey:       pluginAnnotationValue,
+						annotationsRandHostportPrefix + "31000": "31000",
 					},
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 31000,
 									HostPort:      31000,
 								},
 							},
 							Env: []corev1.EnvVar{
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8080",
 									Value: "31000",
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportHostIP,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -205,7 +207,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodName,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -213,7 +215,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodNamespace,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -227,7 +229,7 @@ func TestInjectPod(t *testing.T) {
 					Affinity: &corev1.Affinity{
 						PodAntiAffinity: &corev1.PodAntiAffinity{
 							RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-								corev1.PodAffinityTerm{
+								{
 									LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
 										"31000" + podHostportLabelSuffix: "31000",
 									})),
@@ -256,16 +258,16 @@ func TestInjectPod(t *testing.T) {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 8080,
 								},
 							},
 						},
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									Name:          "http",
 									ContainerPort: 8081,
 								},
@@ -275,15 +277,15 @@ func TestInjectPod(t *testing.T) {
 				},
 			},
 			PortsList: []*PortEntry{
-				&PortEntry{
+				{
 					Port:     31000,
 					Quantity: 0,
 				},
-				&PortEntry{
+				{
 					Port:     31001,
 					Quantity: 3,
 				},
-				&PortEntry{
+				{
 					Port:     31002,
 					Quantity: 4,
 				},
@@ -299,29 +301,31 @@ func TestInjectPod(t *testing.T) {
 						"31001" + podHostportLabelSuffix: "31001",
 					},
 					Annotations: map[string]string{
-						pluginAnnotationKey:      pluginAnnotationValue,
-						pluginPortsAnnotationKey: "8080,http",
+						pluginAnnotationKey:                    pluginAnnotationValue,
+						pluginPortsAnnotationKey:               "8080,http",
+						annotationsRandHostportPrefix + "8080": "31000",
+						annotationsRandHostportPrefix + "8081": "31001",
 					},
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 8080,
 									HostPort:      31000,
 								},
 							},
 							Env: []corev1.EnvVar{
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8080",
 									Value: "31000",
 								},
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8081",
 									Value: "31001",
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportHostIP,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -329,7 +333,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodName,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -337,7 +341,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodNamespace,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -347,24 +351,24 @@ func TestInjectPod(t *testing.T) {
 								},
 							},
 						},
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									Name:          "http",
 									ContainerPort: 8081,
 									HostPort:      31001,
 								},
 							},
 							Env: []corev1.EnvVar{
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8080",
 									Value: "31000",
 								},
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8081",
 									Value: "31001",
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportHostIP,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -372,7 +376,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodName,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -380,7 +384,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodNamespace,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -394,13 +398,13 @@ func TestInjectPod(t *testing.T) {
 					Affinity: &corev1.Affinity{
 						PodAntiAffinity: &corev1.PodAntiAffinity{
 							RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-								corev1.PodAffinityTerm{
+								{
 									LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
 										"31000" + podHostportLabelSuffix: "31000",
 									})),
 									TopologyKey: "kubernetes.io/hostname",
 								},
-								corev1.PodAffinityTerm{
+								{
 									LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
 										"31001" + podHostportLabelSuffix: "31001",
 									})),
@@ -429,21 +433,21 @@ func TestInjectPod(t *testing.T) {
 				},
 				Spec: corev1.PodSpec{
 					InitContainers: []corev1.Container{
-						corev1.Container{
+						{
 							Image: "test-image",
 						},
 					},
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 8080,
 								},
 							},
 						},
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									Name:          "http",
 									ContainerPort: 8081,
 								},
@@ -453,15 +457,15 @@ func TestInjectPod(t *testing.T) {
 				},
 			},
 			PortsList: []*PortEntry{
-				&PortEntry{
+				{
 					Port:     31000,
 					Quantity: 0,
 				},
-				&PortEntry{
+				{
 					Port:     31001,
 					Quantity: 3,
 				},
-				&PortEntry{
+				{
 					Port:     31002,
 					Quantity: 4,
 				},
@@ -477,24 +481,26 @@ func TestInjectPod(t *testing.T) {
 						"31001" + podHostportLabelSuffix: "31001",
 					},
 					Annotations: map[string]string{
-						pluginAnnotationKey:      pluginAnnotationValue,
-						pluginPortsAnnotationKey: "8080,http",
+						pluginAnnotationKey:                    pluginAnnotationValue,
+						pluginPortsAnnotationKey:               "8080,http",
+						annotationsRandHostportPrefix + "8080": "31000",
+						annotationsRandHostportPrefix + "8081": "31001",
 					},
 				},
 				Spec: corev1.PodSpec{
 					InitContainers: []corev1.Container{
-						corev1.Container{
+						{
 							Image: "test-image",
 							Env: []corev1.EnvVar{
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8080",
 									Value: "31000",
 								},
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8081",
 									Value: "31001",
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportHostIP,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -502,7 +508,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodName,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -510,7 +516,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodNamespace,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -522,23 +528,23 @@ func TestInjectPod(t *testing.T) {
 						},
 					},
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 8080,
 									HostPort:      31000,
 								},
 							},
 							Env: []corev1.EnvVar{
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8080",
 									Value: "31000",
 								},
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8081",
 									Value: "31001",
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportHostIP,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -546,7 +552,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodName,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -554,7 +560,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodNamespace,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -564,24 +570,24 @@ func TestInjectPod(t *testing.T) {
 								},
 							},
 						},
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									Name:          "http",
 									ContainerPort: 8081,
 									HostPort:      31001,
 								},
 							},
 							Env: []corev1.EnvVar{
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8080",
 									Value: "31000",
 								},
-								corev1.EnvVar{
+								{
 									Name:  envRandHostportPrefix + "8081",
 									Value: "31001",
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportHostIP,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -589,7 +595,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodName,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -597,7 +603,7 @@ func TestInjectPod(t *testing.T) {
 										},
 									},
 								},
-								corev1.EnvVar{
+								{
 									Name: envRandHostportPodNamespace,
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
@@ -611,13 +617,13 @@ func TestInjectPod(t *testing.T) {
 					Affinity: &corev1.Affinity{
 						PodAntiAffinity: &corev1.PodAntiAffinity{
 							RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-								corev1.PodAffinityTerm{
+								{
 									LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
 										"31000" + podHostportLabelSuffix: "31000",
 									})),
 									TopologyKey: "kubernetes.io/hostname",
 								},
-								corev1.PodAffinityTerm{
+								{
 									LabelSelector: k8smetav1.SetAsLabelSelector(labels.Set(map[string]string{
 										"31001" + podHostportLabelSuffix: "31001",
 									})),
@@ -642,9 +648,9 @@ func TestInjectPod(t *testing.T) {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Ports: []corev1.ContainerPort{
-								corev1.ContainerPort{
+								{
 									ContainerPort: 8080,
 								},
 							},
@@ -664,6 +670,7 @@ func TestInjectPod(t *testing.T) {
 		}
 		hpi := &HostPortInjector{
 			portCache: portCache,
+			conf:      &HostPortInjectorConfig{},
 		}
 		patches, err := hpi.injectToPod(test.Pod)
 		if err == nil {

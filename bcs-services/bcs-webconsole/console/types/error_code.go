@@ -14,30 +14,30 @@
 package types
 
 const (
-	// NoError TODO
+	// NoError ..
 	NoError = 0
-	// UnknownError TODO
+	// UnknownError ..
 	UnknownError = 300
-	// UserError TODO
+	// UserError ..
 	UserError = 400
-	// SysError TODO
+	// SysError ..
 	SysError = 500
-	// NotFoundError TODO
+	// NotFoundError ..
 	NotFoundError = 404
 
-	// RecordNotFound TODO
+	// RecordNotFound ..
 	RecordNotFound = "记录不存在"
-	// RecordNotFoundCode TODO
+	// RecordNotFoundCode ..
 	RecordNotFoundCode = 404
-	// JsonParseError TODO
+	// JsonParseError ..
 	JsonParseError = "解析异常"
-	// DBOperError TODO
+	// DBOperError ..
 	DBOperError = "DB操作异常"
 
-	// TODO 禁用 APIError，该 ErrorCode 定义过于模糊，容易误用，考虑后续去除
+	// Note 禁用 APIError，该 ErrorCode 定义过于模糊，容易误用，考虑后续去除
 
-	// ApiError TODO
+	// ApiError ..
 	ApiError = "请求失败"
-	// ApiErrorCode TODO
+	// ApiErrorCode ..
 	ApiErrorCode = 40001
 )

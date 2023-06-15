@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
@@ -156,7 +157,7 @@ func TestManifestRenderByPipe(t *testing.T) {
 	pathPrefix := path.GetCurPKGPath() + "/testdata/manifest/"
 	clusterConf := res.NewClusterConf(envs.TestClusterID)
 
-	// TODO 考虑下拆分函数，逻辑太多了可读性差
+	// 考虑下拆分函数，逻辑太多了可读性差
 	for _, data := range testCaseData {
 		// 先加载预设的结果
 		yamlFile, err := ioutil.ReadFile(pathPrefix + data.filePath)
@@ -196,7 +197,9 @@ func TestManifestRenderByPipe(t *testing.T) {
 		)
 
 		// 获取集群中的数据，与下发的配置做对比
-		ret, err := resCli.Get(ctx, namespace, resName, metav1.GetOptions{})
+		var ret *unstructured.Unstructured
+		ret, err = resCli.Get(ctx, namespace, resName, metav1.GetOptions{})
+		assert.Nil(t, err, "kind [%s] manifest render failed: %v", resKind, err)
 		for _, diffRet := range mapx.NewDiffer(result, ret.UnstructuredContent()).Do() {
 			if !diffRetCanIgnored(diffRet) {
 				assert.Fail(

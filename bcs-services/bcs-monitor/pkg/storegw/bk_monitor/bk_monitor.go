@@ -11,8 +11,8 @@
  *
  */
 
-// Package bk_monitor xxx
-package bk_monitor
+// Package bkmonitor xxx
+package bkmonitor
 
 import (
 	"context"
@@ -68,18 +68,15 @@ func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
 
 // Info 返回元数据信息
 func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*storepb.InfoResponse, error) {
-	labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR"})
-
-	zset := labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)}
-
 	// 默认配置
-	lsets := []labelpb.ZLabelSet{zset}
+	var lsets []labelpb.ZLabelSet
 
 	clusterMap, err := bcs.GetClusterMap()
 	if err != nil {
 		return nil, err
 	}
 
+	// NOCC:ineffassign/assign(误报)
 	grayClusterMap := make(map[string]struct{}, 0)
 	if config.G.BKMonitor.EnableGrey {
 		grayClusterMap, err = bkmonitor_client.QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
@@ -220,32 +217,8 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return s.getMatcherSeries(r, srv, clusterId, cluster.BKBizID)
 	}
 
-	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
-	for _, m := range r.Matchers {
-		if m.Name == "provider" {
-			continue
-		}
-
-		// 集群Id转换为 bcs 的规范
-		if m.Name == "cluster_id" {
-			// 对 bkmonitor: 为 蓝鲸监控主机的数据, 不能添加集群过滤
-			if strings.HasPrefix(metricName, "bkmonitor:") {
-				continue
-			}
-			newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: m.Value})
-			continue
-		}
-
-		newMatchers = append(newMatchers, m)
-	}
+	newMatchers := getMatcher(r.Matchers, metricName, cluster)
 	// 必须的参数 bk_biz_id, 单独拎出来处理
-	bkBizIDMatcher := storepb.LabelMatcher{
-		Type:  storepb.LabelMatcher_EQ,
-		Name:  "bk_biz_id",
-		Value: cluster.BKBizID,
-	}
-	newMatchers = append(newMatchers, bkBizIDMatcher)
-	newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: clusterId})
 
 	r.Matchers = newMatchers
 	pql := ""
@@ -281,6 +254,35 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	}
 
 	return nil
+}
+
+func getMatcher(matchers []storepb.LabelMatcher, metricName string, cluster *bcs.Cluster) []storepb.LabelMatcher {
+	newMatchers := make([]storepb.LabelMatcher, 0)
+	for _, m := range matchers {
+		if m.Name == "provider" {
+			continue
+		}
+
+		// 集群Id转换为 bcs 的规范
+		if m.Name == "cluster_id" {
+			// 对 bkmonitor: 为 蓝鲸监控主机的数据, 不能添加集群过滤
+			if strings.HasPrefix(metricName, "bkmonitor:") {
+				continue
+			}
+			newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: m.Value})
+			continue
+		}
+
+		newMatchers = append(newMatchers, m)
+	}
+	bkBizIDMatcher := storepb.LabelMatcher{
+		Type:  storepb.LabelMatcher_EQ,
+		Name:  "bk_biz_id",
+		Value: cluster.BKBizID,
+	}
+	newMatchers = append(newMatchers, bkBizIDMatcher)
+	newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: cluster.ClusterId})
+	return newMatchers
 }
 
 func (s *BKMonitorStore) getMatcherSeries(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer,

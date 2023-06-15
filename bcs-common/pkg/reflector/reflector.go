@@ -194,7 +194,7 @@ func (r *Reflector) handleWatch(cxt context.Context) {
 			case watch.EventDeleted:
 				r.processDeletion(&event)
 			case watch.EventErr:
-				// some unexpected err occured, but channel & watach is still work
+				// some unexpected err occurred, but channel & watach is still work
 				blog.V(3).Infof("Reflector %s catch some data err in watch.Event channel, keep watch running", r.name)
 			}
 		}

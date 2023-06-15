@@ -66,5 +66,7 @@ COPY --from=builder /go/src/pkg/i18n/locale/lc_msgs.yaml /data/workspace/lc_msgs
 
 ENV LOCALIZE_FILE_PATH=/data/workspace/lc_msgs.yaml
 
+ENV GODEBUG x509sha1=1
+
 # default log file base dir
 RUN mkdir -p /tmp/logs

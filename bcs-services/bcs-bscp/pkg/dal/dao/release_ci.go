@@ -13,11 +13,14 @@ limitations under the License.
 package dao
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -30,10 +33,13 @@ import (
 type ReleasedCI interface {
 	// BulkCreateWithTx bulk create released config items with tx.
 	BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.ReleasedConfigItem) error
+	// BulkCreateWithTxV2 bulk create released config items with tx.
+	// NOTE: unify BulkCreateWithTxV2 and BulkCreateWithTx to be one with gorm/gen
+	BulkCreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error
 	// Get released config item by id and released id
 	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
 	// GetReleasedLately released config item by app id and biz id
-	GetReleasedLately(kit *kit.Kit, appId, bizID uint32) ([]*table.ReleasedConfigItem, error)
+	GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) ([]*table.ReleasedConfigItem, error)
 	// List released config items with options.
 	List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (*types.ListReleasedCIsDetails, error)
 }
@@ -45,6 +51,45 @@ type releasedCIDao struct {
 	sd       *sharding.Sharding
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// BulkCreateWithTxV2 bulk create released config items.
+func (dao *releasedCIDao) BulkCreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error {
+	if len(items) == 0 {
+		return errors.New("released config items is empty")
+	}
+
+	// validate released config item field.
+	for _, item := range items {
+		if err := item.Validate(); err != nil {
+			return err
+		}
+	}
+
+	// generate released config items id.
+	ids, err := dao.idGen.Batch(kit, table.ReleasedConfigItemTable, len(items))
+	if err != nil {
+		return err
+	}
+
+	start := 0
+	for _, item := range items {
+		item.ID = ids[start]
+		start++
+	}
+	batchSize := 100
+
+	q := tx.ReleasedConfigItem.WithContext(kit.Ctx)
+	if err := q.CreateInBatches(items, batchSize); err != nil {
+		return fmt.Errorf("insert events failed, err: %v", err)
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, items[0].Attachment.BizID).PrepareCreate(table.RciList(items))
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // BulkCreateWithTx bulk create released config items.
@@ -139,6 +184,13 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 			},
 		},
 	}
+	if opts.ReleaseID != 0 {
+		sqlOpt.CrownedOption.Rules = append(sqlOpt.CrownedOption.Rules, &filter.AtomRule{
+			Field: "release_id",
+			Op:    filter.Equal.Factory(),
+			Value: opts.ReleaseID,
+		})
+	}
 	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
 	if err != nil {
 		return nil, err
@@ -171,19 +223,26 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 }
 
 // GetReleasedLately
-func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32) ([]*table.ReleasedConfigItem, error) {
+func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) (
+	[]*table.ReleasedConfigItem, error) {
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
 
-	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", table.ReleasedConfigItemTable.Name(),
-		" WHERE  biz_id = ", strconv.Itoa(int(bizID)), " AND app_id = ", strconv.Itoa(int(appId)), " AND release_id = (SELECT release_id from ", table.ReleasedConfigItemTable.Name(),
-		" where app_id = ", strconv.Itoa(int(appId)), " ORDER BY release_id desc limit 1)")
-	sql := filter.SqlJoint(sqlSentenceCount)
+	var sqlBuf bytes.Buffer
+	sqlBuf.WriteString("SELECT ")
+	sqlBuf.WriteString(table.ReleasedConfigItemColumns.NamedExpr())
+	sqlBuf.WriteString(" FROM ")
+	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
+	sqlBuf.WriteString(" WHERE biz_id = ? AND app_id = ?")
+	sqlBuf.WriteString(" AND (name like ? OR creator like ? OR reviser like ?)")
+	sqlBuf.WriteString(" AND release_id = (SELECT release_id from ")
+	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
+	sqlBuf.WriteString(" WHERE app_id = ? ORDER BY release_id desc limit 1)")
 
 	fileInfo := make([]*table.ReleasedConfigItem, 0)
-	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sql)
+	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sqlBuf.String(),
+		bizID, appId, "%"+searchKey+"%", "%"+searchKey+"%", "%"+searchKey+"%", appId)
 	if err != nil {
 		return nil, err
 	}

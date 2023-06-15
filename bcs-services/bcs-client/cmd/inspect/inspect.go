@@ -81,7 +81,7 @@ func inspect(c *utils.ClientContext) error {
 	case "meshcluster":
 		return inspectMeshCluster(c)
 	default:
-		// unkown type, try Custom Resource
+		// unknown type, try Custom Resource
 		return inspectCustomResource(c)
 	}
 }

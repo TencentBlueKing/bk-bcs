@@ -87,17 +87,17 @@ func DeleteCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 	found := true
 	if group.CloudNodeGroupID != "" {
-		_, err := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
-		if err != nil {
-			if strings.Contains(err.Error(), "NotFound") || strings.Contains(err.Error(), "not found") {
+		_, errPool := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
+		if errPool != nil {
+			if strings.Contains(errPool.Error(), "NotFound") || strings.Contains(errPool.Error(), "not found") {
 				blog.Warnf("DeleteCloudNodeGroupTask[%s]: nodegroup[%s/%s] in task %s step %s not found, skip delete",
 					taskID, nodeGroupID, group.CloudNodeGroupID, stepName, stepName)
 				found = false
 			} else {
 				blog.Errorf(
 					"DeleteCloudNodeGroupTask[%s]: call DescribeClusterNodePoolDetail[%s] api in task %s step %s failed, %s",
-					taskID, nodeGroupID, taskID, stepName, err.Error())
-				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, err.Error())
+					taskID, nodeGroupID, taskID, stepName, errPool.Error())
+				retErr := fmt.Errorf("call DescribeClusterNodePoolDetail[%s] api err, %s", nodeGroupID, errPool.Error())
 				_ = state.UpdateStepFailure(start, stepName, retErr)
 				return retErr
 			}

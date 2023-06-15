@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newReleaseCmd create the release tke cidrs command
 func newReleaseCmd() *cobra.Command {
 	releaseCmd := &cobra.Command{
 		Use:   "release",

@@ -26,6 +26,7 @@ import (
 )
 
 const (
+	// NOCC:gas/crypto(工具误报:不包含凭证,只是获取凭证的路径)
 	tokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 )
 

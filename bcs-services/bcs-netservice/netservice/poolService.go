@@ -16,14 +16,16 @@ package netservice
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"net"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 
+// getAllHosts will return all hosts
 func getAllHosts(cidr string) ([]string, error) {
 	ip, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
@@ -46,6 +48,7 @@ func inc(ip net.IP) {
 	}
 }
 
+// stringInSlice split string to slice
 func stringInSlice(str string, strs []string) bool {
 	for _, item := range strs {
 		if str == item {
@@ -191,6 +194,7 @@ func (srv *NetService) AddPool(pool *types.NetPool) error {
 	return nil
 }
 
+// initPoolPath will init the pool path when started
 func (srv *NetService) initPoolPath(pool *types.NetPool, poolPath string, poolData []byte) error {
 	if err := srv.store.Add(poolPath, poolData); err != nil {
 		blog.Errorf("Pool %s create data node %v err: %s", pool.GetKey(), pool, err.Error())
@@ -212,7 +216,7 @@ func (srv *NetService) initPoolPath(pool *types.NetPool, poolPath string, poolDa
 	return nil
 }
 
-// DeletePool update Pool info
+// DeletePool will delete the pool by netservice key. It will delete from store
 func (srv *NetService) DeletePool(netKey string) error {
 	started := time.Now()
 	// check pool existence
@@ -290,7 +294,8 @@ func (srv *NetService) DeletePool(netKey string) error {
 	return nil
 }
 
-// UpdatePool update Pool info
+// UpdatePool update Pool info will update by netservice key. It will update poll
+// info to store
 func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 	started := time.Now()
 	// check & construct data
@@ -387,7 +392,6 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 		blog.Infof("Pool %s append available node %s success.", pool.GetKey(), inst.GetKey())
 	}
 
-	// todo here create host node for query
 	for _, host := range pool.Hosts {
 		hostPath := filepath.Join(defaultHostInfoPath, host)
 		exist, eErr := srv.store.Exist(hostPath)
@@ -433,6 +437,7 @@ func (srv *NetService) UpdatePool(pool *types.NetPool, netKey string) error {
 	return nil
 }
 
+// filterDuplicateIP will filter the duplicate ip from store
 func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPool) error {
 	existIPs := make(map[string]bool)
 	for _, a := range old.Active {
@@ -484,7 +489,8 @@ func (srv *NetService) filterDuplicateIP(update *types.NetPool, old *types.NetPo
 	return nil
 }
 
-// ListPool update Pool info
+// ListPool will list all the pools from store. It will return the netpools, and it
+// will return error if list from store failed.
 func (srv *NetService) ListPool() ([]*types.NetPool, error) {
 	started := time.Now()
 	// list all pool from defaultPoolPath
@@ -515,7 +521,8 @@ func (srv *NetService) ListPool() ([]*types.NetPool, error) {
 	return pools, nil
 }
 
-// ListPoolByKey Get pool info by net
+// ListPoolByKey Get pool info by net from store. It will query from store
+// by key, and return error if store query failed.
 func (srv *NetService) ListPoolByKey(net string) (*types.NetPool, error) {
 	started := time.Now()
 	blog.Info("try to get pool %s info.", net)
@@ -571,7 +578,7 @@ func (srv *NetService) ListPoolByKey(net string) (*types.NetPool, error) {
 	return pool, nil
 }
 
-// ListPoolByCluster list all pool under cluster
+// ListPoolByCluster list all pool under cluster from store by cluster id
 func (srv *NetService) ListPoolByCluster(cluster string) ([]*types.NetPool, error) {
 	started := time.Now()
 	// list all pool from defaultPoolPath
@@ -634,7 +641,8 @@ func (srv *NetService) cleanChildrenNode(nodepath string) error {
 	return nil
 }
 
-// GetPoolAvailable get pool available ip list only
+// GetPoolAvailable get pool available ip list only from store
+// It will return the available ips from net
 func (srv *NetService) GetPoolAvailable(net string) (*types.NetPool, error) {
 	started := time.Now()
 	blog.Info("try to get pool %s info.", net)

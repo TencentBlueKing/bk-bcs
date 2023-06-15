@@ -17,14 +17,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 // PermissionRequired 权限控制，必须都为真才可以
@@ -132,12 +133,12 @@ func ValidateProjectCluster(c *gin.Context, authCtx *AuthContext) error {
 
 	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
 	if err != nil {
-		return errors.Wrap(err, "项目不正确")
+		return errors.Wrap(err, i18n.GetMessage(c, "项目不正确"))
 	}
 
 	cluster, err := bcs.GetCluster(c.Request.Context(), project.ProjectId, clusterId)
 	if err != nil {
-		return errors.Wrap(err, "项目或者集群Id不正确")
+		return errors.Wrap(err, i18n.GetMessage(c, "项目或者集群Id不正确"))
 	}
 
 	authCtx.BindProject = project
@@ -159,7 +160,7 @@ func initContextWithIAMProject(c *gin.Context, authCtx *AuthContext) error {
 		return err
 	}
 	if !allow {
-		return errors.New("没有权限")
+		return errors.New(i18n.GetMessage(c, "没有权限"))
 	}
 
 	return nil

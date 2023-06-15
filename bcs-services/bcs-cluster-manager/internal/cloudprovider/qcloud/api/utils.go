@@ -45,6 +45,7 @@ var (
 	InstanceFamily FilterKey = "instance-family"
 )
 
+// generateInstanceAdvancedSetting transfer InstanceAdvancedSettings to cloudInstanceAdvancedSettings
 func generateInstanceAdvancedSetting(advancedSetting *InstanceAdvancedSettings) *tke.InstanceAdvancedSettings {
 	if advancedSetting != nil {
 		advancedSet := &tke.InstanceAdvancedSettings{
@@ -117,6 +118,7 @@ func generateInstanceAdvancedSetting(advancedSetting *InstanceAdvancedSettings) 
 	return nil
 }
 
+// generateAddExistedInstancesReq existed instance request
 func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExistedInstancesRequest {
 	// add existed instance to cluster request
 	req := tke.NewAddExistedInstancesRequest()
@@ -164,6 +166,7 @@ func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExist
 	return req
 }
 
+// generateClusterRequestInfo create cluster request
 func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClusterRequest, error) {
 	if request.Region == "" || request.ClusterType == "" {
 		return nil, fmt.Errorf("CreateClusterRequest invalid region or clusterType info")
@@ -245,6 +248,7 @@ func generateClusterRequestInfo(request *CreateClusterRequest) (*tke.CreateClust
 	return req, nil
 }
 
+// generateClusterBasic create cluster basic setting
 func generateClusterBasic(basic *ClusterBasicSettings) *tke.ClusterBasicSettings {
 	tkeClusterBasic := &tke.ClusterBasicSettings{
 		ClusterOs:      common.StringPtr(basic.ClusterOS),
@@ -277,6 +281,7 @@ func generateClusterBasic(basic *ClusterBasicSettings) *tke.ClusterBasicSettings
 	return tkeClusterBasic
 }
 
+// generateClusterAdvancedSet create cluster advanced setting
 func generateClusterAdvancedSet(request *ClusterAdvancedSettings) *tke.ClusterAdvancedSettings {
 	if request == nil {
 		return nil
@@ -308,8 +313,7 @@ func generateClusterAdvancedSet(request *ClusterAdvancedSettings) *tke.ClusterAd
 	return clusterAdvance
 }
 
-// generateInstanceAdvancedSet xxx
-// transfer input para to tke para
+// generateInstanceAdvancedSet transfer input para to tke para
 func generateInstanceAdvancedSet(request *InstanceAdvancedSettings) *tke.InstanceAdvancedSettings {
 	if request == nil {
 		return nil
@@ -363,6 +367,7 @@ func generateInstanceAdvancedSet(request *InstanceAdvancedSettings) *tke.Instanc
 	return instanceAdvance
 }
 
+// generateEnhancedService enhanced service
 func generateEnhancedService(service *EnhancedService) *tke.EnhancedService {
 	if service == nil {
 		return nil
@@ -377,6 +382,7 @@ func generateEnhancedService(service *EnhancedService) *tke.EnhancedService {
 	return svc
 }
 
+// generateLoginSet login setting
 func generateLoginSet(settings *LoginSettings) *tke.LoginSettings {
 	if settings == nil {
 		return nil
@@ -387,6 +393,7 @@ func generateLoginSet(settings *LoginSettings) *tke.LoginSettings {
 	}
 }
 
+// generateClusterNodePool cluster node pool
 func generateClusterNodePool(nodePool *CreateNodePoolInput) *tke.CreateClusterNodePoolRequest {
 	if nodePool == nil {
 		return nil

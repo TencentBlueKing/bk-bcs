@@ -30,7 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	bcstype "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/schetypes"
-	proc_daemon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/proc-daemon"
+	procdaemon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/proc-daemon"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
 
 	"github.com/golang/protobuf/proto"
@@ -49,7 +49,7 @@ type bcsExecutor struct {
 	tasks         map[string]*types.ProcessTaskInfo // key: taskinfo id
 	status        types.ExecutorStatus
 	callbackFuncs map[types.CallbackFuncType]interface{}
-	procDaemon    proc_daemon.ProcDaemon
+	procDaemon    procdaemon.ProcDaemon
 
 	ackUpdates   map[string]*mesos.TaskStatus // key: taskinfo id
 	updatesLocks sync.RWMutex
@@ -66,7 +66,7 @@ func NewExecutor(cxt context.Context) Executor {
 		tasks:         make(map[string]*types.ProcessTaskInfo),
 		callbackFuncs: make(map[types.CallbackFuncType]interface{}),
 		status:        types.ExecutorStatusUnknown,
-		procDaemon:    proc_daemon.NewDaemon(),
+		procDaemon:    procdaemon.NewDaemon(),
 		ackUpdates:    make(map[string]*mesos.TaskStatus),
 	}
 
@@ -100,7 +100,8 @@ func (e *bcsExecutor) LaunchTaskgroup(taskgroup *mesos.TaskGroupInfo) {
 
 	// craete process taskinfo
 	for _, task := range taskgroup.GetTasks() {
-		proc, err := createProcessTaskinfo(task)
+		var proc *types.ProcessTaskInfo
+		proc, err = createProcessTaskinfo(task)
 		if err != nil {
 			blog.Errorf("Launch task %s failed, update task status TASK_ERROR", task.GetTaskId().GetValue())
 			e.updateTaskStatus(task.GetTaskId().GetValue(), types.TaskStatusError, err.Error())
@@ -665,7 +666,8 @@ func writeLocalFile(localFile *types.LocalFile) error {
 
 	// set file user
 	if localFile.User != "root" {
-		u, err := user.Lookup(localFile.User)
+		var u *user.User
+		u, err = user.Lookup(localFile.User)
 		if err != nil {
 			blog.Errorf("write localfile %s lookup user %s eror %s", localFile.To, localFile.User, err.Error())
 		} else {

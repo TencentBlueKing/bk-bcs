@@ -119,6 +119,7 @@ var (
 	parseEnv                 = false
 )
 
+// IfQueryFromBKMonitor check if query from bk monitor
 func IfQueryFromBKMonitor() bool {
 	if parseEnv {
 		return queryMetricFromBKMonitor

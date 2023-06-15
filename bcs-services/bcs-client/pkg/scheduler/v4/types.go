@@ -14,19 +14,19 @@
 package v4
 
 const (
-	// BcsSchedulerResourceApplication TODO
+	// BcsSchedulerResourceApplication applications resource
 	BcsSchedulerResourceApplication = "applications"
-	// BcsSchedulerResourceProcess TODO
+	// BcsSchedulerResourceProcess processes resource
 	BcsSchedulerResourceProcess = "processes"
-	// BcsSchedulerResourceConfigMap TODO
+	// BcsSchedulerResourceConfigMap configmaps resource
 	BcsSchedulerResourceConfigMap = "configmaps"
-	// BcsSchedulerResourceSecret TODO
+	// BcsSchedulerResourceSecret secrets resource
 	BcsSchedulerResourceSecret = "secrets"
-	// BcsSchedulerResourceService TODO
+	// BcsSchedulerResourceService services resource
 	BcsSchedulerResourceService = "services"
-	// BcsSchedulerResourceDeployment TODO
+	// BcsSchedulerResourceDeployment deployments resource
 	BcsSchedulerResourceDeployment = "deployments"
-	// BcsSchedulerResourceDaemonset TODO
+	// BcsSchedulerResourceDaemonset daemonset resource
 	BcsSchedulerResourceDaemonset = "daemonset"
 
 	// AllNamespace selector

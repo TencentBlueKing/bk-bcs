@@ -136,8 +136,8 @@ type ClusterScopedApplicationAction struct {
 	Data     []ProjectClusterData
 }
 
-// BuildClusterScopedApplicationInstance build cluster scoped resource application
-func BuildClusterScopedApplicationInstance(clsAppAction ClusterScopedApplicationAction) iam.ApplicationAction {
+// BuildClusterScopedAppInstance build cluster scoped resource application
+func BuildClusterScopedAppInstance(clsAppAction ClusterScopedApplicationAction) iam.ApplicationAction {
 	nsApp := utils.ClusterApplication{ActionID: clsAppAction.ActionID}
 	// cluster resource support one system, need to build multi instances if use extra system resource
 	instances := ClusterScopedInstances{

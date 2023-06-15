@@ -20,19 +20,20 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/entity"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/logcollector"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/logindex"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/logrule"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // Storage 提供了数据库操作的接口
 type Storage interface {
-	// LogCollector operation
-	CreateLogCollector(ctx context.Context, lc *entity.LogCollector) error
-	UpdateLogCollector(ctx context.Context, id string, lc entity.M) error
-	DeleteLogCollector(ctx context.Context, id string) error
-	ListLogCollectors(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (
-		int64, []*entity.LogCollector, error)
-	GetLogCollector(ctx context.Context, id string) (*entity.LogCollector, error)
+	// LogRule operation
+	CreateLogRule(ctx context.Context, lc *entity.LogRule) error
+	UpdateLogRule(ctx context.Context, id string, lc entity.M) error
+	DeleteLogRule(ctx context.Context, id string) error
+	ListLogRules(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (
+		int64, []*entity.LogRule, error)
+	GetLogRule(ctx context.Context, id string) (*entity.LogRule, error)
 	// GetIndexSetID return stdIndexSetID and fileIndexSetID
 	GetIndexSetID(ctx context.Context, projectID, clusterID string) (int, int, error)
 	CreateOldIndexSetID(ctx context.Context, logIndex *entity.LogIndex) error
@@ -40,12 +41,14 @@ type Storage interface {
 }
 
 type modelSet struct {
-	*logcollector.ModelLogCollector
+	*logrule.ModelLogRule
+	*logindex.ModelLogIndex
 }
 
 // New return a new ResourceManagerModel instance
 func New(db drivers.DB) Storage {
 	return &modelSet{
-		ModelLogCollector: logcollector.New(db),
+		ModelLogRule:  logrule.New(db),
+		ModelLogIndex: logindex.New(db),
 	}
 }

@@ -13,8 +13,9 @@
 package metric
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetFloatData(t *testing.T) {
@@ -41,7 +42,7 @@ func Test_getDimensionPromql(t *testing.T) {
 
 }
 
-func Test_getIncreasingIntervalDifference(t *testing.T) {
+func Test_getIncreasingInterDifference(t *testing.T) {
 	testNums := []int{0, 1, 2, 1, 2, 3, 4, 0}
 	result := getIncreasingIntervalDifference(testNums)
 	assert.Equal(t, 5, result)

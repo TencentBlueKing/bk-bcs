@@ -18,7 +18,7 @@ import (
 	"fmt"
 )
 
-// NewTokenAuth impelmentation of grpc credentials interface
+// NewTokenAuth implementation of grpc credentials interface
 func NewTokenAuth(t string) *GrpcTokenAuth {
 	return &GrpcTokenAuth{
 		Token: t,

@@ -21,6 +21,7 @@ import (
 )
 
 func init() {
+	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
 		Version: "20230511114513",
 		Name:    "20230511114513_add_template",
@@ -30,6 +31,7 @@ func init() {
 	})
 }
 
+// mig20230511114513GormTestUp for up migration
 func mig20230511114513GormTestUp(tx *gorm.DB) error {
 	// TemplateSpaces ：模版空间
 	type TemplateSpaces struct {
@@ -74,15 +76,22 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		TemplateName string `gorm:"type:varchar(255) not null"`
-		TemplatePath string `gorm:"type:varchar(255) not null"`
-		Name         string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempID_name,priority:2"`
-		Memo         string `gorm:"type:varchar(256) default ''"`
+		ReleaseName string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempID_relName,priority:2"`
+		ReleaseMemo string `gorm:"type:varchar(256) default ''"`
+		Name        string `gorm:"type:varchar(255) not null"`
+		Path        string `gorm:"type:varchar(255) not null"`
+		FileType    string `gorm:"type:varchar(20) not null"`
+		FileMode    string `gorm:"type:varchar(20) not null"`
+		User        string `gorm:"type:varchar(64) not null"`
+		UserGroup   string `gorm:"type:varchar(64) not null"`
+		Privilege   string `gorm:"type:varchar(64) not null"`
+		Signature   string `gorm:"type:varchar(64) not null"`
+		ByteSize    uint   `gorm:"type:bigint(1) unsigned not null"`
 
 		// Attachment is attachment info of the resource
 		BizID           uint `gorm:"type:bigint(1) unsigned not null"`
 		TemplateSpaceID uint `gorm:"type:bigint(1) unsigned not null"`
-		TemplateID      uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_tempID_name,priority:1"`
+		TemplateID      uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_tempID_relName,priority:1"`
 
 		// CreatedRevision is reversion info of the resource being created
 		Creator   string    `gorm:"type:varchar(64) not null"`
@@ -94,9 +103,9 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		Name               string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempSpaID_name,priority:2"`
-		Memo               string `gorm:"type:varchar(256) default ''"`
-		TemplateReleaseIDs string `gorm:"type:json not null"`
+		Name        string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempSpaID_name,priority:2"`
+		Memo        string `gorm:"type:varchar(256) default ''"`
+		TemplateIDs string `gorm:"type:json not null"`
 
 		// Attachment is attachment info of the resource
 		BizID           uint `gorm:"type:bigint(1) unsigned not null"`
@@ -136,6 +145,7 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 
 }
 
+// mig20230511114513GormDown for down migration
 func mig20230511114513GormDown(tx *gorm.DB) error {
 	// IDGenerators : ID生成器
 	type IDGenerators struct {

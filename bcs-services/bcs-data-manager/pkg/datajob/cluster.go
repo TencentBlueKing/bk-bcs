@@ -112,6 +112,7 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 		blog.Errorf("do cluster day policy failed, get cluster metrics err, length not equal 1, metrics:%v", hourMetrics)
 		return
 	}
+	// day的统计值数据从hour中获取，正常情况指定bucket之后hourMetric只能拿到1条
 	hourMetric := hourMetrics[0]
 	// 统计前一天出现过的workload总数
 	hourBucket, _ := utils.GetBucketTime(opts.CurrentTime.AddDate(0, 0, -1), types.DimensionHour)
@@ -119,6 +120,7 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 	if err != nil {
 		blog.Errorf("do cluster day policy failed, get cluster workload count err: %v", err)
 	}
+	// 每天的统计值（max/min）就是小时桶统计的值
 	clusterMetric := &types.ClusterMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -199,6 +201,8 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 		blog.Errorf("do cluster hour policy failed, get cluster metrics err, length not equal 1, metrics:%v", minuteMetrics)
 		return
 	}
+	// hour的统计值从上一个小时的Minute数据中获取
+	// 正常情况下指定bucket只获取到一条minute桶数据
 	minuteMetric := minuteMetrics[0]
 	// 统计上一个小时出现过的workload总数
 	hourBucket, _ := utils.GetBucketTime(opts.CurrentTime.Add(-1*time.Hour), types.DimensionHour)
@@ -206,6 +210,7 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 	if err != nil {
 		blog.Errorf("do cluster hour policy failed, get cluster workload count err: %v", err)
 	}
+	// 每小时的统计值（max/min）就是分钟桶统计的值
 	clusterMetric := &types.ClusterMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),
@@ -281,6 +286,7 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.J
 	if err != nil {
 		blog.Errorf("do cluster minute policy failed, get cluster ca count err: %v", err)
 	}
+	// 每一minute的统计值（max/min）是自己，hour级的在insert时会做预聚合处理
 	clusterMetric := &types.ClusterMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(utils.FormatTime(opts.CurrentTime, opts.Dimension)),

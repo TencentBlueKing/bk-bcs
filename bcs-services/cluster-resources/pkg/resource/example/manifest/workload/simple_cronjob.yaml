@@ -18,4 +18,11 @@ spec:
             - /bin/sh
             - -c
             - date; echo Hello from the Kubernetes cluster
+            resources:
+              requests:
+                memory: "128Mi"
+                cpu: "250m"
+              limits:
+                memory: "128Mi"
+                cpu: "250m"
           restartPolicy: OnFailure

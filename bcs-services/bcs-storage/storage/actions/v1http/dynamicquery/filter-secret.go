@@ -27,6 +27,7 @@ type SecretFilter struct {
 
 const secretNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t SecretFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, secretNestedTimeLayout)
 }

@@ -99,6 +99,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.PermissionSwitch = op.PermissionSwitch
 	userMgrConfig.CommunityEdition = op.CommunityEdition
 	userMgrConfig.PassConfig = op.PassCC
+	userMgrConfig.BcsAPI = &op.BcsAPI
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretId))

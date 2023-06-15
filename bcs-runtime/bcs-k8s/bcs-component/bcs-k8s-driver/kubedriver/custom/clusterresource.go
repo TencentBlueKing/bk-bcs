@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/client"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/options"
 
-	restful "github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,8 +99,8 @@ OutLoop:
 }
 
 // Config config kube clientset
-func (cph *ClusterResourceAPIHandler) Config(KubeMasterURL string, TLSConfig options.TLSConfig) error {
-	cph.clientSet = client.NewClientSet(KubeMasterURL, TLSConfig)
+func (cph *ClusterResourceAPIHandler) Config(k8sMasterUrl string, tlsCfg options.TLSConfig) error {
+	cph.clientSet = client.NewClientSet(k8sMasterUrl, tlsCfg)
 	if cph.clientSet == nil {
 		return fmt.Errorf("failed to get k8s clientSet")
 	}

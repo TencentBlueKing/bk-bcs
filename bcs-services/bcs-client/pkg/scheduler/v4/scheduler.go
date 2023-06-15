@@ -78,11 +78,7 @@ type Scheduler interface {
 	// GetOffer get specified mesos cluster resources list by agents
 	GetOffer(clusterID string) ([]*schetypes.OfferWithDelta, error)
 
-	// CreateCustomResourceDefinition TODO
-	/*
-		CustomResourceDefinition section
-	*/
-	// CreateResourceDefinition create CRD by definition file
+	// CreateCustomResourceDefinition create CRD by definition file
 	CreateCustomResourceDefinition(clusterID string, data []byte) error
 	// UpdateCustomResourceDefinition replace specified CRD
 	UpdateCustomResourceDefinition(clusterID, name string, data []byte) error
@@ -92,11 +88,8 @@ type Scheduler interface {
 	GetCustomResourceDefinition(clusterID string, name string) (*v1beta1.CustomResourceDefinition, error)
 	// DeleteCustomResourceDefinition delete specified CRD
 	DeleteCustomResourceDefinition(clusterID, name string) error
-	// CreateCustomResource TODO
-	/*
-		CustomResource section, depend on ListCustomResourceDefinition for validation
-	*/
-	// CreateResource create CRD by definition file
+
+	// CreateCustomResource create CRD by definition file
 	CreateCustomResource(clusterID, apiVersion, plural, namespace string, data []byte) error
 	// UpdateCustomResource replace specified CRD
 	UpdateCustomResource(clusterID, apiVersion, plural, namespace, name string, data []byte) error

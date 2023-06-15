@@ -32,7 +32,8 @@ func NewBCSClusterPermClient(cli iam.PermClient) *BCSClusterPerm {
 }
 
 // CanCreateCluster check user createCluster perm
-func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool, string, []utils.ResourceAction, error) {
+func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool, string,
+	[]utils.ResourceAction, error) {
 	if bcp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -102,7 +103,8 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 }
 
 // CanManageCluster check user manageCluster perm
-func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clusterID string) (bool, string, []utils.ResourceAction, error) {
+func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clusterID string) (bool, string,
+	[]utils.ResourceAction, error) {
 	if bcp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -169,7 +171,8 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 }
 
 // CanDeleteCluster check user deleteCluster perm
-func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clusterID string) (bool, string, []utils.ResourceAction, error) {
+func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clusterID string) (bool, string,
+	[]utils.ResourceAction, error) {
 	if bcp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -237,7 +240,8 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 }
 
 // CanViewCluster check user viewCluster perm
-func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, clusterID string) (bool, string, []utils.ResourceAction, error) {
+func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, clusterID string) (bool, string,
+	[]utils.ResourceAction, error) {
 	if bcp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -336,8 +340,8 @@ func (bcp *BCSClusterPerm) GetClusterMultiActionPermission(user, projectID, clus
 		UserName: user}, clusterNode)
 }
 
-// GetMultiClusterMultiActionPermission only support same instanceSelection
-func (bcp *BCSClusterPerm) GetMultiClusterMultiActionPermission(user, projectID string, clusterIDs []string,
+// GetMultiClusterMultiActionPerm only support same instanceSelection
+func (bcp *BCSClusterPerm) GetMultiClusterMultiActionPerm(user, projectID string, clusterIDs []string,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bcp == nil {
 		return nil, utils.ErrServerNotInited
@@ -418,7 +422,7 @@ func (bcp *BCSClusterPerm) CanCreateClusterScopedResource(user, projectID, clust
 			{Project: projectID, Cluster: clusterID},
 		},
 	})
-	csApp := BuildClusterScopedApplicationInstance(ClusterScopedApplicationAction{
+	csApp := BuildClusterScopedAppInstance(ClusterScopedApplicationAction{
 		ActionID: ClusterScopedCreate.String(),
 		Data: []ProjectClusterData{
 			{Project: projectID, Cluster: clusterID},
@@ -493,7 +497,7 @@ func (bcp *BCSClusterPerm) CanViewClusterScopedResource(user, projectID, cluster
 			{Project: projectID, Cluster: clusterID},
 		},
 	})
-	csApp := BuildClusterScopedApplicationInstance(ClusterScopedApplicationAction{
+	csApp := BuildClusterScopedAppInstance(ClusterScopedApplicationAction{
 		ActionID: ClusterScopedView.String(),
 		Data: []ProjectClusterData{
 			{Project: projectID, Cluster: clusterID},
@@ -568,7 +572,7 @@ func (bcp *BCSClusterPerm) CanUpdateClusterScopedResource(user, projectID, clust
 			{Project: projectID, Cluster: clusterID},
 		},
 	})
-	csApp := BuildClusterScopedApplicationInstance(ClusterScopedApplicationAction{
+	csApp := BuildClusterScopedAppInstance(ClusterScopedApplicationAction{
 		ActionID: ClusterScopedUpdate.String(),
 		Data: []ProjectClusterData{
 			{Project: projectID, Cluster: clusterID},
@@ -643,7 +647,7 @@ func (bcp *BCSClusterPerm) CanDeleteClusterScopedResource(user, projectID, clust
 			{Project: projectID, Cluster: clusterID},
 		},
 	})
-	csApp := BuildClusterScopedApplicationInstance(ClusterScopedApplicationAction{
+	csApp := BuildClusterScopedAppInstance(ClusterScopedApplicationAction{
 		ActionID: ClusterScopedDelete.String(),
 		Data: []ProjectClusterData{
 			{Project: projectID, Cluster: clusterID},

@@ -27,6 +27,13 @@ spec:
             - mountPath: /data/hostpath
               name: hp-conf-vol
               subPath: conf
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
       volumes:
         - name: pvc-log-vol
           persistentVolumeClaim:

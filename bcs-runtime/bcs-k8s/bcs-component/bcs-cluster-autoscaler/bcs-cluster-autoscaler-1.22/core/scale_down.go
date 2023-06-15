@@ -312,6 +312,7 @@ func calculateScaleDownCoresMemoryTotal(nodes []*apiv1.Node, timestamp time.Time
 	return coresTotal, memoryTotal
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func (sd *ScaleDown) calculateScaleDownCustomResourcesTotal(nodes []*apiv1.Node, cp cloudprovider.CloudProvider,
 	timestamp time.Time) (map[string]int64, error) {
 	result := make(map[string]int64)

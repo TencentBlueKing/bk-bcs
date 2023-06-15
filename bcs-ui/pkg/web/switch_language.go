@@ -14,6 +14,7 @@
 package web
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -21,6 +22,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 )
+
+// LanguageReq language req
+type LanguageReq struct {
+	Lang string `json:"lang"`
+}
 
 // ErrorRsp error response
 type ErrorRsp struct {
@@ -32,25 +38,25 @@ func (s *WebServer) CookieSwitchLanguage(w http.ResponseWriter, r *http.Request)
 	okResponse := &OKResponse{Message: "OK", RequestID: r.Header.Get(constants.RequestIDHeaderKey)}
 	// response message
 	defer render.JSON(w, r, okResponse)
-	// get cookie key blueking_language
-	cookie, err := r.Cookie(constants.BluekingLanguage)
+
+	req := LanguageReq{}
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		// failure return
 		okResponse.Code = http.StatusBadRequest
 		okResponse.Message = err.Error()
 		return
 	}
-	// get language
-	lang := cookie.Value
 
 	// set cookie message
 	if config.G.Base.Domain != "" {
 		http.SetCookie(w, &http.Cookie{
 			Name:     constants.BluekingLanguage,
-			Value:    lang,
+			Value:    req.Lang,
 			Domain:   config.G.Base.Domain,
 			Path:     "/",
 			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
 		})
 	}
 }

@@ -81,7 +81,7 @@ func main() {
 		return
 	}
 
-	// TODO: strategy related test depends on group, add group test first
+	// NOTE: strategy related test depends on group, add group test first
 	//if err := genSceneData2(); err != nil {
 	//	log.Println(err)
 	//	return

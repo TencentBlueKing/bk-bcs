@@ -14,17 +14,17 @@
 package actions
 
 const (
-	// BcsCustomSchedulerPrefix TODO
+	// BcsCustomSchedulerPrefix prefix of custom scheduler
 	BcsCustomSchedulerPrefix = "/bcs/custom/scheduler/k8s/"
-	// IpSchedulerV1 TODO
+	// IpSchedulerV1 scheduler v1
 	IpSchedulerV1 = "v1"
-	// IpSchedulerV2 TODO
+	// IpSchedulerV2 scheduler v2
 	IpSchedulerV2 = "v2"
 
-	// TotalNodeNumKey TODO
+	// TotalNodeNumKey total node
 	TotalNodeNumKey = "totalNode"
-	// CanSchedulerNodeNumKey TODO
+	// CanSchedulerNodeNumKey can be scheduled
 	CanSchedulerNodeNumKey = "canScheduler"
-	// CanNotSchedulerNodeNumKey TODO
+	// CanNotSchedulerNodeNumKey can not be scheduled
 	CanNotSchedulerNodeNumKey = "canNotScheduler"
 )
