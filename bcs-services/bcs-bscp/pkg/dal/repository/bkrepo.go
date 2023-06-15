@@ -181,7 +181,7 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader,
 
 	uploadResp := new(repo.UploadResp)
 	if err := json.NewDecoder(resp.Body).Decode(uploadResp); err != nil {
-		return nil, errors.Wrap(err, "upload respones")
+		return nil, errors.Wrap(err, "upload response")
 	}
 
 	if uploadResp.Code != 0 {

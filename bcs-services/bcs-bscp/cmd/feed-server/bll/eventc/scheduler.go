@@ -251,7 +251,7 @@ func (sch *Scheduler) notifyEvent(kt *kit.Kit, cursorID uint32, members []*membe
 }
 
 func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
-	// TODO: optimize this when a mount of instances have the same labels with same release id.
+	// Note: optimize this when a mount of instances have the same labels with same release id.
 	inst := one.InstSpec
 	meta := &btyp.AppInstanceMeta{
 		BizID:  inst.BizID,

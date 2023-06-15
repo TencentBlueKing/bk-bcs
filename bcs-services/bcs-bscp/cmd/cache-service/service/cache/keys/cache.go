@@ -195,8 +195,8 @@ func (ele element) String() string {
 }
 
 const (
-	// FalseVal TODO
+	// FalseVal ..
 	FalseVal = "0"
-	// TrueVal TODO
+	// TrueVal ..
 	TrueVal = "1"
 )

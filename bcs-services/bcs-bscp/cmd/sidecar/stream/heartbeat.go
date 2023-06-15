@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	// TODO: these config can set by config file.
+	// Note: these config can set by config file.
 	// defaultHeartbeatIntervalSec defines heartbeat default interval.
 	defaultHeartbeatInterval = 15 * time.Second
 	// defaultHeartbeatTimeout defines default heartbeat request timeout.

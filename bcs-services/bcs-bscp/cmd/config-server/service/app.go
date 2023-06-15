@@ -180,7 +180,6 @@ func (s *Service) GetAppByName(ctx context.Context, req *pbcs.GetAppByNameReq) (
 // ListAppsRest list apps with rest filter
 func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListAppsResp)
 
 	userSpaceResp, err := s.client.AS.ListUserSpace(kt.RpcCtx(), &pbas.ListUserSpaceReq{})
 	if err != nil {
@@ -228,7 +227,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 		}
 	}
 
-	resp = &pbcs.ListAppsResp{
+	resp := &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

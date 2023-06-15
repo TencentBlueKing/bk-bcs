@@ -114,7 +114,7 @@ func newOneClient(opt PoolOption) (interface{}, error) {
 		return nil, fmt.Errorf("dial service %s failed, err: %v", opt.ServiceName, err)
 	}
 
-	// TODO: add ping test and wait for service ready.
+	// Note: add ping test and wait for service ready.
 
 	return opt.NewClient(conn), nil
 }

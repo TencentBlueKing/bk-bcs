@@ -75,6 +75,6 @@ func (i *IAM) ListInstances(kt *kit.Kit, resType client.TypeID, filter *types.Li
 func (i *IAM) ListInstancesWithAttributes(ctx context.Context, opts *client.ListWithAttributes) (idList []string,
 	err error) {
 
-	// TODO implement this when attribute auth is enabled
+	// Note implement this when attribute auth is enabled
 	return make([]string, 0), nil
 }

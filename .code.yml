@@ -19,6 +19,7 @@ source:
       - ".*.pb.validate.go"
       - ".*.pb.gw.go"
       - ".*.gen.go"
+      - ".*docs.go"
       - ".*/bcs-common/pkg/third_party/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core/scale_up.go"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator/drain.go"
@@ -33,8 +34,6 @@ source:
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22/go.mod"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/go.mod"
-      - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22/cloudprovider/bcs/clustermanager/clustermanager.pb.go"
-      - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/cloudprovider/bcs/clustermanager/clustermanager.pb.go"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-csi-tencentcloud/driver/cbs/controller.go"
       - ".*/bcs-runtime/bcs-k8s/kubedeprecated/.*"
       - ".*/bcs-runtime/bcs-k8s/kubernetes/.*"
@@ -74,7 +73,6 @@ source:
       - ".*/bcs-services/bcs-project-manager/proto/.*"
       - ".*/bcs-services/bcs-project-manager/third_party/.*"
       - ".*/bcs-services/cluster-resources/pkg/resource/example/manifest/config/simple_secret.yaml"
-      - ".*/bcs-services/cluster-resources/proto/cluster-resources/cluster-resources.pb.validate.go"
       - ".*/bmsf-configuration/internal/protocol/.*"
       - ".*/bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/cluster-autoscaler/.*"
@@ -96,7 +94,6 @@ source:
       - ".*/bcs-runtime/bcs-mesos/bcs-scheduler/.*"
       - ".*/bcs-services/bcs-storage/pkg/proto/.*"
       - ".*/bcs-services/cluster-resources/proto/.*"
-      - ".*/bcs-services/bcs-bscp/.*pb.*"
 
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
   # 此处备注的第三方代码在后续统计代码量环节会被排除，若代码库中不存在需要排除的第三方代码，该项配置标识可为空

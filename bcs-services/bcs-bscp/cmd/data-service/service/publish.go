@@ -79,7 +79,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	}
 
 	releasedCIs := make([]*table.ReleasedConfigItem, 0)
-	// TODO: need to change batch operator to query config item and it's commit.
+	// Note: need to change batch operator to query config item and it's commit.
 	// step2: query app's all config items.
 	cfgItems, err := s.queryAppConfigItemList(grpcKit, req.BizId, req.AppId)
 	if err != nil {

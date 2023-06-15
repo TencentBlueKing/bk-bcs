@@ -37,7 +37,7 @@ func newAppEvent(bizID, appID uint32, sch *Scheduler) *appEvent {
 		mc:     sch.mc,
 	}
 
-	// TODO: remove this go-routine, mounts of app may cost unacceptable size of memory.
+	// Note: remove this go-routine, mounts of app may cost unacceptable size of memory.
 	go ae.watchEvents(ctx)
 	return ae
 }

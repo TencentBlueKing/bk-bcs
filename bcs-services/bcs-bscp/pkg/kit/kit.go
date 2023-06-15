@@ -92,7 +92,7 @@ func FromGrpcContext(ctx context.Context) *Kit {
 
 	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid)
 
-	// TODO: need to add supplier id and authorization field.
+	// Note: need to add supplier id and authorization field.
 	return kit
 }
 

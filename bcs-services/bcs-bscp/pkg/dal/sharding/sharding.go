@@ -53,7 +53,7 @@ func InitSharding(sd *cc.Sharding) (*Sharding, error) {
 // which works for all the biz and admin resources.
 type Sharding struct {
 	// we support only one db just for now.
-	// TODO: support sharding management later.
+	// Note: support sharding management later.
 	one *One
 	// db pool, like a connection pool
 }
