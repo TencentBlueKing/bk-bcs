@@ -48,7 +48,7 @@ func (r Release) TableName() Name {
 
 // AppID AuditRes interface
 func (r *Release) AppID() uint32 {
-	return r.ID
+	return r.Attachment.AppID
 }
 
 // ResID AuditRes interface

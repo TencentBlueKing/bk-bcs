@@ -20,11 +20,14 @@ var (
 	App                *app
 	ArchivedApp        *archivedApp
 	Audit              *audit
+	ConfigHook         *configHook
 	Credential         *credential
 	CredentialScope    *credentialScope
 	Event              *event
 	Group              *group
 	GroupAppBind       *groupAppBind
+	Hook               *hook
+	HookRelease        *hookRelease
 	IDGenerator        *iDGenerator
 	Release            *release
 	ReleasedConfigItem *releasedConfigItem
@@ -40,11 +43,14 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	App = &Q.App
 	ArchivedApp = &Q.ArchivedApp
 	Audit = &Q.Audit
+	ConfigHook = &Q.ConfigHook
 	Credential = &Q.Credential
 	CredentialScope = &Q.CredentialScope
 	Event = &Q.Event
 	Group = &Q.Group
 	GroupAppBind = &Q.GroupAppBind
+	Hook = &Q.Hook
+	HookRelease = &Q.HookRelease
 	IDGenerator = &Q.IDGenerator
 	Release = &Q.Release
 	ReleasedConfigItem = &Q.ReleasedConfigItem
@@ -61,11 +67,14 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		App:                newApp(db, opts...),
 		ArchivedApp:        newArchivedApp(db, opts...),
 		Audit:              newAudit(db, opts...),
+		ConfigHook:         newConfigHook(db, opts...),
 		Credential:         newCredential(db, opts...),
 		CredentialScope:    newCredentialScope(db, opts...),
 		Event:              newEvent(db, opts...),
 		Group:              newGroup(db, opts...),
 		GroupAppBind:       newGroupAppBind(db, opts...),
+		Hook:               newHook(db, opts...),
+		HookRelease:        newHookRelease(db, opts...),
 		IDGenerator:        newIDGenerator(db, opts...),
 		Release:            newRelease(db, opts...),
 		ReleasedConfigItem: newReleasedConfigItem(db, opts...),
@@ -83,11 +92,14 @@ type Query struct {
 	App                app
 	ArchivedApp        archivedApp
 	Audit              audit
+	ConfigHook         configHook
 	Credential         credential
 	CredentialScope    credentialScope
 	Event              event
 	Group              group
 	GroupAppBind       groupAppBind
+	Hook               hook
+	HookRelease        hookRelease
 	IDGenerator        iDGenerator
 	Release            release
 	ReleasedConfigItem releasedConfigItem
@@ -106,11 +118,14 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		App:                q.App.clone(db),
 		ArchivedApp:        q.ArchivedApp.clone(db),
 		Audit:              q.Audit.clone(db),
+		ConfigHook:         q.ConfigHook.clone(db),
 		Credential:         q.Credential.clone(db),
 		CredentialScope:    q.CredentialScope.clone(db),
 		Event:              q.Event.clone(db),
 		Group:              q.Group.clone(db),
 		GroupAppBind:       q.GroupAppBind.clone(db),
+		Hook:               q.Hook.clone(db),
+		HookRelease:        q.HookRelease.clone(db),
 		IDGenerator:        q.IDGenerator.clone(db),
 		Release:            q.Release.clone(db),
 		ReleasedConfigItem: q.ReleasedConfigItem.clone(db),
@@ -136,11 +151,14 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		App:                q.App.replaceDB(db),
 		ArchivedApp:        q.ArchivedApp.replaceDB(db),
 		Audit:              q.Audit.replaceDB(db),
+		ConfigHook:         q.ConfigHook.replaceDB(db),
 		Credential:         q.Credential.replaceDB(db),
 		CredentialScope:    q.CredentialScope.replaceDB(db),
 		Event:              q.Event.replaceDB(db),
 		Group:              q.Group.replaceDB(db),
 		GroupAppBind:       q.GroupAppBind.replaceDB(db),
+		Hook:               q.Hook.replaceDB(db),
+		HookRelease:        q.HookRelease.replaceDB(db),
 		IDGenerator:        q.IDGenerator.replaceDB(db),
 		Release:            q.Release.replaceDB(db),
 		ReleasedConfigItem: q.ReleasedConfigItem.replaceDB(db),
@@ -156,11 +174,14 @@ type queryCtx struct {
 	App                IAppDo
 	ArchivedApp        IArchivedAppDo
 	Audit              IAuditDo
+	ConfigHook         IConfigHookDo
 	Credential         ICredentialDo
 	CredentialScope    ICredentialScopeDo
 	Event              IEventDo
 	Group              IGroupDo
 	GroupAppBind       IGroupAppBindDo
+	Hook               IHookDo
+	HookRelease        IHookReleaseDo
 	IDGenerator        IIDGeneratorDo
 	Release            IReleaseDo
 	ReleasedConfigItem IReleasedConfigItemDo
@@ -176,11 +197,14 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		App:                q.App.WithContext(ctx),
 		ArchivedApp:        q.ArchivedApp.WithContext(ctx),
 		Audit:              q.Audit.WithContext(ctx),
+		ConfigHook:         q.ConfigHook.WithContext(ctx),
 		Credential:         q.Credential.WithContext(ctx),
 		CredentialScope:    q.CredentialScope.WithContext(ctx),
 		Event:              q.Event.WithContext(ctx),
 		Group:              q.Group.WithContext(ctx),
 		GroupAppBind:       q.GroupAppBind.WithContext(ctx),
+		Hook:               q.Hook.WithContext(ctx),
+		HookRelease:        q.HookRelease.WithContext(ctx),
 		IDGenerator:        q.IDGenerator.WithContext(ctx),
 		Release:            q.Release.WithContext(ctx),
 		ReleasedConfigItem: q.ReleasedConfigItem.WithContext(ctx),

@@ -114,6 +114,10 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 		sset := cur.(*table.Hook)
 		ab.toAudit.ResourceID = sset.ID
 
+	case *table.TemplateSpace:
+		sset := cur.(*table.TemplateSpace)
+		ab.toAudit.ResourceID = sset.ID
+
 	case *table.Group:
 		sset := cur.(*table.Group)
 		ab.toAudit.ResourceID = sset.ID
@@ -202,20 +206,6 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 	case *table.Group:
 		group := updatedTo.(*table.Group)
 		if err := ab.decorateGroupUpdate(group); err != nil {
-			ab.hitErr = err
-			return ab
-		}
-
-	case *table.Credential:
-		credential := updatedTo.(*table.Credential)
-		if err := ab.decorateCredentialUpdate(credential); err != nil {
-			ab.hitErr = err
-			return ab
-		}
-
-	case *table.CredentialScope:
-		credentialScope := updatedTo.(*table.CredentialScope)
-		if err := ab.decorateCredentialScopeUpdate(credentialScope); err != nil {
 			ab.hitErr = err
 			return ab
 		}
@@ -313,34 +303,6 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.ResourceID = group.ID
 		ab.prev = group
 
-	case enumor.CRInstance:
-		cri, err := ab.getCRInstance(resID)
-		if err != nil {
-			ab.hitErr = err
-			return ab
-		}
-		ab.toAudit.AppID = cri.Attachment.AppID
-		ab.toAudit.ResourceID = cri.ID
-		ab.prev = cri
-
-	case enumor.Credential:
-		credential, err := ab.getCredential(resID)
-		if err != nil {
-			ab.hitErr = err
-			return ab
-		}
-		ab.toAudit.ResourceID = credential.ID
-		ab.prev = credential
-
-	case enumor.CredentialScope:
-		credentialScope, err := ab.getCredentialScope(resID)
-		if err != nil {
-			ab.hitErr = err
-			return ab
-		}
-		ab.toAudit.ResourceID = credentialScope.ID
-		ab.prev = credentialScope
-
 	default:
 		ab.hitErr = fmt.Errorf("unsupported audit deleted resource: %s", ab.toAudit.ResourceType)
 		return ab
@@ -397,36 +359,6 @@ func (ab *AuditBuilder) getGroup(groupID uint32) (*table.Group, error) {
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get group details failed, err: %v", err)
-	}
-
-	return one, nil
-}
-
-func (ab *AuditBuilder) getCredential(credentialID uint32) (*table.Credential, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialColumns.NamedExpr(), " FROM ", table.CredentialTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(credentialID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
-	filter := filter2.SqlJoint(sqlSentence)
-
-	one := new(table.Credential)
-	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
-	if err != nil {
-		return nil, fmt.Errorf("get credential details failed, err: %v", err)
-	}
-
-	return one, nil
-}
-
-func (ab *AuditBuilder) getCredentialScope(id uint32) (*table.CredentialScope, error) {
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialScopeColumns.NamedExpr(), " FROM ", table.CredentialScopeTable.Name(),
-		" WHERE id = ", strconv.Itoa(int(id)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
-	filter := filter2.SqlJoint(sqlSentence)
-
-	one := new(table.CredentialScope)
-	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
-	if err != nil {
-		return nil, fmt.Errorf("get credential scope details failed, err: %v", err)
 	}
 
 	return one, nil

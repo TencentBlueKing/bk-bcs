@@ -135,42 +135,8 @@ func (s ConfigHook) ValidateUpdate() error {
 		return errors.New("revision not set")
 	}
 
-	if len(s.Revision.Reviser) == 0 {
-		return errors.New("reviser can not be empty")
-	}
-
-	if len(s.Revision.Creator) != 0 {
-		return errors.New("creator can not be updated")
-	}
-
-	return nil
-}
-
-// ValidateEnable validate ConfigHook is valid or not when update it.
-func (s ConfigHook) ValidateEnable() error {
-
-	if s.Attachment == nil {
-		return errors.New("attachment should be set")
-	}
-
-	if s.Attachment.AppID <= 0 {
-		return errors.New("app id should be set")
-	}
-
-	if s.Attachment.BizID <= 0 {
-		return errors.New("biz id should be set")
-	}
-
-	if s.Revision == nil {
-		return errors.New("revision not set")
-	}
-
-	if len(s.Revision.Reviser) == 0 {
-		return errors.New("reviser can not be empty")
-	}
-
-	if len(s.Revision.Creator) != 0 {
-		return errors.New("creator can not be updated")
+	if err := s.Revision.ValidateUpdate(); err != nil {
+		return err
 	}
 
 	return nil

@@ -108,6 +108,20 @@ func (s *HookReleaseSpec) ValidateCreate() error {
 	return nil
 }
 
+// ValidateUpdate validate spec when updated.
+func (s *HookReleaseSpec) ValidateUpdate() error {
+
+	if err := validator.ValidateName(s.Name); err != nil {
+		return err
+	}
+
+	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Validate validate Attachment.
 func (a HookReleaseAttachment) Validate() error {
 
@@ -166,6 +180,40 @@ func (r HookRelease) ValidatePublish() error {
 
 	if r.Attachment.HookID <= 0 {
 		return errors.New("hook id should be set")
+	}
+
+	return nil
+}
+
+// ValidateUpdate validate the update
+func (r HookRelease) ValidateUpdate() error {
+
+	if r.ID <= 0 {
+		return errors.New("hook release id should be set")
+	}
+
+	if r.Attachment.BizID <= 0 {
+		return errors.New("biz id should be set")
+	}
+
+	if r.Attachment.HookID <= 0 {
+		return errors.New("hook id should be set")
+	}
+
+	if r.Spec == nil {
+		return errors.New("spec not set")
+	}
+
+	if err := r.Spec.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	if r.Revision == nil {
+		return errors.New("revision not set")
+	}
+
+	if err := r.Revision.ValidateUpdate(); err != nil {
+		return err
 	}
 
 	return nil
