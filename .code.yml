@@ -72,6 +72,7 @@ source:
       - ".*/bcs-services/bcs-project-manager/proto/.*"
       - ".*/bcs-services/bcs-project-manager/third_party/.*"
       - ".*/bcs-services/cluster-resources/pkg/resource/example/manifest/config/simple_secret.yaml"
+      - ".*/bcs-services/cluster-resources/proto/cluster-resources/cluster-resources.pb.validate.go"
       - ".*/bmsf-configuration/internal/protocol/.*"
       - ".*/bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*"
       - ".*/bcs-runtime/bcs-k8s/bcs-component/cluster-autoscaler/.*"
