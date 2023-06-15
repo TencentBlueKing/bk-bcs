@@ -72,7 +72,7 @@ func TestIamClient_CreateGradeManagers(t *testing.T) {
 	authScopes = append(authScopes, BuildAuthorizationScope(SysProject, []ActionID{
 		ProjectView, ProjectEdit, ProjectDelete,
 	}, []LevelResource{
-		LevelResource{
+		{
 			Type: string(SysProject),
 			ID:   "xxx",
 			Name: "xxx",

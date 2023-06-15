@@ -16,12 +16,12 @@ package manager
 import (
 	"context"
 	"encoding/base64"
-	"github.com/gin-gonic/gin"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -366,7 +366,7 @@ func ZhLength(str string) int {
 		if unicode.Is(unicode.Han, i) {
 			length += 2
 		} else {
-			length += 1
+			length++
 		}
 	}
 
