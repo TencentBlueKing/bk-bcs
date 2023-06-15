@@ -45,6 +45,7 @@ import (
 	yaml2 "gopkg.in/yaml.v3"
 	"k8s.io/klog/v2"
 
+	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -285,7 +286,7 @@ func (c *WebConsoleManager) initHTTPService() (*gin.Engine, error) {
 		AllowAllOrigins: true,
 	}))
 	router.Use(i18n.Localize())
-	router.Use(tracing.MiddleWareTracing())
+	router.Use(gintrace.Middleware(tracing.ServiceName))
 
 	// 注册模板和静态资源
 	router.SetHTMLTemplate(web.WebTemplate())
