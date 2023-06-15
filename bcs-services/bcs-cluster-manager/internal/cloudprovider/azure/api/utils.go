@@ -1282,8 +1282,7 @@ func handlerIPConfig(config *armnetwork.InterfaceIPConfiguration) (string, bool)
 	if config.Properties == nil || config.Properties.PrivateIPAddress == nil {
 		return "", false
 	}
-	// todo: VNet地址范围支持问题
-	//  https://learn.microsoft.com/zh-cn/azure/virtual-network/virtual-networks-faq#what-address-ranges-can-i-use-in-my-vnets
+	// VNet地址范围支持问题 (https://learn.microsoft.com/zh-cn/azure/virtual-network/virtual-networks-faq#what-address-ranges-can-i-use-in-my-vnets)
 	ip := net.ParseIP(*config.Properties.PrivateIPAddress)
 	if !(ip != nil && ip.IsPrivate()) { // 取反
 		return "", false
