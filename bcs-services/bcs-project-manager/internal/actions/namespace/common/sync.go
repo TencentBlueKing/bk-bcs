@@ -22,7 +22,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/etcd"
@@ -43,7 +43,7 @@ func SyncNamespace(projectCode, clusterID string, namespaces []corev1.Namespace)
 		return err
 	}
 	defer session.Close()
-	prefix := fmt.Sprintf("%s/%s/%s", config.NamespaceSyncLockPrefix, projectCode, clusterID)
+	prefix := fmt.Sprintf("%s/%s/%s", constant.NamespaceSyncLockPrefix, projectCode, clusterID)
 	mu := concurrency.NewMutex(session, prefix)
 	timeoutCtx, _ := context.WithTimeout(context.TODO(), time.Second)
 	err = mu.Lock(timeoutCtx)

@@ -222,6 +222,10 @@ message Project {
     title: "businessName", 
     description: "项目绑定的蓝鲸CMDB中业务名称"
   }];
+  bool enableVcluster = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "enableVcluster",
+    description: "是否开启VCluster特性服务"
+  }];
 }
 
 message CreateProjectRequest {

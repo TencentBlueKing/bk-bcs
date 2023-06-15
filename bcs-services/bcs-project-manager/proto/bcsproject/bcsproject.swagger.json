@@ -3137,6 +3137,12 @@
           "type": "string",
           "description": "项目绑定的蓝鲸CMDB中业务名称",
           "title": "businessName"
+        },
+        "enableVcluster": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启VCluster特性服务",
+          "title": "enableVcluster"
         }
       },
       "description": "项目的基本信息",

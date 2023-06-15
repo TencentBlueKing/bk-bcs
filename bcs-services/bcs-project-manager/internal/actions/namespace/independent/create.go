@@ -21,7 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
@@ -95,7 +95,7 @@ func (c *IndependentNamespaceAction) createNamespace(ctx context.Context,
 		annotations[annotation.GetKey()] = annotation.GetValue()
 	}
 	if creator != "" {
-		annotations[config.AnnotationKeyCreator] = creator
+		annotations[constant.AnnotationKeyCreator] = creator
 	}
 	ns.SetAnnotations(annotations)
 	return client.CoreV1().Namespaces().Create(ctx, ns, metav1.CreateOptions{})

@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -64,7 +64,7 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 			Name:        ns.GetName(),
 			Uid:         string(ns.GetUID()),
 			Status:      string(ns.Status.Phase),
-			CreateTime:  ns.GetCreationTimestamp().Format(config.TimeLayout),
+			CreateTime:  ns.GetCreationTimestamp().Format(constant.TimeLayout),
 			Labels:      []*proto.Label{},
 			Annotations: []*proto.Annotation{},
 		}

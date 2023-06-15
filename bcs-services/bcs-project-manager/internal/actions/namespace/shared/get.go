@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
@@ -66,7 +66,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	retData := &proto.NamespaceData{
 		Name:       namespace.GetName(),
 		Uid:        string(namespace.GetUID()),
-		CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
+		CreateTime: namespace.GetCreationTimestamp().Format(constant.TimeLayout),
 		Status:     string(namespace.Status.Phase),
 	}
 	// get quota

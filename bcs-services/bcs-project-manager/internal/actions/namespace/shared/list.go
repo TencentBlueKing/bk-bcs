@@ -22,7 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -86,6 +86,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 	}
 	// filter namespaces by project code
 	namespaces := nsutils.FilterNamespaces(nsList, true, req.GetProjectCode())
+	namespaces = nsutils.FilterOutVcluster(namespaces)
 	variablesMap, err := batchListNamespaceVariables(ctx, req.GetProjectCode(), req.GetClusterID(), namespaces)
 	if err != nil {
 		logging.Error("batch list variables failed, err: %s", err.Error())
@@ -221,7 +222,7 @@ func loadRetDatasFromCluster(namespaces []corev1.Namespace, variablesMap map[str
 		retData := &proto.NamespaceData{
 			Name:       namespace.GetName(),
 			Uid:        string(namespace.GetUID()),
-			CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
+			CreateTime: namespace.GetCreationTimestamp().Format(constant.TimeLayout),
 			Status:     string(namespace.Status.Phase),
 		}
 		// get quota

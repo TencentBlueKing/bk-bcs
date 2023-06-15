@@ -24,8 +24,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -81,6 +83,12 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	if err != nil {
 		return err
 	}
+	var enableVcluster bool
+	if vclusterFeatureFlag, exists := config.GlobalConf.FeatureFlags[constant.FlagKeyEnableVcluster]; exists {
+		if enable, exists := vclusterFeatureFlag[projectInfo.ProjectCode]; exists && enable {
+			enableVcluster = true
+		}
+	}
 	businessName := ""
 	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
 		// get business name from cache
@@ -103,6 +111,7 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
 	resp.Data.BusinessName = businessName
+	resp.Data.EnableVcluster = enableVcluster
 	return nil
 }
 
