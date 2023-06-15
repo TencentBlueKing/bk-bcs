@@ -105,7 +105,7 @@ func Init(db *gorm.DB) (*Migrator, error) {
 	// Mark the migrations as Done if it is already executed
 	for rows.Next() {
 		var version string
-		err := rows.Scan(&version)
+		err = rows.Scan(&version)
 		if err != nil {
 			return migrator, err
 		}
@@ -291,7 +291,7 @@ func genSqlMigrationFile(version, fileName string, in interface{}) error {
 	}
 	defer migrationFile.Close()
 
-	if _, err := migrationFile.WriteString(out.String()); err != nil {
+	if _, err = migrationFile.WriteString(out.String()); err != nil {
 		return errors.New("Unable to write to migration file:" + err.Error())
 	}
 
@@ -302,7 +302,8 @@ func genSqlMigrationFile(version, fileName string, in interface{}) error {
 	}
 	defer upSQLFile.Close()
 
-	downSQLFile, err := os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/sql/%s_%s_down.sql",
+	var downSQLFile *os.File
+	downSQLFile, err = os.Create(fmt.Sprintf("./cmd/data-service/db-migration/migrations/sql/%s_%s_down.sql",
 		version, fileName))
 	if err != nil {
 		return errors.New("Unable to create down sql file:" + err.Error())
@@ -342,7 +343,7 @@ func getMigrationSQLs() (map[string]string, error) {
 	dir := "migrations/sql"
 	getAllSQLFiles(dir)
 	for _, file := range allSQLFiles {
-		content, err := db_migration.SQLFiles.ReadFile(file)
+		content, err := dbmigration.SQLFiles.ReadFile(file)
 		if err != nil {
 			fmt.Printf("read file %s err: %s", file, err)
 			return nil, fmt.Errorf("read file %s err: %s", file, err)
@@ -355,7 +356,7 @@ func getMigrationSQLs() (map[string]string, error) {
 }
 
 func getAllSQLFiles(dir string) error {
-	entries, err := db_migration.SQLFiles.ReadDir(dir)
+	entries, err := dbmigration.SQLFiles.ReadDir(dir)
 	if err != nil {
 		return err
 	}

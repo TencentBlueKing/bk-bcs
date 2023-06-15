@@ -82,19 +82,19 @@ func (p *proxy) routers() http.Handler {
 	// repo 上传 API
 	r.Route("/api/v1/api/create/content/upload", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Put("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.UploadFile)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Put("/biz_id/{biz_id}/app_id/{app_id}", p.repo.UploadFile)
 	})
 
 	// repo 下载 API
 	r.Route("/api/v1/api/get/content/download", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.DownloadFile)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repo.DownloadFile)
 	})
 
 	// repo 获取二进制元数据 API
 	r.Route("/api/v1/api/get/content/metadata", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
-		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repoRevProxy.FileMetadata)
+		r.With(p.authorizer.BizVerified, p.authorizer.AppVerified).Get("/biz_id/{biz_id}/app_id/{app_id}", p.repo.FileMetadata)
 	})
 
 	return r

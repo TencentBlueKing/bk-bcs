@@ -13,9 +13,11 @@
 package entity
 
 import (
+	"context"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -68,6 +70,10 @@ func (r *Repository) Transfer2Proto() *helmmanager.Repository {
 	if len(displayName) == 0 {
 		displayName = common.ProjectRepoDefaultDisplayName
 	}
+
+	// 语言转换
+	displayName = i18n.GetMsg(context.TODO(), displayName)
+
 	return &helmmanager.Repository{
 		ProjectCode: common.GetStringP(r.ProjectID),
 		Name:        common.GetStringP(r.Name),

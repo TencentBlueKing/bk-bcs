@@ -254,13 +254,13 @@ func (s HookSpec) ValidateHookContentSecurity() error {
 
 // ValidateShellHookSecurity validate security of shell hook content
 func (s HookSpec) ValidateShellHookSecurity(hookContent string) error {
-	// TODO implement this
+	// NOTE: implement this
 	return nil
 }
 
 // ValidatePythonHookSecurity validate security of python hook content
 func (s HookSpec) ValidatePythonHookSecurity(hookContent string) error {
-	// TODO implement this
+	// NOTE: implement this
 	return nil
 }
 

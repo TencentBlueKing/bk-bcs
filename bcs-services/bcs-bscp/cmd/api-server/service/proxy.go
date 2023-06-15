@@ -24,7 +24,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"bscp.io/pkg/cc"
-	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
 	pbas "bscp.io/pkg/protocol/auth-server"
@@ -36,11 +35,11 @@ import (
 
 // proxy all server's mux proxy.
 type proxy struct {
-	cfgSvrMux    *runtime.ServeMux
-	authSvrMux   http.Handler
-	repoRevProxy repository.FileApiType
-	state        serviced.State
-	authorizer   auth.Authorizer
+	cfgSvrMux  *runtime.ServeMux
+	authSvrMux http.Handler
+	repo       *repoService
+	state      serviced.State
+	authorizer auth.Authorizer
 }
 
 // newProxy create new mux proxy.
@@ -65,17 +64,17 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, fmt.Errorf("new authorizer failed, err: %v", err)
 	}
 
-	repoProxy, err := newRepoProxy(authorizer)
+	repo, err := newRepoService(cc.ApiServer().Repo, authorizer)
 	if err != nil {
 		return nil, err
 	}
 
 	p := &proxy{
-		cfgSvrMux:    cfgSvrMux,
-		repoRevProxy: repoProxy,
-		state:        state,
-		authorizer:   authorizer,
-		authSvrMux:   authSvrMux,
+		cfgSvrMux:  cfgSvrMux,
+		repo:       repo,
+		state:      state,
+		authorizer: authorizer,
+		authSvrMux: authSvrMux,
 	}
 
 	return p, nil
