@@ -191,21 +191,21 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return nil
 	}
 
-	clusterId, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
+	clusterID, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
 	if err != nil {
 		return err
 	}
 
 	scopeClusterID := store.ClusterIDValue(ctx)
-	if clusterId == "" && scopeClusterID == "" {
+	if clusterID == "" && scopeClusterID == "" {
 		return nil
 	}
 
 	// 优先使用 clusterID
 	if scopeClusterID != "" {
-		clusterId = scopeClusterID
+		clusterID = scopeClusterID
 	}
-	cluster, err := bcs.GetCluster(clusterId)
+	cluster, err := bcs.GetCluster(clusterID)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	if r.SkipChunks {
 		// end = time.Now().Unix()
 		// start = end - clientutil.SeriesStepDeltaSeconds
-		return s.getMatcherSeries(r, srv, clusterId, cluster.BKBizID)
+		return s.getMatcherSeries(r, srv, clusterID, cluster.BKBizID)
 	}
 
 	newMatchers := getMatcher(r.Matchers, metricName, cluster)
@@ -228,7 +228,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		pql = r.ToPromQL()
 	}
 	bkmonitorURL := config.G.BKMonitor.URL
-	if url, ok := s.dispatch[clusterId]; ok {
+	if url, ok := s.dispatch[clusterID]; ok {
 		bkmonitorURL = url.URL
 	}
 	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), bkmonitorURL, cluster.BKBizID,
@@ -240,7 +240,7 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	for _, promSeries := range promSeriesSet {
 		series := &clientutil.TimeSeries{TimeSeries: promSeries}
 		series = series.AddLabel("__name__", metricName)
-		series = series.AddLabel("cluster_id", clusterId)
+		series = series.AddLabel("cluster_id", clusterID)
 		series = series.RenameLabel("bk_namespace", "namespace")
 		series = series.RenameLabel("bk_pod", "pod")
 

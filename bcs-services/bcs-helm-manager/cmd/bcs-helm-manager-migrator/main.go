@@ -110,6 +110,7 @@ func main() {
 		MaxPoolSize:           uint64(C.Mongo.MaxPoolSize),
 		MinPoolSize:           uint64(C.Mongo.MinPoolSize),
 	}
+	// new mongo db
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {
 		blog.Fatalf("init mongo db failed, err %s", err.Error())
@@ -278,6 +279,7 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 				v.Name, v.ClusterID, v.Namespace, err.Error())
 			continue
 		}
+		// update release
 		if err == nil {
 			existReleases++
 			if rl.UpdateTime < exist.UpdateTime {
@@ -385,6 +387,7 @@ func (r *release) toEntity() (*entity.Release, error) {
 	if r.Status != 1 {
 		status = helmrelease.StatusFailed
 	}
+	// init release struct
 	return &entity.Release{
 		Name:         r.Name,
 		Namespace:    r.Namespace,
@@ -436,6 +439,7 @@ func loadConfig() {
 		env.WithStrippedPrefix("HELM"),
 	)
 
+	// load config
 	if err = config.Load(
 		microFlg.NewSource(
 			microFlg.IncludeUnset(true),
@@ -444,6 +448,7 @@ func loadConfig() {
 		blog.Fatalf("load config from flag failed, %s", err.Error())
 	}
 
+	// get cocnfig from file and env
 	if len(config.Get("conf").String("")) > 0 {
 		err = config.Load(microFile.NewSource(microFile.WithPath(config.Get("conf").String(""))), envSource)
 		if err != nil {
@@ -451,6 +456,7 @@ func loadConfig() {
 		}
 	}
 
+	// scan config
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
 	}
@@ -473,9 +479,11 @@ func initRegistry() error {
 		blog.Info("load helm manager client tls config successfully")
 	}
 
+	// get endpoints
 	etcdEndpoints := common.SplitAddrString(C.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
+	// init etcd tls
 	var etcdTLS *tls.Config
 	if len(C.Etcd.EtcdCa) != 0 && len(C.Etcd.EtcdCert) != 0 && len(C.Etcd.EtcdKey) != 0 {
 		etcdSecure = true

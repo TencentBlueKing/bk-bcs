@@ -52,6 +52,7 @@ func GetFormatFunc(kind string, apiVersion string) func(manifest map[string]inte
 
 // FormatPodManifestRes 针对pod返回需要用到的字段
 func FormatPodManifestRes(kind string, manifest map[string]interface{}) map[string]interface{} {
+	// NOCC:ineffassign/assign(误报)
 	newManifest := map[string]interface{}{}
 	if kind == resCsts.Po {
 		metadata, _ := mapx.GetItems(manifest, "metadata")

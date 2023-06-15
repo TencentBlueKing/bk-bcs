@@ -28,16 +28,18 @@ type metricsParams struct {
 	client base.MetricHandler
 	ctx    context.Context
 	// metrics handler params
-	projectID      string
-	clusterID      string
-	namespace      string
+	projectID string
+	clusterID string
+	namespace string
+	// pod params
 	podName        string
 	podNames       []string
 	containerNames []string
 	node           string
-	startTime      time.Time
-	endTime        time.Time
-	stepDuration   time.Duration
+	// query params
+	startTime    time.Time
+	endTime      time.Time
+	stepDuration time.Duration
 }
 
 // metricsFn
@@ -46,74 +48,92 @@ type metricsFn func(metricsParams) ([]*prompb.TimeSeries, error)
 // metrics maps
 // map metrics to metrics func
 var metricsMaps = map[string]metricsFn{
+	// GetClusterCPUTotal
 	"bcs:cluster:cpu:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPUTotal(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterCPUUsed
 	"bcs:cluster:cpu:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPUUsed(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterPodTotal
 	"bcs:cluster:pod:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterPodTotal(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterPodUsed
 	"bcs:cluster:pod:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterPodUsed(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterCPURequest
 	"bcs:cluster:cpu:request": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPURequest(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterCPUUsage
 	"bcs:cluster:cpu:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPUUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterCPURequestUsage
 	"bcs:cluster:cpu_request:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterCPURequestUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterMemoryTotal
 	"bcs:cluster:memory:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterMemoryTotal(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterMemoryUsed
 	"bcs:cluster:memory:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterMemoryUsed(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterMemoryRequest
 	"bcs:cluster:memory:request": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterMemoryRequest(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterMemoryUsage
 	"bcs:cluster:memory:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterMemoryUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterMemoryRequestUsage
 	"bcs:cluster:memory_request:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterMemoryRequestUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterDiskTotal
 	"bcs:cluster:disk:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterDiskTotal(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterDiskUsed
 	"bcs:cluster:disk:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterDiskUsed(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterDiskUsage
 	"bcs:cluster:disk:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterDiskUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterDiskioUsage
 	"bcs:cluster:diskio:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterDiskioUsage(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterDiskioUsed
 	"bcs:cluster:diskio:used": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterDiskioUsed(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetClusterDiskioTotal
 	"bcs:cluster:diskio:total": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetClusterDiskioTotal(mp.ctx, mp.projectID, mp.clusterID,
 			mp.startTime, mp.endTime, mp.stepDuration)
@@ -124,18 +144,22 @@ var metricsMaps = map[string]metricsFn{
 		nodeInfo, err := mp.client.GetNodeInfo(mp.ctx, mp.projectID, mp.clusterID, mp.node, mp.endTime)
 		return nodeInfo.PromSeries(mp.endTime), err
 	},
+	// GetNodeCPUUsage
 	"bcs:node:cpu:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetNodeCPUUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetNodeCPURequestUsage
 	"bcs:node:cpu_request:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetNodeCPURequestUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetNodeMemoryUsage
 	"bcs:node:memory:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetNodeMemoryUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)
 	},
+	// GetNodeMemoryRequestUsage
 	"bcs:node:memory_request:usage": func(mp metricsParams) ([]*prompb.TimeSeries, error) {
 		return mp.client.GetNodeMemoryRequestUsage(mp.ctx, mp.projectID, mp.clusterID, mp.node,
 			mp.startTime, mp.endTime, mp.stepDuration)

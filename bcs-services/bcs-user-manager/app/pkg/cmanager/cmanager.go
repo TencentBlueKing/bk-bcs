@@ -26,7 +26,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	"go-micro.dev/v4/registry"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
@@ -49,6 +48,9 @@ const (
 	CacheClusterBusinessKeyPrefix = "cached_cluster_manager_cluster_business"
 	// CacheClusterSharedKeyPrefix key prefix for cluster shared
 	CacheClusterSharedKeyPrefix = "cached_cluster_manager_shared"
+
+	// GetClusterURL get cluster url
+	GetClusterURL = "/bcsapi/v4/clustermanager/v1/cluster/%s"
 )
 
 // Options for init clusterManager
@@ -123,9 +125,9 @@ func (cm *ClusterManagerClient) GetProjectIDByClusterID(clusterID string) (strin
 
 	// calling clustermanager through http
 	resp := models.GetClusterResp{}
-	bcsApi := config.GetGlobalConfig().BcsAPI
-	url := fmt.Sprintf(constant.ClusterUrl, clusterID)
-	err := bcsApi.HttpRequest(http.MethodGet, url, nil, &resp)
+	bcsAPI := config.GetGlobalConfig().BcsAPI
+	url := fmt.Sprintf(GetClusterURL, clusterID)
+	err := bcsAPI.HttpRequest(http.MethodGet, url, nil, &resp)
 	if err != nil {
 		blog.Errorf("GetProjectIDByClusterID failed: %v", err.Error())
 		return "", err
@@ -163,9 +165,9 @@ func (cm *ClusterManagerClient) GetBusinessIDByClusterID(clusterID string) (stri
 	blog.V(3).Infof("GetBusinessIDByClusterID miss clusterID cache")
 
 	resp := &models.GetClusterResp{}
-	bcsApi := config.GetGlobalConfig().BcsAPI
-	url := fmt.Sprintf(constant.ClusterUrl, clusterID)
-	err := bcsApi.HttpRequest(http.MethodGet, url, nil, resp)
+	bcsAPI := config.GetGlobalConfig().BcsAPI
+	url := fmt.Sprintf(GetClusterURL, clusterID)
+	err := bcsAPI.HttpRequest(http.MethodGet, url, nil, resp)
 	if err != nil {
 		blog.Errorf("GetProjectIDByClusterID failed: %v", err.Error())
 		return "", err

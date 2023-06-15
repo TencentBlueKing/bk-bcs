@@ -24,22 +24,22 @@ import (
 const provider = "Prometheus"
 
 // handleNodeMetric xxx
-func (m *Prometheus) handleNodeMetric(ctx context.Context, projectId, clusterId, nodeName string, promql string, start,
+func (m *Prometheus) handleNodeMetric(ctx context.Context, projectID, clusterID, nodeName string, promql string, start,
 	end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
-	nodeMatch, _, err := base.GetNodeMatchByName(ctx, clusterId, nodeName)
+	nodeMatch, _, err := base.GetNodeMatchByName(ctx, clusterID, nodeName)
 	if err != nil {
 		return nil, err
 	}
 	params := map[string]interface{}{
-		"clusterId":  clusterId,
+		"clusterID":  clusterID,
 		"ip":         nodeMatch,
 		"node":       nodeName,
-		"fstype":     DISK_FSTYPE,
-		"mountpoint": DISK_MOUNTPOINT,
+		"fstype":     DiskFstype,
+		"mountpoint": DiskMountpoint,
 		"provider":   PROVIDER,
 	}
 
-	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
+	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectID, promql, params, start, end, step)
 	if err != nil {
 		return nil, err
 	}
@@ -48,26 +48,26 @@ func (m *Prometheus) handleNodeMetric(ctx context.Context, projectId, clusterId,
 }
 
 // GetNodeInfo 节点信息
-func (m *Prometheus) GetNodeInfo(ctx context.Context, projectId, clusterId, nodeName string, t time.Time) (
+func (m *Prometheus) GetNodeInfo(ctx context.Context, projectID, clusterID, nodeName string, t time.Time) (
 	*base.NodeInfo, error) {
-	nodeMatch, ips, err := base.GetNodeMatchByName(ctx, clusterId, nodeName)
+	nodeMatch, ips, err := base.GetNodeMatchByName(ctx, clusterID, nodeName)
 	if err != nil {
 		return nil, err
 	}
 	params := map[string]interface{}{
-		"clusterId":  clusterId,
+		"clusterID":  clusterID,
 		"ip":         nodeMatch,
 		"node":       nodeName,
-		"fstype":     DISK_FSTYPE,
-		"mountpoint": DISK_MOUNTPOINT,
+		"fstype":     DiskFstype,
+		"mountpoint": DiskMountpoint,
 		"provider":   PROVIDER,
 	}
 
 	info := &base.NodeInfo{}
 
 	// 节点信息
-	infoPromql := `cadvisor_version_info{cluster_id="%<clusterId>s", instance=~"%<ip>s", %<provider>s}`
-	infoLabelSet, err := bcsmonitor.QueryLabelSet(ctx, projectId, infoPromql, params, t)
+	infoPromql := `cadvisor_version_info{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s}`
+	infoLabelSet, err := bcsmonitor.QueryLabelSet(ctx, projectID, infoPromql, params, t)
 	if err != nil {
 		return nil, err
 	}
@@ -78,15 +78,15 @@ func (m *Prometheus) GetNodeInfo(ctx context.Context, projectId, clusterId, node
 	info.IP = ips
 
 	promqlMap := map[string]string{
-		"coreCount": `sum by (instance) (count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s",` +
+		"coreCount": `sum by (instance) (count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterID>s",` +
 			` job="node-exporter", mode="idle", instance=~"%<ip>s", %<provider>s}))`,
-		"memory": `sum by (instance) (node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", ` +
+		"memory": `sum by (instance) (node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", job="node-exporter", ` +
 			`instance=~"%<ip>s", %<provider>s})`,
-		"disk": `sum by (instance) (node_filesystem_size_bytes{cluster_id="%<clusterId>s", job="node-exporter", ` +
+		"disk": `sum by (instance) (node_filesystem_size_bytes{cluster_id="%<clusterID>s", job="node-exporter", ` +
 			`instance=~"%<ip>s", fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})`,
 	}
 
-	result, err := bcsmonitor.QueryMultiValues(ctx, projectId, promqlMap, params, time.Now())
+	result, err := bcsmonitor.QueryMultiValues(ctx, projectID, promqlMap, params, time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -99,130 +99,121 @@ func (m *Prometheus) GetNodeInfo(ctx context.Context, projectId, clusterId, node
 }
 
 // GetNodeCPUUsage 节点CPU使用率
-func (m *Prometheus) GetNodeCPUUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+func (m *Prometheus) GetNodeCPUUsage(ctx context.Context, projectID, clusterID, nodeName string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(irate(node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", mode!="idle", ` +
-		`instance=~"%<ip>s", %<provider>s}[2m])) /
-		sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", ` +
-		`mode="idle", instance=~"%<ip>s", %<provider>s})) *
-		100`
+		sum(irate(node_cpu_seconds_total{cluster_id="%<clusterID>s", job="node-exporter", mode!="idle", ` +
+		`instance=~"%<ip>s", %<provider>s}[2m])) / ` +
+		`sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterID>s", job="node-exporter", ` +
+		`mode="idle", instance=~"%<ip>s", %<provider>s})) * 100`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodeCPURequestUsage 节点CPU装箱率
-func (m *Prometheus) GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, nodeName string,
+func (m *Prometheus) GetNodeCPURequestUsage(ctx context.Context, projectID, clusterID, nodeName string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterId>s", job="kube-state-metrics", ` +
-		`node="%<node>s", %<provider>s}) /
-		sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", ` +
-		`mode="idle", instance=~"%<ip>s", %<provider>s})) *
-		100`
+		sum(kube_pod_container_resource_requests_cpu_cores{cluster_id="%<clusterID>s", job="kube-state-metrics", ` +
+		`node="%<node>s", %<provider>s}) / ` +
+		`sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id="%<clusterID>s", job="node-exporter", ` +
+		`mode="idle", instance=~"%<ip>s", %<provider>s})) * 100`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodeMemoryUsage 节点内存使用率
-func (m *Prometheus) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, nodeName string,
+func (m *Prometheus) GetNodeMemoryUsage(ctx context.Context, projectID, clusterID, nodeName string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<ip>s", ` +
-		`%<provider>s}) -
-        sum(node_memory_MemFree_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<ip>s", ` +
-		`%<provider>s}) -
-        sum(node_memory_Buffers_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<ip>s", ` +
-		`%<provider>s}) -
-        sum(node_memory_Cached_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<ip>s", ` +
-		`%<provider>s}) +
-        sum(node_memory_Shmem_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<ip>s", ` +
-		`%<provider>s})) /
-        sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<ip>s", ` +
-		`%<provider>s}) *
-        100`
+		(sum(node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", job="node-exporter", instance=~"%<ip>s", ` +
+		`%<provider>s}) - sum(node_memory_MemFree_bytes{cluster_id="%<clusterID>s", job="node-exporter", ` +
+		`instance=~"%<ip>s", %<provider>s}) - sum(node_memory_Buffers_bytes{cluster_id="%<clusterID>s", ` +
+		`job="node-exporter", instance=~"%<ip>s", %<provider>s}) - ` +
+		`sum(node_memory_Cached_bytes{cluster_id="%<clusterID>s", job="node-exporter", instance=~"%<ip>s", ` +
+		`%<provider>s}) + sum(node_memory_Shmem_bytes{cluster_id="%<clusterID>s", job="node-exporter", ` +
+		`instance=~"%<ip>s", %<provider>s})) / sum(node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", ` +
+		`job="node-exporter", instance=~"%<ip>s", %<provider>s}) * 100`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodeMemoryRequestUsage 节点内存装箱率
-func (m *Prometheus) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, nodeName string,
+func (m *Prometheus) GetNodeMemoryRequestUsage(ctx context.Context, projectID, clusterID, nodeName string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterId>s", job="kube-state-metrics", ` +
-		`node="%<node>s", %<provider>s}) /
-		sum(node_memory_MemTotal_bytes{cluster_id="%<clusterId>s", job="node-exporter", instance=~"%<ip>s", ` +
-		`%<provider>s}) * 100`
+		sum(kube_pod_container_resource_requests_memory_bytes{cluster_id="%<clusterID>s", job="kube-state-metrics", ` +
+		`node="%<node>s", %<provider>s}) / sum(node_memory_MemTotal_bytes{cluster_id="%<clusterID>s", ` +
+		`job="node-exporter", instance=~"%<ip>s", %<provider>s}) * 100`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodeDiskUsage 节点磁盘使用率
-func (m *Prometheus) GetNodeDiskUsage(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+func (m *Prometheus) GetNodeDiskUsage(ctx context.Context, projectID, clusterID, nodeName string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql := `
-		(sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", instance=~"%<ip>s", job="node-exporter", ` +
-		`fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) -
-        sum(node_filesystem_free_bytes{cluster_id="%<clusterId>s", instance=~"%<ip>s", job="node-exporter", ` +
-		`fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})) /
-        sum(node_filesystem_size_bytes{cluster_id="%<clusterId>s", instance=~"%<ip>s", job="node-exporter", ` +
-		`fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) *
-        100`
+		(sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", job="node-exporter", ` +
+		`fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) - ` +
+		`sum(node_filesystem_free_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", job="node-exporter", ` +
+		`fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s})) / ` +
+		`sum(node_filesystem_size_bytes{cluster_id="%<clusterID>s", instance=~"%<ip>s", job="node-exporter", ` +
+		`fstype=~"%<fstype>s", mountpoint=~"%<mountpoint>s", %<provider>s}) * 100`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodeDiskioUsage 接触磁盘IO使用率
-func (m *Prometheus) GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, nodeName string,
+func (m *Prometheus) GetNodeDiskioUsage(ctx context.Context, projectID, clusterID, nodeName string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max(rate(node_disk_io_time_seconds_total{cluster_id="%<clusterId>s", job="node-exporter", ` +
+		`max(rate(node_disk_io_time_seconds_total{cluster_id="%<clusterID>s", job="node-exporter", ` +
 			`instance=~"%<ip>s", %<provider>s}[2m]) * 100)`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodePodCount PodCount
-func (m *Prometheus) GetNodePodCount(ctx context.Context, projectId, clusterId, nodeName string, start, end time.Time,
+func (m *Prometheus) GetNodePodCount(ctx context.Context, projectID, clusterID, nodeName string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max by (instance) (kubelet_running_pod_count{cluster_id="%<clusterId>s", instance=~"%<ip>s", %<provider>s})`
+		`max by (instance) (kubelet_running_pod_count{cluster_id="%<clusterID>s", instance=~"%<ip>s", %<provider>s})`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodePodTotal PodTotal
-func (m *Prometheus) GetNodePodTotal(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
+func (m *Prometheus) GetNodePodTotal(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeContainerCount 容器数量
-func (m *Prometheus) GetNodeContainerCount(ctx context.Context, projectId, clusterId, nodeName string,
+func (m *Prometheus) GetNodeContainerCount(ctx context.Context, projectID, clusterID, nodeName string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max by (instance) (kubelet_running_container_count{cluster_id="%<clusterId>s", ` +
+		`max by (instance) (kubelet_running_container_count{cluster_id="%<clusterID>s", ` +
 			`container_state!="exited|created|unknown", instance=~"%<ip>s", %<provider>s})`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodeNetworkTransmit 网络发送量
-func (m *Prometheus) GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, nodeName string,
+func (m *Prometheus) GetNodeNetworkTransmit(ctx context.Context, projectID, clusterID, nodeName string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max(rate(node_network_transmit_bytes_total{cluster_id="%<clusterId>s", instance=~"%<ip>s", ` +
+		`max(rate(node_network_transmit_bytes_total{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
 			`job="node-exporter", %<provider>s}[5m]))`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }
 
 // GetNodeNetworkReceive 节点网络接收量
-func (m *Prometheus) GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, nodeName string,
+func (m *Prometheus) GetNodeNetworkReceive(ctx context.Context, projectID, clusterID, nodeName string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`max(rate(node_network_receive_bytes_total{cluster_id="%<clusterId>s", instance=~"%<ip>s", ` +
+		`max(rate(node_network_receive_bytes_total{cluster_id="%<clusterID>s", instance=~"%<ip>s", ` +
 			`job="node-exporter", %<provider>s}[5m]))`
 
-	return m.handleNodeMetric(ctx, projectId, clusterId, nodeName, promql, start, end, step)
+	return m.handleNodeMetric(ctx, projectID, clusterID, nodeName, promql, start, end, step)
 }

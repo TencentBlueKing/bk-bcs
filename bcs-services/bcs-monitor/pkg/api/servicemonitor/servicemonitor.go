@@ -51,7 +51,10 @@ func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface,
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace [get]
 func ListServiceMonitors(c *rest.Context) (interface{}, error) {
-
+	// 共享集群不展示列表
+	if c.SharedCluster {
+		return nil, nil
+	}
 	limit := c.Query("limit")
 	offset := c.Query("offset")
 	namespace := c.Query("namespace")
@@ -177,6 +180,10 @@ func DeleteServiceMonitor(c *rest.Context) (interface{}, error) {
 // @Success 200 {string} string
 // @Router  /service_monitors/batchdelete [delete]
 func BatchDeleteServiceMonitor(c *rest.Context) (interface{}, error) {
+	// 共享集群禁止批量删除
+	if c.SharedCluster {
+		return nil, fmt.Errorf("denied")
+	}
 	serviceMonitorDelReq := &BatchDeleteServiceMonitorReq{}
 	if err := c.ShouldBindJSON(serviceMonitorDelReq); err != nil {
 		return nil, err
