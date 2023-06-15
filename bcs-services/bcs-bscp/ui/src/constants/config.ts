@@ -30,6 +30,12 @@ export const GET_UNNAMED_VERSION_DATE = () => {
     spec: {
       name: '未命名版本',
       memo: '',
+      hook: {
+        post_hook_id: 0,
+        post_hook_release_id: 0,
+        pre_hook_id: 0,
+        pre_hook_release_id: 0,
+      },
       deprecated: false,
       publish_num: 0,
     },

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-  import { ref, watch, onMounted, nextTick } from 'vue'
+  import { ref, watch, onMounted } from 'vue'
   import { storeToRefs } from 'pinia'
   import { useServiceStore } from '../../../../../../../store/service'
   import { useConfigStore } from '../../../../../../../store/config'
   import { InfoBox } from "bkui-vue/lib";
-  import { InfoLine, Search } from 'bkui-vue/lib/icon';
+  import { Search } from 'bkui-vue/lib/icon';
   import { IConfigItem, IConfigListQueryParams, IConfigVersion } from '../../../../../../../../types/config'
-  import { CONFIG_STATUS_MAP, VERSION_STATUS_MAP } from '../../../../../../../constants/config'
+  import { CONFIG_STATUS_MAP } from '../../../../../../../constants/config'
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
   import EditConfig from './edit-config.vue'
@@ -135,43 +135,29 @@
 </script>
 <template>
   <section class="config-list-wrapper">
-    <section class="config-content-header">
-      <section class="summary-wrapper">
-        <div :class="['status-tag', versionData.status.publish_status]">{{ VERSION_STATUS_MAP[versionData.status.publish_status as keyof typeof VERSION_STATUS_MAP] || '编辑中' }}</div>
-        <div class="version-name">{{ versionData.spec.name }}</div>
-        <InfoLine
-          v-if="versionData.spec.memo"
-          v-bk-tooltips="{
-            content: versionData.spec.memo,
-            placement: 'right',
-            theme: 'light'
-          }"
-          class="version-desc" />
-      </section>
-      <section class="version-operations">
-        <CreateVersion
-          :bk-biz-id="props.bkBizId"
-          :app-id="props.appId"
-          :config-count="pagination.count"
-          @confirm="handleVersionCreated" />
-        <PublishVersion
-          ref="publishVersionRef"
-          :bk-biz-id="props.bkBizId"
-          :app-id="props.appId"
-          :release-id="versionData.id"
-          :app-name="appData.spec.name"
-          :version-name="versionData.spec.name"
-          :config-list="configList"
-          @confirm="refreshVesionList" />
-        <ModifyGroupPublish
-          :bk-biz-id="props.bkBizId"
-          :app-id="props.appId"
-          :release-id="versionData.id"
-          :app-name="appData.spec.name"
-          :version-name="versionData.spec.name"
-          :config-list="configList"
-          @confirm="refreshVesionList" />
-      </section>
+    <section class="version-operations">
+      <CreateVersion
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        :config-count="pagination.count"
+        @confirm="handleVersionCreated" />
+      <PublishVersion
+        ref="publishVersionRef"
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        :release-id="versionData.id"
+        :app-name="appData.spec.name"
+        :version-name="versionData.spec.name"
+        :config-list="configList"
+        @confirm="refreshVesionList" />
+      <ModifyGroupPublish
+        :bk-biz-id="props.bkBizId"
+        :app-id="props.appId"
+        :release-id="versionData.id"
+        :app-name="appData.spec.name"
+        :version-name="versionData.spec.name"
+        :config-list="configList"
+        @confirm="refreshVesionList" />
     </section>
     <div class="operate-area">
       <CreateConfig v-if="versionData.status.publish_status === 'editing'" :bk-biz-id="props.bkBizId" :app-id="props.appId" @confirm="refreshConfigList" />
@@ -241,23 +227,19 @@
 </template>
 <style lang="scss" scoped>
   .config-list-wrapper {
+    position: relative;
     padding: 0 24px;
   }
-  .config-content-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
-    .version-operations {
-      display: flex;
-      align-items: center;
-    }
+  .version-operations {
+    position: absolute;
+    top: -36px;
+    right: 24px;
+    z-index: 10;
   }
   .operate-area {
     display: flex;
     align-items: center;
     padding: 16px 0;
-    border-top: 1px solid #dcdee5;
     .groups-info {
       display: flex;
       align-items: center;
@@ -281,43 +263,6 @@
       padding-right: 10px;
       color: #979ba5;
       background: #ffffff;
-    }
-  }
-  .summary-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    .status-tag {
-      margin-right: 8px;
-      padding: 0 10px;
-      height: 22px;
-      line-height: 20px;
-      font-size: 12px;
-      color: #63656e;
-      border: 1px solid rgba(151,155,165,0.30);
-      border-radius: 11px;
-      &.not_released {
-      color: #fe9000;
-      background: #ffe8c3;
-      border-color: rgba(254, 156, 0, 0.3);
-      }
-    &.full_released,
-    &.partial_released {
-      color: #14a568;
-      background: #e4faf0;
-      border-color: rgba(20, 165, 104, 0.3);
-    }
-    }
-    .version-name {
-      color: #63656e;
-      font-size: 14px;
-      font-weight: bold;
-    }
-    .version-desc {
-      margin-left: 8px;
-      font-size: 15px;
-      color: #979ba5;
-      cursor: pointer;
     }
   }
   .config-list-table {

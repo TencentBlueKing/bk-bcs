@@ -122,7 +122,6 @@ func (ab *AuditBuilder) AuditCreate(cur interface{}, opt *AuditOption) error {
 
 	case *table.Hook:
 		sset := cur.(*table.Hook)
-		ab.toAudit.AppID = sset.Attachment.AppID
 		ab.toAudit.ResourceID = sset.ID
 
 	case *table.TemplateSpace:
@@ -239,13 +238,6 @@ func (ab *AuditBuilder) PrepareUpdate(updatedTo interface{}) AuditDecorator {
 	case *table.Group:
 		group := updatedTo.(*table.Group)
 		if err := ab.decorateGroupUpdate(group); err != nil {
-			ab.hitErr = err
-			return ab
-		}
-
-	case *table.Hook:
-		hook := updatedTo.(*table.Hook)
-		if err := ab.decorateHookUpdate(hook); err != nil {
 			ab.hitErr = err
 			return ab
 		}
@@ -369,27 +361,6 @@ func (ab *AuditBuilder) decorateGroupUpdate(group *table.Group) error {
 	return nil
 }
 
-func (ab *AuditBuilder) decorateHookUpdate(hook *table.Hook) error {
-	ab.toAudit.AppID = hook.Attachment.AppID
-	ab.toAudit.ResourceID = hook.ID
-
-	preHook, err := ab.getHook(hook.ID)
-	if err != nil {
-		return err
-	}
-
-	ab.prev = preHook
-
-	changed, err := parseChangedSpecFields(preHook, hook)
-	if err != nil {
-		ab.hitErr = err
-		return fmt.Errorf("parse hook changed spec field failed, err: %v", err)
-	}
-
-	ab.changed = changed
-	return nil
-}
-
 func (ab *AuditBuilder) decorateCredentialUpdate(credential *table.Credential) error {
 	ab.toAudit.ResourceID = credential.ID
 
@@ -480,15 +451,15 @@ func (ab *AuditBuilder) PrepareDelete(resID uint32) AuditDecorator {
 		ab.toAudit.ResourceID = group.ID
 		ab.prev = group
 
-	case enumor.Hook:
-		hook, err := ab.getHook(resID)
+	case enumor.CRInstance:
+		cri, err := ab.getCRInstance(resID)
 		if err != nil {
 			ab.hitErr = err
 			return ab
 		}
-		ab.toAudit.AppID = hook.Attachment.AppID
-		ab.toAudit.ResourceID = hook.ID
-		ab.prev = hook
+		ab.toAudit.AppID = cri.Attachment.AppID
+		ab.toAudit.ResourceID = cri.ID
+		ab.prev = cri
 
 	case enumor.Credential:
 		credential, err := ab.getCredential(resID)
@@ -608,6 +579,22 @@ func (ab *AuditBuilder) getHook(hookID uint32) (*table.Hook, error) {
 	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
 	if err != nil {
 		return nil, fmt.Errorf("get hook details failed, err: %v", err)
+	}
+
+	return one, nil
+}
+
+func (ab *AuditBuilder) getCRInstance(criID uint32) (*table.CurrentReleasedInstance, error) {
+	var sqlSentence []string
+	sqlSentence = append(sqlSentence, "SELECT ", table.CurrentReleasedInstanceColumns.NamedExpr(),
+		" FROM ", table.CurrentReleasedInstanceTable.Name(),
+		" WHERE id = ", strconv.Itoa(int(criID)), " AND biz_id = ", strconv.Itoa(int(ab.bizID)))
+	filter := filter2.SqlJoint(sqlSentence)
+
+	one := new(table.CurrentReleasedInstance)
+	err := ab.ad.orm.Do(ab.ad.sd.MustSharding(ab.bizID)).Get(ab.kit.Ctx, one, filter)
+	if err != nil {
+		return nil, fmt.Errorf("get current released instance details failed, err: %v", err)
 	}
 
 	return one, nil

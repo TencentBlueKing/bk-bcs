@@ -223,8 +223,8 @@ const (
 	GroupAppBindTable Name = "group_app_binds"
 	// ReleasedGroupTable is current release table's name
 	ReleasedGroupTable Name = "released_groups"
-	// HookTable is hook table's name
-	HookTable Name = "hooks"
+	// StrategySetTable is strategy set table's name
+	StrategySetTable Name = "strategy_sets"
 	// StrategyTable is strategy table's name
 	StrategyTable Name = "strategies"
 	// EventTable is event table's name

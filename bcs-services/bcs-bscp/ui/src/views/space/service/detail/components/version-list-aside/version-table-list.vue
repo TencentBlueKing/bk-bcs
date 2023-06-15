@@ -7,7 +7,7 @@
   import { getConfigVersionList } from '../../../../../../api/config';
   import { VERSION_STATUS_MAP, GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config'
   import { IConfigVersion, IConfigVersionQueryParams } from '../../../../../../../types/config';
-  import VersionDiff from '../components/version-diff/index.vue';
+  import VersionDiff from '../../config/components/version-diff/index.vue';
 
   const configStore = useConfigStore()
   const { versionData } = storeToRefs(configStore)
@@ -253,8 +253,11 @@
   }
   .bk-table {
     :deep(.bk-table-body) {
-      tr.selected td {
-        background: #e1ecff !important;
+      tr {
+        cursor: pointer;
+        &.selected td {
+          background: #e1ecff !important;
+        }
       }
     }
   }

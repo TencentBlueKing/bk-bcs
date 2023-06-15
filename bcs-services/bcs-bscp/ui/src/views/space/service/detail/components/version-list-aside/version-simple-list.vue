@@ -7,7 +7,7 @@
   import { getConfigVersionList } from '../../../../../../api/config'
   import { GET_UNNAMED_VERSION_DATE } from '../../../../../../constants/config'
   import { IConfigVersion } from '../../../../../../../types/config'
-  import VersionDiff from '../components/version-diff/index.vue'
+  import VersionDiff from '../../config/components/version-diff/index.vue'
 
   const configStore = useConfigStore()
   const { versionData, refreshVersionListFlag } = storeToRefs(configStore)
@@ -39,6 +39,10 @@
         refreshVersionListFlag.value = false
       }
     }
+  })
+
+  watch(() => props.appId, () => {
+    getVersionList()
   })
 
   onMounted(async() => {
@@ -105,7 +109,7 @@
           @click="handleSelectVersion(version)">
           <div :class="['dot', version.status.publish_status]"></div>
           <div class="version-name">{{ version.spec.name }}</div>
-          <bk-dropdown v-if="version.status.publish_status !== 'editing'" class="action-area">
+          <bk-dropdown v-if="version.status.publish_status !== 'editing'" class="action-area" :popoverOptions="{ popoverDelay: 300 }">
             <Ellipsis class="action-more-icon" />
             <template #content>
               <bk-dropdown-menu placement="bottom-end">
