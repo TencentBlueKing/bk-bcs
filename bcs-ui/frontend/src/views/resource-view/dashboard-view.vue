@@ -20,7 +20,7 @@ export default defineComponent({
         clusterID.value = curClusterId.value;
       } else {
         // 取默认第一个作为集群ID
-        clusterID.value = clusterList.value[0]?.clusterID;
+        clusterID.value = clusterList.value[0]?.clusterID || '';
       }
     } else {
       clusterID.value = currentRoute.value.params.clusterId;

@@ -58,7 +58,7 @@ export default defineComponent({
             date = `${parseInt(date, 10)}000`;
           }
           return `
-              <div>${moment(parseInt(date, 10)).format('YYYY-MM-DD HH:mm:ss')}</div>
+              <div>${parseInt(date, 10) ? moment(parseInt(date, 10)).format('YYYY-MM-DD HH:mm:ss') : '--'}</div>
               <div>${params[0].seriesName}：${parseFloat(params[0].value[1]).toFixed(2)}%</div>
           `;
         },

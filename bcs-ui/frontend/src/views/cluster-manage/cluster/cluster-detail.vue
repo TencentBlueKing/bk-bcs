@@ -1,8 +1,8 @@
 <template>
   <!-- 集群详情 -->
   <BcsContent
-    :title="curCluster ? curCluster.clusterName : ''"
-    :desc="curCluster ? `(${curCluster.clusterID})` : ''"
+    :title="curCluster.clusterName"
+    :desc="`(${curCluster.clusterID})`"
     v-bkloading="{ isLoading, opacity: 1 }">
     <bcs-tab :label-height="42" :active.sync="activeTabName" :validate-active="false" @tab-change="handleTabChange">
       <bcs-tab-panel name="overview" :label="$t('集群总览')" render-directive="if">
@@ -11,27 +11,32 @@
       <bcs-tab-panel name="info" :label="$t('基本信息')" render-directive="if">
         <Info :cluster-id="clusterId" />
       </bcs-tab-panel>
-      <bcs-tab-panel name="network" :label="$t('网络配置')" render-directive="if">
-        <Network :cluster-id="clusterId" />
+      <bcs-tab-panel name="quota" :label="$t('配额管理')" render-directive="if" v-if="curCluster.clusterType === 'virtual'">
+        <VClusterQuota :cluster-id="clusterId" />
       </bcs-tab-panel>
-      <bcs-tab-panel name="master" :label="$t('Master配置')" render-directive="if">
-        <Master :cluster-id="clusterId" />
-      </bcs-tab-panel>
-      <bcs-tab-panel name="node" :label="$t('节点列表')" render-directive="if">
-        <Node class="pb-[20px]" :cluster-id="clusterId" hide-cluster-select from-cluster />
-      </bcs-tab-panel>
-      <bcs-tab-panel
-        name="autoscaler"
-        :label="$t('弹性扩缩容')"
-        render-directive="if"
-        v-if="showAutoScaler">
-        <template #label>
-          {{ $t('弹性扩缩容') }}
-          <bk-tag theme="danger">NEW</bk-tag>
-        </template>
-        <InternalAutoScaler :cluster-id="clusterId" v-if="$INTERNAL" />
-        <AutoScaler :cluster-id="clusterId" v-else />
-      </bcs-tab-panel>
+      <template v-else>
+        <bcs-tab-panel name="network" :label="$t('网络配置')" render-directive="if">
+          <Network :cluster-id="clusterId" />
+        </bcs-tab-panel>
+        <bcs-tab-panel name="master" :label="$t('Master配置')" render-directive="if">
+          <Master :cluster-id="clusterId" />
+        </bcs-tab-panel>
+        <bcs-tab-panel name="node" :label="$t('节点列表')" render-directive="if">
+          <Node class="pb-[20px]" :cluster-id="clusterId" hide-cluster-select from-cluster />
+        </bcs-tab-panel>
+        <bcs-tab-panel
+          name="autoscaler"
+          :label="$t('弹性扩缩容')"
+          render-directive="if"
+          v-if="showAutoScaler">
+          <template #label>
+            {{ $t('弹性扩缩容') }}
+            <bk-tag theme="danger">NEW</bk-tag>
+          </template>
+          <InternalAutoScaler :cluster-id="clusterId" v-if="$INTERNAL" />
+          <AutoScaler :cluster-id="clusterId" v-else />
+        </bcs-tab-panel>
+      </template>
     </bcs-tab>
   </BcsContent>
 </template>
@@ -41,6 +46,7 @@ import BcsContent from '@/components/layout/Content.vue';
 import Node from '../node-list/node.vue';
 import Overview from '@/views/cluster-manage/cluster/overview/overview.vue';
 import Info from '@/views/cluster-manage/cluster/info/basic-info.vue';
+import VClusterQuota from '@/views/cluster-manage/cluster/info/vcluster-quota.vue';
 import Network from '@/views/cluster-manage/cluster/info/network.vue';
 import Master from '@/views/cluster-manage/cluster/info/master.vue';
 import AutoScaler from './autoscaler/tencent/autoscaler.vue';
@@ -59,6 +65,7 @@ export default defineComponent({
     Overview,
     AutoScaler,
     InternalAutoScaler,
+    VClusterQuota,
   },
   props: {
     active: {
@@ -77,7 +84,12 @@ export default defineComponent({
     const isLoading = ref(false);
 
     const { clusterList } = useCluster();
-    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value));
+    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value) || {
+      provider: '',
+      clusterName: '',
+      clusterID: '',
+      clusterType: '',
+    });
     // 云区域详情
     const cloudDetail = ref<Record<string, any>|null>(null);
     const handleGetCloudDetail = async () => {

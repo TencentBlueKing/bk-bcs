@@ -18,7 +18,11 @@
         error-display-type="normal"
         required>
         <div class="flex">
-          <ClusterSelect v-model="clusterID" class="flex-1" disabled />
+          <ClusterSelect
+            :cluster-type="['independent', 'managed', 'virtual']"
+            v-model="clusterID"
+            class="flex-1"
+            disabled />
           <NamespaceSelect
             :disabled="isEdit"
             :cluster-id="clusterID"

@@ -32,7 +32,7 @@
             </bk-dropdown-menu>
           </div>
           <div class="right">
-            <p class="biz-tpl-desc" v-if="templatesetCount">{{$t('共')}} <strong>{{templatesetCount}}</strong> {{$t('个1')}}</p>
+            <p class="biz-tpl-desc" v-if="templatesetCount">{{$t('共')}} <strong>{{templatesetCount}}</strong> {{$t('个')}}</p>
             <div class="biz-search-input" style="width: 300px;">
               <bkbcs-input
                 right-icon="bk-icon icon-search"

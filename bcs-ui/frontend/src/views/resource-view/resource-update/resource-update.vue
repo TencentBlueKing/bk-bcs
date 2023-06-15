@@ -322,13 +322,15 @@ export default defineComponent({
     });
     const setDetail = (data: any = {}) => { // 设置代码编辑器初始值
       // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
-      const newManifest = {
-        apiVersion: data.apiVersion,
-        kind: data.kind,
-        metadata: data.metadata,
+      // const newManifest = {
+      //   apiVersion: data.apiVersion,
+      //   kind: data.kind,
+      //   metadata: data.metadata,
+      //   ...data,
+      // };
+      detail.value = {
         ...data,
       };
-      detail.value = newManifest;
       editorRef.value?.setValue(Object.keys(detail.value).length ? detail.value : '');
     };
     const handleGetDetail = async () => { // 获取manifest详情
@@ -472,15 +474,15 @@ export default defineComponent({
       });
 
       // 特殊处理-> apiVersion、kind、metadata强制排序在前三位
-      examples.value.items.forEach((example) => {
-        const newManifestMap = {
-          apiVersion: example.manifest.apiVersion,
-          kind: example.manifest.kind,
-          metadata: example.manifest.metadata,
-          ...example.manifest,
-        };
-        example.manifest = newManifestMap;
-      });
+      // examples.value.items.forEach((example) => {
+      //   const newManifestMap = {
+      //     apiVersion: example.manifest.apiVersion,
+      //     kind: example.manifest.kind,
+      //     metadata: example.manifest.metadata,
+      //     ...example.manifest,
+      //   };
+      //   example.manifest = newManifestMap;
+      // });
 
       activeExample.value = examples.value?.items?.[0] || {};
       exampleLoading.value = false;

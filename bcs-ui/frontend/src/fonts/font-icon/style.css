@@ -1,9 +1,9 @@
 @font-face {
 	font-family: "bcs";
-	src: url("@/fonts/fonts/iconcool.svg#iconcool") format("svg"),
-url("@/fonts/fonts/iconcool.ttf") format("truetype"),
-url("@/fonts/fonts/iconcool.woff") format("woff"),
-url("@/fonts/fonts/iconcool.eot?#iefix") format("embedded-opentype");
+	src: url("@/fonts/font-icon/fonts/iconcool.svg#iconcool") format("svg"),
+url("@/fonts/font-icon/fonts/iconcool.ttf") format("truetype"),
+url("@/fonts/font-icon/fonts/iconcool.woff") format("woff"),
+url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
     font-weight: normal;
     font-style: normal;
 }

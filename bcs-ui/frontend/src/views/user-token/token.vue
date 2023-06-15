@@ -84,7 +84,7 @@
     <!-- 独立集群使用案例 -->
     <div class="user-token-example" v-if="data.length">
       <div class="example-item">
-        <div class="title total-title">{{$t('独立集群/托管集群 kubectl 与 BCS API 使用示例')}}:</div>
+        <div class="title total-title">{{$t('独立集群/托管集群/vCluster kubectl 与 BCS API 使用示例')}}:</div>
         <div class="code-wrapper">
           <p>kubectl:</p>
           <br>
