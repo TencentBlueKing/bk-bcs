@@ -135,7 +135,7 @@ func preAnalyzeContent(op operator.OpType, content *operator.Content) error {
 
 	// the same level do not support multiple fields.
 	if len(fieldMap) > 1 {
-		return errors.New(fmt.Sprintf("do not support different field in the same policy level"))
+		return errors.New("do not support different field in the same policy level")
 	}
 	return nil
 }

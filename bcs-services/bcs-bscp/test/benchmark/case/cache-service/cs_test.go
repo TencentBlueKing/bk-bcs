@@ -65,7 +65,7 @@ func (p *pool) Pick() pbcs.CacheClient {
 		return p.conn[p.idx]
 	}
 
-	p.idx += 1
+	p.idx++
 	return p.conn[p.idx]
 }
 

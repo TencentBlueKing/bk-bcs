@@ -73,7 +73,7 @@ func (p *pool) Pick() interface{} {
 	if p.curIndex == p.maxIndex {
 		p.curIndex = 0
 	} else {
-		p.curIndex += 1
+		p.curIndex++
 	}
 
 	return picked

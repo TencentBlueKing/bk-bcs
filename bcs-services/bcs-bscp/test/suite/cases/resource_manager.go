@@ -126,11 +126,12 @@ func (rm *ResourceManager) AddContent(configItemId, contentId uint32) {
 
 // GetContent get a created content id
 func (rm *ResourceManager) GetContent(configItemId uint32) uint32 {
-	if value, ok := rm.Content[configItemId]; !ok {
-		return 0
-	} else {
+	value, ok := rm.Content[configItemId]
+	if ok {
 		return value
 	}
+
+	return 0
 }
 
 // AddCommit add a created commit id
@@ -140,11 +141,12 @@ func (rm *ResourceManager) AddCommit(contentId, commitId uint32) {
 
 // GetCommit get a created commit id
 func (rm *ResourceManager) GetCommit(contentId uint32) uint32 {
-	if value, ok := rm.Commit[contentId]; !ok {
-		return 0
-	} else {
+	value, ok := rm.Commit[contentId]
+	if ok {
 		return value
 	}
+
+	return 0
 }
 
 // AddRelease add a created release id
@@ -154,11 +156,12 @@ func (rm *ResourceManager) AddRelease(appId, releaseId uint32) {
 
 // GetRelease  get a created release id
 func (rm *ResourceManager) GetRelease(appId uint32) uint32 {
-	if value, ok := rm.Release[appId]; !ok {
-		return 0
-	} else {
+	value, ok := rm.Release[appId]
+	if ok {
 		return value
 	}
+
+	return 0
 }
 
 // GetAppToRelease  get an app id and release id, when app has release
@@ -181,11 +184,12 @@ func (rm *ResourceManager) AddStrategySet(appId, stgSetId uint32) {
 
 // GetStrategySet  get a created strategy set id
 func (rm *ResourceManager) GetStrategySet(appId uint32) uint32 {
-	if value, ok := rm.StrategySet[appId]; !ok {
-		return 0
-	} else {
+	value, ok := rm.StrategySet[appId]
+	if ok {
 		return value
 	}
+
+	return 0
 }
 
 // GetAppToStrategySet  get an app id and strategy set id, when app has strategy set

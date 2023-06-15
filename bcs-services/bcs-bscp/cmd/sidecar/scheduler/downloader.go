@@ -333,7 +333,7 @@ func (exec *execDownload) downloadWithRange() error {
 	// calculate the total parts to be downloaded
 	totalParts := int(exec.fileSize / batchSize)
 	if (exec.fileSize % batchSize) > 0 {
-		totalParts += 1
+		totalParts++
 	}
 
 	var hitError error
@@ -352,7 +352,7 @@ func (exec *execDownload) downloadWithRange() error {
 			end = start + batchSize
 		}
 
-		end -= 1
+		end--
 
 		wg.Add(1)
 

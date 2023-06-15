@@ -228,7 +228,7 @@ func (sch *Scheduler) notifyEvent(kt *kit.Kit, cursorID uint32, members []*membe
 	cnt := 0
 	wg := sync.WaitGroup{}
 	for idx := range members {
-		cnt += 1
+		cnt++
 
 		if err := sch.notifyLimiter.Acquire(kt.Ctx, 1); err != nil {
 			sch.retry.Add(cursorID, members[idx])

@@ -47,6 +47,7 @@ func TestCommit(t *testing.T) {
 
 		// get content from db
 		req, err := cases.GenListContentByIdsReq(cases.TBizID, appId, []uint32{ctId})
+		So(err, ShouldBeNil)
 		ctx, header := cases.GenApiCtxHeader()
 		resp, err := cli.Content.List(ctx, header, req)
 		So(err, ShouldBeNil)

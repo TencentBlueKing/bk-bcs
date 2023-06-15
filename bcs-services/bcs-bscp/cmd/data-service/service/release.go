@@ -50,10 +50,10 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	// step2: query config item newest commit
 	now := time.Now()
 	for _, item := range cfgItems {
-		commit, err := s.queryCILatestCommit(grpcKit, req.Attachment.BizId, req.Attachment.AppId, item.ID)
-		if err != nil {
-			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		commit, e := s.queryCILatestCommit(grpcKit, req.Attachment.BizId, req.Attachment.AppId, item.ID)
+		if e != nil {
+			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
 		}
 
 		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{

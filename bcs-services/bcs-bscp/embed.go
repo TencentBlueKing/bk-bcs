@@ -57,6 +57,7 @@ type gzipFileInfo struct {
 	filePath     string
 }
 
+// EmbedWeb ..
 type EmbedWeb struct {
 	dist     fs.FS
 	tpl      *template.Template

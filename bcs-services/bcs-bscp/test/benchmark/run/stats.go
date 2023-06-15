@@ -54,17 +54,17 @@ func (s *Statistic) CollectStatus(status *Status) {
 
 // IncreaseRequest total request.
 func (s *Statistic) IncreaseRequest() {
-	s.TotalRequest += 1
+	s.TotalRequest++
 }
 
 // IncreaseSuccess success request.
 func (s *Statistic) IncreaseSuccess() {
-	s.TotalSucceed += 1
+	s.TotalSucceed++
 }
 
 // IncreaseFailed failed request.
 func (s *Statistic) IncreaseFailed() {
-	s.TotalFailed += 1
+	s.TotalFailed++
 }
 
 // UpdateCostDuration only update success request data
