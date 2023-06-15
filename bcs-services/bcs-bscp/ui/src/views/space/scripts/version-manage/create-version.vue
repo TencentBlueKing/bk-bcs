@@ -9,6 +9,7 @@
   const { spaceId } = storeToRefs(useGlobalStore())
 
   const props = withDefaults(defineProps<{
+    disabled: boolean;
     creatable?: boolean; // 是否编辑当前未上线版本
     scriptId: number
   }>(), {
@@ -74,6 +75,7 @@
     @after-hidden="closePopover">
     <bk-button
       theme="primary"
+      :disabled="props.disabled"
       @click="handleCreateClick">
       <Plus class="button-icon" />
       新建版本

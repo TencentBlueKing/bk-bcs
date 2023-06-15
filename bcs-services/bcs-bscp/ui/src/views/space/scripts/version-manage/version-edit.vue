@@ -18,7 +18,7 @@
     editable: true
   })
 
-  const emits = defineEmits(['close', 'update'])
+  const emits = defineEmits(['close', 'submitted'])
   
   const localVal = ref<IScriptVersionForm>({
     id: 0,
@@ -55,14 +55,14 @@
       const params = { name, memo, content }
       if (localVal.value.id) {
         await updateScriptVersion(spaceId.value, props.scriptId, localVal.value.id, params)
-        emits('update', { ...localVal.value })
+        emits('submitted', { ...localVal.value }, 'update')
         BkMessage({
           theme: 'success',
           message: '编辑版本成功'
         })
       } else {
         const res = await createScriptVersion(spaceId.value, props.scriptId, params)
-        emits('update', { ...localVal.value, id: res.id })
+        emits('submitted', { ...localVal.value, id: res.id }, 'create')
         BkMessage({
           theme: 'success',
           message: '新建版本成功'
@@ -79,7 +79,7 @@
 <template>
   <section :class="['script-content', { 'view-mode': !props.editable }]">
     <ScriptEditor
-      v-model="localVal.content" class="script-content-wrapper"
+      v-model="localVal.content"
       :language="props.type"
       :editable="props.editable"
       :upload-icon="props.editable">

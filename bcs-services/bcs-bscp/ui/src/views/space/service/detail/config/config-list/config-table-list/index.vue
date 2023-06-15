@@ -175,8 +175,19 @@
     <section class="config-list-table">
       <bk-loading :loading="loading">
         <bk-table v-if="!loading" :border="['outer']" :data="configList">
-          <bk-table-column label="配置文件名" prop="spec.name" :sort="true" :min-width="240"></bk-table-column>
-          <bk-table-column label="配置文件路径" prop="spec.path"></bk-table-column>
+          <bk-table-column label="配置文件名" prop="spec.name" :sort="true" :min-width="240" show-overflow-tooltip>
+            <template #default="{ row }">
+              <bk-button
+                v-if="row.spec"
+                text
+                theme="primary"
+                :disabled="row.file_state === 'DELETE'"
+                @click="handleEdit(row)">
+                {{ row.spec.name }}
+              </bk-button>
+            </template>
+          </bk-table-column>
+          <bk-table-column label="配置文件路径" prop="spec.path" show-overflow-tooltip></bk-table-column>
           <bk-table-column label="配置文件格式">
             <template #default="{ row }">
               {{ getConfigTypeName(row.spec?.file_type) }}

@@ -7,7 +7,7 @@
   import { useGlobalStore } from '../../../../store/global'
   import { useScriptStore } from '../../../../store/script'
   import { IScriptVersion } from '../../../../../types/script'
-  import { getScriptDetail, getScriptVersionList, deleteScriptVersion, publishVersion } from '../../../../api/script'
+  import { getScriptDetail, getScriptVersionList, deleteScriptVersion, publishVersion, getScriptVersionDetail } from '../../../../api/script'
   import DetailLayout from '../components/detail-layout.vue'
   import VersionListFullTable from './version-list-full-table.vue'
   import VersionListSimpleTable from './version-list-simple-table.vue'
@@ -21,11 +21,13 @@
   const route = useRoute()
 
   const scriptId = ref(Number(route.params.scriptId))
+  const initLoading = ref(false)
   const detailLoading = ref(true)
-  const scriptDetail = ref({ spec: { name: '', type: '' } })
+  const scriptDetail = ref({ spec: { name: '', type: '' }, not_release_id: 0 })
   const versionLoading = ref(true)
   const versionList = ref<IScriptVersion[]>([])
   const unPublishVersion = ref<IScriptVersion|null>(null) // 未发布版本
+  const createBtnDisabled = ref(false)
   const showVersionDiff = ref(false)
   const crtVersion = ref<IScriptVersion|null>(null)
   const versionEditData = ref({
@@ -46,11 +48,16 @@
   })
 
   onMounted(async() => {
-    getScriptDetailData()
-    await getVersionList()
+    initLoading.value = true
+    getVersionList()
+    await getScriptDetailData()
+    if (scriptDetail.value.not_release_id) {
+      unPublishVersion.value = await getScriptVersionDetail(spaceId.value, scriptId.value, scriptDetail.value.not_release_id)
+    }
+    initLoading.value = false
     if (versionListPageShouldOpenEdit.value) {
       versionListPageShouldOpenEdit.value = false
-      if (unPublishVersion.value) {
+      if (scriptDetail.value.not_release_id) {
         handleEditVersionClick()
       } else {
         handleCreateVersionClick('')
@@ -61,7 +68,9 @@
   // 获取脚本详情
   const getScriptDetailData = async() => {
     detailLoading.value = true
-    scriptDetail.value = await getScriptDetail(spaceId.value, scriptId.value)
+    const res = await getScriptDetail(spaceId.value, scriptId.value)
+    const { name, type, releases } = res.spec
+    scriptDetail.value = { spec: { name, type }, not_release_id: releases.not_release_id }
     detailLoading.value = false
   }
 
@@ -78,12 +87,6 @@
     const res = await getScriptVersionList(spaceId.value, scriptId.value, params)
     versionList.value = res.details
     pagination.value.count = res.count
-    if (pagination.value.current === 1) {
-      const version = versionList.value.find(item => item.spec.state === 'not_deployed')
-      if (version) {
-        unPublishVersion.value = version
-      }
-    }
     versionLoading.value = false
   }
 
@@ -142,9 +145,8 @@
       confirmText: '确定',
       onConfirm: async () => {
         await publishVersion(spaceId.value, scriptId.value, version.id)
-        refreshList()
         unPublishVersion.value = null
-        
+        getVersionList()
       },
     } as any)
   }
@@ -161,6 +163,7 @@
         if (versionList.value.length === 1 && pagination.value.current > 1) {
           pagination.value.current = pagination.value.current - 1
         }
+        unPublishVersion.value = null
         getVersionList()
       },
     } as any)
@@ -182,9 +185,16 @@
   }
 
   // 新建、编辑脚本后回调
-  const handleVersionEditDataUpdate = (data: { id: number; name: string; memo: string; content: string; }) => {
+  const handleVersionEditSubmitted = async (data: { id: number; name: string; memo: string; content: string; }, type: string) => {
     versionEditData.value.form = { ...data }
     refreshList()
+    // 如果是创建新版本，则需要更新未发布版本数据
+    if (type === 'create') {
+      createBtnDisabled.value = true
+      scriptDetail.value.not_release_id = data.id
+      unPublishVersion.value = await getScriptVersionDetail(spaceId.value, scriptId.value, scriptDetail.value.not_release_id)
+      createBtnDisabled.value = false
+    }
   }
 
   // 版本对比
@@ -220,10 +230,11 @@
     :show-footer="false"
     @close="handleClose">
     <template #content>
-      <div class="script-version-manage">
+      <bk-loading :loading="initLoading" class="script-version-manage">
         <div class="operation-area">
           <CreateVersion
             :script-id="scriptId"
+            :disabled="createBtnDisabled"
             :creatable="!unPublishVersion"
             @create="handleCreateVersionClick"
             @edit="handleEditVersionClick" />
@@ -244,6 +255,7 @@
           <div class="table-data-area">
             <VersionListFullTable
               v-if="!versionEditData.panelOpen"
+              :script-id="scriptId"
               :list="versionList"
               :pagination="pagination"
               @view="handleViewVersionClick"
@@ -289,16 +301,17 @@
               :version-data=versionEditData.form
               :script-id="scriptId"
               :editable="versionEditData.editable"
-              @update="handleVersionEditDataUpdate"
+              @submitted="handleVersionEditSubmitted"
               @close="versionEditData.panelOpen = false" />
           </div>
         </div>
-      </div>
+      </bk-loading>
     </template>
   </DetailLayout>
   <ScriptVersionDiff
     v-if="showVersionDiff"
     v-model:show="showVersionDiff"
+    :type="scriptDetail.spec.type"
     :crt-version="(crtVersion as IScriptVersion)"
     :space-id="spaceId"
     :script-id="scriptId" />
