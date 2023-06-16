@@ -1,5 +1,7 @@
+.gitattributes merge=ours
 .code.yml merge=ours
 bcs-scenarios/kourse/go.mod merge=ours
 bcs-scenarios/kourse/Makefile merge=ours
 bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/server/init.go merge=ours
 bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/* merge=ours
+bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver/* merge=ours
