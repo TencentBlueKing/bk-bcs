@@ -35,7 +35,7 @@ import (
 
 // 业务方法
 
-//CreateHashIndex 创建hash index
+// CreateHashIndex 创建hash index
 func CreateHashIndex(ctx context.Context, resourceType, indexName string) error {
 	//hasIndex, err := dbutils.HasIndex(ctx, dbConfig, resourceType, indexName)
 	hasIndex, err := dbutils.HasIndex(&dbutils.DBOperate{
@@ -165,11 +165,12 @@ func AddEvent(ctx context.Context, resourceType string, data operator.M, opt *li
 		return err
 	}
 	// push事件源
-	if err = PushEvent(data); err != nil {
-		errMsg := fmt.Sprintf("publishEventResourceToQueue failed, err %s", err.Error())
-		blog.Error(errMsg)
-		return fmt.Errorf(errMsg)
-	}
+	go func(data operator.M) {
+		if err = PushEvent(data); err != nil {
+			errMsg := fmt.Sprintf("publishEventResourceToQueue failed, err %s", err.Error())
+			blog.Errorf(errMsg)
+		}
+	}(data)
 	return nil
 }
 

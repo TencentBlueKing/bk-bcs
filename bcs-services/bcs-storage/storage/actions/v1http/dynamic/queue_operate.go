@@ -28,10 +28,12 @@ func PushCreateResourcesToQueue(data operator.M) {
 	}
 
 	// queueFlag true
-	err := publishDynamicResourceToQueue(data, nsFeatTags, msgqueue.EventTypeUpdate)
-	if err != nil {
-		blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putNamespaceResources", err)
-	}
+	go func(data operator.M, featTags []string) {
+		err := publishDynamicResourceToQueue(data, nsFeatTags, msgqueue.EventTypeUpdate)
+		if err != nil {
+			blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putNamespaceResources", err)
+		}
+	}(data, nsFeatTags)
 }
 
 // PushDeleteResourcesToQueue push delete resources to queue
@@ -72,11 +74,12 @@ func PushCreateClusterToQueue(data operator.M) {
 		return
 	}
 	// queueFlag true
-	err := publishDynamicResourceToQueue(data, csFeatTags, msgqueue.EventTypeUpdate)
-	if err != nil {
-		blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putClusterResources", err)
-	}
-
+	go func(data operator.M, featTags []string) {
+		err := publishDynamicResourceToQueue(data, csFeatTags, msgqueue.EventTypeUpdate)
+		if err != nil {
+			blog.Errorf("func[%s] call publishDynamicResourceToQueue failed: err[%v]", "putClusterResources", err)
+		}
+	}(data, nsFeatTags)
 }
 
 // PushDeleteClusterToQueue push delete cluster to queue
