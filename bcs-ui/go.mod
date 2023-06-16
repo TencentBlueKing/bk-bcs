@@ -1,14 +1,11 @@
 module github.com/Tencent/bk-bcs/bcs-ui
 
-go 1.17
-
-replace github.com/cenkalti/backoff/v4 => github.com/cenkalti/backoff/v4 v4.1.3
+go 1.20
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230523073344-2f30db996644
 	github.com/dustin/go-humanize v1.0.0
-	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/render v1.0.2
 	github.com/go-micro/plugins/v4/registry/etcd v1.2.0
