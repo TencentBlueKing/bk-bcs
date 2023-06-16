@@ -28,7 +28,7 @@ func CreateClusterNamespace(ctx context.Context, clusterID, ns string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	if len(clusterID) == 0 || len(ns) == 0 {
-		blog.Errorf("CreateClusterNamespace[%s] resource empty")
+		blog.Errorf("CreateClusterNamespace[%s] resource empty", "cluster or ns")
 		return fmt.Errorf("cluster or ns resource empty")
 	}
 

@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
-	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -49,7 +49,7 @@ type authentication struct {
 }
 
 func (a *authentication) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
-	return map[string]string{middleware.InnerClientHeaderKey: config.ServiceName}, nil
+	return map[string]string{middleware.InnerClientHeaderKey: constant.ServiceName}, nil
 }
 
 func (a *authentication) RequireTransportSecurity() bool {

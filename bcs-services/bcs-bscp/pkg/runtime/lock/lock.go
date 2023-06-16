@@ -64,7 +64,7 @@ func New(opt Option) Interface {
 }
 
 // resLock is used to manage the lock of different kind of resources.
-// TODO: add capacity limit, limit the max number of the resource's
+// Note: add capacity limit, limit the max number of the resource's
 // kind, if overhead of the max limit, then return with an error.
 type resLock struct {
 	lo      sync.Mutex

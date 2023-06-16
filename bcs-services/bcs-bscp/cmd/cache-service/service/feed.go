@@ -18,7 +18,6 @@ import (
 
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/cache-service"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	"bscp.io/pkg/types"
@@ -147,40 +146,27 @@ func (s *Service) GetCurrentCursorReminder(ctx context.Context, _ *pbbase.EmptyR
 
 // ListEventsMeta list event metas with filter
 func (s *Service) ListEventsMeta(ctx context.Context, req *pbcs.ListEventsReq) (*pbcs.ListEventsResp, error) {
-
-	if req.Page.Count {
-		return nil, errors.New("invalid request, do now allows to count events")
-	}
-
 	kt := kit.FromGrpcContext(ctx)
-
-	// parse pb struct filter to filter.Expression.
-	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
-	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
 	if req.Page == nil {
-		return nil, errf.New(errf.InvalidParameter, "page is null")
+		return nil, errors.New("page is null")
 	}
 
-	opt := &types.ListEventsOption{
-		Filter: filter,
-		Page:   req.Page.BasePage(),
+	opt := req.Page.BasePage()
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
 	}
 
-	result, err := s.dao.Event().ListConsumedEvents(kt, opt)
+	details, _, err := s.dao.Event().ListConsumedEvents(kt, req.StartCursor, opt)
 	if err != nil {
 		return nil, err
 	}
 
-	metas := make([]*types.EventMeta, len(result.Details))
-	for idx := range result.Details {
+	metas := make([]*types.EventMeta, len(details))
+	for idx := range details {
 		metas[idx] = &types.EventMeta{
-			ID:         result.Details[idx].ID,
-			Spec:       result.Details[idx].Spec,
-			Attachment: result.Details[idx].Attachment,
+			ID:         details[idx].ID,
+			Spec:       details[idx].Spec,
+			Attachment: details[idx].Attachment,
 		}
 	}
 

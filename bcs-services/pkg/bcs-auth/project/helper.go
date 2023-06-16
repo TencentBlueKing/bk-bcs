@@ -48,7 +48,7 @@ func (prn ProjectResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	}
 
 	return []iam.ResourceNode{
-		iam.ResourceNode{
+		{
 			System:    prn.SystemID,
 			RType:     string(SysProject),
 			RInstance: prn.ProjectID,

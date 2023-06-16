@@ -317,7 +317,7 @@ func transInstancesToNode(rootCtx context.Context, info *cloudprovider.CloudDepe
 	var (
 		err           error
 		nodeIPs       = make([]string, 0)
-		nodes         = make([]*proto.Node, 0)
+		nodes         []*proto.Node
 		asg           = info.NodeGroup.AutoScaling
 		interfaceList = make([]*armnetwork.Interface, 0)
 		taskID        = cloudprovider.GetTaskIDFromContext(rootCtx)
@@ -458,6 +458,7 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 		asg             = info.NodeGroup.AutoScaling
 		taskID          = cloudprovider.GetTaskIDFromContext(rootCtx)
 		ctx, cancel     = context.WithTimeout(rootCtx, 2*time.Minute)
+		instanceList    []*armcompute.VirtualMachineScaleSetVM
 	)
 	defer cancel()
 
@@ -467,13 +468,13 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 	}
 
 	err = cloudprovider.LoopDoFunc(ctx, func() error { // wait all nodes to be ready
-		list, err := client.ListInstanceByIDAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID, instanceIDs)
+		instanceList, err = client.ListInstanceByIDAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID, instanceIDs)
 		if err != nil {
 			return errors.Wrapf(err, "checkClusterInstanceStatus[%s] ListInstanceByIDAndReturn failed", taskID)
 		}
 		index := 0
 		running, failure := make([]string, 0), make([]string, 0)
-		for _, vm := range list {
+		for _, vm := range instanceList {
 			id := api.VmIDToNodeID(vm)
 			state := *vm.Properties.ProvisioningState
 			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, id, state)
@@ -501,12 +502,12 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 		running, failure := make([]string, 0), make([]string, 0)
 		ctx, cancel = context.WithTimeout(rootCtx, 2*time.Minute)
 		defer cancel()
-		list, err := client.ListInstanceByIDAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID, instanceIDs)
+		instanceList, err = client.ListInstanceByIDAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID, instanceIDs)
 		if err != nil {
 			return nil, nil, errors.Wrapf(err,
 				"checkClusterInstanceStatus[%s] call ListInstanceByIDAndReturn failed", taskID)
 		}
-		for _, ins := range list {
+		for _, ins := range instanceList {
 			id := api.VmIDToNodeID(ins)
 			state := *ins.Properties.ProvisioningState
 			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, id, state)

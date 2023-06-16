@@ -175,7 +175,7 @@ func (dao *configItemDao) Update(kit *kit.Kit, ci *table.ConfigItem) error {
 }
 
 // Get configItem by ID.
-// TODO: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
+// Note: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
 func (dao *configItemDao) Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem, error) {
 
 	if id == 0 {

@@ -37,13 +37,13 @@ const (
 	defaultRequestMemory = "64Mi"
 )
 
-// ResSpec
+// ResSpec 资源类型
 type ResSpec struct {
 	CPU    string `yaml:"cpu"`
 	Memory string `yaml:"memory"`
 }
 
-// Resource 资源限制
+// ResourceConf 资源配置
 type ResourceConf struct {
 	Limits   *ResSpec `yaml:"limits"`
 	Requests *ResSpec `yaml:"requests"`
@@ -99,41 +99,41 @@ func (c *WebConsoleConf) Init() error {
 
 // parseRes 解析resources值
 func (c *WebConsoleConf) parseRes() error {
-	if limitCPU, err := resource.ParseQuantity(c.KubectldResources.Limits.CPU); err != nil {
+	limitCPU, err := resource.ParseQuantity(c.KubectldResources.Limits.CPU)
+	if err != nil {
 		return errors.Wrap(err, "parse cpu limit")
-	} else {
-		if limitCPU.CmpInt64(0) != 1 {
-			return errors.New("cpu limit must > 0")
-		}
-		c.Resources.Limits[v1.ResourceCPU] = limitCPU
 	}
+	if limitCPU.CmpInt64(0) != 1 {
+		return errors.New("cpu limit must > 0")
+	}
+	c.Resources.Limits[v1.ResourceCPU] = limitCPU
 
-	if limitMemory, err := resource.ParseQuantity(c.KubectldResources.Limits.Memory); err != nil {
+	limitMemory, err := resource.ParseQuantity(c.KubectldResources.Limits.Memory)
+	if err != nil {
 		return errors.Wrap(err, "parse memory limit")
-	} else {
-		if limitMemory.CmpInt64(0) != 1 {
-			return errors.New("memory limit must > 0")
-		}
-		c.Resources.Limits[v1.ResourceMemory] = limitMemory
 	}
+	if limitMemory.CmpInt64(0) != 1 {
+		return errors.New("memory limit must > 0")
+	}
+	c.Resources.Limits[v1.ResourceMemory] = limitMemory
 
-	if requestCPU, err := resource.ParseQuantity(c.KubectldResources.Requests.CPU); err != nil {
+	requestCPU, err := resource.ParseQuantity(c.KubectldResources.Requests.CPU)
+	if err != nil {
 		return errors.Wrap(err, "parse request cpu")
-	} else {
-		if requestCPU.CmpInt64(0) != 1 {
-			return errors.New("request cpu must > 0")
-		}
-		c.Resources.Requests[v1.ResourceCPU] = requestCPU
 	}
+	if requestCPU.CmpInt64(0) != 1 {
+		return errors.New("request cpu must > 0")
+	}
+	c.Resources.Requests[v1.ResourceCPU] = requestCPU
 
-	if requestMemory, err := resource.ParseQuantity(c.KubectldResources.Requests.Memory); err != nil {
+	requestMemory, err := resource.ParseQuantity(c.KubectldResources.Requests.Memory)
+	if err != nil {
 		return errors.Wrap(err, "parse request memory")
-	} else {
-		if requestMemory.CmpInt64(0) != 1 {
-			return errors.New("request memory must > 0")
-		}
-		c.Resources.Requests[v1.ResourceMemory] = requestMemory
 	}
+	if requestMemory.CmpInt64(0) != 1 {
+		return errors.New("request memory must > 0")
+	}
+	c.Resources.Requests[v1.ResourceMemory] = requestMemory
 
 	return nil
 }

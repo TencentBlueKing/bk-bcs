@@ -46,7 +46,8 @@ type RequestInfo struct {
 	IsResourceRequest bool
 	// Path is the URL path of the request
 	Path string
-	// Verb is the kube verb associated with the request for API requests, not the http verb.  This includes things like list and watch.
+	// Verb is the kube verb associated with the request for API requests, not the http verb.
+	// This includes things like list and watch.
 	// for non-resource requests, this is the lowercase http verb
 	Verb string
 
@@ -56,11 +57,15 @@ type RequestInfo struct {
 	Namespace  string
 	// Resource is the name of the resource being requested.  This is not the kind.  For example: pods
 	Resource string
-	// Subresource is the name of the subresource being requested.  This is a different resource, scoped to the parent resource, but it may have a different kind.
-	// For instance, /pods has the resource "pods" and the kind "Pod", while /pods/foo/status has the resource "pods", the sub resource "status", and the kind "Pod"
-	// (because status operates on pods). The binding resource for a pod though may be /pods/foo/binding, which has resource "pods", subresource "binding", and kind "Binding".
+	// Subresource is the name of the subresource being requested.  This is a different resource, scoped to the
+	// parent resource, but it may have a different kind.
+	// For instance, /pods has the resource "pods" and the kind "Pod", while /pods/foo/status has the resource "pods",
+	// the sub resource "status", and the kind "Pod"
+	// (because status operates on pods). The binding resource for a pod though may be /pods/foo/binding, which has
+	// resource "pods", subresource "binding", and kind "Binding".
 	Subresource string
-	// Name is empty for some verbs, but if the request directly indicates a name (not in body content) then this field is filled in.
+	// Name is empty for some verbs, but if the request directly indicates a name (not in body content) then this
+	// field is filled in.
 	Name string
 	// Parts are the path parts for the request, always starting with /{resource}/{name}
 	Parts []string
@@ -83,7 +88,8 @@ type RequestInfoFactory struct {
 	GrouplessAPIPrefixes sets.String // without leading and trailing slashes
 }
 
-// NewRequestInfo returns the information from the http request.  If error is not nil, RequestInfo holds the information as best it is known before the failure
+// NewRequestInfo returns the information from the http request.  If error is not nil, RequestInfo holds the
+// information as best it is known before the failure
 // It handles both resource and non-resource requests and fills in all the pertinent information for each.
 // Valid Inputs:
 // Resource paths
@@ -111,6 +117,7 @@ type RequestInfoFactory struct {
 // /api
 // /healthz
 // /
+// NOCC:CCN_thresholde(设计如此),golint/fnsize(设计如此)
 func (r *RequestInfoFactory) NewRequestInfo(req *http.Request) (*RequestInfo, error) {
 	// start with a non-resource request until proven otherwise
 	requestInfo := RequestInfo{

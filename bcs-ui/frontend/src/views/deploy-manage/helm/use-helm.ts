@@ -124,7 +124,7 @@ export default function useHelm() {
 
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('删除成功'),
+      message: $i18n.t('删除任务提交成功'),
     });
     return result;
   };
@@ -134,7 +134,7 @@ export default function useHelm() {
 
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('部署成功'),
+      message: $i18n.t('部署任务提交成功'),
     });
     return result;
   };
@@ -144,7 +144,7 @@ export default function useHelm() {
 
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('更新成功'),
+      message: $i18n.t('更新任务提交成功'),
     });
     return result;
   };
@@ -177,7 +177,7 @@ export default function useHelm() {
       .catch(() => false);
     result && $bkMessage({
       theme: 'success',
-      message: $i18n.t('回滚成功'),
+      message: $i18n.t('回滚任务提交成功'),
     });
     return result;
   };

@@ -197,6 +197,7 @@ func RunAsLeader(stopChan <-chan struct{}, config *options.WatchConfig, clusterI
 	glog.Info("create writer success")
 
 	glog.Info("starting writer now...")
+	// NOCC:vetshadow/shadow(设计如此:这里err可以被覆盖)
 	if err := writer.Run(stopChan); err != nil {
 		panic(err)
 	}

@@ -384,32 +384,6 @@ func NewClientS3(repoSetting *cc.Repository, reg prometheus.Registerer) (*Client
 	}, nil
 }
 
-// CreateRepo create new repository in s3.
-func (c *ClientS3) CreateRepo(ctx context.Context, s3 *CreateRepoReq) error {
-	found, _ := c.Client.BucketExists(context.Background(), s3.Name)
-
-	if found {
-		return nil
-	}
-	if err := c.Client.MakeBucket(ctx, s3.Name, minio.MakeBucketOptions{}); err != nil {
-		return err
-	}
-	for !found {
-		found, _ = c.Client.BucketExists(context.Background(), s3.Name)
-	}
-	return nil
-}
-
-// DeleteRepo delete repository in repo. param force: whether to force deletion.
-// If false, the warehouse cannot be deleted when there are files in the warehouse
-func (c *ClientS3) DeleteRepo(ctx context.Context, bizID uint32, forced bool) error {
-	err := c.Client.RemoveBucket(ctx, c.Config.S3.BucketName)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // IsNodeExist judge repo node already exist.
 func (c *ClientS3) IsNodeExist(ctx context.Context, bucketName, nodePath string) (bool, error) {
 	_, err := c.Client.StatObject(ctx, bucketName, nodePath, minio.StatObjectOptions{})

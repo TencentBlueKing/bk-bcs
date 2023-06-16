@@ -16,10 +16,11 @@ package netservice
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"path/filepath"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 
 // IPLean lease ip address from net
@@ -124,14 +125,12 @@ func (srv *NetService) IPLean(lease *types.IPLease) (*types.IPInfo, error) {
 	}
 	data, _ := json.Marshal(ipInst)
 	if err := srv.store.Add(destpath, data); err != nil {
-		// todo(DeveloperJim): recover ip resource when error
 		blog.Errorf("move ip %s to active err, %v", ippath, err)
 		reportMetrics("ipLean", stateStorageFailure, started)
 		return nil, fmt.Errorf("active ip %s resource err, %s", filepath.Base(ippath), err.Error())
 	}
 	containerpath := filepath.Join(defaultHostInfoPath, lease.Host, lease.Container)
 	if err := srv.store.Add(containerpath, data); err != nil {
-		// todo(DeveloperJim): recover ip resource when error
 		blog.Errorf("create container query node %s err, %v", containerpath, err)
 		reportMetrics("ipLean", stateStorageFailure, started)
 		return nil, fmt.Errorf("active ip %s in host %s err, %s", filepath.Base(ippath), lease.Host, err.Error())
@@ -187,7 +186,6 @@ func (srv *NetService) IPRelease(release *types.IPRelease) error {
 		return fmt.Errorf("clean container %s err, %s", release.Container, err.Error())
 	}
 	if _, err := srv.store.Delete(ippath); err != nil {
-		// todo(DeveloperJim): delete force
 		blog.Errorf("clean ip resource %s err, %v", ippath, err)
 		reportMetrics("ipRelease", stateStorageFailure, started)
 		return fmt.Errorf("clean ip resource %s err, %s", ippath, err.Error())

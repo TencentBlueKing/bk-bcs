@@ -79,7 +79,6 @@ limitations under the License.
 //		"glob" pattern and N is a V level. For instance,
 //			-vmodule=gopher*=3
 //		sets the V level to 3 in all Go files whose names begin "gopher".
-//
 package glog
 
 import (
@@ -323,7 +322,7 @@ func (m *moduleSpec) Set(value string) error {
 		if v == 0 {
 			continue // Ignore. It's harmless but no point in paying the overhead.
 		}
-		// TODO: check syntax of filter?
+		// Note: check syntax of filter?
 		filter = append(filter, modulePat{pattern, isLiteral(pattern), Level(v)})
 	}
 	logging.mu.Lock()
@@ -597,7 +596,7 @@ func (l *loggingT) formatHeader(s severity, file string, line int) *buffer {
 	buf.tmp[14] = '.'
 	buf.nDigits(6, 15, now.Nanosecond()/1000, '0')
 	buf.tmp[21] = ' '
-	buf.nDigits(7, 22, pid, ' ') // TODO: should be TID
+	buf.nDigits(7, 22, pid, ' ') // Note: should be TID
 	buf.tmp[29] = ' '
 	buf.Write(buf.tmp[:30])
 	buf.WriteString(file)
@@ -1040,9 +1039,13 @@ type Verbose bool
 // The returned value is a boolean of type Verbose, which implements Info, Infoln
 // and Infof. These methods will write to the Info log if called.
 // Thus, one may write either
+//
 //	if glog.V(2) { glog.Info("log this") }
+//
 // or
+//
 //	glog.V(2).Info("log this")
+//
 // The second form is shorter but the first is cheaper if logging is off because it does
 // not evaluate its arguments.
 //

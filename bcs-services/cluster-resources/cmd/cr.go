@@ -76,13 +76,14 @@ func Start() {
 	}
 
 	//初始化 Tracer
-	shutdown, err := tracing.InitTracing(&crConf.Tracing)
-	if err != nil {
-		logger.Info(err.Error())
+
+	shutdown, traceErr := tracing.InitTracing(&crConf.Tracing)
+	if traceErr != nil {
+		logger.Info(traceErr.Error())
 	}
 	if shutdown != nil {
 		defer func() {
-			if err := shutdown(context.Background()); err != nil {
+			if err = shutdown(context.Background()); err != nil {
 				logging.Info(context.Background(), fmt.Sprintf("failed to shutdown TracerProvider: %s", err.Error()))
 			}
 		}()

@@ -130,3 +130,24 @@ export const publishVersion = (bizId: string, appId: number, releaseId: number, 
 }) => {
   return http.post(`/config/update/strategy/publish/publish/release_id/${releaseId}/app_id/${appId}/biz_id/${bizId}`, data)
 }
+
+/**
+ * 获取服务下初始化脚本引用配置
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @returns 
+ */
+export const getConfigInitScript = (bizId: string, appId: number) => {
+  return http.get(`/config/biz/${bizId}/apps/${appId}/config_hooks`)
+}
+
+/**
+ * 更新服务下初始化脚本引用配置
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param params 配置数据
+ * @returns 
+ */
+export const updateConfigInitScript = (bizId: string, appId: number, params: { pre_hook_id: number; post_hook_id: number; }) => {
+  return http.put(`/config/biz/${bizId}/apps/${appId}/config_hooks`, params)
+}

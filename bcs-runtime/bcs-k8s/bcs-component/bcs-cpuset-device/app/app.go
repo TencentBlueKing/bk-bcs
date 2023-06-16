@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cpuset-device/app/options"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cpuset-device/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cpuset-device/cpuset-device"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cpuset-device/cpusetdevice"
 )
 
 // Run run the server
@@ -30,7 +30,7 @@ func Run(op *options.Option) error {
 	conf := config.NewConfig()
 	setConfig(conf, op)
 
-	controller := cpuset_device.NewCpusetDevicePlugin(conf)
+	controller := cpusetdevice.NewCpusetDevicePlugin(conf)
 	err := controller.Start()
 	if err != nil {
 		blog.Errorf("CpusetDevicePlugin Start failed: %s", err.Error())

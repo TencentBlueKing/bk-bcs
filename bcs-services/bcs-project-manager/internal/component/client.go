@@ -30,7 +30,7 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 	client := goReq.New().Timeout(time.Duration(timeout) * time.Second)
 	// request by method
 	index := 0
-	for k, _ := range req.QueryData {
+	for k := range req.QueryData {
 		if index == 0 {
 			req.Url = fmt.Sprintf("%s?%s=%s", req.Url, k, req.QueryData.Get(k))
 		} else {
@@ -47,7 +47,7 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 	for key, val := range headers {
 		client = client.Set(key, val)
 	}
-	for key, _ := range req.Header {
+	for key := range req.Header {
 		client = client.Set(key, req.Header.Get(key))
 	}
 	// request data

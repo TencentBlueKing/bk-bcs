@@ -15,7 +15,7 @@
           :cluster-id.sync="clusterID"
           :placeholder="$t('输入名称搜索')"
           :search.sync="searchValue"
-          cluster-type="all"
+          :cluster-type="['independent', 'managed', 'virtual']"
           @refresh="getTableData" />
       </template>
     </Row>

@@ -11,13 +11,15 @@
  *
  */
 
-package proc_daemon
+package procdaemon
 
 import (
 	"fmt"
+
+	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"
-	"k8s.io/kubernetes/staging/src/k8s.io/apimachinery/pkg/util/json"
 )
 
 const (

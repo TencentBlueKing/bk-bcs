@@ -223,8 +223,8 @@ const (
 	GroupAppBindTable Name = "group_app_binds"
 	// ReleasedGroupTable is current release table's name
 	ReleasedGroupTable Name = "released_groups"
-	// HookTable is hook table's name
-	HookTable Name = "hooks"
+	// StrategySetTable is strategy set table's name
+	StrategySetTable Name = "strategy_sets"
 	// StrategyTable is strategy table's name
 	StrategyTable Name = "strategies"
 	// EventTable is event table's name
@@ -305,10 +305,6 @@ func (r Revision) ValidateUpdate() error {
 		return errors.New("reviser can not be empty")
 	}
 
-	if len(r.Creator) != 0 {
-		return errors.New("creator can not be updated")
-	}
-
 	return nil
 }
 
@@ -322,20 +318,16 @@ var CreatedRevisionColumnDescriptor = ColumnDescriptors{
 
 // CreatedRevision is a resource's reversion information being created.
 type CreatedRevision struct {
-	Creator   string    `db:"creator" json:"creator"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	Creator   string    `db:"creator" json:"creator" gorm:"column:creator"`
+	CreatedAt time.Time `db:"created_at" json:"created_at" gorm:"column:created_at"`
 }
 
 // Validate revision when created
+// no need to validate time here, because the time is injected by gorm automatically
 func (r CreatedRevision) Validate() error {
 
 	if len(r.Creator) == 0 {
 		return errors.New("creator can not be empty")
-	}
-
-	now := time.Now().Unix()
-	if (r.CreatedAt.Unix() <= (now - lagSeconds)) || (r.CreatedAt.Unix() >= (now + lagSeconds)) {
-		return errors.New("invalid create time")
 	}
 
 	return nil

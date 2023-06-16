@@ -68,21 +68,18 @@
     <bk-table-column
       :label="$t('集群类型')"
       prop="manageType"
-      :filters="[{
-        text: $t('独立集群'),
-        value: 'INDEPENDENT_CLUSTER'
-      },{
-        text: $t('托管集群'),
-        value: 'MANAGED_CLUSTER'
-      }]"
+      :filters="clusterTypeFilterList"
       :filter-method="filterMethod">
       <template #default="{ row }">
-        {{ row.manageType === 'INDEPENDENT_CLUSTER' ? $t('独立集群') : $t('托管集群') }}
+        <template v-if="row.clusterType === 'virtual'">vCluster</template>
+        <template v-else>
+          {{ row.manageType === 'INDEPENDENT_CLUSTER' ? $t('独立集群') : $t('托管集群') }}
+        </template>
       </template>
     </bk-table-column>
     <bk-table-column :label="$t('集群节点数')">
       <template #default="{ row }">
-        <template v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage">
+        <template v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage && row.clusterType !== 'virtual'">
           <LoadingIcon v-if="!clusterNodesMap[row.clusterID]">{{ $t('加载中') }}...</LoadingIcon>
           <div
             :class=" row.status === 'RUNNING' ? 'cursor-pointer' : 'cursor-not-allowed'"
@@ -109,7 +106,8 @@
             class="!mr-[10px]" />
           <RingCell
             :percent="overview[row.clusterID]['disk_usage'] && overview[row.clusterID]['disk_usage']['percent']"
-            fill-color="#B5E0AB" />
+            fill-color="#B5E0AB"
+            v-if="row.clusterType !== 'virtual'" />
         </template>
         <span v-else>--</span>
       </template>
@@ -156,6 +154,7 @@
         <!-- 正常状态 -->
         <template v-else-if="row.status === 'RUNNING'">
           <bk-button text class="mr10" @click="handleGotoClusterOverview(row)">{{ $t('集群总览') }}</bk-button>
+          <bk-button text class="mr10" @click="handleGotoDashborad(row)">{{ $t('资源视图') }}</bk-button>
           <bk-button
             text
             class="mr10"
@@ -171,23 +170,55 @@
               }
             }"
             key="nodeList"
-            @click="handleGotoClusterNode(row)">{{ $t('节点列表') }}</bk-button>
+            v-if="row.clusterType !== 'virtual'"
+            @click="handleGotoClusterNode(row)">
+            {{ $t('节点列表') }}
+          </bk-button>
           <PopoverSelector offset="0, 10">
             <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
             <template #content>
               <ul class="bg-[#fff]">
                 <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'info')">{{ $t('基本信息') }}</li>
-                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'network')">{{ $t('网络配置') }}</li>
-                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'master')">{{ $t('Master配置') }}</li>
                 <li
                   class="bcs-dropdown-item"
-                  v-if="clusterExtraInfo
-                    && clusterExtraInfo[row.clusterID]
-                    && clusterExtraInfo[row.clusterID].autoScale"
+                  v-if="row.clusterType === 'virtual'"
+                  @click="handleGotoClusterDetail(row, 'quota')">
+                  {{ $t('配额管理') }}
+                </li>
+                <template v-else>
+                  <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(row, 'network')">{{ $t('网络配置') }}</li>
+                  <li
+                    class="bcs-dropdown-item"
+                    @click="handleGotoClusterDetail(row, 'master')">{{ $t('Master配置') }}</li>
+                  <li
+                    class="bcs-dropdown-item"
+                    v-if="clusterExtraInfo
+                      && clusterExtraInfo[row.clusterID]
+                      && clusterExtraInfo[row.clusterID].autoScale"
+                    v-authority="{
+                      clickable: perms[row.clusterID]
+                        && perms[row.clusterID].cluster_manage,
+                      actionId: 'cluster_manage',
+                      resourceName: row.clusterName,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: curProject.projectID,
+                        cluster_id: row.clusterID
+                      }
+                    }"
+                    key="ca"
+                    @click="handleGotoClusterCA(row)">
+                    {{ $t('弹性扩缩容') }}
+                  </li>
+                </template>
+                <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
+                <li class="bcs-dropdown-item" @click="handleGotoWebConsole(row)">WebConsole</li>
+                <li
+                  class="bcs-dropdown-item"
                   v-authority="{
                     clickable: perms[row.clusterID]
-                      && perms[row.clusterID].cluster_manage,
-                    actionId: 'cluster_manage',
+                      && perms[row.clusterID].cluster_delete,
+                    actionId: 'cluster_delete',
                     resourceName: row.clusterName,
                     disablePerms: true,
                     permCtx: {
@@ -195,12 +226,11 @@
                       cluster_id: row.clusterID
                     }
                   }"
-                  key="ca"
-                  @click="handleGotoClusterCA(row)">
-                  {{ $t('弹性扩缩容') }}
+                  key="deletevCluster"
+                  v-if="row.clusterType === 'virtual'"
+                  @click="handleDeleteCluster(row)">
+                  {{ $t('删除') }}
                 </li>
-                <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
-                <li class="bcs-dropdown-item" @click="handleGotoWebConsole(row)">WebConsole</li>
                 <li
                   :class="[
                     'bcs-dropdown-item',
@@ -223,6 +253,7 @@
                     disabled: !clusterNodesMap[row.clusterID] || clusterNodesMap[row.clusterID].length === 0,
                     placement: 'right'
                   }"
+                  v-else
                   @click="handleDeleteCluster(row)">
                   {{ $t('删除') }}
                 </li>
@@ -249,15 +280,17 @@ import StatusIcon from '@/components/status-icon';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
-import { useProject } from '@/composables/use-app';
+import { ICluster, useProject } from '@/composables/use-app';
 import { CLUSTER_ENV } from '@/common/constant';
+import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 
 export default defineComponent({
   name: 'ClusterList',
   components: { StatusIcon, RingCell, PopoverSelector, LoadingIcon },
   props: {
     clusterList: {
-      type: Array as PropType<any[]>,
+      type: Array as PropType<ICluster[]>,
       default: () => [],
     },
     overview: {
@@ -283,8 +316,9 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { curProject } = useProject();
-    const { clusterExtraInfo } = toRefs(props);
-    const clusterEnvFilters = computed(() => props.clusterList.reduce((pre, cluster) => {
+    const { clusterExtraInfo, clusterList } = toRefs(props);
+    const clusterEnvFilters = computed(() => props.clusterList
+      .reduce<Array<{value: string, text: string}>>((pre, cluster) => {
       if (pre.find(item => item.value === cluster.environment)) return pre;
       pre.push({
         text: CLUSTER_ENV[cluster.environment],
@@ -292,8 +326,30 @@ export default defineComponent({
       });
       return pre;
     }, []));
+    // 集群类型列表
+    const clusterTypeFilterList = computed(() => {
+      const typeMap =  clusterList.value.reduce<Record<string, string>>((pre, item) => {
+        if (item.clusterType === 'virtual') {
+          pre.virtual = 'vCluster';
+        } else if (item.manageType === 'INDEPENDENT_CLUSTER') {
+          pre.INDEPENDENT_CLUSTER = $i18n.t('独立集群');
+        } else if (item.manageType === 'MANAGED_CLUSTER') {
+          pre.MANAGED_CLUSTER = $i18n.t('托管集群');
+        }
+        return pre;
+      }, {});
+
+      return Object.keys(typeMap).map(key => ({
+        value: key,
+        text: typeMap[key],
+      }));
+    });
     const filterMethod = (value, row, column) => {
       const { property } = column;
+      // 出来集群类型搜索逻辑
+      if (property === 'manageType') {
+        return value === 'virtual' ? row.clusterType === 'virtual' : row[property] === value;
+      }
       return row[property] === value;
     };
     // 跳转集群概览界面
@@ -339,11 +395,21 @@ export default defineComponent({
     const handleClearSearch = () => {
       ctx.emit('clear');
     };
+    // 资源视图
+    const handleGotoDashborad = (row) => {
+      $router.push({
+        name: 'dashboardHome',
+        params: {
+          clusterId: row.clusterID,
+        },
+      });
+    };
 
     return {
       CLUSTER_ENV,
       clusterEnvFilters,
       curProject,
+      clusterTypeFilterList,
       filterMethod,
       handleGotoClusterOverview,
       handleGotoClusterDetail,
@@ -356,6 +422,7 @@ export default defineComponent({
       handleClearSearch,
       handleGotoToken,
       handleGotoWebConsole,
+      handleGotoDashborad,
     };
   },
 });

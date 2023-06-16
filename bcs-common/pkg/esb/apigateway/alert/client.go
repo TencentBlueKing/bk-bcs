@@ -39,26 +39,27 @@ type Config struct {
 }
 
 // Client bk-saas alert client definition, alert message sending details:
-// {
-//	"startsAt": "2020-04-14T12:31:00.124Z",(required)
-//	"endsAt": "2020-04-14T12:31:00.124Z",(required)
-//	"annotations": {
-//		"uuid": "cee84faf-7ee3-11ea-xxx",
-//		"message": "this is alert"  (required)
-//	},
-//	"labels": {
-//		"alert_type": "Error", (required)
-//		"cluster_id": "BCS-K8S-00000", (required)
-//		"namespace": "myns",
-//		"ip": "127.0.0.11",
-//		"module_name": "scheduler"
+//
+//	{
+//		"startsAt": "2020-04-14T12:31:00.124Z",(required)
+//		"endsAt": "2020-04-14T12:31:00.124Z",(required)
+//		"annotations": {
+//			"uuid": "cee84faf-7ee3-11ea-xxx",
+//			"message": "this is alert"  (required)
+//		},
+//		"labels": {
+//			"alert_type": "Error", (required)
+//			"cluster_id": "BCS-K8S-00000", (required)
+//			"namespace": "myns",
+//			"ip": "127.0.0.11",
+//			"module_name": "scheduler"
+//		}
 //	}
-// }
 type Client interface {
-	// SendServiceAlert TODO
+	// SendServiceAlert xx
 	// for bcs-servie modules
 	SendServiceAlert(module string, message string) error
-	// SendClusterAlert TODO
+	// SendClusterAlert xx
 	// for cluster bcs modules
 	SendClusterAlert(cluster string, module string, message string) error
 	SendCustomAlert(annotation, label map[string]string) error

@@ -90,9 +90,9 @@ var CommitSpecColumnDescriptor = mergeColumnDescriptors("", ColumnDescriptors{
 // CommitSpec is the specifics of this committed configuration file.
 type CommitSpec struct {
 	// ContentID is the identity id of a content.
-	ContentID uint32       `db:"content_id" json:"content_id"`
-	Content   *ContentSpec `db:"content" json:"content"`
-	Memo      string       `db:"memo" json:"memo"`
+	ContentID uint32       `db:"content_id" json:"content_id" gorm:"column:content_id"`
+	Content   *ContentSpec `db:"content" json:"content" gorm:"embedded"`
+	Memo      string       `db:"memo" json:"memo" gorm:"column:memo"`
 }
 
 // Validate commit specifics.

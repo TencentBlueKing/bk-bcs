@@ -28,6 +28,13 @@ spec:
             - containerPort: 80
               name: web
               protocol: TCP
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

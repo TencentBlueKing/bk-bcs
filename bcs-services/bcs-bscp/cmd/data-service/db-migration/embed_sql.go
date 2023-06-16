@@ -10,7 +10,7 @@ either express or implied. See the License for the specific language governing p
 limitations under the License.
 */
 
-package db_migration
+package dbmigration
 
 import "embed"
 

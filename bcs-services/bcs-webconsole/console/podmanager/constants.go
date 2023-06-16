@@ -19,9 +19,9 @@ const (
 	// heartbeat:{run_env}
 	webConsolePodHeartbeatKey     = "bcs::webconsole::heartbeat::pods:%s"
 	webConsoleClusterHeartbeatKey = "bcs::webconsole::heartbeat::clusters:%s"
-	// Namespace TODO
+	// Namespace ..
 	Namespace = "bcs-webconsole"
-	// KubectlContainerName TODO
+	// KubectlContainerName ..
 	KubectlContainerName = "kubectl"
 	// CleanUserPodInterval pod清理时间间隔
 	CleanUserPodInterval = time.Second * 60

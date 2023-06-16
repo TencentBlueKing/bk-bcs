@@ -16,7 +16,7 @@ package options
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
+	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
 )
 
 // UserManagerOptions cmd option for user-manager
@@ -48,6 +48,16 @@ type UserManagerOptions struct {
 	Cmdb             CmdbConfig           `json:"cmdb"`
 	CommunityEdition bool                 `json:"community_edition"`
 	PassCC           PassCCConfig         `json:"passcc"`
+	TracingConf      TracingConf          `json:"tracing_conf"`
+	BcsAPI           BcsAPI               `json:"bcs_api"`
+}
+
+// TracingConf tracing config
+type TracingConf struct {
+	Enabled       bool              `json:"enabled" usage:"enable trace"`
+	Endpoint      string            `json:"endpoint" usage:"Collector service endpoint"`
+	Token         string            `json:"token" usage:"token for collector service"`
+	ResourceAttrs map[string]string `json:"resource_attrs" usage:"attributes of traced service"`
 }
 
 // PassCCConfig pass-cc config

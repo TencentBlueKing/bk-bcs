@@ -237,7 +237,7 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('大小')" prop="diskSize">
           <template #default="{ row }">
-            {{ `${row.diskSize} GB` }}
+            {{ `${row.diskSize} GiB` }}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('文件系统')" prop="fileSystem"></bcs-table-column>

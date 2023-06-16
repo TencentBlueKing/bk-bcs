@@ -86,6 +86,6 @@ export default defineComponent({
 <style lang="postcss">
 @import '@/css/reset.css';
 @import '@/css/app.css';
-@import '@/fonts/style.css';
+@import '@/fonts/font-icon/style.css';
 @import '@/css/main.css';
 </style>

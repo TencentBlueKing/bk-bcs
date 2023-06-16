@@ -261,7 +261,7 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 		)
 		return nil, err
 	}
-	task, err := mgr.BuildSwitchAutoScalingOptionStatusTask(scalingOption, enable, opt)
+	task, err := mgr.BuildSwitchAsOptionStatusTask(scalingOption, enable, opt)
 	if err != nil {
 		blog.Errorf("build SwitchAutoScalingOptionStatus task for cluster %s with cloudprovider %s failed, %s",
 			scalingOption.ClusterID, cloudName, err.Error(),

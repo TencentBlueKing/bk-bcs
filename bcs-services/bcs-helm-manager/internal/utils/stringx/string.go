@@ -31,6 +31,15 @@ func JoinString(str ...string) string {
 	return strings.Join(strList, ",")
 }
 
+// Partition 从指定分隔符的第一个位置，将字符串分为两段
+func Partition(s string, sep string) (string, string) {
+	parts := strings.SplitN(s, sep, 2)
+	if len(parts) == 1 {
+		return parts[0], ""
+	}
+	return parts[0], parts[1]
+}
+
 // JoinStringBySeparator 通过分割符拼装字符串
 func JoinStringBySeparator(strList []string, separator string, addSep bool) string {
 	// 如果分隔符为空，则以 \n---\n 分割

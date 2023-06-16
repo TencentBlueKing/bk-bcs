@@ -97,8 +97,8 @@ func queryByClusterIdExternal(ctx context.Context,
 	}
 
 	namespace := GetNamespace()
-	if err := startupMgr.ensureNamespace(namespace); err != nil {
-		return nil, err
+	if e := startupMgr.ensureNamespace(namespace); e != nil {
+		return nil, e
 	}
 
 	kubeConfig, err := startupMgr.getExternalKubeConfig(targetClusterId, username)
@@ -146,6 +146,7 @@ func queryByClusterIdExternal(ctx context.Context,
 }
 
 // queryByClusterIdInternal 通过clusterId, 使用inCluster的方式访问 kubectl 容器
+// NOCC:deadcode/unused(设计如此:)
 func queryByClusterIdInternal(ctx context.Context, clusterId, username, shell string) (*types.PodContext, error) {
 	startupMgr, err := NewStartupManager(ctx, clusterId)
 	if err != nil {
@@ -153,8 +154,8 @@ func queryByClusterIdInternal(ctx context.Context, clusterId, username, shell st
 	}
 
 	namespace := GetNamespace()
-	if err := startupMgr.ensureNamespace(namespace); err != nil {
-		return nil, err
+	if e := startupMgr.ensureNamespace(namespace); e != nil {
+		return nil, e
 	}
 
 	// kubeconfig cm 配置
@@ -166,8 +167,8 @@ func queryByClusterIdInternal(ctx context.Context, clusterId, username, shell st
 	uid := getUid(clusterId, username)
 
 	configmapName := getConfigMapName(clusterId, username)
-	if err := startupMgr.ensureConfigmap(namespace, configmapName, uid, kubeConfig); err != nil {
-		return nil, err
+	if e := startupMgr.ensureConfigmap(namespace, configmapName, uid, kubeConfig); e != nil {
+		return nil, e
 	}
 
 	// 确保 pod 配置正确

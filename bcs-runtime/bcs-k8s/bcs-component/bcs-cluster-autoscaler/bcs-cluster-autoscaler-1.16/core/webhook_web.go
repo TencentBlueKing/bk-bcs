@@ -50,7 +50,7 @@ type WebScaler struct {
 func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token string,
 	maxBulkScaleUpCount int) Webhook {
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 	}
 	client := &http.Client{
 		Transport: tr,

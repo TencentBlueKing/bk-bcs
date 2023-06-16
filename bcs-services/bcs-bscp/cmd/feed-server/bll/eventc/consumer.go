@@ -79,7 +79,7 @@ func (in *consumer) Members() []*member {
 	idx := 0
 	for _, mem := range in.list {
 		members[idx] = mem
-		idx += 1
+		idx++
 	}
 
 	return members

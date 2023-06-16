@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	svcConfig "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 )
@@ -90,7 +90,7 @@ func TestCreateProject(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	svcConfig.LoadConfig("../../../" + config.DefaultConfigPath)
+	svcConfig.LoadConfig("../../../" + constant.DefaultConfigPath)
 	svcConfig.GlobalConf.BCSCC.Host = ts.URL
 	err := CreateProject(project)
 	assert.Nil(t, err)
@@ -111,7 +111,7 @@ func TestUpdateProject(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	svcConfig.LoadConfig("../../../" + config.DefaultConfigPath)
+	svcConfig.LoadConfig("../../../" + constant.DefaultConfigPath)
 	svcConfig.GlobalConf.BCSCC.Host = ts.URL
 	err := UpdateProject(project)
 	assert.Nil(t, err)

@@ -67,11 +67,11 @@ func InitStorage() {
 		mongoDB, err := mongo.NewDB(mongoOptions)
 		if err != nil {
 			blog.Errorf("init mongo db failed, err %s", err.Error())
-			panic(err)
+			return
 		}
 		if err = mongoDB.Ping(); err != nil {
 			blog.Errorf("ping mongo db failed, err %s", err.Error())
-			panic(err)
+			return
 		}
 		blog.Info("init mongo db successfully")
 		GlobalStorage = New(mongoDB)

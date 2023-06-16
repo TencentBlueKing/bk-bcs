@@ -71,19 +71,22 @@
             }
         },
         "/log_collector/entrypoints": {
-            "get": {
+            "post": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "LogCollectors"
                 ],
-                "summary": "获取日志采集规则列表",
+                "summary": "获取容器日志采集日志查询入口",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/logcollector.Entrypoint"
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/pkg_api_logrule.Entrypoint"
+                            }
                         }
                     }
                 }
@@ -104,7 +107,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.LogCollector"
+                                "$ref": "#/definitions/pkg_api_logrule.GetLogRuleResp"
                             }
                         }
                     }
@@ -125,7 +128,7 @@
                 }
             }
         },
-        "/log_collector/rules/:name": {
+        "/log_collector/rules/:id": {
             "get": {
                 "produces": [
                     "application/json"
@@ -138,7 +141,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.LogCollector"
+                            "$ref": "#/definitions/pkg_api_logrule.GetLogRuleResp"
                         }
                     }
                 }
@@ -165,6 +168,54 @@
                     "LogCollectors"
                 ],
                 "summary": "删除日志采集规则",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/log_collector/rules/:id/disable": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "停用日志采集规则",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/log_collector/rules/:id/enable": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "启用日志采集规则",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/log_collector/rules/:id/retry": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LogCollectors"
+                ],
+                "summary": "重试日志采集规则",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -668,10 +719,131 @@
                     }
                 }
             }
+        },
+        "/service_monitors/batchdelete": {
+            "delete": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "批量删除ServiceMonitor",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/service_monitors/create/namespaces/:namespace/servicemonitors/:name": {
+            "post": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "ServiceMonitor列表数据",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/service_monitors/namespaces/:namespace": {
+            "get": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "ServiceMonitor列表数据",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/service_monitors/namespaces/:namespace/servicemonitors/:name": {
+            "delete": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "删除ServiceMonitor",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/service_monitors/update/namespaces/:namespace/servicemonitors/:name": {
+            "put": {
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "ServiceMonitor列表数据",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
-        "entity.Expression": {
+        "bklog.Conditions": {
+            "type": "object",
+            "properties": {
+                "match_content": {
+                    "type": "string"
+                },
+                "match_type": {
+                    "description": "include, exclude(开发中，暂不支持)",
+                    "type": "string"
+                },
+                "separator": {
+                    "description": "分隔符，| 等",
+                    "type": "string"
+                },
+                "separator_filters": {
+                    "description": "分隔符过滤条件",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bklog.SeparatorFilters"
+                    }
+                },
+                "type": {
+                    "description": "match, separator",
+                    "type": "string"
+                }
+            }
+        },
+        "bklog.Container": {
+            "type": "object",
+            "properties": {
+                "container_name": {
+                    "type": "string"
+                },
+                "workload_name": {
+                    "type": "string"
+                },
+                "workload_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "bklog.Expression": {
             "type": "object",
             "properties": {
                 "key": {
@@ -685,56 +857,159 @@
                 }
             }
         },
-        "entity.LogCollector": {
+        "bklog.Label": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "bklog.LabelSelector": {
+            "type": "object",
+            "properties": {
+                "match_expressions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bklog.Expression"
+                    }
+                },
+                "match_labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bklog.Label"
+                    }
+                }
+            }
+        },
+        "bklog.LogRule": {
             "type": "object",
             "properties": {
                 "add_pod_label": {
                     "type": "boolean"
                 },
-                "cluster_id": {
-                    "type": "string"
-                },
                 "config": {
-                    "$ref": "#/definitions/entity.LogCollectorConfig"
+                    "$ref": "#/definitions/bklog.LogRuleContainer"
                 },
-                "config_selected": {
+                "extra_labels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bklog.Label"
+                    }
+                }
+            }
+        },
+        "bklog.LogRuleContainer": {
+            "type": "object",
+            "properties": {
+                "conditions": {
+                    "$ref": "#/definitions/bklog.Conditions"
+                },
+                "container": {
+                    "$ref": "#/definitions/bklog.Container"
+                },
+                "data_encoding": {
                     "type": "string"
                 },
+                "enable_stdout": {
+                    "type": "boolean"
+                },
+                "label_selector": {
+                    "$ref": "#/definitions/bklog.LabelSelector"
+                },
+                "namespaces": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "bklog.SeparatorFilters": {
+            "type": "object",
+            "properties": {
+                "fieldindex": {
+                    "description": "第几列",
+                    "type": "string"
+                },
+                "logic_op": {
+                    "description": "and, or",
+                    "type": "string"
+                },
+                "op": {
+                    "description": "=",
+                    "type": "string"
+                },
+                "word": {
+                    "type": "string"
+                }
+            }
+        },
+        "github.com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_api_logrule.Entrypoint": {
+            "type": "object",
+            "properties": {
+                "file_log_url": {
+                    "type": "string"
+                },
+                "std_log_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "github.com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_api_logrule.GetLogRuleResp": {
+            "type": "object",
+            "properties": {
                 "created_at": {
                     "$ref": "#/definitions/utils.JSONTime"
                 },
                 "creator": {
                     "type": "string"
                 },
-                "deleted": {
-                    "type": "boolean"
-                },
                 "description": {
                     "type": "string"
                 },
-                "extra_labels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                "entrypoint": {
+                    "$ref": "#/definitions/github.com_Tencent_bk-bcs_bcs-services_bcs-monitor_pkg_api_logrule.Entrypoint"
                 },
                 "file_index_set_id": {
                     "type": "integer"
                 },
+                "id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
-                "namespace": {
+                "new_rule_id": {
+                    "description": "当旧规则转换过新规则后，显示该字段",
                     "type": "string"
                 },
-                "project_code": {
-                    "type": "string"
+                "old": {
+                    "type": "boolean"
                 },
-                "project_id": {
-                    "type": "string"
+                "rule": {
+                    "$ref": "#/definitions/bklog.LogRule"
                 },
                 "rule_id": {
                     "type": "integer"
+                },
+                "rule_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 },
                 "std_index_set_id": {
                     "type": "integer"
@@ -743,103 +1018,6 @@
                     "$ref": "#/definitions/utils.JSONTime"
                 },
                 "updator": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.LogCollectorConfig": {
-            "type": "object",
-            "properties": {
-                "all_containers": {
-                    "$ref": "#/definitions/entity.LogCollectorConfigAllContainers"
-                },
-                "label_selector": {
-                    "$ref": "#/definitions/entity.LogCollectorConfigSelector"
-                },
-                "workload": {
-                    "$ref": "#/definitions/entity.LogCollectorConfigWorkload"
-                }
-            }
-        },
-        "entity.LogCollectorConfigAllContainers": {
-            "type": "object",
-            "properties": {
-                "data_encoding": {
-                    "type": "string"
-                },
-                "enable_stdout": {
-                    "type": "boolean"
-                },
-                "paths": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "entity.LogCollectorConfigContainer": {
-            "type": "object",
-            "properties": {
-                "container_name": {
-                    "type": "string"
-                },
-                "data_encoding": {
-                    "type": "string"
-                },
-                "enable_stdout": {
-                    "type": "boolean"
-                },
-                "paths": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "entity.LogCollectorConfigSelector": {
-            "type": "object",
-            "properties": {
-                "data_encoding": {
-                    "type": "string"
-                },
-                "enable_stdout": {
-                    "type": "boolean"
-                },
-                "match_expressions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Expression"
-                    }
-                },
-                "match_labels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "paths": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "entity.LogCollectorConfigWorkload": {
-            "type": "object",
-            "properties": {
-                "containers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.LogCollectorConfigContainer"
-                    }
-                },
-                "kind": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 }
             }
@@ -863,13 +1041,70 @@
                 }
             }
         },
-        "logcollector.Entrypoint": {
+        "pkg_api_logrule.Entrypoint": {
             "type": "object",
             "properties": {
                 "file_log_url": {
                     "type": "string"
                 },
                 "std_log_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "pkg_api_logrule.GetLogRuleResp": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/utils.JSONTime"
+                },
+                "creator": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "entrypoint": {
+                    "$ref": "#/definitions/pkg_api_logrule.Entrypoint"
+                },
+                "file_index_set_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "new_rule_id": {
+                    "description": "当旧规则转换过新规则后，显示该字段",
+                    "type": "string"
+                },
+                "old": {
+                    "type": "boolean"
+                },
+                "rule": {
+                    "$ref": "#/definitions/bklog.LogRule"
+                },
+                "rule_id": {
+                    "type": "integer"
+                },
+                "rule_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "std_index_set_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "$ref": "#/definitions/utils.JSONTime"
+                },
+                "updator": {
                     "type": "string"
                 }
             }

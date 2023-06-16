@@ -23,6 +23,7 @@ import (
 const mig{{.Version}} = "{{.Version}}_{{.FileName}}"
 
 func init() {
+    // add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
 		Version: "{{.Version}}",
 		Name:    "{{.Version}}_{{.FileName}}",
@@ -32,6 +33,7 @@ func init() {
 	})
 }
 
+// mig{{.Version}}{{.FuncName}}Up for up migration
 func mig{{.Version}}{{.FuncName}}Up(tx *gorm.DB) error {
 	sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetUpSQLKey(mig{{.Version}})], ";")
 	for _, sql := range sqlArr {
@@ -47,6 +49,7 @@ func mig{{.Version}}{{.FuncName}}Up(tx *gorm.DB) error {
 
 }
 
+// mig{{.Version}}{{.FuncName}}Down for down migration
 func mig{{.Version}}{{.FuncName}}Down(tx *gorm.DB) error {
     sqlArr := strings.Split(migrator.GetMigrator().MigrationSQLs[migrator.GetDownSQLKey(mig{{.Version}})], ";")
     for _, sql := range sqlArr {

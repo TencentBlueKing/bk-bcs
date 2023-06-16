@@ -38,6 +38,8 @@ const (
 // Prefix indicates this name will be used as part of generation, in which case trailing dashes are allowed.
 var ValidateHorizontalPodAutoscalerName = apimachineryvalidation.NameIsDNSSubdomain
 
+// validateHorizontalPodAutoscalerSpec validates the spec of pod autoscaler and returns an
+// ErrorList with any errors.
 func validateHorizontalPodAutoscalerSpec(autoscaler autoscaling.GeneralPodAutoscalerSpec, fldPath *field.Path,
 	minReplicasLowerBound int32) field.ErrorList {
 	allErrs := field.ErrorList{}
@@ -158,6 +160,7 @@ func ValidateHorizontalPodASU(newAutoscaler, oldAutoscaler *autoscaling.GeneralP
 	return allErrs
 }
 
+// validateMetrics validates metrics and returns an ErrorList with any errors.
 func validateMetrics(metrics []autoscaling.MetricSpec, fldPath *field.Path, minReplicas *int32) field.ErrorList {
 	allErrs := field.ErrorList{}
 	hasObjectMetrics := false
@@ -186,6 +189,7 @@ func validateMetrics(metrics []autoscaling.MetricSpec, fldPath *field.Path, minR
 	return allErrs
 }
 
+// validateWebhook validates webhook configuration and returns an ErrorList with any errors.
 func validateWebhook(wc *v1beta1.WebhookClientConfig, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if wc == nil {
@@ -209,6 +213,7 @@ func validateWebhook(wc *v1beta1.WebhookClientConfig, fldPath *field.Path) field
 	return allErrs
 }
 
+// validateTime validates time configuration and returns an ErrorList with any errors.
 func validateTime(timeRanges []autoscaling.TimeRange, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if len(timeRanges) == 0 {
@@ -230,6 +235,7 @@ func validateTime(timeRanges []autoscaling.TimeRange, fldPath *field.Path) field
 	return allErrs
 }
 
+// validateEvent validates event configuration and returns an ErrorList with any errors.
 func validateEvent(triggers []autoscaling.ScaleTriggers, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if len(triggers) == 0 {
@@ -247,6 +253,7 @@ func validateEvent(triggers []autoscaling.ScaleTriggers, fldPath *field.Path) fi
 	return allErrs
 }
 
+// validateBehavior validates behavior configuration and returns an ErrorList with any errors.
 func validateBehavior(behavior *autoscaling.GeneralPodAutoscalerBehavior, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if behavior != nil {
@@ -264,6 +271,7 @@ var validSelectPolicyTypes = sets.NewString(string(autoscaling.MaxPolicySelect),
 	string(autoscaling.DisabledPolicySelect))
 var validSelectPolicyTypesList = validSelectPolicyTypes.List()
 
+// validateScalingRules validates scaling rules and returns an ErrorList with any errors.
 func validateScalingRules(rules *autoscaling.GPAScalingRules, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if rules != nil {
@@ -297,6 +305,7 @@ func validateScalingRules(rules *autoscaling.GPAScalingRules, fldPath *field.Pat
 var validPolicyTypes = sets.NewString(string(autoscaling.PodsScalingPolicy), string(autoscaling.PercentScalingPolicy))
 var validPolicyTypesList = validPolicyTypes.List()
 
+// validateScalingPolicy validates scaling policy and returns an ErrorList with any errors.
 func validateScalingPolicy(policy autoscaling.GPAScalingPolicy, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if policy.Type != autoscaling.PodsScalingPolicy && policy.Type != autoscaling.PercentScalingPolicy {
@@ -324,6 +333,7 @@ var validMetricSourceTypes = sets.NewString(
 	string(autoscaling.ExternalMetricSourceType))
 var validMetricSourceTypesList = validMetricSourceTypes.List()
 
+// validateMetricSpec validates spec of metric and returns an ErrorList with any errors.
 func validateMetricSpec(spec autoscaling.MetricSpec, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
@@ -411,6 +421,7 @@ func validateMetricSpec(spec autoscaling.MetricSpec, fldPath *field.Path) field.
 	return allErrs
 }
 
+// validateObjectSource validates object resource and returns an ErrorList with any errors.
 func validateObjectSource(src *autoscaling.ObjectMetricSource, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
@@ -427,6 +438,7 @@ func validateObjectSource(src *autoscaling.ObjectMetricSource, fldPath *field.Pa
 	return allErrs
 }
 
+// validateExternalSource validates external source and returns an ErrorList with any errors.
 func validateExternalSource(src *autoscaling.ExternalMetricSource, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
@@ -446,6 +458,7 @@ func validateExternalSource(src *autoscaling.ExternalMetricSource, fldPath *fiel
 	return allErrs
 }
 
+// validatePodsSource validates pods source and returns an ErrorList with any errors.
 func validatePodsSource(src *autoscaling.PodsMetricSource, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
@@ -460,6 +473,7 @@ func validatePodsSource(src *autoscaling.PodsMetricSource, fldPath *field.Path) 
 	return allErrs
 }
 
+// validateResourceSource validates resource source and returns an ErrorList with any errors.
 func validateResourceSource(src *autoscaling.ResourceMetricSource, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
@@ -482,6 +496,7 @@ func validateResourceSource(src *autoscaling.ResourceMetricSource, fldPath *fiel
 	return allErrs
 }
 
+// validateMetricTarget validates metric target and returns an ErrorList with any errors.
 func validateMetricTarget(mt autoscaling.MetricTarget, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
@@ -517,6 +532,7 @@ func validateMetricTarget(mt autoscaling.MetricTarget, fldPath *field.Path) fiel
 	return allErrs
 }
 
+// validateMetricIdentifier validates metric identifier and returns an ErrorList with any errors.
 func validateMetricIdentifier(id autoscaling.MetricIdentifier, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 

@@ -37,6 +37,9 @@ func NewClient(option *Option) Client {
 	return c
 }
 
+// apisixSetting is a helper function that sets the X-API-KEY header 
+// for the request if an admin token is provided in the Option struct.
+// It returns the modified request with the header set or the original request if no header needs to be added.
 func apisixSetting(req *restclient.Request, option *Option) *restclient.Request {
 	header := make(http.Header)
 	if len(option.AdminToken) != 0 {
@@ -56,10 +59,12 @@ type client struct {
 
 // GetUpstream implementation
 func (c *client) GetUpstream(id string) (*Upstream, error) {
+	// check if the id is empty
 	if len(id) == 0 {
 		return nil, fmt.Errorf("upstream id required")
 	}
 
+	// record API metrics
 	metricData := utils.APIMetricsMeta{
 		System:  ApisixAdmin,
 		Handler: "GetUpstream",
@@ -70,6 +75,8 @@ func (c *client) GetUpstream(id string) (*Upstream, error) {
 	defer func() {
 		utils.ReportBcsGatewayAPIMetrics(metricData)
 	}()
+
+	// send request to get the upstream
 	var response Basic
 	err := apisixSetting(c.client.Get(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -81,18 +88,26 @@ func (c *client) GetUpstream(id string) (*Upstream, error) {
 		metricData.Status = utils.ErrStatus
 		return nil, err
 	}
+
+	// check if the response data is empty
 	if response.Data == nil || response.Data.Value == nil {
 		metricData.Status = utils.SucStatus
 		// no exact data
 		return nil, nil
 	}
+
+	// decode the upstream from the response data
 	upstream := new(Upstream)
 	if err := json.Unmarshal(response.Data.Value, upstream); err != nil {
 		return nil, fmt.Errorf("upstream decode err: %s", err.Error())
 	}
+
+	// check if the upstream ID is empty
 	if len(upstream.ID) == 0 {
 		return nil, fmt.Errorf("upstream data err")
 	}
+
+	// parse the upstream nodes
 	nodesOK := false
 	mapStructedNodes := make(map[string]int)
 	var upstreamNodes []UpstreamNode
@@ -103,31 +118,39 @@ func (c *client) GetUpstream(id string) (*Upstream, error) {
 		upstream.MapStructedNodes = &mapStructedNodes
 		nodesOK = true
 	}
+
+	// check if the upstream nodes are parsed successfully
 	if !nodesOK {
 		nodestr, _ := upstream.Nodes.MarshalJSON()
 		blog.Errorf("upstream %s nodes decode failed, nodes value: %s", upstream.Name, nodestr)
 		return nil, fmt.Errorf("upstream %s nodes decode failed, nodes value: %s", upstream.Name, nodestr)
 	}
+
 	return upstream, nil
 }
 
 // CreateUpstream implementation
 func (c *client) CreateUpstream(upstr *Upstream) error {
+	// Check if upstream nodes is empty
 	if upstr == nil || len(upstr.Nodes) == 0 {
 		return fmt.Errorf("upstream nodes is empty")
 	}
+	// Check if upstream ID is required
 	if len(upstr.ID) == 0 {
 		return fmt.Errorf("upstream ID required")
 	}
+	// Check if upstream type is valid
 	if !(upstr.Type == BalanceTypeRoundrobin || upstr.Type == BalanceTypeChash) {
 		return fmt.Errorf(
 			"upstream type err, only [%s, %s] are available",
 			BalanceTypeRoundrobin,
 			BalanceTypeChash)
 	}
+	// Set default retries to 1 if not provided
 	if upstr.Retries == 0 {
 		upstr.Retries = 1
 	}
+	// Record API metrics data
 	metricData := utils.APIMetricsMeta{
 		System:  ApisixAdmin,
 		Handler: "CreateUpstream",
@@ -138,6 +161,7 @@ func (c *client) CreateUpstream(upstr *Upstream) error {
 	defer func() {
 		utils.ReportBcsGatewayAPIMetrics(metricData)
 	}()
+	// Send request to create upstream
 	var response Basic
 	err := apisixSetting(c.client.Put(), c.option).
 		WithEndpoints(c.option.Addrs).
@@ -151,7 +175,7 @@ func (c *client) CreateUpstream(upstr *Upstream) error {
 	}
 	if len(response.Err) != 0 {
 		metricData.Status = utils.ErrStatus
-		// no exact data
+		// Return error message if there is no exact data
 		return fmt.Errorf(response.Err)
 	}
 	return nil
@@ -171,6 +195,7 @@ func (c *client) ListUpstream() ([]*Upstream, error) {
 	}()
 
 	var response Basic
+	// Send GET request to /apisix/admin/upstreams API endpoint
 	err := apisixSetting(c.client.Get(), c.option).
 		WithEndpoints(c.option.Addrs).
 		WithBasePath("/apisix/admin/upstreams").
@@ -202,6 +227,7 @@ func (c *client) ListUpstream() ([]*Upstream, error) {
 		nodesOK := false
 		mapStructedNodes := make(map[string]int)
 		var upstreamNodes []UpstreamNode
+		// Unmarshal upstream.Nodes to UpstreamNode slice or map[string]int
 		if err = json.Unmarshal(upstream.Nodes, &upstreamNodes); err == nil {
 			upstream.UpstreamNodes = &upstreamNodes
 			nodesOK = true

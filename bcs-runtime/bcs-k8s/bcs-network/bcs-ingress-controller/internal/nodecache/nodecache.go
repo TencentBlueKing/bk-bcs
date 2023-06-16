@@ -30,10 +30,11 @@ import (
 
 // NodeCache cache node info
 type NodeCache struct {
-	isInit      bool
-	nodeInfoMap *sync.Map
-	k8sClient   client.Client
-	nodeClient  cloudnode.NodeClient
+	isInit            bool
+	nodeInfoMapByName *sync.Map
+	nodeInfoMapByIP   *sync.Map
+	k8sClient         client.Client
+	nodeClient        cloudnode.NodeClient
 
 	sync.Mutex
 }
@@ -41,17 +42,18 @@ type NodeCache struct {
 // NewNodeCache return new NodeCache
 func NewNodeCache(k8sClient client.Client, nodeClient cloudnode.NodeClient) *NodeCache {
 	cache := &NodeCache{
-		nodeInfoMap: &sync.Map{},
-		isInit:      false,
-		k8sClient:   k8sClient,
-		nodeClient:  nodeClient,
+		nodeInfoMapByName: &sync.Map{},
+		nodeInfoMapByIP:   &sync.Map{},
+		isInit:            false,
+		k8sClient:         k8sClient,
+		nodeClient:        nodeClient,
 	}
 	go func() {
 		timeTicker := time.NewTicker(time.Second * 5)
 		for {
 			select {
 			case <-timeTicker.C:
-				cache.nodeInfoMap.Range(func(key, value interface{}) bool {
+				cache.nodeInfoMapByName.Range(func(key, value interface{}) bool {
 					blog.V(4).Infof("node cache info: %v %v", key, value)
 					return true
 				})
@@ -63,26 +65,50 @@ func NewNodeCache(k8sClient client.Client, nodeClient cloudnode.NodeClient) *Nod
 }
 
 // SetNodeIps set node ip to cache
-func (n *NodeCache) SetNodeIps(nodeName string, nodeIPs []string) {
+func (n *NodeCache) SetNodeIps(node corev1.Node, nodeIPs []string) {
 	// init失败时仍尝试保存数据
 	if err := n.checkInit(); err != nil {
 		err = errors.Wrapf(err, "init node cache failed")
 		blog.Errorf("%s", err.Error())
 	}
 
-	n.nodeInfoMap.Store(nodeName, nodeIPs)
+	n.nodeInfoMapByName.Store(node.GetName(), nodeIPs)
+	n.nodeInfoMapByIP.Store(getNodeInternalIP(node), nodeIPs)
 }
 
-// GetNodeIps get node ip from cache
-func (n *NodeCache) GetNodeIps(nodeName string) ([]string, error) {
+// GetNodeExternalIPsByName get node ip from cache
+func (n *NodeCache) GetNodeExternalIPsByName(nodeName string) ([]string, error) {
 	if n.isInit == false {
 		blog.Errorf("try to get node ip without init")
 		return nil, errors.New("try to get node ip without init")
 	}
-	val, ok := n.nodeInfoMap.Load(nodeName)
+	val, ok := n.nodeInfoMapByName.Load(nodeName)
 	if !ok {
 		metrics.IncreaseNodeNotFoundCounter(nodeName)
 		err := errors.Errorf("node[%s] external ips is empty", nodeName)
+		blog.Errorf("%s", err.Error())
+		return nil, err
+	}
+
+	nodeIPs, ok := val.([]string)
+	if !ok {
+		err := errors.Errorf("unknown type in node cache, value: %+v", val)
+		blog.Errorf("%s", err.Error())
+		return nil, err
+	}
+	return nodeIPs, nil
+}
+
+// GetNodeExternalIPsByIP get node ip from cache
+func (n *NodeCache) GetNodeExternalIPsByIP(nodeInternalIP string) ([]string, error) {
+	if n.isInit == false {
+		blog.Errorf("try to get node ip without init")
+		return nil, errors.New("try to get node ip without init")
+	}
+	val, ok := n.nodeInfoMapByIP.Load(nodeInternalIP)
+	if !ok {
+		metrics.IncreaseNodeNotFoundCounter(nodeInternalIP)
+		err := errors.Errorf("node[%s] external ips is empty", nodeInternalIP)
 		blog.Errorf("%s", err.Error())
 		return nil, err
 	}
@@ -114,7 +140,7 @@ func (n *NodeCache) initCache() error {
 			blog.Errorf("get node[%s] external ip list failed, err: %s", node.GetName(), err.Error())
 			continue
 		}
-		n.SetNodeIps(node.GetName(), externalIPList)
+		n.SetNodeIps(node, externalIPList)
 	}
 
 	return nil
@@ -134,4 +160,14 @@ func (n *NodeCache) checkInit() error {
 		}
 	}
 	return nil
+}
+
+func getNodeInternalIP(node corev1.Node) string {
+	for _, addr := range node.Status.Addresses {
+		if addr.Type == corev1.NodeInternalIP {
+			return addr.Address
+		}
+	}
+
+	return ""
 }

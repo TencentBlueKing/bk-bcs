@@ -11,8 +11,8 @@
  *
  */
 
-// Package bk_monitor xxx
-package bk_monitor
+// Package bkmonitor xxx
+package bkmonitor
 
 import (
 	"context"
@@ -68,18 +68,15 @@ func NewBKMonitorStore(conf []byte) (*BKMonitorStore, error) {
 
 // Info 返回元数据信息
 func (s *BKMonitorStore) Info(ctx context.Context, r *storepb.InfoRequest) (*storepb.InfoResponse, error) {
-	labelSets := labels.FromMap(map[string]string{"provider": "BK_MONITOR"})
-
-	zset := labelpb.ZLabelSet{Labels: labelpb.ZLabelsFromPromLabels(labelSets)}
-
 	// 默认配置
-	lsets := []labelpb.ZLabelSet{zset}
+	var lsets []labelpb.ZLabelSet
 
 	clusterMap, err := bcs.GetClusterMap()
 	if err != nil {
 		return nil, err
 	}
 
+	// NOCC:ineffassign/assign(误报)
 	grayClusterMap := make(map[string]struct{}, 0)
 	if config.G.BKMonitor.EnableGrey {
 		grayClusterMap, err = bkmonitor_client.QueryGrayClusterMap(ctx, config.G.BKMonitor.MetadataURL)
@@ -194,21 +191,21 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 		return nil
 	}
 
-	clusterId, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
+	clusterID, err := clientutil.GetLabelMatchValue("cluster_id", r.Matchers)
 	if err != nil {
 		return err
 	}
 
 	scopeClusterID := store.ClusterIDValue(ctx)
-	if clusterId == "" && scopeClusterID == "" {
+	if clusterID == "" && scopeClusterID == "" {
 		return nil
 	}
 
 	// 优先使用 clusterID
 	if scopeClusterID != "" {
-		clusterId = scopeClusterID
+		clusterID = scopeClusterID
 	}
-	cluster, err := bcs.GetCluster(clusterId)
+	cluster, err := bcs.GetCluster(clusterID)
 	if err != nil {
 		return err
 	}
@@ -217,11 +214,51 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 	if r.SkipChunks {
 		// end = time.Now().Unix()
 		// start = end - clientutil.SeriesStepDeltaSeconds
-		return s.getMatcherSeries(r, srv, clusterId, cluster.BKBizID)
+		return s.getMatcherSeries(r, srv, clusterID, cluster.BKBizID)
 	}
 
-	newMatchers := make([]storepb.LabelMatcher, 0, len(r.Matchers))
-	for _, m := range r.Matchers {
+	newMatchers := getMatcher(r.Matchers, metricName, cluster)
+	// 必须的参数 bk_biz_id, 单独拎出来处理
+
+	r.Matchers = newMatchers
+	pql := ""
+	if r.QueryHints != nil && r.QueryHints.Func != nil &&
+		utils.StringInSlice(r.QueryHints.Func.Name, AvailableFuncNames) {
+		// 传递函数到底层数据源，来实现特定的特性，如：把 avg_over_time 之类的时间函数传递到底层数据源，可以忽略 prometheus 回朔特性
+		pql = r.ToPromQL()
+	}
+	bkmonitorURL := config.G.BKMonitor.URL
+	if url, ok := s.dispatch[clusterID]; ok {
+		bkmonitorURL = url.URL
+	}
+	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), bkmonitorURL, cluster.BKBizID,
+		start, end, step, newMatchers, pql)
+	if err != nil {
+		return err
+	}
+
+	for _, promSeries := range promSeriesSet {
+		series := &clientutil.TimeSeries{TimeSeries: promSeries}
+		series = series.AddLabel("__name__", metricName)
+		series = series.AddLabel("cluster_id", clusterID)
+		series = series.RenameLabel("bk_namespace", "namespace")
+		series = series.RenameLabel("bk_pod", "pod")
+
+		s, err := series.ToThanosSeries(r.SkipChunks)
+		if err != nil {
+			return err
+		}
+		if err := srv.Send(storepb.NewSeriesResponse(s)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getMatcher(matchers []storepb.LabelMatcher, metricName string, cluster *bcs.Cluster) []storepb.LabelMatcher {
+	newMatchers := make([]storepb.LabelMatcher, 0)
+	for _, m := range matchers {
 		if m.Name == "provider" {
 			continue
 		}
@@ -238,49 +275,14 @@ func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_Seri
 
 		newMatchers = append(newMatchers, m)
 	}
-	// 必须的参数 bk_biz_id, 单独拎出来处理
 	bkBizIDMatcher := storepb.LabelMatcher{
 		Type:  storepb.LabelMatcher_EQ,
 		Name:  "bk_biz_id",
 		Value: cluster.BKBizID,
 	}
 	newMatchers = append(newMatchers, bkBizIDMatcher)
-	newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: clusterId})
-
-	r.Matchers = newMatchers
-	pql := ""
-	if r.QueryHints != nil && r.QueryHints.Func != nil &&
-		utils.StringInSlice(r.QueryHints.Func.Name, AvailableFuncNames) {
-		// 传递函数到底层数据源，来实现特定的特性，如：把 avg_over_time 之类的时间函数传递到底层数据源，可以忽略 prometheus 回朔特性
-		pql = r.ToPromQL()
-	}
-	bkmonitorURL := config.G.BKMonitor.URL
-	if url, ok := s.dispatch[clusterId]; ok {
-		bkmonitorURL = url.URL
-	}
-	promSeriesSet, err := bkmonitor_client.QueryByPromQL(srv.Context(), bkmonitorURL, cluster.BKBizID,
-		start, end, step, newMatchers, pql)
-	if err != nil {
-		return err
-	}
-
-	for _, promSeries := range promSeriesSet {
-		series := &clientutil.TimeSeries{TimeSeries: promSeries}
-		series = series.AddLabel("__name__", metricName)
-		series = series.AddLabel("cluster_id", clusterId)
-		series = series.RenameLabel("bk_namespace", "namespace")
-		series = series.RenameLabel("bk_pod", "pod")
-
-		s, err := series.ToThanosSeries(r.SkipChunks)
-		if err != nil {
-			return err
-		}
-		if err := srv.Send(storepb.NewSeriesResponse(s)); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	newMatchers = append(newMatchers, storepb.LabelMatcher{Name: "bcs_cluster_id", Value: cluster.ClusterId})
+	return newMatchers
 }
 
 func (s *BKMonitorStore) getMatcherSeries(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer,

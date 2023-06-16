@@ -66,6 +66,7 @@ func GenerateAutoscalerRequest(nodeGroups []cloudprovider.NodeGroup,
 	return req, nil
 }
 
+// generateNodeGroup generates the information of node groups
 func generateNodeGroup(nodeGroup cloudprovider.NodeGroup,
 	upcomingNodes map[string]int, newPriorities priorities,
 	nodeDeletionTracker *NodeDeletionTracker) (*NodeGroup, error) {
@@ -140,6 +141,7 @@ func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 	return options, candidates, nil
 }
 
+// handleScaleUpResponse abstracts options of scale up from response
 func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (ScaleUpOptions, error) {
 	options := make(ScaleUpOptions, 0)
 	if len(policies) <= 0 {
@@ -165,6 +167,7 @@ func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (S
 	return options, nil
 }
 
+// handleScaleDownResponse abstracts candidates of scale down from response
 func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy, nodes []*corev1.Node,
 	nodeNameToNodeInfo map[string]*schedulerframework.NodeInfo, sd *ScaleDown,
 	scaleDownDelay time.Duration) (ScaleDownCandidates, error) {
@@ -233,6 +236,7 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 
 }
 
+// intersect iintersect two sets
 func intersect(slice1, slice2 []string) []string {
 	m := make(map[string]int)
 	n := make([]string, 0)
@@ -249,6 +253,7 @@ func intersect(slice1, slice2 []string) []string {
 	return n
 }
 
+// sortNodesWithCostAndUtilization sorts nodes woth cost and utilization
 func sortNodesWithCostAndUtilization(nodes []*corev1.Node, candidates []string,
 	nodeNameToNodeInfo map[string]*schedulerframework.NodeInfo, sd *ScaleDown) ([]string, error) {
 	nodeToUtilInfo := make(map[string]simulator.UtilizationInfo)
@@ -393,6 +398,7 @@ func ExecuteScaleDown(context *contextinternal.Context, sd *ScaleDown,
 
 }
 
+// checkCandidates determinates whether the node is in candidates
 func checkCandidates(node *corev1.Node, candidates ScaleDownCandidates) (string, bool) {
 	// get internal IP
 	IP := getInternalIP(node)
@@ -411,6 +417,7 @@ func checkCandidates(node *corev1.Node, candidates ScaleDownCandidates) (string,
 	return IP, found
 }
 
+// simpleGetPodsToMove returns the pods that need to evict when scaling down the node
 func simpleGetPodsToMove(nodeInfo *schedulerframework.NodeInfo) ([]*corev1.Pod, []*corev1.Pod) {
 	pods := make([]*corev1.Pod, 0)
 	daemonsetPods := make([]*corev1.Pod, 0)
@@ -431,18 +438,7 @@ func simpleGetPodsToMove(nodeInfo *schedulerframework.NodeInfo) ([]*corev1.Pod, 
 	return pods, daemonsetPods
 }
 
-// func hasToBeDeletedTaint(taints []corev1.Taint) bool {
-// 	if len(taints) == 0 {
-// 		return false
-// 	}
-// 	for _, taint := range taints {
-// 		if taint.Key == deletetaint.ToBeDeletedTaint && taint.Effect == corev1.TaintEffectNoSchedule {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
-
+// getPriority returns the priority of node groups
 func getPriority(lister v1lister.ConfigMapNamespaceLister) (priorities, error) {
 	cm, err := lister.Get(priority_util.PriorityConfigMapName)
 	if err != nil && kube_errors.IsNotFound(err) {
@@ -466,6 +462,7 @@ func getPriority(lister v1lister.ConfigMapNamespaceLister) (priorities, error) {
 	return newPriorities, nil
 }
 
+// parsePrioritiesYAMLString parse priority from yaml
 func parsePrioritiesYAMLString(prioritiesYAML string) (priorities, error) {
 	if prioritiesYAML == "" {
 		return nil, fmt.Errorf("priority configuration in %s configmap is empty; please provide valid configuration",
@@ -487,6 +484,7 @@ func parsePrioritiesYAMLString(prioritiesYAML string) (priorities, error) {
 	return newPriorities, nil
 }
 
+// processMultiNodeGroupWithPriority process option of node group based on priority
 func processMultiNodeGroupWithPriority(req *AutoscalerRequest, policy *ScaleUpPolicy) (ScaleUpOptions, error) {
 	policyNodeGroupIDs := strings.Split(policy.NodeGroupID, ",")
 	nodeGroups := make([]*NodeGroup, 0)
@@ -544,6 +542,7 @@ func processMultiNodeGroupWithPriority(req *AutoscalerRequest, policy *ScaleUpPo
 	return options, nil
 }
 
+// checkResourcesLimits checks the resources limitation of scale up option and scale down candidates
 func checkResourcesLimits(
 	context *contextinternal.Context,
 	nodes []*corev1.Node,
@@ -571,6 +570,7 @@ func checkResourcesLimits(
 	return nil
 }
 
+// checkScaleUpResourcesLimits checks the resources limitation of scale up option
 func checkScaleUpResourcesLimits(options ScaleUpOptions,
 	nodes []*corev1.Node,
 	cp cloudprovider.CloudProvider,
@@ -603,6 +603,8 @@ func checkScaleUpResourcesLimits(options ScaleUpOptions,
 	return nil
 }
 
+// calculateWebhookScaleUpCoresMemoryTotal return the total resources after scaling up
+// NOCC:tosa/fn_length(设计如此)
 func calculateWebhookScaleUpCoresMemoryTotal(options ScaleUpOptions,
 	nodes []*corev1.Node,
 	cp cloudprovider.CloudProvider) (int64, int64, errors.AutoscalerError) {
@@ -637,6 +639,7 @@ func calculateWebhookScaleUpCoresMemoryTotal(options ScaleUpOptions,
 	return coresTotal, memoryTotal, nil
 }
 
+// checkScaleDownResourcesLimits checks the resources limitation of scale down candidates
 func checkScaleDownResourcesLimits(candidates ScaleDownCandidates,
 	nodes []*corev1.Node, cp cloudprovider.CloudProvider,
 	resourceLimiter *cloudprovider.ResourceLimiter) errors.AutoscalerError {
@@ -669,6 +672,8 @@ func checkScaleDownResourcesLimits(candidates ScaleDownCandidates,
 	return nil
 }
 
+// calculateWebhookScaleDownCoresMemoryTotal return the total resources after scaling down
+// NOCC:tosa/fn_length(设计如此)
 func calculateWebhookScaleDownCoresMemoryTotal(candidates ScaleDownCandidates, nodes []*corev1.Node,
 	cp cloudprovider.CloudProvider) (int64, int64, errors.AutoscalerError) {
 	timestamp := time.Now()
@@ -685,6 +690,7 @@ func calculateWebhookScaleDownCoresMemoryTotal(candidates ScaleDownCandidates, n
 	return coresTotal, memoryTotal, nil
 }
 
+// filteroutInitializingNodes filter out initializing nodes
 func filteroutInitializingNodes(nodes []*corev1.Node, ips []string, delayTime time.Duration) []string {
 	res := make([]string, 0)
 	now := time.Now()
@@ -705,6 +711,7 @@ func filteroutInitializingNodes(nodes []*corev1.Node, ips []string, delayTime ti
 	return res
 }
 
+// getInternalIP returns the internal IP of node
 func getInternalIP(node *corev1.Node) string {
 	if len(node.Status.Addresses) == 0 {
 		return ""
@@ -719,6 +726,7 @@ func getInternalIP(node *corev1.Node) string {
 	return IP
 }
 
+// hasTaint return true when the node has specific taint
 func hasTaint(node *corev1.Node, taintKey string) bool {
 	for _, taint := range node.Spec.Taints {
 		if taint.Key == taintKey {

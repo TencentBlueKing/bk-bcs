@@ -46,7 +46,8 @@ func (rr *reader) Read(p []byte) (n int, err error) {
 			rr.pending, err = rr.size()
 			continue
 		}
-		read, hi := 0, min(rr.pending, uint64(len(p)))
+		var read int
+		hi := min(rr.pending, uint64(len(p)))
 		read, err = rr.r.Read(p[:hi])
 		n += read
 		p = p[read:]

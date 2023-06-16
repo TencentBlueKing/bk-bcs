@@ -15,6 +15,11 @@ package app
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -22,10 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage/zookeeper"
-	"os"
-	"os/signal"
-	"strconv"
-	"syscall"
 )
 
 // Run entry point for bcs-netservice
@@ -51,11 +52,11 @@ func Run(cfg *Config) error {
 	}
 
 	// start signal handler
-	interupt := make(chan os.Signal, 10)
-	signal.Notify(interupt, syscall.SIGINT, syscall.SIGTERM)
+	interrupt := make(chan os.Signal, 10)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 	// start http(s) service
 	httpSrv := api.NewHTTPService(cfg.Address, int(cfg.Port))
-	go handleSysSignal(interupt, httpSrv, st)
+	go handleSysSignal(interrupt, httpSrv, st)
 
 	api.RegisterPoolHandler(httpSrv, netSvr)
 	api.RegisterHostHandler(httpSrv, netSvr)

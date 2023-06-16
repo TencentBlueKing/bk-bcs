@@ -165,19 +165,19 @@ var CISpecColumnDescriptor = mergeColumnDescriptors("",
 // by user.
 type ConfigItemSpec struct {
 	// Name is the name of this config item
-	Name string `db:"name" json:"name"`
+	Name string `db:"name" json:"name" gorm:"column:name"`
 	// Path is where these configurations to save.
 	// Note:
 	// 1. KV config type do not need path.
 	// 2. this path is a relevant path to the sidecar's system workspace path.
 	// 3. this path is the absolute path for user's workspace path.
-	Path string `db:"path" json:"path"`
+	Path string `db:"path" json:"path" gorm:"column:name"`
 	// FileType is the file type of this configuration.
-	FileType FileFormat `db:"file_type" json:"file_type"`
-	FileMode FileMode   `db:"file_mode" json:"file_mode"`
-	Memo     string     `db:"memo" json:"memo"`
+	FileType FileFormat `db:"file_type" json:"file_type" gorm:"column:name"`
+	FileMode FileMode   `db:"file_mode" json:"file_mode" gorm:"column:name"`
+	Memo     string     `db:"memo" json:"memo" gorm:"column:name"`
 	// KV类型，不能有Permission
-	Permission *FilePermission `db:"permission" json:"permission"`
+	Permission *FilePermission `db:"permission" json:"permission" gorm:"embedded"`
 }
 
 // ValidateCreate validate the config item's specifics
@@ -310,8 +310,8 @@ var CIAttachmentColumnDescriptor = ColumnDescriptors{
 
 // ConfigItemAttachment is a configuration item attachment
 type ConfigItemAttachment struct {
-	BizID uint32 `db:"biz_id" json:"biz_id"`
-	AppID uint32 `db:"app_id" json:"app_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
+	AppID uint32 `db:"app_id" json:"app_id" gorm:"column:app_id"`
 }
 
 // Validate config item attachment.

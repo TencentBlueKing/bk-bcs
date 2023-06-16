@@ -43,3 +43,8 @@ const (
 	// ReleaseStatusUninstallFailed xxx
 	ReleaseStatusUninstallFailed release.Status = "failed-uninstall"
 )
+
+const (
+	// LangCookieName 语言版本 Cookie 名称
+	LangCookieName = "blueking_language"
+)

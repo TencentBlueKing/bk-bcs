@@ -34,6 +34,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	microRgt "github.com/micro/go-micro/v2/registry"
 	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
+	"github.com/micro/go-micro/v2/server"
 	serverGrpc "github.com/micro/go-micro/v2/server/grpc"
 	microSvc "github.com/micro/go-micro/v2/service"
 	microGrpc "github.com/micro/go-micro/v2/service/grpc"
@@ -43,7 +44,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
@@ -237,10 +238,10 @@ func (p *ProjectService) initRegistry() error {
 }
 
 func (p *ProjectService) initDiscovery() error {
-	p.discovery = discovery.NewModuleDiscovery(config.ServiceDomain, p.microRgt)
+	p.discovery = discovery.NewModuleDiscovery(constant.ServiceDomain, p.microRgt)
 	logging.Info("init discovery for project manager successfully")
 	// enable discovery cluster manager module
-	p.clusterDiscovery = discovery.NewModuleDiscovery(config.ClusterManagerDomain, p.microRgt)
+	p.clusterDiscovery = discovery.NewModuleDiscovery(constant.ClusterManagerDomain, p.microRgt)
 	clustermanager.SetClusterManagerClient(p.clientTLSConfig, p.clusterDiscovery)
 	logging.Info("init discovery for cluster manager successfully")
 	return nil
@@ -272,7 +273,7 @@ func (p *ProjectService) initMicro() error {
 
 	// service inject metadata to discovery center
 	metadata := make(map[string]string)
-	metadata[config.MicroMetaKeyHTTPPort] = strconv.Itoa(int(p.opt.Server.HTTPPort))
+	metadata[constant.MicroMetaKeyHTTPPort] = strconv.Itoa(int(p.opt.Server.HTTPPort))
 
 	// 适配单栈环境（ipv6注册地址不能是本地回环地址）
 	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
@@ -280,10 +281,10 @@ func (p *ProjectService) initMicro() error {
 	}
 
 	authWrapper := wrapper.NewAuthWrapper()
-	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(config.MaxMsgSize))
+	server := serverGrpc.NewServer(serverGrpc.MaxMsgSize(constant.MaxMsgSize))
 	svc := microGrpc.NewService(
 		microSvc.Server(server),
-		microSvc.Name(config.ServiceDomain),
+		microSvc.Name(constant.ServiceDomain),
 		microSvc.Metadata(metadata),
 		microGrpc.WithTLS(p.tlsConfig),
 		microSvc.Address(net.JoinHostPort(ipv4, port)),
@@ -332,6 +333,17 @@ func (p *ProjectService) initMicro() error {
 		return err
 	}
 
+	// register grpc handlers
+	if err := p.registerHandlers(grpcServer); err != nil {
+		return err
+	}
+
+	p.microSvc = svc
+	logging.Info("success to register project service handler to micro")
+	return nil
+}
+
+func (p *ProjectService) registerHandlers(grpcServer server.Server) error {
 	// 添加项目相关handler
 	if err := proto.RegisterBCSProjectHandler(grpcServer, handler.NewProject(p.model)); err != nil {
 		logging.Error("register project handler failed, err: %s", err.Error())
@@ -357,9 +369,6 @@ func (p *ProjectService) initMicro() error {
 		logging.Error("register healthz handler failed, err: %s", err.Error())
 		return err
 	}
-
-	p.microSvc = svc
-	logging.Info("success to register project service handler to micro")
 	return nil
 }
 
@@ -380,7 +389,7 @@ func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 	}
 
 	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(
-		grpc.MaxCallRecvMsgSize(config.MaxMsgSize), grpc.MaxCallSendMsgSize(config.MaxMsgSize)))
+		grpc.MaxCallRecvMsgSize(constant.MaxMsgSize), grpc.MaxCallSendMsgSize(constant.MaxMsgSize)))
 	if err := p.registerGatewayFromEndPoint(gwMux, grpcDialOpts); err != nil {
 		return err
 	}

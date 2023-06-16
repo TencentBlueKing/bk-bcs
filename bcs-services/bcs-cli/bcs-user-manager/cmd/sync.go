@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
+// newSyncCmd create the sync tke cidrs command
 func newSyncCmd() *cobra.Command {
 	syncCmd := &cobra.Command{
 		Use:   "sync",
@@ -53,7 +54,7 @@ func syncTkeClusterCredentialsCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("sync the tke cluster credentials from tke response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintSyncTkeClusterCredentialsCmdResult(flagOutput, resp)
+			printer.PrintSyncCredentialsResult(flagOutput, resp)
 		},
 	}
 

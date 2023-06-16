@@ -528,7 +528,7 @@ properties:
         clearable: false
         searchable: true
         remoteConfig:
-          # TODO 需要确认 params 能否支持动态获取 namespace，目前是直接渲染到 url 中
+          # 需要确认 params 能否支持动态获取 namespace，目前是直接渲染到 url 中
           url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/clusters/${$context.clusterID}/crds/hooktemplates.tkex.tencent.com/custom_objects?namespace=${$self.getValue('metadata.namespace')}&format=selectItems` {{`}}`}}"
     ui:reactions:
       - lifetime: init

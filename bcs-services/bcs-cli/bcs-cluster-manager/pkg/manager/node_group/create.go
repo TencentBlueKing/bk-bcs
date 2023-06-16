@@ -23,6 +23,7 @@ import (
 // Create 创建节点池,创建成功返回节点池ID和任务ID
 func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNodeGroupResp, err error) {
 	timeRange := make([]*clustermanager.TimeRange, 0)
+	// nodeGroup time range
 	for _, v := range req.AutoScaling.TimeRanges {
 		timeRange = append(timeRange, &clustermanager.TimeRange{
 			Name:       v.Name,
@@ -32,6 +33,7 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNo
 		})
 	}
 
+	// nodegroup node dataDisks
 	launchDataDisk := make([]*clustermanager.DataDisk, 0)
 	for _, v := range req.LaunchTemplate.DataDisks {
 		launchDataDisk = append(launchDataDisk, &clustermanager.DataDisk{
@@ -43,6 +45,7 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNo
 		})
 	}
 
+	// nodeGroup taints
 	taint := make([]*clustermanager.Taint, 0)
 	for _, v := range req.NodeTemplate.Taints {
 		taint = append(taint, &clustermanager.Taint{
@@ -52,6 +55,7 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNo
 		})
 	}
 
+	// nodeGroup dataDisks
 	nodeDataDisk := make([]*clustermanager.DataDisk, 0)
 	for _, v := range req.NodeTemplate.DataDisks {
 		nodeDataDisk = append(nodeDataDisk, &clustermanager.DataDisk{
@@ -63,6 +67,7 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNo
 		})
 	}
 
+	// nodeGroup plugins
 	outPlugins := make(map[string]*clustermanager.BKOpsPlugin)
 	for k, v := range req.NodeTemplate.BcsScaleOutAddons.Plugins {
 		outPlugins[k] = &clustermanager.BKOpsPlugin{
@@ -99,7 +104,7 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNo
 		}
 	}
 
-	//构建CreateNodeGroupRequest并创建节点池
+	// 构建CreateNodeGroupRequest并创建节点池
 	servResp, err := c.client.CreateNodeGroup(c.ctx, &clustermanager.CreateNodeGroupRequest{
 		ClusterID:       req.ClusterID,
 		Name:            req.Name,

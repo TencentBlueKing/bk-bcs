@@ -19,11 +19,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 )
 
 func TestLoadConfig(t *testing.T) {
-	c, err := LoadConfig("../../" + config.DefaultConfigPath)
+	c, err := LoadConfig("../../" + constant.DefaultConfigPath)
 	if err != nil {
 		t.Errorf("Load default config error: %v", err)
 	}

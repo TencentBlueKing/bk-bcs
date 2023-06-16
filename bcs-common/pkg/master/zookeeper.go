@@ -86,7 +86,7 @@ func (zk *ZookeeperMaster) Finit() {
 	zk.client = nil
 }
 
-// Register registery information to storage
+// Register registry information to storage
 func (zk *ZookeeperMaster) Register() error {
 	if err := zk.createSelfNode(); err != nil {
 		return err

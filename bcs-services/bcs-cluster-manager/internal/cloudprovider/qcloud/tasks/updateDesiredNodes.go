@@ -303,12 +303,12 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 
 	// wait all nodes to be ready
 	err = cloudprovider.LoopDoFunc(timeCtx, func() error {
-		instances, err := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
+		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
 			ClusterID:   info.Cluster.SystemID,
 			InstanceIDs: instanceIDs,
 		})
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
+		if errQuery != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
 			return nil
 		}
 
@@ -343,13 +343,13 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	// timeout error
 	if errors.Is(err, context.DeadlineExceeded) {
 		running, failure := make([]string, 0), make([]string, 0)
-		instances, err := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
+		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
 			ClusterID:   info.Cluster.SystemID,
 			InstanceIDs: instanceIDs,
 		})
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
-			return nil, nil, err
+		if errQuery != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
+			return nil, nil, errQuery
 		}
 		for _, ins := range instances {
 			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)

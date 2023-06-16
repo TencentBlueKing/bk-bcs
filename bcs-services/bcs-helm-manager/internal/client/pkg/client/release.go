@@ -24,18 +24,30 @@ import (
 )
 
 const (
-	urlReleaseList              = "/release/%s"
-	urlReleaseListV1            = "/projects/%s/clusters/%s/releases"
-	urlReleaseInstall           = "/release/%s/%s/%s/install"
-	urlReleaseUninstall         = "/release/%s/%s/%s/uninstall"
-	urlReleaseUpgrade           = "/release/%s/%s/%s/upgrade"
-	urlReleaseRollback          = "/release/%s/%s/%s/rollback"
-	urlReleaseDetailV1Get       = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
-	urlReleaseDetailV1Install   = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	// urlReleaseList
+	urlReleaseList = "/release/%s"
+	// urlReleaseListV1
+	urlReleaseListV1 = "/projects/%s/clusters/%s/releases"
+	// urlReleaseInstall
+	urlReleaseInstall = "/release/%s/%s/%s/install"
+	// urlReleaseUninstall
+	urlReleaseUninstall = "/release/%s/%s/%s/uninstall"
+	// urlReleaseUpgrade
+	urlReleaseUpgrade = "/release/%s/%s/%s/upgrade"
+	// urlReleaseRollback
+	urlReleaseRollback = "/release/%s/%s/%s/rollback"
+	// urlReleaseDetailV1Get
+	urlReleaseDetailV1Get = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	// urlReleaseDetailV1Install
+	urlReleaseDetailV1Install = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	// urlReleaseDetailV1Uninstall
 	urlReleaseDetailV1Uninstall = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
-	urlReleaseDetailV1Upgrade   = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
-	urlReleaseDetailV1Rollback  = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/rollback"
-	urlReleaseHistoryGet        = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/history"
+	// urlReleaseDetailV1Upgrade
+	urlReleaseDetailV1Upgrade = "/projects/%s/clusters/%s/namespaces/%s/releases/%s"
+	// urlReleaseDetailV1Rollback
+	urlReleaseDetailV1Rollback = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/rollback"
+	// urlReleaseHistoryGet
+	urlReleaseHistoryGet = "/projects/%s/clusters/%s/namespaces/%s/releases/%s/history"
 )
 
 // Release return a pkg.ReleaseClient instance
@@ -48,7 +60,8 @@ type release struct {
 }
 
 // GetReleaseDetail get release detail
-func (rl *release) GetReleaseDetail(ctx context.Context, req *helmmanager.GetReleaseDetailV1Req) (*helmmanager.ReleaseDetail, error) {
+func (rl *release) GetReleaseDetail(ctx context.Context, req *helmmanager.GetReleaseDetailV1Req) (
+	*helmmanager.ReleaseDetail, error) {
 	if req == nil {
 		return nil, fmt.Errorf("get release detail request is empty")
 	}
@@ -132,6 +145,7 @@ func (rl *release) List(ctx context.Context, req *helmmanager.ListReleaseV1Req) 
 	return r.Data, nil
 }
 
+// listReleaseQuery
 func (rl *release) listReleaseQuery(req *helmmanager.ListReleaseV1Req) url.Values {
 	query := url.Values{}
 	if req.Page != nil {
@@ -336,7 +350,8 @@ func (rl *release) Rollback(ctx context.Context, req *helmmanager.RollbackReleas
 }
 
 // GetReleaseHistory get release history
-func (rl *release) GetReleaseHistory(ctx context.Context, req *helmmanager.GetReleaseHistoryReq) ([]*helmmanager.ReleaseHistory, error) {
+func (rl *release) GetReleaseHistory(ctx context.Context, req *helmmanager.GetReleaseHistoryReq) (
+	[]*helmmanager.ReleaseHistory, error) {
 	if req == nil {
 		return nil, fmt.Errorf("get release history request is empty")
 	}

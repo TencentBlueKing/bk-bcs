@@ -1,12 +1,13 @@
 package test
 
 import (
+	"testing"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
-	"testing"
 )
 
-func TestStorageCli_QueryK8SGameDeployment(t *testing.T) {
+func TestStorageCli_QueryK8SGameDeployment(t *testing.T) { // nolint
 	tlsconfig, err := ssl.ClientTslConfVerity(
 		"xxx",
 		"xxx",

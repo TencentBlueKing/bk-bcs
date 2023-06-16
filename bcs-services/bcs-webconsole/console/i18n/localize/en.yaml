@@ -20,7 +20,7 @@ container_id或namespace/pod_name/container_name不能同时为空: "container_i
 
 BCS Console 已经{}分钟无操作: "BCS Console has no operation for {{ .time }} minutes"
 
-BCS Console 使用已经超过{}小时，请重新登录: "BCS console has been used for more than {{ .time }} hours. Please log in again"
+BCS Console 使用已经超过{}小时，请重新登录: "BCS console has been used for more than {{ .time }} hours. Please login again"
 
 container_id不正确，请检查参数: "Container_id is incorrect, please check parameter"
 
@@ -52,7 +52,7 @@ mgrGuideMessage: "Support common Bash shortcuts; Ctrl-W in Windows is to close t
 
 目标文件不存在: "Target file does not exist"
 
-暂不支持文件夹下载: "Folder download is not supported"
+暂不支持文件夹下载: "Download directory is not supported"
 
 文件不能超过{}MB: "Files cannot exceed {{ .fileLimit }}MB"
 
@@ -74,4 +74,4 @@ mgrGuideMessage: "Support common Bash shortcuts; Ctrl-W in Windows is to close t
 
 session不合法: "Invalid session"
 
-BCS Console 服务端连接断开，请重新登录: "The BCS Console server is disconnected, please log in again"
+BCS Console 服务端连接断开，请重新登录: "The BCS Console server is disconnected, please login again"

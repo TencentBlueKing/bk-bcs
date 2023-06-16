@@ -297,6 +297,7 @@ func (s *SidecarController) syncLogConfs() {
 		}
 		podName := c.Config.Labels[ContainerLabelK8sPodName]
 		podNameSpace := c.Config.Labels[ContainerLabelK8sPodNameSpace]
+		// NOCC:vetshadow/shadow(设计如此:可以覆盖err)
 		pod, err := s.podLister.Pods(podNameSpace).Get(podName)
 		if err != nil {
 			blog.Errorf("list pod(%s/%s) failed: %s", podNameSpace, podName, err.Error())
@@ -587,7 +588,8 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 		BCSLogConfigKey: s.getBCSLogConfigKey(logConf),
 	}
 	var (
-		stdoutDataid  = ""
+		stdoutDataid = ""
+		// NOCC:ineffassign/assign(设计如此:仅初始化赋值为空字符串)
 		referenceKind = ""
 		referenceName = ""
 	)

@@ -27,7 +27,7 @@ import (
 func (i *IAM) FetchInstanceInfo(kt *kit.Kit, resType client.TypeID, ft *types.FetchInstanceInfoFilter) (
 	[]map[string]interface{}, error) {
 
-	// TODO: f.Attrs need to deal with, if add attribute authentication.
+	// Note: f.Attrs need to deal with, if add attribute authentication.
 
 	groups := make(map[uint32][]uint32, 0)
 	for _, id := range ft.IDs {

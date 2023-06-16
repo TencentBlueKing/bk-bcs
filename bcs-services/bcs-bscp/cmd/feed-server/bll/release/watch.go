@@ -129,7 +129,7 @@ func (wh *watchHandler) eventReceiver(event *eventc.Event, sn uint64) bool {
 		logs.Errorf("send release message to sidecar failed, fingerprint: %s, sn: %d, err: %v, rid: %s",
 			wh.im.Meta.Fingerprint, sn, err, rid)
 
-		// TODO: 新增判断机制，判断是否还需要重试，避免大量、高频无效重试。
+		// Note: 新增判断机制，判断是否还需要重试，避免大量、高频无效重试。
 		// 可考虑增加server端主动关链的操作，强制sidecar进行重链，修复链路。
 		// if status.Convert(err).Code() == codes.Unavailable {
 		//	logs.Errorf("downstream sidecar is unavailable, stop send event, rid: %s", rid)

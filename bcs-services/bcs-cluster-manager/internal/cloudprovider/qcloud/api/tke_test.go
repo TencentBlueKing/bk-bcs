@@ -169,7 +169,7 @@ func TestTkeClient_ListTKECluster(t *testing.T) {
 	}
 }
 
-func TestTkeClient_AddExistedInstancesToCluster(t *testing.T) {
+func TestAddExistedInstancesToCluster(t *testing.T) {
 	cli := getClient("ap-nanjing")
 	passwd := utils.BuildInstancePwd()
 
@@ -191,7 +191,7 @@ func TestTkeClient_AddExistedInstancesToCluster(t *testing.T) {
 	fmt.Println(resp.SuccessInstanceIDs, resp.FailedInstanceIDs)
 }
 
-func TestTkeClient_DeleteTkeClusterInstance(t *testing.T) {
+func TestDeleteTkeClusterInstance(t *testing.T) {
 	cli := getClient("ap-nanjing")
 
 	resp, err := cli.DeleteTkeClusterInstance(&DeleteInstancesRequest{
@@ -217,7 +217,7 @@ func TestTkeClient_DeleteTKECluster(t *testing.T) {
 	t.Log("success")
 }
 
-func TestTkeClient_QueryTkeClusterAllInstances(t *testing.T) {
+func TestQueryTkeClusterAllInstances(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	instances, err := cli.QueryTkeClusterAllInstances("cls-xxx", QueryClusterInstanceFilter{
 		NodePoolID:           "",
@@ -234,7 +234,7 @@ func TestTkeClient_QueryTkeClusterAllInstances(t *testing.T) {
 	t.Log(len(instances))
 }
 
-func TestTkeClient_QueryTkeClusterInstances(t *testing.T) {
+func TestQueryTkeClusterInstances(t *testing.T) {
 	cli := getClient("ap-nanjing")
 	instances, err := cli.QueryTkeClusterInstances(&DescribeClusterInstances{
 		ClusterID:    "cls-xxx",
@@ -344,7 +344,7 @@ func TestTkeClient_EnableTKEVpcCniMode(t *testing.T) {
 	}
 }
 
-func TestTkeClient_GetEnableVpcCniProgress(t *testing.T) {
+func TestGetEnableVpcCniProgress(t *testing.T) {
 	cli := getClient("ap-nanjing")
 	for {
 		time.Sleep(time.Second * 5)
@@ -440,7 +440,7 @@ func TestDeleteClusterNodePool(t *testing.T) {
 
 func TestModifyCapacityAboutAsg(t *testing.T) {
 	cli := getClient("ap-guangzhou")
-	err := cli.ModifyNodePoolDesiredCapacityAboutAsg("cls-xxx", "np-xxx", 1)
+	err := cli.ModifyNodePoolCapacity("cls-xxx", "np-xxx", 1)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -108,7 +108,7 @@ func (ua *UpdateAutoScalingStatusAction) updateAutoScalingStatus() error {
 	ua.asOption.EnableAutoscale = ua.req.Enable
 	ua.asOption.UpdateTime = time.Now().Format(time.RFC3339)
 	ua.asOption.Updater = ua.req.Updater
-	if err := ua.model.UpdateAutoScalingOption(ua.ctx, ua.asOption); err != nil {
+	if err = ua.model.UpdateAutoScalingOption(ua.ctx, ua.asOption); err != nil {
 		blog.Errorf("update asOption %s status to updating status failed, err %s", ua.req.ClusterID, err.Error())
 		return err
 	}
@@ -125,13 +125,13 @@ func (ua *UpdateAutoScalingStatusAction) updateAutoScalingStatus() error {
 	if task != nil {
 		taskID = task.TaskID
 		// create task and dispatch task
-		if err := ua.model.CreateTask(ua.ctx, task); err != nil {
+		if err = ua.model.CreateTask(ua.ctx, task); err != nil {
 			blog.Errorf("save update autoScaling status task for cluster %s failed, %s",
 				ua.req.ClusterID, err.Error(),
 			)
 			return err
 		}
-		if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 			blog.Errorf("dispatch update autoScaling status task for cluster %s failed, %s",
 				ua.req.ClusterID, err.Error(),
 			)

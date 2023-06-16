@@ -26,13 +26,14 @@ import (
 )
 
 // handlePodMetricFunc
-type handleContainerMetricFunc func(handler base.MetricHandler, ctx context.Context, projectId, clusterId, namespace,
+type handleContainerMetricFunc func(handler base.MetricHandler, ctx context.Context, projectID, clusterID, namespace,
 	podname string, containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 
-func (m *Federation) handleContainerMetric(ctx context.Context, projectId, clusterId, namespace, podname string,
-	containerNameList []string, start, end time.Time, step time.Duration, fn handleContainerMetricFunc) ([]*prompb.TimeSeries, error) {
+func (m *Federation) handleContainerMetric(ctx context.Context, projectID, clusterID, namespace, podname string,
+	containerNameList []string, start, end time.Time, step time.Duration, fn handleContainerMetricFunc) (
+	[]*prompb.TimeSeries, error) {
 	// get managed clusters
-	clusters, err := k8sclient.GetManagedClusterList(ctx, clusterId)
+	clusters, err := k8sclient.GetManagedClusterList(ctx, clusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +49,7 @@ func (m *Federation) handleContainerMetric(ctx context.Context, projectId, clust
 				klog.Warningf("get client in cluster %s error, %s", clusterID, err)
 				return nil
 			}
-			s, err := fn(client, ctx, projectId, clusterID, namespace, podname, containerNameList, start, end, step)
+			s, err := fn(client, ctx, projectID, clusterID, namespace, podname, containerNameList, start, end, step)
 			if err != nil {
 				klog.Warningf("handle container metrics in cluster %s error, %s", clusterID, err)
 				return nil
@@ -65,73 +66,73 @@ func (m *Federation) handleContainerMetric(ctx context.Context, projectId, clust
 }
 
 // GetContainerCPUUsage 容器CPU使用率
-func (m *Federation) GetContainerCPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerCPUUsage(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerCPUUsage
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }
 
 // GetContainerMemoryUsed 容器内存使用率
-func (m *Federation) GetContainerMemoryUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerMemoryUsed(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerMemoryUsed
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }
 
 // GetContainerCPULimit 容器CPU限制
-func (m *Federation) GetContainerCPULimit(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerCPULimit(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerCPULimit
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }
 
 // GetContainerMemoryLimit 容器内存限制
-func (m *Federation) GetContainerMemoryLimit(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerMemoryLimit(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerMemoryLimit
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }
 
 // GetContainerGPUMemoryUsage 容器GPU显卡使用率
-func (m *Federation) GetContainerGPUMemoryUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerGPUMemoryUsage(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerGPUMemoryUsage
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }
 
 // GetContainerGPUUsed 容器GPU使用量
-func (m *Federation) GetContainerGPUUsed(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerGPUUsed(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerGPUUsed
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }
 
 // GetContainerGPUUsage 容器GPU使用率
-func (m *Federation) GetContainerGPUUsage(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerGPUUsage(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerGPUUsage
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }
 
 // GetContainerDiskReadTotal 容器磁盘读
-func (m *Federation) GetContainerDiskReadTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerDiskReadTotal(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerDiskReadTotal
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }
 
 // GetContainerDiskWriteTotal 容器磁盘写
-func (m *Federation) GetContainerDiskWriteTotal(ctx context.Context, projectId, clusterId, namespace, podname string,
+func (m *Federation) GetContainerDiskWriteTotal(ctx context.Context, projectID, clusterID, namespace, podname string,
 	containerNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetContainerDiskWriteTotal
-	return m.handleContainerMetric(ctx, projectId, clusterId, namespace, podname, containerNameList,
+	return m.handleContainerMetric(ctx, projectID, clusterID, namespace, podname, containerNameList,
 		start, end, step, fn)
 }

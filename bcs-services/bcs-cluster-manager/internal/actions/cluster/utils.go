@@ -303,7 +303,8 @@ func getUserHasPermHosts(bizID int, user string) []string {
 
 	// 如果是业务运维，查询全量主机
 	if utils.StringInSlice(user, maintainers) {
-		hostList, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
+		var hostList []cmdb.HostData
+		hostList, err = cmdb.GetCmdbClient().FetchAllHostsByBizID(bizID)
 		if err != nil {
 			blog.Errorf("getUserHasPermHosts FetchAllHostsByBizID failed: %v", err)
 			return nil
@@ -624,14 +625,17 @@ func mergeClusterNodes(clusterID string, cmNodes []*proto.ClusterNode, k8sNodes 
 // NodeSlice cluster node slice
 type NodeSlice []*proto.ClusterNode
 
+// Len xxx
 func (n NodeSlice) Len() int {
 	return len(n)
 }
 
+// Less xxx
 func (n NodeSlice) Less(i, j int) bool {
 	return n[i].NodeName < n[j].NodeName
 }
 
+// Swap xxx
 func (n NodeSlice) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }

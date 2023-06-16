@@ -404,8 +404,8 @@ type SimpleHead struct {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: default
-  name: deploy
+	namespace: default
+	name: deploy
 **/
 func GetManifestSimpleHeadFromRelease(rl *release.Release, releaseNamespace string) ([]SimpleHead, error) {
 	manifest := rl.Manifest

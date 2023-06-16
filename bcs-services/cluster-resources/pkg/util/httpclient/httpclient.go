@@ -135,6 +135,7 @@ func GetClient() *resty.Client {
 				SetDebugBodyLimit(1024).
 				OnAfterResponse(restyAfterResponseHook).
 				OnError(restyErrHook).
+				// NOCC:gas/tls(设计如此)
 				SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 		})
 	}

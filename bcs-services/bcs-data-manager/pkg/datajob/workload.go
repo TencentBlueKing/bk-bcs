@@ -69,8 +69,12 @@ func NewWorkloadMinutePolicy(getter metric.Server, store store.Server) *Workload
 	}
 }
 
-// ImplementPolicy day policy implement
+// ImplementPolicy is a function that implements the day policy for a workload.
+// It takes in the ctx, opts, and clients parameters.
+// It retrieves the CPU, memory, and instance count metrics for the workload.
+// It creates a new workload metric with the retrieved metrics and inserts it into the database.
 func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
+	// Retrieve the CPU, memory, and instance count metrics for the workload.
 	cpuMetrics, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
 		blog.Errorf("do workload day policy error, opts: %v, err: %v", opts, err)
@@ -102,6 +106,7 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 		return
 	}
 	hourMetric := hourMetrics[0]
+	// Create a new workload metric with the retrieved metrics and insert it into the database.
 	workloadMetric := &types.WorkloadMetrics{
 		Index:              utils.GetIndex(opts.CurrentTime, opts.Dimension),
 		Time:               primitive.NewDateTimeFromTime(opts.CurrentTime),
@@ -132,6 +137,9 @@ func (p *WorkloadDayPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 }
 
 // ImplementPolicy hour policy implement
+// It takes in the ctx, opts, and clients parameters.
+// It retrieves the CPU, memory, and instance count metrics for the workload.
+// It creates a new workload metric with the retrieved metrics and inserts it into the database.
 func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts, clients *types.Clients) {
 	cpuMetrics, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)
 	if err != nil {
@@ -195,6 +203,9 @@ func (p *WorkloadHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Jo
 }
 
 // ImplementPolicy minute policy implement
+// It takes in the ctx, opts, and clients parameters.
+// It retrieves the CPU, memory, and instance count metrics for the workload.
+// It creates a new workload metric with the retrieved metrics and inserts it into the database.
 func (p *WorkloadMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.JobCommonOpts,
 	clients *types.Clients) {
 	cpuMetrics, err := p.MetricGetter.GetWorkloadCPUMetrics(opts, clients)

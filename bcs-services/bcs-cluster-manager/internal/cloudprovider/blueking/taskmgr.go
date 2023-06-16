@@ -596,8 +596,8 @@ func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAuto
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// BuildSwitchAutoScalingOptionStatusTask switch auto scaling option status
-func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+// BuildSwitchAsOptionStatusTask switch auto scaling option status
+func (t *Task) BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

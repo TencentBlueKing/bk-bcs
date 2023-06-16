@@ -31,14 +31,15 @@ import (
 
 const serverNameSuffix = ".bkbcs.tencent.com"
 
-// serviceDiscovery
-type serviceDiscovery struct {
+// ServiceDiscovery service discovery
+type ServiceDiscovery struct {
 	ctx context.Context
 	srv micro.Service
 }
 
 // NewServiceDiscovery :
-func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, bindPort, addrIPv6 string) (*serviceDiscovery, error) {
+func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, bindPort, addrIPv6 string) (
+	*ServiceDiscovery, error) {
 	metadata := map[string]string{}
 	if addrIPv6 != "" {
 		metadata[types.IPV6] = utils.GetListenAddr(addrIPv6, bindPort)
@@ -53,7 +54,7 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, bindPort,
 	svr.Init(server.Advertise(utils.GetListenAddr(bindaddr, bindPort)))
 	service := micro.NewService(micro.Server(svr), micro.Metadata(metadata))
 
-	sd := &serviceDiscovery{srv: service, ctx: ctx}
+	sd := &ServiceDiscovery{srv: service, ctx: ctx}
 	if err := sd.init(); err != nil {
 		return nil, err
 	}
@@ -62,11 +63,11 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, bindPort,
 }
 
 // Run xxx
-func (s *serviceDiscovery) Run() error {
+func (s *ServiceDiscovery) Run() error {
 	return s.srv.Run()
 }
 
-func (s *serviceDiscovery) init() error {
+func (s *ServiceDiscovery) init() error {
 	// etcd 服务发现注册
 	etcdRegistry, err := s.initEtcdRegistry()
 	if err != nil {
@@ -80,7 +81,7 @@ func (s *serviceDiscovery) init() error {
 }
 
 // initEtcdRegistry etcd 服务注册
-func (s *serviceDiscovery) initEtcdRegistry() (registry.Registry, error) {
+func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 	endpoints := config.G.Viper.GetString("etcd.endpoints")
 
 	// 添加环境变量

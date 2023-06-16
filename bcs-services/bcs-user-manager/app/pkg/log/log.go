@@ -64,8 +64,8 @@ func (l *Logger) Warnf(format string, args ...interface{}) {
 }
 
 // Error log Error
-func (l *Logger) Error(args ...interface{}) {
-	l.Errorf("", args)
+func (l *Logger) Error(format string, args ...interface{}) {
+	l.Errorf(format, args)
 }
 
 // Errorf log Errorf
@@ -74,8 +74,8 @@ func (l *Logger) Errorf(format string, args ...interface{}) {
 }
 
 // Fatal log Fatal
-func (l *Logger) Fatal(args ...interface{}) {
-	l.Fatalf("", args)
+func (l *Logger) Fatal(format string, args ...interface{}) {
+	l.Fatalf(format, args)
 }
 
 // Fatalf log Fatalf

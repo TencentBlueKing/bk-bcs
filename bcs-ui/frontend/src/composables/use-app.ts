@@ -24,21 +24,32 @@ export interface IProject {
   projectCode: string
   description: string
   kind: string
+  enableVcluster: boolean
   project_name: string // 兼容旧版数据（不要再使用）
   project_id: string // 兼容旧版数据
 }
 // todo 完善类型
 export interface ICluster {
+  region: string
   clusterID: string
   clusterName: string
   status: 'INITIALIZATION' | 'DELETING'
   clusterCategory: string
   providerType: string
-  networkSettings: any
+  networkSettings: {
+    maxNodePodNum: number
+    maxServiceNum: number
+    clusterIPv4CIDR: number
+    multiClusterCIDR: number[]
+    cidrStep: number
+  }
   master: any
-  clusterBasicSettings: any
-  manageType: 'INDEPENDENT_CLUSTER' | 'MANAGED_CLUSTER'
   provider: string
+  clusterBasicSettings: any
+  environment: 'stag'|'debug'|'prod'
+  extraInfo?: Record<string, any>
+  manageType: 'INDEPENDENT_CLUSTER' | 'MANAGED_CLUSTER'
+  clusterType: string
   is_shared: boolean
   cluster_id: string // 兼容旧版数据（不要再使用）
 }

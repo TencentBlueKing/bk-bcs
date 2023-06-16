@@ -48,6 +48,14 @@ const routes = [
                   navModule: 'service'
                 },
                 component: () => import('./views/space/service/detail/config/index.vue')
+              },
+              {
+                path: 'script',
+                name: 'init-script',
+                meta: {
+                  navModule: 'service'
+                },
+                component: () => import('./views/space/service/detail/init-script/index.vue')
               }
             ]
           },
@@ -67,7 +75,25 @@ const routes = [
         meta: {
           navModule: 'scripts'
         },
-        component: () => import('./views/space/scripts/index.vue')
+        component: () => import('./views/space/scripts/index.vue'),
+        children: [
+          {
+            path: 'list',
+            name: 'script-list',
+            meta: {
+              navModule: 'scripts'
+            },
+            component: () => import('./views/space/scripts/list/script-list.vue')
+          },
+          {
+            path: 'version_manage/:scriptId',
+            name: 'script-version-manage',
+            meta: {
+              navModule: 'scripts',
+            },
+            component: () => import('./views/space/scripts/version-manage/index.vue')
+          }
+        ]
       },
       {
         path: 'credentials',

@@ -34,7 +34,6 @@ const (
 	keyPrefix = "bcs::webconsole::sessions::%s"
 	// "{scope}:{session_id}" 格式
 	fieldKeyPrefix = "%s:%s"
-	expireDuration = time.Minute * 30
 )
 
 // redisStore: redis 全局 session 存储
@@ -45,6 +44,7 @@ type redisStore struct {
 }
 
 // NewStore 新建 session 存储
+// NOCC:golint/ret(设计如此:)
 func NewStore() *redisStore {
 	redisClient := storage.GetDefaultRedisSession().Client
 	key := fmt.Sprintf(keyPrefix, config.G.Base.RunEnv)

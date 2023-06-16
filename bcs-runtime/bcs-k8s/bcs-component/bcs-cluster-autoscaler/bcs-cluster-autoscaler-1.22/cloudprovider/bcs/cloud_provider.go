@@ -79,12 +79,12 @@ func BuildCloudProvider(opts scalingconfig.Options, do cloudprovider.NodeGroupDi
 		}
 	}
 
-	err := client.SyncParams(opts)
-	if err != nil {
-		klog.Warningf("Failed to sync parameters: %v", err)
-	} else {
-		klog.Infof("Sync parameters successfully")
-	}
+	// err := client.SyncParams(opts)
+	// if err != nil {
+	// 	klog.Warningf("Failed to sync parameters: %v", err)
+	// } else {
+	// 	klog.Infof("Sync parameters successfully")
+	// }
 
 	metricsinternal.RegisterScaleTask()
 	cloudProvider, err := BuildBcsCloudProvider(cache, client, do, rl)

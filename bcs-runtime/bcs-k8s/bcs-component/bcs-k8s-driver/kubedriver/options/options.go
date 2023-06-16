@@ -18,17 +18,18 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	regd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsssl "github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"net"
 	"net/url"
 	"strconv"
 	"time"
 
-	restful "github.com/emicklei/go-restful"
+	regd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcsssl "github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+
+	"github.com/emicklei/go-restful"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/pflag"
 )
@@ -255,7 +256,7 @@ func (o *KubeDriverServerOptions) GetClusterKeeperAddr() error {
 				return fmt.Errorf("get cluster keeper  api failed. reason: %s", data.Err.Error())
 			}
 			if len(data.Server) == 0 {
-				return errors.New("get 0 cluster keeper  api address.")
+				return errors.New("get 0 cluster keeper api address")
 			}
 			info := types.ServerInfo{}
 			if err := json.Unmarshal([]byte(data.Server[0]), &info); nil != err {

@@ -1516,7 +1516,7 @@ func hasDelayDeletionAnnotation(node *apiv1.Node) bool {
 }
 
 func hasNoScaleDownAnnotation(node *apiv1.Node) bool {
-	return node.Annotations[ScaleDownDisabledKey] == "true"
+	return node.Annotations[ScaleDownDisabledKey] == valueTrue
 }
 
 const (
@@ -1554,7 +1554,7 @@ func filterOutMasters(nodes []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
 
 func hasGameServer(pods []*apiv1.Pod) bool {
 	for _, pod := range pods {
-		if pod.GetAnnotations()[drain.PodSafeToEvictKey] == "true" {
+		if pod.GetAnnotations()[drain.PodSafeToEvictKey] == valueTrue {
 			continue
 		}
 		ctlRef := metav1.GetControllerOf(pod)

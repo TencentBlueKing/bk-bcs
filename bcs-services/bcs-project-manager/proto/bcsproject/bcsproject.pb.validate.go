@@ -102,6 +102,8 @@ func (m *Project) validate(all bool) error {
 
 	// no validation rules for BusinessName
 
+	// no validation rules for EnableVcluster
+
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
@@ -2375,6 +2377,8 @@ func (m *ListBusinessRequest) validate(all bool) error {
 	}
 
 	var errors []error
+
+	// no validation rules for UseBCS
 
 	if len(errors) > 0 {
 		return ListBusinessRequestMultiError(errors)

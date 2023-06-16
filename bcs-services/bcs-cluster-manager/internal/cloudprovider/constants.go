@@ -88,7 +88,7 @@ var (
 	// BKModuleIDKey bk module id key
 	BKModuleIDKey ParamKey = "bkModuleID"
 
-	// NodeIPsKey TODO
+	// NodeIPsKey xxx
 	// Task Common Instance
 	// NodeIPsKey xxx
 	NodeIPsKey ParamKey = "nodeIPs"
@@ -98,14 +98,14 @@ var (
 	// DynamicNodeIPListKey xxx
 	DynamicNodeIPListKey ParamKey = "NodeIPList"
 
-	// SuccessNodeIDsKey TODO
+	// SuccessNodeIDsKey xxx
 	// CVM Instance
 	// SuccessNodeIDsKey xxx
 	SuccessNodeIDsKey ParamKey = "successNodeIDs"
 	// FailedNodeIDsKey xxx
 	FailedNodeIDsKey ParamKey = "failedNodeIDs"
 
-	// SuccessClusterNodeIDsKey TODO
+	// SuccessClusterNodeIDsKey xxx
 	// cloud cluster success & failed Instance
 	// SuccessClusterNodeIDsKey xxx
 	SuccessClusterNodeIDsKey ParamKey = "successClusterNodeIDs"

@@ -17,14 +17,27 @@ package namespace
 import (
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 )
 
 // FilterNamespaces filter shared namespace
 func FilterNamespaces(namespaceList *corev1.NamespaceList, shared bool, projectCode string) []corev1.Namespace {
 	nsList := []corev1.Namespace{}
 	for _, ns := range namespaceList.Items {
-		if shared && ns.Annotations[config.AnnotationKeyProjectCode] != projectCode {
+		if shared && ns.Annotations[constant.AnnotationKeyProjectCode] != projectCode {
+			continue
+		}
+		nsList = append(nsList, ns)
+	}
+	return nsList
+}
+
+// FilterOutVcluster filter out vcluster namespaces
+func FilterOutVcluster(namespaces []corev1.Namespace) []corev1.Namespace {
+	nsList := []corev1.Namespace{}
+	for _, ns := range namespaces {
+		// annotation exists means it is a vcluster namespace, do not show it in shared cluster view
+		if _, exists := ns.Annotations[constant.AnnotationKeyVcluster]; exists {
 			continue
 		}
 		nsList = append(nsList, ns)

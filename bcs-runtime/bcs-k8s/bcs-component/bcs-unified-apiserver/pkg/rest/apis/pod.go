@@ -75,6 +75,7 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 	case rest.DeleteVerb:
 		obj, err = h.handler.Delete(ctx, c.Namespace, c.Name, *c.Options.DeleteOptions)
 	case rest.GetLogsVerb: // 处理 Pod 日志流
+		// NOCC:vetshadow/shadow(设计如此:需要初始化restReq并且err可以被覆盖)
 		restReq, err := h.handler.GetLogs(ctx, c.Namespace, c.Name, c.Options.PodLogOptions)
 		if err != nil {
 			return err
@@ -89,6 +90,7 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 		return nil
 	case rest.WatchVerb:
 		// watch 需要特殊处理 chunk
+		// NOCC:vetshadow/shadow(设计如此:需要初始化watch并且err可以被覆盖)
 		watch, err := h.handler.Watch(ctx, c.Namespace, *c.Options.ListOptions)
 		if err != nil {
 			return err
@@ -105,6 +107,7 @@ func (h *PodHandler) Serve(c *rest.RequestContext) error {
 		return nil
 	case rest.ExecVerb:
 		// remotecommand 直接使用透明代理
+		// NOCC:vetshadow/shadow(设计如此:需要初始化proxy并且err可以被覆盖)
 		proxy, err := h.handler.Exec(ctx, c.Namespace, c.Name, *c.Options.GetOptions)
 		if err != nil {
 			return err

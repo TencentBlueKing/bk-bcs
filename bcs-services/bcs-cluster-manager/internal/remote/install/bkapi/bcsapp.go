@@ -51,6 +51,7 @@ func NewBCSAppClient(server, appCode, appSecret, bkUsername string, debug bool) 
 	}
 }
 
+// generateGateWayAuth create gateway auth
 func (c *BCSAppClient) generateGateWayAuth() (string, error) {
 	if c == nil {
 		return "", ErrServerNotInit
@@ -83,6 +84,7 @@ func (c *BCSAppClient) ListCharts(projectID string) (*ListChartsResponse, error)
 		return nil, err
 	}
 
+	// List charts
 	resp := &ListChartsResponse{}
 	err = retry.Do(func() error {
 		_, _, errs := gorequest.New().
@@ -123,6 +125,7 @@ func (c *BCSAppClient) GetApp(projectID string, appID int) (*GetAppResponse, err
 		return nil, err
 	}
 
+	// get app
 	resp := &GetAppResponse{}
 	err = retry.Do(func() error {
 		_, _, errs := gorequest.New().
@@ -168,6 +171,8 @@ func (c *BCSAppClient) CreateNamespace(projectID, clusterID string, req CreateNa
 		defaultRetryCnt  uint = 10
 		defaultRetryTime      = 10 * time.Second
 	)
+
+	// create namespace
 	resp := &CreateNamespaceResponse{}
 	err = retry.Do(func() error {
 		_, _, errs := gorequest.New().
@@ -212,6 +217,7 @@ func (c *BCSAppClient) ListNamespace(projectID, clusterID string) (*ListNamespac
 		return nil, err
 	}
 
+	// list namespace
 	resp := &ListNamespaceResponse{}
 	err = retry.Do(func() error {
 		_, _, errs := gorequest.New().
@@ -254,6 +260,8 @@ func (c *BCSAppClient) ListApps(projectID, clusterID, namespace string,
 		blog.Errorf("bcs app client generateGateWayAuth failed: %v", err)
 		return nil, err
 	}
+
+	// list apps
 	resp := &ListAppsResponse{}
 	err = retry.Do(func() error {
 		_, _, errs := gorequest.New().
@@ -294,6 +302,7 @@ func (c *BCSAppClient) CreateApp(req *CreateAppRequest) (*CreateAppResponse, err
 		return nil, err
 	}
 
+	// create app
 	resp := &CreateAppResponse{}
 	err = retry.Do(func() error {
 		_, _, errs := gorequest.New().
@@ -335,6 +344,7 @@ func (c *BCSAppClient) UpdateApp(req *UpdateAppRequest) (*UpdateAppResponse, err
 		return nil, err
 	}
 
+	// update app
 	resp := &UpdateAppResponse{}
 	err = retry.Do(func() error {
 		_, bt, errs := gorequest.New().
@@ -376,6 +386,7 @@ func (c *BCSAppClient) DeleteApp(req *DeleteAppRequest) error {
 		return err
 	}
 
+	// delete app
 	resp := &DeleteAppResponse{}
 	err = retry.Do(func() error {
 		_, bt, errs := gorequest.New().

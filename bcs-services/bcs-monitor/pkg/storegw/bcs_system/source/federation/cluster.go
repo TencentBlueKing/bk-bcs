@@ -26,103 +26,115 @@ type Federation struct {
 	dispatch map[string]clientutil.DispatchConf
 }
 
+// GetClusterPodUsed 获取集群pod使用量
+func (p *Federation) GetClusterPodUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
+// GetClusterPodTotal 获取集群最大允许pod数
+func (p *Federation) GetClusterPodTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
+	return nil, nil
+}
+
 // NewFederation xxx
 func NewFederation(dispatch map[string]clientutil.DispatchConf) *Federation {
 	return &Federation{dispatch: dispatch}
 }
 
 // GetClusterCPUTotal 获取集群CPU核心总量
-func (p *Federation) GetClusterCPUTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterCPUTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterCPUUsed 获取CPU核心使用量
-func (p *Federation) GetClusterCPUUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterCPUUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterCPUUsage 获取CPU核心使用量
-func (p *Federation) GetClusterCPUUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterCPUUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterCPURequest 获取CPU Request
-func (p *Federation) GetClusterCPURequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterCPURequest(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterCPURequestUsage 获取CPU核心装箱率
-func (p *Federation) GetClusterCPURequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterCPURequestUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterMemoryTotal 获取集群内存总量
-func (p *Federation) GetClusterMemoryTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterMemoryTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterMemoryUsed 获取内存使用量
-func (p *Federation) GetClusterMemoryUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterMemoryUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterMemoryUsage 获取内存使用率
-func (p *Federation) GetClusterMemoryUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterMemoryUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterMemoryRequest 获取内存 Request
-func (p *Federation) GetClusterMemoryRequest(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterMemoryRequest(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterMemoryRequestUsage 获取内存装箱率
-func (p *Federation) GetClusterMemoryRequestUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
+func (p *Federation) GetClusterMemoryRequestUsage(ctx context.Context, projectID, clusterID string,
+	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterDiskTotal 获取集群磁盘总量
-func (p *Federation) GetClusterDiskTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterDiskTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterDiskUsed 获取集群磁盘使用量
-func (p *Federation) GetClusterDiskUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterDiskUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterDiskUsage 获取CPU核心使用量
-func (p *Federation) GetClusterDiskUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterDiskUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterDiskioUsage 集群磁盘IO使用率
-func (p *Federation) GetClusterDiskioUsage(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterDiskioUsage(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterDiskioUsed 集群磁盘IO使用量
-func (p *Federation) GetClusterDiskioUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterDiskioUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetClusterDiskioTotal 集群磁盘IO
-func (m *Federation) GetClusterDiskioTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
+func (p *Federation) GetClusterDiskioTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }

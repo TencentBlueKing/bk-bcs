@@ -19,6 +19,7 @@ import (
 	"time"
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
+	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -35,7 +36,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	releasedCIs := make([]*table.ReleasedConfigItem, 0)
-	// TODO: need to change batch operator to query config item and it's commit.
+	// Note: need to change batch operator to query config item and it's commit.
 	// step1: query app's all config items.
 	cfgItems, err := s.queryAppConfigItemList(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
 	if err != nil {
@@ -50,10 +51,10 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 	// step2: query config item newest commit
 	now := time.Now()
 	for _, item := range cfgItems {
-		commit, err := s.queryCILatestCommit(grpcKit, req.Attachment.BizId, req.Attachment.AppId, item.ID)
-		if err != nil {
-			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
+		commit, e := s.queryCILatestCommit(grpcKit, req.Attachment.BizId, req.Attachment.AppId, item.ID)
+		if e != nil {
+			logs.Errorf("query config item latest commit failed, err: %v, rid: %s", e, grpcKit.Rid)
+			return nil, e
 		}
 
 		releasedCIs = append(releasedCIs, &table.ReleasedConfigItem{
@@ -76,6 +77,21 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		return nil, err
 	}
 	// step4: create release, and create release and released config item need to begin tx.
+	hook, err := s.dao.ConfigHook().GetByAppID(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get configHook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+
+		req.Spec.Hook = &pbrelease.Hook{
+			PreHookId:         hook.Spec.PreHookID,
+			PreHookReleaseId:  hook.Spec.PreHookReleaseID,
+			PostHookId:        hook.Spec.PostHookID,
+			PostHookReleaseId: hook.Spec.PostHookReleaseID,
+		}
+	}
+
 	release := &table.Release{
 		Spec:       req.Spec.ReleaseSpec(),
 		Attachment: req.Attachment.ReleaseAttachment(),

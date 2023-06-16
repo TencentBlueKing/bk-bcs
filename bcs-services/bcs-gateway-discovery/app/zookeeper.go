@@ -184,13 +184,15 @@ func (s *DiscoveryServer) formatKubeAPIServerInfo(module string) ([]*register.Se
 	if err != nil {
 		s.clusterCli = bcsapi.NewClusterManager(config)
 		blog.Errorf(
-			"request all kube-apiserver cluster info from previous bcs-cluster-manager instance failed. TIPS: search for `cluster manager instance` to find the previous instance. err: %s", err.Error())
+			"request all kube-apiserver cluster info from previous bcs-cluster-manager instance failed. "+
+				"TIPS: search for `cluster manager instance` to find the previous instance. err: %s", err.Error())
 		blog.Warnf("Create new cluster manager client from cluster manager instance %s", node.Address)
 		return nil, err
 	}
 	if clusterResp.Code != 0 {
 		blog.Errorf(
-			"request all direct connect kube-apiserver info from previous cluster-manager instance failed. TIPS: search for `cluster manager instance` to find the previous instance. err: %s", clusterResp.Message)
+			"request all direct connect kube-apiserver info from previous cluster-manager instance failed. "+
+				"TIPS: search for `cluster manager instance` to find the previous instance. err: %s", clusterResp.Message)
 		return nil, fmt.Errorf(clusterResp.Message)
 	}
 	if len(clusterResp.Data) == 0 {

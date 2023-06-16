@@ -65,6 +65,8 @@ const (
 	unschedulablePodWithGpuTimeBuffer = 30 * time.Second
 	// How long should Cluster Autoscaler wait for nodes to become ready after start.
 	nodesNotReadyAfterStartTimeout = 10 * time.Minute
+
+	valueTrue = "true"
 )
 
 var (
@@ -278,9 +280,9 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 
 	// processNode returns information whether the nodeTemplate was generated and if there was an error.
 	processNode := func(node *apiv1.Node) (bool, string, errors.AutoscalerError) {
-		nodeGroup, err := cloudProvider.NodeGroupForNode(node)
-		if err != nil {
-			return false, "", errors.ToAutoscalerError(errors.CloudProviderError, err)
+		nodeGroup, getErr := cloudProvider.NodeGroupForNode(node)
+		if getErr != nil {
+			return false, "", errors.ToAutoscalerError(errors.CloudProviderError, getErr)
 		}
 		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
 			return false, "", nil
@@ -288,13 +290,13 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		id := nodeGroup.Id()
 		if _, found := result[id]; !found {
 			// Build nodeInfo.
-			nodeInfo, err := simulator.BuildNodeInfoForNode(node, podsForNodes)
-			if err != nil {
-				return false, "", err
+			nodeInfo, buildErr := simulator.BuildNodeInfoForNode(node, podsForNodes)
+			if buildErr != nil {
+				return false, "", buildErr
 			}
-			sanitizedNodeInfo, err := sanitizeNodeInfo(nodeInfo, id, ignoredTaints)
-			if err != nil {
-				return false, "", err
+			sanitizedNodeInfo, sanErr := sanitizeNodeInfo(nodeInfo, id, ignoredTaints)
+			if sanErr != nil {
+				return false, "", sanErr
 			}
 			result[id] = sanitizedNodeInfo
 			return true, id, nil
@@ -456,6 +458,7 @@ func getNodeInfoFromTemplate(nodeGroup cloudprovider.NodeGroup, daemonsets []*ap
 
 // filterOutNodesFromNotAutoscaledGroups return subset of input nodes for which cloud provider does not
 // return autoscaled node group.
+// NOCC:tosa/fn_length(设计如此)
 func filterOutNodesFromNotAutoscaledGroups(nodes []*apiv1.Node, cloudProvider cloudprovider.CloudProvider) (
 	[]*apiv1.Node, errors.AutoscalerError) {
 	result := make([]*apiv1.Node, 0)
@@ -675,7 +678,7 @@ func getNodeCoresAndMemory(node *apiv1.Node) (int64, int64) {
 	if node.Labels[nodeInstanceTypeLabelKey] == nodeInstanceTypeEklet {
 		return 0, 0
 	}
-	if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+	if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 		return 0, 0
 	}
 	cores := getNodeResource(node, apiv1.ResourceCPU)
@@ -785,10 +788,10 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
 		if node.Labels["node.kubernetes.io/instance-type"] == "eklet" {
 			continue
 		}
-		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
+		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
 			continue
 		}
-		if node.Labels[nodeLabel.LabelNodeRoleMaster] == "true" {
+		if node.Labels[nodeLabel.LabelNodeRoleMaster] == valueTrue {
 			continue
 		}
 		klog.V(6).Infof("resource: %+v", node.Status.Allocatable)

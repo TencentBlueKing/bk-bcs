@@ -17,9 +17,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/health"
-	ipvsConfig "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -27,6 +24,10 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/health"
+	ipvsConfig "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs/config"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils"
 
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -228,6 +229,9 @@ func (pm *ProxyManager) syncDeleteLvsRealServers() error {
 		return ErrProxyManagerNotInited
 	}
 	healthCheck, err := health.NewHealthConfig(pm.options.HealthCheck.HealthScheme, pm.options.HealthCheck.HealthPath)
+	if err != nil {
+		return err
+	}
 	rsList, err := pm.lvsProxy.ListRealServer()
 	if err != nil {
 		return err

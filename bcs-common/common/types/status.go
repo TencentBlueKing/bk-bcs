@@ -44,7 +44,7 @@ type BcsReplicaControllerStatus struct {
 	BuildedInstance int `json:"buildedInstance"`
 	// RunningInstance is the number of running status instance
 	RunningInstance int `json:"runningInstance"`
-	// CreateTime is the date and time of begining to create ReplicaController
+	// CreateTime is the date and time of beginning to create ReplicaController
 	CreateTime time.Time `json:"createTime"`
 	// LastUpdateTime is the date and time when ReplicaController status change
 	LastUpdateTime time.Time `json:"lastUpdateTime,omitempty"`

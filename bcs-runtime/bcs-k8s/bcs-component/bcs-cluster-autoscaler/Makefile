@@ -27,7 +27,7 @@ build: clean
 
 clean:
 	rm -f bcs-cluster-autoscaler 
-	rm -r hyper/
+	rm -r -f hyper/
 
 make-image:
 ifdef BASEIMAGE
