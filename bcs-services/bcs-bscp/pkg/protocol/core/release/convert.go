@@ -28,7 +28,24 @@ func (m *ReleaseSpec) ReleaseSpec() *table.ReleaseSpec {
 		Memo:       m.Memo,
 		Deprecated: m.Deprecated,
 		PublishNum: m.PublishNum,
+		Hook:       m.Hook.ReleaseSpecHook(),
 	}
+}
+
+// ReleaseSpecHook convert pb ReleaseSpecHook to table ReleaseSpecHook
+func (h *Hook) ReleaseSpecHook() *table.ReleaseHook {
+
+	if h == nil {
+		return &table.ReleaseHook{}
+	}
+
+	return &table.ReleaseHook{
+		PreHookID:         h.PreHookId,
+		PreHookReleaseID:  h.PreHookReleaseId,
+		PostHookID:        h.PostHookId,
+		PostHookReleaseID: h.PostHookReleaseId,
+	}
+
 }
 
 // PbReleaseSpec convert table ReleaseSpec to pb ReleaseSpec
@@ -42,6 +59,12 @@ func PbReleaseSpec(spec *table.ReleaseSpec) *ReleaseSpec {
 		Memo:       spec.Memo,
 		Deprecated: spec.Deprecated,
 		PublishNum: spec.PublishNum,
+		Hook: &Hook{
+			PreHookId:         spec.Hook.PreHookID,
+			PreHookReleaseId:  spec.Hook.PreHookReleaseID,
+			PostHookId:        spec.Hook.PostHookID,
+			PostHookReleaseId: spec.Hook.PostHookReleaseID,
+		},
 	}
 }
 

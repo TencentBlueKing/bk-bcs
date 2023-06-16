@@ -1,31 +1,45 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
-
 package pbhook;
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
 
 option go_package = "bscp.io/pkg/protocol/core/hook;pbhook";
 
 // Hook source resource reference: pkg/dal/table/hook.go
 message Hook {
-    uint32          id         = 1;
-    HookSpec        spec       = 2;
-    HookAttachment  attachment = 3;
-    pbbase.Revision revision   = 4;
+    uint32 id = 1;
+    HookSpec spec = 2;
+    HookAttachment attachment = 3;
+    pbbase.Revision revision = 4;
 }
 
 // HookSpec source resource reference: pkg/dal/table/hook.go
 message HookSpec {
-    string name      = 1;
-    string pre_type  = 2;
-    string pre_hook  = 3;
-    string post_type = 4;
-    string post_hook = 5;
+    string name         = 1;
+    string release_name = 2;
+    string type         = 3;
+    string tag          = 4;
+    string memo         = 5;
+    string content      = 6;
+    uint32 publish_num  = 7;
 }
 
 // HookAttachment source resource reference: pkg/dal/table/hook.go
 message HookAttachment {
-    uint32 biz_id     = 1;
-    uint32 app_id     = 2;
-    uint32 release_id = 3;
+    uint32 biz_id = 1;
+}
+
+
+// ListConfigItemCounts source resource reference: pkg/dal/table/config_item.go
+message ListHookTagCounts {
+    uint32 app_id    = 1;
+    string tag       = 2;
+    uint32 count     = 3;
+    string update_at = 4;
+}
+
+message CountHookTags {
+    string tag       = 1;
+    uint32 counts    = 2;
 }
