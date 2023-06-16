@@ -55,8 +55,8 @@ bcs-runtime: bcs-k8s bcs-mesos
 bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver \
-	cc-agent csi-cbs kube-sche federated-apiserver apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller mcs-agent \
+	cc-agent kube-sche apiserver-proxy \
+	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller\
 	general-pod-autoscaler cluster-autoscaler
 
 bcs-network:network networkpolicy cloud-netservice cloud-netcontroller cloud-netagent
@@ -65,9 +65,9 @@ bcs-mesos:executor mesos-driver mesos-watch scheduler loadbalance netservice hpa
 	consoleproxy process-executor process-daemon bmsf-mesos-adapter detection clb-controller gw-controller
 
 bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
-	mesh-manager netservice sd-prometheus storage \
+	netservice sd-prometheus storage \
 	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
-    helm-manager project-manager nodegroup-manager
+	helm-manager project-manager nodegroup-manager
 
 bcs-scenarios: kourse
 
@@ -192,11 +192,6 @@ kube-sche:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-k8s-custom-scheduler ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-k8s-custom-scheduler && go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/bcs-k8s-custom-scheduler ./main.go
 
-csi-cbs:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-k8s-csi-tencentcloud ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-csi-tencentcloud/bcs-k8s-csi-tencentcloud ${BCS_COMPONENT_PATH}/bcs-k8s-csi-tencentcloud/cmd/cbs/main.go
-
 scheduler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
 	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-master/bcs-scheduler ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
@@ -219,11 +214,6 @@ log-manager:pre
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-log-manager ${PACKAGEPATH}/bcs-services
 	cd ./bcs-services/bcs-log-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-log-manager/bcs-log-manager ./main.go
 
-mesh-manager:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-mesh-manager ${PACKAGEPATH}/bcs-services
-	cd bcs-services/bcs-mesh-manager && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager ./main.go
-
 hpacontroller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
 	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-master/bcs-hpacontroller ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
@@ -239,15 +229,6 @@ sd-prometheus:pre
 
 k8s-driver:pre
 	cd ${BCS_COMPONENT_PATH}/bcs-k8s-driver && go mod tidy -go=1.16 && go mod tidy -go=1.17 && make k8s-driver
-
-federated-apiserver:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-federated-apiserver ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-federated-apiserver && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/bcs-federated-apiserver ./cmd/apiserver/main.go
-
-federated-apiserver-kubectl-agg:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-federated-apiserver && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-federated-apiserver/kubectl-agg ./cmd/kubectl-agg/main.go
 
 egress-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
@@ -336,11 +317,6 @@ clusternet-controller:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-clusternet-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-clusternet-controller && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/bcs-clusternet-controller ./cmd/clusternet-controller/main.go
-
-mcs-agent:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-mcs-agent ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-mcs && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-mcs-agent/bcs-mcs-agent ./cmd/mcs-agent/main.go
 
 general-pod-autoscaler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
