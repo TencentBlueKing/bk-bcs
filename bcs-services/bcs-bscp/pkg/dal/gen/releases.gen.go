@@ -32,6 +32,10 @@ func newRelease(db *gorm.DB, opts ...gen.DOOption) release {
 	_release.Memo = field.NewString(tableName, "memo")
 	_release.Deprecated = field.NewBool(tableName, "deprecated")
 	_release.PublishNum = field.NewUint32(tableName, "publish_num")
+	_release.PreHookID = field.NewUint32(tableName, "pre_hook_id")
+	_release.PreHookReleaseID = field.NewUint32(tableName, "pre_hook_release_id")
+	_release.PostHookID = field.NewUint32(tableName, "post_hook_id")
+	_release.PostHookReleaseID = field.NewUint32(tableName, "post_hook_release_id")
 	_release.BizID = field.NewUint32(tableName, "biz_id")
 	_release.AppID = field.NewUint32(tableName, "app_id")
 	_release.Creator = field.NewString(tableName, "creator")
@@ -45,16 +49,20 @@ func newRelease(db *gorm.DB, opts ...gen.DOOption) release {
 type release struct {
 	releaseDo releaseDo
 
-	ALL        field.Asterisk
-	ID         field.Uint32
-	Name       field.String
-	Memo       field.String
-	Deprecated field.Bool
-	PublishNum field.Uint32
-	BizID      field.Uint32
-	AppID      field.Uint32
-	Creator    field.String
-	CreatedAt  field.Time
+	ALL               field.Asterisk
+	ID                field.Uint32
+	Name              field.String
+	Memo              field.String
+	Deprecated        field.Bool
+	PublishNum        field.Uint32
+	PreHookID         field.Uint32
+	PreHookReleaseID  field.Uint32
+	PostHookID        field.Uint32
+	PostHookReleaseID field.Uint32
+	BizID             field.Uint32
+	AppID             field.Uint32
+	Creator           field.String
+	CreatedAt         field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -76,6 +84,10 @@ func (r *release) updateTableName(table string) *release {
 	r.Memo = field.NewString(table, "memo")
 	r.Deprecated = field.NewBool(table, "deprecated")
 	r.PublishNum = field.NewUint32(table, "publish_num")
+	r.PreHookID = field.NewUint32(table, "pre_hook_id")
+	r.PreHookReleaseID = field.NewUint32(table, "pre_hook_release_id")
+	r.PostHookID = field.NewUint32(table, "post_hook_id")
+	r.PostHookReleaseID = field.NewUint32(table, "post_hook_release_id")
 	r.BizID = field.NewUint32(table, "biz_id")
 	r.AppID = field.NewUint32(table, "app_id")
 	r.Creator = field.NewString(table, "creator")
@@ -102,12 +114,16 @@ func (r *release) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (r *release) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 9)
+	r.fieldMap = make(map[string]field.Expr, 13)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["name"] = r.Name
 	r.fieldMap["memo"] = r.Memo
 	r.fieldMap["deprecated"] = r.Deprecated
 	r.fieldMap["publish_num"] = r.PublishNum
+	r.fieldMap["pre_hook_id"] = r.PreHookID
+	r.fieldMap["pre_hook_release_id"] = r.PreHookReleaseID
+	r.fieldMap["post_hook_id"] = r.PostHookID
+	r.fieldMap["post_hook_release_id"] = r.PostHookReleaseID
 	r.fieldMap["biz_id"] = r.BizID
 	r.fieldMap["app_id"] = r.AppID
 	r.fieldMap["creator"] = r.Creator

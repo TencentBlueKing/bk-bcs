@@ -41,6 +41,11 @@ func main() {
 		table.Release{},
 		table.ReleasedConfigItem{},
 		table.TemplateSpace{},
+		table.Hook{},
+		table.HookRelease{},
+		table.Release{},
+		table.ConfigHook{},
+		table.App{},
 		table.Template{},
 		table.TemplateRelease{},
 	)

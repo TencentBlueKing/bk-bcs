@@ -116,8 +116,6 @@ insert into id_generators(resource, max_id, updated_at)
 values ('group_app_binds', 0, now());
 insert into id_generators(resource, max_id, updated_at)
 values ('released_groups', 0, now());
-insert into id_generators(resource, max_id, updated_at)
-values ('hooks', 0, now());
 
 create table if not exists `archived_apps`
 (
@@ -401,34 +399,6 @@ create table if not exists `strategies`
 
     primary key (`id`),
     index `idx_bizID_appID` (`biz_id`, `app_id`)
-) engine = innodb
-  default charset = utf8mb4;
-
-create table if not exists `hooks`
-(
-    `id`         bigint(1) unsigned not null,
-
-    # spec is specifics of resource defined with user
-    `name`       varchar(255)       not null,
-    `pre_type`   varchar(20)        not null,
-    `pre_hook`   longtext           not null,
-    `post_type`  varchar(20)        not null,
-    `post_hook`  longtext           not null,
-
-    # Attachment is attachment info of the resource
-    `biz_id`     bigint(1) unsigned not null,
-    `app_id`     bigint(1) unsigned not null,
-    `release_id` bigint(1) unsigned not null,
-
-    # Revision record revision info of the resource
-    `creator`    varchar(64)        not null,
-    `reviser`    varchar(64)        not null,
-    `created_at` datetime(6)        not null,
-    `updated_at` datetime(6)        not null,
-
-    primary key (`id`),
-    unique key `idx_appid_releaseid` (`app_id`, `release_id`),
-    index `idx_bizid_appid` (`biz_id`, `app_id`)
 ) engine = innodb
   default charset = utf8mb4;
 

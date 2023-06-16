@@ -25,28 +25,47 @@
     }
   }
 
-  const props = defineProps<{
-    current: string,
-    base: string
-  }>()
+  const props = withDefaults(defineProps<{
+    base: string;
+    baseLanguage?: string;
+    current: string;
+    currentLanguage?: string;
+  }>(), {
+    baseLanguage: '',
+    currentLanguage: ''
+  })
 
   const textDiffRef = ref()
   let diffEditor: monaco.editor.IStandaloneDiffEditor
 
-  onMounted(() => {
-    if (!diffEditor) {
-      const originalModel = monaco.editor.createModel(props.base)
-      const modifiedModel = monaco.editor.createModel(props.current)
-      diffEditor = monaco.editor.createDiffEditor(textDiffRef.value as HTMLElement, { 
-        theme: 'vs-dark',
-        automaticLayout: true
-      })
-      diffEditor.setModel({
-        original: originalModel,
-        modified: modifiedModel
-      })
-    }
+  watch(() => [props.base, props.current], () => {
+    createDiffEditor()
   })
+
+  watch(() => [props.baseLanguage, props.currentLanguage], () => {
+    createDiffEditor()
+  })
+
+  onMounted(() => {
+    createDiffEditor()
+  })
+
+  const createDiffEditor = () => {
+    if (diffEditor) {
+      diffEditor.dispose()
+    }
+    const originalModel = monaco.editor.createModel(props.base, props.baseLanguage)
+    const modifiedModel = monaco.editor.createModel(props.current, props.currentLanguage)
+    diffEditor = monaco.editor.createDiffEditor(textDiffRef.value as HTMLElement, { 
+      theme: 'vs-dark',
+      automaticLayout: true,
+      readOnly: true
+    })
+    diffEditor.setModel({
+      original: originalModel,
+      modified: modifiedModel
+    })
+  }
 
   onBeforeUnmount(() => {
     diffEditor.dispose()
