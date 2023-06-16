@@ -56,7 +56,7 @@ bcs-k8s: bcs-component bcs-network
 
 bcs-component:k8s-driver \
 	cc-agent kube-sche apiserver-proxy \
-	apiserver-proxy-tools logbeat-sidecar webhook-server clusternet-controller\
+	apiserver-proxy-tools logbeat-sidecar webhook-server \
 	general-pod-autoscaler cluster-autoscaler
 
 bcs-network:network networkpolicy cloud-netservice cloud-netcontroller cloud-netagent
@@ -312,11 +312,6 @@ cc-agent:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-cc-agent ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-cc-agent/bcs-cc-agent ${BCS_COMPONENT_PATH}/bcs-cc-agent/main.go
-
-clusternet-controller:pre
-	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-clusternet-controller ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
-	cd ${BCS_COMPONENT_PATH}/bcs-clusternet-controller && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller/bcs-clusternet-controller ./cmd/bcs-clusternet-controller/main.go
 
 general-pod-autoscaler:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
