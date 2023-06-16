@@ -153,7 +153,7 @@ func (c *BKDataController) createBKDataAPIConfig() error {
 }
 
 // handleAddBKDataAPIConfig xxx
-// TODO: 资源销毁
+// Note: 资源销毁
 func (c *BKDataController) handleAddBKDataAPIConfig(obj interface{}) {
 	// get BKDataClientConfig from crd
 	conf, ok := obj.(*bcsv1.BKDataApiConfig)

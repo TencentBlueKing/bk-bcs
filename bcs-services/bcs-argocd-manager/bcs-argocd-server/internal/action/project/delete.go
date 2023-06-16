@@ -50,7 +50,7 @@ func (action *DeleteArgocdProjectAction) Handle(ctx context.Context,
 	action.resp = resp
 
 	name := req.GetName()
-	// TODO: check if the operator has permission in project
+	// Note: check if the operator has permission in project
 	err := action.tkexIf.ArgocdProjects(common.ArgocdManagerNamespace).Delete(ctx, name, metav1.DeleteOptions{})
 	if err != nil {
 		blog.Errorf("delete argocd project failed, err: %s", err.Error())

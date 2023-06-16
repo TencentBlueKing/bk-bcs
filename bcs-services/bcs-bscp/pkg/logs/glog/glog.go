@@ -277,7 +277,7 @@ func (m *modulePat) match(file string) bool {
 
 // String output moduleSpec.Filter to string.
 func (m *moduleSpec) String() string {
-	// Lock because the type is not atomic. TODO: clean this up.
+	// Lock because the type is not atomic. Note: clean this up.
 	logging.mu.Lock()
 	defer logging.mu.Unlock()
 	var b bytes.Buffer
@@ -364,7 +364,7 @@ func (t *traceLocation) match(file string, line int) bool {
 
 // String 用于打印
 func (t *traceLocation) String() string {
-	// Lock because the type is not atomic. TODO: clean this up.
+	// Lock because the type is not atomic. Note: clean this up.
 	logging.mu.Lock()
 	defer logging.mu.Unlock()
 	return fmt.Sprintf("%s:%d", t.file, t.line)
@@ -438,7 +438,7 @@ func Flush() {
 type loggingT struct {
 	// Boolean flags. Not handled atomically because the flag.Value interface
 	// does not let us avoid the =true, and that shorthand is necessary for
-	// compatibility. TODO: does this matter enough to fix? Seems unlikely.
+	// compatibility. Note: does this matter enough to fix? Seems unlikely.
 	toStderr     bool // The -logtostderr flag.
 	alsoToStderr bool // The -alsologtostderr flag.
 

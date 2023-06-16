@@ -29,7 +29,7 @@ type Selector struct {
 }
 
 // GetNextCondition xxx
-// TODO: error operation
+// Note: error operation
 // GetNextCondition get next label selector condition unit
 func (s *Selector) GetNextCondition() *operator.Condition {
 	if s.cursor >= len(s.SelectorStr) {

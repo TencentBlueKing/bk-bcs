@@ -21,7 +21,7 @@ import (
 	regd "github.com/Tencent/bk-bcs/bcs-common/common/RegisterDiscover"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 )
 
@@ -159,7 +159,7 @@ Outer:
 			// This operation may block if no one is consuming things from stateChan
 			// and length of events has exceeds capacity, so we will try to clean up some
 			// space if channel is half full.
-			// TODO: Why not start a goroutine for data send to make sure it never blocks?
+			// Note: Why not start a goroutine for data send to make sure it never blocks?
 			for len(r.StateChan) > cap(r.StateChan)/2 {
 				select {
 				case <-r.StateChan:
