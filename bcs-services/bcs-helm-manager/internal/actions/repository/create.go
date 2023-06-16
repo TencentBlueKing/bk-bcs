@@ -134,7 +134,7 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 		return nil
 	}
 
-	c.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto())
+	c.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto(c.ctx))
 	blog.Infof("create repository successfully, takeover: %t, project: %s, type: %s, name: %s",
 		takeover, r.ProjectID, r.Type, r.Name)
 	return nil

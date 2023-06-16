@@ -22,6 +22,7 @@ import (
 	"github.com/micro/go-micro/v2/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 )
 
@@ -45,7 +46,7 @@ func GetLangFromCookies(md metadata.Metadata) string {
 
 // GetLangFromContext 从 Context 中获取语言版本
 func GetLangFromContext(ctx context.Context) string {
-	if lang := ctx.Value(common.LangKey); lang != nil {
+	if lang := ctx.Value(contextx.LangContectKey); lang != nil {
 		return lang.(string)
 	}
 	return DefaultLang
