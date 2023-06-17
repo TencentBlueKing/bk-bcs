@@ -263,7 +263,7 @@ detection:pre
 	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-network-detection/bcs-network-detection ./bcs-services/bcs-network-detection/main.go
 
 tools:
-	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
+	go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/cryptools ./install/cryptool/main.go
 
 ui:pre
 	mkdir -p ${PACKAGEPATH}/bcs-ui
