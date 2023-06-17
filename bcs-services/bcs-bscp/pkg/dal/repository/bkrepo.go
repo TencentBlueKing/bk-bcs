@@ -29,6 +29,11 @@ import (
 	"bscp.io/pkg/tools"
 )
 
+const (
+	// tempDownloadURLExpireSeconds is the expire seconds for the temp download url.
+	tempDownloadURLExpireSeconds = 3600
+)
+
 // bkrepoAuthTransport 给请求增加 Authorization header
 type bkrepoAuthTransport struct {
 	Username  string
@@ -266,8 +271,37 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetad
 	return metadata, nil
 }
 
-// NewBKRepoProvider new bkrepo provider
-func NewBKRepoProvider(settings cc.Repository) (Provider, error) {
+// DownloadLink bkrepo file download link
+func (c *bkrepoClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
+	// get file download url.
+	url, err := c.cli.GenerateTempDownloadURL(kt.Ctx, &repo.GenerateTempDownloadURLReq{
+		ProjectID:     cc.FeedServer().Repository.BkRepo.Project,
+		RepoName:      "",
+		FullPathSet:   []string{},
+		ExpireSeconds: uint32(tempDownloadURLExpireSeconds),
+		Permits:       fetchLimit,
+		Type:          "DOWNLOAD",
+	})
+
+	if err != nil {
+		return "", errors.Wrap(err, "generate temp download url failed")
+	}
+
+	return url, nil
+}
+
+// AsyncDownload bkrepo
+func (c *bkrepoClient) AsyncDownload(kt *kit.Kit, fileContentID string) (string, error) {
+	return "", nil
+}
+
+// AsyncDownloadStatus bkrepo
+func (c *bkrepoClient) AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error) {
+	return false, nil
+}
+
+// newBKRepoProvider new bkrepo provider
+func newBKRepoProvider(settings cc.Repository) (Provider, error) {
 	cli, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err

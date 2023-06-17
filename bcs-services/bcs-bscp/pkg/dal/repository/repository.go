@@ -55,15 +55,16 @@ type ObjectMetadata struct {
 	Sha256   string `json:"sha256"`
 }
 
-// ObjectDownload 文件下载
-type ObjectDownload interface {
-	DownloadLink(kt *kit.Kit, fileContentID string) (string, error)
+// ObjectDownloader 文件下载
+type ObjectDownloader interface {
+	DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error)
 	AsyncDownload(kt *kit.Kit, fileContentID string) (string, error)
 	AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error)
 }
 
 // Provider repo provider interface
 type Provider interface {
+	ObjectDownloader
 	Upload(kt *kit.Kit, fileContentID string, body io.Reader, contentLength int64) (*ObjectMetadata, error)
 	Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error)
 	Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error)
@@ -85,7 +86,7 @@ func NewProvider(conf cc.Repository) (Provider, error) {
 	case string(cc.S3):
 		return newCosProvider(conf.S3)
 	case string(cc.BkRepo):
-		return NewBKRepoProvider(conf)
+		return newBKRepoProvider(conf)
 	}
 	return nil, fmt.Errorf("store with type %s is not supported", conf.StorageType)
 }

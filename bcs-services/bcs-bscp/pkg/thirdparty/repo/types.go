@@ -13,7 +13,6 @@ limitations under the License.
 package repo
 
 import (
-	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -422,16 +421,6 @@ type DecoratorInter interface {
 	AccessKeyID() string
 	SecretAccessKey() string
 	GetRepositoryType() cc.StorageMode
-}
-
-// RepositoryTypeInter ..
-type RepositoryTypeInter interface {
-	//IsProjectExist(ctx context.Context) error
-	CreateRepo(ctx context.Context, req *CreateRepoReq) error
-	DeleteRepo(ctx context.Context, bizID uint32, forced bool) error
-	//IsNodeExist(ctx context.Context, nodePath string) (bool, error)
-	//DeleteNode(ctx context.Context, nodePath string) error
-	QueryMetadata(ctx context.Context, opt *NodeOption) (map[string]string, error)
 }
 
 // GenS3NodeFullPath ..

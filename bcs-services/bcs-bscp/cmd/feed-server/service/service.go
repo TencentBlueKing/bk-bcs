@@ -28,6 +28,7 @@ import (
 	"bscp.io/cmd/feed-server/bll"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
@@ -47,11 +48,13 @@ type Service struct {
 	serve      *http.Server
 	state      serviced.State
 	repoCli    *repo.Client
+
 	// name feed server instance name.
 	name string
 	// dsSetting down stream related setting.
 	dsSetting    cc.Downstream
 	uriDecorator repo.UriDecoratorInter
+	provider     repository.Provider
 	mc           *metric
 }
 
@@ -73,10 +76,10 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("initialize business logical layer failed, err: %v", err)
 	}
 
-	// tlsBytes, err := sfs.LoadTLSBytes(cc.FeedServer().Repository)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("conv tls to tls bytes failed, err: %v", err)
-	// }
+	provider, err := repository.NewProvider(cc.FeedServer().Repository)
+	if err != nil {
+		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
+	}
 
 	uriDecorator, err := repo.NewUriDecorator(cc.FeedServer().Repository)
 	if err != nil {
@@ -96,6 +99,7 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		name:         name,
 		dsSetting:    cc.FeedServer().Downstream,
 		uriDecorator: uriDecorator,
+		provider:     provider,
 		mc:           initMetric(name),
 	}, nil
 }

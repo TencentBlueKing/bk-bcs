@@ -144,6 +144,21 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 	return metadata, nil
 }
 
+// DownloadLink cos file download link
+func (c *cosClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
+	return "", nil
+}
+
+// AsyncDownload cos
+func (c *cosClient) AsyncDownload(kt *kit.Kit, fileContentID string) (string, error) {
+	return "", nil
+}
+
+// AsyncDownloadStatus cos
+func (c *cosClient) AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error) {
+	return false, nil
+}
+
 // newCosProvider new cos provider
 func newCosProvider(conf cc.S3Storage) (Provider, error) {
 	host := fmt.Sprintf("%s://%s.%s", cosSchema, conf.BucketName, conf.Endpoint)
