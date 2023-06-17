@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"bscp.io/pkg/criteria/constant"
-	"bscp.io/pkg/kit"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 
+	"bscp.io/pkg/criteria/constant"
+	"bscp.io/pkg/kit"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	"bscp.io/pkg/rest"
 )
