@@ -15,13 +15,9 @@ package repo
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/rest"
@@ -297,11 +293,6 @@ func (c *Client) FileMetadataHead(ctx context.Context, nodePath string) (*FileMe
 	return message, nil
 }
 
-type FileMetadataValue struct {
-	ByteSize int64  `json:"byte_size"`
-	Sha256   string `json:"sha256"`
-}
-
 // GenerateTempDownloadURL generate temp download url.
 func (c *Client) GenerateTempDownloadURL(ctx context.Context, req *GenerateTempDownloadURLReq) (string, error) {
 	resp := c.client.Post().
@@ -331,101 +322,4 @@ func (c *Client) GenerateTempDownloadURL(ctx context.Context, req *GenerateTempD
 	}
 
 	return respBody.Data[0].URL, nil
-}
-
-// Client is s3 client.
-type ClientS3 struct {
-	Config *cc.Repository
-	// http client instance
-	Client *minio.Client
-}
-
-// NewClient new s3 client.
-func NewClientS3(repoSetting *cc.Repository, reg prometheus.Registerer) (*ClientS3, error) {
-	minioClient, err := minio.New(repoSetting.S3.Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(repoSetting.S3.AccessKeyID, repoSetting.S3.SecretAccessKey, ""),
-		Secure: repoSetting.S3.UseSSL,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	c := &client.Capability{
-		MetricOpts: client.MetricOption{Register: reg},
-	}
-	if c.MetricOpts.Register != nil {
-
-		var buckets []float64
-		if len(c.MetricOpts.DurationBuckets) == 0 {
-			// set default buckets
-			buckets = []float64{10, 30, 50, 70, 100, 200, 300, 400, 500, 1000, 2000, 5000}
-		} else {
-			// use user defined buckets
-			buckets = c.MetricOpts.DurationBuckets
-		}
-
-		requestDuration := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-			Name:    "bscp_http_requests_duration_millisecond",
-			Help:    "third party api request duration millisecond.",
-			Buckets: buckets,
-		}, []string{"handler", "status_code", "dimension"})
-
-		if err := c.MetricOpts.Register.Register(requestDuration); err != nil {
-			if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
-				requestDuration = are.ExistingCollector.(*prometheus.HistogramVec)
-			} else {
-				panic(err)
-			}
-		}
-	}
-	return &ClientS3{
-		Config: repoSetting,
-		Client: minioClient,
-	}, nil
-}
-
-// IsNodeExist judge repo node already exist.
-func (c *ClientS3) IsNodeExist(ctx context.Context, bucketName, nodePath string) (bool, error) {
-	_, err := c.Client.StatObject(ctx, bucketName, nodePath, minio.StatObjectOptions{})
-	if err != nil {
-		return false, err
-	}
-	return true, nil
-}
-
-// FileMetadataHead get head data
-func (c *ClientS3) FileMetadataHead(ctx context.Context, bucketName, nodePath string) (*FileMetadataValue, error) {
-
-	resp, err := c.Client.StatObject(ctx, bucketName, nodePath, minio.StatObjectOptions{Checksum: true})
-	if err != nil {
-		return nil, err
-	}
-	fileSize := resp.Size
-	message := &FileMetadataValue{
-		ByteSize: fileSize,
-	}
-
-	return message, nil
-}
-
-// DeleteNode delete node.
-func (c *ClientS3) DeleteNode(ctx context.Context, bucketName, nodePath string) error {
-	err := c.Client.RemoveObject(ctx, bucketName, nodePath, minio.RemoveObjectOptions{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// QueryMetadata query node metadata info. If node not exist, return data is {}.
-func (c *ClientS3) QueryMetadata(ctx context.Context, opt *NodeOption) (map[string]string, error) {
-	bucketName, err := GenRepoName(uint32(opt.BizID))
-	state, err := c.Client.StatObject(ctx, bucketName, opt.Sign, minio.StatObjectOptions{})
-	if err != nil {
-		return nil, err
-	}
-	var dataMeta map[string]string
-	stateJson, _ := json.Marshal(state)
-	json.Unmarshal(stateJson, dataMeta)
-	return dataMeta, nil
 }
