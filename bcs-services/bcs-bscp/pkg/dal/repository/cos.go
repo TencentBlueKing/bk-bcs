@@ -144,6 +144,11 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 	return metadata, nil
 }
 
+// URIDecorator ..
+func (c *cosClient) URIDecorator(bizID uint32) DecoratorInter {
+	return nil
+}
+
 // DownloadLink cos file download link
 func (c *cosClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
 	return "", nil

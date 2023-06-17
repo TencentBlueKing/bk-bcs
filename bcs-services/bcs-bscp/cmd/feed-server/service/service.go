@@ -31,12 +31,10 @@ import (
 	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/metrics"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
-	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/tools"
 )
 
@@ -47,15 +45,13 @@ type Service struct {
 	authorizer auth.Authorizer
 	serve      *http.Server
 	state      serviced.State
-	repoCli    *repo.Client
+	provider   repository.Provider
 
 	// name feed server instance name.
 	name string
 	// dsSetting down stream related setting.
-	dsSetting    cc.Downstream
-	uriDecorator repo.UriDecoratorInter
-	provider     repository.Provider
-	mc           *metric
+	dsSetting cc.Downstream
+	mc        *metric
 }
 
 // NewService create a service instance.
@@ -81,26 +77,14 @@ func NewService(sd serviced.Discover, name string) (*Service, error) {
 		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
 	}
 
-	uriDecorator, err := repo.NewUriDecorator(cc.FeedServer().Repository)
-	if err != nil {
-		return nil, fmt.Errorf("new repository uri decorator failed, err: %v", err)
-	}
-
-	repoCli, err := repo.NewClient(cc.FeedServer().Repository, metrics.Register())
-	if err != nil {
-		return nil, err
-	}
-
 	return &Service{
-		bll:          bl,
-		repoCli:      repoCli,
-		authorizer:   authorizer,
-		state:        state,
-		name:         name,
-		dsSetting:    cc.FeedServer().Downstream,
-		uriDecorator: uriDecorator,
-		provider:     provider,
-		mc:           initMetric(name),
+		bll:        bl,
+		authorizer: authorizer,
+		state:      state,
+		name:       name,
+		dsSetting:  cc.FeedServer().Downstream,
+		provider:   provider,
+		mc:         initMetric(name),
 	}, nil
 }
 

@@ -23,13 +23,13 @@ import (
 	"bscp.io/cmd/feed-server/bll/observer"
 	btyp "bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbct "bscp.io/pkg/protocol/core/content"
 	"bscp.io/pkg/runtime/shutdown"
 	sfs "bscp.io/pkg/sf-share"
-	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/types"
 
 	"go.uber.org/atomic"
@@ -55,9 +55,9 @@ type Handler struct {
 // events processing, which means scheduler do not match the subscribed instance's release.
 func NewScheduler(opt *Option, name string) (*Scheduler, error) {
 
-	uriDecorator, err := repo.NewUriDecorator(cc.FeedServer().Repository)
+	provider, err := repository.NewProvider(cc.FeedServer().Repository)
 	if err != nil {
-		return nil, fmt.Errorf("schduler init repository uri decorator failed, err: %v", err)
+		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
 	}
 
 	mc := initMetric(name)
@@ -66,9 +66,9 @@ func NewScheduler(opt *Option, name string) (*Scheduler, error) {
 		lc:            opt.Cache,
 		retry:         newRetryList(mc),
 		serialNumber:  atomic.NewUint64(0),
-		uriDecorator:  uriDecorator,
 		notifyLimiter: semaphore.NewWeighted(int64(cc.FeedServer().Downstream.NotifyMaxLimit)),
 		mc:            mc,
+		provider:      provider,
 	}
 
 	sch.appPool = &appPool{
@@ -93,7 +93,7 @@ type Scheduler struct {
 	retry        *retryList
 	handler      *Handler
 	serialNumber *atomic.Uint64
-	uriDecorator repo.UriDecoratorInter
+	provider     repository.Provider
 	// notifyLimiter controls the concurrent of sending the event messages to the
 	// event subscribers.
 	notifyLimiter *semaphore.Weighted
@@ -290,7 +290,7 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.ReleaseCICache, releaseID uint32,
 	cursorID uint32) *Event {
 
-	uriD := sch.uriDecorator.Init(inst.BizID)
+	uriD := sch.provider.URIDecorator(inst.BizID)
 	ciMeta := make([]*sfs.ConfigItemMetaV1, len(ciList))
 	for idx, one := range ciList {
 		cis := one.ConfigItemSpec
@@ -329,11 +329,7 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 			ReleaseID: releaseID,
 			CIMetas:   ciMeta,
 			Repository: &sfs.RepositoryV1{
-				Root:            uriD.Root(),
-				Url:             uriD.Url(),
-				AccessKeyID:     uriD.AccessKeyID(),
-				SecretAccessKey: uriD.SecretAccessKey(),
-				RepositoryType:  uriD.GetRepositoryType(),
+				RepositoryType: uriD.GetRepositoryType(),
 			},
 		},
 		Instance: inst,

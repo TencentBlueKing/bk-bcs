@@ -271,6 +271,11 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetad
 	return metadata, nil
 }
 
+// URIDecorator ..
+func (c *bkrepoClient) URIDecorator(bizID uint32) DecoratorInter {
+	return nil
+}
+
 // DownloadLink bkrepo file download link
 func (c *bkrepoClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
 	// get file download url.

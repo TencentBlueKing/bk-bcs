@@ -66,7 +66,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 	// 1. get the basic configurations for sidecar if necessary, and send it back to sidecar later.
 	// 2. collect the basic info for the app with biz dimension.
 
-	decorator := s.uriDecorator.Init(hm.Spec.BizId)
+	decorator := s.provider.URIDecorator(hm.Spec.BizId)
 	payload := &sfs.SidecarHandshakePayload{
 		ServiceInfo: &sfs.ServiceInfo{
 			Name: s.name,
@@ -76,10 +76,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 			Repository: &sfs.RepositoryV1{
 				RepositoryType: decorator.GetRepositoryType(),
 				Root:           decorator.Root(),
-				// Note: TLS
-				AccessKeyID:     decorator.AccessKeyID(),
-				SecretAccessKey: decorator.SecretAccessKey(),
-				Url:             decorator.Url(),
+				Url:            decorator.Url(),
 			},
 		},
 	}

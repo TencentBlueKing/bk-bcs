@@ -55,11 +55,22 @@ type ObjectMetadata struct {
 	Sha256   string `json:"sha256"`
 }
 
+// DecoratorInter ..
+type DecoratorInter interface {
+	Root() string
+	RepoName() string
+	Path(sign string) string
+	RelativePath(sign string) string
+	Url() string
+	GetRepositoryType() cc.StorageMode
+}
+
 // ObjectDownloader 文件下载
 type ObjectDownloader interface {
 	DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error)
 	AsyncDownload(kt *kit.Kit, fileContentID string) (string, error)
 	AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error)
+	URIDecorator(bizID uint32) DecoratorInter
 }
 
 // Provider repo provider interface
