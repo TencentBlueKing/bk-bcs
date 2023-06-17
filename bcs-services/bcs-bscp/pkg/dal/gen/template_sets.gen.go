@@ -31,6 +31,8 @@ func newTemplateSet(db *gorm.DB, opts ...gen.DOOption) templateSet {
 	_templateSet.Name = field.NewString(tableName, "name")
 	_templateSet.Memo = field.NewString(tableName, "memo")
 	_templateSet.TemplateIDs = field.NewField(tableName, "template_ids")
+	_templateSet.Public = field.NewBool(tableName, "public")
+	_templateSet.BoundApps = field.NewField(tableName, "bound_apps")
 	_templateSet.BizID = field.NewUint32(tableName, "biz_id")
 	_templateSet.TemplateSpaceID = field.NewUint32(tableName, "template_space_id")
 	_templateSet.Creator = field.NewString(tableName, "creator")
@@ -51,6 +53,8 @@ type templateSet struct {
 	Name            field.String
 	Memo            field.String
 	TemplateIDs     field.Field
+	Public          field.Bool
+	BoundApps       field.Field
 	BizID           field.Uint32
 	TemplateSpaceID field.Uint32
 	Creator         field.String
@@ -77,6 +81,8 @@ func (t *templateSet) updateTableName(table string) *templateSet {
 	t.Name = field.NewString(table, "name")
 	t.Memo = field.NewString(table, "memo")
 	t.TemplateIDs = field.NewField(table, "template_ids")
+	t.Public = field.NewBool(table, "public")
+	t.BoundApps = field.NewField(table, "bound_apps")
 	t.BizID = field.NewUint32(table, "biz_id")
 	t.TemplateSpaceID = field.NewUint32(table, "template_space_id")
 	t.Creator = field.NewString(table, "creator")
@@ -107,11 +113,13 @@ func (t *templateSet) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (t *templateSet) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 10)
+	t.fieldMap = make(map[string]field.Expr, 12)
 	t.fieldMap["id"] = t.ID
 	t.fieldMap["name"] = t.Name
 	t.fieldMap["memo"] = t.Memo
 	t.fieldMap["template_ids"] = t.TemplateIDs
+	t.fieldMap["public"] = t.Public
+	t.fieldMap["bound_apps"] = t.BoundApps
 	t.fieldMap["biz_id"] = t.BizID
 	t.fieldMap["template_space_id"] = t.TemplateSpaceID
 	t.fieldMap["creator"] = t.Creator

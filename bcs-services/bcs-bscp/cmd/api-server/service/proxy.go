@@ -40,6 +40,7 @@ type proxy struct {
 	repo       *repoService
 	state      serviced.State
 	authorizer auth.Authorizer
+	cfgClient  pbcs.ConfigClient
 }
 
 // newProxy create new mux proxy.
@@ -69,13 +70,21 @@ func newProxy(dis serviced.Discover) (*proxy, error) {
 		return nil, err
 	}
 
+	cfgClient, err := newCfgClient(dis)
+	if err != nil {
+		return nil, err
+	}
+
 	p := &proxy{
 		cfgSvrMux:  cfgSvrMux,
 		repo:       repo,
 		state:      state,
 		authorizer: authorizer,
 		authSvrMux: authSvrMux,
+		cfgClient:  cfgClient,
 	}
+
+	p.initBizsOfTmplSpaces()
 
 	return p, nil
 }
@@ -129,6 +138,23 @@ func newCfgServerMux(dis serviced.Discover) (*runtime.ServeMux, error) {
 	}
 
 	return mux, nil
+}
+
+// newCfgClient new config client.
+func newCfgClient(dis serviced.Discover) (pbcs.ConfigClient, error) {
+	opts, err := newGrpcDialOption(dis, cc.ApiServer().Network.TLS)
+	if err != nil {
+		return nil, err
+	}
+
+	// build conn.
+	conn, err := grpc.Dial(serviced.GrpcServiceDiscoveryName(cc.ConfigServerName), opts...)
+	if err != nil {
+		logs.Errorf("dial config server failed, err: %v", err)
+		return nil, err
+	}
+
+	return pbcs.NewConfigClient(conn), nil
 }
 
 // newGrpcDialOption new grpc dial option by grpc balancer and tls.

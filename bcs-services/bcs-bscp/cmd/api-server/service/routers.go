@@ -72,6 +72,15 @@ func (p *proxy) routers() http.Handler {
 		r.Mount("/", p.cfgSvrMux)
 	})
 
+	// 模版空间相关接口，检查并设置业务下的默认空间
+	r.Route("/api/v1/config/biz/{biz_id}/template_spaces", func(r chi.Router) {
+		r.Use(p.authorizer.UnifiedAuthentication)
+		r.Use(p.authorizer.BizVerified)
+		r.Use(view.Generic(p.authorizer))
+		r.Use(p.CheckDefaultTmplSpace)
+		r.Mount("/", p.cfgSvrMux)
+	})
+
 	r.Route("/api/v1/config/", func(r chi.Router) {
 		r.Use(p.authorizer.UnifiedAuthentication)
 		r.Use(p.authorizer.BizVerified)

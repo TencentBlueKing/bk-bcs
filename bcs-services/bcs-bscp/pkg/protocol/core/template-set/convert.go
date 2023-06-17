@@ -40,6 +40,8 @@ func (m *TemplateSetSpec) TemplateSetSpec() *table.TemplateSetSpec {
 		Name:        m.Name,
 		Memo:        m.Memo,
 		TemplateIDs: m.TemplateIds,
+		Public:      m.Public,
+		BoundApps:   m.BoundApps,
 	}
 }
 
@@ -53,6 +55,8 @@ func PbTemplateSetSpec(spec *table.TemplateSetSpec) *TemplateSetSpec {
 		Name:        spec.Name,
 		Memo:        spec.Memo,
 		TemplateIds: spec.TemplateIDs,
+		Public:      spec.Public,
+		BoundApps:   spec.BoundApps,
 	}
 }
 

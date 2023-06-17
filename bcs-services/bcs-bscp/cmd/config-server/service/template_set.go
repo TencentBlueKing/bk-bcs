@@ -50,6 +50,8 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplat
 			Name:        req.Name,
 			Memo:        req.Memo,
 			TemplateIds: req.TemplateIds,
+			Public:      req.Public,
+			BoundApps:   req.BoundApps,
 		},
 	}
 	rp, err := s.client.DS.CreateTemplateSet(grpcKit.RpcCtx(), r)
@@ -108,7 +110,10 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplat
 			TemplateSpaceId: req.TemplateSpaceId,
 		},
 		Spec: &pbtset.TemplateSetSpec{
-			Memo: req.Memo,
+			Memo:        req.Memo,
+			TemplateIds: req.TemplateIds,
+			Public:      req.Public,
+			BoundApps:   req.BoundApps,
 		},
 	}
 	if _, err := s.client.DS.UpdateTemplateSet(grpcKit.RpcCtx(), r); err != nil {

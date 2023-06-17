@@ -19,6 +19,7 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbts "bscp.io/pkg/protocol/core/template-space"
 	pbds "bscp.io/pkg/protocol/data-service"
 )
@@ -133,6 +134,46 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbcs.ListTemplate
 	resp = &pbcs.ListTemplateSpacesResp{
 		Count:   rp.Count,
 		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// GetAllBizsOfTemplateSpaces get all biz ids of template spaces
+func (s *Service) GetAllBizsOfTemplateSpaces(ctx context.Context, req *pbbase.EmptyReq) (
+	*pbcs.GetAllBizsOfTemplateSpacesResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.GetAllBizsOfTemplateSpacesResp)
+
+	rp, err := s.client.DS.GetAllBizsOfTemplateSpaces(grpcKit.RpcCtx(), req)
+	if err != nil {
+		logs.Errorf("get all bizs of template space failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.GetAllBizsOfTemplateSpacesResp{
+		BizIds: rp.BizIds,
+	}
+	return resp, nil
+}
+
+// CreateDefaultTemplateSpace get all biz ids of template spaces
+func (s *Service) CreateDefaultTemplateSpace(ctx context.Context, req *pbcs.CreateDefaultTemplateSpaceReq) (
+	*pbcs.CreateDefaultTemplateSpaceResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.CreateDefaultTemplateSpaceResp)
+
+	r := &pbds.CreateDefaultTemplateSpaceReq{
+		BizId: req.BizId,
+	}
+
+	rp, err := s.client.DS.CreateDefaultTemplateSpace(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("create default template space failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.CreateDefaultTemplateSpaceResp{
+		Id: rp.Id,
 	}
 	return resp, nil
 }
