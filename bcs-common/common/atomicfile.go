@@ -20,6 +20,7 @@ package common
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -38,8 +39,12 @@ func AtomicFileNew(path string, mode os.FileMode) (*AtomicFile, error) {
 		return nil, err
 	}
 	if err := os.Chmod(f.Name(), mode); err != nil {
-		_ = f.Close()
-		_ = os.Remove(f.Name())
+		if closeErr := f.Close(); closeErr != nil {
+			log.Printf("close file '%s' failed: %s\n", f.Name(), closeErr.Error())
+		}
+		if removeErr := os.Remove(f.Name()); removeErr != nil {
+			log.Printf("remove file '%s' failed: %s\n", f.Name(), removeErr.Error())
+		}
 		return nil, err
 	}
 	return &AtomicFile{File: f, path: path}, nil
@@ -48,7 +53,9 @@ func AtomicFileNew(path string, mode os.FileMode) (*AtomicFile, error) {
 // Close the file replacing the configured file.
 func (f *AtomicFile) Close() error {
 	if err := f.File.Close(); err != nil {
-		_ = os.Remove(f.File.Name())
+		if removeErr := os.Remove(f.Name()); removeErr != nil {
+			log.Printf("remove file '%s' failed: %s\n", f.Name(), removeErr.Error())
+		}
 		return err
 	}
 	if err := os.Rename(f.Name(), f.path); err != nil {
@@ -62,7 +69,9 @@ func (f *AtomicFile) Close() error {
 // don't want it anymore.
 func (f *AtomicFile) Abort() error {
 	if err := f.File.Close(); err != nil {
-		os.Remove(f.Name())
+		if removeErr := os.Remove(f.Name()); removeErr != nil {
+			log.Printf("remove file '%s' failed: %s\n", f.Name(), removeErr.Error())
+		}
 		return err
 	}
 	if err := os.Remove(f.Name()); err != nil {

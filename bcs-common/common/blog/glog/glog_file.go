@@ -36,6 +36,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -126,7 +127,9 @@ func (lk *logKeeper) remove(tag string) (ok bool) {
 	if !ok || lk.total[tag] == 0 {
 		return
 	}
-	_ = lk.removeFile(block.name)
+	if err := lk.removeFile(block.name); err != nil {
+		log.Printf("remove file '%s' failed: %s", block.name, err.Error())
+	}
 	lk.head[tag] = block.next
 	block = nil // for GC
 	lk.total[tag]--
@@ -178,7 +181,9 @@ func (lk *logKeeper) load() {
 				lk.tail[tag] = fb
 				lk.total[tag]++
 			} else {
-				_ = lk.removeFile(block.name)
+				if err = lk.removeFile(block.name); err != nil {
+					log.Printf("remove file '%s' failed: %s", block.name, err.Error())
+				}
 			}
 		}
 	}

@@ -37,5 +37,5 @@ func parseResponse(resp []byte) (code int, msg string, data []byte, err error) {
 		return -1, fmt.Sprintf("decode response failed, raw resp: %s", string(resp)), nil, err
 	}
 
-	return
+	return code, msg, data, nil
 }

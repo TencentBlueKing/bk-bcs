@@ -37,7 +37,7 @@ func NewClient(option *Option) Client {
 	return c
 }
 
-// apisixSetting is a helper function that sets the X-API-KEY header 
+// apisixSetting is a helper function that sets the X-API-KEY header
 // for the request if an admin token is provided in the Option struct.
 // It returns the modified request with the header set or the original request if no header needs to be added.
 func apisixSetting(req *restclient.Request, option *Option) *restclient.Request {

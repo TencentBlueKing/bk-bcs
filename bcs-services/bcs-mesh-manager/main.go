@@ -103,7 +103,7 @@ func main() {
 	managerStop := make(chan struct{})
 	go func() {
 		klog.Infof("starting manager")
-		if err := mgr.Start(managerStop); err != nil {
+		if err = mgr.Start(managerStop); err != nil {
 			klog.Errorf("running manager failed: %s", err.Error())
 			os.Exit(1)
 		}
