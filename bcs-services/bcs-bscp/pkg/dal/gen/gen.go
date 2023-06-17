@@ -35,6 +35,7 @@ var (
 	Strategy           *strategy
 	Template           *template
 	TemplateRelease    *templateRelease
+	TemplateSet        *templateSet
 	TemplateSpace      *templateSpace
 )
 
@@ -58,6 +59,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Strategy = &Q.Strategy
 	Template = &Q.Template
 	TemplateRelease = &Q.TemplateRelease
+	TemplateSet = &Q.TemplateSet
 	TemplateSpace = &Q.TemplateSpace
 }
 
@@ -82,6 +84,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Strategy:           newStrategy(db, opts...),
 		Template:           newTemplate(db, opts...),
 		TemplateRelease:    newTemplateRelease(db, opts...),
+		TemplateSet:        newTemplateSet(db, opts...),
 		TemplateSpace:      newTemplateSpace(db, opts...),
 	}
 }
@@ -107,6 +110,7 @@ type Query struct {
 	Strategy           strategy
 	Template           template
 	TemplateRelease    templateRelease
+	TemplateSet        templateSet
 	TemplateSpace      templateSpace
 }
 
@@ -133,6 +137,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Strategy:           q.Strategy.clone(db),
 		Template:           q.Template.clone(db),
 		TemplateRelease:    q.TemplateRelease.clone(db),
+		TemplateSet:        q.TemplateSet.clone(db),
 		TemplateSpace:      q.TemplateSpace.clone(db),
 	}
 }
@@ -166,6 +171,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Strategy:           q.Strategy.replaceDB(db),
 		Template:           q.Template.replaceDB(db),
 		TemplateRelease:    q.TemplateRelease.replaceDB(db),
+		TemplateSet:        q.TemplateSet.replaceDB(db),
 		TemplateSpace:      q.TemplateSpace.replaceDB(db),
 	}
 }
@@ -189,6 +195,7 @@ type queryCtx struct {
 	Strategy           IStrategyDo
 	Template           ITemplateDo
 	TemplateRelease    ITemplateReleaseDo
+	TemplateSet        ITemplateSetDo
 	TemplateSpace      ITemplateSpaceDo
 }
 
@@ -212,6 +219,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Strategy:           q.Strategy.WithContext(ctx),
 		Template:           q.Template.WithContext(ctx),
 		TemplateRelease:    q.TemplateRelease.WithContext(ctx),
+		TemplateSet:        q.TemplateSet.WithContext(ctx),
 		TemplateSpace:      q.TemplateSpace.WithContext(ctx),
 	}
 }

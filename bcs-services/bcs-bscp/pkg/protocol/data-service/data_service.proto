@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "bscp.io/pkg/protocol/core/app/app.proto";
 import "bscp.io/pkg/protocol/core/base/base.proto";
+import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
 import "bscp.io/pkg/protocol/core/commit/commit.proto";
 import "bscp.io/pkg/protocol/core/content/content.proto";
@@ -13,9 +14,9 @@ import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
-import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
-import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
+import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
+import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -99,6 +100,12 @@ service Data {
     rpc CreateTemplateRelease(CreateTemplateReleaseReq) returns (CreateResp) {}
     rpc ListTemplateReleases(ListTemplateReleasesReq) returns (ListTemplateReleasesResp) {}
     rpc DeleteTemplateRelease(DeleteTemplateReleaseReq) returns (pbbase.EmptyResp) {}
+
+    // template set related interface.
+    rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateResp) {}
+    rpc ListTemplateSets(ListTemplateSetsReq) returns (ListTemplateSetsResp) {}
+    rpc UpdateTemplateSet(UpdateTemplateSetReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (pbbase.EmptyResp) {}
 
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
@@ -610,6 +617,34 @@ message ListTemplateReleasesResp {
 message DeleteTemplateReleaseReq {
     uint32                         id         = 1;
     pbtr.TemplateReleaseAttachment attachment = 2;
+}
+
+message CreateTemplateSetReq {
+    pbtset.TemplateSetAttachment attachment = 1;
+    pbtset.TemplateSetSpec       spec       = 2;
+}
+
+message ListTemplateSetsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 start             = 3;
+    uint32 limit             = 4;
+}
+
+message ListTemplateSetsResp {
+    uint32                      count   = 1;
+    repeated pbtset.TemplateSet details = 2;
+}
+
+message UpdateTemplateSetReq {
+    uint32                       id         = 1;
+    pbtset.TemplateSetAttachment attachment = 2;
+    pbtset.TemplateSetSpec       spec       = 3;
+}
+
+message DeleteTemplateSetReq {
+    uint32                       id         = 1;
+    pbtset.TemplateSetAttachment attachment = 2;
 }
 
 message CreateGroupReq {

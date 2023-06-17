@@ -21,16 +21,18 @@ import (
 )
 
 func init() {
+	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
 		Version: "mig20230526152150",
 		Name:    "20230526152150_add_hook",
 		Mode:    migrator.GormMode,
-		Up:      mig20230526152150GormTestUp,
+		Up:      mig20230526152150GormUp,
 		Down:    mig20230526152150GormDown,
 	})
 }
 
-func mig20230526152150GormTestUp(tx *gorm.DB) error {
+// mig20230526152150GormUp for up migration
+func mig20230526152150GormUp(tx *gorm.DB) error {
 
 	// Hook 脚本
 	type Hook struct {
@@ -129,6 +131,7 @@ func mig20230526152150GormTestUp(tx *gorm.DB) error {
 	return nil
 }
 
+// mig20230526152150GormDown for down migration
 func mig20230526152150GormDown(tx *gorm.DB) error {
 
 	// Hook 脚本
