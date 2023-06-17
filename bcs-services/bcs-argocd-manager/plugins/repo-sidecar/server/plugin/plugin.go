@@ -105,7 +105,7 @@ func (p *Plugin) checkInstance() error {
 		return err
 	}
 
-	// TODO: should check the instance status running
+	// Note: should check the instance status running
 	if resp.GetInstance() == nil {
 		return fmt.Errorf("instance %s not exist", p.instance)
 	}

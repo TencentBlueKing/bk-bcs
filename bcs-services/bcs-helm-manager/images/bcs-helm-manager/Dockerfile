@@ -16,6 +16,7 @@ ADD bcs-helm-manager /data/bcs/bcs-helm-manager/
 ADD bcs-helm-manager-migrator /data/bcs/bcs-helm-manager/
 ADD container-start.sh /data/bcs/bcs-helm-manager/
 ADD swagger/swagger-ui /data/bcs/swagger
+ADD lc_msgs.yaml /data/bcs/bcs-helm-manager/lc_msgs.yaml
 RUN chmod +x /data/bcs/bcs-helm-manager/container-start.sh
 
 WORKDIR /data/bcs/bcs-helm-manager/

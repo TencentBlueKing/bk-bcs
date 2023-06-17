@@ -85,7 +85,7 @@ func (u *UpdateRepositoryAction) update(projectCode, name string, m entity.M) er
 		return nil
 	}
 
-	u.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto())
+	u.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto(u.ctx))
 	blog.Infof("update repository successfully, projectCode: %s, name: %s", projectCode, name)
 	return nil
 }

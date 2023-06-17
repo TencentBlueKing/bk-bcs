@@ -20,7 +20,7 @@ import (
 )
 
 // migrateData xxx
-// TODO: 这里是具体的数据迁移逻辑
+// Note: 这里是具体的数据迁移逻辑
 func migrateData(ctx context.Context, helper upgrader.UpgradeHelper) (err error) {
 
 	return nil

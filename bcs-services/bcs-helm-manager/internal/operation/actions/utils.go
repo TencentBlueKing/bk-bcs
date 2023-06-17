@@ -67,7 +67,8 @@ func checkReleaseAccess(manifest []release.SimpleHead, resources []*metav1.APIRe
 		return err
 	}
 	if !allow {
-		return fmt.Errorf("无操作集群资源的权限，请通过链接申请 %s", url)
+		return fmt.Errorf("You do not have permission to operate cluster resources. "+
+			"Please apply through the provided link. %s", url)
 	}
 	return nil
 }

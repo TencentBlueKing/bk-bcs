@@ -74,7 +74,7 @@ func CreateRestContainer(pathPrefix string) *restful.Container {
 	// Handlers for bcs-services
 	ws.Route(ws.GET("/clusters/bcs/query_by_cluster_id/").To(QueryBCSClusterByClusterID))
 
-	// TODO: Add user management endpoints for admin user
+	// Note: Add user management endpoints for admin user
 	ws.Route(AddSuperUserAuthF(ws.POST("/users/")).To(CreateUser))
 	ws.Route(AddSuperUserAuthF(ws.GET("/users/{user_name}")).To(QueryBCSUserByName))
 	ws.Route(AddSuperUserAuthF(ws.POST("/users/{user_id}/tokens")).To(CreateUserToken))

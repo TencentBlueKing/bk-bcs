@@ -27,7 +27,7 @@ import (
 func NewInjectContextWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
 		// generate uuid， e.g. 40a05290d67a4a39a04c705a0ee56add
-		// TODO: trace id by opentelemetry
+		// Note: trace id by opentelemetry
 		if ctx.Value(ctxkey.RequestIDKey) == nil {
 			ctx = context.WithValue(ctx, ctxkey.RequestIDKey, stringx.GenUUID())
 		}

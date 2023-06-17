@@ -78,7 +78,7 @@ func (l *ListRepositoryAction) list() error {
 
 	r := make([]*helmmanager.Repository, 0, len(origin))
 	for _, item := range origin {
-		r = append(r, item.Transfer2Proto())
+		r = append(r, item.Transfer2Proto(l.ctx))
 	}
 
 	l.setResp(common.ErrHelmManagerSuccess, "ok", r)

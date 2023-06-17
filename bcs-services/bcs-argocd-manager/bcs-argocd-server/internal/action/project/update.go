@@ -51,7 +51,7 @@ func (action *UpdateArgocdProjectAction) Handle(ctx context.Context,
 	action.resp = resp
 
 	p := req.GetProject()
-	// TODO: check if the operator has permission in project
+	// Note: check if the operator has permission in project
 	updated, err := action.tkexIf.ArgocdProjects(common.ArgocdManagerNamespace).Update(ctx, p, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update argocd project failed, err: %s", err.Error())

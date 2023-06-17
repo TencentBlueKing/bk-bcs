@@ -76,7 +76,7 @@ func SoShouldJsonEqual(actual interface{}, expected ...interface{}) string {
 	if string(jActual) == string(jExpected) {
 		return ""
 	}
-	return fmt.Sprintf("Expeced: %v, but actual: %v", expected, actual)
+	return fmt.Sprintf("Expected: %v, but actual: %v", expected, actual)
 }
 
 // SoRevision a func for So() of convey, it is aimed to verify revision

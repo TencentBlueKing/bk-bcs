@@ -56,7 +56,7 @@ func (e *HierarchicalStrategyExecutor) IsAbleToScaleUp(strategy *storage.NodeGro
 	consumerID := strategy.ElasticNodeGroups[0].ConsumerID
 	if consumerID == "" {
 		return 0, false, fmt.Errorf("strategy %s consumer id is empty", strategy.Name)
-		// TODO: 补充通过cluster manager 获取consumer id 逻辑
+		// Note: 补充通过cluster manager 获取consumer id 逻辑
 	}
 	deviceGroup, err := e.opt.ResourceManager.GetResourcePoolByCondition(strategy.ResourcePool, consumerID, "", nil)
 	if err != nil {

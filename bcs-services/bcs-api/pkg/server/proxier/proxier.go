@@ -194,7 +194,7 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 		}
 	}
 
-	// TODO: How to modify the rev-proxy request to allow user pass the ORIGINAL CLUSTER CA instead of the ca of current
+	// Note: How to modify the rev-proxy request to allow user pass the ORIGINAL CLUSTER CA instead of the ca of current
 	// bke-server instance?
 	req.URL.Scheme = "https"
 

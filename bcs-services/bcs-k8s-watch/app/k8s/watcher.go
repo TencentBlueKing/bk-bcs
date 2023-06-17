@@ -716,5 +716,5 @@ func (w *NetServiceWatcher) Run(stopCh <-chan struct{}) {
 	// sync ip resource detail.
 	go wait.NonSlidingUntil(w.SyncIPResourceDetail, defaultSyncInterval*2, stopCh)
 
-	// TODO: add more resource-sync logics here.
+	// Note: add more resource-sync logics here.
 }
