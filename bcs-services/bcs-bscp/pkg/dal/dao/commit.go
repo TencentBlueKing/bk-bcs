@@ -165,10 +165,10 @@ func (dao *commitDao) BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, 
 		return nil, nil
 	}
 	m := dao.genQ.Commit
-	subQuery := dao.genQ.Commit.WithContext(kit.Ctx).Select(m.ID.Max().As("commit_id")).Where(
+	q := dao.genQ.Commit.WithContext(kit.Ctx)
+	subQuery := q.Select(m.ID.Max().As("commit_id")).Where(
 		m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ConfigItemID.In(ids...)).Group(m.ConfigItemID)
-	return dao.genQ.Commit.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
-		dao.genQ.Commit.WithContext(kit.Ctx).Columns(m.ID).In(subQuery)).Find()
+	return q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), q.Columns(m.ID).In(subQuery)).Find()
 }
 
 // List commits with options.

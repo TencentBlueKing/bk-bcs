@@ -201,6 +201,7 @@ func (s *set) ReleasedCI() ReleasedCI {
 	return &releasedCIDao{
 		orm:      s.orm,
 		sd:       s.sd,
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 	}

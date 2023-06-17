@@ -13,12 +13,12 @@ limitations under the License.
 package dao
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -44,6 +44,7 @@ var _ ReleasedCI = new(releasedCIDao)
 type releasedCIDao struct {
 	orm      orm.Interface
 	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 }
@@ -185,27 +186,14 @@ func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32, s
 		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
 
-	var sqlBuf bytes.Buffer
-	args := []interface{}{}
-	sqlBuf.WriteString("SELECT ")
-	sqlBuf.WriteString(table.ReleasedConfigItemColumns.NamedExpr())
-	sqlBuf.WriteString(" FROM ")
-	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
-	sqlBuf.WriteString(" WHERE biz_id = ? AND app_id = ?")
-	args = append(args, bizID, appId)
+	m := dao.genQ.ReleasedConfigItem
+	q := dao.genQ.ReleasedConfigItem.WithContext(kit.Ctx)
+	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId))
 	if searchKey != "" {
-		sqlBuf.WriteString(" AND (name like ? OR creator like ? OR reviser like ?)")
-		args = append(args, "%"+searchKey+"%", "%"+searchKey+"%", "%"+searchKey+"%")
+		param := "%" + searchKey + "%"
+		query = q.Where(q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)),
+			q.Where(m.Name.Like(param)).Or(m.Creator.Like(param)).Or(m.Reviser.Like(param)))
 	}
-	sqlBuf.WriteString(" AND release_id = (SELECT release_id from ")
-	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
-	sqlBuf.WriteString(" WHERE app_id = ? ORDER BY release_id desc limit 1)")
-	args = append(args, appId)
-
-	fileInfo := make([]*table.ReleasedConfigItem, 0)
-	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sqlBuf.String(), args...)
-	if err != nil {
-		return nil, err
-	}
-	return fileInfo, nil
+	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
+	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
 }
