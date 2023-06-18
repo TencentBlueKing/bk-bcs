@@ -39,23 +39,25 @@ const (
 
 // GetLogRuleResp log rule resp
 type GetLogRuleResp struct {
-	ID             string         `json:"id"`
-	Name           string         `json:"name"`
-	RuleID         int            `json:"rule_id"`
-	RuleName       string         `json:"rule_name"`
-	Description    string         `json:"description"`
-	FileIndexSetID int            `json:"file_index_set_id"`
-	STDIndexSetID  int            `json:"std_index_set_id"`
-	Config         bklog.LogRule  `json:"rule"`
-	CreatedAt      utils.JSONTime `json:"created_at"`
-	UpdatedAt      utils.JSONTime `json:"updated_at"`
-	Creator        string         `json:"creator"`
-	Updator        string         `json:"updator"`
-	Old            bool           `json:"old"`
-	NewRuleID      string         `json:"new_rule_id"` // 当旧规则转换过新规则后，显示该字段
-	Entrypoint     Entrypoint     `json:"entrypoint"`
-	Status         string         `json:"status"`
-	Message        string         `json:"message"`
+	ID                 string         `json:"id"`
+	Name               string         `json:"name"`
+	RuleID             int            `json:"rule_id"`
+	RuleName           string         `json:"rule_name"`
+	Description        string         `json:"description"`
+	FileIndexSetID     int            `json:"file_index_set_id"`
+	STDIndexSetID      int            `json:"std_index_set_id"`
+	RuleFileIndexSetID int            `json:"rule_file_index_set_id"`
+	RuleSTDIndexSetID  int            `json:"rule_std_index_set_id"`
+	Config             bklog.LogRule  `json:"rule"`
+	CreatedAt          utils.JSONTime `json:"created_at"`
+	UpdatedAt          utils.JSONTime `json:"updated_at"`
+	Creator            string         `json:"creator"`
+	Updator            string         `json:"updator"`
+	Old                bool           `json:"old"`
+	NewRuleID          string         `json:"new_rule_id"` // 当旧规则转换过新规则后，显示该字段
+	Entrypoint         Entrypoint     `json:"entrypoint"`
+	Status             string         `json:"status"`
+	Message            string         `json:"message"`
 }
 
 // GetLogRuleRespSortByUpdateTime sort LogRule by update time
@@ -190,6 +192,8 @@ func (resp *GetLogRuleResp) loadFromBcsLogConfig(logConfig *logv1.BcsLogConfig, 
 	if logIndexID != nil {
 		resp.FileIndexSetID = logIndexID.FileIndexSetID
 		resp.STDIndexSetID = logIndexID.STDIndexSetID
+		resp.RuleFileIndexSetID = logIndexID.FileIndexSetID
+		resp.RuleSTDIndexSetID = logIndexID.STDIndexSetID
 		resp.Entrypoint = Entrypoint{
 			STDLogURL:  fmt.Sprintf("%s/#/retrieve/%d", config.G.BKLog.Entrypoint, logIndexID.STDIndexSetID),
 			FileLogURL: fmt.Sprintf("%s/#/retrieve/%d", config.G.BKLog.Entrypoint, logIndexID.FileIndexSetID),
@@ -258,6 +262,8 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	resp.Description = e.Description
 	resp.FileIndexSetID = e.FileIndexSetID
 	resp.STDIndexSetID = e.STDIndexSetID
+	resp.RuleFileIndexSetID = e.RuleFileIndexSetID
+	resp.RuleSTDIndexSetID = e.RuleSTDIndexSetID
 	resp.CreatedAt = e.CreatedAt
 	resp.UpdatedAt = e.UpdatedAt
 	resp.Creator = e.Creator
@@ -266,9 +272,9 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	resp.Message = e.Message
 	resp.Entrypoint = Entrypoint{
 		STDLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", config.G.BKLog.Entrypoint,
-			e.STDIndexSetID, e.ProjectCode),
+			e.RuleSTDIndexSetID, e.ProjectCode),
 		FileLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", config.G.BKLog.Entrypoint,
-			e.FileIndexSetID, e.ProjectCode),
+			e.RuleFileIndexSetID, e.ProjectCode),
 	}
 	resp.Config = bklog.LogRule{
 		ExtraLabels: make([]bklog.Label, 0),
@@ -311,16 +317,16 @@ func getContainerQueryLogLinks(containerIDs []string, stdIndexSetID, fileIndexSe
 	}
 
 	type addition struct {
-		Field    string
-		Operator string
-		Value    string
+		Field    string `json:"field"`
+		Operator string `json:"operator"`
+		Value    string `json:"value"`
 	}
 
 	for _, v := range containerIDs {
-		addition := []addition{{Field: "container_id", Operator: "is", Value: v}}
+		addition := []addition{{Field: "__ext.container_id", Operator: "=", Value: v}}
 		additionData, _ := json.Marshal(addition)
 		query := url.Values{}
-		query.Add("spaceUid", fmt.Sprintf("bkci__%s", projectCode))
+		query.Add("spaceUid", GetSpaceID(projectCode))
 		query.Add("addition", string(additionData))
 		result[v] = Entrypoint{
 			STDLogURL:  fmt.Sprintf("%s/#/retrieve/%d?%s", config.G.BKLog.Entrypoint, stdIndexSetID, query.Encode()),
@@ -372,11 +378,13 @@ func createBKLog(req *bklog.CreateBCSCollectorReq) {
 
 	// update db
 	err = store.UpdateLogRule(ctx, ruleID, entity.M{
-		entity.FieldKeyRuleID:         resp.RuleID,
-		entity.FieldKeyStatus:         entity.SuccessStatus,
-		entity.FieldKeyMessage:        "",
-		entity.FieldKeyFileIndexSetID: resp.FileIndexSetID,
-		entity.FieldKeyStdIndexSetID:  resp.STDIndexSetID,
+		entity.FieldKeyRuleID:             resp.RuleID,
+		entity.FieldKeyStatus:             entity.SuccessStatus,
+		entity.FieldKeyMessage:            "",
+		entity.FieldKeyFileIndexSetID:     resp.FileIndexSetID,
+		entity.FieldKeyStdIndexSetID:      resp.STDIndexSetID,
+		entity.FieldKeyRuleFileIndexSetID: resp.RuleFileIndexSetID,
+		entity.FieldKeyRuleStdIndexSetID:  resp.RuleSTDIndexSetID,
 	})
 	if err != nil {
 		klog.Errorf("UpdateLogRule error, %s", err.Error())
@@ -405,10 +413,12 @@ func updateBKLog(ruleID string, bkRuleID int, req *bklog.UpdateBCSCollectorReq) 
 
 	// update db
 	err = store.UpdateLogRule(ctx, ruleID, entity.M{
-		entity.FieldKeyStatus:         entity.SuccessStatus,
-		entity.FieldKeyMessage:        "",
-		entity.FieldKeyFileIndexSetID: resp.FileIndexSetID,
-		entity.FieldKeyStdIndexSetID:  resp.STDIndexSetID,
+		entity.FieldKeyStatus:             entity.SuccessStatus,
+		entity.FieldKeyMessage:            "",
+		entity.FieldKeyFileIndexSetID:     resp.FileIndexSetID,
+		entity.FieldKeyStdIndexSetID:      resp.STDIndexSetID,
+		entity.FieldKeyRuleFileIndexSetID: resp.RuleFileIndexSetID,
+		entity.FieldKeyRuleStdIndexSetID:  resp.RuleSTDIndexSetID,
 	})
 	if err != nil {
 		klog.Errorf("UpdateLogRule error, %s", err.Error())

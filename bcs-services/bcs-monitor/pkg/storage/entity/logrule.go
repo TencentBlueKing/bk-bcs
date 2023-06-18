@@ -39,23 +39,25 @@ const (
 
 // LogRule log rule
 type LogRule struct {
-	ID             primitive.ObjectID `json:"id" bson:"_id"`
-	Name           string             `json:"name" bson:"name"`
-	RuleName       string             `json:"rule_name" bson:"ruleName"`
-	RuleID         int                `json:"rule_id" bson:"ruleID"`
-	Description    string             `json:"description" bson:"description"`
-	ProjectID      string             `json:"project_id" bson:"projectID"`
-	ProjectCode    string             `json:"project_code" bson:"projectCode"`
-	ClusterID      string             `json:"cluster_id" bson:"clusterID"`
-	FileIndexSetID int                `json:"file_index_set_id" bson:"fileIndexSetID"`
-	STDIndexSetID  int                `json:"std_index_set_id" bson:"stdIndexSetID"`
-	CreatedAt      utils.JSONTime     `json:"created_at" bson:"createdAt"`
-	UpdatedAt      utils.JSONTime     `json:"updated_at" bson:"updatedAt"`
-	Creator        string             `json:"creator" bson:"creator"`
-	Updator        string             `json:"updator" bson:"updator"`
-	Status         string             `json:"status" bson:"status"`
-	Message        string             `json:"message" bson:"message"`
-	FromRule       string             `json:"from_rule" bson:"fromRule"`
+	ID                 primitive.ObjectID `json:"id" bson:"_id"`
+	Name               string             `json:"name" bson:"name"`
+	RuleName           string             `json:"rule_name" bson:"ruleName"`
+	RuleID             int                `json:"rule_id" bson:"ruleID"`
+	Description        string             `json:"description" bson:"description"`
+	ProjectID          string             `json:"project_id" bson:"projectID"`
+	ProjectCode        string             `json:"project_code" bson:"projectCode"`
+	ClusterID          string             `json:"cluster_id" bson:"clusterID"`
+	FileIndexSetID     int                `json:"file_index_set_id" bson:"fileIndexSetID"`
+	STDIndexSetID      int                `json:"std_index_set_id" bson:"stdIndexSetID"`
+	RuleFileIndexSetID int                `json:"rule_file_index_set_id" bson:"ruleFileIndexSetID"`
+	RuleSTDIndexSetID  int                `json:"rule_std_index_set_id" bson:"ruleSTDIndexSetID"`
+	CreatedAt          utils.JSONTime     `json:"created_at" bson:"createdAt"`
+	UpdatedAt          utils.JSONTime     `json:"updated_at" bson:"updatedAt"`
+	Creator            string             `json:"creator" bson:"creator"`
+	Updator            string             `json:"updator" bson:"updator"`
+	Status             string             `json:"status" bson:"status"`
+	Message            string             `json:"message" bson:"message"`
+	FromRule           string             `json:"from_rule" bson:"fromRule"`
 }
 
 // FixStatus fix log rule status when status is stucked

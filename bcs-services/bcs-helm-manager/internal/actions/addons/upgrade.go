@@ -101,7 +101,7 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,
 		Version:        u.req.GetVersion(),
-		Values:         []string{u.req.GetValues()},
+		Values:         []string{addons.DefaultValues, u.req.GetValues()},
 		CreateBy:       u.createBy,
 		UpdateBy:       u.updateBy,
 	}

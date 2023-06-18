@@ -131,6 +131,8 @@ type ListBCSCollectorRespData struct {
 	BCSClusterID          string            `json:"bcs_cluster_id"`
 	FileIndexSetID        int               `json:"file_index_set_id"`
 	STDIndexSetID         int               `json:"std_index_set_id"`
+	RuleFileIndexSetID    int               `json:"rule_file_index_set_id"`
+	RuleSTDIndexSetID     int               `json:"rule_std_index_set_id"`
 	AddPodLabel           bool              `json:"add_pod_label"`
 	ExtraLabels           []Label           `json:"extra_labels"`
 	ContainerConfig       []ContainerConfig `json:"container_config"`
@@ -242,11 +244,13 @@ type CreateBCSCollectorResp struct {
 
 // CreateBCSCollectorRespData xxx
 type CreateBCSCollectorRespData struct {
-	RuleID         int        `json:"rule_id"`
-	FileIndexSetID int        `json:"file_index_set_id"`
-	STDIndexSetID  int        `json:"std_index_set_id"`
-	BKDataID       int        `json:"bk_data_id"`
-	StdoutConf     StdoutConf `json:"stdout_conf"`
+	RuleID             int        `json:"rule_id"`
+	FileIndexSetID     int        `json:"file_index_set_id"`
+	STDIndexSetID      int        `json:"std_index_set_id"`
+	RuleFileIndexSetID int        `json:"rule_file_index_set_id"`
+	RuleSTDIndexSetID  int        `json:"rule_std_index_set_id"`
+	BKDataID           int        `json:"bk_data_id"`
+	StdoutConf         StdoutConf `json:"stdout_conf"`
 }
 
 // UpdateBCSCollectorReq req
@@ -279,11 +283,13 @@ type UpdateBCSCollectorResp struct {
 
 // UpdateBCSCollectoRespData xxx
 type UpdateBCSCollectoRespData struct {
-	RuleID         json.Number `json:"rule_id"`
-	FileIndexSetID int         `json:"file_index_set_id"`
-	STDIndexSetID  int         `json:"std_index_set_id"`
-	BKDataID       int         `json:"bk_data_id"`
-	StdoutConf     StdoutConf  `json:"stdout_conf"`
+	RuleID             json.Number `json:"rule_id"`
+	FileIndexSetID     int         `json:"file_index_set_id"`
+	STDIndexSetID      int         `json:"std_index_set_id"`
+	RuleFileIndexSetID int         `json:"rule_file_index_set_id"`
+	RuleSTDIndexSetID  int         `json:"rule_std_index_set_id"`
+	BKDataID           int         `json:"bk_data_id"`
+	StdoutConf         StdoutConf  `json:"stdout_conf"`
 }
 
 // GetRuleID get rule id, rule id is int or string
