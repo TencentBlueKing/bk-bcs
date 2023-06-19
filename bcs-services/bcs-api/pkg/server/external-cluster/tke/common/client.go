@@ -111,7 +111,7 @@ func NewClient(credential CredentialInterface, opts Opts) (*Client, error) {
 		&http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
+					InsecureSkipVerify: true, // nolint
 				},
 			},
 			Timeout: time.Second * 60,
@@ -134,7 +134,7 @@ func (client *Client) Invoke(action string, args interface{}, response interface
 func (client *Client) initCommonArgs(args *url.Values) {
 	args.Set("Region", client.opts.Region)
 	args.Set("Timestamp", fmt.Sprint(uint(time.Now().Unix())))
-	args.Set("Nonce", fmt.Sprint(uint(rand.Int())))
+	args.Set("Nonce", fmt.Sprint(uint(rand.Int()))) // nolint
 	args.Set("SignatureMethod", client.opts.SignatureMethod)
 }
 

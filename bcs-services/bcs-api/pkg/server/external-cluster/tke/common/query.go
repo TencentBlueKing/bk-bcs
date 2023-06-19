@@ -14,7 +14,6 @@
 package common
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -50,7 +49,7 @@ func encodeStructWithPrefix(prefix string, val reflect.Value, v *url.Values) err
 				if fieldVal.Kind() == reflect.Ptr {
 					if fieldVal.IsNil() {
 						if opts.Contains("required") {
-							return errors.New(fmt.Sprintf("field %s of %s should not be nil", tag, typ))
+							return fmt.Errorf("field %s of %s should not be nil", tag, typ)
 						}
 						continue
 					}

@@ -14,8 +14,8 @@
 package types
 
 const (
-	// UserBackendTypeDefault TODO
+	// UserBackendTypeDefault ..
 	UserBackendTypeDefault = "bke_default"
-	// UserBackendTypeBCSAuth TODO
+	// UserBackendTypeBCSAuth ..
 	UserBackendTypeBCSAuth = "bcs_auth"
 )

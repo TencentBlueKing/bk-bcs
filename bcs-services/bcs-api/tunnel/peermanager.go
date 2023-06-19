@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	defaultPeerToken = "Mx9vWfTZea4MEzc7SlvB8aFl0NhmYQvZzEomOYypDMKkev34Q9kIyh32RjXXCIcn"
+	defaultPeerToken = "Mx9vWfTZea4MEzc7SlvB8aFl0NhmYQvZzEomOYypDMKkev34Q9kIyh32RjXXCIcn" // nolint
 )
 
 type peerManager struct {

@@ -74,9 +74,9 @@ func request2mesosapi(req *restful.Request, uri, method string) (string, error) 
 			blog.Errorf("bcs-api handle url %s yaml to json failed, %s", uri, err.Error())
 			mediaErr := bhttp.InternalError(common.BcsErrApiMediaTypeError, common.BcsErrApiMediaTypeErrorStr)
 			return mediaErr.Error(), nil
-		} else {
-			blog.V(3).Infof("bcs-api handle url %s converting yaml to json successfully", uri)
 		}
+
+		blog.V(3).Infof("bcs-api handle url %s converting yaml to json successfully", uri)
 	}
 
 	cluster := req.Request.Header.Get("BCS-ClusterID")

@@ -15,6 +15,7 @@ package rbac
 
 import (
 	"fmt"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	rbacUtils "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/rbac/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
@@ -133,7 +134,8 @@ func extractNamespaceLevelData(rbacData *AuthRbacData) error {
 	// 如果 type 是 pattern_policy ， 说明已经在这个集群中为任意 namespace 的权限创建 clusterrolebinding， 跳过
 	if rbacData.PolicyFrom == policyFromPattern {
 		blog.Infof(
-			"sync namespace level rbac from pattern_policy, skipping. cluster: %s, namespace: %s, user: %s, action: %s", clusterIdFromAuth, rbacData.ResourceInstance.Namespace, username, rbacData.Action)
+			"sync namespace level rbac from pattern_policy, skipping. cluster: %s, namespace: %s, user: %s, action: %s",
+			clusterIdFromAuth, rbacData.ResourceInstance.Namespace, username, rbacData.Action)
 		return nil
 	} else if rbacData.PolicyFrom == policyFromCommon {
 		return syncNamespaceLevelData(username, rbacData.Action, rbacData.Operation, cluster.ID,

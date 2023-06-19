@@ -150,8 +150,8 @@ func (f *ReverseProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Req
 	websocketHandler, found, err := f.lookupWsHandler(clusterId, req)
 	if err != nil {
 		blog.Errorf("error when lookup websocket conn: %s", err.Error())
-		err := fmt.Errorf("error when lookup websocket conn: %s", err.Error())
-		status := utils.NewInternalError(err)
+		e := fmt.Errorf("error when lookup websocket conn: %s", err.Error())
+		status := utils.NewInternalError(e)
 		status.ErrStatus.Reason = "CREATE_TUNNEL_ERROR"
 		utils.WriteKubeAPIError(rw, status)
 		return

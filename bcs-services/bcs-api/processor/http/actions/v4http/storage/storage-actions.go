@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	// BCSAPIPrefix TODO
+	// BCSAPIPrefix ..
 	BCSAPIPrefix = "/bcsapi/v4/storage/"
-	// BCSStoragePrefixV1 TODO
+	// BCSStoragePrefixV1 ..
 	BCSStoragePrefixV1 = "/bcsstorage/v1/"
 )
 

@@ -29,7 +29,7 @@ const (
 	// Module xxx
 	Module = "BCS-API-Tunnel-Module"
 	// RegisterToken xxx
-	RegisterToken = "BCS-API-Tunnel-Token"
+	RegisterToken = "BCS-API-Tunnel-Token" // nolint
 	// Params xxx
 	Params = "BCS-API-Tunnel-Params"
 	// Cluster xxx
@@ -80,9 +80,9 @@ func authorizeTunnel(req *http.Request) (string, bool, error) {
 		blog.Errorf("error when decode cluster params registered by websocket: %s", err.Error())
 		return "", false, err
 	}
-	if err := json.Unmarshal(bytes, &registerCluster); err != nil {
-		blog.Errorf("error when unmarshal cluster params registered by websocket: %s", err.Error())
-		return "", false, err
+	if e := json.Unmarshal(bytes, &registerCluster); e != nil {
+		blog.Errorf("error when unmarshal cluster params registered by websocket: %s", e.Error())
+		return "", false, e
 	}
 
 	if registerCluster.Address == "" {
@@ -97,10 +97,10 @@ func authorizeTunnel(req *http.Request) (string, bool, error) {
 
 	var caCert string
 	if registerCluster.CACert != "" {
-		certBytes, err := base64.StdEncoding.DecodeString(registerCluster.CACert)
-		if err != nil {
-			blog.Errorf("error when decode cluster [%s] cacert registered by websocket: %s", clusterId, err.Error())
-			return "", false, err
+		certBytes, e := base64.StdEncoding.DecodeString(registerCluster.CACert)
+		if e != nil {
+			blog.Errorf("error when decode cluster [%s] cacert registered by websocket: %s", clusterId, e.Error())
+			return "", false, e
 		}
 		caCert = string(certBytes)
 	}
