@@ -453,7 +453,7 @@ func (w *Watcher) processNextWorkItem() bool {
 	if !isExisted {
 		data := w.genSyncData(tObj, nil, action.SyncDataActionDelete)
 		if data == nil {
-			// event should be filterd
+			// event should be filtered
 			return true
 		}
 		w.distributeDataToHandler(data)
@@ -462,7 +462,7 @@ func (w *Watcher) processNextWorkItem() bool {
 	}
 	data := w.genSyncData(tObj, storeObj, action.SyncDataActionUpdate)
 	if data == nil {
-		// event should be filterd
+		// event should be filtered
 		return true
 	}
 	w.distributeDataToHandler(data)
@@ -716,5 +716,5 @@ func (w *NetServiceWatcher) Run(stopCh <-chan struct{}) {
 	// sync ip resource detail.
 	go wait.NonSlidingUntil(w.SyncIPResourceDetail, defaultSyncInterval*2, stopCh)
 
-	// TODO: add more resource-sync logics here.
+	// Note: add more resource-sync logics here.
 }

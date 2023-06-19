@@ -14,12 +14,12 @@
 package http
 
 const (
-	// HEADER_APPID TODO
+	// HEADER_APPID xx
 	HEADER_APPID = "Bcs-Api-AppId"
-	// HEADER_APPCODE TODO
+	// HEADER_APPCODE xx
 	HEADER_APPCODE = "Bcs-Api-AppCode"
-	// HEADER_APPTOKEN TODO
-	HEADER_APPTOKEN = "Bcs-Api-AppToken"
-	// HEADER_OPERATOR TODO
+	// HEADER_APPTOKEN xx
+	HEADER_APPTOKEN = "Bcs-Api-AppToken" // nolint
+	// HEADER_OPERATOR xx
 	HEADER_OPERATOR = "Bcs-Api-Operator"
 )

@@ -102,6 +102,7 @@ func (g *ResourceGetter) GetProjectIDList(ctx context.Context,
 	defer pmConn.Close()
 	pmCli := g.projectManager.NewGrpcClientWithHeader(ctx, pmConn)
 	for _, cluster := range clusterList {
+		// if needFilter, just handle particular cluster list
 		if !g.needFilter || g.clusterIDs[cluster.ClusterID] {
 			project, err := g.GetProjectInfo(ctx, cluster.ProjectID, "", pmCli)
 			if err != nil {
@@ -149,7 +150,7 @@ func (g *ResourceGetter) GetProjectInfo(ctx context.Context, projectId, projectC
 		return nil, fmt.Errorf("projectId and projectCode is empty")
 	}
 
-	project := &pm.Project{}
+	var project *pm.Project
 	if projectId != "" {
 		if projectInfo, ok := g.cache.Get(projectId); !ok {
 			projectResponse, err := pmCli.Cli.GetProject(pmCli.Ctx, &pm.GetProjectRequest{ProjectIDOrCode: projectId})
@@ -197,6 +198,7 @@ func (g *ResourceGetter) GetClusterIDList(ctx context.Context,
 		return nil, fmt.Errorf("get cluster list err: %v", err)
 	}
 	prom.ReportLibRequestMetric(prom.BkBcsClusterManager, "ListCluster", "GET", err, start)
+	// public cluster is duplicate in cluster list
 	uniqueClusterList := removeDuplicateCluster(clusterList.Data)
 	clusterMetaList := make([]*types.ClusterMeta, 0)
 	pmConn, err := g.projectManager.GetBcsProjectManagerConn()
@@ -351,6 +353,7 @@ func (g *ResourceGetter) GetMesosWorkloadList(cluster *types.ClusterMeta,
 }
 
 // GetK8sWorkloadList get k8s workload list
+// deployment, daemonset, statefulSet, gameDeployment, gameStatefulset
 func GetK8sWorkloadList(namespaceMeta *types.NamespaceMeta, storageCli bcsapi.Storage) []*types.WorkloadMeta {
 	workloadList := make([]*types.WorkloadMeta, 0)
 	start := time.Now()
@@ -488,6 +491,7 @@ func (g *ResourceGetter) GetMesosNamespaceList(clusterMeta *types.ClusterMeta,
 	}
 	prom.ReportLibRequestMetric(prom.BkBcsStorage, "GetMesosNamespace", "GET", err, start)
 	for _, namespace := range namespaces {
+		// generate namespace metadata
 		namespaceMeta := &types.NamespaceMeta{
 			ProjectID:   clusterMeta.ProjectID,
 			ProjectCode: clusterMeta.ProjectCode,
@@ -503,6 +507,7 @@ func (g *ResourceGetter) GetMesosNamespaceList(clusterMeta *types.ClusterMeta,
 }
 
 // GetPodAutoscalerList get podAutoscaler list by namespace
+// gpa, hpa
 func (g *ResourceGetter) GetPodAutoscalerList(podAutoscalerType string, namespaces []*types.NamespaceMeta,
 	k8sStorageCli bcsapi.Storage) ([]*types.PodAutoscalerMeta, error) {
 	autoscalerList := make([]*types.PodAutoscalerMeta, 0)
@@ -518,6 +523,7 @@ func (g *ResourceGetter) GetPodAutoscalerList(podAutoscalerType string, namespac
 				return autoscalerList, err
 			}
 			prom.ReportLibRequestMetric(prom.BkBcsStorage, "QueryK8sHPA", "GET", err, startTime)
+			// generate hpa metadata
 			for _, hpa := range hpaList {
 				hpaMeta := &types.PodAutoscalerMeta{
 					ProjectID:          namespace.ProjectID,
@@ -545,6 +551,7 @@ func (g *ResourceGetter) GetPodAutoscalerList(podAutoscalerType string, namespac
 			}
 			prom.ReportLibRequestMetric(prom.BkBcsStorage, "QueryK8sGPA", "GET", err, startTime)
 			for _, gpa := range gpaList {
+				// generate gpa metadata
 				gpaMeta := &types.PodAutoscalerMeta{
 					ProjectID:          namespace.ProjectID,
 					ProjectCode:        namespace.ProjectCode,
@@ -563,6 +570,7 @@ func (g *ResourceGetter) GetPodAutoscalerList(podAutoscalerType string, namespac
 	return autoscalerList, nil
 }
 
+// generateK8sWorkloadList generate k8s workload metadata list
 func generateK8sWorkloadList(namespaceMeta *types.NamespaceMeta, workloadType string,
 	commonHeader storage.CommonDataHeader) *types.WorkloadMeta {
 	workloadMeta := &types.WorkloadMeta{
@@ -579,6 +587,7 @@ func generateK8sWorkloadList(namespaceMeta *types.NamespaceMeta, workloadType st
 	return workloadMeta
 }
 
+// generateMesosWorkloadList generate mesos workload metadata list
 func generateMesosWorkloadList(cluster *types.ClusterMeta, workloadType string,
 	commonHeader storage.CommonDataHeader) *types.WorkloadMeta {
 	workloadMeta := &types.WorkloadMeta{
@@ -594,6 +603,7 @@ func generateMesosWorkloadList(cluster *types.ClusterMeta, workloadType string,
 	return workloadMeta
 }
 
+// removeDuplicateCluster use map remove duplicate public cluster
 func removeDuplicateCluster(clusterList []*cm.Cluster) []*cm.Cluster {
 	clusterMap := make(map[string]struct{})
 	result := make([]*cm.Cluster, 0)

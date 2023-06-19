@@ -53,6 +53,8 @@ const (
 	ingressClassQcloud = "qcloud"
 
 	l7LbControllerName = "l7-lb-controller"
+
+	constStringTrue = "true"
 )
 
 var (
@@ -166,7 +168,7 @@ func (h *Handler) Handle(review v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 		if h.DenyIngress(ingress) {
 			blog.Infof("filterclb: %s %s/%s deny ingress", req.Operation, req.Namespace, req.Name)
 			metrics.ReportBcsWebhookServerPluginLantency(pluginName, metrics.StatusFailure, started)
-			return pluginutil.ToAdmissionResponse(fmt.Errorf("service %s/%s is not allowed to create, It is forbidden to directly create external network clb", req.Namespace, req.Name))
+			return pluginutil.ToAdmissionResponse(fmt.Errorf("ingress %s/%s is not allowed to create, It is forbidden to directly create external network clb", req.Namespace, req.Name))
 		}
 
 		// pass
@@ -180,8 +182,7 @@ func (h *Handler) Handle(review v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 
 // DenyService deny the service
 func (h *Handler) DenyService(svc *corev1.Service) bool {
-	fmt.Println(svc.Annotations)
-	if svc.Annotations[annotationSkipDenyFilterCLB] == "true" {
+	if svc.Annotations[annotationSkipDenyFilterCLB] == constStringTrue {
 		return false
 	}
 	if svc.Spec.Type != corev1.ServiceTypeLoadBalancer {
@@ -198,7 +199,7 @@ func (h *Handler) DenyService(svc *corev1.Service) bool {
 
 // DenyIngress deny the ingress
 func (h *Handler) DenyIngress(ingress *v1.Ingress) bool {
-	if ingress.Annotations[annotationSkipDenyFilterCLB] == "true" {
+	if ingress.Annotations[annotationSkipDenyFilterCLB] == constStringTrue {
 		return false
 	}
 	if ingress.Annotations[annotationIngressSubnetID] != "" {
@@ -227,7 +228,7 @@ func (h *Handler) DenyIngress(ingress *v1.Ingress) bool {
 		//默认的是非qcloud，不需要拦截
 		for _, ingressClass := range ingressClassList.Items {
 			// 也许可能存在多个默认，但是就必须指定ingressClassName了（k8s设定）
-			if ingressClass.Annotations[annotationIngressClassDefaultKey] == "true" && ingressClass.Name != ingressClassQcloud {
+			if ingressClass.Annotations[annotationIngressClassDefaultKey] == constStringTrue && ingressClass.Name != ingressClassQcloud {
 				return false
 			}
 		}

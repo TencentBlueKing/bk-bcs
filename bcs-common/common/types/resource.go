@@ -112,7 +112,7 @@ type ExtendedResource struct {
 	Value float64
 	// Capacity, extended resource total value
 	Capacity float64
-	// device plugin socket address, exmaple: /data/bcs/cpuset.socket
+	// device plugin socket address, example: /data/bcs/cpuset.socket
 	Socket string
 }
 

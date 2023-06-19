@@ -98,7 +98,7 @@ func (g *MetricGetter) getK8sNodeCount(opts *types.JobCommonOpts,
 	}
 	prom.ReportLibRequestMetric(prom.BkBcsStorage, "QueryK8SNode",
 		"GET", err, start)
-	// TODO: k8s cluster use storage get nodes
+	// Note: k8s cluster use storage get nodes
 	nodeCount = int64(len(nodes))
 	for key := range nodes {
 		if nodes[key].Data.Status.Phase == v1.NodeRunning {

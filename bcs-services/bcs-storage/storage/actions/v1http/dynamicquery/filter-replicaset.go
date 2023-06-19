@@ -31,6 +31,7 @@ type ReplicaSetFilter struct {
 
 const rsNestedTimeLayout = NestedTimeLayout
 
+// GetCondition get condition
 func (t ReplicaSetFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, rsNestedTimeLayout)
 }

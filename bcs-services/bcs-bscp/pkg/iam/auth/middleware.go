@@ -15,6 +15,7 @@ package auth
 
 import (
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -86,6 +87,15 @@ func (a authorizer) initKitWithCookie(r *http.Request, k *kit.Kit, multiErr *mul
 
 // initKitWithDevEnv Dev环境, 可以设置环境变量鉴权
 func (a authorizer) initKitWithDevEnv(r *http.Request, k *kit.Kit, multiErr *multierror.Error) bool {
+	user := os.Getenv("BK_USER_FOR_TEST")
+	appCode := os.Getenv("BK_APP_CODE_FOR_TEST")
+
+	if user != "" && appCode != "" {
+		k.User = user
+		k.AppCode = appCode
+		return true
+	}
+
 	return false
 }
 
@@ -187,6 +197,7 @@ func (a authorizer) AppVerified(next http.Handler) http.Handler {
 			return
 		}
 
+		kt.AppID = uint32(appID)
 		kt.SpaceID = space.SpaceId
 		kt.SpaceTypeID = space.SpaceTypeId
 		ctx := kit.WithKit(r.Context(), kt)
@@ -268,7 +279,7 @@ func dummyVerified(next http.Handler) http.Handler {
 			Ctx:         r.Context(),
 			User:        "",
 			Rid:         components.RequestIDValue(r.Context()),
-			AppId:       "",
+			AppID:       0,
 			AppCode:     "dummyApp", // 测试 App
 			SpaceID:     "",
 			SpaceTypeID: "",

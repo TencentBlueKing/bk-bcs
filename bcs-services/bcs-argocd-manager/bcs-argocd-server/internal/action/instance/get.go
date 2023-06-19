@@ -69,7 +69,7 @@ func (action *GetArgocdInstanceAction) Handle(ctx context.Context,
 		action.setResp(common.ErrProjectNotExist, "", nil)
 		return nil
 	}
-	// TODO: check if the operator has permission in project
+	// Note: check if the operator has permission in project
 	blog.Infof("get argocd instance %s success", name)
 	action.setResp(common.ErrArgocdServerSuccess, "", i)
 	return nil

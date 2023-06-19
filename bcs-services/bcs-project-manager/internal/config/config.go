@@ -18,9 +18,9 @@ package config
 import (
 	"io/ioutil"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"gopkg.in/yaml.v2"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
 )
 
@@ -120,8 +120,8 @@ type ITSMConfig struct {
 
 // BkMonitorConfig 蓝鲸监控操作需要的配置
 type BkMonitorConfig struct {
-	Enable                   bool   `yaml:"enable" usage:"enable bk monitor"`
-	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
+	Enable      bool   `yaml:"enable" usage:"enable bk monitor"`
+	GatewayHost string `yaml:"gatewayHost" usage:"gateway host"`
 }
 
 // ClientActionsConfig Client级别的访问
@@ -162,6 +162,12 @@ type BCSGatewayConfig struct {
 	Token string `yaml:"token" usage:"bcs api gateway token"`
 }
 
+// ListForIAMConfig iam 拉取项目列表灰度配置
+type ListForIAMConfig struct {
+	Bizs []string `yaml:"bizs" usage:"filter projects by biz id"`
+	All  bool     `yaml:"all" usage:"list all projects"`
+}
+
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
 	Etcd                   EtcdConfig                   `yaml:"etcd"`
@@ -179,6 +185,8 @@ type ProjectConfig struct {
 	BCSCC                  BCSCCConfig                  `yaml:"bcscc"`
 	App                    AppConfig                    `yaml:"app"`
 	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
+	ListForIAM             ListForIAMConfig             `yaml:"listForIAM"`
+	FeatureFlags           map[string]map[string]bool   `yaml:"featureFlags"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {

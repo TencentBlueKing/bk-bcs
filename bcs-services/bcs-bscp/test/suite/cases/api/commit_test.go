@@ -47,6 +47,7 @@ func TestCommit(t *testing.T) {
 
 		// get content from db
 		req, err := cases.GenListContentByIdsReq(cases.TBizID, appId, []uint32{ctId})
+		So(err, ShouldBeNil)
 		ctx, header := cases.GenApiCtxHeader()
 		resp, err := cli.Content.List(ctx, header, req)
 		So(err, ShouldBeNil)
@@ -86,9 +87,12 @@ func TestCommit(t *testing.T) {
 				So(resp.Id, ShouldNotEqual, uint32(0))
 
 				// verify by list_commit
-				listReq, err := cases.GenListCommitByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
+				var listReq *pbcs.ListCommitsReq
+				listReq, err = cases.GenListCommitByIdsReq(cases.TBizID, appId, []uint32{resp.Id})
+				So(err, ShouldBeNil)
 				ctx, header = cases.GenApiCtxHeader()
-				listResp, err := cli.Commit.List(ctx, header, listReq)
+				var listResp *pbcs.ListCommitsResp
+				listResp, err = cli.Commit.List(ctx, header, listReq)
 				So(err, ShouldBeNil)
 				So(listResp, ShouldNotBeNil)
 				So(len(listResp.Details), ShouldEqual, 1)

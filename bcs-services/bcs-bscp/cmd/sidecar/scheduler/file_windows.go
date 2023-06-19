@@ -15,6 +15,6 @@ package scheduler
 import "errors"
 
 func prepareReloadDirectory(filePath string) error {
-	// TODO: add windows reload file handle logic.
+	// Note: add windows reload file handle logic.
 	return errors.New("windows not support for now.")
 }

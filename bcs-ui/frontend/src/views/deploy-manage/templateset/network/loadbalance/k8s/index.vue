@@ -15,7 +15,7 @@
             :placeholder="$t('输入集群名称搜索')"
             :search.sync="searchKeyword"
             :cluster-id.sync="searchScope"
-            @search-change="getLoadBalanceList"
+            @search-change="searchLoadBalance"
             @refresh="refresh" />
         </div>
       </div>
@@ -273,7 +273,7 @@ export default {
         cluster.longName = `${cluster.name}(${cluster.cluster_id})`;
         return cluster;
       });
-      return list;
+      return list.filter(item => item.clusterType !== 'virtual' && !item.is_shared);
     },
     searchScopeList() {
       const { clusterList } = this.$store.state.cluster;
@@ -568,7 +568,7 @@ export default {
              * 搜索LB
              */
     searchLoadBalance() {
-      const keyword = this.searchKeyword.trim().toLowerCase();
+      const keyword = this.searchKeyword?.trim().toLowerCase();
       const keyList = ['cluster_name', 'name'];
       let list = this.$store.state.network.loadBalanceList;
       let results = [];
@@ -579,7 +579,7 @@ export default {
 
       results = list.filter((item) => {
         for (const key of keyList) {
-          if ((item[key].toLowerCase()).indexOf(keyword) > -1) {
+          if ((item[key]?.toLowerCase()).indexOf(keyword) > -1) {
             return true;
           }
         }

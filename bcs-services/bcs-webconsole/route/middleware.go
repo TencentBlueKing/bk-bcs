@@ -20,14 +20,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
@@ -125,7 +126,7 @@ func APIAuthRequired() gin.HandlerFunc {
 		default:
 			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
 				Code:      types.ApiErrorCode,
-				Message:   UnauthorizedError.Error(),
+				Message:   i18n.GetMessage(c, UnauthorizedError.Error()),
 				RequestID: authCtx.RequestId,
 			})
 			return

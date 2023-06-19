@@ -23,6 +23,7 @@ import (
 )
 
 const (
+	// ServiceName service name
 	ServiceName = "bcs-ui"
 )
 

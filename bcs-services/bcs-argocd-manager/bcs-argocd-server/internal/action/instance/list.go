@@ -52,7 +52,7 @@ func (action *ListArgocdInstancesAction) Handle(ctx context.Context,
 
 	listOptions := metav1.ListOptions{}
 	if req.Project != nil && req.GetProject() != "" {
-		// TODO: check permission?
+		// Note: check permission?
 		labelSelector := metav1.LabelSelector{MatchLabels: map[string]string{common.ArgocdProjectLabel: req.GetProject()}}
 		listOptions.LabelSelector = metav1.FormatLabelSelector(&labelSelector)
 	}

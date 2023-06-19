@@ -15,9 +15,12 @@ package constants
 
 const (
 	// RequestIDKey xxx
-	RequestIDKey       = "requestID"
-	ServerName         = "bcs-ui"
-	TracerName         = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	RequestIDKey = "requestID"
+	// ServerName server name
+	ServerName = "bcs-ui"
+	// TracerName tracer name
+	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	// RequestIDHeaderKey request_id header key
 	RequestIDHeaderKey = "X-Request-Id"
 
 	// BluekingLanguage switch cookies constant

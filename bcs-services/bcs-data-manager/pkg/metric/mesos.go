@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
+// getMesosWorkloadMemory get mesos memory
 func (g *MetricGetter) getMesosWorkloadMemory(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.MemoryMetrics, error) {
 	memoryMetrics := &types.MemoryMetrics{}
@@ -47,6 +48,7 @@ func (g *MetricGetter) getMesosWorkloadMemory(opts *types.JobCommonOpts,
 	return memoryMetrics, nil
 }
 
+// getMesosWorkloadCPU get mesos cpu
 func (g *MetricGetter) getMesosWorkloadCPU(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.CPUMetrics, error) {
 	cpuMetrics := &types.CPUMetrics{}
@@ -73,6 +75,7 @@ func (g *MetricGetter) getMesosWorkloadCPU(opts *types.JobCommonOpts,
 	return cpuMetrics, nil
 }
 
+// getMesosNamespaceMemoryMetrics get namespace memory
 func (g *MetricGetter) getMesosNamespaceMemoryMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.MemoryMetrics, error) {
 	memoryMetrics := &types.MemoryMetrics{}
@@ -100,6 +103,7 @@ func (g *MetricGetter) getMesosNamespaceMemoryMetrics(opts *types.JobCommonOpts,
 	return memoryMetrics, nil
 }
 
+// getMesosNamespaceCPUMetrics get namespace cpu
 func (g *MetricGetter) getMesosNamespaceCPUMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.CPUMetrics, error) {
 	cpuMetrics := &types.CPUMetrics{}
@@ -126,6 +130,7 @@ func (g *MetricGetter) getMesosNamespaceCPUMetrics(opts *types.JobCommonOpts,
 	return cpuMetrics, nil
 }
 
+// getMesosNodeCount get mesos node count
 func (g *MetricGetter) getMesosNodeCount(opts *types.JobCommonOpts,
 	clients *types.Clients) (int64, int64, error) {
 	var nodeCount, availableNode int64
@@ -149,8 +154,7 @@ func (g *MetricGetter) getMesosNodeCount(opts *types.JobCommonOpts,
 	return nodeCount, availableNode, nil
 }
 
-// getMesosClusterMemoryMetrics xxx
-// xxx
+// getMesosClusterMemoryMetrics get mesos cluster memory
 func (g *MetricGetter) getMesosClusterMemoryMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.MemoryMetrics, error) {
 	memoryMetrics := &types.MemoryMetrics{}
@@ -181,6 +185,7 @@ func (g *MetricGetter) getMesosClusterMemoryMetrics(opts *types.JobCommonOpts,
 	return memoryMetrics, nil
 }
 
+// getMesosClusterCPUMetrics get cluster cpu
 func (g *MetricGetter) getMesosClusterCPUMetrics(opts *types.JobCommonOpts,
 	clients *types.Clients) (*types.CPUMetrics, error) {
 	cpuMetrics := &types.CPUMetrics{}

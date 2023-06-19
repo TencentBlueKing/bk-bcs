@@ -1,3 +1,16 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 // Go support for leveled logs, analogous to https://code.google.com/p/google-glog/
 //
 // Copyright 2013 Google Inc. All Rights Reserved.
@@ -105,7 +118,7 @@ func (lk *logKeeper) add(tag string, newBlock *fileBlock) (ok bool) {
 	for lk.total[tag] > MaxNum() {
 		lk.remove(tag)
 	}
-	return
+	return ok
 }
 
 func (lk *logKeeper) remove(tag string) (ok bool) {
@@ -113,11 +126,11 @@ func (lk *logKeeper) remove(tag string) (ok bool) {
 	if !ok || lk.total[tag] == 0 {
 		return
 	}
-	lk.removeFile(block.name)
+	_ = lk.removeFile(block.name)
 	lk.head[tag] = block.next
 	block = nil // for GC
 	lk.total[tag]--
-	return
+	return ok
 }
 
 func (lk *logKeeper) removeFile(name string) error {
@@ -165,7 +178,7 @@ func (lk *logKeeper) load() {
 				lk.tail[tag] = fb
 				lk.total[tag]++
 			} else {
-				lk.removeFile(block.name)
+				_ = lk.removeFile(block.name)
 			}
 		}
 	}

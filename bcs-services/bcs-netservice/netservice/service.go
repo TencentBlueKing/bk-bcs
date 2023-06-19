@@ -15,14 +15,15 @@ package netservice
 
 import (
 	"encoding/json"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -114,7 +115,6 @@ type NetNode struct {
 
 // NetService service for all logic, this NetService
 // add/delete/update/list all data base on key/value
-// todo(DeveloperJim): if we need to store data in SQL system, NetService needs refactor.
 type NetService struct {
 	addr       string          // local listen addr
 	port       int             // local listen port

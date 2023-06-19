@@ -15,15 +15,15 @@ package config
 
 import (
 	"time"
-	_ "time/tzdata" // tzdata TODO
+	_ "time/tzdata" // tzdata xxx
 )
 
 const (
-	// DevEnv TODO
+	// DevEnv xxx
 	DevEnv = "dev"
-	// StagEnv TODO
+	// StagEnv xxx
 	StagEnv = "stag"
-	// ProdEnv TODO
+	// ProdEnv xxx
 	ProdEnv = "prod"
 )
 

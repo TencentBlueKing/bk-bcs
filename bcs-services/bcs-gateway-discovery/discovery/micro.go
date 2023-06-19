@@ -15,8 +15,9 @@ package discovery
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"sort"
 	"strings"
 	"sync"
@@ -32,7 +33,6 @@ const (
 )
 
 func init() {
-	rand.Seed(int64(time.Now().UnixNano()))
 }
 
 // NewDiscovery create micro discovery implementation
@@ -166,8 +166,12 @@ func (d *MicroDiscovery) GetRandomServerInstance(module string) (*registry.Node,
 		blog.V(3).Infof("discovery found no node information of %s(%s)", module, fullName)
 		return nil, nil
 	}
-	selected := rand.Int() % nodeLength
-	return svc.Nodes[selected], nil
+	selected, err := rand.Int(rand.Reader, big.NewInt(int64(nodeLength)))
+	if err != nil {
+		blog.Errorf("discovery rand err: %v", err)
+		return nil, err
+	}
+	return svc.Nodes[selected.Int64()], nil
 }
 
 // ListAllServer list all registered server information
@@ -194,7 +198,7 @@ func (d *MicroDiscovery) ListAllServer() ([]*registry.Service, error) {
 		}
 		// same service with different version nodes
 		if local, ok := svcMap[svc.Name]; ok {
-			blog.V(3).Infof("module %s merge operation, verison: %s", svc.Name, svc.Version)
+			blog.V(3).Infof("module %s merge operation, version: %s", svc.Name, svc.Version)
 			local.Nodes = append(local.Nodes, svc.Nodes...)
 			sort.Slice(local.Nodes, func(i, j int) bool {
 				return local.Nodes[i].Address < local.Nodes[j].Address

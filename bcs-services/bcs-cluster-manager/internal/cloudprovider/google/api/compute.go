@@ -45,6 +45,7 @@ func NewComputeServiceClient(opt *cloudprovider.CommonOption) (*ComputeServiceCl
 	if opt == nil || opt.Account == nil {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
+	// parse account
 	if len(opt.Account.ServiceAccountSecret) == 0 || opt.Account.GkeProjectID == "" {
 		return nil, cloudprovider.ErrCloudCredentialLost
 	}
@@ -59,7 +60,9 @@ func NewComputeServiceClient(opt *cloudprovider.CommonOption) (*ComputeServiceCl
 	}, nil
 }
 
+// getComputeServiceClient compute service client
 func getComputeServiceClient(ctx context.Context, credentialContent string) (*compute.Service, error) {
+	// get source token
 	ts, err := GetTokenSource(ctx, credentialContent)
 	if err != nil {
 		return nil, fmt.Errorf("getComputeServiceClient failed: %v", err)
@@ -79,6 +82,7 @@ func (c *ComputeServiceClient) ListRegions(ctx context.Context) ([]*proto.Region
 		return nil, fmt.Errorf("gce client ListRegions failed: gkeProjectId is required")
 	}
 
+	// region list
 	regions, err := c.computeServiceClient.Regions.List(c.gkeProjectID).Context(ctx).Do()
 	if err != nil {
 		return nil, err
@@ -103,6 +107,7 @@ func (c *ComputeServiceClient) ListZones(ctx context.Context) ([]*proto.ZoneInfo
 		return nil, fmt.Errorf("gce client ListZones failed: gkeProjectId is required")
 	}
 
+	// zone list
 	zones, err := c.computeServiceClient.Zones.List(c.gkeProjectID).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client ListZones failed: %v", err)
@@ -128,6 +133,7 @@ func (c *ComputeServiceClient) GetZone(ctx context.Context, name string) (*proto
 		return nil, fmt.Errorf("gce client ListZones failed: gkeProjectId is required")
 	}
 
+	// zone info
 	zone, err := c.computeServiceClient.Zones.Get(c.gkeProjectID, name).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client ListZones failed: %v", err)
@@ -151,8 +157,12 @@ func (c *ComputeServiceClient) GetInstanceGroupManager(ctx context.Context, loca
 		return nil, fmt.Errorf("gce client GetZoneInstanceGroupManager failed: location is required")
 	}
 
-	var igm *compute.InstanceGroupManager
-	var err error
+	var (
+		igm *compute.InstanceGroupManager
+		err error
+	)
+
+	// region type && zone type cluster
 	switch locationType {
 	case locationTypeZones:
 		igm, err = c.computeServiceClient.InstanceGroupManagers.Get(c.gkeProjectID, c.location, name).Context(ctx).Do()
@@ -180,8 +190,11 @@ func (c *ComputeServiceClient) PatchInstanceGroupManager(ctx context.Context, lo
 		return nil, fmt.Errorf("gce client UpdateZoneInstanceGroupManager failed: location is required")
 	}
 
-	var operation *compute.Operation
-	var err error
+	var (
+		operation *compute.Operation
+		err       error
+	)
+	// region type && zone type cluster
 	switch locationType {
 	case locationTypeZones:
 		operation, err = c.computeServiceClient.InstanceGroupManagers.Patch(c.gkeProjectID, c.location, name, igm).
@@ -212,8 +225,11 @@ func (c *ComputeServiceClient) ResizeInstanceGroupManager(ctx context.Context, l
 		return nil, fmt.Errorf("gce client ResizeZoneInstanceGroupManager failed: location is required")
 	}
 
-	var operation *compute.Operation
-	var err error
+	var (
+		operation *compute.Operation
+		err       error
+	)
+	// region type && zone type cluster
 	switch locationType {
 	case locationTypeZones:
 		operation, err = c.computeServiceClient.InstanceGroupManagers.
@@ -239,6 +255,8 @@ func (c *ComputeServiceClient) GetInstanceTemplate(ctx context.Context, name str
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client GetInstanceTemplate failed: gkeProjectId is required")
 	}
+
+	// instance template
 	it, err := c.computeServiceClient.InstanceTemplates.Get(c.gkeProjectID, name).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client GetInstanceTemplate[%s] failed: %v", name, err)
@@ -254,6 +272,8 @@ func (c *ComputeServiceClient) CreateInstanceTemplate(ctx context.Context, it *c
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client CreateInstanceTemplate failed: gkeProjectId is required")
 	}
+
+	// create instance template
 	operation, err := c.computeServiceClient.InstanceTemplates.Insert(c.gkeProjectID, it).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client CreateInstanceTemplate failed: %v", err)
@@ -269,6 +289,8 @@ func (c *ComputeServiceClient) DeleteInstanceTemplate(ctx context.Context, name 
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client DeleteInstanceTemplate failed: gkeProjectId is required")
 	}
+
+	// delete instance template
 	operation, err := c.computeServiceClient.InstanceTemplates.Delete(c.gkeProjectID, name).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client DeleteInstanceTemplate failed: %v", err)
@@ -288,8 +310,11 @@ func (c *ComputeServiceClient) GetOperation(ctx context.Context, locationType, n
 		return nil, fmt.Errorf("gce client GetOperation failed: location is required")
 	}
 
-	var operation *compute.Operation
-	var err error
+	var (
+		operation *compute.Operation
+		err       error
+	)
+	// region type && zone type cluster
 	switch locationType {
 	case locationTypeZones:
 		operation, err = c.computeServiceClient.ZoneOperations.Get(c.gkeProjectID, c.location, name).Context(ctx).Do()

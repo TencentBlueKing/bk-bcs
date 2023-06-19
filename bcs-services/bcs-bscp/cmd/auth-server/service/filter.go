@@ -158,7 +158,7 @@ func getRid(h http.Header) string {
 
 // authRequestFilter set auth request filter.
 func authRequestFilter(w http.ResponseWriter, req *http.Request) error {
-	// TODO: set auth request filter.
+	// Note: set auth request filter.
 
 	return nil
 }

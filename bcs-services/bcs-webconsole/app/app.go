@@ -59,6 +59,7 @@ var (
 	appName              = "bcs-webconsole"
 	versionTag           = "latest"
 	credentialConfigPath = cli.StringSlice{}
+	configPath           = ""
 	serverAddressFlag    = "server-address" // 默认启动ip
 	serverPortFlag       = "server-port"    // 默认启动port
 	podIPsEnv            = "POD_IPs"        // 双栈监听环境变量
@@ -156,54 +157,18 @@ func (c *WebConsoleManager) Init() error {
 }
 
 func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config, *options.MultiCredConf) {
-	var (
-		configPath string
-	)
-
 	// new config
-	conf, _ := microConf.NewConfig(
-		microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))),
-	)
+	conf, _ := microConf.NewConfig(microConf.WithReader(json.NewReader(reader.WithEncoder(yaml.NewEncoder()))))
 	var multiCredConf *options.MultiCredConf
-
 	cmdOptions := []cmd.Option{
 		cmd.Description("bcs webconsole micro service"),
 		cmd.Version(versionTag),
 	}
-
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Println(appName+",", version.GetVersion())
 	}
-
 	microCmd := cmd.NewCmd(cmdOptions...)
-	microCmd.App().Flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:  serverAddressFlag,
-			Usage: "Bind ip address for the server. 127.0.0.1",
-		},
-		&cli.StringFlag{
-			Name:  serverPortFlag,
-			Value: "8083",
-			Usage: "Bind port for the server",
-		},
-		&cli.StringFlag{
-			Name:        "config",
-			Usage:       "config file path",
-			Destination: &configPath,
-		},
-		&cli.StringSliceFlag{
-			Name:        "credential-config",
-			Usage:       "credential config file path",
-			Required:    false,
-			Destination: &credentialConfigPath,
-		},
-		&cli.BoolFlag{
-			Name:    "confinfo",
-			Usage:   "print init confinfo to stdout",
-			Aliases: []string{"o"},
-		},
-	}
-
+	microCmd.App().Flags = buildFlags()
 	microCmd.App().Action = func(c *cli.Context) error {
 		if c.Bool("confinfo") {
 			encoder := yaml2.NewEncoder(os.Stdout)
@@ -215,7 +180,6 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 			os.Exit(0)
 			return nil
 		}
-
 		if c.String(serverAddressFlag) == "" || c.String("config") == "" {
 			logger.Error("--config and --server-address not set")
 			os.Exit(1)
@@ -223,18 +187,14 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 		if err := conf.Load(file.NewSource(file.WithPath(configPath))); err != nil {
 			return err
 		}
-
 		m.listenPort = c.Value(serverPortFlag).(string)
 		m.serverAddress = c.Value(serverAddressFlag).(string)
-
 		// 初始化配置文件
 		if err := config.G.ReadFrom(conf.Bytes()); err != nil {
 			logger.Errorf("config not valid, err: %s, exited", err)
 			os.Exit(1)
 		}
-
 		logger.Infof("load conf from %s", configPath)
-
 		// 授权信息
 		if len(credentialConfigPath.Value()) > 0 {
 			credConf, err := options.NewMultiCredConf(credentialConfigPath.Value())
@@ -243,21 +203,17 @@ func (m *WebConsoleManager) initMicroService() (micro.Service, microConf.Config,
 				os.Exit(1)
 			}
 			multiCredConf = credConf
-
 		}
 		return nil
 	}
-
 	srv := micro.NewService()
 	opts := []micro.Option{
 		micro.Name(service),
 		micro.Version(versionTag),
 		micro.Cmd(microCmd),
 	}
-
 	// 配置文件, 日志这里才设置完成
 	srv.Init(opts...)
-
 	return srv, conf, multiCredConf
 }
 
@@ -372,13 +328,43 @@ func getListenAddr(addr, port string) string {
 
 	if util.IsIPv6(addr) {
 		// local link ipv6 需要带上 interface， 格式如::%eth0
-		ipv6Interface := os.Getenv(ipv6Interface)
-		if ipv6Interface != "" {
-			addr = addr + "%" + ipv6Interface
+		value := os.Getenv(ipv6Interface)
+		if value != "" {
+			addr = addr + "%" + value
 		}
 	}
 
 	return net.JoinHostPort(addr, port)
+}
+
+func buildFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:  serverAddressFlag,
+			Usage: "Bind ip address for the server. 127.0.0.1",
+		},
+		&cli.StringFlag{
+			Name:  serverPortFlag,
+			Value: "8083",
+			Usage: "Bind port for the server",
+		},
+		&cli.StringFlag{
+			Name:        "config",
+			Usage:       "config file path",
+			Destination: &configPath,
+		},
+		&cli.StringSliceFlag{
+			Name:        "credential-config",
+			Usage:       "credential config file path",
+			Required:    false,
+			Destination: &credentialConfigPath,
+		},
+		&cli.BoolFlag{
+			Name:    "confinfo",
+			Usage:   "print init confinfo to stdout",
+			Aliases: []string{"o"},
+		},
+	}
 }
 
 // Run create a pid

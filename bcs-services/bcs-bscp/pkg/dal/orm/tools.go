@@ -24,14 +24,14 @@ import (
 
 // RearrangeSQLDataWithOption parse a *struct into a sql expression, and
 // returned with the update sql expression and the to be updated data.
-// 1. the input FieldOption only works for the returned 'expr', not controls
-//    the returned 'toUpdate', so the returned 'toUpdate' contains all the
-//    flatted tagged 'db' field and value.
-// 2. Obviously, a data field need to be updated if the field value
-//    is not blank(as is not "ZERO"),
-// 3. If the field is defined in the blank options deliberately, then
-//    update it to blank value as required.
-// 4. see the test case to know the exact data returned.
+//  1. the input FieldOption only works for the returned 'expr', not controls
+//     the returned 'toUpdate', so the returned 'toUpdate' contains all the
+//     flatted tagged 'db' field and value.
+//  2. Obviously, a data field need to be updated if the field value
+//     is not blank(as is not "ZERO"),
+//  3. If the field is defined in the blank options deliberately, then
+//     update it to blank value as required.
+//  4. see the test case to know the exact data returned.
 func RearrangeSQLDataWithOption(data interface{}, opts *FieldOption) (
 	expr string, toUpdate map[string]interface{}, err error) {
 
@@ -74,10 +74,10 @@ func RearrangeSQLDataWithOption(data interface{}, opts *FieldOption) (
 // RecursiveGetTaggedFieldValues get all the tagged db kv
 // in the struct to a flat map except ptr and struct tag.
 // Note:
-// 1. if the embedded tag is same, then it will be overlapped.
-// 2. use this function carefully, it not supports all the type,
-//    such as array, slice, map is not supported.
-// 3. see the test case to know the output data example.
+//  1. if the embedded tag is same, then it will be overlapped.
+//  2. use this function carefully, it not supports all the type,
+//     such as array, slice, map is not supported.
+//  3. see the test case to know the output data example.
 func RecursiveGetTaggedFieldValues(v interface{}) (map[string]interface{}, error) {
 	if v == nil {
 		return map[string]interface{}{}, nil
@@ -169,9 +169,10 @@ func isBlank(value reflect.Value) bool {
 }
 
 // FieldOption is to define which field need to be:
-// 1. updated to blank(as is ZERO) value.
-// 2. be ignored, which means not be updated even its value
-//    is not blank(as is not ZERO).
+//  1. updated to blank(as is ZERO) value.
+//  2. be ignored, which means not be updated even its value
+//     is not blank(as is not ZERO).
+//
 // NOTE:
 // 1. A field can not in the blanked and ignore fields at the
 // same time. if a field does, then it will be ignored without
@@ -226,7 +227,7 @@ func (f *FieldOption) AddIgnoredFields(fields ...string) *FieldOption {
 // embedded if it's an embedded struct.
 // Use table.App as an example, the returned expr should as follows:
 // id, biz_id, name as 'spec.name', memo as 'spec.memo'
-// TODO: define the embedded columns in the table.go manually.
+// Note: define the embedded columns in the table.go manually.
 // Deprecated: GetNamedSelectColumns will panic if there is a nil value.
 func GetNamedSelectColumns(table interface{}) (expr string, err error) {
 	if table == nil {

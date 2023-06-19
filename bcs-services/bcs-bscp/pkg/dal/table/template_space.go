@@ -27,52 +27,52 @@ type TemplateSpace struct {
 }
 
 // TableName is the TemplateSpace's database table name.
-func (s *TemplateSpace) TableName() string {
+func (t *TemplateSpace) TableName() string {
 	return "template_spaces"
 }
 
 // AppID AuditRes interface
-func (s *TemplateSpace) AppID() uint32 {
+func (t *TemplateSpace) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (s *TemplateSpace) ResID() uint32 {
-	return s.ID
+func (t *TemplateSpace) ResID() uint32 {
+	return t.ID
 }
 
 // ResType AuditRes interface
-func (s *TemplateSpace) ResType() string {
+func (t *TemplateSpace) ResType() string {
 	return "template_space"
 }
 
 // ValidateCreate validate TemplateSpace is valid or not when create it.
-func (s TemplateSpace) ValidateCreate() error {
-	if s.ID > 0 {
+func (t *TemplateSpace) ValidateCreate() error {
+	if t.ID > 0 {
 		return errors.New("id should not be set")
 	}
 
-	if s.Spec == nil {
+	if t.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	if err := s.Spec.ValidateCreate(); err != nil {
+	if err := t.Spec.ValidateCreate(); err != nil {
 		return err
 	}
 
-	if s.Attachment == nil {
+	if t.Attachment == nil {
 		return errors.New("attachment not set")
 	}
 
-	if err := s.Attachment.Validate(); err != nil {
+	if err := t.Attachment.Validate(); err != nil {
 		return err
 	}
 
-	if s.Revision == nil {
+	if t.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateCreate(); err != nil {
+	if err := t.Revision.ValidateCreate(); err != nil {
 		return err
 	}
 
@@ -80,31 +80,31 @@ func (s TemplateSpace) ValidateCreate() error {
 }
 
 // ValidateUpdate validate TemplateSpace is valid or not when update it.
-func (s TemplateSpace) ValidateUpdate() error {
+func (t *TemplateSpace) ValidateUpdate() error {
 
-	if s.ID <= 0 {
+	if t.ID <= 0 {
 		return errors.New("id should be set")
 	}
 
-	if s.Spec != nil {
-		if err := s.Spec.ValidateUpdate(); err != nil {
+	if t.Spec != nil {
+		if err := t.Spec.ValidateUpdate(); err != nil {
 			return err
 		}
 	}
 
-	if s.Attachment == nil {
+	if t.Attachment == nil {
 		return errors.New("attachment should be set")
 	}
 
-	if err := s.Attachment.Validate(); err != nil {
+	if err := t.Attachment.Validate(); err != nil {
 		return err
 	}
 
-	if s.Revision == nil {
+	if t.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateUpdate(); err != nil {
+	if err := t.Revision.ValidateUpdate(); err != nil {
 		return err
 	}
 
@@ -112,13 +112,17 @@ func (s TemplateSpace) ValidateUpdate() error {
 }
 
 // ValidateDelete validate the TemplateSpace's info when delete it.
-func (s TemplateSpace) ValidateDelete() error {
-	if s.ID <= 0 {
+func (t *TemplateSpace) ValidateDelete() error {
+	if t.ID <= 0 {
 		return errors.New("TemplateSpace id should be set")
 	}
 
-	if s.Attachment.BizID <= 0 {
-		return errors.New("biz id should be set")
+	if t.Attachment == nil {
+		return errors.New("attachment should be set")
+	}
+
+	if err := t.Attachment.Validate(); err != nil {
+		return err
 	}
 
 	return nil
@@ -134,8 +138,8 @@ type TemplateSpaceSpec struct {
 type TemplateSpaceType string
 
 // ValidateCreate validate TemplateSpace spec when it is created.
-func (s TemplateSpaceSpec) ValidateCreate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
+func (t *TemplateSpaceSpec) ValidateCreate() error {
+	if err := validator.ValidateName(t.Name); err != nil {
 		return err
 	}
 
@@ -143,12 +147,8 @@ func (s TemplateSpaceSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate TemplateSpace spec when it is updated.
-func (s TemplateSpaceSpec) ValidateUpdate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
-		return err
-	}
-
-	if err := validator.ValidateMemo(s.Memo, false); err != nil {
+func (t *TemplateSpaceSpec) ValidateUpdate() error {
+	if err := validator.ValidateMemo(t.Memo, false); err != nil {
 		return err
 	}
 
@@ -161,8 +161,8 @@ type TemplateSpaceAttachment struct {
 }
 
 // Validate whether TemplateSpace attachment is valid or not.
-func (s TemplateSpaceAttachment) Validate() error {
-	if s.BizID <= 0 {
+func (t *TemplateSpaceAttachment) Validate() error {
+	if t.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
 	}
 

@@ -16,6 +16,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"gorm.io/gorm"
 
 	"bscp.io/cmd/data-service/db-migration/migrator"
 	"bscp.io/pkg/cc"
@@ -23,6 +24,7 @@ import (
 	_ "bscp.io/cmd/data-service/db-migration/migrations"
 )
 
+// cmd for migration
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "database migrations tool",
@@ -31,6 +33,7 @@ var migrateCmd = &cobra.Command{
 	},
 }
 
+// sub migrate cmd to create migration
 var migrateCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "create a new empty migrations file",
@@ -41,30 +44,39 @@ var migrateCreateCmd = &cobra.Command{
 			return
 		}
 
-		mode, err := cmd.Flags().GetString("mode")
+		var mode string
+		mode, err = cmd.Flags().GetString("mode")
 		if err != nil {
 			fmt.Println("Unable to read flag `mode`, err:", err)
 			return
 		}
 
-		if err := migrator.Create(name, mode); err != nil {
+		if err = migrator.Create(name, mode); err != nil {
 			fmt.Println("Unable to create migration, err:", err)
 			return
 		}
 	},
 }
 
+// sub migrate cmd to execute up migration
 var migrateUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "run up migrations",
 	Run: func(cmd *cobra.Command, args []string) {
+		var (
+			err   error
+			step  int
+			debug bool
+			db    *gorm.DB
+			mig   *migrator.Migrator
+		)
 
-		step, err := cmd.Flags().GetInt("step")
+		step, err = cmd.Flags().GetInt("step")
 		if err != nil {
 			fmt.Println("Unable to read flag `step`, err:", err)
 			return
 		}
-		debug, err := cmd.Flags().GetBool("debug")
+		debug, err = cmd.Flags().GetBool("debug")
 		if err != nil {
 			fmt.Println("Unable to read flag `debug`, err:", err)
 			return
@@ -75,19 +87,19 @@ var migrateUpCmd = &cobra.Command{
 			return
 		}
 
-		db, err := migrator.NewDB(debug)
+		db, err = migrator.NewDB(debug)
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db)
+		mig, err = migrator.Init(db)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
 		}
 
-		err = migrator.Up(step)
+		err = mig.Up(step)
 		if err != nil {
 			fmt.Println("Unable to run `up` migrations, err:", err)
 			return
@@ -96,40 +108,48 @@ var migrateUpCmd = &cobra.Command{
 	},
 }
 
+// sub migrate cmd to execute down migration
 var migrateDownCmd = &cobra.Command{
 	Use:   "down",
 	Short: "run down migrations",
 	Run: func(cmd *cobra.Command, args []string) {
+		var (
+			err   error
+			step  int
+			debug bool
+			db    *gorm.DB
+			mig   *migrator.Migrator
+		)
 
-		step, err := cmd.Flags().GetInt("step")
+		step, err = cmd.Flags().GetInt("step")
 		if err != nil {
 			fmt.Println("Unable to read flag `step`, err:", err)
 			return
 		}
-		debug, err := cmd.Flags().GetBool("debug")
+		debug, err = cmd.Flags().GetBool("debug")
 		if err != nil {
 			fmt.Println("Unable to read flag `debug`, err:", err)
 			return
 		}
 
-		if err := cc.LoadSettings(SysOpt); err != nil {
+		if err = cc.LoadSettings(SysOpt); err != nil {
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
 
-		db, err := migrator.NewDB(debug)
+		db, err = migrator.NewDB(debug)
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db)
+		mig, err = migrator.Init(db)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
 		}
 
-		err = migrator.Down(step)
+		err = mig.Down(step)
 		if err != nil {
 			fmt.Println("Unable to run `down` migrations, err:", err)
 			return
@@ -137,34 +157,42 @@ var migrateDownCmd = &cobra.Command{
 	},
 }
 
+// sub migrate cmd to get migration status
 var migrateStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "display status of each migrations",
 	Run: func(cmd *cobra.Command, args []string) {
-		debug, err := cmd.Flags().GetBool("debug")
+		var (
+			err   error
+			debug bool
+			db    *gorm.DB
+			mig   *migrator.Migrator
+		)
+
+		debug, err = cmd.Flags().GetBool("debug")
 		if err != nil {
 			fmt.Println("Unable to read flag `debug`, err:", err)
 			return
 		}
 
-		if err := cc.LoadSettings(SysOpt); err != nil {
+		if err = cc.LoadSettings(SysOpt); err != nil {
 			fmt.Println("load settings from config files failed, err:", err)
 			return
 		}
 
-		db, err := migrator.NewDB(debug)
+		db, err = migrator.NewDB(debug)
 		if err != nil {
 			fmt.Println("Unable to new db migrator, err:", err)
 			return
 		}
 
-		migrator, err := migrator.Init(db)
+		mig, err = migrator.Init(db)
 		if err != nil {
 			fmt.Println("Unable to fetch migrator, err:", err)
 			return
 		}
 
-		if err := migrator.MigrationStatus(); err != nil {
+		if err = mig.MigrationStatus(); err != nil {
 			fmt.Println("Unable to fetch migration status, err:", err)
 			return
 		}

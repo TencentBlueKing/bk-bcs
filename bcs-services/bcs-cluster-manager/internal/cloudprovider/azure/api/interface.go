@@ -60,6 +60,7 @@ type ClusterService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	GetCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*armcontainerservice.ManagedCluster,
 		error)
+
 	// GetClusterWithName 查询集群
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
@@ -72,17 +73,20 @@ type ClusterService interface {
 	//
 	// location - 位置
 	ListClusterByLocation(ctx context.Context, location string) ([]*armcontainerservice.ManagedCluster, error)
+
 	// ListClusterByResourceGroupName 根据集群资源组名称查询
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
 	ListClusterByResourceGroupName(ctx context.Context, location, resourceGroupName string) (
 		[]*armcontainerservice.ManagedCluster, error)
+
 	// DeleteCluster 删除集群
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
 	DeleteCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error
+
 	// DeleteClusterWithName 删除集群
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
@@ -97,6 +101,7 @@ type ClusterService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	GetClusterAdminCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
 		[]*armcontainerservice.CredentialResult, error)
+
 	// GetClusterAdminCredentialsWithName 获取集群管理凭证
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
@@ -104,6 +109,7 @@ type ClusterService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	GetClusterAdminCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
 		[]*armcontainerservice.CredentialResult, error)
+
 	// GetClusterUserCredentials 获取集群用户凭证
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
@@ -111,6 +117,7 @@ type ClusterService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	GetClusterUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
 		[]*armcontainerservice.CredentialResult, error)
+
 	// GetClusterUserCredentialsWithName 获取集群用户凭证
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
@@ -118,6 +125,7 @@ type ClusterService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	GetClusterUserCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
 		[]*armcontainerservice.CredentialResult, error)
+
 	// GetClusterMonitoringUserCredentials 获取集群监控凭证
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
@@ -125,12 +133,12 @@ type ClusterService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	GetClusterMonitoringUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
 		[]*armcontainerservice.CredentialResult, error)
-	// GetClusterMonitoringUserCredentialsWithName 获取集群监控凭证
+	// GetClusterMonitorUserCredWithName 获取集群监控凭证(GetClusterMonitoringUserCredentialsWithName)
 	//
 	// resourceGroupName - 资源组名称(Account.resourceGroupName)
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
-	GetClusterMonitoringUserCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
+	GetClusterMonitorUserCredWithName(ctx context.Context, resourceGroupName, resourceName string) (
 		[]*armcontainerservice.CredentialResult, error)
 }
 
@@ -138,6 +146,7 @@ type ClusterService interface {
 type AgentPoolService interface {
 	// CreatePool 创建节点池.
 	CreatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error)
+
 	// CreatePoolWithName 从名称创建节点池.
 	//
 	// pool - 代理节点池.
@@ -145,6 +154,7 @@ type AgentPoolService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	CreatePoolWithName(ctx context.Context, pool *armcontainerservice.AgentPool, resourceName, poolName string,
 		group *proto.NodeGroup) (*proto.NodeGroup, error)
+
 	// CreatePoolAndReturn 从名称创建节点池.
 	// pool - 代理节点池.
 	//
@@ -156,6 +166,7 @@ type AgentPoolService interface {
 
 	// DeletePool 删除节点池.
 	DeletePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error
+
 	// DeletePoolWithName 从名称删除节点池.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
@@ -165,6 +176,7 @@ type AgentPoolService interface {
 
 	// UpdatePool 修改节点池(全量修改).
 	UpdatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error)
+
 	// UpdatePoolAndReturn 从名称修改节点池.
 	//
 	// pool - 代理节点池.
@@ -177,12 +189,14 @@ type AgentPoolService interface {
 
 	// GetPool 获取节点池.
 	GetPool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error)
+
 	// GetPoolWithName 从名称获取节点池.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
 	//
 	// poolName - 节点池名称(NodeGroup.CloudNodeGroupID).
 	GetPoolWithName(ctx context.Context, resourceName, poolName string, group *proto.NodeGroup) (*proto.NodeGroup, error)
+
 	// GetPoolAndReturn 从名称获取节点池.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
@@ -192,10 +206,12 @@ type AgentPoolService interface {
 
 	// ListPool 获取节点池列表.
 	ListPool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) ([]*proto.NodeGroup, error)
+
 	// ListPoolWithName 从名称获取节点池列表.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
 	ListPoolWithName(ctx context.Context, resourceName string) ([]*proto.NodeGroup, error)
+
 	// ListPoolAndReturn 从名称获取节点池列表.
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
@@ -206,6 +222,7 @@ type AgentPoolService interface {
 type VirtualMachineScaleSetService interface {
 	// CreateSet 创建虚拟机规模集.
 	CreateSet(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*armcompute.VirtualMachineScaleSet, error)
+
 	// CreateSetWithName 从名称创建虚拟机规模集.
 	//
 	// set - 虚拟机规模集.
@@ -218,16 +235,19 @@ type VirtualMachineScaleSetService interface {
 
 	// DeleteSet 删除虚拟机规模集.
 	DeleteSet(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error
+
 	// DeleteSetWithName 从名称删除虚拟机规模集.
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 	//
 	// setName - 虚拟机规模集名称(AutoScalingGroup.autoScalingID).
 	DeleteSetWithName(ctx context.Context, nodeResourceGroup, setName string) error
+
 	// BatchDeleteVMs 批量删除节点
 	//
 	// instanceIDs - 实例ID.
 	BatchDeleteVMs(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, instanceIDs []string) error
+
 	// BatchDeleteVMsWithName 批量删除节点
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -239,6 +259,7 @@ type VirtualMachineScaleSetService interface {
 
 	// UpdateSet 修改虚拟机规模集.
 	UpdateSet(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*armcompute.VirtualMachineScaleSet, error)
+
 	// UpdateSetWithName 从名称修改虚拟机规模集.
 	//
 	// set - 虚拟机规模集.
@@ -251,6 +272,7 @@ type VirtualMachineScaleSetService interface {
 
 	// GetSet 获取虚拟机规模集.
 	GetSet(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*armcompute.VirtualMachineScaleSet, error)
+
 	// GetSetWithName 从名称获取虚拟机规模集.
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -260,10 +282,12 @@ type VirtualMachineScaleSetService interface {
 
 	// ListSet 获取虚拟机规模集列表.
 	ListSet(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) ([]*armcompute.VirtualMachineScaleSet, error)
+
 	// ListSetWithName 从名称获取虚拟机规模集列表.
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 	ListSetWithName(ctx context.Context, nodeResourceGroup string) ([]*armcompute.VirtualMachineScaleSet, error)
+
 	// MatchNodeGroup 匹配节点池
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -276,6 +300,7 @@ type VirtualMachineScaleSetService interface {
 type SetInstanceService interface {
 	// DeleteInstance 删除实例.
 	DeleteInstance(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, node *proto.Node) error
+
 	// DeleteInstanceWithName 删除实例.
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -287,29 +312,35 @@ type SetInstanceService interface {
 
 	// UpdateInstance 修改实例.
 	UpdateInstance(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, node *proto.Node) (*proto.Node, error)
+
 	// UpdateInstanceWithName 从名称修改实例.
 	UpdateInstanceWithName(ctx context.Context, vm *armcompute.VirtualMachineScaleSetVM, nodeResourceGroup,
 		setName string) (*proto.Node, error)
+
 	// UpdateInstanceAndReturn 从名称修改实例.
 	UpdateInstanceAndReturn(ctx context.Context, vm *armcompute.VirtualMachineScaleSetVM, nodeResourceGroup,
 		setName string) (*armcompute.VirtualMachineScaleSetVM, error)
 
 	// GetInstance 获取实例.
 	GetInstance(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, node *proto.Node) (*proto.Node, error)
+
 	// GetInstanceWithName 从名称获取实例.
 	GetInstanceWithName(ctx context.Context, nodeResourceGroup, setName, instanceID string) (*proto.Node, error)
+
 	// GetInstanceAndReturn 从名称获取实例.
 	GetInstanceAndReturn(ctx context.Context, nodeResourceGroup, setName, instanceID string) (
 		*armcompute.VirtualMachineScaleSetVM, error)
 
 	// ListInstance 获取实例列表.
 	ListInstance(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) ([]*proto.Node, error)
+
 	// ListInstanceWithName 从名称获取实例列表.
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 	//
 	// setName - 虚拟机规模集名称(AutoScalingGroup.autoScalingID).
 	ListInstanceWithName(ctx context.Context, nodeResourceGroup, setName string) ([]*proto.Node, error)
+
 	// ListInstanceAndReturn 从名称获取实例列表.
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -317,6 +348,7 @@ type SetInstanceService interface {
 	// setName - 虚拟机规模集名称(AutoScalingGroup.autoScalingID).
 	ListInstanceAndReturn(ctx context.Context, nodeResourceGroup, setName string) (
 		[]*armcompute.VirtualMachineScaleSetVM, error)
+
 	// ListInstanceByIDAndReturn 从ids获取实例列表.
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -331,7 +363,7 @@ type SetInstanceService interface {
 
 // NetworkInterfaceService 网络接口(Network Interface)
 type NetworkInterfaceService interface {
-	// GetVmInterfaceAndReturn
+	// GetVmInterfaceAndReturn 查询vm的网卡
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 	//
@@ -350,6 +382,7 @@ type NetworkInterfaceService interface {
 	// virtualNetworkName - 虚拟网络(AutoScalingGroup.VpcID).
 	GetVirtualNetworks(ctx context.Context, nodeResourceGroup, virtualNetworkName string) (*armnetwork.VirtualNetwork,
 		error)
+
 	// ListVirtualNetwork 虚拟网络列表
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
@@ -363,7 +396,7 @@ type NetworkInterfaceService interface {
 	GetNetworkSecurityGroups(ctx context.Context, nodeResourceGroup, networkSecurityGroupName string) (
 		*armnetwork.SecurityGroup, error)
 
-	// ListSetInterfaceAndReturn
+	// ListSetInterfaceAndReturn 查询set中vm的网卡
 	//
 	// nodeResourceGroup - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).
 	//

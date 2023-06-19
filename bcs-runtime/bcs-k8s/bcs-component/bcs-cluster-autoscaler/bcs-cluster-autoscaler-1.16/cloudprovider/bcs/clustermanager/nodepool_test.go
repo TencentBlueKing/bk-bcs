@@ -460,11 +460,11 @@ func TestNodePoolClient_GetNodes(t *testing.T) {
 			res := ListNodesInGroupResponse{
 				Code: 0,
 				Data: []*Node{
-					&Node{
+					{
 						NodeID:      "n1",
 						NodeGroupID: "test1",
 					},
-					&Node{
+					{
 						NodeID:      "n2",
 						NodeGroupID: "test1",
 					},
@@ -516,11 +516,11 @@ func TestNodePoolClient_GetNodes(t *testing.T) {
 				np: "test1",
 			},
 			want: []*Node{
-				&Node{
+				{
 					NodeID:      "n1",
 					NodeGroupID: "test1",
 				},
-				&Node{
+				{
 					NodeID:      "n2",
 					NodeGroupID: "test1",
 				},
@@ -601,15 +601,15 @@ func TestNodePoolClient_GetAutoScalingNodes(t *testing.T) {
 			res := ListNodesInGroupResponse{
 				Code: 0,
 				Data: []*Node{
-					&Node{
+					{
 						NodeID:      "n1",
 						NodeGroupID: "test1",
 					},
-					&Node{
+					{
 						NodeID:      "n2",
 						NodeGroupID: "test1",
 					},
-					&Node{
+					{
 						NodeID:      "n3",
 						NodeGroupID: "",
 					},
@@ -663,11 +663,11 @@ func TestNodePoolClient_GetAutoScalingNodes(t *testing.T) {
 				np: "test1",
 			},
 			want: []*Node{
-				&Node{
+				{
 					NodeID:      "n1",
 					NodeGroupID: "test1",
 				},
-				&Node{
+				{
 					NodeID:      "n2",
 					NodeGroupID: "test1",
 				},
@@ -722,7 +722,7 @@ func TestNodePoolClient_GetNode(t *testing.T) {
 			res := GetNodeResponse{
 				Code: 0,
 				Data: []*Node{
-					&Node{
+					{
 						NodeID:      "n1",
 						NodeGroupID: "test1",
 					},

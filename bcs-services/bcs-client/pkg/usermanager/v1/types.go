@@ -14,12 +14,12 @@
 package v1
 
 const (
-	// BcsUserManagerUserURI TODO
+	// BcsUserManagerUserURI user-manager uri
 	BcsUserManagerUserURI = "%s/bcsapi/v4/usermanager/v1/users/%s/%s"
-	// BcsUserManagerUserRefreshURI TODO
+	// BcsUserManagerUserRefreshURI refresh uri
 	BcsUserManagerUserRefreshURI = "%s/bcsapi/v4/usermanager/v1/users/%s/%s/refresh"
-	// BcsUserManagerPermissionURI TODO
+	// BcsUserManagerPermissionURI permissions url
 	BcsUserManagerPermissionURI = "%s/bcsapi/v4/usermanager/v1/permissions"
-	// BcsUserManagerAddCidrUri TODO
+	// BcsUserManagerAddCidrUri add_cidr usi
 	BcsUserManagerAddCidrUri = "%s/bcsapi/v4/usermanager/v1/tke/cidr/add_cidr"
 )

@@ -111,6 +111,7 @@ func (s *Server) Start(stop <-chan struct{}) error {
 	mux.HandleFunc("/portpool/v1/mutate", s.HandleMutatingWebhook)
 	mux.HandleFunc("/crd/v1/validate", s.HandleValidatingCRD)
 	mux.HandleFunc("/ingress/v1/mutate", s.HandlerValidatingIngress)
+	// 兼容IPV6
 	s.ipv6Server.Server.Handler = mux
 
 	go func() {
@@ -158,10 +159,12 @@ func (s *Server) HandleValidatingCRD(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "validateCRD", newDelegateToV1AdmitHandler(s.validatingCRDDelete))
 }
 
+// HandlerValidatingIngress handler validating ingress webhook request
 func (s *Server) HandlerValidatingIngress(w http.ResponseWriter, r *http.Request) {
 	s.handleWebhook(w, r, "validateIngress", newDelegateToV1AdmitHandler(s.mutatingIngress))
 }
 
+// handleWebhook 新旧版本K8S Webhook的返回结构体不一致， 这里需要自动适配
 func (s *Server) handleWebhook(
 	w http.ResponseWriter, r *http.Request, handleName string,
 	admit admitHandler) {
@@ -245,6 +248,7 @@ func (s *Server) handleWebhook(
 	metrics.ReportAPIRequestMetric(handleName, r.Method, strconv.Itoa(http.StatusOK), startTime)
 }
 
+// validatingWebhook 校验portpool更新，避免端口冲突
 func (s *Server) validatingWebhook(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	req := ar.Request
 	// only hook create and update operation
@@ -276,6 +280,7 @@ func (s *Server) validatingWebhook(ar v1.AdmissionReview) *v1.AdmissionResponse 
 	return &v1.AdmissionResponse{Allowed: true}
 }
 
+// mutatingIngress 校验用户对ingress的更新，包括端口冲突和配置， warning级别的错误会patch到ingress的注解上
 func (s *Server) mutatingIngress(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	req := ar.Request
 	// only hook create and update operation
@@ -321,7 +326,9 @@ func (s *Server) mutatingIngress(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	}
 }
 
+// mutatingWebhook 根据用户注解，分配端口池端口到Pod
 func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionResponse) {
+	// 统计webhook执行成功/失败次数
 	defer func() {
 		if response == nil || response.Allowed == false {
 			metrics.IncreasePodCreateCounter(false)
@@ -380,6 +387,7 @@ func (s *Server) mutatingWebhook(ar v1.AdmissionReview) (response *v1.AdmissionR
 	}
 }
 
+// validatingCRDDelete 根据删除策略，避免用户误删除正在使用中的CRD，导致相关资源被销毁
 func (s *Server) validatingCRDDelete(ar v1.AdmissionReview) *v1.AdmissionResponse {
 	allowResp := &v1.AdmissionResponse{Allowed: true}
 	req := ar.Request

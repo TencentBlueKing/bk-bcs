@@ -16,10 +16,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	ipvsConfig "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs/config"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils"
 	"log"
 	"os"
+
+	ipvsConfig "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs/config"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils"
 )
 
 const (
@@ -115,7 +116,15 @@ func initFunc() {
 		return
 	}
 	scheduler, err := care.lvs.GetScheduler()
+	if err != nil {
+		log.Printf("lvs[%s] get scheduler failed: %v", opts.virtualServer, err)
+		return
+	}
 	vs, err := care.lvs.GetVirtualServer()
+	if err != nil {
+		log.Printf("lvs[%s] get virtual server failed: %v", opts.virtualServer, err)
+		return
+	}
 	rs, err := care.lvs.ListRealServer()
 	if err != nil {
 		log.Println("init failed")

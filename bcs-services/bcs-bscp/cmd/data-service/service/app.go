@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
@@ -26,7 +25,6 @@ import (
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/thirdparty/esb/cmdb"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
@@ -50,15 +48,12 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 		return nil, fmt.Errorf("app name %s already exists", req.Spec.Name)
 	}
 
-	now := time.Now()
 	app := &table.App{
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
-			Creator:   kt.User,
-			Reviser:   kt.User,
-			CreatedAt: now,
-			UpdatedAt: now,
+			Creator: kt.User,
+			Reviser: kt.User,
 		},
 	}
 
@@ -81,8 +76,7 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbbas
 		BizID: req.BizId,
 		Spec:  req.Spec.AppSpec(),
 		Revision: &table.Revision{
-			Reviser:   grpcKit.User,
-			UpdatedAt: time.Now(),
+			Reviser: grpcKit.User,
 		},
 	}
 	if err := s.dao.App().Update(grpcKit, app); err != nil {
@@ -148,36 +142,6 @@ func (s *Service) GetAppByName(ctx context.Context, req *pbds.GetAppByNameReq) (
 	return pbapp.PbApp(app), nil
 }
 
-// ListApps list apps by query condition.
-func (s *Service) ListApps(ctx context.Context, req *pbds.ListAppsReq) (*pbds.ListAppsResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	// parse pb struct filter to filter.Expression.
-	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
-	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	query := &types.ListAppsOption{
-		BizID:  req.BizId,
-		Filter: filter,
-		Page:   req.Page.BasePage(),
-	}
-
-	details, err := s.dao.App().List(grpcKit, query)
-	if err != nil {
-		logs.Errorf("list apps failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	resp := &pbds.ListAppsResp{
-		Count:   details.Count,
-		Details: pbapp.PbApps(details.Details),
-	}
-	return resp, nil
-}
-
 // ListAppsRest list apps by query condition.
 func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (*pbds.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
@@ -188,60 +152,51 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbds.ListAppsRestReq) (
 		limit = 50
 	}
 
-	page := &types.BasePage{
+	opt := &types.BasePage{
 		Start: req.Start,
 		Limit: limit,
 	}
-
-	rules := []filter.RuleFactory{}
-	if req.Operator != "" {
-		rules = append(rules, filter.AtomRule{
-			Field: "creator",
-			Op:    filter.OpFactory(filter.Equal),
-			Value: req.Operator,
-		})
-	}
-
-	// 按名称模糊搜索
-	if req.Name != "" {
-		rules = append(rules, filter.AtomRule{
-			Field: "name",
-			Op:    filter.OpFactory(filter.ContainsInsensitive),
-			Value: req.Name,
-		})
-	}
-
-	bizList, err := tools.GetIntList(req.BizId)
-	if err != nil {
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
 		return nil, err
 	}
 
+	bizList, err := tools.GetUint32List(req.BizId)
+	if err != nil {
+		return nil, err
+	}
 	if len(bizList) == 0 {
 		return nil, fmt.Errorf("bizList is empty")
 	}
 
-	filter := &filter.Expression{
-		Op:    filter.And,
-		Rules: rules,
-	}
-
-	// 导航查询的场景
-	query := &types.ListAppsOption{
-		BizList: bizList,
-		BizID:   uint32(bizList[0]),
-		Filter:  filter,
-		Page:    page,
-	}
-
-	details, err := s.dao.App().List(kt, query)
+	details, count, err := s.dao.App().List(kt, bizList, req.Name, req.Operator, opt)
 	if err != nil {
 		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	resp := &pbds.ListAppsResp{
-		Count:   details.Count,
-		Details: pbapp.PbApps(details.Details),
+		Count:   uint32(count),
+		Details: pbapp.PbApps(details),
+	}
+	return resp, nil
+}
+
+// ListAppsByIDs list apps by query condition.
+func (s *Service) ListAppsByIDs(ctx context.Context, req *pbds.ListAppsByIDsReq) (*pbds.ListAppsByIDsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if len(req.Ids) == 0 {
+		return nil, fmt.Errorf("app ids is empty")
+	}
+
+	details, err := s.dao.App().ListAppsByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListAppsByIDsResp{
+		Details: pbapp.PbApps(details),
 	}
 	return resp, nil
 }

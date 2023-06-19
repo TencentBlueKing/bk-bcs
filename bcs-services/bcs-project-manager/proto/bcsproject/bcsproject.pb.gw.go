@@ -279,9 +279,20 @@ func local_request_BCSProject_ListProjects_0(ctx context.Context, marshaler runt
 
 }
 
+var (
+	filter_BCSProject_ListAuthorizedProjects_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
 func request_BCSProject_ListAuthorizedProjects_0(ctx context.Context, marshaler runtime.Marshaler, client BCSProjectClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListAuthorizedProjReq
 	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_BCSProject_ListAuthorizedProjects_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := client.ListAuthorizedProjects(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -291,6 +302,13 @@ func request_BCSProject_ListAuthorizedProjects_0(ctx context.Context, marshaler 
 func local_request_BCSProject_ListAuthorizedProjects_0(ctx context.Context, marshaler runtime.Marshaler, server BCSProjectServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListAuthorizedProjReq
 	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_BCSProject_ListAuthorizedProjects_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := server.ListAuthorizedProjects(ctx, &protoReq)
 	return msg, metadata, err
@@ -369,9 +387,20 @@ func local_request_Business_GetBusiness_0(ctx context.Context, marshaler runtime
 
 }
 
+var (
+	filter_Business_ListBusiness_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
 func request_Business_ListBusiness_0(ctx context.Context, marshaler runtime.Marshaler, client BusinessClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListBusinessRequest
 	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Business_ListBusiness_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := client.ListBusiness(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -381,6 +410,13 @@ func request_Business_ListBusiness_0(ctx context.Context, marshaler runtime.Mars
 func local_request_Business_ListBusiness_0(ctx context.Context, marshaler runtime.Marshaler, server BusinessServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ListBusinessRequest
 	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Business_ListBusiness_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := server.ListBusiness(ctx, &protoReq)
 	return msg, metadata, err

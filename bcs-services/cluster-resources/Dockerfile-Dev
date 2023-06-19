@@ -25,5 +25,7 @@ ENV FORM_TMPL_FILE_BASE_DIR=/go/src/pkg/resource/form/tmpl
 
 ENV LOCALIZE_FILE_PATH=/go/src/pkg/i18n/locale/lc_msgs.yaml
 
+ENV GODEBUG x509sha1=1
+
 # default log file base dir
 RUN mkdir -p /tmp/logs

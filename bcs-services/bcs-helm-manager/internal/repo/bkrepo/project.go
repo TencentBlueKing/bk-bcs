@@ -112,7 +112,7 @@ func (ph *projectHandler) createProject(ctx context.Context, prj *repo.Project) 
 		blog.Errorf("create project to bk-repo get resp with error code %d, message %s, traceID %s",
 			r.Code, r.Message, r.TraceID)
 
-		// TODO: use code to identify
+		// check user is existed
 		if strings.Contains(r.Message, "existed") {
 			return errAlreadyExist
 		}

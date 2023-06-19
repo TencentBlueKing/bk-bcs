@@ -171,6 +171,7 @@ func (md *ModuleDiscovery) GetRandServiceInst() (*registry.Node, error) {
 		blog.Error("found no available node for service: %s", md.module)
 		return nil, fmt.Errorf("found no available node for service: %s", md.module)
 	}
+	// NOCC:gas/crypto(设计如此)
 	return allNodes[rand.Int()%nodeLen], nil
 }
 

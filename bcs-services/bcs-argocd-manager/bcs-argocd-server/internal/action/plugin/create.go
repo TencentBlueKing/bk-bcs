@@ -115,7 +115,7 @@ func (action *CreateArgocdPluginAction) hasValidProject(p *v1alpha1.ArgocdPlugin
 		return fmt.Errorf("query and get empty project with name %s", p.Spec.Project)
 	}
 
-	// TODO: check if current operator has permission to deal with this project
+	// Note: check if current operator has permission to deal with this project
 	return nil
 }
 

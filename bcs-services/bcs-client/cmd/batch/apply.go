@@ -25,8 +25,8 @@ import (
 	mesostype "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/cmd/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/metastream"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
+	v4 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/scheduler/v4"
+	v1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/storage/v1"
 	userV1 "github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/usermanager/v1"
 
 	"github.com/urfave/cli"
@@ -170,7 +170,7 @@ func apply(cxt *utils.ClientContext) error {
 				return userManager.GrantOrRevokePermission(http.MethodPost, data)
 			}
 		default:
-			// unkown type, try custom resource
+			// unknown type, try custom resource
 			crdapiVersion, plural, crdErr := utils.GetCustomResourceTypeByKind(scheduler, cxt.ClusterID(), info.kind)
 			if err != nil {
 				fmt.Printf("resource %s/%s %s apply failed, %s\n", info.apiVersion, info.kind, info.name, crdErr.Error())

@@ -419,6 +419,7 @@ func ruleType(rules gjson.Result) (RuleType, error) {
 	return AtomType, nil
 }
 
+// SqlJoint ..
 func SqlJoint(sql []string) string {
 	buff := bytes.NewBuffer([]byte{})
 	for _, value := range sql {

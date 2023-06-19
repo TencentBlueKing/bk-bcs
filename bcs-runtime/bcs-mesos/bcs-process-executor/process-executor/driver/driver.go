@@ -297,7 +297,7 @@ func (driver *ExecutorDriver) handleMessage(from *upid.UPID, pbMsg *protoExec.Ev
 
 	// parse to BcsMessage
 	var bcsMessage bcstype.BcsMessage
-	if err := json.Unmarshal([]byte(data), &bcsMessage); err != nil {
+	if err = json.Unmarshal(data, &bcsMessage); err != nil {
 		blog.Errorf("unmarshal data %s to BcsMessage error %s", data, err.Error())
 		return
 	}

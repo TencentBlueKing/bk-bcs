@@ -594,7 +594,7 @@ func (g *IngressConverter) CheckIngressServiceAvailable(ingress *networkextensio
 	}
 
 	var msgList []string
-	for msg, _ := range msgSet {
+	for msg := range msgSet {
 		msgList = append(msgList, msg)
 	}
 

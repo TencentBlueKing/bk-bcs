@@ -256,7 +256,7 @@ type DeleteInstancesResult struct {
 	NotFound []string `json:"notFound"`
 }
 
-func (dir *DeleteInstancesRequest) validateDeleteClusterInstanceRequest() error {
+func (dir *DeleteInstancesRequest) validate() error {
 	if len(dir.ClusterID) == 0 {
 		return fmt.Errorf("DeleteTkeClusterInstance failed: clusterID is empty")
 	}

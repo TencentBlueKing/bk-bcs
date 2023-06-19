@@ -68,7 +68,7 @@ func (g *GetRepositoryAction) get(projectCode, name string) error {
 		return nil
 	}
 
-	g.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto())
+	g.setResp(common.ErrHelmManagerSuccess, "ok", r.Transfer2Proto(g.ctx))
 	blog.Infof("get repository successfully, project: %s, name: %s", r.ProjectID, r.Name)
 	return nil
 }

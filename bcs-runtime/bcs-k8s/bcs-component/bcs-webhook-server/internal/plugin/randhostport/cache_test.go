@@ -60,32 +60,32 @@ func TestPortHeap(t *testing.T) {
 func TestPortCache(t *testing.T) {
 	pc := NewPortCache()
 	portEntryList := []*PortEntry{
-		&PortEntry{
+		{
 			Port:     10000,
 			Quantity: 100,
 		},
-		&PortEntry{
+		{
 			Port:     10001,
 			Quantity: 99,
 		},
-		&PortEntry{
+		{
 			Port:     10002,
 			Quantity: 120,
 		},
 	}
 	orderedList := []*PortEntry{
-		&PortEntry{
+		{
 			Port:     10001,
 			Quantity: 99,
 			Index:    0,
 		},
-		&PortEntry{
+		{
 			Port:     10000,
 			Quantity: 100,
 			Index:    1,
 		},
 
-		&PortEntry{
+		{
 			Port:     10002,
 			Quantity: 120,
 			Index:    2,

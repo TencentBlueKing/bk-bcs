@@ -1,0 +1,40 @@
+@font-face {
+	font-family: "bcs-color";
+	src: url("fonts/iconcool.svg#iconcool") format("svg"),
+url("fonts/iconcool.ttf") format("truetype"),
+url("fonts/iconcool.woff") format("woff"),
+url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+.bcs-color-icon {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'bcs-color' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  text-align: center;
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.bcs-icon-color-vcluster:before {
+	content: "\e101";
+}
+.bcs-icon-color-tencentcloud:before {
+	content: "\e102";
+}
+.bcs-icon-color-publiccloud:before {
+	content: "\e104";
+}
+.bcs-icon-color-k8s:before {
+	content: "\e106";
+}
+.bcs-icon-color-kubeconfig:before {
+	content: "\e103";
+}

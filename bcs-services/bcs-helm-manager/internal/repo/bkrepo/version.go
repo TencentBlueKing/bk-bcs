@@ -25,10 +25,13 @@ import (
 )
 
 const (
-	chartVersionListHelmURI     = "/repository/api/version/page"
+	// chartVersionListHelmURI
+	chartVersionListHelmURI = "/repository/api/version/page"
+	// chartVersionDownloadHelmURI
 	chartVersionDownloadHelmURI = "/repository/api/version/download"
 )
 
+// listChartVersion
 func (ch *chartHandler) listChartVersion(ctx context.Context, option repo.ListOption) (
 	*repo.ListChartVersionData, error) {
 
@@ -46,6 +49,7 @@ func (ch *chartHandler) listChartVersion(ctx context.Context, option repo.ListOp
 	}
 }
 
+// listOCIChartVersion
 func (ch *chartHandler) listOCIChartVersion(ctx context.Context, option repo.ListOption) (
 	*repo.ListChartVersionData, error) {
 
@@ -83,6 +87,7 @@ func (ch *chartHandler) listOCIChartVersion(ctx context.Context, option repo.Lis
 	}, nil
 }
 
+// listHelmChartVersion
 func (ch *chartHandler) listHelmChartVersion(ctx context.Context, option repo.ListOption) (
 	*repo.ListChartVersionData, error) {
 
@@ -120,6 +125,7 @@ func (ch *chartHandler) listHelmChartVersion(ctx context.Context, option repo.Li
 	}, nil
 }
 
+// getListHelmChartVersionURI
 func (ch *chartHandler) getListHelmChartVersionURI(option repo.ListOption) string {
 	return chartVersionListHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
 		"?packageKey=helm://" + ch.chartName +
@@ -127,6 +133,7 @@ func (ch *chartHandler) getListHelmChartVersionURI(option repo.ListOption) strin
 		"&pageSize=" + strconv.FormatInt(option.Size, 10)
 }
 
+// getListOCIChartVersionURI
 func (ch *chartHandler) getListOCIChartVersionURI(option repo.ListOption) string {
 	return chartVersionListHelmURI + "/" + ch.projectID + "/" + ch.repository + "/" +
 		"?packageKey=oci://" + ch.chartName +
@@ -134,11 +141,13 @@ func (ch *chartHandler) getListOCIChartVersionURI(option repo.ListOption) string
 		"&pageSize=" + strconv.FormatInt(option.Size, 10)
 }
 
+// listPackVersionResp
 type listPackVersionResp struct {
 	basicResp
 	Data *listPackVersionData `json:"data"`
 }
 
+// listPackVersionData
 type listPackVersionData struct {
 	basicRecord
 	Records []*packVersion `json:"records"`
@@ -173,6 +182,7 @@ func (pv *packVersion) convert2Chart() *repo.ChartVersion {
 	}
 }
 
+// getChartVersionDetail
 func (ch *chartHandler) getChartVersionDetail(ctx context.Context, version string) (*repo.ChartDetail, error) {
 	switch ch.repoType {
 	case repo.RepositoryTypeHelm:
@@ -184,6 +194,7 @@ func (ch *chartHandler) getChartVersionDetail(ctx context.Context, version strin
 	}
 }
 
+// downloadChartVersion
 func (ch *chartHandler) downloadChartVersion(ctx context.Context, version string) ([]byte, error) {
 	switch ch.repoType {
 	case repo.RepositoryTypeHelm:
@@ -195,6 +206,7 @@ func (ch *chartHandler) downloadChartVersion(ctx context.Context, version string
 	}
 }
 
+// downloadOCIChartVersionOrigin
 func (ch *chartHandler) downloadOCIChartVersionOrigin(_ context.Context, version string) ([]byte, error) {
 	cli, err := registry.NewClient()
 	if err != nil {
@@ -221,6 +233,7 @@ func (ch *chartHandler) downloadOCIChartVersionOrigin(_ context.Context, version
 	return r.Chart.Data, nil
 }
 
+// downloadHelmChartVersionOrigin
 func (ch *chartHandler) downloadHelmChartVersionOrigin(ctx context.Context, version string) ([]byte, error) {
 	resp, err := ch.get(ctx, ch.getDownloadHelmChartVersionURI(version), nil, nil)
 	if err != nil {
@@ -240,6 +253,7 @@ func (ch *chartHandler) downloadHelmChartVersionOrigin(ctx context.Context, vers
 	return resp.Reply, nil
 }
 
+// getOCIChartVersionDetail
 func (ch *chartHandler) getOCIChartVersionDetail(ctx context.Context, version string) (*repo.ChartDetail, error) {
 	contents, err := ch.downloadOCIChartVersionOrigin(ctx, version)
 	if err != nil {
@@ -263,6 +277,7 @@ func (ch *chartHandler) getOCIChartVersionDetail(ctx context.Context, version st
 	return detail, nil
 }
 
+// getHelmChartVersionDetail
 func (ch *chartHandler) getHelmChartVersionDetail(ctx context.Context, version string) (*repo.ChartDetail, error) {
 	contents, err := ch.downloadHelmChartVersionOrigin(ctx, version)
 	if err != nil {
@@ -286,6 +301,7 @@ func (ch *chartHandler) getHelmChartVersionDetail(ctx context.Context, version s
 	return detail, nil
 }
 
+// getDownloadHelmChartVersionURI
 func (ch *chartHandler) getDownloadHelmChartVersionURI(version string) string {
 	u, _ := url.ParseRequestURI(fmt.Sprintf("%s/%s/%s", chartVersionDownloadHelmURI, ch.projectID, ch.repository))
 	q := u.Query()
@@ -295,6 +311,7 @@ func (ch *chartHandler) getDownloadHelmChartVersionURI(version string) string {
 	return u.String()
 }
 
+// getDownloadOCIChartVersionURI
 func (ch *chartHandler) getDownloadOCIChartVersionURI(version string) string {
 	u, _ := url.ParseRequestURI(fmt.Sprintf("%s/%s/%s?", chartVersionDownloadHelmURI, ch.projectID, ch.repository))
 	q := u.Query()

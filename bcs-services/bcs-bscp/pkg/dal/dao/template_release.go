@@ -79,7 +79,7 @@ func (dao *templateReleaseDao) Create(kit *kit.Kit, g *table.TemplateRelease) (u
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return g.ID, nil
@@ -167,12 +167,13 @@ func (dao *templateReleaseDao) GetByUniqueKey(kit *kit.Kit, bizID, templateID ui
 	m := dao.genQ.TemplateRelease
 	q := dao.genQ.TemplateRelease.WithContext(kit.Ctx)
 
-	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID), m.ReleaseName.Eq(releaseName)).Take()
+	templateRelease, err := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID),
+		m.ReleaseName.Eq(releaseName)).Take()
 	if err != nil {
 		return nil, fmt.Errorf("get template release failed, err: %v", err)
 	}
 
-	return tplSpace, nil
+	return templateRelease, nil
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template release

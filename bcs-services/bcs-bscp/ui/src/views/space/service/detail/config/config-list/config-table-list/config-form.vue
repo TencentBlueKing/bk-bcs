@@ -7,10 +7,22 @@
   import { IAppEditParams } from '../../../../../../../../types/app'
   import { IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { updateConfigContent, getConfigContent } from '../../../../../../../api/config'
-  import { stringLengthInBytes } from '../../../../../../../utils/index'
+  import { stringLengthInBytes, splitToDigit } from '../../../../../../../utils/index'
   import { transFileToObject, fileDownload } from '../../../../../../../utils/file'
   import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config'
   import ConfigContentEditor from '../../components/config-content-editor.vue'
+
+  const PRIVILEGE_GROUPS = ['属主（own）', '属组（group）', '其他人（other）']
+  const PRIVILEGE_VALUE_MAP = {
+    0: [],
+    1: [1],
+    2: [2],
+    3: [1, 2],
+    4: [4],
+    5: [1,4],
+    6: [2, 4],
+    7: [1, 2, 4]
+  }
 
   const props = withDefaults(defineProps<{
     config: IAppEditParams,
@@ -26,6 +38,8 @@
   const emit = defineEmits(['confirm', 'cancel'])
 
   const localVal = ref({ ...props.config })
+  const privilegeInputVal = ref('')
+  const showPrivilegeErrorTips = ref(false)
   const stringContent = ref('')
   const fileContent = ref<IFileConfigContentSummary|File>()
   const isFileChanged = ref(false) // 标识文件是否被修改，编辑配置项时若文件未修改，不重新上传文件
@@ -45,6 +59,11 @@
         message: '请使用英文、数字、下划线、中划线或点'
       }
     ],
+    privilege: [{
+      required: true,
+      message: '文件权限 不能为空',
+      trigger: 'blur'
+    }],
     path: [
       {
         validator: (value: string) => value.length < 256,
@@ -58,6 +77,22 @@
     return fileContent.value ? [transFileToObject(<File>fileContent.value)] : []
   })
 
+  // 将权限数字拆分成三个分组配置
+  const privilegeGroupsValue = computed(() => {
+    let data: { [index: string]: number[] } = { '0': [], '1': [], '2': [] }
+    if (typeof localVal.value.privilege === 'string' && localVal.value.privilege.length > 0) {
+      const valArr = splitToDigit(parseInt(localVal.value.privilege))
+      valArr.forEach((item, index) => {
+        data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP]
+      })
+    }
+    return data
+  })
+
+  watch(() => props.config.privilege, (val) => {
+    privilegeInputVal.value = <string>val
+  }, { immediate: true })
+
   watch(() => props.content, () => {
     if (props.config.file_type === 'binary') {
       fileContent.value = <IFileConfigContentSummary>props.content
@@ -65,6 +100,37 @@
       stringContent.value = props.content as string
     }
   }, { immediate: true })
+
+  // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
+  const handlePrivilegeInputBlur = () => {
+    if (/^[0-7]{3}$/.test(privilegeInputVal.value)) {
+      localVal.value.privilege = privilegeInputVal.value
+      showPrivilegeErrorTips.value = false
+    } else {
+      privilegeInputVal.value = <string>localVal.value.privilege
+      showPrivilegeErrorTips.value = true
+    }
+  }
+
+  // 选择文件权限
+  const handleSelectPrivilege = (index: number, val: number[]) => {
+    const groupsValue = { ...privilegeGroupsValue.value }
+    groupsValue[index] = val
+    const digits = []
+    for(let i = 0; i < 3; i++) {
+      let sum = 0
+      if (groupsValue[i].length > 0) {
+        sum = groupsValue[i].reduce((acc, crt) => {
+          return acc + crt
+        }, 0)
+      }
+      digits.push(sum)
+    }
+    const newVal = digits.join('')
+    privilegeInputVal.value = newVal
+    localVal.value.privilege = newVal
+    showPrivilegeErrorTips.value = false
+  }
 
   // 选择文件后上传
   const handleFileUpload = (option: { file: File }) => {
@@ -151,9 +217,6 @@
     fileDownload(res, `${name}.bin`)
   }
 
-  // 打开全屏
-  const handleOpenFullScreen = () => {}
-
   const cancel = () => {
     emit('cancel')
   }
@@ -171,15 +234,60 @@
         </bk-radio-group>
         </bk-form-item>
         <template v-if="['binary', 'text'].includes(localVal.file_type)">
-        <bk-form-item label="文件权限" property="privilege" :required="true">
-            <bk-input v-model="localVal.privilege" :disabled="!editable"></bk-input>
-        </bk-form-item>
-        <bk-form-item label="用户" property="user" :required="true">
-            <bk-input v-model="localVal.user" :disabled="!editable"></bk-input>
-        </bk-form-item>
-        <bk-form-item label="配置路径" property="path" :required="true">
-            <bk-input v-model="localVal.path" :disabled="!editable"></bk-input>
-        </bk-form-item>
+          <bk-form-item label="文件权限" property="privilege" required>
+              <div class="perm-input">
+                <bk-popover
+                  theme="light"
+                  trigger="manual"
+                  placement="top"
+                  :is-show="showPrivilegeErrorTips">
+                  <bk-input
+                    v-model="privilegeInputVal"
+                    type="number"
+                    placeholder="请输入三位权限数字"
+                    :disabled="!editable"
+                    @blur="handlePrivilegeInputBlur" />
+                  <template #content>
+                    <div>只能输入三位 0~7 数字</div>
+                    <div class="privilege-tips-btn-area">
+                      <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">我知道了</bk-button>
+                    </div>
+                  </template>
+                </bk-popover>
+                <bk-popover
+                  ext-cls="privilege-select-popover"
+                  theme="light"
+                  trigger="click"
+                  placement="bottom">
+                  <div class="perm-panel-trigger">
+                    <i class="bk-bscp-icon icon-configuration-line"></i>
+                  </div>
+                  <template #content>
+                    <div class="privilege-select-panel">
+                      <div v-for="(item, index) in PRIVILEGE_GROUPS" class="group-item" :key="index" :label="item">
+                        <div class="header">{{ item }}</div>
+                        <div class="checkbox-area">
+                          <bk-checkbox-group
+                            class="group-checkboxs"
+                            :model-value="privilegeGroupsValue[index]"
+                            @change="handleSelectPrivilege(index, $event)">
+                            <bk-checkbox size="small" :label="1">读</bk-checkbox>
+                            <bk-checkbox size="small" :label="2">写</bk-checkbox>
+                            <bk-checkbox size="small" :label="4">执行</bk-checkbox>
+                          </bk-checkbox-group>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </bk-popover>
+              </div>
+          </bk-form-item>
+          <bk-form-item label="用户" property="user" :required="true">
+              <bk-input v-model="localVal.user" :disabled="!editable"></bk-input>
+          </bk-form-item>
+          <bk-form-item label="配置路径" property="path" :required="true">
+              <bk-input v-model="localVal.path" placeholder="请输入绝对路径，下载路径为前缀+配置路径" :disabled="!editable"></bk-input>
+          </bk-form-item>
         </template>
         <bk-form-item v-if="localVal.file_type === 'binary'" label="配置内容" :required="true">
           <bk-upload
@@ -223,6 +331,70 @@
     padding: 22px;
     height: calc(100% - 48px);
     overflow: auto;
+  }
+  .perm-input {
+    display: flex;
+    align-items: center;
+    width: 192px;
+    :deep(.bk-input) {
+      width: 160px;
+      border-right: none;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      .bk-input--number-control {
+        display: none;
+      }
+    }
+    .perm-panel-trigger {
+      width: 32px;
+      height: 32px;
+      text-align: center;
+      background: #e1ecff;
+      color: #3a84ff;
+      border: 1px solid #3a84ff;
+      cursor: pointer;
+    }
+  }
+  .privilege-tips-btn-area {
+    margin-top: 8px;
+    text-align: right;
+  }
+  .privilege-select-panel {
+    display: flex;
+    align-items: top;
+    border: 1px solid #dcdee5;
+    .group-item {
+      .header {
+        padding: 0 16px;
+        height: 42px;
+        line-height: 42px;
+        color: #313238;
+        font-size: 12px;
+        background: #fafbfd;
+        border-bottom: 1px solid #dcdee5;
+      }
+      &:not(:last-of-type) {
+        .header, .checkbox-area {
+          border-right: 1px solid #dcdee5;
+        }
+      }
+    }
+    .checkbox-area {
+      padding: 10px 16px 12px;
+      background: #ffffff;
+      &:not(:last-child) {
+        border-right: 1px solid #dcdee5;
+      }
+    }
+    .group-checkboxs {
+      font-size: 12px;
+      .bk-checkbox~.bk-checkbox {
+        margin-left: 16px;
+      }
+      :deep(.bk-checkbox-label) {
+        font-size: 12px;
+      }
+    }
   }
   .config-uploader {
     :deep(.bk-upload-list__item) {
@@ -270,5 +442,10 @@
       margin-right: 8px;
       min-width: 88px;
     }
+  }
+</style>
+<style lang="scss">
+  .privilege-select-popover.bk-popover {
+    padding: 0;
   }
 </style>

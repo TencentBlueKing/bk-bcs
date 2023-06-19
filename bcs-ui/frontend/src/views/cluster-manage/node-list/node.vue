@@ -182,11 +182,17 @@
           :resizable="false"
           fixed="left">
           <template #default="{ row }">
-            <bcs-checkbox
-              :checked="selections.some(item => item.nodeName === row.nodeName)"
-              :disabled="!row.nodeName"
-              @change="(value) => handleRowCheckChange(value, row)"
-            />
+            <span
+              v-bk-tooltips="{
+                disabled: !row.nodeGroupID,
+                content: $t('CA节点无法批量操作')
+              }">
+              <bcs-checkbox
+                :checked="selections.some(item => item.nodeName === row.nodeName)"
+                :disabled="!row.nodeName || !!row.nodeGroupID"
+                @change="(value) => handleRowCheckChange(value, row)"
+              />
+            </span>
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('节点名')" min-width="120" prop="nodeName" fixed="left" show-overflow-tooltip>
@@ -553,7 +559,7 @@
     <bk-sideslider
       :is-show.sync="logSideDialogConf.isShow"
       :title="logSideDialogConf.title"
-      :width="860"
+      :width="960"
       @hidden="closeLog"
       :quick-close="true">
       <div slot="content">
@@ -1033,8 +1039,9 @@ export default defineComponent({
 
     // 跨页全选
     const filterFailureTableData = computed(() => filterTableData.value
-      .filter(item => !!item.nodeName));
-    const filterFailureCurTableData = computed(() => curPageData.value.filter(item => !!item.nodeName));
+      .filter(item => !!item.nodeName && !item.nodeGroupID));
+    const filterFailureCurTableData = computed(() => curPageData.value
+      .filter(item => !!item.nodeName && !item.nodeGroupID));
     const {
       selectType,
       selections,
@@ -1300,13 +1307,42 @@ export default defineComponent({
     ]);
     const curDeleteRows = ref<any[]>([]);
     const removeNodeDialogTitle = ref<any>('');
+    const user = computed(() => $store.state.user);
     const handleDeleteNode = async (row) => {
       if (isImportCluster.value) return;
-      curDeleteRows.value = [row];
-      removeNodeDialogTitle.value = $i18n.t('确认要删除节点【{innerIp}】？', {
-        innerIp: row.inner_ip,
-      });
-      showConfirmDialog.value = true;
+
+      if (row.nodeGroupID) {
+        $bkInfo({
+          type: 'warning',
+          clsName: 'custom-info-confirm',
+          title: $i18n.t('确认删除节点'),
+          subTitle: $i18n.t('确认删除节点 {ip}', { ip: row.innerIP }),
+          defaultInfo: true,
+          confirmFn: async () => {
+            const result = await $store.dispatch('clustermanager/deleteNodeGroupNode', {
+              $nodeGroupID: row.nodeGroupID,
+              nodes: row.inner_ip,
+              clusterID: row.clusterID,
+              operator: user.value.username,
+            });
+            if (result) {
+              $bkMessage({
+                theme: 'success',
+                message: $i18n.t('操作成功'),
+              });
+              handleGetNodeData();
+              handleResetPage();
+              handleResetCheckStatus();
+            }
+          },
+        });
+      } else {
+        curDeleteRows.value = [row];
+        removeNodeDialogTitle.value = $i18n.t('确认要删除节点【{innerIp}】？', {
+          innerIp: row.inner_ip,
+        });
+        showConfirmDialog.value = true;
+      }
     };
     const cancelDelNode = () => {
       curDeleteRows.value = [];
@@ -1590,9 +1626,9 @@ export default defineComponent({
     // 当前CIDR可添加节点数
     const realRemainNodesCount = computed(() => {
       const {
-        maxNodePodNum,
-        maxServiceNum,
-        clusterIPv4CIDR,
+        maxNodePodNum = 0,
+        maxServiceNum = 0,
+        clusterIPv4CIDR = 0,
         multiClusterCIDR = [],
       } = curSelectedCluster.value?.networkSettings || {};
       const totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce((pre, cidr) => {
@@ -1604,10 +1640,10 @@ export default defineComponent({
     // 扩容后最大节点数量
     const maxRemainNodesCount = computed(() => {
       const {
-        cidrStep,
-        maxNodePodNum,
-        maxServiceNum,
-        clusterIPv4CIDR,
+        cidrStep = 0,
+        maxNodePodNum = 0,
+        maxServiceNum = 0,
+        clusterIPv4CIDR = 0,
         multiClusterCIDR = [],
       } = curSelectedCluster.value?.networkSettings || {};
       let totalCidrStep = 0;

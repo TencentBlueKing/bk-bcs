@@ -159,7 +159,7 @@ func (dao *contentDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, contents
 }
 
 // Get content by id.
-// TODO: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
+// Note: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
 func (dao *contentDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error) {
 
 	if id == 0 {

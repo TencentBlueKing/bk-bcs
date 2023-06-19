@@ -74,6 +74,7 @@ func (hc *HealthConfig) IsHTTPAPIHealth(addr string, port uint32) bool {
 	}
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
+		// NOCC:gas/tls(设计如此)
 		InsecureSkipVerify: true,
 	}
 	url := fmt.Sprintf("%s://%s:%d%s", hc.Shem, addr, port, hc.Path)

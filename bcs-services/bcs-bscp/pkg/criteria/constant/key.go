@@ -21,6 +21,8 @@ const (
 
 	// RidKey is request id header key.
 	RidKey = "X-Bkapi-Request-Id"
+	// RidKeyGeneric for generic header key
+	RidKeyGeneric = "X-Request-Id"
 
 	// UserKey is operator name header key.
 	UserKey = "X-Bkapi-User-Name"
@@ -67,4 +69,12 @@ const (
 	AuthLoginProviderKey = "auth-login-provider"
 	AuthLoginUID         = "auth-login-uid"
 	AuthLoginToken       = "auth-login-token"
+)
+
+var (
+	// RidKeys support request_id keys
+	RidKeys = []string{
+		RidKey,
+		RidKeyGeneric,
+	}
 )

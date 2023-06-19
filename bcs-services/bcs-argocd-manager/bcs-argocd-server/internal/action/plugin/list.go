@@ -51,7 +51,7 @@ func (action *ListArgocdPluginsAction) Handle(ctx context.Context,
 	action.req = req
 	action.resp = resp
 
-	// TODO: check project permission?
+	// Note: check project permission?
 	listOptions := metav1.ListOptions{
 		LabelSelector: metav1.FormatLabelSelector(&metav1.LabelSelector{MatchLabels: action.getMatchLabels()}),
 	}

@@ -26,10 +26,18 @@ const (
 	ProjectIDContextKey ContextKey = "projectID"
 	// ProjectCodeContextKey projectCode context key
 	ProjectCodeContextKey ContextKey = "projectCode"
+	// LangContectKey
+	LangContectKey ContextKey = "lang"
 )
 
 // HeaderKey string
 const (
 	// RequestIDKey ...
 	RequestIDHeaderKey = "X-Request-Id"
+	// ContentDispositionKey content disposition key
+	ContentDispositionKey = "content-disposition"
+	// ContentDispositionKey content disposition key
+	ContentDispositionCapKey = "Content-Disposition"
+	// ContentDispositionValue contenct disposition value
+	ContentDispositionValue = "Content-Disposition"
 )

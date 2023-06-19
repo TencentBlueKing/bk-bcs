@@ -29,6 +29,20 @@ func main() {
 	g.ApplyBasic(
 		table.IDGenerator{},
 		table.Audit{},
+		table.App{},
+		table.ArchivedApp{},
+		table.Event{},
+		table.Credential{},
+		table.CredentialScope{},
+		table.Strategy{},
+		table.Group{},
+		table.ReleasedGroup{},
+		table.GroupAppBind{},
+		table.Release{},
+		table.ReleasedConfigItem{},
+		table.Hook{},
+		table.HookRelease{},
+		table.ConfigHook{},
 		table.TemplateSpace{},
 		table.Template{},
 		table.TemplateRelease{},
@@ -36,6 +50,7 @@ func main() {
 		table.ReleasedConfigItem{},
 		table.Commit{},
 		table.Content{},
+		table.TemplateSet{},
 	)
 
 	g.Execute()

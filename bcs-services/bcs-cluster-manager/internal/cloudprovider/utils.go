@@ -76,6 +76,7 @@ func GetTaskIDFromContext(ctx context.Context) string {
 
 // WithTaskIDForContext will return a new context wrapped taskID flag around the original ctx
 func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
+	// NOCC:golint/type(设计如此)
 	return context.WithValue(ctx, TaskID, taskID)
 }
 

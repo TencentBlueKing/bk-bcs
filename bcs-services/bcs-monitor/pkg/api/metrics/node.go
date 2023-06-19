@@ -25,6 +25,7 @@ import (
 // NodeOveriewMetric 节点概览
 type NodeOveriewMetric struct {
 	ContainerCount     string `json:"container_count"`
+	PodTotal           string `json:"pod_total"`
 	PodCount           string `json:"pod_count"`
 	CPUUsage           string `json:"cpu_usage"`
 	CPURequestUsage    string `json:"cpu_request_usage"`
@@ -154,6 +155,7 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 		"diskio":          `bcs:node:diskio:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
 		"container_count": `bcs:node:container_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
 		"pod_count":       `bcs:node:pod_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"pod_total":       `bcs:node:pod_total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
 	}
 
 	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params, time.Now())
@@ -170,6 +172,7 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 		DiskioUsage:        result["diskio"],
 		ContainerCount:     result["container_count"],
 		PodCount:           result["pod_count"],
+		PodTotal:           result["pod_total"],
 	}
 
 	return overview, nil

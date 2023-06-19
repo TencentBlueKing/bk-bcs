@@ -29,14 +29,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/options"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 const (
 	// ApiGwJWTKey xxx
 	ApiGwJWTKey = "X-Bkapi-JWT"
 	// BcsUserTokenKey xxx
-	BcsUserTokenKey = "X-Bcs-User-Token"
+	BcsUserTokenKey = "X-Bcs-User-Token" // nolint
 )
 
 // NewAuth xxx

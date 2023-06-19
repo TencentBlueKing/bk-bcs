@@ -64,12 +64,50 @@ type ReleasedConfigItem struct {
 }
 
 // TableName is the released app config's database table name.
-func (r ReleasedConfigItem) TableName() Name {
-	return ReleasedConfigItemTable
+func (r *ReleasedConfigItem) TableName() string {
+	return "released_config_items"
+}
+
+// AppID AuditRes interface
+func (r *ReleasedConfigItem) AppID() uint32 {
+	return r.Attachment.AppID
+}
+
+// ResID AuditRes interface
+func (r *ReleasedConfigItem) ResID() uint32 {
+	return r.ID
+}
+
+// ResType AuditRes interface
+func (r *ReleasedConfigItem) ResType() string {
+	return "released_config_item"
+}
+
+type RciList []*ReleasedConfigItem
+
+// AppID AuditRes interface
+func (rs RciList) AppID() uint32 {
+	if len(rs) > 0 {
+		return rs[0].Attachment.AppID
+	}
+	return 0
+}
+
+// ResID AuditRes interface
+func (rs RciList) ResID() uint32 {
+	if len(rs) > 0 {
+		return rs[0].ID
+	}
+	return 0
+}
+
+// ResType AuditRes interface
+func (rs RciList) ResType() string {
+	return "released_config_item"
 }
 
 // Validate the released config item information.
-func (r ReleasedConfigItem) Validate() error {
+func (r *ReleasedConfigItem) Validate() error {
 	if r.ID != 0 {
 		return errors.New("id should not set")
 	}

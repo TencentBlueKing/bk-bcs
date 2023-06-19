@@ -25,7 +25,7 @@ export const createCluster = request('post', '/cluster');
 export const cloudVpc = request('get', '/cloudvpc');
 export const cloudRegion = request('get', '/cloudregion/$cloudId');
 export const vpccidrList = request('get', '/vpccidr/$vpcID');
-export const fetchClusterList = request('get', '/cluster');
+export const fetchClusterList = request('get', '/projects/$projectId/clusters');
 export const deleteCluster = request('delete', '/cluster/$clusterId');
 export const retryCluster = request('post', '/cluster/$clusterId/retry');
 export const taskList = request('get', '/task');
@@ -64,3 +64,8 @@ export const newUserPermsByAction = request('post', '/perms/actions/$actionId');
 // CA
 export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');
 export const cloudsZones = request('get', '/clouds/$cloudId/zones');
+
+// vCluster
+export const sharedclusters = request('get', '/sharedclusters');
+export const deleteVCluster = request('delete', '/vcluster/$clusterId');
+export const createVCluster = request('post', '/vcluster');

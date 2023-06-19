@@ -58,14 +58,17 @@ func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
 		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
 	}
-	return map[string]interface{}{"manifest": b.manifest, "manifestExt": manifestExt}, nil
+	// 处理pod资源manifest返回数据过多问题
+	newManifest := formatter.FormatPodManifestRes(b.kind, b.manifest)
+	return map[string]interface{}{"manifest": newManifest, "manifestExt": manifestExt}, nil
 }
 
 // Build ...
 func (b *ManifestRespBuilder) Build() (map[string]interface{}, error) {
+	apiVersion := mapx.GetStr(b.manifest, "apiVersion")
 	return map[string]interface{}{
 		"manifest":    b.manifest,
-		"manifestExt": formatter.GetFormatFunc(b.kind, "")(b.manifest),
+		"manifestExt": formatter.GetFormatFunc(b.kind, apiVersion)(b.manifest),
 	}, nil
 }
 

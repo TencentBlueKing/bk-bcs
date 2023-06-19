@@ -44,25 +44,32 @@ var needTimeFormatList = [...]string{updateTimeTag, createTimeTag}
 // Use Mongodb for storage.
 const dbConfig = "mongodb/dynamic"
 
+// doQuery queries the dynamic database with the given filter and name.
 func doQuery(req *restful.Request, resp *restful.Response, filter qFilter, name string) error {
+	// Create a new dynamic request.
 	request := newReqDynamic(req, filter, name)
+	// Query the dynamic database.
 	r, err := request.QueryDynamic()
 	if err != nil {
+		// If failed to query, log the error and return an error response.
 		blog.Errorf("%s | err: %v", common.BcsErrStorageListResourceFailStr, err)
 		lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: []string{}, ErrCode: common.BcsErrStorageListResourceFail,
 			Message: common.BcsErrStorageListResourceFailStr})
 		return err
 	}
+	// Return the query result.
 	lib.ReturnRest(&lib.RestResponse{Resp: resp, Data: r})
 
 	return nil
 }
 
-// GetNameSpace get namespace
+// GetNameSpace get namespace 获取命名空间
 func GetNameSpace(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetNameSpace"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -71,11 +78,13 @@ func GetNameSpace(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetTaskGroup get taskgroup
+// GetTaskGroup get taskgroup 获取taskgroup
 func GetTaskGroup(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetTaskGroup"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -85,11 +94,13 @@ func GetTaskGroup(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetApplication get application
+// GetApplication get application 获取Application
 func GetApplication(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetApplication"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -99,11 +110,13 @@ func GetApplication(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetProcess get process
+// GetProcess get process 获取process
 func GetProcess(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetProcess"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -113,11 +126,13 @@ func GetProcess(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetDeployment get deployment
+// GetDeployment get deployment 获取deployment工作负载
 func GetDeployment(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetDeployment"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -127,11 +142,13 @@ func GetDeployment(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetService get service
+// GetService get service 获取Service
 func GetService(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetService"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -141,11 +158,13 @@ func GetService(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetConfigMap get configmap
+// GetConfigMap get configmap 获取configmap
 func GetConfigMap(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetConfigMap"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -155,11 +174,13 @@ func GetConfigMap(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetSecret get secret
+// GetSecret get secret 获取secret
 func GetSecret(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetSecret"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -169,11 +190,13 @@ func GetSecret(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetEndpoints get endpoints
+// GetEndpoints get endpoints 获取endpoints
 func GetEndpoints(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetEndpoints"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -183,11 +206,13 @@ func GetEndpoints(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetExportService get export service
+// GetExportService get export service 获取ExportService
 func GetExportService(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetExportService"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -197,11 +222,13 @@ func GetExportService(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetPod get pod
+// GetPod get pod 获取Pod
 func GetPod(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetPod"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -211,11 +238,13 @@ func GetPod(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetReplicaSet get replica
+// GetReplicaSet get replicaset 获取replicaset
 func GetReplicaSet(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetReplicaSet"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -225,11 +254,13 @@ func GetReplicaSet(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetDeploymentK8s get deployment k8s
+// GetDeploymentK8s get deployment k8s 获取k8s Deployment
 func GetDeploymentK8s(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetDeploymentK8s"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -239,11 +270,13 @@ func GetDeploymentK8s(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetServiceK8s get service k8s
+// GetServiceK8s get service k8s 获取k8s service
 func GetServiceK8s(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetServiceK8s"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -253,11 +286,13 @@ func GetServiceK8s(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetConfigMapK8s get configmap k8s
+// GetConfigMapK8s get configmap k8s 获取k8s service
 func GetConfigMapK8s(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetConfigMapK8s"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -267,11 +302,13 @@ func GetConfigMapK8s(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetSecretK8s get secret k8s
+// GetSecretK8s get secret k8s 获取k8s service
 func GetSecretK8s(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetSecretK8s"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -281,11 +318,13 @@ func GetSecretK8s(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetEndpointsK8s get endpoints k8s
+// GetEndpointsK8s get endpoints k8s 获取k8s endpoints
 func GetEndpointsK8s(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetEndpointsK8s"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -295,11 +334,13 @@ func GetEndpointsK8s(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetIngress get ingress
+// GetIngress get ingress 获取ingress
 func GetIngress(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetIngress"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -309,11 +350,13 @@ func GetIngress(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetNameSpaceK8s get namespaces k8s
+// GetNameSpaceK8s get namespaces k8s 获取k8s 命名空间
 func GetNameSpaceK8s(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetNameSpaceK8s"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -330,11 +373,13 @@ func GetNameSpaceK8s(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetNode get node
+// GetNode get node 获取node
 func GetNode(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetNode"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -344,11 +389,13 @@ func GetNode(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetDaemonSet get daemonset
+// GetDaemonSet get daemonset 获取daemonset
 func GetDaemonSet(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetDaemonSet"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -358,11 +405,13 @@ func GetDaemonSet(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetJob get job
+// GetJob get job 获取job
 func GetJob(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetJob"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -372,11 +421,13 @@ func GetJob(req *restful.Request, resp *restful.Response) {
 	}
 }
 
-// GetStatefulSet get statefulset
+// GetStatefulSet get statefulset 获取statefulset
 func GetStatefulSet(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetStatefulSet"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -388,9 +439,11 @@ func GetStatefulSet(req *restful.Request, resp *restful.Response) {
 
 // GetIPPoolStatic query netservice ip pool static resource data.
 func GetIPPoolStatic(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetIPPoolStatic"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 
@@ -402,9 +455,11 @@ func GetIPPoolStatic(req *restful.Request, resp *restful.Response) {
 
 // GetIPPoolStaticDetail query netservice ip pool static resource detail data.
 func GetIPPoolStaticDetail(req *restful.Request, resp *restful.Response) {
+	// Define a constant named handler
 	const (
 		handler = "GetIPPoolStaticDetail"
 	)
+	// Create a span to trace the execution of the function
 	span := v1http.SetHTTPSpanContextInfo(req, handler)
 	defer span.Finish()
 

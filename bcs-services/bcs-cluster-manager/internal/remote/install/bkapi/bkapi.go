@@ -216,10 +216,10 @@ func (h *BKAPIInstaller) Upgrade(clusterID, values string) error {
 	defer cancel()
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
 		// get app
-		app, err := h.client.GetApp(h.projectID, h.appID)
-		if err != nil {
-			blog.Errorf("[BKAPIInstaller] get app failed, err: %s", err.Error())
-			return err
+		app, errApp := h.client.GetApp(h.projectID, h.appID)
+		if errApp != nil {
+			blog.Errorf("[BKAPIInstaller] get app failed, err: %s", errApp.Error())
+			return errApp
 		}
 		if app == nil {
 			return fmt.Errorf("get app failed, resp is empty")
@@ -318,10 +318,10 @@ func (h *BKAPIInstaller) CheckAppStatus(clusterID string, timeout time.Duration)
 	defer cancel()
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
 		// get app
-		app, err := h.client.GetApp(h.projectID, h.appID)
-		if err != nil {
-			blog.Errorf("[BKAPIInstaller] get app failed, err: %s", err.Error())
-			return err
+		app, errApp := h.client.GetApp(h.projectID, h.appID)
+		if errApp != nil {
+			blog.Errorf("[BKAPIInstaller] get app failed, err: %s", errApp.Error())
+			return errApp
 		}
 		if app == nil {
 			return fmt.Errorf("get app failed, resp is empty")

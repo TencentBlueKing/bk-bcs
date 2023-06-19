@@ -36,7 +36,7 @@ type MsgHead struct {
 
 // HeadLength 获取协议头长度
 func HeadLength() int {
-	return int(unsafe.Sizeof(MsgHead{}))
+	return int(unsafe.Sizeof(MsgHead{})) // nolint
 }
 
 // ConvertToMsgHead 将字节数组 转换为协议头

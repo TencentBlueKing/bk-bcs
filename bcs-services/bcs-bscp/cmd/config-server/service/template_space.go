@@ -97,7 +97,6 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbcs.UpdateTempl
 			BizId: grpcKit.BizID,
 		},
 		Spec: &pbts.TemplateSpaceSpec{
-			Name: req.Name,
 			Memo: req.Memo,
 		},
 	}

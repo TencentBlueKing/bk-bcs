@@ -96,7 +96,7 @@ func genDeleteProtectTips(ctx context.Context, manifest map[string]interface{}, 
 		return ""
 	}
 
-	tips := ""
+	var tips string
 	if editMode == resCsts.EditModeForm {
 		tips = i18n.GetMsg(ctx, "配置信息->删除保护策略->总是允许删除")
 	} else {

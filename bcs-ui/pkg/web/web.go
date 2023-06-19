@@ -20,7 +20,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -62,25 +62,25 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 }
 
 // Run :
-func (a *WebServer) Run() error {
+func (w *WebServer) Run() error {
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListenerWithAddr(a.srv.Addr); err != nil {
+	if err := dualStackListener.AddListenerWithAddr(w.srv.Addr); err != nil {
 		return err
 	}
 
-	if a.addrIPv6 != "" && a.addrIPv6 != a.srv.Addr {
-		if err := dualStackListener.AddListenerWithAddr(a.addrIPv6); err != nil {
+	if w.addrIPv6 != "" && w.addrIPv6 != w.srv.Addr {
+		if err := dualStackListener.AddListenerWithAddr(w.addrIPv6); err != nil {
 			return err
 		}
-		klog.Infof("api serve dualStackListener with ipv6: %s", a.addrIPv6)
+		klog.Infof("api serve dualStackListener with ipv6: %s", w.addrIPv6)
 	}
 
-	return a.srv.Serve(dualStackListener)
+	return w.srv.Serve(dualStackListener)
 }
 
 // Close :
-func (a *WebServer) Close() error {
-	return a.srv.Shutdown(a.ctx)
+func (w *WebServer) Close() error {
+	return w.srv.Shutdown(w.ctx)
 }
 
 // newRoutes xxx
@@ -162,7 +162,7 @@ func ReverseAPIHandler(name, remoteURL string) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// OKResponse
+// OKResponse ok response
 type OKResponse struct {
 	Code      int         `json:"code"`
 	Data      interface{} `json:"data"`

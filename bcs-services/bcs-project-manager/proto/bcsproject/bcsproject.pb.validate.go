@@ -102,6 +102,8 @@ func (m *Project) validate(all bool) error {
 
 	// no validation rules for BusinessName
 
+	// no validation rules for EnableVcluster
+
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
@@ -1586,6 +1588,14 @@ func (m *ListAuthorizedProjReq) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for All
+
+	// no validation rules for SearchKey
+
+	// no validation rules for Offset
+
+	// no validation rules for Limit
+
 	if len(errors) > 0 {
 		return ListAuthorizedProjReqMultiError(errors)
 	}
@@ -1722,6 +1732,35 @@ func (m *ListAuthorizedProjResp) validate(all bool) error {
 	}
 
 	// no validation rules for RequestID
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListAuthorizedProjRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListAuthorizedProjRespValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListAuthorizedProjRespValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return ListAuthorizedProjRespMultiError(errors)
@@ -2338,6 +2377,8 @@ func (m *ListBusinessRequest) validate(all bool) error {
 	}
 
 	var errors []error
+
+	// no validation rules for UseBCS
 
 	if len(errors) > 0 {
 		return ListBusinessRequestMultiError(errors)

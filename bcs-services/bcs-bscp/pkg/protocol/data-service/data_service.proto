@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "bscp.io/pkg/protocol/core/app/app.proto";
 import "bscp.io/pkg/protocol/core/base/base.proto";
+import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
 import "bscp.io/pkg/protocol/core/commit/commit.proto";
 import "bscp.io/pkg/protocol/core/content/content.proto";
@@ -9,14 +10,13 @@ import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
 import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
-import "bscp.io/pkg/protocol/core/instance/instance.proto";
+import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
-import "bscp.io/pkg/protocol/core/strategy/strategy.proto";
-import "bscp.io/pkg/protocol/core/strategy-set/strategy_set.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
-import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
+import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
+import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -32,8 +32,8 @@ service Data {
     rpc GetApp(GetAppReq) returns (pbapp.App) {}
     rpc GetAppByID(GetAppByIDReq) returns (pbapp.App) {}
     rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {}
-    rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
     rpc ListAppsRest(ListAppsRestReq) returns (ListAppsResp) {}
+    rpc ListAppsByIDs(ListAppsByIDsReq) returns (ListAppsByIDsResp) {}
 
     // config item related interface.
     rpc CreateConfigItem(CreateConfigItemReq) returns (CreateResp) {}
@@ -43,6 +43,11 @@ service Data {
     rpc GetConfigItem(GetConfigItemReq) returns (pbci.ConfigItem) {}
     rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {}
     rpc ListConfigItemCount(ListConfigItemCountReq) returns (ListConfigItemCountResp) {}
+
+    // config hook related interface.
+    rpc CreateConfigHook(CreateConfigHookReq) returns (CreateResp) {}
+    rpc UpdateConfigHook(UpdateConfigHookReq) returns (pbbase.EmptyResp) {}
+    rpc GetConfigHook(GetConfigHookReq) returns (pbch.ConfigHook) {}
 
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
@@ -62,23 +67,22 @@ service Data {
     rpc GetReleasedConfigItem(GetReleasedCIReq) returns (pbrci.ReleasedConfigItem) {}
     rpc ListReleasedConfigItems(ListReleasedCIsReq) returns (ListReleasedCIsResp) {}
 
-    // strategy set related interface.
-    rpc CreateStrategySet(CreateStrategySetReq) returns (CreateResp) {}
-    rpc ListStrategySets(ListStrategySetsReq) returns (ListStrategySetsResp) {}
-    rpc UpdateStrategySet(UpdateStrategySetReq) returns (pbbase.EmptyResp) {}
-    rpc DeleteStrategySet(DeleteStrategySetReq) returns (pbbase.EmptyResp) {}
-
-    // strategy related interface.
-    rpc CreateStrategy(CreateStrategyReq) returns (CreateResp) {}
-    rpc ListStrategies(ListStrategiesReq) returns (ListStrategiesResp) {}
-    rpc UpdateStrategy(UpdateStrategyReq) returns (pbbase.EmptyResp) {}
-    rpc DeleteStrategy(DeleteStrategyReq) returns (pbbase.EmptyResp) {}
-
     // hook related interface.
     rpc CreateHook(CreateHookReq) returns (CreateResp) {}
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {}
-    rpc UpdateHook(UpdateHookReq) returns (pbbase.EmptyResp) {}
     rpc DeleteHook(DeleteHookReq) returns (pbbase.EmptyResp) {}
+    rpc ListHookTags(ListHookTagReq) returns (ListHookTagResp) {}
+    rpc GetHook(GetHookReq) returns (GetHookResp) {}
+
+    // hook release interface.
+    rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateResp) {}
+    rpc ListHookReleases(ListHookReleasesReq) returns (ListHookReleasesResp) {}
+    rpc GetHookReleaseByID(GetHookReleaseByIdReq) returns (pbhr.HookRelease){}
+    rpc DeleteHookRelease(DeleteHookReleaseReq) returns (pbbase.EmptyResp){}
+    rpc PublishHookRelease(PublishHookReleaseReq) returns (pbbase.EmptyResp){}
+    rpc GetHookReleaseByPubState(GetByPubStateReq) returns (pbhr.HookRelease){}
+    rpc UpdateHookRelease(UpdateHookReleaseReq) returns (pbbase.EmptyResp) {}
+    rpc ListHookReleasesReferences(ListHookReleasesReferencesReq) returns (ListHookReleasesReferencesResp) {}
 
     // template space related interface.
     rpc CreateTemplateSpace(CreateTemplateSpaceReq) returns (CreateResp) {}
@@ -97,6 +101,12 @@ service Data {
     rpc ListTemplateReleases(ListTemplateReleasesReq) returns (ListTemplateReleasesResp) {}
     rpc DeleteTemplateRelease(DeleteTemplateReleaseReq) returns (pbbase.EmptyResp) {}
 
+    // template set related interface.
+    rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateResp) {}
+    rpc ListTemplateSets(ListTemplateSetsReq) returns (ListTemplateSetsResp) {}
+    rpc UpdateTemplateSet(UpdateTemplateSetReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (pbbase.EmptyResp) {}
+
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
     rpc ListGroups(ListGroupsReq) returns (ListGroupsResp) {}
@@ -111,13 +121,6 @@ service Data {
     // publish related interface.
     rpc Publish(PublishReq) returns (PublishResp) {}
     rpc GenerateReleaseAndPublish(GenerateReleaseAndPublishReq) returns (PublishResp) {}
-    rpc FinishPublish(FinishPublishReq) returns (pbbase.EmptyResp) {}
-    rpc ListPublishedStrategyHistories(ListPubStrategyHistoriesReq) returns (ListPubStrategyHistoriesResp) {}
-
-    // current released instance related interface.
-    rpc CreateCRInstance(CreateCRInstanceReq) returns (CreateResp) {}
-    rpc ListCRInstances(ListCRInstancesReq) returns (ListCRInstancesResp) {}
-    rpc DeleteCRInstance(DeleteCRInstanceReq) returns (pbbase.EmptyResp) {}
 
     // credential related interface
     rpc CreateCredential(CreateCredentialReq) returns (CreateResp) {}
@@ -177,9 +180,10 @@ message CreateCredentialReq {
 }
 
 message ListCredentialReq {
-    uint32                 biz_id = 1;
-    pbbase.BasePage        page   = 2;
-    google.protobuf.Struct filter = 3;
+    uint32 biz_id    = 1;
+    string searchKey = 2;
+    uint32 start     = 3;
+    uint32 limit     = 4;
 }
 
 message ListCredentialResp{
@@ -206,6 +210,17 @@ message EnableCredentialReq {
 
 message CreateResp {
     uint32 id = 1;
+}
+
+message UpdateConfigHookReq {
+    uint32                    id         = 1;
+    pbch.ConfigHookAttachment attachment = 2;
+    pbch.ConfigHookSpec       spec       = 3;
+}
+
+message GetConfigHookReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
 }
 
 message CreateAppReq {
@@ -238,12 +253,6 @@ message GetAppByNameReq {
     string app_name = 2;
 }
 
-message ListAppsReq {
-    uint32                 biz_id = 1;
-    google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
-}
-
 message ListAppsRestReq {
     string biz_id   = 1;  // 多个以逗号分割
     uint32 start    = 2;
@@ -255,6 +264,14 @@ message ListAppsRestReq {
 message ListAppsResp {
     uint32             count   = 1;
     repeated pbapp.App details = 2;
+}
+
+message ListAppsByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message ListAppsByIDsResp {
+    repeated pbapp.App details = 1;
 }
 
 message CreateConfigItemReq {
@@ -313,6 +330,11 @@ message ListConfigItemCountReq {
 
 message ListConfigItemCountResp {
     repeated pbci.ListConfigItemCounts details = 1;
+}
+
+message CreateConfigHookReq {
+    pbch.ConfigHookAttachment attachment = 1;
+    pbch.ConfigHookSpec       spec       = 2;
 }
 
 message CreateContentReq {
@@ -398,74 +420,47 @@ message ListReleasedCIsResp {
     repeated pbrci.ReleasedConfigItem details = 2;
 }
 
-message CreateStrategySetReq {
-    pbss.StrategySetAttachment attachment = 1;
-    pbss.StrategySetSpec       spec       = 2;
-}
-
-message ListStrategySetsReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
-}
-
-message ListStrategySetsResp {
-    uint32                    count   = 1;
-    repeated pbss.StrategySet details = 2;
-}
-
-message UpdateStrategySetReq {
-    uint32                     id         = 1;
-    pbss.StrategySetAttachment attachment = 2;
-    pbss.StrategySetState      state      = 3;
-    pbss.StrategySetSpec       spec       = 4;
-}
-
-message DeleteStrategySetReq {
-    uint32                     id         = 1;
-    pbss.StrategySetAttachment attachment = 2;
-}
-
-message CreateStrategyReq {
-    pbstrategy.StrategyAttachment attachment = 1;
-    pbstrategy.StrategySpec       spec       = 2;
-}
-
-message ListStrategiesReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
-}
-
-message ListStrategiesResp {
-    uint32                       count   = 1;
-    repeated pbstrategy.Strategy details = 2;
-}
-
-message UpdateStrategyReq {
-    uint32                        id         = 1;
-    pbstrategy.StrategyAttachment attachment = 2;
-    pbstrategy.StrategyState      status     = 3;
-    pbstrategy.StrategySpec       spec       = 4;
-}
-
-message DeleteStrategyReq {
-    uint32                        id         = 1;
-    pbstrategy.StrategyAttachment attachment = 2;
-}
-
 message CreateHookReq {
     pbhook.HookAttachment attachment = 1;
     pbhook.HookSpec       spec       = 2;
 }
 
+message ListHookTagReq {
+    uint32 biz_id = 1;
+}
+
+message GetHookReq {
+    uint32 biz_id  = 1;
+    uint32 hook_id = 2;
+}
+
+message GetHookResp {
+    uint32 id = 1;
+    GetHookInfoSpec spec = 2;
+    pbhook.HookAttachment attachment = 3;
+    pbbase.Revision revision = 4;
+}
+
+message GetHookInfoSpec {
+    string name         = 1;
+    string type         = 3;
+    string tag          = 4;
+    string memo         = 5;
+    uint32 publish_num  = 7;
+    message Releases  {
+        uint32 not_release_id = 1;
+    }
+    Releases releases  = 8;
+}
+
 message ListHooksReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
+    uint32 biz_id  = 1;
+    string name    = 2;
+    string tag     = 3;
+    bool   all     = 5;
+    bool   not_tag = 6;
+    uint32 start   = 7;
+    uint32 limit   = 8;
 }
 
 message ListHooksResp {
@@ -473,15 +468,76 @@ message ListHooksResp {
     repeated pbhook.Hook details = 2;
 }
 
-message UpdateHookReq {
-    uint32                id         = 1;
-    pbhook.HookAttachment attachment = 2;
-    pbhook.HookSpec       spec       = 3;
+message ListHookTagResp {
+    repeated pbhook.CountHookTags details = 1;
 }
 
 message DeleteHookReq {
     uint32                id         = 1;
     pbhook.HookAttachment attachment = 2;
+}
+
+message CreateHookReleaseReq {
+    pbhr.HookReleaseAttachment attachment = 1;
+    pbhr.HookReleaseSpec       spec       = 2;
+}
+
+message ListHookReleasesReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    string search_key   = 3;
+    uint32 start        = 4;
+    uint32 limit        = 5;
+    bool   all          = 6;
+    string state        = 7;
+}
+
+message ListHookReleasesResp {
+    uint32                    count   = 1;
+    repeated pbhr.HookRelease details = 2;
+}
+
+message GetHookReleaseByIdReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
+}
+
+message DeleteHookReleaseReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
+}
+
+message PublishHookReleaseReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 id           = 3;
+}
+
+message GetByPubStateReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    string state        = 3;
+}
+
+message UpdateHookReleaseReq {
+    uint32                       id         = 1;
+    pbhr.HookReleaseAttachment   attachment = 2;
+    pbhr.HookReleaseSpec         spec       = 3;
+}
+
+message ListHookReleasesReferencesReq {
+    uint32 biz_id       = 1;
+    uint32 hook_id      = 2;
+    uint32 releases_id  = 3;
+    uint32 start        = 4;
+    uint32 limit        = 5;
+}
+
+message ListHookReleasesReferencesResp {
+    uint32   count                    = 1;
+    repeated pbhr.ListHookReleasesReferencesDetails details = 2;
 }
 
 message CreateTemplateSpaceReq {
@@ -561,6 +617,34 @@ message ListTemplateReleasesResp {
 message DeleteTemplateReleaseReq {
     uint32                         id         = 1;
     pbtr.TemplateReleaseAttachment attachment = 2;
+}
+
+message CreateTemplateSetReq {
+    pbtset.TemplateSetAttachment attachment = 1;
+    pbtset.TemplateSetSpec       spec       = 2;
+}
+
+message ListTemplateSetsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 start             = 3;
+    uint32 limit             = 4;
+}
+
+message ListTemplateSetsResp {
+    uint32                      count   = 1;
+    repeated pbtset.TemplateSet details = 2;
+}
+
+message UpdateTemplateSetReq {
+    uint32                       id         = 1;
+    pbtset.TemplateSetAttachment attachment = 2;
+    pbtset.TemplateSetSpec       spec       = 3;
+}
+
+message DeleteTemplateSetReq {
+    uint32                       id         = 1;
+    pbtset.TemplateSetAttachment attachment = 2;
 }
 
 message CreateGroupReq {
@@ -662,45 +746,6 @@ message GenerateReleaseAndPublishReq {
 
 message PublishResp {
     uint32 published_strategy_history_id = 1;
-}
-
-message FinishPublishReq {
-    uint32 biz_id      = 1;
-    uint32 app_id      = 2;
-    uint32 strategy_id = 3;
-}
-
-message ListPubStrategyHistoriesReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
-}
-
-message ListPubStrategyHistoriesResp {
-    uint32                                       count   = 1;
-    repeated pbstrategy.PublishedStrategyHistory details = 2;
-}
-
-message CreateCRInstanceReq {
-    pbrelease.ReleaseAttachment     attachment = 1;
-    pbinstance.ReleasedInstanceSpec spec       = 2;
-}
-
-message ListCRInstancesReq {
-    uint32                 biz_id = 1;
-    google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
-}
-
-message ListCRInstancesResp {
-    uint32                                      count   = 1;
-    repeated pbinstance.CurrentReleasedInstance details = 2;
-}
-
-message DeleteCRInstanceReq {
-    uint32                      id         = 1;
-    pbrelease.ReleaseAttachment attachment = 2;
 }
 
 message ListInstancesReq {

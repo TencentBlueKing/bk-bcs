@@ -16,12 +16,13 @@ package etcd
 import (
 	"context"
 	"errors"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock"
 	"path"
 	gosync "sync"
 
-	client "github.com/coreos/etcd/clientv3"
-	cc "github.com/coreos/etcd/clientv3/concurrency"
+	client "go.etcd.io/etcd/client/v3"
+	cc "go.etcd.io/etcd/client/v3/concurrency"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock"
 )
 
 // Client for election

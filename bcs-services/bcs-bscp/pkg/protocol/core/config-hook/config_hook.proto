@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package pbch;
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
+
+option go_package = "bscp.io/pkg/protocol/core/config-hook;pbch";
+
+// ConfigHook source resource reference: pkg/dal/table/configHook.go
+message ConfigHook {
+    uint32               id         = 1;
+    ConfigHookSpec       spec       = 2;
+    ConfigHookAttachment attachment = 3;
+    pbbase.Revision      revision   = 4;
+}
+
+// ConfigHookSpec source resource reference: pkg/dal/table/configHook.go
+message ConfigHookSpec {
+    uint32 pre_hook_id          = 1;
+    uint32 pre_hook_release_id  = 2;
+    uint32 post_hook_id         = 3;
+    uint32 post_hook_release_id = 4;
+}
+
+message ConfigHookAttachment {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}

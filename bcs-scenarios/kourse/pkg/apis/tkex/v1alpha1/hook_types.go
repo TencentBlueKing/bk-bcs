@@ -22,6 +22,17 @@ import (
 )
 
 const (
+	// KindHookTemplate is the kind of HookTemplate
+	KindHookTemplate = "HookTemplate"
+	// ResourceHookTemplate is the resource of HookTemplate
+	ResourceHookTemplate = "hooktemplates"
+	// KindHookRun is the kind of HookRun
+	KindHookRun = "HookRun"
+	// ResourceHookRun is the resource of HookRun
+	ResourceHookRun = "hookruns"
+)
+
+const (
 	// HookPhasePending indicates the hook is pending
 	HookPhasePending HookPhase = "Pending"
 	// HookPhaseRunning indicates the hook is running

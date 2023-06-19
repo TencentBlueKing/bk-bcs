@@ -27,8 +27,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 )
 
-// HttpRespone define the information of the http respone
-type HttpRespone struct {
+// HttpResponse define the information of the http response
+type HttpResponse struct {
 	Reply      []byte
 	StatusCode int
 	Status     string
@@ -174,27 +174,27 @@ func (client *HttpClient) PATCH(url string, header http.Header, data []byte) ([]
 }
 
 // Get wraps http Get method
-func (client *HttpClient) Get(url string, header http.Header, data []byte) (*HttpRespone, error) {
+func (client *HttpClient) Get(url string, header http.Header, data []byte) (*HttpResponse, error) {
 	return client.RequestEx(url, "GET", header, data)
 }
 
 // Post wraps http Post method
-func (client *HttpClient) Post(url string, header http.Header, data []byte) (*HttpRespone, error) {
+func (client *HttpClient) Post(url string, header http.Header, data []byte) (*HttpResponse, error) {
 	return client.RequestEx(url, "POST", header, data)
 }
 
 // Delete wraps http Delete method
-func (client *HttpClient) Delete(url string, header http.Header, data []byte) (*HttpRespone, error) {
+func (client *HttpClient) Delete(url string, header http.Header, data []byte) (*HttpResponse, error) {
 	return client.RequestEx(url, "DELETE", header, data)
 }
 
 // Put wraps http Put method
-func (client *HttpClient) Put(url string, header http.Header, data []byte) (*HttpRespone, error) {
+func (client *HttpClient) Put(url string, header http.Header, data []byte) (*HttpResponse, error) {
 	return client.RequestEx(url, "PUT", header, data)
 }
 
 // Patch wraps http Patch method
-func (client *HttpClient) Patch(url string, header http.Header, data []byte) (*HttpRespone, error) {
+func (client *HttpClient) Patch(url string, header http.Header, data []byte) (*HttpResponse, error) {
 	return client.RequestEx(url, "PATCH", header, data)
 }
 
@@ -205,10 +205,10 @@ func (client *HttpClient) Request(url, method string, header http.Header, data [
 }
 
 // RequestEx do http request, old version
-func (client *HttpClient) RequestEx(url, method string, header http.Header, data []byte) (*HttpRespone, error) {
+func (client *HttpClient) RequestEx(url, method string, header http.Header, data []byte) (*HttpResponse, error) {
 	var req *http.Request
 	var errReq error
-	httpRsp := &HttpRespone{
+	httpRsp := &HttpResponse{
 		Reply:      nil,
 		StatusCode: http.StatusInternalServerError,
 		Status:     "Internal Server Error",

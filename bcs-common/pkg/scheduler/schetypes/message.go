@@ -289,8 +289,8 @@ func (x Secret_Type) Enum() *Secret_Type {
 type TaskFail_Reason int32
 
 const (
-	// TaskFail_UNKOWN xxx
-	TaskFail_UNKOWN TaskFail_Reason = 0
+	// TaskFail_UNKNOWN xxx
+	TaskFail_UNKNOWN TaskFail_Reason = 0
 	// TaskFail_IP_SHORT xxx
 	TaskFail_IP_SHORT TaskFail_Reason = 1
 	// TaskFail_IP_USED xxx

@@ -24,12 +24,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
+	projutil "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/project"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -80,6 +83,12 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	if err != nil {
 		return err
 	}
+	var enableVcluster bool
+	if vclusterFeatureFlag, exists := config.GlobalConf.FeatureFlags[constant.FlagKeyEnableVcluster]; exists {
+		if enable, exists := vclusterFeatureFlag[projectInfo.ProjectCode]; exists && enable {
+			enableVcluster = true
+		}
+	}
 	businessName := ""
 	if projectInfo.BusinessID != "" && projectInfo.BusinessID != "0" {
 		// get business name from cache
@@ -102,6 +111,7 @@ func (p *ProjectHandler) GetProject(ctx context.Context,
 	// 处理返回数据及权限
 	setResp(resp, projectInfo)
 	resp.Data.BusinessName = businessName
+	resp.Data.EnableVcluster = enableVcluster
 	return nil
 }
 
@@ -153,10 +163,13 @@ func (p *ProjectHandler) ListProjects(ctx context.Context,
 		}
 		// 处理返回
 		setListPermsResp(resp, projects, perms)
-		return nil
+	} else {
+		// without username
+		setListPermsResp(resp, projects, nil)
 	}
-	// without username
-	setListPermsResp(resp, projects, nil)
+	if err := projutil.PatchBusinessName(resp.Data.Results); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -168,7 +181,27 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 	if e != nil {
 		return e
 	}
-	setListResp(resp, projects)
+	if req.All {
+		authUser, err := middleware.GetUserFromContext(ctx)
+		if err == nil && authUser.Username != "" {
+			ids := getProjectIDs(projects)
+			perms, err := auth.ProjectIamClient.GetMultiProjectMultiActionPermission(
+				authUser.Username, ids,
+				[]string{auth.ProjectCreate, auth.ProjectView, auth.ProjectEdit, auth.ProjectDelete},
+			)
+			if err != nil {
+				return err
+			}
+			// set web_annotation
+			setListPermsResp(resp, projects, perms)
+		}
+	} else {
+		// list all authorized projects, so no need to set web_annotation
+		setListResp(resp, projects)
+	}
+	if err := projutil.PatchBusinessName(resp.Data.Results); err != nil {
+		return err
+	}
 	return nil
 }
 

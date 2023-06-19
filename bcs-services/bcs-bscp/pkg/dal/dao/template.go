@@ -56,6 +56,10 @@ func (dao *templateDao) Create(kit *kit.Kit, g *table.Template) (uint32, error) 
 		return 0, err
 	}
 
+	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
+		return 0, err
+	}
+
 	// generate a Template id and update to Template.
 	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
@@ -79,7 +83,7 @@ func (dao *templateDao) Create(kit *kit.Kit, g *table.Template) (uint32, error) 
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return g.ID, nil
@@ -88,10 +92,6 @@ func (dao *templateDao) Create(kit *kit.Kit, g *table.Template) (uint32, error) 
 // CreateWithTx create one template instance with transaction.
 func (dao *templateDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Template) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
-		return 0, err
-	}
-
-	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
 		return 0, err
 	}
 
@@ -121,9 +121,8 @@ func (dao *templateDao) Update(kit *kit.Kit, g *table.Template) error {
 		return err
 	}
 
-	m := dao.genQ.Template
-
 	// 更新操作, 获取当前记录做审计
+	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
@@ -207,13 +206,13 @@ func (dao *templateDao) GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID uint
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 
-	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID), m.Name.Eq(name),
+	template, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID), m.Name.Eq(name),
 		m.Path.Eq(path)).Take()
 	if err != nil {
 		return nil, fmt.Errorf("get template failed, err: %v", err)
 	}
 
-	return tplSpace, nil
+	return template, nil
 }
 
 // GetByID get template by id

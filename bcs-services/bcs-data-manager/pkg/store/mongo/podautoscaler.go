@@ -96,17 +96,21 @@ func NewModelPodAutoscaler(db drivers.DB) *ModelPodAutoscaler {
 	}}
 }
 
-// InsertPodAutoscalerInfo insert podAutoscaler info
+// InsertPodAutoscalerInfo inserts the given pod autoscaler metrics into the database.
+// It returns an error (if any).
 func (m *ModelPodAutoscaler) InsertPodAutoscalerInfo(ctx context.Context, metrics *types.PodAutoscalerMetrics,
 	opts *types.JobCommonOpts) error {
+	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return err
 	}
+	// Get the bucket time for the given current time and dimension.
 	bucketTime, err := utils.GetBucketTime(opts.CurrentTime, opts.Dimension)
 	if err != nil {
 		return err
 	}
+	// Create a condition to find the pod autoscaler data for the given parameters.
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ProjectIDKey:         opts.ProjectID,
 		ClusterIDKey:         opts.ClusterID,
@@ -116,9 +120,11 @@ func (m *ModelPodAutoscaler) InsertPodAutoscalerInfo(ctx context.Context, metric
 		PodAutoscalerNameKey: opts.PodAutoscalerName,
 		BucketTimeKey:        bucketTime,
 	})
+	// Find the pod autoscaler data that matches the condition.
 	retPodAutoscaler := &types.PodAutoscalerData{}
 	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retPodAutoscaler)
 	if err != nil {
+		// If the pod autoscaler data is not found, create a new bucket and insert the metrics.
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Infof(" podAutoscaler info not found, create a new bucket")
 			newMetrics := make([]*types.PodAutoscalerMetrics, 0)
@@ -148,6 +154,7 @@ func (m *ModelPodAutoscaler) InsertPodAutoscalerInfo(ctx context.Context, metric
 		}
 		return err
 	}
+	// Update the existing pod autoscaler data with the new metrics.
 	retPodAutoscaler.UpdateTime = primitive.NewDateTimeFromTime(time.Now())
 	retPodAutoscaler.Metrics = append(retPodAutoscaler.Metrics, metrics)
 	retPodAutoscaler.Total += metrics.TotalSuccessfulRescale
@@ -157,19 +164,25 @@ func (m *ModelPodAutoscaler) InsertPodAutoscalerInfo(ctx context.Context, metric
 		Update(ctx, cond, operator.M{"$set": retPodAutoscaler})
 }
 
-// GetPodAutoscalerList get podAutoscaler list
+// GetPodAutoscalerList retrieves a list of pod autoscalers that match the given request parameters.
+// It returns the list of pod autoscalers, the total number of pod autoscalers that match the request,
+// and an error (if any).
 func (m *ModelPodAutoscaler) GetPodAutoscalerList(ctx context.Context,
 	request *bcsdatamanager.GetPodAutoscalerListRequest) ([]*bcsdatamanager.PodAutoscaler, int64, error) {
 	var total int64
+	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, total, err
 	}
+	// Set the dimension to "minute" if it is not specified in the request.
 	dimension := request.Dimension
 	if dimension == "" {
 		dimension = types.DimensionMinute
 	}
+	// Generate the list condition based on the request parameters.
 	cond := genPodAutoscalerListCond(request)
+	// Set the start time based on the dimension and the request parameters.
 	startTime := getStartTime(dimension)
 	if request.GetStartTime() != 0 {
 		startTime = time.Unix(request.GetStartTime(), 0)
@@ -177,12 +190,16 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerList(ctx context.Context,
 	cond = append(cond, operator.NewLeafCondition(operator.Gte, operator.M{
 		MetricTimeKey: primitive.NewDateTimeFromTime(startTime),
 	}))
+	// Set the end time based on the request parameters.
 	if request.GetEndTime() != 0 {
 		cond = append(cond, operator.NewLeafCondition(operator.Lte, operator.M{
 			MetricTimeKey: primitive.NewDateTimeFromTime(time.Unix(request.GetEndTime(), 0)),
 		}))
 	}
+
+	// Combine the conditions into a single branch condition.
 	conds := operator.NewBranchCondition(operator.And, cond...)
+	// Retrieve the list of pod autoscalers that match the conditions.
 	tempList := make([]map[string]string, 0)
 	err = m.DB.Table(m.TableName).Find(conds).WithProjection(
 		map[string]int{ProjectIDKey: 1, ClusterIDKey: 1, NamespaceKey: 1,
@@ -192,17 +209,19 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerList(ctx context.Context,
 		blog.Errorf("get pod autoscaler list error")
 		return nil, total, err
 	}
+	// Remove duplicates from the list of pod autoscalers.
 	autoscalerList := distinctPodAutoscaler(&tempList)
+	// If there are no pod autoscalers in the list, return an empty response.
 	if len(autoscalerList) == 0 {
 		return nil, total, nil
 	}
-	total = int64(len(autoscalerList))
-
+	// Set the page and size parameters based on the request.
 	page := int(request.Page)
 	size := int(request.Size)
 	if size == 0 {
 		size = DefaultSize
 	}
+	// Calculate the start and end indices for the sublist of pod autoscalers to return.
 	endIndex := (page + 1) * size
 	startIndex := page * size
 	if startIndex >= len(autoscalerList) {
@@ -211,6 +230,7 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerList(ctx context.Context,
 	if endIndex >= len(autoscalerList) {
 		endIndex = len(autoscalerList)
 	}
+	// Retrieve the information for each pod autoscaler in the sublist.
 	chooseAutoscaler := autoscalerList[startIndex:endIndex]
 	response := make([]*bcsdatamanager.PodAutoscaler, 0)
 	for _, autoscaler := range chooseAutoscaler {
@@ -230,12 +250,15 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerList(ctx context.Context,
 			response = append(response, autoscalerInfo)
 		}
 	}
+	// Return the list of pod autoscalers, the total number of pod autoscalers that match the request,
+	// and any error that occurred.
 	return response, total, nil
 }
 
 // GetPodAutoscalerInfo get podAutoscaler data with default time range by cluster id, namespace, workload type and name
 func (m *ModelPodAutoscaler) GetPodAutoscalerInfo(ctx context.Context,
 	request *bcsdatamanager.GetPodAutoscalerRequest) (*bcsdatamanager.PodAutoscaler, error) {
+	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
@@ -317,6 +340,7 @@ func (m *ModelPodAutoscaler) GetPodAutoscalerInfo(ctx context.Context,
 	return m.generateAutoscalerResponse(autoscalerMetrics, autoscalerMetricsMap[0], startTime, endTime), nil
 }
 
+// genPodAutoscalerListCond generate list condition
 func genPodAutoscalerListCond(req *bcsdatamanager.GetPodAutoscalerListRequest) []*operator.Condition {
 	cond := make([]*operator.Condition, 0)
 	dimension := req.GetDimension()
@@ -354,14 +378,14 @@ func genPodAutoscalerListCond(req *bcsdatamanager.GetPodAutoscalerListRequest) [
 	return cond
 }
 
-// GetRawPodAutoscalerInfo get raw pod autoscaler data without time range
-func (m *ModelPodAutoscaler) GetRawPodAutoscalerInfo(ctx context.Context, opts *types.JobCommonOpts,
-	bucket string) ([]*types.PodAutoscalerData, error) {
+// GetRawPodAutoscalerInfo is a function that retrieves raw pod autoscaler data without a time range.
+func (m *ModelPodAutoscaler) GetRawPodAutoscalerInfo(ctx context.Context, opts *types.JobCommonOpts, bucket string) ([]*types.PodAutoscalerData, error) {
+	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
 	}
-
+	// Create a condition to filter the database query results.
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ProjectIDKey:         opts.ProjectID,
 		ClusterIDKey:         opts.ClusterID,
@@ -371,14 +395,18 @@ func (m *ModelPodAutoscaler) GetRawPodAutoscalerInfo(ctx context.Context, opts *
 		PodAutoscalerNameKey: opts.PodAutoscalerName,
 		BucketTimeKey:        bucket,
 	})
+	// Create an empty slice of PodAutoscalerData to store the results of the database query.
 	retAutoscaler := make([]*types.PodAutoscalerData, 0)
+	// Query the database with the condition and store the results in retAutoscaler.
 	err = m.DB.Table(m.TableName).Find(cond).All(ctx, &retAutoscaler)
 	if err != nil {
 		return nil, err
 	}
+	// Return the results.
 	return retAutoscaler, nil
 }
 
+// generateAutoscalerResponse generate response, transfer storage struct to proto struct
 func (m *ModelPodAutoscaler) generateAutoscalerResponse(metricSlice []*types.PodAutoscalerMetrics,
 	data *types.PodAutoscalerData, start, end string) *bcsdatamanager.PodAutoscaler {
 	response := &bcsdatamanager.PodAutoscaler{

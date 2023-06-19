@@ -37,7 +37,7 @@ func newAppEvent(bizID, appID uint32, sch *Scheduler) *appEvent {
 		mc:     sch.mc,
 	}
 
-	// TODO: remove this go-routine, mounts of app may cost unacceptable size of memory.
+	// Note: remove this go-routine, mounts of app may cost unacceptable size of memory.
 	go ae.watchEvents(ctx)
 	return ae
 }
@@ -157,13 +157,6 @@ func (ae *appEvent) eventHandler(events []*types.EventMeta) {
 
 			// app level publish operation, all the sidecar instance should be notified.
 			ae.notifyWithApp(kt, one.ID)
-
-		case table.PublishInstance:
-			logs.Infof("start do biz: %d, app: %d publish broadcast to the sidecar with uid: %s, event id: %d, rid: %s",
-				ae.bizID, ae.appID, one.Spec.ResourceUid, one.ID, kt.Rid)
-
-			// sidecar instance level publish, only one sidecar need to be notified.
-			ae.notifyWithInstance(kt, one.ID, one.Spec.ResourceUid)
 
 		case table.Application:
 			logs.Infof("start handle biz: %d, app: %d app event, event id: %d, rid: %s", ae.bizID, ae.appID,

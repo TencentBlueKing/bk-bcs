@@ -15,7 +15,7 @@
   const navList = [
     { id: 'service-mine', module: 'service', name: '服务管理'},
     { id: 'groups-management', module: 'groups', name: '分组管理'},
-    // { id: 'scripts-management', module: 'scripts', name: '脚本管理'},
+    { id: 'script-list', module: 'scripts', name: '脚本管理'},
     { id: 'credentials-management', module: 'credentials', name: '服务密钥'}
   ]
 

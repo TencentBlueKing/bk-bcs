@@ -49,4 +49,7 @@ const (
 	ClusterAliaName = "bkbcs.tencent.com/clusterAliaName"
 	// ClusterEnv defines the cluster env
 	ClusterEnv = "bkbcs.tencent.com/clusterEnv"
+
+	// InClusterName defines the cluster which is 'in-cluster', reserve cluster
+	InClusterName = "in-cluster"
 )

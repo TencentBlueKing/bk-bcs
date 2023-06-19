@@ -15,18 +15,18 @@ package modulediscovery
 
 // ModuleDiscovery bkbcs module discovery interface difinition
 type ModuleDiscovery interface {
-	// GetModuleServers TODO
+	// GetModuleServers xx
 	// module: types.BCS_MODULE_SCHEDULER...
 	// list all servers
 	// if mesos-apiserver/k8s-apiserver module={module}/clusterid, for examples: mesosdriver/BCS-TESTBCSTEST01-10001
 	GetModuleServers(module string) ([]interface{}, error)
 
-	// GetRandModuleServer TODO
+	// GetRandModuleServer xx
 	// get random one server
 	// if mesos-apiserver/k8s-apiserver module={module}/clusterid, for examples: mesosdriver/BCS-TESTBCSTEST01-10001
 	GetRandModuleServer(moduleName string) (interface{}, error)
 
-	// RegisterEventFunc TODO
+	// RegisterEventFunc xx
 	// register event handle function
 	RegisterEventFunc(handleFunc EventHandleFunc)
 

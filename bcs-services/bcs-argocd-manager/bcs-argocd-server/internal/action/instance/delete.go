@@ -68,7 +68,7 @@ func (action *DeleteArgocdInstanceAction) Handle(ctx context.Context,
 		action.setResp(common.ErrProjectNotExist, "")
 		return nil
 	}
-	// TODO: check if the operator has permission in project
+	// Note: check if the operator has permission in project
 	err = action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).Delete(ctx, name, metav1.DeleteOptions{})
 	if err != nil {
 		blog.Errorf("delete argocd instance failed, err: %s", err.Error())

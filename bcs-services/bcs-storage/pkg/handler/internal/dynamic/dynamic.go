@@ -265,8 +265,7 @@ func (g *general) deleteCustomResources() error {
 }
 
 func (g *general) putCustomResources() error {
-	dataRaw := make(operator.M)
-	dataRaw = g.data
+	dataRaw := g.data
 
 	resourceType := g.resource.ResourceType
 	opt := &lib.StorePutOption{
@@ -304,8 +303,8 @@ func (g *general) deleteCustomResourcesIndex() error {
 //k8s namespace resources
 //mesos namespace resources
 
-// HandlerGetNamespaceResourcesRequest  GetNamespaceResourcesRequest业务方法
-func HandlerGetNamespaceResourcesRequest(ctx context.Context, req *storage.GetNamespaceResourcesRequest) ([]operator.M,
+// HandlerGetNsResourcesReq  GetNamespaceResourcesRequest业务方法
+func HandlerGetNsResourcesReq(ctx context.Context, req *storage.GetNamespaceResourcesRequest) ([]operator.M,
 	error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -330,8 +329,8 @@ func HandlerGetNamespaceResourcesRequest(ctx context.Context, req *storage.GetNa
 	return r.getResources()
 }
 
-// HandlerPutNamespaceResourcesRequest PutNamespaceResourcesRequest业务方法
-func HandlerPutNamespaceResourcesRequest(ctx context.Context, req *storage.PutNamespaceResourcesRequest) (operator.M,
+// HandlerPutNsResourcesReq PutNamespaceResourcesRequest业务方法
+func HandlerPutNsResourcesReq(ctx context.Context, req *storage.PutNamespaceResourcesRequest) (operator.M,
 	error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -352,8 +351,8 @@ func HandlerPutNamespaceResourcesRequest(ctx context.Context, req *storage.PutNa
 	return r.putResources()
 }
 
-// HandlerDeleteNamespaceResourcesRequest DeleteNamespaceResourcesRequest业务方法
-func HandlerDeleteNamespaceResourcesRequest(ctx context.Context, req *storage.DeleteNamespaceResourcesRequest) (
+// HandlerDelNsResourcesReq DeleteNamespaceResourcesRequest业务方法
+func HandlerDelNsResourcesReq(ctx context.Context, req *storage.DeleteNamespaceResourcesRequest) (
 	[]operator.M, error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -371,8 +370,8 @@ func HandlerDeleteNamespaceResourcesRequest(ctx context.Context, req *storage.De
 	return r.deleteResources()
 }
 
-// HandlerListNamespaceResourcesRequest ListNamespaceResourcesRequest业务方法
-func HandlerListNamespaceResourcesRequest(ctx context.Context, req *storage.ListNamespaceResourcesRequest) (
+// HandlerListNsResourcesReq ListNamespaceResourcesRequest业务方法
+func HandlerListNsResourcesReq(ctx context.Context, req *storage.ListNamespaceResourcesRequest) (
 	[]operator.M, error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -396,8 +395,8 @@ func HandlerListNamespaceResourcesRequest(ctx context.Context, req *storage.List
 	return r.getResources()
 }
 
-// HandlerDeleteBatchNamespaceResourceRequest DeleteBatchNamespaceResourceRequest业务方法
-func HandlerDeleteBatchNamespaceResourceRequest(ctx context.Context, req *storage.DeleteBatchNamespaceResourceRequest) (
+// HandlerDelBatchNsResourceReq DeleteBatchNamespaceResourceRequest业务方法
+func HandlerDelBatchNsResourceReq(ctx context.Context, req *storage.DeleteBatchNamespaceResourceRequest) (
 	[]operator.M, error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -419,8 +418,8 @@ func HandlerDeleteBatchNamespaceResourceRequest(ctx context.Context, req *storag
 // k8s cluster resources
 // mesos Cluster resources.
 
-// HandlerGetClusterResourcesRequest GetClusterResourcesRequest业务方法
-func HandlerGetClusterResourcesRequest(ctx context.Context, req *storage.GetClusterResourcesRequest) ([]operator.M,
+// HandlerGetClusterResourcesReq GetClusterResourcesRequest业务方法
+func HandlerGetClusterResourcesReq(ctx context.Context, req *storage.GetClusterResourcesRequest) ([]operator.M,
 	error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -444,8 +443,8 @@ func HandlerGetClusterResourcesRequest(ctx context.Context, req *storage.GetClus
 	return r.getResources()
 }
 
-// HandlerPutClusterResourcesRequest PutClusterResourcesRequest业务方法
-func HandlerPutClusterResourcesRequest(ctx context.Context, req *storage.PutClusterResourcesRequest) (operator.M,
+// HandlerPutClusterResourcesReq PutClusterResourcesRequest业务方法
+func HandlerPutClusterResourcesReq(ctx context.Context, req *storage.PutClusterResourcesRequest) (operator.M,
 	error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -465,8 +464,8 @@ func HandlerPutClusterResourcesRequest(ctx context.Context, req *storage.PutClus
 	return r.putResources()
 }
 
-// HandlerDeleteClusterResourcesRequest DeleteClusterResourcesRequest业务方法
-func HandlerDeleteClusterResourcesRequest(ctx context.Context, req *storage.DeleteClusterResourcesRequest) (
+// HandlerDelClusterResourcesReq DeleteClusterResourcesRequest业务方法
+func HandlerDelClusterResourcesReq(ctx context.Context, req *storage.DeleteClusterResourcesRequest) (
 	[]operator.M, error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -483,8 +482,8 @@ func HandlerDeleteClusterResourcesRequest(ctx context.Context, req *storage.Dele
 	return r.deleteResources()
 }
 
-// HandlerListClusterResourcesRequest ListClusterResourcesRequest业务方法
-func HandlerListClusterResourcesRequest(ctx context.Context, req *storage.ListClusterResourcesRequest) ([]operator.M,
+// HandlerListClusterResourcesReq ListClusterResourcesRequest业务方法
+func HandlerListClusterResourcesReq(ctx context.Context, req *storage.ListClusterResourcesRequest) ([]operator.M,
 	error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -507,8 +506,8 @@ func HandlerListClusterResourcesRequest(ctx context.Context, req *storage.ListCl
 	return r.getResources()
 }
 
-// HandlerDeleteBatchClusterResourceRequest DeleteBatchClusterResourceRequest业务方法
-func HandlerDeleteBatchClusterResourceRequest(ctx context.Context, req *storage.DeleteBatchClusterResourceRequest) (
+// HandlerDelBatchClusterResourceReq DeleteBatchClusterResourceRequest业务方法
+func HandlerDelBatchClusterResourceReq(ctx context.Context, req *storage.DeleteBatchClusterResourceRequest) (
 	[]operator.M, error) {
 	resource := &storage.Resources{
 		ClusterId:    req.ClusterId,
@@ -555,8 +554,8 @@ func HandlerGetCustomResources(ctx context.Context, req *storage.GetCustomResour
 	return r.getCustomResources()
 }
 
-// HandlerDeleteCustomResources DeleteCustomResourcesRequest业务方法
-func HandlerDeleteCustomResources(ctx context.Context, req *storage.DeleteCustomResourcesRequest) error {
+// HandlerDelCustomResources DeleteCustomResourcesRequest业务方法
+func HandlerDelCustomResources(ctx context.Context, req *storage.DeleteCustomResourcesRequest) error {
 	resource := &storage.Resources{
 		ResourceType: req.ResourceType,
 	}
@@ -602,8 +601,8 @@ func HandlerCreateCustomResourcesIndex(ctx context.Context, req *storage.CreateC
 	return r.createCustomResourcesIndex()
 }
 
-// HandlerDeleteCustomResourcesIndex DeleteCustomResourcesIndexRequest业务方法
-func HandlerDeleteCustomResourcesIndex(ctx context.Context, req *storage.DeleteCustomResourcesIndexRequest) error {
+// HandlerDelCustomResourcesIndex DeleteCustomResourcesIndexRequest业务方法
+func HandlerDelCustomResourcesIndex(ctx context.Context, req *storage.DeleteCustomResourcesIndexRequest) error {
 	resource := &storage.Resources{
 		ResourceType: req.ResourceType,
 	}

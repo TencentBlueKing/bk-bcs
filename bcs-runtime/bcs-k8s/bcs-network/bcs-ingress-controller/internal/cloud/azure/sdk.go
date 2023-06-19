@@ -35,7 +35,8 @@ import (
 )
 
 const (
-	envNameAzureClientID            = "AZURE_CLIENT_ID"
+	envNameAzureClientID = "AZURE_CLIENT_ID"
+	// NOCC:gas/crypto(环境名误报)
 	envNameAzureClientSecret        = "AZURE_CLIENT_SECRET"
 	envNameAzureTenantID            = "AZURE_TENANT_ID"
 	envNameAzureSubscriptionID      = "AZURE_SUBSCRIPTION_ID"
@@ -148,7 +149,7 @@ func NewSdkWrapperWithSecretIDKey(secretID, secretKey string) (*SdkWrapper, erro
 	return sw, nil
 }
 
-// loadEnv load env parameters todo
+// loadEnv load env parameters
 func (sw *SdkWrapper) loadEnv() {
 	sw.clientID = os.Getenv(envNameAzureClientID)
 	sw.clientSecret = os.Getenv(envNameAzureClientSecret)
@@ -375,8 +376,8 @@ func (sw *SdkWrapper) CreateOrUpdateLoadBalancer(loadBalancerName string,
 	return &lb, nil
 }
 
-// CreateOrUpdateLoadBalanceBackendAddressPool create or update azure backend address pool
-func (sw *SdkWrapper) CreateOrUpdateLoadBalanceBackendAddressPool(loadBalancerName string,
+// CreateOrUpdateBackendAddressPool create or update azure backend address pool
+func (sw *SdkWrapper) CreateOrUpdateBackendAddressPool(loadBalancerName string,
 	backendAddressPoolName string, parameters armnetwork.BackendAddressPool) (*armnetwork.
 	LoadBalancerBackendAddressPoolsClientCreateOrUpdateResponse, error) {
 	blog.V(3).Infof("createOrUpdateBackendAddressPool[%s] request: %s", loadBalancerName,

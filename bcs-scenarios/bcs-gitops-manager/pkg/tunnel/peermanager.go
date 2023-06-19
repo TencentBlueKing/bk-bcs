@@ -125,7 +125,7 @@ func (pm *PeerManager) peerSyncLoop() {
 			return
 		case <-event:
 			// handle read service
-			blog.Infof("PeerManager recieve %s event, ready to update peer information",
+			blog.Infof("PeerManager received %s event, ready to update peer information",
 				pm.options.PeerServiceName)
 			go pm.peerSyncLoop()
 			return
@@ -143,10 +143,9 @@ func (pm *PeerManager) handleWatchEvent(watcher registry.Watcher, ch chan<- stru
 		// when watcher was cancel, err is 'could not get next'
 		blog.Errorf("PeerManager discovery watch faild, %s. GetService & recover watch", err.Error())
 		return
-	} else {
-		blog.Infof("PeerManager watch %s event %s, services details: %+v",
-			pm.options.PeerServiceName, results.Action, results.Service.Nodes)
 	}
+	blog.Infof("PeerManager watch %s event %s, services details: %+v",
+		pm.options.PeerServiceName, results.Action, results.Service.Nodes)
 	ch <- struct{}{}
 }
 

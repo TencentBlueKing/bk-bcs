@@ -47,7 +47,7 @@ const (
 	siteURLHeaderKey = "X-BCS-SiteURL"
 )
 
-// EmbedWebServer
+// EmbedWebServer embed web server
 type EmbedWebServer interface {
 	IndexHandler() http.Handler
 	FaviconHandler(w http.ResponseWriter, r *http.Request)
@@ -62,7 +62,8 @@ type gzipFileInfo struct {
 	filePath     string
 }
 
-type embedWeb struct {
+// EmbedWeb embed web
+type EmbedWeb struct {
 	dist     fs.FS
 	tpl      *template.Template
 	root     http.FileSystem
@@ -70,7 +71,7 @@ type embedWeb struct {
 }
 
 // NewEmbedWeb 初始化模版和fs
-func NewEmbedWeb() *embedWeb {
+func NewEmbedWeb() *EmbedWeb {
 	// dist 路径
 	dist, err := fs.Sub(frontendAssets, "frontend/dist")
 	if err != nil {
@@ -82,7 +83,7 @@ func NewEmbedWeb() *embedWeb {
 
 	root := http.FS(dist)
 
-	w := &embedWeb{
+	w := &EmbedWeb{
 		dist:     dist,
 		tpl:      tpl,
 		root:     root,
@@ -92,7 +93,7 @@ func NewEmbedWeb() *embedWeb {
 }
 
 // FaviconHandler favicon Handler
-func (e *embedWeb) FaviconHandler(w http.ResponseWriter, r *http.Request) {
+func (e *EmbedWeb) FaviconHandler(w http.ResponseWriter, r *http.Request) {
 	// 填写实际的 icon 路径
 	r.URL.Path = "/static/images/favicon.ico"
 
@@ -135,13 +136,13 @@ func mergeConfig() ([]byte, error) {
 	return bcsConfigBytes, nil
 }
 
-// RootFS
-func (e *embedWeb) RootFS() embed.FS {
+// RootFS root fs
+func (e *EmbedWeb) RootFS() embed.FS {
 	return frontendAssets
 }
 
 // IndexHandler Vue 模板渲染
-func (e *embedWeb) IndexHandler() http.Handler {
+func (e *EmbedWeb) IndexHandler() http.Handler {
 	bcsConfigBytes, err := mergeConfig()
 	if err != nil {
 		panic(fmt.Errorf("init bcs config err, %s", err))
@@ -190,7 +191,7 @@ func (e *embedWeb) IndexHandler() http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func (e *embedWeb) shouldCompress(r *http.Request) (bool, *gzipFileInfo) {
+func (e *EmbedWeb) shouldCompress(r *http.Request) (bool, *gzipFileInfo) {
 	// 必须包含 gzip 编码
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 		return false, nil
@@ -235,7 +236,7 @@ func (e *embedWeb) shouldCompress(r *http.Request) (bool, *gzipFileInfo) {
 }
 
 // StaticFileHandler 静态文件资源
-func (e *embedWeb) StaticFileHandler(prefix string) http.Handler {
+func (e *EmbedWeb) StaticFileHandler(prefix string) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if ok, fileInfo := e.shouldCompress(r); ok {
 			r.URL.Path = fileInfo.filePath

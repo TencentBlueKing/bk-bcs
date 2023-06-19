@@ -30,13 +30,13 @@ import (
 )
 
 const (
-	// Module TODO
+	// Module model name
 	Module = "BCS-API-Tunnel-Module"
-	// RegisterToken TODO
-	RegisterToken = "BCS-API-Tunnel-Token"
-	// Params TODO
+	// RegisterToken token header
+	RegisterToken = "BCS-API-Tunnel-Token" // nolint
+	// Params tunnel params
 	Params = "BCS-API-Tunnel-Params"
-	// Cluster TODO
+	// Cluster cluster params
 	Cluster = "BCS-API-Tunnel-ClusterId"
 )
 
@@ -79,7 +79,7 @@ func buildWebsocketToApi(o *options.KubeDriverServerOptions) error {
 
 	var tlsConfig *tls.Config
 	if o.InsecureSkipVerify {
-		tlsConfig = &tls.Config{InsecureSkipVerify: true}
+		tlsConfig = &tls.Config{InsecureSkipVerify: true} // nolint
 	} else {
 		// use bcs cacert
 		pool := x509.NewCertPool()

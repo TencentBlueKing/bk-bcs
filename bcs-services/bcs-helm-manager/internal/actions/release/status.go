@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	_struct "github.com/golang/protobuf/ptypes/struct"
+	"google.golang.org/protobuf/types/known/structpb"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -76,9 +77,13 @@ func (g *GetReleaseStatusAction) getResourceMainfest() error {
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
 		return nil
 	}
+	if rl == nil {
+		g.setResp(common.ErrHelmManagerSuccess, "ok", &structpb.ListValue{})
+		return nil
+	}
 	blog.V(6).Infof("release %s, namespace: %s, manifest: %s", rl.Name, rl.Namespace, rl.Manifest)
 	if rl.Objects == nil {
-		g.setResp(common.ErrHelmManagerSuccess, "ok", nil)
+		g.setResp(common.ErrHelmManagerSuccess, "ok", &structpb.ListValue{})
 		blog.Infof("get release status successfully, projectCode: %s, clusterID: %s, namespace: %s, name: %s",
 			projectCode, clusterID, namespace, name)
 		return nil

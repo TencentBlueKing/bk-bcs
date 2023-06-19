@@ -321,33 +321,38 @@ func (npc *NodePoolClient) SyncParams(opts scalingconfig.Options) error {
 	ctx, cancelFunc := context.WithTimeout(context.Background(), httpTimeOut)
 	defer cancelFunc()
 	req := &SyncAutoScalingOptionRequest{
-		IsScaleDownEnable:                opts.AutoscalingOptions.ScaleDownEnabled,
-		Expander:                         opts.AutoscalingOptions.ExpanderName,
-		MaxEmptyBulkDelete:               uint32(opts.AutoscalingOptions.MaxEmptyBulkDelete),
-		ScaleDownDelay:                   uint32(opts.AutoscalingOptions.NodeGroupDefaults.ScaleDownUnneededTime.Seconds()),
-		ScaleDownUnneededTime:            uint32(opts.AutoscalingOptions.NodeGroupDefaults.ScaleDownUnneededTime.Seconds()),
-		ScaleDownUtilizationThreahold:    uint32(opts.AutoscalingOptions.NodeGroupDefaults.ScaleDownUtilizationThreshold),
-		SkipNodesWithLocalStorage:        skipNodesWithLocalStorage,
-		SkipNodesWithSystemPods:          skipNodesWithSystemPods,
-		IgnoreDaemonSetsUtilization:      opts.AutoscalingOptions.IgnoreDaemonSetsUtilization,
-		OkTotalUnreadyCount:              uint32(opts.AutoscalingOptions.OkTotalUnreadyCount),
+		IsScaleDownEnable:     opts.AutoscalingOptions.ScaleDownEnabled,
+		Expander:              opts.AutoscalingOptions.ExpanderName,
+		MaxEmptyBulkDelete:    uint32(opts.AutoscalingOptions.MaxEmptyBulkDelete),
+		ScaleDownDelay:        uint32(opts.AutoscalingOptions.NodeGroupDefaults.ScaleDownUnneededTime.Seconds()),
+		ScaleDownUnneededTime: uint32(opts.AutoscalingOptions.NodeGroupDefaults.ScaleDownUnneededTime.Seconds()),
+		// should be float, not uint32
+		ScaleDownUtilizationThreahold: uint32(opts.AutoscalingOptions.NodeGroupDefaults.ScaleDownUtilizationThreshold),
+		SkipNodesWithLocalStorage:     skipNodesWithLocalStorage,
+		SkipNodesWithSystemPods:       skipNodesWithSystemPods,
+		IgnoreDaemonSetsUtilization:   opts.AutoscalingOptions.IgnoreDaemonSetsUtilization,
+		OkTotalUnreadyCount:           uint32(opts.AutoscalingOptions.OkTotalUnreadyCount),
+		// should be float, not uint32
 		MaxTotalUnreadyPercentage:        uint32(opts.AutoscalingOptions.MaxTotalUnreadyPercentage),
 		ScaleDownUnreadyTime:             uint32(opts.AutoscalingOptions.NodeGroupDefaults.ScaleDownUnreadyTime.Seconds()),
 		ClusterID:                        clusterID,
 		Updater:                          "bcs-ca",
 		ScaleDownGpuUtilizationThreshold: uint32(opts.AutoscalingOptions.NodeGroupDefaults.ScaleDownGpuUtilizationThreshold),
-		BufferResourceRatio:              uint32(opts.BufferedResourceRatio),
-		MaxGracefulTerminationSec:        uint32(opts.AutoscalingOptions.MaxGracefulTerminationSec),
-		ScanInterval:                     uint32(opts.ScanInterval.Seconds()),
-		MaxNodeProvisionTime:             uint32(opts.AutoscalingOptions.MaxNodeProvisionTime.Seconds()),
-		MaxNodeStartupTime:               uint32(opts.MaxNodeStartupTime.Seconds()),
-		MaxNodeStartScheduleTime:         uint32(opts.MaxNodeStartScheduleTime.Seconds()),
-		ScaleUpFromZero:                  &opts.AutoscalingOptions.ScaleUpFromZero,
-		ScaleDownDelayAfterAdd:           uint32(opts.AutoscalingOptions.ScaleDownDelayAfterAdd.Seconds()),
-		ScaleDownDelayAfterDelete:        uint32(opts.AutoscalingOptions.ScaleDownDelayAfterDelete.Seconds()),
-		ScaleDownDelayAfterFailure:       newUint32Ptr(uint32(opts.AutoscalingOptions.ScaleDownDelayAfterFailure.Seconds())),
-		BufferResourceCpuRatio:           uint32(opts.BufferedCPURatio),
-		BufferResourceMemRatio:           uint32(opts.BufferedMemRatio),
+		// should be float, not uint32
+		BufferResourceRatio:        uint32(opts.BufferedResourceRatio),
+		MaxGracefulTerminationSec:  uint32(opts.AutoscalingOptions.MaxGracefulTerminationSec),
+		ScanInterval:               uint32(opts.ScanInterval.Seconds()),
+		MaxNodeProvisionTime:       uint32(opts.AutoscalingOptions.MaxNodeProvisionTime.Seconds()),
+		MaxNodeStartupTime:         uint32(opts.MaxNodeStartupTime.Seconds()),
+		MaxNodeStartScheduleTime:   uint32(opts.MaxNodeStartScheduleTime.Seconds()),
+		ScaleUpFromZero:            &opts.AutoscalingOptions.ScaleUpFromZero,
+		ScaleDownDelayAfterAdd:     uint32(opts.AutoscalingOptions.ScaleDownDelayAfterAdd.Seconds()),
+		ScaleDownDelayAfterDelete:  uint32(opts.AutoscalingOptions.ScaleDownDelayAfterDelete.Seconds()),
+		ScaleDownDelayAfterFailure: newUint32Ptr(uint32(opts.AutoscalingOptions.ScaleDownDelayAfterFailure.Seconds())),
+		// should be float, not uint32
+		BufferResourceCpuRatio: uint32(opts.BufferedCPURatio),
+		// should be float, not uint32
+		BufferResourceMemRatio: uint32(opts.BufferedMemRatio),
 		Webhook: &WebhookMode{
 			Mode:   opts.WebhookMode,
 			Server: opts.WebhookModeConfig,
@@ -379,10 +384,12 @@ func (npc *NodePoolClient) SyncParams(opts scalingconfig.Options) error {
 	return nil
 }
 
+// newUint32Ptr returns pointer of the uint32 variable
 func newUint32Ptr(val uint32) *uint32 {
 	return &val
 }
 
+// newInt32Ptr returns pointer of the int32 variable
 func newInt32Ptr(val int32) *int32 {
 	return &val
 }

@@ -26,7 +26,7 @@ type HostConf struct {
 	BKSREHOST             string `yaml:"bk_sre_host"`             // 申请服务器地址
 }
 
-// FrontendConf
+// FrontendConf frontend config
 type FrontendConf struct {
 	Docs     map[string]string `yaml:"docs"`
 	Host     *HostConf         `yaml:"hosts"`

@@ -161,6 +161,7 @@ func (hm *HelmManager) Run() error {
 		// run the service
 		return hm.microSvc.Run()
 	})
+	// wait all svc to run
 	if err := eg.Wait(); err != nil {
 		defer blog.CloseLogs()
 		return err
@@ -189,6 +190,8 @@ func (hm *HelmManager) initModel() error {
 	if len(hm.opt.Mongo.Database) == 0 {
 		return fmt.Errorf("mongo database cannot be empty")
 	}
+
+	// get mongo password
 	password := hm.opt.Mongo.Password
 	if password != "" && hm.opt.Mongo.Encrypted {
 		realPwd, err := encrypt.DesDecryptFromBase([]byte(password))
@@ -211,6 +214,7 @@ func (hm *HelmManager) initModel() error {
 	}
 	hm.mongoOptions = mongoOptions
 
+	// init mongo db
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {
 		blog.Errorf("init mongo db failed, err %s", err.Error())
@@ -251,6 +255,7 @@ func (hm *HelmManager) initAddons() error {
 
 // initPlatform init a new repo.Platform, for handling operations to bk-repo
 func (hm *HelmManager) initPlatform() error {
+	// get bkrepo password
 	password := hm.opt.Repo.Password
 	if password != "" && hm.opt.Repo.Encrypted {
 		realPwd, err := encrypt.DesDecryptFromBase([]byte(password))
@@ -291,10 +296,12 @@ func (hm *HelmManager) initReleaseHandler() error {
 	return nil
 }
 
+// initRegistry int micro registry
 func (hm *HelmManager) initRegistry() error {
 	etcdEndpoints := common.SplitAddrString(hm.opt.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
+	// init etcd tls config
 	var etcdTLS *tls.Config
 	var err error
 	if len(hm.opt.Etcd.EtcdCa) != 0 && len(hm.opt.Etcd.EtcdCert) != 0 && len(hm.opt.Etcd.EtcdKey) != 0 {
@@ -318,6 +325,7 @@ func (hm *HelmManager) initRegistry() error {
 	return nil
 }
 
+// initDiscovery init svc discovery
 func (hm *HelmManager) initDiscovery() error {
 	hm.discovery = discovery.NewModuleDiscovery(common.ServiceDomain, hm.microRgt)
 	blog.Info("init discovery for helm manager successfully")
@@ -339,10 +347,13 @@ func (hm *HelmManager) initMicro() error {
 		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
 	}
 
+	// init micro auth middleware, middleware will check user perm
 	authWrapper := middleauth.NewGoMicroAuth(auth.GetJWTClient()).
 		EnableSkipHandler(auth.SkipHandler).
 		EnableSkipClient(auth.SkipClient).
 		SetCheckUserPerm(auth.CheckUserPerm)
+
+	// init micro service
 	svc := microGrpc.NewService(
 		microSvc.Name(common.ServiceDomain),
 		microSvc.Metadata(metadata),
@@ -382,11 +393,13 @@ func (hm *HelmManager) initMicro() error {
 	)
 	svc.Init()
 
+	// register helmmanager handler
 	if err := helmmanager.RegisterHelmManagerHandler(
 		svc.Server(), handler.NewHelmManager(hm.model, hm.platform, hm.opt, hm.releaseHandler)); err != nil {
 		blog.Errorf("register helm handler to micro failed: %s", err.Error())
 		return nil
 	}
+	// register cluster addons handler
 	if err := helmmanager.RegisterClusterAddonsHandler(
 		svc.Server(), handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, hm.addons,
 			hm.releaseHandler)); err != nil {
@@ -399,6 +412,7 @@ func (hm *HelmManager) initMicro() error {
 	return nil
 }
 
+// init grpc gatewasy
 func (hm *HelmManager) initHTTPService() error {
 	router := mux.NewRouter()
 	rmMux := ggRuntime.NewServeMux(
@@ -416,6 +430,8 @@ func (hm *HelmManager) initHTTPService() error {
 	} else {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
 	}
+
+	// register helmmanager gatewasy
 	err := helmmanager.RegisterHelmManagerGwFromEndpoint(
 		context.TODO(),
 		rmMux,
@@ -425,6 +441,7 @@ func (hm *HelmManager) initHTTPService() error {
 		blog.Errorf("register helm http service failed, err %s", err.Error())
 		return fmt.Errorf("register helm http service failed, err %s", err.Error())
 	}
+	// register cluster addons gateway
 	err = helmmanager.RegisterClusterAddonsGwFromEndpoint(
 		context.TODO(),
 		rmMux,
@@ -436,6 +453,7 @@ func (hm *HelmManager) initHTTPService() error {
 	}
 	router.Handle("/{uri:.*}", rmMux)
 
+	// add swagger
 	mux := http.NewServeMux()
 	if len(hm.opt.Swagger.Dir) != 0 {
 		blog.Info("swagger doc is enabled")
@@ -522,6 +540,7 @@ func (hm *HelmManager) initTLSConfig() error {
 	return nil
 }
 
+// init jwt client
 func (hm *HelmManager) initJWTClient() error {
 	conf := auth.JWTClientConfig{
 		Enable:         hm.opt.JWT.Enable,

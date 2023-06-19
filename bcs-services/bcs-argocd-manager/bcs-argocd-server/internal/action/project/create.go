@@ -54,8 +54,8 @@ func (action *CreateArgocdProjectAction) Handle(ctx context.Context,
 
 	var err error
 	p := req.GetProject()
-	// TODO: check if the operator has permission in project
-	// TODO: consider using bcs project id
+	// Note: check if the operator has permission in project
+	// Note: consider using bcs project id
 	if p.GetName() == "" {
 		p.Name = utils.RandomString(common.ProjectNamePrefix, 5)
 	}

@@ -108,7 +108,7 @@ func (f *InstallFlags) ParseParameters() string {
 
 // KubeHelm kube helm interface
 type KubeHelm interface {
-	// InstallChart TODO
+	// InstallChart xx
 	// install
 	// setParam --set hub=docker.io/istio tag=1.5.4
 	InstallChart(inf InstallFlags, glf GlobalFlags) error

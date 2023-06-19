@@ -16,14 +16,15 @@ package custom
 import (
 	"bytes"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/options"
 	"io/ioutil"
 	"net/http"
 	urllib "net/url"
 	"strings"
 
-	restful "github.com/emicklei/go-restful"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/options"
+
+	"github.com/emicklei/go-restful"
 )
 
 // BcsClientAPIHandler xxx
@@ -93,9 +94,9 @@ func (h *BcsClientAPIHandler) Handler(request *restful.Request, response *restfu
 }
 
 // Config xxx
-func (h *BcsClientAPIHandler) Config(KubeMasterURL string, TLSConfig options.TLSConfig) error {
-	h.KubeMasterUrl = KubeMasterURL
-	h.TLSConfig = TLSConfig
+func (h *BcsClientAPIHandler) Config(k8sMasterUrl string, tlsCfg options.TLSConfig) error {
+	h.KubeMasterUrl = k8sMasterUrl
+	h.TLSConfig = tlsCfg
 	return nil
 }
 

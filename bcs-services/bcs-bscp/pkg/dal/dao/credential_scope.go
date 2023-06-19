@@ -1,30 +1,37 @@
+/*
+Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
+Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except
+in compliance with the License. You may obtain a copy of the License at
+http://opensource.org/licenses/MIT
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package dao
 
 import (
-	"fmt"
-	"strconv"
+	"errors"
 
-	"bscp.io/pkg/criteria/enumor"
-	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/types"
 )
 
 // CredentialScope supplies all the credential scope related operations.
 type CredentialScope interface {
 	// CreateWithTx create credential scope with transaction
-	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, credential *table.CredentialScope) (uint32, error)
+	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, credential *table.CredentialScope) (uint32, error)
 	// Get get credential scopes
-	Get(kit *kit.Kit, credentialId, bizId uint32) (*types.ListCredentialScopeDetails, error)
+	Get(kit *kit.Kit, credentialId, bizID uint32) ([]*table.CredentialScope, int64, error)
 	// DeleteWithTx delete credential scope with transaction
-	DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, bizID, id uint32) error
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
 	// UpdateWithTx update credential scope with transaction
-	UpdateWithTx(kit *kit.Kit, tx *sharding.Tx, credentialScope *table.CredentialScope) error
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, credentialScope *table.CredentialScope) error
 	// // UpdateCredentialScopes update credential scopes
 	// UpdateCredentialScopes(kit *kit.Kit, option *types.UpdateCredentialScopesOption) error
 }
@@ -32,175 +39,106 @@ type CredentialScope interface {
 var _ CredentialScope = new(credentialScopeDao)
 
 type credentialScopeDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+
+	orm orm.Interface
+	sd  *sharding.Sharding
 }
 
 // CreateWithTx create credential scope with transaction
-func (dao *credentialScopeDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, c *table.CredentialScope) (uint32, error) {
-
-	if c == nil {
-		return 0, errf.New(errf.InvalidParameter, "credential scope is nil")
+func (dao *credentialScopeDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.CredentialScope) (uint32, error) {
+	if err := g.ValidateCreate(); err != nil {
+		return 0, err
 	}
 
-	if err := c.ValidateCreate(); err != nil {
-		return 0, errf.New(errf.InvalidParameter, err.Error())
-	}
-
-	// generate a credential id and update to credential.
-	id, err := dao.idGen.One(kit, table.CredentialScopeTable)
+	// generate a Template id and update to Template.
+	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
 		return 0, err
 	}
+	g.ID = id
 
-	c.ID = id
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CredentialScopeTable.Name(), " (", table.CredentialScopeColumns.ColumnExpr(), ")  VALUES(", table.CredentialScopeColumns.ColonNameExpr(), ")")
-
-	sql := filter.SqlJoint(sqlSentence)
-
-	if err := dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, c); err != nil {
+	q := tx.CredentialScope.WithContext(kit.Ctx)
+	if err := q.Create(g); err != nil {
 		return 0, err
 	}
 
-	//
-	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
-	if err = dao.auditDao.Decorator(kit, c.Attachment.BizID,
-		enumor.CredentialScope).AuditCreate(c, au); err != nil {
-		return 0, fmt.Errorf("audit create credential scope failed, err: %v", err)
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+	if err := ad.Do(tx.Query); err != nil {
+		return 0, err
 	}
 
-	return id, nil
+	return g.ID, nil
 }
 
 // Get get credential scope
-func (dao *credentialScopeDao) Get(kit *kit.Kit, credentialId, bizId uint32) (*types.ListCredentialScopeDetails, error) {
-	if credentialId == 0 {
-		return nil, errf.New(errf.InvalidParameter, "credential scope credential id null")
-	}
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"id", "biz_id", "credential_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: bizId,
-				},
-				&filter.AtomRule{
-					Field: "credential_id",
-					Op:    filter.Equal.Factory(),
-					Value: credentialId,
-				},
-			},
-		},
-	}
-	ft := &filter.Expression{
-		Op:    filter.Or,
-		Rules: []filter.RuleFactory{},
-	}
-	whereExpr, args, err := ft.SQLWhereExpr(sqlOpt)
+func (dao *credentialScopeDao) Get(kit *kit.Kit, credentialId, bizID uint32) ([]*table.CredentialScope, int64, error) {
+	m := dao.genQ.CredentialScope
+	q := dao.genQ.CredentialScope.WithContext(kit.Ctx)
+
+	result, err := q.Where(m.BizID.Eq(bizID), m.CredentialId.Eq(credentialId)).Find()
 	if err != nil {
-		return nil, err
-	}
-	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.CredentialScopeTable.Name(), whereExpr)
-	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(bizId).DB()).Count(kit.Ctx, countSql, args...)
-	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.CredentialScopeColumns.NamedExpr(), " FROM ", table.CredentialScopeTable.Name(), whereExpr)
-	sql := filter.SqlJoint(sqlSentence)
-	list := make([]*table.CredentialScope, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(bizId).DB()).Select(kit.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.ListCredentialScopeDetails{Count: count, Details: list}, nil
+	return result, int64(len(result)), nil
 }
 
 // DeleteWithTx delete credential scope with transaction
-func (dao *credentialScopeDao) DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, bizID, id uint32) error {
+func (dao *credentialScopeDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error {
 	if bizID == 0 {
-		return errf.New(errf.InvalidParameter, "biz id is zero")
+		return errors.New("biz id is zero")
 	}
 
 	if id == 0 {
-		return errf.New(errf.InvalidParameter, "credential scope id is zero")
+		return errors.New("credential scope id is zero")
 	}
 
-	ab := dao.auditDao.Decorator(kit, bizID, enumor.CredentialScope).PrepareDelete(id)
-
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "DELETE FROM ", table.CredentialScopeTable.Name(), " WHERE id = ", strconv.Itoa(int(id)),
-		" AND biz_id = ", strconv.Itoa(int(bizID)))
-	expr := filter.SqlJoint(sqlSentence)
-
-	err := dao.orm.Txn(tx.Tx()).Delete(kit.Ctx, expr)
+	// 删除操作, 获取当前记录做审计
+	m := tx.CredentialScope
+	q := tx.CredentialScope.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(id), m.BizID.Eq(bizID)).Take()
 	if err != nil {
-		logs.Errorf("delete credential scope: %d failed, err: %v, rid: %v", id, err, kit.Rid)
 		return err
 	}
 
-	auditOpt := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
-	if err := ab.Do(auditOpt); err != nil {
-		return fmt.Errorf("audit delete credential scope failed, err: %v", err)
+	if _, err := q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).Delete(); err != nil {
+		return err
 	}
+
+	ad := dao.auditDao.DecoratorV2(kit, bizID).PrepareDelete(oldOne)
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // UpdateWithTx update credential scope with transaction
-func (dao *credentialScopeDao) UpdateWithTx(kit *kit.Kit, tx *sharding.Tx, c *table.CredentialScope) error {
-
-	if c == nil {
-		return errf.New(errf.InvalidParameter, "credential scope is nil")
-	}
-
-	if err := c.ValidateUpdate(); err != nil {
-		return errf.New(errf.InvalidParameter, err.Error())
-	}
-
-	opts := orm.NewFieldOptions().AddIgnoredFields(
-		"id", "biz_id")
-	expr, toUpdate, err := orm.RearrangeSQLDataWithOption(c, opts)
-	if err != nil {
-		return fmt.Errorf("prepare parsed sql expr failed, err: %v", err)
-	}
-
-	ab := dao.auditDao.Decorator(kit, c.Attachment.BizID, enumor.CredentialScope).PrepareUpdate(c)
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", table.CredentialScopeTable.Name(), " SET ", expr, " WHERE id = ", strconv.Itoa(int(c.ID)),
-		" AND biz_id = ", strconv.Itoa(int(c.Attachment.BizID)))
-	sql := filter.SqlJoint(sqlSentence)
-
-	var effected int64
-	effected, err = dao.orm.Txn(tx.Tx()).Update(kit.Ctx, sql, toUpdate)
-	if err != nil {
-		logs.Errorf("update credential scope: %d failed, err: %v, rid: %v", c.ID, err, kit.Rid)
+func (dao *credentialScopeDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.CredentialScope) error {
+	if err := g.ValidateUpdate(); err != nil {
 		return err
 	}
 
-	if effected == 0 {
-		logs.Errorf("update one credential scope: %d, but record not found, rid: %v", c.ID, kit.Rid)
-		return errf.New(errf.RecordNotFound, orm.ErrRecordNotFound.Error())
+	// 更新操作, 获取当前记录做审计
+	m := tx.CredentialScope
+	q := tx.CredentialScope.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
 	}
 
-	if effected > 1 {
-		logs.Errorf("update one credential scope: %d, but got updated credential count: %d, rid: %v", c.ID,
-			effected, kit.Rid)
-		return fmt.Errorf("matched credential scope count %d is not as excepted", effected)
+	q = tx.CredentialScope.WithContext(kit.Ctx)
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+		Omit(m.BizID, m.ID).Updates(g); err != nil {
+		return err
 	}
 
-	// do audit
-	if err := ab.Do(&AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}); err != nil {
-		return fmt.Errorf("do credential scope update audit failed, err: %v", err)
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+	if err := ad.Do(tx.Query); err != nil {
+		return err
 	}
 
 	return nil

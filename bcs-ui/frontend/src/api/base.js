@@ -89,7 +89,6 @@ export const createCluster = request('post', `${prefix}/clustermanager/v1/cluste
 export const cloudVpc = request('get', `${prefix}/clustermanager/v1/cloudvpc`);
 export const cloudRegion = request('get', `${prefix}/clustermanager/v1/cloudregion/$cloudId`);
 export const vpccidrList = request('get', `${prefix}/clustermanager/v1/vpccidr/$vpcID`);
-export const fetchClusterList = request('get', `${prefix}/clustermanager/v1/cluster`);
 export const deleteCluster = request('delete', `${prefix}/clustermanager/v1/cluster/$clusterId`);
 export const retryCluster = request('post', `${prefix}/clustermanager/v1/cluster/$clusterId/retry`);
 export const taskList = request('get', `${prefix}/clustermanager/v1/task`);
@@ -231,5 +230,4 @@ export default {
   editProject,
   fetchBizTopo,
   fetchBizHosts,
-  fetchClusterList,
 };

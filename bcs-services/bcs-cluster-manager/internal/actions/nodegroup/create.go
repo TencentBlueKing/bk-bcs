@@ -232,13 +232,13 @@ func (ca *CreateAction) createNodeGroup() error {
 
 	// create task and dispatch task
 	ca.resp.Data.Task = task
-	if err := ca.model.CreateTask(ca.ctx, task); err != nil {
+	if err = ca.model.CreateTask(ca.ctx, task); err != nil {
 		blog.Errorf("save create node group task for cluster %s failed, %s",
 			ca.group.ClusterID, err.Error(),
 		)
 		return err
 	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 		blog.Errorf("dispatch create node group task for cluster %s failed, %s",
 			ca.group.ClusterID, err.Error(),
 		)

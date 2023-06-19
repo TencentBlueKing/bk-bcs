@@ -1,10 +1,10 @@
 <template>
-  <div>
+  <div class="flex h-[calc(100vh-108px)]">
     <bk-table
       :data="data"
-      @row-mouse-enter="handleMouseEnter"
-      @row-mouse-leave="handleMouseLeave">
-      <bk-table-column :label="$t('步骤')" prop="taskName" width="160">
+      :row-class-name="rowClass"
+      @row-click="handleRowClick">
+      <bk-table-column :label="$t('步骤')" prop="taskName" min-width="155">
         <template #default="{ row }">
           <span class="task-name">
             <span class="bcs-ellipsis">
@@ -17,17 +17,17 @@
           </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('状态')" prop="status" width="120">
+      <bk-table-column :label="$t('状态')" prop="status" width="90">
         <template #default="{ row }">
           <LoadingIcon v-if="row.status === 'RUNNING'">
             <span class="bcs-ellipsis">{{ $t('运行中') }}</span>
           </LoadingIcon>
-          <StatusIcon :status="row.status" :status-color-map="taskStatusColorMap" v-else>
+          <StatusIcon type="result" :status="row.status" :status-color-map="taskStatusColorMap" v-else>
             {{ taskStatusTextMap[row.status.toLowerCase()] }}
           </StatusIcon>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('执行时间')" width="220">
+      <bk-table-column :label="$t('执行时间')" width="165">
         <template #default="{ row }">
           <template v-if="row.status.toLowerCase() === 'notstarted'">
             --
@@ -50,52 +50,17 @@
           </template>
         </template>
       </bk-table-column>
-      <bk-table-column min-width="120" :label="$t('日志')" prop="message">
-        <template #default="{ row }">
-          <bcs-button
-            text
-            v-if="row.message"
-            @click="handleShowValuesDetail(row)"
-          >{{$t('查看')}}
-          </bcs-button>
-          <span v-else>--</span>
-          <span
-            class="copy-icon ml5"
-            v-if="activeTask === row.taskName && row.message"
-            v-bk-tooltips="$t('复制内容')"
-            @click="handleCopyValues(row)">
-            <i class="bcs-icon bcs-icon-copy"></i>
-          </span>
-        </template>
-      </bk-table-column>
     </bk-table>
-    <bcs-dialog
-      header-position="left"
-      :show-footer="false"
-      width="860"
-      v-model="showValuesDialog">
-      <template #header>
-        <div class="bcs-flex">
-          <span>{{ curTaskRow.taskName }}</span>
-          <span
-            class="copy-icon ml10"
-            v-bk-tooltips="$t('复制内容')"
-            @click="handleCopyValues(curTaskRow)">
-            <i class="bcs-icon bcs-icon-copy"></i>
-          </span>
-        </div>
-      </template>
-      <div class="task-message">{{curTaskRow.message}}</div>
-    </bcs-dialog>
+    <div class="bg-[#F5F7FA] p-[16px] w-[420px] text-[#313238] text-[12px] task-message">
+      {{ curTaskRow.message }}
+    </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
-import { timeDelta, copyText, timeFormat } from '@/common/util';
+import { defineComponent, ref, computed } from 'vue';
+import { timeDelta, timeFormat } from '@/common/util';
 import StatusIcon from '@/components/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
-import $bkMessage from '@/common/bkmagic';
-import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
   name: 'TaskList',
@@ -109,7 +74,7 @@ export default defineComponent({
       default: () => [],
     },
   },
-  setup() {
+  setup(props) {
     const taskStatusTextMap = {
       initialzing: window.i18n.t('初始化中'),
       running: window.i18n.t('运行中'),
@@ -124,45 +89,29 @@ export default defineComponent({
       success: 'green',
       failure: 'red',
       timeout: 'red',
-      notstarted: 'blue',
+      notstarted: 'gray',
     };
-    const curTaskRow = ref<Record<string, any>>({});
-    const showValuesDialog = ref(false);
-    const activeTask = ref('');
+    const activeIndex = ref(0);
+    const curTaskRow = computed<Record<string, any>>(() => props.data?.[activeIndex.value] || {});
+
     // 跳转标准运维
     const handleGotoSops = (row) => {
       window.open(row.params.taskUrl);
     };
-    const handleShowValuesDetail = (row) => {
-      curTaskRow.value = row;
-      showValuesDialog.value = true;
+    const handleRowClick = (row, event, column, rowIndex) => {
+      activeIndex.value = rowIndex;
     };
-    const handleCopyValues = (row) => {
-      copyText(row.message);
-      $bkMessage({
-        theme: 'success',
-        message: $i18n.t('复制成功'),
-      });
-    };
-    const handleMouseEnter = (index, event, row) => {
-      activeTask.value = row.taskName;
-    };
-    const handleMouseLeave = () => {
-      activeTask.value = '';
-    };
+    const rowClass = ({ rowIndex }) => (activeIndex.value === rowIndex ? 'active-row' : 'normal-row');
+
     return {
       taskStatusColorMap,
       taskStatusTextMap,
       timeFormat,
       timeDelta,
       curTaskRow,
-      activeTask,
-      showValuesDialog,
       handleGotoSops,
-      handleCopyValues,
-      handleShowValuesDetail,
-      handleMouseLeave,
-      handleMouseEnter,
+      handleRowClick,
+      rowClass,
     };
   },
 });
@@ -177,16 +126,20 @@ export default defineComponent({
         cursor: pointer;
     }
 }
->>> .copy-icon {
-    color: #3a84ff;
-    cursor: pointer;
-}
 .task-message {
-    height: 500px;
-    overflow-y: auto;
-    padding-right: 20px;
+    border: 1px solid #DCDEE5;
+    border-left: none;
+    word-break: break-word;
 }
 >>> .bk-table .bk-table-header-wrapper {
     border-top: none;
+}
+>>> .active-row {
+  background-color: #E1ECFF;
+  cursor: pointer;
+}
+>>> .normal-row td {
+  background-color: #fff !important;
+  cursor: pointer;
 }
 </style>

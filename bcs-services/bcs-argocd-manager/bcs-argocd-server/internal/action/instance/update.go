@@ -63,7 +63,7 @@ func (action *UpdateArgocdInstanceAction) Handle(ctx context.Context,
 		action.setResp(common.ErrProjectNotExist, "", req.Instance)
 		return nil
 	}
-	// TODO: check if the operator has permission in project
+	// Note: check if the operator has permission in project
 	updated, err := action.tkexIf.ArgocdInstances(common.ArgocdManagerNamespace).Update(ctx, i, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update argocd instance failed, err: %s", err.Error())

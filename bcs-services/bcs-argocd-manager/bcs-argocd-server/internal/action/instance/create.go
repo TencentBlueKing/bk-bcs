@@ -65,7 +65,7 @@ func (action *CreateArgocdInstanceAction) Handle(ctx context.Context,
 		action.setResp(common.ErrProjectNotExist, "", req.Instance)
 		return nil
 	}
-	// TODO: check if the operator has permission in project
+	// Note: check if the operator has permission in project
 	i.Name = utils.RandomString(common.InstanceNamePrefix, 5)
 	// set label
 	if i.Labels == nil {

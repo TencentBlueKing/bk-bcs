@@ -105,7 +105,7 @@ const (
 
 	TASK_STATUS_RESTARTING = "Restarting"
 
-	TASK_STATUS_UNKOWN = "Unknown"
+	TASK_STATUS_UNKNOWN = "Unknown"
 )
 
 // taskgroup status

@@ -63,7 +63,7 @@ func (a *Authorize) countPolicy(ctx context.Context, p *operator.Policy, resourc
 			return &client.AuthorizeList{Ids: ids}, nil
 
 		} else {
-			// TODO: cause we do not support _bk_iam_path_ field for now
+			// Note: cause we do not support _bk_iam_path_ field for now
 			// So we only need to get resource's other attribute policy.
 			opts := &client.ListWithAttributes{
 				Operator:     p.Operator,
@@ -135,7 +135,7 @@ func preAnalyzeContent(op operator.OpType, content *operator.Content) error {
 
 	// the same level do not support multiple fields.
 	if len(fieldMap) > 1 {
-		return errors.New(fmt.Sprintf("do not support different field in the same policy level"))
+		return errors.New("do not support different field in the same policy level")
 	}
 	return nil
 }
@@ -185,7 +185,7 @@ func (a *Authorize) countContent(ctx context.Context, op operator.OpType, conten
 				allList = append(allList, client.AuthorizeList{Ids: list})
 
 			} else {
-				// TODO: cause we do not support _bk_iam_path_ field for now
+				// Note: cause we do not support _bk_iam_path_ field for now
 				// So we only need to get resource's other attribute policy.
 				allAttrPolicies = append(allAttrPolicies, policy)
 			}

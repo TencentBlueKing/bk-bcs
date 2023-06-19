@@ -38,6 +38,7 @@ func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) 
 	})
 }
 
+// PutData 插入数据
 func PutData(ctx context.Context, resourceType string, data operator.M, opt *lib.StorePutOption) error {
 	//return dbutils.PutData(ctx, dbConfig, resourceType, data, opt)
 	return dbutils.PutData(&dbutils.DBOperate{
@@ -49,8 +50,11 @@ func PutData(ctx context.Context, resourceType string, data operator.M, opt *lib
 	})
 }
 
-// 业务方法
+/*
+	业务方法
+*/
 
+// GenerateData 生成数据
 func GenerateData(ctx context.Context, opt *lib.StoreGetOption, clsConfig []operator.M, service string) (config *types.DeployConfig, err error) {
 	var stableVersion string
 	var svcConfigSet *types.ConfigSet
@@ -93,6 +97,7 @@ func GetStableSvcVersion(ctx context.Context, opt *lib.StoreGetOption) (string, 
 	return s, nil
 }
 
+// GetTemplate get template
 func GetTemplate(ctx context.Context, cond *operator.Condition) (string, error) {
 	store := lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),
@@ -123,6 +128,7 @@ func GetTemplate(ctx context.Context, cond *operator.Condition) (string, error) 
 	return s, nil
 }
 
+// GetClusterInfo get cluster info
 func GetClusterInfo(ctx context.Context, cond *operator.Condition) ([]operator.M, error) {
 	// 获取db连接
 	store := lib.NewStore(
@@ -136,10 +142,12 @@ func GetClusterInfo(ctx context.Context, cond *operator.Condition) ([]operator.M
 	return store.Get(ctx, tableCls, opt)
 }
 
+// SaveClusterInfoConfig save cluster info config
 func SaveClusterInfoConfig(ctx context.Context, data operator.M, opt *lib.StorePutOption) error {
 	return PutData(ctx, tableCls, data, opt)
 }
 
+// SaveStableVersion save stable version
 func SaveStableVersion(ctx context.Context, service, version string) error {
 	// 参数
 	data := operator.M{constants.DataTag: version}

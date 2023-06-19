@@ -53,13 +53,13 @@ func buildAbsoluteUri(webHost string, r *http.Request) string {
 }
 
 // buildLoginURL 返回前端的URL
-func buildLoginURL(r *http.Request, Loginhost string) string {
-	u := fmt.Sprintf("%s/login/?c_url=", Loginhost)
+func buildLoginURL(r *http.Request, loginhost string) string {
+	u := fmt.Sprintf("%s/login/?c_url=", loginhost)
 	return u
 }
 
 // buildLoginPlainURL 返回前端的URL
-func buildLoginPlainURL(r *http.Request, Loginhost string) string {
-	u := fmt.Sprintf("%s/login/plain/?c_url=", Loginhost)
+func buildLoginPlainURL(r *http.Request, loginhost string) string {
+	u := fmt.Sprintf("%s/login/plain/?c_url=", loginhost)
 	return u
 }

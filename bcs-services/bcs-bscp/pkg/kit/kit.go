@@ -92,7 +92,7 @@ func FromGrpcContext(ctx context.Context) *Kit {
 
 	kit.Ctx = context.WithValue(kit.Ctx, constant.RidKey, rid)
 
-	// TODO: need to add supplier id and authorization field.
+	// Note: need to add supplier id and authorization field.
 	return kit
 }
 
@@ -115,7 +115,7 @@ type Kit struct {
 
 	// AppCode is app code.
 	AppCode     string
-	AppId       string // 对应的应用ID
+	AppID       uint32 // 对应的应用ID
 	BizID       uint32 // 对应的业务ID
 	SpaceID     string // 应用对应的SpaceID
 	SpaceTypeID string // 应用对应的SpaceTypeID

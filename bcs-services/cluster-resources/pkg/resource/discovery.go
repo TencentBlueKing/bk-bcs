@@ -183,7 +183,7 @@ func (d *RedisCacheClient) ServerGroups() (*metav1.APIGroupList, error) {
 		return liveGroups, err
 	}
 	if err = d.writeCache("", liveGroups); err != nil {
-		// TODO Redis 缓存写失败应该有通知机制
+		// Redis 缓存写失败应该有通知机制
 		log.Warn(d.ctx, "cluster: %s, failed to write cache due to %v", d.clusterID, err)
 	}
 	return liveGroups, nil
@@ -208,7 +208,7 @@ func (d *RedisCacheClient) ServerResourcesForGroupVersion(groupVersion string) (
 		return liveResources, err
 	}
 	if err = d.writeCache(groupVersion, liveResources); err != nil {
-		// TODO Redis 缓存写失败应该有通知机制
+		// Redis 缓存写失败应该有通知机制
 		log.Warn(d.ctx, "cluster: %s, failed to write cache due to %v", d.clusterID, err)
 	}
 	return liveResources, nil
@@ -306,7 +306,8 @@ func GetGroupVersionResource(
 	}
 	// 按指定 groupVersion 查询（含刷新缓存重试）
 	if len(groupVersion) != 0 {
-		res, err := cli.getResWithGroupVersion(kind, groupVersion)
+		var res schema.GroupVersionResource
+		res, err = cli.getResWithGroupVersion(kind, groupVersion)
 		if err != nil {
 			cli.Invalidate()
 			return cli.getResWithGroupVersion(kind, groupVersion)
@@ -314,7 +315,8 @@ func GetGroupVersionResource(
 		return res, nil
 	}
 	// 查询 preferred version（含刷新缓存重试）
-	res, err := cli.getPreferredResource(kind)
+	var res schema.GroupVersionResource
+	res, err = cli.getPreferredResource(kind)
 	if err != nil {
 		cli.Invalidate()
 		return cli.getPreferredResource(kind)

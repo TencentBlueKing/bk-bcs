@@ -65,7 +65,7 @@ func Do(opt cc.Sharding) Interface {
 
 type runtimeOrm struct {
 	// ingressLimiter the limiter to limit the incoming request frequency.
-	// TODO: test the accept for each sharding, but not for all the sharding with one limiter.
+	// Note: test the accept for each sharding, but not for all the sharding with one limiter.
 	ingressLimiter *rate.Limiter
 	logLimiter     *rate.Limiter
 	mc             *metric
@@ -89,7 +89,7 @@ func (o *runtimeOrm) logSlowCmd(ctx context.Context, sql string, latency time.Du
 }
 
 // tryAccept is used to test if the incoming orm request can be accepted.
-// TODO: test the accept for each sharding, but not for all the sharding with one limiter.
+// Note: test the accept for each sharding, but not for all the sharding with one limiter.
 func (o *runtimeOrm) tryAccept() error {
 	if o.ingressLimiter.Allow() {
 		return nil

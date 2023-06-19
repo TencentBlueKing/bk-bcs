@@ -20,7 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
@@ -68,8 +68,8 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 		namespace := &corev1.Namespace{}
 		namespace.SetName(ns.Name)
 		namespace.SetAnnotations(map[string]string{
-			config.AnnotationKeyProjectCode: req.GetProjectCode(),
-			config.AnnotationKeyCreator:     ns.Creator,
+			constant.AnnotationKeyProjectCode: req.GetProjectCode(),
+			constant.AnnotationKeyCreator:     ns.Creator,
 		})
 		_, err = client.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
 		if err != nil {
