@@ -600,59 +600,6 @@
                           @change="handleImageCustom">
                         </bkbcs-input>
                       </template>
-                      <!-- <template v-else>
-                        <div class="bk-dropdown-box" style="width: 380px;">
-                          <bk-combox
-                            style="width: 325px;"
-                            type="text"
-                            :placeholder="$t('镜像')"
-                            :display-key="'_name'"
-                            :setting-key="'_id'"
-                            :search-key="'_name'"
-                            :value.sync="curContainer.webCache.imageName"
-                            :list="varList"
-                            :is-link="true"
-                            :key="renderImageIndex"
-                            :is-select-mode="true"
-                            :default-list="imageList"
-                            @item-selected="changeImage(...arguments, curContainer)">
-                          </bk-combox>
-
-                          <bk-button
-                            style="min-width: 20px;"
-                            class="bk-button bk-default is-outline is-icon"
-                            v-bk-tooltips.top="$t('刷新镜像列表')"
-                            @click="initImageList">
-                            <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-default" style="margin-top: -3px;" v-if="isLoadingImageList">
-                              <div class="rotate rotate1"></div>
-                              <div class="rotate rotate2"></div>
-                              <div class="rotate rotate3"></div>
-                              <div class="rotate rotate4"></div>
-                              <div class="rotate rotate5"></div>
-                              <div class="rotate rotate6"></div>
-                              <div class="rotate rotate7"></div>
-                              <div class="rotate rotate8"></div>
-                            </div>
-                            <i class="bcs-icon bcs-icon-refresh" v-else></i>
-                          </bk-button>
-                        </div>
-
-                        <div class="bk-dropdown-box" style="width: 250px;">
-                          <bk-combox
-                            type="text"
-                            :placeholder="$t('版本号1')"
-                            :display-key="'_name'"
-                            :setting-key="'_id'"
-                            :search-key="'_name'"
-                            :value.sync="curContainer.imageVersion"
-                            :list="varList"
-                            :is-select-mode="true"
-                            :default-list="imageVersionList"
-                            :disabled="!curContainer.webCache.imageName"
-                            @item-selected="setImageVersion">
-                          </bk-combox>
-                        </div>
-                      </template> -->
                       <bk-checkbox
                         class="ml10"
                         name="image-get"

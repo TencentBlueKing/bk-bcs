@@ -75,7 +75,7 @@
           </bk-table-column>
           <bk-table-column :label="$t('状态')">
             <template slot-scope="{ row }">
-              <i class="bk-icon" :class="row.activityStatus === $t('完成1') || row.activityStatus === $t('成功1') ? 'success icon-check-circle' : 'fail icon-close-circle'"></i>
+              <i class="bk-icon" :class="row.activity_status === 'completed' || row.activity_status === 'succeed' ? 'success icon-check-circle' : 'fail icon-close-circle'"></i>
               {{row.activityStatus}}
             </template>
           </bk-table-column>
@@ -99,19 +99,19 @@ export default {
   data() {
     // 操作类型下拉框 list
     const activityTypeList = [
-      { id: 'all', name: this.$t('全部1') },
-      { id: 'note', name: this.$t('注意1') },
-      { id: 'add', name: this.$t('创建1') },
-      { id: 'modify', name: this.$t('更新1') },
-      { id: 'delete', name: this.$t('删除1') },
-      { id: 'begin', name: this.$t('开始1') },
-      { id: 'end', name: this.$t('结束1') },
-      { id: 'start', name: this.$t('启动1') },
-      { id: 'pause', name: this.$t('暂停1') },
-      { id: 'carryon', name: this.$t('继续1') },
-      { id: 'stop', name: this.$t('停止1') },
-      { id: 'restart', name: this.$t('重启1') },
-      { id: 'query', name: this.$t('查询1') },
+      { id: 'all', name: this.$t('全部') },
+      { id: 'note', name: this.$t('注意') },
+      { id: 'add', name: this.$t('创建') },
+      { id: 'modify', name: this.$t('更新') },
+      { id: 'delete', name: this.$t('删除') },
+      { id: 'begin', name: this.$t('开始') },
+      { id: 'end', name: this.$t('结束') },
+      { id: 'start', name: this.$t('启动') },
+      { id: 'pause', name: this.$t('暂停') },
+      { id: 'carryon', name: this.$t('继续') },
+      { id: 'stop', name: this.$t('停止') },
+      { id: 'restart', name: this.$t('重启') },
+      { id: 'query', name: this.$t('查询') },
     ];
     // 操作类型 map
     const activityTypeMap = {};
@@ -121,13 +121,13 @@ export default {
 
     // 状态下拉框 list
     const activityStatusList = [
-      { id: 'all', name: this.$t('全部1') },
-      { id: 'unknown', name: this.$t('未知1') },
-      { id: 'completed', name: this.$t('完成1') },
-      { id: 'error', name: this.$t('错误1') },
-      { id: 'busy', name: this.$t('处理中1') },
-      { id: 'succeed', name: this.$t('成功1') },
-      { id: 'failed', name: this.$t('失败1') },
+      { id: 'all', name: this.$t('全部') },
+      { id: 'unknown', name: this.$t('未知') },
+      { id: 'completed', name: this.$t('完成') },
+      { id: 'error', name: this.$t('错误') },
+      { id: 'busy', name: this.$t('处理中') },
+      { id: 'succeed', name: this.$t('成功') },
+      { id: 'failed', name: this.$t('失败') },
     ];
     // 操作状态 map
     const activityStatusMap = {};
@@ -295,7 +295,7 @@ export default {
             name: this.resourceTypeMap[key],
           });
         });
-        this.resourceTypeList.unshift({ id: 'all', name: this.$t('全部1') });
+        this.resourceTypeList.unshift({ id: 'all', name: this.$t('全部') });
       } catch (e) {
       }
     },
@@ -358,6 +358,7 @@ export default {
         const list = res.results || [];
         list.forEach((item) => {
           this.dataList.push({
+            activity_status: item.activity_status,
             // 操作时间
             activityTime: item.activity_time,
             // 操作类型

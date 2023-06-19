@@ -414,10 +414,10 @@
                                     timeDiff.get('minute'),
                                     timeDiff.get('second')
                                 ]
-                                item.lastScrapeDiffStr = (arr[0] !== 0 ? (arr[0] + this.$t('天1')) : '')
-                                    + (arr[1] !== 0 ? (arr[1] + this.$t('小时1')) : '')
-                                    + (arr[2] !== 0 ? (arr[2] + this.$t('分1')) : '')
-                                    + (arr[3] !== 0 ? (arr[3] + this.$t('秒1')) : '')
+                                item.lastScrapeDiffStr = (arr[0] !== 0 ? (arr[0] + this.$t('天')) : '')
+                                    + (arr[1] !== 0 ? (arr[1] + this.$t('小时')) : '')
+                                    + (arr[2] !== 0 ? (arr[2] + this.$t('分')) : '')
+                                    + (arr[3] !== 0 ? (arr[3] + this.$t('秒')) : '')
                                 newLastScrapeDiffStr = item.lastScrapeDiffStr
                             }
                         })
@@ -840,58 +840,6 @@
                     this.batchDelDialogConf.isDeleting = false
                 }
             },
-
-            /**
-             * 展开/收起当前行
-             *
-             * @param {Object} row 当前行数据
-             */
-            // async toggleRow (row) {
-            //     if (row.expand) {
-            //         row.expand = false
-            //         return
-            //     }
-            //     row.expand = true
-            //     row.expanding = true
-
-            //     setTimeout(() => {
-            //         if (row.targetData.targets && row.targetData.targets.length) {
-            //             row.targetData.targets.forEach(item => {
-            //                 item.labelArr = []
-            //                 Object.keys(item.labels).forEach(k => {
-            //                     item.labelArr.push(`${k}="${item.labels[k]}"`)
-            //                 })
-
-            //                 if (item.lastScrape.substr(0, 10) === '0001-01-01') {
-            //                     item.lastScrapeDiffStr = '--'
-            //                 } else {
-            //                     const timeDiff = moment.duration(
-            //                         moment().diff(moment(Date.parse(item.lastScrape)).format('YYYY-MM-DD HH:mm:ss'))
-            //                     )
-            //                     const arr = [
-            //                         moment().diff(moment(Date.parse(item.lastScrape)), 'days'),
-            //                         timeDiff.get('hour'),
-            //                         timeDiff.get('minute'),
-            //                         timeDiff.get('second')
-            //                     ]
-            //                     item.lastScrapeDiffStr = (arr[0] !== 0 ? (arr[0] + this.$t('天1')) : '')
-            //                         + (arr[1] !== 0 ? (arr[1] + this.$t('小时1')) : '')
-            //                         + (arr[2] !== 0 ? (arr[2] + this.$t('分1')) : '')
-            //                         + (arr[3] !== 0 ? (arr[3] + this.$t('秒1')) : '')
-            //                 }
-            //             })
-            //         } else {
-            //             const curTimestamp = new Date().getTime()
-            //             const createTimestamp = new Date(Date.parse(row.metadata.creationTimestamp)).getTime()
-            //             if (curTimestamp - createTimestamp > 120000) {
-            //                 row.emptyMsg = this.$t('无数据（请检查 Service 是否有关联的 Endpoints)')
-            //             } else {
-            //                 row.emptyMsg = this.$t('无数据（新建 Metric 需要1~2分钟生效，请刷新），通过计算创建时间和当前时间判断')
-            //             }
-            //         }
-            //         row.expanding = false
-            //     }, 500)
-            // },
 
             /**
              * 显示创建 metric sideslider

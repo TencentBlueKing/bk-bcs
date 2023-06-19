@@ -256,7 +256,7 @@
                 <div class="label">
                   <span :class="['biz-env-label mr5', { 'stag': item.environment !== 'prod', 'prod': item.environment === 'prod' }]">{{item.environment === 'prod' ? $t('正式') : $t('测试')}}</span>
                   <span class="biz-text-wrapper" style="max-width: 300px;">{{item.name}}</span>
-                  <span class="choose-num">{{$t('已经选择')}} {{item.results.filter(ns => ns.isChoose).length}} {{$t('个1')}}</span>
+                  <span class="choose-num">{{$t('已经选择')}} {{item.results.filter(ns => ns.isChoose).length}} {{$t('个')}}</span>
                 </div>
                 <div class="checker-inner" v-if="!isYamlMode">
                   <a href="javascript:;" class="bk-text-button" @click.stop="selectAll(item, index)">{{$t('全选')}}</a>

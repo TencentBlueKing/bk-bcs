@@ -897,7 +897,7 @@ export default {
         if (list.length) {
           list.unshift({
             id: 0,
-            name: this.$t('全部1'),
+            name: this.$t('全部'),
           });
         }
 
