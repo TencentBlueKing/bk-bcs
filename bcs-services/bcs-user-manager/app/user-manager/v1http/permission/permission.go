@@ -95,6 +95,7 @@ var Mutex *sync.RWMutex
 
 // InitCache sync data from db to cache periodically
 func InitCache() {
+	// init bcs roles
 	initRoles := []models.BcsRole{
 		{
 			Name:    "manager",
@@ -106,6 +107,7 @@ func InitCache() {
 		},
 	}
 	// init roles
+	// create roles
 	for _, role := range initRoles {
 		m := sqlstore.GetRole(role.Name)
 		if m == nil {
@@ -128,6 +130,7 @@ func InitCache() {
 				"resource, bcs_roles.actions").
 			Joins("left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id").Scan(&ura)
 
+		// set cache mutex lock
 		Mutex.Lock()
 		// cache permission
 		PermissionsCache = make(map[uint][]UserPermissions)
@@ -141,6 +144,7 @@ func InitCache() {
 		}
 		Mutex.Unlock()
 
+		// wait to get roles
 		select {
 		case <-ticker.C:
 		}
@@ -232,6 +236,7 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 			return
 		}
 	}
+	// response
 	data := utils.CreateResponseData(nil, "success", nil)
 	response.Write([]byte(data))
 
@@ -243,6 +248,7 @@ func GetPermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	ctx := request.Request.Context()
 
+	// parse permission form
 	var form GetPermissionForm
 	_ = request.ReadEntity(&form)
 	err := utils.Validate.Struct(&form)
@@ -345,6 +351,7 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 			continue
 		}
 
+		// delete user resource role
 		err := sqlstore.DeleteUserResourceRole(urrInDb)
 		if err != nil {
 			metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.ErrStatus, start)
@@ -370,6 +377,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	ctx := request.Request.Context()
 
+	// parse permission form
 	var form VerifyPermissionForm
 	_ = request.ReadEntity(&form)
 	err := utils.Validate.Struct(&form)
@@ -411,6 +419,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 	// check resource type
 	switch form.ResourceType {
 	case Cluster, Storage:
+		// verify old permission
 		allowed, message := verifyResourceReplica(user.ID, form.ResourceType, form.Resource, form.Action)
 
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
@@ -421,6 +430,7 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 			user.Name, form.ResourceType, form.Resource, form.Action, allowed)
 		_, _ = response.Write([]byte(data))
 	default:
+		// verify default permission
 		allowed, message := verifyResourceReplica(user.ID, form.ResourceType, "", form.Action)
 
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
@@ -458,6 +468,7 @@ func verifyResourceReplica(userID uint, resourceType ResourceType, resource, act
 		}
 		Mutex.RUnlock()
 	}
+	// get resource
 	for _, p := range op {
 		actions := strings.Split(p.Actions, ",")
 		for _, a := range actions {
@@ -550,11 +561,13 @@ func parseAuthToken(authInfo string) string {
 func verifyPermissionV1(ctx context.Context, user *models.BcsUser, req VerifyPermissionReq) (bool, string) {
 	switch req.ResourceType {
 	case Cluster, Storage:
+		/// verifyResourceReplica
 		allowed, message := verifyResourceReplica(user.ID, req.ResourceType, req.Resource, req.Action)
 		blog.Log(ctx).Infof("user %s access to type: %s, resource: %s, action: %s, permission: %t",
 			user.Name, req.ResourceType, req.Resource, req.Action, allowed)
 		return allowed, message
 	default:
+		// verifyResourceReplica
 		allowed, message := verifyResourceReplica(user.ID, req.ResourceType, "", req.Action)
 		blog.Log(ctx).Infof("user %s access to type: %s, action: %s, permission: %t",
 			user.Name, req.ResourceType, req.Action, allowed)
@@ -564,10 +577,12 @@ func verifyPermissionV1(ctx context.Context, user *models.BcsUser, req VerifyPer
 }
 
 // VerifyPermissionV2 [GET] path /usermanager/v2/permissions/verify
+// NOCC:golint/fnsize(设计如此)
 func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	ctx := request.Request.Context()
 
+	// parse permission req
 	var req VerifyPermissionReq
 	_ = request.ReadEntity(&req)
 	err := utils.Validate.Struct(&req)
@@ -649,6 +664,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 		}
 	}
 
+	// VerifyPermissionV2
 	cli.verifyV2Permission(ctx, req, user, response)
 	metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.SucStatus, start)
 }
@@ -701,6 +717,7 @@ func (cli *PermVerifyClient) verifyV2Permission(ctx context.Context, req VerifyP
 			user.Name, req.ResourceType, req.Resource, req.Action, allowed)
 		_, _ = response.Write([]byte(data))
 	default:
+		// verify default permission
 		allowed, message := verifyResourceReplica(user.ID, req.ResourceType, "", req.Action)
 
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{

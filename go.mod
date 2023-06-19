@@ -18,16 +18,13 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230612022433-f63b3b850fe2
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/container-storage-interface/spec v0.3.0
 	github.com/containernetworking/cni v0.6.0
 	github.com/coredns/coredns v1.3.0
 	github.com/coreos/etcd v3.3.25+incompatible
-	github.com/dbdd4us/qcloudapi-sdk-go v0.0.0-20190530123522-c8d9381de48c
 	github.com/deckarep/golang-set v1.7.1
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/fsouza/go-dockerclient v1.6.0
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.4.3
 	github.com/google/cadvisor v0.32.0
 	github.com/gorilla/websocket v1.4.2
@@ -47,7 +44,6 @@ require (
 	github.com/prometheus/common v0.15.0
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/spf13/pflag v1.0.5
-	github.com/tencentcloud/tencentcloud-sdk-go v1.0.132
 	github.com/ugorji/go/codec v1.2.3
 	go4.org v0.0.0-20190313082347-94abd6928b1d
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b

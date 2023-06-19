@@ -211,8 +211,8 @@ func (m *BKMonitor) GetClusterCPURequestUsage(ctx context.Context, projectID, cl
 func (m *BKMonitor) GetClusterMemoryTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s})`
 		// NOCC:goconst/string(设计如此)
+		`sum(node_memory_MemTotal_bytes{%<cluster>s, bk_instance=~"%<instance>s", %<provider>s})`
 
 	return m.handleClusterMetric(ctx, projectID, clusterID, promql, start, end, step)
 }
