@@ -28,65 +28,65 @@ import (
 )
 
 const (
-	// CoreV1GroupVersion TODO
+	// CoreV1GroupVersion groupversion
 	CoreV1GroupVersion = "v1"
-	// AppsV1GroupVersion TODO
+	// AppsV1GroupVersion groupversion
 	AppsV1GroupVersion = "apps/v1"
-	// AppsV1Beta1GroupVersion TODO
+	// AppsV1Beta1GroupVersion groupversion
 	AppsV1Beta1GroupVersion = "apps/v1beta1"
-	// AppsV1Beta2GroupVersion TODO
+	// AppsV1Beta2GroupVersion groupversion
 	AppsV1Beta2GroupVersion = "apps/v1beta2"
-	// ExtensionsV1Beta1GroupVersion TODO
+	// ExtensionsV1Beta1GroupVersion groupversion
 	ExtensionsV1Beta1GroupVersion = "extensions/v1beta1"
-	// AutoScalingV1GroupVersion TODO
+	// AutoScalingV1GroupVersion groupversion
 	AutoScalingV1GroupVersion = "autoscaling/v1"
-	// AutoScalingV2Beta1GroupVersion TODO
+	// AutoScalingV2Beta1GroupVersion groupversion
 	AutoScalingV2Beta1GroupVersion = "autoscaling/v2beta1"
-	// AutoScalingV2Beta2GroupVersion TODO
+	// AutoScalingV2Beta2GroupVersion groupversion
 	AutoScalingV2Beta2GroupVersion = "autoscaling/v2beta2"
-	// StorageV1GroupVersion TODO
+	// StorageV1GroupVersion groupversion
 	StorageV1GroupVersion = "storage.k8s.io/v1"
 
-	// BatchV1GroupVersion TODO
+	// BatchV1GroupVersion groupversion
 	BatchV1GroupVersion = "batch/v1"
-	// BatchV1Beta1GroupVersion TODO
+	// BatchV1Beta1GroupVersion groupversion
 	BatchV1Beta1GroupVersion = "batch/v1beta1"
-	// RbacV1GroupVersion TODO
+	// RbacV1GroupVersion groupversion
 	RbacV1GroupVersion = "rbac.authorization.k8s.io/v1"
-	// RbacV1Beta1GroupVersion TODO
+	// RbacV1Beta1GroupVersion groupversion
 	RbacV1Beta1GroupVersion = "rbac.authorization.k8s.io/v1beta1"
-	// AdmissionRegistrationV1Beta1GroupVersion TODO
+	// AdmissionRegistrationV1Beta1GroupVersion groupversion
 	AdmissionRegistrationV1Beta1GroupVersion = "admissionregistration.k8s.io/v1beta1"
-	// ApiExtensionsV1Beta1GroupVersion TODO
+	// ApiExtensionsV1Beta1GroupVersion groupversion
 	ApiExtensionsV1Beta1GroupVersion = "apiextensions.k8s.io/v1beta1"
 
-	// BkbcsGroupName TODO
+	// BkbcsGroupName groupversion
 	BkbcsGroupName = "bkbcs.tencent.com"
-	// MesosV2GroupVersion TODO
+	// MesosV2GroupVersion groupversion
 	MesosV2GroupVersion = "bkbcs.tencent.com/v2"
-	// WebhookV1GroupVersion TODO
+	// WebhookV1GroupVersion groupversion
 	WebhookV1GroupVersion = "bkbcs.tencent.com/v1"
 
-	// TkexV1alpha1GroupName TODO
+	// TkexV1alpha1GroupName groupversion
 	TkexV1alpha1GroupName = "tkex.tencent.com"
-	// TkexV1alpha1GroupVersion TODO
+	// TkexV1alpha1GroupVersion groupversion
 	TkexV1alpha1GroupVersion = "tkex.tencent.com/v1alpha1"
-	// TkexGameDeploymentName TODO
+	// TkexGameDeploymentName groupversion
 	TkexGameDeploymentName = "gamedeployments.tkex.tencent.com"
-	// TkexGameStatefulSetName TODO
+	// TkexGameStatefulSetName groupversion
 	TkexGameStatefulSetName = "gamestatefulsets.tkex.tencent.com"
-	// TkexGPAName TODO
+	// TkexGPAName groupversion
 	TkexGPAName = "generalpodautoscalers.autoscaling.tkex.tencent.com"
 
-	// KubefedTypesV1Beta1GroupVersion TODO
+	// KubefedTypesV1Beta1GroupVersion groupversion
 	KubefedTypesV1Beta1GroupVersion = "types.kubefed.io/v1beta1"
-	// KubefedCoreV1Alpha1GroupVersion TODO
+	// KubefedCoreV1Alpha1GroupVersion groupversion
 	KubefedCoreV1Alpha1GroupVersion = "core.kubefed.io/v1alpha1"
-	// KubefedCoreV1Beta1GroupVersion TODO
+	// KubefedCoreV1Beta1GroupVersion groupversion
 	KubefedCoreV1Beta1GroupVersion = "core.kubefed.io/v1beta1"
-	// KubefedMultiClusterDnsV1Alpha1GroupVersion TODO
+	// KubefedMultiClusterDnsV1Alpha1GroupVersion groupversion
 	KubefedMultiClusterDnsV1Alpha1GroupVersion = "multiclusterdns.kubefed.io/v1alpha1"
-	// KubefedSchedulingV1Alpha1GroupVersion TODO
+	// KubefedSchedulingV1Alpha1GroupVersion groupversion
 	KubefedSchedulingV1Alpha1GroupVersion = "scheduling.kubefed.io/v1alpha1"
 )
 

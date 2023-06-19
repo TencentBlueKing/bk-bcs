@@ -175,10 +175,9 @@ func (mgr *WatcherManager) capabilities(restConfig *rest.Config) (string, error)
 	if !capabilities.APIVersions.Has("apiextensions.k8s.io/v1beta1") {
 		glog.Infof("capabilities does not has apiextensions.k8s.io/v1beta1, create v1 version")
 		return CRDVersionSupportV1, nil
-	} else {
-		glog.Infof("capabilities has apiextensions.k8s.io/v1beta1, create v1 beta version")
-		return CRDVersionSupportV1Beta1, nil
 	}
+	glog.Infof("capabilities has apiextensions.k8s.io/v1beta1, create v1 beta version")
+	return CRDVersionSupportV1Beta1, nil
 }
 
 func (mgr *WatcherManager) addCrdInformer(crdVersion string,

@@ -221,6 +221,7 @@ func (sync *Synchronizer) transData(data interface{}) (d []map[string]string, er
 		glog.Errorf("transData fail: err=%s", err)
 		return
 	}
+	// NOCC:nakedret/ret(设计如此:允许空返回值)
 	return
 }
 
@@ -344,6 +345,6 @@ func (sync *Synchronizer) doRequest(namespace, selector, kind string) (data []in
 	} else {
 		data, err = client.ListClusterResourceWithLabelSelector(selector)
 	}
+	// NOCC:nakedret/ret(设计如此:允许空返回值)
 	return
-
 }

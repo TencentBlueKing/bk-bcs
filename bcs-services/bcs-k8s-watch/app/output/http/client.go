@@ -269,6 +269,7 @@ func (client *StorageClient) GET() (storageResp StorageResponse, err error) {
 
 	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodGet, status, start)
+	// NOCC:nakedret/ret(设计如此:允许空返回值)
 	return
 }
 
@@ -305,6 +306,7 @@ func (client *StorageClient) DELETE() (storageResp StorageResponse, err error) {
 
 	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodDelete, status, start)
+	// NOCC:nakedret/ret(设计如此:允许空返回值)
 	return
 }
 
@@ -321,7 +323,6 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 
 	body, err := client.GetBody(data)
 	if err != nil {
-		// todo 这里报错
 		status = metrics.ErrStatus
 		metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 			http.MethodPut, status, start)
@@ -354,6 +355,7 @@ func (client *StorageClient) PUT(data interface{}) (storageResp StorageResponse,
 
 	metrics.ReportK8sWatchAPIMetrics(client.ClusterID, handlerName, client.ResourceType,
 		http.MethodPut, status, start)
+	// NOCC:nakedret/ret(设计如此:允许空返回值)
 	return
 }
 
@@ -401,6 +403,7 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 		}
 		data = d
 	}
+	// NOCC:nakedret/ret(设计如此:允许空返回值)
 	return
 }
 
@@ -482,8 +485,8 @@ func (client *StorageClient) ListClusterResource() (data []interface{}, err erro
 	return client.ListClusterResourceWithLabelSelector("")
 }
 
-// NOCC:tosa/fn_length(设计如此:无法再缩短)
 // ListClusterResourceWithLabelSelector list cluster resource with label selector
+// NOCC:tosa/fn_length(设计如此:无法再缩短)
 func (client *StorageClient) ListClusterResourceWithLabelSelector(labelSelector string) ([]interface{}, error) {
 	const (
 		handlerName = HandlerListClusterName

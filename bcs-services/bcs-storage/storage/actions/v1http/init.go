@@ -16,13 +16,13 @@ package v1http
 import (
 	// trigger all package init to register handlers to actions
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/alarms"
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/clusterconfig" // clusterconfig TODO
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"       // dynamic TODO
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamicquery"  // dynamicquery TODO
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamicwatch"  // dynamicwatch TODO
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/events"        // events TODO
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/hostconfig"    // hostconfig TODO
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metric"        // metric TODO
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metricwatch"   // metricwatch TODO
-	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watchk8smesos" // watchk8smesos TODO
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/clusterconfig" // clusterconfig init
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamic"       // dynamic init
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamicquery"  // dynamicquery init
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/dynamicwatch"  // dynamicwatch init
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/events"        // events init
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/hostconfig"    // hostconfig init
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metric"        // metric init
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/metricwatch"   // metricwatch init
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/watchk8smesos" // watchk8smesos init
 )
