@@ -45,6 +45,7 @@ func SyncNamespace(projectCode, clusterID string, namespaces []corev1.Namespace)
 	defer session.Close()
 	prefix := fmt.Sprintf("%s/%s/%s", constant.NamespaceSyncLockPrefix, projectCode, clusterID)
 	mu := concurrency.NewMutex(session, prefix)
+	// NOCC:vet/vet(设计如此:)
 	timeoutCtx, _ := context.WithTimeout(context.TODO(), time.Second)
 	err = mu.Lock(timeoutCtx)
 	if err != nil {

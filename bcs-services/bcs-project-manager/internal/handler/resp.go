@@ -33,6 +33,7 @@ func setResp(resp *proto.ProjectResponse, data *pm.Project) {
 }
 
 // setListResp 设置列表数据的返回
+// NOCC:golint/noptr(设计如此:)
 func setListResp(resp interface{}, data *map[string]interface{}) {
 	// 返回
 	if listProjectResp, ok := resp.(*proto.ListProjectsResponse); ok {
@@ -46,6 +47,7 @@ func setListResp(resp interface{}, data *map[string]interface{}) {
 }
 
 // setListPermsResp 添加权限信息
+// NOCC:golint/noptr(设计如此:)
 func setListPermsResp(resp interface{}, data *map[string]interface{}, perm map[string]map[string]bool) {
 	setListResp(resp, data)
 	// NOTE: 当根据条件查询项目信息时，带上项目对应的权限
@@ -57,6 +59,7 @@ func setListPermsResp(resp interface{}, data *map[string]interface{}, perm map[s
 	}
 }
 
+// NOCC:golint/noptr(设计如此:)
 func getProjectData(d *map[string]interface{}) *proto.ListProjectData {
 	if d == nil {
 		return &proto.ListProjectData{Total: 0, Results: []*proto.Project{}}

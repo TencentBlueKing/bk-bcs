@@ -218,6 +218,7 @@ func (p *ProjectHandler) ListProjectsForIAM(ctx context.Context,
 }
 
 // getProjectIDs 获取项目ID
+// NOCC:golint/noptr(设计如此:)
 func getProjectIDs(p *map[string]interface{}) []string {
 	var ids []string
 	results := (*p)["results"]

@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-// Package config xxx
+// Package constant xxx
 package constant
 
 const (

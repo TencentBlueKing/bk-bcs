@@ -38,6 +38,8 @@ import (
 )
 
 var (
+	// CacheKeyBCSCCAccessToken cache key for bcs cc access token
+	// NOCC:gas/crypto(工具误报:)
 	CacheKeyBCSCCAccessToken = "BCSCC_ACCESS_TOKEN"
 	getAccessTokenPath       = "/api/v1/auth/access-tokens"
 
