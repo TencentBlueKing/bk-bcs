@@ -176,15 +176,14 @@ func (dao *hookReleaseDao) List(kit *kit.Kit,
 
 		return result, int64(len(result)), err
 
-	} else {
-		result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
-		if err != nil {
-			return nil, 0, err
-		}
-
-		return result, count, err
 	}
 
+	result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return result, count, err
 }
 
 // Delete one strategy instance.

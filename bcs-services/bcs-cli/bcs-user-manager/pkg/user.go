@@ -28,7 +28,7 @@ const (
 
 	getSaasUserUrl      = "/v1/users/saas/%s"
 	createSaasUserUrl   = "/v1/users/saas/%s"
-	refreshSaasTokenUrl = "/v1/users/saas/%s/refresh"
+	refreshSaasTokenUrl = "/v1/users/saas/%s/refresh" // nolint
 
 	getPlainUserUrl      = "/v1/users/plain/%s"
 	createPlainUserUrl   = "/v1/users/plain/%s"

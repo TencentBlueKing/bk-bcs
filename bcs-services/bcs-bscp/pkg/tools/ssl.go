@@ -56,7 +56,7 @@ func ClientTLSConfVerify(skipVerify bool, caFile, certFile, keyFile, passwd stri
 	}
 
 	conf := &tls.Config{
-		InsecureSkipVerify: skipVerify,
+		InsecureSkipVerify: skipVerify, // nolint
 		RootCAs:            caPool,
 		Certificates:       []tls.Certificate{*cert},
 	}

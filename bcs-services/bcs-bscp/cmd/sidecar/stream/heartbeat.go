@@ -86,8 +86,6 @@ func (s *stream) heartbeatOnce(vas *kit.Vas, msgType sfs.MessagingType, payload 
 
 		return nil
 	}
-
-	return nil
 }
 
 // sendHeartbeatMessaging send heartbeat message to upstream server.

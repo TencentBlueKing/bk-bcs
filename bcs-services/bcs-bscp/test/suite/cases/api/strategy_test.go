@@ -680,5 +680,5 @@ func createResource(cli *api.Client, mode table.AppMode, name string) (appId, re
 	strategySetId = stgSetResp.Id
 	rm.AddStrategySet(appId, strategySetId)
 
-	return
+	return appId, releaseId, strategySetId
 }

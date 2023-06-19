@@ -125,7 +125,7 @@ func tlsConfigFromTLSBytes(tlsBytes *sfs.TLSBytes) (*tls.Config, error) {
 	var certificate tls.Certificate
 	if len(tlsBytes.CertFileBytes) == 0 && len(tlsBytes.CertFileBytes) == 0 {
 		return &tls.Config{
-			InsecureSkipVerify: tlsBytes.InsecureSkipVerify,
+			InsecureSkipVerify: tlsBytes.InsecureSkipVerify, // nolint
 			ClientCAs:          caPool,
 			Certificates:       []tls.Certificate{certificate},
 			ClientAuth:         tls.RequireAndVerifyClientCert,
@@ -138,7 +138,7 @@ func tlsConfigFromTLSBytes(tlsBytes *sfs.TLSBytes) (*tls.Config, error) {
 	}
 
 	return &tls.Config{
-		InsecureSkipVerify: tlsBytes.InsecureSkipVerify,
+		InsecureSkipVerify: tlsBytes.InsecureSkipVerify, // nolint
 		ClientCAs:          caPool,
 		Certificates:       []tls.Certificate{tlsCert},
 		ClientAuth:         tls.RequireAndVerifyClientCert,

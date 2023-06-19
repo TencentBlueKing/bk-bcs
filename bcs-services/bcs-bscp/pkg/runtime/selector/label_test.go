@@ -160,6 +160,7 @@ func TestUnmarshalGreaterThanElement(t *testing.T) {
 
 }
 
+// nolint
 func TestUnmarshalGreaterThanEqualElement(t *testing.T) {
 
 	const geJSON = `

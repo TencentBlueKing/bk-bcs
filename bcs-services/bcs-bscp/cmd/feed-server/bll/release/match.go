@@ -27,7 +27,9 @@ import (
 // GetMatchedRelease get the app instance's matched release id.
 func (rs *ReleasedService) GetMatchedRelease(kt *kit.Kit, meta *types.AppInstanceMeta) (uint32, error) {
 
-	ctx, _ := context.WithTimeout(context.TODO(), rs.matchReleaseWaitTime)
+	ctx, cancel := context.WithTimeout(context.TODO(), rs.matchReleaseWaitTime)
+	defer cancel()
+
 	if err := rs.limiter.Wait(ctx); err != nil {
 		return 0, err
 	}

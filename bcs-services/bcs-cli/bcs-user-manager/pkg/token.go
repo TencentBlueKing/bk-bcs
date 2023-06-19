@@ -26,7 +26,7 @@ import (
 
 const (
 	createTokenUrl       = "/v1/tokens"
-	getTokenUrl          = "/v1/users/%s/tokens"
+	getTokenUrl          = "/v1/users/%s/tokens" // nolint
 	deleteTokenUrl       = "/v1/tokens/%s"
 	updateTokenUrl       = "/v1/tokens/%s"
 	createTempTokenUrl   = "/v1/tokens/temp"

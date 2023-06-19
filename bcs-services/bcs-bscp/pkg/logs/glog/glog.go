@@ -285,7 +285,7 @@ func (m *moduleSpec) String() string {
 		if i > 0 {
 			b.WriteRune(',')
 		}
-		fmt.Fprintf(&b, "%s=%d", f.pattern, f.level)
+		fmt.Fprintf(&b, "%s=%d", f.pattern, f.level) // nolint
 	}
 	return b.String()
 }
@@ -422,8 +422,8 @@ func init() {
 	logging.stderrThreshold = errorLog
 	logging.toStderr = false
 	logging.alsoToStderr = false
-	logging.vmodule.Set("")
-	logging.traceLocation.Set("")
+	logging.vmodule.Set("")       // nolint
+	logging.traceLocation.Set("") // nolint
 
 	logging.setVState(0, nil, false)
 	go logging.flushDaemon()
@@ -875,7 +875,8 @@ func (sb *syncBuffer) Write(p []byte) (n int, err error) {
 	if err != nil {
 		sb.logger.exit(err)
 	}
-	return
+
+	return n, err
 }
 
 // rotateFile closes the syncBuffer's file and starts a new one.

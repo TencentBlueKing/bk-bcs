@@ -104,15 +104,14 @@ func (dao *hookDao) List(kit *kit.Kit, opt *types.ListHooksOption) ([]*table.Hoo
 
 		return result, int64(len(result)), err
 
-	} else {
-		result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
-		if err != nil {
-			return nil, 0, err
-		}
-
-		return result, count, err
 	}
 
+	result, count, err := q.FindByPage(opt.Page.Offset(), opt.Page.LimitInt())
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return result, count, err
 }
 
 // CountHookTag count hook tag

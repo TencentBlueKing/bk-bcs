@@ -72,6 +72,8 @@ func TestIsVersionMatch(t *testing.T) {
 		Patch: 10,
 	}
 
+	yes = IsAPIVersionMatch(test)
+
 	if !yes {
 		t.Errorf("should matched, but not.")
 		return

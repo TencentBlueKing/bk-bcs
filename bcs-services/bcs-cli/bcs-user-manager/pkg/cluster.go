@@ -25,7 +25,7 @@ import (
 
 const (
 	createClusterUrl       = "/v1/clusters"
-	createRegisterTokenUrl = "/v1/clusters/%s/register_tokens"
+	createRegisterTokenUrl = "/v1/clusters/%s/register_tokens" // nolint
 	getRegisterTokenUrl    = "/v1/clusters/%s/register_tokens"
 	updateCredentialsUrl   = "/v1/clusters/%s/credentials"
 	getCredentialsUrl      = "/v1/clusters/%s/credentials"

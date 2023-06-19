@@ -27,7 +27,7 @@ const (
 	// appCodeHeader iam app code header key.
 	appCodeHeader = "X-Bk-App-Code"
 	// appSecretHeader iam app secret header key.
-	appSecretHeader = "X-Bk-App-Secret"
+	appSecretHeader = "X-Bk-App-Secret" // nolint
 
 	// BkIAMMaxPageSize blueking iam max page size.
 	BkIAMMaxPageSize = 1000

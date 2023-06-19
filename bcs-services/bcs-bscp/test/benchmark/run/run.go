@@ -92,8 +92,6 @@ func FireLoadTest(f func() error) Metrics {
 				stats.CollectStatus(s)
 			}
 		}
-
-		return
 	}()
 
 exitFor:

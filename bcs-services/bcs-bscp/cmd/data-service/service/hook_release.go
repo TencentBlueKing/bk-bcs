@@ -13,7 +13,6 @@ limitations under the License.
 package service
 
 import (
-	"bscp.io/pkg/runtime/filter"
 	"context"
 	"errors"
 	"fmt"
@@ -26,6 +25,7 @@ import (
 	hr "bscp.io/pkg/protocol/core/hook-release"
 	pbhr "bscp.io/pkg/protocol/core/hook-release"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
@@ -222,6 +222,7 @@ func (s *Service) GetHookReleaseByPubState(ctx context.Context,
 	return resp, nil
 }
 
+// UpdateHookRelease ..
 func (s *Service) UpdateHookRelease(ctx context.Context, req *pbds.UpdateHookReleaseReq) (*pbbase.EmptyResp, error) {
 
 	kt := kit.FromGrpcContext(ctx)
@@ -260,6 +261,7 @@ func (s *Service) UpdateHookRelease(ctx context.Context, req *pbds.UpdateHookRel
 	return new(pbbase.EmptyResp), nil
 }
 
+// ListHookReleasesReferences ..
 func (s *Service) ListHookReleasesReferences(ctx context.Context,
 	req *pbds.ListHookReleasesReferencesReq) (*pbds.ListHookReleasesReferencesResp, error) {
 

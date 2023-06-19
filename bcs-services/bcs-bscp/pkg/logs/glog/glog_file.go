@@ -130,7 +130,7 @@ func (lk *logKeeper) add(newBlock *fileBlock) (ok bool) {
 	for lk.total > MaxNum() {
 		lk.remove()
 	}
-	return
+	return ok
 }
 
 func (lk *logKeeper) remove() (ok bool) {
@@ -144,7 +144,7 @@ func (lk *logKeeper) remove() (ok bool) {
 	lk.header = block.next
 	block = nil // for GC
 	lk.total--
-	return
+	return ok
 }
 
 func (lk *logKeeper) removeFile(name string) error {

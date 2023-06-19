@@ -154,6 +154,7 @@ func PrintGetTokenInfoCmdResult(flagOutput string, resp *pkg.GetTokenResponse) {
 }
 
 // PrintGetTokenByUserAndClusterIDCmdResult prints the response that get token by user and clusterID
+// nolint
 func PrintGetTokenByUserAndClusterIDCmdResult(flagOutput string, resp *pkg.GetTokenByUserAndClusterIDResponse) {
 	if flagOutput == outputTypeJSON {
 		if err := encodeJSON(resp); err != nil {

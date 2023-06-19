@@ -202,7 +202,8 @@ func (rm *ResourceManager) GetAppToStrategySet() (appId, stgSetId uint32) {
 		stgSetId = rm.StrategySet[key]
 		break
 	}
-	return
+
+	return appId, stgSetId
 }
 
 // DeleteStrategySet delete a created strategy set id
@@ -241,7 +242,8 @@ func (rm *ResourceManager) GetAppToStrategy() (appId, stgId uint32) {
 			return key, rm.AppToStrategy[key][0]
 		}
 	}
-	return
+
+	return appId, stgId
 }
 
 // AddPublish  add a created publish strategy id

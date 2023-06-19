@@ -283,16 +283,12 @@ func (a *Authorize) authElement(ctx context.Context, policy *operator.Policy, rs
 		}
 
 		// record these attribute for later calculate.
-		allAttrPolicies = append(allAttrPolicies, policy)
+		allAttrPolicies = append(allAttrPolicies, policy) // nolint
 
 		// initialize and validate the resource, can not be empty and should be all the same.
-		if len(resource) == 0 {
-			resource = fv.Field.Resource
-		} else {
-			if resource != fv.Field.Resource {
-				return false, false, fmt.Errorf("a content have different resource %s / %s, should be same",
-					authRsc, fv.Field.Resource)
-			}
+		if len(resource) != 0 && resource != fv.Field.Resource {
+			return false, false, fmt.Errorf("a content have different resource %s / %s, should be same",
+				authRsc, fv.Field.Resource)
 		}
 
 		// we try to handle next attribute if it has.

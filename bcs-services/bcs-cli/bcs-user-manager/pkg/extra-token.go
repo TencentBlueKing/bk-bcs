@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	getTokenByUserAndClusterIDUrl = "/v1/tokens/extra/getClusterUserToken"
+	getTokenByUserAndClusterIDUrl = "/v1/tokens/extra/getClusterUserToken" // nolint
 )
 
 // TokenStatus is a enum for token status.

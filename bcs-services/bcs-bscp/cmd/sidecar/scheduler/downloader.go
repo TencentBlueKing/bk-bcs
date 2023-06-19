@@ -328,7 +328,7 @@ func (exec *execDownload) downloadWithRange() error {
 
 	logs.Infof("start download file[%s] with range, rid: %s", exec.downloadUri, exec.vas.Rid)
 
-	start, end := uint64(0), uint64(0)
+	start, end := uint64(0), uint64(0) // nolint
 	batchSize := 2 * exec.dl.balanceDownloadByteSize
 	// calculate the total parts to be downloaded
 	totalParts := int(exec.fileSize / batchSize)

@@ -46,10 +46,10 @@ const (
 )
 
 var (
-	testApp1ID            uint32 = 0
-	testApp2ID            uint32 = 0
-	testApp3ID            uint32 = 0
-	testApp3StrategySetID uint32 = 0
+	testApp1ID            uint32
+	testApp2ID            uint32
+	testApp3ID            uint32
+	testApp3StrategySetID uint32
 )
 
 // AppReleaseMeta define app release meta struct.

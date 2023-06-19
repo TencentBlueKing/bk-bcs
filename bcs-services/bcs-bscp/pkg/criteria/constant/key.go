@@ -39,7 +39,7 @@ const (
 	LanguageKey = "HTTP_BLUEKING_LANGUAGE"
 
 	// BKGWJWTTokenKey is blueking api gateway jwt header key.
-	BKGWJWTTokenKey = "X-Bkapi-JWT"
+	BKGWJWTTokenKey = "X-Bkapi-JWT" // nolint
 
 	// BKTokenForTest is a token for test
 	BKTokenForTest = "bk-token-for-test"
@@ -68,7 +68,7 @@ const (
 const (
 	AuthLoginProviderKey = "auth-login-provider"
 	AuthLoginUID         = "auth-login-uid"
-	AuthLoginToken       = "auth-login-token"
+	AuthLoginToken       = "auth-login-token" // nolint
 )
 
 var (

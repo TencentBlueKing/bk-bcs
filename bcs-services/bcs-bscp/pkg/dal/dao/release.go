@@ -168,16 +168,14 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (
 
 		return &types.ListReleaseDetails{Count: uint32(len(result)), Details: result}, nil
 
-	} else {
-		result, count, err := q.FindByPage(opts.Page.Offset(), opts.Page.LimitInt())
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListReleaseDetails{Count: uint32(count), Details: result}, nil
-
 	}
 
+	result, count, err := q.FindByPage(opts.Page.Offset(), opts.Page.LimitInt())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.ListReleaseDetails{Count: uint32(count), Details: result}, nil
 }
 
 // validateAttachmentResExist validate if attachment resource exists before creating release.

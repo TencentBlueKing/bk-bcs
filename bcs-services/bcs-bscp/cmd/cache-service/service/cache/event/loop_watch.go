@@ -283,10 +283,10 @@ func (o *observer) tryNext() (reWatch bool, loop bool) {
 		if !current {
 			// not master, status not changed, and can not loop
 			return false, false
-		} else {
-			// is master, status not changed, and can loop
-			return false, true
 		}
+
+		// is master, status not changed, and can loop
+		return false, true
 	}
 
 	logs.Infof("loop watch, is master status changed from %v to %v.", o.preState, current)

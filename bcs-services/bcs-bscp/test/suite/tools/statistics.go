@@ -91,6 +91,9 @@ func getResultFromFile(path string) ([]*Result, error) {
 	}
 	defer file.Close()
 	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
 	content := string(bytes)
 
 	splitContents := strings.Split(content, "<\n>")

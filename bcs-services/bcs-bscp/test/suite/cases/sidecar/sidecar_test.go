@@ -69,8 +69,8 @@ func TestSidecar(t *testing.T) {
 				}
 
 				if hitErr != nil {
-					retry++
-					sleepTime = sleepTime * 4
+					retry++                   // nolint
+					sleepTime = sleepTime * 4 // nolint
 				}
 
 				break
@@ -103,8 +103,8 @@ func TestSidecar(t *testing.T) {
 				}
 
 				if hitErr != nil {
-					retry++
-					sleepTime = sleepTime * 4
+					retry++                   // nolint
+					sleepTime = sleepTime * 4 // nolint
 				}
 
 				break

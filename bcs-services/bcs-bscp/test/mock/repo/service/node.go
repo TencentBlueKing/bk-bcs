@@ -65,7 +65,7 @@ func (s *Service) queryMetadataInfo(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	bytes, err := ioutil.ReadAll(file)
-	if len(bytes) == 0 {
+	if len(bytes) == 0 || err != nil {
 		resp.WriteResp(w, make(map[string]interface{}, 0))
 		return
 	}
@@ -337,7 +337,7 @@ func (s *Service) downloadAll(w http.ResponseWriter, path string) error {
 func (s *Service) recordNodeDetail(path, sign, metadata string) error {
 	readFile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
-		fmt.Errorf("open file failed, err: %v", err)
+		return fmt.Errorf("open file failed, err: %v", err)
 	}
 	defer readFile.Close()
 

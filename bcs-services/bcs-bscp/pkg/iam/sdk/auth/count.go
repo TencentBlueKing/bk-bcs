@@ -62,23 +62,22 @@ func (a *Authorize) countPolicy(ctx context.Context, p *operator.Policy, resourc
 
 			return &client.AuthorizeList{Ids: ids}, nil
 
-		} else {
-			// Note: cause we do not support _bk_iam_path_ field for now
-			// So we only need to get resource's other attribute policy.
-			opts := &client.ListWithAttributes{
-				Operator:     p.Operator,
-				AttrPolicies: []*operator.Policy{p},
-				Type:         resourceType,
-			}
-
-			ids, err := a.fetcher.ListInstancesWithAttributes(ctx, opts)
-			if err != nil {
-				return nil, fmt.Errorf("list instance with %s attribute failed, err: %v", p.Operator, err)
-			}
-
-			return &client.AuthorizeList{Ids: ids}, nil
 		}
 
+		// Note: cause we do not support _bk_iam_path_ field for now
+		// So we only need to get resource's other attribute policy.
+		opts := &client.ListWithAttributes{
+			Operator:     p.Operator,
+			AttrPolicies: []*operator.Policy{p},
+			Type:         resourceType,
+		}
+
+		ids, err := a.fetcher.ListInstancesWithAttributes(ctx, opts)
+		if err != nil {
+			return nil, fmt.Errorf("list instance with %s attribute failed, err: %v", p.Operator, err)
+		}
+
+		return &client.AuthorizeList{Ids: ids}, nil
 	}
 
 }
