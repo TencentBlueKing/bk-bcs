@@ -42,7 +42,7 @@ func (h *cmdHelm) InstallChart(inf InstallFlags, glf GlobalFlags) error {
 	parameters := inf.ParseParameters() + gPara
 	klog.Infof("helm install%s", parameters)
 	os.Remove("install.sh")
-	file, err := os.OpenFile("install.sh", os.O_CREATE|os.O_RDWR, 0755)
+	file, err := os.OpenFile("install.sh", os.O_CREATE|os.O_RDWR, 0755) // NOCC:gas/permission(设计如此)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (h *cmdHelm) InstallChart(inf InstallFlags, glf GlobalFlags) error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command("/bin/bash", "-c", "./install.sh")
+	cmd := exec.Command("/bin/bash", "-c", "./install.sh") // NOCC:gas/subprocess(设计如此)
 	buf := bytes.NewBuffer(make([]byte, 1024))
 	cmd.Stderr = buf
 	err = cmd.Run()

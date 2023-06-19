@@ -26,7 +26,7 @@ __DATA__
     location /t {
         content_by_lua_block {
             local plugin = require("apisix.plugins.bcs-auth")
-            local ok, err = plugin.check_schema({bk_login_host = "http://login.bk.com", private_key = "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLR...", 
+            local ok, err = plugin.check_schema({bk_login_host = "http://login.bk.com", private_key = "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLR...",
             redis_host = "127.0.0.1", redis_password = "123@lua"})
             if not ok then
                 ngx.say(err)
@@ -47,7 +47,7 @@ done
     location /t {
         content_by_lua_block {
             local plugin = require("apisix.plugins.bcs-auth")
-            local ok, err = plugin.check_schema({bk_login_host = "http://login.bk.com", private_key = "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLR...", 
+            local ok, err = plugin.check_schema({bk_login_host = "http://login.bk.com", private_key = "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLR...",
             redis_host = "127.0.0.1", redis_password = 123})
             if not ok then
                 ngx.say(err)
@@ -77,7 +77,7 @@ done
                             "bk_login_host": "http://login.bk.com",
                             "private_key": "LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlCT3dJQkFBSkJBTVg0UW9idVQvSzhWUzIyN3NYZEVKTThCSXJjNnVRU21HOHA0a2Z1S1lLKzJUNy9PaWRUCjRWQ1Y5TUpJdjdidG1BcmI2UFJsYURqdmZiVi9jV3FRQVRrQ0F3RUFBUUpCQUxLaVVXVnZwTFJqUEhrRG1IRHkKQ1FMU0pVY29FTXU3KzlCUyt0dnRDNGZ0RjhRSlMrejcrTXZiOGtyS0Mxb3dzTlFRR2hVR0ovanBoMG5JTXA4UgpBQUVDSVFEbEd5YTBPaWszbTAzcXhDNy96V0p3a0dmZ1pwNit0TStpQm93MTRYSnUrUUloQU4wMWJ5d3p5Q1QyCjJwd2NVTW02dlBvRlFTSGgzSkFIN1c3YTcxNk5RWFJCQWlCeUhpZ1ZOYk02STMyWUpzaFNXbmRpSWt2YmxzSVQKcy9TSWZFSnl4QzAvNFFJZ0R1M1hSZTFzdVlucmNSTzhKQkUxUmM1cStlVnJaRkVVcGlHaWZBZ2VmY0VDSVFEUgpvaU1FS3E3d1dIa1Y2WjRWMUllYnkrSS9UUmVhQmxaR2Q4d2NVTkgrVEE9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQ==",
                             "redis_host": "127.0.0.1",
-                            "redis_password": "Ps2+5f@10"
+                            "redis_password": ""
                         }
                     },
                     "upstream": {
@@ -118,7 +118,7 @@ GET /hello
         content_by_lua_block {
             local red = require("resty.redis").new()
             red:connect("127.0.0.1", "6379")
-            red:auth("Ps2+5f@10")
+            red:auth("")
             red:select(0)
             red:set("bcs_auth:token:ce1d6ce7996a4ad8a9b2e3e36410acea", "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ...")
 
@@ -189,7 +189,7 @@ hello world
             local jwt = require("resty.jwt")
             local red = require("resty.redis").new()
             red:connect("127.0.0.1", "6379")
-            red:auth("Ps2+5f@10")
+            red:auth("")
             red:select(0)
 
             jwt_token = red:get("bcs_auth:session_id:2b0827e0-d932-4342-aa0c-cbaa409495a3")
@@ -229,7 +229,7 @@ Cookie: bk_token=7365a41c-86db-4f6f-977a-af5906cd5bc1
         content_by_lua_block {
             local red = require("resty.redis").new()
             red:connect("127.0.0.1", "6379")
-            red:auth("Ps2+5f@10")
+            red:auth("")
             red:select(0)
             red:del("bcs_auth:session_id:2b0827e0-d932-4342-aa0c-cbaa409495a3")
             red:del("bcs_auth:token:ce1d6ce7996a4ad8a9b2e3e36410acea")

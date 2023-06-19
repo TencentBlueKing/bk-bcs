@@ -29,7 +29,7 @@ import (
 
 var (
 	// Token token for bcs tunnel
-	Token = "BCS-API-Tunnel-Token"
+	Token = "BCS-API-Tunnel-Token" // NOCC:gas/crypto(设计如此)
 	// ID tunnel id
 	ID = "BCS-API-Tunnel-ID"
 )
@@ -102,7 +102,7 @@ func (p *peer) start(ctx context.Context, s *Server) {
 		dialer.TLSClientConfig = p.cliTLS
 	} else {
 		dialer.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: true, // NOCC:gas/tls(设计如此)
 		}
 	}
 

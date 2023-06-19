@@ -9,6 +9,9 @@ source:
       - ".*/install/conf/bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netservice/swagger-ui/.*"
       - ".*/innerdocs/.*"
       - ".*/install/helm/bcs-multi-ns-proxy/values.yaml"
+      - ".*/bcs-services/bcs-gateway-discovery/plugins/t/bcs-auth.t"
+      - ".*/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go"
+      - ".*/bcs-common/pkg/esb/apigateway/bkdata/types.go"
 
   # 提供产品代码库中工具或框架自动生成的且在代码库中的代码，没有可为空。以便后续代码统计环节进行排除等特殊处理。
   auto_generate_source:
