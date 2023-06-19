@@ -161,7 +161,13 @@ type PodUpdateInfo struct {
 }
 
 // GetDiffPods get different pods between two pods maps
-func GetDiffPods(oldPodMap map[string]*Pod, newPodMap map[string]*Pod) (adds []*Pod, updates []*Pod, deletes []*Pod) {
+func GetDiffPods(oldPodMap map[string]*Pod, newPodMap map[string]*Pod) ([]*Pod, []*Pod, []*Pod) {
+	var (
+		adds    []*Pod
+		updates []*Pod
+		deletes []*Pod
+	)
+
 	for k, v := range newPodMap {
 		if old, ok := oldPodMap[k]; ok {
 			if flag, _ := old.GetUpdatedField(newPodMap[k]); flag {
@@ -177,5 +183,6 @@ func GetDiffPods(oldPodMap map[string]*Pod, newPodMap map[string]*Pod) (adds []*
 			deletes = append(deletes, v)
 		}
 	}
-	return
+
+	return adds, updates, deletes
 }

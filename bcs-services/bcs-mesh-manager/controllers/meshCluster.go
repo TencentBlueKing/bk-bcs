@@ -44,6 +44,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	istioOperatorNamespace = "istio-operator"
+)
+
 var (
 	// MeshComponents default istio components to install
 	MeshComponents = []string{"istio-operator", "istiod", "istio-egressgateway", "istio-ingressgateway", "istio-tracing",
@@ -111,7 +115,7 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster,
 				Status:    meshv1.InstallStatusNONE,
 			}
 			if component == "istio-operator" {
-				status.Namespace = "istio-operator"
+				status.Namespace = istioOperatorNamespace
 			}
 			m.meshCluster.Status.ComponentStatus[component] = status
 		}
@@ -150,7 +154,7 @@ func NewMeshClusterManager(conf config.Config, meshCluster *meshv1.MeshCluster,
 	}*/
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: true, // nolint
 		},
 	}
 	// kubernetes api client for create IstioOperator Object
@@ -456,8 +460,6 @@ func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (
 		status.Status = meshv1.InstallStatusFAILED
 		return
 	}
-
-	return
 }
 
 // createIstioOperatorCrds xxx

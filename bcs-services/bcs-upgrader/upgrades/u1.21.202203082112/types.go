@@ -146,7 +146,7 @@ type bcsClusterBase struct {
 
 type bcsReqUpdateCluster struct {
 	bcsClusterBase
-	NetworkSettings        createClustersNetworkSettings      `json:"networkSettings"` // TODO 待定
+	NetworkSettings        createClustersNetworkSettings      `json:"networkSettings"`
 	ClusterBasicSettings   createClustersClusterBasicSettings `json:"clusterBasicSettings"`
 	Updater                string                             `json:"updater"`
 	Master                 []string                           `json:"master"`
@@ -171,7 +171,7 @@ type bcsReqUpdateCluster struct {
 
 type bcsRespFindCluster struct {
 	bcsClusterBase
-	NetworkSettings        createClustersNetworkSettings      `json:"networkSettings"` // TODO 待定
+	NetworkSettings        createClustersNetworkSettings      `json:"networkSettings"`
 	ClusterBasicSettings   createClustersClusterBasicSettings `json:"clusterBasicSettings"`
 	Creator                string                             `json:"creator"` // required
 	Updater                string                             `json:"updater"`

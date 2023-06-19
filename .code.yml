@@ -6,142 +6,90 @@ source:
   test_source:
     #用于匹配文件; 匹配方式为正则表达式。
     filepath_regex:
-      - .*/install/conf/bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netservice/swagger-ui/.*
-      - .*/innerdocs/.*
-      - .*/install/helm/bcs-multi-ns-proxy/values.yaml
-      - .*/bcs-services/bcs-gateway-discovery/plugins/t/bcs-auth.t
+      # Deprecated module
+      - /bcs-services/bcs-argocd-manager/
+      - /bcs-services/bcs-log-manager/
+
+      # Comment ratio
+      - /bcs-services/bcs-mesh-manager/config/options.go
+      - /bcs-services/bcs-upgrader/upgrades/u1.21.202203082112/migrate.go
+      - /bcs-services/bcs-upgrader/upgrades/u1.21.202203082112/types.go
+
+      # Security & Sensitive: it's safe to ignore
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/go.mod
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22/go.mod
+      - /bcs-services/bcs-data-manager/go.mod
+      - /bcs-services/bcs-gateway-discovery/plugins/t/bcs-auth.t
+      - /bcs-services/bcs-k8s-watch/go.mod
+      - /bcs-services/cluster-resources/pkg/resource/example/manifest/config/simple_secret.yaml
+      - /bcs-ui/backend/templatesets/legacy_apps/configuration/yaml_mode/manifests/Secret.yaml
+      - /install/helm/bcs-multi-ns-proxy/values.yaml
+
+      # Misc
+      - /bcs-scenarios/kourse
+      - /bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go
+      - /bcs-common/pkg/esb/apigateway/bkdata/types.go
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core/scale_up.go
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator/drain.go
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/clientset/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/informers/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/listers/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/.*
+      - /bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-csi-tencentcloud/driver/cbs/controller.go
+      - /bcs-runtime/bcs-k8s/bcs-component/cluster-autoscaler/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/api/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netagent/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netcontroller/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/bcs-cloudnetwork/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/bcs-ipmasq-cidrsync/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/bcs-ipres-webhook/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/bcs-networkpolicy/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/internal/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/pkg/.*
+      - /bcs-runtime/bcs-k8s/bcs-network/qcloud-eip/.*
+      - /bcs-runtime/bcs-k8s/kubebkbcs/.*
+      - /bcs-runtime/bcs-k8s/kubedeprecated/.*
+      - /bcs-runtime/bcs-k8s/kubernetes/.*
+      - /bcs-runtime/bcs-mesos/bcs-clb-controller/.*
+      - /bcs-runtime/bcs-mesos/bcs-container-executor/.*
+      - /bcs-runtime/bcs-mesos/bcs-dns/.*
+      - /bcs-runtime/bcs-mesos/bcs-hpacontroller/.*
+      - /bcs-runtime/bcs-mesos/bcs-loadbalance/.*
+      - /bcs-runtime/bcs-mesos/bcs-mesos-driver/.*
+      - /bcs-runtime/bcs-mesos/bcs-mesos-watch/.*
+      - /bcs-runtime/bcs-mesos/bcs-scheduler/.*
+      - /bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*
+      - /bcs-runtime/bcs-mesos/kubebkbcsv2/.*
+      - /bcs-runtime/bcs-mesos/mesosv2/.*
+      - /bcs-runtime/bcs-mesos/pkg/.*
+      - /bcs-services/bcs-clb-controller/apis/.*
+      - /bcs-services/bcs-clb-controller/client/.*
+      - /bcs-services/bcs-cluster-manager/api/.*
+      - /bcs-services/bcs-cluster-manager/internal/cloudprovider/component/.*
+      - /bcs-services/bcs-data-manager/pkg/mock/.*
+      - /bcs-services/bcs-mesh-manager/api/.*
 
   # 提供产品代码库中工具或框架自动生成的且在代码库中的代码，没有可为空。以便后续代码统计环节进行排除等特殊处理。
   auto_generate_source:
     # 自动生成代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
     filepath_regex:
+      - .*.docs.go
+      - .*.gen.go
       - .*.pb.go
+      - .*.pb.gw.go
       - .*.pb.micro.go
       - .*.pb.validate.go
-      - .*.pb.gw.go
-      - .*.gen.go
-      - .*docs.go
-      - .*swagger.*
-      - .*/bcs-common/pkg/third_party/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core/scale_up.go
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator/drain.go
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/apis/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/clientset/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/informers/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamedeployment-operator/pkg/listers/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/apis/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/clientset/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/informers/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-gamestatefulset-operator/pkg/listers/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22/go.mod
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/go.mod
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-csi-tencentcloud/driver/cbs/controller.go
-      - .*/bcs-runtime/bcs-k8s/kubedeprecated/.*
-      - .*/bcs-runtime/bcs-k8s/kubernetes/.*
-      - .*/bcs-runtime/bcs-k8s/kubebkbcs/.*
-      - .*/bcs-runtime/bcs-mesos/mesosv2/.*
-      - .*/bcs-runtime/bcs-mesos/kubebkbcsv2/.*
-      - .*/bcs-runtime/bcs-mesos/pkg/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/api/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netagent/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/bcs-cloud-netcontroller/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/bcs-cloudnetwork/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/bcs-ipmasq-cidrsync/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/bcs-ipres-webhook/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/bcs-networkpolicy/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/internal/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/pkg/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/qcloud-eip/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/third-party/.*
-      - .*/bcs-services/bcs-data-manager/go.mod
-      - .*/bcs-services/bcs-clb-controller/apis/.*
-      - .*/bcs-services/bcs-clb-controller/client/.*
-      - .*/bcs-services/bcs-log-manager/app/api/proto/.*
-      - .*/bcs-services/bcs-log-manager/pkg/apis/.*
-      - .*/bcs-services/bcs-log-manager/pkg/controllers/.*
-      - .*/bcs-services/bcs-log-manager/pkg/generated/.*
-      - .*/bcs-services/bcs-log-manager/pkg/mock/.*
-      - .*/bcs-services/bcs-mesh-manager/api/.*
-      - .*/bcs-services/bcs-mesh-manager/proto/.*
-      - .*/bcs-services/bcs-mesh-manager/third_party/.*
-      - .*/bcs-services/bcs-alert-manager/pkg/proto/alertmanager/.*
-      - .*/bcs-services/bcs-alert-manager/pkg/third_party/.*
-      - .*/bcs-services/bcs-cluster-manager/api/.*
-      - .*/bcs-services/bcs-cluster-manager/third_party/.*
-      - .*/bcs-services/bcs-cluster-manager/internal/cloudprovider/component/.*
-      - .*/bcs-services/bcs-resource-manager/proto/.*
-      - .*/bcs-services/bcs-resource-manager/third_party/.*
-      - .*/bcs-services/bcs-project-manager/proto/.*
-      - .*/bcs-services/bcs-project-manager/third_party/.*
-      - .*/bcs-services/cluster-resources/pkg/resource/example/manifest/config/simple_secret.yaml
-      - .*/bmsf-configuration/internal/protocol/.*
-      - .*/bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/cluster-autoscaler/.*
-      - .*/bcs-ui/backend/templatesets/legacy_apps/configuration/yaml_mode/manifests/Secret.yaml
-      - .*/bcs-ui/backend/resources/examples/manifests/configs/simple_secret.yaml
-      - .*/bcs-services/bcs-nodegroup-manager/proto/.*
-      - .*/bcs-services/bcs-data-manager/proto/.*
-      - .*/bcs-services/bcs-data-manager/pkg/mock/.*
-      - .*/bcs-services/bcs-project-manager/proto/.*
-      - .*/bcs-services/bcs-helm-manager/proto/.*
-      - .*/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr/proto/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-clb-controller/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-container-executor/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-dns/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-hpacontroller/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-loadbalance/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-mesos-driver/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-mesos-watch/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-scheduler/.*
-      - .*/bcs-services/bcs-storage/pkg/proto/.*
-      - .*/bcs-services/cluster-resources/proto/.*
-      - .*/bcs-scenarios/kourse
 
   # 提供产品代码库中直接以源码形式存在的第三方代码目录或代码文件名的正则表达。
   # 此处备注的第三方代码在后续统计代码量环节会被排除，若代码库中不存在需要排除的第三方代码，该项配置标识可为空
   third_party_source:
     #第三方代码文件的正则表达式，若无统一标识格式，可以指定具体目录，样例可参考test_source举例
     filepath_regex:
-      - .*/bcs-services/bcs-argocd-manager/.* # Deprecated module
-      - .*/bcs-common/pkg/bcsapi/clustermanager/.*
-      - .*/bcs-common/pkg/scheduler/mesosproto/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-container-executor/mesos/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/protobuf/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-scheduler/src/mesosproto/.*
-      - .*/pkg/mod/.*
-      - .*/bmsf-configuration/.*
-      - .*/bcs-services/bcs-nodegroup-manager/third_party/.*
-      - .*/bcs-services/bcs-helm-manager/third_party/.*
-      - .*/bcs-services/bcs-project-manager/third_party/.*
-      - .*/bcs-services/bcs-data-manager/third_party/.*
-      - .*/bcs-services/bcs-alert-manager/pkg/third_party/protoc-gen-swagger/.*
-      - .*/bcs-services/cluster-resources/third_party/protoc-gen-swagger/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/bcs-vcluster-plugins/pkg/apis/bk-log-sidecar/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-component/kubernetes/.*
-      - .*/bcs-runtime/bcs-mesos/pkg/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-scheduler/src/mesosproto/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/protobuf/.*
-      - .*/bcs-runtime/bcs-mesos/bcs-container-executor/mesos/.*
-      - .*/bmsf-configuration/internal/protocol/.*
-      - .*/bcs-runtime/bcs-mesos/bmsf-mesh/pkg/.*
-      - .*/bcs-common/pkg/scheduler/mesosproto/.*
-      - .*/install/conf/bcs-services/bcs-cloud-netservice/swagger-ui/.*
-      - .*/bcs-runtime/bcs-k8s/bcs-network/api/.*
-      - .*/bcs-runtime/bcs-k8s/kubedeprecated/.*
-      - .*/bcs-runtime/bcs-mesos/mesosv2/.*
-      - .*/bcs-services/bcs-mesh-manager/api/.*
-      - .*/bcs-services/bcs-mesh-manager/proto/.*
-      - .*/bcs-services/bcs-mesh-manager/third_party/.*
-      - .*/bcs-services/cluster-resources/third_party/.*
-      - .*/bcs-services/bcs-data-manager/proto/.*
-      - .*/bcs-services/bcs-data-manager/third_party/.*
-      - .*/bcs-services/bcs-data-manager/pkg/mock/.*
-      - .*/bcs-services/bcs-helm-manager/proto/bcs-helm-manager/.*
-      - .*/bcs-services/bcs-project/proto/bcsproject/.*
-      - .*/bcs-services/bcs-monitor/docs/.*
-      - .*/bcs-services/bcs-nodegroup-manager/proto/.*
-      - .*/bcs-services/bcs-nodegroup-manager/third_party/.*
-      - .*/bcs-services/bcs-nodegroup-manager/pkg/resourcemgr/proto/.*
-      - .*/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go
-      - .*/bcs-common/pkg/esb/apigateway/bkdata/types.go
+      - .*/mesosproto/.*
+      - .*/swagger-ui/.*
+      - .*/swagger/.*
+      - .*/third_party/.*

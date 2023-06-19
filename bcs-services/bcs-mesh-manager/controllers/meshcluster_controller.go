@@ -142,5 +142,4 @@ func removeString(slice []string, s string) (result []string) {
 		}
 		result = append(result, item)
 	}
-	return
 }

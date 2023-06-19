@@ -11,7 +11,7 @@
  *
  */
 
-package external_cluster
+package cluster
 
 // ExternalCluster xxx
 type ExternalCluster interface {

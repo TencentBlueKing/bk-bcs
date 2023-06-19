@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster"
+	cluster "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/external-cluster/tke/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
 )
@@ -104,7 +104,7 @@ type DescribeClusterSecurityInfoResponse struct {
 }
 
 // NewTkeCluster xxx
-func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) external_cluster.ExternalCluster {
+func NewTkeCluster(clusterId, tkeClusterId, tkeClusterRegion string) cluster.ExternalCluster {
 	return &tkeCluster{
 		ClusterId:        clusterId,
 		TkeClusterId:     tkeClusterId,

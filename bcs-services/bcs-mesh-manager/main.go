@@ -115,8 +115,8 @@ func main() {
 	grpcAddr := fmt.Sprintf("%s:%d", conf.Address, conf.Port)
 	grpcmux := grpcruntime.NewServeMux()
 	opts := []rawgrpc.DialOption{rawgrpc.WithInsecure()}
-	if err := meshmanagerv1.RegisterMeshManagerHandlerFromEndpoint(ctx, grpcmux, grpcAddr, opts); err != nil {
-		klog.Errorf("register grpc-gateway failed, %s", err.Error())
+	if e := meshmanagerv1.RegisterMeshManagerHandlerFromEndpoint(ctx, grpcmux, grpcAddr, opts); e != nil {
+		klog.Errorf("register grpc-gateway failed, %s", e.Error())
 		os.Exit(1)
 	}
 	httpserver := &http.Server{Addr: fmt.Sprintf("%s:%d", conf.Address, conf.Port-1), Handler: grpcmux}

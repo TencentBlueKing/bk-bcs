@@ -15,8 +15,8 @@ package v1
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-common/common/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/http"
 	"github.com/bitly/go-simplejson"
 )
 
@@ -38,7 +38,7 @@ func parseResponse(resp []byte) (code int, msg string, data []byte, err error) {
 		return -1, fmt.Sprintf("decode response failed, raw resp: %s", string(resp)), nil, err
 	}
 
-	return
+	return code, msg, data, nil
 }
 
 func getClusterIDHeader(clusterId string) *http.HeaderSet {
