@@ -62,13 +62,13 @@ type Client interface {
 	// GetUpstream operation
 	GetUpstream(id string) (*Upstream, error)
 	ListUpstream() ([]*Upstream, error)
-	// CreateUpstream TODO
+	// CreateUpstream DOTO
 	// create upstream, upstream id will auto generate by apisix when not setting
 	CreateUpstream(upstr *Upstream) error
 	UpdateUpstream(upstr *Upstream) error
 	DeleteUpstream(id string) error
 
-	// GetService TODO
+	// GetService DOTO
 	// service operation
 	GetService(id string) (*Service, error)
 	ListService() ([]*Service, error)
@@ -76,7 +76,7 @@ type Client interface {
 	UpdateService(svc *Service) error
 	DeleteService(id string) error
 
-	// GetRoute TODO
+	// GetRoute DOTO
 	// route operation
 	GetRoute(id string) (*Route, error)
 	ListRoute() ([]*Route, error)

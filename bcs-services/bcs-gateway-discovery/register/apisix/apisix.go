@@ -353,7 +353,7 @@ func (r *apiRegister) GetTargetByService(svc *register.Service) ([]register.Back
 
 	var backends []register.Backend
 	if upstream.UpstreamNodes == nil {
-		upstream.UpstreamNodes = admin.NodesMap2UpstreamNodes(upstream.MapStructedNodes)
+		upstream.UpstreamNodes = admin.NodesMap2UpstreamNodes(*upstream.MapStructedNodes)
 	}
 	for _, node := range *upstream.UpstreamNodes {
 		backend := register.Backend{
@@ -416,7 +416,7 @@ func (r *apiRegister) ReplaceTargetByService(svc *register.Service, backends []r
 	}
 	blog.Infof("apisix register service %s operation: delete node %+v, add node %+v", svc.Name, *upstream.MapStructedNodes,
 		newBackends)
-	upstream.Nodes, _ = json.Marshal(admin.NodesMap2UpstreamNodes(&destBackends))
+	upstream.Nodes, _ = json.Marshal(admin.NodesMap2UpstreamNodes(destBackends))
 	if err = r.apisixClient.UpdateUpstream(upstream); err != nil {
 		blog.Errorf("apisix register update stream %+v, failed, %s", upstream, err.Error())
 		return err
@@ -448,7 +448,7 @@ func innerServiceConvert(svc *admin.Service, route *admin.Route, upstream *admin
 		Algorithm: upstream.Type,
 	}
 	if upstream.UpstreamNodes == nil {
-		upstream.UpstreamNodes = admin.NodesMap2UpstreamNodes(upstream.MapStructedNodes)
+		upstream.UpstreamNodes = admin.NodesMap2UpstreamNodes(*upstream.MapStructedNodes)
 	}
 	// complicated conversion begin
 	for _, node := range *upstream.UpstreamNodes {
@@ -479,7 +479,7 @@ func apisixUpstreamConversion(svc *register.Service) *admin.Upstream {
 	for _, backend := range svc.Backends {
 		nodes[backend.Target] = backend.Weight
 	}
-	up.UpstreamNodes = admin.NodesMap2UpstreamNodes(&nodes)
+	up.UpstreamNodes = admin.NodesMap2UpstreamNodes(nodes)
 	up.Nodes, _ = json.Marshal(up.UpstreamNodes)
 	return up
 }

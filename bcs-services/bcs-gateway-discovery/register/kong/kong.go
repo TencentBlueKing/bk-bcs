@@ -94,7 +94,7 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 			splugin, err = r.kClient.Plugins().Create(pluReq)
 			if err != nil {
 				reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, startedCreate)
-				// todo(DeveloperJim): shall we clean created service, that we can retry in next data synchronization
+				// DOTO(DeveloperJim): shall we clean created service, that we can retry in next data synchronization
 				blog.Errorf("kong register create plugin %s for Service %s failed, %s", pluReq.Name, svc.Name, err.Error())
 				return err
 			}
@@ -124,7 +124,7 @@ func (r *kRegister) CreateService(svc *register.Service) error {
 				rplugin, err = r.kClient.Plugins().Create(pluReq)
 				if err != nil {
 					reportKongAPIMetrics("CreatePlugins", http.MethodPost, utils.ErrStatus, startedPluginsCreate)
-					// todo(DeveloperJim): roll back discussion
+					// DOTO(DeveloperJim): roll back discussion
 					blog.Errorf("kong register create plugin %s for route %s failed, %s", pluReq.Name, route.Name, err.Error())
 					return err
 				}
@@ -440,7 +440,7 @@ func kongServiceRequestConvert(svc *register.Service) *gokong.ServiceRequest {
 
 // kongRouteConvert convert inner service to kong Route, tls feature supported in default.
 // args: inner route definition; kong service Id
-func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
+func kongRouteConvert(route *register.Route, id *string) *gokong.RouteRequest {
 	var protocols []*string
 	// no matter what protocol it is, service only support tls
 	// route supports double protocols
@@ -468,33 +468,33 @@ func kongRouteConvert(route *register.Route, ID *string) *gokong.RouteRequest {
 			kr.Tags = append(kr.Tags, gokong.String(v))
 		}
 	}
-	kr.Service = gokong.ToId(*ID)
+	kr.Service = gokong.ToId(*id)
 	return kr
 }
 
 // kongPluginConvert convert inner service request plugin to request-transformer
-func kongPluginConvert(plugin *register.Plugins, ID *string, tys string) []*gokong.PluginRequest {
+func kongPluginConvert(plugin *register.Plugins, id *string, tys string) []*gokong.PluginRequest {
 	var plugins []*gokong.PluginRequest
 	if plugin.HeadOption != nil {
-		plu := kongReqTransformerConvert(plugin.HeadOption, *ID, tys)
+		plu := kongReqTransformerConvert(plugin.HeadOption, *id, tys)
 		plugins = append(plugins, plu)
 	}
 	if plugin.AuthOption != nil {
-		plu := kongBKBCSAuthConvert(plugin.AuthOption, *ID, tys)
+		plu := kongBKBCSAuthConvert(plugin.AuthOption, *id, tys)
 		plugins = append(plugins, plu)
 	}
 	return plugins
 }
 
 // kongReqTransformerConvert convert inner service request plugin to request-transformer
-func kongReqTransformerConvert(option *register.HeaderOption, ID string, tys string) *gokong.PluginRequest {
+func kongReqTransformerConvert(option *register.HeaderOption, id string, tys string) *gokong.PluginRequest {
 	pr := &gokong.PluginRequest{
 		Name: "request-transformer",
 	}
 	if tys == "service" {
-		pr.ServiceId = gokong.ToId(ID)
+		pr.ServiceId = gokong.ToId(id)
 	} else {
-		pr.RouteId = gokong.ToId(ID)
+		pr.RouteId = gokong.ToId(id)
 	}
 	// setting clean operation
 	pr.Config = make(map[string]interface{})

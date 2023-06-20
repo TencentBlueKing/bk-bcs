@@ -196,9 +196,9 @@ func (s *Service) DeepEqual(in *Service) bool {
 }
 
 // NodesMap2UpstreamNodes convert to apisix upstream information
-func NodesMap2UpstreamNodes(nodes *map[string]int) *[]UpstreamNode {
+func NodesMap2UpstreamNodes(nodes map[string]int) *[]UpstreamNode {
 	retNodes := make([]UpstreamNode, 0)
-	for host, weight := range *nodes {
+	for host, weight := range nodes {
 		hostport := strings.Split(host, ":")
 		node := UpstreamNode{
 			Host:   hostport[0],

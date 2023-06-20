@@ -316,7 +316,7 @@ func (s *DiscoveryServer) gatewayServiceSync(event *ModuleEvent) error {
 
 // detailServiceVerification all information including service/plugin/target check
 func (s *DiscoveryServer) detailServiceVerification(newSvc *register.Service, oldSvc *register.Service) {
-	// todo(DeveloperJim): we need complete verification if plugin & route rules changed frequently, not now
+	// DOTO(DeveloperJim): we need complete verification if plugin & route rules changed frequently, not now
 }
 
 func (s *DiscoveryServer) isClusterRestriction(clusterID string) bool {
