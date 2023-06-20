@@ -79,7 +79,7 @@ func (dao *templateReleaseDao) Create(kit *kit.Kit, g *table.TemplateRelease) (u
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return g.ID, nil

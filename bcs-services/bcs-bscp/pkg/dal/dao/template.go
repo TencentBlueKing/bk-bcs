@@ -56,6 +56,10 @@ func (dao *templateDao) Create(kit *kit.Kit, g *table.Template) (uint32, error) 
 		return 0, err
 	}
 
+	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
+		return 0, err
+	}
+
 	// generate a Template id and update to Template.
 	id, err := dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
@@ -79,7 +83,7 @@ func (dao *templateDao) Create(kit *kit.Kit, g *table.Template) (uint32, error) 
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return g.ID, nil
@@ -88,10 +92,6 @@ func (dao *templateDao) Create(kit *kit.Kit, g *table.Template) (uint32, error) 
 // CreateWithTx create one template instance with transaction.
 func (dao *templateDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Template) (uint32, error) {
 	if err := g.ValidateCreate(); err != nil {
-		return 0, err
-	}
-
-	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
 		return 0, err
 	}
 

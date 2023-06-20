@@ -13,6 +13,7 @@ import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
 import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
+import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "google/api/annotations.proto";
@@ -284,6 +285,29 @@ service Config {
     rpc DeleteTemplateRelease(DeleteTemplateReleaseReq) returns (DeleteTemplateReleaseResp) {
         option (google.api.http) = {
             delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}"
+        };
+    }
+
+    rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateTemplateSetResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets"
+            body : "*"
+        };
+    }
+    rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (DeleteTemplateSetResp) {
+        option (google.api.http) = {
+            delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}"
+        };
+    }
+    rpc UpdateTemplateSet(UpdateTemplateSetReq) returns (UpdateTemplateSetResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}"
+            body : "*"
+        };
+    }
+    rpc ListTemplateSets(ListTemplateSetsReq) returns (ListTemplateSetsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets"
         };
     }
 
@@ -869,8 +893,7 @@ message CreateTemplateSpaceResp {
 message UpdateTemplateSpaceReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
-    string name              = 3;
-    string memo              = 4;
+    string memo              = 3;
 }
 
 message UpdateTemplateSpaceResp {
@@ -996,6 +1019,48 @@ message CreateGroupReq {
     string                 mode      = 5;
     google.protobuf.Struct selector  = 6;
     string                 uid       = 7;
+}
+
+message CreateTemplateSetReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    string          name              = 3;
+    string          memo              = 4;
+    repeated uint32 template_ids      = 5;
+}
+
+message CreateTemplateSetResp {
+    uint32 id = 1;
+}
+
+message UpdateTemplateSetReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    string memo              = 4;
+}
+
+message UpdateTemplateSetResp {
+}
+
+message DeleteTemplateSetReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+}
+
+message DeleteTemplateSetResp {}
+
+message ListTemplateSetsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 start             = 3;
+    uint32 limit             = 4;
+}
+
+message ListTemplateSetsResp {
+    uint32                      count   = 1;
+    repeated pbtset.TemplateSet details = 2;
 }
 
 message CreateGroupResp {

@@ -72,7 +72,7 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 		return nil
 	}
 	if err := dao.genQ.Transaction(createTx); err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return g.ID, nil
