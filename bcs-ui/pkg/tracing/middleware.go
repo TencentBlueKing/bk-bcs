@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -38,11 +39,13 @@ func MiddleWareTracing(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 开始时间
 		startTime := time.Now()
+		// WrapResponseWriter能获取http statusCode
+		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 		writer := responseWriter{
-			w,
+			ww,
 			bytes.NewBuffer([]byte{}),
 		}
-		w = writer
+		ww = writer
 
 		// get http X-Request-Id
 		requestID := r.Header.Get(constants.RequestIDHeaderKey)
@@ -87,22 +90,28 @@ func MiddleWareTracing(next http.Handler) http.Handler {
 		if len(body) > 1024 {
 			body = fmt.Sprintf("%s...(Total %s)", body[:1024], humanize.Bytes(uint64(len(body))))
 		}
+		// 转换成合法的utf-8格式
+		body = strings.ToValidUTF8(body, "")
 		span.SetAttributes(attribute.Key("body").String(body))
 
 		// pass the span through the request context
 		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(ww, r)
 
+		// 返回
 		respBody := writer.b.String()
 		if len(respBody) > 1024 {
-			respBody = fmt.Sprintf("%s...(Total %s)", writer.b.String()[:1024], humanize.Bytes(uint64(len(writer.b.String()))))
+			respBody = fmt.Sprintf("%s...(Total %s)", writer.b.String()[:1024],
+				humanize.Bytes(uint64(len(writer.b.String()))))
 		}
+		// 转换成合法的utf-8格式
+		respBody = strings.ToValidUTF8(respBody, "")
 		span.SetAttributes(attribute.Key("rsp").String(respBody))
 
 		elapsedTime := time.Since(startTime)
 		span.SetAttributes(attribute.Key("elapsed_ime").String(elapsedTime.String()))
 
-		status := middleware.NewWrapResponseWriter(w, r.ProtoMajor).Status()
+		status := ww.Status()
 		attrs := semconv.HTTPAttributesFromHTTPStatusCode(status)
 		spanStatus, spanMessage := semconv.SpanStatusFromHTTPStatusCode(status)
 		span.SetAttributes(attrs...)
@@ -121,7 +130,7 @@ func getRequestBody(r *http.Request) []byte {
 
 // responseWriter response writer
 type responseWriter struct {
-	http.ResponseWriter
+	middleware.WrapResponseWriter
 	b *bytes.Buffer
 }
 
@@ -129,6 +138,6 @@ type responseWriter struct {
 func (w responseWriter) Write(b []byte) (int, error) {
 	// 向一个bytes.buffer中写一份数据来为获取body使用
 	w.b.Write(b)
-	// 完成http.ResponseWriter.Write()原有功能
-	return w.ResponseWriter.Write(b)
+	// 完成WrapResponseWriter.Write()原有功能
+	return w.WrapResponseWriter.Write(b)
 }
