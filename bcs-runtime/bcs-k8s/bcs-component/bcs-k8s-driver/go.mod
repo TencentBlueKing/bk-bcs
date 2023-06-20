@@ -7,7 +7,6 @@ replace (
 	github.com/Tencent/bk-bcs/bcs-common => github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs => github.com/Tencent/bk-bcs/bcs-k8s/kubebkbcs v0.0.0-20210117140338-aeaed29b1997
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 => github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-20210117140338-aeaed29b1997
-	github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch => ../../../../bcs-services/bcs-k8s-watch
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.0 // indirect
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
@@ -23,7 +22,7 @@ replace (
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220901090711-36bfa115011f
-	github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch v0.0.0-00010101000000-000000000000
+	github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch v0.0.0-20220901090711-36bfa115011f
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/json-iterator/go v1.1.12
@@ -66,8 +65,10 @@ require (
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
