@@ -28,7 +28,7 @@ const (
 	ScaleDownByTaskState = "ScaleDownByTask"
 	// ErrState error happened
 	ErrState = "ErrState"
-	// TimeoutState TODO
+	// TimeoutState timeout
 	TimeoutState = "TimeoutState"
 	// InitState information initialization
 	InitState = "InitState"

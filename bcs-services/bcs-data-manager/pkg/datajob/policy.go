@@ -21,17 +21,17 @@ import (
 var (
 	// PolicyMap : type:map
 	PolicyMap = map[string]map[string]Policy{}
-	// ClusterMap TODO
+	// ClusterMap cluster map
 	ClusterMap = map[string]Policy{}
-	// NamespaceMap TODO
+	// NamespaceMap namespace map
 	NamespaceMap = map[string]Policy{}
-	// WorkloadMap TODO
+	// WorkloadMap workload map
 	WorkloadMap = map[string]Policy{}
-	// PublicMap TODO
+	// PublicMap policy map
 	PublicMap = map[string]Policy{}
-	// ProjectMap TODO
+	// ProjectMap policy map
 	ProjectMap = map[string]Policy{}
-	// PodAutoscalerMap TODO
+	// PodAutoscalerMap hpa/gpa map
 	PodAutoscalerMap = map[string]Policy{}
 )
 

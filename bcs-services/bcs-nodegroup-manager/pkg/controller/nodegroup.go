@@ -308,7 +308,7 @@ func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 		// update tracked action for next logic tick
 		blog.Infof("[nodegroupController] Upcoming scaleDown %d nodes from elasticNodeGroups can satisfy resourcePool %s "+
 			"requirements (%d nodes). wait next tick", releaseNum, strategy.ResourcePool, scaleDownNum)
-		if releaseNum-scaleDownNum >= 3 { // todo(DeveloperJim): fix for configuration
+		if releaseNum-scaleDownNum >= 3 { // need to fix for configuration
 			blog.Warnf("ScaleDown too many resources in last decision or resources had been released from "+
 				"ReservedNodeGroup, it's risky for stable. details: "+
 				"strategy %s, elasticNodeGroup releaseNum %d, resourcePool need %d",
@@ -324,7 +324,7 @@ func (c *control) tracingScaleDownAction(strategy *storage.NodeGroupMgrStrategy,
 	scaleDownBalancer := newWeightBalancer(strategy.ElasticNodeGroups, nodeGroups)
 	allocations := scaleDownBalancer.distribute(scaleMore)
 	for _, allo := range allocations {
-		// todo(DeveloperJim): handle if partition == 0
+		// handle if partition == 0
 		nodegroup := nodeGroups[allo.NodeGroupID]
 		original := nodegroup.DesiredSize
 		nodegroup.DesiredSize = original - allo.partition
@@ -412,7 +412,7 @@ func (c *control) tracingScaleUpAction(strategy *storage.NodeGroupMgrStrategy,
 		// update tracked action for next logic tick
 		blog.Infof("[nodegroupController] Upcoming scaleUp %d nodes from resourcePool %s to elasticNodeGroups satisfy "+
 			"requirements (%d nodes). wait next tick", upComing, strategy.ResourcePool, scaleUpNum)
-		if upComing-scaleUpNum >= 3 { // todo(DeveloperJim): fix for configuration
+		if upComing-scaleUpNum >= 3 { // fix for configuration
 			blog.Warnf("ScaleUp too many resources in last decision or resources had been consumed for "+
 				"ReservedNodeGroup, it's risky for stable. details: "+
 				"strategy %s, elasticNodeGroup upComing %d, resourcePool can release %d",
@@ -519,7 +519,7 @@ func (c *control) listElasticNodeGroups(elasticGroups []*storage.GroupInfo) (map
 				info.ClusterID, info.NodeGroupID, err.Error())
 			return nil, err
 		}
-		// todo(DeveloperJim): no nodegroups found in storage, try to query from cluster-manager
+		// need to do : no nodegroups found in storage, try to query from cluster-manager
 		if nodegroup == nil {
 			blog.Warnf("Controller get no such nodegroup %s/%s in local storage, waiting for webhook request",
 				info.ClusterID, info.NodeGroupID)

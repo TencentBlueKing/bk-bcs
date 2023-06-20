@@ -26,19 +26,23 @@ import (
 )
 
 const (
-	// WorkloadCPUUsage TODO
+	// WorkloadCPUUsage worload cpu usage
 	WorkloadCPUUsage = "sum(rate(container_cpu_usage_seconds_total{%s,image!=\"\"}[%s]))"
-	// ClusterCPUUsage TODO
+	// ClusterCPUUsage cluster cpu usage
 	ClusterCPUUsage = "sum(irate(node_cpu_seconds_total{cluster_id=\"%s\", job=\"%s\", " +
 		"mode!=\"idle\"}[%s]))"
-	// NamespaceCPUUsage TODO
+	// NamespaceCPUUsage namespace cpu usage
 	NamespaceCPUUsage = "sum(rate(container_cpu_usage_seconds_total{%s,image!=\"\"}[%s]))by(%s)"
-	// K8sCPURequest TODO
-	K8sCPURequest       = "sum(kube_pod_container_resource_requests_cpu_cores{%s})"
-	K8sCPULimits        = "sum(kube_pod_container_resource_limits_cpu_cores{%s})"
-	WorkloadMemoryUsed  = "sum(container_memory_working_set_bytes{%s,image!=\"\"})"
+	// K8sCPURequest cpu request
+	K8sCPURequest = "sum(kube_pod_container_resource_requests_cpu_cores{%s})"
+	// K8sCPULimits  cpu limit
+	K8sCPULimits = "sum(kube_pod_container_resource_limits_cpu_cores{%s})"
+	// WorkloadMemoryUsed memory usage
+	WorkloadMemoryUsed = "sum(container_memory_working_set_bytes{%s,image!=\"\"})"
+	// NamespaceMemoryUsed memory usage
 	NamespaceMemoryUsed = "sum(container_memory_working_set_bytes{%s,image!=\"\"})by(%s)"
-	ClusterMemoryUsed   = "sum(node_memory_MemTotal_bytes{cluster_id=\"%s\",job=\"%s\"})" +
+	// ClusterMemoryUsed memory usage
+	ClusterMemoryUsed = "sum(node_memory_MemTotal_bytes{cluster_id=\"%s\",job=\"%s\"})" +
 		"-sum(node_memory_MemFree_bytes{cluster_id=\"%s\",job=\"%s\"})" +
 		"-sum(node_memory_Buffers_bytes{cluster_id=\"%s\",job=\"%s\"})" +
 		"-sum(node_memory_Cached_bytes{cluster_id=\"%s\",job=\"%s\"})" +
@@ -54,34 +58,34 @@ const (
 	ClusterTotalMemory       = "sum(kube_node_status_capacity_memory_bytes{cluster_id=\"%s\"})by(cluster_id)"
 	NodeUsageQuantile        = "quantile(%s,%s)"
 	MesosWorkloadMemoryLimit = "sum(sum(container_spec_memory_limit_bytes{%s})by(%s))"
-	// MesosWorkloadCPULimit TODO
+	// MesosWorkloadCPULimit mesos cpu limit
 	MesosWorkloadCPULimit = "sum(sum(container_spec_cpu_quota{%s})by(%s)/100000)"
-	// MesosMemoryLimit TODO
+	// MesosMemoryLimit mesos memory limit
 	MesosMemoryLimit = "sum(container_spec_memory_limit_bytes{%s})by(%s)"
-	// MesosCPULimit TODO
+	// MesosCPULimit mesos cpu limit
 	MesosCPULimit = "sum(container_spec_cpu_quota{%s})by(%s)/100000"
-	// NodeCPUUsage TODO
+	// NodeCPUUsage node cpu usage
 	NodeCPUUsage = "sum(irate(node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
 		"mode!=\"idle\",%s}[1m]))by(instance)/" +
 		"sum(count without(cpu, mode) (node_cpu_seconds_total{cluster_id=\"%s\", job=\"node-exporter\", " +
 		"mode=\"idle\",%s}))by(instance)"
-	// ClusterAutoscalerUpCount TODO
+	// ClusterAutoscalerUpCount ca count
 	ClusterAutoscalerUpCount = "sum(kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"source=\"/cluster-autoscaler\",reason=\"ScaledUpGroup\",involved_object_namespace=\"bcs-system\"})"
-	// ClusterAutoscalerDownCount TODO
+	// ClusterAutoscalerDownCount ca count
 	ClusterAutoscalerDownCount = "sum(kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"source=\"/cluster-autoscaler\",reason=\"ScaleDown\", involved_object_namespace=\"bcs-system\"})"
-	// GeneralPodAutoscalerCount TODO
+	// GeneralPodAutoscalerCount gpa count
 	GeneralPodAutoscalerCount = "kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"involved_object_kind=\"GeneralPodAutoscaler\",involved_object_name=\"%s\",involved_object_namespace=\"%s\"," +
 		"source=\"/pod-autoscaler\",reason=\"SuccessfulRescale\"}"
-	// HorizontalPodAutoscalerCount TODO
+	// HorizontalPodAutoscalerCount hpa count
 	HorizontalPodAutoscalerCount = "kube_event_unique_events_total{cluster_id=\"%s\", " +
 		"involved_object_kind=\"HorizontalPodAutoscaler\",involved_object_name=\"%s\",involved_object_namespace=\"%s\"," +
 		"source=\"/horizontal-pod-autoscaler\",reason=\"SuccessfulRescale\"}"
-	// MinOverTime TODO
+	// MinOverTime min over time
 	MinOverTime = "min_over_time(%s[%s])"
-	// MaxOverTime TODO
+	// MaxOverTime max over time
 	MaxOverTime = "max_over_time(%s[%s])"
 
 	// BKMonitorNodeExporterLabelJob bkMonitor node-exporter label name
@@ -91,26 +95,26 @@ const (
 )
 
 const (
-	// DeploymentPodCondition TODO
+	// DeploymentPodCondition deployment pod condition
 	DeploymentPodCondition = "cluster_id=\"%s\", namespace=\"%s\",pod=~\"%s-[0-9a-z]*-[0-9a-z]*$\"," +
 		"container_name!=\"POD\""
-	// OtherPodCondition TODO
+	// OtherPodCondition other pod condition
 	OtherPodCondition = "cluster_id=\"%s\", namespace=\"%s\",pod=~\"%s-[0-9a-z]*$\"," +
 		"container_name!=\"POD\""
-	// MesosPodCondition TODO
+	// MesosPodCondition mesos pod condition
 	MesosPodCondition = "cluster_id=\"%s\", namespace=\"%s\",name=~\".*.%s.%s.%s.*\"," +
 		"container_name!=\"POD\""
-	// PodSumCondition TODO
+	// PodSumCondition sum condition
 	PodSumCondition = "pod"
-	// MesosPodSumCondition TODO
+	// MesosPodSumCondition sum condition
 	MesosPodSumCondition = "name"
-	// NamespaceCondition TODO
+	// NamespaceCondition namespace condition
 	NamespaceCondition = "cluster_id=\"%s\", namespace=\"%s\""
-	// NamespaceSumCondition TODO
+	// NamespaceSumCondition sum condition
 	NamespaceSumCondition = "namespace"
-	// ClusterCondition TODO
+	// ClusterCondition cluster condition
 	ClusterCondition = "cluster_id=\"%s\""
-	// ClusterSumCondition TODO
+	// ClusterSumCondition sum condition
 	ClusterSumCondition = "cluster_id"
 )
 

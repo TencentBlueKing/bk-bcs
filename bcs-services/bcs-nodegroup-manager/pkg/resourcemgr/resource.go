@@ -110,7 +110,7 @@ func (c *innerClient) ListResourcePools(option *ListOptions) ([]*storage.Resourc
 		return nil, fmt.Errorf("resource-manager list resource pool err, %s", resp.GetMessage())
 	}
 	// convert to local ResourcePool definition
-	// todo(DeveloperJim): uselessness, evaluate that clean these codes in future.
+	// need to do: uselessness, evaluate that clean these codes in future.
 	return nil, fmt.Errorf("Not Implemented")
 }
 

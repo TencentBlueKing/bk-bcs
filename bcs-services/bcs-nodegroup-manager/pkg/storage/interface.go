@@ -61,7 +61,7 @@ type Storage interface {
 	UpdateNodeGroup(nodegroup *NodeGroup, opt *UpdateOptions) (*NodeGroup, error)
 	DeleteNodeGroup(nodegroupID string, opt *DeleteOptions) (*NodeGroup, error)
 
-	// ListNodeGroupAction TODO
+	// ListNodeGroupAction list action
 	// NodeGroup scaleUp or scaleDown action operations
 	// ScaleUp and ScaleDown will happened at the same time sometimes.
 	ListNodeGroupAction(nodeGroupID string, opt *ListOptions) ([]*NodeGroupAction, error)
@@ -71,12 +71,12 @@ type Storage interface {
 	UpdateNodeGroupAction(action *NodeGroupAction, opt *UpdateOptions) (*NodeGroupAction, error)
 	DeleteNodeGroupAction(action *NodeGroupAction, opt *DeleteOptions) (*NodeGroupAction, error)
 
-	// ListNodeGroupEvent TODO
+	// ListNodeGroupEvent list event
 	// tracing Event for nodegroup
 	ListNodeGroupEvent(nodeGroupID string, opt *ListOptions) ([]*NodeGroupEvent, error)
 	CreateNodeGroupEvent(event *NodeGroupEvent, opt *CreateOptions) error
 
-	// task operation
+	// CreateTask task operation
 	CreateTask(task *ScaleDownTask, opt *CreateOptions) error
 	UpdateTask(task *ScaleDownTask, opt *UpdateOptions) (*ScaleDownTask, error)
 	GetTask(taskID string, opt *GetOptions) (*ScaleDownTask, error)
