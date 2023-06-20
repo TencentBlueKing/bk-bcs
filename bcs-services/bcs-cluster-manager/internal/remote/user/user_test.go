@@ -61,7 +61,7 @@ func TestUser_DeleteUserToken(t *testing.T) {
 
 func TestUser_GrantUserPermission(t *testing.T) {
 	err := cli.GrantUserPermission([]types.Permission{
-		types.Permission{
+		{
 			UserName:     "xxx",
 			ResourceType: ResourceTypeClusterManager,
 			Resource:     "BCS-K8S-15202",
@@ -77,7 +77,7 @@ func TestUser_GrantUserPermission(t *testing.T) {
 
 func TestUser_RevokeUserPermission(t *testing.T) {
 	err := cli.RevokeUserPermission([]types.Permission{
-		types.Permission{
+		{
 			UserName:     "xxx",
 			ResourceType: ResourceTypeClusterManager,
 			Resource:     "BCS-K8S-15202",

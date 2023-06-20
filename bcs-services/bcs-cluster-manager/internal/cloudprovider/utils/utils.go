@@ -83,7 +83,7 @@ func BuildBcsAgentToken(cluster *proto.Cluster) (string, error) {
 
 	// grant permission
 	err = user.GetUserManagerClient().GrantUserPermission([]types.Permission{
-		types.Permission{
+		{
 			UserName:     cluster.ClusterID,
 			ResourceType: user.ResourceTypeClusterManager,
 			Resource:     cluster.ClusterID,
@@ -123,7 +123,7 @@ func DeleteBcsAgentToken(cluster *proto.Cluster) error {
 
 	// grant permission
 	err = user.GetUserManagerClient().RevokeUserPermission([]types.Permission{
-		types.Permission{
+		{
 			UserName:     cluster.ClusterID,
 			ResourceType: user.ResourceTypeClusterManager,
 			Resource:     cluster.ClusterID,
