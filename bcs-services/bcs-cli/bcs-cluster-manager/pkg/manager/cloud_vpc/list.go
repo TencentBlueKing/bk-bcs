@@ -21,12 +21,17 @@ import (
 )
 
 // List 查询云私有网络列表
-func (c *CloudVPCMgr) List(req types.ListCloudVPCReq) (resp types.ListCloudVPCResp, err error) {
+func (c *CloudVPCMgr) List(req types.ListCloudVPCReq) (types.ListCloudVPCResp, error) {
+	var (
+		resp types.ListCloudVPCResp
+		err  error
+	)
+
 	servResp, err := c.client.ListCloudVPC(c.ctx, &clustermanager.ListCloudVPCRequest{
 		NetworkType: req.NetworkType,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -52,5 +57,5 @@ func (c *CloudVPCMgr) List(req types.ListCloudVPCReq) (resp types.ListCloudVPCRe
 		})
 	}
 
-	return
+	return resp, nil
 }

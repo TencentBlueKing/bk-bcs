@@ -21,18 +21,18 @@ import (
 )
 
 // Delete 删除云凭证
-func (c *CloudAccountMgr) Delete(req types.DeleteCloudAccountReq) (err error) {
+func (c *CloudAccountMgr) Delete(req types.DeleteCloudAccountReq) error {
 	resp, err := c.client.DeleteCloudAccount(c.ctx, &clustermanager.DeleteCloudAccountRequest{
 		CloudID:   req.CloudID,
 		AccountID: req.AccountID,
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

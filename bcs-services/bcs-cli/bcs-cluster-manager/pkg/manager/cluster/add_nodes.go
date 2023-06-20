@@ -21,7 +21,12 @@ import (
 )
 
 // AddNodes 添加节点到集群
-func (c *ClusterMgr) AddNodes(req types.AddNodesClusterReq) (resp types.AddNodesClusterResp, err error) {
+func (c *ClusterMgr) AddNodes(req types.AddNodesClusterReq) (types.AddNodesClusterResp, error) {
+	var (
+		resp types.AddNodesClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.AddNodesToCluster(c.ctx, &clustermanager.AddNodesRequest{
 		ClusterID:         req.ClusterID,
 		Nodes:             req.Nodes,
@@ -30,7 +35,7 @@ func (c *ClusterMgr) AddNodes(req types.AddNodesClusterReq) (resp types.AddNodes
 		Operator:          "bcs",
 	})
 	if err != nil {
-		return
+		return servResp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -39,5 +44,5 @@ func (c *ClusterMgr) AddNodes(req types.AddNodesClusterReq) (resp types.AddNodes
 
 	resp.TaskID = servResp.Data.GetTaskID()
 
-	return
+	return resp, nil
 }

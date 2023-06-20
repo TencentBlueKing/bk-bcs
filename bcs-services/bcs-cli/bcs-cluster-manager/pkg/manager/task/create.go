@@ -21,7 +21,12 @@ import (
 )
 
 // Create 创建任务
-func (c *TaskMgr) Create(req types.CreateTaskReq) (resp types.CreateTaskResp, err error) {
+func (c *TaskMgr) Create(req types.CreateTaskReq) (types.CreateTaskResp, error) {
+	var (
+		resp types.CreateTaskResp
+		err  error
+	)
+
 	steps := make(map[string]*clustermanager.Step)
 	for k, v := range req.Steps {
 		steps[k] = &clustermanager.Step{
@@ -51,7 +56,7 @@ func (c *TaskMgr) Create(req types.CreateTaskReq) (resp types.CreateTaskResp, er
 		Creator:      "bcs",
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -60,5 +65,5 @@ func (c *TaskMgr) Create(req types.CreateTaskReq) (resp types.CreateTaskResp, er
 
 	resp.TaskID = servResp.Data.TaskID
 
-	return
+	return resp, nil
 }

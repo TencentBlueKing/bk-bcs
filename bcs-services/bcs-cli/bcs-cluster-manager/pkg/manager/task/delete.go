@@ -21,17 +21,17 @@ import (
 )
 
 // Delete 删除任务
-func (c *TaskMgr) Delete(req types.DeleteTaskReq) (err error) {
+func (c *TaskMgr) Delete(req types.DeleteTaskReq) error {
 	resp, err := c.client.DeleteTask(c.ctx, &clustermanager.DeleteTaskRequest{
 		TaskID: req.TaskID,
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

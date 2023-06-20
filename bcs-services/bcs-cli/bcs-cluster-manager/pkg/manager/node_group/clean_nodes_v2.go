@@ -22,7 +22,11 @@ import (
 )
 
 // CleanNodesV2 从节点池中清理回收指定IP节点
-func (c *NodeGroupMgr) CleanNodesV2(req types.CleanNodeGroupV2Req) (resp types.CleanNodeGroupV2Resp, err error) {
+func (c *NodeGroupMgr) CleanNodesV2(req types.CleanNodeGroupV2Req) (types.CleanNodeGroupV2Resp, error) {
+	var (
+		resp types.CleanNodeGroupV2Resp
+		err  error
+	)
 	servResp, err := c.client.CleanNodesInGroupV2(c.ctx, &clustermanager.CleanNodesInGroupV2Request{
 		ClusterID:   req.ClusterID,
 		Nodes:       strings.Join(req.Nodes, ","),
@@ -31,7 +35,7 @@ func (c *NodeGroupMgr) CleanNodesV2(req types.CleanNodeGroupV2Req) (resp types.C
 	})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -40,5 +44,5 @@ func (c *NodeGroupMgr) CleanNodesV2(req types.CleanNodeGroupV2Req) (resp types.C
 
 	resp.TaskID = servResp.GetData().GetTaskID()
 
-	return
+	return resp, nil
 }

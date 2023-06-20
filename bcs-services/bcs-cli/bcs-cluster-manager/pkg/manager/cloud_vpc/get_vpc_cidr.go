@@ -21,12 +21,17 @@ import (
 )
 
 // GetVPCCidr 查询云私有网络cidr列表
-func (c *CloudVPCMgr) GetVPCCidr(req types.GetVPCCidrReq) (resp types.GetVPCCidrResp, err error) {
+func (c *CloudVPCMgr) GetVPCCidr(req types.GetVPCCidrReq) (types.GetVPCCidrResp, error) {
+	var (
+		resp types.GetVPCCidrResp
+		err  error
+	)
+
 	servResp, err := c.client.GetVPCCidr(c.ctx, &clustermanager.GetVPCCidrRequest{
 		VpcID: req.VPCID,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -44,5 +49,5 @@ func (c *CloudVPCMgr) GetVPCCidr(req types.GetVPCCidrReq) (resp types.GetVPCCidr
 		})
 	}
 
-	return
+	return resp, nil
 }

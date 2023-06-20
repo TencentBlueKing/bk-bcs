@@ -22,7 +22,7 @@ import (
 )
 
 // Create 创建云凭证
-func (c *CloudAccountMgr) Create(req types.CreateCloudAccountReq) (err error) {
+func (c *CloudAccountMgr) Create(req types.CreateCloudAccountReq) error {
 	resp, err := c.client.CreateCloudAccount(c.ctx, &clustermanager.CreateCloudAccountRequest{
 		CloudID:     req.CloudID,
 		AccountName: req.AccountName,
@@ -41,12 +41,12 @@ func (c *CloudAccountMgr) Create(req types.CreateCloudAccountReq) (err error) {
 		Creator: "bcs",
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

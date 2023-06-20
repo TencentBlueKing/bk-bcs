@@ -21,13 +21,18 @@ import (
 )
 
 // RetryCreate 重试创建集群
-func (c *ClusterMgr) RetryCreate(req types.RetryCreateClusterReq) (resp types.RetryCreateClusterResp, err error) {
+func (c *ClusterMgr) RetryCreate(req types.RetryCreateClusterReq) (types.RetryCreateClusterResp, error) {
+	var (
+		resp types.RetryCreateClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.RetryCreateClusterTask(c.ctx, &clustermanager.RetryCreateClusterReq{
 		ClusterID: req.ClusterID,
 		Operator:  "bcs",
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -37,5 +42,5 @@ func (c *ClusterMgr) RetryCreate(req types.RetryCreateClusterReq) (resp types.Re
 	resp.ClusterID = servResp.Data.GetClusterID()
 	resp.TaskID = servResp.Task.GetTaskID()
 
-	return
+	return resp, nil
 }

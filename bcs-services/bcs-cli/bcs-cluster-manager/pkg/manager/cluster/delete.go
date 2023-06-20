@@ -21,14 +21,19 @@ import (
 )
 
 // Delete 删除集群
-func (c *ClusterMgr) Delete(req types.DeleteClusterReq) (resp types.DeleteClusterResp, err error) {
+func (c *ClusterMgr) Delete(req types.DeleteClusterReq) (types.DeleteClusterResp, error) {
+	var (
+		resp types.DeleteClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.DeleteCluster(c.ctx, &clustermanager.DeleteClusterReq{
 		ClusterID:      req.ClusterID,
 		OnlyDeleteInfo: true,
 		Operator:       "bcs",
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -38,5 +43,5 @@ func (c *ClusterMgr) Delete(req types.DeleteClusterReq) (resp types.DeleteCluste
 	resp.ClusterID = servResp.Data.GetClusterID()
 	resp.TaskID = servResp.Task.GetTaskID()
 
-	return
+	return resp, nil
 }

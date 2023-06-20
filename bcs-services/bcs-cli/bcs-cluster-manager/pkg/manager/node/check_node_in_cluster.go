@@ -21,12 +21,17 @@ import (
 )
 
 // CheckNodeInCluster 获取node信息是否存在bcs集群
-func (c *NodeMgr) CheckNodeInCluster(req types.CheckNodeInClusterReq) (resp types.CheckNodeInClusterResp, err error) {
+func (c *NodeMgr) CheckNodeInCluster(req types.CheckNodeInClusterReq) (types.CheckNodeInClusterResp, error) {
+	var (
+		resp types.CheckNodeInClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.CheckNodeInCluster(c.ctx, &clustermanager.CheckNodesRequest{
 		InnerIPs: req.InnerIPs,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -43,5 +48,5 @@ func (c *NodeMgr) CheckNodeInCluster(req types.CheckNodeInClusterReq) (resp type
 		}
 	}
 
-	return
+	return resp, nil
 }

@@ -140,6 +140,7 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 		ExtraArgs:        &api.ClusterExtraArgs{},
 	}
 
+	// extra args
 	if len(cluster.ClusterAdvanceSettings.ExtraArgs) > 0 {
 		if apiserver, ok := cluster.ClusterAdvanceSettings.ExtraArgs[KubeAPIServer]; ok {
 			paras := strings.Split(apiserver, ";")
@@ -179,6 +180,7 @@ func generateInstanceAdvanceInfo(cluster *proto.Cluster) *api.InstanceAdvancedSe
 		mountTarget = ""
 	}
 
+	// instance advanced info
 	advanceInfo := &api.InstanceAdvancedSettings{
 		MountTarget:     mountTarget,
 		DockerGraphPath: cluster.NodeSettings.DockerGraphPath,
@@ -238,6 +240,7 @@ func disksToCVMDisks(disks []*proto.DataDisk) []*cvm.DataDisk {
 	return cvmDisks
 }
 
+// generateRunInstance xxx
 func generateRunInstance(cluster *proto.Cluster, passwd string) *api.RunInstancesForNode {
 	runInstance := &api.RunInstancesForNode{
 		NodeRole: api.MASTER_ETCD.String(),
@@ -328,7 +331,7 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 	// attention: call client to shieldAlarm
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CreateClusterShieldAlarmTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -408,6 +411,8 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	for masterIP := range cluster.Master {
 		masterIPs = append(masterIPs, masterIP)
 	}
+
+	// trans masterIPs
 	instanceIDs, err := transIPsToInstanceID(&cloudprovider.ListNodesOption{
 		Common:       cmOption,
 		ClusterVPCID: cluster.VpcID,
@@ -453,6 +458,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 		}
 	}
 
+	// create cluster
 	var systemID string
 	if cluster.SystemID != "" {
 		tkeCluster, errCluster := tkeCli.GetTKECluster(cluster.SystemID)
@@ -498,7 +504,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	state.Task.CommonParams["InstanceIDs"] = strings.Join(instanceIDs, ",")
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CreateTkeClusterTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -580,6 +586,7 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
 
+	// check cluster status
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*30)
 	defer cancel()
 
@@ -596,17 +603,18 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 			break
 		}
 
-		cluster, err := cli.GetTKECluster(systemID)
-		if err != nil {
+		tkeCluster, errGet := cli.GetTKECluster(systemID)
+		if errGet != nil {
 			continue
 		}
 
-		blog.Infof("CheckTkeClusterStatusTask[%s] cluster[%s] current status[%s]", taskID, clusterID, *cluster.ClusterStatus)
+		blog.Infof("CheckTkeClusterStatusTask[%s] cluster[%s] current status[%s]", taskID,
+			clusterID, *tkeCluster.ClusterStatus)
 		// check cluster status
-		if *cluster.ClusterStatus == "Running" {
+		if *tkeCluster.ClusterStatus == "Running" {
 			break
 		}
-		if *cluster.ClusterStatus == "Abnormal" {
+		if *tkeCluster.ClusterStatus == "Abnormal" {
 			abnormal = true
 			break
 		}
@@ -621,7 +629,7 @@ func CheckTkeClusterStatusTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CheckTkeClusterStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -688,6 +696,7 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 	}
 	cmOption.Region = cluster.Region
 
+	// tke client
 	cli, err := api.NewTkeClient(cmOption)
 	if err != nil {
 		blog.Errorf("EnableTkeClusterVpcCniTask[%s]: get tke client for cluster[%s] in task %s step %s failed, %s",
@@ -698,6 +707,8 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 	}
 
 	blog.Infof("EnableTkeClusterVpcCniTask[%s]: enableVPCCni %v", taskID, cluster.NetworkSettings.EnableVPCCni)
+
+	// enable vpc-cni feature
 	if cluster.NetworkSettings.EnableVPCCni {
 		err = cli.EnableTKEVpcCniMode(&api.EnableVpcCniInput{
 			TkeClusterID:   systemID,
@@ -737,8 +748,8 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 			}
 
 			// GetEnableVpcCniProgress vpcCni status
-			status, err := cli.GetEnableVpcCniProgress(systemID)
-			if err != nil {
+			status, errGet := cli.GetEnableVpcCniProgress(systemID)
+			if errGet != nil {
 				continue
 			}
 
@@ -819,6 +830,7 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	cluster.SystemID = SystemID
 	cluster.Status = icommon.StatusInitialization
 
+	// update cluster
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {
 		blog.Errorf("UpdateCreateClusterDBInfoTask[%s]: update cluster systemID for %s failed", taskID, clusterID)

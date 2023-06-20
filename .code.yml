@@ -23,6 +23,8 @@ source:
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/go.mod
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22/go.mod
       - /bcs-services/bcs-data-manager/go.mod
+      - /bcs-services/bcs-client/go.mod
+      - /bcs-services/bcs-alert-manager/go.mod
       - /bcs-services/bcs-gateway-discovery/plugins/t/bcs-auth.t
       - /bcs-services/bcs-k8s-watch/go.mod
       - /bcs-services/cluster-resources/pkg/resource/example/manifest/config/simple_secret.yaml
@@ -75,6 +77,7 @@ source:
       - /bcs-services/bcs-clb-controller/client/.*
       - /bcs-services/bcs-cluster-manager/api/.*
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/component/.*
+      - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api/common_.*
       - /bcs-services/bcs-data-manager/pkg/mock/.*
       - /bcs-services/bcs-mesh-manager/api/.*
 

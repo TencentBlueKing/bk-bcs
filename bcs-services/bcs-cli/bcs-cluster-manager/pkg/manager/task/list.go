@@ -21,13 +21,18 @@ import (
 )
 
 // List 查询任务列表
-func (c *TaskMgr) List(req types.ListTaskReq) (resp types.ListTaskResp, err error) {
+func (c *TaskMgr) List(req types.ListTaskReq) (types.ListTaskResp, error) {
+	var (
+		resp types.ListTaskResp
+		err  error
+	)
+
 	servResp, err := c.client.ListTask(c.ctx, &clustermanager.ListTaskRequest{
 		ClusterID: req.ClusterID,
 		ProjectID: req.ProjectID,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -80,5 +85,5 @@ func (c *TaskMgr) List(req types.ListTaskReq) (resp types.ListTaskResp, err erro
 		})
 	}
 
-	return
+	return resp, nil
 }

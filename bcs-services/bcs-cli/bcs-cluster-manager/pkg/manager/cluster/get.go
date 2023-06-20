@@ -21,10 +21,15 @@ import (
 )
 
 // Get 获取集群
-func (c *ClusterMgr) Get(req types.GetClusterReq) (resp types.GetClusterResp, err error) {
+func (c *ClusterMgr) Get(req types.GetClusterReq) (types.GetClusterResp, error) {
+	var (
+		resp types.GetClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.GetCluster(c.ctx, &clustermanager.GetClusterReq{ClusterID: req.ClusterID})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -60,5 +65,5 @@ func (c *ClusterMgr) Get(req types.GetClusterReq) (resp types.GetClusterResp, er
 		},
 	}
 
-	return
+	return resp, nil
 }

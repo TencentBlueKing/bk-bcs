@@ -21,12 +21,17 @@ import (
 )
 
 // ListCloudRegions 查询云region列表
-func (c *CloudVPCMgr) ListCloudRegions(req types.ListCloudRegionsReq) (resp types.ListCloudRegionsResp, err error) {
+func (c *CloudVPCMgr) ListCloudRegions(req types.ListCloudRegionsReq) (types.ListCloudRegionsResp, error) {
+	var (
+		resp types.ListCloudRegionsResp
+		err  error
+	)
+
 	servResp, err := c.client.ListCloudRegions(c.ctx, &clustermanager.ListCloudRegionsRequest{
 		CloudID: req.CloudID,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -43,5 +48,5 @@ func (c *CloudVPCMgr) ListCloudRegions(req types.ListCloudRegionsReq) (resp type
 		})
 	}
 
-	return
+	return resp, nil
 }

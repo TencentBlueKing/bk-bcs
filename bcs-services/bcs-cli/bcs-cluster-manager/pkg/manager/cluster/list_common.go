@@ -21,10 +21,15 @@ import (
 )
 
 // ListCommon 查询公共集群及公共集群所属权限
-func (c *ClusterMgr) ListCommon() (resp types.ListCommonClusterResp, err error) {
+func (c *ClusterMgr) ListCommon() (types.ListCommonClusterResp, error) {
+	var (
+		resp types.ListCommonClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.ListCommonCluster(c.ctx, &clustermanager.ListCommonClusterReq{})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -68,5 +73,5 @@ func (c *ClusterMgr) ListCommon() (resp types.ListCommonClusterResp, err error) 
 		})
 	}
 
-	return
+	return resp, nil
 }

@@ -21,14 +21,18 @@ import (
 )
 
 // Cordon 节点设置不可调度状态
-func (c *NodeMgr) Cordon(req types.CordonNodeReq) (resp types.CordonNodeResp, err error) {
+func (c *NodeMgr) Cordon(req types.CordonNodeReq) (types.CordonNodeResp, error) {
+	var (
+		resp types.CordonNodeResp
+		err  error
+	)
 	servResp, err := c.client.CordonNode(c.ctx, &clustermanager.CordonNodeRequest{
 		InnerIPs:  req.InnerIPs,
 		ClusterID: req.ClusterID,
 		Updater:   "bcs",
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	resp.Data = make([]string, 0)
@@ -39,5 +43,5 @@ func (c *NodeMgr) Cordon(req types.CordonNodeReq) (resp types.CordonNodeResp, er
 
 	resp.Data = servResp.Fail
 
-	return
+	return resp, nil
 }

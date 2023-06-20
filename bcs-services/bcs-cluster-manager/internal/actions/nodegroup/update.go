@@ -55,6 +55,7 @@ func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
+// validate xxx
 func (ua *UpdateAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
@@ -80,8 +81,7 @@ func (ua *UpdateAction) validate() error {
 	return nil
 }
 
-// modifyNodeGroupField xxx
-// trans request args to node group
+// modifyNodeGroupField trans request args to node group
 func (ua *UpdateAction) modifyNodeGroupField() {
 	timeStr := time.Now().Format(time.RFC3339)
 	// update field if required
@@ -226,6 +226,7 @@ func (ua *UpdateAction) getRelativeResource() error {
 	}
 	ua.group = group
 
+	// cluster
 	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
 	if err != nil {
 		blog.Errorf("can not get relative Cluster %s when update NodeGroup", ua.req.ClusterID)
@@ -233,6 +234,7 @@ func (ua *UpdateAction) getRelativeResource() error {
 	}
 	ua.cluster = cluster
 
+	// cloud
 	cloud, err := actions.GetCloudByCloudID(ua.model, ua.group.Provider)
 	if err != nil {
 		blog.Errorf("can not get relative Cloud %s when update NodeGroup for Cluster %s, %s",
@@ -267,6 +269,8 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 		return err
 	}
 	cmOption.Region = ua.group.Region
+
+	// update nodegroup
 	err = mgr.UpdateNodeGroup(ua.group, cmOption)
 	if err != nil {
 		blog.Errorf("update nodegroup %s in cluster %s with cloudprovider %s failed, %s",
@@ -278,6 +282,7 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 	return nil
 }
 
+// setNodeGroupUpdating update group status
 func (ua *UpdateAction) setNodeGroupUpdating() error {
 	ua.group.Status = common.StatusNodeGroupUpdating
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
@@ -288,6 +293,7 @@ func (ua *UpdateAction) setNodeGroupUpdating() error {
 	return nil
 }
 
+// saveDB save nodeGroup
 func (ua *UpdateAction) saveDB(status string) error {
 	ua.group.Status = status
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
@@ -300,6 +306,7 @@ func (ua *UpdateAction) saveDB(status string) error {
 	return nil
 }
 
+// checkStatus status check
 func (ua *UpdateAction) checkStatus() error {
 	// if nodegroup is creating/deleting/deleted, return error
 	if ua.group.Status == common.StatusCreateNodeGroupCreating || ua.group.Status == common.StatusDeleting ||
@@ -395,6 +402,7 @@ func (ua *MoveNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
+// validate xxx
 func (ua *MoveNodeAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
@@ -475,6 +483,8 @@ func (ua *MoveNodeAction) Handle(
 		// valiate already setting response message
 		return
 	}
+
+	// moveCloudNodeGroupNodes move node to nodeGroup
 	if err := ua.moveCloudNodeGroupNodes(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
@@ -538,6 +548,8 @@ func (ua *MoveNodeAction) moveCloudNodeGroupNodes() error {
 		return err
 	}
 	cmOption.Region = ua.group.Region
+
+	// build moveNodesToGroup task
 	task, err := mgr.MoveNodesToGroup(ua.moveNodes, ua.group, &cloudprovider.MoveNodesOption{
 		CommonOption: *cmOption,
 		Cluster:      ua.cluster,
@@ -551,14 +563,14 @@ func (ua *MoveNodeAction) moveCloudNodeGroupNodes() error {
 	}
 	// create task and dispatch task
 	ua.resp.Data = task
-	if err := ua.model.CreateTask(ua.ctx, task); err != nil {
+	if err = ua.model.CreateTask(ua.ctx, task); err != nil {
 		blog.Errorf("save move nodes to node group task for cluster %s failed, %s",
 			ua.group.ClusterID, err.Error(),
 		)
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
 	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 		blog.Errorf("dispatch move nodes to node group task for cluster %s failed, %s",
 			ua.group.ClusterID, err.Error(),
 		)
@@ -650,13 +662,13 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 		)
 		return err
 	}
-	if err := ua.model.CreateTask(ua.ctx, task); err != nil {
+	if err = ua.model.CreateTask(ua.ctx, task); err != nil {
 		blog.Errorf("save scaling task for NodeGroup %s failed, %s",
 			ua.group.NodeGroupID, err.Error(),
 		)
 		return err
 	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 		blog.Errorf("dispatch scaling task for NodeGroup %s failed, %s",
 			ua.group.NodeGroupID, err.Error(),
 		)
@@ -670,6 +682,7 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 	return nil
 }
 
+// getRelativeData cloud/cluster data
 func (ua *UpdateDesiredNodeAction) getRelativeData() error {
 	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, ua.group.Provider, ua.group.ClusterID)
 	if err != nil {

@@ -21,12 +21,17 @@ import (
 )
 
 // Get 查询任务
-func (c *TaskMgr) Get(req types.GetTaskReq) (resp types.GetTaskResp, err error) {
+func (c *TaskMgr) Get(req types.GetTaskReq) (types.GetTaskResp, error) {
+	var (
+		resp types.GetTaskResp
+		err  error
+	)
+
 	servResp, err := c.client.GetTask(c.ctx, &clustermanager.GetTaskRequest{
 		TaskID: req.TaskID,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -77,5 +82,5 @@ func (c *TaskMgr) Get(req types.GetTaskReq) (resp types.GetTaskResp, err error) 
 		},
 	}
 
-	return
+	return resp, nil
 }

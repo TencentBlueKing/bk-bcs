@@ -21,7 +21,7 @@ import (
 )
 
 // UpdateDesiredSize 更新节点池期望的节点数,扩容前保证数据一致性
-func (c *NodeGroupMgr) UpdateDesiredSize(req types.UpdateGroupDesiredSizeReq) (err error) {
+func (c *NodeGroupMgr) UpdateDesiredSize(req types.UpdateGroupDesiredSizeReq) error {
 	resp, err := c.client.UpdateGroupDesiredSize(c.ctx, &clustermanager.UpdateGroupDesiredSizeRequest{
 		NodeGroupID: req.NodeGroupID,
 		DesiredSize: req.DesiredSize,
@@ -29,12 +29,12 @@ func (c *NodeGroupMgr) UpdateDesiredSize(req types.UpdateGroupDesiredSizeReq) (e
 	})
 
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

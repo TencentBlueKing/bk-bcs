@@ -21,12 +21,17 @@ import (
 )
 
 // Get 获取节点
-func (c *NodeMgr) Get(req types.GetNodeReq) (resp types.GetNodeResp, err error) {
+func (c *NodeMgr) Get(req types.GetNodeReq) (types.GetNodeResp, error) {
+	var (
+		resp types.GetNodeResp
+		err  error
+	)
+
 	servResp, err := c.client.GetNode(c.ctx, &clustermanager.GetNodeRequest{
 		InnerIP: req.InnerIP,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -55,5 +60,5 @@ func (c *NodeMgr) Get(req types.GetNodeReq) (resp types.GetNodeResp, err error) 
 		})
 	}
 
-	return
+	return resp, nil
 }

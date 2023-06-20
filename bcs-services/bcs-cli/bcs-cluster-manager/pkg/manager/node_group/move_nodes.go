@@ -21,7 +21,12 @@ import (
 )
 
 // MoveNodes 将集群中节点移入节点池
-func (c *NodeGroupMgr) MoveNodes(req types.MoveNodesToGroupReq) (resp types.MoveNodesToGroupResp, err error) {
+func (c *NodeGroupMgr) MoveNodes(req types.MoveNodesToGroupReq) (types.MoveNodesToGroupResp, error) {
+	var (
+		resp types.MoveNodesToGroupResp
+		err  error
+	)
+
 	servResp, err := c.client.MoveNodesToGroup(c.ctx, &clustermanager.MoveNodesToGroupRequest{
 		ClusterID:   req.ClusterID,
 		Nodes:       req.Nodes,
@@ -29,7 +34,7 @@ func (c *NodeGroupMgr) MoveNodes(req types.MoveNodesToGroupReq) (resp types.Move
 	})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -38,5 +43,5 @@ func (c *NodeGroupMgr) MoveNodes(req types.MoveNodesToGroupReq) (resp types.Move
 
 	resp.TaskID = servResp.GetData().GetTaskID()
 
-	return
+	return resp, nil
 }

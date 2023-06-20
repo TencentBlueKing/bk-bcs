@@ -21,10 +21,15 @@ import (
 )
 
 // ListToPerm 查询云凭证列表, 主要用于权限资源查询
-func (c *CloudAccountMgr) ListToPerm(req types.ListCloudAccountToPermReq) (resp types.ListCloudAccountToPermResp, err error) {
+func (c *CloudAccountMgr) ListToPerm(req types.ListCloudAccountToPermReq) (types.ListCloudAccountToPermResp, error) {
+	var (
+		resp types.ListCloudAccountToPermResp
+		err  error
+	)
+
 	servResp, err := c.client.ListCloudAccountToPerm(c.ctx, &clustermanager.ListCloudAccountPermRequest{})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -54,5 +59,5 @@ func (c *CloudAccountMgr) ListToPerm(req types.ListCloudAccountToPermReq) (resp 
 		})
 	}
 
-	return
+	return resp, nil
 }

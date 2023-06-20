@@ -21,7 +21,12 @@ import (
 )
 
 // RemoveNodes 指定IP地址从节点组中移除,但是该节点仍然在集群中
-func (c *NodeGroupMgr) RemoveNodes(req types.RemoveNodesFromGroupReq) (resp types.RemoveNodesFromGroupResp, err error) {
+func (c *NodeGroupMgr) RemoveNodes(req types.RemoveNodesFromGroupReq) (types.RemoveNodesFromGroupResp, error) {
+	var (
+		resp types.RemoveNodesFromGroupResp
+		err  error
+	)
+
 	servResp, err := c.client.RemoveNodesFromGroup(c.ctx, &clustermanager.RemoveNodesFromGroupRequest{
 		ClusterID:   req.ClusterID,
 		Nodes:       req.Nodes,
@@ -29,7 +34,7 @@ func (c *NodeGroupMgr) RemoveNodes(req types.RemoveNodesFromGroupReq) (resp type
 	})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -38,5 +43,5 @@ func (c *NodeGroupMgr) RemoveNodes(req types.RemoveNodesFromGroupReq) (resp type
 
 	resp.TaskID = servResp.GetData().GetTaskID()
 
-	return
+	return resp, nil
 }

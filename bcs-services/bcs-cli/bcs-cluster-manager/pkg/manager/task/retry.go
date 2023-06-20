@@ -21,13 +21,18 @@ import (
 )
 
 // Retry 针对失败的任务, 进行重试操作
-func (c *TaskMgr) Retry(req types.RetryTaskReq) (resp types.RetryTaskResp, err error) {
+func (c *TaskMgr) Retry(req types.RetryTaskReq) (types.RetryTaskResp, error) {
+	var (
+		resp types.RetryTaskResp
+		err  error
+	)
+
 	servResp, err := c.client.RetryTask(c.ctx, &clustermanager.RetryTaskRequest{
 		TaskID:  req.TaskID,
 		Updater: "bcs",
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -36,5 +41,5 @@ func (c *TaskMgr) Retry(req types.RetryTaskReq) (resp types.RetryTaskResp, err e
 
 	resp.TaskID = servResp.Data.TaskID
 
-	return
+	return resp, nil
 }

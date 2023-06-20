@@ -21,14 +21,19 @@ import (
 )
 
 // UnCordon 节点设置可调度状态
-func (c *NodeMgr) UnCordon(req types.UnCordonNodeReq) (resp types.UnCordonNodeResp, err error) {
+func (c *NodeMgr) UnCordon(req types.UnCordonNodeReq) (types.UnCordonNodeResp, error) {
+	var (
+		resp types.UnCordonNodeResp
+		err  error
+	)
+
 	servResp, err := c.client.UnCordonNode(c.ctx, &clustermanager.UnCordonNodeRequest{
 		InnerIPs:  req.InnerIPs,
 		ClusterID: req.ClusterID,
 		Updater:   "bcs",
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	resp.Data = make([]string, 0)
@@ -39,5 +44,5 @@ func (c *NodeMgr) UnCordon(req types.UnCordonNodeReq) (resp types.UnCordonNodeRe
 
 	resp.Data = servResp.Fail
 
-	return
+	return resp, nil
 }

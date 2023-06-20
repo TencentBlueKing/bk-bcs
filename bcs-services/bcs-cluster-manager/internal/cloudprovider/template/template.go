@@ -60,6 +60,7 @@ var (
 	addNodesExtraEnv      = "CM.cluster.AddNodesExtraEnv"
 	bcsCommonInfo         = "CM.bcs.CommonInfo"
 
+	// NOCC:gas/crypto(误报)
 	nodePasswd           = "CM.node.NodePasswd"
 	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy"
 	nodeIPList           = "CM.node.NodeIPList"

@@ -21,7 +21,12 @@ import (
 )
 
 // Create 创建节点池,创建成功返回节点池ID和任务ID
-func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNodeGroupResp, err error) {
+func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (types.CreateNodeGroupResp, error) {
+	var (
+		resp types.CreateNodeGroupResp
+		err  error
+	)
+
 	timeRange := make([]*clustermanager.TimeRange, 0)
 	// nodeGroup time range
 	for _, v := range req.AutoScaling.TimeRanges {
@@ -215,7 +220,7 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNo
 	})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -225,5 +230,5 @@ func (c *NodeGroupMgr) Create(req types.CreateNodeGroupReq) (resp types.CreateNo
 	resp.TaskID = servResp.GetData().GetTask().GetTaskID()
 	resp.NodeGroupID = servResp.GetData().GetNodeGroup().GetNodeGroupID()
 
-	return
+	return resp, nil
 }

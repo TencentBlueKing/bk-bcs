@@ -95,7 +95,7 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 		blog.Errorf("error when decode cluster params registered by websocket: %s", err.Error())
 		return "", false, err
 	}
-	if err := json.Unmarshal(bytes, &registerCluster); err != nil {
+	if err = json.Unmarshal(bytes, &registerCluster); err != nil {
 		blog.Errorf("error when unmarshal cluster params registered by websocket: %s", err.Error())
 		return "", false, err
 	}
@@ -114,10 +114,11 @@ func (wts *WsTunnelServerCallback) authorizeTunnel(req *http.Request) (string, b
 
 	var caCert string
 	if registerCluster.CACert != "" {
-		certBytes, err := base64.StdEncoding.DecodeString(registerCluster.CACert)
-		if err != nil {
-			blog.Errorf("error when decode cluster [%s] cacert registered by websocket: %s", clusterID, err.Error())
-			return "", false, err
+		certBytes, errDecode := base64.StdEncoding.DecodeString(registerCluster.CACert)
+		if errDecode != nil {
+			blog.Errorf("error when decode cluster [%s] cacert registered by websocket: %s",
+				clusterID, errDecode.Error())
+			return "", false, errDecode
 		}
 		caCert = string(certBytes)
 	}

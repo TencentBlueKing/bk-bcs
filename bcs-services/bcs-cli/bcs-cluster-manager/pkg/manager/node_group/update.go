@@ -21,7 +21,7 @@ import (
 )
 
 // Update 更新节点池,更新成功返回nil
-func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
+func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) error {
 	timeRange := make([]*clustermanager.TimeRange, 0)
 
 	// nodeGroup time range
@@ -217,12 +217,12 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 	})
 
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

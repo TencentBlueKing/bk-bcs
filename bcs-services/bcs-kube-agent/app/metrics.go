@@ -32,9 +32,9 @@ const (
 )
 
 const (
-	// BCSKubeAgentStatesNotReady TODO
+	// BCSKubeAgentStatesNotReady xxx
 	BCSKubeAgentStatesNotReady = 0
-	// BCSKubeAgentStatesReady TODO
+	// BCSKubeAgentStatesReady xxx
 	BCSKubeAgentStatesReady = 1
 )
 

@@ -303,7 +303,7 @@ type ClusterMgr interface {
 	Get(GetClusterReq) (GetClusterResp, error)
 	// List 获取集群列表
 	List(ListClusterReq) (ListClusterResp, error)
-	// Retry 重试创建集群
+	// RetryCreate 重试创建集群
 	RetryCreate(RetryCreateClusterReq) (RetryCreateClusterResp, error)
 	// AddNodes 添加节点到集群
 	AddNodes(AddNodesClusterReq) (AddNodesClusterResp, error)

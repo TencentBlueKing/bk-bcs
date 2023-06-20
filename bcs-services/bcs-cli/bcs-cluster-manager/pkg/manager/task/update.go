@@ -21,7 +21,7 @@ import (
 )
 
 // Update 更新任务
-func (c *TaskMgr) Update(req types.UpdateTaskReq) (err error) {
+func (c *TaskMgr) Update(req types.UpdateTaskReq) error {
 	steps := make(map[string]*clustermanager.Step)
 	for k, v := range req.Steps {
 		steps[k] = &clustermanager.Step{
@@ -52,12 +52,12 @@ func (c *TaskMgr) Update(req types.UpdateTaskReq) (err error) {
 		Updater:       "bcs",
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

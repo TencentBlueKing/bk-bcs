@@ -21,14 +21,19 @@ import (
 )
 
 // Drain 节点pod迁移,将节点上的 Pod 驱逐
-func (c *NodeMgr) Drain(req types.DrainNodeReq) (resp types.DrainNodeResp, err error) {
+func (c *NodeMgr) Drain(req types.DrainNodeReq) (types.DrainNodeResp, error) {
+	var (
+		resp types.DrainNodeResp
+		err  error
+	)
+
 	servResp, err := c.client.DrainNode(c.ctx, &clustermanager.DrainNodeRequest{
 		InnerIPs:  req.InnerIPs,
 		ClusterID: req.ClusterID,
 		Updater:   "bcs",
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	resp.Data = make([]string, 0)
@@ -39,5 +44,5 @@ func (c *NodeMgr) Drain(req types.DrainNodeReq) (resp types.DrainNodeResp, err e
 
 	resp.Data = servResp.Fail
 
-	return
+	return resp, nil
 }

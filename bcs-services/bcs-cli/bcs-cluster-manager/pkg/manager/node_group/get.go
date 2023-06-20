@@ -21,13 +21,18 @@ import (
 )
 
 // Get 查询节点池
-func (c *NodeGroupMgr) Get(req types.GetNodeGroupReq) (resp types.GetNodeGroupResp, err error) {
+func (c *NodeGroupMgr) Get(req types.GetNodeGroupReq) (types.GetNodeGroupResp, error) {
+	var (
+		resp types.GetNodeGroupResp
+		err  error
+	)
+
 	servResp, err := c.client.GetNodeGroup(c.ctx, &clustermanager.GetNodeGroupRequest{
 		NodeGroupID: req.NodeGroupID,
 	})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -60,5 +65,5 @@ func (c *NodeGroupMgr) Get(req types.GetNodeGroupReq) (resp types.GetNodeGroupRe
 		Status:     servResp.Data.Status,
 	}
 
-	return
+	return resp, nil
 }

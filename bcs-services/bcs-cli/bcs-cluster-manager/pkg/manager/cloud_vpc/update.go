@@ -21,7 +21,7 @@ import (
 )
 
 // Update 更新云私有网络
-func (c *CloudVPCMgr) Update(req types.UpdateCloudVPCReq) (err error) {
+func (c *CloudVPCMgr) Update(req types.UpdateCloudVPCReq) error {
 	resp, err := c.client.UpdateCloudVPC(c.ctx, &clustermanager.UpdateCloudVPCRequest{
 		CloudID:     req.CloudID,
 		NetworkType: req.NetworkType,
@@ -33,12 +33,12 @@ func (c *CloudVPCMgr) Update(req types.UpdateCloudVPCReq) (err error) {
 		Updater:     "bcs",
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

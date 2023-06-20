@@ -22,7 +22,7 @@ import (
 )
 
 // Update 更新云凭证
-func (c *CloudAccountMgr) Update(req types.UpdateCloudAccountReq) (err error) {
+func (c *CloudAccountMgr) Update(req types.UpdateCloudAccountReq) error {
 	resp, err := c.client.UpdateCloudAccount(c.ctx, &clustermanager.UpdateCloudAccountRequest{
 		CloudID:     req.CloudID,
 		AccountID:   req.AccountID,
@@ -33,12 +33,12 @@ func (c *CloudAccountMgr) Update(req types.UpdateCloudAccountReq) (err error) {
 		Updater:     "bcs",
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

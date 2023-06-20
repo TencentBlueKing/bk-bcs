@@ -21,14 +21,19 @@ import (
 )
 
 // ListNodes 查询集群下所有节点列表
-func (c *ClusterMgr) ListNodes(req types.ListClusterNodesReq) (resp types.ListClusterNodesResp, err error) {
+func (c *ClusterMgr) ListNodes(req types.ListClusterNodesReq) (types.ListClusterNodesResp, error) {
+	var (
+		resp types.ListClusterNodesResp
+		err  error
+	)
+
 	servResp, err := c.client.ListNodesInCluster(c.ctx, &clustermanager.ListNodesInClusterRequest{
 		ClusterID: req.ClusterID,
 		Offset:    req.Offset,
 		Limit:     req.Limit,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -44,5 +49,5 @@ func (c *ClusterMgr) ListNodes(req types.ListClusterNodesReq) (resp types.ListCl
 		})
 	}
 
-	return
+	return resp, nil
 }

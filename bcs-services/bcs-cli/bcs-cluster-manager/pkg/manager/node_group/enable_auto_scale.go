@@ -21,18 +21,18 @@ import (
 )
 
 // EnableAutoScale 开启节点池自动扩缩容
-func (c *NodeGroupMgr) EnableAutoScale(req types.EnableNodeGroupAutoScaleReq) (err error) {
+func (c *NodeGroupMgr) EnableAutoScale(req types.EnableNodeGroupAutoScaleReq) error {
 	resp, err := c.client.EnableNodeGroupAutoScale(c.ctx, &clustermanager.EnableNodeGroupAutoScaleRequest{
 		NodeGroupID: req.NodeGroupID,
 	})
 
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

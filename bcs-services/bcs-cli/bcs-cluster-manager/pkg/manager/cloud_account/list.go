@@ -21,10 +21,15 @@ import (
 )
 
 // List 查询云凭证列表
-func (c *CloudAccountMgr) List(req types.ListCloudAccountReq) (resp types.ListCloudAccountResp, err error) {
+func (c *CloudAccountMgr) List(req types.ListCloudAccountReq) (types.ListCloudAccountResp, error) {
+	var (
+		resp types.ListCloudAccountResp
+		err  error
+	)
+
 	servResp, err := c.client.ListCloudAccount(c.ctx, &clustermanager.ListCloudAccountRequest{})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -52,5 +57,5 @@ func (c *CloudAccountMgr) List(req types.ListCloudAccountReq) (resp types.ListCl
 		})
 	}
 
-	return
+	return resp, nil
 }

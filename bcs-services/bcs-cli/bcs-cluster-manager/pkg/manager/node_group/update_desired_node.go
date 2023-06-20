@@ -21,7 +21,12 @@ import (
 )
 
 // UpdateDesiredNode 更新节点池中DesiredNode信息
-func (c *NodeGroupMgr) UpdateDesiredNode(req types.UpdateGroupDesiredNodeReq) (resp types.UpdateGroupDesiredNodeResp, err error) {
+func (c *NodeGroupMgr) UpdateDesiredNode(req types.UpdateGroupDesiredNodeReq) (types.UpdateGroupDesiredNodeResp, error) {
+	var (
+		resp types.UpdateGroupDesiredNodeResp
+		err  error
+	)
+
 	servResp, err := c.client.UpdateGroupDesiredNode(c.ctx, &clustermanager.UpdateGroupDesiredNodeRequest{
 		NodeGroupID: req.NodeGroupID,
 		DesiredNode: req.DesiredNode,
@@ -29,7 +34,7 @@ func (c *NodeGroupMgr) UpdateDesiredNode(req types.UpdateGroupDesiredNodeReq) (r
 	})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -38,5 +43,5 @@ func (c *NodeGroupMgr) UpdateDesiredNode(req types.UpdateGroupDesiredNodeReq) (r
 
 	resp.TaskID = servResp.Data.TaskID
 
-	return
+	return resp, nil
 }

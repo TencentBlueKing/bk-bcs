@@ -21,11 +21,16 @@ import (
 )
 
 // List 获取节点池列表
-func (c *NodeGroupMgr) List(req types.ListNodeGroupReq) (resp types.ListNodeGroupResp, err error) {
+func (c *NodeGroupMgr) List(req types.ListNodeGroupReq) (types.ListNodeGroupResp, error) {
+	var (
+		resp types.ListNodeGroupResp
+		err  error
+	)
+
 	servResp, err := c.client.ListNodeGroup(c.ctx, &clustermanager.ListNodeGroupRequest{})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -62,5 +67,5 @@ func (c *NodeGroupMgr) List(req types.ListNodeGroupReq) (resp types.ListNodeGrou
 		})
 	}
 
-	return
+	return resp, nil
 }

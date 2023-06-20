@@ -21,7 +21,7 @@ import (
 )
 
 // Create 创建云私有网络
-func (c *CloudVPCMgr) Create(req types.CreateCloudVPCReq) (err error) {
+func (c *CloudVPCMgr) Create(req types.CreateCloudVPCReq) error {
 	resp, err := c.client.CreateCloudVPC(c.ctx, &clustermanager.CreateCloudVPCRequest{
 		CloudID:     req.CloudID,
 		NetworkType: req.NetworkType,
@@ -32,12 +32,12 @@ func (c *CloudVPCMgr) Create(req types.CreateCloudVPCReq) (err error) {
 		Creator:     "bcs",
 	})
 	if err != nil {
-		return
+		return err
 	}
 
 	if resp != nil && resp.Code != 0 {
 		return errors.New(resp.Message)
 	}
 
-	return
+	return nil
 }

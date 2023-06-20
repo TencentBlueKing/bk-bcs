@@ -21,7 +21,12 @@ import (
 )
 
 // Create 创建集群
-func (c *ClusterMgr) Create(req types.CreateClusterReq) (resp types.CreateClusterResp, err error) {
+func (c *ClusterMgr) Create(req types.CreateClusterReq) (types.CreateClusterResp, error) {
+	var (
+		resp types.CreateClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.CreateCluster(c.ctx, &clustermanager.CreateClusterReq{
 		ProjectID:   req.ProjectID,
 		BusinessID:  req.BusinessID,
@@ -49,7 +54,7 @@ func (c *ClusterMgr) Create(req types.CreateClusterReq) (resp types.CreateCluste
 		OnlyCreateInfo: true,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -59,5 +64,5 @@ func (c *ClusterMgr) Create(req types.CreateClusterReq) (resp types.CreateCluste
 	resp.ClusterID = servResp.Data.GetClusterID()
 	resp.TaskID = servResp.Task.GetTaskID()
 
-	return
+	return resp, nil
 }

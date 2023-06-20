@@ -21,7 +21,12 @@ import (
 )
 
 // Delete 删除节点池
-func (c *NodeGroupMgr) Delete(req types.DeleteNodeGroupReq) (resp types.DeleteNodeGroupResp, err error) {
+func (c *NodeGroupMgr) Delete(req types.DeleteNodeGroupReq) (types.DeleteNodeGroupResp, error) {
+	var (
+		resp types.DeleteNodeGroupResp
+		err  error
+	)
+
 	servResp, err := c.client.DeleteNodeGroup(c.ctx, &clustermanager.DeleteNodeGroupRequest{
 		NodeGroupID:           req.NodeGroupID,
 		IsForce:               false,
@@ -31,7 +36,7 @@ func (c *NodeGroupMgr) Delete(req types.DeleteNodeGroupReq) (resp types.DeleteNo
 	})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -40,5 +45,5 @@ func (c *NodeGroupMgr) Delete(req types.DeleteNodeGroupReq) (resp types.DeleteNo
 
 	resp.TaskID = servResp.GetData().GetTask().GetTaskID()
 
-	return
+	return resp, nil
 }

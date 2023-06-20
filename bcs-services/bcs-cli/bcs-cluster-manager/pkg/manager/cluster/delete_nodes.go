@@ -22,7 +22,12 @@ import (
 )
 
 // DeleteNodes 从集群中删除节点
-func (c *ClusterMgr) DeleteNodes(req types.DeleteNodesClusterReq) (resp types.DeleteNodesClusterResp, err error) {
+func (c *ClusterMgr) DeleteNodes(req types.DeleteNodesClusterReq) (types.DeleteNodesClusterResp, error) {
+	var (
+		resp types.DeleteNodesClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.DeleteNodesFromCluster(c.ctx, &clustermanager.DeleteNodesRequest{
 		ClusterID:      req.ClusterID,
 		Nodes:          strings.Join(req.Nodes, ","),
@@ -31,7 +36,7 @@ func (c *ClusterMgr) DeleteNodes(req types.DeleteNodesClusterReq) (resp types.De
 		OnlyDeleteInfo: true,
 	})
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -40,5 +45,5 @@ func (c *ClusterMgr) DeleteNodes(req types.DeleteNodesClusterReq) (resp types.De
 
 	resp.TaskID = servResp.Data.GetTaskID()
 
-	return
+	return resp, nil
 }

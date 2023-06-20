@@ -21,14 +21,19 @@ import (
 )
 
 // List 获取集群列表
-func (c *ClusterMgr) List(req types.ListClusterReq) (resp types.ListClusterResp, err error) {
+func (c *ClusterMgr) List(req types.ListClusterReq) (types.ListClusterResp, error) {
+	var (
+		resp types.ListClusterResp
+		err  error
+	)
+
 	servResp, err := c.client.ListCluster(c.ctx, &clustermanager.ListClusterReq{
 		Offset: req.Offset,
 		Limit:  req.Limit,
 	})
 
 	if err != nil {
-		return
+		return resp, err
 	}
 
 	if servResp != nil && servResp.Code != 0 {
@@ -72,5 +77,5 @@ func (c *ClusterMgr) List(req types.ListClusterReq) (resp types.ListClusterResp,
 		})
 	}
 
-	return
+	return resp, nil
 }
