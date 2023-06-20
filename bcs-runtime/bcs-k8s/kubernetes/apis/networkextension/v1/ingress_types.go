@@ -135,6 +135,8 @@ type IngressListenerAttribute struct {
 	// aws targetGroup attributes, https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_ModifyTargetGroupAttributes.html
 	AWSAttributes []AWSAttribute       `json:"awsAttributes,omitempty"`
 	HealthCheck   *ListenerHealthCheck `json:"healthCheck,omitempty"`
+	// 声明7层监听器中，rule的优先级(目前只在aws中使用)
+	Priority int `json:"priority,omitempty""`
 }
 
 // AWSAttribute define aws target group attribute

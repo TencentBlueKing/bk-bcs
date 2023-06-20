@@ -22,7 +22,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/aws/smithy-go/ptr"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
@@ -259,12 +261,22 @@ func (e *Elb) compareRule(cloudRule *elbv2.DescribeRulesOutput, localRule []type
 			}
 		}
 		if !found {
-			add = append(add, elbv2.CreateRuleInput{
+			generateRule := elbv2.CreateRuleInput{
 				Conditions:  r.Conditions,
 				Actions:     r.Actions,
 				Priority:    e.nextPriority(cloudRule.Rules, add),
 				ListenerArn: &listenerArn,
-			})
+			}
+			if r.Priority != nil {
+				priority, err := strconv.Atoi(*r.Priority)
+				if err != nil {
+					blog.Errorf("convert priority failed, raw priority: %s", r.Priority)
+					// if convert failed, use generate value
+					priority = int(*generateRule.Priority)
+				}
+				generateRule.Priority = ptr.Int32(int32(priority))
+			}
+			add = append(add, generateRule)
 		}
 	}
 
@@ -441,10 +453,14 @@ func (e *Elb) generateExceptRules(rules []networkextensionv1.ListenerRule,
 				}},
 			)
 		}
-		except = append(except, types.Rule{
+		generateRule := types.Rule{
 			Actions:    []types.Action{action},
 			Conditions: conditions,
-		})
+		}
+		if rule.ListenerAttribute != nil && rule.ListenerAttribute.Priority != 0 {
+			generateRule.Priority = ptr.String(strconv.Itoa(rule.ListenerAttribute.Priority))
+		}
+		except = append(except, generateRule)
 	}
 	return except
 }
@@ -575,7 +591,10 @@ func (e *Elb) ensureTargetGroupTarget(region string, listenerTg *networkextensio
 	for _, backend := range backends {
 		var found bool
 		for _, t := range th.TargetHealthDescriptions {
-			if t.Target != nil && *t.Target.Id == backend.IP && *t.Target.Port == int32(backend.Port) {
+			// 当解绑target后， target不会马上删除而是处于draining状态。
+			// 此时仍能通过describeTargetHealth接口查到该target，需要单独判断状态
+			if t.Target != nil && *t.Target.Id == backend.IP && *t.Target.Port == int32(backend.Port) && t.
+				TargetHealth != nil && t.TargetHealth.State != types.TargetHealthStateEnumDraining {
 				found = true
 				break
 			}
@@ -607,15 +626,15 @@ func (e *Elb) ensureTargetGroupTarget(region string, listenerTg *networkextensio
 	}
 
 	if len(registers) > 0 {
-		if _, err := e.sdkWrapper.RegisterTargets(region, &elbv2.RegisterTargetsInput{
-			TargetGroupArn: targetGroupArn, Targets: registers}); err != nil {
-			return fmt.Errorf("RegisterTargets failed, %s", err.Error())
+		if _, inErr := e.sdkWrapper.RegisterTargets(region, &elbv2.RegisterTargetsInput{
+			TargetGroupArn: targetGroupArn, Targets: registers}); inErr != nil {
+			return fmt.Errorf("RegisterTargets failed, %s", inErr.Error())
 		}
 	}
 	if len(deregisters) > 0 {
-		if _, err := e.sdkWrapper.DeregisterTargets(region, &elbv2.DeregisterTargetsInput{
-			TargetGroupArn: targetGroupArn, Targets: deregisters}); err != nil {
-			return fmt.Errorf("DeregisterTargets failed, %s", err.Error())
+		if _, inErr := e.sdkWrapper.DeregisterTargets(region, &elbv2.DeregisterTargetsInput{
+			TargetGroupArn: targetGroupArn, Targets: deregisters}); inErr != nil {
+			return fmt.Errorf("DeregisterTargets failed, %s", inErr.Error())
 		}
 	}
 	return nil

@@ -116,6 +116,9 @@ spec:
                           description: MaxRate specifies the maximum number of connections
                             per second allowed for every target instance.
                           type: integer
+                        priority:
+                          description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                          type: integer
                         sessionTime:
                           type: integer
                         sniSwitch:
@@ -189,6 +192,9 @@ spec:
                                 description: MaxRate specifies the maximum number
                                   of connections per second allowed for every target
                                   instance.
+                                type: integer
+                              priority:
+                                description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
                                 type: integer
                               sessionTime:
                                 type: integer
@@ -321,6 +327,9 @@ spec:
                                   of connections per second allowed for every target
                                   instance.
                                 type: integer
+                              priority:
+                                description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
+                                type: integer
                               sessionTime:
                                 type: integer
                               sniSwitch:
@@ -438,6 +447,9 @@ spec:
                         maxRate:
                           description: MaxRate specifies the maximum number of connections
                             per second allowed for every target instance.
+                          type: integer
+                        priority:
+                          description: 声明7层监听器中，rule的优先级(目前只在aws中使用)
                           type: integer
                         sessionTime:
                           type: integer
