@@ -140,7 +140,7 @@ func (r *ReconcileBCSEgress) Reconcile(request reconcile.Request) (reconcile.Res
 		if err = r.client.Update(context.TODO(), instance); err != nil {
 			klog.Errorf("update BCSEgress %s port conflict status failed, %s, #now drop reconcile until client fix#",
 				request.String(), err.Error())
-			// todo(DeveloperJim): evaluate necessary of reconcile
+			// should evaluate necessary of reconcile
 		} else {
 			klog.Warningf(">update BCSEgress %s port conflict status successfully, #wait client fix#", request.String())
 		}

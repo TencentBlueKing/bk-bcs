@@ -1,3 +1,4 @@
+// NOCC:tosa/license(设计如此)
 //go:build linux
 // +build linux
 

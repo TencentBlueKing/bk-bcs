@@ -36,7 +36,7 @@ const (
 
 // Proxy interface for http/tcp network flow controlle
 type Proxy interface {
-	// GetHTTPRule TODO
+	// GetHTTPRule ...
 	// http server operation part
 	GetHTTPRule(key string) (*HTTPConfig, error)
 	ListHTTPRules() ([]*HTTPConfig, error)
@@ -44,7 +44,7 @@ type Proxy interface {
 	DeleteHTTPRule(key string) error
 	UpdateHTTPRule(cfg *HTTPConfig) error
 
-	// GetTCPRule TODO
+	// GetTCPRule ...
 	// upstream tcp operation part
 	GetTCPRule(key string) (*TCPConfig, error)
 	GetTCPRuleByPort(port uint) (*TCPConfig, error)

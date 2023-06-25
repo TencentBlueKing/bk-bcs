@@ -93,6 +93,7 @@ func BuildRealServer(real string) *ipvs.RealServer {
 func WriteToFile(filePath string, content string) error {
 	var file *os.File
 	var err error
+	// NOCC:gas/permission(设计如此)
 	file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		log.Printf("open file %s failed; %v", filePath, err)
@@ -111,7 +112,7 @@ func WriteToFile(filePath string, content string) error {
 // SetIpvsStartup xxx
 func SetIpvsStartup(ipvsPersistDir string, toolPath string) error {
 	command := "chmod +x /etc/rc.d/rc.local"
-	// NOCC:(gas/subprocess) 设计如此
+	// NOCC:gas/subprocess(设计如此)
 	cmd := exec.Command("/bin/sh", "-c", command)
 	output, err := cmd.Output()
 	if err != nil {
@@ -126,16 +127,15 @@ func SetIpvsStartup(ipvsPersistDir string, toolPath string) error {
 	}
 	if exist {
 		return nil
-	} else {
-		command := fmt.Sprintf("%v -cmd reload -persistDir %v",
-			toolPath, ipvsPersistDir)
-		command = "# " + RcLocalIpvsFlag + "\n" + command + "\n"
+	}
+	commandNew := fmt.Sprintf("%v -cmd reload -persistDir %v",
+		toolPath, ipvsPersistDir)
+	commandNew = "# " + RcLocalIpvsFlag + "\n" + commandNew + "\n"
 
-		err = WriteToFile("/etc/rc.local", command)
-		if err != nil {
-			log.Printf("write command [%s] to rc.local failed", command)
-			return err
-		}
+	err = WriteToFile("/etc/rc.local", commandNew)
+	if err != nil {
+		log.Printf("write command [%s] to rc.local failed", commandNew)
+		return err
 	}
 	return nil
 }

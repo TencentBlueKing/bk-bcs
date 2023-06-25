@@ -432,7 +432,7 @@ func newNodeNetwork(name string, ipLimit int) *cloudv1.NodeNetwork {
 		},
 		Status: cloudv1.NodeNetworkStatus{
 			Enis: []*cloudv1.ElasticNetworkInterface{
-				&cloudv1.ElasticNetworkInterface{
+				{
 					EniID:  newEniID(name, 0),
 					Status: "Ready",
 				},

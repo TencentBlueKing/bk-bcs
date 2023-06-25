@@ -48,10 +48,8 @@ const (
 	CrdNameCloudIP = "CloudIP"
 	// CrdNameCloudIPQuota crd name for cloud ip quota
 	CrdNameCloudIPQuota = "CloudIPQuota"
-
 	// BcsSystemNamespace namespace name for bcs-system
 	BcsSystemNamespace = "bcs-system"
-
 	// CrdNameLabelsVpcID crd labels name for vpc id
 	CrdNameLabelsVpcID = "vpc.cloud.bkbcs.tencent.com"
 	// CrdNameLabelsRegion crd labels name for region
@@ -108,10 +106,11 @@ func (handler *EventHandler) OnDelete(obj interface{}) {}
 
 // NewClient create new client for kube-apiserver
 func NewClient(kubeconfig string) (*Client, error) {
-
+	// init rest config
 	var restConfig *rest.Config
 	var err error
 	if len(kubeconfig) == 0 {
+		// build incluster config
 		blog.Infof("access kube-apiserver using incluster mod")
 		restConfig, err = rest.InClusterConfig()
 		if err != nil {
@@ -119,6 +118,7 @@ func NewClient(kubeconfig string) (*Client, error) {
 			return nil, fmt.Errorf("get incluster config failed, err %s", err.Error())
 		}
 	} else {
+		// build out of cluster config
 		blog.Infof("access kube-apiserver using kubeconfig %s", kubeconfig)
 		//parse configuration
 		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -127,21 +127,21 @@ func NewClient(kubeconfig string) (*Client, error) {
 			return nil, err
 		}
 	}
+	// set qps for client-go
 	restConfig.QPS = 1e6
 	restConfig.Burst = 2e6
-
 	clientset, err := bcsclientset.NewForConfig(restConfig)
 	if err != nil {
 		blog.Errorf("NewForConfig failed, err %s", err.Error())
 		return nil, fmt.Errorf("NewForConfig failed, err %s", err.Error())
 	}
-
 	k8sClientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		blog.Errorf("k8s NewForConfig failed err %s", err.Error())
 		return nil, fmt.Errorf("k8s NewForConfig failed err %s", err.Error())
 	}
 
+	// init informers
 	eventHandler := NewEventHandler()
 	factory := bcsinformers.NewSharedInformerFactory(clientset, time.Duration(120)*time.Second)
 	cloudSubnetInformer := factory.Cloud().V1().CloudSubnets()
@@ -152,6 +152,7 @@ func NewClient(kubeconfig string) (*Client, error) {
 	quotaInformer.Informer().AddEventHandler(eventHandler)
 	quotaLister := factory.Cloud().V1().CloudIPQuotas().Lister()
 	ipInformer := cloudIPInformer.Informer()
+	// init cache indexes
 	indexFuncContainerID := func(obj interface{}) ([]string, error) {
 		cloudIP, ok := obj.(*cloudv1.CloudIP)
 		if !ok {
@@ -168,21 +169,21 @@ func NewClient(kubeconfig string) (*Client, error) {
 		vals := []string{utils.KeyToNamespacedKey(cloudIP.GetNamespace(), cloudIP.Spec.PodName)}
 		return vals, nil
 	}
+	// add indexers into informer
 	ipInformer.AddIndexers(clientgocache.Indexers{utils.FieldIndexName("spec.containerID"): indexFuncContainerID})
 	ipInformer.AddIndexers(clientgocache.Indexers{utils.FieldIndexName("spec.podName"): indexFuncPodName})
 	ipInformer.AddEventHandler(eventHandler)
 	cloudIPLister := factory.Cloud().V1().CloudIPs().Lister()
-
 	cloudv1Client := clientset.CloudV1()
 
+	// start informer factory
 	stopCh := make(chan struct{})
-
 	factory.Start(stopCh)
 	blog.Infof("start cloud subnet informers factory")
-
 	factory.WaitForCacheSync(stopCh)
 	blog.Infof("wait for cloud subnet cache synced")
 
+	// return new client
 	return &Client{
 		cloudv1Client: cloudv1Client,
 		subnetLister:  cloudSubnetLister,
@@ -198,6 +199,7 @@ func NewClient(kubeconfig string) (*Client, error) {
 func (c *Client) ensureNamespace(ns string) error {
 	_, err := c.k8sClientSet.CoreV1().Namespaces().Get(context.Background(), ns, metav1.GetOptions{})
 	if err != nil {
+		// if ns is not found
 		if errors.IsNotFound(err) {
 			newNs := &corev1.Namespace{
 				TypeMeta: metav1.TypeMeta{
@@ -208,10 +210,11 @@ func (c *Client) ensureNamespace(ns string) error {
 					Name: ns,
 				},
 			}
-			_, err := c.k8sClientSet.CoreV1().Namespaces().Create(context.Background(), newNs, metav1.CreateOptions{})
-			if err != nil {
-				blog.Errorf("create ns %+v failed, err %s", err.Error())
-				return fmt.Errorf("create ns %+v failed, err %s", newNs, err.Error())
+			// create namespace
+			_, cErr := c.k8sClientSet.CoreV1().Namespaces().Create(context.Background(), newNs, metav1.CreateOptions{})
+			if cErr != nil {
+				blog.Errorf("create ns %+v failed, err %s", newNs, cErr.Error())
+				return fmt.Errorf("create ns %+v failed, err %s", newNs, cErr.Error())
 			}
 		}
 		return fmt.Errorf("get kubernetes namespace %s failed, err %s", ns, err.Error())
@@ -221,6 +224,7 @@ func (c *Client) ensureNamespace(ns string) error {
 
 // CreateSubnet create subnet
 func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) error {
+	// create new object
 	timeNowStr := time.Now().UTC().String()
 	newCloudSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
@@ -252,6 +256,7 @@ func (c *Client) CreateSubnet(ctx context.Context, subnet *types.CloudSubnet) er
 		},
 	}
 
+	// ensure namespace before creating ip object
 	err := c.ensureNamespace(BcsSystemNamespace)
 	if err != nil {
 		return err
@@ -279,13 +284,13 @@ func (c *Client) DeleteSubnet(ctx context.Context, subnetID string) error {
 
 // UpdateSubnetState update subnet state
 func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state, minIPNumPerEni int32) error {
-
+	// get existed subnet
 	subnet, err := c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Get(ctx, subnetID, metav1.GetOptions{})
 	if err != nil {
 		blog.Errorf("get subnet %s failed, err %s", subnetID, err.Error())
 		return fmt.Errorf("get subnet %s failed, err %s", subnetID, err.Error())
 	}
-
+	// construct new subnet
 	timeNowStr := time.Now().UTC().String()
 	updatedSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
@@ -313,6 +318,7 @@ func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state, 
 			UpdateTime:     timeNowStr,
 		},
 	}
+	// do update
 	_, err = c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Update(ctx, updatedSubnet, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update subent failed, err %s", err.Error())
@@ -324,12 +330,13 @@ func (c *Client) UpdateSubnetState(ctx context.Context, subnetID string, state, 
 
 // UpdateSubnetAvailableIP update subnet available
 func (c *Client) UpdateSubnetAvailableIP(ctx context.Context, subnetID string, availableIP int64) error {
+	// get existed subnet
 	subnet, err := c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Get(ctx, subnetID, metav1.GetOptions{})
 	if err != nil {
 		blog.Errorf("get subnet %s failed, err %s", subnetID, err.Error())
 		return fmt.Errorf("get subnet %s failed, err %s", subnetID, err.Error())
 	}
-
+	// construct new subnet
 	timeNowStr := time.Now().UTC().String()
 	updatedSubnet := &cloudv1.CloudSubnet{
 		TypeMeta: metav1.TypeMeta{
@@ -357,6 +364,7 @@ func (c *Client) UpdateSubnetAvailableIP(ctx context.Context, subnetID string, a
 			UpdateTime:     timeNowStr,
 		},
 	}
+	// do update
 	_, err = c.cloudv1Client.CloudSubnets(BcsSystemNamespace).Update(ctx, updatedSubnet, metav1.UpdateOptions{})
 	if err != nil {
 		blog.Errorf("update subent failed, err %s", err.Error())
@@ -635,6 +643,7 @@ func (c *Client) ListIPObjectByField(ctx context.Context, fieldKey string, field
 		if err != nil {
 			return nil, fmt.Errorf("parse update time failed, err %s", err.Error())
 		}
+		// create a new IPObject with the fields from the IP object
 		ipList = append(ipList, &types.IPObject{
 			Address:         ip.Spec.Address,
 			VpcID:           ip.Spec.VpcID,
@@ -664,6 +673,7 @@ func (c *Client) ListIPObjectByField(ctx context.Context, fieldKey string, field
 func (c *Client) ListIPObject(ctx context.Context, labelsMap map[string]string) ([]*types.IPObject, error) {
 	var err error
 	var selector labels.Selector
+	// create a label selector based on the given labelsMap
 	if len(labelsMap) == 0 {
 		selector = labels.Everything()
 	} else {
@@ -677,6 +687,7 @@ func (c *Client) ListIPObject(ctx context.Context, labelsMap map[string]string) 
 		}
 	}
 
+	// returns a list of IP objects in the BcsSystemNamespace that match the given label selector
 	ips, err := c.ipLister.CloudIPs(BcsSystemNamespace).List(selector)
 	if err != nil {
 		blog.Errorf("list crd subnets failed, err %s", err.Error())
@@ -684,6 +695,7 @@ func (c *Client) ListIPObject(ctx context.Context, labelsMap map[string]string) 
 
 	var ipList []*types.IPObject
 	for _, ip := range ips {
+		// parse the create and update times from the IP object's status
 		createTime, err := utils.ParseTimeString(ip.Status.CreateTime)
 		if err != nil {
 			return nil, fmt.Errorf("parse create time failed, err %s", err.Error())
@@ -692,6 +704,7 @@ func (c *Client) ListIPObject(ctx context.Context, labelsMap map[string]string) 
 		if err != nil {
 			return nil, fmt.Errorf("parse update time failed, err %s", err.Error())
 		}
+		// create a new IPObject with the fields from the IP object
 		ipList = append(ipList, &types.IPObject{
 			Address:         ip.Spec.Address,
 			VpcID:           ip.Spec.VpcID,
@@ -802,18 +815,23 @@ func (c *Client) DeleteIPQuota(ctx context.Context, cluster string) error {
 
 // ListIPQuota list ip quota object
 func (c *Client) ListIPQuota(ctx context.Context) ([]*types.IPQuota, error) {
+	// list the IP quotas in the BcsSystemNamespace using the quotaLister
 	quotaList, err := c.quotaLister.CloudIPQuotas(BcsSystemNamespace).List(labels.Everything())
 	if err != nil {
 		blog.Errorf("list ip quota failed, err %s", err.Error())
 		return nil, fmt.Errorf("list ip quota failed, err %s", err.Error())
 	}
+	// create a list to hold the IP quotas to be returned
 	var retQuotas []*types.IPQuota
+	// iterate through the list of quotas returned by the quotaLister
 	for _, q := range quotaList {
+		// create a new IPQuota object with the cluster and limit from the quota
 		retQuotas = append(retQuotas, &types.IPQuota{
 			Cluster: q.Spec.Cluster,
 			Limit:   q.Spec.Limit,
 		})
 	}
+	// return the list of IP quotas
 	return retQuotas, nil
 }
 
