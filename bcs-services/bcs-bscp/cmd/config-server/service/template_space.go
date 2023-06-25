@@ -156,7 +156,7 @@ func (s *Service) GetAllBizsOfTemplateSpaces(ctx context.Context, req *pbbase.Em
 	return resp, nil
 }
 
-// CreateDefaultTemplateSpace get all biz ids of template spaces
+// CreateDefaultTemplateSpace create default template space
 func (s *Service) CreateDefaultTemplateSpace(ctx context.Context, req *pbcs.CreateDefaultTemplateSpaceReq) (
 	*pbcs.CreateDefaultTemplateSpaceResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
