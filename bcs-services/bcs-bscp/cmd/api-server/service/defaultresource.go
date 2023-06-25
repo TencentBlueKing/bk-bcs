@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"sync"
-	"time"
 
 	"bscp.io/pkg/logs"
 	pbbase "bscp.io/pkg/protocol/core/base"
@@ -37,25 +36,17 @@ func (b *BizsOfTmplSpace) Has(key uint32) bool {
 func (p *proxy) initBizsOfTmplSpaces() {
 	bizsOfTS.Bizs = make(map[uint32]struct{})
 
-	tryCnt := 3
-	i := 1
-	for {
-		resp, err := p.cfgClient.GetAllBizsOfTemplateSpaces(context.Background(), &pbbase.EmptyReq{})
-		if err != nil {
-			if i > tryCnt {
-				logs.Warnf("init bizs of template spaces from db failed, err: %v", err)
-				return
-			}
-			i++
-			time.Sleep(time.Second)
-			continue
-		}
-
-		for _, bizID := range resp.BizIds {
-			// no need to use lock for init step
-			bizsOfTS.Bizs[bizID] = struct{}{}
-		}
-		logs.Infof("init bizs of template spaces success, len(biz):%d", len(resp.BizIds))
+	resp, err := p.cfgClient.GetAllBizsOfTemplateSpaces(context.Background(), &pbbase.EmptyReq{})
+	if err != nil {
+		logs.Warnf("init bizs of template spaces from db failed, err: %v", err)
 		return
 	}
+
+	for _, bizID := range resp.BizIds {
+		// no need to use lock for init step
+		bizsOfTS.Bizs[bizID] = struct{}{}
+	}
+	logs.Infof("init bizs of template spaces success, len(biz):%d", len(resp.BizIds))
+
+	return
 }
