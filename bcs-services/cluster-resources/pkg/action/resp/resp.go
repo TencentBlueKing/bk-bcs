@@ -228,16 +228,16 @@ func BuildGetContainerAPIResp(
 		},
 	}
 	mounts := mapx.GetList(curContainerSpec, "volumeMounts")
+	volumes := []map[string]interface{}{}
 	for _, mount := range mounts {
 		m, _ := mount.(map[string]interface{})
-		volumes := []map[string]interface{}{}
 		volumes = append(volumes, map[string]interface{}{
 			"name":      mapx.Get(m, "name", "N/A"),
 			"mountPath": mapx.Get(m, "mountPath", "N/A"),
 			"readonly":  mapx.Get(m, "readOnly", "N/A"),
 		})
-		containerInfo["volumes"] = volumes
 	}
+	containerInfo["volumes"] = volumes
 
 	return pbstruct.Map2pbStruct(containerInfo)
 }
