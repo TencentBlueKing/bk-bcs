@@ -14,8 +14,10 @@ package imageloader
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
 
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
@@ -43,21 +45,25 @@ type Workload interface {
 // Init inits all workloads.
 func InitWorkloads(i *imageLoader) (map[string]Workload, error) {
 	// TODO add other workloads
-	// add bcsgd
-	bcsgd := &bcsgdWorkload{}
-	err := bcsgd.Init(i)
-	if err != nil {
-		return nil, fmt.Errorf("init bcsgd workload failed: %v", err)
+	if strings.Contains(i.config.Workload, tkexv1alpha1.KindGameDeployment) {
+		// add bcsgd
+		bcsgd := &bcsgdWorkload{}
+		err := bcsgd.Init(i)
+		if err != nil {
+			return nil, fmt.Errorf("init bcsgd workload failed: %v", err)
+		}
+		workloads[bcsgd.Name()] = bcsgd
 	}
-	workloads[bcsgd.Name()] = bcsgd
 
-	// add bcsgs
-	bcsgs := &bcsgsWorkload{}
-	err = bcsgs.Init(i)
-	if err != nil {
-		return nil, fmt.Errorf("init bcsgs workload failed: %v", err)
+	if strings.Contains(i.config.Workload, tkexv1alpha1.KindGameStatefulSet) {
+		// add bcsgs
+		bcsgs := &bcsgsWorkload{}
+		err := bcsgs.Init(i)
+		if err != nil {
+			return nil, fmt.Errorf("init bcsgs workload failed: %v", err)
+		}
+		workloads[bcsgs.Name()] = bcsgs
 	}
-	workloads[bcsgs.Name()] = bcsgs
 
 	return workloads, nil
 }

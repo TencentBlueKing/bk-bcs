@@ -15,6 +15,7 @@ package imageloader
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -22,7 +23,11 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/util/retry"
 )
 
 const (
@@ -39,59 +44,97 @@ var (
 	// backoff limit of a job
 	backoffLimit int32 = 1
 	// active time seconds of a job
-	activeTimeSecondsOfJob int64 = 300
-	// delete pod when job is deleted
-	jobDeletePropagationPolicy = metav1.DeletePropagationForeground
+	activeTimeSecondsOfJob int64 = 900
+	// delete pod after job is deleting
+	jobDeletePropagationPolicy = metav1.DeletePropagationBackground
 )
 
-func (i *imageLoader) addJob(o interface{}) {
-	// get the job
-	job, ok := o.(*batchv1.Job)
-	if !ok {
-		blog.Errorf("job(%v) type assertion failed", o)
+func (i *imageLoader) addJob(obj interface{}) {
+	key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("cound't get key for object %+v: %v", obj, err))
 		return
 	}
-	go i.jobChanged(job)
-	return
+	i.queue.Add(key)
+
 }
 
-func (i *imageLoader) updateJob(o, n interface{}) {
-	// get the job
-	job, ok := n.(*batchv1.Job)
+func (i *imageLoader) updateJob(old, cur interface{}) {
+	oldJob, ok := old.(*batchv1.Job)
 	if !ok {
-		blog.Errorf("job(%v) type assertion failed", n)
+		blog.Errorf("old job(%v) type assertion failed", old)
 		return
 	}
-	go i.jobChanged(job)
-	return
+	if oldJob.Namespace != pluginName {
+		return
+	}
+
+	curJob, ok := cur.(*batchv1.Job)
+	if !ok {
+		blog.Errorf("old job(%v) type assertion failed", cur)
+		return
+	}
+	if curJob.Namespace != pluginName {
+		return
+	}
+
+	key, err := cache.DeletionHandlingMetaNamespaceKeyFunc(cur)
+	if err != nil {
+		utilruntime.HandleError(fmt.Errorf("cound't get key for object %+v: %v", cur, err))
+		return
+	}
+
+	if !reflect.DeepEqual(oldJob, curJob) {
+		i.queue.Add(key)
+	}
 }
 
-func (i *imageLoader) jobChanged(job *batchv1.Job) {
-	blog.V(3).Infof("job status changed: %v", job)
+func (i *imageLoader) sync(key string) error {
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		return err
+	}
+	if namespace != pluginName {
+		return nil
+	}
+	job, err := i.jobLister.Jobs(namespace).Get(name)
+	if err != nil && errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if job.DeletionTimestamp != nil {
+		return nil
+	}
+
+	blog.V(3).Infof("start sync job %s/%s", namespace, name)
 	// do nothing if job is not done, wait next status change
 	event, done := i.isJobDone(job)
 	if !done {
-		return
+		return nil
 	}
 
 	// get workload to trigger the update
 	workloadName, ok := job.Annotations[workloadNameAnno]
 	if !ok {
 		blog.Errorf("job %s has no workload name label, it should not in the namespace", job.Name)
-		return
+		return fmt.Errorf("job %s has no workload name label, it should not in the namespace", job.Name)
 	}
 	workload, ok := i.workloads[workloadName]
 	if !ok {
 		blog.Errorf("job %s belongs to workload %s which is not supported in imageloader",
 			job.Name, workloadName)
-		return
+		return fmt.Errorf("job %s belongs to workload %s which is not supported in imageloader",
+			job.Name, workloadName)
 	}
-	err := workload.JobDoneHook(
+	err = workload.JobDoneHook(
 		job.Labels[workloadInsNamespaceLabel], job.Labels[workloadInsNameLabel], event)
 	if err != nil {
 		blog.Errorf("finish job %s of workload %s-%s-%s failed: %v",
 			job.Name, workloadName, job.Labels[workloadInsNamespaceLabel], job.Labels[workloadInsNameLabel], err)
-		return
+		return fmt.Errorf("finish job %s of workload %s-%s-%s failed: %v",
+			job.Name, workloadName, job.Labels[workloadInsNamespaceLabel], job.Labels[workloadInsNameLabel], err)
 	}
 
 	// attach event to workload instance
@@ -102,12 +145,12 @@ func (i *imageLoader) jobChanged(job *batchv1.Job) {
 		_, err := i.k8sClient.CoreV1().Events(event.Namespace).Create(context.Background(), event, metav1.CreateOptions{})
 		if err != nil {
 			blog.Errorf("attach event(%v) to workload instance failed: %v", event, err)
-			return
+			return fmt.Errorf("attach event(%v) to workload instance failed: %v", event, err)
 		}
 	}
 
 	// delete the job
-	i.deleteJob(job)
+	return i.deleteJob(job.Namespace, job.Name)
 }
 
 func (i *imageLoader) isJobDone(job *batchv1.Job) (*corev1.Event, bool) {
@@ -124,6 +167,8 @@ func (i *imageLoader) isJobDone(job *batchv1.Job) (*corev1.Event, bool) {
 		job.Status.Succeeded == *job.Spec.Completions {
 		// all pods of the job success, no need to check node
 		// reduce check time when job complete before node report image
+		collectJobDuration(job.Name, actionRun, statusSuccess, time.Since(job.CreationTimestamp.Time))
+		collectJobStatus(job.Name, actionRun, statusSuccess)
 		return nil, true
 	}
 
@@ -161,7 +206,7 @@ func (i *imageLoader) isJobDone(job *batchv1.Job) (*corev1.Event, bool) {
 		for _, i := range images {
 			if _, ok := imagesOnNode[i]; !ok {
 				errMsg := fmt.Sprintf("image %s is not on node %s", i, nodeName)
-				nowTime := metav1.Time{Time: time.Now()}
+				nowTime := metav1.Now()
 				event := &corev1.Event{
 					ObjectMeta: metav1.ObjectMeta{
 						GenerateName: pluginName + "-",
@@ -173,32 +218,92 @@ func (i *imageLoader) isJobDone(job *batchv1.Job) (*corev1.Event, bool) {
 					LastTimestamp:  nowTime,
 				}
 				blog.Error(errMsg)
+				collectJobDuration(job.Name, actionRun, statusFailure, time.Since(job.CreationTimestamp.Time))
+				collectJobStatus(job.Name, actionRun, statusFailure)
 				return event, true
 			}
 		}
 	}
 
+	collectJobDuration(job.Name, actionRun, statusSuccess, time.Since(job.CreationTimestamp.Time))
+	collectJobStatus(job.Name, actionRun, statusSuccess)
 	return nil, true
 }
 
 func (i *imageLoader) createJob(job *batchv1.Job) error {
-	// TODO retry on conflict
-	_, err := i.k8sClient.BatchV1().Jobs(pluginName).Create(context.Background(), job, metav1.CreateOptions{})
+	start := time.Now()
+	// create job with retry
+	createFunc := func() error {
+		_, createErr := i.k8sClient.BatchV1().Jobs(pluginName).Create(context.Background(), job, metav1.CreateOptions{})
+		return createErr
+	}
+	isRetryable := func(err error) bool {
+		return errors.IsAlreadyExists(err)
+	}
+	err := retry.OnError(retry.DefaultBackoff, isRetryable, createFunc)
 	if err != nil {
 		blog.Errorf("create job(%v) failed: %v", job, err)
+		collectJobDuration(job.Name, actionCreate, statusFailure, time.Since(start))
+		collectJobStatus(job.Name, actionCreate, statusFailure)
+	} else {
+		collectJobDuration(job.Name, actionCreate, statusSuccess, time.Since(start))
+		collectJobStatus(job.Name, actionCreate, statusSuccess)
 	}
 	return err
 }
 
-func (i *imageLoader) deleteJob(job *batchv1.Job) error {
-	err := i.k8sClient.BatchV1().Jobs(job.Namespace).Delete(
+func (i *imageLoader) deleteJob(namespace, name string) error {
+	start := time.Now()
+	err := i.k8sClient.BatchV1().Jobs(namespace).Delete(
 		context.Background(),
-		job.Name,
+		name,
 		metav1.DeleteOptions{
 			PropagationPolicy: &jobDeletePropagationPolicy,
 		})
 	if err != nil {
-		blog.Errorf("delete job %s failed: %v", job.Name, err)
+		blog.Errorf("delete job %s/%s failed: %v", namespace, name, err)
+		if !errors.IsNotFound(err) {
+			collectJobDuration(name, actionDelete, statusFailure, time.Since(start))
+			collectJobStatus(name, actionDelete, statusFailure)
+		}
+	} else {
+		collectJobDuration(name, actionDelete, statusSuccess, time.Since(start))
+		collectJobStatus(name, actionDelete, statusSuccess)
+	}
+	return err
+}
+
+func (i *imageLoader) createJobIfNeed(job *batchv1.Job) error {
+	currentJob, err := i.k8sClient.BatchV1().Jobs(pluginName).Get(context.Background(), job.Name, metav1.GetOptions{})
+	// create job if not exist
+	if errors.IsNotFound(err) {
+		return i.createJob(job)
+	}
+	if err != nil {
+		return err
+	}
+	// recreate job if failed
+	failed := false
+	for _, condition := range currentJob.Status.Conditions {
+		if condition.Type == batchv1.JobFailed && condition.Status == corev1.ConditionTrue {
+			failed = true
+			break
+		}
+	}
+	// recreate job if different
+	diff := false
+	if !reflect.DeepEqual(currentJob.Spec, job.Spec) {
+		diff = true
+	}
+	if failed || diff {
+		err = i.deleteJob(job.Namespace, job.Name)
+		if err != nil {
+			return err
+		}
+		err = i.createJob(job)
+		if err != nil {
+			return err
+		}
 	}
 	return err
 }
