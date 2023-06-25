@@ -1,4 +1,4 @@
-FROM python:3.6.8-stretch
+FROM python:3.6.15-bullseye
 WORKDIR /data
 
 RUN apt-get update && apt-get install less
