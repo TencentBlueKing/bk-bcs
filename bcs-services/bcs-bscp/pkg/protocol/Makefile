@@ -13,3 +13,11 @@ clean:
 	@cd config-server && make clean
 	@cd feed-server && make clean
 	@cd cache-service && make clean
+
+py:
+	@cd core && make py
+	@cd auth-server && make py
+	@cd data-service && make py
+	@cd config-server && make py
+	@cd feed-server && make py
+	@cd cache-service && make py

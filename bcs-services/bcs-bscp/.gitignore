@@ -1,5 +1,6 @@
 bscp-ui
 bcs-bscp
+pkg/protocol/python
 *dev*
 .bin
 .codecc

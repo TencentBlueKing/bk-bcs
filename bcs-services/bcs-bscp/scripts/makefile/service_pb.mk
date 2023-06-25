@@ -3,6 +3,7 @@
 
 PROTO=$(wildcard ./*.proto)
 VERSION=$(shell protoc --version)
+DIR_NAME=$(notdir $(CURDIR))
 
 OBJ:=$(patsubst %.proto, %.pb.go, $(PROTO))
 GRPC:=$(patsubst %.proto, %_grpc.pb.go, $(PROTO))
@@ -18,3 +19,8 @@ all:
 
 clean:
 	@rm -f $(OBJ) $(GW) $(GRPC)
+
+py:
+	mkdir -p ../../../pkg/protocol/python/$(DIR_NAME)
+	@echo $(DIR_NAME)
+	python3 -m grpc_tools.protoc --proto_path=. --proto_path=../../../../ --proto_path=../../../pkg/thirdparty/protobuf/ --python_out=../../../pkg/protocol/python/$(DIR_NAME) --pyi_out=../../../pkg/protocol/python/$(DIR_NAME) --grpc_python_out=../../../pkg/protocol/python/$(DIR_NAME) *.proto

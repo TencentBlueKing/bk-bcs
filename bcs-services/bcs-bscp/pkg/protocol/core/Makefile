@@ -39,3 +39,24 @@ clean:
 	@cd template && make clean
 	@cd template-release && make clean
 	@cd template-set && make clean
+
+py:
+	@cd base && make py
+	@cd app && make py
+	@cd config-item && make py
+	@cd commit && make py
+	@cd content && make py
+	@cd release && make py
+	@cd released-ci && make py
+	@cd event && make py
+	@cd hook && make py
+	@cd hook-release && make py
+	@cd group && make py
+	@cd released-group && make py
+	@cd credential && make py
+	@cd credential-scope && make py
+	@cd template-space && make py
+	@cd config-hook && make py
+	@cd template && make py
+	@cd template-release && make py
+	@cd template-set && make py
