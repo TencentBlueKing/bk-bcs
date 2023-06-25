@@ -326,6 +326,8 @@ func (c *client) Uninstall(_ context.Context, config release.HelmUninstallConfig
 
 	uninstaller := action.NewUninstall(conf)
 	uninstaller.DryRun = config.DryRun
+	uninstaller.Wait = true
+	uninstaller.Timeout = 10 * time.Minute
 
 	_, err := uninstaller.Run(config.Name)
 	if err != nil {
