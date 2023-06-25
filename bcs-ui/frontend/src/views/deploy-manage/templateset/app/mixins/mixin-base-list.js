@@ -441,7 +441,7 @@ export default {
           },
         ]);
       }
-      this.$refs.bkSearcher.$emit('resetSearchParams', true);
+      // this.$refs.bkSearcher.$emit('resetSearchParams', true);
 
       // this.searchParamsListFromRoute
       // 为 undefined 说明是第一次进入
@@ -644,7 +644,7 @@ export default {
       this.cancelLoopAppList();
       this.cancelLoopInstanceList();
 
-      this.$refs.bkSearcher.$emit('resetSearchParams', true);
+      // this.$refs.bkSearcher.$emit('resetSearchParams', true);
     },
 
     /**

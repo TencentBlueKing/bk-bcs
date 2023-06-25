@@ -24,7 +24,7 @@
                     <span class="label" :class="clusterSearchSelectExpand ? 'is-focus' : ''">{{$t('集群名')}}</span>
                     <ClusterSelect 
                         :disabled="bkSearcherMask"
-                        :cluster-type="CATEGORY === 'daemonset' ? 'normal' : 'all'"
+                        :cluster-type="CATEGORY === 'daemonset' ? ['independent', 'managed', 'virtual'] : 'all'"
                         v-model="clusterValue"
                         @change="changeCluster">
                     </ClusterSelect>

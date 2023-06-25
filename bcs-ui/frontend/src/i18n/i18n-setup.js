@@ -27,29 +27,26 @@ import Vue from 'vue';
 import VueI18n from 'vue-i18n';
 import { locale, lang } from 'bk-magic-vue';
 import cookie from 'cookie';
+import yamljs from 'js-yaml';
+import enUS from 'text-loader?modules!./en-US.yaml';
+import zhCN from 'text-loader?modules!./zh-CN.yaml';
 
 Vue.use(VueI18n);
 
-const modulesFiles = require.context('.', true, /.json$/);
-const modules = modulesFiles.keys().reduce((modules, modulePath) => {
-  const langName = modulePath.match(/\/(\S*)\//)[1];
-  // const moduleName = modulePath.replace(/(.*\/)*([^.]+).*/ig, '$2');
-  const data = modulesFiles(modulePath);
-  if (!modules[langName]) {
-    modules[langName] = {};
-  }
-  Object.keys(data || {}).forEach((key) => {
-    if (modules[langName][key]) {
-      console.error(`Duplicate key name '${key}', ${modulePath}`);
-    }
+const validateTranslation = (yamlData, lang) => {
+  const data = yamljs.load(yamlData);
+  Object.keys(data).forEach((key) => {
     if (!data[key]) {
-      console.warn(`un-translation '${key}', ${modulePath}`);
+      console.warn(`un-translation '${key}', ${lang}`);
     }
-    modules[langName][key] = data[key];
   });
+  return data;
+};
 
-  return modules;
-}, {});
+const modules = {
+  'en-US': validateTranslation(enUS, 'en-US'),
+  'zh-CN': validateTranslation(zhCN, 'zh-CN'),
+};
 
 const messages = {
   'en-US': Object.assign(lang.enUS, modules['en-US']),

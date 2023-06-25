@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npm run i18n && bk-cli-service-webpack dev",
     "build": "bk-cli-service-webpack build",
-    "i18n": "node ./vue-i18n-extract.js"
+    "i18n": "node ./scripts/vue-i18n-extract.js"
   },
   "dependencies": {
     "@blueking/bkui-form": "0.0.28",
