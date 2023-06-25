@@ -166,16 +166,16 @@ process-daemon:pre
 netservice:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-netservice ${PACKAGEPATH}/bcs-services
-	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-services/bcs-netservice/bcs-netservice ./bcs-services/bcs-netservice/main.go
+	cd ./bcs-services/bcs-netservice && go mod tidy  && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-netservice/bcs-netservice ./main.go
 
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
 	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-master/bcs-netservice ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master
-	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-netservice/bcs-netservice ./bcs-services/bcs-netservice/main.go
+	cd ./bcs-services/bcs-netservice && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master/bcs-netservice/bcs-netservice ./main.go
 
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node/bcs-cni/bin/conf
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node/bcs-cni/conf
 	cp -R ${BCS_CONF_MESOS_PATH}/bcs-mesos-node/bcs-ipam/bcs.conf.template ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node/bcs-cni/bin/conf
-	go mod tidy && go build ${LDFLAG} -o ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node/bcs-cni/bin/bcs-ipam ./bcs-services/bcs-netservice/bcs-ipam/main.go
+	cd ./bcs-services/bcs-netservice/bcs-ipam && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-node/bcs-cni/bin/bcs-ipam ./main.go
 
 mesos-driver:pre
 	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-mesos/bcs-mesos-master

@@ -16,11 +16,14 @@ package zookeeper
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
+	"github.com/pkg/errors"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
-	"strings"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -169,7 +172,7 @@ func (cl *ConLocker) Unlock() error {
 }
 
 // NewStorage create etcd storage
-func NewStorage(hosts string) storage.Storage {
+func NewStorage(hosts string) (storage.Storage, error) {
 	// create zookeeper connection
 	host := strings.Split(hosts, ",")
 	blog.Info("Storage create zookeeper connection with %s", hosts)
@@ -180,8 +183,7 @@ func NewStorage(hosts string) storage.Storage {
 	// }
 	bcsClient := zkclient.NewZkClient(host)
 	if conErr := bcsClient.ConnectEx(time.Second * 5); conErr != nil {
-		blog.Errorf("Storage create zookeeper connection failed: %v", conErr)
-		return nil
+		return nil, errors.Wrapf(conErr, "create zookeeper connection failed")
 	}
 
 	blog.Infof("Storage connect to zookeeper %s success", hosts)
@@ -191,7 +193,7 @@ func NewStorage(hosts string) storage.Storage {
 			client: bcsClient,
 		},
 	}
-	return s
+	return s, nil
 }
 
 // eStorage storage data in etcd

@@ -14,13 +14,18 @@
 package netdriver
 
 import (
+	"crypto/tls"
 	"fmt"
+	"strings"
+
+	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam/resource"
-	"strings"
 )
 
 var (
@@ -30,25 +35,40 @@ var (
 // NewDriver create IPDriver for bcs-netservice
 func NewDriver() (resource.IPDriver, error) {
 	// check config for zookeeper list
-	conf, err := conf.LoadConfigFromFile(defaultConfig)
+	config, err := conf.LoadConfigFromFile(defaultConfig)
 	if err != nil {
 		return nil, fmt.Errorf("load config bcs.conf failed, %s", err.Error())
 	}
 	client := bcsapi.NewNetserviceCli()
-	if conf.TLS != nil {
-		conf.TLS.Passwd = static.ClientCertPwd
-		if err := client.SetCerts(conf.TLS.CACert, conf.TLS.Key, conf.TLS.PubKey, conf.TLS.Passwd); err != nil {
+	if config.TLS != nil {
+		config.TLS.Passwd = static.ClientCertPwd
+		if err := client.SetCerts(config.TLS.CACert, config.TLS.Key, config.TLS.PubKey, config.TLS.Passwd); err != nil {
 			return nil, err
 		}
 	}
 	driver := &NetDriver{
 		netClient: client,
 	}
-	// client get bcs-netservice info
-	conf.ZkHost = strings.Replace(conf.ZkHost, ",", ";", -1)
-	hosts := strings.Split(conf.ZkHost, ";")
-	if err := client.GetNetService(hosts); err != nil {
-		return nil, fmt.Errorf("get netservice failed, %s", err.Error())
+
+	if config.EtcdHost != "" {
+		var etcdTls *tls.Config
+		if config.EtcdCA != "" && config.EtcdCert != "" && config.EtcdKey != "" {
+			etcdTls, err = ssl.ClientTslConfVerity(config.EtcdCA, config.EtcdCert, config.EtcdKey,
+				static.ServerCertPwd)
+			if err != nil {
+				return nil, errors.Wrapf(err, "load etcd tls config failed")
+			}
+		}
+		if err := client.GetNetServiceWithEtcd(strings.Split(config.EtcdHost, ","), etcdTls); err != nil {
+			return nil, fmt.Errorf("get netservice failed, %s", err.Error())
+		}
+	} else {
+		// client get bcs-netservice info
+		config.ZkHost = strings.Replace(config.ZkHost, ",", ";", -1)
+		hosts := strings.Split(config.ZkHost, ";")
+		if err := client.GetNetService(hosts); err != nil {
+			return nil, fmt.Errorf("get netservice failed, %s", err.Error())
+		}
 	}
 	return driver, nil
 }

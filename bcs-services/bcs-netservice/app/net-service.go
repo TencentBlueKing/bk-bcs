@@ -18,33 +18,65 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
+
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/netservice"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/storage/zookeeper"
 )
 
 // Run entry point for bcs-netservice
 func Run(cfg *Config) error {
-	// check storage data
-	if cfg.BCSZk == "" {
-		return fmt.Errorf("parameter backend host lost")
+	var st storage.Storage
+	var err error
+	blog.Infof("store type is selected as '%s'", cfg.Store)
+	switch cfg.Store {
+	case "zookeeper":
+		// check storage data
+		if cfg.BCSZk == "" {
+			return errors.Errorf("parameter backend host lost")
+		}
+		// start storage
+		st, err = zookeeper.NewStorage(cfg.BCSZk)
+	case "etcd":
+		if cfg.Registry.Endpoints == "" {
+			return errors.Errorf("registry param endpoints cannot be empty")
+		}
+		hosts := strings.Split(cfg.Registry.Endpoints, ",")
+		blog.Infof("init etcd tls config for '%v' started", hosts)
+		if cfg.Registry.CA != "" && cfg.Registry.Key != "" && cfg.Registry.Cert != "" {
+			tlsConfig, err := ssl.ClientTslConfVerity(cfg.Registry.CA, cfg.Registry.Cert,
+				cfg.Registry.Key, static.ServerCertPwd)
+			if err != nil {
+				return errors.Wrapf(err, "load server tls config failed")
+			}
+			blog.Infof("init etcd tls config success")
+			cfg.Registry.TLSConfig = tlsConfig
+		}
+		st, err = etcd.NewStorage(hosts, cfg.Registry.TLSConfig)
+	default:
+		return errors.Errorf("unknown store type '%s'", cfg.Store)
 	}
-	// start storage
-	st := zookeeper.NewStorage(cfg.BCSZk)
-	if st == nil {
-		return fmt.Errorf("Create Storage Err")
+	if err != nil {
+		return errors.Wrapf(err, "create storage failed")
 	}
+	blog.Infof("create storage success")
+
 	// create netservice
 	netSvr := netservice.NewNetService(cfg.Address, int(cfg.Port), int(cfg.MetricPort), st)
 	if netSvr == nil {
-		return fmt.Errorf("Create NetService Err")
+		return fmt.Errorf("create net server failed")
 	}
+	blog.Infof("create storage with store '%s' success", cfg.Store)
 
 	// pid
 	if err := common.SavePid(cfg.ProcessConfig); err != nil {
@@ -52,11 +84,11 @@ func Run(cfg *Config) error {
 	}
 
 	// start signal handler
-	interrupt := make(chan os.Signal, 10)
-	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+	interupt := make(chan os.Signal, 10)
+	signal.Notify(interupt, syscall.SIGINT, syscall.SIGTERM)
 	// start http(s) service
 	httpSrv := api.NewHTTPService(cfg.Address, int(cfg.Port))
-	go handleSysSignal(interrupt, httpSrv, st)
+	go handleSysSignal(interupt, httpSrv, st)
 
 	api.RegisterPoolHandler(httpSrv, netSvr)
 	api.RegisterHostHandler(httpSrv, netSvr)

@@ -14,6 +14,8 @@
 package app
 
 import (
+	"crypto/tls"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 )
 
@@ -40,4 +42,15 @@ type Config struct {
 	conf.LicenseServerConfig
 	conf.LogConfig
 	conf.ProcessConfig
+
+	Store    string   `json:"store,omitempty"`
+	Registry Registry `json:"registry,omitempty"`
+}
+
+type Registry struct {
+	Endpoints string `json:"endpoints"`
+	CA        string `json:"ca"`
+	Key       string `json:"key"`
+	Cert      string `json:"cert"`
+	TLSConfig *tls.Config
 }

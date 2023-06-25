@@ -14,6 +14,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime"
@@ -33,6 +34,9 @@ func main() {
 	// init logs
 	blog.InitLogs(cfg.LogConfig)
 	defer blog.CloseLogs()
+
+	bs, _ := json.Marshal(cfg)
+	blog.Infof("%s", string(bs))
 	// running netservice application
 	if err := app.Run(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "bcs-netservice running failed: %s\n", err.Error())
