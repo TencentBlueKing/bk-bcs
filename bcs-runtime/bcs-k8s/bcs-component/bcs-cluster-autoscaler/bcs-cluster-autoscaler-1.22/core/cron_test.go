@@ -305,7 +305,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,

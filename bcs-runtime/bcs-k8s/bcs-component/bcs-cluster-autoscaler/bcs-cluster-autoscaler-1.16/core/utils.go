@@ -707,8 +707,9 @@ func UpdateClusterStateMetrics(csr *clusterstate.ClusterStateRegistry) {
 	}
 	metrics.UpdateClusterSafeToAutoscale(csr.IsClusterHealthy())
 	readiness := csr.GetClusterReadiness()
+	// fix(bcs): 删除中节点也应统计到指标中, 为减少改动, 添加到 Unregistered 中
 	metrics.UpdateNodesCount(readiness.Ready, readiness.Unready+readiness.LongNotStarted, readiness.NotStarted,
-		readiness.LongUnregistered, readiness.Unregistered)
+		readiness.LongUnregistered, readiness.Unregistered+readiness.Deleted)
 }
 
 func getOldestCreateTime(pods []*apiv1.Pod) time.Time {
@@ -816,7 +817,6 @@ func checkResourceNotEnough(nodes map[string]*schedulernodeinfo.NodeInfo,
 			continue
 		}
 		r := float64(left.MilliValue()) / float64(sum.MilliValue())
-		klog.V(4).Infof("Resource :%v, left: %v", name, r)
 		switch name {
 		case apiv1.ResourceCPU:
 			klog.V(4).Infof("%v ratio %v, desired CPU ratio %v", name, r, cpuRatio)

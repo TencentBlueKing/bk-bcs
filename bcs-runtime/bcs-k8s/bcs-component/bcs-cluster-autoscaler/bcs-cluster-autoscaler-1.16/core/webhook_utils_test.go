@@ -324,7 +324,7 @@ func TestHandleResponse(t *testing.T) {
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0, true)
 	request := &AutoscalerRequest{
 		UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
 		NodeGroups: map[string]*NodeGroup{
@@ -928,7 +928,7 @@ func TestExecuteScaleDown(t *testing.T) {
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0, true)
 
 	type args struct {
 		context            *contextinternal.Context

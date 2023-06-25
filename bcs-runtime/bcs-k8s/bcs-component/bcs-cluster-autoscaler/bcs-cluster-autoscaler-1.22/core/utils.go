@@ -173,6 +173,7 @@ func filterOutExpendablePods(pods []*apiv1.Pod, expendablePodsPriorityCutoff int
 // It also returns a node group to sample node mapping.
 // TODO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
 // TODO(mwielgus): Review error policy - sometimes we may continue with partial errors.
+// NOCC:golint/fnsize(设计如此)
 func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedulerframework.NodeInfo,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
 	daemonsets []*appsv1.DaemonSet, predicateChecker simulator.PredicateChecker,
@@ -555,8 +556,9 @@ func UpdateClusterStateMetrics(csr *clusterstate.ClusterStateRegistry) {
 	}
 	metrics.UpdateClusterSafeToAutoscale(csr.IsClusterHealthy())
 	readiness := csr.GetClusterReadiness()
+	// fix(bcs): 删除中节点也应统计到指标中, 为减少改动, 添加到 Unregistered 中
 	metrics.UpdateNodesCount(readiness.Ready, readiness.Unready, readiness.NotStarted,
-		readiness.LongUnregistered, readiness.Unregistered)
+		readiness.LongUnregistered, readiness.Unregistered+readiness.Deleted)
 }
 
 func getOldestCreateTime(pods []*apiv1.Pod) time.Time {
@@ -617,7 +619,8 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 			// Ensure new nodes have different names because nodeName
 			// will be used as a map key. Also deep copy pods (daemonsets &
 			// any pods added by cloud provider on template).
-			upcomingNodes = append(upcomingNodes, scheduler_utils.DeepCopyTemplateNode(nodeTemplate, fmt.Sprintf("upcoming-%d", i)))
+			upcomingNodes = append(upcomingNodes,
+				scheduler_utils.DeepCopyTemplateNode(nodeTemplate, fmt.Sprintf("upcoming-%d", i)))
 		}
 	}
 	return upcomingNodes
@@ -668,7 +671,6 @@ func checkResourceNotEnough(nodes map[string]*schedulerframework.NodeInfo,
 			continue
 		}
 		r := float64(left.MilliValue()) / float64(sum.MilliValue())
-		klog.V(6).Infof("Resource :%v, left: %v", name, r)
 		switch name {
 		case apiv1.ResourceCPU:
 			klog.V(4).Infof("%v ratio %v, desired CPU ratio %v", name, r, cpuRatio)

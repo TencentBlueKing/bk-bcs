@@ -61,10 +61,7 @@ func NewAutoscaler(opts AutoscalerOptions) (core.Autoscaler, errors.AutoscalerEr
 		opts.CloudProvider,
 		opts.ExpanderStrategy,
 		opts.EstimatorBuilder,
-		opts.Backoff,
-		opts.BufferedCPURatio,
-		opts.BufferedMemRatio,
-		opts.BufferedResourceRatio), nil
+		opts.Backoff), nil
 }
 
 // initializeDefaultOptions initialize default options if not provided.

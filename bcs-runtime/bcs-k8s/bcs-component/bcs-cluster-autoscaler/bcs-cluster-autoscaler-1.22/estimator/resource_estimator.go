@@ -197,13 +197,28 @@ func computeNewNodeNumWithRatio(nodeTemplate *schedulerframework.NodeInfo, name 
 	if ratio == 0 {
 		return 0
 	}
+	var num float64
 	r := float64(left.MilliValue()) / float64(sum.MilliValue())
 	// (left + num)/ (sum + num) >= ratio
 	resourceRequest := (float64(sum.MilliValue())*ratio - float64(left.MilliValue())) / (1 - ratio)
+	// num >= 0
+	resourceRequest = math.Max(0, resourceRequest)
 	nodeResource := nodeTemplate.Allocatable
 	nodeResourceList := scheduler.ResourceToResourceList(nodeResource)
-	nodeCapacity := nodeResourceList[name]
-	num := math.Ceil(resourceRequest / float64(nodeCapacity.MilliValue()))
+	nodeCapacity, ok := nodeResourceList[name]
+	if !ok && r < ratio {
+		// the resource is not exist in nodeTemplate
+		// scale up when current ratio small than desired ratio
+		klog.V(4).Infof("resource %v is not in nodeTemplate's capacity, scale up 1 node instead", name)
+		num = 1
+	} else if !ok {
+		// the resource is not exist in nodeTemplate
+		// but there is no need to scale up
+		num = 0
+	} else {
+		num = math.Ceil(resourceRequest / float64(nodeCapacity.MilliValue()))
+	}
+
 	klog.V(4).Infof("resource: %v, sum: %v, left: %v, desired-ratio: %v, current-ratio: %v, desired-node: %v",
 		name, sum.MilliValue(), left.MilliValue(), ratio, r, num)
 	return math.Max(0, num)

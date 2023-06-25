@@ -399,11 +399,12 @@ type ScaleDown struct {
 	cpuRatio             float64
 	memRatio             float64
 	ratio                float64
+	evictLatest          bool
 }
 
 // NewScaleDown builds new ScaleDown object.
 func NewScaleDown(context *context.Context, clusterStateRegistry *clusterstate.ClusterStateRegistry,
-	cpuRatio, memRatio, ratio float64) *ScaleDown {
+	cpuRatio, memRatio, ratio float64, evictLatest bool) *ScaleDown {
 	return &ScaleDown{
 		context:              context,
 		clusterStateRegistry: clusterStateRegistry,
@@ -417,6 +418,7 @@ func NewScaleDown(context *context.Context, clusterStateRegistry *clusterstate.C
 		cpuRatio:             cpuRatio,
 		memRatio:             memRatio,
 		ratio:                ratio,
+		evictLatest:          evictLatest,
 	}
 }
 
@@ -855,25 +857,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	if len(emptyNodes) > 0 {
 		klog.Infof("%d empty node", len(emptyNodes))
 		// filter empty nodes with ratio
-		emptyNodesAfterFilter := make([]*apiv1.Node, 0)
-		nodeInfos := buildNodeInfos(nodesWithoutMaster, getPodsInfos(pods))
-		for _, node := range emptyNodes {
-			// 被移除的节点需先有 soft taint 阻止新 Pod 调度，减少极端情况
-			// 否则移到下一轮循环再判断
-			if !deletetaint.HasDeletionCandidateTaint(node) {
-				klog.Infof("empty node %s should be soft tainted before delete", node.Name)
-				continue
-			}
-			pods := nodeInfos[node.Name]
-			delete(nodeInfos, node.Name)
-			if checkResourceNotEnough(nodeInfos, nil, sd.cpuRatio, sd.memRatio, sd.ratio) {
-				nodeInfos[node.Name] = pods
-				klog.Infof("Skip node %v due to left resource ratio", node.Name)
-				metrics.UpdateUnremovableNodes(node.Name, string(simulator.BufferNotEnough), "", "")
-				continue
-			}
-			emptyNodesAfterFilter = append(emptyNodesAfterFilter, node)
-		}
+		emptyNodesAfterFilter := sd.filterNodes(emptyNodes, nodesWithoutMaster, pods)
 		klog.Infof("%d empty node after filter", len(emptyNodesAfterFilter))
 		emptyNodes = emptyNodesAfterFilter
 		if len(emptyNodes) == 0 {
@@ -933,20 +917,8 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 	nodesToRemove = sortNodesByDeletionCost(nodesToRemove)
 
 	toRemove := nodesToRemove[0]
-	// 被移除的节点需要先有 soft taint 阻止新 Pod 调度，减少极端情况
-	// 否则移到下一轮循环再判断
-	if !deletetaint.HasDeletionCandidateTaint(toRemove.Node) {
-		klog.V(1).Infof("Node %v should be deleted after soft taint", toRemove.Node.Name)
-		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
-		return scaleDownStatus, nil
-	}
-	// check resource ratio
-	nodeInfos := buildNodeInfos(nodesWithoutMaster, getPodsInfos(pods))
-	delete(nodeInfos, toRemove.Node.Name)
-	if checkResourceNotEnough(nodeInfos, toRemove.PodsToReschedule,
-		sd.cpuRatio, sd.memRatio, sd.ratio) {
-		klog.Infof("Skip node %v due to left resource ratio", toRemove.Node.Name)
-		metrics.UpdateUnremovableNodes(toRemove.Node.Name, string(simulator.BufferNotEnough), "", "")
+	nodesAfterFilter := sd.filterNodes([]*apiv1.Node{toRemove.Node}, nodesWithoutMaster, pods)
+	if len(nodesAfterFilter) == 0 {
 		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
 		return scaleDownStatus, nil
 	}
@@ -998,6 +970,30 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		map[string][]*apiv1.Pod{toRemove.Node.Name: toRemove.PodsToReschedule})
 	scaleDownStatus.Result = status.ScaleDownNodeDeleteStarted
 	return scaleDownStatus, nil
+}
+
+func (sd *ScaleDown) filterNodes(nodes, nodesWithoutMaster []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
+	nodesAfterFilter := make([]*apiv1.Node, 0, len(nodes))
+	nodeInfos := buildNodeInfos(nodesWithoutMaster, getPodsInfos(pods))
+	for _, node := range nodes {
+		// 被移除的节点需有 DeletionCandidateTaint 或 ToBeDeletedTaint 阻止新 Pod 调度，减少极端情况
+		// 否则移到下一轮循环再判断
+		if !deletetaint.HasDeletionCandidateTaint(node) && !deletetaint.HasToBeDeletedTaint(node) {
+			klog.Infof("empty node %s should be deleted after DeletionCandidateTaint or ToBeDeletedTaint", node.Name)
+			continue
+		}
+		// filter empty nodes with ratio
+		pods := nodeInfos[node.Name]
+		delete(nodeInfos, node.Name)
+		if checkResourceNotEnough(nodeInfos, nil, sd.cpuRatio, sd.memRatio, sd.ratio) {
+			nodeInfos[node.Name] = pods
+			klog.Infof("Skip node %v due to left resource ratio", node.Name)
+			metrics.UpdateUnremovableNodes(node.Name, string(simulator.BufferNotEnough), "", "")
+			continue
+		}
+		nodesAfterFilter = append(nodesAfterFilter, node)
+	}
+	return nodesAfterFilter
 }
 
 func getTempNodesPerNodeGroup(cp cloudprovider.CloudProvider, tempNodes []*apiv1.Node) map[string]int {
@@ -1251,7 +1247,6 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 	nodeGroup cloudprovider.NodeGroup) status.NodeDeleteResult {
 	deleteSuccessful := false
 	drainSuccessful := false
-	klog.Infof("aaaaaaaaaaa: nodename %v", node.Name)
 	if err := deletetaint.MarkToBeDeleted(node, sd.context.ClientSet); err != nil {
 		sd.context.Recorder.Eventf(node, apiv1.EventTypeWarning, "ScaleDownFailed",
 			"failed to mark the node as toBeDeleted/unschedulable: %v", err)
@@ -1259,23 +1254,15 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 			Err: errors.ToAutoscalerError(errors.ApiCallError, err)}
 	}
 
-	// 获取最新的 drain pod 列表
-	fieldSelector := fmt.Sprintf("spec.nodeName=%s", node.Name)
-	podList, listErr := sd.context.ClientSet.CoreV1().Pods(apiv1.NamespaceAll).List(
-		metav1.ListOptions{FieldSelector: fieldSelector})
-	if listErr != nil {
-		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: listErr}
-	}
-	podsOfNode := make([]*apiv1.Pod, 0)
-	for i := range podList.Items {
-		podsOfNode = append(podsOfNode, &podList.Items[i])
-	}
-	nonExpendablePods := filterOutExpendablePods(podsOfNode, sd.context.ExpendablePodsPriorityCutoff)
-	podsToDrain, _, _, getErr := simulator.GetPodsForDeletionOnNodeDrain(
-		nonExpendablePods, []*policyv1.PodDisruptionBudget{}, false, false, false,
-		false, nil, 0, time.Now())
-	if getErr != nil {
-		return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: getErr}
+	var podsToDrain []*apiv1.Pod
+	var err error
+	if sd.evictLatest {
+		podsToDrain, err = getLatestPodsToDrain(sd, node)
+		if err != nil {
+			return status.NodeDeleteResult{ResultType: status.NodeDeleteErrorFailedToEvictPods, Err: err}
+		}
+	} else {
+		podsToDrain = pods
 	}
 
 	if hasGameServer(podsToDrain) {
@@ -1292,7 +1279,7 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 	// If we fail to evict all the pods from the node we want to remove delete taint
 	defer func() {
 		if !deleteSuccessful {
-			_, err := deletetaint.CleanToBeDeleted(node, sd.context.ClientSet)
+			_, err = deletetaint.CleanToBeDeleted(node, sd.context.ClientSet)
 			if err != nil {
 				klog.Errorf("CleanToBeDeleted failed. Error: %v", err)
 			}
@@ -1331,6 +1318,28 @@ func (sd *ScaleDown) deleteNode(node *apiv1.Node, pods []*apiv1.Pod,
 
 	deleteSuccessful = true // Let the deferred function know there is no need to cleanup
 	return status.NodeDeleteResult{ResultType: status.NodeDeleteOk}
+}
+
+func getLatestPodsToDrain(sd *ScaleDown, node *apiv1.Node) ([]*apiv1.Pod, error) {
+	// 获取最新的 drain pod 列表
+	fieldSelector := fmt.Sprintf("spec.nodeName=%s", node.Name)
+	podList, listErr := sd.context.ClientSet.CoreV1().Pods(apiv1.NamespaceAll).List(
+		metav1.ListOptions{FieldSelector: fieldSelector})
+	if listErr != nil {
+		return nil, listErr
+	}
+	podsOfNode := make([]*apiv1.Pod, 0)
+	for i := range podList.Items {
+		podsOfNode = append(podsOfNode, &podList.Items[i])
+	}
+	nonExpendablePods := filterOutExpendablePods(podsOfNode, sd.context.ExpendablePodsPriorityCutoff)
+	podsToDrain, _, _, getErr := simulator.GetPodsForDeletionOnNodeDrain(
+		nonExpendablePods, []*policyv1.PodDisruptionBudget{}, false, false, false,
+		false, nil, 0, time.Now())
+	if getErr != nil {
+		return nil, getErr
+	}
+	return podsToDrain, nil
 }
 
 func evictPod(podToEvict *apiv1.Pod, client kube_client.Interface, recorder kube_record.EventRecorder,
@@ -1542,15 +1551,6 @@ func filterOutMasters(nodes []*apiv1.Node, pods []*apiv1.Pod) []*apiv1.Node {
 
 	return others
 }
-
-// func checkNotSystem(pods []*apiv1.Pod) error {
-// 	for _, pod := range pods {
-// 		if pod.Namespace != metav1.NamespaceSystem {
-// 			return fmt.Errorf("at least one pod(not in kube-system) %v/%v exist", pod.Namespace, pod.Name)
-// 		}
-// 	}
-// 	return nil
-// }
 
 func hasGameServer(pods []*apiv1.Pod) bool {
 	for _, pod := range pods {

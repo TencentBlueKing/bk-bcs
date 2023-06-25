@@ -112,7 +112,7 @@ func NewBufferedAutoscaler(
 	cloudProvider cloudprovider.CloudProvider,
 	expanderStrategy expander.Strategy,
 	estimatorBuilder estimatorinternal.ExtendedEstimatorBuilder,
-	backoff backoff.Backoff, cpuRatio, memRatio, ratio float64,
+	backoff backoff.Backoff,
 	client kubeclient.Interface) core.Autoscaler {
 
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
@@ -136,7 +136,9 @@ func NewBufferedAutoscaler(
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(autoscalingContext.CloudProvider, clusterStateConfig,
 		autoscalingContext.LogRecorder, backoff)
 
-	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, cpuRatio, memRatio, ratio)
+	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry,
+		opts.BufferedCPURatio, opts.BufferedMemRatio, opts.BufferedResourceRatio, opts.EvictLatest)
+	klog.Infof("should evict latest pod: %v", opts.EvictLatest)
 
 	var webhook Webhook
 	switch opts.WebhookMode {
@@ -168,9 +170,9 @@ func NewBufferedAutoscaler(
 		clusterStateRegistry:    clusterStateRegistry,
 		nodeInfoCache:           make(map[string]*schedulernodeinfo.NodeInfo),
 		ignoredTaints:           ignoredTaints,
-		CPURatio:                cpuRatio,
-		MemRatio:                memRatio,
-		ratio:                   ratio,
+		CPURatio:                opts.BufferedCPURatio,
+		MemRatio:                opts.BufferedMemRatio,
+		ratio:                   opts.BufferedResourceRatio,
 		webhook:                 webhook,
 		maxBulkScaleUpCount:     opts.MaxBulkScaleUpCount,
 	}
@@ -268,6 +270,7 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 	}
 	metrics.UpdateLastTime(metrics.Autoscaling, time.Now())
 
+	// execute webhook mode
 	if b.webhook != nil {
 		originalScheduledPods, listErr := b.ScheduledPodLister().List()
 		if listErr != nil {
@@ -275,12 +278,6 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 			return errors.ToAutoscalerError(errors.ApiCallError, listErr)
 		}
 		return b.webhook.DoWebhook(contexts, b.clusterStateRegistry, b.scaleDown, allNodes, originalScheduledPods)
-	}
-
-	// set minSize of nodegroups in cron mode
-	err = b.doCron(contexts, b.clusterStateRegistry, currentTime)
-	if err != nil {
-		klog.Errorf("Failed in cron mode: %v", err)
 	}
 
 	originalScheduledPods, err := b.ScheduledPodLister().List()
@@ -330,6 +327,13 @@ func (b *BufferedAutoscaler) preRun(currentTime time.Time) ([]*corev1.Node, []*c
 	if err != nil {
 		klog.Errorf("Failed to refresh cloud provider config: %v", err)
 		return nil, nil, errors.ToAutoscalerError(errors.CloudProviderError, err)
+	}
+
+	// execute cron mode
+	// move here before updating nodegroup's metrics, prevent reporting incorrect min sizes
+	err = b.doCron(b.Context, b.clusterStateRegistry, currentTime)
+	if err != nil {
+		klog.Errorf("Failed in cron mode: %v", err)
 	}
 
 	// Update node groups min/max/current after cloud provider refresh

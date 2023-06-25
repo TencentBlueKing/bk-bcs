@@ -355,6 +355,7 @@ func computeExpansionOption(context *contextinternal.Context, podEquivalenceGrou
 // ScaleUp tries to scale the cluster up. Return true if it found a way to increase the size,
 // false if it didn't and error if an error occurred. Assumes that all nodes in the cluster are
 // ready and in sync with instance groups.
+// NOCC:golint/fnsize(设计如此)
 func ScaleUp(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, unschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
 	daemonSets []*appsv1.DaemonSet, nodeInfos map[string]*schedulerframework.NodeInfo,
@@ -457,6 +458,7 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 }
 
 // optimizeBestOption generates the best scale up options
+// NOCC:golint/fnsize(设计如此)
 func optimizeBestOption(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, daemonSets []*appsv1.DaemonSet,
 	nodes []*apiv1.Node, upcomingNodes []*schedulerframework.NodeInfo,

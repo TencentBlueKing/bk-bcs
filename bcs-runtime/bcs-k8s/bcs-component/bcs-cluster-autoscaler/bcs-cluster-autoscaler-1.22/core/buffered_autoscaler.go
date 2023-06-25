@@ -134,8 +134,7 @@ func NewBufferedAutoscaler(
 	cloudProvider cloudprovider.CloudProvider,
 	expanderStrategy expander.Strategy,
 	estimatorBuilder estimatorinternal.ExtendedEstimatorBuilder,
-	backoff backoff.Backoff,
-	cpuRatio, memRatio, ratio float64) core.Autoscaler {
+	backoff backoff.Backoff) core.Autoscaler {
 
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
 	autoscalingContext := contextinternal.NewAutoscalingContext(opts, predicateChecker,
@@ -160,7 +159,8 @@ func NewBufferedAutoscaler(
 		autoscalingContext.LogRecorder, backoff)
 
 	scaleDown := NewScaleDown(autoscalingContext.AutoscalingContext, processors, clusterStateRegistry,
-		opts.ExpendablePodsPriorityCutoff, opts.BufferedCPURatio, opts.BufferedMemRatio, opts.BufferedResourceRatio)
+		opts.ExpendablePodsPriorityCutoff, opts.BufferedCPURatio, opts.BufferedMemRatio, opts.BufferedResourceRatio,
+		opts.EvictLatest)
 	processorCallbacks.scaleDown = scaleDown
 
 	var webhook Webhook
@@ -191,9 +191,9 @@ func NewBufferedAutoscaler(
 		clusterStateRegistry:    clusterStateRegistry,
 		nodeInfoCache:           make(map[string]*schedulerframework.NodeInfo),
 		ignoredTaints:           ignoredTaints,
-		CPURatio:                cpuRatio,
-		MemRatio:                memRatio,
-		ratio:                   ratio,
+		CPURatio:                opts.BufferedCPURatio,
+		MemRatio:                opts.BufferedMemRatio,
+		ratio:                   opts.BufferedResourceRatio,
 		webhook:                 webhook,
 		maxBulkScaleUpCount:     opts.MaxBulkScaleUpCount,
 	}
@@ -251,6 +251,7 @@ func (b *BufferedAutoscaler) initializeClusterSnapshot(nodes []*apiv1.Node,
 }
 
 // RunOnce iterates over node groups and scales them up/down if necessary
+// NOCC:golint/fnsize(设计如此)
 func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerError {
 	stateUpdateStart := time.Now()
 	klog.V(4).Info("Starting main loop")
@@ -345,12 +346,6 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 		return b.webhook.DoWebhook(b.Context, b.clusterStateRegistry, b.scaleDown, allNodes, originalScheduledPods)
 	}
 
-	// execute cron mode
-	err = b.doCron(b.Context, b.clusterStateRegistry, currentTime)
-	if err != nil {
-		klog.Errorf("Failed in cron mode: %v", err)
-	}
-
 	scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, typedErr = b.doScaleUp(b.Context, currentTime,
 		allNodes, readyNodes, originalScheduledPods, nodeInfosForGroups, daemonsets)
 	if typedErr != nil {
@@ -395,6 +390,13 @@ func (b *BufferedAutoscaler) preRun(currentTime time.Time) ([]*corev1.Node, []*c
 	if err != nil {
 		klog.Errorf("Failed to refresh cloud provider config: %v", err)
 		return nil, nil, errors.ToAutoscalerError(errors.CloudProviderError, err)
+	}
+
+	// execute cron mode
+	// move here before updating nodegroup's metrics, prevent reporting incorrect min sizes
+	err = b.doCron(b.Context, b.clusterStateRegistry, currentTime)
+	if err != nil {
+		klog.Errorf("Failed in cron mode: %v", err)
 	}
 
 	// Update node groups min/max/current after cloud provider refresh
@@ -457,6 +459,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 	return false, nil
 }
 
+// NOCC:golint/fnsize(设计如此)
 func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Context,
 	currentTime time.Time, allNodes []*corev1.Node, readyNodes []*corev1.Node,
 	originalScheduledPods []*corev1.Pod, nodeInfosForGroups map[string]*schedulerframework.NodeInfo,
@@ -580,6 +583,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 	return scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, typedErr
 }
 
+// NOCC:golint/fnsize(设计如此)
 func (b *BufferedAutoscaler) doScaleDown(autoscalingContext *context.AutoscalingContext,
 	currentTime time.Time, allNodes []*corev1.Node) (
 	*status.ScaleDownStatus, bool, errors.AutoscalerError) {

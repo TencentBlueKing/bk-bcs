@@ -30,4 +30,5 @@ type Options struct {
 	WebhookModeToken      string
 	MaxBulkScaleUpCount   int
 	ScanInterval          time.Duration
+	EvictLatest           bool
 }
