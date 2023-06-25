@@ -15,10 +15,5 @@ export default {
       currentView: k8sIngress,
     };
   },
-  computed: {
-    onlineProjectList() {
-      return this.$store.state.projectList;
-    },
-  },
 };
 </script>

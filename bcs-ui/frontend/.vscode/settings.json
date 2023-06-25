@@ -11,5 +11,6 @@
     "google-cn",
     "google"
   ],
-  "i18n-ally.keystyle": "nested"
+  "i18n-ally.keystyle": "nested",
+  "vue.codeActions.enabled": false
 }

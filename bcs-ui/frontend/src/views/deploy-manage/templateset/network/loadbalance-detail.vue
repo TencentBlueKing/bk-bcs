@@ -14,11 +14,6 @@ export default {
       currentView: k8sLoadBalance,
     };
   },
-  computed: {
-    onlineProjectList() {
-      return this.$store.state.projectList;
-    },
-  },
   mounted() {
     this.$store.commit('network/updateLoadBalanceList', []);
   },

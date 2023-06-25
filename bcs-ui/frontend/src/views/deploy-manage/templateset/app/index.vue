@@ -150,21 +150,24 @@ export default {
         'customobjects',
       ],
       componentName: '',
-      projectId: '',
-      projectCode: '',
-      curProject: null,
     };
   },
   computed: {
-    onlineProjectList() {
-      return this.$store.state.projectList;
+    curProject() {
+      return this.$store.state.curProject;
     },
-    curProjectCode() {
+    projectCode() {
       return this.$store.getters.curProjectCode;
     },
-    curProjectId() {
+    // curProjectCode() {
+    //   return this.$store.getters.curProjectCode;
+    // },
+    projectId() {
       return this.$store.getters.curProjectId;
     },
+    // curProjectId() {
+    //   return this.$store.getters.curProjectId;
+    // },
     category() {
       const categoryMap = {
         deploymentsInstanceDetail: 'deployments',
@@ -220,21 +223,8 @@ export default {
              * 设置 curProject
              */
     setCurProject() {
-      const len = this.onlineProjectList.length;
-      if (len) {
-        const firstProject = this.onlineProjectList[0];
-        this.projectId = this.$route.params.projectId
-                        || this.curProjectId
-                        || firstProject.project_id;
-
-        this.projectCode = this.$route.params.projectCode
-                        || this.curProjectCode
-                        || firstProject.english_name;
-
-        this.curProject = this.onlineProjectList.find(p => p.project_id === this.projectId);
-        if (this.curProject) {
-          this.setComponent();
-        }
+      if (this.curProject) {
+        this.setComponent();
       }
     },
 

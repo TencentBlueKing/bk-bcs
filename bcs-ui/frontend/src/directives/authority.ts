@@ -64,6 +64,8 @@ function init(el: IElement, binding: DirectiveBinding, vNode: VNode) {
     element.style.position = 'absolute';
     element.style.zIndex = '9999';
     cloneEl.element = element;
+    cloneEl.element.style.left = '0px';
+    cloneEl.element.style.top = '0px';
     document.body.appendChild(element);
 
     element.classList.add(options.cls || DEFAULT_OPTIONS.cls);

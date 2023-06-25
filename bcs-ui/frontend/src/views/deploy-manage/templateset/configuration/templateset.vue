@@ -527,9 +527,6 @@ export default {
     curProject() {
       return this.$store.state.curProject;
     },
-    onlineProjectList() {
-      return this.$store.state.projectList;
-    },
   },
   watch: {
     searchKeyword(newVal, oldVal) {
@@ -1097,7 +1094,6 @@ export default {
              */
     async deleteInstance() {
       const list = Object.keys(this.namespaceListTmp);
-      // const projectKind = await this.getProjectKind(this.projectId)
 
       const params = {
         projectId: this.projectId,
@@ -1280,27 +1276,6 @@ export default {
     clearSearch() {
       this.searchKeyword = '';
       this.search();
-    },
-
-    /**
-             * 获取项目类型
-             * @param  {number} id 项目ID
-             * @return {number}  项目类型
-             */
-    async getProjectKind(id) {
-      const { curProject } = this;
-      let kind = 0;
-      if (curProject && curProject.project_id === id) {
-        kind = curProject.kind;
-      } else {
-        const projects = this.onlineProjectList;
-        for (const project of projects) {
-          if (project.project_id === id) {
-            kind = project.kind;
-          }
-        }
-      }
-      return kind;
     },
 
     /**
