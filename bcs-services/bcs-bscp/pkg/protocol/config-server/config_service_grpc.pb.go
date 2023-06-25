@@ -8,6 +8,7 @@ package pbcs
 
 import (
 	app "bscp.io/pkg/protocol/core/app"
+	base "bscp.io/pkg/protocol/core/base"
 	hook_release "bscp.io/pkg/protocol/core/hook-release"
 	context "context"
 	grpc "google.golang.org/grpc"
@@ -60,6 +61,8 @@ const (
 	Config_DeleteTemplateSpace_FullMethodName        = "/pbcs.Config/DeleteTemplateSpace"
 	Config_UpdateTemplateSpace_FullMethodName        = "/pbcs.Config/UpdateTemplateSpace"
 	Config_ListTemplateSpaces_FullMethodName         = "/pbcs.Config/ListTemplateSpaces"
+	Config_GetAllBizsOfTemplateSpaces_FullMethodName = "/pbcs.Config/GetAllBizsOfTemplateSpaces"
+	Config_CreateDefaultTemplateSpace_FullMethodName = "/pbcs.Config/CreateDefaultTemplateSpace"
 	Config_CreateTemplate_FullMethodName             = "/pbcs.Config/CreateTemplate"
 	Config_DeleteTemplate_FullMethodName             = "/pbcs.Config/DeleteTemplate"
 	Config_UpdateTemplate_FullMethodName             = "/pbcs.Config/UpdateTemplate"
@@ -132,6 +135,10 @@ type ConfigClient interface {
 	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*DeleteTemplateSpaceResp, error)
 	UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...grpc.CallOption) (*UpdateTemplateSpaceResp, error)
 	ListTemplateSpaces(ctx context.Context, in *ListTemplateSpacesReq, opts ...grpc.CallOption) (*ListTemplateSpacesResp, error)
+	// GetAllBizsOfTemplateSpaces called only by system itself
+	GetAllBizsOfTemplateSpaces(ctx context.Context, in *base.EmptyReq, opts ...grpc.CallOption) (*GetAllBizsOfTemplateSpacesResp, error)
+	// CreateDefaultTemplateSpace called only by system itself
+	CreateDefaultTemplateSpace(ctx context.Context, in *CreateDefaultTemplateSpaceReq, opts ...grpc.CallOption) (*CreateDefaultTemplateSpaceResp, error)
 	CreateTemplate(ctx context.Context, in *CreateTemplateReq, opts ...grpc.CallOption) (*CreateTemplateResp, error)
 	DeleteTemplate(ctx context.Context, in *DeleteTemplateReq, opts ...grpc.CallOption) (*DeleteTemplateResp, error)
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*UpdateTemplateResp, error)
@@ -518,6 +525,24 @@ func (c *configClient) ListTemplateSpaces(ctx context.Context, in *ListTemplateS
 	return out, nil
 }
 
+func (c *configClient) GetAllBizsOfTemplateSpaces(ctx context.Context, in *base.EmptyReq, opts ...grpc.CallOption) (*GetAllBizsOfTemplateSpacesResp, error) {
+	out := new(GetAllBizsOfTemplateSpacesResp)
+	err := c.cc.Invoke(ctx, Config_GetAllBizsOfTemplateSpaces_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) CreateDefaultTemplateSpace(ctx context.Context, in *CreateDefaultTemplateSpaceReq, opts ...grpc.CallOption) (*CreateDefaultTemplateSpaceResp, error) {
+	out := new(CreateDefaultTemplateSpaceResp)
+	err := c.cc.Invoke(ctx, Config_CreateDefaultTemplateSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateTemplate(ctx context.Context, in *CreateTemplateReq, opts ...grpc.CallOption) (*CreateTemplateResp, error) {
 	out := new(CreateTemplateResp)
 	err := c.cc.Invoke(ctx, Config_CreateTemplate_FullMethodName, in, out, opts...)
@@ -788,6 +813,10 @@ type ConfigServer interface {
 	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*DeleteTemplateSpaceResp, error)
 	UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq) (*UpdateTemplateSpaceResp, error)
 	ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error)
+	// GetAllBizsOfTemplateSpaces called only by system itself
+	GetAllBizsOfTemplateSpaces(context.Context, *base.EmptyReq) (*GetAllBizsOfTemplateSpacesResp, error)
+	// CreateDefaultTemplateSpace called only by system itself
+	CreateDefaultTemplateSpace(context.Context, *CreateDefaultTemplateSpaceReq) (*CreateDefaultTemplateSpaceResp, error)
 	CreateTemplate(context.Context, *CreateTemplateReq) (*CreateTemplateResp, error)
 	DeleteTemplate(context.Context, *DeleteTemplateReq) (*DeleteTemplateResp, error)
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error)
@@ -935,6 +964,12 @@ func (UnimplementedConfigServer) UpdateTemplateSpace(context.Context, *UpdateTem
 }
 func (UnimplementedConfigServer) ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSpaces not implemented")
+}
+func (UnimplementedConfigServer) GetAllBizsOfTemplateSpaces(context.Context, *base.EmptyReq) (*GetAllBizsOfTemplateSpacesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllBizsOfTemplateSpaces not implemented")
+}
+func (UnimplementedConfigServer) CreateDefaultTemplateSpace(context.Context, *CreateDefaultTemplateSpaceReq) (*CreateDefaultTemplateSpaceResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDefaultTemplateSpace not implemented")
 }
 func (UnimplementedConfigServer) CreateTemplate(context.Context, *CreateTemplateReq) (*CreateTemplateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplate not implemented")
@@ -1725,6 +1760,42 @@ func _Config_ListTemplateSpaces_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetAllBizsOfTemplateSpaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(base.EmptyReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetAllBizsOfTemplateSpaces(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetAllBizsOfTemplateSpaces_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetAllBizsOfTemplateSpaces(ctx, req.(*base.EmptyReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_CreateDefaultTemplateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateDefaultTemplateSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateDefaultTemplateSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateDefaultTemplateSpace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateDefaultTemplateSpace(ctx, req.(*CreateDefaultTemplateSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateTemplateReq)
 	if err := dec(in); err != nil {
@@ -2337,6 +2408,14 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateSpaces",
 			Handler:    _Config_ListTemplateSpaces_Handler,
+		},
+		{
+			MethodName: "GetAllBizsOfTemplateSpaces",
+			Handler:    _Config_GetAllBizsOfTemplateSpaces_Handler,
+		},
+		{
+			MethodName: "CreateDefaultTemplateSpace",
+			Handler:    _Config_CreateDefaultTemplateSpace_Handler,
 		},
 		{
 			MethodName: "CreateTemplate",

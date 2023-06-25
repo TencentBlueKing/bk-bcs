@@ -23,16 +23,16 @@ import (
 func init() {
 	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
-		Version: "20230511114513",
-		Name:    "20230511114513_add_template",
+		Version: "20230617152513",
+		Name:    "20230617152513_add_template",
 		Mode:    migrator.GormMode,
-		Up:      mig20230511114513GormUp,
-		Down:    mig20230511114513GormDown,
+		Up:      mig20230617152513GormUp,
+		Down:    mig20230617152513GormDown,
 	})
 }
 
-// mig20230511114513GormUp for up migration
-func mig20230511114513GormUp(tx *gorm.DB) error {
+// mig20230617152513GormUp for up migration
+func mig20230617152513GormUp(tx *gorm.DB) error {
 	// TemplateSpaces ：模版空间
 	type TemplateSpaces struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
@@ -106,6 +106,8 @@ func mig20230511114513GormUp(tx *gorm.DB) error {
 		Name        string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempSpaID_name,priority:2"`
 		Memo        string `gorm:"type:varchar(256) default ''"`
 		TemplateIDs string `gorm:"type:json not null"`
+		Public      bool   `gorm:"type:boolean default false"`
+		BoundApps   string `gorm:"type:json not null"`
 
 		// Attachment is attachment info of the resource
 		BizID           uint `gorm:"type:bigint(1) unsigned not null"`
@@ -145,8 +147,8 @@ func mig20230511114513GormUp(tx *gorm.DB) error {
 
 }
 
-// mig20230511114513GormDown for down migration
-func mig20230511114513GormDown(tx *gorm.DB) error {
+// mig20230617152513GormDown for down migration
+func mig20230617152513GormDown(tx *gorm.DB) error {
 	// IDGenerators : ID生成器
 	type IDGenerators struct {
 		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`

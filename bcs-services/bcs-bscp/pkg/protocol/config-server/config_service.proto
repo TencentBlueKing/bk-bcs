@@ -247,6 +247,19 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces"
         };
     }
+    // GetAllBizsOfTemplateSpaces called only by system itself
+    rpc GetAllBizsOfTemplateSpaces(pbbase.EmptyReq) returns (GetAllBizsOfTemplateSpacesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/template_spaces/bizs"
+        };
+    }
+    // CreateDefaultTemplateSpace called only by system itself
+    rpc CreateDefaultTemplateSpace(CreateDefaultTemplateSpaceReq) returns (CreateDefaultTemplateSpaceResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/template_spaces/default"
+            body : "*"
+        };
+    }
 
     rpc CreateTemplate(CreateTemplateReq) returns (CreateTemplateResp) {
         option (google.api.http) = {
@@ -648,10 +661,10 @@ message ListContentsResp {
 }
 
 message CreateConfigHookReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
-    uint32 pre_hook_id            = 3;
-    uint32 post_hook_id           = 4;
+    uint32 biz_id       = 1;
+    uint32 app_id       = 2;
+    uint32 pre_hook_id  = 3;
+    uint32 post_hook_id = 4;
 }
 
 message CreateConfigHookResp {
@@ -659,22 +672,22 @@ message CreateConfigHookResp {
 }
 
 message UpdateConfigHookReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
-    uint32 pre_hook_id            = 3;
-    uint32 post_hook_id           = 4;
-    bool   enable                 = 5;
+    uint32 biz_id       = 1;
+    uint32 app_id       = 2;
+    uint32 pre_hook_id  = 3;
+    uint32 post_hook_id = 4;
+    bool   enable       = 5;
 }
 
 message UpdateConfigHookResp {}
 
 message GetConfigHookReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
 }
 
 message  GetConfigHookResp {
-    pbch.ConfigHook config_hook   = 1;
+    pbch.ConfigHook config_hook = 1;
 }
 
 message CreateCommitReq {
@@ -776,7 +789,7 @@ message ListHooksResp {
 }
 
 message ListHookTagsReq {
-    uint32 biz_id       = 1;
+    uint32 biz_id = 1;
 }
 
 message ListHookTagsResp {
@@ -784,11 +797,11 @@ message ListHookTagsResp {
 }
 
 message CreateHookReleaseReq {
-    uint32 biz_id       = 1;
-    uint32 hook_id      = 2;
-    string name         = 3;
-    string memo         = 4;
-    string content      = 7;
+    uint32 biz_id  = 1;
+    uint32 hook_id = 2;
+    string name    = 3;
+    string memo    = 4;
+    string content = 7;
 }
 
 message CreateHookReleaseResp {
@@ -796,32 +809,32 @@ message CreateHookReleaseResp {
 }
 
 message ListHookReleaseReq {
-    uint32 biz_id       = 1;
-    uint32 hook_id      = 2;
-    string search_key   = 3;
-    uint32 start        = 4;
-    uint32 limit        = 5;
-    bool   all          = 6;
-    string state        = 7;
+    uint32 biz_id     = 1;
+    uint32 hook_id    = 2;
+    string search_key = 3;
+    uint32 start      = 4;
+    uint32 limit      = 5;
+    bool   all        = 6;
+    string state      = 7;
 }
 
 message ListHookReleaseResp {
-    uint32   count                    = 1;
+    uint32                    count   = 1;
     repeated pbhr.HookRelease details = 2;
 }
 
 message DeleteHookReleaseReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
+    uint32 biz_id     = 1;
+    uint32 hook_id    = 2;
+    uint32 release_id = 3;
 }
 
 message DeleteHookReleaseResp {}
 
 message PublishHookReleaseReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
+    uint32 biz_id     = 1;
+    uint32 hook_id    = 2;
+    uint32 release_id = 3;
 }
 
 message PublishHookReleaseResp {}
@@ -832,51 +845,51 @@ message GetHookReq {
 }
 
 message GetHookResp {
-    uint32 id = 1;
-    GetHookInfoSpec spec = 2;
+    uint32                id         = 1;
+    GetHookInfoSpec       spec       = 2;
     pbhook.HookAttachment attachment = 3;
-    pbbase.Revision revision = 4;
+    pbbase.Revision       revision   = 4;
 }
 
 message GetHookInfoSpec {
-    string name         = 1;
-    string type         = 3;
-    string tag          = 4;
-    string memo         = 5;
-    uint32 publish_num  = 7;
+    string   name        = 1;
+    string   type        = 3;
+    string   tag         = 4;
+    string   memo        = 5;
+    uint32   publish_num = 7;
     message Releases  {
         uint32 not_release_id = 1;
     }
-    Releases releases = 8;
+    Releases releases    = 8;
 }
 
 message GetHookReleaseReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
+    uint32 biz_id     = 1;
+    uint32 hook_id    = 2;
+    uint32 release_id = 3;
 }
 
 message UpdateHookReleaseReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
-    string name            = 4;
-    string content         = 5;
-    string memo            = 6;
+    uint32 biz_id     = 1;
+    uint32 hook_id    = 2;
+    uint32 release_id = 3;
+    string name       = 4;
+    string content    = 5;
+    string memo       = 6;
 }
 
 message UpdateHookReleaseResp {}
 
 message ListHookReleasesReferencesReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
-    uint32 start           = 4;
-    uint32 limit           = 5;
+    uint32 biz_id     = 1;
+    uint32 hook_id    = 2;
+    uint32 release_id = 3;
+    uint32 start      = 4;
+    uint32 limit      = 5;
 }
 
 message ListHookReleasesReferencesResp {
-    uint32   count                                          = 1;
+    uint32                                          count   = 1;
     repeated pbhr.ListHookReleasesReferencesDetails details = 2;
 }
 
@@ -915,6 +928,18 @@ message ListTemplateSpacesReq {
 message ListTemplateSpacesResp {
     uint32                      count   = 1;
     repeated pbts.TemplateSpace details = 2;
+}
+
+message GetAllBizsOfTemplateSpacesResp {
+    repeated uint32 biz_ids = 1;
+}
+
+message CreateDefaultTemplateSpaceReq{
+    uint32 biz_id = 1;
+}
+
+message CreateDefaultTemplateSpaceResp{
+    uint32 id = 1;
 }
 
 message CreateTemplateReq {
@@ -1027,6 +1052,8 @@ message CreateTemplateSetReq {
     string          name              = 3;
     string          memo              = 4;
     repeated uint32 template_ids      = 5;
+    bool            public            = 6;
+    repeated uint32 bound_apps        = 7;
 }
 
 message CreateTemplateSetResp {
@@ -1034,10 +1061,13 @@ message CreateTemplateSetResp {
 }
 
 message UpdateTemplateSetReq {
-    uint32 biz_id            = 1;
-    uint32 template_space_id = 2;
-    uint32 template_set_id   = 3;
-    string memo              = 4;
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    uint32          template_set_id   = 3;
+    string          memo              = 4;
+    repeated uint32 template_ids      = 5;
+    bool            public            = 6;
+    repeated uint32 bound_apps        = 7;
 }
 
 message UpdateTemplateSetResp {
