@@ -158,6 +158,7 @@ func (s *set) Commit() Commit {
 	return &commitDao{
 		orm:      s.orm,
 		sd:       s.sd,
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 	}
@@ -168,6 +169,7 @@ func (s *set) ConfigItem() ConfigItem {
 	return &configItemDao{
 		orm:      s.orm,
 		sd:       s.sd,
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		lock:     s.lock,
@@ -179,6 +181,7 @@ func (s *set) Content() Content {
 	return &contentDao{
 		orm:      s.orm,
 		sd:       s.sd,
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 	}
@@ -200,6 +203,7 @@ func (s *set) ReleasedCI() ReleasedCI {
 	return &releasedCIDao{
 		orm:      s.orm,
 		sd:       s.sd,
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 	}

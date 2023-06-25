@@ -121,19 +121,13 @@ func PbConfigItem(rci *table.ReleasedConfigItem, fileState string) *pbci.ConfigI
 }
 
 // PbConfigItemState convert config item state
-func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) (
-	[]*pbci.ConfigItem, []*pbci.ConfigItem) {
-	if cis == nil {
-		return make([]*pbci.ConfigItem, 0), nil
-	}
-
+func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedConfigItem) []*pbci.ConfigItem {
 	releaseMap := make(map[uint32]*table.ReleasedConfigItem, len(fileRelease))
 	for _, release := range fileRelease {
 		releaseMap[release.ConfigItemID] = release
 	}
 
 	result := make([]*pbci.ConfigItem, 0)
-	deleted := make([]*pbci.ConfigItem, 0)
 	for _, ci := range cis {
 		var fileState string
 		if len(fileRelease) == 0 {
@@ -153,14 +147,36 @@ func PbConfigItemState(cis []*table.ConfigItem, fileRelease []*table.ReleasedCon
 		}
 		result = append(result, pbci.PbConfigItem(ci, fileState))
 	}
+	for _, file := range releaseMap {
+		result = append(result, PbConfigItem(file, DELETE))
+	}
+	return sortConfigItemsByState(result)
+}
 
-	if len(releaseMap) != 0 {
-		for _, file := range releaseMap {
-			deleted = append(deleted, PbConfigItem(file, DELETE))
+func sortConfigItemsByState(cis []*pbci.ConfigItem) []*pbci.ConfigItem {
+	result := make([]*pbci.ConfigItem, 0)
+	add := make([]*pbci.ConfigItem, 0)
+	delete := make([]*pbci.ConfigItem, 0)
+	revise := make([]*pbci.ConfigItem, 0)
+	unchange := make([]*pbci.ConfigItem, 0)
+	for _, ci := range cis {
+		switch ci.FileState {
+		case ADD:
+			add = append(add, ci)
+		case DELETE:
+			delete = append(delete, ci)
+		case REVISE:
+			revise = append(revise, ci)
+		case UNCHANGE:
+			unchange = append(unchange, ci)
 		}
 	}
+	result = append(result, add...)
+	result = append(result, revise...)
+	result = append(result, delete...)
+	result = append(result, unchange...)
+	return result
 
-	return result, deleted
 }
 
 // 文件状态

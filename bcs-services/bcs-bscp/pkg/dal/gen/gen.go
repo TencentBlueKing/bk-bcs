@@ -20,7 +20,10 @@ var (
 	App                *app
 	ArchivedApp        *archivedApp
 	Audit              *audit
+	Commit             *commit
 	ConfigHook         *configHook
+	ConfigItem         *configItem
+	Content            *content
 	Credential         *credential
 	CredentialScope    *credentialScope
 	Event              *event
@@ -44,7 +47,10 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	App = &Q.App
 	ArchivedApp = &Q.ArchivedApp
 	Audit = &Q.Audit
+	Commit = &Q.Commit
 	ConfigHook = &Q.ConfigHook
+	ConfigItem = &Q.ConfigItem
+	Content = &Q.Content
 	Credential = &Q.Credential
 	CredentialScope = &Q.CredentialScope
 	Event = &Q.Event
@@ -69,7 +75,10 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		App:                newApp(db, opts...),
 		ArchivedApp:        newArchivedApp(db, opts...),
 		Audit:              newAudit(db, opts...),
+		Commit:             newCommit(db, opts...),
 		ConfigHook:         newConfigHook(db, opts...),
+		ConfigItem:         newConfigItem(db, opts...),
+		Content:            newContent(db, opts...),
 		Credential:         newCredential(db, opts...),
 		CredentialScope:    newCredentialScope(db, opts...),
 		Event:              newEvent(db, opts...),
@@ -95,7 +104,10 @@ type Query struct {
 	App                app
 	ArchivedApp        archivedApp
 	Audit              audit
+	Commit             commit
 	ConfigHook         configHook
+	ConfigItem         configItem
+	Content            content
 	Credential         credential
 	CredentialScope    credentialScope
 	Event              event
@@ -122,7 +134,10 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		App:                q.App.clone(db),
 		ArchivedApp:        q.ArchivedApp.clone(db),
 		Audit:              q.Audit.clone(db),
+		Commit:             q.Commit.clone(db),
 		ConfigHook:         q.ConfigHook.clone(db),
+		ConfigItem:         q.ConfigItem.clone(db),
+		Content:            q.Content.clone(db),
 		Credential:         q.Credential.clone(db),
 		CredentialScope:    q.CredentialScope.clone(db),
 		Event:              q.Event.clone(db),
@@ -156,7 +171,10 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		App:                q.App.replaceDB(db),
 		ArchivedApp:        q.ArchivedApp.replaceDB(db),
 		Audit:              q.Audit.replaceDB(db),
+		Commit:             q.Commit.replaceDB(db),
 		ConfigHook:         q.ConfigHook.replaceDB(db),
+		ConfigItem:         q.ConfigItem.replaceDB(db),
+		Content:            q.Content.replaceDB(db),
 		Credential:         q.Credential.replaceDB(db),
 		CredentialScope:    q.CredentialScope.replaceDB(db),
 		Event:              q.Event.replaceDB(db),
@@ -180,7 +198,10 @@ type queryCtx struct {
 	App                IAppDo
 	ArchivedApp        IArchivedAppDo
 	Audit              IAuditDo
+	Commit             ICommitDo
 	ConfigHook         IConfigHookDo
+	ConfigItem         IConfigItemDo
+	Content            IContentDo
 	Credential         ICredentialDo
 	CredentialScope    ICredentialScopeDo
 	Event              IEventDo
@@ -204,7 +225,10 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		App:                q.App.WithContext(ctx),
 		ArchivedApp:        q.ArchivedApp.WithContext(ctx),
 		Audit:              q.Audit.WithContext(ctx),
+		Commit:             q.Commit.WithContext(ctx),
 		ConfigHook:         q.ConfigHook.WithContext(ctx),
+		ConfigItem:         q.ConfigItem.WithContext(ctx),
+		Content:            q.Content.WithContext(ctx),
 		Credential:         q.Credential.WithContext(ctx),
 		CredentialScope:    q.CredentialScope.WithContext(ctx),
 		Event:              q.Event.WithContext(ctx),
