@@ -333,7 +333,7 @@ func DetailedGetPodsForMove(nodeInfo *schedulernodeinfo.NodeInfo, skipNodesWithS
 }
 
 func checkPdbs(pods []*apiv1.Pod, pdbs []*policyv1.PodDisruptionBudget) (*BlockingPod, error) {
-	// TODO: make it more efficient.
+	// DOTO: make it more efficient.
 	for _, pdb := range pdbs {
 		selector, err := metav1.LabelSelectorAsSelector(pdb.Spec.Selector)
 		if err != nil {
@@ -422,7 +422,7 @@ func checkRC(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerR
 		rc, err := listers.ReplicationControllerLister().ReplicationControllers(controllerNamespace).Get(controllerRef.Name)
 		// Assume a reason for an error is because the RC is either
 		// gone/missing or that the rc has too few replicas configured.
-		// TODO: replace the minReplica check with pod disruption budget.
+		// DOTO: replace the minReplica check with pod disruption budget.
 		if err == nil && rc != nil {
 			if rc.Spec.Replicas != nil && *rc.Spec.Replicas < minReplica {
 				return &BlockingPod{Pod: pod, Reason: MinReplicasReached},
@@ -465,7 +465,7 @@ func checkJob(replicated *bool, checkReferences bool, pod *apiv1.Pod, controller
 		job, err := listers.JobLister().Jobs(controllerNamespace).Get(controllerRef.Name)
 
 		// Assume the only reason for an error is because the Job is
-		// gone/missing, not for any other cause.  TODO(mml): something more
+		// gone/missing, not for any other cause.  DOTO(mml): something more
 		// sophisticated than this
 		if err == nil && job != nil {
 			*replicated = true
@@ -486,7 +486,7 @@ func checkRS(replicated *bool, checkReferences bool, pod *apiv1.Pod, controllerR
 		rs, err := listers.ReplicaSetLister().ReplicaSets(controllerNamespace).Get(controllerRef.Name)
 
 		// Assume the only reason for an error is because the RS is
-		// gone/missing, not for any other cause.  TODO(mml): something more
+		// gone/missing, not for any other cause.  DOTO(mml): something more
 		// sophisticated than this
 		if err == nil && rs != nil {
 			if rs.Spec.Replicas != nil && *rs.Spec.Replicas < minReplica {
@@ -512,7 +512,7 @@ func checkSts(replicated *bool, checkReferences bool, pod *apiv1.Pod, controller
 		ss, err := listers.StatefulSetLister().StatefulSets(controllerNamespace).Get(controllerRef.Name)
 
 		// Assume the only reason for an error is because the StatefulSet is
-		// gone/missing, not for any other cause.  TODO(mml): something more
+		// gone/missing, not for any other cause.  DOTO(mml): something more
 		// sophisticated than this
 		if err == nil && ss != nil {
 			*replicated = true

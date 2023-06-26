@@ -546,7 +546,7 @@ func TestDeleteNode(t *testing.T) {
 			expectedResultType: status.NodeDeleteOk,
 		},
 		/* Temporarily disabled as it takes several minutes due to hardcoded timeout.
-		* TODO(aleksandra-malinowska): move MaxPodEvictionTime to AutoscalingContext.
+		* DOTO(aleksandra-malinowska): move MaxPodEvictionTime to AutoscalingContext.
 		{
 			name:              "failed on drain",
 			pods:              []string{"p1", "p2"},
@@ -2135,7 +2135,7 @@ func Test_sortNodesByDeletionCost(t *testing.T) {
 		args args
 		want []simulatorinternal.NodeToBeRemoved
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "sort nodes with cost",
 			args: args{

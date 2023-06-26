@@ -241,7 +241,7 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 		return nil
 	}
 	// add imagePreloadDoneLabel
-	// TODO retry on conflict
+	// DOTO retry on conflict
 	updatePatch = updatePatch[:len(updatePatch)-1] + "," +
 		fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/%s\",\"value\":\"1\"}",
 			imagePreloadDoneLabel) + "]"

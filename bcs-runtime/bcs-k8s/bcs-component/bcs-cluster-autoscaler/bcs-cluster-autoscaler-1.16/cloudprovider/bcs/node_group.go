@@ -240,7 +240,7 @@ func (group *NodeGroup) DeleteNodes(nodes []*apiv1.Node) error {
 		ips = append(ips, ip)
 	}
 
-	// TODO： max support 100, separates to multi requests
+	// DOTO: max support 100, separates to multi requests
 	if len(ips) < maxRecordsReturnedByAPI {
 		klog.Infof("DeleteInstances len(%d)", len(ips))
 		return group.deleteInstances(ips)
@@ -410,13 +410,13 @@ func (group *NodeGroup) buildNodeFromTemplate(template *nodeTemplate) (*apiv1.No
 		Capacity: apiv1.ResourceList{},
 	}
 	node.Status.Capacity = template.Resources
-	// TODO: get a real value.
+	// DOTO: get a real value.
 	node.Status.Capacity[apiv1.ResourcePods] = *resource.NewQuantity(110, resource.DecimalSI)
 	if _, ok := node.Status.Capacity[gpu.ResourceNvidiaGPU]; !ok {
 		node.Status.Capacity[gpu.ResourceNvidiaGPU] = template.Resources["gpu"]
 	}
 
-	// TODO: use proper allocatable!!
+	// DOTO: use proper allocatable!!
 	node.Status.Allocatable = node.Status.Capacity
 
 	node.Labels = cloudprovider.JoinStringMaps(node.Labels, template.Label)

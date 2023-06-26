@@ -212,7 +212,7 @@ func buildNodeGroup(client clustermanager.NodePoolClientInterface, minSize int, 
 
 func buildGenericLabels(template *nodeTemplate, nodeName string) map[string]string {
 	result := make(map[string]string)
-	// TODO: extract it somehow
+	// DOTO: extract it somehow
 	result[kubeletapis.LabelArch] = cloudprovider.DefaultArch
 	result[kubeletapis.LabelOS] = cloudprovider.DefaultOS
 	result[apiv1.LabelInstanceType] = template.InstanceType

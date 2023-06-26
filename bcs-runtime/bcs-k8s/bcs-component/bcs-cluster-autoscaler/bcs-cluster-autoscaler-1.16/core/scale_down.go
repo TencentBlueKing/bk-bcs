@@ -271,7 +271,7 @@ func calculateScaleDownGpusTotal(nodes []*apiv1.Node, cp cloudprovider.CloudProv
 		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
 			// We do not trust cloud providers to return properly constructed nil for interface type - hence the reflection check
 			// See https://golang.org/doc/faq#nil_error
-			// TODO[lukaszos] consider creating cloud_provider sanitizer which will wrap cloud provider and ensure sane behaviour
+			// DOTO[lukaszos] consider creating cloud_provider sanitizer which will wrap cloud provider and ensure sane behaviour
 			nodeGroup = nil
 		}
 
@@ -871,7 +871,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 			readinessMap, candidateNodeGroups)
 		nodeDeletionDuration = time.Since(nodeDeletionStart)
 
-		// TODO: Give the processor some information about the nodes that failed to be deleted.
+		// DOTO: Give the processor some information about the nodes that failed to be deleted.
 		scaleDownStatus.ScaledDownNodes = sd.mapNodesToStatusScaleDownNodes(deletedNodes,
 			candidateNodeGroups, make(map[string][]*apiv1.Pod))
 		if len(deletedNodes) > 0 {
@@ -913,7 +913,7 @@ func (sd *ScaleDown) TryToScaleDown(allNodes []*apiv1.Node, pods []*apiv1.Pod,
 		scaleDownStatus.Result = status.ScaleDownNoNodeDeleted
 		return scaleDownStatus, nil
 	}
-	// TODO: add sort based on NodeDeletionCost
+	// DOTO: add sort based on NodeDeletionCost
 	nodesToRemove = sortNodesByDeletionCost(nodesToRemove)
 
 	toRemove := nodesToRemove[0]

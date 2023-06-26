@@ -33,7 +33,7 @@ import (
 )
 
 func TestFilterOutSchedulableByPacking(t *testing.T) {
-	// TODO(scheduler_framework_integration) extend/cleanup the test
+	// DOTO(scheduler_framework_integration) extend/cleanup the test
 	// - add more nodes
 	// - add better naming for pods/scenarios
 

@@ -446,7 +446,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 
 	// Check if there has been a constant difference between the number of nodes in k8s and
 	// the number of nodes on the cloud provider side.
-	// TODO: andrewskim - add protection for ready AWS nodes.
+	// DOTO: andrewskim - add protection for ready AWS nodes.
 	fixedSomething, err := fixNodeGroupSize(autoscalingContext, b.clusterStateRegistry, currentTime)
 	if err != nil {
 		klog.Errorf("Failed to fix node group sizes: %v", err)
@@ -720,7 +720,7 @@ func (b *BufferedAutoscaler) processNodes(autoscalingContext *context.Autoscalin
 
 func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node) bool {
 	// We always schedule deleting of incoming errornous nodes
-	// TODO[lukaszos] Consider adding logic to not retry delete every loop iteration
+	// DOTO[lukaszos] Consider adding logic to not retry delete every loop iteration
 	nodes := b.clusterStateRegistry.GetCreatedNodesWithErrors()
 
 	nodeGroups := b.nodeGroupsByID()
@@ -852,7 +852,7 @@ func (b *BufferedAutoscaler) obtainNodeLists(cp cloudprovider.CloudProvider) ([]
 	// node registers as ready. See https://github.com/kubernetes/kubernetes/issues/54959
 	// Treat those nodes as unready until GPU actually becomes available and let
 	// our normal handling for booting up nodes deal with this.
-	// TODO: Remove this call when we handle dynamically provisioned resources.
+	// DOTO: Remove this call when we handle dynamically provisioned resources.
 	allNodes, readyNodes = b.processors.CustomResourcesProcessor.FilterOutNodesWithUnreadyResources(
 		b.AutoscalingContext, allNodes, readyNodes)
 	allNodes, readyNodes = taints.FilterOutNodesWithIgnoredTaints(b.ignoredTaints, allNodes, readyNodes)

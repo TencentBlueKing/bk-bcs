@@ -52,7 +52,6 @@ var (
 )
 
 func init() {
-	// TODO register plugin to hook-server
 	p := &imageLoader{}
 	pluginmanager.Register(pluginName, p)
 }
@@ -110,7 +109,7 @@ func (i *imageLoader) Init(configFilePath string) error {
 	}
 	i.config = *newConfig
 
-	// TODO set burst and qps
+	// DOTO set burst and qps
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
@@ -125,7 +124,6 @@ func (i *imageLoader) Init(configFilePath string) error {
 	}
 	blog.Info("connect to k8s with default client success")
 
-	// TODO select workload by config
 	// regist workloads
 	err = i.registWorkloads()
 	if err != nil {
@@ -251,7 +249,7 @@ func (i *imageLoader) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 }
 
 // Close xxx
-// TODO clean resources like connections, files
+// DOTO clean resources like connections, files
 func (i *imageLoader) Close() error {
 	return nil
 }

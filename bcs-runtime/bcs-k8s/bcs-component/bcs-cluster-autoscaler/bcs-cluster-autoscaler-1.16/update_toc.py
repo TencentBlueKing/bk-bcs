@@ -19,12 +19,13 @@ import re
 SECTION_PREFIX = "# "
 QUESTION_PREFIX = "### "
 
+
 def updateFAQ():
-    with open("FAQ.md","r") as faq_file:
+    with open("FAQ.md", "r") as faq_file:
         faq_content = faq_file.read()
     faq_lines = faq_content.splitlines()
     while faq_lines and faq_lines[-1] == '':
-      faq_lines = faq_lines[:-1]
+        faq_lines = faq_lines[:-1]
 
     prefixes = (SECTION_PREFIX, QUESTION_PREFIX)
     toc_elements = []
@@ -42,17 +43,19 @@ def updateFAQ():
                 toc_elements.append((processed_line, i))
     in_toc = False
 
-    with open("FAQ.md","w") as faq_file:
+    with open("FAQ.md", "w") as faq_file:
         for line in faq_lines:
             if line.strip() == "<!--- TOC BEGIN -->":
                 in_toc = True
-                faq_file.write(line +"\n")
+                faq_file.write(line + "\n")
                 for question, indent in toc_elements:
-                    faq_file.write("%s* [%s](#%s)\n" % (' ' * 2 * indent, question, re.sub("[^a-z0-9\- ]+", "", question.lower()).replace(" ","-")))
+                    faq_file.write("%s* [%s](#%s)\n" % (' ' * 2 * indent, question, re.sub(
+                        "[^a-z0-9\- ]+", "", question.lower()).replace(" ", "-")))
             if line.strip() == "<!--- TOC END -->":
                 in_toc = False
             if not in_toc:
                 faq_file.write(line+"\n")
+
 
 if __name__ == '__main__':
     updateFAQ()

@@ -264,8 +264,8 @@ func (c *podsSchedulableOnNodeChecker) checkPodsSchedulableOnNode(nodeGroupID st
 
 // getNodeInfosForGroups finds NodeInfos for all node groups used to manage the given nodes.
 // It also returns a node group to sample node mapping.
-// TODO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
-// TODO(mwielgus): Review error policy - sometimes we may continue with partial errors.
+// DOTO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
+// DOTO(mwielgus): Review error policy - sometimes we may continue with partial errors.
 func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedulernodeinfo.NodeInfo,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
 	daemonsets []*appsv1.DaemonSet, predicateChecker *simulator.PredicateChecker,
@@ -326,7 +326,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		if typedErr != nil {
 			return map[string]*schedulernodeinfo.NodeInfo{}, typedErr
 		}
-		// TODO: support node pool label update
+		// DOTO: support node pool label update
 		if added && nodeInfoCache != nil {
 			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
 				nodeInfoCache[id] = nodeInfoCopy
@@ -737,7 +737,7 @@ func getOldestCreateTimeWithGpu(pods []*apiv1.Pod) (bool, time.Time) {
 }
 
 // updateEmptyClusterStateMetrics updates metrics related to empty cluster's state.
-// TODO(aleksandra-malinowska): use long unregistered value from ClusterStateRegistry.
+// DOTO(aleksandra-malinowska): use long unregistered value from ClusterStateRegistry.
 func updateEmptyClusterStateMetrics() {
 	metrics.UpdateClusterSafeToAutoscale(false)
 	metrics.UpdateNodesCount(0, 0, 0, 0, 0)

@@ -314,7 +314,7 @@ func computeExpansionOption(context *contextinternal.Context, podEquivalenceGrou
 		if revertErr := context.AutoscalingContext.ClusterSnapshot.Revert(); revertErr != nil {
 			klog.Fatalf("Error while calling ClusterSnapshot.Revert; %v", revertErr)
 		}
-		// TODO: Or should I just skip the node group? specifically if Revert fails it is fatal error.
+		// DOTO: Or should I just skip the node group? specifically if Revert fails it is fatal error.
 		//       Maybe we should not return error from Revert as we cannot handle it in any way on the caller side?
 		return expander.Option{}, err
 	}
@@ -717,7 +717,7 @@ func computeExpansionOptionForCreatedNodeGroups(context *contextinternal.Context
 	}
 
 	// Update ClusterStateRegistry so similar nodegroups rebalancing works.
-	// TODO(lukaszos) when pursuing scalability update this call with one which takes list of changed node groups so
+	// DOTO(lukaszos) when pursuing scalability update this call with one which takes list of changed node groups so
 	//                we do not do extra API calls. (the call at the bottom of ScaleUp() could be also changed then)
 	clusterStateRegistry.Recalculate()
 	return expansionOptions, createNodeGroupResults, &status.ScaleUpStatus{}, nil

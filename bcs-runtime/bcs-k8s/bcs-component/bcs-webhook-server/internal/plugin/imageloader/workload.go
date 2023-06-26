@@ -44,7 +44,7 @@ type Workload interface {
 // InitWorkloads xxx
 // Init inits all workloads.
 func InitWorkloads(i *imageLoader) (map[string]Workload, error) {
-	// TODO add other workloads
+	// DOTO add other workloads
 	if strings.Contains(i.config.Workload, tkexv1alpha1.KindGameDeployment) {
 		// add bcsgd
 		bcsgd := &bcsgdWorkload{}

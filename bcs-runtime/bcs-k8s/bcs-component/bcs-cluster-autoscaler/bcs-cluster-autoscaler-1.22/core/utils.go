@@ -171,8 +171,8 @@ func filterOutExpendablePods(pods []*apiv1.Pod, expendablePodsPriorityCutoff int
 
 // getNodeInfosForGroups finds NodeInfos for all node groups used to manage the given nodes.
 // It also returns a node group to sample node mapping.
-// TODO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
-// TODO(mwielgus): Review error policy - sometimes we may continue with partial errors.
+// DOTO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
+// DOTO(mwielgus): Review error policy - sometimes we may continue with partial errors.
 // NOCC:golint/fnsize(设计如此)
 func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedulerframework.NodeInfo,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
@@ -234,7 +234,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		if typedErr != nil {
 			return map[string]*schedulerframework.NodeInfo{}, typedErr
 		}
-		// TODO: support node pool label update
+		// DOTO: support node pool label update
 		if added && nodeInfoCache != nil {
 			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
 				nodeInfoCache[id] = nodeInfoCopy
@@ -586,7 +586,7 @@ func getOldestCreateTimeWithGpu(pods []*apiv1.Pod) (bool, time.Time) {
 }
 
 // updateEmptyClusterStateMetrics updates metrics related to empty cluster's state.
-// TODO(aleksandra-malinowska): use long unregistered value from ClusterStateRegistry.
+// DOTO(aleksandra-malinowska): use long unregistered value from ClusterStateRegistry.
 func updateEmptyClusterStateMetrics() {
 	metrics.UpdateClusterSafeToAutoscale(false)
 	metrics.UpdateNodesCount(0, 0, 0, 0, 0)

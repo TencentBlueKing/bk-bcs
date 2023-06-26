@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	// TODO combine all annotations and labels together
+	// DOTO combine all annotations and labels together
 	// workloadNameAnno is the label key to identify the corresponding workload
 	workloadNameAnno = "workloadName"
 	// workloadInsNameLabel is the label key to identify the name of the workload instance
@@ -139,8 +139,8 @@ func (i *imageLoader) sync(key string) error {
 
 	// attach event to workload instance
 	// do not finish the job if failed
-	// TODO retry on conflict
-	// TODO create or update
+	// DOTO retry on conflict
+	// DOTO create or update
 	if event != nil {
 		_, err := i.k8sClient.CoreV1().Events(event.Namespace).Create(context.Background(), event, metav1.CreateOptions{})
 		if err != nil {
@@ -159,7 +159,7 @@ func (i *imageLoader) isJobDone(job *batchv1.Job) (*corev1.Event, bool) {
 	if job.Status.Succeeded+job.Status.Failed < *job.Spec.Completions &&
 		(len(job.Status.Conditions) == 0 || (job.Status.Conditions[0].Type != batchv1.JobFailed)) {
 		// wait timeout
-		// TODO make sure CompletionTime will be setup when timeout
+		// DOTO make sure CompletionTime will be setup when timeout
 		return nil, false
 	}
 
@@ -192,7 +192,7 @@ func (i *imageLoader) isJobDone(job *batchv1.Job) (*corev1.Event, bool) {
 		node, err := i.nodeLister.Get(nodeName)
 		if err != nil {
 			// node may not exist, ignore it
-			// TODO maybe network problem
+			// DOTO maybe network problem
 			blog.Errorf("get node %s failed of job %s: %v, ignore the failure", nodeName, job.Name, err)
 			continue
 		}

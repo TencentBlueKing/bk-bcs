@@ -1275,7 +1275,7 @@ func TestBufferedAutoscalerInstaceCreationErrors(t *testing.T) {
 			return names["A3"] && names["A4"] && names["A5"] && names["A6"]
 		}))
 
-	// TODO assert that scaleup was failed (separately for QUOTA and STOCKOUT)
+	// DOTO assert that scaleup was failed (separately for QUOTA and STOCKOUT)
 
 	clusterState.RefreshCloudProviderNodeInstancesCache()
 
@@ -1302,7 +1302,7 @@ func TestBufferedAutoscalerInstaceCreationErrors(t *testing.T) {
 			return names["A3"] && names["A4"] && names["A5"] && names["A6"]
 		}))
 
-	// TODO assert that scaleup is not failed again
+	// DOTO assert that scaleup is not failed again
 
 	// restub node group A so nodes are no longer reporting errors
 	nodeGroupA.On("Nodes").Return([]cloudprovider.Instance{

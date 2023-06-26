@@ -81,7 +81,6 @@ func Test_bcsgdWorkload_LoadImageBeforeUpdate(t *testing.T) {
 		expectedKubeAction []core.Action
 		expectedTkexAction []core.Action
 	}{
-		// TODO: Add test cases.
 		{
 			name: "only update annotations",
 			args: args{
