@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+import "bscp.io/pkg/protocol/core/base/base.proto";
+
+package pbatb;
+
+option go_package = "bscp.io/pkg/protocol/core/app-template-binding;pbatb";
+
+// AppTemplateBinding source resource reference: pkg/dal/table/app_template_binding.go
+message AppTemplateBinding {
+    uint32                       id         = 1;
+    AppTemplateBindingSpec       spec       = 2;
+    AppTemplateBindingAttachment attachment = 3;
+    pbbase.Revision              revision   = 4;
+}
+
+// AppTemplateBindingSpec source resource reference: pkg/dal/table/app_template_binding.go
+message AppTemplateBindingSpec {
+    repeated uint32          template_space_ids   = 1;
+    repeated uint32          template_set_ids     = 2;
+    repeated uint32          template_ids         = 3;
+    repeated uint32          template_release_ids = 4;
+    repeated TemplateBinding bindings             = 5;
+}
+
+// TemplateBinding source resource reference: pkg/dal/table/app_template_binding.go
+message TemplateBinding {
+    uint32          template_set_id      = 1;
+    repeated uint32 template_release_ids = 2;
+}
+
+
+// AppTemplateBindingAttachment source resource reference: pkg/dal/table/app_template_binding.go
+message AppTemplateBindingAttachment {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}

@@ -51,6 +51,7 @@ func main() {
 		table.Commit{},
 		table.Content{},
 		table.TemplateSet{},
+		table.AppTemplateBinding{},
 	)
 
 	g.Execute()

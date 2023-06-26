@@ -1,7 +1,8 @@
 syntax = "proto3";
 
-import "bscp.io/pkg/protocol/core/base/base.proto";
 import "bscp.io/pkg/protocol/core/app/app.proto";
+import "bscp.io/pkg/protocol/core/app-template-binding/app_template_binding.proto";
+import "bscp.io/pkg/protocol/core/base/base.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
 import "bscp.io/pkg/protocol/core/commit/commit.proto";
 import "bscp.io/pkg/protocol/core/content/content.proto";
@@ -321,6 +322,29 @@ service Config {
     rpc ListTemplateSets(ListTemplateSetsReq) returns (ListTemplateSetsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets"
+        };
+    }
+
+    rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateAppTemplateBindingResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings"
+            body : "*"
+        };
+    }
+    rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (DeleteAppTemplateBindingResp) {
+        option (google.api.http) = {
+            delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}"
+        };
+    }
+    rpc UpdateAppTemplateBinding(UpdateAppTemplateBindingReq) returns (UpdateAppTemplateBindingResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/{binding_id}"
+            body : "*"
+        };
+    }
+    rpc ListAppTemplateBindings(ListAppTemplateBindingsReq) returns (ListAppTemplateBindingsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings"
         };
     }
 
@@ -1036,16 +1060,6 @@ message DeleteTemplateReleaseReq {
 
 message DeleteTemplateReleaseResp {}
 
-message CreateGroupReq {
-    uint32                 biz_id    = 1;
-    string                 name      = 2;
-    bool                   public    = 3;
-    repeated uint32        bind_apps = 4;
-    string                 mode      = 5;
-    google.protobuf.Struct selector  = 6;
-    string                 uid       = 7;
-}
-
 message CreateTemplateSetReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
@@ -1091,6 +1105,54 @@ message ListTemplateSetsReq {
 message ListTemplateSetsResp {
     uint32                      count   = 1;
     repeated pbtset.TemplateSet details = 2;
+}
+
+message CreateAppTemplateBindingReq {
+    uint32                         biz_id   = 1;
+    uint32                         app_id   = 2;
+    repeated pbatb.TemplateBinding bindings = 3;
+}
+
+message CreateAppTemplateBindingResp {
+    uint32 id = 1;
+}
+
+message UpdateAppTemplateBindingReq {
+    uint32                         biz_id     = 1;
+    uint32                         app_id     = 2;
+    uint32                         binding_id = 3;
+    repeated pbatb.TemplateBinding bindings   = 4;
+}
+
+message UpdateAppTemplateBindingResp {
+}
+
+message DeleteAppTemplateBindingReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 binding_id = 3;
+}
+
+message DeleteAppTemplateBindingResp {}
+
+message ListAppTemplateBindingsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ListAppTemplateBindingsResp {
+    uint32                            count   = 1;
+    repeated pbatb.AppTemplateBinding details = 2;
+}
+
+message CreateGroupReq {
+    uint32                 biz_id    = 1;
+    string                 name      = 2;
+    bool                   public    = 3;
+    repeated uint32        bind_apps = 4;
+    string                 mode      = 5;
+    google.protobuf.Struct selector  = 6;
+    string                 uid       = 7;
 }
 
 message CreateGroupResp {

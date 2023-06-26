@@ -18,6 +18,7 @@ import (
 var (
 	Q                  = new(Query)
 	App                *app
+	AppTemplateBinding *appTemplateBinding
 	ArchivedApp        *archivedApp
 	Audit              *audit
 	Commit             *commit
@@ -45,6 +46,7 @@ var (
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	App = &Q.App
+	AppTemplateBinding = &Q.AppTemplateBinding
 	ArchivedApp = &Q.ArchivedApp
 	Audit = &Q.Audit
 	Commit = &Q.Commit
@@ -73,6 +75,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:                 db,
 		App:                newApp(db, opts...),
+		AppTemplateBinding: newAppTemplateBinding(db, opts...),
 		ArchivedApp:        newArchivedApp(db, opts...),
 		Audit:              newAudit(db, opts...),
 		Commit:             newCommit(db, opts...),
@@ -102,6 +105,7 @@ type Query struct {
 	db *gorm.DB
 
 	App                app
+	AppTemplateBinding appTemplateBinding
 	ArchivedApp        archivedApp
 	Audit              audit
 	Commit             commit
@@ -132,6 +136,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:                 db,
 		App:                q.App.clone(db),
+		AppTemplateBinding: q.AppTemplateBinding.clone(db),
 		ArchivedApp:        q.ArchivedApp.clone(db),
 		Audit:              q.Audit.clone(db),
 		Commit:             q.Commit.clone(db),
@@ -169,6 +174,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:                 db,
 		App:                q.App.replaceDB(db),
+		AppTemplateBinding: q.AppTemplateBinding.replaceDB(db),
 		ArchivedApp:        q.ArchivedApp.replaceDB(db),
 		Audit:              q.Audit.replaceDB(db),
 		Commit:             q.Commit.replaceDB(db),
@@ -196,6 +202,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 
 type queryCtx struct {
 	App                IAppDo
+	AppTemplateBinding IAppTemplateBindingDo
 	ArchivedApp        IArchivedAppDo
 	Audit              IAuditDo
 	Commit             ICommitDo
@@ -223,6 +230,7 @@ type queryCtx struct {
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		App:                q.App.WithContext(ctx),
+		AppTemplateBinding: q.AppTemplateBinding.WithContext(ctx),
 		ArchivedApp:        q.ArchivedApp.WithContext(ctx),
 		Audit:              q.Audit.WithContext(ctx),
 		Commit:             q.Commit.WithContext(ctx),

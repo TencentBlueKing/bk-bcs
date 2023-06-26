@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "bscp.io/pkg/protocol/core/app/app.proto";
+import "bscp.io/pkg/protocol/core/app-template-binding/app_template_binding.proto";
 import "bscp.io/pkg/protocol/core/base/base.proto";
 import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
@@ -108,6 +109,12 @@ service Data {
     rpc ListTemplateSets(ListTemplateSetsReq) returns (ListTemplateSetsResp) {}
     rpc UpdateTemplateSet(UpdateTemplateSetReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (pbbase.EmptyResp) {}
+
+    // app template binding related interface.
+    rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateResp) {}
+    rpc ListAppTemplateBindings(ListAppTemplateBindingsReq) returns (ListAppTemplateBindingsResp) {}
+    rpc UpdateAppTemplateBinding(UpdateAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
 
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
@@ -655,6 +662,34 @@ message UpdateTemplateSetReq {
 message DeleteTemplateSetReq {
     uint32                       id         = 1;
     pbtset.TemplateSetAttachment attachment = 2;
+}
+
+message CreateAppTemplateBindingReq {
+    pbatb.AppTemplateBindingAttachment attachment = 1;
+    pbatb.AppTemplateBindingSpec       spec       = 2;
+}
+
+message ListAppTemplateBindingsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+    uint32 start  = 3;
+    uint32 limit  = 4;
+}
+
+message ListAppTemplateBindingsResp {
+    uint32                            count   = 1;
+    repeated pbatb.AppTemplateBinding details = 2;
+}
+
+message UpdateAppTemplateBindingReq {
+    uint32                             id         = 1;
+    pbatb.AppTemplateBindingAttachment attachment = 2;
+    pbatb.AppTemplateBindingSpec       spec       = 3;
+}
+
+message DeleteAppTemplateBindingReq {
+    uint32                             id         = 1;
+    pbatb.AppTemplateBindingAttachment attachment = 2;
 }
 
 message CreateGroupReq {

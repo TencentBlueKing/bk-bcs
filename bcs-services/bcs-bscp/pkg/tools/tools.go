@@ -62,3 +62,23 @@ func SliceDiff(slice1, slice2 []uint32) []uint32 {
 
 	return diff
 }
+
+// SliceRepeatedElements get the repeated elements in a slice
+func SliceRepeatedElements(slice []uint32) []uint32 {
+	frequencyMap := make(map[uint32]uint32)
+	var repeatedElements []uint32
+
+	// Count the frequency of each element in the slice
+	for _, num := range slice {
+		frequencyMap[num]++
+	}
+
+	// Check if any element appears more than once
+	for num, count := range frequencyMap {
+		if count > 1 {
+			repeatedElements = append(repeatedElements, num)
+		}
+	}
+
+	return repeatedElements
+}
