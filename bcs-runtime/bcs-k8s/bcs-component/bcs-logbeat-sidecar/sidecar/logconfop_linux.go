@@ -1,7 +1,7 @@
+// NOCC:tosa/license(设计如此:需要先包含编译头，已包含Tencent license头)
 //go:build linux
 // +build linux
 
-// NOCC:tosa/license(设计如此:需要先包含编译头，已包含Tencent license头)
 /*
 * Tencent is pleased to support the open source community by making Blueking Container Service available.
 * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.

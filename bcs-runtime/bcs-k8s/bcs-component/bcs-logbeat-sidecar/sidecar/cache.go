@@ -59,14 +59,14 @@ func (s *SidecarController) syncContainerCacheOnce() {
 	}
 }
 
-func (s *SidecarController) inspectContainer(ID string) *dockertypes.ContainerJSON {
+func (s *SidecarController) inspectContainer(id string) *dockertypes.ContainerJSON {
 	inspectChan := make(chan interface{}, 1)
 	timer := time.NewTimer(3 * time.Second)
 	// NOCC:vet/vet(工具误报:函数末尾有用到cancelFunc)
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	go func() {
 		defer close(inspectChan)
-		c, err := s.client.ContainerInspect(ctx, ID)
+		c, err := s.client.ContainerInspect(ctx, id)
 		if err != nil {
 			inspectChan <- err
 			return
@@ -81,19 +81,19 @@ func (s *SidecarController) inspectContainer(ID string) *dockertypes.ContainerJS
 		}
 		err, ok := obj.(error)
 		if ok {
+			blog.Errorf("docker InspectContainer %s failed: %s", id, err.Error())
 			// NOCC:vet/vet(设计如此:不需要使用cancelFunc)
-			blog.Errorf("docker InspectContainer %s failed: %s", ID, err.Error())
 			return nil
 		}
 		c, ok := obj.(dockertypes.ContainerJSON)
 		if !ok {
-			blog.Errorf("docker InspectContainer %s failed with type(%T) returned, expected dockertypes.ContainerJSON", ID, obj)
+			blog.Errorf("docker InspectContainer %s failed with type(%T) returned, expected dockertypes.ContainerJSON", id, obj)
 			return nil
 		}
 		return &c
 	case <-timer.C:
 		cancelFunc()
-		blog.Errorf("Inspect container %s timeout unexpected, check whether pod is working properly with sharePID mode.", ID)
+		blog.Errorf("Inspect container %s timeout unexpected, check whether pod is working properly with sharePID mode.", id)
 		return nil
 	}
 }

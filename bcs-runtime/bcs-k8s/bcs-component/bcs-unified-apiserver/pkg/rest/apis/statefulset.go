@@ -32,9 +32,9 @@ type StatefulSetInterface interface {
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*appsv1.StatefulSet, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
 		opts metav1.GetOptions) (*metav1.Table, error)
-	Create(ctx context.Context, namespace string, deployment *appsv1.StatefulSet,
+	Create(ctx context.Context, namespace string, statefulset *appsv1.StatefulSet,
 		opts metav1.CreateOptions) (*appsv1.StatefulSet, error)
-	Update(ctx context.Context, namespace string, deployment *appsv1.StatefulSet,
+	Update(ctx context.Context, namespace string, statefulset *appsv1.StatefulSet,
 		opts metav1.UpdateOptions) (*appsv1.StatefulSet, error)
 	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
 		subresources ...string) (*appsv1.StatefulSet, error)

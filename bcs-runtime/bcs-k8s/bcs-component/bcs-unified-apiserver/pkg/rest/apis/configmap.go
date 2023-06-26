@@ -32,9 +32,9 @@ type ConfigMapInterface interface {
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.ConfigMap, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
 		opts metav1.GetOptions) (*metav1.Table, error)
-	Create(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap, opts metav1.CreateOptions) (*v1.ConfigMap,
+	Create(ctx context.Context, namespace string, configmap *v1.ConfigMap, opts metav1.CreateOptions) (*v1.ConfigMap,
 		error)
-	Update(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap, opts metav1.UpdateOptions) (*v1.ConfigMap,
+	Update(ctx context.Context, namespace string, configmap *v1.ConfigMap, opts metav1.UpdateOptions) (*v1.ConfigMap,
 		error)
 	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
 		subresources ...string) (*v1.ConfigMap, error)

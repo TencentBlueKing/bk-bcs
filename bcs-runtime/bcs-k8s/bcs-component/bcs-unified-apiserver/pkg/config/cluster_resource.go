@@ -17,11 +17,11 @@ package config
 type ClusterKind string
 
 var (
-	// IsolatedCLuster TODO
+	// IsolatedCLuster isolated cluster
 	IsolatedCLuster ClusterKind = "isolated"
-	// SharedCluster TODO
+	// SharedCluster shared cluster
 	SharedCluster ClusterKind = "shared"
-	// FederatedCluter TODO
+	// FederatedCluter federated cluster
 	FederatedCluter ClusterKind = "federated"
 )
 

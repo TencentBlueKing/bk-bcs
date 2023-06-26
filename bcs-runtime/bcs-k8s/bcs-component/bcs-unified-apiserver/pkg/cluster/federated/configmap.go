@@ -114,9 +114,9 @@ func (s *ConfigMapStor) GetAsTable(ctx context.Context, namespace string, name s
 }
 
 // Create 创建 ConfigMap
-func (s *ConfigMapStor) Create(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap,
+func (s *ConfigMapStor) Create(ctx context.Context, namespace string, configmap *v1.ConfigMap,
 	opts metav1.CreateOptions) (*v1.ConfigMap, error) {
-	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Create(ctx, ConfigMap, opts)
+	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Create(ctx, configmap, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -124,9 +124,9 @@ func (s *ConfigMapStor) Create(ctx context.Context, namespace string, ConfigMap 
 }
 
 // Update 更新 ConfigMap
-func (s *ConfigMapStor) Update(ctx context.Context, namespace string, ConfigMap *v1.ConfigMap,
+func (s *ConfigMapStor) Update(ctx context.Context, namespace string, configmap *v1.ConfigMap,
 	opts metav1.UpdateOptions) (*v1.ConfigMap, error) {
-	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Update(ctx, ConfigMap, opts)
+	result, err := s.masterClient.CoreV1().ConfigMaps(namespace).Update(ctx, configmap, opts)
 	if err != nil {
 		return nil, err
 	}

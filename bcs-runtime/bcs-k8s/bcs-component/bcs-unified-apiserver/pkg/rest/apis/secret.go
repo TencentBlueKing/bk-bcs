@@ -32,8 +32,8 @@ type SecretInterface interface {
 	Get(ctx context.Context, namespace string, name string, opts metav1.GetOptions) (*v1.Secret, error)
 	GetAsTable(ctx context.Context, namespace string, name string, acceptHeader string,
 		opts metav1.GetOptions) (*metav1.Table, error)
-	Create(ctx context.Context, namespace string, Service *v1.Secret, opts metav1.CreateOptions) (*v1.Secret, error)
-	Update(ctx context.Context, namespace string, Service *v1.Secret, opts metav1.UpdateOptions) (*v1.Secret, error)
+	Create(ctx context.Context, namespace string, secret *v1.Secret, opts metav1.CreateOptions) (*v1.Secret, error)
+	Update(ctx context.Context, namespace string, secret *v1.Secret, opts metav1.UpdateOptions) (*v1.Secret, error)
 	Patch(ctx context.Context, namespace string, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions,
 		subresources ...string) (*v1.Secret, error)
 	Delete(ctx context.Context, namespace string, name string, opts metav1.DeleteOptions) (*metav1.Status, error)

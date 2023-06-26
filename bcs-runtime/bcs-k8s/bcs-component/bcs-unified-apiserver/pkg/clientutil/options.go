@@ -27,7 +27,7 @@ import (
 
 // GetListOptionsFromQueryParam 从查询参数获取 ListOptions
 func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
-	var errReturn error = nil
+	var errReturn error
 	allowWatchBookmarksStr := strings.ToLower(q.Get("allowWatchBookmarks"))
 	allowWatchBookmarksBool := allowWatchBookmarksStr == "true" || allowWatchBookmarksStr == "yes"
 	continueStr := q.Get("continue")
@@ -35,7 +35,7 @@ func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
 	labelSelector := q.Get("labelSelector")
 
 	limitStr := q.Get("limit")
-	var limitInt64 *int64 = nil
+	var limitInt64 *int64
 	if limitStr != "" {
 		t, err := strconv.ParseInt(limitStr, 10, 64)
 		if err != nil {
@@ -46,7 +46,7 @@ func GetListOptionsFromQueryParam(q url.Values) (*metav1.ListOptions, error) {
 	}
 
 	timeoutSecondsStr := q.Get("timeoutSeconds")
-	var timeoutSecondsInt64 *int64 = nil
+	var timeoutSecondsInt64 *int64
 	if timeoutSecondsStr != "" {
 		t, err := strconv.ParseInt(timeoutSecondsStr, 10, 64)
 		if err != nil {

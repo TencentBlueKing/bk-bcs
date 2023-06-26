@@ -113,9 +113,9 @@ func (s *ServiceStor) GetAsTable(ctx context.Context, namespace string, name str
 }
 
 // Create 创建 Service
-func (s *ServiceStor) Create(ctx context.Context, namespace string, Service *v1.Service,
+func (s *ServiceStor) Create(ctx context.Context, namespace string, service *v1.Service,
 	opts metav1.CreateOptions) (*v1.Service, error) {
-	result, err := s.masterClient.CoreV1().Services(namespace).Create(ctx, Service, opts)
+	result, err := s.masterClient.CoreV1().Services(namespace).Create(ctx, service, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -123,9 +123,9 @@ func (s *ServiceStor) Create(ctx context.Context, namespace string, Service *v1.
 }
 
 // Update 更新 Service
-func (s *ServiceStor) Update(ctx context.Context, namespace string, Service *v1.Service,
+func (s *ServiceStor) Update(ctx context.Context, namespace string, service *v1.Service,
 	opts metav1.UpdateOptions) (*v1.Service, error) {
-	result, err := s.masterClient.CoreV1().Services(namespace).Update(ctx, Service, opts)
+	result, err := s.masterClient.CoreV1().Services(namespace).Update(ctx, service, opts)
 	if err != nil {
 		return nil, err
 	}
