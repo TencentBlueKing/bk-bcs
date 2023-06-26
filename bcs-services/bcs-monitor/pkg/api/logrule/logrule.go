@@ -114,7 +114,9 @@ func ListLogCollectors(c *rest.Context) (interface{}, error) {
 		}
 	}
 
-	sort.Sort(GetLogRuleRespSortByUpdateTime(result))
+	sort.Sort(GetLogRuleRespSortByName(result))
+	// 仅需要名称排序
+	// sort.Sort(GetLogRuleRespSortByStatus(result))
 	return result, nil
 }
 
@@ -195,14 +197,14 @@ func CreateLogRule(c *rest.Context) (interface{}, error) {
 		return nil, errors.Errorf("%s is exist", req.Name)
 	}
 
-	err = store.CreateLogRule(c.Request.Context(), req.toEntity(c))
+	id, err := store.CreateLogRule(c.Request.Context(), req.toEntity(c))
 	if err != nil {
 		return nil, err
 	}
 
 	// 创建 bklog 规则耗时比较长，异步调用
 	go createBKLog(req.toBKLog(c))
-	return nil, nil
+	return id, nil
 }
 
 // UpdateLogRule 更新日志采集规则
@@ -240,7 +242,7 @@ func UpdateLogRule(c *rest.Context) (interface{}, error) {
 
 	// 更新 bklog 规则耗时比较长，异步调用
 	go updateBKLog(rule.ID.Hex(), rule.RuleID, req.toBKLog(c, rule.RuleName))
-	return nil, nil
+	return id, nil
 }
 
 // DeleteLogRule 删除日志采集规则

@@ -74,6 +74,34 @@ func (l GetLogRuleRespSortByUpdateTime) Less(i, j int) bool {
 // Swap xxx
 func (l GetLogRuleRespSortByUpdateTime) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
+// GetLogRuleRespSortByName sort LogRule by name
+type GetLogRuleRespSortByName []*GetLogRuleResp
+
+// Len xxx
+func (l GetLogRuleRespSortByName) Len() int { return len(l) }
+
+// Less xxx
+func (l GetLogRuleRespSortByName) Less(i, j int) bool {
+	return l[i].Name < l[j].Name
+}
+
+// Swap xxx
+func (l GetLogRuleRespSortByName) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+
+// GetLogRuleRespSortByStatus sort LogRule by status
+type GetLogRuleRespSortByStatus []*GetLogRuleResp
+
+// Len xxx
+func (l GetLogRuleRespSortByStatus) Len() int { return len(l) }
+
+// Less xxx
+func (l GetLogRuleRespSortByStatus) Less(i, j int) bool {
+	return l[i].Status == entity.PendingStatus
+}
+
+// Swap xxx
+func (l GetLogRuleRespSortByStatus) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
+
 // CreateLogRuleReq req
 type CreateLogRuleReq struct {
 	Name        string        `json:"name" form:"name" binding:"required" validate:"max=30,min=5,regexp=^[A-Za-z0-9_]+$"`
@@ -91,6 +119,7 @@ func (req *CreateLogRuleReq) toEntity(c *rest.Context) *entity.LogRule {
 		ProjectID:   c.ProjectId,
 		ProjectCode: c.ProjectCode,
 		ClusterID:   c.ClusterId,
+		Rule:        req.Rule,
 		Creator:     c.Username,
 		Updator:     c.Username,
 		Status:      entity.PendingStatus,
@@ -128,6 +157,7 @@ func (req *UpdateLogRuleReq) toEntity(username, projectCode string) entity.M {
 		entity.FieldKeyMessage:     "",
 		entity.FieldKeyUpdator:     username,
 		entity.FieldKeyProjectCode: projectCode,
+		entity.FieldKeyRule:        req.Rule,
 	}
 }
 
@@ -279,7 +309,7 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	resp.Config = bklog.LogRule{
 		ExtraLabels: make([]bklog.Label, 0),
 		LogRuleContainer: bklog.LogRuleContainer{
-			Namespaces: make([]string, 0),
+			Namespaces: e.Rule.LogRuleContainer.Namespaces,
 			Paths:      make([]string, 0),
 		},
 	}

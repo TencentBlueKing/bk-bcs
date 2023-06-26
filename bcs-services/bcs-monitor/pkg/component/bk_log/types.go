@@ -172,10 +172,15 @@ func (resp *ListBCSCollectorRespData) ToLogRule() LogRule {
 
 // Status return log status
 func (resp *ListBCSCollectorRespData) Status() string {
+	var status string
 	if len(resp.ContainerConfig) > 0 {
-		return resp.ContainerConfig[0].Status
+		status = resp.ContainerConfig[0].Status
 	}
-	return ""
+	// bklog RUNNING status is PENDING status
+	if status == "RUNNING" {
+		status = "PENDING"
+	}
+	return status
 }
 
 // Message return log message
