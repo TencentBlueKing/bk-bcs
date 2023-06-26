@@ -50,11 +50,22 @@ init:
 
 .PHONY: proto
 proto:
-	protoc -I./third_party/ --proto_path=. --micro_out=. --go_out=plugins=grpc:. \
-	--grpc-gateway_out=logtostderr=true,register_func_suffix=Gw:. \
-	--validate_out=lang=go:. \
-	--openapiv2_out=logtostderr=true:. \
-	proto/bcs-gitops-manager.proto
+	protoc --proto_path=. \
+    		--proto_path=../../bcs-common/pkg/third_party \
+    		--go_out=. \
+    		--micro_out=. \
+    		--go-grpc_out=. \
+    		--validate_out=paths=source_relative,lang=go:. \
+    		--grpc-gateway_out=logtostderr=true,register_func_suffix=Gw:. --swagger_out=logtostderr=true:. \
+    		proto/bcs-gitops-manager.proto
+	protoc --proto_path=. \
+			--proto_path=../../bcs-common/pkg/third_party \
+			--go_out=. \
+			--micro_out=. \
+			--go-grpc_out=. \
+			--validate_out=paths=source_relative,lang=go:. \
+			--grpc-gateway_out=logtostderr=true,register_func_suffix=Gw:. --swagger_out=logtostderr=true:. \
+			proto/bcs-gitops-webhook.proto
 
 .PHONY: tidy
 tidy:
@@ -67,9 +78,7 @@ test:
 .PHONY: manager
 manager: tidy
 	mkdir -p ${OUTPUT}/bcs-gitops-manager
-	cp -r third_party/swagger ${OUTPUT}/bcs-gitops-manager/
 	cp -r images/manager/* ${OUTPUT}/bcs-gitops-manager/
-	cp proto/bcs-gitops-manager.swagger.json ${OUTPUT}/bcs-gitops-manager/swagger/
 	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-manager/bcs-gitops-manager main.go
 
 .PHONY: proxy
@@ -77,6 +86,12 @@ proxy: tidy
 	mkdir -p ${OUTPUT}/bcs-gitops-proxy
 	cp -r images/proxy/* ${OUTPUT}/bcs-gitops-proxy/
 	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-proxy/bcs-gitops-proxy cmd/proxy/main.go
+
+.PHONY: webhook
+webhook: tidy
+	mkdir -p ${OUTPUT}/bcs-gitops-webhook
+	cp -r images/proxy/* ${OUTPUT}/bcs-gitops-webhook/
+	go build ${LDFLAG} -o ${OUTPUT}/bcs-gitops-webhook/bcs-gitops-webhook cmd/webhook/main.go
 
 .PHONY: docker
 docker: manager proxy

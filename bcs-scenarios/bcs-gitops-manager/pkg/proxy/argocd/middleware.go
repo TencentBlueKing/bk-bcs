@@ -224,7 +224,7 @@ func (h *MiddlewareHandler) CheckProjectPermissionByID(ctx context.Context, proj
 		return http.StatusInternalServerError, errors.Wrapf(err, "auth center failed")
 	}
 	if !permit {
-		return http.StatusForbidden, errors.Errorf("project '%s' forbidden", projectID)
+		return http.StatusForbidden, errors.Errorf("project '%s' for action '%s' forbidden", projectID, action)
 	}
 	return http.StatusOK, nil
 }

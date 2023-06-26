@@ -73,7 +73,7 @@ bcs-scenarios: kourse
 
 kourse: gamedeployment gamestatefulset hook-operator
 
-gitops: gitops-proxy gitops-manager
+gitops: gitops-proxy gitops-manager 
 
 allpack: svcpack k8spack mmpack mnpack netpack
 	cd build && tar -czf bcs.${VERSION}.tgz bcs.${VERSION}
@@ -469,6 +469,10 @@ gitops-proxy:
 gitops-manager:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-manager
 	cd bcs-scenarios/bcs-gitops-manager && make manager && cd -
+
+gitops-webhook:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-webhook
+	cd bcs-scenarios/bcs-gitops-manager && make webhook && cd -
 
 test: test-bcs-runtime
 

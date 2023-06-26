@@ -126,8 +126,7 @@ func (plugin *GrpcPlugin) parseRequestBytes(request []byte) ([]byte, error) {
 		return nil, fmt.Errorf("request body %v bytes not over 5", request)
 	}
 	// NOTE: 默认未压缩，此处不做处理
-	isCompressed := request[0]
-	blog.V(5).Infof("request compressed: %v", isCompressed)
+	_ = request[0]
 	bodyBytes := request[1:5]
 	bodyLen := binary.BigEndian.Uint32(bodyBytes)
 	if len(request) < int(bodyLen+5) {
