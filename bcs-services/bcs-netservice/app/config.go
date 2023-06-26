@@ -47,6 +47,7 @@ type Config struct {
 	Registry Registry `json:"registry,omitempty"`
 }
 
+// Registry defines the config of registry
 type Registry struct {
 	Endpoints string `json:"endpoints"`
 	CA        string `json:"ca"`

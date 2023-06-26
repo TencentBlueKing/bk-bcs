@@ -27,6 +27,8 @@ import (
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
 )
 
+// TGitWebhook defines the webhook handler of tgit, ther will transfer tgit webhook
+// to gitlab webhook
 func (s *Server) TGitWebhook(ctx context.Context, req *pb.TGitWebhookRequest, resp *pb.TGitWebhookResponse) error {
 	blog.Infof("tgit received webhook")
 	bs, err := json.Marshal(req.Body)
@@ -51,6 +53,7 @@ func (s *Server) TGitWebhook(ctx context.Context, req *pb.TGitWebhookRequest, re
 	return nil
 }
 
+// GeneralWebhook defines the handler of general webhook, it will add the authorization header
 func (s *Server) GeneralWebhook(ctx context.Context, req *pb.GeneralWebhookRequest,
 	resp *pb.GeneralWebhookResponse) error {
 	blog.Infof("general received webhook")

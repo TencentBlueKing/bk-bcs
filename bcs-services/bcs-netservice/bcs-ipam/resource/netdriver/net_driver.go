@@ -42,7 +42,7 @@ func NewDriver() (resource.IPDriver, error) {
 	client := bcsapi.NewNetserviceCli()
 	if config.TLS != nil {
 		config.TLS.Passwd = static.ClientCertPwd
-		if err := client.SetCerts(config.TLS.CACert, config.TLS.Key, config.TLS.PubKey, config.TLS.Passwd); err != nil {
+		if err = client.SetCerts(config.TLS.CACert, config.TLS.Key, config.TLS.PubKey, config.TLS.Passwd); err != nil {
 			return nil, err
 		}
 	}

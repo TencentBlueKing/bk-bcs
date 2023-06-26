@@ -84,11 +84,11 @@ func Run(cfg *Config) error {
 	}
 
 	// start signal handler
-	interupt := make(chan os.Signal, 10)
-	signal.Notify(interupt, syscall.SIGINT, syscall.SIGTERM)
+	interrupt := make(chan os.Signal, 10)
+	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 	// start http(s) service
 	httpSrv := api.NewHTTPService(cfg.Address, int(cfg.Port))
-	go handleSysSignal(interupt, httpSrv, st)
+	go handleSysSignal(interrupt, httpSrv, st)
 
 	api.RegisterPoolHandler(httpSrv, netSvr)
 	api.RegisterHostHandler(httpSrv, netSvr)

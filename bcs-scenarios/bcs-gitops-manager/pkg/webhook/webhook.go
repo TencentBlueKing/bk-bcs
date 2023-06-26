@@ -63,6 +63,7 @@ const (
 	RegisterInterval = 10
 )
 
+// Server defines the server of webhook. It will handle the webhook event from git
 type Server struct {
 	ctx    context.Context
 	cancel context.CancelFunc

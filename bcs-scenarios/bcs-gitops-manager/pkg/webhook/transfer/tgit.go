@@ -33,6 +33,7 @@ const (
 // TGitHandler defines the tgit implementation of transfer handler
 type TGitHandler struct{}
 
+// NewTGitHandler create the handler of TGit
 func NewTGitHandler() Interface {
 	return &TGitHandler{}
 }
