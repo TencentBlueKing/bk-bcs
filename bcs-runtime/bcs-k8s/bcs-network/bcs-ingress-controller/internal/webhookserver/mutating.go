@@ -126,7 +126,6 @@ func (s *Server) checkExistedPortBinding(pod *k8scorev1.Pod, portList []*portEnt
 			portBinding.GetName(), portBinding.GetNamespace())
 	}
 	// 用户移除了Pod上的KeepDuration标记
-	// TODO 暂不支持修改keep duration时间
 	if !isPodKeepDurationExisted(pod) {
 		blog.Infof("remove pods' '%s/%s' keep duration annotate, delete portBinding quickly",
 			pod.GetNamespace(), pod.GetName())

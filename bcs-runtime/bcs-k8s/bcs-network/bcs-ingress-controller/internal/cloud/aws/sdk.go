@@ -87,9 +87,7 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 // RetryerWithDefaultOptions returns a retryer with default options
 func RetryerWithDefaultOptions(o *retry.StandardOptions) {
 	o.MaxAttempts = maxRetry
-	retryAbles := retry.RetryableHTTPStatusCode{
-		// TODO add more retryable status code
-	}
+	retryAbles := retry.RetryableHTTPStatusCode{}
 	o.Retryables = append(o.Retryables, retryAbles)
 	o.RateLimiter = ratelimit.NewTokenRateLimit(uint(defaultBucketSize))
 }

@@ -356,6 +356,7 @@ func (e *Elb) ensureRuleTargetGroup(region string, listener *networkextensionv1.
 	return ruleTgMap, nil
 }
 
+// setHealthCheck convert local health check to cloud attribute
 func setHealthCheck(input *elbv2.CreateTargetGroupInput, rule *networkextensionv1.ListenerRule) {
 	if rule.ListenerAttribute == nil || rule.ListenerAttribute.HealthCheck == nil {
 		return
@@ -387,6 +388,7 @@ func setHealthCheck(input *elbv2.CreateTargetGroupInput, rule *networkextensionv
 	}
 }
 
+// setModifyHealthCheck convert local health check to cloud attribute
 func setModifyHealthCheck(input *elbv2.ModifyTargetGroupInput, rule *networkextensionv1.ListenerRule) {
 	if rule.ListenerAttribute == nil || rule.ListenerAttribute.HealthCheck == nil {
 		return
@@ -588,6 +590,7 @@ func (e *Elb) ensureTargetGroupTarget(region string, listenerTg *networkextensio
 	if listenerTg != nil {
 		backends = listenerTg.Backends
 	}
+	// found by IP and port
 	for _, backend := range backends {
 		var found bool
 		for _, t := range th.TargetHealthDescriptions {
@@ -599,6 +602,7 @@ func (e *Elb) ensureTargetGroupTarget(region string, listenerTg *networkextensio
 				break
 			}
 		}
+		// if local backend not found in cloud, add to registers
 		if !found {
 			registers = append(registers, types.TargetDescription{
 				Id:   aws.String(backend.IP),
@@ -617,6 +621,7 @@ func (e *Elb) ensureTargetGroupTarget(region string, listenerTg *networkextensio
 				break
 			}
 		}
+		// if cloud backend not found in local , deregister from cloud
 		if !found {
 			deregisters = append(deregisters, types.TargetDescription{
 				Id:   t.Target.Id,
@@ -660,6 +665,7 @@ func (e *Elb) ensureTargetGroupHealthCheck(region string, listener *networkexten
 	return nil
 }
 
+// genLayer7HealthCheck set cloud request attribute from l7 health check
 func (e *Elb) genLayer7HealthCheck(input *elbv2.ModifyTargetGroupInput, listener *networkextensionv1.Listener) {
 	if listener.Spec.ListenerAttribute != nil &&
 		listener.Spec.ListenerAttribute.HealthCheck != nil {
@@ -783,8 +789,8 @@ func convertHealthStatus(status types.TargetHealthStateEnum) string {
 	return statusStr
 }
 
-// has same rule condition
-// condition has host and path, check if the rule has same host and path
+// check if rules have same condition
+// only return true if condition has same host and path
 func isSameRuleCondition(a, b []types.RuleCondition) bool {
 	if len(a) != len(b) {
 		return false
