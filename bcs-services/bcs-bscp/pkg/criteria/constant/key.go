@@ -47,6 +47,9 @@ const (
 	// BKUserForTestPrefix is a user prefix for test
 	BKUserForTestPrefix = "bk-user-for-test-"
 
+	// BKSystemUser can be saved for user field in db when some operations come from bscp system itself
+	BKSystemUser = "system"
+
 	// ContentIDHeaderKey is common content sha256 id.
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
 )

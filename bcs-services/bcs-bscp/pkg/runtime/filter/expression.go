@@ -30,9 +30,9 @@ import (
 
 const (
 	// DefaultMaxInLimit defines the default max in limit
-	DefaultMaxInLimit = uint(1000)
+	DefaultMaxInLimit = uint(3000)
 	// DefaultMaxNotInLimit defines the default max nin limit
-	DefaultMaxNotInLimit = uint(1000)
+	DefaultMaxNotInLimit = uint(3000)
 	// DefaultMaxRuleLimit defines the default max number of rules limit
 	DefaultMaxRuleLimit = uint(5)
 )

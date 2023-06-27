@@ -13,12 +13,14 @@ limitations under the License.
 package dao
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -33,15 +35,23 @@ import (
 // ConfigItem supplies all the configItem related operations.
 type ConfigItem interface {
 	// CreateWithTx create one configItem instance.
-	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, configItem *table.ConfigItem) (uint32, error)
+	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) (uint32, error)
+	// BatchCreateWithTx batch create configItem instances with transaction.
+	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItems []*table.ConfigItem) error
 	// Update one configItem instance.
 	Update(kit *kit.Kit, configItem *table.ConfigItem) error
+	// BatchUpdateWithTx batch update configItem instances with transaction.
+	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItems []*table.ConfigItem) error
 	// Get configItem by id
 	Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem, error)
 	// List configItem with options.
 	List(kit *kit.Kit, opts *types.ListConfigItemsOption) (*types.ListConfigItemDetails, error)
 	// Delete one configItem instance.
 	Delete(kit *kit.Kit, configItem *table.ConfigItem) error
+	// Delete one configItem instance with transaction.
+	DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, configItem *table.ConfigItem) error
+	// BatchDeleteWithTx batch configItem instances with transaction.
+	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32, bizID, appID uint32) error
 	// GetCount bizID config count
 	GetCount(kit *kit.Kit, bizID uint32, appId []uint32) ([]*table.ListConfigItemCounts, error)
 	// TruncateWithTx truncate app config items with transaction.
@@ -53,13 +63,14 @@ var _ ConfigItem = new(configItemDao)
 type configItemDao struct {
 	orm      orm.Interface
 	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
 }
 
 // CreateWithTx create one configItem instance with transaction.
-func (dao *configItemDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, ci *table.ConfigItem) (uint32, error) {
+func (dao *configItemDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.ConfigItem) (uint32, error) {
 	if ci == nil {
 		return 0, errors.New("config item is nil")
 	}
@@ -79,27 +90,41 @@ func (dao *configItemDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, ci *table.
 	}
 
 	ci.ID = id
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ConfigItemTable.Name(),
-		" (", table.ConfigItemColumns.ColumnExpr(), ")  VALUES(", table.ConfigItemColumns.ColonNameExpr(), ")")
-	sql := filter.SqlJoint(sqlSentence)
+	ad := dao.auditDao.DecoratorV2(kit, ci.Attachment.BizID).PrepareCreate(ci)
 
-	if err = dao.validateAppCINumber(kit, ci.Attachment, &LockOption{Txn: tx.Tx()}); err != nil {
+	if err := tx.ConfigItem.WithContext(kit.Ctx).Create(ci); err != nil {
 		return 0, err
 	}
 
-	if e := dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, ci); e != nil {
-		return 0, err
-	}
-
-	// audit this to be create config item details.
-	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
-	if err = dao.auditDao.Decorator(kit, ci.Attachment.BizID,
-		enumor.ConfigItem).AuditCreate(ci, au); err != nil {
+	if err := ad.Do(tx.Query); err != nil {
 		return 0, fmt.Errorf("audit create config item failed, err: %v", err)
 	}
 
 	return id, nil
+}
+
+// BatchCreateWithTx batch create configItem instances with transaction.
+// NOTE: 1. this method won't audit, because it's batch operation.
+// 2. this method won't validate attachment resource exist, because it's batch operation.
+func (dao *configItemDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItems []*table.ConfigItem) error {
+	// generate an config item id and update to config item.
+	if len(configItems) == 0 {
+		return nil
+	}
+	ids, err := dao.idGen.Batch(kit, table.ConfigItemTable, len(configItems))
+	if err != nil {
+		return err
+	}
+	for i, configItem := range configItems {
+		if err := configItem.ValidateCreate(); err != nil {
+			return err
+		}
+		configItem.ID = ids[i]
+	}
+	if err := tx.ConfigItem.WithContext(kit.Ctx).Save(configItems...); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Update one configItem instance.
@@ -171,6 +196,20 @@ func (dao *configItemDao) Update(kit *kit.Kit, ci *table.ConfigItem) error {
 		return err
 	}
 
+	return nil
+}
+
+// BatchUpdateWithTx batch update configItem instances with transaction.
+// Note: 1. this method won't audit, because it's batch operation.
+// 2. this method won't validate resource update, because it's batch operation.
+// 3. this method won't validate attachment resource exist, because it's batch operation.
+func (dao *configItemDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItems []*table.ConfigItem) error {
+	if len(configItems) == 0 {
+		return nil
+	}
+	if err := tx.ConfigItem.WithContext(kit.Ctx).Save(configItems...); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -307,6 +346,58 @@ func (dao *configItemDao) Delete(kit *kit.Kit, ci *table.ConfigItem) error {
 		return fmt.Errorf("delete config item, but run txn failed, err: %v", err)
 	}
 
+	return nil
+}
+
+// DeleteWithTx one configItem instance with transaction.
+func (dao *configItemDao) DeleteWithTx(kit *kit.Kit, tx *sharding.Tx, ci *table.ConfigItem) error {
+
+	if ci == nil {
+		return errf.New(errf.InvalidParameter, "config item is nil")
+	}
+
+	if err := ci.ValidateDelete(); err != nil {
+		return errf.New(errf.InvalidParameter, err.Error())
+	}
+
+	if err := dao.validateAttachmentAppExist(kit, ci.Attachment); err != nil {
+		return err
+	}
+
+	ab := dao.auditDao.Decorator(kit, ci.Attachment.BizID, enumor.ConfigItem).PrepareDelete(ci.ID)
+
+	var sqlBuf bytes.Buffer
+	sqlBuf.WriteString("DELETE FROM ")
+	sqlBuf.WriteString(table.ConfigItemTable.Name())
+	sqlBuf.WriteString(" WHERE id = ? AND biz_id = ?")
+
+	// delete the config item at first.
+	if err := dao.orm.Txn(tx.Tx()).Delete(kit.Ctx, sqlBuf.String(), ci.ID, ci.Attachment.BizID); err != nil {
+		return err
+	}
+
+	// audit this delete config item details.
+	auditOpt := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
+	if err := ab.Do(auditOpt); err != nil {
+		return fmt.Errorf("audit delete config item failed, err: %v", err)
+	}
+
+	// decrease the config item lock count after the deletion
+	lock := lockKey.ConfigItem(ci.Attachment.BizID, ci.Attachment.AppID)
+	if err := dao.lock.DecreaseCount(kit, lock, &LockOption{Txn: tx.Tx()}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// BatchDeleteWithTx batch configItem instances with transaction.
+func (dao *configItemDao) BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32, bizID, appID uint32) error {
+	m := dao.genQ.ConfigItem
+	q := tx.ConfigItem.WithContext(kit.Ctx)
+	if _, err := q.Where(m.ID.In(ids...), m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete(); err != nil {
+		return err
+	}
 	return nil
 }
 

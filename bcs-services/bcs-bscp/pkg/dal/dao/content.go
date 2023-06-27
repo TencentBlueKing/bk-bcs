@@ -18,6 +18,7 @@ import (
 
 	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
@@ -33,7 +34,9 @@ type Content interface {
 	// Create one content instance.
 	Create(kit *kit.Kit, content *table.Content) (uint32, error)
 	// CreateWithTx create one content instance with transaction
-	CreateWithTx(kit *kit.Kit, tx *sharding.Tx, content *table.Content) (uint32, error)
+	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, content *table.Content) (uint32, error)
+	// BatchCreateWithTx batch create content instances with transaction.
+	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, contents []*table.Content) error
 	// Get get content by id
 	Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error)
 	// List contents with options.
@@ -45,6 +48,7 @@ var _ Content = new(contentDao)
 type contentDao struct {
 	orm      orm.Interface
 	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 }
@@ -102,7 +106,7 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 }
 
 // CreateWithTx create one content instance with transaction
-func (dao *contentDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, content *table.Content) (uint32, error) {
+func (dao *contentDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, content *table.Content) (uint32, error) {
 
 	if content == nil {
 		return 0, errf.New(errf.InvalidParameter, "content is nil")
@@ -120,23 +124,38 @@ func (dao *contentDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, content *tabl
 
 	content.ID = id
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ContentTable.Name(),
-		" (", table.ContentColumns.ColumnExpr(), ")  VALUES(", table.ContentColumns.ColonNameExpr(), ")")
-	sql := filter.SqlJoint(sqlSentence)
-
-	if e := dao.orm.Txn(tx.Tx()).Insert(kit.Ctx, sql, content); e != nil {
+	if err := tx.Content.WithContext(kit.Ctx).Create(content); err != nil {
 		return 0, err
 	}
 
-	// audit this to be create content details.
-	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
-	if err = dao.auditDao.Decorator(kit, content.Attachment.BizID,
-		enumor.Content).AuditCreate(content, au); err != nil {
+	ad := dao.auditDao.DecoratorV2(kit, content.Attachment.BizID).PrepareCreate(content)
+	if err := ad.Do(tx.Query); err != nil {
 		return 0, fmt.Errorf("audit create content failed, err: %v", err)
 	}
-
 	return id, nil
+}
+
+// BatchCreateWithTx batch create content instances with transaction.
+// NOTE: 1. this method won't audit, because it's batch operation.
+// 2. this method won't validate attachment resource exist, because it's batch operation.
+func (dao *contentDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, contents []*table.Content) error {
+	if len(contents) == 0 {
+		return nil
+	}
+	ids, err := dao.idGen.Batch(kit, table.ContentTable, len(contents))
+	if err != nil {
+		return err
+	}
+	for i, content := range contents {
+		if err := content.ValidateCreate(); err != nil {
+			return err
+		}
+		content.ID = ids[i]
+	}
+	if err := tx.Content.WithContext(kit.Ctx).Save(contents...); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Get content by id.

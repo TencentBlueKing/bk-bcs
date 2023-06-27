@@ -72,6 +72,8 @@ const (
 	Data_ListTemplateSpaces_FullMethodName         = "/pbds.Data/ListTemplateSpaces"
 	Data_UpdateTemplateSpace_FullMethodName        = "/pbds.Data/UpdateTemplateSpace"
 	Data_DeleteTemplateSpace_FullMethodName        = "/pbds.Data/DeleteTemplateSpace"
+	Data_GetAllBizsOfTemplateSpaces_FullMethodName = "/pbds.Data/GetAllBizsOfTemplateSpaces"
+	Data_CreateDefaultTemplateSpace_FullMethodName = "/pbds.Data/CreateDefaultTemplateSpace"
 	Data_CreateTemplate_FullMethodName             = "/pbds.Data/CreateTemplate"
 	Data_ListTemplates_FullMethodName              = "/pbds.Data/ListTemplates"
 	Data_UpdateTemplate_FullMethodName             = "/pbds.Data/UpdateTemplate"
@@ -161,6 +163,8 @@ type DataClient interface {
 	ListTemplateSpaces(ctx context.Context, in *ListTemplateSpacesReq, opts ...grpc.CallOption) (*ListTemplateSpacesResp, error)
 	UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	GetAllBizsOfTemplateSpaces(ctx context.Context, in *base.EmptyReq, opts ...grpc.CallOption) (*GetAllBizsOfTemplateSpacesResp, error)
+	CreateDefaultTemplateSpace(ctx context.Context, in *CreateDefaultTemplateSpaceReq, opts ...grpc.CallOption) (*CreateResp, error)
 	// template related interface.
 	CreateTemplate(ctx context.Context, in *CreateTemplateReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
@@ -614,6 +618,24 @@ func (c *dataClient) DeleteTemplateSpace(ctx context.Context, in *DeleteTemplate
 	return out, nil
 }
 
+func (c *dataClient) GetAllBizsOfTemplateSpaces(ctx context.Context, in *base.EmptyReq, opts ...grpc.CallOption) (*GetAllBizsOfTemplateSpacesResp, error) {
+	out := new(GetAllBizsOfTemplateSpacesResp)
+	err := c.cc.Invoke(ctx, Data_GetAllBizsOfTemplateSpaces_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) CreateDefaultTemplateSpace(ctx context.Context, in *CreateDefaultTemplateSpaceReq, opts ...grpc.CallOption) (*CreateResp, error) {
+	out := new(CreateResp)
+	err := c.cc.Invoke(ctx, Data_CreateDefaultTemplateSpace_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateTemplate(ctx context.Context, in *CreateTemplateReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateTemplate_FullMethodName, in, out, opts...)
@@ -925,6 +947,8 @@ type DataServer interface {
 	ListTemplateSpaces(context.Context, *ListTemplateSpacesReq) (*ListTemplateSpacesResp, error)
 	UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq) (*base.EmptyResp, error)
 	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*base.EmptyResp, error)
+	GetAllBizsOfTemplateSpaces(context.Context, *base.EmptyReq) (*GetAllBizsOfTemplateSpacesResp, error)
+	CreateDefaultTemplateSpace(context.Context, *CreateDefaultTemplateSpaceReq) (*CreateResp, error)
 	// template related interface.
 	CreateTemplate(context.Context, *CreateTemplateReq) (*CreateResp, error)
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
@@ -1103,6 +1127,12 @@ func (UnimplementedDataServer) UpdateTemplateSpace(context.Context, *UpdateTempl
 }
 func (UnimplementedDataServer) DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateSpace not implemented")
+}
+func (UnimplementedDataServer) GetAllBizsOfTemplateSpaces(context.Context, *base.EmptyReq) (*GetAllBizsOfTemplateSpacesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllBizsOfTemplateSpaces not implemented")
+}
+func (UnimplementedDataServer) CreateDefaultTemplateSpace(context.Context, *CreateDefaultTemplateSpaceReq) (*CreateResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDefaultTemplateSpace not implemented")
 }
 func (UnimplementedDataServer) CreateTemplate(context.Context, *CreateTemplateReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplate not implemented")
@@ -2010,6 +2040,42 @@ func _Data_DeleteTemplateSpace_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetAllBizsOfTemplateSpaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(base.EmptyReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetAllBizsOfTemplateSpaces(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetAllBizsOfTemplateSpaces_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetAllBizsOfTemplateSpaces(ctx, req.(*base.EmptyReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_CreateDefaultTemplateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateDefaultTemplateSpaceReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).CreateDefaultTemplateSpace(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_CreateDefaultTemplateSpace_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).CreateDefaultTemplateSpace(ctx, req.(*CreateDefaultTemplateSpaceReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateTemplateReq)
 	if err := dec(in); err != nil {
@@ -2700,6 +2766,14 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteTemplateSpace",
 			Handler:    _Data_DeleteTemplateSpace_Handler,
+		},
+		{
+			MethodName: "GetAllBizsOfTemplateSpaces",
+			Handler:    _Data_GetAllBizsOfTemplateSpaces_Handler,
+		},
+		{
+			MethodName: "CreateDefaultTemplateSpace",
+			Handler:    _Data_CreateDefaultTemplateSpace_Handler,
 		},
 		{
 			MethodName: "CreateTemplate",

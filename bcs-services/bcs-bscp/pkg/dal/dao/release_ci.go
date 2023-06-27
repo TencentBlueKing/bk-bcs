@@ -13,7 +13,6 @@ limitations under the License.
 package dao
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -49,6 +48,7 @@ var _ ReleasedCI = new(releasedCIDao)
 type releasedCIDao struct {
 	orm      orm.Interface
 	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 }
@@ -229,22 +229,14 @@ func (dao *releasedCIDao) GetReleasedLately(kit *kit.Kit, appId, bizID uint32, s
 		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
 
-	var sqlBuf bytes.Buffer
-	sqlBuf.WriteString("SELECT ")
-	sqlBuf.WriteString(table.ReleasedConfigItemColumns.NamedExpr())
-	sqlBuf.WriteString(" FROM ")
-	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
-	sqlBuf.WriteString(" WHERE biz_id = ? AND app_id = ?")
-	sqlBuf.WriteString(" AND (name like ? OR creator like ? OR reviser like ?)")
-	sqlBuf.WriteString(" AND release_id = (SELECT release_id from ")
-	sqlBuf.WriteString(table.ReleasedConfigItemTable.Name())
-	sqlBuf.WriteString(" WHERE app_id = ? ORDER BY release_id desc limit 1)")
-
-	fileInfo := make([]*table.ReleasedConfigItem, 0)
-	err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Select(kit.Ctx, &fileInfo, sqlBuf.String(),
-		bizID, appId, "%"+searchKey+"%", "%"+searchKey+"%", "%"+searchKey+"%", appId)
-	if err != nil {
-		return nil, err
+	m := dao.genQ.ReleasedConfigItem
+	q := dao.genQ.ReleasedConfigItem.WithContext(kit.Ctx)
+	query := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId))
+	if searchKey != "" {
+		param := "%" + searchKey + "%"
+		query = q.Where(q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)),
+			q.Where(m.Name.Like(param)).Or(m.Creator.Like(param)).Or(m.Reviser.Like(param)))
 	}
-	return fileInfo, nil
+	subQuery := q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appId)).Order(m.ReleaseID.Desc()).Limit(1).Select(m.ReleaseID)
+	return query.Where(q.Columns(m.ReleaseID).Eq(subQuery)).Find()
 }

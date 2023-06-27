@@ -19,6 +19,8 @@ message TemplateSetSpec {
     string          name         = 1;
     string          memo         = 2;
     repeated uint32 template_ids = 3;
+    bool            public       = 4;
+    repeated uint32 bound_apps   = 5;
 }
 
 // TemplateSetAttachment source resource reference: pkg/dal/table/template_set.go

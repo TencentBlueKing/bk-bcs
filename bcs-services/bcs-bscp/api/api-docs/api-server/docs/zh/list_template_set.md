@@ -34,7 +34,9 @@
           "template_ids": [
             1,
             2
-          ]
+          ],
+          "public": true,
+          "bound_apps": []
         },
         "attachment": {
           "biz_id": 2,
@@ -77,11 +79,13 @@
 
 #### spec
 
-| 参数名称     | 参数类型 | 描述             |
-| ------------ | -------- | ---------------- |
+| 参数名称         | 参数类型     | 描述             |
+|--------------|----------| ---------------- |
 | name         | string   | 模版套餐名称     |
 | memo         | string   | 模版套餐描述     |
 | template_ids | []uint32 | 引用的模版ID列表 |
+| public       | bool     | 是否公开对所有服务可见 |
+| bound_apps   | []uint32 | 指定可见的服务列表   |
 
 #### attachment
 

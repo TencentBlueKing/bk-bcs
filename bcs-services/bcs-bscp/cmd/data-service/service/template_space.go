@@ -109,3 +109,33 @@ func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbds.DeleteTempl
 
 	return new(pbbase.EmptyResp), nil
 }
+
+// GetAllBizsOfTemplateSpaces get all biz ids of template spaces
+func (s *Service) GetAllBizsOfTemplateSpaces(ctx context.Context, req *pbbase.EmptyReq) (
+	*pbds.GetAllBizsOfTemplateSpacesResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	bizIDs, err := s.dao.TemplateSpace().GetAllBizs(kt)
+	if err != nil {
+		logs.Errorf("get all bizs of template space failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.GetAllBizsOfTemplateSpacesResp{BizIds: bizIDs}
+	return resp, nil
+}
+
+// CreateDefaultTemplateSpace get all biz ids of template spaces
+func (s *Service) CreateDefaultTemplateSpace(ctx context.Context, req *pbds.CreateDefaultTemplateSpaceReq) (
+	*pbds.CreateResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	id, err := s.dao.TemplateSpace().CreateDefault(kt, req.BizId)
+	if err != nil {
+		logs.Errorf("create default template space failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.CreateResp{Id: id}
+	return resp, nil
+}

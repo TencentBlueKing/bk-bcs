@@ -49,10 +49,25 @@ func ValidateAppCINumber(count uint32) error {
 type ConfigItem struct {
 	// ID is an auto-increased value, which is a config item's
 	// unique identity.
-	ID         uint32                `db:"id" json:"id"`
-	Spec       *ConfigItemSpec       `db:"spec" json:"spec"`
-	Attachment *ConfigItemAttachment `db:"attachment" json:"attachment"`
-	Revision   *Revision             `db:"revision" json:"revision"`
+	ID         uint32                `db:"id" json:"id" gorm:"primaryKey"`
+	Spec       *ConfigItemSpec       `db:"spec" json:"spec" gorm:"embedded"`
+	Attachment *ConfigItemAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
+	Revision   *Revision             `db:"revision" json:"revision" gorm:"embedded"`
+}
+
+// AppID AuditRes interface
+func (s *ConfigItem) AppID() uint32 {
+	return 0
+}
+
+// ResID AuditRes interface
+func (s *ConfigItem) ResID() uint32 {
+	return s.ID
+}
+
+// ResType AuditRes interface
+func (s *ConfigItem) ResType() string {
+	return "config_item"
 }
 
 // TableName is the config item's database table name.
@@ -171,11 +186,11 @@ type ConfigItemSpec struct {
 	// 1. KV config type do not need path.
 	// 2. this path is a relevant path to the sidecar's system workspace path.
 	// 3. this path is the absolute path for user's workspace path.
-	Path string `db:"path" json:"path" gorm:"column:name"`
+	Path string `db:"path" json:"path" gorm:"column:path"`
 	// FileType is the file type of this configuration.
-	FileType FileFormat `db:"file_type" json:"file_type" gorm:"column:name"`
-	FileMode FileMode   `db:"file_mode" json:"file_mode" gorm:"column:name"`
-	Memo     string     `db:"memo" json:"memo" gorm:"column:name"`
+	FileType FileFormat `db:"file_type" json:"file_type" gorm:"column:file_type"`
+	FileMode FileMode   `db:"file_mode" json:"file_mode" gorm:"column:file_mode"`
+	Memo     string     `db:"memo" json:"memo" gorm:"column:memo"`
 	// KV类型，不能有Permission
 	Permission *FilePermission `db:"permission" json:"permission" gorm:"embedded"`
 }

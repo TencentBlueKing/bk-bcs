@@ -23,7 +23,7 @@ import (
 func init() {
 	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
-		Version: "mig20230526152150",
+		Version: "20230526152150",
 		Name:    "20230526152150_add_hook",
 		Mode:    migrator.GormMode,
 		Up:      mig20230526152150GormUp,
