@@ -27,7 +27,7 @@ import (
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
 )
 
-// TGitWebhook defines the webhook handler of tgit, ther will transfer tgit webhook
+// TGitWebhook defines the webhook handler of tgit, there will transfer tgit webhook
 // to gitlab webhook
 func (s *Server) TGitWebhook(ctx context.Context, req *pb.TGitWebhookRequest, resp *pb.TGitWebhookResponse) error {
 	blog.Infof("tgit received webhook")
