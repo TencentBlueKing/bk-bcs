@@ -54,6 +54,14 @@ const (
 	ContentIDHeaderKey = "X-Bkapi-File-Content-Id"
 )
 
+// default resource
+const (
+	DefaultTmplSpaceName = "默认空间"
+	DefaultTmplSpaceMemo = "这是默认空间"
+	DefaultTmplSetName   = "默认套餐"
+	DefaultTmplSetMemo   = "当前空间下的所有模版"
+)
+
 // Note:
 // 1. This scope defines keys which is used only by sidecar and feed server.
 // 2. All the defined key should be prefixed with 'Side'.

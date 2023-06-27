@@ -33,7 +33,7 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateAppTemplateBindingResp)
 
-	templateSetIDs, templateReleasedIDs, err := parseBindings(req.Bindings)
+	templateSetIDs, templateReleaseIDs, err := parseBindings(req.Bindings)
 	if err != nil {
 		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -42,13 +42,13 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	if len(repeatedTmplSetIDs) > 0 {
 		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
 	}
-	repeatedTmplReleasedIDs := tools.SliceRepeatedElements(templateReleasedIDs)
-	if len(repeatedTmplSetIDs) > 0 {
-		return nil, fmt.Errorf("repeated template released ids: %v, id must be unique", repeatedTmplReleasedIDs)
+	repeatedTmplReleasedIDs := tools.SliceRepeatedElements(templateReleaseIDs)
+	if len(repeatedTmplReleasedIDs) > 0 {
+		return nil, fmt.Errorf("repeated template release ids: %v, id must be unique", repeatedTmplReleasedIDs)
 	}
-	if len(templateReleasedIDs) > 500 {
-		return nil, fmt.Errorf("the length of template released ids is %d, it must be within the range of [1,500]",
-			len(templateReleasedIDs))
+	if len(templateReleaseIDs) > 500 {
+		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,500]",
+			len(templateReleaseIDs))
 	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Create,
@@ -111,6 +111,24 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateAppTemplateBindingResp)
 
+	templateSetIDs, templateReleaseIDs, err := parseBindings(req.Bindings)
+	if err != nil {
+		logs.Errorf("create app template binding failed, parse bindings err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	repeatedTmplSetIDs := tools.SliceRepeatedElements(templateSetIDs)
+	if len(repeatedTmplSetIDs) > 0 {
+		return nil, fmt.Errorf("repeated template set ids: %v, id must be unique", repeatedTmplSetIDs)
+	}
+	repeatedTmplReleasedIDs := tools.SliceRepeatedElements(templateReleaseIDs)
+	if len(repeatedTmplReleasedIDs) > 0 {
+		return nil, fmt.Errorf("repeated template release ids: %v, id must be unique", repeatedTmplReleasedIDs)
+	}
+	if len(templateReleaseIDs) > 500 {
+		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,500]",
+			len(templateReleaseIDs))
+	}
+
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Update,
 		ResourceID: req.BindingId}, BizID: req.BizId}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
@@ -168,7 +186,7 @@ func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListApp
 	return resp, nil
 }
 
-func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateReleasedIDs []uint32, err error) {
+func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateReleaseIDs []uint32, err error) {
 	if len(bindings) == 0 {
 		return nil, nil, errors.New("bindings can't be empty")
 	}
@@ -179,14 +197,9 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateR
 		if len(b.TemplateReleaseIds) == 0 {
 			return nil, nil, errors.New("template release ids of bindings member can't be empty")
 		}
-		for _, id := range b.TemplateReleaseIds {
-			if id <= 0 {
-				return nil, nil, fmt.Errorf("invalid template release id of bindings member: %d", id)
-			}
-		}
 		templateSetIDs = append(templateSetIDs, b.TemplateSetId)
-		templateReleasedIDs = append(templateReleasedIDs, b.TemplateReleaseIds...)
+		templateReleaseIDs = append(templateReleaseIDs, b.TemplateReleaseIds...)
 	}
 
-	return templateSetIDs, templateReleasedIDs, nil
+	return templateSetIDs, templateReleaseIDs, nil
 }

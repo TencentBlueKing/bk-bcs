@@ -133,12 +133,11 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 		return err
 	}
 
-	now := time.Now()
 	if result := tx.Create([]IDGenerators{
-		{Resource: "template_spaces", MaxID: 0, UpdatedAt: now},
-		{Resource: "templates", MaxID: 0, UpdatedAt: now},
-		{Resource: "template_releases", MaxID: 0, UpdatedAt: now},
-		{Resource: "template_sets", MaxID: 0, UpdatedAt: now},
+		{Resource: "template_spaces", MaxID: 0},
+		{Resource: "templates", MaxID: 0},
+		{Resource: "template_releases", MaxID: 0},
+		{Resource: "template_sets", MaxID: 0},
 	}); result.Error != nil {
 		return result.Error
 	}

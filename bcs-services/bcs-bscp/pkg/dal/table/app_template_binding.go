@@ -212,11 +212,6 @@ func validateBindings(bindings TemplateBindings) error {
 		if len(b.TemplateReleaseIDs) == 0 {
 			return errors.New("template release ids of bindings member can't be empty")
 		}
-		for _, id := range b.TemplateReleaseIDs {
-			if id <= 0 {
-				return fmt.Errorf("invalid template release id of bindings member: %d", id)
-			}
-		}
 	}
 	return nil
 }

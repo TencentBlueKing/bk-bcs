@@ -111,6 +111,14 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
+	// IDGenerators : ID生成器
+	type IDGenerators struct {
+		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
+		Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`
+		MaxID     uint      `gorm:"type:bigint(1) unsigned not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
 	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").AutoMigrate(
 		&AppTemplateBindings{},
 		&ReleasedAppTemplateBindings{},
@@ -120,12 +128,29 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		return err
 	}
 
+	if result := tx.Create([]IDGenerators{
+		{Resource: "app_template_bindings", MaxID: 0},
+		{Resource: "released_app_template_bindings", MaxID: 0},
+		{Resource: "app_template_variables", MaxID: 0},
+		{Resource: "released_template_variables", MaxID: 0},
+	}); result.Error != nil {
+		return result.Error
+	}
+
 	return nil
 
 }
 
 // mig20230625152115GormAddAppTemplateRelatedDown for down migration
 func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
+	// IDGenerators : ID生成器
+	type IDGenerators struct {
+		ID        uint      `gorm:"type:bigint(1) unsigned not null;primaryKey"`
+		Resource  string    `gorm:"type:varchar(50) not null;uniqueIndex:idx_resource"`
+		MaxID     uint      `gorm:"type:bigint(1) unsigned not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
 	if err := tx.Migrator().DropTable(
 		"app_template_bindings",
 		"released_app_template_bindings",
@@ -133,6 +158,16 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 		"released_template_variables",
 	); err != nil {
 		return err
+	}
+
+	var resources = []string{
+		"app_template_bindings",
+		"released_app_template_bindings",
+		"app_template_variables",
+		"released_template_variables",
+	}
+	if result := tx.Where("resource in ?", resources).Delete(&IDGenerators{}); result.Error != nil {
+		return result.Error
 	}
 
 	return nil

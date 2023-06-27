@@ -61,7 +61,7 @@ func (dao *appTemplateBindingDao) Create(kit *kit.Kit, g *table.AppTemplateBindi
 		return 0, err
 	}
 
-	// generate a app template binding id and update to app template binding.v
+	// generate a app template binding id and update to app template binding.
 	var id uint32
 	id, err = dao.idGen.One(kit, table.Name(g.TableName()))
 	if err != nil {
@@ -325,12 +325,12 @@ func (dao *appTemplateBindingDao) validateTemplateSetsExist(kit *kit.Kit, templa
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 	var existIDs []uint32
 	if err := q.Where(m.ID.In(templateSetIDs...)).Pluck(m.ID, &existIDs); err != nil {
-		return fmt.Errorf("validate app template bindings exist failed, err: %v", err)
+		return fmt.Errorf("validate template sets exist failed, err: %v", err)
 	}
 
 	diffIDs := tools.SliceDiff(templateSetIDs, existIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("app template binding id in %v is not exist", diffIDs)
+		return fmt.Errorf("template set id in %v is not exist", diffIDs)
 	}
 
 	return nil
