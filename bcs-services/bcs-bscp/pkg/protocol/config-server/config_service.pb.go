@@ -2430,258 +2430,6 @@ func (x *ListConfigItemCountResp) GetDetails() []*config_item.ListConfigItemCoun
 	return nil
 }
 
-type CreateContentReq struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	BizId        uint32 `protobuf:"varint,1,opt,name=biz_id,json=bizId,proto3" json:"biz_id,omitempty"`
-	AppId        uint32 `protobuf:"varint,2,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
-	ConfigItemId uint32 `protobuf:"varint,3,opt,name=config_item_id,json=configItemId,proto3" json:"config_item_id,omitempty"`
-	Sign         string `protobuf:"bytes,4,opt,name=sign,proto3" json:"sign,omitempty"`
-	ByteSize     uint64 `protobuf:"varint,5,opt,name=byte_size,json=byteSize,proto3" json:"byte_size,omitempty"`
-}
-
-func (x *CreateContentReq) Reset() {
-	*x = CreateContentReq{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[39]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CreateContentReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateContentReq) ProtoMessage() {}
-
-func (x *CreateContentReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[39]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateContentReq.ProtoReflect.Descriptor instead.
-func (*CreateContentReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{39}
-}
-
-func (x *CreateContentReq) GetBizId() uint32 {
-	if x != nil {
-		return x.BizId
-	}
-	return 0
-}
-
-func (x *CreateContentReq) GetAppId() uint32 {
-	if x != nil {
-		return x.AppId
-	}
-	return 0
-}
-
-func (x *CreateContentReq) GetConfigItemId() uint32 {
-	if x != nil {
-		return x.ConfigItemId
-	}
-	return 0
-}
-
-func (x *CreateContentReq) GetSign() string {
-	if x != nil {
-		return x.Sign
-	}
-	return ""
-}
-
-func (x *CreateContentReq) GetByteSize() uint64 {
-	if x != nil {
-		return x.ByteSize
-	}
-	return 0
-}
-
-type CreateContentResp struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-}
-
-func (x *CreateContentResp) Reset() {
-	*x = CreateContentResp{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[40]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CreateContentResp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateContentResp) ProtoMessage() {}
-
-func (x *CreateContentResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[40]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateContentResp.ProtoReflect.Descriptor instead.
-func (*CreateContentResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{40}
-}
-
-func (x *CreateContentResp) GetId() uint32 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-type ListContentsReq struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	BizId  uint32           `protobuf:"varint,1,opt,name=biz_id,json=bizId,proto3" json:"biz_id,omitempty"`
-	AppId  uint32           `protobuf:"varint,2,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
-	Filter *structpb.Struct `protobuf:"bytes,3,opt,name=filter,proto3" json:"filter,omitempty"`
-	Page   *base.BasePage   `protobuf:"bytes,4,opt,name=page,proto3" json:"page,omitempty"`
-}
-
-func (x *ListContentsReq) Reset() {
-	*x = ListContentsReq{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[41]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListContentsReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListContentsReq) ProtoMessage() {}
-
-func (x *ListContentsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[41]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListContentsReq.ProtoReflect.Descriptor instead.
-func (*ListContentsReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{41}
-}
-
-func (x *ListContentsReq) GetBizId() uint32 {
-	if x != nil {
-		return x.BizId
-	}
-	return 0
-}
-
-func (x *ListContentsReq) GetAppId() uint32 {
-	if x != nil {
-		return x.AppId
-	}
-	return 0
-}
-
-func (x *ListContentsReq) GetFilter() *structpb.Struct {
-	if x != nil {
-		return x.Filter
-	}
-	return nil
-}
-
-func (x *ListContentsReq) GetPage() *base.BasePage {
-	if x != nil {
-		return x.Page
-	}
-	return nil
-}
-
-type ListContentsResp struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Count   uint32             `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
-	Details []*content.Content `protobuf:"bytes,2,rep,name=details,proto3" json:"details,omitempty"`
-}
-
-func (x *ListContentsResp) Reset() {
-	*x = ListContentsResp{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[42]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListContentsResp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListContentsResp) ProtoMessage() {}
-
-func (x *ListContentsResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[42]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListContentsResp.ProtoReflect.Descriptor instead.
-func (*ListContentsResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{42}
-}
-
-func (x *ListContentsResp) GetCount() uint32 {
-	if x != nil {
-		return x.Count
-	}
-	return 0
-}
-
-func (x *ListContentsResp) GetDetails() []*content.Content {
-	if x != nil {
-		return x.Details
-	}
-	return nil
-}
-
 type CreateConfigHookReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2696,7 +2444,7 @@ type CreateConfigHookReq struct {
 func (x *CreateConfigHookReq) Reset() {
 	*x = CreateConfigHookReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[43]
+		mi := &file_config_service_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2709,7 +2457,7 @@ func (x *CreateConfigHookReq) String() string {
 func (*CreateConfigHookReq) ProtoMessage() {}
 
 func (x *CreateConfigHookReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[43]
+	mi := &file_config_service_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2722,7 +2470,7 @@ func (x *CreateConfigHookReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateConfigHookReq.ProtoReflect.Descriptor instead.
 func (*CreateConfigHookReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{43}
+	return file_config_service_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *CreateConfigHookReq) GetBizId() uint32 {
@@ -2764,7 +2512,7 @@ type CreateConfigHookResp struct {
 func (x *CreateConfigHookResp) Reset() {
 	*x = CreateConfigHookResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[44]
+		mi := &file_config_service_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2777,7 +2525,7 @@ func (x *CreateConfigHookResp) String() string {
 func (*CreateConfigHookResp) ProtoMessage() {}
 
 func (x *CreateConfigHookResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[44]
+	mi := &file_config_service_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2790,7 +2538,7 @@ func (x *CreateConfigHookResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateConfigHookResp.ProtoReflect.Descriptor instead.
 func (*CreateConfigHookResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{44}
+	return file_config_service_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *CreateConfigHookResp) GetId() uint32 {
@@ -2815,7 +2563,7 @@ type UpdateConfigHookReq struct {
 func (x *UpdateConfigHookReq) Reset() {
 	*x = UpdateConfigHookReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[45]
+		mi := &file_config_service_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2828,7 +2576,7 @@ func (x *UpdateConfigHookReq) String() string {
 func (*UpdateConfigHookReq) ProtoMessage() {}
 
 func (x *UpdateConfigHookReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[45]
+	mi := &file_config_service_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2841,7 +2589,7 @@ func (x *UpdateConfigHookReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateConfigHookReq.ProtoReflect.Descriptor instead.
 func (*UpdateConfigHookReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{45}
+	return file_config_service_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *UpdateConfigHookReq) GetBizId() uint32 {
@@ -2888,7 +2636,7 @@ type UpdateConfigHookResp struct {
 func (x *UpdateConfigHookResp) Reset() {
 	*x = UpdateConfigHookResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[46]
+		mi := &file_config_service_proto_msgTypes[42]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2901,7 +2649,7 @@ func (x *UpdateConfigHookResp) String() string {
 func (*UpdateConfigHookResp) ProtoMessage() {}
 
 func (x *UpdateConfigHookResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[46]
+	mi := &file_config_service_proto_msgTypes[42]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2914,7 +2662,7 @@ func (x *UpdateConfigHookResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateConfigHookResp.ProtoReflect.Descriptor instead.
 func (*UpdateConfigHookResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{46}
+	return file_config_service_proto_rawDescGZIP(), []int{42}
 }
 
 type GetConfigHookReq struct {
@@ -2929,7 +2677,7 @@ type GetConfigHookReq struct {
 func (x *GetConfigHookReq) Reset() {
 	*x = GetConfigHookReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[47]
+		mi := &file_config_service_proto_msgTypes[43]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2942,7 +2690,7 @@ func (x *GetConfigHookReq) String() string {
 func (*GetConfigHookReq) ProtoMessage() {}
 
 func (x *GetConfigHookReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[47]
+	mi := &file_config_service_proto_msgTypes[43]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2955,7 +2703,7 @@ func (x *GetConfigHookReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConfigHookReq.ProtoReflect.Descriptor instead.
 func (*GetConfigHookReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{47}
+	return file_config_service_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *GetConfigHookReq) GetBizId() uint32 {
@@ -2983,7 +2731,7 @@ type GetConfigHookResp struct {
 func (x *GetConfigHookResp) Reset() {
 	*x = GetConfigHookResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[48]
+		mi := &file_config_service_proto_msgTypes[44]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2996,7 +2744,7 @@ func (x *GetConfigHookResp) String() string {
 func (*GetConfigHookResp) ProtoMessage() {}
 
 func (x *GetConfigHookResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[48]
+	mi := &file_config_service_proto_msgTypes[44]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3009,7 +2757,7 @@ func (x *GetConfigHookResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConfigHookResp.ProtoReflect.Descriptor instead.
 func (*GetConfigHookResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{48}
+	return file_config_service_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *GetConfigHookResp) GetConfigHook() *config_hook.ConfigHook {
@@ -3034,7 +2782,7 @@ type CreateCommitReq struct {
 func (x *CreateCommitReq) Reset() {
 	*x = CreateCommitReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[49]
+		mi := &file_config_service_proto_msgTypes[45]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3047,7 +2795,7 @@ func (x *CreateCommitReq) String() string {
 func (*CreateCommitReq) ProtoMessage() {}
 
 func (x *CreateCommitReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[49]
+	mi := &file_config_service_proto_msgTypes[45]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3060,7 +2808,7 @@ func (x *CreateCommitReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCommitReq.ProtoReflect.Descriptor instead.
 func (*CreateCommitReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{49}
+	return file_config_service_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *CreateCommitReq) GetBizId() uint32 {
@@ -3109,7 +2857,7 @@ type CreateCommitResp struct {
 func (x *CreateCommitResp) Reset() {
 	*x = CreateCommitResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[50]
+		mi := &file_config_service_proto_msgTypes[46]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3122,7 +2870,7 @@ func (x *CreateCommitResp) String() string {
 func (*CreateCommitResp) ProtoMessage() {}
 
 func (x *CreateCommitResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[50]
+	mi := &file_config_service_proto_msgTypes[46]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3135,7 +2883,7 @@ func (x *CreateCommitResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCommitResp.ProtoReflect.Descriptor instead.
 func (*CreateCommitResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{50}
+	return file_config_service_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *CreateCommitResp) GetId() uint32 {
@@ -3159,7 +2907,7 @@ type ListCommitsReq struct {
 func (x *ListCommitsReq) Reset() {
 	*x = ListCommitsReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[51]
+		mi := &file_config_service_proto_msgTypes[47]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3172,7 +2920,7 @@ func (x *ListCommitsReq) String() string {
 func (*ListCommitsReq) ProtoMessage() {}
 
 func (x *ListCommitsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[51]
+	mi := &file_config_service_proto_msgTypes[47]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3185,7 +2933,7 @@ func (x *ListCommitsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCommitsReq.ProtoReflect.Descriptor instead.
 func (*ListCommitsReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{51}
+	return file_config_service_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *ListCommitsReq) GetBizId() uint32 {
@@ -3228,7 +2976,7 @@ type ListCommitsResp struct {
 func (x *ListCommitsResp) Reset() {
 	*x = ListCommitsResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[52]
+		mi := &file_config_service_proto_msgTypes[48]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3241,7 +2989,7 @@ func (x *ListCommitsResp) String() string {
 func (*ListCommitsResp) ProtoMessage() {}
 
 func (x *ListCommitsResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[52]
+	mi := &file_config_service_proto_msgTypes[48]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3254,7 +3002,7 @@ func (x *ListCommitsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCommitsResp.ProtoReflect.Descriptor instead.
 func (*ListCommitsResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{52}
+	return file_config_service_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *ListCommitsResp) GetCount() uint32 {
@@ -3285,7 +3033,7 @@ type CreateReleaseReq struct {
 func (x *CreateReleaseReq) Reset() {
 	*x = CreateReleaseReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[53]
+		mi := &file_config_service_proto_msgTypes[49]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3298,7 +3046,7 @@ func (x *CreateReleaseReq) String() string {
 func (*CreateReleaseReq) ProtoMessage() {}
 
 func (x *CreateReleaseReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[53]
+	mi := &file_config_service_proto_msgTypes[49]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3311,7 +3059,7 @@ func (x *CreateReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateReleaseReq.ProtoReflect.Descriptor instead.
 func (*CreateReleaseReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{53}
+	return file_config_service_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *CreateReleaseReq) GetBizId() uint32 {
@@ -3353,7 +3101,7 @@ type CreateReleaseResp struct {
 func (x *CreateReleaseResp) Reset() {
 	*x = CreateReleaseResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[54]
+		mi := &file_config_service_proto_msgTypes[50]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3366,7 +3114,7 @@ func (x *CreateReleaseResp) String() string {
 func (*CreateReleaseResp) ProtoMessage() {}
 
 func (x *CreateReleaseResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[54]
+	mi := &file_config_service_proto_msgTypes[50]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3379,7 +3127,7 @@ func (x *CreateReleaseResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateReleaseResp.ProtoReflect.Descriptor instead.
 func (*CreateReleaseResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{54}
+	return file_config_service_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *CreateReleaseResp) GetId() uint32 {
@@ -3406,7 +3154,7 @@ type ListReleasesReq struct {
 func (x *ListReleasesReq) Reset() {
 	*x = ListReleasesReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[55]
+		mi := &file_config_service_proto_msgTypes[51]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3419,7 +3167,7 @@ func (x *ListReleasesReq) String() string {
 func (*ListReleasesReq) ProtoMessage() {}
 
 func (x *ListReleasesReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[55]
+	mi := &file_config_service_proto_msgTypes[51]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3432,7 +3180,7 @@ func (x *ListReleasesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListReleasesReq.ProtoReflect.Descriptor instead.
 func (*ListReleasesReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{55}
+	return file_config_service_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *ListReleasesReq) GetBizId() uint32 {
@@ -3496,7 +3244,7 @@ type ListReleasesResp struct {
 func (x *ListReleasesResp) Reset() {
 	*x = ListReleasesResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[56]
+		mi := &file_config_service_proto_msgTypes[52]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3509,7 +3257,7 @@ func (x *ListReleasesResp) String() string {
 func (*ListReleasesResp) ProtoMessage() {}
 
 func (x *ListReleasesResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[56]
+	mi := &file_config_service_proto_msgTypes[52]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3522,7 +3270,7 @@ func (x *ListReleasesResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListReleasesResp.ProtoReflect.Descriptor instead.
 func (*ListReleasesResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{56}
+	return file_config_service_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *ListReleasesResp) GetCount() uint32 {
@@ -3553,7 +3301,7 @@ type ListReleasedConfigItemsReq struct {
 func (x *ListReleasedConfigItemsReq) Reset() {
 	*x = ListReleasedConfigItemsReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[57]
+		mi := &file_config_service_proto_msgTypes[53]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3566,7 +3314,7 @@ func (x *ListReleasedConfigItemsReq) String() string {
 func (*ListReleasedConfigItemsReq) ProtoMessage() {}
 
 func (x *ListReleasedConfigItemsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[57]
+	mi := &file_config_service_proto_msgTypes[53]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3579,7 +3327,7 @@ func (x *ListReleasedConfigItemsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListReleasedConfigItemsReq.ProtoReflect.Descriptor instead.
 func (*ListReleasedConfigItemsReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{57}
+	return file_config_service_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *ListReleasedConfigItemsReq) GetBizId() uint32 {
@@ -3615,7 +3363,7 @@ type ListReleasedConfigItemsResp struct {
 func (x *ListReleasedConfigItemsResp) Reset() {
 	*x = ListReleasedConfigItemsResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[58]
+		mi := &file_config_service_proto_msgTypes[54]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3628,7 +3376,7 @@ func (x *ListReleasedConfigItemsResp) String() string {
 func (*ListReleasedConfigItemsResp) ProtoMessage() {}
 
 func (x *ListReleasedConfigItemsResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[58]
+	mi := &file_config_service_proto_msgTypes[54]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3641,7 +3389,7 @@ func (x *ListReleasedConfigItemsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListReleasedConfigItemsResp.ProtoReflect.Descriptor instead.
 func (*ListReleasedConfigItemsResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{58}
+	return file_config_service_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *ListReleasedConfigItemsResp) GetCount() uint32 {
@@ -3675,7 +3423,7 @@ type CreateHookReq struct {
 func (x *CreateHookReq) Reset() {
 	*x = CreateHookReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[59]
+		mi := &file_config_service_proto_msgTypes[55]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3688,7 +3436,7 @@ func (x *CreateHookReq) String() string {
 func (*CreateHookReq) ProtoMessage() {}
 
 func (x *CreateHookReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[59]
+	mi := &file_config_service_proto_msgTypes[55]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3701,7 +3449,7 @@ func (x *CreateHookReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateHookReq.ProtoReflect.Descriptor instead.
 func (*CreateHookReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{59}
+	return file_config_service_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *CreateHookReq) GetBizId() uint32 {
@@ -3764,7 +3512,7 @@ type CreateHookResp struct {
 func (x *CreateHookResp) Reset() {
 	*x = CreateHookResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[60]
+		mi := &file_config_service_proto_msgTypes[56]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3777,7 +3525,7 @@ func (x *CreateHookResp) String() string {
 func (*CreateHookResp) ProtoMessage() {}
 
 func (x *CreateHookResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[60]
+	mi := &file_config_service_proto_msgTypes[56]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3790,7 +3538,7 @@ func (x *CreateHookResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateHookResp.ProtoReflect.Descriptor instead.
 func (*CreateHookResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{60}
+	return file_config_service_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *CreateHookResp) GetId() uint32 {
@@ -3812,7 +3560,7 @@ type DeleteHookReq struct {
 func (x *DeleteHookReq) Reset() {
 	*x = DeleteHookReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[61]
+		mi := &file_config_service_proto_msgTypes[57]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3825,7 +3573,7 @@ func (x *DeleteHookReq) String() string {
 func (*DeleteHookReq) ProtoMessage() {}
 
 func (x *DeleteHookReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[61]
+	mi := &file_config_service_proto_msgTypes[57]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3838,7 +3586,7 @@ func (x *DeleteHookReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteHookReq.ProtoReflect.Descriptor instead.
 func (*DeleteHookReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{61}
+	return file_config_service_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *DeleteHookReq) GetBizId() uint32 {
@@ -3864,7 +3612,7 @@ type DeleteHookResp struct {
 func (x *DeleteHookResp) Reset() {
 	*x = DeleteHookResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[62]
+		mi := &file_config_service_proto_msgTypes[58]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3877,7 +3625,7 @@ func (x *DeleteHookResp) String() string {
 func (*DeleteHookResp) ProtoMessage() {}
 
 func (x *DeleteHookResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[62]
+	mi := &file_config_service_proto_msgTypes[58]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3890,7 +3638,7 @@ func (x *DeleteHookResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteHookResp.ProtoReflect.Descriptor instead.
 func (*DeleteHookResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{62}
+	return file_config_service_proto_rawDescGZIP(), []int{58}
 }
 
 type ListHooksReq struct {
@@ -3910,7 +3658,7 @@ type ListHooksReq struct {
 func (x *ListHooksReq) Reset() {
 	*x = ListHooksReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[63]
+		mi := &file_config_service_proto_msgTypes[59]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3923,7 +3671,7 @@ func (x *ListHooksReq) String() string {
 func (*ListHooksReq) ProtoMessage() {}
 
 func (x *ListHooksReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[63]
+	mi := &file_config_service_proto_msgTypes[59]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3936,7 +3684,7 @@ func (x *ListHooksReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHooksReq.ProtoReflect.Descriptor instead.
 func (*ListHooksReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{63}
+	return file_config_service_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *ListHooksReq) GetBizId() uint32 {
@@ -4000,7 +3748,7 @@ type ListHooksResp struct {
 func (x *ListHooksResp) Reset() {
 	*x = ListHooksResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[64]
+		mi := &file_config_service_proto_msgTypes[60]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4013,7 +3761,7 @@ func (x *ListHooksResp) String() string {
 func (*ListHooksResp) ProtoMessage() {}
 
 func (x *ListHooksResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[64]
+	mi := &file_config_service_proto_msgTypes[60]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4026,7 +3774,7 @@ func (x *ListHooksResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHooksResp.ProtoReflect.Descriptor instead.
 func (*ListHooksResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{64}
+	return file_config_service_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *ListHooksResp) GetCount() uint32 {
@@ -4054,7 +3802,7 @@ type ListHookTagsReq struct {
 func (x *ListHookTagsReq) Reset() {
 	*x = ListHookTagsReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[65]
+		mi := &file_config_service_proto_msgTypes[61]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4067,7 +3815,7 @@ func (x *ListHookTagsReq) String() string {
 func (*ListHookTagsReq) ProtoMessage() {}
 
 func (x *ListHookTagsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[65]
+	mi := &file_config_service_proto_msgTypes[61]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4080,7 +3828,7 @@ func (x *ListHookTagsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHookTagsReq.ProtoReflect.Descriptor instead.
 func (*ListHookTagsReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{65}
+	return file_config_service_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *ListHookTagsReq) GetBizId() uint32 {
@@ -4101,7 +3849,7 @@ type ListHookTagsResp struct {
 func (x *ListHookTagsResp) Reset() {
 	*x = ListHookTagsResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[66]
+		mi := &file_config_service_proto_msgTypes[62]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4114,7 +3862,7 @@ func (x *ListHookTagsResp) String() string {
 func (*ListHookTagsResp) ProtoMessage() {}
 
 func (x *ListHookTagsResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[66]
+	mi := &file_config_service_proto_msgTypes[62]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4127,7 +3875,7 @@ func (x *ListHookTagsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHookTagsResp.ProtoReflect.Descriptor instead.
 func (*ListHookTagsResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{66}
+	return file_config_service_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *ListHookTagsResp) GetDetails() []*hook.CountHookTags {
@@ -4152,7 +3900,7 @@ type CreateHookReleaseReq struct {
 func (x *CreateHookReleaseReq) Reset() {
 	*x = CreateHookReleaseReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[67]
+		mi := &file_config_service_proto_msgTypes[63]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4165,7 +3913,7 @@ func (x *CreateHookReleaseReq) String() string {
 func (*CreateHookReleaseReq) ProtoMessage() {}
 
 func (x *CreateHookReleaseReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[67]
+	mi := &file_config_service_proto_msgTypes[63]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4178,7 +3926,7 @@ func (x *CreateHookReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateHookReleaseReq.ProtoReflect.Descriptor instead.
 func (*CreateHookReleaseReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{67}
+	return file_config_service_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *CreateHookReleaseReq) GetBizId() uint32 {
@@ -4227,7 +3975,7 @@ type CreateHookReleaseResp struct {
 func (x *CreateHookReleaseResp) Reset() {
 	*x = CreateHookReleaseResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[68]
+		mi := &file_config_service_proto_msgTypes[64]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4240,7 +3988,7 @@ func (x *CreateHookReleaseResp) String() string {
 func (*CreateHookReleaseResp) ProtoMessage() {}
 
 func (x *CreateHookReleaseResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[68]
+	mi := &file_config_service_proto_msgTypes[64]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4253,7 +4001,7 @@ func (x *CreateHookReleaseResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateHookReleaseResp.ProtoReflect.Descriptor instead.
 func (*CreateHookReleaseResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{68}
+	return file_config_service_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *CreateHookReleaseResp) GetId() uint32 {
@@ -4280,7 +4028,7 @@ type ListHookReleaseReq struct {
 func (x *ListHookReleaseReq) Reset() {
 	*x = ListHookReleaseReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[69]
+		mi := &file_config_service_proto_msgTypes[65]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4293,7 +4041,7 @@ func (x *ListHookReleaseReq) String() string {
 func (*ListHookReleaseReq) ProtoMessage() {}
 
 func (x *ListHookReleaseReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[69]
+	mi := &file_config_service_proto_msgTypes[65]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4306,7 +4054,7 @@ func (x *ListHookReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHookReleaseReq.ProtoReflect.Descriptor instead.
 func (*ListHookReleaseReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{69}
+	return file_config_service_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *ListHookReleaseReq) GetBizId() uint32 {
@@ -4370,7 +4118,7 @@ type ListHookReleaseResp struct {
 func (x *ListHookReleaseResp) Reset() {
 	*x = ListHookReleaseResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[70]
+		mi := &file_config_service_proto_msgTypes[66]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4383,7 +4131,7 @@ func (x *ListHookReleaseResp) String() string {
 func (*ListHookReleaseResp) ProtoMessage() {}
 
 func (x *ListHookReleaseResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[70]
+	mi := &file_config_service_proto_msgTypes[66]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4396,7 +4144,7 @@ func (x *ListHookReleaseResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHookReleaseResp.ProtoReflect.Descriptor instead.
 func (*ListHookReleaseResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{70}
+	return file_config_service_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *ListHookReleaseResp) GetCount() uint32 {
@@ -4426,7 +4174,7 @@ type DeleteHookReleaseReq struct {
 func (x *DeleteHookReleaseReq) Reset() {
 	*x = DeleteHookReleaseReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[71]
+		mi := &file_config_service_proto_msgTypes[67]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4439,7 +4187,7 @@ func (x *DeleteHookReleaseReq) String() string {
 func (*DeleteHookReleaseReq) ProtoMessage() {}
 
 func (x *DeleteHookReleaseReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[71]
+	mi := &file_config_service_proto_msgTypes[67]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4452,7 +4200,7 @@ func (x *DeleteHookReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteHookReleaseReq.ProtoReflect.Descriptor instead.
 func (*DeleteHookReleaseReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{71}
+	return file_config_service_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *DeleteHookReleaseReq) GetBizId() uint32 {
@@ -4485,7 +4233,7 @@ type DeleteHookReleaseResp struct {
 func (x *DeleteHookReleaseResp) Reset() {
 	*x = DeleteHookReleaseResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[72]
+		mi := &file_config_service_proto_msgTypes[68]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4498,7 +4246,7 @@ func (x *DeleteHookReleaseResp) String() string {
 func (*DeleteHookReleaseResp) ProtoMessage() {}
 
 func (x *DeleteHookReleaseResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[72]
+	mi := &file_config_service_proto_msgTypes[68]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4511,7 +4259,7 @@ func (x *DeleteHookReleaseResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteHookReleaseResp.ProtoReflect.Descriptor instead.
 func (*DeleteHookReleaseResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{72}
+	return file_config_service_proto_rawDescGZIP(), []int{68}
 }
 
 type PublishHookReleaseReq struct {
@@ -4527,7 +4275,7 @@ type PublishHookReleaseReq struct {
 func (x *PublishHookReleaseReq) Reset() {
 	*x = PublishHookReleaseReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[73]
+		mi := &file_config_service_proto_msgTypes[69]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4540,7 +4288,7 @@ func (x *PublishHookReleaseReq) String() string {
 func (*PublishHookReleaseReq) ProtoMessage() {}
 
 func (x *PublishHookReleaseReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[73]
+	mi := &file_config_service_proto_msgTypes[69]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4553,7 +4301,7 @@ func (x *PublishHookReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishHookReleaseReq.ProtoReflect.Descriptor instead.
 func (*PublishHookReleaseReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{73}
+	return file_config_service_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *PublishHookReleaseReq) GetBizId() uint32 {
@@ -4586,7 +4334,7 @@ type PublishHookReleaseResp struct {
 func (x *PublishHookReleaseResp) Reset() {
 	*x = PublishHookReleaseResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[74]
+		mi := &file_config_service_proto_msgTypes[70]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4599,7 +4347,7 @@ func (x *PublishHookReleaseResp) String() string {
 func (*PublishHookReleaseResp) ProtoMessage() {}
 
 func (x *PublishHookReleaseResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[74]
+	mi := &file_config_service_proto_msgTypes[70]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4612,7 +4360,7 @@ func (x *PublishHookReleaseResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishHookReleaseResp.ProtoReflect.Descriptor instead.
 func (*PublishHookReleaseResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{74}
+	return file_config_service_proto_rawDescGZIP(), []int{70}
 }
 
 type GetHookReq struct {
@@ -4627,7 +4375,7 @@ type GetHookReq struct {
 func (x *GetHookReq) Reset() {
 	*x = GetHookReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[75]
+		mi := &file_config_service_proto_msgTypes[71]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4640,7 +4388,7 @@ func (x *GetHookReq) String() string {
 func (*GetHookReq) ProtoMessage() {}
 
 func (x *GetHookReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[75]
+	mi := &file_config_service_proto_msgTypes[71]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4653,7 +4401,7 @@ func (x *GetHookReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHookReq.ProtoReflect.Descriptor instead.
 func (*GetHookReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{75}
+	return file_config_service_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *GetHookReq) GetBizId() uint32 {
@@ -4684,7 +4432,7 @@ type GetHookResp struct {
 func (x *GetHookResp) Reset() {
 	*x = GetHookResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[76]
+		mi := &file_config_service_proto_msgTypes[72]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4697,7 +4445,7 @@ func (x *GetHookResp) String() string {
 func (*GetHookResp) ProtoMessage() {}
 
 func (x *GetHookResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[76]
+	mi := &file_config_service_proto_msgTypes[72]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4710,7 +4458,7 @@ func (x *GetHookResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHookResp.ProtoReflect.Descriptor instead.
 func (*GetHookResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{76}
+	return file_config_service_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *GetHookResp) GetId() uint32 {
@@ -4757,7 +4505,7 @@ type GetHookInfoSpec struct {
 func (x *GetHookInfoSpec) Reset() {
 	*x = GetHookInfoSpec{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[77]
+		mi := &file_config_service_proto_msgTypes[73]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4770,7 +4518,7 @@ func (x *GetHookInfoSpec) String() string {
 func (*GetHookInfoSpec) ProtoMessage() {}
 
 func (x *GetHookInfoSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[77]
+	mi := &file_config_service_proto_msgTypes[73]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4783,7 +4531,7 @@ func (x *GetHookInfoSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHookInfoSpec.ProtoReflect.Descriptor instead.
 func (*GetHookInfoSpec) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{77}
+	return file_config_service_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *GetHookInfoSpec) GetName() string {
@@ -4841,7 +4589,7 @@ type GetHookReleaseReq struct {
 func (x *GetHookReleaseReq) Reset() {
 	*x = GetHookReleaseReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[78]
+		mi := &file_config_service_proto_msgTypes[74]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4854,7 +4602,7 @@ func (x *GetHookReleaseReq) String() string {
 func (*GetHookReleaseReq) ProtoMessage() {}
 
 func (x *GetHookReleaseReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[78]
+	mi := &file_config_service_proto_msgTypes[74]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4867,7 +4615,7 @@ func (x *GetHookReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHookReleaseReq.ProtoReflect.Descriptor instead.
 func (*GetHookReleaseReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{78}
+	return file_config_service_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *GetHookReleaseReq) GetBizId() uint32 {
@@ -4907,7 +4655,7 @@ type UpdateHookReleaseReq struct {
 func (x *UpdateHookReleaseReq) Reset() {
 	*x = UpdateHookReleaseReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[79]
+		mi := &file_config_service_proto_msgTypes[75]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4920,7 +4668,7 @@ func (x *UpdateHookReleaseReq) String() string {
 func (*UpdateHookReleaseReq) ProtoMessage() {}
 
 func (x *UpdateHookReleaseReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[79]
+	mi := &file_config_service_proto_msgTypes[75]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4933,7 +4681,7 @@ func (x *UpdateHookReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateHookReleaseReq.ProtoReflect.Descriptor instead.
 func (*UpdateHookReleaseReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{79}
+	return file_config_service_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *UpdateHookReleaseReq) GetBizId() uint32 {
@@ -4987,7 +4735,7 @@ type UpdateHookReleaseResp struct {
 func (x *UpdateHookReleaseResp) Reset() {
 	*x = UpdateHookReleaseResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[80]
+		mi := &file_config_service_proto_msgTypes[76]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5000,7 +4748,7 @@ func (x *UpdateHookReleaseResp) String() string {
 func (*UpdateHookReleaseResp) ProtoMessage() {}
 
 func (x *UpdateHookReleaseResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[80]
+	mi := &file_config_service_proto_msgTypes[76]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5013,7 +4761,7 @@ func (x *UpdateHookReleaseResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateHookReleaseResp.ProtoReflect.Descriptor instead.
 func (*UpdateHookReleaseResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{80}
+	return file_config_service_proto_rawDescGZIP(), []int{76}
 }
 
 type ListHookReleasesReferencesReq struct {
@@ -5031,7 +4779,7 @@ type ListHookReleasesReferencesReq struct {
 func (x *ListHookReleasesReferencesReq) Reset() {
 	*x = ListHookReleasesReferencesReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[81]
+		mi := &file_config_service_proto_msgTypes[77]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5044,7 +4792,7 @@ func (x *ListHookReleasesReferencesReq) String() string {
 func (*ListHookReleasesReferencesReq) ProtoMessage() {}
 
 func (x *ListHookReleasesReferencesReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[81]
+	mi := &file_config_service_proto_msgTypes[77]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5057,7 +4805,7 @@ func (x *ListHookReleasesReferencesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHookReleasesReferencesReq.ProtoReflect.Descriptor instead.
 func (*ListHookReleasesReferencesReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{81}
+	return file_config_service_proto_rawDescGZIP(), []int{77}
 }
 
 func (x *ListHookReleasesReferencesReq) GetBizId() uint32 {
@@ -5107,7 +4855,7 @@ type ListHookReleasesReferencesResp struct {
 func (x *ListHookReleasesReferencesResp) Reset() {
 	*x = ListHookReleasesReferencesResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[82]
+		mi := &file_config_service_proto_msgTypes[78]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5120,7 +4868,7 @@ func (x *ListHookReleasesReferencesResp) String() string {
 func (*ListHookReleasesReferencesResp) ProtoMessage() {}
 
 func (x *ListHookReleasesReferencesResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[82]
+	mi := &file_config_service_proto_msgTypes[78]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5133,7 +4881,7 @@ func (x *ListHookReleasesReferencesResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHookReleasesReferencesResp.ProtoReflect.Descriptor instead.
 func (*ListHookReleasesReferencesResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{82}
+	return file_config_service_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *ListHookReleasesReferencesResp) GetCount() uint32 {
@@ -5163,7 +4911,7 @@ type CreateTemplateSpaceReq struct {
 func (x *CreateTemplateSpaceReq) Reset() {
 	*x = CreateTemplateSpaceReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[83]
+		mi := &file_config_service_proto_msgTypes[79]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5176,7 +4924,7 @@ func (x *CreateTemplateSpaceReq) String() string {
 func (*CreateTemplateSpaceReq) ProtoMessage() {}
 
 func (x *CreateTemplateSpaceReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[83]
+	mi := &file_config_service_proto_msgTypes[79]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5189,7 +4937,7 @@ func (x *CreateTemplateSpaceReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTemplateSpaceReq.ProtoReflect.Descriptor instead.
 func (*CreateTemplateSpaceReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{83}
+	return file_config_service_proto_rawDescGZIP(), []int{79}
 }
 
 func (x *CreateTemplateSpaceReq) GetBizId() uint32 {
@@ -5224,7 +4972,7 @@ type CreateTemplateSpaceResp struct {
 func (x *CreateTemplateSpaceResp) Reset() {
 	*x = CreateTemplateSpaceResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[84]
+		mi := &file_config_service_proto_msgTypes[80]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5237,7 +4985,7 @@ func (x *CreateTemplateSpaceResp) String() string {
 func (*CreateTemplateSpaceResp) ProtoMessage() {}
 
 func (x *CreateTemplateSpaceResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[84]
+	mi := &file_config_service_proto_msgTypes[80]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5250,7 +4998,7 @@ func (x *CreateTemplateSpaceResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTemplateSpaceResp.ProtoReflect.Descriptor instead.
 func (*CreateTemplateSpaceResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{84}
+	return file_config_service_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *CreateTemplateSpaceResp) GetId() uint32 {
@@ -5273,7 +5021,7 @@ type UpdateTemplateSpaceReq struct {
 func (x *UpdateTemplateSpaceReq) Reset() {
 	*x = UpdateTemplateSpaceReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[85]
+		mi := &file_config_service_proto_msgTypes[81]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5286,7 +5034,7 @@ func (x *UpdateTemplateSpaceReq) String() string {
 func (*UpdateTemplateSpaceReq) ProtoMessage() {}
 
 func (x *UpdateTemplateSpaceReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[85]
+	mi := &file_config_service_proto_msgTypes[81]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5299,7 +5047,7 @@ func (x *UpdateTemplateSpaceReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTemplateSpaceReq.ProtoReflect.Descriptor instead.
 func (*UpdateTemplateSpaceReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{85}
+	return file_config_service_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *UpdateTemplateSpaceReq) GetBizId() uint32 {
@@ -5332,7 +5080,7 @@ type UpdateTemplateSpaceResp struct {
 func (x *UpdateTemplateSpaceResp) Reset() {
 	*x = UpdateTemplateSpaceResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[86]
+		mi := &file_config_service_proto_msgTypes[82]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5345,7 +5093,7 @@ func (x *UpdateTemplateSpaceResp) String() string {
 func (*UpdateTemplateSpaceResp) ProtoMessage() {}
 
 func (x *UpdateTemplateSpaceResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[86]
+	mi := &file_config_service_proto_msgTypes[82]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5358,7 +5106,7 @@ func (x *UpdateTemplateSpaceResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTemplateSpaceResp.ProtoReflect.Descriptor instead.
 func (*UpdateTemplateSpaceResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{86}
+	return file_config_service_proto_rawDescGZIP(), []int{82}
 }
 
 type DeleteTemplateSpaceReq struct {
@@ -5373,7 +5121,7 @@ type DeleteTemplateSpaceReq struct {
 func (x *DeleteTemplateSpaceReq) Reset() {
 	*x = DeleteTemplateSpaceReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[87]
+		mi := &file_config_service_proto_msgTypes[83]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5386,7 +5134,7 @@ func (x *DeleteTemplateSpaceReq) String() string {
 func (*DeleteTemplateSpaceReq) ProtoMessage() {}
 
 func (x *DeleteTemplateSpaceReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[87]
+	mi := &file_config_service_proto_msgTypes[83]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5399,7 +5147,7 @@ func (x *DeleteTemplateSpaceReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateSpaceReq.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateSpaceReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{87}
+	return file_config_service_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *DeleteTemplateSpaceReq) GetBizId() uint32 {
@@ -5425,7 +5173,7 @@ type DeleteTemplateSpaceResp struct {
 func (x *DeleteTemplateSpaceResp) Reset() {
 	*x = DeleteTemplateSpaceResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[88]
+		mi := &file_config_service_proto_msgTypes[84]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5438,7 +5186,7 @@ func (x *DeleteTemplateSpaceResp) String() string {
 func (*DeleteTemplateSpaceResp) ProtoMessage() {}
 
 func (x *DeleteTemplateSpaceResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[88]
+	mi := &file_config_service_proto_msgTypes[84]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5451,7 +5199,7 @@ func (x *DeleteTemplateSpaceResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateSpaceResp.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateSpaceResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{88}
+	return file_config_service_proto_rawDescGZIP(), []int{84}
 }
 
 type ListTemplateSpacesReq struct {
@@ -5467,7 +5215,7 @@ type ListTemplateSpacesReq struct {
 func (x *ListTemplateSpacesReq) Reset() {
 	*x = ListTemplateSpacesReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[89]
+		mi := &file_config_service_proto_msgTypes[85]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5480,7 +5228,7 @@ func (x *ListTemplateSpacesReq) String() string {
 func (*ListTemplateSpacesReq) ProtoMessage() {}
 
 func (x *ListTemplateSpacesReq) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[89]
+	mi := &file_config_service_proto_msgTypes[85]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5493,7 +5241,7 @@ func (x *ListTemplateSpacesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplateSpacesReq.ProtoReflect.Descriptor instead.
 func (*ListTemplateSpacesReq) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{89}
+	return file_config_service_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *ListTemplateSpacesReq) GetBizId() uint32 {
@@ -5529,7 +5277,7 @@ type ListTemplateSpacesResp struct {
 func (x *ListTemplateSpacesResp) Reset() {
 	*x = ListTemplateSpacesResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_config_service_proto_msgTypes[90]
+		mi := &file_config_service_proto_msgTypes[86]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5542,7 +5290,7 @@ func (x *ListTemplateSpacesResp) String() string {
 func (*ListTemplateSpacesResp) ProtoMessage() {}
 
 func (x *ListTemplateSpacesResp) ProtoReflect() protoreflect.Message {
-	mi := &file_config_service_proto_msgTypes[90]
+	mi := &file_config_service_proto_msgTypes[86]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5555,7 +5303,7 @@ func (x *ListTemplateSpacesResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplateSpacesResp.ProtoReflect.Descriptor instead.
 func (*ListTemplateSpacesResp) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{90}
+	return file_config_service_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *ListTemplateSpacesResp) GetCount() uint32 {
@@ -5737,7 +5485,11 @@ type CreateTemplateReq struct {
 func (x *CreateTemplateReq) Reset() {
 	*x = CreateTemplateReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[94]
+=======
+		mi := &file_config_service_proto_msgTypes[87]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5750,7 +5502,11 @@ func (x *CreateTemplateReq) String() string {
 func (*CreateTemplateReq) ProtoMessage() {}
 
 func (x *CreateTemplateReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[94]
+=======
+	mi := &file_config_service_proto_msgTypes[87]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5763,7 +5519,11 @@ func (x *CreateTemplateReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTemplateReq.ProtoReflect.Descriptor instead.
 func (*CreateTemplateReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{94}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{87}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *CreateTemplateReq) GetBizId() uint32 {
@@ -5875,7 +5635,11 @@ type CreateTemplateResp struct {
 func (x *CreateTemplateResp) Reset() {
 	*x = CreateTemplateResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[95]
+=======
+		mi := &file_config_service_proto_msgTypes[88]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5888,7 +5652,11 @@ func (x *CreateTemplateResp) String() string {
 func (*CreateTemplateResp) ProtoMessage() {}
 
 func (x *CreateTemplateResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[95]
+=======
+	mi := &file_config_service_proto_msgTypes[88]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5901,7 +5669,11 @@ func (x *CreateTemplateResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTemplateResp.ProtoReflect.Descriptor instead.
 func (*CreateTemplateResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{95}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{88}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *CreateTemplateResp) GetId() uint32 {
@@ -5925,7 +5697,11 @@ type UpdateTemplateReq struct {
 func (x *UpdateTemplateReq) Reset() {
 	*x = UpdateTemplateReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[96]
+=======
+		mi := &file_config_service_proto_msgTypes[89]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5938,7 +5714,11 @@ func (x *UpdateTemplateReq) String() string {
 func (*UpdateTemplateReq) ProtoMessage() {}
 
 func (x *UpdateTemplateReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[96]
+=======
+	mi := &file_config_service_proto_msgTypes[89]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5951,7 +5731,11 @@ func (x *UpdateTemplateReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTemplateReq.ProtoReflect.Descriptor instead.
 func (*UpdateTemplateReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{96}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{89}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *UpdateTemplateReq) GetBizId() uint32 {
@@ -5991,7 +5775,11 @@ type UpdateTemplateResp struct {
 func (x *UpdateTemplateResp) Reset() {
 	*x = UpdateTemplateResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[97]
+=======
+		mi := &file_config_service_proto_msgTypes[90]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6004,7 +5792,11 @@ func (x *UpdateTemplateResp) String() string {
 func (*UpdateTemplateResp) ProtoMessage() {}
 
 func (x *UpdateTemplateResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[97]
+=======
+	mi := &file_config_service_proto_msgTypes[90]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6017,7 +5809,11 @@ func (x *UpdateTemplateResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTemplateResp.ProtoReflect.Descriptor instead.
 func (*UpdateTemplateResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{97}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{90}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 type DeleteTemplateReq struct {
@@ -6033,7 +5829,11 @@ type DeleteTemplateReq struct {
 func (x *DeleteTemplateReq) Reset() {
 	*x = DeleteTemplateReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[98]
+=======
+		mi := &file_config_service_proto_msgTypes[91]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6046,7 +5846,11 @@ func (x *DeleteTemplateReq) String() string {
 func (*DeleteTemplateReq) ProtoMessage() {}
 
 func (x *DeleteTemplateReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[98]
+=======
+	mi := &file_config_service_proto_msgTypes[91]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6059,7 +5863,11 @@ func (x *DeleteTemplateReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateReq.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{98}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{91}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *DeleteTemplateReq) GetBizId() uint32 {
@@ -6092,7 +5900,11 @@ type DeleteTemplateResp struct {
 func (x *DeleteTemplateResp) Reset() {
 	*x = DeleteTemplateResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[99]
+=======
+		mi := &file_config_service_proto_msgTypes[92]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6105,7 +5917,11 @@ func (x *DeleteTemplateResp) String() string {
 func (*DeleteTemplateResp) ProtoMessage() {}
 
 func (x *DeleteTemplateResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[99]
+=======
+	mi := &file_config_service_proto_msgTypes[92]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6118,7 +5934,11 @@ func (x *DeleteTemplateResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateResp.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{99}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{92}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 type ListTemplatesReq struct {
@@ -6135,7 +5955,11 @@ type ListTemplatesReq struct {
 func (x *ListTemplatesReq) Reset() {
 	*x = ListTemplatesReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[100]
+=======
+		mi := &file_config_service_proto_msgTypes[93]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6148,7 +5972,11 @@ func (x *ListTemplatesReq) String() string {
 func (*ListTemplatesReq) ProtoMessage() {}
 
 func (x *ListTemplatesReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[100]
+=======
+	mi := &file_config_service_proto_msgTypes[93]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6161,7 +5989,11 @@ func (x *ListTemplatesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplatesReq.ProtoReflect.Descriptor instead.
 func (*ListTemplatesReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{100}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{93}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListTemplatesReq) GetBizId() uint32 {
@@ -6204,7 +6036,11 @@ type ListTemplatesResp struct {
 func (x *ListTemplatesResp) Reset() {
 	*x = ListTemplatesResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[101]
+=======
+		mi := &file_config_service_proto_msgTypes[94]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6217,7 +6053,11 @@ func (x *ListTemplatesResp) String() string {
 func (*ListTemplatesResp) ProtoMessage() {}
 
 func (x *ListTemplatesResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[101]
+=======
+	mi := &file_config_service_proto_msgTypes[94]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6230,7 +6070,11 @@ func (x *ListTemplatesResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplatesResp.ProtoReflect.Descriptor instead.
 func (*ListTemplatesResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{101}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{94}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListTemplatesResp) GetCount() uint32 {
@@ -6271,7 +6115,11 @@ type CreateTemplateReleaseReq struct {
 func (x *CreateTemplateReleaseReq) Reset() {
 	*x = CreateTemplateReleaseReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[102]
+=======
+		mi := &file_config_service_proto_msgTypes[95]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6284,7 +6132,11 @@ func (x *CreateTemplateReleaseReq) String() string {
 func (*CreateTemplateReleaseReq) ProtoMessage() {}
 
 func (x *CreateTemplateReleaseReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[102]
+=======
+	mi := &file_config_service_proto_msgTypes[95]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6297,7 +6149,11 @@ func (x *CreateTemplateReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTemplateReleaseReq.ProtoReflect.Descriptor instead.
 func (*CreateTemplateReleaseReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{102}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{95}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *CreateTemplateReleaseReq) GetBizId() uint32 {
@@ -6409,7 +6265,11 @@ type CreateTemplateReleaseResp struct {
 func (x *CreateTemplateReleaseResp) Reset() {
 	*x = CreateTemplateReleaseResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[103]
+=======
+		mi := &file_config_service_proto_msgTypes[96]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6422,7 +6282,11 @@ func (x *CreateTemplateReleaseResp) String() string {
 func (*CreateTemplateReleaseResp) ProtoMessage() {}
 
 func (x *CreateTemplateReleaseResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[103]
+=======
+	mi := &file_config_service_proto_msgTypes[96]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6435,7 +6299,11 @@ func (x *CreateTemplateReleaseResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTemplateReleaseResp.ProtoReflect.Descriptor instead.
 func (*CreateTemplateReleaseResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{103}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{96}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *CreateTemplateReleaseResp) GetId() uint32 {
@@ -6460,7 +6328,11 @@ type ListTemplateReleasesReq struct {
 func (x *ListTemplateReleasesReq) Reset() {
 	*x = ListTemplateReleasesReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[104]
+=======
+		mi := &file_config_service_proto_msgTypes[97]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6473,7 +6345,11 @@ func (x *ListTemplateReleasesReq) String() string {
 func (*ListTemplateReleasesReq) ProtoMessage() {}
 
 func (x *ListTemplateReleasesReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[104]
+=======
+	mi := &file_config_service_proto_msgTypes[97]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6486,7 +6362,11 @@ func (x *ListTemplateReleasesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplateReleasesReq.ProtoReflect.Descriptor instead.
 func (*ListTemplateReleasesReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{104}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{97}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListTemplateReleasesReq) GetBizId() uint32 {
@@ -6536,7 +6416,11 @@ type ListTemplateReleasesResp struct {
 func (x *ListTemplateReleasesResp) Reset() {
 	*x = ListTemplateReleasesResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[105]
+=======
+		mi := &file_config_service_proto_msgTypes[98]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6549,7 +6433,11 @@ func (x *ListTemplateReleasesResp) String() string {
 func (*ListTemplateReleasesResp) ProtoMessage() {}
 
 func (x *ListTemplateReleasesResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[105]
+=======
+	mi := &file_config_service_proto_msgTypes[98]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6562,7 +6450,11 @@ func (x *ListTemplateReleasesResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplateReleasesResp.ProtoReflect.Descriptor instead.
 func (*ListTemplateReleasesResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{105}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{98}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListTemplateReleasesResp) GetCount() uint32 {
@@ -6593,7 +6485,11 @@ type DeleteTemplateReleaseReq struct {
 func (x *DeleteTemplateReleaseReq) Reset() {
 	*x = DeleteTemplateReleaseReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[106]
+=======
+		mi := &file_config_service_proto_msgTypes[99]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6606,7 +6502,11 @@ func (x *DeleteTemplateReleaseReq) String() string {
 func (*DeleteTemplateReleaseReq) ProtoMessage() {}
 
 func (x *DeleteTemplateReleaseReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[106]
+=======
+	mi := &file_config_service_proto_msgTypes[99]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6619,7 +6519,11 @@ func (x *DeleteTemplateReleaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateReleaseReq.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateReleaseReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{106}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{99}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *DeleteTemplateReleaseReq) GetBizId() uint32 {
@@ -6659,7 +6563,11 @@ type DeleteTemplateReleaseResp struct {
 func (x *DeleteTemplateReleaseResp) Reset() {
 	*x = DeleteTemplateReleaseResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[107]
+=======
+		mi := &file_config_service_proto_msgTypes[100]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6672,7 +6580,11 @@ func (x *DeleteTemplateReleaseResp) String() string {
 func (*DeleteTemplateReleaseResp) ProtoMessage() {}
 
 func (x *DeleteTemplateReleaseResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[107]
+=======
+	mi := &file_config_service_proto_msgTypes[100]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6685,7 +6597,11 @@ func (x *DeleteTemplateReleaseResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateReleaseResp.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateReleaseResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{107}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{100}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 type CreateGroupReq struct {
@@ -6705,7 +6621,11 @@ type CreateGroupReq struct {
 func (x *CreateGroupReq) Reset() {
 	*x = CreateGroupReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[108]
+=======
+		mi := &file_config_service_proto_msgTypes[101]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6718,7 +6638,11 @@ func (x *CreateGroupReq) String() string {
 func (*CreateGroupReq) ProtoMessage() {}
 
 func (x *CreateGroupReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[108]
+=======
+	mi := &file_config_service_proto_msgTypes[101]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6731,7 +6655,11 @@ func (x *CreateGroupReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateGroupReq.ProtoReflect.Descriptor instead.
 func (*CreateGroupReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{108}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{101}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *CreateGroupReq) GetBizId() uint32 {
@@ -6800,7 +6728,11 @@ type CreateTemplateSetReq struct {
 func (x *CreateTemplateSetReq) Reset() {
 	*x = CreateTemplateSetReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[109]
+=======
+		mi := &file_config_service_proto_msgTypes[102]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6813,7 +6745,11 @@ func (x *CreateTemplateSetReq) String() string {
 func (*CreateTemplateSetReq) ProtoMessage() {}
 
 func (x *CreateTemplateSetReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[109]
+=======
+	mi := &file_config_service_proto_msgTypes[102]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6826,7 +6762,11 @@ func (x *CreateTemplateSetReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTemplateSetReq.ProtoReflect.Descriptor instead.
 func (*CreateTemplateSetReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{109}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{102}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *CreateTemplateSetReq) GetBizId() uint32 {
@@ -6889,7 +6829,11 @@ type CreateTemplateSetResp struct {
 func (x *CreateTemplateSetResp) Reset() {
 	*x = CreateTemplateSetResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[110]
+=======
+		mi := &file_config_service_proto_msgTypes[103]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6902,7 +6846,11 @@ func (x *CreateTemplateSetResp) String() string {
 func (*CreateTemplateSetResp) ProtoMessage() {}
 
 func (x *CreateTemplateSetResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[110]
+=======
+	mi := &file_config_service_proto_msgTypes[103]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6915,7 +6863,11 @@ func (x *CreateTemplateSetResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTemplateSetResp.ProtoReflect.Descriptor instead.
 func (*CreateTemplateSetResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{110}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{103}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *CreateTemplateSetResp) GetId() uint32 {
@@ -6942,7 +6894,11 @@ type UpdateTemplateSetReq struct {
 func (x *UpdateTemplateSetReq) Reset() {
 	*x = UpdateTemplateSetReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[111]
+=======
+		mi := &file_config_service_proto_msgTypes[104]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6955,7 +6911,11 @@ func (x *UpdateTemplateSetReq) String() string {
 func (*UpdateTemplateSetReq) ProtoMessage() {}
 
 func (x *UpdateTemplateSetReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[111]
+=======
+	mi := &file_config_service_proto_msgTypes[104]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6968,7 +6928,11 @@ func (x *UpdateTemplateSetReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTemplateSetReq.ProtoReflect.Descriptor instead.
 func (*UpdateTemplateSetReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{111}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{104}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *UpdateTemplateSetReq) GetBizId() uint32 {
@@ -7029,7 +6993,11 @@ type UpdateTemplateSetResp struct {
 func (x *UpdateTemplateSetResp) Reset() {
 	*x = UpdateTemplateSetResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[112]
+=======
+		mi := &file_config_service_proto_msgTypes[105]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7042,7 +7010,11 @@ func (x *UpdateTemplateSetResp) String() string {
 func (*UpdateTemplateSetResp) ProtoMessage() {}
 
 func (x *UpdateTemplateSetResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[112]
+=======
+	mi := &file_config_service_proto_msgTypes[105]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7055,7 +7027,11 @@ func (x *UpdateTemplateSetResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTemplateSetResp.ProtoReflect.Descriptor instead.
 func (*UpdateTemplateSetResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{112}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{105}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 type DeleteTemplateSetReq struct {
@@ -7071,7 +7047,11 @@ type DeleteTemplateSetReq struct {
 func (x *DeleteTemplateSetReq) Reset() {
 	*x = DeleteTemplateSetReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[113]
+=======
+		mi := &file_config_service_proto_msgTypes[106]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7084,7 +7064,11 @@ func (x *DeleteTemplateSetReq) String() string {
 func (*DeleteTemplateSetReq) ProtoMessage() {}
 
 func (x *DeleteTemplateSetReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[113]
+=======
+	mi := &file_config_service_proto_msgTypes[106]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7097,7 +7081,11 @@ func (x *DeleteTemplateSetReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateSetReq.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateSetReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{113}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{106}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *DeleteTemplateSetReq) GetBizId() uint32 {
@@ -7130,7 +7118,11 @@ type DeleteTemplateSetResp struct {
 func (x *DeleteTemplateSetResp) Reset() {
 	*x = DeleteTemplateSetResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[114]
+=======
+		mi := &file_config_service_proto_msgTypes[107]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7143,7 +7135,11 @@ func (x *DeleteTemplateSetResp) String() string {
 func (*DeleteTemplateSetResp) ProtoMessage() {}
 
 func (x *DeleteTemplateSetResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[114]
+=======
+	mi := &file_config_service_proto_msgTypes[107]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7156,7 +7152,11 @@ func (x *DeleteTemplateSetResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTemplateSetResp.ProtoReflect.Descriptor instead.
 func (*DeleteTemplateSetResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{114}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{107}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 type ListTemplateSetsReq struct {
@@ -7173,7 +7173,11 @@ type ListTemplateSetsReq struct {
 func (x *ListTemplateSetsReq) Reset() {
 	*x = ListTemplateSetsReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[115]
+=======
+		mi := &file_config_service_proto_msgTypes[108]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7186,7 +7190,11 @@ func (x *ListTemplateSetsReq) String() string {
 func (*ListTemplateSetsReq) ProtoMessage() {}
 
 func (x *ListTemplateSetsReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[115]
+=======
+	mi := &file_config_service_proto_msgTypes[108]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7199,7 +7207,11 @@ func (x *ListTemplateSetsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplateSetsReq.ProtoReflect.Descriptor instead.
 func (*ListTemplateSetsReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{115}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{108}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListTemplateSetsReq) GetBizId() uint32 {
@@ -7242,7 +7254,11 @@ type ListTemplateSetsResp struct {
 func (x *ListTemplateSetsResp) Reset() {
 	*x = ListTemplateSetsResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[116]
+=======
+		mi := &file_config_service_proto_msgTypes[109]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7255,7 +7271,11 @@ func (x *ListTemplateSetsResp) String() string {
 func (*ListTemplateSetsResp) ProtoMessage() {}
 
 func (x *ListTemplateSetsResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[116]
+=======
+	mi := &file_config_service_proto_msgTypes[109]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7268,7 +7288,11 @@ func (x *ListTemplateSetsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTemplateSetsResp.ProtoReflect.Descriptor instead.
 func (*ListTemplateSetsResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{116}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{109}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListTemplateSetsResp) GetCount() uint32 {
@@ -7296,7 +7320,11 @@ type CreateGroupResp struct {
 func (x *CreateGroupResp) Reset() {
 	*x = CreateGroupResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[117]
+=======
+		mi := &file_config_service_proto_msgTypes[110]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7309,7 +7337,11 @@ func (x *CreateGroupResp) String() string {
 func (*CreateGroupResp) ProtoMessage() {}
 
 func (x *CreateGroupResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[117]
+=======
+	mi := &file_config_service_proto_msgTypes[110]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7322,7 +7354,11 @@ func (x *CreateGroupResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateGroupResp.ProtoReflect.Descriptor instead.
 func (*CreateGroupResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{117}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{110}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *CreateGroupResp) GetId() uint32 {
@@ -7350,7 +7386,11 @@ type UpdateGroupReq struct {
 func (x *UpdateGroupReq) Reset() {
 	*x = UpdateGroupReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[118]
+=======
+		mi := &file_config_service_proto_msgTypes[111]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7363,7 +7403,11 @@ func (x *UpdateGroupReq) String() string {
 func (*UpdateGroupReq) ProtoMessage() {}
 
 func (x *UpdateGroupReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[118]
+=======
+	mi := &file_config_service_proto_msgTypes[111]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7376,7 +7420,11 @@ func (x *UpdateGroupReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGroupReq.ProtoReflect.Descriptor instead.
 func (*UpdateGroupReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{118}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{111}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *UpdateGroupReq) GetBizId() uint32 {
@@ -7444,7 +7492,11 @@ type UpdateGroupResp struct {
 func (x *UpdateGroupResp) Reset() {
 	*x = UpdateGroupResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[119]
+=======
+		mi := &file_config_service_proto_msgTypes[112]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7457,7 +7509,11 @@ func (x *UpdateGroupResp) String() string {
 func (*UpdateGroupResp) ProtoMessage() {}
 
 func (x *UpdateGroupResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[119]
+=======
+	mi := &file_config_service_proto_msgTypes[112]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7470,7 +7526,11 @@ func (x *UpdateGroupResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGroupResp.ProtoReflect.Descriptor instead.
 func (*UpdateGroupResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{119}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{112}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 type DeleteGroupReq struct {
@@ -7485,7 +7545,11 @@ type DeleteGroupReq struct {
 func (x *DeleteGroupReq) Reset() {
 	*x = DeleteGroupReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[120]
+=======
+		mi := &file_config_service_proto_msgTypes[113]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7498,7 +7562,11 @@ func (x *DeleteGroupReq) String() string {
 func (*DeleteGroupReq) ProtoMessage() {}
 
 func (x *DeleteGroupReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[120]
+=======
+	mi := &file_config_service_proto_msgTypes[113]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7511,7 +7579,11 @@ func (x *DeleteGroupReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteGroupReq.ProtoReflect.Descriptor instead.
 func (*DeleteGroupReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{120}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{113}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *DeleteGroupReq) GetBizId() uint32 {
@@ -7537,7 +7609,11 @@ type DeleteGroupResp struct {
 func (x *DeleteGroupResp) Reset() {
 	*x = DeleteGroupResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[121]
+=======
+		mi := &file_config_service_proto_msgTypes[114]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7550,7 +7626,11 @@ func (x *DeleteGroupResp) String() string {
 func (*DeleteGroupResp) ProtoMessage() {}
 
 func (x *DeleteGroupResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[121]
+=======
+	mi := &file_config_service_proto_msgTypes[114]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7563,7 +7643,11 @@ func (x *DeleteGroupResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteGroupResp.ProtoReflect.Descriptor instead.
 func (*DeleteGroupResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{121}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{114}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 type ListAllGroupsReq struct {
@@ -7577,7 +7661,11 @@ type ListAllGroupsReq struct {
 func (x *ListAllGroupsReq) Reset() {
 	*x = ListAllGroupsReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[122]
+=======
+		mi := &file_config_service_proto_msgTypes[115]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7590,7 +7678,11 @@ func (x *ListAllGroupsReq) String() string {
 func (*ListAllGroupsReq) ProtoMessage() {}
 
 func (x *ListAllGroupsReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[122]
+=======
+	mi := &file_config_service_proto_msgTypes[115]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7603,7 +7695,11 @@ func (x *ListAllGroupsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAllGroupsReq.ProtoReflect.Descriptor instead.
 func (*ListAllGroupsReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{122}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{115}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListAllGroupsReq) GetBizId() uint32 {
@@ -7624,7 +7720,11 @@ type ListAllGroupsResp struct {
 func (x *ListAllGroupsResp) Reset() {
 	*x = ListAllGroupsResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[123]
+=======
+		mi := &file_config_service_proto_msgTypes[116]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7637,7 +7737,11 @@ func (x *ListAllGroupsResp) String() string {
 func (*ListAllGroupsResp) ProtoMessage() {}
 
 func (x *ListAllGroupsResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[123]
+=======
+	mi := &file_config_service_proto_msgTypes[116]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7650,7 +7754,11 @@ func (x *ListAllGroupsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAllGroupsResp.ProtoReflect.Descriptor instead.
 func (*ListAllGroupsResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{123}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{116}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListAllGroupsResp) GetDetails() []*ListAllGroupsResp_ListAllGroupsData {
@@ -7672,7 +7780,11 @@ type ListAppGroupsReq struct {
 func (x *ListAppGroupsReq) Reset() {
 	*x = ListAppGroupsReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[124]
+=======
+		mi := &file_config_service_proto_msgTypes[117]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7685,7 +7797,11 @@ func (x *ListAppGroupsReq) String() string {
 func (*ListAppGroupsReq) ProtoMessage() {}
 
 func (x *ListAppGroupsReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[124]
+=======
+	mi := &file_config_service_proto_msgTypes[117]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7698,7 +7814,11 @@ func (x *ListAppGroupsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAppGroupsReq.ProtoReflect.Descriptor instead.
 func (*ListAppGroupsReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{124}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{117}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListAppGroupsReq) GetBizId() uint32 {
@@ -7726,7 +7846,11 @@ type ListAppGroupsResp struct {
 func (x *ListAppGroupsResp) Reset() {
 	*x = ListAppGroupsResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[125]
+=======
+		mi := &file_config_service_proto_msgTypes[118]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7739,7 +7863,11 @@ func (x *ListAppGroupsResp) String() string {
 func (*ListAppGroupsResp) ProtoMessage() {}
 
 func (x *ListAppGroupsResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[125]
+=======
+	mi := &file_config_service_proto_msgTypes[118]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7752,7 +7880,11 @@ func (x *ListAppGroupsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAppGroupsResp.ProtoReflect.Descriptor instead.
 func (*ListAppGroupsResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{125}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{118}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListAppGroupsResp) GetDetails() []*ListAppGroupsResp_ListAppGroupsData {
@@ -7776,7 +7908,11 @@ type ListGroupReleasedAppsReq struct {
 func (x *ListGroupReleasedAppsReq) Reset() {
 	*x = ListGroupReleasedAppsReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[126]
+=======
+		mi := &file_config_service_proto_msgTypes[119]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7789,7 +7925,11 @@ func (x *ListGroupReleasedAppsReq) String() string {
 func (*ListGroupReleasedAppsReq) ProtoMessage() {}
 
 func (x *ListGroupReleasedAppsReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[126]
+=======
+	mi := &file_config_service_proto_msgTypes[119]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7802,7 +7942,11 @@ func (x *ListGroupReleasedAppsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListGroupReleasedAppsReq.ProtoReflect.Descriptor instead.
 func (*ListGroupReleasedAppsReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{126}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{119}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListGroupReleasedAppsReq) GetBizId() uint32 {
@@ -7845,7 +7989,11 @@ type ListGroupReleasedAppsResp struct {
 func (x *ListGroupReleasedAppsResp) Reset() {
 	*x = ListGroupReleasedAppsResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[127]
+=======
+		mi := &file_config_service_proto_msgTypes[120]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7858,7 +8006,11 @@ func (x *ListGroupReleasedAppsResp) String() string {
 func (*ListGroupReleasedAppsResp) ProtoMessage() {}
 
 func (x *ListGroupReleasedAppsResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[127]
+=======
+	mi := &file_config_service_proto_msgTypes[120]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7871,7 +8023,11 @@ func (x *ListGroupReleasedAppsResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListGroupReleasedAppsResp.ProtoReflect.Descriptor instead.
 func (*ListGroupReleasedAppsResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{127}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{120}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListGroupReleasedAppsResp) GetCount() uint32 {
@@ -7905,7 +8061,11 @@ type PublishReq struct {
 func (x *PublishReq) Reset() {
 	*x = PublishReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[128]
+=======
+		mi := &file_config_service_proto_msgTypes[121]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7918,7 +8078,11 @@ func (x *PublishReq) String() string {
 func (*PublishReq) ProtoMessage() {}
 
 func (x *PublishReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[128]
+=======
+	mi := &file_config_service_proto_msgTypes[121]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7931,7 +8095,11 @@ func (x *PublishReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishReq.ProtoReflect.Descriptor instead.
 func (*PublishReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{128}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{121}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *PublishReq) GetBizId() uint32 {
@@ -7999,7 +8167,11 @@ type GenerateReleaseAndPublishReq struct {
 func (x *GenerateReleaseAndPublishReq) Reset() {
 	*x = GenerateReleaseAndPublishReq{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[129]
+=======
+		mi := &file_config_service_proto_msgTypes[122]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8012,7 +8184,11 @@ func (x *GenerateReleaseAndPublishReq) String() string {
 func (*GenerateReleaseAndPublishReq) ProtoMessage() {}
 
 func (x *GenerateReleaseAndPublishReq) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[129]
+=======
+	mi := &file_config_service_proto_msgTypes[122]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8025,7 +8201,11 @@ func (x *GenerateReleaseAndPublishReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateReleaseAndPublishReq.ProtoReflect.Descriptor instead.
 func (*GenerateReleaseAndPublishReq) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{129}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{122}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *GenerateReleaseAndPublishReq) GetBizId() uint32 {
@@ -8081,7 +8261,11 @@ type GenerateReleaseAndPublishResp struct {
 func (x *GenerateReleaseAndPublishResp) Reset() {
 	*x = GenerateReleaseAndPublishResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[130]
+=======
+		mi := &file_config_service_proto_msgTypes[123]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8094,7 +8278,11 @@ func (x *GenerateReleaseAndPublishResp) String() string {
 func (*GenerateReleaseAndPublishResp) ProtoMessage() {}
 
 func (x *GenerateReleaseAndPublishResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[130]
+=======
+	mi := &file_config_service_proto_msgTypes[123]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8107,7 +8295,11 @@ func (x *GenerateReleaseAndPublishResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateReleaseAndPublishResp.ProtoReflect.Descriptor instead.
 func (*GenerateReleaseAndPublishResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{130}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{123}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *GenerateReleaseAndPublishResp) GetId() uint32 {
@@ -8128,7 +8320,11 @@ type PublishResp struct {
 func (x *PublishResp) Reset() {
 	*x = PublishResp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[131]
+=======
+		mi := &file_config_service_proto_msgTypes[124]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8141,7 +8337,11 @@ func (x *PublishResp) String() string {
 func (*PublishResp) ProtoMessage() {}
 
 func (x *PublishResp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[131]
+=======
+	mi := &file_config_service_proto_msgTypes[124]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8154,7 +8354,11 @@ func (x *PublishResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishResp.ProtoReflect.Descriptor instead.
 func (*PublishResp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{131}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{124}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *PublishResp) GetId() uint32 {
@@ -8184,7 +8388,11 @@ type BatchUpsertConfigItemsReq_ConfigItem struct {
 func (x *BatchUpsertConfigItemsReq_ConfigItem) Reset() {
 	*x = BatchUpsertConfigItemsReq_ConfigItem{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[132]
+=======
+		mi := &file_config_service_proto_msgTypes[125]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8197,7 +8405,11 @@ func (x *BatchUpsertConfigItemsReq_ConfigItem) String() string {
 func (*BatchUpsertConfigItemsReq_ConfigItem) ProtoMessage() {}
 
 func (x *BatchUpsertConfigItemsReq_ConfigItem) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[132]
+=======
+	mi := &file_config_service_proto_msgTypes[125]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8294,7 +8506,11 @@ type GetHookInfoSpec_Releases struct {
 func (x *GetHookInfoSpec_Releases) Reset() {
 	*x = GetHookInfoSpec_Releases{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[133]
+=======
+		mi := &file_config_service_proto_msgTypes[126]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8307,7 +8523,11 @@ func (x *GetHookInfoSpec_Releases) String() string {
 func (*GetHookInfoSpec_Releases) ProtoMessage() {}
 
 func (x *GetHookInfoSpec_Releases) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[133]
+=======
+	mi := &file_config_service_proto_msgTypes[126]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8320,7 +8540,7 @@ func (x *GetHookInfoSpec_Releases) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHookInfoSpec_Releases.ProtoReflect.Descriptor instead.
 func (*GetHookInfoSpec_Releases) Descriptor() ([]byte, []int) {
-	return file_config_service_proto_rawDescGZIP(), []int{77, 0}
+	return file_config_service_proto_rawDescGZIP(), []int{73, 0}
 }
 
 func (x *GetHookInfoSpec_Releases) GetNotReleaseId() uint32 {
@@ -8347,7 +8567,11 @@ type ListAllGroupsResp_ListAllGroupsData struct {
 func (x *ListAllGroupsResp_ListAllGroupsData) Reset() {
 	*x = ListAllGroupsResp_ListAllGroupsData{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[134]
+=======
+		mi := &file_config_service_proto_msgTypes[127]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8360,7 +8584,11 @@ func (x *ListAllGroupsResp_ListAllGroupsData) String() string {
 func (*ListAllGroupsResp_ListAllGroupsData) ProtoMessage() {}
 
 func (x *ListAllGroupsResp_ListAllGroupsData) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[134]
+=======
+	mi := &file_config_service_proto_msgTypes[127]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8373,7 +8601,11 @@ func (x *ListAllGroupsResp_ListAllGroupsData) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use ListAllGroupsResp_ListAllGroupsData.ProtoReflect.Descriptor instead.
 func (*ListAllGroupsResp_ListAllGroupsData) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{123, 0}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{116, 0}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListAllGroupsResp_ListAllGroupsData) GetId() uint32 {
@@ -8437,7 +8669,11 @@ type ListAllGroupsResp_ListAllGroupsData_BindApp struct {
 func (x *ListAllGroupsResp_ListAllGroupsData_BindApp) Reset() {
 	*x = ListAllGroupsResp_ListAllGroupsData_BindApp{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[135]
+=======
+		mi := &file_config_service_proto_msgTypes[128]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8450,7 +8686,11 @@ func (x *ListAllGroupsResp_ListAllGroupsData_BindApp) String() string {
 func (*ListAllGroupsResp_ListAllGroupsData_BindApp) ProtoMessage() {}
 
 func (x *ListAllGroupsResp_ListAllGroupsData_BindApp) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[135]
+=======
+	mi := &file_config_service_proto_msgTypes[128]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8463,7 +8703,11 @@ func (x *ListAllGroupsResp_ListAllGroupsData_BindApp) ProtoReflect() protoreflec
 
 // Deprecated: Use ListAllGroupsResp_ListAllGroupsData_BindApp.ProtoReflect.Descriptor instead.
 func (*ListAllGroupsResp_ListAllGroupsData_BindApp) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{123, 0, 0}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{116, 0, 0}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListAllGroupsResp_ListAllGroupsData_BindApp) GetId() uint32 {
@@ -8497,7 +8741,11 @@ type ListAppGroupsResp_ListAppGroupsData struct {
 func (x *ListAppGroupsResp_ListAppGroupsData) Reset() {
 	*x = ListAppGroupsResp_ListAppGroupsData{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[136]
+=======
+		mi := &file_config_service_proto_msgTypes[129]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8510,7 +8758,11 @@ func (x *ListAppGroupsResp_ListAppGroupsData) String() string {
 func (*ListAppGroupsResp_ListAppGroupsData) ProtoMessage() {}
 
 func (x *ListAppGroupsResp_ListAppGroupsData) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[136]
+=======
+	mi := &file_config_service_proto_msgTypes[129]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8523,7 +8775,11 @@ func (x *ListAppGroupsResp_ListAppGroupsData) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use ListAppGroupsResp_ListAppGroupsData.ProtoReflect.Descriptor instead.
 func (*ListAppGroupsResp_ListAppGroupsData) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{125, 0}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{118, 0}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListAppGroupsResp_ListAppGroupsData) GetGroupId() uint32 {
@@ -8590,7 +8846,11 @@ type ListGroupReleasedAppsResp_ListGroupReleasedAppsData struct {
 func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) Reset() {
 	*x = ListGroupReleasedAppsResp_ListGroupReleasedAppsData{}
 	if protoimpl.UnsafeEnabled {
+<<<<<<< HEAD
 		mi := &file_config_service_proto_msgTypes[137]
+=======
+		mi := &file_config_service_proto_msgTypes[130]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8603,7 +8863,11 @@ func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) String() string {
 func (*ListGroupReleasedAppsResp_ListGroupReleasedAppsData) ProtoMessage() {}
 
 func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) ProtoReflect() protoreflect.Message {
+<<<<<<< HEAD
 	mi := &file_config_service_proto_msgTypes[137]
+=======
+	mi := &file_config_service_proto_msgTypes[130]
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8616,7 +8880,11 @@ func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) ProtoReflect() pro
 
 // Deprecated: Use ListGroupReleasedAppsResp_ListGroupReleasedAppsData.ProtoReflect.Descriptor instead.
 func (*ListGroupReleasedAppsResp_ListGroupReleasedAppsData) Descriptor() ([]byte, []int) {
+<<<<<<< HEAD
 	return file_config_service_proto_rawDescGZIP(), []int{127, 0}
+=======
+	return file_config_service_proto_rawDescGZIP(), []int{120, 0}
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func (x *ListGroupReleasedAppsResp_ListGroupReleasedAppsData) GetAppId() uint32 {
@@ -8968,33 +9236,6 @@ var file_config_service_proto_rawDesc = []byte{
 	0x73, 0x70, 0x12, 0x34, 0x0a, 0x07, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x01, 0x20,
 	0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x70, 0x62, 0x63, 0x69, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43,
 	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65, 0x6d, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52,
-	0x07, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x22, 0x97, 0x01, 0x0a, 0x10, 0x43, 0x72, 0x65,
-	0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x12, 0x15, 0x0a,
-	0x06, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x62,
-	0x69, 0x7a, 0x49, 0x64, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x12, 0x24, 0x0a, 0x0e, 0x63,
-	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x5f, 0x69, 0x74, 0x65, 0x6d, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0d, 0x52, 0x0c, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65, 0x6d, 0x49,
-	0x64, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x69, 0x67, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x04, 0x73, 0x69, 0x67, 0x6e, 0x12, 0x1b, 0x0a, 0x09, 0x62, 0x79, 0x74, 0x65, 0x5f, 0x73, 0x69,
-	0x7a, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x62, 0x79, 0x74, 0x65, 0x53, 0x69,
-	0x7a, 0x65, 0x22, 0x23, 0x0a, 0x11, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x74,
-	0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0d, 0x52, 0x02, 0x69, 0x64, 0x22, 0x96, 0x01, 0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74,
-	0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x71, 0x12, 0x15, 0x0a, 0x06, 0x62,
-	0x69, 0x7a, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x62, 0x69, 0x7a,
-	0x49, 0x64, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x0d, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x12, 0x2f, 0x0a, 0x06, 0x66, 0x69, 0x6c,
-	0x74, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
-	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x53, 0x74, 0x72, 0x75,
-	0x63, 0x74, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x24, 0x0a, 0x04, 0x70, 0x61,
-	0x67, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x70, 0x62, 0x62, 0x61, 0x73,
-	0x65, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x50, 0x61, 0x67, 0x65, 0x52, 0x04, 0x70, 0x61, 0x67, 0x65,
-	0x22, 0x56, 0x0a, 0x10, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0d, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x2c, 0x0a, 0x07, 0x64, 0x65,
-	0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x62,
-	0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x52,
 	0x07, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x22, 0x85, 0x01, 0x0a, 0x13, 0x43, 0x72, 0x65,
 	0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x71,
 	0x12, 0x15, 0x0a, 0x06, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
@@ -9593,6 +9834,7 @@ var file_config_service_proto_rawDesc = []byte{
 	0x65, 0x71, 0x12, 0x15, 0x0a, 0x06, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x0d, 0x52, 0x05, 0x62, 0x69, 0x7a, 0x49, 0x64, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70,
 	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64,
+<<<<<<< HEAD
 	0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x03,
 	0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x49, 0x64, 0x12,
 	0x12, 0x0a, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6d,
@@ -9664,6 +9906,58 @@ var file_config_service_proto_rawDesc = []byte{
 	0x74, 0x41, 0x70, 0x70, 0x73, 0x42, 0x79, 0x53, 0x70, 0x61, 0x63, 0x65, 0x52, 0x65, 0x73, 0x74,
 	0x12, 0x1c, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x70, 0x70, 0x73,
 	0x42, 0x79, 0x53, 0x70, 0x61, 0x63, 0x65, 0x52, 0x65, 0x73, 0x74, 0x52, 0x65, 0x71, 0x1a, 0x12,
+=======
+	0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x4e,
+	0x61, 0x6d, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f, 0x6d,
+	0x65, 0x6d, 0x6f, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x4d, 0x65, 0x6d, 0x6f, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x6c, 0x6c, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x03, 0x61, 0x6c, 0x6c, 0x12, 0x16, 0x0a, 0x06, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x09, 0x52, 0x06, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x73,
+	0x22, 0x2f, 0x0a, 0x1d, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65,
+	0x61, 0x73, 0x65, 0x41, 0x6e, 0x64, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x52, 0x65, 0x73,
+	0x70, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x02, 0x69,
+	0x64, 0x22, 0x1d, 0x0a, 0x0b, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x52, 0x65, 0x73, 0x70,
+	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x02, 0x69, 0x64,
+	0x32, 0xf6, 0x46, 0x0a, 0x06, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x6e, 0x0a, 0x09, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x70, 0x70, 0x12, 0x12, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x70, 0x70, 0x52, 0x65, 0x71, 0x1a, 0x13, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x41, 0x70, 0x70, 0x52, 0x65, 0x73,
+	0x70, 0x22, 0x38, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x32, 0x22, 0x2d, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x2f, 0x61, 0x70, 0x70, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f,
+	0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x7a, 0x0a, 0x09, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x41, 0x70, 0x70, 0x12, 0x12, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x41, 0x70, 0x70, 0x52, 0x65, 0x71, 0x1a, 0x13, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x41, 0x70, 0x70, 0x52, 0x65, 0x73,
+	0x70, 0x22, 0x44, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3e, 0x1a, 0x39, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x2f, 0x61, 0x70, 0x70, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x2f,
+	0x7b, 0x69, 0x64, 0x7d, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a,
+	0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x77, 0x0a, 0x09, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x41, 0x70, 0x70, 0x12, 0x12, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65,
+	0x74, 0x65, 0x41, 0x70, 0x70, 0x52, 0x65, 0x71, 0x1a, 0x13, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x41, 0x70, 0x70, 0x52, 0x65, 0x73, 0x70, 0x22, 0x41, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x3b, 0x2a, 0x39, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x2f, 0x61, 0x70, 0x70,
+	0x2f, 0x61, 0x70, 0x70, 0x2f, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x69, 0x64, 0x7d,
+	0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d,
+	0x12, 0x69, 0x0a, 0x06, 0x47, 0x65, 0x74, 0x41, 0x70, 0x70, 0x12, 0x0f, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x47, 0x65, 0x74, 0x41, 0x70, 0x70, 0x52, 0x65, 0x71, 0x1a, 0x0a, 0x2e, 0x70, 0x62,
+	0x61, 0x70, 0x70, 0x2e, 0x41, 0x70, 0x70, 0x22, 0x42, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3c, 0x12,
+	0x3a, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f,
+	0x67, 0x65, 0x74, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x61, 0x70, 0x70, 0x2f, 0x61, 0x70, 0x70, 0x5f,
+	0x69, 0x64, 0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x62, 0x69, 0x7a, 0x5f,
+	0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x71, 0x0a, 0x0c, 0x47,
+	0x65, 0x74, 0x41, 0x70, 0x70, 0x42, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x15, 0x2e, 0x70, 0x62,
+	0x63, 0x73, 0x2e, 0x47, 0x65, 0x74, 0x41, 0x70, 0x70, 0x42, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x52,
+	0x65, 0x71, 0x1a, 0x0a, 0x2e, 0x70, 0x62, 0x61, 0x70, 0x70, 0x2e, 0x41, 0x70, 0x70, 0x22, 0x3e,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x38, 0x12, 0x36, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f,
+	0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f,
+	0x69, 0x64, 0x7d, 0x2f, 0x61, 0x70, 0x70, 0x73, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2f, 0x6e,
+	0x61, 0x6d, 0x65, 0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x7d, 0x12, 0x63,
+	0x0a, 0x0c, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x73, 0x74, 0x12, 0x15,
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65,
 	0x73, 0x70, 0x22, 0x33, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2d, 0x12, 0x2b, 0x2f, 0x61, 0x70, 0x69,
 	0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x6c, 0x69, 0x73, 0x74, 0x2f,
@@ -9729,6 +10023,7 @@ var file_config_service_proto_rawDesc = []byte{
 	0xe4, 0x93, 0x02, 0x38, 0x12, 0x36, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f,
 	0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64,
 	0x7d, 0x2f, 0x61, 0x70, 0x70, 0x73, 0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f,
+<<<<<<< HEAD
 	0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x5f, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x12, 0x8f, 0x01, 0x0a,
 	0x13, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65, 0x6d, 0x43,
 	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1c, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74,
@@ -9986,21 +10281,293 @@ var file_config_service_proto_rawDesc = []byte{
 	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x18, 0x2e, 0x70, 0x62,
 	0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
 	0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x54, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x4e, 0x22, 0x49, 0x2f,
+=======
+	0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x5f, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x2f, 0x7b, 0x63, 0x6f,
+	0x6e, 0x66, 0x69, 0x67, 0x5f, 0x69, 0x74, 0x65, 0x6d, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x86, 0x01,
+	0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65, 0x6d,
+	0x73, 0x12, 0x18, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6e,
+	0x66, 0x69, 0x67, 0x49, 0x74, 0x65, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x19, 0x2e, 0x70, 0x62,
+	0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65,
+	0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x3e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x38, 0x12, 0x36,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62,
+	0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x61, 0x70, 0x70, 0x73,
+	0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x5f, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x12, 0x8f, 0x01, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74, 0x43,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65, 0x6d, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1c,
+	0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x49, 0x74, 0x65, 0x6d, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x1a, 0x1d, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74,
+	0x65, 0x6d, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x22, 0x3b, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x35, 0x22, 0x30, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e,
+	0x66, 0x69, 0x67, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x5f, 0x69, 0x74, 0x65, 0x6d, 0x5f,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69,
+	0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x8c, 0x01, 0x0a, 0x10, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x48, 0x6f, 0x6f, 0x6b, 0x12, 0x19, 0x2e,
+	0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x71, 0x1a, 0x1a, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x48, 0x6f, 0x6f, 0x6b,
+	0x52, 0x65, 0x73, 0x70, 0x22, 0x41, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3b, 0x1a, 0x36, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a,
+	0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x61, 0x70, 0x70, 0x73, 0x2f, 0x7b,
+	0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x5f, 0x68,
+	0x6f, 0x6f, 0x6b, 0x73, 0x3a, 0x01, 0x2a, 0x12, 0x80, 0x01, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x43,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x48, 0x6f, 0x6f, 0x6b, 0x12, 0x16, 0x2e, 0x70, 0x62, 0x63, 0x73,
+	0x2e, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65,
+	0x71, 0x1a, 0x17, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x22, 0x3e, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x38, 0x12, 0x36, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f,
+	0x61, 0x70, 0x70, 0x73, 0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x63, 0x6f,
+	0x6e, 0x66, 0x69, 0x67, 0x5f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x12, 0xad, 0x01, 0x0a, 0x0c, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x12, 0x15, 0x2e, 0x70, 0x62,
+	0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52,
+	0x65, 0x71, 0x1a, 0x16, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x22, 0x6e, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x68, 0x22, 0x63, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x2f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74,
+	0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x5f, 0x69,
+	0x74, 0x65, 0x6d, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x5f, 0x69,
+	0x74, 0x65, 0x6d, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x2f, 0x7b,
+	0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b,
+	0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x88, 0x01, 0x0a, 0x0b, 0x4c,
+	0x69, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73, 0x12, 0x14, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71,
+	0x1a, 0x15, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d,
+	0x69, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x4c, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x46, 0x22,
+	0x41, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f,
+	0x6c, 0x69, 0x73, 0x74, 0x2f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x2f, 0x63, 0x6f, 0x6d, 0x6d,
+	0x69, 0x74, 0x2f, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x69,
+	0x64, 0x7d, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69,
+	0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x92, 0x01, 0x0a, 0x0d, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x16, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x1a,
+	0x17, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x50, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x4a,
+	0x22, 0x45, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x2f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x2f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x2f,
+	0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x2f, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x2f, 0x7b,
+	0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b,
+	0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x79, 0x0a, 0x0c, 0x4c, 0x69,
+	0x73, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x12, 0x15, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x52, 0x65,
+	0x71, 0x1a, 0x16, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x3a, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x34, 0x12, 0x32, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x61,
+	0x70, 0x70, 0x73, 0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x72, 0x65, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x73, 0x12, 0xba, 0x01, 0x0a, 0x17, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65, 0x6d,
+	0x73, 0x12, 0x20, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x64, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65, 0x6d, 0x73,
+	0x52, 0x65, 0x71, 0x1a, 0x21, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52,
+	0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x49, 0x74, 0x65,
+	0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x5a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x54, 0x22, 0x4f,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x6c,
+	0x69, 0x73, 0x74, 0x2f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x2f, 0x63, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x5f, 0x69, 0x74, 0x65, 0x6d, 0x2f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f,
+	0x69, 0x64, 0x2f, 0x7b, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f,
+	0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x3a,
+	0x01, 0x2a, 0x12, 0x65, 0x0a, 0x0a, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b,
+	0x12, 0x13, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x48, 0x6f,
+	0x6f, 0x6b, 0x52, 0x65, 0x71, 0x1a, 0x14, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x22, 0x2c, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x26, 0x22, 0x21, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e,
+	0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x3a, 0x01, 0x2a, 0x12, 0x6c, 0x0a, 0x0a, 0x44, 0x65, 0x6c,
+	0x65, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x12, 0x13, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x71, 0x1a, 0x14, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65,
+	0x73, 0x70, 0x22, 0x33, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2d, 0x2a, 0x2b, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b,
+	0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x2f, 0x7b, 0x68,
+	0x6f, 0x6f, 0x6b, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x5f, 0x0a, 0x09, 0x4c, 0x69, 0x73, 0x74, 0x48,
+	0x6f, 0x6f, 0x6b, 0x73, 0x12, 0x12, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x48, 0x6f, 0x6f, 0x6b, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x13, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x4c, 0x69, 0x73, 0x74, 0x48, 0x6f, 0x6f, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x29, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x23, 0x12, 0x21, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69,
+	0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x12, 0x6c, 0x0a, 0x0c, 0x4c, 0x69, 0x73, 0x74,
+	0x48, 0x6f, 0x6f, 0x6b, 0x54, 0x61, 0x67, 0x73, 0x12, 0x15, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x4c, 0x69, 0x73, 0x74, 0x48, 0x6f, 0x6f, 0x6b, 0x54, 0x61, 0x67, 0x73, 0x52, 0x65, 0x71, 0x1a,
+	0x16, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x48, 0x6f, 0x6f, 0x6b, 0x54,
+	0x61, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x2d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x27, 0x12,
+	0x25, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f,
+	0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f,
+	0x6b, 0x5f, 0x74, 0x61, 0x67, 0x73, 0x12, 0x63, 0x0a, 0x07, 0x47, 0x65, 0x74, 0x48, 0x6f, 0x6f,
+	0x6b, 0x12, 0x10, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x47, 0x65, 0x74, 0x48, 0x6f, 0x6f, 0x6b,
+	0x52, 0x65, 0x71, 0x1a, 0x11, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x47, 0x65, 0x74, 0x48, 0x6f,
+	0x6f, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x22, 0x33, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2d, 0x12, 0x2b,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62,
+	0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b,
+	0x73, 0x2f, 0x7b, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x92, 0x01, 0x0a, 0x11,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x12, 0x1a, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x48,
+	0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e,
+	0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x52,
+	0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x44, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x3e, 0x22, 0x39, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f,
+	0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x2f, 0x7b, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x69, 0x64, 0x7d, 0x2f,
+	0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x3a, 0x01, 0x2a,
+	0x12, 0x89, 0x01, 0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x12, 0x18, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x19,
+	0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x41, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x3b, 0x12, 0x39, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68,
+	0x6f, 0x6f, 0x6b, 0x73, 0x2f, 0x7b, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68,
+	0x6f, 0x6f, 0x6b, 0x5f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x12, 0x9c, 0x01, 0x0a,
+	0x11, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x12, 0x1a, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
+	0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x1b,
+	0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b,
+	0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x4e, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x48, 0x2a, 0x46, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e,
+	0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x2f, 0x7b, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x2f, 0x7b,
+	0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xa7, 0x01, 0x0a, 0x12,
+	0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x12, 0x1b, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73,
+	0x68, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x1a,
+	0x1c, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x48, 0x6f,
+	0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x56, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x50, 0x1a, 0x4e, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69,
+	0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x2f, 0x7b, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x69,
+	0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73,
+	0x2f, 0x7b, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x70, 0x75,
+	0x62, 0x6c, 0x69, 0x73, 0x68, 0x12, 0x8c, 0x01, 0x0a, 0x0e, 0x47, 0x65, 0x74, 0x48, 0x6f, 0x6f,
+	0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x47, 0x65, 0x74, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65,
+	0x71, 0x1a, 0x11, 0x2e, 0x70, 0x62, 0x68, 0x72, 0x2e, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x22, 0x4e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x48, 0x12, 0x46, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a,
+	0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x2f,
+	0x7b, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x72,
+	0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x2f, 0x7b, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65,
+	0x5f, 0x69, 0x64, 0x7d, 0x12, 0x9f, 0x01, 0x0a, 0x11, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x48,
+	0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x1a, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65,
+	0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x22, 0x51, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x4b, 0x1a, 0x46, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f,
+	0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x2f, 0x7b,
+	0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x5f, 0x72, 0x65,
+	0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x2f, 0x7b, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f,
+	0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0xa7, 0x01, 0x0a, 0x1a, 0x4c, 0x69, 0x73, 0x74, 0x48,
+	0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x52, 0x65, 0x66, 0x65, 0x72,
+	0x65, 0x6e, 0x63, 0x65, 0x73, 0x12, 0x23, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73,
+	0x74, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x52, 0x65, 0x66,
+	0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x24, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x48, 0x6f, 0x6f, 0x6b, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x73, 0x52, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x22, 0x3e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x38, 0x12, 0x36, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76,
+	0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69,
+	0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x68, 0x6f, 0x6f, 0x6b, 0x73, 0x2f, 0x7b, 0x68, 0x6f, 0x6f,
+	0x6b, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x72, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x73,
+	0x12, 0x8a, 0x01, 0x0a, 0x13, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c,
+	0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x12, 0x1c, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70,
+	0x61, 0x63, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x1d, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63,
+	0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x36, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x30, 0x22, 0x2b, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69,
+	0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c,
+	0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x3a, 0x01, 0x2a, 0x12, 0x9b, 0x01,
+	0x0a, 0x13, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65,
+	0x53, 0x70, 0x61, 0x63, 0x65, 0x12, 0x1c, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c,
+	0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65,
+	0x52, 0x65, 0x71, 0x1a, 0x1d, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x52, 0x65,
+	0x73, 0x70, 0x22, 0x47, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x41, 0x2a, 0x3f, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b,
+	0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65,
+	0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x9e, 0x01, 0x0a, 0x13,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70,
+	0x61, 0x63, 0x65, 0x12, 0x1c, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x52, 0x65,
+	0x71, 0x1a, 0x1d, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x54,
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x22, 0x4a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x44, 0x1a, 0x3f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76,
+	0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69,
+	0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73,
+	0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f,
+	0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x84, 0x01, 0x0a,
+	0x12, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61,
+	0x63, 0x65, 0x73, 0x12, 0x1b, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54,
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x73, 0x52, 0x65, 0x71,
+	0x1a, 0x1c, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x53, 0x70, 0x61, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x33,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2d, 0x12, 0x2b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f,
+	0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f,
+	0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61,
+	0x63, 0x65, 0x73, 0x12, 0x99, 0x01, 0x0a, 0x0e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x1a,
+	0x18, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x54, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x4e, 0x22, 0x49, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74,
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b,
+	0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69,
+	0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x3a, 0x01, 0x2a, 0x12,
+	0xa4, 0x01, 0x0a, 0x0e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
+	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x18, 0x2e, 0x70, 0x62,
+	0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x5f, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x59, 0x2a, 0x57, 0x2f,
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69,
 	0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c,
 	0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70,
 	0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74,
+<<<<<<< HEAD
 	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x3a, 0x01, 0x2a, 0x12, 0xa4, 0x01, 0x0a, 0x0e,
 	0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x17,
 	0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70,
 	0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x18, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44,
 	0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
 	0x70, 0x22, 0x5f, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x59, 0x2a, 0x57, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+=======
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xa7, 0x01, 0x0a, 0x0e, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x62, 0x63, 0x73,
+	0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52,
+	0x65, 0x71, 0x1a, 0x18, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x62, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x5c, 0x1a, 0x57, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f,
+	0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64,
+	0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65,
+	0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63,
+	0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x2f,
+	0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a,
+	0x12, 0x93, 0x01, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x73, 0x12, 0x16, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x17, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x22, 0x51, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x4b, 0x12, 0x49, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f,
+	0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x12, 0xce, 0x01, 0x0a, 0x15, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65,
+	0x12, 0x1e, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71,
+	0x1a, 0x1f, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x22, 0x74, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x6e, 0x22, 0x69, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 	0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62,
 	0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f,
 	0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65,
 	0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c,
 	0x61, 0x74, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x69,
+<<<<<<< HEAD
 	0x64, 0x7d, 0x12, 0xa7, 0x01, 0x0a, 0x0e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d,
 	0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64,
 	0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x18,
@@ -10227,6 +10794,202 @@ var file_config_service_proto_rawDesc = []byte{
 	0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x2f, 0x63, 0x6f,
 	0x6e, 0x66, 0x69, 0x67, 0x2d, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x3b, 0x70, 0x62, 0x63, 0x73,
 	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+=======
+	0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x6c, 0x65,
+	0x61, 0x73, 0x65, 0x73, 0x3a, 0x01, 0x2a, 0x12, 0xc8, 0x01, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74,
+	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73,
+	0x12, 0x1d, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x52, 0x65, 0x71, 0x1a,
+	0x1e, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c,
+	0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22,
+	0x71, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x6b, 0x12, 0x69, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31,
+	0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a,
+	0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70,
+	0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73,
+	0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x73, 0x12, 0xe3, 0x01, 0x0a, 0x15, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x12, 0x1e, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x1f, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x88, 0x01,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x81, 0x01, 0x2a, 0x7f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31,
+	0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a,
+	0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70,
+	0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73,
+	0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73,
+	0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x6c,
+	0x65, 0x61, 0x73, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xa6, 0x01, 0x0a, 0x11, 0x43, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x12, 0x1a,
+	0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65,
+	0x53, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x22, 0x58, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x52, 0x22,
+	0x4d, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f,
+	0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x73, 0x3a, 0x01,
+	0x2a, 0x12, 0xb5, 0x01, 0x0a, 0x11, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70,
+	0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x12, 0x1a, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74,
+	0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70,
+	0x22, 0x67, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x61, 0x2a, 0x5f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76,
+	0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69,
+	0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73,
+	0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f,
+	0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xb8, 0x01, 0x0a, 0x11, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x12,
+	0x1a, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e, 0x70, 0x62,
+	0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74,
+	0x65, 0x53, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x22, 0x6a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x64,
+	0x1a, 0x5f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65,
+	0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74,
+	0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64,
+	0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x73, 0x2f,
+	0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x69, 0x64,
+	0x7d, 0x3a, 0x01, 0x2a, 0x12, 0xa0, 0x01, 0x0a, 0x10, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x73, 0x12, 0x19, 0x2e, 0x70, 0x62, 0x63, 0x73,
+	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74,
+	0x73, 0x52, 0x65, 0x71, 0x1a, 0x1a, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x53, 0x65, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x22, 0x55, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x4f, 0x12, 0x4d, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76,
+	0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69,
+	0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x73,
+	0x70, 0x61, 0x63, 0x65, 0x73, 0x2f, 0x7b, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f,
+	0x73, 0x70, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61,
+	0x74, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x73, 0x12, 0x69, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x12, 0x14, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x71, 0x1a, 0x15, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52,
+	0x65, 0x73, 0x70, 0x22, 0x2d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x27, 0x22, 0x22, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f,
+	0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x3a,
+	0x01, 0x2a, 0x12, 0x71, 0x0a, 0x0b, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x12, 0x14, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x71, 0x1a, 0x15, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x22, 0x35,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2f, 0x2a, 0x2d, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f,
+	0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f,
+	0x69, 0x64, 0x7d, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x2f, 0x7b, 0x67, 0x72, 0x6f, 0x75,
+	0x70, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x74, 0x0a, 0x0b, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x12, 0x14, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x71, 0x1a, 0x15, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x52, 0x65, 0x73,
+	0x70, 0x22, 0x38, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x32, 0x1a, 0x2d, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62,
+	0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x2f, 0x7b, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x6c, 0x0a, 0x0d, 0x4c,
+	0x69, 0x73, 0x74, 0x41, 0x6c, 0x6c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x12, 0x16, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x6c, 0x6c, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x73, 0x52, 0x65, 0x71, 0x1a, 0x17, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x41, 0x6c, 0x6c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x2a, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x24, 0x12, 0x22, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69,
+	0x64, 0x7d, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x12, 0x7a, 0x0a, 0x0d, 0x4c, 0x69, 0x73,
+	0x74, 0x41, 0x70, 0x70, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x12, 0x16, 0x2e, 0x70, 0x62, 0x63,
+	0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x70, 0x70, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x52,
+	0x65, 0x71, 0x1a, 0x17, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x70,
+	0x70, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x38, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x32, 0x12, 0x30, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e,
+	0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x61, 0x70, 0x70, 0x73, 0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x67,
+	0x72, 0x6f, 0x75, 0x70, 0x73, 0x12, 0x9d, 0x01, 0x0a, 0x15, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72,
+	0x6f, 0x75, 0x70, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x41, 0x70, 0x70, 0x73, 0x12,
+	0x1e, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x71, 0x1a,
+	0x1f, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x41, 0x70, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x22, 0x43, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3d, 0x12, 0x3b, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76,
+	0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69,
+	0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x73, 0x2f, 0x7b, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x72, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64,
+	0x5f, 0x61, 0x70, 0x70, 0x73, 0x12, 0xa1, 0x01, 0x0a, 0x07, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73,
+	0x68, 0x12, 0x10, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68,
+	0x52, 0x65, 0x71, 0x1a, 0x11, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x50, 0x75, 0x62, 0x6c, 0x69,
+	0x73, 0x68, 0x52, 0x65, 0x73, 0x70, 0x22, 0x71, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x6b, 0x22, 0x66,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x75,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x2f, 0x73, 0x74, 0x72, 0x61, 0x74, 0x65, 0x67, 0x79, 0x2f, 0x70,
+	0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x2f, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x2f, 0x72,
+	0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x72, 0x65, 0x6c, 0x65, 0x61,
+	0x73, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x61,
+	0x70, 0x70, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62,
+	0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x3a, 0x01, 0x2a, 0x12, 0x90, 0x01, 0x0a, 0x19, 0x47, 0x65,
+	0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x41, 0x6e, 0x64,
+	0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x12, 0x22, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x47,
+	0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x41, 0x6e,
+	0x64, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x52, 0x65, 0x71, 0x1a, 0x11, 0x2e, 0x70, 0x62,
+	0x63, 0x73, 0x2e, 0x50, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x52, 0x65, 0x73, 0x70, 0x22, 0x3c,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x36, 0x22, 0x31, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f,
+	0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f,
+	0x69, 0x64, 0x7d, 0x2f, 0x61, 0x70, 0x70, 0x73, 0x2f, 0x7b, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64,
+	0x7d, 0x2f, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x73, 0x68, 0x3a, 0x01, 0x2a, 0x12, 0x81, 0x01, 0x0a,
+	0x11, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61,
+	0x6c, 0x73, 0x12, 0x19, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x52, 0x65, 0x71, 0x1a, 0x1a, 0x2e,
+	0x70, 0x62, 0x63, 0x73, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x65,
+	0x6e, 0x74, 0x69, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x22, 0x35, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x2f, 0x22, 0x2a, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64,
+	0x7d, 0x2f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73, 0x3a, 0x01, 0x2a,
+	0x12, 0x7a, 0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69,
+	0x61, 0x6c, 0x73, 0x12, 0x18, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43,
+	0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x19, 0x2e,
+	0x70, 0x62, 0x63, 0x73, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74,
+	0x69, 0x61, 0x6c, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x32, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2c,
+	0x12, 0x2a, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73, 0x12, 0x7e, 0x0a, 0x10,
+	0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c,
+	0x12, 0x1a, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x43, 0x72,
+	0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e,
+	0x74, 0x69, 0x61, 0x6c, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x2b, 0x2a, 0x29, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64,
+	0x7d, 0x2f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x12, 0x81, 0x01, 0x0a,
+	0x10, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61,
+	0x6c, 0x12, 0x1a, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43,
+	0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x1b, 0x2e,
+	0x70, 0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x65,
+	0x6e, 0x74, 0x69, 0x61, 0x6c, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x34, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x2e, 0x1a, 0x29, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69,
+	0x64, 0x7d, 0x2f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x3a, 0x01, 0x2a,
+	0x12, 0x9f, 0x01, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74,
+	0x69, 0x61, 0x6c, 0x53, 0x63, 0x6f, 0x70, 0x65, 0x73, 0x12, 0x1d, 0x2e, 0x70, 0x62, 0x63, 0x73,
+	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x53,
+	0x63, 0x6f, 0x70, 0x65, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x1e, 0x2e, 0x70, 0x62, 0x63, 0x73, 0x2e,
+	0x4c, 0x69, 0x73, 0x74, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x53, 0x63,
+	0x6f, 0x70, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x22, 0x48, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x42,
+	0x12, 0x40, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x2f, 0x7b, 0x63, 0x72, 0x65,
+	0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x73, 0x63, 0x6f, 0x70,
+	0x65, 0x73, 0x12, 0xa4, 0x01, 0x0a, 0x15, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x72, 0x65,
+	0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x53, 0x63, 0x6f, 0x70, 0x65, 0x12, 0x1e, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e,
+	0x74, 0x69, 0x61, 0x6c, 0x53, 0x63, 0x6f, 0x70, 0x65, 0x52, 0x65, 0x71, 0x1a, 0x1f, 0x2e, 0x70,
+	0x62, 0x63, 0x73, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x72, 0x65, 0x64, 0x65, 0x6e,
+	0x74, 0x69, 0x61, 0x6c, 0x53, 0x63, 0x6f, 0x70, 0x65, 0x52, 0x65, 0x73, 0x70, 0x22, 0x4a, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x44, 0x1a, 0x3f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x63,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2f, 0x62, 0x69, 0x7a, 0x5f, 0x69, 0x64, 0x2f, 0x7b, 0x62, 0x69,
+	0x7a, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c,
+	0x2f, 0x7b, 0x63, 0x72, 0x65, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x7d,
+	0x2f, 0x73, 0x63, 0x6f, 0x70, 0x65, 0x3a, 0x01, 0x2a, 0x42, 0x29, 0x5a, 0x27, 0x62, 0x73, 0x63,
+	0x70, 0x2e, 0x69, 0x6f, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f,
+	0x6c, 0x2f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x2d, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x3b,
+	0x70, 0x62, 0x63, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 var (
@@ -10241,7 +11004,11 @@ func file_config_service_proto_rawDescGZIP() []byte {
 	return file_config_service_proto_rawDescData
 }
 
+<<<<<<< HEAD
 var file_config_service_proto_msgTypes = make([]protoimpl.MessageInfo, 138)
+=======
+var file_config_service_proto_msgTypes = make([]protoimpl.MessageInfo, 131)
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 var file_config_service_proto_goTypes = []interface{}{
 	(*UpdateCredentialScopeReq)(nil),                            // 0: pbcs.UpdateCredentialScopeReq
 	(*UpdateCredentialScopeResp)(nil),                           // 1: pbcs.UpdateCredentialScopeResp
@@ -10282,6 +11049,7 @@ var file_config_service_proto_goTypes = []interface{}{
 	(*ListConfigItemsResp)(nil),                                 // 36: pbcs.ListConfigItemsResp
 	(*ListConfigItemCountReq)(nil),                              // 37: pbcs.ListConfigItemCountReq
 	(*ListConfigItemCountResp)(nil),                             // 38: pbcs.ListConfigItemCountResp
+<<<<<<< HEAD
 	(*CreateContentReq)(nil),                                    // 39: pbcs.CreateContentReq
 	(*CreateContentResp)(nil),                                   // 40: pbcs.CreateContentResp
 	(*ListContentsReq)(nil),                                     // 41: pbcs.ListContentsReq
@@ -10585,6 +11353,291 @@ var file_config_service_proto_depIdxs = []int32{
 	40,  // [40:40] is the sub-list for extension type_name
 	40,  // [40:40] is the sub-list for extension extendee
 	0,   // [0:40] is the sub-list for field type_name
+=======
+	(*CreateConfigHookReq)(nil),                                 // 39: pbcs.CreateConfigHookReq
+	(*CreateConfigHookResp)(nil),                                // 40: pbcs.CreateConfigHookResp
+	(*UpdateConfigHookReq)(nil),                                 // 41: pbcs.UpdateConfigHookReq
+	(*UpdateConfigHookResp)(nil),                                // 42: pbcs.UpdateConfigHookResp
+	(*GetConfigHookReq)(nil),                                    // 43: pbcs.GetConfigHookReq
+	(*GetConfigHookResp)(nil),                                   // 44: pbcs.GetConfigHookResp
+	(*CreateCommitReq)(nil),                                     // 45: pbcs.CreateCommitReq
+	(*CreateCommitResp)(nil),                                    // 46: pbcs.CreateCommitResp
+	(*ListCommitsReq)(nil),                                      // 47: pbcs.ListCommitsReq
+	(*ListCommitsResp)(nil),                                     // 48: pbcs.ListCommitsResp
+	(*CreateReleaseReq)(nil),                                    // 49: pbcs.CreateReleaseReq
+	(*CreateReleaseResp)(nil),                                   // 50: pbcs.CreateReleaseResp
+	(*ListReleasesReq)(nil),                                     // 51: pbcs.ListReleasesReq
+	(*ListReleasesResp)(nil),                                    // 52: pbcs.ListReleasesResp
+	(*ListReleasedConfigItemsReq)(nil),                          // 53: pbcs.ListReleasedConfigItemsReq
+	(*ListReleasedConfigItemsResp)(nil),                         // 54: pbcs.ListReleasedConfigItemsResp
+	(*CreateHookReq)(nil),                                       // 55: pbcs.CreateHookReq
+	(*CreateHookResp)(nil),                                      // 56: pbcs.CreateHookResp
+	(*DeleteHookReq)(nil),                                       // 57: pbcs.DeleteHookReq
+	(*DeleteHookResp)(nil),                                      // 58: pbcs.DeleteHookResp
+	(*ListHooksReq)(nil),                                        // 59: pbcs.ListHooksReq
+	(*ListHooksResp)(nil),                                       // 60: pbcs.ListHooksResp
+	(*ListHookTagsReq)(nil),                                     // 61: pbcs.ListHookTagsReq
+	(*ListHookTagsResp)(nil),                                    // 62: pbcs.ListHookTagsResp
+	(*CreateHookReleaseReq)(nil),                                // 63: pbcs.CreateHookReleaseReq
+	(*CreateHookReleaseResp)(nil),                               // 64: pbcs.CreateHookReleaseResp
+	(*ListHookReleaseReq)(nil),                                  // 65: pbcs.ListHookReleaseReq
+	(*ListHookReleaseResp)(nil),                                 // 66: pbcs.ListHookReleaseResp
+	(*DeleteHookReleaseReq)(nil),                                // 67: pbcs.DeleteHookReleaseReq
+	(*DeleteHookReleaseResp)(nil),                               // 68: pbcs.DeleteHookReleaseResp
+	(*PublishHookReleaseReq)(nil),                               // 69: pbcs.PublishHookReleaseReq
+	(*PublishHookReleaseResp)(nil),                              // 70: pbcs.PublishHookReleaseResp
+	(*GetHookReq)(nil),                                          // 71: pbcs.GetHookReq
+	(*GetHookResp)(nil),                                         // 72: pbcs.GetHookResp
+	(*GetHookInfoSpec)(nil),                                     // 73: pbcs.GetHookInfoSpec
+	(*GetHookReleaseReq)(nil),                                   // 74: pbcs.GetHookReleaseReq
+	(*UpdateHookReleaseReq)(nil),                                // 75: pbcs.UpdateHookReleaseReq
+	(*UpdateHookReleaseResp)(nil),                               // 76: pbcs.UpdateHookReleaseResp
+	(*ListHookReleasesReferencesReq)(nil),                       // 77: pbcs.ListHookReleasesReferencesReq
+	(*ListHookReleasesReferencesResp)(nil),                      // 78: pbcs.ListHookReleasesReferencesResp
+	(*CreateTemplateSpaceReq)(nil),                              // 79: pbcs.CreateTemplateSpaceReq
+	(*CreateTemplateSpaceResp)(nil),                             // 80: pbcs.CreateTemplateSpaceResp
+	(*UpdateTemplateSpaceReq)(nil),                              // 81: pbcs.UpdateTemplateSpaceReq
+	(*UpdateTemplateSpaceResp)(nil),                             // 82: pbcs.UpdateTemplateSpaceResp
+	(*DeleteTemplateSpaceReq)(nil),                              // 83: pbcs.DeleteTemplateSpaceReq
+	(*DeleteTemplateSpaceResp)(nil),                             // 84: pbcs.DeleteTemplateSpaceResp
+	(*ListTemplateSpacesReq)(nil),                               // 85: pbcs.ListTemplateSpacesReq
+	(*ListTemplateSpacesResp)(nil),                              // 86: pbcs.ListTemplateSpacesResp
+	(*CreateTemplateReq)(nil),                                   // 87: pbcs.CreateTemplateReq
+	(*CreateTemplateResp)(nil),                                  // 88: pbcs.CreateTemplateResp
+	(*UpdateTemplateReq)(nil),                                   // 89: pbcs.UpdateTemplateReq
+	(*UpdateTemplateResp)(nil),                                  // 90: pbcs.UpdateTemplateResp
+	(*DeleteTemplateReq)(nil),                                   // 91: pbcs.DeleteTemplateReq
+	(*DeleteTemplateResp)(nil),                                  // 92: pbcs.DeleteTemplateResp
+	(*ListTemplatesReq)(nil),                                    // 93: pbcs.ListTemplatesReq
+	(*ListTemplatesResp)(nil),                                   // 94: pbcs.ListTemplatesResp
+	(*CreateTemplateReleaseReq)(nil),                            // 95: pbcs.CreateTemplateReleaseReq
+	(*CreateTemplateReleaseResp)(nil),                           // 96: pbcs.CreateTemplateReleaseResp
+	(*ListTemplateReleasesReq)(nil),                             // 97: pbcs.ListTemplateReleasesReq
+	(*ListTemplateReleasesResp)(nil),                            // 98: pbcs.ListTemplateReleasesResp
+	(*DeleteTemplateReleaseReq)(nil),                            // 99: pbcs.DeleteTemplateReleaseReq
+	(*DeleteTemplateReleaseResp)(nil),                           // 100: pbcs.DeleteTemplateReleaseResp
+	(*CreateGroupReq)(nil),                                      // 101: pbcs.CreateGroupReq
+	(*CreateTemplateSetReq)(nil),                                // 102: pbcs.CreateTemplateSetReq
+	(*CreateTemplateSetResp)(nil),                               // 103: pbcs.CreateTemplateSetResp
+	(*UpdateTemplateSetReq)(nil),                                // 104: pbcs.UpdateTemplateSetReq
+	(*UpdateTemplateSetResp)(nil),                               // 105: pbcs.UpdateTemplateSetResp
+	(*DeleteTemplateSetReq)(nil),                                // 106: pbcs.DeleteTemplateSetReq
+	(*DeleteTemplateSetResp)(nil),                               // 107: pbcs.DeleteTemplateSetResp
+	(*ListTemplateSetsReq)(nil),                                 // 108: pbcs.ListTemplateSetsReq
+	(*ListTemplateSetsResp)(nil),                                // 109: pbcs.ListTemplateSetsResp
+	(*CreateGroupResp)(nil),                                     // 110: pbcs.CreateGroupResp
+	(*UpdateGroupReq)(nil),                                      // 111: pbcs.UpdateGroupReq
+	(*UpdateGroupResp)(nil),                                     // 112: pbcs.UpdateGroupResp
+	(*DeleteGroupReq)(nil),                                      // 113: pbcs.DeleteGroupReq
+	(*DeleteGroupResp)(nil),                                     // 114: pbcs.DeleteGroupResp
+	(*ListAllGroupsReq)(nil),                                    // 115: pbcs.ListAllGroupsReq
+	(*ListAllGroupsResp)(nil),                                   // 116: pbcs.ListAllGroupsResp
+	(*ListAppGroupsReq)(nil),                                    // 117: pbcs.ListAppGroupsReq
+	(*ListAppGroupsResp)(nil),                                   // 118: pbcs.ListAppGroupsResp
+	(*ListGroupReleasedAppsReq)(nil),                            // 119: pbcs.ListGroupReleasedAppsReq
+	(*ListGroupReleasedAppsResp)(nil),                           // 120: pbcs.ListGroupReleasedAppsResp
+	(*PublishReq)(nil),                                          // 121: pbcs.PublishReq
+	(*GenerateReleaseAndPublishReq)(nil),                        // 122: pbcs.GenerateReleaseAndPublishReq
+	(*GenerateReleaseAndPublishResp)(nil),                       // 123: pbcs.GenerateReleaseAndPublishResp
+	(*PublishResp)(nil),                                         // 124: pbcs.PublishResp
+	(*BatchUpsertConfigItemsReq_ConfigItem)(nil),                // 125: pbcs.BatchUpsertConfigItemsReq.ConfigItem
+	(*GetHookInfoSpec_Releases)(nil),                            // 126: pbcs.GetHookInfoSpec.Releases
+	(*ListAllGroupsResp_ListAllGroupsData)(nil),                 // 127: pbcs.ListAllGroupsResp.ListAllGroupsData
+	(*ListAllGroupsResp_ListAllGroupsData_BindApp)(nil),         // 128: pbcs.ListAllGroupsResp.ListAllGroupsData.BindApp
+	(*ListAppGroupsResp_ListAppGroupsData)(nil),                 // 129: pbcs.ListAppGroupsResp.ListAppGroupsData
+	(*ListGroupReleasedAppsResp_ListGroupReleasedAppsData)(nil), // 130: pbcs.ListGroupReleasedAppsResp.ListGroupReleasedAppsData
+	(*credential_scope.UpdateScopeSpec)(nil),                    // 131: pbcrs.UpdateScopeSpec
+	(*credential_scope.CredentialScopeList)(nil),                // 132: pbcrs.CredentialScopeList
+	(*credential.CredentialList)(nil),                           // 133: pbcredential.CredentialList
+	(*app.App)(nil),                                             // 134: pbapp.App
+	(*config_item.ConfigItem)(nil),                              // 135: pbci.ConfigItem
+	(*content.ContentSpec)(nil),                                 // 136: pbcontent.ContentSpec
+	(*config_item.ListConfigItemCounts)(nil),                    // 137: pbci.ListConfigItemCounts
+	(*config_hook.ConfigHook)(nil),                              // 138: pbch.ConfigHook
+	(*structpb.Struct)(nil),                                     // 139: google.protobuf.Struct
+	(*base.BasePage)(nil),                                       // 140: pbbase.BasePage
+	(*commit.Commit)(nil),                                       // 141: pbcommit.Commit
+	(*release.Release)(nil),                                     // 142: pbrelease.Release
+	(*released_ci.ReleasedConfigItem)(nil),                      // 143: pbrci.ReleasedConfigItem
+	(*hook.Hook)(nil),                                           // 144: pbhook.Hook
+	(*hook.CountHookTags)(nil),                                  // 145: pbhook.CountHookTags
+	(*hook_release.HookRelease)(nil),                            // 146: pbhr.HookRelease
+	(*hook.HookAttachment)(nil),                                 // 147: pbhook.HookAttachment
+	(*base.Revision)(nil),                                       // 148: pbbase.Revision
+	(*hook_release.ListHookReleasesReferencesDetails)(nil),      // 149: pbhr.ListHookReleasesReferencesDetails
+	(*template_space.TemplateSpace)(nil),                        // 150: pbts.TemplateSpace
+	(*template.Template)(nil),                                   // 151: pbtemplate.Template
+	(*template_release.TemplateRelease)(nil),                    // 152: pbtr.TemplateRelease
+	(*template_set.TemplateSet)(nil),                            // 153: pbtset.TemplateSet
+}
+var file_config_service_proto_depIdxs = []int32{
+	131, // 0: pbcs.UpdateCredentialScopeReq.alter_scope:type_name -> pbcrs.UpdateScopeSpec
+	132, // 1: pbcs.ListCredentialScopesResp.details:type_name -> pbcrs.CredentialScopeList
+	133, // 2: pbcs.ListCredentialsResp.details:type_name -> pbcredential.CredentialList
+	134, // 3: pbcs.ListAppsResp.details:type_name -> pbapp.App
+	125, // 4: pbcs.BatchUpsertConfigItemsReq.items:type_name -> pbcs.BatchUpsertConfigItemsReq.ConfigItem
+	135, // 5: pbcs.GetConfigItemResp.config_item:type_name -> pbci.ConfigItem
+	136, // 6: pbcs.GetConfigItemResp.content:type_name -> pbcontent.ContentSpec
+	135, // 7: pbcs.ListConfigItemsResp.details:type_name -> pbci.ConfigItem
+	137, // 8: pbcs.ListConfigItemCountResp.details:type_name -> pbci.ListConfigItemCounts
+	138, // 9: pbcs.GetConfigHookResp.config_hook:type_name -> pbch.ConfigHook
+	139, // 10: pbcs.ListCommitsReq.filter:type_name -> google.protobuf.Struct
+	140, // 11: pbcs.ListCommitsReq.page:type_name -> pbbase.BasePage
+	141, // 12: pbcs.ListCommitsResp.details:type_name -> pbcommit.Commit
+	142, // 13: pbcs.ListReleasesResp.details:type_name -> pbrelease.Release
+	140, // 14: pbcs.ListReleasedConfigItemsReq.page:type_name -> pbbase.BasePage
+	143, // 15: pbcs.ListReleasedConfigItemsResp.details:type_name -> pbrci.ReleasedConfigItem
+	144, // 16: pbcs.ListHooksResp.details:type_name -> pbhook.Hook
+	145, // 17: pbcs.ListHookTagsResp.details:type_name -> pbhook.CountHookTags
+	146, // 18: pbcs.ListHookReleaseResp.details:type_name -> pbhr.HookRelease
+	73,  // 19: pbcs.GetHookResp.spec:type_name -> pbcs.GetHookInfoSpec
+	147, // 20: pbcs.GetHookResp.attachment:type_name -> pbhook.HookAttachment
+	148, // 21: pbcs.GetHookResp.revision:type_name -> pbbase.Revision
+	126, // 22: pbcs.GetHookInfoSpec.releases:type_name -> pbcs.GetHookInfoSpec.Releases
+	149, // 23: pbcs.ListHookReleasesReferencesResp.details:type_name -> pbhr.ListHookReleasesReferencesDetails
+	150, // 24: pbcs.ListTemplateSpacesResp.details:type_name -> pbts.TemplateSpace
+	151, // 25: pbcs.ListTemplatesResp.details:type_name -> pbtemplate.Template
+	152, // 26: pbcs.ListTemplateReleasesResp.details:type_name -> pbtr.TemplateRelease
+	139, // 27: pbcs.CreateGroupReq.selector:type_name -> google.protobuf.Struct
+	153, // 28: pbcs.ListTemplateSetsResp.details:type_name -> pbtset.TemplateSet
+	139, // 29: pbcs.UpdateGroupReq.selector:type_name -> google.protobuf.Struct
+	127, // 30: pbcs.ListAllGroupsResp.details:type_name -> pbcs.ListAllGroupsResp.ListAllGroupsData
+	129, // 31: pbcs.ListAppGroupsResp.details:type_name -> pbcs.ListAppGroupsResp.ListAppGroupsData
+	130, // 32: pbcs.ListGroupReleasedAppsResp.details:type_name -> pbcs.ListGroupReleasedAppsResp.ListGroupReleasedAppsData
+	128, // 33: pbcs.ListAllGroupsResp.ListAllGroupsData.bind_apps:type_name -> pbcs.ListAllGroupsResp.ListAllGroupsData.BindApp
+	139, // 34: pbcs.ListAllGroupsResp.ListAllGroupsData.selector:type_name -> google.protobuf.Struct
+	139, // 35: pbcs.ListAppGroupsResp.ListAppGroupsData.old_selector:type_name -> google.protobuf.Struct
+	139, // 36: pbcs.ListAppGroupsResp.ListAppGroupsData.new_selector:type_name -> google.protobuf.Struct
+	14,  // 37: pbcs.Config.CreateApp:input_type -> pbcs.CreateAppReq
+	16,  // 38: pbcs.Config.UpdateApp:input_type -> pbcs.UpdateAppReq
+	18,  // 39: pbcs.Config.DeleteApp:input_type -> pbcs.DeleteAppReq
+	20,  // 40: pbcs.Config.GetApp:input_type -> pbcs.GetAppReq
+	21,  // 41: pbcs.Config.GetAppByName:input_type -> pbcs.GetAppByNameReq
+	22,  // 42: pbcs.Config.ListAppsRest:input_type -> pbcs.ListAppsRestReq
+	23,  // 43: pbcs.Config.ListAppsBySpaceRest:input_type -> pbcs.ListAppsBySpaceRestReq
+	25,  // 44: pbcs.Config.CreateConfigItem:input_type -> pbcs.CreateConfigItemReq
+	26,  // 45: pbcs.Config.BatchUpsertConfigItems:input_type -> pbcs.BatchUpsertConfigItemsReq
+	29,  // 46: pbcs.Config.UpdateConfigItem:input_type -> pbcs.UpdateConfigItemReq
+	31,  // 47: pbcs.Config.DeleteConfigItem:input_type -> pbcs.DeleteConfigItemReq
+	33,  // 48: pbcs.Config.GetConfigItem:input_type -> pbcs.GetConfigItemReq
+	35,  // 49: pbcs.Config.ListConfigItems:input_type -> pbcs.ListConfigItemsReq
+	37,  // 50: pbcs.Config.ListConfigItemCount:input_type -> pbcs.ListConfigItemCountReq
+	41,  // 51: pbcs.Config.UpdateConfigHook:input_type -> pbcs.UpdateConfigHookReq
+	43,  // 52: pbcs.Config.GetConfigHook:input_type -> pbcs.GetConfigHookReq
+	45,  // 53: pbcs.Config.CreateCommit:input_type -> pbcs.CreateCommitReq
+	47,  // 54: pbcs.Config.ListCommits:input_type -> pbcs.ListCommitsReq
+	49,  // 55: pbcs.Config.CreateRelease:input_type -> pbcs.CreateReleaseReq
+	51,  // 56: pbcs.Config.ListReleases:input_type -> pbcs.ListReleasesReq
+	53,  // 57: pbcs.Config.ListReleasedConfigItems:input_type -> pbcs.ListReleasedConfigItemsReq
+	55,  // 58: pbcs.Config.CreateHook:input_type -> pbcs.CreateHookReq
+	57,  // 59: pbcs.Config.DeleteHook:input_type -> pbcs.DeleteHookReq
+	59,  // 60: pbcs.Config.ListHooks:input_type -> pbcs.ListHooksReq
+	61,  // 61: pbcs.Config.ListHookTags:input_type -> pbcs.ListHookTagsReq
+	71,  // 62: pbcs.Config.GetHook:input_type -> pbcs.GetHookReq
+	63,  // 63: pbcs.Config.CreateHookRelease:input_type -> pbcs.CreateHookReleaseReq
+	65,  // 64: pbcs.Config.ListHookRelease:input_type -> pbcs.ListHookReleaseReq
+	67,  // 65: pbcs.Config.DeleteHookRelease:input_type -> pbcs.DeleteHookReleaseReq
+	69,  // 66: pbcs.Config.PublishHookRelease:input_type -> pbcs.PublishHookReleaseReq
+	74,  // 67: pbcs.Config.GetHookRelease:input_type -> pbcs.GetHookReleaseReq
+	75,  // 68: pbcs.Config.UpdateHookRelease:input_type -> pbcs.UpdateHookReleaseReq
+	77,  // 69: pbcs.Config.ListHookReleasesReferences:input_type -> pbcs.ListHookReleasesReferencesReq
+	79,  // 70: pbcs.Config.CreateTemplateSpace:input_type -> pbcs.CreateTemplateSpaceReq
+	83,  // 71: pbcs.Config.DeleteTemplateSpace:input_type -> pbcs.DeleteTemplateSpaceReq
+	81,  // 72: pbcs.Config.UpdateTemplateSpace:input_type -> pbcs.UpdateTemplateSpaceReq
+	85,  // 73: pbcs.Config.ListTemplateSpaces:input_type -> pbcs.ListTemplateSpacesReq
+	87,  // 74: pbcs.Config.CreateTemplate:input_type -> pbcs.CreateTemplateReq
+	91,  // 75: pbcs.Config.DeleteTemplate:input_type -> pbcs.DeleteTemplateReq
+	89,  // 76: pbcs.Config.UpdateTemplate:input_type -> pbcs.UpdateTemplateReq
+	93,  // 77: pbcs.Config.ListTemplates:input_type -> pbcs.ListTemplatesReq
+	95,  // 78: pbcs.Config.CreateTemplateRelease:input_type -> pbcs.CreateTemplateReleaseReq
+	97,  // 79: pbcs.Config.ListTemplateReleases:input_type -> pbcs.ListTemplateReleasesReq
+	99,  // 80: pbcs.Config.DeleteTemplateRelease:input_type -> pbcs.DeleteTemplateReleaseReq
+	102, // 81: pbcs.Config.CreateTemplateSet:input_type -> pbcs.CreateTemplateSetReq
+	106, // 82: pbcs.Config.DeleteTemplateSet:input_type -> pbcs.DeleteTemplateSetReq
+	104, // 83: pbcs.Config.UpdateTemplateSet:input_type -> pbcs.UpdateTemplateSetReq
+	108, // 84: pbcs.Config.ListTemplateSets:input_type -> pbcs.ListTemplateSetsReq
+	101, // 85: pbcs.Config.CreateGroup:input_type -> pbcs.CreateGroupReq
+	113, // 86: pbcs.Config.DeleteGroup:input_type -> pbcs.DeleteGroupReq
+	111, // 87: pbcs.Config.UpdateGroup:input_type -> pbcs.UpdateGroupReq
+	115, // 88: pbcs.Config.ListAllGroups:input_type -> pbcs.ListAllGroupsReq
+	117, // 89: pbcs.Config.ListAppGroups:input_type -> pbcs.ListAppGroupsReq
+	119, // 90: pbcs.Config.ListGroupReleasedApps:input_type -> pbcs.ListGroupReleasedAppsReq
+	121, // 91: pbcs.Config.Publish:input_type -> pbcs.PublishReq
+	122, // 92: pbcs.Config.GenerateReleaseAndPublish:input_type -> pbcs.GenerateReleaseAndPublishReq
+	12,  // 93: pbcs.Config.CreateCredentials:input_type -> pbcs.CreateCredentialReq
+	10,  // 94: pbcs.Config.ListCredentials:input_type -> pbcs.ListCredentialsReq
+	6,   // 95: pbcs.Config.DeleteCredential:input_type -> pbcs.DeleteCredentialsReq
+	8,   // 96: pbcs.Config.UpdateCredential:input_type -> pbcs.UpdateCredentialsReq
+	2,   // 97: pbcs.Config.ListCredentialScopes:input_type -> pbcs.ListCredentialScopesReq
+	0,   // 98: pbcs.Config.UpdateCredentialScope:input_type -> pbcs.UpdateCredentialScopeReq
+	15,  // 99: pbcs.Config.CreateApp:output_type -> pbcs.CreateAppResp
+	17,  // 100: pbcs.Config.UpdateApp:output_type -> pbcs.UpdateAppResp
+	19,  // 101: pbcs.Config.DeleteApp:output_type -> pbcs.DeleteAppResp
+	134, // 102: pbcs.Config.GetApp:output_type -> pbapp.App
+	134, // 103: pbcs.Config.GetAppByName:output_type -> pbapp.App
+	24,  // 104: pbcs.Config.ListAppsRest:output_type -> pbcs.ListAppsResp
+	24,  // 105: pbcs.Config.ListAppsBySpaceRest:output_type -> pbcs.ListAppsResp
+	28,  // 106: pbcs.Config.CreateConfigItem:output_type -> pbcs.CreateConfigItemResp
+	27,  // 107: pbcs.Config.BatchUpsertConfigItems:output_type -> pbcs.BatchUpsertConfigItemsResp
+	30,  // 108: pbcs.Config.UpdateConfigItem:output_type -> pbcs.UpdateConfigItemResp
+	32,  // 109: pbcs.Config.DeleteConfigItem:output_type -> pbcs.DeleteConfigItemResp
+	34,  // 110: pbcs.Config.GetConfigItem:output_type -> pbcs.GetConfigItemResp
+	36,  // 111: pbcs.Config.ListConfigItems:output_type -> pbcs.ListConfigItemsResp
+	38,  // 112: pbcs.Config.ListConfigItemCount:output_type -> pbcs.ListConfigItemCountResp
+	42,  // 113: pbcs.Config.UpdateConfigHook:output_type -> pbcs.UpdateConfigHookResp
+	44,  // 114: pbcs.Config.GetConfigHook:output_type -> pbcs.GetConfigHookResp
+	46,  // 115: pbcs.Config.CreateCommit:output_type -> pbcs.CreateCommitResp
+	48,  // 116: pbcs.Config.ListCommits:output_type -> pbcs.ListCommitsResp
+	50,  // 117: pbcs.Config.CreateRelease:output_type -> pbcs.CreateReleaseResp
+	52,  // 118: pbcs.Config.ListReleases:output_type -> pbcs.ListReleasesResp
+	54,  // 119: pbcs.Config.ListReleasedConfigItems:output_type -> pbcs.ListReleasedConfigItemsResp
+	56,  // 120: pbcs.Config.CreateHook:output_type -> pbcs.CreateHookResp
+	58,  // 121: pbcs.Config.DeleteHook:output_type -> pbcs.DeleteHookResp
+	60,  // 122: pbcs.Config.ListHooks:output_type -> pbcs.ListHooksResp
+	62,  // 123: pbcs.Config.ListHookTags:output_type -> pbcs.ListHookTagsResp
+	72,  // 124: pbcs.Config.GetHook:output_type -> pbcs.GetHookResp
+	64,  // 125: pbcs.Config.CreateHookRelease:output_type -> pbcs.CreateHookReleaseResp
+	66,  // 126: pbcs.Config.ListHookRelease:output_type -> pbcs.ListHookReleaseResp
+	68,  // 127: pbcs.Config.DeleteHookRelease:output_type -> pbcs.DeleteHookReleaseResp
+	70,  // 128: pbcs.Config.PublishHookRelease:output_type -> pbcs.PublishHookReleaseResp
+	146, // 129: pbcs.Config.GetHookRelease:output_type -> pbhr.HookRelease
+	76,  // 130: pbcs.Config.UpdateHookRelease:output_type -> pbcs.UpdateHookReleaseResp
+	78,  // 131: pbcs.Config.ListHookReleasesReferences:output_type -> pbcs.ListHookReleasesReferencesResp
+	80,  // 132: pbcs.Config.CreateTemplateSpace:output_type -> pbcs.CreateTemplateSpaceResp
+	84,  // 133: pbcs.Config.DeleteTemplateSpace:output_type -> pbcs.DeleteTemplateSpaceResp
+	82,  // 134: pbcs.Config.UpdateTemplateSpace:output_type -> pbcs.UpdateTemplateSpaceResp
+	86,  // 135: pbcs.Config.ListTemplateSpaces:output_type -> pbcs.ListTemplateSpacesResp
+	88,  // 136: pbcs.Config.CreateTemplate:output_type -> pbcs.CreateTemplateResp
+	92,  // 137: pbcs.Config.DeleteTemplate:output_type -> pbcs.DeleteTemplateResp
+	90,  // 138: pbcs.Config.UpdateTemplate:output_type -> pbcs.UpdateTemplateResp
+	94,  // 139: pbcs.Config.ListTemplates:output_type -> pbcs.ListTemplatesResp
+	96,  // 140: pbcs.Config.CreateTemplateRelease:output_type -> pbcs.CreateTemplateReleaseResp
+	98,  // 141: pbcs.Config.ListTemplateReleases:output_type -> pbcs.ListTemplateReleasesResp
+	100, // 142: pbcs.Config.DeleteTemplateRelease:output_type -> pbcs.DeleteTemplateReleaseResp
+	103, // 143: pbcs.Config.CreateTemplateSet:output_type -> pbcs.CreateTemplateSetResp
+	107, // 144: pbcs.Config.DeleteTemplateSet:output_type -> pbcs.DeleteTemplateSetResp
+	105, // 145: pbcs.Config.UpdateTemplateSet:output_type -> pbcs.UpdateTemplateSetResp
+	109, // 146: pbcs.Config.ListTemplateSets:output_type -> pbcs.ListTemplateSetsResp
+	110, // 147: pbcs.Config.CreateGroup:output_type -> pbcs.CreateGroupResp
+	114, // 148: pbcs.Config.DeleteGroup:output_type -> pbcs.DeleteGroupResp
+	112, // 149: pbcs.Config.UpdateGroup:output_type -> pbcs.UpdateGroupResp
+	116, // 150: pbcs.Config.ListAllGroups:output_type -> pbcs.ListAllGroupsResp
+	118, // 151: pbcs.Config.ListAppGroups:output_type -> pbcs.ListAppGroupsResp
+	120, // 152: pbcs.Config.ListGroupReleasedApps:output_type -> pbcs.ListGroupReleasedAppsResp
+	124, // 153: pbcs.Config.Publish:output_type -> pbcs.PublishResp
+	124, // 154: pbcs.Config.GenerateReleaseAndPublish:output_type -> pbcs.PublishResp
+	13,  // 155: pbcs.Config.CreateCredentials:output_type -> pbcs.CreateCredentialResp
+	11,  // 156: pbcs.Config.ListCredentials:output_type -> pbcs.ListCredentialsResp
+	7,   // 157: pbcs.Config.DeleteCredential:output_type -> pbcs.DeleteCredentialsResp
+	9,   // 158: pbcs.Config.UpdateCredential:output_type -> pbcs.UpdateCredentialsResp
+	3,   // 159: pbcs.Config.ListCredentialScopes:output_type -> pbcs.ListCredentialScopesResp
+	1,   // 160: pbcs.Config.UpdateCredentialScope:output_type -> pbcs.UpdateCredentialScopeResp
+	99,  // [99:161] is the sub-list for method output_type
+	37,  // [37:99] is the sub-list for method input_type
+	37,  // [37:37] is the sub-list for extension type_name
+	37,  // [37:37] is the sub-list for extension extendee
+	0,   // [0:37] is the sub-list for field type_name
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 }
 
 func init() { file_config_service_proto_init() }
@@ -11062,54 +12115,6 @@ func file_config_service_proto_init() {
 			}
 		}
 		file_config_service_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateContentReq); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_config_service_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateContentResp); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_config_service_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListContentsReq); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_config_service_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListContentsResp); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_config_service_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateConfigHookReq); i {
 			case 0:
 				return &v.state
@@ -11121,7 +12126,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateConfigHookResp); i {
 			case 0:
 				return &v.state
@@ -11133,7 +12138,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateConfigHookReq); i {
 			case 0:
 				return &v.state
@@ -11145,7 +12150,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[46].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateConfigHookResp); i {
 			case 0:
 				return &v.state
@@ -11157,7 +12162,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[47].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetConfigHookReq); i {
 			case 0:
 				return &v.state
@@ -11169,7 +12174,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[48].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetConfigHookResp); i {
 			case 0:
 				return &v.state
@@ -11181,7 +12186,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[49].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateCommitReq); i {
 			case 0:
 				return &v.state
@@ -11193,7 +12198,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[50].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[46].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateCommitResp); i {
 			case 0:
 				return &v.state
@@ -11205,7 +12210,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[51].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[47].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListCommitsReq); i {
 			case 0:
 				return &v.state
@@ -11217,7 +12222,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[52].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[48].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListCommitsResp); i {
 			case 0:
 				return &v.state
@@ -11229,7 +12234,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[53].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[49].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateReleaseReq); i {
 			case 0:
 				return &v.state
@@ -11241,7 +12246,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[50].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateReleaseResp); i {
 			case 0:
 				return &v.state
@@ -11253,7 +12258,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[51].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListReleasesReq); i {
 			case 0:
 				return &v.state
@@ -11265,7 +12270,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[52].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListReleasesResp); i {
 			case 0:
 				return &v.state
@@ -11277,7 +12282,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[53].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListReleasedConfigItemsReq); i {
 			case 0:
 				return &v.state
@@ -11289,7 +12294,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListReleasedConfigItemsResp); i {
 			case 0:
 				return &v.state
@@ -11301,7 +12306,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateHookReq); i {
 			case 0:
 				return &v.state
@@ -11313,7 +12318,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[60].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateHookResp); i {
 			case 0:
 				return &v.state
@@ -11325,7 +12330,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[61].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteHookReq); i {
 			case 0:
 				return &v.state
@@ -11337,7 +12342,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[62].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteHookResp); i {
 			case 0:
 				return &v.state
@@ -11349,7 +12354,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[63].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListHooksReq); i {
 			case 0:
 				return &v.state
@@ -11361,7 +12366,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[64].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[60].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListHooksResp); i {
 			case 0:
 				return &v.state
@@ -11373,7 +12378,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[65].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[61].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListHookTagsReq); i {
 			case 0:
 				return &v.state
@@ -11385,7 +12390,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[66].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[62].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListHookTagsResp); i {
 			case 0:
 				return &v.state
@@ -11397,7 +12402,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[67].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[63].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateHookReleaseReq); i {
 			case 0:
 				return &v.state
@@ -11409,7 +12414,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[68].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[64].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateHookReleaseResp); i {
 			case 0:
 				return &v.state
@@ -11421,7 +12426,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[69].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[65].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListHookReleaseReq); i {
 			case 0:
 				return &v.state
@@ -11433,7 +12438,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[70].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[66].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListHookReleaseResp); i {
 			case 0:
 				return &v.state
@@ -11445,7 +12450,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[71].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[67].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteHookReleaseReq); i {
 			case 0:
 				return &v.state
@@ -11457,7 +12462,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[72].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[68].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteHookReleaseResp); i {
 			case 0:
 				return &v.state
@@ -11469,7 +12474,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[73].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[69].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PublishHookReleaseReq); i {
 			case 0:
 				return &v.state
@@ -11481,7 +12486,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[74].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[70].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PublishHookReleaseResp); i {
 			case 0:
 				return &v.state
@@ -11493,7 +12498,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[75].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[71].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetHookReq); i {
 			case 0:
 				return &v.state
@@ -11505,7 +12510,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[76].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[72].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetHookResp); i {
 			case 0:
 				return &v.state
@@ -11517,7 +12522,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[77].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[73].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetHookInfoSpec); i {
 			case 0:
 				return &v.state
@@ -11529,7 +12534,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[78].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[74].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetHookReleaseReq); i {
 			case 0:
 				return &v.state
@@ -11541,7 +12546,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[79].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[75].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateHookReleaseReq); i {
 			case 0:
 				return &v.state
@@ -11553,7 +12558,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[80].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[76].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateHookReleaseResp); i {
 			case 0:
 				return &v.state
@@ -11565,7 +12570,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[81].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[77].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListHookReleasesReferencesReq); i {
 			case 0:
 				return &v.state
@@ -11577,7 +12582,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[82].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[78].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListHookReleasesReferencesResp); i {
 			case 0:
 				return &v.state
@@ -11589,7 +12594,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[83].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[79].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateTemplateSpaceReq); i {
 			case 0:
 				return &v.state
@@ -11601,7 +12606,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[84].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[80].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateTemplateSpaceResp); i {
 			case 0:
 				return &v.state
@@ -11613,7 +12618,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[85].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[81].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateTemplateSpaceReq); i {
 			case 0:
 				return &v.state
@@ -11625,7 +12630,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[86].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[82].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateTemplateSpaceResp); i {
 			case 0:
 				return &v.state
@@ -11637,7 +12642,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[87].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[83].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteTemplateSpaceReq); i {
 			case 0:
 				return &v.state
@@ -11649,7 +12654,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[88].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[84].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteTemplateSpaceResp); i {
 			case 0:
 				return &v.state
@@ -11661,7 +12666,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[89].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[85].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListTemplateSpacesReq); i {
 			case 0:
 				return &v.state
@@ -11673,7 +12678,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
-		file_config_service_proto_msgTypes[90].Exporter = func(v interface{}, i int) interface{} {
+		file_config_service_proto_msgTypes[86].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListTemplateSpacesResp); i {
 			case 0:
 				return &v.state
@@ -11685,8 +12690,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[91].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetAllBizsOfTemplateSpacesResp); i {
+=======
+		file_config_service_proto_msgTypes[87].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateTemplateReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11697,8 +12707,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[92].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateDefaultTemplateSpaceReq); i {
+=======
+		file_config_service_proto_msgTypes[88].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateTemplateResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11709,8 +12724,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[93].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateDefaultTemplateSpaceResp); i {
+=======
+		file_config_service_proto_msgTypes[89].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateTemplateReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11721,8 +12741,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[94].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateTemplateReq); i {
+=======
+		file_config_service_proto_msgTypes[90].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateTemplateResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11733,8 +12758,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[95].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateTemplateResp); i {
+=======
+		file_config_service_proto_msgTypes[91].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteTemplateReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11745,8 +12775,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[96].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateTemplateReq); i {
+=======
+		file_config_service_proto_msgTypes[92].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteTemplateResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11757,8 +12792,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[97].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateTemplateResp); i {
+=======
+		file_config_service_proto_msgTypes[93].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListTemplatesReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11769,8 +12809,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[98].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteTemplateReq); i {
+=======
+		file_config_service_proto_msgTypes[94].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListTemplatesResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11781,8 +12826,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[99].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteTemplateResp); i {
+=======
+		file_config_service_proto_msgTypes[95].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateTemplateReleaseReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11793,8 +12843,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[100].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListTemplatesReq); i {
+=======
+		file_config_service_proto_msgTypes[96].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateTemplateReleaseResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11805,8 +12860,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[101].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListTemplatesResp); i {
+=======
+		file_config_service_proto_msgTypes[97].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListTemplateReleasesReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11817,8 +12877,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[102].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateTemplateReleaseReq); i {
+=======
+		file_config_service_proto_msgTypes[98].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListTemplateReleasesResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11829,8 +12894,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[103].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateTemplateReleaseResp); i {
+=======
+		file_config_service_proto_msgTypes[99].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteTemplateReleaseReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11841,8 +12911,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[104].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListTemplateReleasesReq); i {
+=======
+		file_config_service_proto_msgTypes[100].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteTemplateReleaseResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11853,8 +12928,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[105].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListTemplateReleasesResp); i {
+=======
+		file_config_service_proto_msgTypes[101].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateGroupReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11865,8 +12945,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[106].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteTemplateReleaseReq); i {
+=======
+		file_config_service_proto_msgTypes[102].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateTemplateSetReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11877,8 +12962,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[107].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteTemplateReleaseResp); i {
+=======
+		file_config_service_proto_msgTypes[103].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateTemplateSetResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11889,8 +12979,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[108].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateGroupReq); i {
+=======
+		file_config_service_proto_msgTypes[104].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateTemplateSetReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11901,8 +12996,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[109].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateTemplateSetReq); i {
+=======
+		file_config_service_proto_msgTypes[105].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateTemplateSetResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11913,8 +13013,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[110].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateTemplateSetResp); i {
+=======
+		file_config_service_proto_msgTypes[106].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteTemplateSetReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11925,8 +13030,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[111].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateTemplateSetReq); i {
+=======
+		file_config_service_proto_msgTypes[107].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteTemplateSetResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11937,8 +13047,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[112].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateTemplateSetResp); i {
+=======
+		file_config_service_proto_msgTypes[108].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListTemplateSetsReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11949,8 +13064,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[113].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteTemplateSetReq); i {
+=======
+		file_config_service_proto_msgTypes[109].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListTemplateSetsResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11961,8 +13081,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[114].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteTemplateSetResp); i {
+=======
+		file_config_service_proto_msgTypes[110].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateGroupResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11973,8 +13098,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[115].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListTemplateSetsReq); i {
+=======
+		file_config_service_proto_msgTypes[111].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateGroupReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11985,8 +13115,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[116].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListTemplateSetsResp); i {
+=======
+		file_config_service_proto_msgTypes[112].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UpdateGroupResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -11997,8 +13132,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[117].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CreateGroupResp); i {
+=======
+		file_config_service_proto_msgTypes[113].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteGroupReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12009,8 +13149,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[118].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateGroupReq); i {
+=======
+		file_config_service_proto_msgTypes[114].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteGroupResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12021,8 +13166,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[119].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UpdateGroupResp); i {
+=======
+		file_config_service_proto_msgTypes[115].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAllGroupsReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12033,8 +13183,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[120].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteGroupReq); i {
+=======
+		file_config_service_proto_msgTypes[116].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAllGroupsResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12045,8 +13200,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[121].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeleteGroupResp); i {
+=======
+		file_config_service_proto_msgTypes[117].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAppGroupsReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12057,8 +13217,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[122].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListAllGroupsReq); i {
+=======
+		file_config_service_proto_msgTypes[118].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAppGroupsResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12069,8 +13234,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[123].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListAllGroupsResp); i {
+=======
+		file_config_service_proto_msgTypes[119].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListGroupReleasedAppsReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12081,8 +13251,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[124].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListAppGroupsReq); i {
+=======
+		file_config_service_proto_msgTypes[120].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListGroupReleasedAppsResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12093,8 +13268,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[125].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListAppGroupsResp); i {
+=======
+		file_config_service_proto_msgTypes[121].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PublishReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12105,8 +13285,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[126].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListGroupReleasedAppsReq); i {
+=======
+		file_config_service_proto_msgTypes[122].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GenerateReleaseAndPublishReq); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12117,8 +13302,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[127].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListGroupReleasedAppsResp); i {
+=======
+		file_config_service_proto_msgTypes[123].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GenerateReleaseAndPublishResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12129,8 +13319,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[128].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PublishReq); i {
+=======
+		file_config_service_proto_msgTypes[124].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PublishResp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12141,8 +13336,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[129].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenerateReleaseAndPublishReq); i {
+=======
+		file_config_service_proto_msgTypes[125].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BatchUpsertConfigItemsReq_ConfigItem); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12153,8 +13353,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[130].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenerateReleaseAndPublishResp); i {
+=======
+		file_config_service_proto_msgTypes[126].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetHookInfoSpec_Releases); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12165,8 +13370,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[131].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PublishResp); i {
+=======
+		file_config_service_proto_msgTypes[127].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAllGroupsResp_ListAllGroupsData); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12177,8 +13387,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[132].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BatchUpsertConfigItemsReq_ConfigItem); i {
+=======
+		file_config_service_proto_msgTypes[128].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAllGroupsResp_ListAllGroupsData_BindApp); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12189,8 +13404,13 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[133].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetHookInfoSpec_Releases); i {
+=======
+		file_config_service_proto_msgTypes[129].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAppGroupsResp_ListAppGroupsData); i {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			case 0:
 				return &v.state
 			case 1:
@@ -12201,6 +13421,7 @@ func file_config_service_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD
 		file_config_service_proto_msgTypes[134].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ListAllGroupsResp_ListAllGroupsData); i {
 			case 0:
@@ -12238,6 +13459,9 @@ func file_config_service_proto_init() {
 			}
 		}
 		file_config_service_proto_msgTypes[137].Exporter = func(v interface{}, i int) interface{} {
+=======
+		file_config_service_proto_msgTypes[130].Exporter = func(v interface{}, i int) interface{} {
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			switch v := v.(*ListGroupReleasedAppsResp_ListGroupReleasedAppsData); i {
 			case 0:
 				return &v.state
@@ -12256,7 +13480,11 @@ func file_config_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_config_service_proto_rawDesc,
 			NumEnums:      0,
+<<<<<<< HEAD
 			NumMessages:   138,
+=======
+			NumMessages:   131,
+>>>>>>> fcadf0327 (Update: remove unuse content api)
 			NumExtensions: 0,
 			NumServices:   1,
 		},

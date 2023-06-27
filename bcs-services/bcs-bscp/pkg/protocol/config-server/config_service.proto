@@ -104,18 +104,6 @@ service Config {
             body : "*"
         };
     }
-    rpc CreateContent(CreateContentReq) returns (CreateContentResp) {
-        option (google.api.http) = {
-            post : "/api/v1/config/create/content/content/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}"
-            body : "*"
-        };
-    }
-    rpc ListContents(ListContentsReq) returns (ListContentsResp) {
-        option (google.api.http) = {
-            post : "/api/v1/config/list/content/content/app_id/{app_id}/biz_id/{biz_id}"
-            body : "*"
-        };
-    }
 
     rpc UpdateConfigHook(UpdateConfigHookReq) returns (UpdateConfigHookResp) {
         option (google.api.http) = {
@@ -634,30 +622,6 @@ message ListConfigItemCountReq {
 
 message ListConfigItemCountResp {
     repeated pbci.ListConfigItemCounts details = 1;
-}
-
-message CreateContentReq {
-    uint32 biz_id         = 1;
-    uint32 app_id         = 2;
-    uint32 config_item_id = 3;
-    string sign           = 4;
-    uint64 byte_size      = 5;
-}
-
-message CreateContentResp {
-    uint32 id = 1;
-}
-
-message ListContentsReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
-}
-
-message ListContentsResp {
-    uint32                     count   = 1;
-    repeated pbcontent.Content details = 2;
 }
 
 message CreateConfigHookReq {
