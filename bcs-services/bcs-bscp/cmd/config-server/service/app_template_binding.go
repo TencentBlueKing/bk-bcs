@@ -29,7 +29,7 @@ import (
 
 // CreateAppTemplateBinding create a app template binding
 func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.CreateAppTemplateBindingReq) (*pbcs.
-CreateAppTemplateBindingResp, error) {
+	CreateAppTemplateBindingResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateAppTemplateBindingResp)
 
@@ -49,7 +49,6 @@ CreateAppTemplateBindingResp, error) {
 	if len(templateReleaseIDs) > 500 {
 		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,500]",
 			len(templateReleaseIDs))
-
 	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.AppTemplateBinding, Action: meta.Create,
@@ -81,7 +80,7 @@ CreateAppTemplateBindingResp, error) {
 
 // DeleteAppTemplateBinding delete a app template binding
 func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbcs.DeleteAppTemplateBindingReq) (*pbcs.
-DeleteAppTemplateBindingResp, error) {
+	DeleteAppTemplateBindingResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.DeleteAppTemplateBindingResp)
 
@@ -108,7 +107,7 @@ DeleteAppTemplateBindingResp, error) {
 
 // UpdateAppTemplateBinding update a app template binding
 func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.UpdateAppTemplateBindingReq) (*pbcs.
-UpdateAppTemplateBindingResp, error) {
+	UpdateAppTemplateBindingResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateAppTemplateBindingResp)
 
@@ -156,7 +155,7 @@ UpdateAppTemplateBindingResp, error) {
 
 // ListAppTemplateBindings list app template bindings
 func (s *Service) ListAppTemplateBindings(ctx context.Context, req *pbcs.ListAppTemplateBindingsReq) (*pbcs.
-ListAppTemplateBindingsResp,
+	ListAppTemplateBindingsResp,
 	error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAppTemplateBindingsResp)
