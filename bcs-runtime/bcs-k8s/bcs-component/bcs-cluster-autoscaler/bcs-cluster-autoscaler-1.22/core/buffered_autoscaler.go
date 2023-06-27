@@ -478,7 +478,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 
 	unschedulablePods = tpu.ClearTPURequests(unschedulablePods)
 
-	// NOTE: move split and append below to separate PodListProcessor
+	// DOTO: move split and append below to separate PodListProcessor
 	// Some unschedulable pods can be waiting for lower priority pods preemption so they have nominated node to run.
 	// Such pods don't require scale up but should be considered during scale down.
 	unschedulablePods, unschedulableWaitingForLowerPriorityPreemption := core_utils.FilterOutExpendableAndSplit(
