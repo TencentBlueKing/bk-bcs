@@ -136,15 +136,23 @@ type resourceID struct {
 }
 
 func (r *resourceID) check() error {
+	// '-' means ignore project level in url
+	if r.ProjectCode == "-" || r.ProjectIDOrCode == "-" || r.ProjectID == "-" {
+		return nil
+	}
 	if r.ProjectIDOrCode != "" && r.ProjectID == "" {
-		if p, err := store.GetModel().GetProject(context.Background(), r.ProjectIDOrCode); err == nil {
-			r.ProjectID = p.ProjectID
+		p, err := store.GetModel().GetProject(context.Background(), r.ProjectIDOrCode)
+		if err != nil {
+			return errorx.NewReadableErr(errorx.ProjectNotExistsErr, "项目不存在")
 		}
+		r.ProjectID = p.ProjectID
 	}
 	if r.ProjectCode != "" && r.ProjectID == "" {
-		if p, err := store.GetModel().GetProject(context.Background(), r.ProjectCode); err == nil {
-			r.ProjectID = p.ProjectID
+		p, err := store.GetModel().GetProject(context.Background(), r.ProjectCode)
+		if err != nil {
+			return errorx.NewReadableErr(errorx.ProjectNotExistsErr, "项目不存在")
 		}
+		r.ProjectID = p.ProjectID
 	}
 	return nil
 }
@@ -168,7 +176,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	}
 
 	if cErr := resourceID.check(); cErr != nil {
-		return false, errorx.NewReadableErr(errorx.ParamErr, "权限校验失败")
+		return false, cErr
 	}
 
 	action, ok := auth.ActionPermissions[req.Method()]

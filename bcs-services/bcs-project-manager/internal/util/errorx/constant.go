@@ -85,4 +85,6 @@ const (
 	RequestITSMErrMsg = "request bk itsm api error"
 	// NoPermissionErr 无权限
 	NoPermissionErr = 40403
+	// ProjectNotExistsErr 项目不存在
+	ProjectNotExistsErr = 40404
 )
