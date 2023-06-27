@@ -66,6 +66,7 @@ func expectCreateEventAction() core.CreateActionImpl {
 	return core.NewCreateAction(apiv1.SchemeGroupVersion.WithResource("events"), apiv1.NamespaceDefault, &apiv1.Event{})
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func Test_bcsgdWorkload_LoadImageBeforeUpdate(t *testing.T) {
 	blog.InitLogs(conf.LogConfig{Verbosity: 4, ToStdErr: true, AlsoToStdErr: true})
 	b := newBcsGdWorkload()

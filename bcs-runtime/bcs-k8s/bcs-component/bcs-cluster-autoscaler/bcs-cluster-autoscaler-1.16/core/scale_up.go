@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -38,6 +37,8 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 type scaleUpResourcesLimits map[string]int64
@@ -499,10 +500,9 @@ func checkPodsSchedulable(nodeGroup cloudprovider.NodeGroup,
 		klog.V(4).Infof("Skipping node group %s; cannot compute pods passing predicates", nodeGroup.Id())
 		skippedNodeGroups[nodeGroup.Id()] = notReadyReason
 		return option, skippedNodeGroups, podsRemainUnschedulable, fmt.Errorf("")
-	} else {
-		option.Pods = make([]*apiv1.Pod, len(podsPassing))
-		copy(option.Pods, podsPassing)
 	}
+	option.Pods = make([]*apiv1.Pod, len(podsPassing))
+	copy(option.Pods, podsPassing)
 
 	// update information why we cannot schedule pods for which we did not find a working extension option so far
 	podsNotPassing, err := getPodsNotPassingPredicates(nodeGroup.Id())

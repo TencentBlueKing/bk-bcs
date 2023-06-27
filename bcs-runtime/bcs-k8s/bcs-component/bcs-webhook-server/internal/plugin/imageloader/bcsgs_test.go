@@ -33,6 +33,7 @@ import (
 	"k8s.io/kubernetes/pkg/controller"
 )
 
+// NOCC:tosa/fn_length(设计如此)
 func Test_bcsgsWorkload_LoadImageBeforeUpdate(t *testing.T) {
 	blog.InitLogs(conf.LogConfig{Verbosity: 4, ToStdErr: true, AlsoToStdErr: true})
 	b := newBcsGsWorkload()
