@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/time/rate"
+
 	clientset "bscp.io/cmd/feed-server/bll/client-set"
 	"bscp.io/cmd/feed-server/bll/eventc"
 	"bscp.io/cmd/feed-server/bll/lcache"
@@ -27,15 +29,13 @@ import (
 	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
-
-	"golang.org/x/time/rate"
 )
 
 // New initialize the release service instance.
 func New(cs *clientset.ClientSet, cache *lcache.Cache, w eventc.Watcher) (*ReleasedService, error) {
 	provider, err := repository.NewProvider(cc.FeedServer().Repository)
 	if err != nil {
-		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
+		return nil, fmt.Errorf("init repository provider failed, err: %v", err)
 	}
 
 	limiter := cc.FeedServer().MRLimiter

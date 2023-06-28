@@ -19,6 +19,10 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/atomic"
+	"golang.org/x/sync/semaphore"
+	"golang.org/x/time/rate"
+
 	"bscp.io/cmd/feed-server/bll/lcache"
 	"bscp.io/cmd/feed-server/bll/observer"
 	btyp "bscp.io/cmd/feed-server/bll/types"
@@ -31,10 +35,6 @@ import (
 	"bscp.io/pkg/runtime/shutdown"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/types"
-
-	"go.uber.org/atomic"
-	"golang.org/x/sync/semaphore"
-	"golang.org/x/time/rate"
 )
 
 // Option defines options to create a scheduler instance.
@@ -57,7 +57,7 @@ func NewScheduler(opt *Option, name string) (*Scheduler, error) {
 
 	provider, err := repository.NewProvider(cc.FeedServer().Repository)
 	if err != nil {
-		return nil, fmt.Errorf("new repository provider failed, err: %v", err)
+		return nil, fmt.Errorf("schduler init repository provider failed, err: %v", err)
 	}
 
 	mc := initMetric(name)
@@ -324,11 +324,14 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 
 	return &Event{
 		Change: &sfs.ReleaseEventMetaV1{
-			App:        inst.App,
-			AppID:      inst.AppID,
-			ReleaseID:  releaseID,
-			CIMetas:    ciMeta,
-			Repository: &sfs.RepositoryV1{},
+			App:       inst.App,
+			AppID:     inst.AppID,
+			ReleaseID: releaseID,
+			CIMetas:   ciMeta,
+			Repository: &sfs.RepositoryV1{
+				Root: uriD.Root(),
+				Url:  uriD.Url(),
+			},
 		},
 		Instance: inst,
 		CursorID: cursorID,
