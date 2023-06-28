@@ -25,6 +25,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/thirdparty/repo"
 )
 
 const (
@@ -104,17 +105,21 @@ func (u *uriDecoratorInter) Root() string {
 
 // RepoName ..
 func (u *uriDecoratorInter) RepoName() string {
-	return ""
+	name, _ := repo.GenRepoName(u.bizID) // nolint
+	return name
 }
 
 // Path ..
 func (u *uriDecoratorInter) Path(sign string) string {
-	return ""
+	p, _ := repo.GenS3NodeFullPath(u.bizID, sign) // nolint
+	return p
+
 }
 
 // RelativePath ..
 func (u *uriDecoratorInter) RelativePath(sign string) string {
-	return ""
+	p, _ := repo.GenNodeFullPath(sign) // nolint
+	return p
 }
 
 // Url ..
