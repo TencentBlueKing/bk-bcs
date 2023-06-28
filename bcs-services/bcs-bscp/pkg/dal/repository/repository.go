@@ -47,6 +47,9 @@ var (
 		WriteBufferSize:     defaultWriteBufferSize,
 		ReadBufferSize:      defaultReadBufferSize,
 	}
+
+	// notImplementedErr
+	notImplementedErr = errors.New("notImplemented")
 )
 
 // ObjectMetadata 文件元数据

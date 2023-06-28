@@ -295,9 +295,12 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	}
 
 	// validate can file be downloaded by credential.
-	if match, e := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec); e != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", e.Error())
-	} else if !match {
+	match, err := s.bll.Auth().CanMatchCI(im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "do authorization failed, %s", err.Error())
+	}
+
+	if !match {
 		return nil, status.Error(codes.PermissionDenied, "no permission to download file")
 	}
 
@@ -306,6 +309,7 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	fetchLimit := uint32(req.FileMeta.CommitSpec.Content.ByteSize/1024) + 1
 
 	// 生成下载链接
+	im.Kit.BizID = req.BizId
 	downloadLink, err := s.provider.DownloadLink(im.Kit, req.FileMeta.CommitSpec.Content.Signature, fetchLimit)
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "generate temp download url failed, %s", err.Error())

@@ -272,16 +272,26 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetad
 
 // URIDecorator ..
 func (c *bkrepoClient) URIDecorator(bizID uint32) DecoratorInter {
-	return nil
+	return NewUriDecoratorInter()
 }
 
 // DownloadLink bkrepo file download link
 func (c *bkrepoClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
+	repoName, err := repo.GenRepoName(kt.BizID)
+	if err != nil {
+		return "", err
+	}
+
+	objPath, err := repo.GenNodeFullPath(fileContentID)
+	if err != nil {
+		return "", err
+	}
+
 	// get file download url.
 	url, err := c.cli.GenerateTempDownloadURL(kt.Ctx, &repo.GenerateTempDownloadURLReq{
 		ProjectID:     c.project,
-		RepoName:      "",
-		FullPathSet:   []string{},
+		RepoName:      repoName,
+		FullPathSet:   []string{objPath},
 		ExpireSeconds: uint32(tempDownloadURLExpireSeconds),
 		Permits:       fetchLimit,
 		Type:          "DOWNLOAD",

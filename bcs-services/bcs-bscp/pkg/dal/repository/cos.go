@@ -142,22 +142,22 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 
 // URIDecorator ..
 func (c *cosClient) URIDecorator(bizID uint32) DecoratorInter {
-	return nil
+	return NewUriDecoratorInter()
 }
 
 // DownloadLink cos file download link
 func (c *cosClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
-	return "", nil
+	return "", notImplementedErr
 }
 
 // AsyncDownload cos
 func (c *cosClient) AsyncDownload(kt *kit.Kit, fileContentID string) (string, error) {
-	return "", nil
+	return "", notImplementedErr
 }
 
 // AsyncDownloadStatus cos
 func (c *cosClient) AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error) {
-	return false, nil
+	return false, notImplementedErr
 }
 
 // newCosProvider new cos provider
