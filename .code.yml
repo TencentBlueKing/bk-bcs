@@ -11,14 +11,15 @@ source:
       - /bcs-services/bcs-log-manager/
 
       # Comment ratio
+      - /bcs-services/bcs-bscp/cmd/data-service/service/config_item.go
       - /bcs-services/bcs-bscp/cmd/data-service/service/group.go
       - /bcs-services/bcs-bscp/test/benchmark/run/template.go
       - /bcs-services/bcs-bscp/test/mock/repo/service/node.go
       - /bcs-services/bcs-cli/bcs-user-manager/cmd/create.go
+      - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks/createNodeGroup.go
       - /bcs-services/bcs-mesh-manager/config/options.go
       - /bcs-services/bcs-upgrader/upgrades/u1.21.202203082112/migrate.go
       - /bcs-services/bcs-upgrader/upgrades/u1.21.202203082112/types.go
-      - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks/createNodeGroup.go
 
       # Security & Sensitive: it's safe to ignore
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16/go.mod
