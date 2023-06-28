@@ -19,11 +19,6 @@ export default {
       currentView: 'k8sService',
     };
   },
-  computed: {
-    onlineProjectList() {
-      return this.$store.state.projectList;
-    },
-  },
   beforeDestroy() {
     this.$refs.service.leaveCallback();
   },

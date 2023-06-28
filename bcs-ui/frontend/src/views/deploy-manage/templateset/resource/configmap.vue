@@ -395,9 +395,6 @@ export default {
 
       return results;
     },
-    onlineProjectList() {
-      return this.$store.state.projectList;
-    },
     isClusterDataReady() {
       return this.$store.state.cluster.isClusterDataReady;
     },

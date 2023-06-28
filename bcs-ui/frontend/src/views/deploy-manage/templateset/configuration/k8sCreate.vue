@@ -86,27 +86,6 @@ export default {
     },
 
     /**
-             * 获取项目类型
-             * @param  {number} id 项目ID
-             * @return {number}  项目类型
-             */
-    async getProjectKind(id) {
-      const { curProject } = this;
-      let kind = 0;
-      if (curProject && curProject.project_id === id) {
-        kind = curProject.kind;
-      } else {
-        const projects = this.onlineProjectList;
-        for (const project of projects) {
-          if (project.project_id === id) {
-            kind = project.kind;
-          }
-        }
-      }
-      return kind;
-    },
-
-    /**
              * 重新刷新
              */
     reloadTemplateset() {

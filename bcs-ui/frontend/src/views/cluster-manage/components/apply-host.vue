@@ -396,7 +396,7 @@ export default {
       return this.$store.state.cluster.maintainers || [];
     },
     projectId() {
-      return this.$route.params.projectId;
+      return this.$store.getters.curProjectId;
     },
     getHostInfoString() {
       if (!this.formdata.cvm_type) return '';

@@ -474,7 +474,6 @@ export default {
       },
       // 模板多选下拉框选择的值，提交给后端的
       instanceEntity: {},
-      projectId: '',
       // aceAnnotationErrorMsg: '',
       goNamespaceDialogConf: {
         isShow: false,
@@ -484,13 +483,18 @@ export default {
         hasFooter: false,
         hasHeader: false,
       },
-      curProject: null,
       isSelectAllTpl: false,
       previewErrorMessage: '',
       namespaceName: '',
     };
   },
   computed: {
+    curProject() {
+      return this.$store.state.curProject;
+    },
+    projectId() {
+      return this.$store.getters.curProjectId;
+    },
     projectCode() {
       return this.$route.params.projectCode;
     },
@@ -524,9 +528,6 @@ export default {
     isYamlMode() {
       return this.curTemplate.edit_mode === 'yaml';
     },
-    onlineProjectList() {
-      return this.$store.state.projectList;
-    },
     curShowVersionId() {
       return this.$route.params.curShowVersionId;
     },
@@ -544,32 +545,17 @@ export default {
     },
   },
   created() {
-    // router > localStorage > onlineProjectList[0]
-    const len = this.onlineProjectList.length;
-    if (len) {
-      this.projectId = this.$route.params.projectId
-                    || this.curProjectId
-                    || this.onlineProjectList[0].project_id;
-
-      for (let i = 0; i < len; i++) {
-        const project = this.onlineProjectList[i];
-        if (project.project_id === this.projectId) {
-          this.curProject = Object.assign({}, project);
-          break;
-        }
-      }
-      // k8s
-      if (this.curProject.kind === PROJECT_K8S || this.curProject.kind === PROJECT_TKE) {
-        this.editorConfig.lang = 'yaml';
-      } else { // mesos
-        this.editorConfig.lang = 'json';
-      }
-      if (Object.keys(this.curTemplate).length === 0) {
-        this.fetchTemplate();
-      }
-      this.fetchTemplatesetVerList();
-      this.fetchNamespaceList();
+    // k8s
+    if (this.curProject.kind === PROJECT_K8S || this.curProject.kind === PROJECT_TKE) {
+      this.editorConfig.lang = 'yaml';
+    } else { // mesos
+      this.editorConfig.lang = 'json';
     }
+    if (Object.keys(this.curTemplate).length === 0) {
+      this.fetchTemplate();
+    }
+    this.fetchTemplatesetVerList();
+    this.fetchNamespaceList();
   },
   methods: {
     isSharedCluster(clusterID) {

@@ -25,10 +25,9 @@
   </bk-exception>
 </template>
 <script lang="ts">
-import { defineComponent, onBeforeMount, ref, computed } from 'vue';
+import { PropType, defineComponent, onBeforeMount, ref } from 'vue';
 import { userPermsByAction } from '@/api/base';
 import actionsMap from '@/views/app/actions-map';
-import $store from '@/store';
 
 export default defineComponent({
   name: 'AuthForbidden',
@@ -49,6 +48,17 @@ export default defineComponent({
       type: [Object, String],
       default: () => ({}),
     },
+    // 接口返回的权限数据
+    perms: {
+      type: Object as PropType<{
+        action_list: Array<{
+          action_id: string
+          resource_type: string
+        }>
+        apply_url: string
+      }>,
+      default: () => null,
+    },
     fromRoute: {
       type: String,
       default: '',
@@ -61,8 +71,14 @@ export default defineComponent({
     const handleGotoIAM = () => {
       window.open(href.value);
     };
-    const projectList = computed(() => $store.state.projectList);
-    onBeforeMount(async () => {
+
+    // 设置权限信息
+    const handleSetPermsData = (url, data) => {
+      href.value = url;
+      tableData.value = data;
+    };
+
+    const handleGetPermsData = async () => {
       if (!props.actionId) return;
       isLoading.value = true;
       const data = await userPermsByAction({
@@ -72,15 +88,29 @@ export default defineComponent({
           : props.permCtx,
       }).catch(() => ({}));
       isLoading.value = false;
-      if (data?.perms?.[props.actionId] && props.fromRoute && projectList.value.length) {
+      if (data?.perms?.[props.actionId] && props.fromRoute) {
+        // 有权限跳回原来界面
         window.location.href = props.fromRoute;
       } else {
-        // eslint-disable-next-line camelcase
-        href.value = data?.perms?.apply_url;
-        tableData.value = [{
+        // 无权限
+        handleSetPermsData(data?.perms?.apply_url, [{
           resource_name: props.resourceName,
           action_id: props.actionId,
-        }];
+        }]);
+      }
+    };
+
+    onBeforeMount(async () => {
+      if (props.perms) {
+        // 已经返回权限信息
+        const { apply_url, action_list } = props.perms;
+        handleSetPermsData(apply_url, action_list.map(item => ({
+          ...item,
+          resource_name: props.resourceName,
+        })));
+      } else {
+        // 查询权限信息
+        handleGetPermsData();
       }
     });
     return {

@@ -4,14 +4,34 @@
       class="project-select"
       :clearable="false"
       searchable
-      :value="$store.getters.curProjectCode"
+      :value="projectName"
       :popover-min-width="320"
-      @change="handleProjectChange">
+      enable-scroll-load
+      :scroll-loading="{
+        isLoading: scrollLoading
+      }"
+      :loading="loading"
+      :remote-method="remoteSearch"
+      allow-create
+      ref="selectRef"
+      @selected="handleProjectChange"
+      @scroll-end="handleScrollToBottom">
       <bcs-option
         v-for="option in projectList"
         :key="option.projectCode"
         :id="option.projectCode"
-        :name="option.name">
+        :name="option.name"
+        :disabled="!(perms[option.projectID] && perms[option.projectID].project_view)"
+        v-authority="{
+          clickable: perms[option.projectID]
+            && perms[option.projectID].project_view,
+          actionId: 'project_view',
+          resourceName: option.name,
+          disablePerms: true,
+          permCtx: {
+            project_id: option.projectID
+          }
+        }">
         <span
           class="flex items-center"
           v-bk-tooltips="{
@@ -19,7 +39,8 @@
               ? `${$t('项目名称')}: ${option.name}<br/>${$t('业务ID')}: ${option.businessID}`
               : `${$t('项目名称')}: ${option.name}<br/>${$t('未启用容器服务')}`,
             placement: 'left',
-            boundary: 'window'
+            boundary: 'window',
+            delay: [300, 0]
           }">
           <span :class="['bcs-ellipsis', { 'flex-1': !option.businessID }]">{{option.name}}</span>
           <span class="text-[#C4C6CC]" v-if="option.businessID">
@@ -59,17 +80,81 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue';
+import { defineComponent, ref, onBeforeMount, computed, watch, onMounted } from 'vue';
 import ProjectCreate from '@/views/project-manage/project/project-create.vue';
 import $router from '@/router';
 import $store from '@/store';
+import useProjects, { IProjectPerm } from '../project-manage/project/use-project';
+import { IProject } from '@/composables/use-app';
+import useDebouncedRef from '@/composables/use-debounce';
 
 export default defineComponent({
   name: 'ProjectSelector',
   components: { ProjectCreate },
   setup() {
+    const { getProjectList } = useProjects();
     const showCreateDialog = ref(false);
-    const projectList = computed<any[]>(() => $store.state.projectList);
+    const loading = ref(false);
+    const params = ref({
+      offset: 0,
+      limit: 20,
+    });
+
+    const projectList = ref<IProject[]>([]);
+    const perms = ref<Record<string, IProjectPerm>>({});
+    const projectName = computed(() => $store.state.curProject?.name);
+    const projectCodeMap = computed(() => projectList.value.reduce((pre, item) => {
+      pre[item.projectCode] = item;
+      return pre;
+    }, {}));
+
+    // 初始化数据
+    const handleInitProjectList = async () => {
+      params.value.offset = 0;
+      const { data, web_annotations } = await getProjectList({
+        ...params.value,
+        searchKey: searchKey.value,
+      });
+      projectList.value = data?.results || [];
+      perms.value = web_annotations.perms;
+    };
+
+    // 滚动加载
+    const finished = ref(false);
+    const scrollLoading = ref(false);
+    const handleScrollToBottom = async () => {
+      if (finished.value || scrollLoading.value) return;
+
+      scrollLoading.value = true;
+      params.value.offset = projectList.value.length;
+      const { data, web_annotations } = await getProjectList({
+        ...params.value,
+        searchKey: searchKey.value,
+      });
+      // 过滤重复数据
+      const filterData = data.results.filter(item => !projectCodeMap.value[item.projectCode]);
+      if (!filterData.length) {
+        finished.value = true;
+      } else {
+        projectList.value.push(...filterData);
+        perms.value = Object.assign(perms.value, web_annotations.perms);
+      }
+      scrollLoading.value = false;
+    };
+
+    // 远程搜索
+    const selectRef = ref();
+    const searchKey = useDebouncedRef('', 600);
+    const remoteSearch = (key) => {
+      // hack 重置组件内部的loading
+      selectRef.value.searchLoading = false;
+      searchKey.value = key;
+    };
+    watch(searchKey, async () => {
+      selectRef.value.searchLoading = true;
+      await handleInitProjectList();
+      selectRef.value.searchLoading = false;
+    });
 
     // 申请项目权限
     const handleGotoIAM = () => {
@@ -111,13 +196,31 @@ export default defineComponent({
       }
     };
 
+    onBeforeMount(async () => {
+      loading.value = true;
+      await handleInitProjectList();
+      loading.value = false;
+    });
+
+    onMounted(() => {
+      // hack 禁用select输入框
+      selectRef.value?.$refs?.createInput?.setAttribute('readonly', true);
+    });
+
     return {
+      perms,
+      projectName,
+      loading,
+      selectRef,
+      remoteSearch,
+      scrollLoading,
       showCreateDialog,
       projectList,
       handleGotoIAM,
       handleCreateProject,
       handleProjectChange,
       handleGotoProjectManage,
+      handleScrollToBottom,
     };
   },
 });
@@ -128,5 +231,12 @@ export default defineComponent({
   background:#252F43;
   color:#D3D9E4;
   box-shadow: none;
+  >>> .bk-select-name {
+    background:#252F43;
+    cursor: pointer;
+  }
+  >>> .bk-select-angle {
+    z-index: 2;
+  }
 }
 </style>

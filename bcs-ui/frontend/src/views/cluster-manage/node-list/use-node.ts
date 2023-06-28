@@ -47,8 +47,7 @@ export interface ILabelsAndTaintsParams<T> {
 
 export default function useNode() {
   const projectId = computed(() => store.getters.curProjectId);
-  const projectList = computed<any[]>(() => store.state.projectList);
-  const curProject = computed(() => projectList.value.find(item => item.project_id === projectId.value));
+  const curProject = computed(() => store.state.curProject);
   const user = computed(() => store.state.user);
   // 获取节点列表
   const getNodeList = async (clusterId) => {
@@ -206,7 +205,7 @@ export default function useNode() {
       return;
     }
     const data = await store.dispatch('metric/clusterNodeOverview', {
-      $projectCode: curProject.value.project_code,
+      $projectCode: curProject.value.projectCode,
       $clusterId: clusterId,
       $nodeIP: nodeIP,
     }).catch(() => ({}));
