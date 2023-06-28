@@ -11,8 +11,7 @@
 | biz_id               | uint32   | 是   | 业务ID                          |
 | app_id               | uint32   | 是   | 应用ID                          |
 | binding_id           | uint32   | 是   | 服务模版绑定ID                  |
-| template_ids         | []uint32 | 是   | 绑定的模版ID集合，最多500个     |
-| template_release_ids | []uint32 | 是   | 绑定的模版版本ID集合，最多500个 |
+| bindings   | []template_binding | 是   | 服务绑定的套餐和模版版本关系，绑定模板版本最多500个 |
 
 #### 调用示例
 

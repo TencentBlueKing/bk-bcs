@@ -140,8 +140,10 @@ type AppTemplateBindingSpec struct {
 	Bindings           TemplateBindings  `json:"bindings" gorm:"column:bindings;type:json"`
 }
 
+// TemplateBindings is []*TemplateBinding
 type TemplateBindings []*TemplateBinding
 
+// TemplateBinding is relation between template set id and template release ids
 type TemplateBinding struct {
 	TemplateSetID      uint32   `json:"template_set_id"`
 	TemplateReleaseIDs []uint32 `json:"template_release_ids"`
