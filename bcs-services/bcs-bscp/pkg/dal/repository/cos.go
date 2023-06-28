@@ -44,8 +44,8 @@ type cosClient struct {
 }
 
 // Upload upload file to cos
-func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+func (c *cosClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
 		return nil, err
 	}
@@ -70,15 +70,15 @@ func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*
 
 	// cos return not have metadata
 	metadata := &ObjectMetadata{
-		Sha256: fileContentID,
+		Sha256: sign,
 	}
 
 	return metadata, nil
 }
 
 // Download download file from cos
-func (c *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+func (c *cosClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -109,8 +109,8 @@ func (c *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, 
 }
 
 // Metadata cos file metadata
-func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
 		ByteSize: 0,
-		Sha256:   fileContentID,
+		Sha256:   sign,
 	}
 
 	return metadata, nil
@@ -151,8 +151,8 @@ func (c *cosClient) URIDecorator(bizID uint32) DecoratorInter {
 }
 
 // DownloadLink cos file download link
-func (c *cosClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+func (c *cosClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (string, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
 		return "", err
 	}
@@ -173,12 +173,12 @@ func (c *cosClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit u
 }
 
 // AsyncDownload cos
-func (c *cosClient) AsyncDownload(kt *kit.Kit, fileContentID string) (string, error) {
+func (c *cosClient) AsyncDownload(kt *kit.Kit, sign string) (string, error) {
 	return "", notImplementedErr
 }
 
 // AsyncDownloadStatus cos
-func (c *cosClient) AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error) {
+func (c *cosClient) AsyncDownloadStatus(kt *kit.Kit, sign string, taskID string) (bool, error) {
 	return false, notImplementedErr
 }
 

@@ -146,12 +146,12 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 }
 
 // Upload file to bkrepo
-func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader) (*ObjectMetadata, error) {
+func (c *bkrepoClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error) {
 	if err := c.ensureRepo(kt); err != nil {
 		return nil, errors.Wrap(err, "ensure repo failed")
 	}
 
-	opt := &repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID}
+	opt := &repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign}
 	nodeMeta, err := getNodeMetadata(kt, c.cli, opt, kt.AppID)
 	if err != nil {
 		return nil, errors.Wrap(err, "get node metadata")
@@ -202,8 +202,8 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader)
 }
 
 // Download download file from bkrepo
-func (c *bkrepoClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
-	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID})
+func (c *bkrepoClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error) {
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
 	if err != nil {
 		return nil, 0, err
 	}
@@ -234,8 +234,8 @@ func (c *bkrepoClient) Download(kt *kit.Kit, fileContentID string) (io.ReadClose
 }
 
 // Metadata bkrepo file metadata
-func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
-	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID})
+func (c *bkrepoClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) {
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
 	if err != nil {
 		return nil, err
 	}
@@ -276,13 +276,13 @@ func (c *bkrepoClient) URIDecorator(bizID uint32) DecoratorInter {
 }
 
 // DownloadLink bkrepo file download link
-func (c *bkrepoClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
+func (c *bkrepoClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (string, error) {
 	repoName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
 		return "", err
 	}
 
-	objPath, err := repo.GenNodeFullPath(fileContentID)
+	objPath, err := repo.GenNodeFullPath(sign)
 	if err != nil {
 		return "", err
 	}
@@ -305,12 +305,12 @@ func (c *bkrepoClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimi
 }
 
 // AsyncDownload bkrepo
-func (c *bkrepoClient) AsyncDownload(kt *kit.Kit, fileContentID string) (string, error) {
+func (c *bkrepoClient) AsyncDownload(kt *kit.Kit, sign string) (string, error) {
 	return "", nil
 }
 
 // AsyncDownloadStatus bkrepo
-func (c *bkrepoClient) AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error) {
+func (c *bkrepoClient) AsyncDownloadStatus(kt *kit.Kit, sign string, taskID string) (bool, error) {
 	return false, nil
 }
 
