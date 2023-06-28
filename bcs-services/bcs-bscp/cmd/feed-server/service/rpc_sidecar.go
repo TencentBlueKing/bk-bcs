@@ -74,9 +74,8 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 		RuntimeOption: &sfs.SidecarRuntimeOption{
 			BounceIntervalHour: s.dsSetting.BounceIntervalHour,
 			Repository: &sfs.RepositoryV1{
-				RepositoryType: decorator.GetRepositoryType(),
-				Root:           decorator.Root(),
-				Url:            decorator.Url(),
+				Root: decorator.Root(),
+				Url:  decorator.Url(),
 			},
 		},
 	}

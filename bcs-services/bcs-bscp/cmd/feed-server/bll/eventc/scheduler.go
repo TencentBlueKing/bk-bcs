@@ -324,13 +324,11 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 
 	return &Event{
 		Change: &sfs.ReleaseEventMetaV1{
-			App:       inst.App,
-			AppID:     inst.AppID,
-			ReleaseID: releaseID,
-			CIMetas:   ciMeta,
-			Repository: &sfs.RepositoryV1{
-				RepositoryType: uriD.GetRepositoryType(),
-			},
+			App:        inst.App,
+			AppID:      inst.AppID,
+			ReleaseID:  releaseID,
+			CIMetas:    ciMeta,
+			Repository: &sfs.RepositoryV1{},
 		},
 		Instance: inst,
 		CursorID: cursorID,

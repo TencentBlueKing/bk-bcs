@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"sync"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/runtime/jsoni"
 )
 
@@ -219,7 +218,7 @@ type FileMetadataValue struct {
 // GenRepoName generate repo repository name, like "bscp-{version}-{biz_id}".
 func GenRepoName(bizID uint32) (string, error) {
 	if bizID == 0 {
-		return "", errf.New(errf.InvalidParameter, "biz_id should > 0")
+		return "", errors.New("biz_id should > 0")
 	}
 
 	return fmt.Sprintf("bscp-%s-biz-%d", version, bizID), nil
@@ -228,7 +227,7 @@ func GenRepoName(bizID uint32) (string, error) {
 // GenNodeFullPath generate node full path, like "/file/c7d78b78205a2619eb2b80558f85ee188836ef5f4f317f8587ee38bc3712a8a"
 func GenNodeFullPath(sign string) (string, error) {
 	if len(sign) == 0 {
-		return "", errf.New(errf.InvalidParameter, "sign is required")
+		return "", errors.New("sign is required")
 	}
 
 	return fmt.Sprintf("%s%s", nodeFrontPath, sign), nil

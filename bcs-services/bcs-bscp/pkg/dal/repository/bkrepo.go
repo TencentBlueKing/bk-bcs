@@ -280,7 +280,7 @@ func (c *bkrepoClient) URIDecorator(bizID uint32) DecoratorInter {
 func (c *bkrepoClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
 	// get file download url.
 	url, err := c.cli.GenerateTempDownloadURL(kt.Ctx, &repo.GenerateTempDownloadURLReq{
-		ProjectID:     cc.FeedServer().Repository.BkRepo.Project,
+		ProjectID:     c.project,
 		RepoName:      "",
 		FullPathSet:   []string{},
 		ExpireSeconds: uint32(tempDownloadURLExpireSeconds),

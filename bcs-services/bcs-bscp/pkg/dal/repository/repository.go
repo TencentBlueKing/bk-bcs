@@ -62,7 +62,6 @@ type DecoratorInter interface {
 	Path(sign string) string
 	RelativePath(sign string) string
 	Url() string
-	GetRepositoryType() cc.StorageMode
 }
 
 // ObjectDownloader 文件下载
@@ -89,6 +88,40 @@ func GetFileContentID(r *http.Request) (string, error) {
 	}
 
 	return fileContentID, nil
+}
+
+type uriDecoratorInter struct {
+	bizID string
+}
+
+// Root ..
+func (u *uriDecoratorInter) Root() string {
+	return ""
+}
+
+// RepoName ..
+func (u *uriDecoratorInter) RepoName() string {
+	return ""
+}
+
+// Path ..
+func (u *uriDecoratorInter) Path(sign string) string {
+	return ""
+}
+
+// RelativePath ..
+func (u *uriDecoratorInter) RelativePath(sign string) string {
+	return ""
+}
+
+// Url ..
+func (u *uriDecoratorInter) Url() string {
+	return ""
+}
+
+// NewUriDecoratorInter ..
+func NewUriDecoratorInter() DecoratorInter {
+	return &uriDecoratorInter{}
 }
 
 // NewProvider init provider factory by storage type
