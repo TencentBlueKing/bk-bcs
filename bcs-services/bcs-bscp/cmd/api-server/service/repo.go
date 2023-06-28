@@ -44,7 +44,7 @@ func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metadata, err := s.provider.Upload(kt, fileContentID, r.Body, r.ContentLength)
+	metadata, err := s.provider.Upload(kt, fileContentID, r.Body)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
