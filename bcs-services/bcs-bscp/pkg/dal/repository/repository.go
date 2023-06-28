@@ -94,7 +94,7 @@ func GetFileContentID(r *http.Request) (string, error) {
 }
 
 type uriDecoratorInter struct {
-	bizID string
+	bizID uint32
 }
 
 // Root ..
@@ -122,9 +122,9 @@ func (u *uriDecoratorInter) Url() string {
 	return ""
 }
 
-// NewUriDecoratorInter ..
-func NewUriDecoratorInter() DecoratorInter {
-	return &uriDecoratorInter{}
+// newUriDecoratorInter ..
+func newUriDecoratorInter(bizID uint32) DecoratorInter {
+	return &uriDecoratorInter{bizID: bizID}
 }
 
 // NewProvider init provider factory by storage type

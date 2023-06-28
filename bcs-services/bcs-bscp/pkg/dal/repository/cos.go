@@ -16,6 +16,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	cos "github.com/tencentyun/cos-go-sdk-v5"
@@ -34,8 +37,10 @@ const (
 
 // cosClient tencentcloud cos client struct
 type cosClient struct {
-	host   string
-	client *http.Client
+	conf        *cc.S3Storage
+	host        string
+	client      *http.Client
+	innerClient *cos.Client
 }
 
 // Upload upload file to cos
@@ -142,12 +147,29 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 
 // URIDecorator ..
 func (c *cosClient) URIDecorator(bizID uint32) DecoratorInter {
-	return NewUriDecoratorInter()
+	return newUriDecoratorInter(bizID)
 }
 
 // DownloadLink cos file download link
 func (c *cosClient) DownloadLink(kt *kit.Kit, fileContentID string, fetchLimit uint32) (string, error) {
-	return "", notImplementedErr
+	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+	if err != nil {
+		return "", err
+	}
+
+	opt := &cos.PresignedURLOptions{
+		Query:  &url.Values{},
+		Header: &http.Header{},
+	}
+
+	// cos sdk 已经包含根目录, 需要去重
+	node = strings.TrimLeft(node, "/")
+	u, err := c.innerClient.Object.GetPresignedURL(kt.Ctx, http.MethodGet, node, c.conf.AccessKeyID, c.conf.SecretAccessKey, time.Hour, opt)
+	if err != nil {
+		return "", err
+	}
+
+	return u.String(), nil
 }
 
 // AsyncDownload cos
@@ -171,9 +193,16 @@ func newCosProvider(conf cc.S3Storage) (Provider, error) {
 		Transport: tools.NewCurlLogTransport(defaultTransport),
 	}
 
+	u, err := url.Parse(host)
+	if err != nil {
+		return nil, err
+	}
+
 	p := &cosClient{
-		host:   host,
-		client: &http.Client{Transport: transport},
+		host:        host,
+		conf:        &conf,
+		client:      &http.Client{Transport: transport},
+		innerClient: cos.NewClient(&cos.BaseURL{BucketURL: u}, nil),
 	}
 
 	return p, nil
