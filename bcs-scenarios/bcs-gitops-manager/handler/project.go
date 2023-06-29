@@ -95,6 +95,12 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 		return e.startProjectResult(resp, failedCode, "",
 			errors.Wrapf(err, "sync project '%s' clusters failed", project.ProjectCode))
 	}
+
+	// 完成project同步之后，需要初始化secret vault相关信息
+	if err := e.option.SecretClient.InitSecretRequest(project.Name); err != nil {
+		return e.startProjectResult(resp, failedCode, "",
+			errors.Wrapf(err, "init secret project '%s' failed", project.Name))
+	}
 	return e.startProjectResult(resp, successCode, "ok", nil)
 }
 
@@ -111,6 +117,7 @@ func defaultAppProject(ns string, project *bcsproject.Project) *v1alpha1.AppProj
 				common.ProjectAliaName:      project.Name,
 				common.ProjectIDKey:         project.ProjectID,
 				common.ProjectBusinessIDKey: project.BusinessID,
+				common.SecretKey:            fmt.Sprintf("default:vault-secret-%s", project.Name),
 			},
 		},
 		Spec: v1alpha1.AppProjectSpec{

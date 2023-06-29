@@ -46,6 +46,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/controller"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/tunnel"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
@@ -82,6 +83,7 @@ type Server struct {
 	gitops proxy.GitOpsProxy
 	// gitops data storage
 	storage store.Store
+	secret  *secret.ServerProxy
 
 	jwtClient *jwt.JWTClient
 	iamClient iam.PermClient
@@ -91,7 +93,7 @@ type Server struct {
 func (s *Server) Init() error {
 	// 初始化所有进程
 	initializer := []func() error{
-		s.initIamJWTClient, s.initStorage, s.initController,
+		s.initSecret, s.initIamJWTClient, s.initStorage, s.initController,
 		s.initMicroService, s.initHTTPService, s.initLeaderElection,
 	}
 	for _, init := range initializer {
@@ -145,6 +147,15 @@ func (s *Server) initStorage() error {
 		return fmt.Errorf("gitops storage failure")
 	}
 	s.stops = append(s.stops, s.storage.Stop)
+	return nil
+}
+
+func (s *Server) initSecret() error {
+	opt := &secret.ServerOptions{
+		Address: s.option.SecretServer.Address,
+		Port:    s.option.SecretServer.Port,
+	}
+	s.secret = secret.NewServerProxy(opt)
 	return nil
 }
 
@@ -202,6 +213,7 @@ func (s *Server) initMicroService() error {
 		ProjectControl: s.projectCtl,
 		JwtClient:      s.jwtClient,
 		IamClient:      s.iamClient,
+		SecretClient:   s.secret,
 	}
 	gitopsHandler := handler.NewGitOpsHandler(opt)
 	if err := gitopsHandler.Init(); err != nil {
@@ -311,11 +323,12 @@ func (s *Server) initGrpcGateway(router *mux.Router) error {
 // change to other gitops solution easilly
 func (s *Server) initGitOpsProxy(router *mux.Router) error {
 	opt := &proxy.GitOpsOptions{
-		Service:    s.option.GitOps.Service,
-		PathPrefix: common.GitOpsProxyURL,
-		JWTDecoder: s.jwtClient,
-		IAMClient:  s.iamClient,
-		Storage:    s.storage,
+		Service:      s.option.GitOps.Service,
+		PathPrefix:   common.GitOpsProxyURL,
+		JWTDecoder:   s.jwtClient,
+		IAMClient:    s.iamClient,
+		Storage:      s.storage,
+		SecretClient: s.secret,
 	}
 
 	s.gitops = argocd.NewGitOpsProxy(opt)
@@ -364,6 +377,7 @@ func (s *Server) initController() error {
 		APIToken:             s.option.APIGatewayToken,
 		Interval:             s.option.ClusterSyncInterval,
 		Storage:              s.storage,
+		Secret:               s.secret,
 	}
 	s.clusterCtl = controller.NewClusterController(opt)
 	if err := s.clusterCtl.Init(); err != nil {

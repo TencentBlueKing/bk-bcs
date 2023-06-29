@@ -39,7 +39,7 @@ func (plugin *WebhookPlugin) Init() error {
 }
 
 func (plugin *WebhookPlugin) executeWebhook(ctx context.Context, r *http.Request) *httpResponse {
-	user := ctx.Value("user").(*proxy.UserInfo)
+	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	blog.Infof("user %s request webhook", user.GetUser())
 	return nil
 }

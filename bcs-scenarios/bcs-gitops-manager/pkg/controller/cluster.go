@@ -205,6 +205,13 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 			continue
 		}
 		blog.Infof("sync clusters for project [%s]%s success", appPro.Name, proID)
+
+		// 同步secret的初始化
+		if err := control.option.Secret.InitSecretRequest(appPro.Name); err != nil {
+			blog.Errorf("sync secrets for project [%s]%s failed: %s", appPro.Name, proID, err.Error())
+			continue
+		}
+		blog.Infof("sync secrets for project [%s]%s success", appPro.Name, proID)
 	}
 	return nil
 }

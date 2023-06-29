@@ -89,6 +89,11 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
 		middleware: middleware,
 	}
+	secretPlugin := &SecretPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/secrets").Subrouter(),
+		middleware: middleware,
+		session:    ops.session,
+	}
 	streamPlugin := &StreamPlugin{
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/stream/applications").Subrouter(),
 		appHandler: appPlugin,
@@ -107,6 +112,7 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
+		secretPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

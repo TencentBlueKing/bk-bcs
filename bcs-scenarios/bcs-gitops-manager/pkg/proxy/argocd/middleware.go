@@ -25,6 +25,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/handler"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
@@ -113,6 +114,8 @@ type MiddlewareInterface interface {
 	ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error)
 	CheckApplicationPermission(ctx context.Context, appName string,
 		action iam.ActionID) (*v1alpha1.Application, int, error)
+
+	ProxySecretRequest(req *http.Request) *handler.SecretResponse
 }
 
 // MiddlewareHandler 定义 http 中间件处理对象
@@ -144,7 +147,7 @@ func (h *MiddlewareHandler) HttpWrapper(handler httpHandler) http.Handler {
 
 // ListProjects 根据用户权限列出具备权限的 Projects
 func (h *MiddlewareHandler) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error) {
-	user := ctx.Value("user").(*proxy.UserInfo)
+	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	projectList, err := h.option.Storage.ListProjects(ctx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list projects failed")
@@ -205,7 +208,7 @@ func (h *MiddlewareHandler) CheckProjectPermission(ctx context.Context, projectN
 // CheckProjectPermissionByID 检查登录态用户对于项目的权限
 func (h *MiddlewareHandler) CheckProjectPermissionByID(ctx context.Context, projectID string,
 	action iam.ActionID) (int, error) {
-	user := ctx.Value("user").(*proxy.UserInfo)
+	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	var permit bool
 	var err error
 	switch action {
@@ -231,7 +234,7 @@ func (h *MiddlewareHandler) CheckProjectPermissionByID(ctx context.Context, proj
 
 // CheckClusterCreatePermission 检查登录态用户是否有创建集群权限
 func (h *MiddlewareHandler) CheckClusterCreatePermission(ctx context.Context, projectID string) (int, error) {
-	user := ctx.Value("user").(*proxy.UserInfo)
+	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	permit, _, err := h.clusterPermission.CanCreateCluster(user.GetUser(), projectID)
 	if err != nil {
 		return http.StatusInternalServerError, errors.Errorf("auth center failed")
@@ -245,7 +248,7 @@ func (h *MiddlewareHandler) CheckClusterCreatePermission(ctx context.Context, pr
 // CheckClusterPermission 检查登录态用户对于集群的权限
 func (h *MiddlewareHandler) CheckClusterPermission(ctx context.Context, clusterName string,
 	action iam.ActionID) (statusCode int, err error) {
-	user := ctx.Value("user").(*proxy.UserInfo)
+	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	argoCluster, err := h.option.Storage.GetCluster(ctx, clusterName)
 	if err != nil {
 		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster from storage failure")
@@ -281,7 +284,7 @@ func (h *MiddlewareHandler) CheckClusterPermission(ctx context.Context, clusterN
 // ListClusters 根据项目名获取用户态下可以 view 的集群列表
 func (h *MiddlewareHandler) ListClusters(ctx context.Context, projectNames []string) (*v1alpha1.ClusterList,
 	int, error) {
-	user := ctx.Value("user").(*proxy.UserInfo)
+	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
 	// get all clusters from argocd
 	clusterList, err := h.option.Storage.ListCluster(ctx)
 	if err != nil {
@@ -407,4 +410,9 @@ func (h *MiddlewareHandler) CheckApplicationPermission(ctx context.Context, appN
 		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
 	}
 	return app, http.StatusOK, nil
+}
+
+// ProxySecretRequest secret interface
+func (h *MiddlewareHandler) ProxySecretRequest(req *http.Request) *handler.SecretResponse {
+	return h.option.SecretClient.ProxySecretRequest(req)
 }

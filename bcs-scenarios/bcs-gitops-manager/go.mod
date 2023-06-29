@@ -6,6 +6,8 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220919094211-a1b246e54e5a
 	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230613090449-9c5bf107fe88
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220923140150-350b3bc988eb
+	github.com/agiledragon/gomonkey/v2 v2.10.1
+	github.com/argoproj-labs/argocd-vault-plugin v1.15.0
 	github.com/argoproj/argo-cd/v2 v2.6.2
 	github.com/asim/go-micro/plugins/client/grpc/v4 v4.7.0
 	github.com/asim/go-micro/plugins/registry/etcd/v4 v4.7.0
@@ -19,16 +21,21 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3
+	github.com/hashicorp/vault/api v1.9.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.14.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.12.0
+	github.com/stretchr/testify v1.8.2
 	go-micro.dev/v4 v4.10.2
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/go-playground/webhooks.v5 v5.17.0
+	k8s.io/api v0.24.2
 	k8s.io/apimachinery v0.24.2
+	k8s.io/client-go v0.24.2
 	k8s.io/kubernetes v1.24.2
 )
 

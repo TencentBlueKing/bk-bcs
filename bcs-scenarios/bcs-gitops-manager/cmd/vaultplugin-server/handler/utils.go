@@ -10,41 +10,30 @@
  * limitations under the License.
  */
 
-package controller
+package handler
 
 import (
 	"context"
-	"crypto/tls"
+	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
+	"github.com/pkg/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
-// Options for project controller
-type Options struct {
-	// global context for graceful exit
-	Context context.Context
-	// work mode, tunnel or service
-	Mode      string
-	ClientTLS *tls.Config
-	// take affect when in service mode
-	Registry    string
-	RegistryTLS *tls.Config
-	// 专门用于设置 cluster 的地址
-	APIGatewayForCluster string
-	// take effect when in tunnel mode
-	APIGateway string
-	APIToken   string
-	// interval for data sync, seconds
-	Interval uint
-	// gitops system storage
-	Storage store.Store
-	Secret  *secret.ServerProxy
-}
-
-// Controller common definition
-type Controller interface {
-	Init() error
-	Start() error
-	Stop()
+func getGitopsAppSecretkey(ctx context.Context, st store.Store, application string) (string, error) {
+	app, err := st.GetApplication(ctx, application)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get gitops application")
+	}
+	project, err := st.GetProject(ctx, app.Spec.Project)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get gitops project")
+	}
+	secretKey, ok := project.GetAnnotations()[common.SecretKey]
+	if !ok {
+		return "", fmt.Errorf("get secret key error, secretkey is empty")
+	}
+	return secretKey, nil
 }

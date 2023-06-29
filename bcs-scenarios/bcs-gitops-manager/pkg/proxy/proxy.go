@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -42,6 +43,8 @@ type GitOpsOptions struct {
 	JWTDecoder *jwt.JWTClient
 	// IAMClient is basic client
 	IAMClient iam.PermClient
+	// Secret client
+	SecretClient *secret.ServerProxy
 }
 
 // Validate options
@@ -85,7 +88,7 @@ func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	return GetJWTInfoWithAuthorization(raw, client)
 }
 
-//GetJWTInfoWithAuthorization 根据 token 获取用户信息
+// GetJWTInfoWithAuthorization 根据 token 获取用户信息
 func GetJWTInfoWithAuthorization(authorization string, client *jwt.JWTClient) (*UserInfo, error) {
 	if len(authorization) == 0 {
 		return nil, fmt.Errorf("lost 'Authorization' header")
@@ -129,10 +132,11 @@ var (
 
 // GRPCResponse 将对象通过 grpc 的数据格式返回
 // grpc 返回的 proto 数据格式规定如下：
-// - 第 1 个 byte 表明是否是 compressed, 参见: google.golang.org/grpc/rpc_util.go 中的 compressed
-// - 第 2-5 个 byte 表明 body 的长度，参见: google.golang.org/grpc/rpc_util.go 的 recvMsg 方法
-//   长度需要用到大端转换来获取实际值
-// - 后续的 byte 位是 body + content-type
+//   - 第 1 个 byte 表明是否是 compressed, 参见: google.golang.org/grpc/rpc_util.go 中的 compressed
+//   - 第 2-5 个 byte 表明 body 的长度，参见: google.golang.org/grpc/rpc_util.go 的 recvMsg 方法
+//     长度需要用到大端转换来获取实际值
+//   - 后续的 byte 位是 body + content-type
+//
 // 在获取到 body 字节后，可以通过 grpc.encoding 来反序列化
 func GRPCResponse(w http.ResponseWriter, obj interface{}) {
 	w.Header().Set("Content-Type", "application/grpc+proto")

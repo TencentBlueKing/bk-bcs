@@ -140,6 +140,7 @@ func (plugin *AppPlugin) createApplicationHandler(ctx context.Context, r *http.R
 	}
 	app.Annotations[common.ProjectIDKey] = common.GetBCSProjectID(argoProject.Annotations)
 	app.Annotations[common.ProjectBusinessIDKey] = argoProject.Annotations[common.ProjectBusinessIDKey]
+
 	updatedBody, err := json.Marshal(app)
 	if err != nil {
 		return &httpResponse{
