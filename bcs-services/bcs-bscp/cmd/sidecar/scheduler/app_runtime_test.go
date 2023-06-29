@@ -82,9 +82,8 @@ func TestAppRuntime(t *testing.T) {
 				},
 			},
 			Repository: &sfs.RepositoryV1{
-				Root:           downloadAddr,
-				TLS:            nil,
-				RepositoryType: cc.BkRepo,
+				Root: downloadAddr,
+				TLS:  nil,
 			},
 		},
 		CursorID:    1,

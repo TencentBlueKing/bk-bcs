@@ -25,6 +25,7 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/kit"
+	"bscp.io/pkg/thirdparty/repo"
 )
 
 const (
@@ -47,6 +48,9 @@ var (
 		WriteBufferSize:     defaultWriteBufferSize,
 		ReadBufferSize:      defaultReadBufferSize,
 	}
+
+	// notImplementedErr
+	notImplementedErr = errors.New("notImplemented")
 )
 
 // ObjectMetadata 文件元数据
@@ -55,28 +59,77 @@ type ObjectMetadata struct {
 	Sha256   string `json:"sha256"`
 }
 
-// ObjectDownload 文件下载
-type ObjectDownload interface {
-	DownloadLink(kt *kit.Kit, fileContentID string) (string, error)
-	AsyncDownload(kt *kit.Kit, fileContentID string) (string, error)
-	AsyncDownloadStatus(kt *kit.Kit, fileContentID string, taskID string) (bool, error)
+// DecoratorInter ..
+type DecoratorInter interface {
+	Root() string
+	RepoName() string
+	Path(sign string) string
+	RelativePath(sign string) string
+	Url() string
+}
+
+// ObjectDownloader 文件下载
+type ObjectDownloader interface {
+	DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (string, error)
+	AsyncDownload(kt *kit.Kit, sign string) (string, error)
+	AsyncDownloadStatus(kt *kit.Kit, sign string, taskID string) (bool, error)
+	URIDecorator(bizID uint32) DecoratorInter
 }
 
 // Provider repo provider interface
 type Provider interface {
-	Upload(kt *kit.Kit, fileContentID string, body io.Reader, contentLength int64) (*ObjectMetadata, error)
-	Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error)
-	Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error)
+	ObjectDownloader
+	Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error)
+	Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error)
+	Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error)
 }
 
-// GetFileContentID get file sha256
-func GetFileContentID(r *http.Request) (string, error) {
-	fileContentID := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
-	if len(fileContentID) != 64 {
+// GetFileSign get file sha256
+func GetFileSign(r *http.Request) (string, error) {
+	sign := strings.ToLower(r.Header.Get(constant.ContentIDHeaderKey))
+	if len(sign) != 64 {
 		return "", errors.New("not valid X-Bkapi-File-Content-Id in header")
 	}
 
-	return fileContentID, nil
+	return sign, nil
+}
+
+type uriDecoratorInter struct {
+	bizID uint32
+}
+
+// Root ..
+func (u *uriDecoratorInter) Root() string {
+	return ""
+}
+
+// RepoName ..
+func (u *uriDecoratorInter) RepoName() string {
+	name, _ := repo.GenRepoName(u.bizID) // nolint
+	return name
+}
+
+// Path ..
+func (u *uriDecoratorInter) Path(sign string) string {
+	p, _ := repo.GenS3NodeFullPath(u.bizID, sign) // nolint
+	return p
+
+}
+
+// RelativePath ..
+func (u *uriDecoratorInter) RelativePath(sign string) string {
+	p, _ := repo.GenNodeFullPath(sign) // nolint
+	return p
+}
+
+// Url ..
+func (u *uriDecoratorInter) Url() string {
+	return ""
+}
+
+// newUriDecoratorInter ..
+func newUriDecoratorInter(bizID uint32) DecoratorInter {
+	return &uriDecoratorInter{bizID: bizID}
 }
 
 // NewProvider init provider factory by storage type
@@ -85,7 +138,7 @@ func NewProvider(conf cc.Repository) (Provider, error) {
 	case string(cc.S3):
 		return newCosProvider(conf.S3)
 	case string(cc.BkRepo):
-		return NewBKRepoProvider(conf)
+		return newBKRepoProvider(conf)
 	}
 	return nil, fmt.Errorf("store with type %s is not supported", conf.StorageType)
 }

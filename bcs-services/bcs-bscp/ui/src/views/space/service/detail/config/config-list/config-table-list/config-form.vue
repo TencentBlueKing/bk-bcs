@@ -7,7 +7,7 @@
   import { IAppEditParams } from '../../../../../../../../types/app'
   import { IFileConfigContentSummary } from '../../../../../../../../types/config'
   import { updateConfigContent, getConfigContent } from '../../../../../../../api/config'
-  import { stringLengthInBytes, splitToDigit } from '../../../../../../../utils/index'
+  import { stringLengthInBytes } from '../../../../../../../utils/index'
   import { transFileToObject, fileDownload } from '../../../../../../../utils/file'
   import { CONFIG_FILE_TYPE } from '../../../../../../../constants/config'
   import ConfigContentEditor from '../../components/config-content-editor.vue'
@@ -81,7 +81,7 @@
   const privilegeGroupsValue = computed(() => {
     let data: { [index: string]: number[] } = { '0': [], '1': [], '2': [] }
     if (typeof localVal.value.privilege === 'string' && localVal.value.privilege.length > 0) {
-      const valArr = splitToDigit(parseInt(localVal.value.privilege))
+      const valArr = localVal.value.privilege.split('').map(i => parseInt(i))
       valArr.forEach((item, index) => {
         data[index as keyof typeof data] = PRIVILEGE_VALUE_MAP[item as keyof typeof PRIVILEGE_VALUE_MAP]
       })
@@ -271,9 +271,9 @@
                             class="group-checkboxs"
                             :model-value="privilegeGroupsValue[index]"
                             @change="handleSelectPrivilege(index, $event)">
-                            <bk-checkbox size="small" :label="1">读</bk-checkbox>
+                            <bk-checkbox size="small" :label="4">读</bk-checkbox>
                             <bk-checkbox size="small" :label="2">写</bk-checkbox>
-                            <bk-checkbox size="small" :label="4">执行</bk-checkbox>
+                            <bk-checkbox size="small" :label="1">执行</bk-checkbox>
                           </bk-checkbox-group>
                         </div>
                       </div>

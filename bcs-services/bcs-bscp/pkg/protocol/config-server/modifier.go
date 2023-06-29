@@ -21,28 +21,6 @@ import (
 
 // ModifyResp implements interface modifier，it converts byte_size type from string to int64
 // see grpc-gateway issue: https://github.com/grpc-ecosystem/grpc-gateway/issues/296
-func (r *ListContentsResp) ModifyResp(resp []byte) ([]byte, error) {
-	js := string(resp)
-	result := gjson.Get(js, "details.#.spec.byte_size")
-	if !result.Exists() {
-		return nil, fmt.Errorf("can't find json path details.#.spec.byte_size in response")
-	}
-
-	destJs := js
-	rs := result.Array()
-	var err error
-	for i, r := range rs {
-		// convert byte_size type from string to int64
-		destJs, err = sjson.Set(destJs, fmt.Sprintf("details.%d.spec.byte_size", i), r.Int())
-		if err != nil {
-			return nil, err
-		}
-	}
-	return []byte(destJs), nil
-}
-
-// ModifyResp implements interface modifier，it converts byte_size type from string to int64
-// see grpc-gateway issue: https://github.com/grpc-ecosystem/grpc-gateway/issues/296
 func (r *ListCommitsResp) ModifyResp(resp []byte) ([]byte, error) {
 	js := string(resp)
 	result := gjson.Get(js, "details.#.spec.content.byte_size")
