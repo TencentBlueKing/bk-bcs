@@ -25,7 +25,6 @@ import (
 	hr "bscp.io/pkg/protocol/core/hook-release"
 	pbhr "bscp.io/pkg/protocol/core/hook-release"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
@@ -193,7 +192,10 @@ func (s *Service) PublishHookRelease(ctx context.Context, req *pbds.PublishHookR
 		return nil, err
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 
 	return new(pbbase.EmptyResp), nil
 
@@ -284,13 +286,7 @@ func (s *Service) ListHookReleasesReferences(ctx context.Context,
 		return nil, err
 	}
 
-	gcrs, err := s.dao.ReleasedGroup().List(kt, &types.ListReleasedGroupsOption{
-		BizID: req.BizId,
-		Filter: &filter.Expression{
-			Op:    filter.And,
-			Rules: []filter.RuleFactory{},
-		},
-	})
+	gcrs, err := s.dao.ReleasedGroup().ListAll(kt, req.BizId)
 	if err != nil {
 		logs.Errorf("list group current releases failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err

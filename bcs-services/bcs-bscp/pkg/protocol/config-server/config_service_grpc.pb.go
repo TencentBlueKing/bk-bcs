@@ -36,15 +36,10 @@ const (
 	Config_GetConfigItem_FullMethodName              = "/pbcs.Config/GetConfigItem"
 	Config_ListConfigItems_FullMethodName            = "/pbcs.Config/ListConfigItems"
 	Config_ListConfigItemCount_FullMethodName        = "/pbcs.Config/ListConfigItemCount"
-	Config_CreateContent_FullMethodName              = "/pbcs.Config/CreateContent"
-	Config_ListContents_FullMethodName               = "/pbcs.Config/ListContents"
 	Config_UpdateConfigHook_FullMethodName           = "/pbcs.Config/UpdateConfigHook"
 	Config_GetConfigHook_FullMethodName              = "/pbcs.Config/GetConfigHook"
-	Config_CreateCommit_FullMethodName               = "/pbcs.Config/CreateCommit"
-	Config_ListCommits_FullMethodName                = "/pbcs.Config/ListCommits"
 	Config_CreateRelease_FullMethodName              = "/pbcs.Config/CreateRelease"
 	Config_ListReleases_FullMethodName               = "/pbcs.Config/ListReleases"
-	Config_ListReleasedConfigItems_FullMethodName    = "/pbcs.Config/ListReleasedConfigItems"
 	Config_CreateHook_FullMethodName                 = "/pbcs.Config/CreateHook"
 	Config_DeleteHook_FullMethodName                 = "/pbcs.Config/DeleteHook"
 	Config_ListHooks_FullMethodName                  = "/pbcs.Config/ListHooks"
@@ -110,15 +105,10 @@ type ConfigClient interface {
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
-	CreateContent(ctx context.Context, in *CreateContentReq, opts ...grpc.CallOption) (*CreateContentResp, error)
-	ListContents(ctx context.Context, in *ListContentsReq, opts ...grpc.CallOption) (*ListContentsResp, error)
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*UpdateConfigHookResp, error)
 	GetConfigHook(ctx context.Context, in *GetConfigHookReq, opts ...grpc.CallOption) (*GetConfigHookResp, error)
-	CreateCommit(ctx context.Context, in *CreateCommitReq, opts ...grpc.CallOption) (*CreateCommitResp, error)
-	ListCommits(ctx context.Context, in *ListCommitsReq, opts ...grpc.CallOption) (*ListCommitsResp, error)
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
-	ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error)
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
@@ -300,24 +290,6 @@ func (c *configClient) ListConfigItemCount(ctx context.Context, in *ListConfigIt
 	return out, nil
 }
 
-func (c *configClient) CreateContent(ctx context.Context, in *CreateContentReq, opts ...grpc.CallOption) (*CreateContentResp, error) {
-	out := new(CreateContentResp)
-	err := c.cc.Invoke(ctx, Config_CreateContent_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) ListContents(ctx context.Context, in *ListContentsReq, opts ...grpc.CallOption) (*ListContentsResp, error) {
-	out := new(ListContentsResp)
-	err := c.cc.Invoke(ctx, Config_ListContents_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*UpdateConfigHookResp, error) {
 	out := new(UpdateConfigHookResp)
 	err := c.cc.Invoke(ctx, Config_UpdateConfigHook_FullMethodName, in, out, opts...)
@@ -336,24 +308,6 @@ func (c *configClient) GetConfigHook(ctx context.Context, in *GetConfigHookReq, 
 	return out, nil
 }
 
-func (c *configClient) CreateCommit(ctx context.Context, in *CreateCommitReq, opts ...grpc.CallOption) (*CreateCommitResp, error) {
-	out := new(CreateCommitResp)
-	err := c.cc.Invoke(ctx, Config_CreateCommit_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) ListCommits(ctx context.Context, in *ListCommitsReq, opts ...grpc.CallOption) (*ListCommitsResp, error) {
-	out := new(ListCommitsResp)
-	err := c.cc.Invoke(ctx, Config_ListCommits_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error) {
 	out := new(CreateReleaseResp)
 	err := c.cc.Invoke(ctx, Config_CreateRelease_FullMethodName, in, out, opts...)
@@ -366,15 +320,6 @@ func (c *configClient) CreateRelease(ctx context.Context, in *CreateReleaseReq, 
 func (c *configClient) ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error) {
 	out := new(ListReleasesResp)
 	err := c.cc.Invoke(ctx, Config_ListReleases_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *configClient) ListReleasedConfigItems(ctx context.Context, in *ListReleasedConfigItemsReq, opts ...grpc.CallOption) (*ListReleasedConfigItemsResp, error) {
-	out := new(ListReleasedConfigItemsResp)
-	err := c.cc.Invoke(ctx, Config_ListReleasedConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -788,15 +733,10 @@ type ConfigServer interface {
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
-	CreateContent(context.Context, *CreateContentReq) (*CreateContentResp, error)
-	ListContents(context.Context, *ListContentsReq) (*ListContentsResp, error)
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error)
 	GetConfigHook(context.Context, *GetConfigHookReq) (*GetConfigHookResp, error)
-	CreateCommit(context.Context, *CreateCommitReq) (*CreateCommitResp, error)
-	ListCommits(context.Context, *ListCommitsReq) (*ListCommitsResp, error)
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
-	ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error)
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
@@ -890,32 +830,17 @@ func (UnimplementedConfigServer) ListConfigItems(context.Context, *ListConfigIte
 func (UnimplementedConfigServer) ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListConfigItemCount not implemented")
 }
-func (UnimplementedConfigServer) CreateContent(context.Context, *CreateContentReq) (*CreateContentResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateContent not implemented")
-}
-func (UnimplementedConfigServer) ListContents(context.Context, *ListContentsReq) (*ListContentsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListContents not implemented")
-}
 func (UnimplementedConfigServer) UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigHook not implemented")
 }
 func (UnimplementedConfigServer) GetConfigHook(context.Context, *GetConfigHookReq) (*GetConfigHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfigHook not implemented")
 }
-func (UnimplementedConfigServer) CreateCommit(context.Context, *CreateCommitReq) (*CreateCommitResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateCommit not implemented")
-}
-func (UnimplementedConfigServer) ListCommits(context.Context, *ListCommitsReq) (*ListCommitsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListCommits not implemented")
-}
 func (UnimplementedConfigServer) CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRelease not implemented")
 }
 func (UnimplementedConfigServer) ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleases not implemented")
-}
-func (UnimplementedConfigServer) ListReleasedConfigItems(context.Context, *ListReleasedConfigItemsReq) (*ListReleasedConfigItemsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedConfigItems not implemented")
 }
 func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHook not implemented")
@@ -1310,42 +1235,6 @@ func _Config_ListConfigItemCount_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_CreateContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateContentReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).CreateContent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_CreateContent_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).CreateContent(ctx, req.(*CreateContentReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_ListContents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListContentsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListContents(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListContents_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListContents(ctx, req.(*ListContentsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_UpdateConfigHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateConfigHookReq)
 	if err := dec(in); err != nil {
@@ -1382,42 +1271,6 @@ func _Config_GetConfigHook_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_CreateCommit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateCommitReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).CreateCommit(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_CreateCommit_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).CreateCommit(ctx, req.(*CreateCommitReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_ListCommits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListCommitsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListCommits(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListCommits_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListCommits(ctx, req.(*ListCommitsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_CreateRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateReleaseReq)
 	if err := dec(in); err != nil {
@@ -1450,24 +1303,6 @@ func _Config_ListReleases_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListReleases(ctx, req.(*ListReleasesReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Config_ListReleasedConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListReleasedConfigItemsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).ListReleasedConfigItems(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_ListReleasedConfigItems_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListReleasedConfigItems(ctx, req.(*ListReleasedConfigItemsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2310,14 +2145,6 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListConfigItemCount_Handler,
 		},
 		{
-			MethodName: "CreateContent",
-			Handler:    _Config_CreateContent_Handler,
-		},
-		{
-			MethodName: "ListContents",
-			Handler:    _Config_ListContents_Handler,
-		},
-		{
 			MethodName: "UpdateConfigHook",
 			Handler:    _Config_UpdateConfigHook_Handler,
 		},
@@ -2326,24 +2153,12 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_GetConfigHook_Handler,
 		},
 		{
-			MethodName: "CreateCommit",
-			Handler:    _Config_CreateCommit_Handler,
-		},
-		{
-			MethodName: "ListCommits",
-			Handler:    _Config_ListCommits_Handler,
-		},
-		{
 			MethodName: "CreateRelease",
 			Handler:    _Config_CreateRelease_Handler,
 		},
 		{
 			MethodName: "ListReleases",
 			Handler:    _Config_ListReleases_Handler,
-		},
-		{
-			MethodName: "ListReleasedConfigItems",
-			Handler:    _Config_ListReleasedConfigItems_Handler,
 		},
 		{
 			MethodName: "CreateHook",

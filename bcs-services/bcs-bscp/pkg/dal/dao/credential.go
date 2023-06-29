@@ -19,8 +19,6 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/tools"
@@ -52,10 +50,7 @@ type credentialDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 
-	orm               orm.Interface
-	sd                *sharding.Sharding
 	credentialSetting cc.Credential
-	event             Event
 }
 
 func (dao *credentialDao) Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error) {

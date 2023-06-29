@@ -17,43 +17,9 @@ import (
 
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	pbbase "bscp.io/pkg/protocol/core/base"
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/types"
 )
-
-// ListReleasedConfigItems list released config items.
-func (s *Service) ListReleasedConfigItems(ctx context.Context, req *pbds.ListReleasedCIsReq) (
-	*pbds.ListReleasedCIsResp, error) {
-
-	kt := kit.FromGrpcContext(ctx)
-
-	// parse pb struct filter to filter.Expression.
-	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
-	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	query := &types.ListReleasedCIsOption{
-		BizID:  req.BizId,
-		Filter: filter,
-		Page:   req.Page.BasePage(),
-	}
-
-	details, err := s.dao.ReleasedCI().List(kt, query)
-	if err != nil {
-		logs.Errorf("list released config item failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	resp := &pbds.ListReleasedCIsResp{
-		Count:   details.Count,
-		Details: pbrci.PbReleasedConfigItems(details.Details),
-	}
-	return resp, nil
-}
 
 // GetReleasedConfigItem get released config item
 func (s *Service) GetReleasedConfigItem(ctx context.Context, req *pbds.GetReleasedCIReq) (

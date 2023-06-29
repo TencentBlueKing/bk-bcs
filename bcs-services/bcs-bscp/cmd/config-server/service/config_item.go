@@ -14,7 +14,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -23,6 +25,8 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/thirdparty/repo"
+	"bscp.io/pkg/version"
 )
 
 // CreateConfigItem create config item with option
@@ -38,7 +42,12 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	if err != nil {
 		return nil, err
 	}
-	// 1. create config_item
+	// 1. validate if file content uploaded.
+	if err = s.validateRepoNodeExist(grpcKit, req.BizId, req.Sign); err != nil {
+		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	// 2. insert config item, content and commit to db.
 	cciReq := &pbds.CreateConfigItemReq{
 		ConfigItemAttachment: &pbci.ConfigItemAttachment{
 			BizId: req.BizId,
@@ -74,6 +83,35 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	return resp, nil
 }
 
+func (s *Service) validateRepoNodeExist(kt *kit.Kit, bizID uint32, sign string) error {
+	// build version is debug mode, not need to validate repo node if exist.
+	if version.Debug() {
+		return nil
+	}
+
+	// validate repo file if upload.
+	opt := &repo.NodeOption{
+		Project: s.client.Repo.ProjectID(),
+		BizID:   bizID,
+		Sign:    sign,
+	}
+	path, err := repo.GenNodePath(opt)
+	if err != nil {
+		return err
+	}
+
+	exist, err := s.client.Repo.IsNodeExist(kt.ContextWithRid(), path)
+	if err != nil {
+		return err
+	}
+
+	if !exist {
+		return errf.New(errf.InvalidParameter, fmt.Sprintf("file content %s not upload", sign))
+	}
+
+	return nil
+}
+
 // BatchUpsertConfigItems batch upsert config items with option
 func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUpsertConfigItemsReq) (
 	*pbcs.BatchUpsertConfigItemsResp, error) {
@@ -89,6 +127,11 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 	}
 	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
 	for _, item := range req.Items {
+		// validate if file content uploaded.
+		if err = s.validateRepoNodeExist(grpcKit, req.BizId, item.Sign); err != nil {
+			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
 		items = append(items, &pbds.BatchUpsertConfigItemsReq_ConfigItem{
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
 				BizId: req.BizId,
@@ -194,6 +237,11 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 			Signature: req.Sign,
 			ByteSize:  req.ByteSize,
 		},
+	}
+	// validate if file content uploaded.
+	if err = s.validateRepoNodeExist(grpcKit, req.BizId, req.Sign); err != nil {
+		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
 	}
 	ccResp, err := s.client.DS.CreateContent(grpcKit.RpcCtx(), ccReq)
 	if err != nil {

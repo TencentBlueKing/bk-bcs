@@ -23,7 +23,7 @@ import (
 
 const (
 	// DefaultMaxPageLimit is the default value of the max page limitation.
-	DefaultMaxPageLimit = uint(200)
+	DefaultMaxPageLimit = uint(1000)
 )
 
 // DefaultPageOption is the default BasePage's option.
