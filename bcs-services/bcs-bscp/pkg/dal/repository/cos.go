@@ -25,6 +25,7 @@ import (
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/tools"
@@ -97,7 +98,7 @@ func (c *cosClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, er
 
 	if resp.StatusCode == http.StatusNotFound {
 		resp.Body.Close()
-		return nil, 0, errors.New("config item not found")
+		return nil, 0, errf.ErrFileContentNotFound
 	}
 
 	if resp.StatusCode != 200 {
@@ -129,7 +130,7 @@ func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.New("metadata not found")
+		return nil, errf.ErrFileContentNotFound
 	}
 
 	if resp.StatusCode != 200 {

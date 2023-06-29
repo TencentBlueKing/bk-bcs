@@ -14,7 +14,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -87,7 +89,11 @@ func (s *Service) validateContentExist(kt *kit.Kit, bizID uint32, sign string) e
 	}
 
 	// validate was file content uploaded.
-	if _, err := s.client.provider.Metadata(kt, sign); err != nil {
+	_, err := s.client.provider.Metadata(kt, sign)
+	if err == errf.ErrFileContentNotFound {
+		return fmt.Errorf("file content %s not upload", sign)
+	}
+	if err != nil {
 		return err
 	}
 
