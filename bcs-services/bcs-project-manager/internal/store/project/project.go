@@ -36,6 +36,7 @@ const (
 	FieldKeyProjectID   = "projectID"
 	FieldKeyName        = "name"
 	FieldKeyProjectCode = "projectCode"
+	FieldKeyKind        = "kind"
 )
 
 var (
@@ -64,7 +65,7 @@ var (
 		{
 			Name: tableName + "_kind_idx",
 			Key: bson.D{
-				bson.E{Key: FieldKeyName, Value: 1},
+				bson.E{Key: FieldKeyKind, Value: 1},
 			},
 			Unique: false,
 		},
