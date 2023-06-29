@@ -25,7 +25,6 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/version"
 )
 
@@ -43,7 +42,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 		return nil, err
 	}
 	// 1. validate if file content uploaded.
-	if err = s.validateRepoNodeExist(grpcKit, req.BizId, req.Sign); err != nil {
+	if err = s.validateContentExist(grpcKit, req.BizId, req.Sign); err != nil {
 		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
@@ -83,30 +82,19 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 	return resp, nil
 }
 
-func (s *Service) validateRepoNodeExist(kt *kit.Kit, bizID uint32, sign string) error {
+func (s *Service) validateContentExist(kt *kit.Kit, bizID uint32, sign string) error {
 	// build version is debug mode, not need to validate repo node if exist.
 	if version.Debug() {
 		return nil
 	}
 
-	// validate repo file if upload.
-	opt := &repo.NodeOption{
-		Project: s.client.Repo.ProjectID(),
-		BizID:   bizID,
-		Sign:    sign,
+	// validate was file content uploaded.
+	_, err := s.client.provider.Metadata(kt, sign)
+	if err == errf.ErrFileContentNotFound {
+		return fmt.Errorf("file content %s not upload", sign)
 	}
-	path, err := repo.GenNodePath(opt)
 	if err != nil {
 		return err
-	}
-
-	exist, err := s.client.Repo.IsNodeExist(kt.ContextWithRid(), path)
-	if err != nil {
-		return err
-	}
-
-	if !exist {
-		return errf.New(errf.InvalidParameter, fmt.Sprintf("file content %s not upload", sign))
 	}
 
 	return nil
@@ -128,7 +116,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
 	for _, item := range req.Items {
 		// validate if file content uploaded.
-		if err = s.validateRepoNodeExist(grpcKit, req.BizId, item.Sign); err != nil {
+		if err = s.validateContentExist(grpcKit, req.BizId, item.Sign); err != nil {
 			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
@@ -239,7 +227,7 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 		},
 	}
 	// validate if file content uploaded.
-	if err = s.validateRepoNodeExist(grpcKit, req.BizId, req.Sign); err != nil {
+	if err = s.validateContentExist(grpcKit, req.BizId, req.Sign); err != nil {
 		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
