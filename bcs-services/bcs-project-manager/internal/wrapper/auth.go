@@ -49,6 +49,11 @@ var NoAuthEndpoints = []string{
 	"Namespace.SyncNamespace",
 }
 
+// NoNeedCheckResourceIDEndpoints 不需要校验或转换 resourceID 的方法
+var NoNeedCheckResourceIDEndpoints = []string{
+	"BCSProject.CreateProject",
+}
+
 // NewAuthHeaderAdapter 转换旧的请求头，适配新的鉴权中间件
 func NewAuthHeaderAdapter(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, rsp interface{}) (err error) {
@@ -135,6 +140,12 @@ type resourceID struct {
 	Name            string `json:"name,omitempty"`
 }
 
+// check check and convert resourceID
+// when create project:
+// 1. projectID is empty in community edition, while it is not empty in inner edition.
+// 2. projectCode is not empty in all edition.
+// when update project: projectID is not empty in all edition,projectCode is ignored.
+// when get project: projectIDOrCode is not empty, while projectID and projectCode are empty.
 func (r *resourceID) check() error {
 	// '-' means ignore project level in url
 	if r.ProjectCode == "-" || r.ProjectIDOrCode == "-" || r.ProjectID == "-" {
@@ -175,8 +186,10 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 		return false, uErr
 	}
 
-	if cErr := resourceID.check(); cErr != nil {
-		return false, cErr
+	if !stringx.StringInSlice(req.Method(), NoNeedCheckResourceIDEndpoints) {
+		if e := resourceID.check(); e != nil {
+			return false, e
+		}
 	}
 
 	action, ok := auth.ActionPermissions[req.Method()]
