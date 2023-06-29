@@ -46,13 +46,13 @@ type Credential interface {
 var _ Credential = new(credentialDao)
 
 type credentialDao struct {
-	genQ     *gen.Query
-	idGen    IDGenInterface
-	auditDao AuditDao
-
-	credentialSetting cc.Credential
+	genQ              *gen.Query
+	idGen             IDGenInterface
+	auditDao          AuditDao
+	credentialSetting *cc.Credential
 }
 
+// Get ..
 func (dao *credentialDao) Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error) {
 	if bizID == 0 {
 		return nil, errors.New("bizID is empty")

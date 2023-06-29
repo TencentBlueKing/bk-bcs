@@ -61,7 +61,7 @@ func TestCreatePassCCClusterSnap(t *testing.T) {
 		CreateTime:  time.Now().String(),
 		UpdateTime:  time.Now().String(),
 		Master: map[string]*proto.Node{
-			"127.0.0.1": &proto.Node{
+			"127.0.0.1": {
 				NodeID:  "",
 				InnerIP: "",
 			},
@@ -116,7 +116,7 @@ func TestCreatePassCCCluster(t *testing.T) {
 		CreateTime:  time.Now().String(),
 		UpdateTime:  time.Now().String(),
 		Master: map[string]*proto.Node{
-			"127.0.0.1": &proto.Node{
+			"127.0.0.1": {
 				NodeID:  "",
 				InnerIP: "",
 			},

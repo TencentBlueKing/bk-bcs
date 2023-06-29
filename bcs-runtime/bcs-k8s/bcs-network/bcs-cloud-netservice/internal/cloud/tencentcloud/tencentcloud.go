@@ -34,25 +34,18 @@ import (
 type Client struct {
 	// tencentcloud vpc domain
 	vpcDomain string
-
 	// tencentcloud cvm domain
 	cvmDomain string
-
 	// tencentcloud region
 	region string
-
 	// secret id for tencent cloud
 	secretID string
-
 	// secret key for tencent cloud
 	secretKey string
-
 	// security group ids
 	securityGroups []string
-
 	// vpcClient client for tencent cloud vpc
 	vpcClient *vpc.Client
-
 	// cvmClient client for tencent cloud cvm
 	cvmClient *cvm.Client
 }
@@ -64,37 +57,44 @@ func NewClient() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	// create new credential
 	credential := common.NewCredential(
 		c.secretID,
 		c.secretKey,
 	)
+	// create new client profile
 	cpf := profile.NewClientProfile()
 	if len(c.vpcDomain) != 0 {
 		cpf.HttpProfile.Endpoint = c.vpcDomain
 	}
+	// create new vpc client
 	vpcClient, err := vpc.NewClient(credential, c.region, cpf)
 	if err != nil {
 		blog.Errorf("new vpc client failed, err %s", err.Error())
 		return nil, fmt.Errorf("new vpc client failed, err %s", err.Error())
 	}
 	c.vpcClient = vpcClient
-
+	// create new cvm client
 	cvmClient, err := cvm.NewClient(credential, c.region, cpf)
 	if err != nil {
 		blog.Errorf("new cvm client failed, err %s", err.Error())
 		return nil, fmt.Errorf("new cvm client failed, err %s", err.Error())
 	}
 	c.cvmClient = cvmClient
-
+	// return client
 	return c, nil
 }
 
 func (c *Client) loadEnv() error {
+	// load tencent cloud vpc domain
 	c.vpcDomain = os.Getenv(EnvNameTencentCloudVpcDomain)
+	// load tencent cloud cvm domain
 	c.cvmDomain = os.Getenv(EnvNameTencentCloudCvmDomain)
+	// load tencent cloud region
 	c.region = os.Getenv(EnvNameTencentCloudRegion)
+	// load tencent cloud secret id
 	c.secretID = os.Getenv(EnvNameTencentCloudAccessKeyID)
+	// load tencent cloud secret key
 	secretKey := os.Getenv(EnvNameTencentCloudAccessKey)
 
 	// security groups

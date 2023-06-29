@@ -44,14 +44,12 @@ func NewBcsGitopsManagerEndpoints() []*api.Endpoint {
 			Name:    "BcsGitopsManager.StartupProject",
 			Path:    []string{"/gitopsmanager/v1/project"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 		{
 			Name:    "BcsGitopsManager.SyncCluster",
 			Path:    []string{"/gitopsmanager/v1/cluster/sync"},
 			Method:  []string{"POST"},
-			Body:    "*",
 			Handler: "rpc",
 		},
 	}
@@ -135,14 +133,12 @@ func RegisterBcsGitopsManagerHandler(s server.Server, hdlr BcsGitopsManagerHandl
 		Name:    "BcsGitopsManager.StartupProject",
 		Path:    []string{"/gitopsmanager/v1/project"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "BcsGitopsManager.SyncCluster",
 		Path:    []string{"/gitopsmanager/v1/cluster/sync"},
 		Method:  []string{"POST"},
-		Body:    "*",
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&BcsGitopsManager{h}, opts...))

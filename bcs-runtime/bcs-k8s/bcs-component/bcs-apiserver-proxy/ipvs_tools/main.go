@@ -153,6 +153,10 @@ func reloadFunc() {
 		log.Printf("reload ipvs failed: %v", err)
 	}
 	err = care.CreateVirtualService()
+	if err != nil {
+		log.Printf("lvs[%s] reload real servers %v failed: %v", opts.virtualServer, opts.realServer, err)
+		return
+	}
 }
 
 func addFunc() {
@@ -191,9 +195,8 @@ func validateInitOptions(opt options) bool {
 		if os.IsNotExist(err) {
 			log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
 			return false
-		} else {
-			log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
 		}
+		log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")
 	}
 	if tool.IsDir() {
 		log.Println("error path, please set the valid absolute path for apiserver-proxy-tools")

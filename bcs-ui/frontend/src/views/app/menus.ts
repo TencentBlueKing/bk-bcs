@@ -12,17 +12,17 @@ export interface IMenu {
 
 const menus: IMenu[] = [
   {
-    title: $i18n.t('资源视图'),
+    title: $i18n.t('nav.dashboard'),
     id: 'CLUSTERRESOURCE',
     children: [
       {
-        title: $i18n.t('命名空间'),
+        title: $i18n.t('nav.namespace'),
         icon: 'bcs-icon-namespace',
         id: 'NAMESPACE',
         route: 'dashboardNamespace',
       },
       {
-        title: $i18n.t('工作负载'),
+        title: $i18n.t('nav.workload'),
         icon: 'bcs-icon-yy-apply',
         id: 'WORKLOAD',
         children: [
@@ -59,7 +59,7 @@ const menus: IMenu[] = [
         ],
       },
       {
-        title: $i18n.t('网络'),
+        title: $i18n.t('nav.network'),
         icon: 'bcs-icon-wl-network',
         id: 'NETWORK',
         children: [
@@ -81,7 +81,7 @@ const menus: IMenu[] = [
         ],
       },
       {
-        title: $i18n.t('配置'),
+        title: $i18n.t('nav.configuration'),
         icon: 'bcs-icon-zy-resource',
         children: [
           {
@@ -98,7 +98,7 @@ const menus: IMenu[] = [
         id: 'CONFIGURATION',
       },
       {
-        title: $i18n.t('存储'),
+        title: $i18n.t('nav.storage'),
         icon: 'bcs-icon-data',
         children: [
           {
@@ -138,7 +138,7 @@ const menus: IMenu[] = [
         id: 'HORIZONTALPODAUTOSCALER',
       },
       {
-        title: $i18n.t('自定义资源'),
+        title: $i18n.t('nav.customResource'),
         icon: 'bcs-icon-customize',
         children: [
           {
@@ -172,24 +172,24 @@ const menus: IMenu[] = [
     ],
   },
   {
-    title: $i18n.t('集群管理'),
+    title: $i18n.t('nav.cluster'),
     id: 'CLUSTERMANAGE',
     route: 'clusterMain',
     children: [
       {
-        title: $i18n.t('集群列表'),
+        title: $i18n.t('nav.clusterList'),
         icon: 'bcs-icon-jq-colony',
         route: 'clusterMain',
         id: 'CLUSTER',
       },
       {
-        title: $i18n.t('节点列表'),
+        title: $i18n.t('nav.nodeList'),
         icon: 'bcs-icon-jd-node',
         route: 'nodeMain',
         id: 'NODE',
       },
       {
-        title: $i18n.t('节点模板'),
+        title: $i18n.t('nav.nodeTemplate'),
         icon: 'bcs-icon-mobanpeizhi',
         route: 'nodeTemplate',
         id: 'NODETEMPLATE',
@@ -197,7 +197,7 @@ const menus: IMenu[] = [
     ],
   },
   {
-    title: $i18n.t('部署管理'),
+    title: $i18n.t('nav.deploy'),
     id: 'DEPLOYMENTMANAGE',
     route: 'releaseList',
     children: [
@@ -207,19 +207,19 @@ const menus: IMenu[] = [
         id: 'HELM',
         children: [
           {
-            title: $i18n.t('Release列表'),
+            title: $i18n.t('nav.releaseList'),
             id: 'RELEASELIST',
             route: 'releaseList',
           },
           {
-            title: $i18n.t('Chart列表'),
+            title: $i18n.t('nav.chartList'),
             id: 'CHARTLIST',
             route: 'chartList',
           },
         ],
       },
       {
-        title: $i18n.t('模板集'),
+        title: $i18n.t('nav.templateSet'),
         id: 'TEMPLATESET_v1.0',
         icon: 'bcs-icon-templateset',
         children: [
@@ -291,7 +291,7 @@ const menus: IMenu[] = [
         ],
       },
       {
-        title: $i18n.t('变量管理'),
+        title: $i18n.t('nav.variable'),
         icon: 'bcs-icon-var',
         route: 'variable',
         id: 'VARIABLE',
@@ -316,17 +316,17 @@ const menus: IMenu[] = [
     ],
   },
   {
-    title: $i18n.t('项目管理'),
+    title: $i18n.t('nav.project'),
     id: 'PROJECTMANAGE',
     children: [
       {
-        title: $i18n.t('事件查询'),
+        title: $i18n.t('nav.event'),
         id: 'EVENT',
         icon: 'bcs-icon-event-query',
         route: 'eventQuery',
       },
       {
-        title: $i18n.t('操作记录'),
+        title: $i18n.t('nav.record'),
         id: 'AUDIT',
         icon: 'bcs-icon-operate-audit',
         route: 'operateAudit',
@@ -344,7 +344,7 @@ const menus: IMenu[] = [
       //   ],
       // },
       {
-        title: $i18n.t('项目信息'),
+        title: $i18n.t('nav.projectInfo'),
         id: 'PROJECT',
         icon: 'bcs-icon bcs-icon-apps',
         route: 'projectInfo',
@@ -352,17 +352,17 @@ const menus: IMenu[] = [
     ],
   },
   {
-    title: $i18n.t('插件管理'),
+    title: $i18n.t('nav.plugin'),
     id: 'PLUGINMANAGE',
     children: [
       {
-        title: $i18n.t('组件库'),
+        title: $i18n.t('nav.clusterTools'),
         id: 'TOOLS',
         icon: 'bcs-icon-crd1',
         route: 'dbCrdcontroller',
       },
       {
-        title: $i18n.t('Metric 管理'),
+        title: $i18n.t('nav.metric'),
         id: 'METRICS',
         icon: 'bcs-icon-control-center',
         route: 'metricManage',
@@ -374,7 +374,7 @@ const menus: IMenu[] = [
         route: 'loadBalance',
       },
       {
-        title: $i18n.t('日志采集'),
+        title: $i18n.t('nav.log'),
         id: 'LOG',
         icon: 'bcs-icon-log-collection',
         route: 'logCrdcontroller',
@@ -387,7 +387,7 @@ const menus: IMenu[] = [
       //   tag: 'NEW',
       // },
       {
-        title: $i18n.t('容器监控'),
+        title: $i18n.t('nav.monitor'),
         id: 'MONITOR',
         icon: 'bcs-icon-monitors',
       },

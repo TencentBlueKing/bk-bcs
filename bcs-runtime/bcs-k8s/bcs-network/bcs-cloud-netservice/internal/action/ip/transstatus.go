@@ -97,7 +97,7 @@ func (a *TransStatusAction) transIPStatus() (pbcommon.ErrCode, string) {
 	return pbcommon.ErrCode_ERROR_OK, ""
 }
 
-// DO do trans ip status action
+// Do do trans ip status action
 func (a *TransStatusAction) Do() error {
 	if errCode, errMsg := a.transIPStatus(); errCode != pbcommon.ErrCode_ERROR_OK {
 		return a.Err(errCode, errMsg)

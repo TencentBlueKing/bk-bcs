@@ -56,7 +56,7 @@ type AppRuntime struct {
 	currentRelease *currentRelease
 
 	workspace  *AppFileWorkspace
-	repository map[cc.StorageMode]Downloader
+	repository Downloader
 	reloader   Reloader
 }
 
@@ -278,15 +278,7 @@ func (ar *AppRuntime) downloadReleasedCI(vas *kit.Vas, readiness map[uint32]bool
 				return
 			}
 
-			if desc.Repository.RepositoryType == cc.S3 {
-				ar.repository[desc.Repository.RepositoryType] = &downloaderS3{
-					Url:             desc.Repository.Url,
-					AccessKeyID:     desc.Repository.AccessKeyID,
-					SecretAccessKey: desc.Repository.SecretAccessKey,
-					Name:            desc.Repository.Root,
-				}
-			}
-			if err := ar.repository[desc.Repository.RepositoryType].Download(vas, ciMeta.RepositoryPath, ciMeta.ContentSpec.ByteSize, filePath); err != nil {
+			if err := ar.repository.Download(vas, ciMeta.RepositoryPath, ciMeta.ContentSpec.ByteSize, filePath); err != nil {
 				hitErr = err
 				logs.Errorf("download app: %d, CI[%d, %s/%s] failed, uri: %s, err: %v, rid: %s", ar.appID, ciMeta.ID,
 					spec.Path, spec.Name, ciMeta.RepositoryPath, err, vas.Rid)

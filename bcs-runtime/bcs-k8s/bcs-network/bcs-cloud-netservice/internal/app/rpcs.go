@@ -162,7 +162,7 @@ func (cn *CloudNetservice) CleanFixedIP(ctx context.Context, req *pb.CleanFixedI
 		cost := metric.DefaultCollector.StatRequest("CleanFixedIP", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("CleanFixedIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do clean fixed ip action
 	fixedCleanAction := ipAction.NewFixedCleanAction(ctx, req, response, cn.storeIf, cn.cloudIf)
 	action.NewExecutor().Execute(fixedCleanAction)
 	return response, nil
@@ -178,7 +178,7 @@ func (cn *CloudNetservice) CleanEni(ctx context.Context, req *pb.CleanEniReq) (*
 		cost := metric.DefaultCollector.StatRequest("CleanEni", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("CleanEni seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do clean eni action
 	cleanEniAction := ipAction.NewCleanEniAction(ctx, req, response, cn.storeIf, cn.cloudIf)
 	action.NewExecutor().Execute(cleanEniAction)
 	return response, nil
@@ -194,7 +194,7 @@ func (cn *CloudNetservice) ListIP(ctx context.Context, req *pb.ListIPsReq) (*pb.
 		cost := metric.DefaultCollector.StatRequest("ListIP", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("ListIP seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do list action
 	listAction := ipAction.NewListAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(listAction)
 	return response, nil
@@ -210,7 +210,7 @@ func (cn *CloudNetservice) AllocateEni(ctx context.Context, req *pb.AllocateEniR
 		cost := metric.DefaultCollector.StatRequest("AllocateEni", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("AllocateEni seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do allocate action
 	allocateEniAction := eniAction.NewAllocateAction(ctx, cn.cfg, req, response, cn.storeIf, cn.locker)
 	action.NewExecutor().Execute(allocateEniAction)
 	return response, nil
@@ -226,7 +226,7 @@ func (cn *CloudNetservice) ReleaseEni(ctx context.Context, req *pb.ReleaseEniReq
 		cost := metric.DefaultCollector.StatRequest("ReleaseEni", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("ReleaseEni seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do release action
 	releaseEniAction := eniAction.NewReleaseAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(releaseEniAction)
 
@@ -243,7 +243,7 @@ func (cn *CloudNetservice) TransIPStatus(ctx context.Context, req *pb.TransIPSta
 		cost := metric.DefaultCollector.StatRequest("TransIPStatus", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("TransIPStatus seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do change status action
 	transIPAction := ipAction.NewTransStatusAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(transIPAction)
 
@@ -260,7 +260,7 @@ func (cn *CloudNetservice) GetQuota(ctx context.Context, req *pb.GetIPQuotaReq) 
 		cost := metric.DefaultCollector.StatRequest("GetQuota", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("GetQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do get action
 	getAction := quotaAction.NewGetAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(getAction)
 
@@ -277,7 +277,7 @@ func (cn *CloudNetservice) CreateQuota(ctx context.Context, req *pb.CreateIPQuot
 		cost := metric.DefaultCollector.StatRequest("CreateQuota", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("CreateQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do add action
 	createAction := quotaAction.NewAddAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(createAction)
 
@@ -294,7 +294,7 @@ func (cn *CloudNetservice) UpdateQuota(ctx context.Context, req *pb.UpdateIPQuot
 		cost := metric.DefaultCollector.StatRequest("UpdateQuota", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("UpdateQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do update action
 	createAction := quotaAction.NewUpdateAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(createAction)
 
@@ -311,7 +311,7 @@ func (cn *CloudNetservice) DeleteQuota(ctx context.Context, req *pb.DeleteIPQuot
 		cost := metric.DefaultCollector.StatRequest("DeleteQuota", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("DeleteQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do delete action
 	createAction := quotaAction.NewDeleteAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(createAction)
 
@@ -328,7 +328,7 @@ func (cn *CloudNetservice) ListQuota(ctx context.Context, req *pb.ListIPQuotaReq
 		cost := metric.DefaultCollector.StatRequest("ListQuota", response.ErrCode, rtime, time.Now())
 		blog.V(3).Infof("ListQuota seq[%d]| output[%dms][%+v]", req.Seq, cost, response)
 	}()
-
+	// do create action
 	createAction := quotaAction.NewListAction(ctx, req, response, cn.storeIf)
 	action.NewExecutor().Execute(createAction)
 

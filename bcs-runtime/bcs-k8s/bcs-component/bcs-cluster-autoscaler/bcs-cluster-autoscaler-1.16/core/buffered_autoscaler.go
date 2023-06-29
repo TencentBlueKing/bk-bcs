@@ -112,7 +112,7 @@ func NewBufferedAutoscaler(
 	cloudProvider cloudprovider.CloudProvider,
 	expanderStrategy expander.Strategy,
 	estimatorBuilder estimatorinternal.ExtendedEstimatorBuilder,
-	backoff backoff.Backoff, cpuRatio, memRatio, ratio float64,
+	backoff backoff.Backoff,
 	client kubeclient.Interface) core.Autoscaler {
 
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
@@ -136,7 +136,9 @@ func NewBufferedAutoscaler(
 	clusterStateRegistry := clusterstate.NewClusterStateRegistry(autoscalingContext.CloudProvider, clusterStateConfig,
 		autoscalingContext.LogRecorder, backoff)
 
-	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry, cpuRatio, memRatio, ratio)
+	scaleDown := NewScaleDown(autoscalingContext, clusterStateRegistry,
+		opts.BufferedCPURatio, opts.BufferedMemRatio, opts.BufferedResourceRatio, opts.EvictLatest)
+	klog.Infof("should evict latest pod: %v", opts.EvictLatest)
 
 	var webhook Webhook
 	switch opts.WebhookMode {
@@ -168,9 +170,9 @@ func NewBufferedAutoscaler(
 		clusterStateRegistry:    clusterStateRegistry,
 		nodeInfoCache:           make(map[string]*schedulernodeinfo.NodeInfo),
 		ignoredTaints:           ignoredTaints,
-		CPURatio:                cpuRatio,
-		MemRatio:                memRatio,
-		ratio:                   ratio,
+		CPURatio:                opts.BufferedCPURatio,
+		MemRatio:                opts.BufferedMemRatio,
+		ratio:                   opts.BufferedResourceRatio,
 		webhook:                 webhook,
 		maxBulkScaleUpCount:     opts.MaxBulkScaleUpCount,
 	}
@@ -268,6 +270,7 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 	}
 	metrics.UpdateLastTime(metrics.Autoscaling, time.Now())
 
+	// execute webhook mode
 	if b.webhook != nil {
 		originalScheduledPods, listErr := b.ScheduledPodLister().List()
 		if listErr != nil {
@@ -275,12 +278,6 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 			return errors.ToAutoscalerError(errors.ApiCallError, listErr)
 		}
 		return b.webhook.DoWebhook(contexts, b.clusterStateRegistry, b.scaleDown, allNodes, originalScheduledPods)
-	}
-
-	// set minSize of nodegroups in cron mode
-	err = b.doCron(contexts, b.clusterStateRegistry, currentTime)
-	if err != nil {
-		klog.Errorf("Failed in cron mode: %v", err)
 	}
 
 	originalScheduledPods, err := b.ScheduledPodLister().List()
@@ -332,6 +329,13 @@ func (b *BufferedAutoscaler) preRun(currentTime time.Time) ([]*corev1.Node, []*c
 		return nil, nil, errors.ToAutoscalerError(errors.CloudProviderError, err)
 	}
 
+	// execute cron mode
+	// move here before updating nodegroup's metrics, prevent reporting incorrect min sizes
+	err = b.doCron(b.Context, b.clusterStateRegistry, currentTime)
+	if err != nil {
+		klog.Errorf("Failed in cron mode: %v", err)
+	}
+
 	// Update node groups min/max/current after cloud provider refresh
 	for _, nodeGroup := range b.AutoscalingContext.CloudProvider.NodeGroups() {
 		metrics.UpdateNodeGroupMin(nodeGroup.Id(), nodeGroup.MinSize())
@@ -376,7 +380,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 
 	// Check if there has been a constant difference between the number of nodes in k8s and
 	// the number of nodes on the cloud provider side.
-	// TODO: andrewskim - add protection for ready AWS nodes.
+	// DOTO: andrewskim - add protection for ready AWS nodes.
 	fixedSomething, err := fixNodeGroupSize(autoscalingContext, b.clusterStateRegistry, currentTime)
 	if err != nil {
 		klog.Errorf("Failed to fix node group sizes: %v", err)
@@ -557,7 +561,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 
 	ConfigurePredicateCheckerForLoop(unschedulablePods, scheduledPods, b.PredicateChecker)
 
-	// todo: move split and append below to separate PodListProcessor
+	// NOTE: move split and append below to separate PodListProcessor
 	// Some unschedulable pods can be waiting for lower priority pods preemption so they have nominated node to run.
 	// Such pods don't require scale up but should be considered during scale down.
 	unschedulablePods, unschedulableWaitingForLowerPriorityPreemption := filterOutExpendableAndSplit(unschedulablePods,
@@ -648,7 +652,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 
 func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node) {
 	// We always schedule deleting of incoming errornous nodes
-	// TODO[lukaszos] Consider adding logic to not retry delete every loop iteration
+	// DOTO[lukaszos] Consider adding logic to not retry delete every loop iteration
 	nodes := b.clusterStateRegistry.GetCreatedNodesWithOutOfResourcesErrors()
 
 	nodeGroups := b.nodeGroupsByID()
@@ -779,7 +783,7 @@ func (b *BufferedAutoscaler) obtainNodeLists(cp cloudprovider.CloudProvider) ([]
 	// node registers as ready. See https://github.com/kubernetes/kubernetes/issues/54959
 	// Treat those nodes as unready until GPU actually becomes available and let
 	// our normal handling for booting up nodes deal with this.
-	// TODO: Remove this call when we handle dynamically provisioned resources.
+	// DOTO: Remove this call when we handle dynamically provisioned resources.
 	allNodes, readyNodes = gpu.FilterOutNodesWithUnreadyGpus(cp.GPULabel(), allNodes, readyNodes)
 	return allNodes, readyNodes, nil
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -35,6 +36,7 @@ const (
 	FieldKeyProjectID   = "projectID"
 	FieldKeyName        = "name"
 	FieldKeyProjectCode = "projectCode"
+	FieldKeyKind        = "kind"
 )
 
 var (
@@ -57,6 +59,13 @@ var (
 			Name: tableName + "_name_idx",
 			Key: bson.D{
 				bson.E{Key: FieldKeyName, Value: 1},
+			},
+			Unique: false,
+		},
+		{
+			Name: tableName + "_kind_idx",
+			Key: bson.D{
+				bson.E{Key: FieldKeyKind, Value: 1},
 			},
 			Unique: false,
 		},
@@ -246,74 +255,94 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 }
 
 // SearchProjects query project sort by ids
+// NOCC:golint/fnsize(设计如此:该方法较长且不可拆分)
 func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchKey string,
 	pagination *page.Pagination) ([]Project, int64, error) {
 	if pagination.Limit == 0 {
 		pagination.Limit = page.DefaultPageLimit
 	}
 	projectList := make([]Project, 0)
-	matchPipeline := map[string]interface{}{"$match": map[string]interface{}{
-		"$or": []map[string]interface{}{
-			{"name": map[string]interface{}{"$regex": searchKey, "$options": "i"}},
-			{"projectCode": map[string]interface{}{"$regex": searchKey, "$options": "i"}},
-			{"projectID": fmt.Sprintf("\"%s\"", searchKey)},
-			{"businessID": fmt.Sprintf("\"%s\"", searchKey)},
-		},
-	}}
-	pipeline := make([]map[string]interface{}, 0)
-	if searchKey != "" {
-		pipeline = append(pipeline, matchPipeline)
+	matchPipline := bson.D{
+		{"$match", bson.D{
+			{"$or", bson.A{
+				bson.D{{"name", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
+				bson.D{{"projectCode", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
+				bson.D{{"projectID", fmt.Sprintf("\"%s\"", searchKey)}},
+				bson.D{{"businessID", fmt.Sprintf("\"%s\"", searchKey)}},
+			}},
+		}},
 	}
+	pipeline := mongo.Pipeline{}
+	if searchKey != "" {
+		pipeline = append(pipeline, matchPipline)
+	}
+	pipeline = append(pipeline, bson.D{
+		{"$addFields", bson.D{
+			{"authorized", bson.D{
+				{"$cond", bson.D{
+					{"if", bson.D{{"$in", bson.A{"$projectID", ids}}}},
+					{"then", 1},
+					{"else", 0},
+				}},
+			}},
+			// kind 为 k8s 则认为开启了容器服务，排在前面
+			{"enabled", bson.D{
+				{"$cond", bson.D{
+					{"if", bson.D{{"$eq", bson.A{"$kind", "k8s"}}}},
+					{"then", 1},
+					{"else", 0},
+				}},
+			}},
+		}},
+	})
 	pipeline = append(pipeline,
-		map[string]interface{}{"$project": map[string]interface{}{
-			"createTime":  1,
-			"updateTime":  1,
-			"creator":     1,
-			"updater":     1,
-			"managers":    1,
-			"projectID":   1,
-			"name":        1,
-			"projectCode": 1,
-			"useBKRes":    1,
-			"description": 1,
-			"isOffline":   1,
-			"kind":        1,
-			"businessID":  1,
-			"isSecret":    1,
-			"projectType": 1,
-			"deployType":  1,
-			"bgID":        1,
-			"bgName":      1,
-			"deptID":      1,
-			"deptName":    1,
-			"centerID":    1,
-			"centerName":  1,
-			"priority": map[string]interface{}{"$cond": map[string]interface{}{
-				"if":   map[string]interface{}{"$in": []interface{}{"$projectID", ids}},
-				"then": 1,
-				"else": 0}},
-		}},
-		map[string]interface{}{"$sort": map[string]interface{}{
-			"priority":   -1,
-			"createTime": -1,
-		}},
-		map[string]interface{}{"$skip": pagination.Offset},
-		map[string]interface{}{"$limit": pagination.Limit},
-	)
+		bson.D{{"$project", bson.D{
+			{"createTime", 1},
+			{"updateTime", 1},
+			{"creator", 1},
+			{"updater", 1},
+			{"managers", 1},
+			{"projectID", 1},
+			{"name", 1},
+			{"projectCode", 1},
+			{"useBKRes", 1},
+			{"description", 1},
+			{"isOffline", 1},
+			{"kind", 1},
+			{"businessID", 1},
+			{"isSecret", 1},
+			{"projectType", 1},
+			{"deployType", 1},
+			{"bgID", 1},
+			{"bgName", 1},
+			{"deptID", 1},
+			{"deptName", 1},
+			{"centerID", 1},
+			{"centerName", 1},
+			{"authorized", 1},
+			{"enabled", 1}}}},
+		bson.D{{"$sort", bson.D{
+			{"authorized", -1},
+			{"enabled", -1},
+			{"name", 1},
+		}}},
+		bson.D{{"$skip", pagination.Offset}},
+		bson.D{{"$limit", pagination.Limit}})
 	if err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &projectList); err != nil {
 		return nil, 0, err
 	}
 	var counts []struct {
 		Count int64 `bson:"count"`
 	}
-	countPipeline := make([]map[string]interface{}, 0)
+	countPipeline := mongo.Pipeline{}
 	if searchKey != "" {
-		countPipeline = append(countPipeline, matchPipeline)
+		countPipeline = append(countPipeline, matchPipline)
 	}
-	countPipeline = append(countPipeline, map[string]interface{}{"$group": map[string]interface{}{
-		"_id":   nil,
-		"count": map[string]interface{}{"$sum": 1},
-	}})
+	countPipeline = append(countPipeline, bson.D{
+		{"$group", bson.D{
+			{"_id", nil},
+			{"count", bson.D{{"$sum", 1}}},
+		}}})
 	if err := m.db.Table(m.tableName).Aggregation(ctx, countPipeline, &counts); err != nil {
 		return nil, 0, err
 	}

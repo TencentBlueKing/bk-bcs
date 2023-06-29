@@ -155,7 +155,6 @@ export default {
 
       showStagTip: false,
       exceptionCode: null,
-      curProject: [],
       nodeMetric: {},
     };
   },
@@ -165,9 +164,6 @@ export default {
     },
     projectCode() {
       return this.$route.params.projectCode;
-    },
-    onlineProjectList() {
-      return this.$store.state.projectList || [];
     },
     curPageData() {
       const { pageSize, curPage } = this.pageConf;
@@ -180,9 +176,6 @@ export default {
         this.handleGetNodeOverview();
       },
     },
-  },
-  mounted() {
-    this.curProject = Object.assign({}, this.onlineProjectList.filter(p => p.project_id === this.projectId)[0] || {});
   },
   methods: {
     async handleGetNodeOverview() {

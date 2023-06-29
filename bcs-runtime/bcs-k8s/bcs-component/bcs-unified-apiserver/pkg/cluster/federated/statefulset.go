@@ -114,9 +114,9 @@ func (s *StatefulSetStor) GetAsTable(ctx context.Context, namespace string, name
 }
 
 // Create 创建 StatefulSet
-func (s *StatefulSetStor) Create(ctx context.Context, namespace string, StatefulSet *appsv1.StatefulSet,
+func (s *StatefulSetStor) Create(ctx context.Context, namespace string, statefulset *appsv1.StatefulSet,
 	opts metav1.CreateOptions) (*appsv1.StatefulSet, error) {
-	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Create(ctx, StatefulSet, opts)
+	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Create(ctx, statefulset, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -124,9 +124,9 @@ func (s *StatefulSetStor) Create(ctx context.Context, namespace string, Stateful
 }
 
 // Update 更新 StatefulSet
-func (s *StatefulSetStor) Update(ctx context.Context, namespace string, StatefulSet *appsv1.StatefulSet,
+func (s *StatefulSetStor) Update(ctx context.Context, namespace string, statefulset *appsv1.StatefulSet,
 	opts metav1.UpdateOptions) (*appsv1.StatefulSet, error) {
-	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Update(ctx, StatefulSet, opts)
+	result, err := s.masterClient.AppsV1().StatefulSets(namespace).Update(ctx, statefulset, opts)
 	if err != nil {
 		return nil, err
 	}

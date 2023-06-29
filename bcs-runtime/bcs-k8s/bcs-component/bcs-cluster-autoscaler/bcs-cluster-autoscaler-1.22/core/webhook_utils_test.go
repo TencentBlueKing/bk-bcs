@@ -88,7 +88,7 @@ func TestGenerateAutoscalerRequest(t *testing.T) {
 		want    *AutoscalerRequest
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "normal case",
 			args: args{
@@ -318,7 +318,7 @@ func TestHandleResponse(t *testing.T) {
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(context.AutoscalingContext, ca_processors.DefaultProcessors(), clusterState, 0, 0, 0, 0)
+	sd := NewScaleDown(context.AutoscalingContext, ca_processors.DefaultProcessors(), clusterState, 0, 0, 0, 0, true)
 	request := &AutoscalerRequest{
 		UID: apitypes.UID("31313131-3131-4131-ad31-3131312d3131"),
 		NodeGroups: map[string]*NodeGroup{
@@ -385,7 +385,7 @@ func TestHandleResponse(t *testing.T) {
 		want1   ScaleDownCandidates
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "normal case with scale up",
 			args: args{
@@ -734,11 +734,11 @@ func TestHandleResponse(t *testing.T) {
 	}
 }
 
-func injectNodeIP(node *corev1.Node, IP string) {
+func injectNodeIP(node *corev1.Node, ip string) {
 	node.Status.Addresses = []corev1.NodeAddress{
 		{
 			Type:    corev1.NodeInternalIP,
-			Address: IP,
+			Address: ip,
 		},
 	}
 }
@@ -802,7 +802,7 @@ func TestExecuteScaleUp(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "scale up ng1 and ng2 normally",
 			args: args{
@@ -911,7 +911,7 @@ func TestExecuteScaleDown(t *testing.T) {
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
 	processors := ca_processors.DefaultProcessors()
-	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0)
+	sd := NewScaleDown(context.AutoscalingContext, processors, clusterState, 0, 0, 0, 0, true)
 
 	type args struct {
 		context            *contextinternal.Context
@@ -925,7 +925,7 @@ func TestExecuteScaleDown(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "scale down ng1 normally",
 			args: args{

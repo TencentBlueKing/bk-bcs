@@ -137,7 +137,7 @@ func NewTestProcessors() *processors.AutoscalingProcessors {
 		PodListProcessor:       NewFilterOutSchedulablePodListProcessor(),
 		NodeGroupListProcessor: &nodegroups.NoOpNodeGroupListProcessor{},
 		NodeGroupSetProcessor:  nodegroupset.NewDefaultNodeGroupSetProcessor([]string{}),
-		// TODO(bskiba): change scale up test so that this can be a NoOpProcessor
+		// DOTO(bskiba): change scale up test so that this can be a NoOpProcessor
 		ScaleUpStatusProcessor:     &status.EventingScaleUpStatusProcessor{},
 		ScaleDownStatusProcessor:   &status.NoOpScaleDownStatusProcessor{},
 		AutoscalingStatusProcessor: &status.NoOpAutoscalingStatusProcessor{},

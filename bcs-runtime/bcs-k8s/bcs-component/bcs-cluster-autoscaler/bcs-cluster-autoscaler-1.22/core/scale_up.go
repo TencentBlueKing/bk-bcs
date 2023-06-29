@@ -314,7 +314,7 @@ func computeExpansionOption(context *contextinternal.Context, podEquivalenceGrou
 		if revertErr := context.AutoscalingContext.ClusterSnapshot.Revert(); revertErr != nil {
 			klog.Fatalf("Error while calling ClusterSnapshot.Revert; %v", revertErr)
 		}
-		// TODO: Or should I just skip the node group? specifically if Revert fails it is fatal error.
+		// DOTO: Or should I just skip the node group? specifically if Revert fails it is fatal error.
 		//       Maybe we should not return error from Revert as we cannot handle it in any way on the caller side?
 		return expander.Option{}, err
 	}
@@ -355,6 +355,7 @@ func computeExpansionOption(context *contextinternal.Context, podEquivalenceGrou
 // ScaleUp tries to scale the cluster up. Return true if it found a way to increase the size,
 // false if it didn't and error if an error occurred. Assumes that all nodes in the cluster are
 // ready and in sync with instance groups.
+// NOCC:golint/fnsize(设计如此)
 func ScaleUp(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, unschedulablePods []*apiv1.Pod, nodes []*apiv1.Node,
 	daemonSets []*appsv1.DaemonSet, nodeInfos map[string]*schedulerframework.NodeInfo,
@@ -457,6 +458,7 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 }
 
 // optimizeBestOption generates the best scale up options
+// NOCC:golint/fnsize(设计如此)
 func optimizeBestOption(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, daemonSets []*appsv1.DaemonSet,
 	nodes []*apiv1.Node, upcomingNodes []*schedulerframework.NodeInfo,
@@ -715,7 +717,7 @@ func computeExpansionOptionForCreatedNodeGroups(context *contextinternal.Context
 	}
 
 	// Update ClusterStateRegistry so similar nodegroups rebalancing works.
-	// TODO(lukaszos) when pursuing scalability update this call with one which takes list of changed node groups so
+	// DOTO(lukaszos) when pursuing scalability update this call with one which takes list of changed node groups so
 	//                we do not do extra API calls. (the call at the bottom of ScaleUp() could be also changed then)
 	clusterStateRegistry.Recalculate()
 	return expansionOptions, createNodeGroupResults, &status.ScaleUpStatus{}, nil

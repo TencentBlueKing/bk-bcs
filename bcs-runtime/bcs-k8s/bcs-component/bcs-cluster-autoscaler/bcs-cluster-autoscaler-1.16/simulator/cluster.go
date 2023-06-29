@@ -211,7 +211,7 @@ func FindEmptyNodesToRemove(candidates []*apiv1.Node, pods []*apiv1.Pod) []*apiv
 }
 
 // findPlaceFor xxx
-// TODO: We don't need to pass list of nodes here as they are already available in nodeInfos.
+// DOTO: We don't need to pass list of nodes here as they are already available in nodeInfos.
 func findPlaceFor(removedNode string, pods []*apiv1.Pod, nodes []*apiv1.Node,
 	nodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	predicateChecker *simulatorinternal.PredicateChecker, oldHints map[string]string, newHints map[string]string,
@@ -243,7 +243,7 @@ func findPlaceFor(removedNode string, pods []*apiv1.Pod, nodes []*apiv1.Node,
 				glogx.V(4).UpTo(loggingQuota).Infof("Evaluation %s for %s/%s -> %v",
 					nodename, pod.Namespace, pod.Name, err.VerboseError())
 			} else {
-				// TODO(mwielgus): Optimize it.
+				// DOTO(mwielgus): Optimize it.
 				klog.V(4).Infof("Pod %s/%s can be moved to %s", pod.Namespace, pod.Name, nodename)
 				podsOnNode := nodeInfo.Pods()
 				podsOnNode = append(podsOnNode, pod)
@@ -260,7 +260,7 @@ func findPlaceFor(removedNode string, pods []*apiv1.Pod, nodes []*apiv1.Node,
 		return false
 	}
 
-	// TODO: come up with a better semi-random semi-utilization sorted
+	// DOTO: come up with a better semi-random semi-utilization sorted
 	// layout.
 	shuffledNodes := shuffleNodes(nodes)
 

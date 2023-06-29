@@ -15,8 +15,9 @@ package conf
 
 import (
 	"encoding/json"
-	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 	"io/ioutil"
+
+	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
 )
 
 // BcsConfig config item for ipam
@@ -24,6 +25,10 @@ type BcsConfig struct {
 	ZkHost   string         `json:"zkHost"`
 	TLS      *types.SSLInfo `json:"tls,omitempty"`
 	Interval int            `json:"interval,omitempty"`
+	EtcdHost string         `json:"etcdHost"`
+	EtcdCA   string         `json:"etcdCA"`
+	EtcdCert string         `json:"etcdCert"`
+	EtcdKey  string         `json:"etcdKey"`
 }
 
 // LoadConfigFromFile load config item from file

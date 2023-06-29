@@ -48,6 +48,7 @@ func init() {
 }
 
 // NewWebhookServer new web hook server
+// NOCC:golint/ret(设计如此)
 func NewWebhookServer() *webhookServer {
 	return &webhookServer{}
 }

@@ -171,8 +171,9 @@ func filterOutExpendablePods(pods []*apiv1.Pod, expendablePodsPriorityCutoff int
 
 // getNodeInfosForGroups finds NodeInfos for all node groups used to manage the given nodes.
 // It also returns a node group to sample node mapping.
-// TODO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
-// TODO(mwielgus): Review error policy - sometimes we may continue with partial errors.
+// DOTO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
+// DOTO(mwielgus): Review error policy - sometimes we may continue with partial errors.
+// NOCC:golint/fnsize(设计如此)
 func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedulerframework.NodeInfo,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
 	daemonsets []*appsv1.DaemonSet, predicateChecker simulator.PredicateChecker,
@@ -233,7 +234,7 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]*schedu
 		if typedErr != nil {
 			return map[string]*schedulerframework.NodeInfo{}, typedErr
 		}
-		// TODO: support node pool label update
+		// DOTO: support node pool label update
 		if added && nodeInfoCache != nil {
 			if nodeInfoCopy, err := deepCopyNodeInfo(result[id]); err == nil {
 				nodeInfoCache[id] = nodeInfoCopy
@@ -555,8 +556,9 @@ func UpdateClusterStateMetrics(csr *clusterstate.ClusterStateRegistry) {
 	}
 	metrics.UpdateClusterSafeToAutoscale(csr.IsClusterHealthy())
 	readiness := csr.GetClusterReadiness()
+	// fix(bcs): 删除中节点也应统计到指标中, 为减少改动, 添加到 Unregistered 中
 	metrics.UpdateNodesCount(readiness.Ready, readiness.Unready, readiness.NotStarted,
-		readiness.LongUnregistered, readiness.Unregistered)
+		readiness.LongUnregistered, readiness.Unregistered+readiness.Deleted)
 }
 
 func getOldestCreateTime(pods []*apiv1.Pod) time.Time {
@@ -584,7 +586,7 @@ func getOldestCreateTimeWithGpu(pods []*apiv1.Pod) (bool, time.Time) {
 }
 
 // updateEmptyClusterStateMetrics updates metrics related to empty cluster's state.
-// TODO(aleksandra-malinowska): use long unregistered value from ClusterStateRegistry.
+// DOTO(aleksandra-malinowska): use long unregistered value from ClusterStateRegistry.
 func updateEmptyClusterStateMetrics() {
 	metrics.UpdateClusterSafeToAutoscale(false)
 	metrics.UpdateNodesCount(0, 0, 0, 0, 0)
@@ -617,7 +619,8 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 			// Ensure new nodes have different names because nodeName
 			// will be used as a map key. Also deep copy pods (daemonsets &
 			// any pods added by cloud provider on template).
-			upcomingNodes = append(upcomingNodes, scheduler_utils.DeepCopyTemplateNode(nodeTemplate, fmt.Sprintf("upcoming-%d", i)))
+			upcomingNodes = append(upcomingNodes,
+				scheduler_utils.DeepCopyTemplateNode(nodeTemplate, fmt.Sprintf("upcoming-%d", i)))
 		}
 	}
 	return upcomingNodes
@@ -668,7 +671,6 @@ func checkResourceNotEnough(nodes map[string]*schedulerframework.NodeInfo,
 			continue
 		}
 		r := float64(left.MilliValue()) / float64(sum.MilliValue())
-		klog.V(6).Infof("Resource :%v, left: %v", name, r)
 		switch name {
 		case apiv1.ResourceCPU:
 			klog.V(4).Infof("%v ratio %v, desired CPU ratio %v", name, r, cpuRatio)

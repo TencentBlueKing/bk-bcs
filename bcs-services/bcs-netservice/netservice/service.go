@@ -71,6 +71,18 @@ func reportMetrics(logic, status string, started time.Time) {
 	logicLatency.WithLabelValues(logic, status).Observe(time.Since(started).Seconds())
 }
 
+func (srv *NetService) createPath(key string, value []byte) {
+	var err error
+	if _, err = srv.store.Get(key); err == nil {
+		blog.Infof("storage key '%s' already exist", key)
+		return
+	}
+	blog.Infof("storage get '%s' failed: %s, will be auto created", key, err.Error())
+	if err := srv.store.Add(key, value); err != nil {
+		blog.Errorf("storage create '%s' failed", key)
+	}
+}
+
 // NewNetService create netservice logic
 func NewNetService(addr string, port, metricPort int, st storage.Storage) *NetService {
 	srv := &NetService{
@@ -79,31 +91,16 @@ func NewNetService(addr string, port, metricPort int, st storage.Storage) *NetSe
 		metricPort: metricPort,
 		store:      st,
 	}
-	// service init
-	if _, err := st.Get(defaultNetSvcPath); err != nil {
-		// create node
-		st.Add(defaultNetSvcPath, []byte("netservice"))
-	}
-	if _, err := st.Get(defaultHostInfoPath); err != nil {
-		// create node
-		st.Add(defaultHostInfoPath, []byte("hosts"))
-	}
-	if _, err := st.Get(defaultPoolInfoPath); err != nil {
-		// create node
-		st.Add(defaultPoolInfoPath, []byte("pools"))
-	}
-	if _, err := st.Get(defaultLockerPath); err != nil {
-		// create node
-		st.Add(defaultLockerPath, []byte("lock"))
-	}
-	if _, err := st.Get(defaultDiscoveryPath); err != nil {
-		// create node
-		st.Add(defaultDiscoveryPath, []byte("server"))
-	}
+	srv.createPath(defaultNetSvcPath, []byte("netservice"))
+	srv.createPath(defaultHostInfoPath, []byte("hosts"))
+	srv.createPath(defaultPoolInfoPath, []byte("pools"))
+	srv.createPath(defaultLockerPath, []byte("lock"))
+	srv.createPath(defaultDiscoveryPath, []byte("server"))
 	if err := srv.createSelfNode(); err != nil {
 		blog.Errorf("NetServer create self node err, %v", err)
 		return nil
 	}
+	blog.Infof("net server init success")
 	return srv
 }
 

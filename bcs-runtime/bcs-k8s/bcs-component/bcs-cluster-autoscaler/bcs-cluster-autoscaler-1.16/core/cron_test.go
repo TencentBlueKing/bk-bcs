@@ -302,7 +302,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 	}
 
 	clusterState := clusterstate.NewClusterStateRegistry(provider, clusterStateConfig, context.LogRecorder, newBackoff())
-	sd := NewScaleDown(&context, clusterState, 0, 0, 0)
+	sd := NewScaleDown(&context, clusterState, 0, 0, 0, true)
 
 	autoscaler := &BufferedAutoscaler{
 		Context:               &context,
@@ -326,7 +326,7 @@ func TestBufferedAutoscaler_doCron(t *testing.T) {
 		want        errors.AutoscalerError
 		wantDesired []int
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "in range, ng-1 need scale up, ng-2 have no change",
 			args: args{
@@ -373,7 +373,7 @@ func Test_getDesiredNumForNodeGroupWithTime(t *testing.T) {
 		want    int
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "one rule, in range",
 			args: args{

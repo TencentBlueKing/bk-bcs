@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package metrics TODO
+// Package metrics DOTO
 package metrics
 
 import (

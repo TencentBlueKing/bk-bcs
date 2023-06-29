@@ -23,6 +23,7 @@ import (
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 )
 
+// query subnets
 func (c *Client) describeSubnets(subnetIDs []string) ([]*vpc.Subnet, error) {
 	req := vpc.NewDescribeSubnetsRequest()
 	req.SubnetIds = common.StringPtrs(subnetIDs)
@@ -57,11 +58,11 @@ func (c *Client) createEni(name, vpcID, subnetID string, ipNum int) (*vpc.Networ
 
 	blog.V(2).Infof("tencentcloud CreateNetworkInterface response %s", resp.ToJsonString())
 
+	// validate response
 	if resp.Response.NetworkInterface == nil {
 		blog.Errorf("tencentcloud CreateNetworkInterface failed, NetworkInterface in resp is empty")
 		return nil, fmt.Errorf("tencentcloud CreateNetworkInterface failed, NetworkInterface in resp is empty")
 	}
-
 	return resp.Response.NetworkInterface, nil
 }
 
@@ -72,6 +73,7 @@ func (c *Client) queryENI(subnetID, eniID, instanceID, eniName string, offset, l
 	uint64, []*vpc.NetworkInterface, error) {
 	req := vpc.NewDescribeNetworkInterfacesRequest()
 	req.Filters = make([]*vpc.Filter, 0)
+	// check query condition
 	if len(subnetID) != 0 {
 		req.Filters = append(req.Filters, &vpc.Filter{
 			Name: common.StringPtr("subnet-id"),
@@ -143,9 +145,7 @@ func (c *Client) attachENI(eniID string, instanceID string) error {
 		return fmt.Errorf(
 			"tencentcloud AttachNetworkInterface %s to ins %s failed, err %s", eniID, instanceID, err.Error())
 	}
-
 	blog.V(3).Infof("tencentcloud AttachNetworkInterface response %s", response.ToJsonString())
-
 	return nil
 }
 
@@ -156,7 +156,7 @@ func (c *Client) detachENI(eniID string, instanceID string) error {
 	request.InstanceId = common.StringPtr(instanceID)
 
 	blog.V(2).Infof("tencentcloud DetachNetworkInterface request %s", request.ToJsonString())
-
+	// do detach
 	response, err := c.vpcClient.DetachNetworkInterface(request)
 	if err != nil {
 		blog.Errorf("tencentcloud DetachNetworkInterface %s from ins %s failed, err %s",
@@ -174,7 +174,7 @@ func (c *Client) deleteEni(eniID string) error {
 	req.NetworkInterfaceId = common.StringPtr(eniID)
 
 	blog.V(2).Infof("tencentcloud DeleteNetworkInterface request %s", req.ToJsonString())
-
+	// do delete
 	resp, err := c.vpcClient.DeleteNetworkInterface(req)
 	if err != nil {
 		blog.Errorf("tencentcloud DeleteNetworkInterface failed %s", err.Error())
@@ -192,7 +192,7 @@ func (c *Client) assignIPsToEni(eniID string, ipNum int) error {
 	req.SecondaryPrivateIpAddressCount = common.Uint64Ptr(uint64(ipNum))
 
 	blog.V(2).Infof("tencentcloud AssignPrivateIpAddresses request %s", req.ToJsonString())
-
+	// do ip assign
 	resp, err := c.vpcClient.AssignPrivateIpAddresses(req)
 	if err != nil {
 		blog.Errorf("tencentcloud AssignPrivateIpAddresses request %s", req.ToJsonString())
@@ -218,7 +218,7 @@ func (c *Client) unassignIPsFromEni(eniID string, addrs []string) error {
 	}
 
 	blog.V(2).Infof("tencentcloud UnassignPrivateIpAddresses request %s", req.ToJsonString())
-
+	// do ip unassign
 	resp, err := c.vpcClient.UnassignPrivateIpAddresses(req)
 	if err != nil {
 		blog.Errorf("tencentcloud UnassignPrivateIpAddresses failed, err %s", err.Error())
@@ -229,14 +229,17 @@ func (c *Client) unassignIPsFromEni(eniID string, addrs []string) error {
 	return nil
 }
 
+// wait for attached status
 func (c *Client) waitForAttached(eniID string, checkNum, checkInterval int) error {
 	return c.doWaitForStatus(eniID, checkNum, checkInterval, EnvNameTencentCloudEniAttachedStatus)
 }
 
+// wait for detached status
 func (c *Client) waitForDetached(eniID string, checkNum, checkInterval int) error {
 	return c.doWaitForStatus(eniID, checkNum, checkInterval, EnvNameTencentCloudEniDetachedStatus)
 }
 
+// wait for available status
 func (c *Client) waitForAvailable(eniID string, checkNum, checkInterval int) error {
 	return c.doWaitForStatus(eniID, checkNum, checkInterval, EnvNameTencentCloudEniAvailableStatus)
 }
@@ -249,6 +252,7 @@ func (c *Client) doWaitForStatus(eniID string, checkNum, checkInterval int, fina
 		if err != nil {
 			return err
 		}
+		// wait for all enis
 		for _, eni := range enis {
 			if *eni.NetworkInterfaceId == eniID {
 				switch *eni.State {
@@ -306,6 +310,7 @@ func (c *Client) queryInstance(instanceIP string) (*cvm.Instance, error) {
 		return nil, fmt.Errorf("cvm with %s not found", err.Error())
 	}
 
+	// validate response
 	ins := resp.Response.InstanceSet[0]
 	if ins == nil {
 		return nil, fmt.Errorf("no vm info")
@@ -338,6 +343,7 @@ func (c *Client) querySubnet(subnetID string) (*vpc.Subnet, error) {
 
 	blog.V(2).Infof("tencentcloud DescribeSubnets response %s", response.ToJsonString())
 
+	// validate response
 	if *response.Response.TotalCount == 0 {
 		blog.Errorf("tencentcloud DescribeSubnets by id %s return zero result", subnetID)
 		return nil, fmt.Errorf("tencentcloud DescribeSubnets by id %s return zero result", subnetID)

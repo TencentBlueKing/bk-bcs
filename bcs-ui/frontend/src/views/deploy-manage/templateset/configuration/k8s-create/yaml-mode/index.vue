@@ -362,7 +362,7 @@
                                 <div class="bk-dropdown-box mb20" style="width: 4;">
                                     <bkbcs-input
                                         type="text"
-                                        :placeholder="$t('版本号1')"
+                                        :placeholder="$t('版本号')"
                                         :display-key="'_name'"
                                         :setting-key="'_id'"
                                         :search-key="'_name'"

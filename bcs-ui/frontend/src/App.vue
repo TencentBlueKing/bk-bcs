@@ -2,8 +2,7 @@
   <!-- 加Loading会导致跟index的loading错位的效果 -->
   <div id="app">
     <Navigation>
-      <RouterView v-if="!!projectList.length" />
-      <ProjectGuide v-else-if="!isLoading" />
+      <RouterView />
       <template #sideMenu>
         <RouterView name="sideMenu" />
       </template>
@@ -19,16 +18,15 @@ import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 import Navigation from '@/views/app/navigation.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
 import PermDialog from '@/views/app/apply-perm.vue';
-import ProjectGuide from '@/views/app/empty-project-guide.vue';
 import $i18n from '@/i18n/i18n-setup';
 import { bus } from '@/common/bus';
 import useProject from '@/views/project-manage/project/use-project';
 
 export default defineComponent({
   name: 'App',
-  components: { Navigation, BkPaaSLogin, PermDialog, ProjectGuide },
+  components: { Navigation, BkPaaSLogin, PermDialog },
   setup() {
-    const { projectList, getProjectList, getUserInfo } = useProject();
+    const { getUserInfo } = useProject();
     const isLoading = ref(false);
     const applyPermRef = ref<any>(null);
     const loginRef = ref<any>(null);
@@ -64,10 +62,7 @@ export default defineComponent({
       window.$loginModal = loginRef.value;
 
       isLoading.value = true;
-      await Promise.all([
-        getUserInfo(),
-        getProjectList(),
-      ]).catch((err) => {
+      await getUserInfo().catch((err) => {
         console.error(err);
       });
       isLoading.value = false;
@@ -78,7 +73,6 @@ export default defineComponent({
       isLoading,
       applyPermRef,
       loginRef,
-      projectList,
     };
   },
 });

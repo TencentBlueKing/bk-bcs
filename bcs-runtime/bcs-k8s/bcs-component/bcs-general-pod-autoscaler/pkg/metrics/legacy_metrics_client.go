@@ -31,13 +31,13 @@ import (
 )
 
 const (
-	// DefaultHeapsterNamespace TODO
+	// DefaultHeapsterNamespace DOTO
 	DefaultHeapsterNamespace = "bcs-system"
-	// DefaultHeapsterScheme TODO
+	// DefaultHeapsterScheme DOTO
 	DefaultHeapsterScheme = "http"
-	// DefaultHeapsterService TODO
+	// DefaultHeapsterService DOTO
 	DefaultHeapsterService = "heapster"
-	// DefaultHeapsterPort TODO
+	// DefaultHeapsterPort DOTO
 	DefaultHeapsterPort         = "" // use the first exposed port on the service
 	heapsterDefaultMetricWindow = time.Minute
 )

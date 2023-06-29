@@ -113,9 +113,9 @@ func (s *SecretStor) GetAsTable(ctx context.Context, namespace string, name stri
 }
 
 // Create 创建 Secret
-func (s *SecretStor) Create(ctx context.Context, namespace string, Secret *v1.Secret,
+func (s *SecretStor) Create(ctx context.Context, namespace string, secret *v1.Secret,
 	opts metav1.CreateOptions) (*v1.Secret, error) {
-	result, err := s.masterClient.CoreV1().Secrets(namespace).Create(ctx, Secret, opts)
+	result, err := s.masterClient.CoreV1().Secrets(namespace).Create(ctx, secret, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -123,9 +123,9 @@ func (s *SecretStor) Create(ctx context.Context, namespace string, Secret *v1.Se
 }
 
 // Update 更新 Secret
-func (s *SecretStor) Update(ctx context.Context, namespace string, Secret *v1.Secret,
+func (s *SecretStor) Update(ctx context.Context, namespace string, secret *v1.Secret,
 	opts metav1.UpdateOptions) (*v1.Secret, error) {
-	result, err := s.masterClient.CoreV1().Secrets(namespace).Update(ctx, Secret, opts)
+	result, err := s.masterClient.CoreV1().Secrets(namespace).Update(ctx, secret, opts)
 	if err != nil {
 		return nil, err
 	}

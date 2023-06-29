@@ -610,7 +610,7 @@ func (s *SidecarController) produceLogConfParameterV2(container *dockertypes.Con
 		}
 		blog.V(4).Infof("container info: %+v", *container)
 		if !container.State.Running && container.State.Status != "created" {
-			var closeEOF bool = true
+			var closeEOF = true
 			para.CloseEOF = &closeEOF
 			para.CloseTimeout = time.Duration(time.Duration(logConf.Spec.ExitedContainerLogCloseTimeout) * time.Second).String()
 		}

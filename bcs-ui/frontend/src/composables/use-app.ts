@@ -61,7 +61,6 @@ export function useProject() {
   const projectID = computed<string>(() => curProject.value?.projectID);
   // todo 详情接口会丢失project_code
   const projectCode = computed<string>(() => curProject.value?.projectCode || $store.getters.curProjectCode);
-  const projectList = computed<any[]>(() => $store.state.projectList || []);
   const isMaintainer = computed(() => ($store.state.cluster.maintainers as string[])
     .includes($store.state.user.username));
 
@@ -70,7 +69,6 @@ export function useProject() {
     curProject,
     projectID,
     projectCode,
-    projectList,
   };
 }
 

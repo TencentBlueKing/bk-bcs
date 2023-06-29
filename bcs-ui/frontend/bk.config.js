@@ -25,6 +25,7 @@ module.exports = {
   },
   configureWebpack() {
     return {
+      devtool: 'eval-source-map',
       resolve: {
         fallback: { "url": require.resolve("url") },
         extensions: ['.md'],
@@ -92,7 +93,9 @@ module.exports = {
       .plugin('braceTheme')
       .use(webpack.ContextReplacementPlugin, [/brace\/theme$/, /^\.\/(monokai)$/]);
 
-    config
+   
+    if (process.env.NODE_ENV === 'production') {
+      config
       .plugin('compression')
       .use(new CompressionPlugin({
         test: /\.(js|css)(\?.*)?$/i,
@@ -100,6 +103,7 @@ module.exports = {
         //   level: 9
         // }
       }))
+    }
 
     config.devServer
       .set('allowedHosts', 'all')

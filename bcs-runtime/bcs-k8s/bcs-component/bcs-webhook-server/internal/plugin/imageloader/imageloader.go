@@ -15,7 +15,10 @@
 package imageloader
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -23,13 +26,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginmanager"
 
 	"k8s.io/api/admission/v1beta1"
+	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	batchlister "k8s.io/client-go/listers/batch/v1"
 	corev1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	//	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/workqueue"
 )
 
 const (
@@ -44,19 +52,31 @@ var (
 )
 
 func init() {
-	// TODO register plugin to hook-server
 	p := &imageLoader{}
 	pluginmanager.Register(pluginName, p)
 }
 
+// ImageLoaderConfig config of image loader
+type ImageLoaderConfig struct {
+	// Workload supported workload
+	Workload string `json:"workload"`
+	// JobTimeoutSeconds timeout seconds of job
+	JobTimeoutSeconds int64 `json:"jobTimeoutSeconds"`
+}
+
 type imageLoader struct {
 	stopCh chan struct{}
+	config ImageLoaderConfig
 
 	kubeConfig *rest.Config
-	k8sClient  *kubernetes.Clientset
+	k8sClient  kubernetes.Interface
 	workloads  map[string]Workload
 
-	nodeLister corev1lister.NodeLister
+	nodeLister   corev1lister.NodeLister
+	jobLister    batchlister.JobLister
+	secretLister corev1lister.SecretLister
+
+	queue workqueue.RateLimitingInterface
 }
 
 func (i *imageLoader) registWorkloads() error {
@@ -76,8 +96,20 @@ func (i *imageLoader) AnnotationKey() string {
 // Init inits job, node and workload's informer.
 func (i *imageLoader) Init(configFilePath string) error {
 	blog.V(3).Infof("init imageloader with configFilePath %s", configFilePath)
-	// TODO read config from configFilePath
-	// TODO set burst and qps
+	fileBytes, err := ioutil.ReadFile(configFilePath)
+	if err != nil {
+		blog.Errorf("load config file %s failed, err %s", configFilePath, err.Error())
+		return fmt.Errorf("load config file %s failed, err %s", configFilePath, err.Error())
+	}
+	newConfig := &ImageLoaderConfig{}
+	err = json.Unmarshal(fileBytes, &newConfig)
+	if err != nil {
+		blog.Errorf("decode config %s failed, err %s", string(fileBytes), err.Error())
+		return fmt.Errorf("decode config %s failed, err %s", string(fileBytes), err.Error())
+	}
+	i.config = *newConfig
+
+	// DOTO set burst and qps
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
@@ -89,11 +121,9 @@ func (i *imageLoader) Init(configFilePath string) error {
 	if err != nil {
 		blog.Errorf("%v", err)
 		return err
-	} else {
-		blog.Info("connect to k8s with default client success")
 	}
+	blog.Info("connect to k8s with default client success")
 
-	// TODO select workload by config
 	// regist workloads
 	err = i.registWorkloads()
 	if err != nil {
@@ -104,34 +134,89 @@ func (i *imageLoader) Init(configFilePath string) error {
 		return fmt.Errorf("workloads cache synced failed")
 	}
 
-	// TODO create imageloader namespace if not exist
+	// create imageloader namespace if not exist
+	_, err = i.k8sClient.CoreV1().Namespaces().Get(context.Background(), pluginName, metav1.GetOptions{})
+	if errors.IsNotFound(err) {
+		namespace := apiv1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{Name: pluginName},
+		}
+		_, err = i.k8sClient.CoreV1().Namespaces().Create(context.Background(), &namespace, metav1.CreateOptions{})
+		if err != nil {
+			blog.Errorf("failed to create namespace: %v", err)
+			return err
+		}
+	}
 
 	// listen bcs-gamedeployment to compare update, listen imageload job to execute the update
-	// node is a cluster-scoped resource, it's ok to specify the namespace
-	corev1InformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(i.k8sClient, 0,
-		kubeinformers.WithNamespace(pluginName))
-
-	// TODO start workload informer
+	corev1InformerFactory := kubeinformers.NewSharedInformerFactory(i.k8sClient, 0)
 
 	// add handler for imageload job
-	// TODO use workqueue
-	corev1InformerFactory.Batch().V1().Jobs().Informer().AddEventHandler(
+	i.queue = workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(),
+		pluginName)
+	jobInformer := corev1InformerFactory.Batch().V1().Jobs().Informer()
+	jobInformer.AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc:    i.addJob,
 			UpdateFunc: i.updateJob,
 			// do nothing
 			DeleteFunc: func(interface{}) {},
 		})
+	i.jobLister = corev1InformerFactory.Batch().V1().Jobs().Lister()
 
 	// set node lister to get images on node
-	// add node informer
 	nodeInformer := corev1InformerFactory.Core().V1().Nodes().Informer()
 	i.nodeLister = corev1InformerFactory.Core().V1().Nodes().Lister()
+
+	secretInformer := corev1InformerFactory.Core().V1().Secrets().Informer()
+	i.secretLister = corev1InformerFactory.Core().V1().Secrets().Lister()
+
 	i.stopCh = make(chan struct{})
 	corev1InformerFactory.Start(i.stopCh)
-	if !cache.WaitForCacheSync(i.stopCh, nodeInformer.HasSynced) {
-		return fmt.Errorf("node cache synced failed")
+	if !cache.WaitForCacheSync(i.stopCh, nodeInformer.HasSynced, jobInformer.HasSynced, secretInformer.HasSynced) {
+		return fmt.Errorf("Wait for cache failed")
 	}
+
+	workers := 1
+	go i.run(workers)
+	return nil
+}
+
+// processNextWorkItem dequeues items, processes them, and marks them done. It enforces that the syncHandler is never
+// invoked concurrently with the same key.
+func (i *imageLoader) processNextWorkItem() bool {
+	key, quit := i.queue.Get()
+	if quit {
+		return false
+	}
+	defer i.queue.Done(key)
+	blog.Infof("processNextWorkItem get item: %#v", key)
+	if err := i.sync(key.(string)); err != nil {
+		utilruntime.HandleError(fmt.Errorf("error syncing GameDeployment %v, requeuing: %v", key.(string), err))
+		i.queue.AddRateLimited(key)
+	} else {
+		i.queue.Forget(key)
+	}
+	return true
+}
+
+// worker runs a worker goroutine that invokes processNextWorkItem until the controller's queue is closed
+func (i *imageLoader) worker() {
+	for i.processNextWorkItem() {
+	}
+}
+
+func (i *imageLoader) run(workers int) error {
+	defer utilruntime.HandleCrash()
+	defer i.queue.ShutDown()
+
+	for j := 0; j < workers; j++ {
+		go wait.Until(i.worker, time.Second, i.stopCh)
+	}
+
+	blog.Info("Started workers")
+	<-i.stopCh
+	blog.Info("Shutting down workers")
+
 	return nil
 }
 
@@ -164,7 +249,7 @@ func (i *imageLoader) Handle(ar v1beta1.AdmissionReview) *v1beta1.AdmissionRespo
 }
 
 // Close xxx
-// TODO clean resources like connections, files
+// DOTO clean resources like connections, files
 func (i *imageLoader) Close() error {
 	return nil
 }

@@ -1213,7 +1213,7 @@ export default {
         msg = `The conversion YAML function will copy the template set version [${name}] into a new YAML template set, and the platform will complete the conversion of the template configuration. If you have any questions during use, please contact BCS`;
       }
       me.$bkInfo({
-        title: me.$t('注意1'),
+        title: me.$t('注意'),
         content: msg,
         confirmFn() {
           me.exportYamlTemplate(versionId, realVersionId);

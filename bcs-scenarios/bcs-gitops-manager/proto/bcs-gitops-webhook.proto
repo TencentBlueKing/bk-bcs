@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package bcsgitopsmanager;
+
+option go_package = "./proto;bcsgitopsmanager";
+
+import "protoc-gen-swagger/options/annotations.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/any.proto";
+
+service BcsGitopsWebhook {
+  rpc TGitWebhook(TGitWebhookRequest) returns (TGitWebhookResponse) {
+    option (google.api.http) = {
+      post : "/gitopswebhook/v1/webhook/tgit"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      summary : "工峰 webhook"
+      description : "用于给工蜂的 webhook 请求做处理"
+    };
+  }
+  rpc GeneralWebhook(GeneralWebhookRequest) returns (GeneralWebhookResponse) {
+    option (google.api.http) = {
+      post : "/gitopswebhook/v1/webhook/general"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      summary : "常规 Git Webhook（github/gitlab）"
+      description : "用于给常规的 git webhook 请求做处理"
+    };
+  }
+}
+
+message TGitWebhookRequest {
+  google.protobuf.Any body = 1;
+}
+
+message TGitWebhookResponse {}
+
+message GeneralWebhookRequest {
+  google.protobuf.Any body = 1;
+}
+
+message GeneralWebhookResponse {}

@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -38,6 +37,8 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	"k8s.io/klog"
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 type scaleUpResourcesLimits map[string]int64
@@ -142,7 +143,7 @@ func calculateScaleUpCoresMemoryTotal(
 
 // calculateScaleUpGpusTotal calculate the total gpu
 func calculateScaleUpGpusTotal(
-	GPULabel string,
+	gpuLabel string,
 	nodeGroups []cloudprovider.NodeGroup,
 	nodeInfos map[string]*schedulernodeinfo.NodeInfo,
 	nodesFromNotAutoscaledGroups []*apiv1.Node) (map[string]int64, errors.AutoscalerError) {
@@ -159,7 +160,7 @@ func calculateScaleUpGpusTotal(
 			return nil, errors.NewAutoscalerError(errors.CloudProviderError, "No node info for: %s", nodeGroup.Id())
 		}
 		if currentSize > 0 {
-			gpuType, gpuCount, err := gpu.GetNodeTargetGpus(GPULabel, nodeInfo.Node(), nodeGroup)
+			gpuType, gpuCount, err := gpu.GetNodeTargetGpus(gpuLabel, nodeInfo.Node(), nodeGroup)
 			if err != nil {
 				return nil, errors.ToAutoscalerError(errors.CloudProviderError, err).AddPrefix(
 					"Failed to get target gpu for node group %v:", nodeGroup.Id())
@@ -172,7 +173,7 @@ func calculateScaleUpGpusTotal(
 	}
 
 	for _, node := range nodesFromNotAutoscaledGroups {
-		gpuType, gpuCount, err := gpu.GetNodeTargetGpus(GPULabel, node, nil)
+		gpuType, gpuCount, err := gpu.GetNodeTargetGpus(gpuLabel, node, nil)
 		if err != nil {
 			return nil, errors.ToAutoscalerError(errors.CloudProviderError, err).AddPrefix(
 				"Failed to get target gpu for node gpus count for node %v:", node.Name)
@@ -499,10 +500,9 @@ func checkPodsSchedulable(nodeGroup cloudprovider.NodeGroup,
 		klog.V(4).Infof("Skipping node group %s; cannot compute pods passing predicates", nodeGroup.Id())
 		skippedNodeGroups[nodeGroup.Id()] = notReadyReason
 		return option, skippedNodeGroups, podsRemainUnschedulable, fmt.Errorf("")
-	} else {
-		option.Pods = make([]*apiv1.Pod, len(podsPassing))
-		copy(option.Pods, podsPassing)
 	}
+	option.Pods = make([]*apiv1.Pod, len(podsPassing))
+	copy(option.Pods, podsPassing)
 
 	// update information why we cannot schedule pods for which we did not find a working extension option so far
 	podsNotPassing, err := getPodsNotPassingPredicates(nodeGroup.Id())
@@ -571,7 +571,7 @@ func optimizeBestOption(context *contextinternal.Context, processors *ca_process
 			createNodeGroupResult, oldID)
 
 		// Update ClusterStateRegistry so similar nodegroups rebalancing works.
-		// TODO(lukaszos) when pursuing scalability update this call with one which takes list of changed node groups so
+		// DOTO(lukaszos) when pursuing scalability update this call with one which takes list of changed node groups so
 		//                we do not do extra API calls. (the call at the bottom of ScaleUp() could be also changed then)
 		clusterStateRegistry.Recalculate()
 	}

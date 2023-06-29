@@ -4,7 +4,17 @@
     <div class="mt-[16px] text-[14px] text-[#979BA5]">{{ $t('推荐使用共享集群。如有需要也可添加新的集群') }}</div>
     <div class="flex justify-center mt-[24px]">
       <bk-button class="min-w-[116px]" theme="primary" @click="handleGotoResourceView">{{ $t('使用共享集群') }}</bk-button>
-      <bk-button class="min-w-[116px]" @click="handleCreateCluster">{{ $t('添加集群') }}</bk-button>
+      <bk-button
+        class="min-w-[116px]"
+        v-authority="{
+          actionId: 'cluster_create',
+          resourceName: curProject.project_name,
+          permCtx: {
+            resource_type: 'project',
+            project_id: curProject.project_id
+          }
+        }"
+        @click="handleCreateCluster">{{ $t('添加集群') }}</bk-button>
     </div>
     <div class="flex justify-center mt-[16px]">
       <bk-button text @click="handleGotoDoc">
@@ -19,10 +29,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import $router from '@/router';
+import { useProject } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'ClusterGuide',
   setup() {
+    const { curProject } = useProject();
     const handleGotoResourceView = () => {
       $router.push({ name: 'dashboardNamespace' });
     };
@@ -37,6 +49,7 @@ export default defineComponent({
       handleGotoResourceView,
       handleCreateCluster,
       handleGotoDoc,
+      curProject,
     };
   },
 });

@@ -239,10 +239,9 @@ func (h *Handler) DenyIngress(ingress *v1.Ingress) bool {
 			if apierrors.IsNotFound(err) {
 				blog.Infof("get deploy %s not found, skip filter clb", l7LbControllerName)
 				return false
-			} else {
-				blog.Errorf("get deploy %s failed, err %s", l7LbControllerName, err.Error())
-				return true
 			}
+			blog.Errorf("get deploy %s failed, err %s", l7LbControllerName, err.Error())
+			return true
 		}
 	}
 

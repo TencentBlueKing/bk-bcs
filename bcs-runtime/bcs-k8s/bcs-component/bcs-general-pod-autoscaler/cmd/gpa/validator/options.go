@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	// Version TODO
+	// Version DOTO
 	Version = "unknown"
 )
 

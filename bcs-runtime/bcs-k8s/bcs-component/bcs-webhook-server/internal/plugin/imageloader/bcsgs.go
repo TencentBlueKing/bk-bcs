@@ -19,12 +19,11 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsgsapi "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/tkex/v1alpha1"
-	bcsgstkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/apis/tkex/v1alpha1"
-	bcsclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
-	bcssche "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned/scheme"
-	informers "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/informers/externalversions"
-	bcsgslister "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/listers/tkex/v1alpha1"
+	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/apis/tkex/v1alpha1"
+	bcsclient "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned"
+	bcssche "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/clientset/versioned/scheme"
+	informers "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/informers/externalversions"
+	bcsgslister "github.com/Tencent/bk-bcs/bcs-scenarios/kourse/pkg/client/listers/tkex/v1alpha1"
 
 	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/api/admission/v1beta1"
@@ -35,16 +34,17 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/utils/pointer"
 )
 
 var (
-	bcsgsCodec = bcssche.Codecs.LegacyCodec(bcsgstkexv1alpha1.SchemeGroupVersion)
+	bcsgsCodec = bcssche.Codecs.LegacyCodec(tkexv1alpha1.SchemeGroupVersion)
 )
 
 type bcsgsWorkload struct {
 	name string
 
-	client   *bcsclient.Clientset
+	client   bcsclient.Interface
 	informer cache.SharedIndexInformer
 	lister   bcsgslister.GameStatefulSetLister
 
@@ -59,9 +59,9 @@ func (b *bcsgsWorkload) Name() string {
 // Init inits the workload's informer.
 func (b *bcsgsWorkload) Init(i *imageLoader) error {
 	b.name = metav1.GroupVersionKind{
-		Group:   bcsgsapi.GroupVersion.Group,
-		Version: bcsgsapi.GroupVersion.Version,
-		Kind:    "GameStatefulSet",
+		Group:   tkexv1alpha1.GroupVersion.Group,
+		Version: tkexv1alpha1.GroupVersion.Version,
+		Kind:    tkexv1alpha1.KindGameStatefulSet,
 	}.String()
 	b.i = i
 
@@ -87,152 +87,122 @@ func (b *bcsgsWorkload) Init(i *imageLoader) error {
 // create a image-load job.
 func (b *bcsgsWorkload) LoadImageBeforeUpdate(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	// get req gs
-	newGS := &bcsgstkexv1alpha1.GameStatefulSet{}
-	raw := ar.Request.Object.Raw
-	err := json.Unmarshal(raw, newGS)
-	if err != nil {
-		blog.Errorf("get new gs failed: %v", err)
-		return toAdmissionResponse(err)
+	newGS := &tkexv1alpha1.GameStatefulSet{}
+	if err := json.Unmarshal(ar.Request.Object.Raw, newGS); err != nil {
+		return toAdmissionResponse(fmt.Errorf("get new gs failed: %v", err))
 	}
 
 	// only inplace-update need image loader
-	if newGS.Spec.UpdateStrategy.Type != bcsgstkexv1alpha1.InplaceUpdateGameStatefulSetStrategyType {
+	if newGS.Spec.UpdateStrategy.Type != tkexv1alpha1.InplaceUpdateGameStatefulSetStrategyType {
 		return toAdmissionResponse(nil)
 	}
 
 	// get old gs
-	oldGS := &bcsgstkexv1alpha1.GameStatefulSet{}
-	raw = ar.Request.OldObject.Raw
-	err = json.Unmarshal(raw, oldGS)
-	if err != nil {
-		blog.Errorf("get old gs failed: %v", err)
-		return toAdmissionResponse(err)
+	oldGS := &tkexv1alpha1.GameStatefulSet{}
+	if err := json.Unmarshal(ar.Request.OldObject.Raw, oldGS); err != nil {
+		return toAdmissionResponse(fmt.Errorf("get old gs failed: %v", err))
 	}
 
-	blog.V(3).Infof("bcsgs %v updating", newGS)
+	blog.V(3).Infof("bcsgs %s/%s updating", newGS.Namespace, newGS.Name)
 
 	// diff new and old images to get patch on new and jobContainers to pull images
-	originalDiffPatch, originalDiffJobContainers := b.imageDiff(oldGS, newGS)
+	originalDiffPatch, originalDiffJobContainers := diff(oldGS.ObjectMeta, newGS.ObjectMeta,
+		oldGS.Spec.Template.Spec.Containers, newGS.Spec.Template.Spec.Containers)
 	// apply final patch
 	var finalPatch string
 	// craete finalJob if it is not nil
 	var finalJob *batchv1.Job
-	// delete current job created if this is true
-	deleteCurrentJob := false
+	var needToDeleteJob bool
+	var err error
 
-	if updatePatch, ok := oldGS.Annotations[imageUpdateAnno]; !ok {
+	// update but without container change
+	if len(originalDiffJobContainers) == 0 {
+		blog.V(3).Infof("recevice update requests but wihout changing container, gs: %s/%s",
+			newGS.Namespace, newGS.Name)
+		return toAdmissionResponse(nil, finalPatch)
+	}
+
+	updatePatch, ok := oldGS.Annotations[imageUpdateAnno]
+	if !ok {
 		// new image change request from user
 		// use original diff, and create job
-		blog.V(3).Infof("new image change request from user of bcsgs %v", newGS)
+		blog.V(3).Infof("new image update request from user of bcsgs %s/%s", newGS.Namespace, newGS.Name)
 		finalPatch = originalDiffPatch
 		finalJob, err = b.generateJobByDiff(newGS, originalDiffJobContainers)
-		if err != nil {
-			blog.Errorf("generate job by original diff failed: %v", err)
-			return toAdmissionResponse(err)
-		}
 	} else {
 		// during a image loading process
 		if _, ok := newGS.Labels[imagePreloadDoneLabel]; ok {
 			// image loaded, trigger the real update, delete the job
 			// remove imageUpdateAnno and imagePreloadDoneLabel and return patch
-			blog.V(3).Infof("trigger real update, bcsgs %v", newGS)
+			blog.V(3).Infof("trigger real update, bcsgs %s/%s", newGS.Namespace, newGS.Name)
 			patchs := []string{
 				fmt.Sprintf("{\"op\":\"remove\",\"path\":\"/metadata/annotations/%s\"}", imageUpdateAnno),
 				fmt.Sprintf("{\"op\":\"remove\",\"path\":\"/metadata/labels/%s\"}", imagePreloadDoneLabel),
 			}
 			finalPatch = fmt.Sprintf("[%s]", strings.Join(patchs, ","))
-			deleteCurrentJob = true
+			needToDeleteJob = true
 		} else {
 			// user request during image loading
 			// caculate diff between new and old's imageUpdateAnno
 			// patch imageUpdateAnno to updateOld, then diff new and updateOld
-			updateOld, err := applyPatchToGS(oldGS, updatePatch)
-			if err != nil {
-				blog.Errorf("apply patch %s to bcsgs failed: %v", updatePatch, oldGS)
-				return toAdmissionResponse(err)
+			updateOld, applyErr := applyPatchToGS(oldGS, updatePatch)
+			if applyErr != nil {
+				blog.Errorf("apply patch %s to bcsgs %s/%s failed: %v", updatePatch, oldGS.Namespace, oldGS.Name, applyErr)
+				return toAdmissionResponse(applyErr)
 			}
 
 			// diff new and updateOld
-			_, updateDiffJobContainers := b.imageDiff(updateOld, newGS)
+			_, updateDiffJobContainers := diff(updateOld.ObjectMeta, newGS.ObjectMeta,
+				updateOld.Spec.Template.Spec.Containers, newGS.Spec.Template.Spec.Containers)
 			if len(updateDiffJobContainers) == 0 {
 				// no diff between user request and current update
-				// use original diff, TODO create job if not exist
-				blog.V(3).Infof("user request original update, bcsgs: %v", newGS)
-				finalPatch = originalDiffPatch
-			} else {
-				// new user request differ from current update
-				if len(originalDiffJobContainers) != 0 {
-					// real new update request, use original diff, create the job
-					blog.V(3).Infof("user request new update, bcsgs %v", newGS)
-					// TODO delete old job to avoid repeat name
-					finalPatch = originalDiffPatch
-					finalJob, err = b.generateJobByDiff(newGS, originalDiffJobContainers)
-					if err != nil {
-						return toAdmissionResponse(err)
-					}
-				} else {
-					// user revert the current update
-					// delete imageUpdateAnno and corresponding job, permit the update
-					blog.V(3).Infof("user revert old update, bcsgs %v", newGS)
-					finalPatch = fmt.Sprintf("[{\"op\":\"remove\",\"path\":\"/metadata/annotations/%s\"}]", imageUpdateAnno)
-					deleteCurrentJob = true
+				finalJob, err = b.generateJobByDiff(newGS, originalDiffJobContainers)
+				if err != nil {
+					blog.Errorf("generate job by original diff failed: %v", err)
+					return toAdmissionResponse(err)
 				}
+				blog.V(3).Infof("user request original update, bcsgs: %s/%s", newGS.Namespace, newGS.Name)
+				finalPatch = originalDiffPatch
+			} else if len(originalDiffJobContainers) != 0 {
+				// real new update request, use original diff, create the job
+				blog.V(3).Infof("user request new update, bcsgs %s/%s", newGS.Namespace, newGS.Name)
+				finalPatch = originalDiffPatch
+				finalJob, err = b.generateJobByDiff(newGS, originalDiffJobContainers)
+				if err != nil {
+					return toAdmissionResponse(err)
+				}
+			} else {
+				// user revert the current update
+				// delete imageUpdateAnno and corresponding job, permit the update
+				blog.V(3).Infof("user revert old update, bcsgs %v", newGS)
+				finalPatch = fmt.Sprintf("[{\"op\":\"remove\",\"path\":\"/metadata/annotations/%s\"}]", imageUpdateAnno)
+				needToDeleteJob = true
 			}
 		}
 	}
 
-	if deleteCurrentJob {
-		// TODO find the job and delete
-	}
-	if finalJob != nil {
-		go b.i.createJob(finalJob)
+	if err != nil {
+		return toAdmissionResponse(err)
 	}
 
-	return toAdmissionResponse(nil, finalPatch)
-}
-
-// imageDiff diffs old and new gs, and return patch string and containers for job to load images.
-func (b *bcsgsWorkload) imageDiff(o, n *bcsgstkexv1alpha1.GameStatefulSet) (string, []corev1.Container) {
-	oldContainers := o.Spec.Template.Spec.Containers
-	newContainers := n.Spec.Template.Spec.Containers
-	// for quick index
-	oldImageMap := make(map[string]string)
-	for _, c := range oldContainers {
-		oldImageMap[c.Name] = c.Image
-	}
-	// container image update and update patch
-	revertPatch := make([]string, len(newContainers)+1)
-	imageChangeCount := 0
-	// patch to annotations, used for trigger real update
-	updatePatch := make([]string, len(newContainers))
-	retContainers := make([]corev1.Container, 0)
-	for i, c := range newContainers {
-		if oi, ok := oldImageMap[c.Name]; ok && oi != c.Image {
-			// TODO do not create the job if the image is already on the node
-			// this is an image update
-			// generate mutate patch
-			revertPatch[imageChangeCount] = fmt.Sprintf(
-				"{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/%d/image\",\"value\":\"%s\"}", i, oi)
-			updatePatch[imageChangeCount] = fmt.Sprintf(
-				"{\"op\":\"replace\",\"path\":\"/spec/template/spec/containers/%d/image\",\"value\":\"%s\"}", i, c.Image)
-			imageChangeCount++
-			// add a image loader container
-			retContainers = append(retContainers,
-				corev1.Container{
-					Name:            c.Name,
-					Image:           c.Image,
-					ImagePullPolicy: corev1.PullIfNotPresent,
-					Command:         []string{"echo", "pull " + c.Image}})
+	if needToDeleteJob {
+		jobName := fmt.Sprintf("%s-%s-%s", strings.ToLower(tkexv1alpha1.KindGameStatefulSet), newGS.Namespace, newGS.Name)
+		err = b.i.deleteJob(pluginName, jobName)
+		if err != nil {
+			blog.Errorf("delete job %s failed: %v", jobName, err)
 		}
 	}
-	// set image patch to label and append label patch
-	updatePatchStr := fmt.Sprintf("[%s]", strings.Join(updatePatch[:imageChangeCount], ","))
-	revertPatch[imageChangeCount] = fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/annotations/%s\",\"value\":\"%s\"}",
-		imageUpdateAnno, strings.ReplaceAll(updatePatchStr, "\"", "\\\""))
-	// combine patch string
-	patchStr := fmt.Sprintf("[%s]", strings.Join(revertPatch[:imageChangeCount+1], ","))
 
-	return patchStr, retContainers
+	if finalJob != nil {
+		b.generateStartEvent(newGS)
+		err = b.i.createJobIfNeed(finalJob)
+		if err != nil {
+			blog.Errorf("create job %s/%s failed: %v", finalJob.Namespace, finalJob.Name, err)
+		}
+	}
+
+	blog.V(3).Infof("finalPatch for GS %s/%s: %s", newGS.Namespace, newGS.Name, finalPatch)
+	return toAdmissionResponse(nil, finalPatch)
 }
 
 // JobDoneHook is called after image-load job is done.
@@ -244,7 +214,7 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 		blog.Errorf("get gs %s-%s failed: %v", namespace, name, err)
 		return err
 	}
-	blog.V(3).Infof("job done, update bcsgs %v", gs)
+	blog.V(3).Infof("job done, update bcsgs %s/%s", namespace, name)
 
 	// handle event
 	if event != nil {
@@ -254,11 +224,11 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 		// event.Name = gs.Name + "-imageloadfailed"
 		event.Namespace = gs.Namespace
 		event.InvolvedObject = corev1.ObjectReference{
-			Kind:            "GameStatefulSet",
+			Kind:            tkexv1alpha1.KindGameStatefulSet,
 			Namespace:       gs.Namespace,
 			Name:            gs.Name,
 			UID:             gs.UID,
-			APIVersion:      gs.APIVersion,
+			APIVersion:      "tkex.tencent.com/v1alpha1",
 			ResourceVersion: gs.ResourceVersion,
 		}
 		return nil
@@ -271,7 +241,7 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 		return nil
 	}
 	// add imagePreloadDoneLabel
-	// TODO retry on conflict
+	// DOTO retry on conflict
 	updatePatch = updatePatch[:len(updatePatch)-1] + "," +
 		fmt.Sprintf("{\"op\":\"add\",\"path\":\"/metadata/labels/%s\",\"value\":\"1\"}",
 			imagePreloadDoneLabel) + "]"
@@ -285,11 +255,12 @@ func (b *bcsgsWorkload) JobDoneHook(namespace, name string, event *corev1.Event)
 		blog.Errorf("execute update failed: %v", err)
 		return err
 	}
+	b.generateFinishEvent(gs)
 	return nil
 }
 
-func applyPatchToGS(old *bcsgstkexv1alpha1.GameStatefulSet, patch string) (*bcsgstkexv1alpha1.GameStatefulSet, error) {
-	updateOld := &bcsgstkexv1alpha1.GameStatefulSet{}
+func applyPatchToGS(old *tkexv1alpha1.GameStatefulSet, patch string) (*tkexv1alpha1.GameStatefulSet, error) {
+	updateOld := &tkexv1alpha1.GameStatefulSet{}
 	// transfer old object to json
 	oldJS, err := runtime.Encode(bcsgsCodec, old)
 	if err != nil {
@@ -314,9 +285,9 @@ func applyPatchToGS(old *bcsgstkexv1alpha1.GameStatefulSet, patch string) (*bcsg
 }
 
 func (b *bcsgsWorkload) generateJobByDiff(
-	gs *bcsgstkexv1alpha1.GameStatefulSet, diffContainers []corev1.Container) (*batchv1.Job, error) {
+	gs *tkexv1alpha1.GameStatefulSet, diffContainers []corev1.Container) (*batchv1.Job, error) {
 	job := newJob(diffContainers)
-	job.Name = fmt.Sprintf("%s-%s-%s", strings.ToLower("GameStatefulSet"), gs.Namespace, gs.Name)
+	job.Name = fmt.Sprintf("%s-%s-%s", strings.ToLower(tkexv1alpha1.KindGameStatefulSet), gs.Namespace, gs.Name)
 	// add fields to set anti affinity
 	job.Labels[jobNameLabel] = job.Name
 	job.Labels[workloadInsNameLabel] = gs.Name
@@ -364,10 +335,11 @@ func (b *bcsgsWorkload) generateJobByDiff(
 		},
 	}
 
-	return job, nil
+	job.Spec.ActiveDeadlineSeconds = pointer.Int64(b.i.config.JobTimeoutSeconds)
+	return job, injectImagePullSecrets(b.i.secretLister, b.i.k8sClient, gs.Namespace, job, gs.Spec.Template)
 }
 
-func (b *bcsgsWorkload) nodesOfGS(gs *bcsgstkexv1alpha1.GameStatefulSet) []string {
+func (b *bcsgsWorkload) nodesOfGS(gs *tkexv1alpha1.GameStatefulSet) []string {
 	ret := []string{}
 	// get all pods of the gs
 	set := labels.Set(gs.Spec.Selector.MatchLabels)
@@ -386,4 +358,54 @@ func (b *bcsgsWorkload) nodesOfGS(gs *bcsgstkexv1alpha1.GameStatefulSet) []strin
 // WaitForCacheSync waits the workload informer to be synced.
 func (b *bcsgsWorkload) WaitForCacheSync(stopCh chan struct{}) bool {
 	return cache.WaitForCacheSync(stopCh, b.informer.HasSynced)
+}
+
+func (b *bcsgsWorkload) generateStartEvent(gs *tkexv1alpha1.GameStatefulSet) {
+	event := &corev1.Event{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: pluginName + "-",
+		},
+		Reason:  "ImageLoading",
+		Message: "Start to preload images",
+		Type:    corev1.EventTypeNormal,
+		InvolvedObject: corev1.ObjectReference{
+			Kind:            gs.Kind,
+			Namespace:       gs.Namespace,
+			Name:            gs.Name,
+			UID:             gs.UID,
+			APIVersion:      gs.APIVersion,
+			ResourceVersion: gs.ResourceVersion,
+		},
+		FirstTimestamp: metav1.Now(),
+		LastTimestamp:  metav1.Now(),
+	}
+	_, err := b.i.k8sClient.CoreV1().Events(gs.Namespace).Create(context.Background(), event, metav1.CreateOptions{})
+	if err != nil {
+		blog.Errorf("create event %v failed: %v", event, err)
+	}
+}
+
+func (b *bcsgsWorkload) generateFinishEvent(gs *tkexv1alpha1.GameStatefulSet) {
+	event := &corev1.Event{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: pluginName + "-",
+		},
+		InvolvedObject: corev1.ObjectReference{
+			Kind:            tkexv1alpha1.KindGameStatefulSet,
+			Namespace:       gs.Namespace,
+			Name:            gs.Name,
+			UID:             gs.UID,
+			APIVersion:      "tkex.tencent.com/v1alpha1",
+			ResourceVersion: gs.ResourceVersion,
+		},
+		Reason:         "ImageLoaded",
+		Message:        "Successfully preload image",
+		Type:           corev1.EventTypeNormal,
+		FirstTimestamp: metav1.Now(),
+		LastTimestamp:  metav1.Now(),
+	}
+	_, err := b.i.k8sClient.CoreV1().Events(gs.Namespace).Create(context.Background(), event, metav1.CreateOptions{})
+	if err != nil {
+		blog.Errorf("create event %v failed: %v", event, err)
+	}
 }

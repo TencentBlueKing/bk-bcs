@@ -41,7 +41,7 @@ func TestBuildBcsCloudProvider(t *testing.T) {
 		want    cloudprovider.CloudProvider
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "len(specs) <= 0",
 			args: args{
@@ -138,7 +138,7 @@ func TestProvider_NodeGroups(t *testing.T) {
 		fields fields
 		want   []cloudprovider.NodeGroup
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "test NodeGroups",
 			fields: fields{
@@ -272,7 +272,7 @@ func TestProvider_Refresh(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name:    "node group cache is nil",
 			fields:  fields{},

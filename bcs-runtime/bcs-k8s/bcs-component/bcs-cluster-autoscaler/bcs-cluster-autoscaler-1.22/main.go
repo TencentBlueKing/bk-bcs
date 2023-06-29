@@ -275,6 +275,8 @@ var (
 	webhookModeConfig = flag.String("webhook-mode-config", "", "Configuration of webhook mode."+
 		" It is a url for web, or namespace/name for configmap")
 	webhookModeToken = flag.String("webhook-mode-token", "", "Token for webhook mode")
+
+	evictLatest = flag.Bool("should-evict-latest", true, "If true, get latest pod lists when scale down node")
 )
 
 func createAutoscalingOptions() scalingconfig.Options {
@@ -364,6 +366,7 @@ func createAutoscalingOptions() scalingconfig.Options {
 		MaxNodeStartScheduleTime: *maxNodeStartScheduleTime,
 		MaxNodeStartupTime:       *maxNodeStartupTime,
 		ScanInterval:             *scanInterval,
+		EvictLatest:              *evictLatest,
 	}
 }
 

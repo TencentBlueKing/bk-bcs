@@ -460,6 +460,8 @@ func (m *MeshClusterManager) getComponentStatus(status *meshv1.ComponentState) (
 		status.Status = meshv1.InstallStatusFAILED
 		return
 	}
+
+	return changed
 }
 
 // createIstioOperatorCrds xxx

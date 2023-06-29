@@ -32,4 +32,5 @@ type Options struct {
 	MaxNodeStartupTime       time.Duration
 	MaxNodeStartScheduleTime time.Duration
 	ScanInterval             time.Duration
+	EvictLatest              bool
 }

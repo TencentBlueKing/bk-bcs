@@ -50,7 +50,7 @@ func TestNodeGroup_MaxSize(t *testing.T) {
 		fields fields
 		want   int
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "get max size 10",
 			fields: fields{
@@ -172,7 +172,7 @@ func TestNodeGroup_TargetSize(t *testing.T) {
 		want    int
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "get target normal",
 			fields: fields{
@@ -269,7 +269,7 @@ func TestNodeGroup_IncreaseSize(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "increase size normal",
 			fields: fields{
@@ -401,7 +401,7 @@ func TestNodeGroup_buildNodeFromTemplate(t *testing.T) {
 		want    *apiv1.Node
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "build node from template",
 			fields: fields{
@@ -485,7 +485,7 @@ func Test_getIP(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "node with InterlIP",
 			args: args{
@@ -846,7 +846,7 @@ func TestNodeGroup_DeleteNodes(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "delete nodes normal",
 			fields: fields{
@@ -1112,7 +1112,7 @@ func TestNodeGroup_TemplateNodeInfo(t *testing.T) {
 		want    *nodeinfo.NodeInfo
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "TemplateNodeInfo normal",
 			fields: fields{
@@ -1167,7 +1167,7 @@ func TestNodeGroup_Id(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		// TODO: Add test cases.
+		// DOTO: Add test cases.
 		{
 			name: "test Id",
 			fields: fields{
