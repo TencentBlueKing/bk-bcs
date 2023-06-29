@@ -41,7 +41,7 @@ type CreateSpaceResp struct {
 	Code    int    `json:"code"`
 	Result  bool   `json:"result"`
 	Message string `json:"message"`
-	Data    string `json:"data"`
+	Data    *Space `json:"data"`
 }
 
 // ListSpacesResp list bkmonitor spaces response
