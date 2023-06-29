@@ -52,6 +52,8 @@ const (
 	EnvNameIsBulkMode = "IS_BULK_MODE"
 	// EnvNamePodIPs env name for pod ips
 	EnvNamePodIPs = "POD_IPS"
+	// EnvNameImageTag env name for controller image tag
+	EnvNameImageTag = "IMAGE_TAG"
 
 	// DelimiterForLbID delimiter for lb id
 	DelimiterForLbID = ":"

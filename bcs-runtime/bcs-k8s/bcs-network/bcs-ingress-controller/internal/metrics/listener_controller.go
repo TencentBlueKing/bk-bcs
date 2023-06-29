@@ -13,8 +13,18 @@
 package metrics
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+)
+
+const (
+	// ListenerMethodEnsureListener ensure listener
+	ListenerMethodEnsureListener = "ensureListener"
+	// ListenerMethodDeleteListener delete listener
+	ListenerMethodDeleteListener = "deleteListener"
 )
 
 var (
@@ -24,8 +34,42 @@ var (
 		Name:      "lbworker",
 		Help:      "The total lb worker managed by controller",
 	}, []string{"lbid"})
+
+	handleTotalListener = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "bkbcs_ingressctrl",
+		Subsystem: "listener",
+		Name:      "handle_total",
+		Help:      "The total number of requests for bkbcs ingress controller to reconcile listener batch",
+	}, []string{"batch_size", "is_bulk_mode", "method", "status"})
+	handleLatencyListener = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: "bkbcs_ingressctrl",
+		Subsystem: "listener",
+		Name:      "handle_latency_seconds",
+		Help:      "handle latency statistic for bkbcs ingress controller to reconcile listener batch",
+		Buckets:   []float64{0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 30.0, 60.0},
+	}, []string{"batch_size", "is_bulk_mode", "method", "status"})
 )
 
 func init() {
 	metrics.Registry.MustRegister(WorkerTotal)
+	metrics.Registry.MustRegister(handleTotalListener)
+	metrics.Registry.MustRegister(handleLatencyListener)
+}
+
+// ReportHandleListenerMetric report listener handle metric
+func ReportHandleListenerMetric(batchSize int, isBulkMode bool, method string, err error, startTime time.Time) {
+	batchSizeStr := strconv.Itoa(batchSize)
+
+	isBulk := "true"
+	if !isBulkMode {
+		isBulk = "false"
+	}
+
+	status := "success"
+	if err != nil {
+		status = "fail"
+	}
+
+	handleLatencyListener.WithLabelValues(batchSizeStr, isBulk, method, status).Observe(time.Since(startTime).Seconds())
+	handleTotalListener.WithLabelValues(batchSizeStr, isBulk, method, status).Inc()
 }

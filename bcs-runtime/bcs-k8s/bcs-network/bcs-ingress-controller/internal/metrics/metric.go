@@ -49,6 +49,12 @@ const (
 )
 
 var (
+	ControllerInfo = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "bkbcs_ingressctrl",
+		Subsystem: "controller",
+		Name:      "info",
+		Help:      "Controller info",
+	}, []string{"version", "cloud"})
 	requestsTotalLib = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "bkbcs_ingressctrl",
 		Subsystem: "lib",
@@ -99,6 +105,7 @@ func init() {
 	metrics.Registry.MustRegister(requestLatencyAPI)
 	metrics.Registry.MustRegister(eventCounter)
 	metrics.Registry.MustRegister(failCounter)
+	metrics.Registry.MustRegister(ControllerInfo)
 }
 
 // ReportLibRequestMetric report lib call metrics

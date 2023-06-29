@@ -27,6 +27,9 @@ import (
 
 // ControllerOption options for controller
 type ControllerOption struct {
+	// ImageTag image tag used by controller
+	ImageTag string
+
 	// Address address for server
 	Address string
 
@@ -145,6 +148,12 @@ func (op *ControllerOption) SetFromEnv() {
 	}
 	blog.Infof("pod ips: %s", podIPs)
 	op.PodIPs = strings.Split(podIPs, ",")
+
+	imageTag := os.Getenv(constant.EnvNameImageTag)
+	if len(imageTag) == 0 {
+		blog.Errorf("empty image tag")
+	}
+	op.ImageTag = imageTag
 }
 
 // BindFromCommandLine 读取命令行参数并绑定
