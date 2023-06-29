@@ -52,12 +52,10 @@ service Data {
     // content related interface.
     rpc CreateContent(CreateContentReq) returns (CreateResp) {}
     rpc GetContent(GetContentReq) returns (pbcontent.Content) {}
-    rpc ListContents(ListContentsReq) returns (ListContentsResp) {}
 
     // commit related interface.
     rpc CreateCommit(CreateCommitReq) returns (CreateResp) {}
     rpc GetLatestCommit(GetLatestCommitReq) returns (pbcommit.Commit) {}
-    rpc ListCommits(ListCommitsReq) returns (ListCommitsResp) {}
 
     // release related interface.
     rpc CreateRelease(CreateReleaseReq) returns (CreateResp) {}
@@ -65,7 +63,6 @@ service Data {
 
     // released config item related interface.
     rpc GetReleasedConfigItem(GetReleasedCIReq) returns (pbrci.ReleasedConfigItem) {}
-    rpc ListReleasedConfigItems(ListReleasedCIsReq) returns (ListReleasedCIsResp) {}
 
     // hook related interface.
     rpc CreateHook(CreateHookReq) returns (CreateResp) {}
@@ -111,7 +108,7 @@ service Data {
 
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
-    rpc ListGroups(ListGroupsReq) returns (ListGroupsResp) {}
+    rpc ListAllGroups(ListAllGroupsReq) returns (ListAllGroupsResp) {}
     rpc ListAppGroups(ListAppGroupsReq) returns (ListAppGroupsResp) {}
     rpc UpdateGroup(UpdateGroupReq) returns (pbbase.EmptyResp) {}
     rpc DeleteGroup(DeleteGroupReq) returns (pbbase.EmptyResp) {}
@@ -350,18 +347,6 @@ message GetContentReq {
     uint32 app_id = 3;
 }
 
-message ListContentsReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
-}
-
-message ListContentsResp {
-    uint32                     count   = 1;
-    repeated pbcontent.Content details = 2;
-}
-
 message CreateCommitReq {
     pbcommit.CommitAttachment attachment = 1;
     uint32                    content_id = 2;
@@ -374,18 +359,6 @@ message GetLatestCommitReq {
     uint32 config_item_id = 3;
 }
 
-message ListCommitsReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
-}
-
-message ListCommitsResp {
-    uint32                   count   = 1;
-    repeated pbcommit.Commit details = 2;
-}
-
 message CreateReleaseReq {
     pbrelease.ReleaseAttachment attachment = 1;
     pbrelease.ReleaseSpec       spec       = 2;
@@ -395,8 +368,10 @@ message ListReleasesReq {
     uint32                 biz_id     = 1;
     uint32                 app_id     = 2;
     bool                   deprecated = 3;
-    google.protobuf.Struct filter     = 4;
-    pbbase.BasePage        page       = 5;
+    uint32                 start      = 4;
+    uint32                 limit      = 5;
+    bool                   all        = 6;
+    string                 searchKey  = 7;
 }
 
 message ListReleasesResp {
@@ -409,17 +384,6 @@ message GetReleasedCIReq {
     uint32 app_id         = 2;
     uint32 config_item_id = 3;
     uint32 release_id     = 4;
-}
-
-message ListReleasedCIsReq {
-    uint32                 biz_id = 1;
-    google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
-}
-
-message ListReleasedCIsResp {
-    uint32                            count   = 1;
-    repeated pbrci.ReleasedConfigItem details = 2;
 }
 
 message CreateHookReq {
@@ -662,15 +626,12 @@ message CreateGroupReq {
     pbgroup.GroupSpec       spec       = 2;
 }
 
-message ListGroupsReq {
+message ListAllGroupsReq {
     uint32                 biz_id = 1;
-    google.protobuf.Struct filter = 2;
-    pbbase.BasePage        page   = 3;
 }
 
-message ListGroupsResp {
-    uint32                 count   = 1;
-    repeated pbgroup.Group details = 2;
+message ListAllGroupsResp {
+    repeated pbgroup.Group details = 1;
 }
 
 message ListAppGroupsReq {

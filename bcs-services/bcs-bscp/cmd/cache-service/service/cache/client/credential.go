@@ -23,7 +23,6 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
@@ -164,25 +163,11 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential s
 	}
 
 	cis := make([]uint32, 0)
-	listReleasedCIopt := &types.ListReleasedCIsOption{
-		BizID: bizID,
-		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "app_id",
-					Op:    filter.In.Factory(),
-					Value: appIDs,
-				},
-			},
-		},
-		Page: &types.BasePage{},
-	}
-	CIDetails, err := c.op.ReleasedCI().List(kt, listReleasedCIopt)
+	releasedCIs, err := c.op.ReleasedCI().ListAllByAppIDs(kt, appIDs, bizID)
 	if err != nil {
 		return "", 0, err
 	}
-	for _, ci := range CIDetails.Details {
+	for _, ci := range releasedCIs {
 		for _, scope := range scopes {
 			match, e := scope.Spec.CredentialScope.MatchConfigItem(ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
 			if e != nil {

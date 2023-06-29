@@ -27,7 +27,6 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
@@ -95,7 +94,10 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 		tx.Rollback()
 		return nil, err
 	}
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
 
 	resp := &pbds.CreateResp{Id: ciID}
 	return resp, nil
@@ -106,7 +108,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 	*pbbase.EmptyResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	// 1. list all editing config items.
-	cis, err := s.queryAllEditingConfigItems(grpcKit, req.BizId, req.AppId)
+	cis, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.AppId, req.BizId)
 	if err != nil {
 		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -146,31 +148,10 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		return nil, err
 	}
 	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit batch upsert config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 	return new(pbbase.EmptyResp), nil
-}
-
-func (s *Service) queryAllEditingConfigItems(kt *kit.Kit, bizID, appID uint32) ([]*table.ConfigItem, error) {
-	listOpts := &types.ListConfigItemsOption{
-		BizID: bizID,
-		AppID: appID,
-		Filter: &filter.Expression{
-			Op:    filter.And,
-			Rules: []filter.RuleFactory{},
-		},
-		Page: &types.BasePage{
-			// set start to 0, limit to 0, to get all editing config items.
-			Start: 0,
-			Limit: 0,
-		},
-	}
-	resp, err := s.dao.ConfigItem().List(kt, listOpts)
-	if err != nil {
-		return nil, err
-	}
-	return resp.Details, nil
 }
 
 func (s *Service) checkConfigItems(kt *kit.Kit, req *pbds.BatchUpsertConfigItemsReq,
@@ -508,36 +489,8 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	if req.ReleaseId == 0 {
-		// list all editing config items
-		query := &types.ListConfigItemsOption{
-			BizID: req.BizId,
-			AppID: req.AppId,
-			Filter: &filter.Expression{
-				Op:    filter.Or,
-				Rules: []filter.RuleFactory{},
-			},
-			Page: &types.BasePage{
-				// set start to 0, limit to 0, to get all editing config items.
-				Start: 0,
-				Limit: 0,
-			},
-		}
-		if req.SearchKey != "" {
-			query.Filter.Rules = append(query.Filter.Rules, &filter.AtomRule{
-				Field: "name",
-				Op:    filter.ContainsInsensitive.Factory(),
-				Value: req.SearchKey,
-			}, &filter.AtomRule{
-				Field: "creator",
-				Op:    filter.ContainsInsensitive.Factory(),
-				Value: req.SearchKey,
-			}, &filter.AtomRule{
-				Field: "reviser",
-				Op:    filter.ContainsInsensitive.Factory(),
-				Value: req.SearchKey,
-			})
-		}
-		details, err := s.dao.ConfigItem().List(grpcKit, query)
+		// search all editing config items
+		details, err := s.dao.ConfigItem().SearchAll(grpcKit, req.SearchKey, req.BizId)
 		if err != nil {
 			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
@@ -548,7 +501,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
 		}
-		configItems := pbrci.PbConfigItemState(details.Details, fileReleased)
+		configItems := pbrci.PbConfigItemState(details, fileReleased)
 		var start, end uint32 = 0, uint32(len(configItems))
 		if !req.All {
 			if req.Start < uint32(len(configItems)) {
@@ -570,29 +523,11 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	query := &types.ListReleasedCIsOption{
 		BizID:     req.BizId,
 		ReleaseID: req.ReleaseId,
-		Filter: &filter.Expression{
-			Op:    filter.Or,
-			Rules: []filter.RuleFactory{},
-		},
+		SearchKey: req.SearchKey,
 		Page: &types.BasePage{
 			Start: req.Start,
 			Limit: uint(req.Limit),
 		},
-	}
-	if req.SearchKey != "" {
-		query.Filter.Rules = append(query.Filter.Rules, &filter.AtomRule{
-			Field: "name",
-			Op:    filter.ContainsInsensitive.Factory(),
-			Value: req.SearchKey,
-		}, &filter.AtomRule{
-			Field: "creator",
-			Op:    filter.ContainsInsensitive.Factory(),
-			Value: req.SearchKey,
-		}, &filter.AtomRule{
-			Field: "reviser",
-			Op:    filter.ContainsInsensitive.Factory(),
-			Value: req.SearchKey,
-		})
 	}
 	if req.All {
 		query.Page.Start = 0
@@ -609,43 +544,6 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	}
 	return resp, nil
 
-}
-
-// queryAppConfigItemList query config item list under specific app.
-func (s *Service) queryAppConfigItemList(kit *kit.Kit, bizID, appID uint32) ([]*table.ConfigItem, error) {
-	cfgItems := make([]*table.ConfigItem, 0)
-	f := &filter.Expression{
-		Op:    filter.And,
-		Rules: []filter.RuleFactory{},
-	}
-
-	const step = 200
-	for start := uint32(0); ; start += step {
-		opt := &types.ListConfigItemsOption{
-			BizID:  bizID,
-			AppID:  appID,
-			Filter: f,
-			Page: &types.BasePage{
-				Count: false,
-				Start: start,
-				Limit: step,
-				Sort:  "id",
-			},
-		}
-
-		details, err := s.dao.ConfigItem().List(kit, opt)
-		if err != nil {
-			return nil, err
-		}
-
-		cfgItems = append(cfgItems, details.Details...)
-
-		if len(details.Details) < step {
-			break
-		}
-	}
-
-	return cfgItems, nil
 }
 
 // ListConfigItemCount list config items count.

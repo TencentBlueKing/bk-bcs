@@ -15,16 +15,15 @@ package types
 import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/runtime/filter"
 )
 
 // ListReleasesOption defines options to list release.
 type ListReleasesOption struct {
-	BizID      uint32             `json:"biz_id"`
-	AppID      uint32             `json:"app_id"`
-	Deprecated bool               `json:"deprecated"`
-	Filter     *filter.Expression `json:"filter"`
-	Page       *BasePage          `json:"page"`
+	BizID      uint32    `json:"biz_id"`
+	AppID      uint32    `json:"app_id"`
+	Deprecated bool      `json:"deprecated"`
+	SearchKey  string    `json:"search_key"`
+	Page       *BasePage `json:"page"`
 }
 
 // Validate the list release options
@@ -35,18 +34,6 @@ func (opt *ListReleasesOption) Validate(po *PageOption) error {
 
 	if opt.AppID <= 0 {
 		return errf.New(errf.InvalidParameter, "invalid app id, should >= 1")
-	}
-
-	if opt.Filter == nil {
-		return errf.New(errf.InvalidParameter, "filter is nil")
-	}
-
-	exprOpt := &filter.ExprOption{
-		// remove biz_id, app_id because it's a required field in the option.
-		RuleFields: table.ReleaseColumns.WithoutColumn("biz_id", "app_id"),
-	}
-	if err := opt.Filter.Validate(exprOpt); err != nil {
-		return err
 	}
 
 	if opt.Page == nil {

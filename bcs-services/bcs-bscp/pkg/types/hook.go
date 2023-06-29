@@ -53,6 +53,6 @@ type ListHookDetails struct {
 
 // HookTagCount defines the response details of requested CountHookTag.
 type HookTagCount struct {
-	Tag    string `db:"tag" json:"tag"`
-	Counts uint32 `db:"counts" json:"counts"`
+	Tag    string `gorm:"column:tag" json:"tag"`
+	Counts uint32 `gorm:"column:counts" json:"counts"`
 }
