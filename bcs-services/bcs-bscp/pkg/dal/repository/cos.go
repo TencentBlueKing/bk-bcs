@@ -129,11 +129,11 @@ func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.New("config item not found")
+		return nil, errors.New("metadata not found")
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, errors.Errorf("download status %d != 200", resp.StatusCode)
+		return nil, errors.Errorf("metadata status %d != 200", resp.StatusCode)
 	}
 
 	// cos only have etag, not for validate
