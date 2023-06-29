@@ -26,4 +26,6 @@ var (
 	LocalIPV6 = stringx.GetEnv("localIpv6", "")
 	// MongoPwd mongo password
 	MongoPwd = stringx.GetEnv("mongoPwd", "")
+	// BCSGatewayToken bcs gateway token
+	BCSGatewayToken = stringx.GetEnv("gatewayToken", "")
 )
