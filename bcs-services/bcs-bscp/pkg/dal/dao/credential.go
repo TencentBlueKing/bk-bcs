@@ -19,8 +19,6 @@ import (
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/tools"
@@ -48,16 +46,13 @@ type Credential interface {
 var _ Credential = new(credentialDao)
 
 type credentialDao struct {
-	genQ     *gen.Query
-	idGen    IDGenInterface
-	auditDao AuditDao
-
-	orm               orm.Interface
-	sd                *sharding.Sharding
-	credentialSetting cc.Credential
-	event             Event
+	genQ              *gen.Query
+	idGen             IDGenInterface
+	auditDao          AuditDao
+	credentialSetting *cc.Credential
 }
 
+// Get ..
 func (dao *credentialDao) Get(kit *kit.Kit, bizID, id uint32) (*table.Credential, error) {
 	if bizID == 0 {
 		return nil, errors.New("bizID is empty")

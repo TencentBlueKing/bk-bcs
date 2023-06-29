@@ -29,6 +29,11 @@ import (
 	"bscp.io/pkg/tools"
 )
 
+const (
+	// tempDownloadURLExpireSeconds is the expire seconds for the temp download url.
+	tempDownloadURLExpireSeconds = 3600
+)
+
 // bkrepoAuthTransport 给请求增加 Authorization header
 type bkrepoAuthTransport struct {
 	Username  string
@@ -141,12 +146,12 @@ func getNodeMetadata(kt *kit.Kit, cli *repo.Client, opt *repo.NodeOption, appID 
 }
 
 // Upload file to bkrepo
-func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader, contentLength int64) (*ObjectMetadata, error) {
+func (c *bkrepoClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error) {
 	if err := c.ensureRepo(kt); err != nil {
 		return nil, errors.Wrap(err, "ensure repo failed")
 	}
 
-	opt := &repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID}
+	opt := &repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign}
 	nodeMeta, err := getNodeMetadata(kt, c.cli, opt, kt.AppID)
 	if err != nil {
 		return nil, errors.Wrap(err, "get node metadata")
@@ -163,7 +168,6 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader,
 		return nil, err
 	}
 
-	req.Header.Set("Content-Length", strconv.FormatInt(contentLength, 10))
 	req.Header.Set("Content-Type", "application/octet-stream")
 	req.Header.Set(constant.RidKey, kt.Rid)
 	req.Header.Set(repo.HeaderKeyMETA, nodeMeta)
@@ -198,8 +202,8 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader,
 }
 
 // Download download file from bkrepo
-func (c *bkrepoClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
-	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID})
+func (c *bkrepoClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error) {
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
 	if err != nil {
 		return nil, 0, err
 	}
@@ -230,8 +234,8 @@ func (c *bkrepoClient) Download(kt *kit.Kit, fileContentID string) (io.ReadClose
 }
 
 // Metadata bkrepo file metadata
-func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
-	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: fileContentID})
+func (c *bkrepoClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) {
+	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
 	if err != nil {
 		return nil, err
 	}
@@ -266,8 +270,52 @@ func (c *bkrepoClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetad
 	return metadata, nil
 }
 
-// NewBKRepoProvider new bkrepo provider
-func NewBKRepoProvider(settings cc.Repository) (Provider, error) {
+// URIDecorator ..
+func (c *bkrepoClient) URIDecorator(bizID uint32) DecoratorInter {
+	return newUriDecoratorInter(bizID)
+}
+
+// DownloadLink bkrepo file download link
+func (c *bkrepoClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (string, error) {
+	repoName, err := repo.GenRepoName(kt.BizID)
+	if err != nil {
+		return "", err
+	}
+
+	objPath, err := repo.GenNodeFullPath(sign)
+	if err != nil {
+		return "", err
+	}
+
+	// get file download url.
+	url, err := c.cli.GenerateTempDownloadURL(kt.Ctx, &repo.GenerateTempDownloadURLReq{
+		ProjectID:     c.project,
+		RepoName:      repoName,
+		FullPathSet:   []string{objPath},
+		ExpireSeconds: uint32(tempDownloadURLExpireSeconds),
+		Permits:       fetchLimit,
+		Type:          "DOWNLOAD",
+	})
+
+	if err != nil {
+		return "", errors.Wrap(err, "generate temp download url failed")
+	}
+
+	return url, nil
+}
+
+// AsyncDownload bkrepo
+func (c *bkrepoClient) AsyncDownload(kt *kit.Kit, sign string) (string, error) {
+	return "", nil
+}
+
+// AsyncDownloadStatus bkrepo
+func (c *bkrepoClient) AsyncDownloadStatus(kt *kit.Kit, sign string, taskID string) (bool, error) {
+	return false, nil
+}
+
+// newBKRepoProvider new bkrepo provider
+func newBKRepoProvider(settings cc.Repository) (Provider, error) {
 	cli, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err

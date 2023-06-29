@@ -344,9 +344,10 @@ func (s *set) Healthz() error {
 // Credential returns the Credential's DAO
 func (s *set) Credential() Credential {
 	return &credentialDao{
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		genQ:     s.genQ,
+		credentialSetting: &s.credentialSetting,
+		idGen:             s.idGen,
+		auditDao:          s.auditDao,
+		genQ:              s.genQ,
 	}
 }
 

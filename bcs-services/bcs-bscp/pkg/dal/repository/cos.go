@@ -16,7 +16,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
+	"net/url"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	cos "github.com/tencentyun/cos-go-sdk-v5"
@@ -35,13 +37,15 @@ const (
 
 // cosClient tencentcloud cos client struct
 type cosClient struct {
-	host   string
-	client *http.Client
+	conf        *cc.S3Storage
+	host        string
+	client      *http.Client
+	innerClient *cos.Client
 }
 
 // Upload upload file to cos
-func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader, contentLength int64) (*ObjectMetadata, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+func (c *cosClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +55,6 @@ func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader, co
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Length", strconv.FormatInt(contentLength, 10))
 	req.Header.Set("Content-Type", "application/octet-stream")
 	req.Header.Set(constant.RidKey, kt.Rid)
 
@@ -59,9 +62,7 @@ func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader, co
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
-	io.Copy(io.Discard, resp.Body)
 
 	if resp.StatusCode != 200 {
 		return nil, errors.Errorf("upload status %d != 200", resp.StatusCode)
@@ -69,15 +70,15 @@ func (c *cosClient) Upload(kt *kit.Kit, fileContentID string, body io.Reader, co
 
 	// cos return not have metadata
 	metadata := &ObjectMetadata{
-		Sha256: fileContentID,
+		Sha256: sign,
 	}
 
 	return metadata, nil
 }
 
 // Download download file from cos
-func (c *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, int64, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+func (c *cosClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -108,8 +109,8 @@ func (c *cosClient) Download(kt *kit.Kit, fileContentID string) (io.ReadCloser, 
 }
 
 // Metadata cos file metadata
-func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata, error) {
-	node, err := repo.GenS3NodeFullPath(kt.BizID, fileContentID)
+func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
 		return nil, err
 	}
@@ -138,10 +139,47 @@ func (c *cosClient) Metadata(kt *kit.Kit, fileContentID string) (*ObjectMetadata
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
 		ByteSize: 0,
-		Sha256:   fileContentID,
+		Sha256:   sign,
 	}
 
 	return metadata, nil
+}
+
+// URIDecorator ..
+func (c *cosClient) URIDecorator(bizID uint32) DecoratorInter {
+	return newUriDecoratorInter(bizID)
+}
+
+// DownloadLink cos file download link
+func (c *cosClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (string, error) {
+	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
+	if err != nil {
+		return "", err
+	}
+
+	opt := &cos.PresignedURLOptions{
+		Query:  &url.Values{},
+		Header: &http.Header{},
+	}
+
+	// cos sdk 已经包含根目录, 需要去重
+	node = strings.TrimLeft(node, "/")
+	u, err := c.innerClient.Object.GetPresignedURL(kt.Ctx, http.MethodGet, node, c.conf.AccessKeyID, c.conf.SecretAccessKey, time.Hour, opt)
+	if err != nil {
+		return "", err
+	}
+
+	return u.String(), nil
+}
+
+// AsyncDownload cos
+func (c *cosClient) AsyncDownload(kt *kit.Kit, sign string) (string, error) {
+	return "", notImplementedErr
+}
+
+// AsyncDownloadStatus cos
+func (c *cosClient) AsyncDownloadStatus(kt *kit.Kit, sign string, taskID string) (bool, error) {
+	return false, notImplementedErr
 }
 
 // newCosProvider new cos provider
@@ -155,9 +193,16 @@ func newCosProvider(conf cc.S3Storage) (Provider, error) {
 		Transport: tools.NewCurlLogTransport(defaultTransport),
 	}
 
+	u, err := url.Parse(host)
+	if err != nil {
+		return nil, err
+	}
+
 	p := &cosClient{
-		host:   host,
-		client: &http.Client{Transport: transport},
+		host:        host,
+		conf:        &conf,
+		client:      &http.Client{Transport: transport},
+		innerClient: cos.NewClient(&cos.BaseURL{BucketURL: u}, nil),
 	}
 
 	return p, nil

@@ -17,32 +17,32 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/time/rate"
+
 	clientset "bscp.io/cmd/feed-server/bll/client-set"
 	"bscp.io/cmd/feed-server/bll/eventc"
 	"bscp.io/cmd/feed-server/bll/lcache"
 	"bscp.io/cmd/feed-server/bll/types"
 	"bscp.io/pkg/cc"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/kit"
 	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
-	"bscp.io/pkg/thirdparty/repo"
-
-	"golang.org/x/time/rate"
 )
 
 // New initialize the release service instance.
 func New(cs *clientset.ClientSet, cache *lcache.Cache, w eventc.Watcher) (*ReleasedService, error) {
-	uriDecorator, err := repo.NewUriDecorator(cc.FeedServer().Repository)
+	provider, err := repository.NewProvider(cc.FeedServer().Repository)
 	if err != nil {
-		return nil, fmt.Errorf("init repository uri decorator failed, err: %v", err)
+		return nil, fmt.Errorf("init repository provider failed, err: %v", err)
 	}
 
 	limiter := cc.FeedServer().MRLimiter
 	return &ReleasedService{
 		cs:                   cs,
 		cache:                cache,
-		uriDecorator:         uriDecorator,
+		provider:             provider,
 		watcher:              w,
 		wait:                 initWait(),
 		limiter:              rate.NewLimiter(rate.Limit(limiter.QPS), int(limiter.Burst)),
@@ -54,7 +54,7 @@ func New(cs *clientset.ClientSet, cache *lcache.Cache, w eventc.Watcher) (*Relea
 type ReleasedService struct {
 	cs                   *clientset.ClientSet
 	cache                *lcache.Cache
-	uriDecorator         repo.UriDecoratorInter
+	provider             repository.Provider
 	watcher              eventc.Watcher
 	wait                 *waitShutdown
 	limiter              *rate.Limiter
@@ -75,7 +75,7 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 		return nil, err
 	}
 
-	uriDec := rs.uriDecorator.Init(opts.BizID)
+	uriDec := rs.provider.URIDecorator(opts.BizID)
 	meta := &types.AppLatestReleaseMeta{
 		ReleaseId: releaseID,
 		Repository: &types.Repository{

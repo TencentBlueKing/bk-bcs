@@ -13,15 +13,11 @@ limitations under the License.
 package repo
 
 import (
-	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 
-	"bscp.io/pkg/cc"
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/runtime/jsoni"
 )
 
@@ -213,10 +209,16 @@ type GenerateTempDownloadURLData struct {
 	Type string `json:"type"`
 }
 
+// FileMetadataValue ..
+type FileMetadataValue struct {
+	ByteSize int64  `json:"byte_size"`
+	Sha256   string `json:"sha256"`
+}
+
 // GenRepoName generate repo repository name, like "bscp-{version}-{biz_id}".
 func GenRepoName(bizID uint32) (string, error) {
 	if bizID == 0 {
-		return "", errf.New(errf.InvalidParameter, "biz_id should > 0")
+		return "", errors.New("biz_id should > 0")
 	}
 
 	return fmt.Sprintf("bscp-%s-biz-%d", version, bizID), nil
@@ -225,7 +227,7 @@ func GenRepoName(bizID uint32) (string, error) {
 // GenNodeFullPath generate node full path, like "/file/c7d78b78205a2619eb2b80558f85ee188836ef5f4f317f8587ee38bc3712a8a"
 func GenNodeFullPath(sign string) (string, error) {
 	if len(sign) == 0 {
-		return "", errf.New(errf.InvalidParameter, "sign is required")
+		return "", errors.New("sign is required")
 	}
 
 	return fmt.Sprintf("%s%s", nodeFrontPath, sign), nil
@@ -290,150 +292,6 @@ func (c NodeMeta) String() (string, error) {
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("biz_id=%d&app_id=%s", c.BizID, appIDs))), nil
 }
 
-// NewUriDecorator create a uri decorator instance.
-func NewUriDecorator(r cc.Repository) (UriDecoratorInter, error) {
-	switch strings.ToUpper(string(r.StorageType)) {
-	case string(cc.S3):
-		if len(r.S3.SecretAccessKey) == 0 {
-			return nil, errors.New("s3 repository secretAccessKey is empty")
-		}
-		if len(r.S3.AccessKeyID) == 0 {
-			return nil, errors.New("s3 repository accessKeyID is empty")
-		}
-		if len(r.S3.BucketName) == 0 {
-			return nil, errors.New("s3 repository bucketName is empty")
-		}
-		return &UriS3Decorator{
-			Endpoints:       r.S3.Endpoint,
-			AccessKeyID:     r.S3.AccessKeyID,
-			SecretAccessKey: r.S3.SecretAccessKey,
-			BucketName:      r.S3.BucketName,
-		}, nil
-
-	case string(cc.BkRepo):
-
-		if len(r.BkRepo.Project) == 0 {
-			return nil, errors.New("repository project is empty")
-		}
-
-		if len(r.BkRepo.Endpoints) == 0 {
-			return nil, errors.New("repository endpoints is empty")
-		}
-
-		return &UriDecorator{
-			index:     0,
-			count:     len(r.BkRepo.Endpoints),
-			Endpoints: r.BkRepo.Endpoints,
-			Project:   r.BkRepo.Project,
-		}, nil
-	}
-	return nil, errors.New("create a uri decorator instance fail")
-}
-
-// UriDecorator is used to generate configure item's download uri
-type UriDecorator struct {
-	index     int
-	count     int
-	Endpoints []string
-	Project   string
-	rrLock    sync.Mutex
-}
-
-// Init initialize an new uri decorator
-func (ud *UriDecorator) Init(bizID uint32) DecoratorInter {
-	repoName := fmt.Sprintf("bscp-%s-biz-%d", version, bizID)
-
-	return &Decorator{
-		repoName:   repoName,
-		root:       ud.root() + repoName,
-		pathPrefix: ud.root() + repoName + nodeFrontPath,
-	}
-}
-
-// root get repo request root path by UriDecorator.
-func (ud *UriDecorator) root() string {
-	ud.rrLock.Lock()
-	defer ud.rrLock.Unlock()
-
-	if ud.index < ud.count-1 {
-		ud.index = ud.index + 1
-	} else {
-		ud.index = 0
-	}
-	host := ud.Endpoints[ud.index]
-
-	return fmt.Sprintf("%s/generic/%s/", host, ud.Project)
-}
-
-// Decorator defines how to generate a repository uri, an configure item download uri: root + Path(sign).
-type Decorator struct {
-	repoName   string
-	root       string
-	pathPrefix string
-}
-
-// Root return Decorator root that is repo download root.
-func (de *Decorator) Root() string {
-	return de.root
-}
-
-// RepoName return Decorator repo name.
-func (de *Decorator) RepoName() string {
-	return de.repoName
-}
-
-// Path generate the download sub path for an configure item.
-func (de *Decorator) Path(sign string) string {
-	return de.pathPrefix + sign
-}
-
-// RelativePath generate the download sub path for an configure item.
-func (de *Decorator) RelativePath(sign string) string {
-	return nodeFrontPath + sign
-}
-
-// Url ..
-func (de *Decorator) Url() string {
-	return ""
-}
-
-// AccessKeyID ..
-func (de *Decorator) AccessKeyID() string {
-	return ""
-}
-
-// SecretAccessKey ..
-func (de *Decorator) SecretAccessKey() string {
-	return ""
-}
-
-// GetRepositoryType ..
-func (de *Decorator) GetRepositoryType() cc.StorageMode {
-	return cc.BkRepo
-}
-
-// DecoratorInter ..
-type DecoratorInter interface {
-	Root() string
-	RepoName() string
-	Path(sign string) string
-	RelativePath(sign string) string
-	Url() string
-	AccessKeyID() string
-	SecretAccessKey() string
-	GetRepositoryType() cc.StorageMode
-}
-
-// RepositoryTypeInter ..
-type RepositoryTypeInter interface {
-	//IsProjectExist(ctx context.Context) error
-	CreateRepo(ctx context.Context, req *CreateRepoReq) error
-	DeleteRepo(ctx context.Context, bizID uint32, forced bool) error
-	//IsNodeExist(ctx context.Context, nodePath string) (bool, error)
-	//DeleteNode(ctx context.Context, nodePath string) error
-	QueryMetadata(ctx context.Context, opt *NodeOption) (map[string]string, error)
-}
-
 // GenS3NodeFullPath ..
 func GenS3NodeFullPath(bizID uint32, sign string) (string, error) {
 	if len(sign) == 0 {
@@ -445,83 +303,4 @@ func GenS3NodeFullPath(bizID uint32, sign string) (string, error) {
 
 	repoName := fmt.Sprintf("bscp-%s-biz-%d", version, bizID)
 	return fmt.Sprintf("/%s%s%s", repoName, nodeFrontPath, sign), nil
-}
-
-// UriDecoratorInter ..
-type UriDecoratorInter interface {
-	Init(bizID uint32) DecoratorInter
-}
-
-// UriS3Decorator is used to generate configure item's download uri
-type UriS3Decorator struct {
-	Endpoints       string
-	AccessKeyID     string
-	SecretAccessKey string
-	BucketName      string
-}
-
-// Init initialize an new uri decorator
-func (ud *UriS3Decorator) Init(bizID uint32) DecoratorInter {
-	pathName := fmt.Sprintf("/bscp-%s-biz-%d%s", version, bizID, nodeFrontPath)
-	return &DecoratorS3{
-		root:            ud.BucketName,
-		url:             ud.root(),
-		pathPrefix:      pathName,
-		accessKeyID:     ud.AccessKeyID,
-		secretAccessKey: ud.SecretAccessKey,
-	}
-}
-
-// root get repo request root path by UriDecorator.
-func (ud *UriS3Decorator) root() string {
-	return ud.Endpoints
-}
-
-// Decorator defines how to generate a repository uri, an configure item download uri: root + Path(sign).
-type DecoratorS3 struct {
-	root            string
-	url             string
-	pathPrefix      string
-	accessKeyID     string
-	secretAccessKey string
-}
-
-// Url ..
-func (de *DecoratorS3) Url() string {
-	return de.url
-}
-
-// AccessKeyID ..
-func (de *DecoratorS3) AccessKeyID() string {
-	return de.accessKeyID
-}
-
-// SecretAccessKey ..
-func (de *DecoratorS3) SecretAccessKey() string {
-	return de.secretAccessKey
-}
-
-// Root return Decorator root that is repo download root.
-func (de *DecoratorS3) Root() string {
-	return de.root
-}
-
-// RepoName return Decorator repo name.
-func (de *DecoratorS3) RepoName() string {
-	return ""
-}
-
-// Path generate the download sub path for an configure item.
-func (de *DecoratorS3) Path(sign string) string {
-	return de.pathPrefix + sign
-}
-
-// RelativePath generate the download sub path for an configure item.
-func (de *DecoratorS3) RelativePath(sign string) string {
-	return nodeFrontPath + sign
-}
-
-// GetRepositoryType ..
-func (de *DecoratorS3) GetRepositoryType() cc.StorageMode {
-	return cc.S3
 }

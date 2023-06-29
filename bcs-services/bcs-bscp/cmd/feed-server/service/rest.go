@@ -59,19 +59,3 @@ func (s *Service) ListFileAppLatestReleaseMetaRest(r *http.Request) (interface{}
 
 	return metas, nil
 }
-
-// AuthRepoRest repo authorize callback.
-func (s *Service) AuthRepoRest(r *http.Request) (interface{}, error) {
-	kt := kit.MustGetKit(r.Context())
-
-	opt := new(AuthRepoReq)
-	if err := render.Bind(r, opt); err != nil {
-		return nil, err
-	}
-
-	if err := s.authRepo(kt, opt); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
-}
