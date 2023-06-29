@@ -142,7 +142,8 @@ type ClusterService interface {
 		[]*armcontainerservice.CredentialResult, error)
 }
 
-// AgentPoolService	代理节点池(Agent Pool)
+// AgentPoolService	代理节点池 - Agent Pool
+// NOCC:golint/interfacecomment(检查工具规则误报)
 type AgentPoolService interface {
 	// CreatePool 创建节点池.
 	CreatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*proto.NodeGroup, error)
