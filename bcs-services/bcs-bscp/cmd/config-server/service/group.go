@@ -20,10 +20,8 @@ import (
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbapp "bscp.io/pkg/protocol/core/app"
-	pbbase "bscp.io/pkg/protocol/core/base"
 	pbgroup "bscp.io/pkg/protocol/core/group"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/filter"
 )
 
 // CreateGroup create a group
@@ -136,28 +134,14 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 		return nil, err
 	}
 
-	// 1. list groups
-	lgft := &filter.Expression{
-		Op:    filter.And,
-		Rules: []filter.RuleFactory{},
-	}
-	lgftpb, err := lgft.MarshalPB()
-	if err != nil {
-		return nil, err
-	}
-
-	lgReq := &pbds.ListGroupsReq{
-		BizId:  req.BizId,
-		Filter: lgftpb,
-		Page:   &pbbase.BasePage{},
-	}
-	lgResp, err := s.client.DS.ListGroups(grpcKit.RpcCtx(), lgReq)
+	// 1. list all groups
+	lgResp, err := s.client.DS.ListAllGroups(grpcKit.RpcCtx(), &pbds.ListAllGroupsReq{BizId: req.BizId})
 	if err != nil {
 		logs.Errorf("list groups failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	if lgResp.Count == 0 {
+	if len(lgResp.Details) == 0 {
 		return resp, nil
 	}
 

@@ -13,20 +13,15 @@ limitations under the License.
 package dao
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 
-	"bscp.io/pkg/criteria/enumor"
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/types"
-	"github.com/jmoiron/sqlx"
 )
 
 // Commit supplies all the commit related operations.
@@ -39,15 +34,13 @@ type Commit interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commits []*table.Commit) error
 	// BatchListLatestCommits batch list config itmes' latest commit.
 	BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, ids []uint32) ([]*table.Commit, error)
-	// List commits with options.
-	List(kit *kit.Kit, opts *types.ListCommitsOption) (*types.ListCommitDetails, error)
+	// GetLatestCommit get config item's latest commit.
+	GetLatestCommit(kit *kit.Kit, bizID, appID, configItemID uint32) (*table.Commit, error)
 }
 
 var _ Commit = new(commitDao)
 
 type commitDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
@@ -69,37 +62,29 @@ func (dao *commitDao) Create(kit *kit.Kit, commit *table.Commit) (uint32, error)
 	}
 
 	// generate an commit id and update to commit.
-	id, err := dao.idGen.One(kit, table.CommitsTable)
+	id, err := dao.idGen.One(kit, table.Name(commit.TableName()))
 	if err != nil {
 		return 0, err
 	}
 
 	commit.ID = id
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.CommitsTable.Name(),
-		" (", table.CommitsColumns.ColumnExpr(), ")  VALUES(", table.CommitsColumns.ColonNameExpr(), ")")
 
-	sql := filter.SqlJoint(sqlSentence)
+	ad := dao.auditDao.DecoratorV2(kit, commit.Attachment.BizID).PrepareCreate(commit)
 
-	err = dao.sd.ShardingOne(commit.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if e := dao.orm.Txn(txn).Insert(kit.Ctx, sql, commit); e != nil {
-				return err
-			}
+	createTx := func(tx *gen.Query) error {
+		q := tx.Commit.WithContext(kit.Ctx)
+		if err = q.Create(commit); err != nil {
+			return err
+		}
 
-			// audit this to be create commit details.
-			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err = dao.auditDao.Decorator(kit, commit.Attachment.BizID,
-				enumor.Content).AuditCreate(commit, au); err != nil {
-				return fmt.Errorf("audit create commit failed, err: %v", err)
-			}
+		if err = ad.Do(tx); err != nil {
+			return err
+		}
 
-			return nil
-		})
-
-	if err != nil {
-		logs.Errorf("create commit, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
-		return 0, fmt.Errorf("create commit, but auto run txn failed, err: %v", err)
+		return nil
+	}
+	if err = dao.genQ.Transaction(createTx); err != nil {
+		return 0, err
 	}
 
 	return id, nil
@@ -153,10 +138,7 @@ func (dao *commitDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commits [
 		}
 		commit.ID = ids[i]
 	}
-	if err := tx.Query.Commit.WithContext(kit.Ctx).Save(commits...); err != nil {
-		return err
-	}
-	return nil
+	return tx.Query.Commit.WithContext(kit.Ctx).Save(commits...)
 }
 
 // BatchListLatestCommits batch list config itmes' latest commit.
@@ -171,103 +153,44 @@ func (dao *commitDao) BatchListLatestCommits(kit *kit.Kit, bizID, appID uint32, 
 	return q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), q.Columns(m.ID).In(subQuery)).Find()
 }
 
-// List commits with options.
-func (dao *commitDao) List(kit *kit.Kit, opts *types.ListCommitsOption) (
-	*types.ListCommitDetails, error) {
-
-	if opts == nil {
-		return nil, errf.New(errf.InvalidParameter, "list commits options null")
+// GetLatestCommit get config item's latest commit.
+func (dao *commitDao) GetLatestCommit(kit *kit.Kit, bizID, appID, configItemID uint32) (*table.Commit, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz id is 0")
 	}
-
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
-		return nil, err
+	if appID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "app id is 0")
 	}
-
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"id", "biz_id", "app_id", "config_item_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				},
-				&filter.AtomRule{
-					Field: "app_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.AppID,
-				},
-			},
-		},
+	if configItemID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "config item id is 0")
 	}
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
-	if err != nil {
-		return nil, err
-	}
-
-	var sql string
-	var sqlSentence []string
-	if opts.Page.Count {
-		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.CommitsTable.Name(), whereExpr)
-		sql = filter.SqlJoint(sqlSentence)
-		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListCommitDetails{Count: count, Details: make([]*table.Commit, 0)}, nil
-	}
-
-	// query commit list for now.
-	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
-	if err != nil {
-		return nil, err
-	}
-
-	sqlSentence = append(sqlSentence, "SELECT ", table.CommitsColumns.NamedExpr(),
-		" FROM ", table.CommitsTable.Name(), whereExpr, pageExpr)
-	sql = filter.SqlJoint(sqlSentence)
-
-	list := make([]*table.Commit, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.ListCommitDetails{Count: 0, Details: list}, nil
+	m := dao.genQ.Commit
+	return m.WithContext(kit.Ctx).
+		Where(m.ConfigItemID.Eq(configItemID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).
+		Order(m.ID.Desc()).First()
 }
 
 // validateAttachmentResExist validate if attachment resource exists before creating commit.
 func (dao *commitDao) validateAttachmentResExist(kit *kit.Kit, am *table.CommitAttachment) error {
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)),
-		" AND biz_id = ", strconv.Itoa(int(am.BizID)))
-	sql := filter.SqlJoint(sqlSentence)
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
-	if err != nil {
-		return err
+	appQ := dao.genQ.App
+	// validate if commit attached app exists.
+	if _, err := appQ.WithContext(kit.Ctx).
+		Where(appQ.ID.Eq(am.AppID), appQ.BizID.Eq(am.BizID)).Take(); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("commit attached app %d not exist", am.AppID)
+		}
+		return fmt.Errorf("get commit attached app %d failed", am.AppID)
 	}
 
-	if !exist {
-		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("commit attached app %d is not exist", am.AppID))
-	}
-
-	var sqlSentenceRes []string
-	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)),
-		" AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
-	sqlRes := filter.SqlJoint(sqlSentenceRes)
-	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable, sqlRes)
-	if err != nil {
-		return err
-	}
-
-	if !exist {
-		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("commit attached config item %d is not exist",
-			am.ConfigItemID))
+	ciQ := dao.genQ.ConfigItem
+	// validate if commit attached config item exists.
+	if _, err := ciQ.WithContext(kit.Ctx).Where(
+		ciQ.BizID.Eq(am.BizID), ciQ.AppID.Eq(am.AppID), ciQ.ID.Eq(am.ConfigItemID)).Take(); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("commit attached config item %d not exist", am.ConfigItemID)
+		}
+		return fmt.Errorf("get commit attached config item %d failed", am.ConfigItemID)
 	}
 
 	return nil

@@ -13,20 +13,15 @@ limitations under the License.
 package dao
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 
-	"bscp.io/pkg/criteria/enumor"
+	"gorm.io/gorm"
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/types"
-	"github.com/jmoiron/sqlx"
 )
 
 // Content supplies all the content related operations.
@@ -39,15 +34,11 @@ type Content interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, contents []*table.Content) error
 	// Get get content by id
 	Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error)
-	// List contents with options.
-	List(kit *kit.Kit, opts *types.ListContentsOption) (*types.ListContentDetails, error)
 }
 
 var _ Content = new(contentDao)
 
 type contentDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
@@ -76,30 +67,22 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 
 	content.ID = id
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ContentTable.Name(),
-		" (", table.ContentColumns.ColumnExpr(), ")  VALUES(", table.ContentColumns.ColonNameExpr(), ")")
-	sql := filter.SqlJoint(sqlSentence)
+	ad := dao.auditDao.DecoratorV2(kit, content.Attachment.BizID).PrepareCreate(content)
 
-	err = dao.sd.ShardingOne(content.Attachment.BizID).AutoTxn(kit,
-		func(txn *sqlx.Tx, opt *sharding.TxnOption) error {
-			if e := dao.orm.Txn(txn).Insert(kit.Ctx, sql, content); e != nil {
-				return err
-			}
+	createTx := func(tx *gen.Query) error {
+		q := tx.Content.WithContext(kit.Ctx)
+		if err = q.Create(content); err != nil {
+			return err
+		}
 
-			// audit this to be create content details.
-			au := &AuditOption{Txn: txn, ResShardingUid: opt.ShardingUid}
-			if err = dao.auditDao.Decorator(kit, content.Attachment.BizID,
-				enumor.Content).AuditCreate(content, au); err != nil {
-				return fmt.Errorf("audit create content failed, err: %v", err)
-			}
+		if err = ad.Do(tx); err != nil {
+			return err
+		}
 
-			return nil
-		})
-
-	if err != nil {
-		logs.Errorf("create content, but do auto txn failed, err: %v, rid: %s", err, kit.Rid)
-		return 0, fmt.Errorf("create content, but auto run txn failed, err: %v", err)
+		return nil
+	}
+	if err = dao.genQ.Transaction(createTx); err != nil {
+		return 0, err
 	}
 
 	return id, nil
@@ -166,116 +149,31 @@ func (dao *contentDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Content, erro
 		return nil, errf.New(errf.InvalidParameter, "content id can not be 0")
 	}
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(),
-		" FROM ", table.ContentTable.Name(), " WHERE id = ", strconv.Itoa(int(id)))
-	sql := filter.SqlJoint(sqlSentence)
+	m := dao.genQ.Content
 
-	content := &table.Content{}
-	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, content, sql); err != nil {
-		return nil, err
-	}
-	return content, nil
-}
-
-// List contents with options.
-func (dao *contentDao) List(kit *kit.Kit, opts *types.ListContentsOption) (
-	*types.ListContentDetails, error) {
-
-	if opts == nil {
-		return nil, errf.New(errf.InvalidParameter, "list content options null")
-	}
-
-	if err := opts.Validate(types.DefaultPageOption); err != nil {
-		return nil, err
-	}
-
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"id", "biz_id", "app_id", "config_item_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				},
-				&filter.AtomRule{
-					Field: "app_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.AppID,
-				},
-			},
-		},
-	}
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
-	if err != nil {
-		return nil, err
-	}
-
-	var sql string
-	var sqlSentence []string
-	if opts.Page.Count {
-		// this is a count request, then do count operation only.
-		sqlSentence = append(sqlSentence, "SELECT COUNT(*) FROM ", table.ContentTable.Name(), whereExpr)
-		sql = filter.SqlJoint(sqlSentence)
-		var count uint32
-		count, err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, sql, args...)
-		if err != nil {
-			return nil, err
-		}
-
-		return &types.ListContentDetails{Count: count, Details: make([]*table.Content, 0)}, nil
-	}
-
-	// query content list for now.
-	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
-	if err != nil {
-		return nil, err
-	}
-
-	sqlSentence = append(sqlSentence, "SELECT ", table.ContentColumns.NamedExpr(),
-		" FROM ", table.ContentTable.Name(), whereExpr, pageExpr)
-	sql = filter.SqlJoint(sqlSentence)
-
-	list := make([]*table.Content, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.ListContentDetails{Count: 0, Details: list}, nil
+	return m.WithContext(kit.Ctx).Where(m.ID.Eq(id), m.BizID.Eq(bizID)).Take()
 }
 
 // validateAttachmentResExist validate if attachment resource exists before creating content.
 func (dao *contentDao) validateAttachmentResExist(kit *kit.Kit, am *table.ContentAttachment) error {
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "WHERE id = ", strconv.Itoa(int(am.AppID)),
-		" AND biz_id = ", strconv.Itoa(int(am.BizID)))
-	sql := filter.SqlJoint(sqlSentence)
-	exist, err := isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.AppTable, sql)
-	if err != nil {
-		return err
+	appQ := dao.genQ.App
+	// validate if content attached app exists.
+	if _, err := appQ.WithContext(kit.Ctx).Where(appQ.ID.Eq(am.AppID), appQ.BizID.Eq(am.BizID)).Take(); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("content attached config item %d not exist", am.ConfigItemID)
+		}
+		return fmt.Errorf("get content attached app %d failed", am.AppID)
 	}
 
-	if !exist {
-		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("content attached app %d is not exist", am.AppID))
-	}
-
-	var sqlSentenceRes []string
-	sqlSentenceRes = append(sqlSentenceRes, "WHERE id = ", strconv.Itoa(int(am.ConfigItemID)),
-		" AND biz_id = ", strconv.Itoa(int(am.BizID)), " AND app_id = ", strconv.Itoa(int(am.AppID)))
-	sqlRes := filter.SqlJoint(sqlSentenceRes)
-
-	exist, err = isResExist(kit, dao.orm, dao.sd.ShardingOne(am.BizID), table.ConfigItemTable, sqlRes)
-	if err != nil {
-		return err
-	}
-
-	if !exist {
-		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("content attached config item %d is not exist",
-			am.ConfigItemID))
+	ciQ := dao.genQ.ConfigItem
+	// validate if content attached config item exists.
+	if _, err := ciQ.WithContext(kit.Ctx).Where(
+		ciQ.BizID.Eq(am.BizID), ciQ.AppID.Eq(am.AppID), ciQ.ID.Eq(am.ConfigItemID)).Take(); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("content attached config item %d not exist", am.ConfigItemID)
+		}
+		return fmt.Errorf("get content attached config item %d failed", am.ConfigItemID)
 	}
 
 	return nil

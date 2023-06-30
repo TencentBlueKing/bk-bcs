@@ -31,4 +31,7 @@ var (
 
 	// ErrAppInstanceNotMatchedRelease
 	ErrAppInstanceNotMatchedRelease = errors.New("this app instance can not match any release")
+
+	// ErrFileContentNotFound is error when the file content not found in file provider.
+	ErrFileContentNotFound = errors.New("file content not found")
 )

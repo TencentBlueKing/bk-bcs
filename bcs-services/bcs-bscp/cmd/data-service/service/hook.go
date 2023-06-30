@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/table"
@@ -81,7 +82,10 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 		return nil, err
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
@@ -163,7 +167,10 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbds.DeleteHookReq) (*pbb
 		return nil, err
 	}
 
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 	return new(pbbase.EmptyResp), nil
 }
 

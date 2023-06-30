@@ -22,10 +22,8 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/tools"
-	"bscp.io/pkg/types"
 )
 
 // ListAppReleasedGroups get app's released groups.
@@ -122,21 +120,7 @@ func (c *client) refreshAppReleasedGroupCache(kt *kit.Kit, bizID uint32, appID u
 // 1. app's released group list.
 // 2. app's all released group cache size.
 func (c *client) queryAppReleasedGroups(kt *kit.Kit, bizID uint32, appID uint32) (string, int, error) {
-
-	opts := &types.ListReleasedGroupsOption{
-		BizID: bizID,
-		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "app_id",
-					Op:    filter.Equal.Factory(),
-					Value: appID,
-				},
-			},
-		},
-	}
-	groups, err := c.op.ReleasedGroup().List(kt, opts)
+	groups, err := c.op.ReleasedGroup().ListAllByAppID(kt, appID, bizID)
 	if err != nil {
 		return "", 0, err
 	}

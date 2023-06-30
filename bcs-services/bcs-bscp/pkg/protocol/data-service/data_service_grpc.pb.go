@@ -47,14 +47,11 @@ const (
 	Data_GetConfigHook_FullMethodName              = "/pbds.Data/GetConfigHook"
 	Data_CreateContent_FullMethodName              = "/pbds.Data/CreateContent"
 	Data_GetContent_FullMethodName                 = "/pbds.Data/GetContent"
-	Data_ListContents_FullMethodName               = "/pbds.Data/ListContents"
 	Data_CreateCommit_FullMethodName               = "/pbds.Data/CreateCommit"
 	Data_GetLatestCommit_FullMethodName            = "/pbds.Data/GetLatestCommit"
-	Data_ListCommits_FullMethodName                = "/pbds.Data/ListCommits"
 	Data_CreateRelease_FullMethodName              = "/pbds.Data/CreateRelease"
 	Data_ListReleases_FullMethodName               = "/pbds.Data/ListReleases"
 	Data_GetReleasedConfigItem_FullMethodName      = "/pbds.Data/GetReleasedConfigItem"
-	Data_ListReleasedConfigItems_FullMethodName    = "/pbds.Data/ListReleasedConfigItems"
 	Data_CreateHook_FullMethodName                 = "/pbds.Data/CreateHook"
 	Data_ListHooks_FullMethodName                  = "/pbds.Data/ListHooks"
 	Data_DeleteHook_FullMethodName                 = "/pbds.Data/DeleteHook"
@@ -86,7 +83,7 @@ const (
 	Data_UpdateTemplateSet_FullMethodName          = "/pbds.Data/UpdateTemplateSet"
 	Data_DeleteTemplateSet_FullMethodName          = "/pbds.Data/DeleteTemplateSet"
 	Data_CreateGroup_FullMethodName                = "/pbds.Data/CreateGroup"
-	Data_ListGroups_FullMethodName                 = "/pbds.Data/ListGroups"
+	Data_ListAllGroups_FullMethodName              = "/pbds.Data/ListAllGroups"
 	Data_ListAppGroups_FullMethodName              = "/pbds.Data/ListAppGroups"
 	Data_UpdateGroup_FullMethodName                = "/pbds.Data/UpdateGroup"
 	Data_DeleteGroup_FullMethodName                = "/pbds.Data/DeleteGroup"
@@ -132,17 +129,14 @@ type DataClient interface {
 	// content related interface.
 	CreateContent(ctx context.Context, in *CreateContentReq, opts ...grpc.CallOption) (*CreateResp, error)
 	GetContent(ctx context.Context, in *GetContentReq, opts ...grpc.CallOption) (*content.Content, error)
-	ListContents(ctx context.Context, in *ListContentsReq, opts ...grpc.CallOption) (*ListContentsResp, error)
 	// commit related interface.
 	CreateCommit(ctx context.Context, in *CreateCommitReq, opts ...grpc.CallOption) (*CreateResp, error)
 	GetLatestCommit(ctx context.Context, in *GetLatestCommitReq, opts ...grpc.CallOption) (*commit.Commit, error)
-	ListCommits(ctx context.Context, in *ListCommitsReq, opts ...grpc.CallOption) (*ListCommitsResp, error)
 	// release related interface.
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	// released config item related interface.
 	GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error)
-	ListReleasedConfigItems(ctx context.Context, in *ListReleasedCIsReq, opts ...grpc.CallOption) (*ListReleasedCIsResp, error)
 	// hook related interface.
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
@@ -181,7 +175,7 @@ type DataClient interface {
 	DeleteTemplateSet(ctx context.Context, in *DeleteTemplateSetReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// group related interface.
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error)
-	ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error)
+	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
 	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
@@ -393,15 +387,6 @@ func (c *dataClient) GetContent(ctx context.Context, in *GetContentReq, opts ...
 	return out, nil
 }
 
-func (c *dataClient) ListContents(ctx context.Context, in *ListContentsReq, opts ...grpc.CallOption) (*ListContentsResp, error) {
-	out := new(ListContentsResp)
-	err := c.cc.Invoke(ctx, Data_ListContents_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *dataClient) CreateCommit(ctx context.Context, in *CreateCommitReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateCommit_FullMethodName, in, out, opts...)
@@ -414,15 +399,6 @@ func (c *dataClient) CreateCommit(ctx context.Context, in *CreateCommitReq, opts
 func (c *dataClient) GetLatestCommit(ctx context.Context, in *GetLatestCommitReq, opts ...grpc.CallOption) (*commit.Commit, error) {
 	out := new(commit.Commit)
 	err := c.cc.Invoke(ctx, Data_GetLatestCommit_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataClient) ListCommits(ctx context.Context, in *ListCommitsReq, opts ...grpc.CallOption) (*ListCommitsResp, error) {
-	out := new(ListCommitsResp)
-	err := c.cc.Invoke(ctx, Data_ListCommits_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -450,15 +426,6 @@ func (c *dataClient) ListReleases(ctx context.Context, in *ListReleasesReq, opts
 func (c *dataClient) GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error) {
 	out := new(released_ci.ReleasedConfigItem)
 	err := c.cc.Invoke(ctx, Data_GetReleasedConfigItem_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataClient) ListReleasedConfigItems(ctx context.Context, in *ListReleasedCIsReq, opts ...grpc.CallOption) (*ListReleasedCIsResp, error) {
-	out := new(ListReleasedCIsResp)
-	err := c.cc.Invoke(ctx, Data_ListReleasedConfigItems_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -744,9 +711,9 @@ func (c *dataClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts .
 	return out, nil
 }
 
-func (c *dataClient) ListGroups(ctx context.Context, in *ListGroupsReq, opts ...grpc.CallOption) (*ListGroupsResp, error) {
-	out := new(ListGroupsResp)
-	err := c.cc.Invoke(ctx, Data_ListGroups_FullMethodName, in, out, opts...)
+func (c *dataClient) ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error) {
+	out := new(ListAllGroupsResp)
+	err := c.cc.Invoke(ctx, Data_ListAllGroups_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -916,17 +883,14 @@ type DataServer interface {
 	// content related interface.
 	CreateContent(context.Context, *CreateContentReq) (*CreateResp, error)
 	GetContent(context.Context, *GetContentReq) (*content.Content, error)
-	ListContents(context.Context, *ListContentsReq) (*ListContentsResp, error)
 	// commit related interface.
 	CreateCommit(context.Context, *CreateCommitReq) (*CreateResp, error)
 	GetLatestCommit(context.Context, *GetLatestCommitReq) (*commit.Commit, error)
-	ListCommits(context.Context, *ListCommitsReq) (*ListCommitsResp, error)
 	// release related interface.
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	// released config item related interface.
 	GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error)
-	ListReleasedConfigItems(context.Context, *ListReleasedCIsReq) (*ListReleasedCIsResp, error)
 	// hook related interface.
 	CreateHook(context.Context, *CreateHookReq) (*CreateResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
@@ -965,7 +929,7 @@ type DataServer interface {
 	DeleteTemplateSet(context.Context, *DeleteTemplateSetReq) (*base.EmptyResp, error)
 	// group related interface.
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error)
-	ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error)
+	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
 	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*base.EmptyResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*base.EmptyResp, error)
@@ -1053,17 +1017,11 @@ func (UnimplementedDataServer) CreateContent(context.Context, *CreateContentReq)
 func (UnimplementedDataServer) GetContent(context.Context, *GetContentReq) (*content.Content, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetContent not implemented")
 }
-func (UnimplementedDataServer) ListContents(context.Context, *ListContentsReq) (*ListContentsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListContents not implemented")
-}
 func (UnimplementedDataServer) CreateCommit(context.Context, *CreateCommitReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCommit not implemented")
 }
 func (UnimplementedDataServer) GetLatestCommit(context.Context, *GetLatestCommitReq) (*commit.Commit, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLatestCommit not implemented")
-}
-func (UnimplementedDataServer) ListCommits(context.Context, *ListCommitsReq) (*ListCommitsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListCommits not implemented")
 }
 func (UnimplementedDataServer) CreateRelease(context.Context, *CreateReleaseReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRelease not implemented")
@@ -1073,9 +1031,6 @@ func (UnimplementedDataServer) ListReleases(context.Context, *ListReleasesReq) (
 }
 func (UnimplementedDataServer) GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedConfigItem not implemented")
-}
-func (UnimplementedDataServer) ListReleasedConfigItems(context.Context, *ListReleasedCIsReq) (*ListReleasedCIsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListReleasedConfigItems not implemented")
 }
 func (UnimplementedDataServer) CreateHook(context.Context, *CreateHookReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHook not implemented")
@@ -1170,8 +1125,8 @@ func (UnimplementedDataServer) DeleteTemplateSet(context.Context, *DeleteTemplat
 func (UnimplementedDataServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
 }
-func (UnimplementedDataServer) ListGroups(context.Context, *ListGroupsReq) (*ListGroupsResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListGroups not implemented")
+func (UnimplementedDataServer) ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAllGroups not implemented")
 }
 func (UnimplementedDataServer) ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppGroups not implemented")
@@ -1590,24 +1545,6 @@ func _Data_GetContent_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_ListContents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListContentsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServer).ListContents(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Data_ListContents_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).ListContents(ctx, req.(*ListContentsReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Data_CreateCommit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateCommitReq)
 	if err := dec(in); err != nil {
@@ -1640,24 +1577,6 @@ func _Data_GetLatestCommit_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GetLatestCommit(ctx, req.(*GetLatestCommitReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Data_ListCommits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListCommitsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServer).ListCommits(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Data_ListCommits_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).ListCommits(ctx, req.(*ListCommitsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1712,24 +1631,6 @@ func _Data_GetReleasedConfigItem_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GetReleasedConfigItem(ctx, req.(*GetReleasedCIReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Data_ListReleasedConfigItems_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListReleasedCIsReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServer).ListReleasedConfigItems(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Data_ListReleasedConfigItems_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).ListReleasedConfigItems(ctx, req.(*ListReleasedCIsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2292,20 +2193,20 @@ func _Data_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Data_ListGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListGroupsReq)
+func _Data_ListAllGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAllGroupsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataServer).ListGroups(ctx, in)
+		return srv.(DataServer).ListAllGroups(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Data_ListGroups_FullMethodName,
+		FullMethod: Data_ListAllGroups_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServer).ListGroups(ctx, req.(*ListGroupsReq))
+		return srv.(DataServer).ListAllGroups(ctx, req.(*ListAllGroupsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2668,20 +2569,12 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_GetContent_Handler,
 		},
 		{
-			MethodName: "ListContents",
-			Handler:    _Data_ListContents_Handler,
-		},
-		{
 			MethodName: "CreateCommit",
 			Handler:    _Data_CreateCommit_Handler,
 		},
 		{
 			MethodName: "GetLatestCommit",
 			Handler:    _Data_GetLatestCommit_Handler,
-		},
-		{
-			MethodName: "ListCommits",
-			Handler:    _Data_ListCommits_Handler,
 		},
 		{
 			MethodName: "CreateRelease",
@@ -2694,10 +2587,6 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleasedConfigItem",
 			Handler:    _Data_GetReleasedConfigItem_Handler,
-		},
-		{
-			MethodName: "ListReleasedConfigItems",
-			Handler:    _Data_ListReleasedConfigItems_Handler,
 		},
 		{
 			MethodName: "CreateHook",
@@ -2824,8 +2713,8 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_CreateGroup_Handler,
 		},
 		{
-			MethodName: "ListGroups",
-			Handler:    _Data_ListGroups_Handler,
+			MethodName: "ListAllGroups",
+			Handler:    _Data_ListAllGroups_Handler,
 		},
 		{
 			MethodName: "ListAppGroups",

@@ -19,8 +19,6 @@ import (
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/cache-service"
 	pbrci "bscp.io/pkg/protocol/core/released-ci"
-	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/types"
 )
 
 // Node: the interface of this file is only used for internal basic interface stress testing.
@@ -56,28 +54,17 @@ func (s *Service) BenchReleasedCI(ctx context.Context, req *pbcs.BenchReleasedCI
 		return nil, err
 	}
 
-	opts := &types.ListReleasedCIsOption{
-		BizID:     req.BizId,
-		ReleaseID: req.ReleaseId,
-		Filter: &filter.Expression{
-			Op:    filter.And,
-			Rules: []filter.RuleFactory{},
-		},
-		// use unlimited page.
-		Page: &types.BasePage{Start: 0, Limit: 0},
-	}
-
 	cancel := kt.CtxWithTimeoutMS(500)
 	defer cancel()
 
-	detail, err := s.dao.ReleasedCI().List(kt, opts)
+	list, err := s.dao.ReleasedCI().ListAll(kt, req.BizId)
 	if err != nil {
 		logs.Errorf("benchmark list released config item failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	resp := &pbcs.BenchReleasedCIResp{
-		Meta: pbrci.PbReleasedConfigItems(detail.Details),
+		Meta: pbrci.PbReleasedConfigItems(list),
 	}
 
 	return resp, nil

@@ -90,11 +90,11 @@ func (opt *ListGroupRleasesdAppsOption) Validate() error {
 
 // ListGroupRleasesdAppsData defines the response detail data of requested ListGroupRleasesdAppsOption.
 type ListGroupRleasesdAppsData struct {
-	AppID       uint32 `db:"app_id" json:"app_id"`
-	AppName     string `db:"app_name" json:"app_name"`
-	ReleaseID   uint32 `db:"release_id" json:"release_id"`
-	ReleaseName string `db:"release_name" json:"release_name"`
-	Edited      bool   `db:"edited" json:"edited"`
+	AppID       uint32 `gorm:"column:app_id" json:"app_id"`
+	AppName     string `gorm:"column:app_name" json:"app_name"`
+	ReleaseID   uint32 `gorm:"column:release_id" json:"release_id"`
+	ReleaseName string `gorm:"column:release_name" json:"release_name"`
+	Edited      bool   `gorm:"column:edited" json:"edited"`
 }
 
 // ListGroupRleasesdAppsDetails defines the response details of requested ListGroupRleasesdAppsOption.

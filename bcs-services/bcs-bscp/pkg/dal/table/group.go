@@ -42,38 +42,53 @@ type Group struct {
 }
 
 // TableName is the group's database table name.
-func (s Group) TableName() string {
+func (g Group) TableName() string {
 	return "groups"
 }
 
-// ValidateCreate validate group is valid or not when create it.
-func (s Group) ValidateCreate() error {
+// AppID AuditRes interface
+func (g Group) AppID() uint32 {
+	return 0
+}
 
-	if s.ID > 0 {
+// ResID AuditRes interface
+func (g Group) ResID() uint32 {
+	return g.ID
+}
+
+// ResType AuditRes interface
+func (g Group) ResType() string {
+	return "app"
+}
+
+// ValidateCreate validate group is valid or not when create it.
+func (g Group) ValidateCreate() error {
+
+	if g.ID > 0 {
 		return errors.New("id should not be set")
 	}
 
-	if s.Spec == nil {
+	if g.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	if err := s.Spec.ValidateCreate(); err != nil {
+	if err := g.Spec.ValidateCreate(); err != nil {
 		return err
 	}
 
-	if s.Attachment == nil {
+	if g.Attachment == nil {
 		return errors.New("attachment not set")
 	}
 
-	if err := s.Attachment.Validate(); err != nil {
+	if err := g.Attachment.Validate(); err != nil {
 		return err
 	}
 
-	if s.Revision == nil {
+	if g.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateCreate(); err != nil {
+	if err := g.Revision.ValidateCreate(); err != nil {
 		return err
 	}
 
@@ -81,25 +96,25 @@ func (s Group) ValidateCreate() error {
 }
 
 // ValidateUpdate validate group is valid or not when update it.
-func (s Group) ValidateUpdate() error {
+func (g Group) ValidateUpdate() error {
 
-	if s.ID <= 0 {
+	if g.ID <= 0 {
 		return errors.New("id should be set")
 	}
 
 	changed := false
-	if s.Spec != nil {
+	if g.Spec != nil {
 		changed = true
-		if err := s.Spec.ValidateUpdate(); err != nil {
+		if err := g.Spec.ValidateUpdate(); err != nil {
 			return err
 		}
 	}
 
-	if s.Attachment == nil {
+	if g.Attachment == nil {
 		return errors.New("attachment should be set")
 	}
 
-	if s.Attachment.BizID <= 0 {
+	if g.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
 
@@ -107,11 +122,11 @@ func (s Group) ValidateUpdate() error {
 		return errors.New("nothing is found to be change")
 	}
 
-	if s.Revision == nil {
+	if g.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := s.Revision.ValidateUpdate(); err != nil {
+	if err := g.Revision.ValidateUpdate(); err != nil {
 		return err
 	}
 
@@ -119,12 +134,12 @@ func (s Group) ValidateUpdate() error {
 }
 
 // ValidateDelete validate the group's info when delete it.
-func (s Group) ValidateDelete() error {
-	if s.ID <= 0 {
+func (g Group) ValidateDelete() error {
+	if g.ID <= 0 {
 		return errors.New("group id should be set")
 	}
 
-	if s.Attachment.BizID <= 0 {
+	if g.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
 
@@ -171,38 +186,38 @@ const (
 type GroupMode string
 
 // String returns the string value of GroupMode.
-func (s GroupMode) String() string {
-	return string(s)
+func (g GroupMode) String() string {
+	return string(g)
 }
 
 // Validate strategy set type.
-func (s GroupMode) Validate() error {
-	switch s {
+func (g GroupMode) Validate() error {
+	switch g {
 	case Custom:
 	case Debug:
 	case Default:
 	default:
-		return fmt.Errorf("unsupported group working mode: %s", s)
+		return fmt.Errorf("unsupported group working mode: %s", g)
 	}
 
 	return nil
 }
 
 // ValidateCreate validate group spec when it is created.
-func (s GroupSpec) ValidateCreate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
+func (g GroupSpec) ValidateCreate() error {
+	if err := validator.ValidateName(g.Name); err != nil {
 		return err
 	}
-	if err := s.Mode.Validate(); err != nil {
+	if err := g.Mode.Validate(); err != nil {
 		return err
 	}
-	switch s.Mode {
+	switch g.Mode {
 	case Custom:
-		if s.Selector == nil || s.Selector.IsEmpty() {
+		if g.Selector == nil || g.Selector.IsEmpty() {
 			return errors.New("group works in custom mode, selector should be set")
 		}
 	case Debug:
-		if s.UID == "" {
+		if g.UID == "" {
 			return errors.New("group works in debug mode, uid should be set")
 		}
 	}
@@ -210,12 +225,12 @@ func (s GroupSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate group spec when it is updated.
-func (s GroupSpec) ValidateUpdate() error {
-	if err := validator.ValidateName(s.Name); err != nil {
+func (g GroupSpec) ValidateUpdate() error {
+	if err := validator.ValidateName(g.Name); err != nil {
 		return err
 	}
 
-	if s.Mode != "" {
+	if g.Mode != "" {
 		return errors.New("group's mode can not be updated")
 	}
 
@@ -235,13 +250,13 @@ type GroupAttachment struct {
 }
 
 // IsEmpty test whether group attachment is empty or not.
-func (s GroupAttachment) IsEmpty() bool {
-	return s.BizID == 0
+func (g GroupAttachment) IsEmpty() bool {
+	return g.BizID == 0
 }
 
 // Validate whether group attachment is valid or not.
-func (s GroupAttachment) Validate() error {
-	if s.BizID <= 0 {
+func (g GroupAttachment) Validate() error {
+	if g.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
 	}
 	return nil

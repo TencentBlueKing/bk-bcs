@@ -3,14 +3,12 @@ syntax = "proto3";
 import "bscp.io/pkg/protocol/core/base/base.proto";
 import "bscp.io/pkg/protocol/core/app/app.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
-import "bscp.io/pkg/protocol/core/commit/commit.proto";
 import "bscp.io/pkg/protocol/core/content/content.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
 import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
-import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
 import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
@@ -117,19 +115,6 @@ service Config {
         };
     }
 
-    rpc CreateCommit(CreateCommitReq) returns (CreateCommitResp) {
-        option (google.api.http) = {
-            post : "/api/v1/config/create/commit/commit/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}"
-            body : "*"
-        };
-    }
-    rpc ListCommits(ListCommitsReq) returns (ListCommitsResp) {
-        option (google.api.http) = {
-            post : "/api/v1/config/list/commit/commit/app_id/{app_id}/biz_id/{biz_id}"
-            body : "*"
-        };
-    }
-
     rpc CreateRelease(CreateReleaseReq) returns (CreateReleaseResp) {
         option (google.api.http) = {
             post : "/api/v1/config/create/release/release/app_id/{app_id}/biz_id/{biz_id}"
@@ -139,12 +124,6 @@ service Config {
     rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases"
-        };
-    }
-    rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {
-        option (google.api.http) = {
-            post : "/api/v1/config/list/release/config_item/release_id/{release_id}/biz_id/{biz_id}"
-            body : "*"
         };
     }
 
@@ -654,30 +633,6 @@ message  GetConfigHookResp {
     pbch.ConfigHook config_hook = 1;
 }
 
-message CreateCommitReq {
-    uint32 biz_id         = 1;
-    uint32 app_id         = 2;
-    uint32 config_item_id = 3;
-    uint32 content_id     = 4;
-    string memo           = 5;
-}
-
-message CreateCommitResp {
-    uint32 id = 1;
-}
-
-message ListCommitsReq {
-    uint32                 biz_id = 1;
-    uint32                 app_id = 2;
-    google.protobuf.Struct filter = 3;
-    pbbase.BasePage        page   = 4;
-}
-
-message ListCommitsResp {
-    uint32                   count   = 1;
-    repeated pbcommit.Commit details = 2;
-}
-
 message CreateReleaseReq {
     uint32 biz_id = 1;
     uint32 app_id = 2;
@@ -702,18 +657,6 @@ message ListReleasesReq {
 message ListReleasesResp {
     uint32                     count   = 1;
     repeated pbrelease.Release details = 2;
-}
-
-message ListReleasedConfigItemsReq {
-    uint32          biz_id     = 1;
-    uint32          release_id = 2;
-    // serial number 3 is reserved for later added filter fields
-    pbbase.BasePage page       = 4;
-}
-
-message ListReleasedConfigItemsResp {
-    uint32                            count   = 1;
-    repeated pbrci.ReleasedConfigItem details = 2;
 }
 
 message CreateHookReq {

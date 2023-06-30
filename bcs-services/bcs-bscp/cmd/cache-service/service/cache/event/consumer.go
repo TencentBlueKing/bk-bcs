@@ -22,7 +22,6 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/types"
 )
@@ -228,7 +227,7 @@ func (c *consumer) cacheReleasedCI(kt *kit.Kit, releaseBizID map[uint32]uint32) 
 	}
 
 	for bizID, releaseIDs := range reminder {
-		releasedCI, err := c.listReleasedCI(kt, bizID, releaseIDs)
+		releasedCI, err := c.op.ReleasedCI().ListAllByReleaseIDs(kt, releaseIDs, bizID)
 		if err != nil {
 			logs.Errorf("list released ci failed, bizID: %d, releaseIDs: %v, err: %v, rid: %s", bizID, releaseIDs,
 				err, kt.Rid)
@@ -317,19 +316,7 @@ func (c *consumer) cacheReleasedGroup(kt *kit.Kit, appBizID map[uint32]uint32) (
 
 // cacheOneReleasedGroup cache one released group.
 func (c *consumer) cacheOneReleasedGroup(kt *kit.Kit, bizID, appID uint32) (map[uint32]uint32, error) {
-	groups, err := c.op.ReleasedGroup().List(kt, &types.ListReleasedGroupsOption{
-		BizID: bizID,
-		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "app_id",
-					Op:    filter.Equal.Factory(),
-					Value: appID,
-				},
-			},
-		},
-	})
+	groups, err := c.op.ReleasedGroup().ListAllByAppID(kt, appID, bizID)
 	if err != nil {
 		logs.Errorf("get biz: %d, app: %d all the released groups failed, err: %v, rid: %s", bizID, appID, err, kt.Rid)
 		return nil, err
@@ -353,32 +340,6 @@ func (c *consumer) cacheOneReleasedGroup(kt *kit.Kit, bizID, appID uint32) (map[
 	}
 
 	return releaseBizID, err
-}
-
-func (c *consumer) listReleasedCI(kt *kit.Kit, bizID uint32, releaseIDs []uint32) ([]*table.ReleasedConfigItem, error) {
-	opts := &types.ListReleasedCIsOption{
-		BizID: bizID,
-		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "release_id",
-					Op:    filter.In.Factory(),
-					Value: releaseIDs,
-				},
-			},
-		},
-		// use unlimited page.
-		Page: &types.BasePage{Start: 0, Limit: 0},
-	}
-
-	resp, err := c.op.ReleasedCI().List(kt, opts)
-	if err != nil {
-		logs.Errorf("list biz: %d released ci failed, err: %v, rid: %s", bizID, err, kt.Rid)
-		return nil, err
-	}
-
-	return resp.Details, nil
 }
 
 func (c *consumer) refreshAppMetaCache(kt *kit.Kit, events []*table.Event) error {

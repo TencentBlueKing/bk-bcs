@@ -15,46 +15,44 @@ package dao
 import (
 	"errors"
 	"fmt"
-	"strconv"
 
-	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
 // ReleasedCI supplies all the released config item related operations.
 type ReleasedCI interface {
 	// BulkCreateWithTx bulk create released config items with tx.
-	BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.ReleasedConfigItem) error
-	// BulkCreateWithTxV2 bulk create released config items with tx.
-	// NOTE: unify BulkCreateWithTxV2 and BulkCreateWithTx to be one with gorm/gen
-	BulkCreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error
+	BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error
 	// Get released config item by id and released id
 	Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error)
 	// GetReleasedLately released config item by app id and biz id
 	GetReleasedLately(kit *kit.Kit, appId, bizID uint32, searchKey string) ([]*table.ReleasedConfigItem, error)
 	// List released config items with options.
 	List(kit *kit.Kit, opts *types.ListReleasedCIsOption) (*types.ListReleasedCIsDetails, error)
+	// ListAll list all released config items in biz.
+	ListAll(kit *kit.Kit, bizID uint32) ([]*table.ReleasedConfigItem, error)
+	// ListAllByAppID list all released config items by appID.
+	ListAllByAppID(kit *kit.Kit, appID, bizID uint32) ([]*table.ReleasedConfigItem, error)
+	// ListAllByAppIDs batch list released config items by appIDs.
+	ListAllByAppIDs(kit *kit.Kit, appIDs []uint32, bizID uint32) ([]*table.ReleasedConfigItem, error)
+	// ListAllByReleaseIDs batch list released config items by releaseIDs.
+	ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedConfigItem, error)
 }
 
 var _ ReleasedCI = new(releasedCIDao)
 
 type releasedCIDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 }
 
-// BulkCreateWithTxV2 bulk create released config items.
-func (dao *releasedCIDao) BulkCreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error {
+// BulkCreateWithTx bulk create released config items.
+func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, items []*table.ReleasedConfigItem) error {
 	if len(items) == 0 {
 		return errors.New("released config items is empty")
 	}
@@ -92,66 +90,20 @@ func (dao *releasedCIDao) BulkCreateWithTxV2(kit *kit.Kit, tx *gen.QueryTx, item
 	return nil
 }
 
-// BulkCreateWithTx bulk create released config items.
-func (dao *releasedCIDao) BulkCreateWithTx(kit *kit.Kit, tx *sharding.Tx, items []*table.ReleasedConfigItem) error {
-	if items == nil {
-		return errf.New(errf.InvalidParameter, "released config items is nil")
-	}
+// Get released config item by ID and config item id and release id.
+func (dao *releasedCIDao) Get(kit *kit.Kit, configItemID, bizID, releaseID uint32) (*table.ReleasedConfigItem, error) {
 
-	// validate released config item field.
-	for _, item := range items {
-		if err := item.Validate(); err != nil {
-			return err
-		}
-	}
-
-	// generate released config items id.
-	ids, err := dao.idGen.Batch(kit, table.ReleasedConfigItemTable, len(items))
-	if err != nil {
-		return err
-	}
-
-	start := 0
-	for _, item := range items {
-		item.ID = ids[start]
-		start++
-	}
-
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "INSERT INTO ", table.ReleasedConfigItemTable.Name(), " (", table.ReleasedConfigItemColumns.ColumnExpr(),
-		")  VALUES(", table.ReleasedConfigItemColumns.ColonNameExpr(), ")")
-	sql := filter.SqlJoint(sqlSentence)
-
-	if err = dao.orm.Txn(tx.Tx()).BulkInsert(kit.Ctx, sql, items); err != nil {
-		return err
-	}
-
-	au := &AuditOption{Txn: tx.Tx(), ResShardingUid: tx.ShardingUid()}
-	if err := dao.auditDao.Decorator(kit, items[0].Attachment.BizID,
-		enumor.Release).AuditCreate(items, au); err != nil {
-		return fmt.Errorf("audit create released config items failed, err: %v", err)
-	}
-
-	return nil
-}
-
-// Get released config item by ID and released id
-func (dao *releasedCIDao) Get(kit *kit.Kit, id, bizID, releasedID uint32) (*table.ReleasedConfigItem, error) {
-
-	if id == 0 {
+	if configItemID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "config item id can not be 0")
 	}
 
-	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", table.ReleasedConfigItemTable.Name(),
-		" WHERE config_item_id = ", strconv.Itoa(int(id)), " AND release_id = ", strconv.Itoa(int(releasedID)))
-	sql := filter.SqlJoint(sqlSentenceCount)
-
-	releasedCI := &table.ReleasedConfigItem{}
-	if err := dao.orm.Do(dao.sd.ShardingOne(bizID).DB()).Get(kit.Ctx, releasedCI, sql); err != nil {
-		return nil, err
+	if releaseID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "release id can not be 0")
 	}
-	return releasedCI, nil
+
+	m := dao.genQ.ReleasedConfigItem
+	return m.WithContext(kit.Ctx).Where(
+		m.ConfigItemID.Eq(configItemID), m.ReleaseID.Eq(releaseID), m.BizID.Eq(bizID)).Take()
 }
 
 // List released config items with options.
@@ -171,55 +123,72 @@ func (dao *releasedCIDao) List(kit *kit.Kit, opts *types.ListReleasedCIsOption) 
 		return nil, err
 	}
 
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"id", "release_id", "biz_id", "app_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				},
-			},
-		},
-	}
-	if opts.ReleaseID != 0 {
-		sqlOpt.CrownedOption.Rules = append(sqlOpt.CrownedOption.Rules, &filter.AtomRule{
-			Field: "release_id",
-			Op:    filter.Equal.Factory(),
-			Value: opts.ReleaseID,
-		})
-	}
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
-	if err != nil {
-		return nil, err
+	m := dao.genQ.ReleasedConfigItem
+
+	query := m.WithContext(kit.Ctx).Where(m.ReleaseID.Eq(opts.ReleaseID), m.BizID.Eq(opts.BizID))
+	if opts.SearchKey != "" {
+		searchKey := "%" + opts.SearchKey + "%"
+		query = query.Where(m.Name.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))
 	}
 
-	var sqlSentenceCount []string
-	sqlSentenceCount = append(sqlSentenceCount, "SELECT COUNT(*) FROM ", table.ReleasedConfigItemTable.Name(), whereExpr)
-	countSql := filter.SqlJoint(sqlSentenceCount)
-	count, err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Count(kit.Ctx, countSql, args...)
-	if err != nil {
-		return nil, err
+	var list []*table.ReleasedConfigItem
+	var count int64
+	var err error
+	if opts.Page.Start == 0 && opts.Page.Limit == 0 {
+		list, err = query.Find()
+		if err != nil {
+			return nil, err
+		}
+		count = int64(len(list))
+	} else {
+		list, count, err = query.FindByPage(opts.Page.Offset(), opts.Page.LimitInt())
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &types.ListReleasedCIsDetails{Count: uint32(count), Details: list}, nil
+}
+
+// ListAll list all released config items in biz.
+func (dao *releasedCIDao) ListAll(kit *kit.Kit, bizID uint32) ([]*table.ReleasedConfigItem, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
 
-	// query released config item list for now.
-	pageExpr, err := opts.Page.SQLExpr(&types.PageSQLOption{Sort: types.SortOption{Sort: "id", IfNotPresent: true}})
-	if err != nil {
-		return nil, err
+	m := dao.genQ.ReleasedConfigItem
+	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID)).Find()
+}
+
+// ListAll list all released config items in biz.
+func (dao *releasedCIDao) ListAllByAppID(kit *kit.Kit, appID, bizID uint32) ([]*table.ReleasedConfigItem, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ReleasedConfigItemColumns.NamedExpr(), " FROM ", table.ReleasedConfigItemTable.Name(), whereExpr, pageExpr)
-	sql := filter.SqlJoint(sqlSentence)
-	list := make([]*table.ReleasedConfigItem, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
+	m := dao.genQ.ReleasedConfigItem
+	return m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Find()
+}
+
+// ListAllByAppIDs list all released config items by appIDs.
+func (dao *releasedCIDao) ListAllByAppIDs(kit *kit.Kit,
+	appIDs []uint32, bizID uint32) ([]*table.ReleasedConfigItem, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
 	}
 
-	return &types.ListReleasedCIsDetails{Count: count, Details: list}, nil
+	m := dao.genQ.ReleasedConfigItem
+	return m.WithContext(kit.Ctx).Where(m.AppID.In(appIDs...), m.BizID.Eq(bizID)).Find()
+}
+
+// ListAllByReleaseIDs list all released config items by releaseIDs.
+func (dao *releasedCIDao) ListAllByReleaseIDs(kit *kit.Kit,
+	releaseIDs []uint32, bizID uint32) ([]*table.ReleasedConfigItem, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "biz_id can not be 0")
+	}
+
+	m := dao.genQ.ReleasedConfigItem
+	return m.WithContext(kit.Ctx).Where(m.AppID.In(releaseIDs...), m.BizID.Eq(bizID)).Find()
 }
 
 // GetReleasedLately
