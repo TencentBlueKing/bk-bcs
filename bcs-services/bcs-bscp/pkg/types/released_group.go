@@ -34,9 +34,9 @@ func (opt *CountGroupsReleasedAppsOption) Validate(po *PageOption) error {
 
 // GroupPublishedAppsCount defines the response details of requested CountGroupsReleasedAppsOption.
 type GroupPublishedAppsCount struct {
-	GroupID uint32 `db:"group_id" json:"group_id"`
-	Counts  uint32 `db:"counts" json:"counts"`
-	Edited  bool   `db:"edited" json:"edited"`
+	GroupID uint32 `gorm:"column:group_id" json:"group_id"`
+	Counts  uint32 `gorm:"column:counts" json:"counts"`
+	Edited  bool   `gorm:"column:edited" json:"edited"`
 }
 
 // ListReleasedGroupsOption defines options to list group current releases.

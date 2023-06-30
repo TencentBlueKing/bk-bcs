@@ -70,7 +70,6 @@ const store = new Vuex.Store<{
   user: {
     username: string
   }
-  projectList: Partial<IProject>[]
   openSideMenu: boolean
   clusterViewType: 'card' | 'list'
   isEn: boolean
@@ -123,7 +122,6 @@ const store = new Vuex.Store<{
     curSideMenu: {},
     curNamespace: '',
     user: {},
-    projectList: [],
     openSideMenu: true, // 菜单是否折叠
     clusterViewType: 'card', // 集群展示模式 card 或者 list
     isEn: lang === 'en-US', // todo 废弃
@@ -176,15 +174,6 @@ const store = new Vuex.Store<{
       state.curProject = project || {};
       sessionStorage.setItem('_project_code_', project.projectCode);
       sessionStorage.setItem('_project_id_', project.projectID);
-    },
-    /**
-     * 更新 store 中的 projectList
-     *
-     * @param {Object} state store state
-     * @param {list} list 项目列表
-     */
-    updateProjectList(state, list) {
-      state.projectList.splice(0, state.projectList.length, ...list);
     },
     /**
      * 更新 store.cluster 中的 curCluster

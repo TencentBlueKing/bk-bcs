@@ -20,6 +20,7 @@ import (
 
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/errf"
+	"bscp.io/pkg/dal/repository"
 	"bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
@@ -27,7 +28,6 @@ import (
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/serviced"
 	esbcli "bscp.io/pkg/thirdparty/esb/client"
-	"bscp.io/pkg/thirdparty/repo"
 	"bscp.io/pkg/tools"
 
 	"google.golang.org/grpc"
@@ -115,22 +115,22 @@ func newClientSet(sd serviced.Discover, tls cc.TLSConfig) (*ClientSet, error) {
 		return nil, errf.New(errf.Unknown, fmt.Sprintf("dial data service failed, err: %v", err))
 	}
 
-	repoCli, err := repo.NewClient(cc.ConfigServer().Repo, metrics.Register())
-	if err != nil {
-		return nil, err
-	}
-
 	esbSetting := cc.ConfigServer().Esb
 	esbCli, err := esbcli.NewClient(&esbSetting, metrics.Register())
 	if err != nil {
 		return nil, err
 	}
 
+	provider, err := repository.NewProvider(cc.ConfigServer().Repo)
+	if err != nil {
+		return nil, err
+	}
+
 	cs := &ClientSet{
-		DS:   pbds.NewDataClient(dsConn),
-		AS:   pbas.NewAuthClient(asConn),
-		Repo: repoCli,
-		Esb:  esbCli,
+		DS:       pbds.NewDataClient(dsConn),
+		AS:       pbas.NewAuthClient(asConn),
+		Esb:      esbCli,
+		provider: provider,
 	}
 
 	logs.Infof("initialize the client set success.")
@@ -142,8 +142,7 @@ type ClientSet struct {
 	// DS data service's client api
 	DS pbds.DataClient
 	AS pbas.AuthClient
-	// Repo repoCli repo client api.
-	Repo *repo.Client
 	// Esb Esb client api
-	Esb esbcli.Client
+	Esb      esbcli.Client
+	provider repository.Provider
 }

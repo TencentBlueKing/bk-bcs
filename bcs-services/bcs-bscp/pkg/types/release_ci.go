@@ -15,33 +15,20 @@ package types
 import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/runtime/filter"
 )
 
 // ListReleasedCIsOption defines options to list released config item.
 type ListReleasedCIsOption struct {
-	BizID     uint32             `json:"biz_id"`
-	ReleaseID uint32             `json:"release_id"`
-	Filter    *filter.Expression `json:"filter"`
-	Page      *BasePage          `json:"page"`
+	BizID     uint32    `json:"biz_id"`
+	ReleaseID uint32    `json:"release_id"`
+	SearchKey string    `json:"search_key"`
+	Page      *BasePage `json:"page"`
 }
 
 // Validate the list released config item options
 func (opt *ListReleasedCIsOption) Validate(po *PageOption) error {
 	if opt.BizID <= 0 {
 		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
-	}
-
-	if opt.Filter == nil {
-		return errf.New(errf.InvalidParameter, "filter is nil")
-	}
-
-	exprOpt := &filter.ExprOption{
-		// remove biz_id, app_id because it's a required field in the option.
-		RuleFields: table.ReleasedConfigItemColumns.WithoutColumn("biz_id"),
-	}
-	if err := opt.Filter.Validate(exprOpt); err != nil {
-		return err
 	}
 
 	if opt.Page == nil {

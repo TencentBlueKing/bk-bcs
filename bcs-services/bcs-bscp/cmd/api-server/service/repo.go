@@ -38,13 +38,13 @@ type repoService struct {
 func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
-	fileContentID, err := repository.GetFileContentID(r)
+	sign, err := repository.GetFileSign(r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	metadata, err := s.provider.Upload(kt, fileContentID, r.Body, r.ContentLength)
+	metadata, err := s.provider.Upload(kt, sign, r.Body)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
@@ -57,13 +57,13 @@ func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 func (s *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
-	fileContentID, err := repository.GetFileContentID(r)
+	sign, err := repository.GetFileSign(r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	body, contentLength, err := s.provider.Download(kt, fileContentID)
+	body, contentLength, err := s.provider.Download(kt, sign)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
@@ -74,7 +74,7 @@ func (s *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 	_, err = io.Copy(w, body)
 	if err != nil {
-		klog.ErrorS(err, "download file", "fileContentID", fileContentID)
+		klog.ErrorS(err, "download file", "sign", sign)
 	}
 }
 
@@ -82,13 +82,13 @@ func (s *repoService) DownloadFile(w http.ResponseWriter, r *http.Request) {
 func (s *repoService) FileMetadata(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
 
-	fileContentID, err := repository.GetFileContentID(r)
+	sign, err := repository.GetFileSign(r)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	metadata, err := s.provider.Metadata(kt, fileContentID)
+	metadata, err := s.provider.Metadata(kt, sign)
 	if err != nil {
 		render.Render(w, r, rest.BadRequest(err))
 		return

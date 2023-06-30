@@ -16,8 +16,6 @@ import (
 	"errors"
 
 	"bscp.io/pkg/dal/gen"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 )
@@ -32,8 +30,6 @@ type CredentialScope interface {
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id uint32) error
 	// UpdateWithTx update credential scope with transaction
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, credentialScope *table.CredentialScope) error
-	// // UpdateCredentialScopes update credential scopes
-	// UpdateCredentialScopes(kit *kit.Kit, option *types.UpdateCredentialScopesOption) error
 }
 
 var _ CredentialScope = new(credentialScopeDao)
@@ -42,9 +38,6 @@ type credentialScopeDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
-
-	orm orm.Interface
-	sd  *sharding.Sharding
 }
 
 // CreateWithTx create credential scope with transaction
@@ -122,21 +115,20 @@ func (dao *credentialScopeDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *ta
 		return err
 	}
 
-	// 更新操作, 获取当前记录做审计
 	m := tx.CredentialScope
-	q := tx.CredentialScope.WithContext(kit.Ctx)
-	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+
+	// 更新操作, 获取当前记录做审计
+	oldOne, err := tx.CredentialScope.WithContext(kit.Ctx).Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
 		return err
 	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 
-	q = tx.CredentialScope.WithContext(kit.Ctx)
-	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+	if _, err := tx.CredentialScope.WithContext(kit.Ctx).Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
 		Omit(m.BizID, m.ID).Updates(g); err != nil {
 		return err
 	}
 
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
 	if err := ad.Do(tx.Query); err != nil {
 		return err
 	}

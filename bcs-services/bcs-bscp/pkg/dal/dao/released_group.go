@@ -13,79 +13,69 @@ limitations under the License.
 package dao
 
 import (
-	"bytes"
-	"strconv"
-
 	"bscp.io/pkg/criteria/errf"
-	"bscp.io/pkg/dal/orm"
-	"bscp.io/pkg/dal/sharding"
+	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/types"
 )
 
 // ReleasedGroup supplies all the group related operations.
 type ReleasedGroup interface {
-	// List list group current releases by option
-	List(kit *kit.Kit, opts *types.ListReleasedGroupsOption) ([]*table.ReleasedGroup, error)
+	// ListAll list all released groups in biz
+	ListAll(kit *kit.Kit, bizID uint32) ([]*table.ReleasedGroup, error)
+	// ListAllByGroupID list all released groups by groupID
+	ListAllByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.ReleasedGroup, error)
+	// ListAllByAppID list all released groups by appID
+	ListAllByAppID(kit *kit.Kit, appID, bizID uint32) ([]*table.ReleasedGroup, error)
 	// CountGroupsReleasedApps counts each group's published apps.
 	CountGroupsReleasedApps(kit *kit.Kit, opts *types.CountGroupsReleasedAppsOption) (
 		[]*types.GroupPublishedAppsCount, error)
 	// UpdateEditedStatusWithTx update edited status with transaction
-	UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding.Tx, edited bool, groupID, bizID uint32) error
+	UpdateEditedStatusWithTx(kit *kit.Kit, tx *gen.QueryTx, edited bool, groupID, bizID uint32) error
 }
 
 var _ ReleasedGroup = new(releasedGroupDao)
 
 type releasedGroupDao struct {
-	orm      orm.Interface
-	sd       *sharding.Sharding
+	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
 }
 
-// List list group current releases by option
-func (dao *releasedGroupDao) List(kit *kit.Kit, opts *types.ListReleasedGroupsOption) (
-	[]*table.ReleasedGroup, error) {
-	if opts == nil {
-		return nil, errf.New(errf.InvalidParameter, "list group current releases option is nil")
+// ListAll list all released groups in biz
+func (dao *releasedGroupDao) ListAll(kit *kit.Kit, bizID uint32) ([]*table.ReleasedGroup, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID is 0")
 	}
 
-	if err := opts.Validate(); err != nil {
-		return nil, err
+	m := dao.genQ.ReleasedGroup
+	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID)).Find()
+}
+
+// ListByGroupID list released groups by groupID
+func (dao *releasedGroupDao) ListAllByGroupID(kit *kit.Kit, groupID, bizID uint32) ([]*table.ReleasedGroup, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID is 0")
 	}
 
-	sqlOpt := &filter.SQLWhereOption{
-		Priority: filter.Priority{"biz_id", "app_id"},
-		CrownedOption: &filter.CrownedOption{
-			CrownedOp: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "biz_id",
-					Op:    filter.Equal.Factory(),
-					Value: opts.BizID,
-				},
-			},
-		},
+	m := dao.genQ.ReleasedGroup
+	return m.WithContext(kit.Ctx).Where(m.GroupID.Eq(groupID), m.BizID.Eq(bizID)).Find()
+}
+
+// ListByGroupID list released groups by appID
+func (dao *releasedGroupDao) ListAllByAppID(kit *kit.Kit, appID, bizID uint32) ([]*table.ReleasedGroup, error) {
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "bizID is 0")
 	}
 
-	whereExpr, args, err := opts.Filter.SQLWhereExpr(sqlOpt)
-	if err != nil {
-		return nil, err
+	if appID == 0 {
+		return nil, errf.New(errf.InvalidParameter, "appID is 0")
 	}
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "SELECT ", table.ReleasedGroupColumns.NamedExpr(), " FROM ",
-		table.ReleasedGroupTable.Name(), whereExpr)
-	sql := filter.SqlJoint(sqlSentence)
 
-	list := make([]*table.ReleasedGroup, 0)
-	err = dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx, &list, sql, args...)
-	if err != nil {
-		return nil, err
-	}
-	return list, nil
+	m := dao.genQ.ReleasedGroup
+	return m.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID)).Find()
 }
 
 // CountGroupsReleasedApps counts each group's published apps.
@@ -100,22 +90,22 @@ func (dao *releasedGroupDao) CountGroupsReleasedApps(kit *kit.Kit, opts *types.C
 		return nil, err
 	}
 
-	var sqlBuf bytes.Buffer
-	sqlBuf.WriteString("SELECT group_id, COUNT(DISTINCT app_id) AS counts, MAX(edited) AS edited FROM ")
-	sqlBuf.WriteString(table.ReleasedGroupTable.Name())
-	sqlBuf.WriteString(" WHERE biz_id = ? AND group_id IN (?) GROUP BY group_id")
-
 	counts := make([]*types.GroupPublishedAppsCount, 0)
-	err := dao.orm.Do(dao.sd.ShardingOne(opts.BizID).DB()).Select(kit.Ctx,
-		&counts, sqlBuf.String(), opts.BizID, opts.Groups)
-	if err != nil {
+
+	m := dao.genQ.ReleasedGroup
+	if err := m.WithContext(kit.Ctx).
+		Select(m.GroupID, m.AppID.Distinct().Count().As("counts"), m.Edited.Max().As("edited")).
+		Where(m.BizID.Eq(opts.BizID), m.GroupID.In(opts.Groups...)).
+		Group(m.GroupID).
+		Scan(&counts); err != nil {
 		return nil, err
 	}
 	return counts, nil
 }
 
 // UpdateEditedStatusWithTx update edited status with transaction
-func (dao *releasedGroupDao) UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding.Tx, edited bool, groupID, bizID uint32) error {
+func (dao *releasedGroupDao) UpdateEditedStatusWithTx(kit *kit.Kit,
+	tx *gen.QueryTx, edited bool, groupID, bizID uint32) error {
 	if bizID == 0 {
 		return errf.New(errf.InvalidParameter, "bizID is 0")
 	}
@@ -124,17 +114,11 @@ func (dao *releasedGroupDao) UpdateEditedStatusWithTx(kit *kit.Kit, tx *sharding
 		return errf.New(errf.InvalidParameter, "groupID is 0")
 	}
 
-	var sqlSentence []string
-	sqlSentence = append(sqlSentence, "UPDATE ", table.ReleasedGroupTable.Name(),
-		" SET edited = ", strconv.FormatBool(edited), " WHERE biz_id = ", strconv.Itoa(int(bizID)))
-	sql := filter.SqlJoint(sqlSentence)
+	m := tx.ReleasedGroup
 
-	toUpdate := map[string]interface{}{
-		"edited": edited,
-	}
-
-	_, err := dao.orm.Txn(tx.Tx()).Update(kit.Ctx, sql, toUpdate)
-	if err != nil {
+	if _, err := m.WithContext(kit.Ctx).
+		Where(m.GroupID.Eq(groupID), m.BizID.Eq(bizID)).
+		Update(m.Edited, edited); err != nil {
 		return err
 	}
 	return nil

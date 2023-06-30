@@ -16,15 +16,11 @@ import (
 	"context"
 	"time"
 
-	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	pbbase "bscp.io/pkg/protocol/core/base"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbds "bscp.io/pkg/protocol/data-service"
-	"bscp.io/pkg/runtime/filter"
-	"bscp.io/pkg/types"
 )
 
 // CreateContent create content.
@@ -61,84 +57,4 @@ func (s *Service) GetContent(ctx context.Context, req *pbds.GetContentReq) (*pbc
 
 	resp := pbcontent.PbContent(content)
 	return resp, nil
-}
-
-// ListContents list contents by query condition.
-func (s *Service) ListContents(ctx context.Context, req *pbds.ListContentsReq) (*pbds.ListContentsResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	// parse pb struct filter to filter.Expression.
-	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
-	if err != nil {
-		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	query := &types.ListContentsOption{
-		BizID:  req.BizId,
-		AppID:  req.AppId,
-		Filter: filter,
-		Page:   req.Page.BasePage(),
-	}
-
-	details, err := s.dao.Content().List(grpcKit, query)
-	if err != nil {
-		logs.Errorf("list content failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	resp := &pbds.ListContentsResp{
-		Count:   details.Count,
-		Details: pbcontent.PbContents(details.Details),
-	}
-	return resp, nil
-}
-
-// queryContentOption query content option.
-type queryContentOption struct {
-	// ID content id.
-	ID uint32
-	// BizID content attachment biz id.
-	BizID uint32
-	// AppID content attachment app id.
-	AppID uint32
-}
-
-// queryContent query content by option.
-func (s *Service) queryContent(kit *kit.Kit, opt *queryContentOption) (*table.Content, error) {
-	if opt == nil {
-		return nil, errf.New(errf.InvalidParameter, "query content option is nil")
-	}
-
-	// build query option.
-	query := &types.ListContentsOption{
-		BizID: opt.BizID,
-		AppID: opt.AppID,
-		Filter: &filter.Expression{
-			Op: filter.And,
-			Rules: []filter.RuleFactory{
-				&filter.AtomRule{
-					Field: "id",
-					Op:    filter.Equal.Factory(),
-					Value: opt.ID,
-				},
-			},
-		},
-		Page: &types.BasePage{
-			Count: false,
-			Start: 0,
-			Limit: 1,
-		},
-	}
-	details, err := s.dao.Content().List(kit, query)
-	if err != nil {
-		return nil, err
-	}
-
-	// if query data is nil by query option, return err.
-	if len(details.Details) == 0 {
-		return nil, errf.New(errf.RecordNotFound, "requested content not exist")
-	}
-
-	return details.Details[0], nil
 }

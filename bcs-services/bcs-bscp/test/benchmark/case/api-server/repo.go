@@ -29,14 +29,14 @@ import (
 )
 
 // dd if=/dev/urandom of=/tmp/100Mib.bin bs=1M count=100
-func upload(ctx context.Context, host string, bizID, appID string, fileContentID string, body io.Reader) (*http.Response, error) {
+func upload(ctx context.Context, host string, bizID, appID string, sign string, body io.Reader) (*http.Response, error) {
 	u := fmt.Sprintf("http://%s/api/v1/api/create/content/upload/biz_id/%s/app_id/%s", host, bizID, appID)
 	req, err := http.NewRequestWithContext(ctx, "PUT", u, body)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("X-Bkapi-File-Content-Id", fileContentID)
+	req.Header.Set("X-Bkapi-File-Content-Id", sign)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -53,14 +53,14 @@ func upload(ctx context.Context, host string, bizID, appID string, fileContentID
 	return resp, nil
 }
 
-func download(ctx context.Context, host string, bizID, appID string, fileContentID string, body io.Reader) (*http.Response, error) {
+func download(ctx context.Context, host string, bizID, appID string, sign string, body io.Reader) (*http.Response, error) {
 	u := fmt.Sprintf("http://%s/api/v1/api/get/content/download/biz_id/%s/app_id/%s", host, bizID, appID)
 	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("X-Bkapi-File-Content-Id", fileContentID)
+	req.Header.Set("X-Bkapi-File-Content-Id", sign)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -94,8 +94,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fileContentID := tools.ByteSHA256(d)
-	klog.InfoS("file", "id", fileContentID)
+	sign := tools.ByteSHA256(d)
+	klog.InfoS("file", "id", sign)
 
 	c := 1
 	for i := 0; i < c; i++ {
@@ -104,8 +104,8 @@ func main() {
 			defer wg.Done()
 			for {
 				st := time.Now()
-				resp, err := upload(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
-				// resp, err := download(context.Background(), host, bizID, appID, fileContentID, bytes.NewReader(d))
+				resp, err := upload(context.Background(), host, bizID, appID, sign, bytes.NewReader(d))
+				// resp, err := download(context.Background(), host, bizID, appID, sign, bytes.NewReader(d))
 				if err != nil {
 					klog.ErrorS(err, "idx", idx, "resp", resp)
 					continue

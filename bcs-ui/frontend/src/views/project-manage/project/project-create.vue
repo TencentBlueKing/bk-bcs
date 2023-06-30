@@ -47,7 +47,6 @@ import { computed, defineComponent, ref, toRefs, watch } from 'vue';
 import useFormLabel from '@/composables/use-form-label';
 import useProjects from '@/views/project-manage/project/use-project';
 import { SPECIAL_REGEXP } from '@/common/constant';
-import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import $bkMessage from '@/common/bkmagic';
 
@@ -166,14 +165,12 @@ export default defineComponent({
       }
       loading.value = false;
       if (result) {
-        // 更新集群列表
-        await $store.dispatch('getProjectList');
         $bkMessage({
           message: isEdit.value ? $i18n.t('编辑成功') : $i18n.t('创建成功'),
           theme: 'success',
         });
         handleChange(false);
-        emit('finished');
+        emit('finished');// 更新集群列表
       }
       return result;
     };

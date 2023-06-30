@@ -15,7 +15,7 @@ package pbci
 import (
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
-	"bscp.io/pkg/protocol/core/base"
+	pbbase "bscp.io/pkg/protocol/core/base"
 )
 
 // ConfigItemSpec convert pb ConfigItemSpec to table ConfigItemSpec
@@ -146,6 +146,6 @@ func PbConfigItemCount(cc *table.ListConfigItemCounts) *ListConfigItemCounts {
 	return &ListConfigItemCounts{
 		AppId:    cc.AppId,
 		Count:    cc.Count,
-		UpdateAt: cc.UpdateAt.Format(constant.TimeStdFormat),
+		UpdateAt: cc.UpdatedAt.Format(constant.TimeStdFormat),
 	}
 }

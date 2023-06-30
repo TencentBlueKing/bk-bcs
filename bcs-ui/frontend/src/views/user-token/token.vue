@@ -224,7 +224,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted, toRef, reactive } from 'vue';
+import { defineComponent, ref, computed, onMounted } from 'vue';
 import StatusIcon from '@/components/status-icon';
 import { copyText, renderTemplate } from '@/common/util';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
@@ -243,7 +243,6 @@ export default defineComponent({
     'full-screen': fullScreen,
   },
   setup() {
-    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
     const goBack = () => {
       $router.back();
     };
@@ -256,12 +255,7 @@ export default defineComponent({
     // 用户信息
     const user = computed(() => $store.state.user);
     // 使用案例
-    const projectID = computed(() => {
-      const list: any[] = $store.state.projectList || [];
-      const { projectCode } = $route.value.params;
-      // eslint-disable-next-line camelcase
-      return list.find(item => item.project_code === projectCode)?.project_id;
-    });
+    const projectID = computed(() => $store.getters.curProjectId);
     const kubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get node');
 
     const demoConfigExample = ref(renderTemplate(clusterDemoConfig, {

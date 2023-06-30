@@ -231,14 +231,10 @@ type RepositoryV1 struct {
 	AccessKeyID     string    `json:"accessKeyId"`
 	SecretAccessKey string    `json:"secretAccessKey"`
 	Url             string    `json:"url"`
-	RepositoryType  cc.StorageMode
 }
 
 // DownloadUri generate the fully qualified URI to download the config item from repository.
 func (r RepositoryV1) DownloadUri(rs *RepositorySpecV1) string {
-	if r.RepositoryType == cc.S3 {
-		return rs.Path
-	}
 	subPath := strings.TrimRight(rs.Path, " ")
 	subPath = strings.Trim(subPath, "/")
 	return fmt.Sprintf("%s/%s", r.Root, subPath)

@@ -80,7 +80,6 @@ export const fetchBizHosts = request('post', '/api/projects/$projectId/cc/hosts/
 export const createProject = request('post', '/api/nav/projects/');
 export const editProject = request('put', '/api/nav/projects/$projectId/');
 export const logLinks = request('post', '/api/datalog/projects/$projectId/log_links/');
-export const getProjectList = request('get', '/api/nav/projects/');
 
 // Cluster Manager
 const prefix = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4`;

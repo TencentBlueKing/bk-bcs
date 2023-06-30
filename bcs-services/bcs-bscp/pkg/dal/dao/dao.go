@@ -157,8 +157,6 @@ func (s *set) App() App {
 // Commit returns the commits' DAO
 func (s *set) Commit() Commit {
 	return &commitDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
@@ -168,8 +166,6 @@ func (s *set) Commit() Commit {
 // ConfigItem returns the config item's DAO
 func (s *set) ConfigItem() ConfigItem {
 	return &configItemDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
@@ -180,8 +176,6 @@ func (s *set) ConfigItem() ConfigItem {
 // Content returns the content's DAO
 func (s *set) Content() Content {
 	return &contentDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
@@ -191,7 +185,6 @@ func (s *set) Content() Content {
 // Release returns the release's DAO
 func (s *set) Release() Release {
 	return &releaseDao{
-		orm:      s.orm,
 		genQ:     s.genQ,
 		sd:       s.sd,
 		idGen:    s.idGen,
@@ -202,8 +195,6 @@ func (s *set) Release() Release {
 // ReleasedCI returns the released config item's DAO
 func (s *set) ReleasedCI() ReleasedCI {
 	return &releasedCIDao{
-		orm:      s.orm,
-		sd:       s.sd,
 		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
@@ -276,8 +267,7 @@ func (s *set) AppTemplateBinding() AppTemplateBinding {
 // Group returns the group's DAO
 func (s *set) Group() Group {
 	return &groupDao{
-		orm:      s.orm,
-		sd:       s.sd,
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		lock:     s.lock,
@@ -287,8 +277,7 @@ func (s *set) Group() Group {
 // GroupAppBind returns the group app bind's DAO
 func (s *set) GroupAppBind() GroupAppBind {
 	return &groupAppDao{
-		orm:      s.orm,
-		sd:       s.sd,
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		lock:     s.lock,
@@ -298,8 +287,7 @@ func (s *set) GroupAppBind() GroupAppBind {
 // ReleasedGroup returns the currnet release's DAO
 func (s *set) ReleasedGroup() ReleasedGroup {
 	return &releasedGroupDao{
-		orm:      s.orm,
-		sd:       s.sd,
+		genQ:     s.genQ,
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		lock:     s.lock,
@@ -354,9 +342,10 @@ func (s *set) Healthz() error {
 // Credential returns the Credential's DAO
 func (s *set) Credential() Credential {
 	return &credentialDao{
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
-		genQ:     s.genQ,
+		credentialSetting: &s.credentialSetting,
+		idGen:             s.idGen,
+		auditDao:          s.auditDao,
+		genQ:              s.genQ,
 	}
 }
 

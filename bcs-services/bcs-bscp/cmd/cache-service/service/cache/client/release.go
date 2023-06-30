@@ -22,7 +22,6 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
-	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/runtime/jsoni"
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
@@ -93,21 +92,10 @@ func (c *client) getReleasedCIFromCache(kt *kit.Kit, bizID uint32, releaseID uin
 
 // refreshReleasedCICache get a release's all the config items and cached them.
 func (c *client) refreshReleasedCICache(kt *kit.Kit, bizID uint32, releaseID uint32) (string, error) {
-	opts := &types.ListReleasedCIsOption{
-		BizID:     bizID,
-		ReleaseID: releaseID,
-		Filter: &filter.Expression{
-			Op:    filter.And,
-			Rules: []filter.RuleFactory{},
-		},
-		// use unlimited page.
-		Page: &types.BasePage{Start: 0, Limit: 0},
-	}
-
 	cancel := kt.CtxWithTimeoutMS(500)
 	defer cancel()
 
-	resp, err := c.op.ReleasedCI().List(kt, opts)
+	releasedCIs, err := c.op.ReleasedCI().ListAll(kt, bizID)
 	if err != nil {
 		logs.Errorf("get biz: %d release: %d CI from db failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
 		return "", err
@@ -115,7 +103,7 @@ func (c *client) refreshReleasedCICache(kt *kit.Kit, bizID uint32, releaseID uin
 
 	ciKey := keys.Key.ReleasedCI(bizID, releaseID)
 
-	if len(resp.Details) == 0 {
+	if len(releasedCIs) == 0 {
 		logs.Errorf("invalid request, can not find biz: %d, release: %d from db, rid: %s", bizID, releaseID, kt.Rid)
 
 		// set a NULL value to block the illegal request.
@@ -128,7 +116,7 @@ func (c *client) refreshReleasedCICache(kt *kit.Kit, bizID uint32, releaseID uin
 		return "", errf.New(errf.RecordNotFound, "release not exist in db")
 	}
 
-	js, err := jsoni.Marshal(types.ReleaseCICaches(resp.Details))
+	js, err := jsoni.Marshal(types.ReleaseCICaches(releasedCIs))
 	if err != nil {
 		return "", err
 	}

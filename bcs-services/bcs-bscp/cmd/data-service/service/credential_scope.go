@@ -108,7 +108,10 @@ func (s *Service) UpdateCredentialScopes(ctx context.Context, req *pbds.UpdateCr
 		tx.Rollback()
 		return nil, err
 	}
-	tx.Commit()
+	if err := tx.Commit(); err != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 	resp := &pbds.UpdateCredentialScopesResp{}
 	return resp, nil
 }

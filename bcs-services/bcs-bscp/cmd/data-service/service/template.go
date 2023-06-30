@@ -81,6 +81,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	}
 
 	tx.Commit()
+
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
 }

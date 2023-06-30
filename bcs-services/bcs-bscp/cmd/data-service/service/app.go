@@ -17,6 +17,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
@@ -29,7 +31,6 @@ import (
 	"bscp.io/pkg/tools"
 	"bscp.io/pkg/types"
 	"bscp.io/pkg/version"
-	"github.com/pkg/errors"
 )
 
 // CreateApp create application.

@@ -7,17 +7,34 @@ import {
   createProject as handleCreateProject,
 } from '@/api/modules/project';
 import { userInfo } from '@/api/modules/user-manager';
+import { IProject } from '@/composables/use-app';
 import $store from '@/store';
-import { computed } from 'vue';
+
+export interface IProjectPerm {
+  project_create: boolean
+  project_delete: boolean
+  project_edit: boolean
+  project_view: boolean
+}
+export interface IProjectListData {
+  data: {
+    results: IProject[]
+    total: number
+  }
+  web_annotations: {
+    perms: Record<string, IProjectPerm>
+  }
+}
 
 export default function useProjects() {
-  const projectList = computed<any[]>(() => $store.state.projectList);
-
-  // 获取当前有权限项目
-  async function getProjectList() {
-    const result = await fetchProjectList({}, { cancelWhenRouteChange: false })
+  // 获取项目列表
+  async function getProjectList(params = {}) {
+    const data = await fetchProjectList({
+      all: true,
+      ...params,
+    }, { cancelWhenRouteChange: false, needRes: true })
       .catch(() => ({ results: [], total: 0 }));
-    const projectList = result.results.map(project => ({
+    data.data.results = data.data.results.map(project => ({
       ...project,
       cc_app_id: project.businessID,
       cc_app_name: project.businessName,
@@ -25,11 +42,10 @@ export default function useProjects() {
       project_name: project.name,
       project_code: project.projectCode,
     }));
-    $store.commit('updateProjectList', projectList);
-    return result.results;
+    return data as IProjectListData;
   };
 
-  // 获取所有项目列表
+  // 获取所有项目列表(项目列表页面)
   async function getAllProjectList(params: any = {}, config = {}) {
     const result = await fetchAllProjectList(params,  { needRes: true, ...config })
       .catch(() => ({
@@ -58,14 +74,30 @@ export default function useProjects() {
     return result;
   }
 
-  async function fetchProjectInfo(params: any) {
-    const result = await getProject(params).catch(() => {});
+  async function fetchProjectInfo(params: { $projectId: string }) {
+    const { data, web_annotations, code } = await getProject(params, {
+      needRes: true,
+      globalError: false,
+    }).catch(() => ({}));
+    if (!data) return {
+      code,
+      data: data as IProject,
+      web_annotations,
+    };
+    // 兼容历史数据
+    const bcsProjectData = {
+      ...data,
+      cc_app_id: data.businessID,
+      project_id: data.projectID,
+      project_name: data.name,
+      project_code: data.projectCode,
+    };
+    $store.commit('updateCurProject', bcsProjectData);
+
     return {
-      ...result,
-      cc_app_id: result.businessID,
-      project_id: result.projectID,
-      project_name: result.name,
-      project_code: result.projectCode,
+      code,
+      data: bcsProjectData as IProject,
+      web_annotations,
     };
   }
 
@@ -87,7 +119,6 @@ export default function useProjects() {
 
   return {
     getUserInfo,
-    projectList,
     fetchProjectInfo,
     getProjectList,
     getAllProjectList,

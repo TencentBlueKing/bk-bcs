@@ -415,7 +415,7 @@ func (f FileMode) Validate() error {
 
 // ListConfigItemCounts return data structure
 type ListConfigItemCounts struct {
-	AppId    uint32    `db:"app_id" json:"app_id"`
-	Count    uint32    `db:"count" json:"count"`
-	UpdateAt time.Time `db:"update_at" json:"update_at"`
+	AppId     uint32    `gorm:"column:app_id" json:"app_id"`
+	Count     uint32    `gorm:"column:count" json:"count"`
+	UpdatedAt time.Time `gorm:"column:updated_at" json:"updated_at"`
 }
