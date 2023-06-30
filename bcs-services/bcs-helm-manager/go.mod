@@ -30,7 +30,7 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.0
 	github.com/tidwall/pretty v1.0.0
-	github.com/ugorji/go/codec v1.2.6
+	github.com/ugorji/go/codec v1.2.11
 	github.com/vmware-tanzu/carvel-ytt v0.40.1
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
