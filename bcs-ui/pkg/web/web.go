@@ -105,6 +105,9 @@ func (w *WebServer) newRouter() http.Handler {
 		r.Mount("/bcsapi", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
 	}
 
+	if config.G.Web.RoutePrefix != "" && config.G.Web.RoutePrefix != "/" {
+		r.Mount(config.G.Web.RoutePrefix+"/", http.StripPrefix(config.G.Web.RoutePrefix, w.subRouter()))
+	}
 	r.Mount("/", w.subRouter())
 
 	return r
