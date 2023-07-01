@@ -54,8 +54,6 @@ const (
 	AuthServerName Name = "auth-server"
 	// UIName is the ui service name
 	UIName Name = "ui"
-	// SidecarName is the sidecar's service name
-	SidecarName Name = "sidecar"
 )
 
 // Setting defines all service Setting interface.
