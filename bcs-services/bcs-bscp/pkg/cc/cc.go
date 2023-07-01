@@ -167,22 +167,3 @@ func DataService() DataServiceSetting {
 
 	return *s
 }
-
-// Sidecar return sidecar's setting.
-func Sidecar() SidecarSetting {
-	rt.lock.Lock()
-	defer rt.lock.Unlock()
-
-	if !rt.Ready() {
-		logs.ErrorDepthf(1, "runtime not ready, return empty data service setting")
-		return SidecarSetting{}
-	}
-
-	s, ok := rt.settings.(*SidecarSetting)
-	if !ok {
-		logs.ErrorDepthf(1, "current %s service can not get data service setting", ServiceName())
-		return SidecarSetting{}
-	}
-
-	return *s
-}
