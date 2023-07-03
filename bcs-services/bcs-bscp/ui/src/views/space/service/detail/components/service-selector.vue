@@ -2,21 +2,16 @@
   import { ref, watch ,onMounted } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { storeToRefs } from 'pinia'
+  import { AngleDown } from 'bkui-vue/lib/icon'
   import { useUserStore } from '../../../../../store/user'
+  import { useServiceStore } from '../../../../../store/service'
   import { IAppItem } from '../../../../../../types/app'
   import { getAppList } from "../../../../../api";
 
-  interface IServiceGroupItem {
-    space_id: number;
-    space_name: string;
-    space_type_id: string;
-    space_type_name: string;
-    children: Array<IAppItem>;
-  }
-
   const route = useRoute()
   const router = useRouter()
-
+  
+  const { appData } = storeToRefs(useServiceStore())
   const { userInfo } = storeToRefs(useUserStore())
 
   const bizId = <string>route.params.spaceId
@@ -67,10 +62,18 @@
 <div>
   <bk-select
     v-model="localVal"
+    class="app-selector"
     :filterable="true"
+    :input-search="false"
     :clearable="false"
     :loading="loading"
     @change="handleAppChange">
+    <template #trigger>
+      <div class="selector-trigger">
+        <input readonly :value="appData.spec.name">
+        <AngleDown class="arrow-icon" />
+      </div>
+    </template>
     <bk-option
       v-for="item in serviceList"
       :key="item.id"
@@ -87,6 +90,59 @@
 </div>
 </template>
 <style lang="scss" scoped>
+  .app-selector {
+    &.popover-show {
+      .selector-trigger .arrow-icon {
+        transform: rotate(-180deg);
+      }
+    }
+    &.is-focus {
+      .selector-trigger {
+        border-color: #3a84ff;
+        box-shadow: 0 0 3px #a3c5fd;
+        outline: 0;
+      }
+    }
+  }
+  .selector-trigger {
+    display: inline-flex;
+    align-items: stretch;
+    width: 100%;
+    height: 32px;
+    font-size: 12px;
+    border: 1px solid #c4c6cc;
+    border-radius: 2px;
+    transition: all .3s;
+    & > input {
+      flex: 1;
+      width: 100%;
+      padding: 0 24px 0 10px;
+      line-height: 1;
+      color: #63656e;
+      background-color: #fff;
+      border-radius: 2px;
+      border: none;
+      outline: none;
+      transition: all .3s;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .arrow-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      right: 4px;
+      top: 0;
+      width: 20px;
+      height: 100%;
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+      font-size: 20px;
+      color: #979ba5;
+    }
+  }
   .selector-extensition {
     .content {
       height: 40px;
