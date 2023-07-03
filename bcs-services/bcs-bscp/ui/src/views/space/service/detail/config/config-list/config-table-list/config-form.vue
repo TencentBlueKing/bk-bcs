@@ -258,8 +258,9 @@
                   ext-cls="privilege-select-popover"
                   theme="light"
                   trigger="click"
-                  placement="bottom">
-                  <div class="perm-panel-trigger">
+                  placement="bottom"
+                  :disabled="!editable">
+                  <div :class="['perm-panel-trigger', { disabled: !editable }]">
                     <i class="bk-bscp-icon icon-configuration-line"></i>
                   </div>
                   <template #content>
@@ -353,6 +354,11 @@
       color: #3a84ff;
       border: 1px solid #3a84ff;
       cursor: pointer;
+      &.disabled {
+        color: #dcdee5;
+        border-color: #dcdee5;
+        cursor: not-allowed;
+      }
     }
   }
   .privilege-tips-btn-area {
