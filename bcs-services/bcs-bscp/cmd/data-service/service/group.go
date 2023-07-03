@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"time"
 
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -51,15 +50,12 @@ func (s *Service) CreateGroup(ctx context.Context, req *pbds.CreateGroupReq) (*p
 		return nil, errf.New(errf.InvalidParameter, "group must not bind apps when public is set to true")
 	}
 
-	now := time.Now()
 	group := &table.Group{
 		Spec:       spec,
 		Attachment: req.Attachment.GroupAttachment(),
 		Revision: &table.Revision{
-			Creator:   kt.User,
-			Reviser:   kt.User,
-			CreatedAt: now,
-			UpdatedAt: now,
+			Creator: kt.User,
+			Reviser: kt.User,
 		},
 	}
 	tx := s.dao.GenQuery().Begin()
@@ -244,14 +240,12 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*p
 		return nil, errf.New(errf.InvalidParameter, "group must not bind apps when public is set to true")
 	}
 
-	now := time.Now()
 	new := &table.Group{
 		ID:         req.Id,
 		Spec:       spec,
 		Attachment: req.Attachment.GroupAttachment(),
 		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
+			Reviser: kt.User,
 		},
 	}
 

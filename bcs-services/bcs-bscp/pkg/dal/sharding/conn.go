@@ -41,7 +41,7 @@ func connect(opt cc.Database) (*sqlx.DB, error) {
 func URI(opt cc.Database) string {
 
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s)/%s?parseTime=true&loc=Local&timeout=%ds&readTimeout=%ds&writeTimeout=%ds&charset=%s",
+		"%s:%s@tcp(%s)/%s?parseTime=true&loc=UTC&timeout=%ds&readTimeout=%ds&writeTimeout=%ds&charset=%s",
 		opt.User,
 		opt.Password,
 		strings.Join(opt.Endpoints, ","),

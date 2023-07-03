@@ -49,7 +49,7 @@ func initAuditBuilderV2(kit *kit.Kit, bizID uint32, ad *audit) AuditPrepare {
 	ab := &AuditBuilderV2{
 		toAudit: &table.Audit{
 			BizID:     bizID,
-			CreatedAt: time.Now(),
+			CreatedAt: time.Now().UTC(),
 			Operator:  kit.User,
 			Rid:       kit.Rid,
 			AppCode:   kit.AppCode,

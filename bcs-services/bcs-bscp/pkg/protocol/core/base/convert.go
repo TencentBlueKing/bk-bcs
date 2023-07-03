@@ -14,6 +14,7 @@ package pbbase
 
 import (
 	"errors"
+	"time"
 
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/table"
@@ -47,8 +48,8 @@ func PbRevision(r *table.Revision) *Revision {
 	return &Revision{
 		Creator:  r.Creator,
 		Reviser:  r.Reviser,
-		CreateAt: r.CreatedAt.Format(constant.TimeStdFormat),
-		UpdateAt: r.UpdatedAt.Format(constant.TimeStdFormat),
+		CreateAt: r.CreatedAt.Format(time.RFC3339),
+		UpdateAt: r.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

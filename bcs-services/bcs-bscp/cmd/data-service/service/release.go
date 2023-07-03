@@ -16,7 +16,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 	"gorm.io/gorm"
@@ -45,7 +44,6 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		return nil, errors.New("app config items is empty")
 	}
 	// step2: query config item newest commit
-	now := time.Now()
 	for _, item := range cfgItems {
 		commit, e := s.dao.Commit().GetLatestCommit(grpcKit, req.Attachment.BizId, req.Attachment.AppId, item.ID)
 		if e != nil {
@@ -84,8 +82,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		Spec:       req.Spec.ReleaseSpec(),
 		Attachment: req.Attachment.ReleaseAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   grpcKit.User,
-			CreatedAt: now,
+			Creator: grpcKit.User,
 		},
 	}
 	id, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
