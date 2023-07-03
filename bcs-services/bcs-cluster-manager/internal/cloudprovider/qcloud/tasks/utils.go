@@ -244,3 +244,46 @@ func updateNodeGroupDesiredSize(nodeGroupID string, desiredSize uint32) error {
 
 	return nil
 }
+
+// createIfNotExistSecurityGroup If security group does not exist, create it
+func createIfNotExistSecurityGroup() (string, error) {
+	vpcCli := api.VPCClient{}
+	filters := []*api.Filter{{
+		Name:   common.GroupNameFilterKey,
+		Values: []string{common.GroupName},
+	}}
+	securityGroups, err := vpcCli.DescribeSecurityGroups(nil, filters)
+	if err != nil {
+		return "", err
+	}
+
+	if len(securityGroups) == 0 {
+		egress := []*cloudprovider.SecurityGroupPolicyOption{{
+			Action:    "ACCEPT",
+			Protocol:  "TCP",
+			Port:      "80",
+			CidrBlock: "0.0.0.0/0",
+		}}
+		ingress := []*cloudprovider.SecurityGroupPolicyOption{{
+			Action:    "ACCEPT",
+			Protocol:  "TCP",
+			Port:      "80",
+			CidrBlock: "0.0.0.0/0",
+		}}
+		opt := &cloudprovider.CreateSecurityGroupWithPoliciesOption{
+			GroupName:        common.GroupName,
+			GroupDescription: common.GroupDescription,
+			Egress:           egress,
+			Ingress:          ingress,
+		}
+		//创建安全组和规则
+		securityGroup, err := vpcCli.CreateSecurityGroupWithPolicies(opt)
+		if err != nil {
+			return "", err
+		}
+
+		return securityGroup.ID, nil
+	}
+
+	return securityGroups[0].ID, nil
+}

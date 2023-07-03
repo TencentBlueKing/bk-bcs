@@ -61,6 +61,92 @@ type VPCClient struct {
 	vpc *vpc.Client
 }
 
+// CreateSecurityGroup create security group
+// https://cloud.tencent.com/document/api/215/15806
+func (c *VPCClient) CreateSecurityGroup(opt *cloudprovider.CreateSecurityGroupOption) (
+	SecurityGroup, error) {
+	blog.Infof("CreateSecurityGroup input: groupName/%s, groupDescription/%s, projectId/%s, tags/%s",
+		opt.GroupName, opt.GroupDescription, opt.ProjectId, utils.ToJSONString(opt.Tags))
+	req := vpc.NewCreateSecurityGroupRequest()
+	req.GroupName = &opt.GroupName
+	req.GroupDescription = &opt.GroupDescription
+	req.ProjectId = &opt.ProjectId
+	req.Tags = make([]*vpc.Tag, 0)
+	for k, v := range opt.Tags {
+		req.Tags = append(req.Tags, &vpc.Tag{Key: common.StringPtr(k), Value: common.StringPtr(v)})
+	}
+
+	securityGroup := SecurityGroup{}
+
+	resp, err := c.vpc.CreateSecurityGroup(req)
+	if err != nil {
+		blog.Errorf("CreateSecurityGroup failed, err: %s", err.Error())
+		return securityGroup, err
+	}
+
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("CreateSecurityGroup resp is nil")
+		return securityGroup, fmt.Errorf("CreateSecurityGroup resp is nil")
+	}
+
+	blog.Infof("CreateSecurityGroup success, requestID: %s", resp.Response.RequestId)
+
+	securityGroup.ID = *resp.Response.SecurityGroup.SecurityGroupId
+	securityGroup.Name = *resp.Response.SecurityGroup.SecurityGroupName
+	securityGroup.Desc = *resp.Response.SecurityGroup.SecurityGroupDesc
+
+	return securityGroup, nil
+}
+
+// DeleteSecurityGroup delete security group
+// https://cloud.tencent.com/document/api/215/15803
+func (c *VPCClient) DeleteSecurityGroup(SecurityGroupId string) error {
+	blog.Infof("DeleteSecurityGroup input: SecurityGroupId/%s", SecurityGroupId)
+	req := vpc.NewDeleteSecurityGroupRequest()
+	req.SecurityGroupId = &SecurityGroupId
+
+	resp, err := c.vpc.DeleteSecurityGroup(req)
+	if err != nil {
+		blog.Errorf("DeleteSecurityGroup failed, err: %s", err.Error())
+		return err
+	}
+
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("DeleteSecurityGroup resp is nil")
+		return fmt.Errorf("DescribeSecurityGroups resp is nil")
+	}
+
+	blog.Infof("DeleteSecurityGroup success, requestID: %s", resp.Response.RequestId)
+
+	return nil
+}
+
+// ModifySecurityGroupAttribute modify aecurity group attribute
+// https://cloud.tencent.com/document/api/215/15805
+func (c *VPCClient) ModifySecurityGroupAttribute(SecurityGroupId, groupName, groupDescription string) error {
+	blog.Infof("ModifySecurityGroupAttribute input: SecurityGroupId/%s, groupName/%s, groupDescription/%s",
+		SecurityGroupId, groupName, groupDescription)
+	req := vpc.NewModifySecurityGroupAttributeRequest()
+	req.SecurityGroupId = &SecurityGroupId
+	req.GroupName = &groupName
+	req.GroupDescription = &groupDescription
+
+	resp, err := c.vpc.ModifySecurityGroupAttribute(req)
+	if err != nil {
+		blog.Errorf("ModifySecurityGroupAttribute failed, err: %s", err.Error())
+		return err
+	}
+
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("ModifySecurityGroupAttribute resp is nil")
+		return fmt.Errorf("ModifySecurityGroupAttribute resp is nil")
+	}
+
+	blog.Infof("ModifySecurityGroupAttribute success, requestID: %s", resp.Response.RequestId)
+
+	return nil
+}
+
 // DescribeSecurityGroups describe security groups
 // https://cloud.tencent.com/document/api/215/15808
 func (c *VPCClient) DescribeSecurityGroups(securityGroupIds []string, filters []*Filter) (
@@ -100,6 +186,52 @@ func (c *VPCClient) DescribeSecurityGroups(securityGroupIds []string, filters []
 		total = int(*resp.Response.TotalCount)
 	}
 	return sg, nil
+}
+
+// CreateSecurityGroupWithPolicies create security group with policies
+// https://cloud.tencent.com/document/api/215/43279
+func (c *VPCClient) CreateSecurityGroupWithPolicies(opt *cloudprovider.CreateSecurityGroupWithPoliciesOption) (
+	SecurityGroup, error) {
+	req := vpc.NewCreateSecurityGroupWithPoliciesRequest()
+	req.GroupName = common.StringPtr(opt.GroupName)
+	req.GroupDescription = common.StringPtr(opt.GroupDescription)
+	for _, v := range opt.Egress {
+		req.SecurityGroupPolicySet.Egress = append(req.SecurityGroupPolicySet.Egress, &vpc.SecurityGroupPolicy{
+			Action:    common.StringPtr(v.Action),
+			Protocol:  common.StringPtr(v.Protocol),
+			Port:      common.StringPtr(v.Port),
+			CidrBlock: common.StringPtr(v.CidrBlock),
+		})
+	}
+	for _, v := range opt.Ingress {
+		req.SecurityGroupPolicySet.Ingress = append(req.SecurityGroupPolicySet.Ingress, &vpc.SecurityGroupPolicy{
+			Action:    common.StringPtr(v.Action),
+			Protocol:  common.StringPtr(v.Protocol),
+			Port:      common.StringPtr(v.Port),
+			CidrBlock: common.StringPtr(v.CidrBlock),
+		})
+	}
+
+	securityGroup := SecurityGroup{}
+
+	resp, err := c.vpc.CreateSecurityGroupWithPolicies(req)
+	if err != nil {
+		blog.Errorf("CreateSecurityGroupWithPolicies failed, err: %s", err.Error())
+		return securityGroup, err
+	}
+
+	if resp == nil || resp.Response == nil {
+		blog.Errorf("CreateSecurityGroupWithPolicies resp is nil")
+		return securityGroup, fmt.Errorf("CreateSecurityGroupWithPolicies resp is nil")
+	}
+
+	blog.Infof("CreateSecurityGroupWithPolicies success, requestID: %s", resp.Response.RequestId)
+
+	securityGroup.ID = *resp.Response.SecurityGroup.SecurityGroupId
+	securityGroup.Name = *resp.Response.SecurityGroup.SecurityGroupName
+	securityGroup.Desc = *resp.Response.SecurityGroup.SecurityGroupDesc
+
+	return securityGroup, nil
 }
 
 // DescribeSubnets describe subnets
