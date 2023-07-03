@@ -27,82 +27,92 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Data_CreateApp_FullMethodName                  = "/pbds.Data/CreateApp"
-	Data_UpdateApp_FullMethodName                  = "/pbds.Data/UpdateApp"
-	Data_DeleteApp_FullMethodName                  = "/pbds.Data/DeleteApp"
-	Data_GetApp_FullMethodName                     = "/pbds.Data/GetApp"
-	Data_GetAppByID_FullMethodName                 = "/pbds.Data/GetAppByID"
-	Data_GetAppByName_FullMethodName               = "/pbds.Data/GetAppByName"
-	Data_ListAppsRest_FullMethodName               = "/pbds.Data/ListAppsRest"
-	Data_ListAppsByIDs_FullMethodName              = "/pbds.Data/ListAppsByIDs"
-	Data_CreateConfigItem_FullMethodName           = "/pbds.Data/CreateConfigItem"
-	Data_BatchUpsertConfigItems_FullMethodName     = "/pbds.Data/BatchUpsertConfigItems"
-	Data_UpdateConfigItem_FullMethodName           = "/pbds.Data/UpdateConfigItem"
-	Data_DeleteConfigItem_FullMethodName           = "/pbds.Data/DeleteConfigItem"
-	Data_GetConfigItem_FullMethodName              = "/pbds.Data/GetConfigItem"
-	Data_ListConfigItems_FullMethodName            = "/pbds.Data/ListConfigItems"
-	Data_ListConfigItemCount_FullMethodName        = "/pbds.Data/ListConfigItemCount"
-	Data_CreateConfigHook_FullMethodName           = "/pbds.Data/CreateConfigHook"
-	Data_UpdateConfigHook_FullMethodName           = "/pbds.Data/UpdateConfigHook"
-	Data_GetConfigHook_FullMethodName              = "/pbds.Data/GetConfigHook"
-	Data_CreateContent_FullMethodName              = "/pbds.Data/CreateContent"
-	Data_GetContent_FullMethodName                 = "/pbds.Data/GetContent"
-	Data_CreateCommit_FullMethodName               = "/pbds.Data/CreateCommit"
-	Data_GetLatestCommit_FullMethodName            = "/pbds.Data/GetLatestCommit"
-	Data_CreateRelease_FullMethodName              = "/pbds.Data/CreateRelease"
-	Data_ListReleases_FullMethodName               = "/pbds.Data/ListReleases"
-	Data_GetReleasedConfigItem_FullMethodName      = "/pbds.Data/GetReleasedConfigItem"
-	Data_CreateHook_FullMethodName                 = "/pbds.Data/CreateHook"
-	Data_ListHooks_FullMethodName                  = "/pbds.Data/ListHooks"
-	Data_DeleteHook_FullMethodName                 = "/pbds.Data/DeleteHook"
-	Data_ListHookTags_FullMethodName               = "/pbds.Data/ListHookTags"
-	Data_GetHook_FullMethodName                    = "/pbds.Data/GetHook"
-	Data_CreateHookRelease_FullMethodName          = "/pbds.Data/CreateHookRelease"
-	Data_ListHookReleases_FullMethodName           = "/pbds.Data/ListHookReleases"
-	Data_GetHookReleaseByID_FullMethodName         = "/pbds.Data/GetHookReleaseByID"
-	Data_DeleteHookRelease_FullMethodName          = "/pbds.Data/DeleteHookRelease"
-	Data_PublishHookRelease_FullMethodName         = "/pbds.Data/PublishHookRelease"
-	Data_GetHookReleaseByPubState_FullMethodName   = "/pbds.Data/GetHookReleaseByPubState"
-	Data_UpdateHookRelease_FullMethodName          = "/pbds.Data/UpdateHookRelease"
-	Data_ListHookReleasesReferences_FullMethodName = "/pbds.Data/ListHookReleasesReferences"
-	Data_CreateTemplateSpace_FullMethodName        = "/pbds.Data/CreateTemplateSpace"
-	Data_ListTemplateSpaces_FullMethodName         = "/pbds.Data/ListTemplateSpaces"
-	Data_UpdateTemplateSpace_FullMethodName        = "/pbds.Data/UpdateTemplateSpace"
-	Data_DeleteTemplateSpace_FullMethodName        = "/pbds.Data/DeleteTemplateSpace"
-	Data_GetAllBizsOfTemplateSpaces_FullMethodName = "/pbds.Data/GetAllBizsOfTemplateSpaces"
-	Data_CreateDefaultTemplateSpace_FullMethodName = "/pbds.Data/CreateDefaultTemplateSpace"
-	Data_CreateTemplate_FullMethodName             = "/pbds.Data/CreateTemplate"
-	Data_ListTemplates_FullMethodName              = "/pbds.Data/ListTemplates"
-	Data_UpdateTemplate_FullMethodName             = "/pbds.Data/UpdateTemplate"
-	Data_DeleteTemplate_FullMethodName             = "/pbds.Data/DeleteTemplate"
-	Data_CreateTemplateRelease_FullMethodName      = "/pbds.Data/CreateTemplateRelease"
-	Data_ListTemplateReleases_FullMethodName       = "/pbds.Data/ListTemplateReleases"
-	Data_DeleteTemplateRelease_FullMethodName      = "/pbds.Data/DeleteTemplateRelease"
-	Data_CreateTemplateSet_FullMethodName          = "/pbds.Data/CreateTemplateSet"
-	Data_ListTemplateSets_FullMethodName           = "/pbds.Data/ListTemplateSets"
-	Data_UpdateTemplateSet_FullMethodName          = "/pbds.Data/UpdateTemplateSet"
-	Data_DeleteTemplateSet_FullMethodName          = "/pbds.Data/DeleteTemplateSet"
-	Data_CreateAppTemplateBinding_FullMethodName   = "/pbds.Data/CreateAppTemplateBinding"
-	Data_ListAppTemplateBindings_FullMethodName    = "/pbds.Data/ListAppTemplateBindings"
-	Data_UpdateAppTemplateBinding_FullMethodName   = "/pbds.Data/UpdateAppTemplateBinding"
-	Data_DeleteAppTemplateBinding_FullMethodName   = "/pbds.Data/DeleteAppTemplateBinding"
-	Data_CreateGroup_FullMethodName                = "/pbds.Data/CreateGroup"
-	Data_ListAllGroups_FullMethodName              = "/pbds.Data/ListAllGroups"
-	Data_ListAppGroups_FullMethodName              = "/pbds.Data/ListAppGroups"
-	Data_UpdateGroup_FullMethodName                = "/pbds.Data/UpdateGroup"
-	Data_DeleteGroup_FullMethodName                = "/pbds.Data/DeleteGroup"
-	Data_CountGroupsReleasedApps_FullMethodName    = "/pbds.Data/CountGroupsReleasedApps"
-	Data_ListGroupRleasesdApps_FullMethodName      = "/pbds.Data/ListGroupRleasesdApps"
-	Data_Publish_FullMethodName                    = "/pbds.Data/Publish"
-	Data_GenerateReleaseAndPublish_FullMethodName  = "/pbds.Data/GenerateReleaseAndPublish"
-	Data_CreateCredential_FullMethodName           = "/pbds.Data/CreateCredential"
-	Data_ListCredentials_FullMethodName            = "/pbds.Data/ListCredentials"
-	Data_DeleteCredential_FullMethodName           = "/pbds.Data/DeleteCredential"
-	Data_UpdateCredential_FullMethodName           = "/pbds.Data/UpdateCredential"
-	Data_ListCredentialScopes_FullMethodName       = "/pbds.Data/ListCredentialScopes"
-	Data_UpdateCredentialScopes_FullMethodName     = "/pbds.Data/UpdateCredentialScopes"
-	Data_ListInstances_FullMethodName              = "/pbds.Data/ListInstances"
-	Data_Ping_FullMethodName                       = "/pbds.Data/Ping"
+	Data_CreateApp_FullMethodName                                 = "/pbds.Data/CreateApp"
+	Data_UpdateApp_FullMethodName                                 = "/pbds.Data/UpdateApp"
+	Data_DeleteApp_FullMethodName                                 = "/pbds.Data/DeleteApp"
+	Data_GetApp_FullMethodName                                    = "/pbds.Data/GetApp"
+	Data_GetAppByID_FullMethodName                                = "/pbds.Data/GetAppByID"
+	Data_GetAppByName_FullMethodName                              = "/pbds.Data/GetAppByName"
+	Data_ListAppsRest_FullMethodName                              = "/pbds.Data/ListAppsRest"
+	Data_ListAppsByIDs_FullMethodName                             = "/pbds.Data/ListAppsByIDs"
+	Data_CreateConfigItem_FullMethodName                          = "/pbds.Data/CreateConfigItem"
+	Data_BatchUpsertConfigItems_FullMethodName                    = "/pbds.Data/BatchUpsertConfigItems"
+	Data_UpdateConfigItem_FullMethodName                          = "/pbds.Data/UpdateConfigItem"
+	Data_DeleteConfigItem_FullMethodName                          = "/pbds.Data/DeleteConfigItem"
+	Data_GetConfigItem_FullMethodName                             = "/pbds.Data/GetConfigItem"
+	Data_ListConfigItems_FullMethodName                           = "/pbds.Data/ListConfigItems"
+	Data_ListConfigItemCount_FullMethodName                       = "/pbds.Data/ListConfigItemCount"
+	Data_CreateConfigHook_FullMethodName                          = "/pbds.Data/CreateConfigHook"
+	Data_UpdateConfigHook_FullMethodName                          = "/pbds.Data/UpdateConfigHook"
+	Data_GetConfigHook_FullMethodName                             = "/pbds.Data/GetConfigHook"
+	Data_CreateContent_FullMethodName                             = "/pbds.Data/CreateContent"
+	Data_GetContent_FullMethodName                                = "/pbds.Data/GetContent"
+	Data_CreateCommit_FullMethodName                              = "/pbds.Data/CreateCommit"
+	Data_GetLatestCommit_FullMethodName                           = "/pbds.Data/GetLatestCommit"
+	Data_CreateRelease_FullMethodName                             = "/pbds.Data/CreateRelease"
+	Data_ListReleases_FullMethodName                              = "/pbds.Data/ListReleases"
+	Data_GetReleasedConfigItem_FullMethodName                     = "/pbds.Data/GetReleasedConfigItem"
+	Data_CreateHook_FullMethodName                                = "/pbds.Data/CreateHook"
+	Data_ListHooks_FullMethodName                                 = "/pbds.Data/ListHooks"
+	Data_DeleteHook_FullMethodName                                = "/pbds.Data/DeleteHook"
+	Data_ListHookTags_FullMethodName                              = "/pbds.Data/ListHookTags"
+	Data_GetHook_FullMethodName                                   = "/pbds.Data/GetHook"
+	Data_CreateHookRelease_FullMethodName                         = "/pbds.Data/CreateHookRelease"
+	Data_ListHookReleases_FullMethodName                          = "/pbds.Data/ListHookReleases"
+	Data_GetHookReleaseByID_FullMethodName                        = "/pbds.Data/GetHookReleaseByID"
+	Data_DeleteHookRelease_FullMethodName                         = "/pbds.Data/DeleteHookRelease"
+	Data_PublishHookRelease_FullMethodName                        = "/pbds.Data/PublishHookRelease"
+	Data_GetHookReleaseByPubState_FullMethodName                  = "/pbds.Data/GetHookReleaseByPubState"
+	Data_UpdateHookRelease_FullMethodName                         = "/pbds.Data/UpdateHookRelease"
+	Data_ListHookReleasesReferences_FullMethodName                = "/pbds.Data/ListHookReleasesReferences"
+	Data_CreateTemplateSpace_FullMethodName                       = "/pbds.Data/CreateTemplateSpace"
+	Data_ListTemplateSpaces_FullMethodName                        = "/pbds.Data/ListTemplateSpaces"
+	Data_UpdateTemplateSpace_FullMethodName                       = "/pbds.Data/UpdateTemplateSpace"
+	Data_DeleteTemplateSpace_FullMethodName                       = "/pbds.Data/DeleteTemplateSpace"
+	Data_GetAllBizsOfTemplateSpaces_FullMethodName                = "/pbds.Data/GetAllBizsOfTemplateSpaces"
+	Data_CreateDefaultTemplateSpace_FullMethodName                = "/pbds.Data/CreateDefaultTemplateSpace"
+	Data_CreateTemplate_FullMethodName                            = "/pbds.Data/CreateTemplate"
+	Data_ListTemplates_FullMethodName                             = "/pbds.Data/ListTemplates"
+	Data_UpdateTemplate_FullMethodName                            = "/pbds.Data/UpdateTemplate"
+	Data_DeleteTemplate_FullMethodName                            = "/pbds.Data/DeleteTemplate"
+	Data_CreateTemplateRelease_FullMethodName                     = "/pbds.Data/CreateTemplateRelease"
+	Data_ListTemplateReleases_FullMethodName                      = "/pbds.Data/ListTemplateReleases"
+	Data_DeleteTemplateRelease_FullMethodName                     = "/pbds.Data/DeleteTemplateRelease"
+	Data_CreateTemplateSet_FullMethodName                         = "/pbds.Data/CreateTemplateSet"
+	Data_ListTemplateSets_FullMethodName                          = "/pbds.Data/ListTemplateSets"
+	Data_UpdateTemplateSet_FullMethodName                         = "/pbds.Data/UpdateTemplateSet"
+	Data_DeleteTemplateSet_FullMethodName                         = "/pbds.Data/DeleteTemplateSet"
+	Data_CreateAppTemplateBinding_FullMethodName                  = "/pbds.Data/CreateAppTemplateBinding"
+	Data_ListAppTemplateBindings_FullMethodName                   = "/pbds.Data/ListAppTemplateBindings"
+	Data_UpdateAppTemplateBinding_FullMethodName                  = "/pbds.Data/UpdateAppTemplateBinding"
+	Data_DeleteAppTemplateBinding_FullMethodName                  = "/pbds.Data/DeleteAppTemplateBinding"
+	Data_ListTemplateBoundCounts_FullMethodName                   = "/pbds.Data/ListTemplateBoundCounts"
+	Data_ListTemplateReleaseBoundCounts_FullMethodName            = "/pbds.Data/ListTemplateReleaseBoundCounts"
+	Data_ListTemplateSetBoundCounts_FullMethodName                = "/pbds.Data/ListTemplateSetBoundCounts"
+	Data_ListTemplateBoundUnnamedAppDetails_FullMethodName        = "/pbds.Data/ListTemplateBoundUnnamedAppDetails"
+	Data_ListTemplateBoundNamedAppDetails_FullMethodName          = "/pbds.Data/ListTemplateBoundNamedAppDetails"
+	Data_ListTemplateBoundTemplateSetDetails_FullMethodName       = "/pbds.Data/ListTemplateBoundTemplateSetDetails"
+	Data_ListTemplateReleaseBoundUnnamedAppDetails_FullMethodName = "/pbds.Data/ListTemplateReleaseBoundUnnamedAppDetails"
+	Data_ListTemplateReleaseBoundNamedAppDetails_FullMethodName   = "/pbds.Data/ListTemplateReleaseBoundNamedAppDetails"
+	Data_ListTemplateSetBoundUnnamedAppDetails_FullMethodName     = "/pbds.Data/ListTemplateSetBoundUnnamedAppDetails"
+	Data_ListTemplateSetBoundNamedAppDetails_FullMethodName       = "/pbds.Data/ListTemplateSetBoundNamedAppDetails"
+	Data_CreateGroup_FullMethodName                               = "/pbds.Data/CreateGroup"
+	Data_ListAllGroups_FullMethodName                             = "/pbds.Data/ListAllGroups"
+	Data_ListAppGroups_FullMethodName                             = "/pbds.Data/ListAppGroups"
+	Data_UpdateGroup_FullMethodName                               = "/pbds.Data/UpdateGroup"
+	Data_DeleteGroup_FullMethodName                               = "/pbds.Data/DeleteGroup"
+	Data_CountGroupsReleasedApps_FullMethodName                   = "/pbds.Data/CountGroupsReleasedApps"
+	Data_ListGroupRleasesdApps_FullMethodName                     = "/pbds.Data/ListGroupRleasesdApps"
+	Data_Publish_FullMethodName                                   = "/pbds.Data/Publish"
+	Data_GenerateReleaseAndPublish_FullMethodName                 = "/pbds.Data/GenerateReleaseAndPublish"
+	Data_CreateCredential_FullMethodName                          = "/pbds.Data/CreateCredential"
+	Data_ListCredentials_FullMethodName                           = "/pbds.Data/ListCredentials"
+	Data_DeleteCredential_FullMethodName                          = "/pbds.Data/DeleteCredential"
+	Data_UpdateCredential_FullMethodName                          = "/pbds.Data/UpdateCredential"
+	Data_ListCredentialScopes_FullMethodName                      = "/pbds.Data/ListCredentialScopes"
+	Data_UpdateCredentialScopes_FullMethodName                    = "/pbds.Data/UpdateCredentialScopes"
+	Data_ListInstances_FullMethodName                             = "/pbds.Data/ListInstances"
+	Data_Ping_FullMethodName                                      = "/pbds.Data/Ping"
 )
 
 // DataClient is the client API for Data service.
@@ -182,6 +192,17 @@ type DataClient interface {
 	ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error)
 	UpdateAppTemplateBinding(ctx context.Context, in *UpdateAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	// template binding relation related interface.
+	ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error)
+	ListTemplateReleaseBoundCounts(ctx context.Context, in *ListTemplateReleaseBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateReleaseBoundCountsResp, error)
+	ListTemplateSetBoundCounts(ctx context.Context, in *ListTemplateSetBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundCountsResp, error)
+	ListTemplateBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundUnnamedAppDetailsResp, error)
+	ListTemplateBoundNamedAppDetails(ctx context.Context, in *ListTemplateBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundNamedAppDetailsResp, error)
+	ListTemplateBoundTemplateSetDetails(ctx context.Context, in *ListTemplateBoundTemplateSetDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundTemplateSetDetailsResp, error)
+	ListTemplateReleaseBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateReleaseBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateReleaseBoundUnnamedAppDetailsResp, error)
+	ListTemplateReleaseBoundNamedAppDetails(ctx context.Context, in *ListTemplateReleaseBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateReleaseBoundNamedAppDetailsResp, error)
+	ListTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundUnnamedAppDetailsResp, error)
+	ListTemplateSetBoundNamedAppDetails(ctx context.Context, in *ListTemplateSetBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundNamedAppDetailsResp, error)
 	// group related interface.
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
@@ -747,6 +768,96 @@ func (c *dataClient) DeleteAppTemplateBinding(ctx context.Context, in *DeleteApp
 	return out, nil
 }
 
+func (c *dataClient) ListTemplateBoundCounts(ctx context.Context, in *ListTemplateBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateBoundCountsResp, error) {
+	out := new(ListTemplateBoundCountsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateBoundCounts_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateReleaseBoundCounts(ctx context.Context, in *ListTemplateReleaseBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateReleaseBoundCountsResp, error) {
+	out := new(ListTemplateReleaseBoundCountsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateReleaseBoundCounts_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateSetBoundCounts(ctx context.Context, in *ListTemplateSetBoundCountsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundCountsResp, error) {
+	out := new(ListTemplateSetBoundCountsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateSetBoundCounts_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundUnnamedAppDetailsResp, error) {
+	out := new(ListTemplateBoundUnnamedAppDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateBoundUnnamedAppDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateBoundNamedAppDetails(ctx context.Context, in *ListTemplateBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundNamedAppDetailsResp, error) {
+	out := new(ListTemplateBoundNamedAppDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateBoundNamedAppDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateBoundTemplateSetDetails(ctx context.Context, in *ListTemplateBoundTemplateSetDetailsReq, opts ...grpc.CallOption) (*ListTemplateBoundTemplateSetDetailsResp, error) {
+	out := new(ListTemplateBoundTemplateSetDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateBoundTemplateSetDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateReleaseBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateReleaseBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateReleaseBoundUnnamedAppDetailsResp, error) {
+	out := new(ListTemplateReleaseBoundUnnamedAppDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateReleaseBoundUnnamedAppDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateReleaseBoundNamedAppDetails(ctx context.Context, in *ListTemplateReleaseBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateReleaseBoundNamedAppDetailsResp, error) {
+	out := new(ListTemplateReleaseBoundNamedAppDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateReleaseBoundNamedAppDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateSetBoundUnnamedAppDetails(ctx context.Context, in *ListTemplateSetBoundUnnamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundUnnamedAppDetailsResp, error) {
+	out := new(ListTemplateSetBoundUnnamedAppDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateSetBoundUnnamedAppDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListTemplateSetBoundNamedAppDetails(ctx context.Context, in *ListTemplateSetBoundNamedAppDetailsReq, opts ...grpc.CallOption) (*ListTemplateSetBoundNamedAppDetailsResp, error) {
+	out := new(ListTemplateSetBoundNamedAppDetailsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateSetBoundNamedAppDetails_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateGroup_FullMethodName, in, out, opts...)
@@ -977,6 +1088,17 @@ type DataServer interface {
 	ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error)
 	UpdateAppTemplateBinding(context.Context, *UpdateAppTemplateBindingReq) (*base.EmptyResp, error)
 	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error)
+	// template binding relation related interface.
+	ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error)
+	ListTemplateReleaseBoundCounts(context.Context, *ListTemplateReleaseBoundCountsReq) (*ListTemplateReleaseBoundCountsResp, error)
+	ListTemplateSetBoundCounts(context.Context, *ListTemplateSetBoundCountsReq) (*ListTemplateSetBoundCountsResp, error)
+	ListTemplateBoundUnnamedAppDetails(context.Context, *ListTemplateBoundUnnamedAppDetailsReq) (*ListTemplateBoundUnnamedAppDetailsResp, error)
+	ListTemplateBoundNamedAppDetails(context.Context, *ListTemplateBoundNamedAppDetailsReq) (*ListTemplateBoundNamedAppDetailsResp, error)
+	ListTemplateBoundTemplateSetDetails(context.Context, *ListTemplateBoundTemplateSetDetailsReq) (*ListTemplateBoundTemplateSetDetailsResp, error)
+	ListTemplateReleaseBoundUnnamedAppDetails(context.Context, *ListTemplateReleaseBoundUnnamedAppDetailsReq) (*ListTemplateReleaseBoundUnnamedAppDetailsResp, error)
+	ListTemplateReleaseBoundNamedAppDetails(context.Context, *ListTemplateReleaseBoundNamedAppDetailsReq) (*ListTemplateReleaseBoundNamedAppDetailsResp, error)
+	ListTemplateSetBoundUnnamedAppDetails(context.Context, *ListTemplateSetBoundUnnamedAppDetailsReq) (*ListTemplateSetBoundUnnamedAppDetailsResp, error)
+	ListTemplateSetBoundNamedAppDetails(context.Context, *ListTemplateSetBoundNamedAppDetailsReq) (*ListTemplateSetBoundNamedAppDetailsResp, error)
 	// group related interface.
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error)
 	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
@@ -1183,6 +1305,36 @@ func (UnimplementedDataServer) UpdateAppTemplateBinding(context.Context, *Update
 }
 func (UnimplementedDataServer) DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAppTemplateBinding not implemented")
+}
+func (UnimplementedDataServer) ListTemplateBoundCounts(context.Context, *ListTemplateBoundCountsReq) (*ListTemplateBoundCountsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundCounts not implemented")
+}
+func (UnimplementedDataServer) ListTemplateReleaseBoundCounts(context.Context, *ListTemplateReleaseBoundCountsReq) (*ListTemplateReleaseBoundCountsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateReleaseBoundCounts not implemented")
+}
+func (UnimplementedDataServer) ListTemplateSetBoundCounts(context.Context, *ListTemplateSetBoundCountsReq) (*ListTemplateSetBoundCountsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetBoundCounts not implemented")
+}
+func (UnimplementedDataServer) ListTemplateBoundUnnamedAppDetails(context.Context, *ListTemplateBoundUnnamedAppDetailsReq) (*ListTemplateBoundUnnamedAppDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundUnnamedAppDetails not implemented")
+}
+func (UnimplementedDataServer) ListTemplateBoundNamedAppDetails(context.Context, *ListTemplateBoundNamedAppDetailsReq) (*ListTemplateBoundNamedAppDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundNamedAppDetails not implemented")
+}
+func (UnimplementedDataServer) ListTemplateBoundTemplateSetDetails(context.Context, *ListTemplateBoundTemplateSetDetailsReq) (*ListTemplateBoundTemplateSetDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateBoundTemplateSetDetails not implemented")
+}
+func (UnimplementedDataServer) ListTemplateReleaseBoundUnnamedAppDetails(context.Context, *ListTemplateReleaseBoundUnnamedAppDetailsReq) (*ListTemplateReleaseBoundUnnamedAppDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateReleaseBoundUnnamedAppDetails not implemented")
+}
+func (UnimplementedDataServer) ListTemplateReleaseBoundNamedAppDetails(context.Context, *ListTemplateReleaseBoundNamedAppDetailsReq) (*ListTemplateReleaseBoundNamedAppDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateReleaseBoundNamedAppDetails not implemented")
+}
+func (UnimplementedDataServer) ListTemplateSetBoundUnnamedAppDetails(context.Context, *ListTemplateSetBoundUnnamedAppDetailsReq) (*ListTemplateSetBoundUnnamedAppDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetBoundUnnamedAppDetails not implemented")
+}
+func (UnimplementedDataServer) ListTemplateSetBoundNamedAppDetails(context.Context, *ListTemplateSetBoundNamedAppDetailsReq) (*ListTemplateSetBoundNamedAppDetailsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetBoundNamedAppDetails not implemented")
 }
 func (UnimplementedDataServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
@@ -2309,6 +2461,186 @@ func _Data_DeleteAppTemplateBinding_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListTemplateBoundCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateBoundCountsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateBoundCounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateBoundCounts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateBoundCounts(ctx, req.(*ListTemplateBoundCountsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateReleaseBoundCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateReleaseBoundCountsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateReleaseBoundCounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateReleaseBoundCounts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateReleaseBoundCounts(ctx, req.(*ListTemplateReleaseBoundCountsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateSetBoundCounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSetBoundCountsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateSetBoundCounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateSetBoundCounts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateSetBoundCounts(ctx, req.(*ListTemplateSetBoundCountsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateBoundUnnamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateBoundUnnamedAppDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateBoundUnnamedAppDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateBoundUnnamedAppDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateBoundUnnamedAppDetails(ctx, req.(*ListTemplateBoundUnnamedAppDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateBoundNamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateBoundNamedAppDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateBoundNamedAppDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateBoundNamedAppDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateBoundNamedAppDetails(ctx, req.(*ListTemplateBoundNamedAppDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateBoundTemplateSetDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateBoundTemplateSetDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateBoundTemplateSetDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateBoundTemplateSetDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateBoundTemplateSetDetails(ctx, req.(*ListTemplateBoundTemplateSetDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateReleaseBoundUnnamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateReleaseBoundUnnamedAppDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateReleaseBoundUnnamedAppDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateReleaseBoundUnnamedAppDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateReleaseBoundUnnamedAppDetails(ctx, req.(*ListTemplateReleaseBoundUnnamedAppDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateReleaseBoundNamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateReleaseBoundNamedAppDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateReleaseBoundNamedAppDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateReleaseBoundNamedAppDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateReleaseBoundNamedAppDetails(ctx, req.(*ListTemplateReleaseBoundNamedAppDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateSetBoundUnnamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSetBoundUnnamedAppDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateSetBoundUnnamedAppDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateSetBoundUnnamedAppDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateSetBoundUnnamedAppDetails(ctx, req.(*ListTemplateSetBoundUnnamedAppDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListTemplateSetBoundNamedAppDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSetBoundNamedAppDetailsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateSetBoundNamedAppDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateSetBoundNamedAppDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateSetBoundNamedAppDetails(ctx, req.(*ListTemplateSetBoundNamedAppDetailsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateGroupReq)
 	if err := dec(in); err != nil {
@@ -2857,6 +3189,46 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteAppTemplateBinding",
 			Handler:    _Data_DeleteAppTemplateBinding_Handler,
+		},
+		{
+			MethodName: "ListTemplateBoundCounts",
+			Handler:    _Data_ListTemplateBoundCounts_Handler,
+		},
+		{
+			MethodName: "ListTemplateReleaseBoundCounts",
+			Handler:    _Data_ListTemplateReleaseBoundCounts_Handler,
+		},
+		{
+			MethodName: "ListTemplateSetBoundCounts",
+			Handler:    _Data_ListTemplateSetBoundCounts_Handler,
+		},
+		{
+			MethodName: "ListTemplateBoundUnnamedAppDetails",
+			Handler:    _Data_ListTemplateBoundUnnamedAppDetails_Handler,
+		},
+		{
+			MethodName: "ListTemplateBoundNamedAppDetails",
+			Handler:    _Data_ListTemplateBoundNamedAppDetails_Handler,
+		},
+		{
+			MethodName: "ListTemplateBoundTemplateSetDetails",
+			Handler:    _Data_ListTemplateBoundTemplateSetDetails_Handler,
+		},
+		{
+			MethodName: "ListTemplateReleaseBoundUnnamedAppDetails",
+			Handler:    _Data_ListTemplateReleaseBoundUnnamedAppDetails_Handler,
+		},
+		{
+			MethodName: "ListTemplateReleaseBoundNamedAppDetails",
+			Handler:    _Data_ListTemplateReleaseBoundNamedAppDetails_Handler,
+		},
+		{
+			MethodName: "ListTemplateSetBoundUnnamedAppDetails",
+			Handler:    _Data_ListTemplateSetBoundUnnamedAppDetails_Handler,
+		},
+		{
+			MethodName: "ListTemplateSetBoundNamedAppDetails",
+			Handler:    _Data_ListTemplateSetBoundNamedAppDetails_Handler,
 		},
 		{
 			MethodName: "CreateGroup",

@@ -29,10 +29,11 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbcs.CreateTemplat
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.CreateTemplateSetResp)
 
-	templateIDsLen := len(req.TemplateIds)
-	if templateIDsLen <= 0 || templateIDsLen > 500 {
+	// validate input param
+	idsLen := len(req.TemplateIds)
+	if idsLen == 0 || idsLen > 500 {
 		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,500]",
-			templateIDsLen)
+			idsLen)
 	}
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSet, Action: meta.Create,

@@ -190,9 +190,6 @@ func (u *TemplateBindings) Scan(value interface{}) error {
 	return nil
 }
 
-// AppTemplateBindingType is the type of AppTemplateBinding
-type AppTemplateBindingType string
-
 // ValidateCreate validate AppTemplateBinding spec when it is created.
 func (t *AppTemplateBindingSpec) ValidateCreate() error {
 	return validateBindings(t.Bindings)

@@ -15,6 +15,7 @@ import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
+import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_relation.proto";
 import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
@@ -112,6 +113,25 @@ service Data {
     rpc ListAppTemplateBindings(ListAppTemplateBindingsReq) returns (ListAppTemplateBindingsResp) {}
     rpc UpdateAppTemplateBinding(UpdateAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
     rpc DeleteAppTemplateBinding(DeleteAppTemplateBindingReq) returns (pbbase.EmptyResp) {}
+
+    // template binding relation related interface.
+    rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {}
+    rpc ListTemplateReleaseBoundCounts(ListTemplateReleaseBoundCountsReq) returns (ListTemplateReleaseBoundCountsResp){}
+    rpc ListTemplateSetBoundCounts(ListTemplateSetBoundCountsReq) returns (ListTemplateSetBoundCountsResp){}
+    rpc ListTemplateBoundUnnamedAppDetails(ListTemplateBoundUnnamedAppDetailsReq) returns
+        (ListTemplateBoundUnnamedAppDetailsResp){}
+    rpc ListTemplateBoundNamedAppDetails(ListTemplateBoundNamedAppDetailsReq) returns
+        (ListTemplateBoundNamedAppDetailsResp) {}
+    rpc ListTemplateBoundTemplateSetDetails(ListTemplateBoundTemplateSetDetailsReq) returns
+        (ListTemplateBoundTemplateSetDetailsResp) {}
+    rpc ListTemplateReleaseBoundUnnamedAppDetails(ListTemplateReleaseBoundUnnamedAppDetailsReq) returns
+        (ListTemplateReleaseBoundUnnamedAppDetailsResp){}
+    rpc ListTemplateReleaseBoundNamedAppDetails(ListTemplateReleaseBoundNamedAppDetailsReq) returns
+        (ListTemplateReleaseBoundNamedAppDetailsResp) {}
+    rpc ListTemplateSetBoundUnnamedAppDetails(ListTemplateSetBoundUnnamedAppDetailsReq) returns
+        (ListTemplateSetBoundUnnamedAppDetailsResp){}
+    rpc ListTemplateSetBoundNamedAppDetails(ListTemplateSetBoundNamedAppDetailsReq) returns
+        (ListTemplateSetBoundNamedAppDetailsResp){}
 
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
@@ -372,13 +392,13 @@ message CreateReleaseReq {
 }
 
 message ListReleasesReq {
-    uint32                 biz_id     = 1;
-    uint32                 app_id     = 2;
-    bool                   deprecated = 3;
-    uint32                 start      = 4;
-    uint32                 limit      = 5;
-    bool                   all        = 6;
-    string                 searchKey  = 7;
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    bool   deprecated = 3;
+    uint32 start      = 4;
+    uint32 limit      = 5;
+    bool   all        = 6;
+    string searchKey  = 7;
 }
 
 message ListReleasesResp {
@@ -656,13 +676,137 @@ message DeleteAppTemplateBindingReq {
     pbatb.AppTemplateBindingAttachment attachment = 2;
 }
 
+message ListTemplateBoundCountsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+}
+
+message ListTemplateBoundCountsResp {
+    repeated pbtbr.TemplateBoundCounts details = 1;
+}
+
+message ListTemplateReleaseBoundCountsReq {
+    uint32          biz_id               = 1;
+    uint32          template_space_id    = 2;
+    uint32          template_id          = 3;
+    repeated uint32 template_release_ids = 4;
+}
+
+message ListTemplateReleaseBoundCountsResp {
+    repeated pbtbr.TemplateReleaseBoundCounts details = 1;
+}
+
+message ListTemplateSetBoundCountsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_set_ids  = 3;
+}
+
+message ListTemplateSetBoundCountsResp {
+    repeated pbtbr.TemplateSetBoundCounts details = 1;
+}
+
+message ListTemplateBoundUnnamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateBoundUnnamedAppDetailsResp {
+    uint32                                       count   = 1;
+    repeated pbtbr.TemplateBoundUnnamedAppDetail details = 2;
+}
+
+message ListTemplateBoundNamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateBoundNamedAppDetailsResp {
+    uint32                                     count   = 1;
+    repeated pbtbr.TemplateBoundNamedAppDetail details = 2;
+}
+
+message ListTemplateBoundTemplateSetDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateBoundTemplateSetDetailsResp {
+    uint32                                        count   = 1;
+    repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
+}
+
+message ListTemplateReleaseBoundUnnamedAppDetailsReq {
+    uint32 biz_id              = 1;
+    uint32 template_space_id   = 2;
+    uint32 template_id         = 3;
+    uint32 template_release_id = 4;
+    uint32 start               = 5;
+    uint32 limit               = 6;
+}
+
+message ListTemplateReleaseBoundUnnamedAppDetailsResp {
+    uint32                                              count   = 1;
+    repeated pbtbr.TemplateReleaseBoundUnnamedAppDetail details = 2;
+}
+
+message ListTemplateReleaseBoundNamedAppDetailsReq {
+    uint32 biz_id              = 1;
+    uint32 template_space_id   = 2;
+    uint32 template_id         = 3;
+    uint32 template_release_id = 4;
+    uint32 start               = 5;
+    uint32 limit               = 6;
+}
+
+message ListTemplateReleaseBoundNamedAppDetailsResp {
+    uint32                                            count   = 1;
+    repeated pbtbr.TemplateReleaseBoundNamedAppDetail details = 2;
+}
+
+message ListTemplateSetBoundUnnamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateSetBoundUnnamedAppDetailsResp {
+    uint32                                          count   = 1;
+    repeated pbtbr.TemplateSetBoundUnnamedAppDetail details = 2;
+}
+
+message ListTemplateSetBoundNamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateSetBoundNamedAppDetailsResp {
+    uint32                                        count   = 1;
+    repeated pbtbr.TemplateSetBoundNamedAppDetail details = 2;
+}
+
 message CreateGroupReq {
     pbgroup.GroupAttachment attachment = 1;
     pbgroup.GroupSpec       spec       = 2;
 }
 
 message ListAllGroupsReq {
-    uint32                 biz_id = 1;
+    uint32 biz_id = 1;
 }
 
 message ListAllGroupsResp {
