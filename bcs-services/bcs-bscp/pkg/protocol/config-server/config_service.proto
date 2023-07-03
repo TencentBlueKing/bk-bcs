@@ -11,6 +11,7 @@ import "bscp.io/pkg/protocol/core/hook/hook.proto";
 import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
+import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_relation.proto";
 import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
@@ -312,6 +313,67 @@ service Config {
     rpc ListAppTemplateBindings(ListAppTemplateBindingsReq) returns (ListAppTemplateBindingsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings"
+        };
+    }
+
+    rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/bound_counts"
+            body : "*"
+        };
+    }
+    rpc ListTemplateReleaseBoundCounts(ListTemplateReleaseBoundCountsReq) returns (ListTemplateReleaseBoundCountsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/bound_counts"
+            body : "*"
+        };
+    }
+    rpc ListTemplateSetBoundCounts(ListTemplateSetBoundCountsReq) returns (ListTemplateSetBoundCountsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/bound_counts"
+            body : "*"
+        };
+    }
+    rpc ListTemplateBoundUnnamedAppDetails(ListTemplateBoundUnnamedAppDetailsReq) returns
+        (ListTemplateBoundUnnamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_unnamed_app_details"
+        };
+    }
+    rpc ListTemplateBoundNamedAppDetails(ListTemplateBoundNamedAppDetailsReq) returns
+        (ListTemplateBoundNamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_named_app_details"
+        };
+    }
+    rpc ListTemplateBoundTemplateSetDetails(ListTemplateBoundTemplateSetDetailsReq) returns
+        (ListTemplateBoundTemplateSetDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"
+        };
+    }
+    rpc ListTemplateReleaseBoundUnnamedAppDetails(ListTemplateReleaseBoundUnnamedAppDetailsReq) returns
+        (ListTemplateReleaseBoundUnnamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}/bound_unnamed_app_details"
+        };
+    }
+    rpc ListTemplateReleaseBoundNamedAppDetails(ListTemplateReleaseBoundNamedAppDetailsReq) returns
+        (ListTemplateReleaseBoundNamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}/bound_named_app_details"
+        };
+    }
+    rpc ListTemplateSetBoundUnnamedAppDetails(ListTemplateSetBoundUnnamedAppDetailsReq) returns
+        (ListTemplateSetBoundUnnamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_unnamed_app_details"
+        };
+    }
+    rpc ListTemplateSetBoundNamedAppDetails(ListTemplateSetBoundNamedAppDetailsReq) returns
+        (ListTemplateSetBoundNamedAppDetailsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"
         };
     }
 
@@ -1050,6 +1112,130 @@ message ListAppTemplateBindingsReq {
 message ListAppTemplateBindingsResp {
     uint32                            count   = 1;
     repeated pbatb.AppTemplateBinding details = 2;
+}
+
+message ListTemplateBoundCountsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_ids      = 3;
+}
+
+message ListTemplateBoundCountsResp {
+    repeated pbtbr.TemplateBoundCounts details = 1;
+}
+
+message ListTemplateReleaseBoundCountsReq {
+    uint32          biz_id               = 1;
+    uint32          template_space_id    = 2;
+    uint32          template_id          = 3;
+    repeated uint32 template_release_ids = 4;
+}
+
+message ListTemplateReleaseBoundCountsResp {
+    repeated pbtbr.TemplateReleaseBoundCounts details = 1;
+}
+
+message ListTemplateSetBoundCountsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    repeated uint32 template_set_ids  = 3;
+}
+
+message ListTemplateSetBoundCountsResp {
+    repeated pbtbr.TemplateSetBoundCounts details = 1;
+}
+
+message ListTemplateBoundUnnamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateBoundUnnamedAppDetailsResp {
+    uint32                                       count   = 1;
+    repeated pbtbr.TemplateBoundUnnamedAppDetail details = 2;
+}
+
+message ListTemplateBoundNamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateBoundNamedAppDetailsResp {
+    uint32                                     count   = 1;
+    repeated pbtbr.TemplateBoundNamedAppDetail details = 2;
+}
+
+message ListTemplateBoundTemplateSetDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_id       = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateBoundTemplateSetDetailsResp {
+    uint32                                        count   = 1;
+    repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
+}
+
+message ListTemplateReleaseBoundUnnamedAppDetailsReq {
+    uint32 biz_id              = 1;
+    uint32 template_space_id   = 2;
+    uint32 template_id         = 3;
+    uint32 template_release_id = 4;
+    uint32 start               = 5;
+    uint32 limit               = 6;
+}
+
+message ListTemplateReleaseBoundUnnamedAppDetailsResp {
+    uint32                                              count   = 1;
+    repeated pbtbr.TemplateReleaseBoundUnnamedAppDetail details = 2;
+}
+
+message ListTemplateReleaseBoundNamedAppDetailsReq {
+    uint32 biz_id              = 1;
+    uint32 template_space_id   = 2;
+    uint32 template_id         = 3;
+    uint32 template_release_id = 4;
+    uint32 start               = 5;
+    uint32 limit               = 6;
+}
+
+message ListTemplateReleaseBoundNamedAppDetailsResp {
+    uint32                                            count   = 1;
+    repeated pbtbr.TemplateReleaseBoundNamedAppDetail details = 2;
+}
+
+message ListTemplateSetBoundUnnamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateSetBoundUnnamedAppDetailsResp {
+    uint32                                          count   = 1;
+    repeated pbtbr.TemplateSetBoundUnnamedAppDetail details = 2;
+}
+
+message ListTemplateSetBoundNamedAppDetailsReq {
+    uint32 biz_id            = 1;
+    uint32 template_space_id = 2;
+    uint32 template_set_id   = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
+}
+
+message ListTemplateSetBoundNamedAppDetailsResp {
+    uint32                                        count   = 1;
+    repeated pbtbr.TemplateSetBoundNamedAppDetail details = 2;
 }
 
 message CreateGroupReq {

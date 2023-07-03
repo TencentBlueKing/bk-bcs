@@ -47,6 +47,8 @@ type Set interface {
 	TemplateRelease() TemplateRelease
 	TemplateSet() TemplateSet
 	AppTemplateBinding() AppTemplateBinding
+	TemplateBindingRelation() TemplateBindingRelation
+	Validator() Validator
 	Group() Group
 	GroupAppBind() GroupAppBind
 	ReleasedGroup() ReleasedGroup
@@ -258,6 +260,24 @@ func (s *set) TemplateSet() TemplateSet {
 // AppTemplateBinding returns the app template binding's DAO
 func (s *set) AppTemplateBinding() AppTemplateBinding {
 	return &appTemplateBindingDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// TemplateBindingRelation returns the template binding relation's DAO
+func (s *set) TemplateBindingRelation() TemplateBindingRelation {
+	return &templateBindingRelationDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// Validator returns the template binding relation's DAO
+func (s *set) Validator() Validator {
+	return &validatorDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
