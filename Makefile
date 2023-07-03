@@ -69,7 +69,7 @@ bcs-services:api client bkcmdb-synchronizer cpuset gateway log-manager \
 	user-manager cluster-manager tools alert-manager k8s-watch kube-agent data-manager \
 	helm-manager project-manager nodegroup-manager
 
-bcs-scenarios: kourse
+bcs-scenarios: kourse gitops
 
 kourse: gamedeployment gamestatefulset hook-operator
 
@@ -473,6 +473,10 @@ gitops-manager:
 gitops-webhook:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-webhook
 	cd bcs-scenarios/bcs-gitops-manager && make webhook && cd -
+
+gitops-vaultplugin-server:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-vaultplugin-server
+	cd bcs-scenarios/bcs-gitops-manager && make vaultplugin && cd -
 
 test: test-bcs-runtime
 

@@ -8,13 +8,11 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8
 
-RUN mkdir -p /data/bcs/bcs-gitops-manager/swagger
 RUN mkdir -p /data/bcs/logs/bcs
 
 ADD bcs-gitops-manager /data/bcs/bcs-gitops-manager/
 ADD bcs-gitops-manager.json.template /data/bcs/bcs-gitops-manager/
 ADD container-start.sh /data/bcs/bcs-gitops-manager/
-ADD swagger /data/bcs/bcs-gitops-manager/swagger
 
 RUN chmod +x /data/bcs/bcs-gitops-manager/container-start.sh
 RUN chmod +x /data/bcs/bcs-gitops-manager/bcs-gitops-manager
