@@ -32,6 +32,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
+	tracingTransport "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/tracing"
 )
 
 const (
@@ -141,6 +142,7 @@ func GetClient() *resty.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {
 			globalClient = resty.New().
+				SetTransport(tracingTransport.NewTracingTransport(http.DefaultTransport)).
 				SetTimeout(timeout).
 				SetDebug(false).   // 更多详情, 可以开启为 true
 				SetCookieJar(nil). // 后台API去掉 cookie 记录
