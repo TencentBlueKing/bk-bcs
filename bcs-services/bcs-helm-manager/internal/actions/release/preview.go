@@ -170,6 +170,9 @@ func (r *ReleasePreviewAction) generateFileContents(manifest string) (map[string
 			blog.Errorf("YAML parse error, %s", err)
 			return nil, err
 		}
+		if entry.Metadata == nil {
+			continue
+		}
 		path := fmt.Sprintf("%s/%s", entry.Kind, entry.Metadata.Name)
 		files[path] = &helmmanager.FileContent{
 			Name:    &entry.Metadata.Name,
