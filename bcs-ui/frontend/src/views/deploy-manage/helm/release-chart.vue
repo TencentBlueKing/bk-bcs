@@ -317,6 +317,7 @@ import { useCluster, useProject } from '@/composables/use-app';
 import $router from '@/router';
 import $i18n from '@/i18n/i18n-setup';
 import { copyText } from '@/common/util';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 
 export default defineComponent({
   name: 'ReleaseChart',
@@ -351,6 +352,33 @@ export default defineComponent({
       type: String,
       default: '',
     },
+  },
+  async beforeRouteLeave(to, from, next) {
+    const validateChange = () => new Promise((resolve, reject) => {
+      if (!this.isFormChanged) {
+        resolve(true);
+        return;
+      };
+      $bkInfo({
+        title: $i18n.t('确认离开当前页?'),
+        subTitle: $i18n.t('离开将会导致未保存信息丢失'),
+        clsName: 'custom-info-confirm default-info',
+        okText: $i18n.t('离开'),
+        cancelText: $i18n.t('取消'),
+        confirmFn() {
+          resolve(true);
+        },
+        cancelFn() {
+          reject(false);
+        },
+      });
+    });
+    const result = await validateChange().catch(() => false);
+    if (result) {
+      next();
+    } else {
+      next(false);
+    }
   },
   setup(props) {
     const { releaseName, repoName, chartName, namespace, cluster } = toRefs(props);
@@ -450,6 +478,19 @@ export default defineComponent({
       args.value['--history-max'] = 10;
     }
 
+    // 表单是否修改
+    const isFormChanged = ref(false);
+    watch(
+      () => [
+        releaseData.value,
+        valuesData.value,
+      ],
+      () => {
+        isFormChanged.value = true;
+      },
+      { deep: true },
+    );
+
     // 设置当前编辑器内容
     const setValuesContent = () => {
       let content = '';
@@ -462,6 +503,7 @@ export default defineComponent({
       }
       valuesData.value.valueFileContent = content;
       codeEditorRef.value?.setValue(valuesData.value.valueFileContent);
+      isFormChanged.value = false;
     };
     // 锁定当前values
     watch(lockValues, () => {
@@ -668,6 +710,7 @@ export default defineComponent({
     });
 
     return {
+      isFormChanged,
       contentRef,
       isPreview,
       activeTab,
