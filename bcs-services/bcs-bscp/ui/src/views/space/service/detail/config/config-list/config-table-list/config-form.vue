@@ -226,7 +226,11 @@
   <section class="form-content">
     <bk-form ref="formRef" :model="localVal" :rules="rules">
         <bk-form-item label="配置项名称" property="name" :required="true">
-          <bk-input v-model="localVal.name" :disabled="!editable"></bk-input>
+          <bk-input
+            v-model="localVal.name"
+            placeholder="请输入1~64个字符，只允许英文、数字、下划线、中划线或点"
+            :disabled="!editable">
+          </bk-input>
         </bk-form-item>
         <bk-form-item label="配置格式">
         <bk-radio-group v-model="localVal.file_type" :required="true">
