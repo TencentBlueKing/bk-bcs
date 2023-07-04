@@ -313,6 +313,7 @@ export default defineComponent({
     });
     // chart列表
     const handleGetChartsTableData = async () => {
+      if (!activeRepo.value) return;
       chartsLoading.value = true;
       const data = await handleGetRepoCharts(activeRepo.value, 1, 10, searchName.value);
       const tableConfig: ITableConfig = {
