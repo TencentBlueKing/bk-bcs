@@ -60,6 +60,7 @@ service Data {
     // release related interface.
     rpc CreateRelease(CreateReleaseReq) returns (CreateResp) {}
     rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {}
+    rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {}
 
     // released config item related interface.
     rpc GetReleasedConfigItem(GetReleasedCIReq) returns (pbrci.ReleasedConfigItem) {}
@@ -110,6 +111,7 @@ service Data {
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
     rpc ListAllGroups(ListAllGroupsReq) returns (ListAllGroupsResp) {}
     rpc ListAppGroups(ListAppGroupsReq) returns (ListAppGroupsResp) {}
+    rpc GetGroupByName(GetGroupByNameReq) returns (pbgroup.Group) {}
     rpc UpdateGroup(UpdateGroupReq) returns (pbbase.EmptyResp) {}
     rpc DeleteGroup(DeleteGroupReq) returns (pbbase.EmptyResp) {}
 
@@ -377,6 +379,12 @@ message ListReleasesReq {
 message ListReleasesResp {
     uint32                     count   = 1;
     repeated pbrelease.Release details = 2;
+}
+
+message GetReleaseByNameReq {
+    uint32 biz_id       = 1;
+    uint32 app_id       = 2;
+    string release_name = 3;
 }
 
 message GetReleasedCIReq {
@@ -650,6 +658,11 @@ message ListAppGroupsResp {
         bool                   edited       = 7;
     }
     repeated ListAppGroupsData details = 1;
+}
+
+message GetGroupByNameReq {
+    uint32 biz_id     = 1;
+    string group_name = 2;
 }
 
 message UpdateGroupReq {
