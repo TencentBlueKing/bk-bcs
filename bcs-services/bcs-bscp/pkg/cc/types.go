@@ -475,7 +475,7 @@ func (ds *Database) trySetDefault() {
 	}
 
 	if ds.MaxIdleTimeoutMin == 0 {
-		ds.MaxIdleTimeoutMin = 60
+		ds.MaxIdleTimeoutMin = 3
 	}
 }
 

@@ -15,6 +15,7 @@ package dao
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -62,6 +63,7 @@ type Set interface {
 // NewDaoSet create the DAO set instance.
 func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 
+	// opt cc.Database
 	sd, err := sharding.InitSharding(&opt)
 	if err != nil {
 		return nil, fmt.Errorf("init sharding failed, err: %v", err)
@@ -71,6 +73,14 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	db, err := adminDB.DB()
+	if err != nil {
+		return nil, err
+	}
+	db.SetMaxOpenConns(int(opt.AdminDatabase.MaxOpenConn))
+	db.SetMaxIdleConns(int(opt.AdminDatabase.MaxIdleConn))
+	db.SetConnMaxLifetime(time.Duration(opt.AdminDatabase.MaxIdleTimeoutMin) * time.Minute)
 
 	if e := adminDB.Use(tracing.NewPlugin(tracing.WithoutMetrics())); e != nil {
 		return nil, err
