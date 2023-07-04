@@ -13,7 +13,9 @@ import (
 	config_hook "bscp.io/pkg/protocol/core/config-hook"
 	config_item "bscp.io/pkg/protocol/core/config-item"
 	content "bscp.io/pkg/protocol/core/content"
+	group "bscp.io/pkg/protocol/core/group"
 	hook_release "bscp.io/pkg/protocol/core/hook-release"
+	release "bscp.io/pkg/protocol/core/release"
 	released_ci "bscp.io/pkg/protocol/core/released-ci"
 	context "context"
 	grpc "google.golang.org/grpc"
@@ -51,6 +53,7 @@ const (
 	Data_GetLatestCommit_FullMethodName            = "/pbds.Data/GetLatestCommit"
 	Data_CreateRelease_FullMethodName              = "/pbds.Data/CreateRelease"
 	Data_ListReleases_FullMethodName               = "/pbds.Data/ListReleases"
+	Data_GetReleaseByName_FullMethodName           = "/pbds.Data/GetReleaseByName"
 	Data_GetReleasedConfigItem_FullMethodName      = "/pbds.Data/GetReleasedConfigItem"
 	Data_CreateHook_FullMethodName                 = "/pbds.Data/CreateHook"
 	Data_ListHooks_FullMethodName                  = "/pbds.Data/ListHooks"
@@ -85,6 +88,7 @@ const (
 	Data_CreateGroup_FullMethodName                = "/pbds.Data/CreateGroup"
 	Data_ListAllGroups_FullMethodName              = "/pbds.Data/ListAllGroups"
 	Data_ListAppGroups_FullMethodName              = "/pbds.Data/ListAppGroups"
+	Data_GetGroupByName_FullMethodName             = "/pbds.Data/GetGroupByName"
 	Data_UpdateGroup_FullMethodName                = "/pbds.Data/UpdateGroup"
 	Data_DeleteGroup_FullMethodName                = "/pbds.Data/DeleteGroup"
 	Data_CountGroupsReleasedApps_FullMethodName    = "/pbds.Data/CountGroupsReleasedApps"
@@ -135,6 +139,7 @@ type DataClient interface {
 	// release related interface.
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
+	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
 	// released config item related interface.
 	GetReleasedConfigItem(ctx context.Context, in *GetReleasedCIReq, opts ...grpc.CallOption) (*released_ci.ReleasedConfigItem, error)
 	// hook related interface.
@@ -177,6 +182,7 @@ type DataClient interface {
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
 	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
+	GetGroupByName(ctx context.Context, in *GetGroupByNameReq, opts ...grpc.CallOption) (*group.Group, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// group current release related interface.
@@ -417,6 +423,15 @@ func (c *dataClient) CreateRelease(ctx context.Context, in *CreateReleaseReq, op
 func (c *dataClient) ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error) {
 	out := new(ListReleasesResp)
 	err := c.cc.Invoke(ctx, Data_ListReleases_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error) {
+	out := new(release.Release)
+	err := c.cc.Invoke(ctx, Data_GetReleaseByName_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -729,6 +744,15 @@ func (c *dataClient) ListAppGroups(ctx context.Context, in *ListAppGroupsReq, op
 	return out, nil
 }
 
+func (c *dataClient) GetGroupByName(ctx context.Context, in *GetGroupByNameReq, opts ...grpc.CallOption) (*group.Group, error) {
+	out := new(group.Group)
+	err := c.cc.Invoke(ctx, Data_GetGroupByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
 	out := new(base.EmptyResp)
 	err := c.cc.Invoke(ctx, Data_UpdateGroup_FullMethodName, in, out, opts...)
@@ -889,6 +913,7 @@ type DataServer interface {
 	// release related interface.
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
+	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
 	// released config item related interface.
 	GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error)
 	// hook related interface.
@@ -931,6 +956,7 @@ type DataServer interface {
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateResp, error)
 	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
 	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
+	GetGroupByName(context.Context, *GetGroupByNameReq) (*group.Group, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*base.EmptyResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*base.EmptyResp, error)
 	// group current release related interface.
@@ -1028,6 +1054,9 @@ func (UnimplementedDataServer) CreateRelease(context.Context, *CreateReleaseReq)
 }
 func (UnimplementedDataServer) ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleases not implemented")
+}
+func (UnimplementedDataServer) GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseByName not implemented")
 }
 func (UnimplementedDataServer) GetReleasedConfigItem(context.Context, *GetReleasedCIReq) (*released_ci.ReleasedConfigItem, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleasedConfigItem not implemented")
@@ -1130,6 +1159,9 @@ func (UnimplementedDataServer) ListAllGroups(context.Context, *ListAllGroupsReq)
 }
 func (UnimplementedDataServer) ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAppGroups not implemented")
+}
+func (UnimplementedDataServer) GetGroupByName(context.Context, *GetGroupByNameReq) (*group.Group, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroupByName not implemented")
 }
 func (UnimplementedDataServer) UpdateGroup(context.Context, *UpdateGroupReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
@@ -1613,6 +1645,24 @@ func _Data_ListReleases_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).ListReleases(ctx, req.(*ListReleasesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetReleaseByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleaseByNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetReleaseByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetReleaseByName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetReleaseByName(ctx, req.(*GetReleaseByNameReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2229,6 +2279,24 @@ func _Data_ListAppGroups_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_GetGroupByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupByNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetGroupByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetGroupByName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetGroupByName(ctx, req.(*GetGroupByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateGroupReq)
 	if err := dec(in); err != nil {
@@ -2585,6 +2653,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListReleases_Handler,
 		},
 		{
+			MethodName: "GetReleaseByName",
+			Handler:    _Data_GetReleaseByName_Handler,
+		},
+		{
 			MethodName: "GetReleasedConfigItem",
 			Handler:    _Data_GetReleasedConfigItem_Handler,
 		},
@@ -2719,6 +2791,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListAppGroups",
 			Handler:    _Data_ListAppGroups_Handler,
+		},
+		{
+			MethodName: "GetGroupByName",
+			Handler:    _Data_GetGroupByName_Handler,
 		},
 		{
 			MethodName: "UpdateGroup",

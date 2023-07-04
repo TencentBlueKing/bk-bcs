@@ -4,6 +4,7 @@ import "bscp.io/pkg/protocol/core/base/base.proto";
 import "bscp.io/pkg/protocol/core/app/app.proto";
 import "bscp.io/pkg/protocol/core/config-item/config_item.proto";
 import "bscp.io/pkg/protocol/core/content/content.proto";
+import "bscp.io/pkg/protocol/core/group/group.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
@@ -124,6 +125,11 @@ service Config {
     rpc ListReleases(ListReleasesReq) returns (ListReleasesResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases"
+        };
+    }
+    rpc GetReleaseByName(GetReleaseByNameReq) returns (pbrelease.Release) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/query/name/{release_name}"
         };
     }
 
@@ -321,6 +327,11 @@ service Config {
     rpc ListGroupReleasedApps(ListGroupReleasedAppsReq) returns (ListGroupReleasedAppsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/groups/{group_id}/released_apps"
+        };
+    }
+    rpc GetGroupByName(GetGroupByNameReq) returns (pbgroup.Group) {
+        option (google.api.http) = {
+            get: "/api/v1/config/biz/{biz_id}/groups/query/name/{group_name}"
         };
     }
 
@@ -657,6 +668,12 @@ message ListReleasesReq {
 message ListReleasesResp {
     uint32                     count   = 1;
     repeated pbrelease.Release details = 2;
+}
+
+message GetReleaseByNameReq {
+    uint32 biz_id       = 1;
+    uint32 app_id       = 2;
+    string release_name = 3;
 }
 
 message CreateHookReq {
@@ -1080,6 +1097,11 @@ message ListGroupReleasedAppsResp {
     }
     uint32                             count   = 1;
     repeated ListGroupReleasedAppsData details = 2;
+}
+
+message GetGroupByNameReq {
+    uint32 biz_id   = 1;
+    string group_name = 2;
 }
 
 message PublishReq {

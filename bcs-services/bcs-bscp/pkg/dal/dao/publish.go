@@ -62,15 +62,28 @@ func (dao *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, erro
 
 	// 多个使用事务处理
 	createTx := func(tx *gen.Query) error {
-		groups := make([]*table.Group, 0, len(opt.Groups))
-		if !opt.All {
+		groupIDs := opt.Groups
+		if opt.All {
+			m := dao.genQ.ReleasedGroup
+			q := dao.genQ.ReleasedGroup.WithContext(kit.Ctx)
+			err := q.Select(m.GroupID).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID),
+				m.GroupID.Neq(0)).Scan(&groupIDs)
+			if err != nil {
+				logs.Errorf("get to be published groups(all) failed, err: %v, rid: %s", err, kit.Rid)
+				return err
+			}
+			opt.Default = true
+		}
+
+		groups := make([]*table.Group, 0, len(groupIDs))
+		var err error
+		if len(groupIDs) > 0 {
 			m := dao.genQ.Group
 			q := dao.genQ.Group.WithContext(kit.Ctx)
-			var err error
-			groups, err = q.Where(m.ID.In(opt.Groups...)).Find()
+			groups, err = q.Where(m.ID.In(groupIDs...), m.BizID.Eq(opt.BizID)).Find()
 			if err != nil {
 				logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
-					tools.JoinUint32(opt.Groups, ","), err, kit.Rid)
+					tools.JoinUint32(groupIDs, ","), err, kit.Rid)
 				return err
 			}
 		}
@@ -195,11 +208,11 @@ func (dao *pubDao) PublishWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.Publi
 	}
 
 	groups := make([]*table.Group, 0, len(groupIDs))
+	var err error
 	// list groups if gray release
 	if len(groupIDs) > 0 {
 		m := dao.genQ.Group
 		q := dao.genQ.Group.WithContext(kit.Ctx)
-		var err error
 		groups, err = q.Where(m.ID.In(groupIDs...)).Find()
 		if err != nil {
 			logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",

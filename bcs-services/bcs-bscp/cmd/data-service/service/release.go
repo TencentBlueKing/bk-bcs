@@ -203,6 +203,19 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 	return resp, nil
 }
 
+// GetReleaseByName get release by release name.
+func (s *Service) GetReleaseByName(ctx context.Context, req *pbds.GetReleaseByNameReq) (*pbrelease.Release, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	release, err := s.dao.Release().GetByName(grpcKit, req.GetBizId(), req.GetAppId(), req.GetReleaseName())
+	if err != nil {
+		logs.Errorf("get release by name failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, fmt.Errorf("query release by name %s failed", req.GetReleaseName())
+	}
+
+	return pbrelease.PbRelease(release), nil
+}
+
 func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint32) (
 	string, []*table.ReleasedGroup) {
 	var includeDefault = false

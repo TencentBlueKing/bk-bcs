@@ -225,6 +225,19 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 	}, nil
 }
 
+// GetGroupByName get group by group name.
+func (s *Service) GetGroupByName(ctx context.Context, req *pbds.GetGroupByNameReq) (*pbgroup.Group, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	group, err := s.dao.Group().GetByName(grpcKit, req.GetBizId(), req.GetGroupName())
+	if err != nil {
+		logs.Errorf("get group by name failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, fmt.Errorf("query group by name %s failed", req.GetGroupName())
+	}
+
+	return pbgroup.PbGroup(group)
+}
+
 // UpdateGroup update group.
 func (s *Service) UpdateGroup(ctx context.Context, req *pbds.UpdateGroupReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
