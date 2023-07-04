@@ -88,7 +88,10 @@ export const getConfigContent = (bizId: string, appId: number, SHA256Str: string
   return http.get<string, string>(`/api/get/content/download/biz_id/${bizId}/app_id/${appId}`, {
     headers: {
       'X-Bkapi-File-Content-Id': SHA256Str
-    }
+    },
+    transitional: {
+      forcedJSONParsing: false
+    },
   }).then(res => res)
 }
 

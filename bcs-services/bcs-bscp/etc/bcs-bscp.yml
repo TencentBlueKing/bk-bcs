@@ -65,19 +65,3 @@ repository:
   user: xx
 downstream:
   bounceIntervalHour: 48
-
-# sidecar
-upstream:
-  endpoints:
-    - bcs-bscp-feedserver:9510
-  authentication:
-    user: bcs-bscp
-    token: bcs-bscp
-appSpec:
-  bizID: 2 # 蓝鲸项目
-  applications:
-    - appID: 1 # 手动调用API创建
-      namespace: ""
-      uid: 10
-workspace:
-  rootDirectory: /tmp
