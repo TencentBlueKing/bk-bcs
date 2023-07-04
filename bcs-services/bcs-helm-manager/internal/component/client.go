@@ -58,8 +58,9 @@ func Request(req goReq.SuperAgent, timeout int, proxy string, headers map[string
 func GetK8SClientByClusterID(clusterID string) (*kubernetes.Clientset, error) {
 	host := fmt.Sprintf("%s/clusters/%s", options.GlobalOptions.Release.APIServer, clusterID)
 	config := &rest.Config{
-		Host:        host,
-		BearerToken: options.GlobalOptions.Release.Token,
+		Host:            host,
+		BearerToken:     options.GlobalOptions.Release.Token,
+		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
 	}
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {

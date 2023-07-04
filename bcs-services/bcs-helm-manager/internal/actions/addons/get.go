@@ -66,6 +66,13 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 
 	clusterAddons := addons.ToAddonsProto()
 
+	// get latest version
+	version, err := g.getLatestVersion(ctx, addons.ChartName)
+	if err != nil {
+		blog.Errorf("get addons latest version failed, %s", err.Error())
+	}
+	clusterAddons.Version = &version
+
 	// get current status
 	rl, err := g.model.GetRelease(ctx, g.req.GetClusterID(), addons.Namespace, addons.Name)
 	if err != nil {
@@ -83,13 +90,7 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 	if len(rl.Values) > 0 {
 		clusterAddons.CurrentValues = &rl.Values[len(rl.Values)-1]
 	}
-
-	// get latest version
-	version, err := g.getLatestVersion(ctx, addons.ChartName)
-	if err != nil {
-		blog.Errorf("get addons latest version failed, %s", err.Error())
-		clusterAddons.Version = &rl.ChartVersion
-	} else {
+	if version == "" {
 		clusterAddons.Version = &version
 	}
 
