@@ -297,6 +297,7 @@ func TestBufferedAutoscalerRunOnce(t *testing.T) {
 		podDisruptionBudgetListerMock, daemonSetListerMock, onScaleUpMock, onScaleDownMock)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerRunOnceWithAutoprovisionedEnabled(t *testing.T) {
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
@@ -461,6 +462,7 @@ func TestBufferedAutoscalerRunOnceWithAutoprovisionedEnabled(t *testing.T) {
 		podDisruptionBudgetListerMock, daemonSetListerMock, onScaleUpMock, onScaleDownMock)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
@@ -587,6 +589,7 @@ func TestBufferedAutoscalerRunOnceWithALongUnregisteredNode(t *testing.T) {
 		podDisruptionBudgetListerMock, daemonSetListerMock, onScaleUpMock, onScaleDownMock)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerRunOncePodsWithFilterOutSchedulablePodsUsesPackingFalse(t *testing.T) {
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
@@ -700,6 +703,7 @@ func TestBufferedAutoscalerRunOncePodsWithFilterOutSchedulablePodsUsesPackingFal
 		podDisruptionBudgetListerMock, daemonSetListerMock, onScaleUpMock, onScaleDownMock)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerRunOncePodsWithPriorities(t *testing.T) {
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
@@ -855,6 +859,7 @@ func TestBufferedAutoscalerRunOncePodsWithPriorities(t *testing.T) {
 		podDisruptionBudgetListerMock, daemonSetListerMock, onScaleUpMock, onScaleDownMock)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerRunOnceWithFilteringOnBinPackingEstimator(t *testing.T) {
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
@@ -945,6 +950,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnBinPackingEstimator(t *testing.
 		podDisruptionBudgetListerMock, daemonSetListerMock, onScaleUpMock, onScaleDownMock)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerRunOnceWithFilteringOnOldEstimator(t *testing.T) {
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
@@ -1035,6 +1041,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnOldEstimator(t *testing.T) {
 		podDisruptionBudgetListerMock, daemonSetListerMock, onScaleUpMock, onScaleDownMock)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerRunOnceWithFilteringOnUpcomingNodesEnabledNoScaleUp(t *testing.T) {
 	readyNodeLister := kubernetes.NewTestNodeLister(nil)
 	allNodeLister := kubernetes.NewTestNodeLister(nil)
@@ -1125,6 +1132,7 @@ func TestBufferedAutoscalerRunOnceWithFilteringOnUpcomingNodesEnabledNoScaleUp(t
 		podDisruptionBudgetListerMock, daemonSetListerMock, onScaleUpMock, onScaleDownMock)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerInstaceCreationErrors(t *testing.T) {
 
 	// setup
@@ -1359,6 +1367,7 @@ func TestBufferedAutoscalerInstaceCreationErrors(t *testing.T) {
 	nodeGroupA.AssertNumberOfCalls(t, "DeleteNodes", 2)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestBufferedAutoscalerProcessorCallbacks(t *testing.T) {
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
 	assert.Equal(t, false, processorCallbacks.disableScaleDownForLoop)

@@ -24,6 +24,7 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+// NOCC:tosa/fn_length(设计如此)
 func TestNodeGroupCache_GetRegisteredNodeGroups(t *testing.T) {
 	ng1 := NodeGroup{
 		nodeGroupID: "test",
@@ -165,6 +166,7 @@ func TestNodeGroupCache_FindForInstance(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestNodeGroupCache_CheckInstancesTerminateByAs(t *testing.T) {
 	ins1 := InstanceRef{
 		Name: "ins1",
@@ -377,6 +379,7 @@ func TestNodeGroupCache_regenerateCache(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestNodeGroupCache_SetNodeGroupMinSize(t *testing.T) {
 	ng1 := NodeGroup{
 		nodeGroupID: "test",

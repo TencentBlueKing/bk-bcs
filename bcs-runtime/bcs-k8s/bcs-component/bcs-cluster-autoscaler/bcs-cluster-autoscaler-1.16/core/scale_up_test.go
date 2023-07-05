@@ -23,8 +23,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+
 	// "k8s.io/apimachinery/pkg/api/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	testprovider "k8s.io/autoscaler/cluster-autoscaler/cloudprovider/test"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
@@ -97,6 +98,7 @@ func TestScaleUpMaxCoresLimitHit(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleUpMaxCoresLimitHitWithNotAutoscaledGroup(t *testing.T) {
 	options := defaultOptions
 	options.MaxCoresTotal = 9
@@ -150,6 +152,7 @@ func TestScaleUpMaxMemoryLimitHit(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleUpMaxMemoryLimitHitWithNotAutoscaledGroup(t *testing.T) {
 	options := defaultOptions
 	options.MaxMemoryTotal = 1300 * MiB
@@ -204,6 +207,7 @@ func TestScaleUpCapToMaxTotalNodesLimit(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleUpCapToMaxTotalNodesLimitWithNotAutoscaledGroup(t *testing.T) {
 	options := defaultOptions
 	options.MaxNodesTotal = 3
@@ -231,6 +235,7 @@ func TestScaleUpCapToMaxTotalNodesLimitWithNotAutoscaledGroup(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestWillConsiderGpuAndStandardPoolForPodWhichDoesNotRequireGpu(t *testing.T) {
 	options := defaultOptions
 	options.MaxNodesTotal = 100
@@ -260,6 +265,7 @@ func TestWillConsiderGpuAndStandardPoolForPodWhichDoesNotRequireGpu(t *testing.T
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestWillConsiderOnlyGpuPoolForPodWhichDoesRequiresGpu(t *testing.T) {
 	options := defaultOptions
 	options.MaxNodesTotal = 100
@@ -288,6 +294,7 @@ func TestWillConsiderOnlyGpuPoolForPodWhichDoesRequiresGpu(t *testing.T) {
 	simpleScaleUpTest(t, config, results)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestWillConsiderAllPoolsWhichFitTwoPodsRequiringGpus(t *testing.T) {
 	options := defaultOptions
 	options.MaxNodesTotal = 100

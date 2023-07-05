@@ -606,6 +606,7 @@ func TestRemoveFixNodeTargetSize(t *testing.T) {
 	assert.Equal(t, "ng1/-2", change)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestConfigurePredicateCheckerForLoop(t *testing.T) {
 	testCases := []struct {
 		affinity         *apiv1.Affinity

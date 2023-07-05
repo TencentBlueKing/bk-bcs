@@ -76,6 +76,7 @@ type bufferedAutoscalerProcessorCallbacks struct {
 	extraValues             map[string]interface{}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func newBufferedAutoscalerProcessorCallbacks() *bufferedAutoscalerProcessorCallbacks {
 	callbacks := &bufferedAutoscalerProcessorCallbacks{}
 	callbacks.reset()

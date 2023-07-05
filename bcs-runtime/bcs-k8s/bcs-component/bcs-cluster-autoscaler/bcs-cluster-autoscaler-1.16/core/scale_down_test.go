@@ -262,6 +262,7 @@ func TestFindUnneededGPUNodes(t *testing.T) {
 	assert.Equal(t, 3, len(sd.nodeUtilizationMap))
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestPodsWithPrioritiesFindUnneededNodes(t *testing.T) {
 	// shared owner reference
 	ownerRef := GenerateOwnerReferences("rs", "ReplicaSet", "extensions/v1beta1", "")
@@ -1122,6 +1123,7 @@ var defaultScaleDownOptions = config.AutoscalingOptions{
 	MaxMemoryTotal:                   config.DefaultMaxClusterMemory * units.GiB,
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleDownEmptyMultipleNodeGroups(t *testing.T) {
 	config := &scaleTestConfig{
 		nodes: []nodeConfig{
@@ -1267,6 +1269,7 @@ func TestScaleDownEmptyMinGpuLimitHit(t *testing.T) {
 	simpleScaleDownEmpty(t, config)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleDownEmptyMinGroupSizeLimitHit(t *testing.T) {
 	options := defaultScaleDownOptions
 	config := &scaleTestConfig{
@@ -1279,6 +1282,7 @@ func TestScaleDownEmptyMinGroupSizeLimitHit(t *testing.T) {
 	simpleScaleDownEmpty(t, config)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestScaleDownEmptyMinGroupSizeLimitHitWhenOneNodeIsBeingDeleted(t *testing.T) {
 	nodeDeletionTracker := NewNodeDeletionTracker()
 	nodeDeletionTracker.StartDeletion("ng1")

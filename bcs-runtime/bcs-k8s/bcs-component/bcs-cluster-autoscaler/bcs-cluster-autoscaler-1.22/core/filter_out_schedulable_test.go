@@ -177,6 +177,7 @@ func TestFilterOutSchedulableByPacking(t *testing.T) {
 	}
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func BenchmarkFilterOutSchedulableByPacking(b *testing.B) {
 	// All pending pods in this scenario are unschedulable - predicates will fail.
 	tests := []struct {
