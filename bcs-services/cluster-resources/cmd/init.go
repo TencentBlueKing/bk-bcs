@@ -19,14 +19,9 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	"path"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	microGrpc "github.com/go-micro/plugins/v4/server/grpc"
@@ -40,6 +35,9 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -323,8 +321,10 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		log.Info(crSvc.ctx, "swagger doc is enabled")
 		// 挂载 swagger.json 文件目录
 		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path.Join(crSvc.conf.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
+			file, _ := swagger.Assets.ReadFile("data/cluster-resources.swagger.json")
+			w.Write(file)
 		})
+
 		// 配置 swagger-ui 服务
 		fileServer := http.FileServer(&goBindataAssetfs.AssetFS{
 			Asset:    swagger.Asset,
