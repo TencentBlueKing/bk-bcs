@@ -162,8 +162,8 @@ func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
 	return nil
 }
 
-func restyBeforeRequestHook(c *resty.Client, r *http.Request) error {
-	SetRequestIDHeaderValue(r, RequestIDValue(r.Context()))
+func restyBeforeRequestHook(c *resty.Client, r *resty.Request) error {
+	SetRequestIDHeaderValue(r.RawRequest, RequestIDValue(r.Context()))
 	return nil
 }
 

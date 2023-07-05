@@ -88,7 +88,13 @@ func (s *service) ListClusters(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
 	projectId := c.Param("projectId")
-	clusters, err := bcs.ListClusters(c.Request.Context(), projectId)
+	project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectId)
+	if err != nil {
+		APIError(c, i18n.GetMessage(c, "项目不正确"))
+		return
+	}
+
+	clusters, err := bcs.ListClusters(c.Request.Context(), project.ProjectId)
 	if err != nil {
 		APIError(c, i18n.GetMessage(c, err.Error()))
 		return
@@ -106,8 +112,6 @@ func (s *service) ListClusters(c *gin.Context) {
 func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 
-	projectId := c.Param("projectId")
-	clusterId := c.Param("clusterId")
 	consoleQuery := new(podmanager.ConsoleQuery)
 	c.BindQuery(consoleQuery)
 
@@ -124,15 +128,15 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 			metrics.SetRequestIgnoreDuration(c, podReadyDuration)
 
 			metrics.CollectPodReady(
-				podmanager.GetAdminClusterId(clusterId),
+				podmanager.GetAdminClusterId(authCtx.ClusterId),
 				podmanager.GetNamespace(),
-				podmanager.GetPodName(clusterId, authCtx.Username),
+				podmanager.GetPodName(authCtx.ClusterId, authCtx.Username),
 				err,
 				podReadyDuration,
 			)
 		}()
 
-		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), clusterId, authCtx.Username, consoleQuery)
+		podCtx, err = podmanager.QueryAuthPodCtx(c.Request.Context(), authCtx.ClusterId, authCtx.Username, consoleQuery)
 		return
 	}()
 	if err != nil {
@@ -140,7 +144,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 		return
 	}
 
-	podCtx.ProjectId = projectId
+	podCtx.ProjectId = authCtx.ProjectId
 	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
 
