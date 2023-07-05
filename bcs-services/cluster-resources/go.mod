@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230606084703-25ffabad186a
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
 	github.com/TencentBlueKing/gopkg v1.0.8
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
 	// fork 自 https://github.com/signalfx/splunk-otel-go/tree/main/instrumentation/k8s.io/client-go/splunkclient-go
@@ -13,7 +13,6 @@ require (
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dustin/go-humanize v1.0.0
-	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/envoyproxy/protoc-gen-validate v0.9.1
 	github.com/fatih/structs v1.1.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
@@ -175,3 +174,10 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
+
+require (
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230701022721-8cbd62252af8
+	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
+)
+
+require github.com/elazarl/go-bindata-assetfs v1.0.1 // indirect
