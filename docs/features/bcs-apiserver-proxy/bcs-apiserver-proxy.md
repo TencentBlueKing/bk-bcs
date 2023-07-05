@@ -59,7 +59,7 @@ kubectl edit cm -n kube-system kube-proxy
 # excludeCIDRs添加vip
 ipvs:
       excludeCIDRs:
-        - 10.103.97.2/32
+        - 10.0.xx.xx/32
 
 # 重启kube-proxy
 kubectl rollout restart daemonset -n kube-system kube-proxy
