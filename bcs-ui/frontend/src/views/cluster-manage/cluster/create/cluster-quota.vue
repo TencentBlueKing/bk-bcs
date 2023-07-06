@@ -28,7 +28,7 @@
           {{ getMemQuota(row) }}
         </template>
       </bcs-table-column>
-      <bcs-table-column width="64">
+      <bcs-table-column width="80">
         <template #default="{ $index }">
           <span
             :class="[

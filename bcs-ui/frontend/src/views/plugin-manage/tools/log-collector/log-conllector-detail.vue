@@ -42,7 +42,7 @@
           </template>
           <span v-else>--</span>
         </bcs-form-item>
-        <template v-if="!!data.rule.config.paths.length">
+        <template v-if="data.rule.config.paths && !!data.rule.config.paths.length">
           <bcs-form-item :label="$t('日志路径')" class="config-form-item mb-[4px]">
             <div class="mt-[2px]">
               <div

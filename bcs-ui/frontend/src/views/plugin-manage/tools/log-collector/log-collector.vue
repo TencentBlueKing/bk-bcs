@@ -198,7 +198,7 @@
                 <bcs-button
                   text
                   class="text-[12px] mr-[10px]"
-                  v-if="row.entrypoint.file_log_url && row.rule.config.paths.length"
+                  v-if="row.entrypoint.file_log_url && row.rule.config.paths && row.rule.config.paths.length"
                   @click="openLink(row.entrypoint.file_log_url)">
                   {{ $t('文件日志') }}
                 </bcs-button>
