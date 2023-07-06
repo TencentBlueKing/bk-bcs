@@ -554,7 +554,7 @@ const handleInitData = async () => {
   showEditStatus.value = false;
   loading.value = true;
   await handleGetOnsData();
-  await handleGetLogCollectorRules(false);
+  // await handleGetLogCollectorRules(false);
   loading.value = false;
   const { id } = $router.currentRoute.query || {};
   const activeRow = ruleList.value.find(item => item.id === id);
