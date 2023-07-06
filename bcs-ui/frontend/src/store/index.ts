@@ -63,10 +63,7 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
 }
 
 const store = new Vuex.Store<{
-  featureFlags: Array<{
-    key: string
-    enabled: boolean
-  }>
+  featureFlags: Record<string, boolean>
   curProject: IProject | Record<string, any>
   curCluster: any
   curSideMenu: IMenu | Record<string, any>
@@ -121,7 +118,7 @@ const store = new Vuex.Store<{
   ],
   // 公共 store
   state: {
-    featureFlags: [],
+    featureFlags: {},
     curProject: {},
     curCluster: {},
     curSideMenu: {},

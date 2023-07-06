@@ -2,7 +2,6 @@ import { computed, ref } from 'vue';
 import $store from '@/store';
 import { userInfo } from '@/api/modules/user-manager';
 import { featureFlags as featureFlagsApi } from '@/api/modules/project';
-import { unionWith } from 'lodash';
 
 // todo 完善类型
 export interface IProject {
@@ -125,34 +124,20 @@ export function useAppData() {
     return data;
   }
 
-  const featureFlags = computed(() => $store.state.featureFlags);
-  const flagsMap = computed<Record<string, boolean>>(() => featureFlags.value.reduce((pre, item) => {
-    pre[item.key] = item.enabled;
-    return pre;
-  }, {}));
+  const flagsMap = computed(() => $store.state.featureFlags);
   // 默认菜单配置项
-  const defaultFlags: Array<{
-    key: string
-    enabled: boolean
-  }> = [
-    {
-      key: 'CLOUDTOKEN',
-      enabled: false,
-    },
-    {
-      key: 'PROJECT_LIST',
-      enabled: false,
-    }
-  ];
+  const defaultFlags = {
+    CLOUDTOKEN: false,
+    PROJECT_LIST: false,
+  };
   async function getFeatureFlags(params: { projectCode: string }) {
-    const data = await featureFlagsApi(params).catch(() => ([]));
-    $store.commit('updateFeatureFlags', unionWith(defaultFlags, data));
+    const data = await featureFlagsApi(params).catch(() => ({}));
+    $store.commit('updateFeatureFlags', Object.assign(defaultFlags, data));
     return data;
   }
   return {
     user,
     getUserInfo,
-    featureFlags,
     flagsMap,
     getFeatureFlags,
   };

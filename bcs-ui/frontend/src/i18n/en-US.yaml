@@ -2631,6 +2631,8 @@ exclude(过滤匹配字符串): exclude (filter matching string)
 增/删: Add/Delete
 条件关系: Conditional relationship
 功能开发中，暂不开放: 'Function under development, not yet available'
-当前集群日志采集组件未启用，请联系集群管理员处理: 'The current cluster log collection component is not enabled, please contact the cluster administrator to handle it'
+当前集群日志采集组件未启用，请联系集群管理员处理: >-
+  The current cluster log collection component is not enabled, please contact
+  the cluster administrator to handle it
 只支持星号（*）、问号（?）两种通配符: 'Only supports two wildcards: asterisk () and question mark (?)'
-反引号(`): 'Backtick (`)'
+反引号(`): Backtick (`)

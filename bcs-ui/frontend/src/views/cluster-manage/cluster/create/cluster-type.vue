@@ -49,8 +49,7 @@ import { computed, defineComponent, ref } from 'vue';
 import BcsContent from '../../components/bcs-content.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
-import { useConfig, useProject } from '@/composables/use-app';
-import { useAppData } from '@/composables/use-app';
+import { useConfig, useAppData } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'CreateCluster',
