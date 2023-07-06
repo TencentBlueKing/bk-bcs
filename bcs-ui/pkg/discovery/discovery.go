@@ -22,13 +22,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	etcd "github.com/go-micro/plugins/v4/registry/etcd"
+	"github.com/spf13/viper"
 	"github.com/urfave/cli/v2"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
 	"go-micro.dev/v4/server"
 	"go-micro.dev/v4/util/cmd"
-
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
 
 const serverNameSuffix = ".bkbcs.tencent.com"
@@ -95,16 +94,16 @@ func (s *ServiceDiscovery) init() error {
 
 // initEtcdRegistry etcd 服务注册
 func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
-	endpoints := config.G.Viper.GetString("etcd.endpoints")
+	endpoints := viper.GetString("etcd.endpoints")
 	if endpoints == "" {
 		return nil, nil
 	}
 
 	etcdRegistry := etcd.NewRegistry(registry.Addrs(strings.Split(endpoints, ",")...))
 
-	ca := config.G.Viper.GetString("etcd.ca")
-	cert := config.G.Viper.GetString("etcd.cert")
-	key := config.G.Viper.GetString("etcd.key")
+	ca := viper.GetString("etcd.ca")
+	cert := viper.GetString("etcd.cert")
+	key := viper.GetString("etcd.key")
 	if ca != "" && cert != "" && key != "" {
 		tlsConfig, err := ssl.ClientTslConfVerity(ca, cert, key, "")
 		if err != nil {

@@ -21,7 +21,7 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chimid "github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"k8s.io/klog/v2"
@@ -30,7 +30,7 @@ import (
 	bcsui "github.com/Tencent/bk-bcs/bcs-ui"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/metrics"
-	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/middleware"
 )
 
 // WebServer :
@@ -86,8 +86,8 @@ func (w *WebServer) Close() error {
 // newRoutes xxx
 func (w *WebServer) newRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(chimid.Logger)
+	r.Use(chimid.Recoverer)
 
 	// openapi 文档
 	// 访问 swagger/index.html, swagger/doc.json
@@ -115,7 +115,7 @@ func (w *WebServer) newRouter() http.Handler {
 
 func (w *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(tracing.MiddleWareTracing)
+	r.Use(middleware.Tracing)
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
 
@@ -124,6 +124,9 @@ func (w *WebServer) subRouter() http.Handler {
 		r.Use(metrics.RequestCollect("ReleaseNoteHandler"))
 		r.Get("/", w.ReleaseNoteHandler)
 	})
+
+	r.With(metrics.RequestCollect("FeatureFlagsHandler"), middleware.NeedProjectAuthorization).
+		Get("/feature_flags", w.FeatureFlagsHandler)
 
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
 

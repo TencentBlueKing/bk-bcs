@@ -11,20 +11,14 @@
  *
  */
 
-package constants
+package config
 
-const (
-	// RequestIDKey xxx
-	RequestIDKey = "requestID"
-	// ServerName server name
-	ServerName = "bcs-ui"
-	// TracerName tracer name
-	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	// RequestIDHeaderKey request_id header key
-	RequestIDHeaderKey = "X-Request-Id"
-	// ClaimsKey claims key
-	ClaimsKey = "bcs-claims"
-
-	// BluekingLanguage switch cookies constant
-	BluekingLanguage = "blueking_language"
-)
+// FeatureFlagOption feature flag option
+type FeatureFlagOption struct {
+	// 1. if set enabled to true, it means all projects enable this feature,
+	// only projects in list(blacklist) disable this feature
+	// 2. if set enabled to false, it means only projects in list(whitelist) enable this feature
+	Enabled bool `yaml:"enabled"`
+	// List can be white list or black list, depends on enabled
+	List []string `yaml:"list"`
+}

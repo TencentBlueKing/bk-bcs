@@ -11,20 +11,14 @@
  *
  */
 
-package constants
+package config
 
-const (
-	// RequestIDKey xxx
-	RequestIDKey = "requestID"
-	// ServerName server name
-	ServerName = "bcs-ui"
-	// TracerName tracer name
-	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	// RequestIDHeaderKey request_id header key
-	RequestIDHeaderKey = "X-Request-Id"
-	// ClaimsKey claims key
-	ClaimsKey = "bcs-claims"
-
-	// BluekingLanguage switch cookies constant
-	BluekingLanguage = "blueking_language"
-)
+// IAMConf for BK-IAM
+type IAMConf struct {
+	External      bool   `yaml:"external"`
+	GatewayServer string `yaml:"gateway_server"`
+	IAMServer     string `yaml:"iam_server"`
+	BkIAMServer   string `yaml:"bk_iam_erver"`
+	Metric        bool   `yaml:"metric"`
+	Debug         bool   `yaml:"debug"`
+}

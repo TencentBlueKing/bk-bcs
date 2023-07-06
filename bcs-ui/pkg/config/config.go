@@ -15,18 +15,20 @@
 package config
 
 import (
-	"github.com/spf13/viper"
+	"io/ioutil"
+
 	"gopkg.in/yaml.v3"
 )
 
 // Configuration 配置
 type Configuration struct {
-	Viper        *viper.Viper  `yaml:"-"`
-	Base         *BaseConf     `yaml:"base_conf"`
-	BCS          *BCSConf      `yaml:"bcs_conf"`
-	Web          *WebConf      `yaml:"web"`
-	FrontendConf *FrontendConf `yaml:"frontend_conf"`
-	Tracing      *TracingConf  `yaml:"tracing"`
+	Base         *BaseConf                    `yaml:"base_conf"`
+	BCS          *BCSConf                     `yaml:"bcs_conf"`
+	IAM          *IAMConf                     `yaml:"iam_conf"`
+	Web          *WebConf                     `yaml:"web"`
+	FrontendConf *FrontendConf                `yaml:"frontend_conf"`
+	Tracing      *TracingConf                 `yaml:"tracing"`
+	FeatureFlags map[string]FeatureFlagOption `yaml:"feature_flags"`
 }
 
 // init 初始化
@@ -105,13 +107,12 @@ func (c *Configuration) BCSDebugAPIHost() string {
 	return c.BCS.Host
 }
 
-// ReadFromViper : read from viper
-func (c *Configuration) ReadFromViper(v *viper.Viper) error {
+// ReadFromFile : read from config file
+func (c *Configuration) ReadFromFile(cfgFile string) error {
 	// 不支持inline, 需要使用 yaml 库
-	content, err := yaml.Marshal(v.AllSettings())
+	content, err := ioutil.ReadFile(cfgFile)
 	if err != nil {
 		return err
 	}
-	c.Viper = v
 	return c.ReadFrom(content)
 }

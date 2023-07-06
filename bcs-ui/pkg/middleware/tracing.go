@@ -11,7 +11,7 @@
  *
  */
 
-package tracing
+package middleware
 
 import (
 	"bytes"
@@ -29,11 +29,12 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/tracing"
 )
 
-// MiddleWareTracing middleware tracing
-func MiddleWareTracing(next http.Handler) http.Handler {
-	cfg := NewConfig()
+// Tracing middleware tracing
+func Tracing(next http.Handler) http.Handler {
+	cfg := tracing.NewConfig()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 开始时间
