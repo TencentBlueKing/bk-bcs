@@ -8,6 +8,7 @@
   import { useScriptStore } from '../../../../store/script'
   import { getScriptList, getScriptTagList, deleteScript } from '../../../../api/script'
   import { IScriptItem, IScriptTagItem, IScriptListQuery} from '../../../../../types/script'
+  import { datetimeFormat } from '../../../../utils/index'
   import CreateScript from './create-script.vue'
   import ScriptCited from './script-cited.vue'
 
@@ -82,7 +83,7 @@
   }
 
   // 删除分组
-  const handleDeleteScript = (script: IScriptItem) => { 
+  const handleDeleteScript = (script: IScriptItem) => {
     InfoBox({
       title: `确认是否删除脚本【${script.spec.name}?】`,
       infoType: "danger",
@@ -174,7 +175,11 @@
           </template>
         </bk-table-column>
         <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
-        <bk-table-column label="更新时间" prop="revision.update_at" min-width="180"></bk-table-column>
+        <bk-table-column label="更新时间" width="220">
+          <template #default="{ row }">
+            <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
+          </template>
+        </bk-table-column>
         <bk-table-column label="操作">
           <template #default="{ row }" width="180">
             <div class="action-btns">

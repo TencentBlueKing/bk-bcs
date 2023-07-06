@@ -2,6 +2,7 @@
   import { ref } from 'vue'
   import { IScriptVersion } from '../../../../../types/script';
   import { IPagination } from '../../../../../types/index';
+  import { datetimeFormat } from '../../../../utils/index';
   import ScriptCited from '../list/script-cited.vue';
 
   const STATUS_MAP = {
@@ -50,7 +51,11 @@
       </template>
     </bk-table-column>
     <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
-    <bk-table-column label="更新时间" prop="revision.update_at"></bk-table-column>
+    <bk-table-column label="更新时间" width="220">
+      <template #default="{ row }">
+        <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
+      </template>
+    </bk-table-column>
     <bk-table-column label="状态">
       <template #default="{ row }">
         <span v-if="row.spec">
