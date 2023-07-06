@@ -35,7 +35,7 @@ type HTTPConfig struct {
 	indexer string
 	Name    string
 	Domain  string
-	// backend ip list, reserved for extension
+	// backend ip list, reserved for extention
 	IPs             []string
 	DestinationPort uint
 	// Label use for custom information storage

@@ -332,7 +332,7 @@ func validateResourceType(resourceType string) bool {
 
 // Consume subscribe Event queue & backgroundSync
 func (eh *SyncEventHandler) Consume(ctx context.Context, sub msgqueue.MessageQueue) error {
-	unSub, _ := sub.Subscribe(msgqueue.NewHandlerWrapper("event-handler", eh.HandleQueueEvent), eh.filters,
+	unSub, _ := sub.Subscribe(msgqueue.HandlerWrap("event-handler", eh.HandleQueueEvent), eh.filters,
 		msgqueue.EventSubscribeType)
 
 	eh.unSub = func() {

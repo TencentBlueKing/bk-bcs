@@ -15,9 +15,8 @@ package bcs
 
 import (
 	"fmt"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	"github.com/gofrs/uuid"
+	"github.com/satori/go.uuid"
 )
 
 // ServiceNode is node info for bcs services.

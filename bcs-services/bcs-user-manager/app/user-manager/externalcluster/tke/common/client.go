@@ -108,7 +108,6 @@ func NewClient(credential CredentialInterface, opts Opts) (*Client, error) {
 		&http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
-					// NOCC:gas/tls(设计如此)
 					InsecureSkipVerify: true,
 				},
 			},
@@ -132,7 +131,6 @@ func (client *Client) Invoke(action string, args interface{}, response interface
 func (client *Client) initCommonArgs(args *url.Values) {
 	args.Set("Region", client.opts.Region)
 	args.Set("Timestamp", fmt.Sprint(uint(time.Now().Unix())))
-	// NOCC:gas/crypto(设计如此)
 	args.Set("Nonce", fmt.Sprint(uint(rand.Int())))
 	args.Set("SignatureMethod", client.opts.SignatureMethod)
 }

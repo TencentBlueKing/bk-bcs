@@ -293,6 +293,7 @@ func getMetricName(metricSpec autoscaling.MetricSpec) string {
 	default:
 		return ""
 	}
+	return ""
 }
 
 // computeReplicasForMetrics computes the desired number of replicas for the metric specifications listed in the GPA,
@@ -1283,11 +1284,11 @@ type NormalizationArg struct {
 // normalizeDesiredReplicasWithB 原方法名 normalizeDesiredReplicasWithBehaviors
 //
 // normalizeDesiredReplicasWithB takes the metrics desired replicas value and normalizes it:
-//  1. Apply the basic conditions (i.e. < maxReplicas, > minReplicas, etc...)
-//  2. Apply the scale up/down limits from the gpaSpec.Behaviors (i.e. add no more than 4 pods)
-//  3. Apply the constraints period (i.e. add no more than 4 pods per minute)
-//  4. Apply the stabilization (i.e. add no more than 4 pods per minute, and pick the smallest
-//     recommendation during last 5 minutes)
+// 1. Apply the basic conditions (i.e. < maxReplicas, > minReplicas, etc...)
+// 2. Apply the scale up/down limits from the gpaSpec.Behaviors (i.e. add no more than 4 pods)
+// 3. Apply the constraints period (i.e. add no more than 4 pods per minute)
+// 4. Apply the stabilization (i.e. add no more than 4 pods per minute, and pick the smallest
+//    recommendation during last 5 minutes)
 func (a *GeneralController) normalizeDesiredReplicasWithB(gpa *autoscaling.GeneralPodAutoscaler,
 	key string, currentReplicas, prenormalizedDesiredReplicas, minReplicas int32) int32 {
 	a.maybeInitScaleDownSW(gpa)

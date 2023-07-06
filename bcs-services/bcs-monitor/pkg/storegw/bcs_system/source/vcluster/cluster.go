@@ -213,15 +213,3 @@ func (m *VCluster) GetClusterDiskioTotal(ctx context.Context, projectID, cluster
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
-
-// GetClusterPodUsed 获取集群pod使用量
-func (m *VCluster) GetClusterPodUsed(ctx context.Context, projectID, clusterID string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
-}
-
-// GetClusterPodTotal 获取集群最大允许pod数
-func (m *VCluster) GetClusterPodTotal(ctx context.Context, projectID, clusterID string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
-}

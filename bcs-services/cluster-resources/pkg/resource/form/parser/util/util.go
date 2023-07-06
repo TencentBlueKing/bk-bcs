@@ -35,10 +35,7 @@ func AnalyzeIntStr(raw interface{}) (int64, string) {
 	case int64:
 		return r, UnitCnt
 	case string:
-		val, err := strconv.ParseInt(r[:len(r)-1], 10, 64)
-		if err != nil {
-			return 0, UnitPercent
-		}
+		val, _ := strconv.ParseInt(r[:len(r)-1], 10, 64)
 		return val, UnitPercent
 	}
 	return 0, UnitCnt
@@ -51,16 +48,10 @@ func ConvertCPUUnit(raw string) int {
 		return 0
 	}
 	if strings.Contains(raw, "m") {
-		val, err := strconv.Atoi(strings.Replace(raw, "m", "", 1))
-		if err != nil {
-			return 0
-		}
+		val, _ := strconv.Atoi(strings.Replace(raw, "m", "", 1))
 		return val
 	}
-	val, err := strconv.ParseFloat(raw, 64)
-	if err != nil {
-		return 0
-	}
+	val, _ := strconv.ParseFloat(raw, 64)
 	return int(val * 1000)
 }
 
@@ -70,18 +61,12 @@ func ConvertMemoryUnit(raw string) int {
 	if strings.Contains(raw, "M") {
 		raw = strings.Replace(raw, "Mi", "", 1)
 		raw = strings.Replace(raw, "M", "", 1)
-		val, err := strconv.Atoi(raw)
-		if err != nil {
-			return 0
-		}
+		val, _ := strconv.Atoi(raw)
 		return val
 	} else if strings.Contains(raw, "G") {
 		raw = strings.Replace(raw, "Gi", "", 1)
 		raw = strings.Replace(raw, "G", "", 1)
-		val, err := strconv.Atoi(raw)
-		if err != nil {
-			return 0
-		}
+		val, _ := strconv.Atoi(raw)
 		return val * 1024
 	}
 	return 0
@@ -93,18 +78,12 @@ func ConvertStorageUnit(raw string) int {
 	if strings.Contains(raw, "M") {
 		raw = strings.Replace(raw, "Mi", "", 1)
 		raw = strings.Replace(raw, "M", "", 1)
-		val, err := strconv.ParseFloat(raw, 64)
-		if err != nil {
-			return 0
-		}
+		val, _ := strconv.ParseFloat(raw, 64)
 		return int(math.Ceil(val / 1024))
 	} else if strings.Contains(raw, "G") {
 		raw = strings.Replace(raw, "Gi", "", 1)
 		raw = strings.Replace(raw, "G", "", 1)
-		val, err := strconv.Atoi(raw)
-		if err != nil {
-			return 0
-		}
+		val, _ := strconv.Atoi(raw)
 		return val
 	}
 	return 0

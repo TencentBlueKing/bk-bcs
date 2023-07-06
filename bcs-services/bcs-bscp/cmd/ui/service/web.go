@@ -177,11 +177,11 @@ func (s *WebServer) subRouter() http.Handler {
 	return r
 }
 
-// HealthzHandler Healthz 接口
 // @Summary  Healthz 接口
 // @Tags     Healthz
 // @Success  200  {string}  string
 // @Router   /healthz [get]
+// HealthzHandler Healthz 接口
 func (s *WebServer) HealthzHandler(w http.ResponseWriter, r *http.Request) {
 	if err := s.state.Healthz(); err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)

@@ -66,7 +66,6 @@
           :cluster-extra-info="clusterExtraInfo"
           :status-text-map="statusTextMap"
           :cluster-nodes-map="clusterNodesMap"
-          :cluster-current-task-data-map="clusterCurrentTaskDataMap"
           @overview="goOverview"
           @detail="goClusterDetail"
           @node="goNodeInfo"
@@ -104,21 +103,11 @@
     <bcs-sideslider
       :is-show.sync="showLogDialog"
       :title="curOperateCluster && curOperateCluster.cluster_id"
-      :width="960"
+      :width="860"
       quick-close
       @hidden="handleCloseLog">
       <template #content>
-        <TaskList v-bkloading="{ isLoading: logLoading }" class="px-[24px] py-[20px]" :data="taskData"></TaskList>
-        <div class="bg-[#FAFBFD] h-[48px] flex items-center px-[24px] log-footer-border-top">
-          <bcs-button
-            class="w-[88px]"
-            theme="primary"
-            v-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(curOperateCluster.status)"
-            @click="handleRetry(curOperateCluster)">
-            {{ $t('重试') }}
-          </bcs-button>
-          <bcs-button class="w-[88px]" @click="showLogDialog = false">{{ $t('取消') }}</bcs-button>
-        </div>
+        <TaskList v-bkloading="{ isLoading: logLoading }" class="px-[30px] py-[20px]" :data="taskData"></TaskList>
       </template>
     </bcs-sideslider>
     <!-- 集群删除确认弹窗 -->
@@ -138,7 +127,7 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { defineComponent, ref, computed, onMounted, set } from 'vue';
-import { useClusterList, useClusterOverview, useClusterOperate, useTask, useVCluster } from './use-cluster';
+import { useClusterList, useClusterOverview, useClusterOperate, useTask } from './use-cluster';
 import { useCluster, useProject } from '@/composables/use-app';
 import useSearch from '@/composables/use-search';
 import ApplyHost from '../components/apply-host.vue';
@@ -188,13 +177,7 @@ export default defineComponent({
     };
 
     // 集群列表
-    const {
-      clusterList: clusterData,
-      getClusterList,
-      clusterExtraInfo,
-      webAnnotations,
-      clusterCurrentTaskDataMap,
-    } = useClusterList();
+    const { clusterList: clusterData, getClusterList, clusterExtraInfo, webAnnotations } = useClusterList();
     const filterSharedClusterList = computed(() => clusterData.value.filter(item => !item.is_shared));
     const keys = ref(['name', 'clusterID']);
     const { searchValue, tableDataMatchSearch: clusterList } = useSearch(filterSharedClusterList, keys);
@@ -269,41 +252,21 @@ export default defineComponent({
     const curOperateCluster = ref<any>(null);
     // 集群删除
     const showConfirmDialog = ref(false);
-    const deleteClusterTips = computed(() => {
-      if (curOperateCluster.value?.clusterType === 'virtual') {
-        return [
-          $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-          $i18n.t('请确认已清理该集群下的所有应用'),
-          $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
-        ];
-      }
-      return curOperateCluster.value?.clusterCategory === 'importer'
-        ? [
-          $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-          $i18n.t('删除导入集群不会对集群有任何操作'),
-          $i18n.t('删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力'),
-          $i18n.t('删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理'),
-        ]
-        : [
-          $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
-          $i18n.t('请确认已清理该集群下的所有应用与节点'),
-          $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
-          $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
-        ];
-    });
-    const { handleDeleteVCluster } = useVCluster();
-    const user = computed(() => $store.state.user);
+    const deleteClusterTips = computed(() => (curOperateCluster.value?.clusterCategory === 'importer'
+      ? [
+        $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+        $i18n.t('删除导入集群不会对集群有任何操作'),
+        $i18n.t('删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力'),
+        $i18n.t('删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理'),
+      ]
+      : [
+        $i18n.t('您正在尝试删除集群 {clusterName}，此操作不可逆，请谨慎操作', { clusterName: curOperateCluster.value?.clusterID }),
+        $i18n.t('请确认已清理该集群下的所有应用与节点'),
+        $i18n.t('集群删除时会清理集群上的工作负载、服务、路由等集群上的所有资源'),
+        $i18n.t('集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本'),
+      ]));
     const confirmDeleteCluster = async () => {
-      let result = false;
-      if (curOperateCluster.value.clusterType === 'virtual') {
-        result = await handleDeleteVCluster({
-          operator: user.value.username,
-          onlyDeleteInfo: false,
-          $clusterId: curOperateCluster.value.clusterID,
-        });
-      } else {
-        result = await deleteCluster(curOperateCluster.value);
-      }
+      const result = await deleteCluster(curOperateCluster.value);
       if (result) {
         await handleGetClusterList();
         $bkMessage({
@@ -313,11 +276,7 @@ export default defineComponent({
       }
     };
     const handleDeleteCluster = (cluster) => {
-      if (
-        cluster.clusterType !== 'virtual'
-        && clusterNodesMap.value[cluster.clusterID]?.length > 0
-        && cluster.status === 'RUNNING'
-      ) return;
+      if (clusterNodesMap.value[cluster.clusterID]?.length > 0 && cluster.status === 'RUNNING') return;
 
       curOperateCluster.value = cluster;
       setTimeout(() => {
@@ -376,7 +335,6 @@ export default defineComponent({
     // 失败重试
     const handleRetry = async (cluster) => {
       isLoading.value = true;
-      showLogDialog.value = false;
       if (['CREATE-FAILURE', 'DELETE-FAILURE'].includes(cluster.status)) {
         // 创建重试
         $bkInfo({
@@ -411,7 +369,7 @@ export default defineComponent({
     const clusterNodesMap = ref({});
     const handleGetClusterNodes = async () => {
       clusterList.value
-        .filter(cluster => webAnnotations.value.perms[cluster.clusterID].cluster_manage && cluster.clusterType !== 'virtual')
+        .filter(cluster => webAnnotations.value.perms[cluster.clusterID].cluster_manage)
         .forEach((item) => {
           getNodeList(item.clusterID).then((data) => {
             set(clusterNodesMap.value, item.clusterID, data);
@@ -462,7 +420,6 @@ export default defineComponent({
       handleChangeType,
       statusTextMap,
       handleGotoConsole,
-      clusterCurrentTaskDataMap,
     };
   },
 });
@@ -482,8 +439,5 @@ export default defineComponent({
     background-color: #E1ECFF;
     z-index: 2;
   }
-}
-.log-footer-border-top {
-  border-top: 1px solid #DCDEE5;
 }
 </style>

@@ -139,8 +139,7 @@ func DeleteWatchComponentByHelm(ctx context.Context, projectID, clusterID string
 	defer cancel()
 
 	err = cloudprovider.LoopDoFunc(timeContext, func() error {
-		var exist bool
-		exist, err = install.IsInstalled(clusterID)
+		exist, err := install.IsInstalled(clusterID)
 		if err != nil {
 			blog.Errorf("DeleteWatchComponentByHelm[%s] failed[%s:%s]: %v", traceID, projectID, clusterID, err)
 			return nil
@@ -289,26 +288,24 @@ func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []proto.NodeG
 	if as.EnableAutoscale {
 		scaler.Replicas = defaultReplicas
 
-		var values string
 		// 注意: 配置打开弹性伸缩的节点池
-		values, err = scaler.GetValues()
+		values, err := scaler.GetValues()
 		if err != nil {
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
 		// install or upgrade
 		if installed {
-			if err = installer.Upgrade(as.ClusterID, values); err != nil {
+			if err := installer.Upgrade(as.ClusterID, values); err != nil {
 				return fmt.Errorf("upgrade app failed, err %s", err)
 			}
 		} else {
-			if err = installer.Install(as.ClusterID, values); err != nil {
+			if err := installer.Install(as.ClusterID, values); err != nil {
 				return fmt.Errorf("install app failed, err %s", err)
 			}
 		}
 
 		// check status
-		var ok bool
-		ok, err = installer.CheckAppStatus(as.ClusterID, time.Minute*10)
+		ok, err := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
 		if err != nil {
 			return fmt.Errorf("check app status failed, err %s", err)
 		}
@@ -323,18 +320,17 @@ func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []proto.NodeG
 		// 副本数设置为 0，则停止应用
 		scaler.Replicas = 0
 
-		var values string
-		values, err = scaler.GetValues()
+		values, err := scaler.GetValues()
 		if err != nil {
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
 
-		if err = installer.Upgrade(as.ClusterID, values); err != nil {
+		if err := installer.Upgrade(as.ClusterID, values); err != nil {
 			return fmt.Errorf("upgrade app failed, err %s", err)
 		}
 		// check status
-		ok, errCheck := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
-		if errCheck != nil {
+		ok, err := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
+		if err != nil {
 			return fmt.Errorf("check app status failed, err %s", err)
 		}
 		if !ok {

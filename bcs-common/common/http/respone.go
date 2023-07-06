@@ -137,5 +137,5 @@ func addExtraField(s []byte, extra map[string]interface{}) (r []byte, err error)
 		}
 	}
 	err = codec.EncJson(jsn, &r)
-	return r, err
+	return
 }

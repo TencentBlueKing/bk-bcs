@@ -19,7 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql
+	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql TODO
 )
 
 // GCoreDB global DB client

@@ -232,10 +232,10 @@ func (r *RDiscover) registerAPI() error {
 		return err
 	}
 
-	apiPath := types.BCS_SERV_BASEPATH + "/" + types.BCS_MODULE_APISERVER + "/" + r.conf.LocalIp
+	path := types.BCS_SERV_BASEPATH + "/" + types.BCS_MODULE_APISERVER + "/" + r.conf.LocalIp
 
-	blog.Infof("register key %s apiserver %s", apiPath, string(data))
-	return r.rd.RegisterAndWatchService(apiPath, data)
+	blog.Infof("register key %s apiserver %s", path, string(data))
+	return r.rd.RegisterAndWatchService(path, data)
 }
 
 func (r *RDiscover) discoverStorageServ(servInfos []string) error {

@@ -19,10 +19,22 @@ import (
 	"fmt"
 	"strings"
 
+	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/criteria/validator"
 	"bscp.io/pkg/runtime/selector"
 )
+
+// StrategyColumns defines Strategy's columns
+var StrategyColumns = mergeColumns(StrategyColumnDescriptor)
+
+// StrategyColumnDescriptor is Strategy's column descriptors.
+var StrategyColumnDescriptor = mergeColumnDescriptors("",
+	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
+	mergeColumnDescriptors("spec", StrategySpecColumnDescriptor),
+	mergeColumnDescriptors("state", StrategyStateColumnDescriptor),
+	mergeColumnDescriptors("attachment", StrategyAttachmentColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
 
 const (
 	// maxNormalStrategiesLimitForApp defines the max limit of normal type strategy for an app for user to create.
@@ -56,35 +68,20 @@ func ValidateAppStrategyNumber(count uint32, mode AppMode) error {
 type Strategy struct {
 	// ID is an auto-increased value, which is a unique identity
 	// of a strategy.
-	ID         uint32              `db:"id" json:"id" gorm:"primaryKey"`
-	Spec       *StrategySpec       `db:"spec" json:"spec" gorm:"embedded"`
-	State      *StrategyState      `db:"state" json:"state" gorm:"embedded"`
-	Attachment *StrategyAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
-	Revision   *Revision           `db:"revision" json:"revision" gorm:"embedded"`
+	ID         uint32              `db:"id" json:"id"`
+	Spec       *StrategySpec       `db:"spec" json:"spec"`
+	State      *StrategyState      `db:"state" json:"state"`
+	Attachment *StrategyAttachment `db:"attachment" json:"attachment"`
+	Revision   *Revision           `db:"revision" json:"revision"`
 }
 
 // TableName is the strategy's database table name.
-func (s *Strategy) TableName() string {
-	return "strategies"
-}
-
-// AppID AuditRes interface
-func (s *Strategy) AppID() uint32 {
-	return s.Attachment.AppID
-}
-
-// ResID AuditRes interface
-func (s *Strategy) ResID() uint32 {
-	return s.ID
-}
-
-// ResType AuditRes interface
-func (s *Strategy) ResType() string {
-	return "strategy"
+func (s Strategy) TableName() Name {
+	return StrategyTable
 }
 
 // ValidateCreate validate strategy is valid or not when create it.
-func (s *Strategy) ValidateCreate() error {
+func (s Strategy) ValidateCreate() error {
 
 	if s.ID > 0 {
 		return errors.New("id should not be set")
@@ -126,7 +123,7 @@ func (s *Strategy) ValidateCreate() error {
 }
 
 // ValidateUpdate validate strategy is valid or not when update it.
-func (s *Strategy) ValidateUpdate(asDefault bool, namespaced bool) error {
+func (s Strategy) ValidateUpdate(asDefault bool, namespaced bool) error {
 
 	if s.ID <= 0 {
 		return errors.New("id should be set")
@@ -175,7 +172,7 @@ func (s *Strategy) ValidateUpdate(asDefault bool, namespaced bool) error {
 }
 
 // ValidateDelete validate the strategy's info when delete it.
-func (s *Strategy) ValidateDelete() error {
+func (s Strategy) ValidateDelete() error {
 	if s.ID <= 0 {
 		return errors.New("strategy id should be set")
 	}
@@ -186,6 +183,19 @@ func (s *Strategy) ValidateDelete() error {
 
 	return nil
 }
+
+// StrategySpecColumns defines StrategySpec's columns
+var StrategySpecColumns = mergeColumns(StrategySpecColumnDescriptor)
+
+// StrategySpecColumnDescriptor is StrategySpec's column descriptors.
+var StrategySpecColumnDescriptor = ColumnDescriptors{
+	{Column: "name", NamedC: "name", Type: enumor.String},
+	{Column: "release_id", NamedC: "release_id", Type: enumor.Numeric},
+	{Column: "as_default", NamedC: "as_default", Type: enumor.Boolean},
+	{Column: "scope", NamedC: "scope", Type: enumor.String},
+	{Column: "mode", NamedC: "mode", Type: enumor.String},
+	{Column: "namespace", NamedC: "namespace", Type: enumor.String},
+	{Column: "memo", NamedC: "memo", Type: enumor.String}}
 
 const (
 	// ReservedNamespacePrefix defines the reserved namespaces which
@@ -200,20 +210,20 @@ const (
 
 // StrategySpec defines all the specifics for strategy set by user.
 type StrategySpec struct {
-	Name      string `db:"name" json:"name" gorm:"column:name"`
-	ReleaseID uint32 `db:"release_id" json:"release_id" gorm:"column:release_id"`
+	Name      string `db:"name" json:"name"`
+	ReleaseID uint32 `db:"release_id" json:"release_id"`
 	// AsDefault(=true) describes this strategy works as full release,
 	// which means any instance can match this strategies
-	AsDefault bool `db:"as_default" json:"as_default" gorm:"column:as_default"`
+	AsDefault bool `db:"as_default" json:"as_default"`
 
 	// Scope must be empty when this strategy is a default strategy.
 	// Scope must not be empty when this strategy is not a default strategy.
-	Scope *Scope `db:"scope" json:"scope" gorm:"column:scope;type:json"`
+	Scope *Scope `db:"scope" json:"scope"`
 
 	// Mode defines what mode of this strategy works at, it is succeeded from
 	// this strategy's app's mode.
 	// it can not be updated once it is created.
-	Mode AppMode `db:"mode" json:"mode" gorm:"column:mode"`
+	Mode AppMode `db:"mode" json:"mode"`
 
 	// Namespace defines which namespace this strategy works at.
 	// It has the following features:
@@ -226,8 +236,8 @@ type StrategySpec struct {
 	// 3. if this strategy is set to default strategy and works at namespace mode,
 	//    then its namespace should be the reserved namespace DefaultNamespace(
 	//    'bscp_default_ns')
-	Namespace string `db:"namespace" json:"namespace" gorm:"column:namespace"`
-	Memo      string `db:"memo" json:"memo" gorm:"column:memo"`
+	Namespace string `db:"namespace" json:"namespace"`
+	Memo      string `db:"memo" json:"memo"`
 }
 
 // ValidateCreate validate strategy spec when it is created.
@@ -357,9 +367,15 @@ func (p PublishState) Validate() error {
 	return nil
 }
 
+// StrategyStateColumns defines StrategyState's columns
+var StrategyStateColumns = mergeColumns(StrategyStateColumnDescriptor)
+
+// StrategyStateColumnDescriptor is StrategyState's column descriptors.
+var StrategyStateColumnDescriptor = ColumnDescriptors{{Column: "pub_state", NamedC: "pub_state", Type: enumor.String}}
+
 // StrategyState defines the strategy's state
 type StrategyState struct {
-	PubState PublishState `db:"pub_state" json:"pub_state" gorm:"column:pub_state"`
+	PubState PublishState `db:"pub_state" json:"pub_state"`
 }
 
 // Validate whether strategy state is valid or not.
@@ -371,11 +387,20 @@ func (s StrategyState) Validate() error {
 	return nil
 }
 
+// StrategyAttachmentColumns defines StrategyAttachment's columns
+var StrategyAttachmentColumns = mergeColumns(StrategyAttachmentColumnDescriptor)
+
+// StrategyAttachmentColumnDescriptor is StrategyAttachment's column descriptors.
+var StrategyAttachmentColumnDescriptor = ColumnDescriptors{
+	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
+	{Column: "app_id", NamedC: "app_id", Type: enumor.Numeric},
+	{Column: "strategy_set_id", NamedC: "strategy_set_id", Type: enumor.Numeric}}
+
 // StrategyAttachment defines the strategy attachments.
 type StrategyAttachment struct {
-	BizID         uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
-	AppID         uint32 `db:"app_id" json:"app_id" gorm:"column:app_id"`
-	StrategySetID uint32 `db:"strategy_set_id" json:"strategy_set_id" gorm:"column:strategy_set_id"`
+	BizID         uint32 `db:"biz_id" json:"biz_id"`
+	AppID         uint32 `db:"app_id" json:"app_id"`
+	StrategySetID uint32 `db:"strategy_set_id" json:"strategy_set_id"`
 }
 
 // IsEmpty test whether strategy attachment is empty or not.
@@ -471,7 +496,7 @@ func (s Scope) ValidateUpdate(asDefault bool, namespaced bool) error {
 // SubStrategy is the sub-strategy of its parent strategy, it can not be
 // used independently.
 type SubStrategy struct {
-	Spec *SubStrategySpec `db:"spec" json:"spec" gorm:"column:name"`
+	Spec *SubStrategySpec `db:"spec" json:"spec"`
 }
 
 // IsEmpty test whether a sub-strategy is empty or not.
@@ -517,11 +542,11 @@ func (s SubStrategy) ValidateUpdate() error {
 
 // SubStrategySpec is the sub-strategy's specifics defined by user.
 type SubStrategySpec struct {
-	Name string `db:"name" json:"name" gorm:"column:name"`
+	Name string `db:"name" json:"name"`
 	// ReleaseID this sub strategy's released version id.
-	ReleaseID uint32            `db:"release_id" json:"release_id" gorm:"column:release_id"`
-	Scope     *SubScopeSelector `db:"scope" json:"scope" gorm:"embedded"`
-	Memo      string            `db:"memo" json:"memo" gorm:"column:memo"`
+	ReleaseID uint32            `db:"release_id" json:"release_id"`
+	Scope     *SubScopeSelector `db:"scope" json:"scope"`
+	Memo      string            `db:"memo" json:"memo"`
 }
 
 // IsEmpty test whether a sub-strategy specific is empty or not.
@@ -578,7 +603,7 @@ type SubScopeSelector struct {
 	// this select should not be matched all policy. and this selector
 	// is required, should not be empty.
 	// this selector has a max size limit, as is MaxScopeSelectorByteSize byte.
-	Selector *selector.Selector `db:"selector" json:"selector" gorm:"column:selector;type:json"`
+	Selector *selector.Selector `db:"selector" json:"selector"`
 }
 
 // IsEmpty test whether a sub-scope selector is empty or not.

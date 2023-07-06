@@ -347,8 +347,8 @@ type TaskManager interface {
 	// BuildUpdateAutoScalingOptionTask 更新CA配置 - update cluster autoscaling option
 	BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption, opt *UpdateScalingOption) (*proto.Task,
 		error)
-	// BuildSwitchAsOptionStatusTask 开启/关闭CA - switch cluster autoscaling option enable auto scaling status
-	BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+	// BuildSwitchAutoScalingOptionStatusTask 开启/关闭CA - switch cluster autoscaling option enable auto scaling status
+	BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 		opt *CommonOption) (*proto.Task, error)
 
 	// ClusterManager taskList - 集群任务队列

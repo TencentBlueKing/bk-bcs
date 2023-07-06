@@ -54,6 +54,7 @@ func NewResMgr(clusterID, groupVersion, kind string) *ResMgr {
 }
 
 /*
+TODO 重构 ResMgr
 目前存在一个问题，大部分资源使用到了 ResMgr，但其 List，Get 方法返回格式固定为了 structpb.Struct，
 导致在 handler 层如果要使用数据计算 WebAnnotations（如 ConfigMap, GameDeploy 等），则要么解包 xxx.AsMap()，
 要么不使用 ResMgr，直接使用 resp.BuildListApiRespData，这样会导致调用关系比较乱，有些走 ResMgr 有些不走。

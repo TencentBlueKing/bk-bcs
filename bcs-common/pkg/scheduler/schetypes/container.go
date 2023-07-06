@@ -19,17 +19,17 @@ import (
 )
 
 const (
-	// ContainerStatus_PAUSED paused status
+	// ContainerStatus_PAUSED TODO
 	ContainerStatus_PAUSED = "paused"
-	// ContainerStatus_RESTARTING restarting status
+	// ContainerStatus_RESTARTING TODO
 	ContainerStatus_RESTARTING = "restarting"
-	// ContainerStatus_RUNNING running status
+	// ContainerStatus_RUNNING TODO
 	ContainerStatus_RUNNING = "running"
-	// ContainerStatus_DEAD dead status
+	// ContainerStatus_DEAD TODO
 	ContainerStatus_DEAD = "dead"
-	// ContainerStatus_CREATED created status
+	// ContainerStatus_CREATED TODO
 	ContainerStatus_CREATED = "created"
-	// ContainerStatus_EXITED exited status
+	// ContainerStatus_EXITED TODO
 	ContainerStatus_EXITED = "exited"
 )
 

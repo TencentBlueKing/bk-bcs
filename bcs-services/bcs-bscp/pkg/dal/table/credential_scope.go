@@ -1,102 +1,102 @@
-/*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package table
 
 import (
 	"errors"
 	"time"
 
+	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/runtime/credential"
+)
+
+// CredentialColumns defines credential's columns
+var CredentialScopeColumns = mergeColumns(CredentialScopeColumnDescriptor)
+
+// CredentialScopeColumnDescriptor is mergeColumnDescriptors
+var CredentialScopeColumnDescriptor = mergeColumnDescriptors("",
+	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
+	mergeColumnDescriptors("spec", CredentialScopeSpecColumnDescriptor),
+	mergeColumnDescriptors("attachment", CredentialScopeAttachmentColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor),
 )
 
 // CredentialScope defines CredentialScope's columns
 type CredentialScope struct {
 	// ID is an auto-increased value, which is a unique identity of a Credential.
-	ID         uint32                     `json:"id" gorm:"primaryKey"`
-	Spec       *CredentialScopeSpec       `json:"spec" gorm:"embedded"`
-	Attachment *CredentialScopeAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *Revision                  `json:"revision" gorm:"embedded"`
+	ID         uint32                     `db:"id" json:"id"`
+	Spec       *CredentialScopeSpec       `db:"spec" json:"spec"`
+	Attachment *CredentialScopeAttachment `db:"attachment" json:"attachment"`
+	Revision   *Revision                  `db:"revision" json:"revision"`
 }
 
 // TableName is the CredentialScope's database table name.
-func (c *CredentialScope) TableName() string {
-	return "credential_scopes"
-}
-
-// AppID AuditRes interface
-func (c *CredentialScope) AppID() uint32 {
-	return 0
-}
-
-// ResID AuditRes interface
-func (c *CredentialScope) ResID() uint32 {
-	return c.ID
-}
-
-// ResType AuditRes interface
-func (c *CredentialScope) ResType() string {
-	return "credential_scope"
+func (s CredentialScope) TableName() Name {
+	return CredentialScopeTable
 }
 
 // ValidateCreate validate Credential is valid or not when create it.
-func (c *CredentialScope) ValidateCreate() error {
+func (s CredentialScope) ValidateCreate() error {
 
-	if c.ID > 0 {
+	if s.ID > 0 {
 		return errors.New("id should not be set")
 	}
 
-	if c.Spec == nil {
+	if s.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	if err := c.Spec.CredentialScope.Validate(); err != nil {
+	if err := s.Spec.CredentialScope.Validate(); err != nil {
 		return err
 	}
 
-	if c.Attachment == nil {
+	if s.Attachment == nil {
 		return errors.New("attachment not set")
 	}
 
-	if c.Revision == nil {
+	if s.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := c.Revision.ValidateCreate(); err != nil {
+	if err := s.Revision.ValidateCreate(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+// CredentialScopeSpecColumns defines credential scope's columns
+var CredentialScopeSpecColumns = mergeColumns(CredentialScopeSpecColumnDescriptor)
+
+// CredentialScopeSpecColumnDescriptor defines credential scope's descriptor
+var CredentialScopeSpecColumnDescriptor = ColumnDescriptors{
+	{Column: "credential_scope", NamedC: "credential_scope", Type: enumor.String},
+	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
+}
+
 // CredentialScopeSpec defines credential scope's Spec
 type CredentialScopeSpec struct {
-	CredentialScope credential.CredentialScope `json:"credential_scope" gorm:"column:credential_scope"`
-	ExpiredAt       time.Time                  `json:"expired_at" gorm:"column:expired_at"`
+	CredentialScope credential.CredentialScope `db:"credential_scope" json:"credential_scope"`
+	ExpiredAt       time.Time                  `db:"expired_at" json:"expired_at"`
+}
+
+// CredentialScopeAttachmentColumnDescriptor defines credential scope's ColumnDescriptors
+var CredentialScopeAttachmentColumnDescriptor = ColumnDescriptors{
+	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
+	{Column: "credential_id", NamedC: "credential_id", Type: enumor.Numeric},
 }
 
 // CredentialScopeAttachment defines the credential scope attachments.
 type CredentialScopeAttachment struct {
-	BizID        uint32 `json:"biz_id" gorm:"column:biz_id"`
-	CredentialId uint32 `json:"credential_id" gorm:"column:credential_id"`
+	BizID        uint32 `db:"biz_id" json:"biz_id"`
+	CredentialId uint32 `db:"credential_id" json:"credential_id"`
 }
 
 // ValidateDelete credential scope validate
-func (c *CredentialScope) ValidateDelete() error {
-	if c.ID <= 0 {
+func (s CredentialScope) ValidateDelete() error {
+	if s.ID <= 0 {
 		return errors.New("credential scope id should be set")
 	}
 
-	if c.Attachment.BizID <= 0 {
+	if s.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
 
@@ -104,25 +104,25 @@ func (c *CredentialScope) ValidateDelete() error {
 }
 
 // ValidateUpdate validate Credential is valid or not when update it.
-func (c *CredentialScope) ValidateUpdate() error {
+func (s CredentialScope) ValidateUpdate() error {
 
-	if c.ID <= 0 {
+	if s.ID <= 0 {
 		return errors.New("credential scope id should be set")
 	}
 
-	if c.Spec == nil {
+	if s.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	if err := c.Spec.CredentialScope.Validate(); err != nil {
+	if err := s.Spec.CredentialScope.Validate(); err != nil {
 		return err
 	}
 
-	if c.Attachment == nil {
+	if s.Attachment == nil {
 		return errors.New("attachment not set")
 	}
 
-	if c.Revision == nil {
+	if s.Revision == nil {
 		return errors.New("revision not set")
 	}
 

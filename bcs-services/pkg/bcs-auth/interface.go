@@ -11,7 +11,7 @@
  *
  */
 
-package bcsauth
+package bcs_auth
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"

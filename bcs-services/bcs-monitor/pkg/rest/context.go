@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 )
@@ -26,19 +26,18 @@ import (
 // Context xxx
 type Context struct {
 	*gin.Context
-	RequestId     string          `json:"request_id"`
-	StartTime     time.Time       `json:"start_time"`
-	Operator      string          `json:"operator"`
-	Username      string          `json:"username"`
-	ProjectId     string          `json:"project_id"`
-	ProjectCode   string          `json:"project_code"`
-	ClusterId     string          `json:"cluster_id"`
-	SharedCluster bool            `json:"shared_cluster"`
-	BindEnv       *EnvToken       `json:"bind_env"`
-	BindBCS       *UserClaimsInfo `json:"bind_bcs"`
-	BindAPIGW     *APIGWToken     `json:"bind_apigw"`
-	BindCluster   *bcs.Cluster    `json:"bind_cluster"`
-	BindProject   *bcs.Project    `json:"bind_project"`
+	RequestId   string          `json:"request_id"`
+	StartTime   time.Time       `json:"start_time"`
+	Operator    string          `json:"operator"`
+	Username    string          `json:"username"`
+	ProjectId   string          `json:"project_id"`
+	ProjectCode string          `json:"project_code"`
+	ClusterId   string          `json:"cluster_id"`
+	BindEnv     *EnvToken       `json:"bind_env"`
+	BindBCS     *UserClaimsInfo `json:"bind_bcs"`
+	BindAPIGW   *APIGWToken     `json:"bind_apigw"`
+	BindCluster *bcs.Cluster    `json:"bind_cluster"`
+	BindProject *bcs.Project    `json:"bind_project"`
 }
 
 // WriteAttachment 提供附件下载能力

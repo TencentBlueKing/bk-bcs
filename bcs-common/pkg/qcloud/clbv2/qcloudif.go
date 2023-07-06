@@ -22,7 +22,7 @@ import (
 type APIInterface interface {
 	DescribeLoadBalanceTaskResult(input *DescribeLoadBalancersTaskResultInput) (*DescribeLoadBalancersTaskResultOutput,
 		error)
-	// CreateLoadBalance will create load balancer
+	// CreateLoadBalance TODO
 	// clb v2
 	CreateLoadBalance(input *CreateLBInput) (*CreateLBOutput, error)
 	DescribeLoadBalance(input *DescribeLBInput) (*DescribeLBOutput, error)
@@ -51,7 +51,7 @@ type APIInterface interface {
 	DeleteRules(input *DeleteForwardLBListenerRulesInput) (*DeleteForwardLBListenerRulesOutput, error)
 	ModifyRuleDomain(input *ModifyForwardLBRulesDomainInput) (*ModifyForwardLBRulesDomainOutput, error)
 	ModifyRuleProbe(input *ModifyLoadBalancerRulesProbeInput) (*ModifyLoadBalancerRulesProbeOutput, error)
-	// DescribeCVMInstance will describe cvm instance
+	// DescribeCVMInstance TODO
 	// cvm
 	DescribeCVMInstance(input *DescribeCVMInstanceInput) (*DescribeCVMInstanceOutput, error)
 	DescribeCVMInstanceV3(input *DescribeCVMInstanceV3Input) (*DescribeCVMInstanceV3Output, error)

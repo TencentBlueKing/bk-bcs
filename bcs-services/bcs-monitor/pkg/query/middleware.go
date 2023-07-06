@@ -34,21 +34,19 @@ const (
 	LabelMatcherParam = "labelMatch[]"
 )
 
-// TenantAuthMiddleware tenant auth middleware
-type TenantAuthMiddleware struct {
+type tenantAuthMiddleware struct {
 	ins extpromhttp.InstrumentationMiddleware
 	ctx context.Context
 }
 
 // NewTenantAuthMiddleware 租户鉴权中间件
-func NewTenantAuthMiddleware(ctx context.Context, ins extpromhttp.InstrumentationMiddleware) (*TenantAuthMiddleware,
+func NewTenantAuthMiddleware(ctx context.Context, ins extpromhttp.InstrumentationMiddleware) (*tenantAuthMiddleware,
 	error) {
-	return &TenantAuthMiddleware{ctx: ctx, ins: ins}, nil
+	return &tenantAuthMiddleware{ctx: ctx, ins: ins}, nil
 }
 
 // parseLabelMatchersParam 解析 labelMatch selector
-func parseLabelMatchersParam(r *http.Request) ([][]*labels.Matcher, *api.ApiError) {
-	var labelMatchers [][]*labels.Matcher
+func parseLabelMatchersParam(r *http.Request) (labelMatchers [][]*labels.Matcher, _ *api.ApiError) {
 	if err := r.ParseForm(); err != nil {
 		return nil, &api.ApiError{Typ: api.ErrorInternal, Err: errors.Wrap(err, "parse form")}
 	}
@@ -65,7 +63,7 @@ func parseLabelMatchersParam(r *http.Request) ([][]*labels.Matcher, *api.ApiErro
 }
 
 // NewHandler 处理函数
-func (t *TenantAuthMiddleware) NewHandler(handlerName string, handler http.Handler) http.HandlerFunc {
+func (t *tenantAuthMiddleware) NewHandler(handlerName string, handler http.Handler) http.HandlerFunc {
 	handleFunc := t.ins.NewHandler(handlerName, handler)
 
 	return func(w http.ResponseWriter, r *http.Request) {

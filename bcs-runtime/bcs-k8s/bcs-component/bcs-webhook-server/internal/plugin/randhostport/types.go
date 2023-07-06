@@ -29,8 +29,6 @@ const (
 	envRandHostportPodName      = "BCS_RANDHOSTPORT_POD_NAME"
 	envRandHostportPodNamespace = "BCS_RANDHOSTPORT_POD_NAMESPACE"
 
-	annotationsRandHostportPrefix = pluginAnnotationKey + "."
-
 	// PatchOperationAdd patch add operation
 	PatchOperationAdd = "add"
 	// PatchOperationReplace patch replace operation
@@ -50,6 +48,4 @@ const (
 	PatchPathPodLabel = "/metadata/labels"
 	// PatchPathAffinity path for patching pod affinity
 	PatchPathAffinity = "/spec/affinity"
-	// PatchPathPodAnnotations path for patching pod annotations
-	PatchPathPodAnnotations = "/metadata/annotations"
 )

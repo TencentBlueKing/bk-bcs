@@ -20,16 +20,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 	"io/ioutil"
 	"math/rand"
 	syshttp "net/http"
 	"strings"
 	"time"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 
 	"golang.org/x/net/context"
 )
@@ -227,13 +226,12 @@ func (s *Client) Delete(ctx context.Context, key string) (obj meta.Object, err e
 // * if key empty, watch all data
 // * if key is namespace, watch all data under namespace
 // * if key is namespace/name, watch detail data
-// watch is Stopped when any error occure, close event channel immediately
+// watch is Stopped when any error occure, close event channel immediatly
 // param cxt: context for background running, not used, only reserved now
 // param version: data version, not used, reserved
 // param selector: labels selector
 // return:
-//
-//	watch: watch implementation for changing event, need to Stop manually
+//  watch: watch implementation for changing event, need to Stop manually
 func (s *Client) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
 	if len(key) == 0 || strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key formate")
@@ -391,7 +389,7 @@ func (s *Client) List(cxt context.Context, key string, selector storage.Selector
 	return objs, nil
 }
 
-// Close storage connection, clean resource
+// Close storage conenction, clean resource
 func (s *Client) Close() {
 	blog.V(3).Infof("http api event storage %v exit.", s.servers)
 }
@@ -447,7 +445,7 @@ func (e *Watch) eventProxy() {
 			blog.V(3).Infof("http watch is asked stopped")
 			return
 		}
-		// reading all data from response connection
+		// reading all data from repsonse connection
 		rawStr, err := buf.ReadSlice('\n')
 		if err != nil {
 			blog.V(3).Infof("http watch %s read continue response failed, %s", e.url, err)
@@ -460,7 +458,7 @@ func (e *Watch) eventProxy() {
 			return
 		}
 		if watchRes.Code != 0 {
-			// Note(DeveloperJim): error code classification for recovery
+			// todo(DeveloperJim): error code classification for recovery
 			blog.V(3).Infof("http watch %s failed, code: %d, message: %s", e.url, watchRes.Code, watchRes.Message)
 			return
 		}

@@ -77,8 +77,7 @@ func (p *patcher) Run(renderedManifests *bytes.Buffer) (*bytes.Buffer, error) {
 	for _, s := range splitManifests {
 		// 向 metadata.labels 中注入 `io.tencent.bcs.controller.name`
 		// 向 spec.template.metadata.labels 中注入 `io.tencent.bcs.controller.name`
-		var j string
-		j, err = inject4MetadataLabels(s)
+		j, err := inject4MetadataLabels(s)
 		if err != nil {
 			blog.Errorf("inject4MetadataLabels error, %s", err.Error())
 			yList = append(yList, s)
@@ -141,7 +140,7 @@ func inject4MetadataLabels(manifest string) (string, error) {
 		return s, err
 	}
 	var name string
-	if err = namePath.Read(strings.NewReader(s), &name); err != nil {
+	if err := namePath.Read(strings.NewReader(s), &name); err != nil {
 		return s, err
 	}
 
@@ -151,7 +150,7 @@ func inject4MetadataLabels(manifest string) (string, error) {
 		return s, err
 	}
 	var kind string
-	if err = kindPath.Read(strings.NewReader(s), &kind); err != nil {
+	if err := kindPath.Read(strings.NewReader(s), &kind); err != nil {
 		return s, err
 	}
 

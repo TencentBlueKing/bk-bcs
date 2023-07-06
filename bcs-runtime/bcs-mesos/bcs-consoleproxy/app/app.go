@@ -15,8 +15,6 @@
 package app
 
 import (
-	"os"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	comconf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
@@ -24,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-consoleproxy/console-proxy/api"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-consoleproxy/console-proxy/config"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-consoleproxy/console-proxy/manager"
+	"os"
 )
 
 // ConsoleProxy is an console proxy struct
@@ -72,7 +71,7 @@ func setConfig(op *options.ConsoleProxyOption) {
 	op.Conf.IsAuth = op.IsAuth
 	op.Conf.IsOneSeesion = op.IsOneSession
 
-	// server cert directory
+	// server cert directoty
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ServerKeyFile != "" {
 

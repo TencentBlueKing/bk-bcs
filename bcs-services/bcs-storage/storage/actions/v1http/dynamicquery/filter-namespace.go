@@ -29,7 +29,6 @@ type NameSpaceFilter struct {
 
 const nameSpaceNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t NameSpaceFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, nameSpaceNestedTimeLayout)
 }

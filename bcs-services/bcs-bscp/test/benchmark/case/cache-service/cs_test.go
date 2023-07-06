@@ -65,7 +65,7 @@ func (p *pool) Pick() pbcs.CacheClient {
 		return p.conn[p.idx]
 	}
 
-	p.idx++
+	p.idx += 1
 	return p.conn[p.idx]
 }
 
@@ -107,14 +107,14 @@ func init() {
 // TestReport perform routine stress tests and generate stress test reports.
 func TestReport(t *testing.T) {
 	TestBenchAppMeta(t)
-	// NOTE: strategy related test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//TestBenchAppCPS(t)
 	TestBenchAppCRIMeta(t)
 	TestBenchReleasedCI(t)
 	TestGetAppMeta(t)
 	TestGetReleasedCI(t)
 	TestGetAppInstanceRelease(t)
-	// NOTE: strategy related test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//TestGetAppReleasedStrategy(t)
 
 	if err := run.GenReport(outputPath); err != nil {

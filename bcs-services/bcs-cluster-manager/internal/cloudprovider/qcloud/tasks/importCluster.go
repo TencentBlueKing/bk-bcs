@@ -205,10 +205,9 @@ func checkClusterEndpointStatus(ctx context.Context, data *cloudprovider.CloudDe
 	defer cancel()
 
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		status, errStatus := cli.GetClusterEndpointStatus(data.Cluster.SystemID, true)
-		if errStatus != nil {
-			blog.Errorf("taskID[%s] GetClusterEndpointStatus[%s] failed: %v",
-				taskID, data.Cluster.SystemID, errStatus)
+		status, err := cli.GetClusterEndpointStatus(data.Cluster.SystemID, true)
+		if err != nil {
+			blog.Errorf("taskID[%s] GetClusterEndpointStatus[%s] failed: %v", taskID, data.Cluster.SystemID, err)
 			return nil
 		}
 		switch {

@@ -139,10 +139,10 @@ func parseIngHosts(manifest map[string]interface{}) (hosts []string) {
 func parseIngAddrs(manifest map[string]interface{}) (addrs []string) {
 	ingresses := mapx.GetList(manifest, "status.loadBalancer.ingress")
 	for _, ing := range ingresses {
-		ing2, _ := ing.(map[string]interface{})
-		if ip, ok := ing2["ip"]; ok {
+		ing, _ := ing.(map[string]interface{})
+		if ip, ok := ing["ip"]; ok {
 			addrs = append(addrs, ip.(string))
-		} else if hostname, ok := ing2["hostname"]; ok {
+		} else if hostname, ok := ing["hostname"]; ok {
 			addrs = append(addrs, hostname.(string))
 		}
 	}
@@ -161,16 +161,16 @@ func getIngDefaultPort(manifest map[string]interface{}) string {
 func parseV1IngRules(manifest map[string]interface{}) (rules []map[string]interface{}) {
 	rawRules := mapx.GetList(manifest, "spec.rules")
 	for _, r := range rawRules {
-		r2, _ := r.(map[string]interface{})
-		paths := mapx.GetList(r2, "http.paths")
+		r, _ := r.(map[string]interface{})
+		paths := mapx.GetList(r, "http.paths")
 		for _, p := range paths {
-			p2, _ := p.(map[string]interface{})
+			p, _ := p.(map[string]interface{})
 			subRules := map[string]interface{}{
-				"host":        r2["host"],
-				"path":        p2["path"],
-				"pathType":    p2["pathType"],
-				"serviceName": mapx.Get(p2, "backend.service.name", "N/A"),
-				"port":        mapx.Get(p2, "backend.service.port.number", "N/A"),
+				"host":        r["host"],
+				"path":        p["path"],
+				"pathType":    p["pathType"],
+				"serviceName": mapx.Get(p, "backend.service.name", "N/A"),
+				"port":        mapx.Get(p, "backend.service.port.number", "N/A"),
 			}
 			rules = append(rules, subRules)
 		}
@@ -182,16 +182,16 @@ func parseV1IngRules(manifest map[string]interface{}) (rules []map[string]interf
 func parseV1beta1IngRules(manifest map[string]interface{}) (rules []map[string]interface{}) {
 	rawRules := mapx.GetList(manifest, "spec.rules")
 	for _, r := range rawRules {
-		r2, _ := r.(map[string]interface{})
-		paths := mapx.GetList(r2, "http.paths")
+		r, _ := r.(map[string]interface{})
+		paths := mapx.GetList(r, "http.paths")
 		for _, p := range paths {
-			p2, _ := p.(map[string]interface{})
+			p, _ := p.(map[string]interface{})
 			subRules := map[string]interface{}{
-				"host":        r2["host"],
-				"path":        p2["path"],
+				"host":        r["host"],
+				"path":        p["path"],
 				"pathType":    "--",
-				"serviceName": mapx.Get(p2, "backend.serviceName", "N/A"),
-				"port":        mapx.Get(p2, "backend.servicePort", "N/A"),
+				"serviceName": mapx.Get(p, "backend.serviceName", "N/A"),
+				"port":        mapx.Get(p, "backend.servicePort", "N/A"),
 			}
 			rules = append(rules, subRules)
 		}
@@ -212,11 +212,11 @@ func parseSVCExternalIPs(manifest map[string]interface{}) []string {
 func parseSVCPorts(manifest map[string]interface{}) (ports []string) {
 	rawPorts := mapx.GetList(manifest, "spec.ports")
 	for _, p := range rawPorts {
-		p2, _ := p.(map[string]interface{})
-		if nodePort, ok := p2["nodePort"]; ok {
-			ports = append(ports, fmt.Sprintf("%d:%d/%s", p2["port"], nodePort, p2["protocol"]))
+		p, _ := p.(map[string]interface{})
+		if nodePort, ok := p["nodePort"]; ok {
+			ports = append(ports, fmt.Sprintf("%d:%d/%s", p["port"], nodePort, p["protocol"]))
 		} else {
-			ports = append(ports, fmt.Sprintf("%d/%s", p2["port"], p2["protocol"]))
+			ports = append(ports, fmt.Sprintf("%d/%s", p["port"], p["protocol"]))
 		}
 	}
 	return ports
@@ -235,10 +235,10 @@ func parseEndpoints(manifest map[string]interface{}) (endpoints []string) {
 		}
 		for _, addr := range mapx.GetList(ss, "addresses") {
 			for _, p := range mapx.GetList(ss, "ports") {
-				addr2, _ := addr.(map[string]interface{})
-				p2, _ := p.(map[string]interface{})
-				endpoints = append(endpoints, net.JoinHostPort(fmt.Sprintf("%s", addr2["ip"]),
-					fmt.Sprintf("%d", p2["port"])))
+				addr, _ := addr.(map[string]interface{})
+				p, _ := p.(map[string]interface{})
+				endpoints = append(endpoints, net.JoinHostPort(fmt.Sprintf("%s", addr["ip"]),
+					fmt.Sprintf("%d", p["port"])))
 			}
 		}
 	}

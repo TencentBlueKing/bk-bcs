@@ -23,7 +23,6 @@ import (
 )
 
 // TestEnsureApplicationGatewayListener test ensure azure application gateway listener
-// NOCC:tosa/fn_length(测试函数)
 func TestEnsureApplicationGatewayListener(t *testing.T) {
 	listener := &networkextensionv1.Listener{
 		TypeMeta:   metav1.TypeMeta{},

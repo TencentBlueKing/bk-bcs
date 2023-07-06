@@ -216,16 +216,16 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 	for _, portEntry := range portEntryList {
 		poolKey := getPoolKey(portEntry.poolName, portEntry.poolNamespace)
 		var portPoolItemStatus *networkextensionv1.PortPoolItemStatus
-		var inErr error
+		var err error
 		// deal with TCP_UDP protocol
 		// for TCP_UDP protocol, one container port needs both TCP listener port and UDP listener port
 		if portEntry.protocol == constant.PortPoolPortProtocolTCPUDP {
 			var cachePortItemMap map[string]portpoolcache.AllocatedPortItem
-			portPoolItemStatus, cachePortItemMap, inErr = s.poolCache.AllocateAllProtocolPortBinding(poolKey)
-			if inErr != nil {
+			portPoolItemStatus, cachePortItemMap, err = s.poolCache.AllocateAllProtocolPortBinding(poolKey)
+			if err != nil {
 				s.cleanAllocatedResource(portItemListArr)
 				return nil, fmt.Errorf("allocate protocol %s port from pool %s failed, err %s",
-					portEntry.protocol, poolKey, inErr.Error())
+					portEntry.protocol, poolKey, err.Error())
 			}
 			var tmpPortItemList []portpoolcache.AllocatedPortItem
 			for _, cachePortItem := range cachePortItemMap {
@@ -236,11 +236,11 @@ func (s *Server) mutatingPod(pod *k8scorev1.Pod) ([]PatchOperation, error) {
 		} else {
 			// deal with TCP protocol and UDP protocol
 			var cachePortItem portpoolcache.AllocatedPortItem
-			portPoolItemStatus, cachePortItem, inErr = s.poolCache.AllocatePortBinding(poolKey, portEntry.protocol)
-			if inErr != nil {
+			portPoolItemStatus, cachePortItem, err = s.poolCache.AllocatePortBinding(poolKey, portEntry.protocol)
+			if err != nil {
 				s.cleanAllocatedResource(portItemListArr)
 				return nil, fmt.Errorf("allocate protocol %s port from pool %s failed, err %s",
-					portEntry.protocol, poolKey, inErr.Error())
+					portEntry.protocol, poolKey, err.Error())
 			}
 			portItemListArr = append(portItemListArr, []portpoolcache.AllocatedPortItem{cachePortItem})
 			portPoolItemStatusList = append(portPoolItemStatusList, portPoolItemStatus)
@@ -299,7 +299,7 @@ func (s *Server) handleForPodCreateFailed(pod *k8scorev1.Pod, portItemListArr []
 	defer func() {
 		if r := recover(); r != nil {
 			blog.Errorf("pod '%s/%s' check failed create failed: %v, occurred a panic: %s\n",
-				pod.GetNamespace(), pod.GetName(), r, string(debug.Stack()))
+				r, string(debug.Stack()))
 		}
 	}()
 
@@ -370,7 +370,7 @@ func (s *Server) patchPodByBinding(
 
 	// patch annotations
 	var retPatches []PatchOperation
-	annotationPortsPatch, err := s.generatePortsAnnoPatchByBinding(pod, portBinding)
+	annotationPortsPatch, err := s.generatePortsAnnotationPatchByBinding(pod, portBinding)
 	if err != nil {
 		return nil, fmt.Errorf("generate annotations ports by portbinding failed, err %s", err.Error())
 	}
@@ -400,7 +400,7 @@ func (s *Server) patchPodByBinding(
 }
 
 // generate container annotations patch object by existed portbinding object
-func (s *Server) generatePortsAnnoPatchByBinding(
+func (s *Server) generatePortsAnnotationPatchByBinding(
 	pod *k8scorev1.Pod, portBinding *networkextensionv1.PortBinding) (PatchOperation, error) {
 	portValues, err := json.Marshal(portBinding.Spec.PortBindingList)
 	if err != nil {

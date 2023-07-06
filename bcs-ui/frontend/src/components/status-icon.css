@@ -10,15 +10,6 @@
         background: #FF9C01;
         margin-right: 8px;
     }
-    .status-icon-result {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border: 1px solid #FFE8C3;
-        border-radius: 4px;
-        background: #FF9C01;
-        margin-right: 8px;
-    }
 
     .status-name {
         flex: 1;
@@ -29,19 +20,9 @@
         background: #ea3636;
     }
 
-    .status-red-result {
-        border-color: #ea3636;
-        background: #ffe6e6;
-    }
-
     .status-green {
         border-color: #E5F6EA;
         background: #3FC06D;
-    }
-
-    .status-green-result {
-        border-color: #3FC06D;
-        background: #E5F6EA;
     }
 
     .status-blue {
@@ -49,18 +30,8 @@
         background: #3A84FF;
     }
 
-    .status-blue-result {
-        border-color: #3A84FF;
-        background: #E2EDFF;
-    }
-
     .status-gray {
         border-color: #eeeff0;
         background: #979BA5;
-    }
-
-    .status-gray-result {
-        border-color: #979BA5;
-        background: #eeeff0;
     }
 }

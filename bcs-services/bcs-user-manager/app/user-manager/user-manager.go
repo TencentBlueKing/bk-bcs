@@ -28,8 +28,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/emicklei/go-restful"
-	"github.com/go-micro/plugins/v4/registry/etcd"
-	"go-micro.dev/v4/registry"
+	"github.com/micro/go-micro/v2/registry"
+	"github.com/micro/go-micro/v2/registry/etcd"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
@@ -134,7 +134,6 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 // initRouters init usermanager http router
 func (u *UserManager) initRouters(ws *restful.WebService) {
 	ws.Filter(middleware.RequestIDFilter)
-	ws.Filter(middleware.TracingFilter)
 	v1http.InitV1Routers(ws, u.permService)
 	// register pull resource API
 }

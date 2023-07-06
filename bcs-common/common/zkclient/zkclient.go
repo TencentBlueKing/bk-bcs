@@ -427,8 +427,7 @@ func (z *ZkClient) GetAll2Json(path string) (string, error) {
 	}
 
 	if len(childs) <= 0 {
-		var ctx string
-		ctx, err = z.Get(path)
+		ctx, err := z.Get(path)
 		if err != nil {
 			// blog.Warn("fail to get value from path(%s), err:%s", path, err.Error())
 			return "", err

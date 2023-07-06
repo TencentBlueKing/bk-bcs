@@ -44,23 +44,23 @@ var ReleasedGroupColumnDescriptor = mergeColumnDescriptors("",
 type ReleasedGroup struct {
 	// ID is an auto-increased value, which is a group app's
 	// unique identity.
-	ID         uint32             `db:"id" json:"id" gorm:"primaryKey"`
-	GroupID    uint32             `db:"group_id" json:"group_id" gorm:"column:group_id"`
-	AppID      uint32             `db:"app_id" json:"app_id" gorm:"column:app_id"`
-	ReleaseID  uint32             `db:"release_id" json:"release_id" gorm:"column:release_id"`
-	StrategyID uint32             `db:"strategy_id" json:"strategy_id" gorm:"column:strategy_id"`
-	Mode       GroupMode          `db:"mode" json:"mode" gorm:"column:mode"`
-	Selector   *selector.Selector `db:"selector" json:"selector" gorm:"column:selector;type:json"`
-	UID        string             `db:"uid" json:"uid" gorm:"column:uid"`
-	Edited     bool               `db:"edited" json:"edited" gorm:"column:edited"`
-	BizID      uint32             `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
-	Reviser    string             `db:"reviser" json:"reviser" gorm:"column:reviser"`
-	UpdatedAt  time.Time          `db:"updated_at" json:"updated_at" gorm:"column:updated_at"`
+	ID         uint32             `db:"id" json:"id"`
+	GroupID    uint32             `db:"group_id" json:"group_id"`
+	AppID      uint32             `db:"app_id" json:"app_id"`
+	ReleaseID  uint32             `db:"release_id" json:"release_id"`
+	StrategyID uint32             `db:"strategy_id" json:"strategy_id"`
+	Mode       GroupMode          `db:"mode" json:"mode"`
+	Selector   *selector.Selector `db:"selector" json:"selector"`
+	UID        string             `db:"uid" json:"uid"`
+	Edited     bool               `db:"edited" json:"edited"`
+	BizID      uint32             `db:"biz_id" json:"biz_id"`
+	Reviser    string             `db:"reviser" json:"reviser"`
+	UpdatedAt  time.Time          `db:"updated_at" json:"updated_at"`
 }
 
-// TableName is the released group's database table name.
-func (c ReleasedGroup) TableName() string {
-	return "released_groups"
+// TableName is the group app's database table name.
+func (c ReleasedGroup) TableName() Name {
+	return ReleasedGroupTable
 }
 
 // ValidateCreate validate the group app's specific when create it.

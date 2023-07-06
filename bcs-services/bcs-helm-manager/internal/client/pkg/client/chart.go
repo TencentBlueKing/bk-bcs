@@ -130,8 +130,7 @@ func (ct *chart) GetChartDetail(ctx context.Context, req *helmmanager.GetChartDe
 }
 
 // Detail get version detail
-func (ct *chart) GetVersionDetail(ctx context.Context, req *helmmanager.GetVersionDetailV1Req) (
-	*helmmanager.ChartDetail, error) {
+func (ct *chart) GetVersionDetail(ctx context.Context, req *helmmanager.GetVersionDetailV1Req) (*helmmanager.ChartDetail, error) {
 	projectCode := req.GetProjectCode()
 	if projectCode == "" {
 		return nil, fmt.Errorf("chart project can not be empty")

@@ -28,8 +28,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-// IngressChecker do ingress related check
-type IngressChecker struct {
+type ingressChecker struct {
 	cli      client.Client
 	lbClient cloud.LoadBalance
 
@@ -43,8 +42,8 @@ type IngressChecker struct {
 
 // NewIngressChecker return new ingress checker
 func NewIngressChecker(cli client.Client, lbClient cloud.LoadBalance, lbIDCache, lbNameCache *gocache.Cache,
-	lbCacheExpiration int) *IngressChecker {
-	return &IngressChecker{
+	lbCacheExpiration int) *ingressChecker {
+	return &ingressChecker{
 		cli:               cli,
 		lbClient:          lbClient,
 		lbIDCache:         lbIDCache,
@@ -54,12 +53,12 @@ func NewIngressChecker(cli client.Client, lbClient cloud.LoadBalance, lbIDCache,
 }
 
 // Run start check
-func (ic *IngressChecker) Run() {
+func (ic *ingressChecker) Run() {
 	blog.Infof("ingress checker begin")
 
 	ingressList := &networkextensionv1.IngressList{}
 	if err := ic.cli.List(context.TODO(), ingressList); err != nil {
-		blog.Errorf("list ingress failed, err: %s", err.Error())
+		blog.Errorf("list ingress failed, err: %s")
 		return
 	}
 
@@ -105,7 +104,7 @@ func (ic *IngressChecker) Run() {
 	blog.Infof("ingress checker done")
 }
 
-func (ic *IngressChecker) renewCache(info lbInfo) {
+func (ic *ingressChecker) renewCache(info lbInfo) {
 	var lbObj *cloud.LoadBalanceObject
 	var err error
 

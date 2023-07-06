@@ -193,7 +193,7 @@ const (
 	BcsErrMesosDriverNoVersionId          = AdditionErrorCode + 232
 	BcsErrMesosDriverNoVersionIdStr       = "no version id"
 	BcsErrMesosDriverSendMsgUnknowType    = AdditionErrorCode + 233
-	BcsErrMesosDriverSendMsgUnknowTypeStr = "unknown the message type"
+	BcsErrMesosDriverSendMsgUnknowTypeStr = "unkown the message type"
 	BcsErrMesosDriverHttpFilterFailed     = AdditionErrorCode + 234
 	BcsErrMesosDriverHttpFilterFailedStr  = "bcs auth check no authority"
 

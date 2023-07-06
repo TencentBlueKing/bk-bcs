@@ -14,7 +14,6 @@ package gcp
 
 import (
 	"context"
-	// NOCC:gas/crypto(未使用于密钥)
 	"crypto/md5"
 	"errors"
 	"fmt"
@@ -135,16 +134,16 @@ func (e *GCLB) ensureListenerService(region string, listener *networkextensionv1
 	// ensure service without selector
 	service := &k8scorev1.Service{}
 	objectKey := types.NamespacedName{Namespace: listener.Namespace, Name: listener.Name}
-	if inErr := e.client.Get(context.TODO(), objectKey, service); inErr != nil {
-		if k8serrors.IsNotFound(inErr) {
+	if err := e.client.Get(context.TODO(), objectKey, service); err != nil {
+		if k8serrors.IsNotFound(err) {
 			// create service
-			svc := e.generateListenerService(listener, address.Address)
-			if inErr = e.client.Create(context.TODO(), svc); inErr != nil {
-				return "", false, inErr
+			service := e.generateListenerService(listener, address.Address)
+			if err := e.client.Create(context.TODO(), service); err != nil {
+				return "", false, err
 			}
-			return svc.Name, true, nil
+			return service.Name, true, nil
 		}
-		return "", false, inErr
+		return "", false, err
 	}
 
 	if service.DeletionTimestamp != nil {
@@ -213,12 +212,12 @@ func (e *GCLB) ensureListenerEndpoints(listener *networkextensionv1.Listener) (b
 	if err := e.client.Get(context.TODO(), objectKey, ep); err != nil {
 		if k8serrors.IsNotFound(err) {
 			// create endpoints
-			inEp := e.generateListenerEndpoints(listener)
-			if inEp == nil {
+			ep := e.generateListenerEndpoints(listener)
+			if ep == nil {
 				blog.Warnf("endpoints %s is empty", objectKey.String())
 				return false, nil
 			}
-			return true, e.client.Create(context.TODO(), inEp)
+			return true, e.client.Create(context.TODO(), ep)
 		}
 		return false, err
 	}
@@ -318,11 +317,11 @@ func (e *GCLB) ensureURLMap(listener *networkextensionv1.Listener) (string, erro
 	// ensure url map
 	_, err = e.sdkWrapper.GetURLMaps(e.project, listener.Name)
 	if err != nil {
-		if isNotFound(err) {
-			inErr := e.sdkWrapper.CreateURLMap(e.project, &compute.UrlMap{Name: listener.Name, DefaultService: "global/backendServices/" + bsName})
-			if inErr != nil {
-				blog.Errorf("CreateURLMap %s failed, %s", listener.Name, inErr.Error())
-				return "", inErr
+		if IsNotFound(err) {
+			err := e.sdkWrapper.CreateURLMap(e.project, &compute.UrlMap{Name: listener.Name, DefaultService: "global/backendServices/" + bsName})
+			if err != nil {
+				blog.Errorf("CreateURLMap %s failed, %s", listener.Name, err.Error())
+				return "", err
 			}
 			return listener.Name, nil
 		}
@@ -339,14 +338,14 @@ func (e *GCLB) ensureTargetProxy(listener *networkextensionv1.Listener) (string,
 	}
 
 	// get target proxy
-	if listener.Spec.Protocol == ProtocolHTTP {
+	if listener.Spec.Protocol == "HTTP" {
 		_, err = e.sdkWrapper.GetTargetHTTPProxies(e.project, listener.Name)
 		if err != nil {
-			if isNotFound(err) {
-				inErr := e.sdkWrapper.CreateTargetHTTPProxy(e.project, &compute.TargetHttpProxy{Name: listener.Name, UrlMap: "global/urlMaps/" + urlMapName})
-				if inErr != nil {
-					blog.Errorf("CreateTargetHTTPProxy %s failed, %s", listener.Name, inErr.Error())
-					return "", inErr
+			if IsNotFound(err) {
+				err := e.sdkWrapper.CreateTargetHTTPProxy(e.project, &compute.TargetHttpProxy{Name: listener.Name, UrlMap: "global/urlMaps/" + urlMapName})
+				if err != nil {
+					blog.Errorf("CreateTargetHTTPProxy %s failed, %s", listener.Name, err.Error())
+					return "", err
 				}
 				return listener.Name, nil
 			}
@@ -362,13 +361,13 @@ func (e *GCLB) ensureTargetProxy(listener *networkextensionv1.Listener) (string,
 		}
 		_, err = e.sdkWrapper.GetTargetHTTPSProxies(e.project, listener.Name)
 		if err != nil {
-			if isNotFound(err) {
-				inErr := e.sdkWrapper.CreateTargetHTTPSProxy(e.project, &compute.TargetHttpsProxy{Name: listener.Name,
+			if IsNotFound(err) {
+				err := e.sdkWrapper.CreateTargetHTTPSProxy(e.project, &compute.TargetHttpsProxy{Name: listener.Name,
 					UrlMap:          "global/urlMaps/" + urlMapName,
 					SslCertificates: []string{"global/sslCertificates/" + listener.Spec.Certificate.CertID}})
-				if inErr != nil {
-					blog.Errorf("CreateTargetHTTPSProxy %s failed, %s", listener.Name, inErr.Error())
-					return "", inErr
+				if err != nil {
+					blog.Errorf("CreateTargetHTTPSProxy %s failed, %s", listener.Name, err.Error())
+					return "", err
 				}
 				return listener.Name, nil
 			}
@@ -389,12 +388,12 @@ func (e *GCLB) ensureForwardingRules(listener *networkextensionv1.Listener) (str
 	// get forwarding rules
 	fr, err := e.sdkWrapper.GetForwardingRules(e.project, listener.Name)
 	if err != nil {
-		if isNotFound(err) {
+		if IsNotFound(err) {
 			// create forwarding rules
-			inErr := e.sdkWrapper.CreateForwardingRules(e.project, listener.Name, targetProxyName,
+			err := e.sdkWrapper.CreateForwardingRules(e.project, listener.Name, targetProxyName,
 				listener.Spec.LoadbalancerID, listener.Spec.Port)
-			if inErr != nil {
-				return "", inErr
+			if err != nil {
+				return "", err
 			}
 			return listener.Name, nil
 		}
@@ -447,7 +446,6 @@ func (e *GCLB) ensureL7Rules(rules []networkextensionv1.ListenerRule, protocol, 
 
 // md5(domain+path)
 func getRuleName(domain, path string, port int) string {
-	// NOCC:gas/crypto(未使用于密钥)
 	return fmt.Sprintf("a%x", md5.Sum([]byte(fmt.Sprintf("%s:%d%s", domain, port, path))))
 }
 
@@ -460,10 +458,10 @@ func getNEGName(backendServiceName, zone string) string {
 func (e *GCLB) ensureL7HealthCheck(rule networkextensionv1.ListenerRule, port int) error {
 	_, err := e.sdkWrapper.GetHealthChecks(e.project, getRuleName(rule.Domain, rule.Path, port))
 	if err != nil {
-		if isNotFound(err) {
-			if inErr := e.sdkWrapper.CreateHealthChecks(e.project, e.generateHealthCheck(rule, port)); inErr != nil {
-				blog.Errorf("CreateHealthChecks failed, err: %s", inErr.Error())
-				return inErr
+		if IsNotFound(err) {
+			if err := e.sdkWrapper.CreateHealthChecks(e.project, e.generateHealthCheck(rule, port)); err != nil {
+				blog.Errorf("CreateHealthChecks failed, err: %s", err.Error())
+				return err
 			}
 			return nil
 		}
@@ -485,7 +483,7 @@ func (e *GCLB) generateHealthCheck(rule networkextensionv1.ListenerRule, port in
 	}
 	if rule.ListenerAttribute == nil || rule.ListenerAttribute.HealthCheck == nil {
 		hc.HttpHealthCheck = &compute.HTTPHealthCheck{Port: 80}
-		hc.Type = ProtocolHTTP
+		hc.Type = "HTTP"
 	}
 	if rule.ListenerAttribute != nil && rule.ListenerAttribute.HealthCheck != nil {
 		if rule.ListenerAttribute.HealthCheck.IntervalTime != 0 {
@@ -504,17 +502,17 @@ func (e *GCLB) generateHealthCheck(rule networkextensionv1.ListenerRule, port in
 			hc.Type = rule.ListenerAttribute.HealthCheck.HealthCheckProtocol
 		}
 		switch hc.Type {
-		case ProtocolHTTP:
+		case "HTTP":
 			hc.HttpHealthCheck = &compute.HTTPHealthCheck{
 				Port:        int64(rule.ListenerAttribute.HealthCheck.HealthCheckPort),
 				RequestPath: rule.ListenerAttribute.HealthCheck.HTTPCheckPath,
 			}
-		case ProtocolHTTPS:
+		case "HTTPS":
 			hc.HttpsHealthCheck = &compute.HTTPSHealthCheck{
 				Port:        int64(rule.ListenerAttribute.HealthCheck.HealthCheckPort),
 				RequestPath: rule.ListenerAttribute.HealthCheck.HTTPCheckPath,
 			}
-		case ProtocolTCP:
+		case "TCP":
 			hc.TcpHealthCheck = &compute.TCPHealthCheck{
 				Port: int64(rule.ListenerAttribute.HealthCheck.HealthCheckPort),
 			}
@@ -528,7 +526,7 @@ func (e *GCLB) ensureL7BackendService(rule networkextensionv1.ListenerRule, prot
 	name := getRuleName(rule.Domain, rule.Path, port)
 	_, err := e.sdkWrapper.GetBackendServices(e.project, name)
 	if err != nil {
-		if isNotFound(err) {
+		if IsNotFound(err) {
 			bs := &compute.BackendService{
 				Name:                name,
 				LoadBalancingScheme: "EXTERNAL",
@@ -536,12 +534,12 @@ func (e *GCLB) ensureL7BackendService(rule networkextensionv1.ListenerRule, prot
 				HealthChecks:        []string{"global/healthChecks/" + name},
 			}
 			if rule.ListenerAttribute != nil && rule.ListenerAttribute.BackendInsecure {
-				bs.Protocol = ProtocolHTTP
+				bs.Protocol = "HTTP"
 			}
-			inErr := e.sdkWrapper.CreateBackendService(e.project, bs)
-			if inErr != nil {
-				blog.Errorf("CreateBackendService failed, err: %s", inErr.Error())
-				return "", inErr
+			err := e.sdkWrapper.CreateBackendService(e.project, bs)
+			if err != nil {
+				blog.Errorf("CreateBackendService failed, err: %s", err.Error())
+				return "", err
 			}
 		} else {
 			blog.Errorf("GetBackendServices failed, err: %s", err.Error())
@@ -588,9 +586,9 @@ func (e *GCLB) ensureNEGs(targetGroup *networkextensionv1.ListenerTargetGroup, b
 	newNegs := e.generateNEGs(zones, zone, backendServiceName)
 	for _, v := range newNegs {
 		if _, ok := existNegsMap[v.Name]; !ok {
-			inErr := e.sdkWrapper.CreateNetworkEndpointGroups(e.project, v.Zone, v.Name, network, subnetwork)
-			if inErr != nil {
-				return inErr
+			err := e.sdkWrapper.CreateNetworkEndpointGroups(e.project, v.Zone, v.Name, network, subnetwork)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -841,27 +839,27 @@ func (e *GCLB) deleteL4Listener(listener *networkextensionv1.Listener) error {
 
 func (e *GCLB) deleteL7Listener(listener *networkextensionv1.Listener) error {
 	// delete forwarding-rules
-	if err := e.sdkWrapper.DeleteForwardingRules(e.project, listener.Name); isError(err) {
+	if err := e.sdkWrapper.DeleteForwardingRules(e.project, listener.Name); err != nil && !IsNotFound(err) {
 		blog.Errorf("DeleteForwardingRules failed, err: %s", err.Error())
 		return err
 	}
 
 	// delete target http(s) proxy
 	if listener.Spec.Protocol == ProtocolHTTP {
-		if err := e.sdkWrapper.DeleteTargetHTTPProxy(e.project, listener.Name); isError(err) {
+		if err := e.sdkWrapper.DeleteTargetHTTPProxy(e.project, listener.Name); err != nil && !IsNotFound(err) {
 			blog.Errorf("DeleteTargetHTTPProxy failed, err: %s", err.Error())
 			return err
 		}
 	}
 	if listener.Spec.Protocol == ProtocolHTTPS {
-		if err := e.sdkWrapper.DeleteTargetHTTPSProxy(e.project, listener.Name); isError(err) {
+		if err := e.sdkWrapper.DeleteTargetHTTPSProxy(e.project, listener.Name); err != nil && !IsNotFound(err) {
 			blog.Errorf("DeleteTargetHTTPSProxy failed, err: %s", err.Error())
 			return err
 		}
 	}
 
 	// delete url-maps
-	if err := e.sdkWrapper.DeleteURLMaps(e.project, listener.Name); isError(err) {
+	if err := e.sdkWrapper.DeleteURLMaps(e.project, listener.Name); err != nil && !IsNotFound(err) {
 		blog.Errorf("DeleteURLMaps failed, err: %s", err.Error())
 		return err
 	}
@@ -869,27 +867,32 @@ func (e *GCLB) deleteL7Listener(listener *networkextensionv1.Listener) error {
 	for _, rule := range listener.Spec.Rules {
 		bsName := getRuleName(rule.Domain, rule.Path, listener.Spec.Port)
 		defaultBsName := getRuleName(listener.Name, "", listener.Spec.Port)
-
-		if err := e.deleteDefaultResource(defaultBsName); err != nil {
+		// delete default health check
+		if err := e.sdkWrapper.DeleteHealthCheck(e.project, defaultBsName); err != nil && !IsNotFound(err) {
+			blog.Errorf("DeleteHealthCheck failed, err: %s", err.Error())
 			return err
 		}
-
+		// delete default backend service
+		if err := e.sdkWrapper.DeleteBackendService(e.project, defaultBsName); err != nil && !IsNotFound(err) {
+			blog.Errorf("DeleteBackendService failed, err: %s", err.Error())
+			return err
+		}
 		// delete health-checks
-		if err := e.sdkWrapper.DeleteHealthCheck(e.project, bsName); isError(err) {
+		if err := e.sdkWrapper.DeleteHealthCheck(e.project, bsName); err != nil && !IsNotFound(err) {
 			blog.Errorf("DeleteHealthCheck failed, err: %s", err.Error())
 			return err
 		}
 		// get backend service
 		bs, err := e.sdkWrapper.GetBackendServices(e.project, bsName)
 		if err != nil {
-			if isNotFound(err) {
+			if IsNotFound(err) {
 				continue
 			}
 			blog.Errorf("GetBackendServices failed, err: %s", err.Error())
 			return err
 		}
 		// delete backend-services
-		if err := e.sdkWrapper.DeleteBackendService(e.project, bsName); isError(err) {
+		if err := e.sdkWrapper.DeleteBackendService(e.project, bsName); err != nil && !IsNotFound(err) {
 			blog.Errorf("DeleteBackendService failed, err: %s", err.Error())
 			return err
 		}
@@ -920,20 +923,6 @@ func (e *GCLB) deleteEndpoints(listener *networkextensionv1.Listener) error {
 	}
 	if err := e.client.Delete(context.TODO(), ep); err != nil {
 		blog.Errorf("delete endpoints of listener '%s/%s' failed", listener.GetNamespace(), listener.GetName())
-		return err
-	}
-	return nil
-}
-
-func (e *GCLB) deleteDefaultResource(defaultBsName string) error {
-	// delete default health check
-	if err := e.sdkWrapper.DeleteHealthCheck(e.project, defaultBsName); err != nil && !isNotFound(err) {
-		blog.Errorf("DeleteHealthCheck failed, err: %s", err.Error())
-		return err
-	}
-	// delete default backend service
-	if err := e.sdkWrapper.DeleteBackendService(e.project, defaultBsName); err != nil && !isNotFound(err) {
-		blog.Errorf("DeleteBackendService failed, err: %s", err.Error())
 		return err
 	}
 	return nil

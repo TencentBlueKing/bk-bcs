@@ -82,35 +82,23 @@ func multiStringFlag(name string, usage string) *MultiStringFlag {
 }
 
 var (
-	// clusterName Autoscaled cluster name, if available
-	clusterName = flag.String("cluster-name", "", "Autoscaled cluster name, if available")
-	// address The address to expose prometheus metrics
-	address = flag.String("address", ":8085", "The address to expose prometheus metrics.")
-	// kubernetes Kubernetes master location
-	kubernetes = flag.String("kubernetes", "", "Kubernetes master location. Leave blank for default")
-	// kubeConfigFile Path to kubeconfig file with authorization and master location information
+	clusterName    = flag.String("cluster-name", "", "Autoscaled cluster name, if available")
+	address        = flag.String("address", ":8085", "The address to expose prometheus metrics.")
+	kubernetes     = flag.String("kubernetes", "", "Kubernetes master location. Leave blank for default")
 	kubeConfigFile = flag.String("kubeconfig", "",
 		"Path to kubeconfig file with authorization and master location information.")
-	// cloudConfig The path to the cloud provider configuration file
 	cloudConfig = flag.String("cloud-config", "",
 		"The path to the cloud provider configuration file.  Empty string for no configuration file.")
-	// namespace Namespace in which cluster-autoscaler run
-	namespace = flag.String("namespace", "bcs-system", "Namespace in which cluster-autoscaler run.")
-	// scaleDownEnabled Should CA scale down the cluster
-	scaleDownEnabled = flag.Bool("scale-down-enabled", true, "Should CA scale down the cluster")
-	// scaleDownDelayAfterAdd How long after scale up that scale down evaluation resumes
+	namespace              = flag.String("namespace", "bcs-system", "Namespace in which cluster-autoscaler run.")
+	scaleDownEnabled       = flag.Bool("scale-down-enabled", true, "Should CA scale down the cluster")
 	scaleDownDelayAfterAdd = flag.Duration("scale-down-delay-after-add", 20*time.Minute,
 		"How long after scale up that scale down evaluation resumes")
-	// scaleDownDelayAfterDelete How long after node deletion that scale down evaluation resumes
 	scaleDownDelayAfterDelete = flag.Duration("scale-down-delay-after-delete", 0,
 		"How long after node deletion that scale down evaluation resumes, defaults to scanInterval")
-	// scaleDownDelayAfterFailure How long after scale down failure that scale down evaluation resumes
 	scaleDownDelayAfterFailure = flag.Duration("scale-down-delay-after-failure", 3*time.Minute,
 		"How long after scale down failure that scale down evaluation resumes")
-	// scaleDownUnneededTime How long a node should be unneeded before it is eligible for scale down
 	scaleDownUnneededTime = flag.Duration("scale-down-unneeded-time", 10*time.Minute,
 		"How long a node should be unneeded before it is eligible for scale down")
-	// scaleDownUnreadyTime How long an unready node should be unneeded before it is eligible for scale down
 	scaleDownUnreadyTime = flag.Duration("scale-down-unready-time", 20*time.Minute,
 		"How long an unready node should be unneeded before it is eligible for scale down")
 	scaleDownUtilizationThreshold = flag.Float64("scale-down-utilization-threshold", 0.5,
@@ -140,57 +128,41 @@ var (
 	nodeDeletionDelayTimeout = flag.Duration("node-deletion-delay-timeout", 2*time.Minute,
 		"Maximum time CA waits for removing delay-deletion.cluster-autoscaler.kubernetes.io/ annotations"+
 			"before deleting the node.")
-	// scanInterval How often cluster is reevaluated for scale up or down
 	scanInterval = flag.Duration("scan-interval", 10*time.Second,
 		"How often cluster is reevaluated for scale up or down")
-	// maxNodesTotal Maximum number of nodes in all node groups
 	maxNodesTotal = flag.Int("max-nodes-total", 0,
 		"Maximum number of nodes in all node groups. Cluster autoscaler will not grow the cluster beyond this number.")
-	// coresTotal Minimum and maximum number of cores in cluster
 	coresTotal = flag.String("cores-total", minMaxFlagString(0, config.DefaultMaxClusterCores),
 		"Minimum and maximum number of cores in cluster, in the format <min>:<max>."+
 			"Cluster autoscaler will not scale the cluster beyond these numbers.")
-	// memoryTotal Minimum and maximum number of gigabytes of memory in cluster
 	memoryTotal = flag.String("memory-total", minMaxFlagString(0, config.DefaultMaxClusterMemory),
 		"Minimum and maximum number of gigabytes of memory in cluster, in the format <min>:<max>."+
 			"Cluster autoscaler will not scale the cluster beyond these numbers.")
-	// gpuTotal Minimum and maximum number of different GPUs in cluster
 	gpuTotal = multiStringFlag("gpu-total",
 		"Minimum and maximum number of different GPUs in cluster, in the format <gpu_type>:<min>:<max>."+
 			"Cluster autoscaler will not scale the cluster beyond these numbers. Can be passed multiple times."+
 			"CURRENTLY THIS FLAG ONLY WORKS ON GKE.")
-	// cloudProviderFlag Cloud provider type
 	cloudProviderFlag = flag.String("cloud-provider", cloudBuilder.DefaultCloudProvider,
 		"Cloud provider type. Available values: ["+strings.Join(cloudBuilder.AvailableCloudProviders, ",")+"]")
-	// maxBulkSoftTaintCount Maximum number of nodes that can be tainted/untainted PreferNoSchedule at the same time
 	maxBulkSoftTaintCount = flag.Int("max-bulk-soft-taint-count", 10,
 		"Maximum number of nodes that can be tainted/untainted PreferNoSchedule at the same time."+
 			"Set to 0 to turn off such tainting.")
-	// maxBulkSoftTaintTime Maximum duration of tainting/untainting nodes as PreferNoSchedule at the same time
 	maxBulkSoftTaintTime = flag.Duration("max-bulk-soft-taint-time", 3*time.Second,
 		"Maximum duration of tainting/untainting nodes as PreferNoSchedule at the same time.")
-	// maxEmptyBulkDeleteFlag Maximum number of empty nodes that can be deleted at the same time
 	maxEmptyBulkDeleteFlag = flag.Int("max-empty-bulk-delete", 10,
 		"Maximum number of empty nodes that can be deleted at the same time.")
-	// maxGracefulTerminationFlag Maximum number of seconds CA waits for pod termination when trying to scale down a node
 	maxGracefulTerminationFlag = flag.Int("max-graceful-termination-sec", 10*60,
 		"Maximum number of seconds CA waits for pod termination when trying to scale down a node.")
-	// maxTotalUnreadyPercentage Maximum percentage of unready nodes in the cluster
 	maxTotalUnreadyPercentage = flag.Float64("max-total-unready-percentage", 45,
 		"Maximum percentage of unready nodes in the cluster.  After this is exceeded, CA halts operations")
-	// okTotalUnreadyCount Number of allowed unready nodes
 	okTotalUnreadyCount = flag.Int("ok-total-unready-count", 3,
 		"Number of allowed unready nodes, irrespective of max-total-unready-percentage")
-	// scaleUpFromZero Should CA scale up when there 0 ready nodes
 	scaleUpFromZero = flag.Bool("scale-up-from-zero", true,
 		"Should CA scale up when there 0 ready nodes.")
-	// maxNodeProvisionTime Maximum time CA waits for node to be provisioned
 	maxNodeProvisionTime = flag.Duration("max-node-provision-time", 15*time.Minute,
 		"Maximum time CA waits for node to be provisioned")
-	// maxNodeStartupTime Maximum time CA waits for node to be ready
 	maxNodeStartupTime = flag.Duration("max-node-startup-time", 15*time.Minute,
 		"Maximum time CA waits for node to be ready")
-	// maxNodeStartScheduleTime Maximum time CA waits for node to be schedulable
 	maxNodeStartScheduleTime = flag.Duration("max-node-start-schedule-time", 15*time.Minute,
 		"Maximum time CA waits for node to be schedulable")
 	nodeGroupsFlag = multiStringFlag("nodes",
@@ -266,13 +238,11 @@ var (
 
 	maxBulkScaleUpCount = flag.Int("max-bulk-scale-up-count", 100,
 		"Maximum number of nodes that can be scale up at the same time. Set to 0 to turn off such scaling up")
-	// buffer ratio configuration
 	bufferedCPURatio      = flag.Float64("buffer-cpu-ratio", 0, "ratio of buffered cpu")
 	bufferedMemRatio      = flag.Float64("buffer-mem-ratio", 0, "ratio of buffered memory")
 	bufferedResourceRatio = flag.Float64("buffer-resource-ratio", 0, "ratio of buffered resources")
-	// webhook configuration
-	webhookMode       = flag.String("webhook-mode", "", "Webhook Mode. Available values: [ Web, ConfigMap ]")
-	webhookModeConfig = flag.String("webhook-mode-config", "", "Configuration of webhook mode."+
+	webhookMode           = flag.String("webhook-mode", "", "Webhook Mode. Available values: [ Web, ConfigMap ]")
+	webhookModeConfig     = flag.String("webhook-mode-config", "", "Configuration of webhook mode."+
 		" It is a url for web, or namespace/name for configmap")
 	webhookModeToken = flag.String("webhook-mode-token", "", "Token for webhook mode")
 )
@@ -367,7 +337,6 @@ func createAutoscalingOptions() scalingconfig.Options {
 	}
 }
 
-// getKubeConfig get config of kube
 func getKubeConfig() *rest.Config {
 	if *kubeConfigFile != "" {
 		klog.V(1).Infof("Using kubeconfig file: %s", *kubeConfigFile)
@@ -391,14 +360,12 @@ func getKubeConfig() *rest.Config {
 	return kubeConfig
 }
 
-// createKubeClient create kube client
 func createKubeClient(kubeConfig *rest.Config) kube_client.Interface {
 	kubeConfig.QPS = 100
 	kubeConfig.Burst = 200
 	return kube_client.NewForConfigOrDie(kubeConfig)
 }
 
-// registerSignalHandlers register handler for grace termination
 func registerSignalHandlers(autoscaler core.Autoscaler) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGQUIT)
@@ -505,7 +472,6 @@ func main() {
 
 	klog.V(1).Infof("Cluster Autoscaler %s", version.ClusterAutoscalerVersion)
 
-	// start web server for prometheus and health check
 	go func() {
 		pathRecorderMux := mux.NewPathRecorderMux("cluster-autoscaler")
 		defaultMetricsHandler := legacyregistry.Handler().ServeHTTP
@@ -570,7 +536,6 @@ func main() {
 	}
 }
 
-// defaultLeaderElectionConfiguration construct default configuration of leader election
 func defaultLeaderElectionConfiguration() componentbaseconfig.LeaderElectionConfiguration {
 	return componentbaseconfig.LeaderElectionConfiguration{
 		LeaderElect:   false,
@@ -582,14 +547,12 @@ func defaultLeaderElectionConfiguration() componentbaseconfig.LeaderElectionConf
 	}
 }
 
-// leader election config
 const (
 	defaultLeaseDuration = 15 * time.Second
 	defaultRenewDeadline = 10 * time.Second
 	defaultRetryPeriod   = 2 * time.Second
 )
 
-// parseMinMaxFlag parse MinMax flag
 func parseMinMaxFlag(flag string) (int64, int64, error) {
 	tokens := strings.SplitN(flag, ":", 2)
 	if len(tokens) != 2 {
@@ -614,7 +577,6 @@ func parseMinMaxFlag(flag string) (int64, int64, error) {
 	return min, max, nil
 }
 
-// validateMinMaxFlag validates flag of MinMax
 func validateMinMaxFlag(min, max int64) error {
 	if min < 0 {
 		return fmt.Errorf("min size must be greater or equal to  0")
@@ -629,7 +591,6 @@ func minMaxFlagString(min, max int64) string {
 	return fmt.Sprintf("%v:%v", min, max)
 }
 
-// parseMultipleGpuLimits parse multiple gpu limits
 func parseMultipleGpuLimits(flags MultiStringFlag) ([]config.GpuLimits, error) {
 	parsedFlags := make([]config.GpuLimits, 0, len(flags))
 	for _, flag := range flags {
@@ -642,7 +603,6 @@ func parseMultipleGpuLimits(flags MultiStringFlag) ([]config.GpuLimits, error) {
 	return parsedFlags, nil
 }
 
-// parseSingleGpuLimit parse single gpu limits
 func parseSingleGpuLimit(limits string) (config.GpuLimits, error) {
 	parts := strings.Split(limits, ":")
 	if len(parts) != 3 {
@@ -673,5 +633,3 @@ func parseSingleGpuLimit(limits string) (config.GpuLimits, error) {
 	}
 	return parsedGpuLimits, nil
 }
-
-// NOCC:tosa/comment_ratio

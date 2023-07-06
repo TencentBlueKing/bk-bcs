@@ -431,7 +431,7 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	defer ca.locker.Unlock(createClusterIDLockKey)
 
 	// create validate cluster
-	if err = ca.validate(); err != nil {
+	if err := ca.validate(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}

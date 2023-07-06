@@ -79,7 +79,6 @@
 <template>
   <bk-button
     v-if="versionData.id === 0"
-    class="trigger-button"
     theme="primary"
     :disabled="props.configCount === 0"
     @click="handleCreateDialogOpen">
@@ -118,9 +117,6 @@
   </bk-dialog>
 </template>
 <style lang="scss" scoped>
-  .trigger-button {
-    margin-left: 8px;
-  }
   .form-wrapper {
     padding-bottom: 24px;
   }

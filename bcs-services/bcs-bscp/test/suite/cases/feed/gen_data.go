@@ -101,7 +101,7 @@ func (g *Generator) GenBaseNormalData(ctx context.Context, header http.Header) e
 		}
 	}
 
-	// NOTE: strategy related test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//stgSetSpec := &table.StrategySetSpec{
 	//	Name: cases.RandName("strategy_set"),
 	//}
@@ -161,7 +161,7 @@ func (g *Generator) GenBaseNamespaceData(ctx context.Context, header http.Header
 		}
 	}
 
-	// NOTE: strategy related test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//stgSetSpec := &table.StrategySetSpec{
 	//	Name: cases.RandName("strategy_set"),
 	//}

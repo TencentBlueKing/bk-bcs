@@ -38,7 +38,7 @@ import (
 const (
 	// BKMONITOR 蓝鲸监控数据源
 	BKMONITOR config.StoreProvider = "BK_MONITOR"
-	// BCS_SYSTEM xxx
+	// BCS_SYSTEM TODO
 	BCS_SYSTEM config.StoreProvider = "BCS_SYSTEM"
 	// PROMETHEUS prometheus 原生数据源
 	PROMETHEUS config.StoreProvider = "PROMETHEUS"
@@ -58,18 +58,18 @@ type Store struct {
 func GetStoreSvr(logger log.Logger, reg *prometheus.Registry, conf *config.StoreConf) (storepb.StoreServer, error) {
 	level.Info(logger).Log("msg", "loading store configuration")
 
-	c, err := yaml.Marshal(conf.Config)
+	config, err := yaml.Marshal(conf.Config)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshal content of store configuration")
 	}
 
 	switch strings.ToUpper(string(conf.Type)) {
 	case string(BKMONITOR):
-		return bkmonitor.NewBKMonitorStore(c)
+		return bkmonitor.NewBKMonitorStore(config)
 	case string(BCS_SYSTEM):
-		return bcssystem.NewBCSSystemStore(c)
+		return bcssystem.NewBCSSystemStore(config)
 	case string(PROMETHEUS):
-		return prom.NewPromStore(c)
+		return prom.NewPromStore(config)
 	default:
 		return nil, errors.Errorf("store with type %s is not supported", conf.Type)
 	}

@@ -26,7 +26,7 @@ const (
 	applyTkeCidrUrl              = "/v1/tke/cidr/apply_cidr"
 	releaseTkeCidrUrl            = "/v1/tke/cidr/release_cidr"
 	listTkeCidrUrl               = "/v1/tke/cidr/list_count"
-	syncTkeClusterCredentialsUrl = "/v1/tke/%s/sync_credentials"
+	syncTkeClusterCredentialsUrl = "/v1/tke/{cluster_id}/sync_credentials"
 )
 
 // TkeCidr xxx

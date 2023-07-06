@@ -13,7 +13,6 @@
 package common
 
 import (
-	// NOCC:gas/crypto(未使用于密钥)
 	"crypto/md5"
 	"fmt"
 	"strconv"
@@ -103,7 +102,6 @@ func GetNamespacedNameKey(name, ns string) string {
 // example: pool1/md5(item1)
 // because item1 is an anomaly string, so we use md5 to encode it
 func GetPortPoolListenerLabelKey(portPoolName, itemName string) string {
-	// NOCC:gas/crypto(未使用于密钥)
 	return portPoolName + "/" + fmt.Sprintf("%x", (md5.Sum([]byte(itemName))))
 }
 

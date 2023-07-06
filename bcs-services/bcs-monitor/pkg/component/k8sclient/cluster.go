@@ -17,10 +17,8 @@ import (
 	"strings"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetManagedClusterList 获取联邦集群子集群列表
@@ -46,17 +44,4 @@ func GetManagedClusterList(ctx context.Context, clusterID string) ([]string, err
 
 	storage.LocalCache.Slot.Set(cacheKey, clusters, time.Minute*10)
 	return clusters, nil
-}
-
-// GetClusterNodeList 获取集群中节点列表
-func GetClusterNodeList(ctx context.Context, clusterId string) ([]v1.Node, error) {
-	client, err := GetK8SClientByClusterId(clusterId)
-	if err != nil {
-		return nil, err
-	}
-	nodes, err := client.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return nodes.Items, nil
 }

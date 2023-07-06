@@ -228,7 +228,7 @@ func (s *Server) initModel() error {
 	return nil
 }
 
-// initRegistry init micro service registry
+// initRegistry init registry
 func (s *Server) initRegistry() error {
 	endpoints := strings.Replace(s.opt.Etcd.EtcdEndpoints, ";", ",", -1)
 	etcdEndpoints := strings.Split(endpoints, ",")
@@ -367,7 +367,6 @@ func (s *Server) initSignalHandler() {
 	}()
 }
 
-// close service
 func (s *Server) close() {
 	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeCancel()
@@ -438,7 +437,7 @@ func (s *Server) initWorker() error {
 }
 
 // initQueue xxx
-// init message queue, use rabbit mq
+// init message queue
 func initQueue(opts QueueConfig) (msgqueue.MessageQueue, error) {
 	address := opts.QueueAddress
 	schemas := strings.Split(address, "//")
@@ -549,7 +548,7 @@ func (s *Server) initClusterManager() (cmanager.ClusterManagerClient, error) {
 }
 
 // initBcsMonitorCli xxx
-// init bcs monitor/storeGW cli
+// init bcs monitor cli
 func (s *Server) initBcsMonitorCli() bcsmonitor.ClientInterface {
 	var realAppSecret []byte
 	if s.opt.AppSecret != "" {
@@ -663,7 +662,6 @@ func (s *Server) initMetric(mux *http.ServeMux) {
 	mux.Handle("/metrics", promhttp.Handler())
 }
 
-// initProjectManager init project manager client
 func (s *Server) initProjectManager() bcsproject.BcsProjectManagerClient {
 	realAuthToken, _ := encrypt.DesDecryptFromBase([]byte(s.opt.BcsAPIConf.AdminToken))
 	opts := &bcsproject.Options{
@@ -677,7 +675,6 @@ func (s *Server) initProjectManager() bcsproject.BcsProjectManagerClient {
 	return bcsproject.NewBcsProjectManagerClient(opts)
 }
 
-// initKafkaConn init kafka connection cli
 func (s *Server) initKafkaConn() error {
 	password := s.opt.KafkaConfig.Password
 	if password != "" {

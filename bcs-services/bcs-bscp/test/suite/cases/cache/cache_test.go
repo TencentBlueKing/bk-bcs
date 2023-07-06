@@ -47,7 +47,7 @@ func TestCache(t *testing.T) {
 		nmApp        pbapp.App
 		nmConfigItem pbci.ConfigItem
 		nmContent    pbcontent.Content
-		// NOTE: strategy related test depends on group, add group test first
+		// TODO: strategy related test depends on group, add group test first
 		//nmStrategy   pbstrategy.Strategy
 
 		// The following ids need to be assigned after generating resources.
@@ -97,7 +97,7 @@ func TestCache(t *testing.T) {
 				},
 			}
 
-			// NOTE: strategy related test depends on group, add group test first
+			// TODO: strategy related test depends on group, add group test first
 			// normal mode strategy.
 			//nmStrategy = pbstrategy.Strategy{
 			//	Spec: &pbstrategy.StrategySpec{
@@ -222,7 +222,7 @@ func TestCache(t *testing.T) {
 			So(nmStgSetResp, ShouldNotBeNil)
 			So(nmStgSetResp.Id, ShouldNotEqual, uint32(0))
 
-			// NOTE: strategy related test depends on group, add group test first
+			// TODO: strategy related test depends on group, add group test first
 			//// create strategy in normal mode
 			//nmStgReq := &pbconfig.CreateStrategyReq{
 			//	BizId:         cases.TBizID,

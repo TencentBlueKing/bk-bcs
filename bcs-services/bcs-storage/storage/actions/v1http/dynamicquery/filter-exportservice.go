@@ -29,7 +29,6 @@ type ExportServiceFilter struct {
 
 const exportServiceNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t ExportServiceFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, exportServiceNestedTimeLayout)
 }

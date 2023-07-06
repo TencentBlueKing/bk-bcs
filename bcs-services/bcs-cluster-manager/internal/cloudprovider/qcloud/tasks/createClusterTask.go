@@ -54,7 +54,6 @@ const (
 
 // as far as possible to keep every operation unit simple
 
-// stringToInt string to int
 func stringToInt(str string) (int, error) {
 	num, err := strconv.Atoi(str)
 	if err != nil {
@@ -64,7 +63,6 @@ func stringToInt(str string) (int, error) {
 	return num, nil
 }
 
-// generateClusterCIDRInfo cidr info
 func generateClusterCIDRInfo(cluster *proto.Cluster) *api.ClusterCIDRSettings {
 	cidrInfo := &api.ClusterCIDRSettings{
 		ClusterCIDR:          cluster.NetworkSettings.ClusterIPv4CIDR,
@@ -76,7 +74,6 @@ func generateClusterCIDRInfo(cluster *proto.Cluster) *api.ClusterCIDRSettings {
 	return cidrInfo
 }
 
-// generateTags tags info
 func generateTags(bizID int64, operator string) map[string]string {
 	cli := cmdb.GetCmdbClient()
 	if cli == nil {
@@ -86,7 +83,6 @@ func generateTags(bizID int64, operator string) map[string]string {
 	return nil
 }
 
-// generateClusterBasicInfo cluster basic info
 func generateClusterBasicInfo(cluster *proto.Cluster, imageID, operator string) *api.ClusterBasicSettings {
 	basicInfo := &api.ClusterBasicSettings{
 		ClusterOS:      imageID,
@@ -131,7 +127,6 @@ func generateClusterBasicInfo(cluster *proto.Cluster, imageID, operator string) 
 	return basicInfo
 }
 
-// generateClusterAdvancedInfo cluster advanced info
 func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSettings {
 	advancedInfo := &api.ClusterAdvancedSettings{
 		IPVS:             cluster.ClusterAdvanceSettings.IPVS,
@@ -165,7 +160,6 @@ func generateClusterAdvancedInfo(cluster *proto.Cluster) *api.ClusterAdvancedSet
 	return advancedInfo
 }
 
-// generateInstanceAdvanceInfo instance advanced info
 func generateInstanceAdvanceInfo(cluster *proto.Cluster) *api.InstanceAdvancedSettings {
 	if cluster.NodeSettings.MountTarget == "" {
 		cluster.NodeSettings.MountTarget = MountTarget
@@ -220,7 +214,6 @@ func generateExistedInstance(passwd string, instanceIDs []string) *api.ExistedIn
 	return existedInstance
 }
 
-// disksToCVMDisks transfer cvm disk
 func disksToCVMDisks(disks []*proto.DataDisk) []*cvm.DataDisk {
 	if len(disks) == 0 {
 		return nil
@@ -453,23 +446,23 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 		}
 	}
 
-	var systemID string
+	systemID := cluster.SystemID
 	if cluster.SystemID != "" {
-		tkeCluster, errCluster := tkeCli.GetTKECluster(cluster.SystemID)
-		if errCluster != nil {
+		tkeCluster, err := tkeCli.GetTKECluster(cluster.SystemID)
+		if err != nil {
 			blog.Errorf("CreateTkeClusterTask[%s]: call GetTKECluster[%s] api in task %s step %s failed, %s",
-				taskID, clusterID, taskID, stepName, errCluster.Error())
-			retErr := fmt.Errorf("call GetTKECluster[%s] api err, %s", clusterID, errCluster.Error())
+				taskID, clusterID, taskID, stepName, err.Error())
+			retErr := fmt.Errorf("call GetTKECluster[%s] api err, %s", clusterID, err.Error())
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}
 		systemID = *tkeCluster.ClusterId
 	} else {
-		resp, errCluster := tkeCli.CreateTKECluster(req)
-		if errCluster != nil {
+		resp, err := tkeCli.CreateTKECluster(req)
+		if err != nil {
 			blog.Errorf("CreateTkeClusterTask[%s]: call CreateTKECluster[%s] api in task %s step %s failed, %s",
-				taskID, clusterID, taskID, stepName, errCluster.Error())
-			retErr := fmt.Errorf("call CreateTKECluster[%s] api err, %s", clusterID, errCluster.Error())
+				taskID, clusterID, taskID, stepName, err.Error())
+			retErr := fmt.Errorf("call CreateTKECluster[%s] api err, %s", clusterID, err.Error())
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}
@@ -736,7 +729,6 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 				break
 			}
 
-			// GetEnableVpcCniProgress vpcCni status
 			status, err := cli.GetEnableVpcCniProgress(systemID)
 			if err != nil {
 				continue
@@ -764,7 +756,7 @@ func EnableTkeClusterVpcCniTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("EnableTkeClusterVpcCniTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -828,7 +820,7 @@ func UpdateCreateClusterDBInfoTask(taskID string, stepName string) error {
 	utils.SyncClusterInfoToPassCC(taskID, cluster)
 
 	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("UpdateCreateClusterDBInfoTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}

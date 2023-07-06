@@ -204,9 +204,9 @@ func (nm *NodeManager) GetCVMImageIDByImageName(imageName string, opt *cloudprov
 	}
 
 	var (
-		initOffset   uint64
-		imageIDList  = make([]string, 0)
-		imageListLen = 100
+		initOffset   uint64 = 0
+		imageIDList         = make([]string, 0)
+		imageListLen        = 100
 	)
 
 	for {

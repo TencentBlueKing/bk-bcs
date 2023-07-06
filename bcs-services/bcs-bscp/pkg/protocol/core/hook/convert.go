@@ -16,6 +16,7 @@ import (
 	"bscp.io/pkg/dal/table"
 	pbbase "bscp.io/pkg/protocol/core/base"
 	"bscp.io/pkg/runtime/selector"
+
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 )
 
@@ -44,10 +45,11 @@ func (m *HookSpec) HookSpec() (*table.HookSpec, error) {
 	}
 
 	return &table.HookSpec{
-		Name: m.Name,
-		Type: table.HookType(m.Type),
-		Tag:  m.Tag,
-		Memo: m.Memo,
+		Name:     m.Name,
+		PreType:  table.HookType(m.PreType),
+		PreHook:  m.PreHook,
+		PostType: table.HookType(m.PostType),
+		PostHook: m.PostHook,
 	}, nil
 }
 
@@ -58,12 +60,11 @@ func PbHookSpec(spec *table.HookSpec) (*HookSpec, error) {
 	}
 
 	return &HookSpec{
-		Name:        spec.Name,
-		ReleaseName: spec.Name,
-		Type:        string(spec.Type),
-		Tag:         spec.Tag,
-		Memo:        spec.Memo,
-		PublishNum:  spec.PublishNum,
+		Name:     spec.Name,
+		PreType:  string(spec.PreType),
+		PreHook:  spec.PreHook,
+		PostType: string(spec.PostType),
+		PostHook: spec.PostHook,
 	}, nil
 }
 
@@ -74,7 +75,9 @@ func (m *HookAttachment) HookAttachment() *table.HookAttachment {
 	}
 
 	return &table.HookAttachment{
-		BizID: m.BizId,
+		BizID:     m.BizId,
+		AppID:     m.AppId,
+		ReleaseID: m.ReleaseId,
 	}
 }
 
@@ -85,7 +88,9 @@ func PbHookAttachment(at *table.HookAttachment) *HookAttachment {
 	}
 
 	return &HookAttachment{
-		BizId: at.BizID,
+		BizId:     at.BizID,
+		AppId:     at.AppID,
+		ReleaseId: at.ReleaseID,
 	}
 }
 

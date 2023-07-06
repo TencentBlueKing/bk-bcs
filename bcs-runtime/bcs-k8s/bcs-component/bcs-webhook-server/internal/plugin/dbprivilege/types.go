@@ -20,5 +20,5 @@ const (
 	// NetworkTypeUnderlay underlay network
 	NetworkTypeUnderlay = "underlay"
 	// DbPrivilegeSecretName the name of secret to store db privilege info
-	DbPrivilegeSecretName = "bcs-db-privilege" // NOCC:gas/crypto(存量代码)
+	DbPrivilegeSecretName = "bcs-db-privilege"
 )

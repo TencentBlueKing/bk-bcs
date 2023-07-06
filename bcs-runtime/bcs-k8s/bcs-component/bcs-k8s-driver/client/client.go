@@ -15,35 +15,37 @@
 package client
 
 import (
-	urllib "net/url"
-
 	glog "github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/options"
+	urllib "net/url"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 // NewClientSet create k8s clientset
-func NewClientSet(k8sMasterUrl string, tlsCfg options.TLSConfig) *kubernetes.Clientset {
+func NewClientSet(KubeMasterURL string, TLSConfig options.TLSConfig) *kubernetes.Clientset {
 
-	glog.V(3).Infof("k8sConfig.Master is set: %s", k8sMasterUrl)
+	glog.V(3).Infof("k8sConfig.Master is set: %s", KubeMasterURL)
+	// TODO: modify here, need to use master url and cert file to make clientset
 
 	config := &rest.Config{
-		Host:  k8sMasterUrl,
+		Host:  KubeMasterURL,
 		QPS:   1e6,
 		Burst: 1e6,
 	}
-	kubeURL, _ := urllib.Parse(k8sMasterUrl)
+	kubeURL, _ := urllib.Parse(KubeMasterURL)
 	if kubeURL.Scheme == options.HTTPS {
-		if tlsCfg.CAFile == "" || tlsCfg.CertFile == "" || tlsCfg.KeyFile == "" {
+		if TLSConfig.CAFile == "" || TLSConfig.CertFile == "" || TLSConfig.KeyFile == "" {
 			return nil
 		}
-		config.TLSClientConfig = rest.TLSClientConfig{
-			CAFile:   tlsCfg.CAFile,
-			CertFile: tlsCfg.CertFile,
-			KeyFile:  tlsCfg.KeyFile,
+		tlsConfig := rest.TLSClientConfig{
+			CAFile:   TLSConfig.CAFile,
+			CertFile: TLSConfig.CertFile,
+			KeyFile:  TLSConfig.KeyFile,
 		}
+
+		config.TLSClientConfig = tlsConfig
 	}
 
 	// 2.2 creates the clientSet

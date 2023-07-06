@@ -26,7 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 
-	"github.com/bitly/go-simplejson"
+	simplejson "github.com/bitly/go-simplejson"
 	"github.com/spf13/pflag"
 )
 
@@ -256,7 +256,7 @@ func wrapFieldFlag(fs *pflag.FlagSet, field reflect.StructField, fieldV reflect.
 	flagUsage := field.Tag.Get("usage")
 	flagShortHand := field.Tag.Get("short")
 
-	unsafePtr := unsafe.Pointer(fieldV.UnsafeAddr()) // nolint
+	unsafePtr := unsafe.Pointer(fieldV.UnsafeAddr())
 	switch field.Type.Kind() {
 	case reflect.String:
 		fs.StringVarP((*string)(unsafePtr), flagName, flagShortHand, flagValue, flagUsage)

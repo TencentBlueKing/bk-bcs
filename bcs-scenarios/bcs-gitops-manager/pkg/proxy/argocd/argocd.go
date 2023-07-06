@@ -85,7 +85,6 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware: middleware,
 	}
 	appPlugin := &AppPlugin{
-		storage:    ops.option.Storage,
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/applications").Subrouter(),
 		middleware: middleware,
 	}

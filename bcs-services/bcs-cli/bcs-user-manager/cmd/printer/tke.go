@@ -112,8 +112,8 @@ func PrintReleaseTkeCidrCmdResult(flagOutput string, resp *pkg.ReleaseTkeCidrRes
 	tw.Render()
 }
 
-// PrintSyncCredentialsResult prints the response that sync cluster tkecidrs
-func PrintSyncCredentialsResult(flagOutput string, resp *pkg.SyncTkeClusterCredentialsResponse) {
+// PrintSyncTkeClusterCredentialsCmdResult prints the response that sync cluster tkecidrs
+func PrintSyncTkeClusterCredentialsCmdResult(flagOutput string, resp *pkg.SyncTkeClusterCredentialsResponse) {
 	if flagOutput == outputTypeJSON {
 		if err := encodeJSON(resp); err != nil {
 			klog.Fatalf("sync cluster tkecidrs output json to stdout failed: %s", err.Error())

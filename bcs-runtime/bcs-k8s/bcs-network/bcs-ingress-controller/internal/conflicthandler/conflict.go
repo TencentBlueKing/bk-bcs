@@ -48,12 +48,12 @@ type ConflictHandler struct {
 }
 
 // NewConflictHandler return new conflictHandler
-func NewConflictHandler(conflictCheckOpen bool, isTCPUDPPortReuse bool, defaultRegion string, k8sCli client.Client,
+func NewConflictHandler(conflictCheckOpen bool, IsTCPUDPPortReuse bool, defaultRegion string, k8sCli client.Client,
 	igc *generator.IngressConverter, eventer record.EventRecorder) *ConflictHandler {
 	return &ConflictHandler{
 		conflictCheckOpen: conflictCheckOpen,
 		defaultRegion:     defaultRegion,
-		IsTCPUDPPortReuse: isTCPUDPPortReuse,
+		IsTCPUDPPortReuse: IsTCPUDPPortReuse,
 		k8sClient:         k8sCli,
 		ingressConverter:  igc,
 		eventer:           eventer,

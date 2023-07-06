@@ -1,21 +1,8 @@
-/*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.
- * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
- * Licensed under the MIT License (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- * either express or implied. See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
+// Package iam xxx
 package iam
 
 import (
 	"context"
-	// NOCC:gas/crypto(设计如此:)
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -104,9 +91,9 @@ func IsAllowedWithResource(ctx context.Context, projectId, clusterId, namespaceN
 	}
 
 	if namespaceName != "" {
-		nameSpaceID, cErr := calcNamespaceID(clusterId, namespaceName)
-		if cErr != nil {
-			return false, cErr
+		nameSpaceID, err := calcNamespaceID(clusterId, namespaceName)
+		if err != nil {
+			return false, err
 		}
 		relatedActionIDs = append(relatedActionIDs, namespace.NameSpaceScopedCreate.String())
 		resources = append(resources, utils.ResourceAction{Resource: nameSpaceID,
@@ -182,9 +169,9 @@ func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, namespaceNa
 	// 命名空间域创建权限
 	// 和bcs-api校验权限一致(POST请求, 命名空间下的资源)
 	if namespaceName != "" {
-		nameSpaceID, cErr := calcNamespaceID(clusterId, namespaceName)
-		if cErr != nil {
-			return "", cErr
+		nameSpaceID, err := calcNamespaceID(clusterId, namespaceName)
+		if err != nil {
+			return "", err
 		}
 		namespaceApp := iam.ApplicationAction{
 			ActionID: namespace.NameSpaceScopedCreate.String(),
@@ -220,7 +207,6 @@ func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, namespaceNa
 
 // md5Digest 字符串转 MD5
 func md5Digest(key string) string {
-	// NOCC:gas/crypto(设计如此:)
 	hash := md5.New()
 	hash.Write([]byte(key))
 	return hex.EncodeToString(hash.Sum(nil))

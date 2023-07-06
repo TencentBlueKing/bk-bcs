@@ -14,7 +14,6 @@
 package azure
 
 import (
-	// NOCC:gas/crypto(误报 未用于创建密钥)
 	"crypto/md5"
 	"fmt"
 	"strings"
@@ -32,15 +31,6 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-// ensureLoadBalancerListener ensure load balancer listener, azure load balancer can only support layer4 listener
-// LoadBalancerListener contains:
-// - backendAddressPool
-// - probe
-// - loadBalancingRules (can be seen as listener)
-// (LoadBalancer listener)   --> LoadBalancingRule --> backendAddressPool   --> backend1
-// 																		   |--> backend2
-//																		   |--> ...
-//							|--> ...
 func (a *Alb) ensureLoadBalancerListener(region string, listeners []*networkextensionv1.Listener) (map[string]cloud.
 	Result, error) {
 	if len(listeners) == 0 {
@@ -48,7 +38,6 @@ func (a *Alb) ensureLoadBalancerListener(region string, listeners []*networkexte
 	}
 	blog.V(4).Infof("ensure load balancer listener[%d]", len(listeners))
 	for _, listener := range listeners {
-		// listener下的targetGroup中，所有backend必须有相同的port
 		if !isRuleSamePort(listener) {
 			return nil, errors.Wrapf(multiplePortInOneTargetGroupError, "listener '%s/%s' check failed",
 				listener.GetNamespace(), listener.GetName())
@@ -74,7 +63,6 @@ func (a *Alb) ensureLoadBalancerListener(region string, listeners []*networkexte
 		}
 	}
 
-	// ensure失败的监听器，需要将原因返回上层
 	retMap := make(map[string]cloud.Result)
 	for _, li := range successListenerList {
 		if errI, ok := failedListenerMap.Load(li.GetName()); ok {
@@ -93,16 +81,13 @@ func (a *Alb) ensureLoadBalancerListener(region string, listeners []*networkexte
 	return retMap, nil
 }
 
-// ensureAddrPoolForLB ensure addr pool for load balancer
 func (a *Alb) ensureAddrPoolForLB(listeners []*networkextensionv1.Listener) *sync.Map {
 	failedListenerMap := &sync.Map{}
-	// 通过channel限制同时启动的goroutine数量
 	ch := make(chan struct{}, CreateGoroutineLimit)
 	wg := sync.WaitGroup{}
 	wg.Add(len(listeners))
 	for _, listener := range listeners {
 		ch <- struct{}{}
-		// 不同AddrPool之间互不影响，goroutine创建加快效率
 		go func(listener *networkextensionv1.Listener) {
 			defer func() {
 				wg.Done()
@@ -113,11 +98,9 @@ func (a *Alb) ensureAddrPoolForLB(listeners []*networkextensionv1.Listener) *syn
 			poolName := getLBRuleTgName(listener.Name, listener.Spec.Port)
 			addrList := make([]*armnetwork.LoadBalancerBackendAddress, 0)
 
-			// 根据listener.spec.targetGroup构建AddressPool
 			if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
 				for _, backend := range listener.Spec.TargetGroup.Backends {
 					addrList = append(addrList, &armnetwork.LoadBalancerBackendAddress{
-						// NOCC:gas/crypto(误报 未用于创建密钥)
 						Name: to.StringPtr(fmt.Sprintf("%x", md5.Sum([]byte(backend.IP)))),
 						Properties: &armnetwork.LoadBalancerBackendAddressPropertiesFormat{
 							IPAddress:      to.StringPtr(backend.IP),
@@ -127,7 +110,7 @@ func (a *Alb) ensureAddrPoolForLB(listeners []*networkextensionv1.Listener) *syn
 				}
 			}
 
-			_, err := a.sdkWrapper.CreateOrUpdateBackendAddressPool(lbName, poolName, armnetwork.BackendAddressPool{
+			_, err := a.sdkWrapper.CreateOrUpdateLoadBalanceBackendAddressPool(lbName, poolName, armnetwork.BackendAddressPool{
 				Name: to.StringPtr(poolName),
 				Properties: &armnetwork.BackendAddressPoolPropertiesFormat{
 					LoadBalancerBackendAddresses: addrList,
@@ -161,7 +144,6 @@ func (a *Alb) ensureLoadBalancer(region string, listeners []*networkextensionv1.
 		return err
 	}
 
-	// 3. ensure loadBalancer
 	_, err = a.sdkWrapper.CreateOrUpdateLoadBalancer(listeners[0].Spec.LoadbalancerID, *lb)
 	if err != nil {
 		return err
@@ -188,7 +170,6 @@ func (a *Alb) ensureProbesForLB(loadBalancer *armnetwork.LoadBalancer,
 			},
 		}
 
-		// translate cr listenerAttribute to cloud request field
 		if listener.Spec.ListenerAttribute != nil && listener.Spec.ListenerAttribute.HealthCheck != nil && listener.
 			Spec.ListenerAttribute.HealthCheck.Enabled == true {
 			healthCheck := listener.Spec.ListenerAttribute.HealthCheck
@@ -207,7 +188,6 @@ func (a *Alb) ensureProbesForLB(loadBalancer *armnetwork.LoadBalancer,
 		probeNameSet.Add(probeName)
 	}
 
-	// 避免遗漏用户手动创建的probe
 	for _, probe := range loadBalancer.Properties.Probes {
 		if probe.Name != nil && probeNameSet.Contains(*probe.Name) {
 			continue
@@ -235,7 +215,6 @@ func (a *Alb) ensureLoadBalancingRule(loadBalancer *armnetwork.LoadBalancer,
 		ruleName := getLBRuleTgName(listener.Name, listener.Spec.Port)
 		port := getBackendPort(listener.Spec.TargetGroup)
 
-		// translate cr field to cloud request field
 		newRule := &armnetwork.LoadBalancingRule{
 			Name: to.StringPtr(ruleName),
 			Properties: &armnetwork.LoadBalancingRulePropertiesFormat{
@@ -243,9 +222,14 @@ func (a *Alb) ensureLoadBalancingRule(loadBalancer *armnetwork.LoadBalancer,
 				Protocol:     transTransportProtocolPtr(listener.Spec.Protocol),
 				BackendAddressPool: a.resourceHelper.genSubResource(ResourceProviderLoadBalancer, listener.Spec.LoadbalancerID,
 					ResourceTypeBackendAddressPools, ruleName),
+				BackendAddressPools:     nil,
 				BackendPort:             to.Int32Ptr(port),
+				DisableOutboundSnat:     nil,
 				EnableFloatingIP:        to.BoolPtr(false),
+				EnableTCPReset:          nil,
 				FrontendIPConfiguration: a.resourceHelper.getSubResourceByID(*frontendIPConfigurationID),
+				IdleTimeoutInMinutes:    nil,
+				LoadDistribution:        nil,
 				Probe: a.resourceHelper.genSubResource(ResourceProviderLoadBalancer, listener.Spec.LoadbalancerID,
 					ResourceTypeProbes, ruleName),
 			},
@@ -261,7 +245,6 @@ func (a *Alb) ensureLoadBalancingRule(loadBalancer *armnetwork.LoadBalancer,
 		ruleNameSet.Add(ruleName)
 	}
 
-	// 避免遗漏用户手动创建的规则
 	for _, rule := range loadBalancer.Properties.LoadBalancingRules {
 		if rule.Name != nil && ruleNameSet.Contains(*rule.Name) {
 			continue
@@ -337,17 +320,6 @@ func (a *Alb) deleteLoadBalancerListener(region string, listeners []*networkexte
 
 	return nil
 }
-
-// ensureApplicationGatewayListener ensure listeners of ApplicationGateway.
-// ApplicationGateway is layer7 load balancer in azure
-// contains:
-// - frontendPort
-// - AddressPool
-// - Probes
-// - BackendSettings
-// - HttpListener
-// - URLPathMap
-// - RequestRoutingRule
 func (a *Alb) ensureApplicationGatewayListener(region string, listeners []*networkextensionv1.Listener) error {
 	if len(listeners) == 0 {
 		return nil
@@ -426,7 +398,6 @@ func (a *Alb) ensureFrontendPortForAg(appGateway *armnetwork.ApplicationGateway,
 	return appGateway
 }
 
-// azure中，addressPool只包含IP。 监听器具体的后端转发端口/协议由backendSetting指定
 func (a *Alb) ensureAddrPoolForAg(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	newPools := make([]*armnetwork.ApplicationGatewayBackendAddressPool, 0)
@@ -475,7 +446,6 @@ func (a *Alb) ensureAddrPoolForAg(appGateway *armnetwork.ApplicationGateway,
 	return appGateway
 }
 
-// backendSetting 用于确认后端对应的端口和协议
 func (a *Alb) ensureBackendSettings(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	newSettings := make([]*armnetwork.ApplicationGatewayBackendHTTPSettings, 0)
@@ -485,7 +455,7 @@ func (a *Alb) ensureBackendSettings(appGateway *armnetwork.ApplicationGateway,
 			settingName := getRuleTgName(listener.Name, rule.Domain, rule.Path, listener.Spec.Port)
 
 			needProbe := false
-			var probeResource *armnetwork.SubResource
+			var probeResource *armnetwork.SubResource = nil
 			if rule.ListenerAttribute != nil && rule.ListenerAttribute.HealthCheck != nil && rule.ListenerAttribute.
 				HealthCheck.Enabled {
 				needProbe = true
@@ -503,12 +473,20 @@ func (a *Alb) ensureBackendSettings(appGateway *armnetwork.ApplicationGateway,
 			newSetting := &armnetwork.ApplicationGatewayBackendHTTPSettings{
 				Name: to.StringPtr(settingName),
 				Properties: &armnetwork.ApplicationGatewayBackendHTTPSettingsPropertiesFormat{
+					AffinityCookieName:             nil,
+					AuthenticationCertificates:     nil,
+					ConnectionDraining:             nil,
+					CookieBasedAffinity:            nil,
+					HostName:                       nil,
+					Path:                           nil,
 					PickHostNameFromBackendAddress: to.BoolPtr(false),
 					Port:                           to.Int32Ptr(int32(port)),
 					Probe:                          probeResource,
 					ProbeEnabled:                   &needProbe,
 					Protocol:                       transAgProtocolPtr(protocol),
 					RequestTimeout:                 to.Int32Ptr(DefaultRequestTimeout),
+					TrustedRootCertificates:        nil,
+					ProvisioningState:              nil,
 				},
 			}
 			newSettings = append(newSettings, newSetting)
@@ -519,9 +497,18 @@ func (a *Alb) ensureBackendSettings(appGateway *armnetwork.ApplicationGateway,
 	newSettings = append(newSettings, &armnetwork.ApplicationGatewayBackendHTTPSettings{
 		Name: to.StringPtr(DefaultBackendSettingName),
 		Properties: &armnetwork.ApplicationGatewayBackendHTTPSettingsPropertiesFormat{
-			Port:           to.Int32Ptr(80),
-			Protocol:       transAgProtocolPtr(string(armnetwork.ApplicationGatewayProtocolHTTP)),
-			RequestTimeout: to.Int32Ptr(DefaultRequestTimeout),
+			AffinityCookieName:             nil,
+			AuthenticationCertificates:     nil,
+			ConnectionDraining:             nil,
+			CookieBasedAffinity:            nil,
+			HostName:                       nil,
+			Path:                           nil,
+			PickHostNameFromBackendAddress: nil,
+			Port:                           to.Int32Ptr(80),
+			Protocol:                       transAgProtocolPtr(string(armnetwork.ApplicationGatewayProtocolHTTP)),
+			RequestTimeout:                 to.Int32Ptr(DefaultRequestTimeout),
+			TrustedRootCertificates:        nil,
+			ProvisioningState:              nil,
 		},
 	})
 
@@ -563,7 +550,6 @@ func (a *Alb) ensureProbeForAg(appGateway *armnetwork.ApplicationGateway,
 				probeHost = "127.0.0.1"
 			}
 
-			// translate cr field to cloud request field
 			newProbe := &armnetwork.ApplicationGatewayProbe{
 				Name: to.StringPtr(probeName),
 				Properties: &armnetwork.ApplicationGatewayProbePropertiesFormat{
@@ -579,14 +565,11 @@ func (a *Alb) ensureProbeForAg(appGateway *armnetwork.ApplicationGateway,
 					UnhealthyThreshold:                  to.Int32Ptr(int32(healthCheck.UnHealthNum)),
 				},
 			}
-			// 用户未配置健康检查端口时，使用后端服务的端口
 			if healthCheck.HealthCheckPort == 0 {
 				newProbe.Properties.Port = to.Int32Ptr(getBackendPort(rule.TargetGroup))
 			}
-			// 用户未配置健康检查协议时，使用后端服务的协议
 			if healthCheck.HealthCheckProtocol == "" {
 				if rule.TargetGroup == nil || len(rule.TargetGroup.Backends) == 0 {
-					// 空监听器使用HTTP作为默认（用于没有rs，实际不会被用到）
 					newProbe.Properties.Protocol = transAgProtocolPtr(AzureProtocolHTTP)
 				} else {
 					newProbe.Properties.Protocol = transAgProtocolPtr(rule.TargetGroup.TargetGroupProtocol)
@@ -641,23 +624,25 @@ func (a *Alb) ensureHttpListenerForAg(appGateway *armnetwork.ApplicationGateway,
 			httpListenerName := getHttpListenerName(listener.Spec.Port, rule.Domain)
 
 			listenPort := listener.Spec.Port
-			var hostNamePtr *string
+			var hostNamePtr *string = nil
 			if rule.Domain != "" {
 				hostNamePtr = to.StringPtr(rule.Domain)
 			}
 
-			// translate cr field to cloud request field
 			newHttpListener := &armnetwork.ApplicationGatewayHTTPListener{
 				Name: to.StringPtr(httpListenerName),
 				Properties: &armnetwork.ApplicationGatewayHTTPListenerPropertiesFormat{
 					FrontendIPConfiguration: a.resourceHelper.getSubResourceByID(*frontIPConfigurationID),
 					FrontendPort: a.resourceHelper.genSubResource(ResourceProviderApplicationGateway,
 						listener.Spec.LoadbalancerID, ResourceTypeFrontendPorts, fmt.Sprintf("port_%d", listenPort)),
-					HostName: hostNamePtr,
-					Protocol: transAgProtocolPtr(listener.Spec.Protocol),
+					HostName:                    hostNamePtr,
+					Protocol:                    transAgProtocolPtr(listener.Spec.Protocol),
+					RequireServerNameIndication: nil,
+					SSLCertificate:              nil,
+					SSLProfile:                  nil,
 				},
 			}
-			if strings.ToUpper(listener.Spec.Protocol) == AzureProtocolHTTPS && listener.Spec.Certificate != nil {
+			if strings.ToLower(listener.Spec.Protocol) == "https" && listener.Spec.Certificate != nil {
 				newHttpListener.Properties.SSLCertificate = a.resourceHelper.genSubResource(
 					ResourceProviderApplicationGateway, listener.Spec.LoadbalancerID, ResourceTypeSSLCertificate,
 					listener.Spec.Certificate.CertID)
@@ -668,7 +653,6 @@ func (a *Alb) ensureHttpListenerForAg(appGateway *armnetwork.ApplicationGateway,
 		}
 	}
 
-	// 避免遗漏用户手动创建的监听器
 	for _, httpListener := range appGateway.Properties.HTTPListeners {
 		if httpListener.Name != nil && listenerNameSet.Contains(*httpListener.Name) {
 			continue
@@ -712,9 +696,8 @@ func (a *Alb) ensureRequestRoutingRule(appGateway *armnetwork.ApplicationGateway
 				}
 			}
 
-			// Azure 规定一个ruleTg中的所有backend都必须是相同的port
+			// Azure request all backends have same port
 			ruleTgName := getRuleTgName(listener.Name, rule.Domain, rule.Path, listener.Spec.Port)
-			// 每条rule需要有唯一的优先级，这里会选择1～20000中没被使用过的最小优先级
 			priority := generatePriority(appGateway)
 
 			newRoutingRule := &armnetwork.ApplicationGatewayRequestRoutingRule{
@@ -748,7 +731,6 @@ func (a *Alb) ensureRequestRoutingRule(appGateway *armnetwork.ApplicationGateway
 	return appGateway, nil
 }
 
-// URLPath 指定了http监听器中具体路径和addressPool/backendSetting的对应关系
 func (a *Alb) ensureUrlPathMap(appGateway *armnetwork.ApplicationGateway,
 	listeners []*networkextensionv1.Listener) *armnetwork.ApplicationGateway {
 	urlPathMapMap := make(map[string]*armnetwork.ApplicationGatewayURLPathMap)
@@ -781,7 +763,6 @@ func (a *Alb) ensureUrlPathMap(appGateway *armnetwork.ApplicationGateway,
 				}
 			}
 
-			// NOCC:gas/crypto(误报 未用于创建密钥)
 			pathRuleName := fmt.Sprintf("%x", md5.Sum([]byte(rule.Path)))
 			redundant := false
 			for _, pathRule := range urlPathMap.Properties.PathRules {
@@ -957,7 +938,6 @@ func (a *Alb) deleteURLPathMapForAg(appGateway *armnetwork.ApplicationGateway,
 			if rule.Path == "" {
 				continue
 			}
-			// NOCC:gas/crypto(误报 未用于创建密钥)
 			pathName := fmt.Sprintf("%x", md5.Sum([]byte(rule.Path)))
 
 			urlPathMapName := getHttpListenerName(listener.Spec.Port, rule.Domain)

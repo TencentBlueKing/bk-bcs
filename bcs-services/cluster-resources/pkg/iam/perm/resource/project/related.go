@@ -41,6 +41,6 @@ func RelatedProjectCanViewPerm(ctx perm.Ctx, subAllow bool, subErr error) (bool,
 	if !subAllow {
 		return false, errorx.New(errcode.NoIAMPerm, "not iam permission for current operate")
 	}
-	// 考虑下要不要加上 View 类型的，跳过鉴权？
+	// TODO 考虑下要不要加上 View 类型的，跳过鉴权？
 	return NewPerm().CanView(projPermCtx.FromMap(ctx.ToMap()))
 }

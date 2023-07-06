@@ -45,8 +45,8 @@ export default defineComponent({
     clusterId: String,
     search: String,
     clusterType: {
-      type: [String, Array] as PropType<ClusterType|ClusterType[]>,
-      default: () => ['independent', 'managed'],
+      type: String as PropType<ClusterType>,
+      default: 'independent',
     },
   },
   emits: ['cluster-change', 'search-change', 'search-enter', 'refresh', 'update:clusterId', 'update:search'],

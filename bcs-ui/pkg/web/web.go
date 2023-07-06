@@ -62,25 +62,25 @@ func NewWebServer(ctx context.Context, addr string, addrIPv6 string) (*WebServer
 }
 
 // Run :
-func (w *WebServer) Run() error {
+func (a *WebServer) Run() error {
 	dualStackListener := listener.NewDualStackListener()
-	if err := dualStackListener.AddListenerWithAddr(w.srv.Addr); err != nil {
+	if err := dualStackListener.AddListenerWithAddr(a.srv.Addr); err != nil {
 		return err
 	}
 
-	if w.addrIPv6 != "" && w.addrIPv6 != w.srv.Addr {
-		if err := dualStackListener.AddListenerWithAddr(w.addrIPv6); err != nil {
+	if a.addrIPv6 != "" && a.addrIPv6 != a.srv.Addr {
+		if err := dualStackListener.AddListenerWithAddr(a.addrIPv6); err != nil {
 			return err
 		}
-		klog.Infof("api serve dualStackListener with ipv6: %s", w.addrIPv6)
+		klog.Infof("api serve dualStackListener with ipv6: %s", a.addrIPv6)
 	}
 
-	return w.srv.Serve(dualStackListener)
+	return a.srv.Serve(dualStackListener)
 }
 
 // Close :
-func (w *WebServer) Close() error {
-	return w.srv.Shutdown(w.ctx)
+func (a *WebServer) Close() error {
+	return a.srv.Shutdown(a.ctx)
 }
 
 // newRoutes xxx
@@ -162,7 +162,7 @@ func ReverseAPIHandler(name, remoteURL string) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// OKResponse ok response
+// OKResponse
 type OKResponse struct {
 	Code      int         `json:"code"`
 	Data      interface{} `json:"data"`

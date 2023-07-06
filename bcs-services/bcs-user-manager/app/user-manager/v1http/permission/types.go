@@ -33,8 +33,6 @@ const (
 	Namespace ResourceType = "namespace"
 	// NamespaceScoped namespace scoped
 	NamespaceScoped ResourceType = "namespace_scoped"
-	// Storage cluster
-	Storage ResourceType = "storage"
 )
 
 // ResourceType resource type

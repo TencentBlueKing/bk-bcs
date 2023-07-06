@@ -354,7 +354,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		return nil, err
 	}
 
-	// Note: list latest release and compare each config item exists and latest commit id to get changing status
+	// TODO: list latest release and compare each config item exists and latest commit id to get changing status
 	r := &pbds.ListConfigItemsReq{
 		BizId:     grpcKit.BizID,
 		AppId:     req.AppId,

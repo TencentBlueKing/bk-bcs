@@ -89,7 +89,7 @@ func list(c *utils.ClientContext) error {
 	case "meshcluster":
 		return listMeshCluster(c)
 	default:
-		// unknown type, try custom resource
+		// unkown type, try custom resource
 		return listCustomResource(c)
 	}
 }

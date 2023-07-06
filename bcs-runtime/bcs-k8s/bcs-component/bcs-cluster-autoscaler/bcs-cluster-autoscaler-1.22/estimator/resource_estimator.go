@@ -29,12 +29,8 @@ import (
 	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
 )
 
-const (
-	// filterNodeResourceAnnoKey filters nodes when calculating buffer and total resource
-	filterNodeResourceAnnoKey = "io.tencent.bcs.dev/filter-node-resource"
-
-	valueTrue = "true"
-)
+// filterNodeResourceAnnoKey filters nodes when calculating buffer and total resource
+const filterNodeResourceAnnoKey = "io.tencent.bcs.dev/filter-node-resource"
 
 // podInfo contains Pod and score that corresponds to how important it is to handle the pod first.
 type podInfo struct {
@@ -150,13 +146,13 @@ func (e *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate *schedul
 		if node.Labels[corev1.LabelInstanceTypeStable] == "eklet" {
 			continue
 		}
-		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
+		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
 			continue
 		}
-		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
+		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
 			continue
 		}
-		if node.Labels[nodeLabel.LabelNodeRoleControlPlane] == valueTrue {
+		if node.Labels[nodeLabel.LabelNodeRoleControlPlane] == "true" {
 			continue
 		}
 		sumResourcesList.Add(scheduler.ResourceToResourceList(nodeInfo.Allocatable))

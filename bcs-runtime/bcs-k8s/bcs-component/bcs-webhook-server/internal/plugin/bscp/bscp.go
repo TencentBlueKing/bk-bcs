@@ -182,8 +182,7 @@ func (h *Hooker) retrieveEnvFromPod(pod *corev1.Pod) (map[string]string, []types
 	if len(cfgPath) == 0 {
 		return nil, nil, fmt.Errorf("bscp SideCar environment BSCP_BCSSIDECAR_APPCFG_PATH is empty")
 	}
-	modValue, ok := envMap[SideCarMod]
-	if !ok {
+	if modValue, ok := envMap[SideCarMod]; !ok {
 		// for single app
 		if !ValidateEnvs(envMap) {
 			return nil, nil, fmt.Errorf("bscp sidecar envs are invalid")
@@ -191,11 +190,11 @@ func (h *Hooker) retrieveEnvFromPod(pod *corev1.Pod) (map[string]string, []types
 	} else {
 		// for multiple app
 		// if BSCP_BCSSIDECAR_APPINFO_MOD's value is invlaid, cannot do inject
-		newModValue, err := AddPathIntoAppInfoMode(modValue, cfgPath)
+		modValue, err := AddPathIntoAppInfoMode(modValue, cfgPath)
 		if err != nil {
-			return nil, nil, fmt.Errorf("env %s:%s is invalid", SideCarMod, newModValue)
+			return nil, nil, fmt.Errorf("env %s:%s is invalid", SideCarMod, modValue)
 		}
-		envMap[SideCarMod] = newModValue
+		envMap[SideCarMod] = modValue
 	}
 
 	return envMap, patches, nil

@@ -337,12 +337,12 @@ func create(t time.Time) (f *os.File, filename string, filesize uint32, err erro
 		f, err = os.Create(fname)
 		if err == nil {
 			symlink := filepath.Join(lk.dir, link)
-			if e := os.Remove(symlink); e != nil {
-				fmt.Fprintf(os.Stderr, "log: create remove: %v\n", e)
+			if err := os.Remove(symlink); err != nil {
+				fmt.Fprintf(os.Stderr, "log: create remove: %v\n", err)
 			}
 
-			if e := os.Symlink(name, symlink); e != nil {
-				fmt.Fprintf(os.Stderr, "log: create symlink: %v\n", e)
+			if err := os.Symlink(name, symlink); err != nil {
+				fmt.Fprintf(os.Stderr, "log: create symlink: %v\n", err)
 			}
 
 			lk.add(&fileBlock{fileInfo: fileInfo{name: name, timestamp: ""}, next: nil})

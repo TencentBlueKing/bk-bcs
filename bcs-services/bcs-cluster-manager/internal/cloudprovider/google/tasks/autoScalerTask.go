@@ -108,25 +108,25 @@ func ensureAutoScalerWithInstaller(nodeGroups []cmproto.NodeGroup, as *cmproto.C
 	if as.EnableAutoscale {
 		scaler.Replicas = defaultReplicas
 
-		values, errValues := scaler.GetValues()
-		if errValues != nil {
+		values, err := scaler.GetValues()
+		if err != nil {
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
 
 		// install or upgrade
 		if installed {
-			if errUpgrade := installer.Upgrade(as.ClusterID, values); errUpgrade != nil {
+			if err := installer.Upgrade(as.ClusterID, values); err != nil {
 				return fmt.Errorf("upgrade app failed, err %s", err)
 			}
 		} else {
-			if errInstall := installer.Install(as.ClusterID, values); errInstall != nil {
+			if err := installer.Install(as.ClusterID, values); err != nil {
 				return fmt.Errorf("install app failed, err %s", err)
 			}
 		}
 
 		// check status
-		ok, errStatus := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
-		if errStatus != nil {
+		ok, err := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
+		if err != nil {
 			return fmt.Errorf("check app status failed, err %s", err)
 		}
 		if !ok {
@@ -140,17 +140,17 @@ func ensureAutoScalerWithInstaller(nodeGroups []cmproto.NodeGroup, as *cmproto.C
 		// 副本数设置为 0，则停止应用
 		scaler.Replicas = 0
 
-		values, errValues := scaler.GetValues()
-		if errValues != nil {
+		values, err := scaler.GetValues()
+		if err != nil {
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
 
-		if errUpgrade := installer.Upgrade(as.ClusterID, values); errUpgrade != nil {
+		if err := installer.Upgrade(as.ClusterID, values); err != nil {
 			return fmt.Errorf("upgrade app failed, err %s", err)
 		}
 		// check status
-		ok, errStatus := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
-		if errStatus != nil {
+		ok, err := installer.CheckAppStatus(as.ClusterID, time.Minute*10)
+		if err != nil {
 			return fmt.Errorf("check app status failed, err %s", err)
 		}
 		if !ok {

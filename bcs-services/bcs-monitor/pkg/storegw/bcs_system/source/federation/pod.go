@@ -26,13 +26,13 @@ import (
 )
 
 // handlePodMetricFunc
-type handlePodMetricFunc func(handler base.MetricHandler, ctx context.Context, projectID, clusterID, namespace string,
+type handlePodMetricFunc func(handler base.MetricHandler, ctx context.Context, projectId, clusterId, namespace string,
 	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error)
 
-func (m *Federation) handlePodMetric(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
+func (m *Federation) handlePodMetric(ctx context.Context, projectId, clusterId, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration, fn handlePodMetricFunc) ([]*prompb.TimeSeries, error) {
 	// get managed clusters
-	clusters, err := k8sclient.GetManagedClusterList(ctx, clusterID)
+	clusters, err := k8sclient.GetManagedClusterList(ctx, clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (m *Federation) handlePodMetric(ctx context.Context, projectID, clusterID, 
 				klog.Warningf("get client in cluster %s error, %s", clusterID, err)
 				return nil
 			}
-			s, err := fn(client, ctx, projectID, clusterID, namespace, podNameList, start, end, step)
+			s, err := fn(client, ctx, projectId, clusterID, namespace, podNameList, start, end, step)
 			if err != nil {
 				klog.Warningf("handle container metrics in cluster %s error, %s", clusterID, err)
 				return nil
@@ -65,29 +65,29 @@ func (m *Federation) handlePodMetric(ctx context.Context, projectID, clusterID, 
 }
 
 // GetPodCPUUsage POD 使用率
-func (m *Federation) GetPodCPUUsage(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
+func (m *Federation) GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetPodCPUUsage
-	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+	return m.handlePodMetric(ctx, projectId, clusterId, namespace, podNameList, start, end, step, fn)
 }
 
 // GetPodMemoryUsed 内存使用量
-func (m *Federation) GetPodMemoryUsed(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
+func (m *Federation) GetPodMemoryUsed(ctx context.Context, projectId, clusterId, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetPodMemoryUsed
-	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+	return m.handlePodMetric(ctx, projectId, clusterId, namespace, podNameList, start, end, step, fn)
 }
 
 // GetPodNetworkReceive 网络接收
-func (m *Federation) GetPodNetworkReceive(ctx context.Context, projectID, clusterID, namespace string,
+func (m *Federation) GetPodNetworkReceive(ctx context.Context, projectId, clusterId, namespace string,
 	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetPodNetworkReceive
-	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+	return m.handlePodMetric(ctx, projectId, clusterId, namespace, podNameList, start, end, step, fn)
 }
 
 // GetPodNetworkTransmit 网络发送
-func (m *Federation) GetPodNetworkTransmit(ctx context.Context, projectID, clusterID, namespace string,
+func (m *Federation) GetPodNetworkTransmit(ctx context.Context, projectId, clusterId, namespace string,
 	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	fn := base.MetricHandler.GetPodNetworkTransmit
-	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, start, end, step, fn)
+	return m.handlePodMetric(ctx, projectId, clusterId, namespace, podNameList, start, end, step, fn)
 }

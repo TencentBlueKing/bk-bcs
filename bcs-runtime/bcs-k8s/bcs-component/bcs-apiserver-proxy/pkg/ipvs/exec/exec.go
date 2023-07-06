@@ -189,12 +189,10 @@ func (cmd *cmdWrapper) Stop() {
 		return
 	}
 
-	// NOCC:gas/error(设计如此)
 	_ = c.Process.Signal(syscall.SIGTERM)
 
 	time.AfterFunc(10*time.Second, func() {
 		if !c.ProcessState.Exited() {
-			// NOCC:gas/error(设计如此)
 			_ = c.Process.Signal(syscall.SIGKILL)
 		}
 	})

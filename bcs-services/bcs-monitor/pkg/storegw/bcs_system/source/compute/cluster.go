@@ -23,18 +23,6 @@ import (
 type Compute struct {
 }
 
-// GetClusterPodUsed 获取集群pod使用量
-func (p *Compute) GetClusterPodUsed(ctx context.Context, projectId, clusterId string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
-}
-
-// GetClusterPodTotal 获取集群最大允许pod数
-func (p *Compute) GetClusterPodTotal(ctx context.Context, projectId, clusterId string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
-}
-
 // NewCompute xxx
 func NewCompute() *Compute {
 	return &Compute{}

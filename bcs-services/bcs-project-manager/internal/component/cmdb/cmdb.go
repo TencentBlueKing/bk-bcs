@@ -175,7 +175,6 @@ func GetBusinessMaintainers(bizID string) ([]string, error) {
 	return maintainers, nil
 }
 
-// BatchSearchBusinessByBizIDs batch search business by bizIDs
 func BatchSearchBusinessByBizIDs(bizIDs []int) (*SearchBusinessData, error) {
 	// 获取超时时间
 	timeout := defaultTimeout

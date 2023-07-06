@@ -42,11 +42,6 @@ func NewBcsDataManager(model store.Server, resourceGetter common.GetterInterface
 }
 
 // GetAllProjectList get project list
-// dimension: project only support day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
 func (e *BcsDataManager) GetAllProjectList(ctx context.Context,
 	req *bcsdatamanager.GetAllProjectListRequest, rsp *bcsdatamanager.GetAllProjectListResponse) error {
 	blog.Infof("Received GetAllProjectList.Call request. Dimension:%s, page:%d, size:%d, startTime=%s, endTime=%s",
@@ -69,8 +64,7 @@ func (e *BcsDataManager) GetAllProjectList(ctx context.Context,
 	return nil
 }
 
-// GetProjectInfo get single project info
-// projectID/projectCode/businessID is necessary
+// GetProjectInfo get project info
 func (e *BcsDataManager) GetProjectInfo(ctx context.Context,
 	req *bcsdatamanager.GetProjectInfoRequest, rsp *bcsdatamanager.GetProjectInfoResponse) error {
 	blog.Infof("Received GetProjectInfo.Call request. Project id: %s, dimension:%s, startTime=%s, endTime=%s",
@@ -118,11 +112,6 @@ func (e *BcsDataManager) GetProjectInfo(ctx context.Context,
 }
 
 // GetAllClusterList get all cluster list
-// dimension: minute/hour/day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
 func (e *BcsDataManager) GetAllClusterList(ctx context.Context, req *bcsdatamanager.GetClusterListRequest,
 	rsp *bcsdatamanager.GetClusterListResponse) error {
 	blog.Infof("Received GetAllClusterList.Call request. Dimension:%s, page:%s, size:%s, startTime=%s, endTime=%s",
@@ -146,11 +135,6 @@ func (e *BcsDataManager) GetAllClusterList(ctx context.Context, req *bcsdatamana
 }
 
 // GetClusterListByProject get cluster list by project
-// dimension: minute/hour/day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
 func (e *BcsDataManager) GetClusterListByProject(ctx context.Context, req *bcsdatamanager.GetClusterListRequest,
 	rsp *bcsdatamanager.GetClusterListResponse) error {
 	blog.Infof("Received GetClusterListByProject.Call request. Project id: %s, dimension:%s, page:%s, size:%s, "+
@@ -199,13 +183,7 @@ func (e *BcsDataManager) GetClusterListByProject(ctx context.Context, req *bcsda
 	return nil
 }
 
-// GetClusterInfo get single cluster info
-// dimension: minute/hour/day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
-// clusterID is necessary
+// GetClusterInfo get cluster info
 func (e *BcsDataManager) GetClusterInfo(ctx context.Context, req *bcsdatamanager.GetClusterInfoRequest,
 	rsp *bcsdatamanager.GetClusterInfoResponse) error {
 	blog.Infof("Received GetClusterInfo.Call request. cluster id:%s, dimension: %s, startTime=%s, endTime=%s",
@@ -228,12 +206,6 @@ func (e *BcsDataManager) GetClusterInfo(ctx context.Context, req *bcsdatamanager
 }
 
 // GetNamespaceInfoList get namespace info list
-// dimension: minute/hour/day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
-// clusterID is necessary
 func (e *BcsDataManager) GetNamespaceInfoList(ctx context.Context, req *bcsdatamanager.GetNamespaceInfoListRequest,
 	rsp *bcsdatamanager.GetNamespaceInfoListResponse) error {
 	blog.Infof("Received GetNamespaceInfoList.Call request. cluster id:%s, dimension: %s, page:%s, size:%s, "+
@@ -257,13 +229,7 @@ func (e *BcsDataManager) GetNamespaceInfoList(ctx context.Context, req *bcsdatam
 	return nil
 }
 
-// GetNamespaceInfo get single namespace info
-// dimension: minute/hour/day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
-// clusterID and namespace is necessary
+// GetNamespaceInfo get namespace info
 func (e *BcsDataManager) GetNamespaceInfo(ctx context.Context, req *bcsdatamanager.GetNamespaceInfoRequest,
 	rsp *bcsdatamanager.GetNamespaceInfoResponse) error {
 	blog.Infof("Received GetNamespaceInfo.Call request. cluster id:%s, namespace:%s, dimension: %s, "+
@@ -287,12 +253,6 @@ func (e *BcsDataManager) GetNamespaceInfo(ctx context.Context, req *bcsdatamanag
 }
 
 // GetWorkloadInfoList get workload info list
-// dimension: minute/hour/day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
-// clusterID is necessary
 func (e *BcsDataManager) GetWorkloadInfoList(ctx context.Context, req *bcsdatamanager.GetWorkloadInfoListRequest,
 	rsp *bcsdatamanager.GetWorkloadInfoListResponse) error {
 	blog.Infof("Received GetWorkloadInfoList.Call request, cluster id: %s, namespace: %s, dimension: %s, "+
@@ -316,13 +276,7 @@ func (e *BcsDataManager) GetWorkloadInfoList(ctx context.Context, req *bcsdatama
 	return nil
 }
 
-// GetWorkloadInfo get single workload info
-// dimension: minute/hour/day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
-// clusterID, namespace, workloadType and workloadName is necessary
+// GetWorkloadInfo get workload info
 func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanager.GetWorkloadInfoRequest,
 	rsp *bcsdatamanager.GetWorkloadInfoResponse) error {
 	blog.Infof("Received GetWorkloadInfo.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
@@ -346,11 +300,6 @@ func (e *BcsDataManager) GetWorkloadInfo(ctx context.Context, req *bcsdatamanage
 }
 
 // GetPodAutoscalerList get pod autoscaler list
-// dimension: minute/hour/day
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
 func (e *BcsDataManager) GetPodAutoscalerList(ctx context.Context, req *bcsdatamanager.GetPodAutoscalerListRequest,
 	rsp *bcsdatamanager.GetPodAutoscalerListResponse) error {
 	blog.Infof("Received GetPodAutoscalerList.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
@@ -376,12 +325,6 @@ func (e *BcsDataManager) GetPodAutoscalerList(ctx context.Context, req *bcsdatam
 }
 
 // GetPodAutoscaler get pod autoscaler
-// dimension: minute/hour/day, default minute
-// page: default 0
-// size: default 10
-// startTime: timestamp
-// endTime: timestamp
-// clusterID, namespace, podAutoscalerType and podAutoscalerName is necessary
 func (e *BcsDataManager) GetPodAutoscaler(ctx context.Context, req *bcsdatamanager.GetPodAutoscalerRequest,
 	rsp *bcsdatamanager.GetPodAutoscalerResponse) error {
 	blog.Infof("Received GetPodAutoscaler.Call request. cluster id: %s, namespace: %s, dimension: %s, "+
@@ -389,6 +332,7 @@ func (e *BcsDataManager) GetPodAutoscaler(ctx context.Context, req *bcsdatamanag
 		req.GetClusterID(), req.GetNamespace(), req.Dimension, req.GetPodAutoscalerType(), req.GetPodAutoscalerName(),
 		time.Unix(req.GetStartTime(), 0), time.Unix(req.GetEndTime(), 0))
 	start := time.Now()
+	// TODO:
 	result, err := e.model.GetPodAutoscalerInfo(ctx, req)
 	if err != nil {
 		rsp.Message = fmt.Sprintf("get podAutoscaler info error: %v", err)

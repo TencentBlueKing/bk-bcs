@@ -56,7 +56,7 @@ func NewWorkspace(ws cc.SidecarWorkspace, spec cc.SidecarAppSpec) (*RuntimeWorks
 	return rw, nil
 }
 
-// Note: update this landscape.
+// TODO: update this landscape.
 // sidecar's workspace landscape.
 // ${workspaceRootDirectory}/bk-bscp
 // ├── file-release-v1

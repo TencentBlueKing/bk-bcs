@@ -28,13 +28,6 @@ func SHA256(data string) string {
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
-// ByteSHA256 returns a sha256 string of the data byte.
-func ByteSHA256(data []byte) string {
-	hash := sha256.New()
-	hash.Write(data)
-	return fmt.Sprintf("%x", hash.Sum(nil))
-}
-
 // FileSHA256 returns sha256 string of the file.
 func FileSHA256(file string) (string, error) {
 	f, err := os.Open(file)

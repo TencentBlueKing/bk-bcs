@@ -78,19 +78,16 @@ type VectorResult struct {
 	Value  []interface{}     `json:"value"`
 }
 
-// StoreGWResponse response from storeGw
 type StoreGWResponse struct {
 	Status string      `json:"status"`
 	Data   StoreGWData `json:"data"`
 }
 
-// StoreGWData response date from storeGw
 type StoreGWData struct {
 	Query   []StoreGWQuery `json:"query"`
 	Sidecar []StoreGWQuery `json:"sidecar"`
 }
 
-// StoreGWQuery storageGw query
 type StoreGWQuery struct {
 	Name      string              `json:"name"`
 	LastCheck string              `json:"lastCheck"`

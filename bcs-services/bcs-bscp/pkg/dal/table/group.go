@@ -35,15 +35,15 @@ var GroupColumnDescriptor = mergeColumnDescriptors("",
 // it contains the selector to define the scope of the matched instances.
 type Group struct {
 	// ID is an auto-increased value, which is a unique identity of a group.
-	ID         uint32           `db:"id" json:"id" gorm:"primaryKey"`
-	Spec       *GroupSpec       `db:"spec" json:"spec" gorm:"embedded"`
-	Attachment *GroupAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
-	Revision   *Revision        `db:"revision" json:"revision" gorm:"embedded"`
+	ID         uint32           `db:"id" json:"id"`
+	Spec       *GroupSpec       `db:"spec" json:"spec"`
+	Attachment *GroupAttachment `db:"attachment" json:"attachment"`
+	Revision   *Revision        `db:"revision" json:"revision"`
 }
 
 // TableName is the group's database table name.
-func (s Group) TableName() string {
-	return "groups"
+func (s Group) TableName() Name {
+	return GroupTable
 }
 
 // ValidateCreate validate group is valid or not when create it.
@@ -148,10 +148,10 @@ type GroupSpec struct {
 	Name string `db:"name" json:"name"`
 	// Public defines weather group can be used by all apps.
 	// It can not be updated once it is created.
-	Public   bool               `db:"public" json:"public" gorm:"column:public"`
-	Mode     GroupMode          `db:"mode" json:"mode" gorm:"column:mode"`
-	Selector *selector.Selector `db:"selector" json:"selector" gorm:"column:selector;type:json"`
-	UID      string             `db:"uid" json:"uid" gorm:"column:uid"`
+	Public   bool               `db:"public" json:"public"`
+	Mode     GroupMode          `db:"mode" json:"mode"`
+	Selector *selector.Selector `db:"selector" json:"selector"`
+	UID      string             `db:"uid" json:"uid"`
 }
 
 const (
@@ -163,7 +163,7 @@ const (
 	// Default will select instances that won't be selected by any other released groups
 	Default GroupMode = "default"
 	// BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
-	// Note: BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
+	// TODO: BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
 	BuiltIn GroupMode = "builtin"
 )
 
@@ -231,7 +231,7 @@ var GroupAttachmentColumnDescriptor = ColumnDescriptors{
 
 // GroupAttachment defines the group attachments.
 type GroupAttachment struct {
-	BizID uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id"`
 }
 
 // IsEmpty test whether group attachment is empty or not.

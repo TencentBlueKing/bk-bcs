@@ -17,44 +17,42 @@ import (
 	"fmt"
 	"time"
 
+	"bscp.io/pkg/criteria/enumor"
 	"bscp.io/pkg/criteria/validator"
 )
+
+// AppColumns defines all the app table's columns.
+var AppColumns = mergeColumns(AppColumnDescriptor)
+
+// AppColumnDescriptor is App's column descriptors.
+var AppColumnDescriptor = mergeColumnDescriptors("",
+	ColumnDescriptors{
+		{Column: "id", NamedC: "id", Type: enumor.Numeric},
+		{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
+	},
+	mergeColumnDescriptors("spec", AppSpecColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor))
 
 // App defines an application's detail information
 type App struct {
 	// ID is an auto-increased value, which is an application's
 	// unique identity.
-	ID uint32 `json:"id" gorm:"primaryKey"`
+	ID uint32 `db:"id" json:"id"`
 	// BizID is the business is which this app belongs to
-	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id"`
 	// Spec is a collection of app's specifics defined with user
-	Spec *AppSpec `json:"spec" gorm:"embedded"`
+	Spec *AppSpec `db:"spec" json:"spec"`
 	// Revision record this app's revision information
-	Revision *Revision `json:"revision" gorm:"embedded"`
+	Revision *Revision `db:"revision" json:"revision"`
 }
 
 // TableName is the app's database table name.
-func (a *App) TableName() string {
-	return "applications"
-}
-
-// AppID AuditRes interface
-func (a *App) AppID() uint32 {
-	return a.ID
-}
-
-// ResID AuditRes interface
-func (a *App) ResID() uint32 {
-	return a.ID
-}
-
-// ResType AuditRes interface
-func (a *App) ResType() string {
-	return "app"
+func (a App) TableName() Name {
+	return AppTable
 }
 
 // ValidateCreate validate app's info when created.
-func (a *App) ValidateCreate() error {
+func (a App) ValidateCreate() error {
 	if a.ID != 0 {
 		return errors.New("id can not be set")
 	}
@@ -83,7 +81,7 @@ func (a *App) ValidateCreate() error {
 }
 
 // ValidateUpdate validate app's info when update.
-func (a *App) ValidateUpdate(configType ConfigType) error {
+func (a App) ValidateUpdate(configType ConfigType) error {
 	if a.ID <= 0 {
 		return errors.New("id is not set")
 	}
@@ -112,7 +110,7 @@ func (a *App) ValidateUpdate(configType ConfigType) error {
 }
 
 // ValidateDelete validate app's info when delete.
-func (a *App) ValidateDelete() error {
+func (a App) ValidateDelete() error {
 	if a.ID <= 0 {
 		return errors.New("app id not set")
 	}
@@ -124,18 +122,31 @@ func (a *App) ValidateDelete() error {
 	return nil
 }
 
+// AppSpecColumns defines all the app spec's columns.
+var AppSpecColumns = mergeColumns(AppSpecColumnDescriptor)
+
+// AppSpecColumnDescriptor is AppSpec's column descriptors.
+var AppSpecColumnDescriptor = mergeColumnDescriptors("",
+	ColumnDescriptors{
+		{Column: "name", NamedC: "name", Type: enumor.String},
+		{Column: "config_type", NamedC: "config_type", Type: enumor.String},
+		{Column: "mode", NamedC: "mode", Type: enumor.String},
+		{Column: "memo", NamedC: "memo", Type: enumor.String},
+	},
+	mergeColumnDescriptors("reload", ReloadColumnDescriptor))
+
 // AppSpec is a collection of app's specifics defined with user
 type AppSpec struct {
 	// Name is application's name
-	Name string `json:"name" gorm:"column:name"`
+	Name string `db:"name" json:"name"`
 	// ConfigType defines which type is this configuration, different type has the
 	// different ways to be consumed.
-	ConfigType ConfigType `json:"config_type" gorm:"column:config_type"`
+	ConfigType ConfigType `db:"config_type" json:"config_type"`
 	// Mode defines what mode of this app works at.
 	// Mode can not be updated once it is created.
-	Mode   AppMode `json:"mode" gorm:"column:mode"`
-	Memo   string  `json:"memo" gorm:"column:memo"`
-	Reload *Reload `json:"reload" gorm:"embedded"`
+	Mode   AppMode `db:"mode" json:"mode"`
+	Memo   string  `db:"memo" json:"memo"`
+	Reload *Reload `db:"reload" json:"reload"`
 }
 
 const (
@@ -245,11 +256,21 @@ func (as *AppSpec) ValidateUpdate(configType ConfigType) error {
 	return nil
 }
 
+// ReloadColumns defines all the app reload spec's columns.
+var ReloadColumns = mergeColumns(ReloadColumnDescriptor)
+
+// ReloadColumnDescriptor is Reload's column descriptors.
+var ReloadColumnDescriptor = mergeColumnDescriptors("",
+	ColumnDescriptors{
+		{Column: "reload_type", NamedC: "reload_type", Type: enumor.String},
+	},
+	mergeColumnDescriptors("file_reload_spec", FileReloadSpecColumnDescriptor))
+
 // Reload is a collection of app reload specifics defined with user. only is used when this app is file config type.
 // Reload is used to control how bscp sidecar notifies applications to go to reload config files.
 type Reload struct {
-	ReloadType     AppReloadType   `json:"reload_type" gorm:"column:reload_type"`
-	FileReloadSpec *FileReloadSpec `json:"file_reload_spec" gorm:"embedded"`
+	ReloadType     AppReloadType   `db:"reload_type" json:"reload_type"`
+	FileReloadSpec *FileReloadSpec `db:"file_reload_spec" json:"file_reload_spec"`
 }
 
 // IsEmpty reload.
@@ -323,9 +344,17 @@ func (r *Reload) ValidateUpdate() error {
 	return nil
 }
 
+// FileReloadSpecColumns defines all the app file reload spec's columns.
+var FileReloadSpecColumns = mergeColumns(FileReloadSpecColumnDescriptor)
+
+// FileReloadSpecColumnDescriptor is Reload's column descriptors.
+var FileReloadSpecColumnDescriptor = ColumnDescriptors{
+	{Column: "reload_file_path", NamedC: "reload_file_path", Type: enumor.String},
+}
+
 // FileReloadSpec is a collection of file reload spec's specifics defined with user.
 type FileReloadSpec struct {
-	ReloadFilePath string `json:"reload_file_path" gorm:"column:reload_file_path"`
+	ReloadFilePath string `db:"reload_file_path" json:"reload_file_path"`
 }
 
 // IsEmpty file reload spec.
@@ -402,17 +431,27 @@ func (rt AppReloadType) Validate() error {
 	return nil
 }
 
+// ArchivedAppColumns defines ArchivedApp's columns
+var ArchivedAppColumns = mergeColumns(ArchivedAppColumnDescriptor)
+
+// ArchivedAppColumnDescriptor is ArchivedApp's column descriptors.
+var ArchivedAppColumnDescriptor = ColumnDescriptors{
+	{Column: "id", NamedC: "id", Type: enumor.Numeric},
+	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
+	{Column: "app_id", NamedC: "app_id", Type: enumor.Numeric},
+	{Column: "created_at", NamedC: "created_at", Type: enumor.Time}}
+
 // ArchivedApp is used to record applications basic information
 // which is used to purge resources related with this application
 // asynchronously.
 type ArchivedApp struct {
-	ID        uint32    `json:"id" gorm:"primaryKey"`
-	BizID     uint32    `json:"biz_id" gorm:"column:biz_id"`
-	AppID     uint32    `json:"app_id" gorm:"column:app_id"`
-	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
+	ID        uint32    `db:"id" json:"id"`
+	BizID     uint32    `db:"biz_id" json:"biz_id"`
+	AppID     uint32    `db:"app_id" json:"app_id"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
 
 // TableName is the archived app's database table name.
-func (a *ArchivedApp) TableName() string {
-	return "archived_apps"
+func (a ArchivedApp) TableName() Name {
+	return ArchivedAppTable
 }

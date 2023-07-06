@@ -15,7 +15,6 @@
 package utils
 
 import (
-	// NOCC:gas/crypto(设计如此)
 	"crypto/md5"
 	"errors"
 	"fmt"
@@ -35,7 +34,6 @@ var (
 )
 
 const (
-	// PermDeniedCode perm denied code
 	PermDeniedCode = 40300
 )
 
@@ -152,7 +150,6 @@ func (rs ResourceInfo) Validate() error {
 	return nil
 }
 
-// AuthorizeCreatorOptions authorize creator options
 type AuthorizeCreatorOptions struct {
 	Ancestors []iam.Ancestor
 }
@@ -172,7 +169,6 @@ func WithAncestors(ancestors []iam.Ancestor) AuthorizeCreatorOption {
 func CalcIAMNsID(clusterID, namespace string) string {
 	s := strings.Split(clusterID, "-")
 	clusterIDNum := s[len(s)-1]
-	// NOCC:gas/crypto(设计如此)
 	h := md5.New()
 	io.WriteString(h, namespace)
 	b := h.Sum(nil)
@@ -198,7 +194,6 @@ func GetEnvWithDefault(key, defaultValue string) string {
 // GenerateEventID generate event id, format: app_code-YYYYMMDDHHMMSS-substring(MD5(随机因子)),8,24)
 func GenerateEventID(appCode, factor string) string {
 	currentTime := time.Now().Format("20060102150405")
-	// NOCC:gas/crypto(设计如此)
 	hash := fmt.Sprintf("%x", md5.Sum([]byte(factor)))
 	result := fmt.Sprintf("%s-%s-%s", appCode, currentTime, hash[8:24])
 	return result

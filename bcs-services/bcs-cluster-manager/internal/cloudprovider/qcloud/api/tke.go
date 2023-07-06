@@ -36,15 +36,12 @@ func NewTkeClient(opt *cloudprovider.CommonOption) (*TkeClient, error) {
 	if len(opt.Region) == 0 {
 		return nil, cloudprovider.ErrCloudRegionLost
 	}
-
-	// qcloud account
 	credential := common.NewCredential(opt.Account.SecretID, opt.Account.SecretKey)
 	cpf := profile.NewClientProfile()
 	if opt.CommonConf.CloudInternalEnable {
 		cpf.HttpProfile.Endpoint = opt.CommonConf.CloudDomain
 	}
 
-	// tke client
 	cli, err := tke.NewClient(credential, opt.Region, cpf)
 	if err != nil {
 		return nil, cloudprovider.ErrCloudInitFailed
@@ -59,7 +56,7 @@ func NewTkeClient(opt *cloudprovider.CommonOption) (*TkeClient, error) {
 
 // TkeClient xxx
 type TkeClient struct {
-	tke       *tke.Client
+	tke *tke.Client
 	tkeCommon *Client
 }
 
@@ -301,7 +298,6 @@ func (cli *TkeClient) QueryTkeClusterInstances(clusterReq *DescribeClusterInstan
 	}
 	req.Limit = common.Int64Ptr(limit)
 
-	// tke DescribeClusterInstances
 	resp, err := cli.tke.DescribeClusterInstances(req)
 	if err != nil {
 		blog.Errorf("QueryTkeClusterInstances client DescribeClusterInstances[%s] failed: %v", clusterReq.ClusterID, err)
@@ -333,7 +329,7 @@ func (cli *TkeClient) DeleteTkeClusterInstance(deleteReq *DeleteInstancesRequest
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
-	err := deleteReq.validate()
+	err := deleteReq.validateDeleteClusterInstanceRequest()
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +345,6 @@ func (cli *TkeClient) DeleteTkeClusterInstance(deleteReq *DeleteInstancesRequest
 	req.InstanceDeleteMode = common.StringPtr(deleteReq.DeleteMode.String())
 	req.InstanceIds = common.StringPtrs(deleteReq.Instances)
 
-	// tke DeleteClusterInstances
 	resp, err := cli.tke.DeleteClusterInstances(req)
 	if err != nil {
 		blog.Errorf("DeleteTkeClusterInstance client DeleteClusterInstances[%s] failed: %v", deleteReq.ClusterID, err)
@@ -387,8 +382,6 @@ func (cli *TkeClient) AddExistedInstancesToCluster(addReq *AddExistedInstanceReq
 	}
 
 	req := generateAddExistedInstancesReq(addReq)
-
-	// tke AddExistedInstances
 	resp, err := cli.tke.AddExistedInstances(req)
 	if err != nil {
 		blog.Errorf("AddExistedInstancesToCluster client AddExistedInstances[%s] failed: %v",
@@ -429,7 +422,6 @@ func (cli *TkeClient) EnableTKEVpcCniMode(input *EnableVpcCniInput) error {
 	req.Subnets = common.StringPtrs(input.SubnetsIDs)
 	req.ExpiredSeconds = common.Uint64Ptr(uint64(input.ExpiredSeconds))
 
-	// tke EnableVpcCniNetworkType
 	resp, err := cli.tke.EnableVpcCniNetworkType(req)
 	if err != nil {
 		if resp != nil && resp.Response != nil {
@@ -448,7 +440,6 @@ func (cli *TkeClient) GetEnableVpcCniProgress(clusterID string) (*GetEnableVpcCn
 	req := tke.NewDescribeEnableVpcCniProgressRequest()
 	req.ClusterId = &clusterID
 
-	// tke DescribeEnableVpcCniProgress
 	resp, err := cli.tke.DescribeEnableVpcCniProgress(req)
 	if err != nil {
 		if resp != nil && resp.Response != nil {
@@ -472,7 +463,6 @@ func (cli *TkeClient) AddVpcCniSubnets(input *AddVpcCniSubnetsInput) error {
 	req.VpcId = &input.VpcID
 	req.SubnetIds = common.StringPtrs(input.SubnetIDs)
 
-	// tke AddVpcCniSubnets
 	resp, err := cli.tke.AddVpcCniSubnets(req)
 	if err != nil {
 		if resp != nil && resp.Response != nil {
@@ -489,7 +479,6 @@ func (cli *TkeClient) CloseVpcCniMode(clusterID string) error {
 	req := tke.NewDisableVpcCniNetworkTypeRequest()
 	req.ClusterId = &clusterID
 
-	// tke DisableVpcCniNetworkType
 	resp, err := cli.tke.DisableVpcCniNetworkType(req)
 	if err != nil {
 		if resp != nil && resp.Response != nil {
@@ -510,8 +499,6 @@ func (cli *TkeClient) GetTKEClusterVersions() ([]*Versions, error) {
 	}
 
 	req := tke.NewDescribeVersionsRequest()
-
-	// tke DescribeVersions
 	resp, err := cli.tke.DescribeVersions(req)
 	if err != nil {
 		blog.Errorf("GetTKEClusterVersions client DescribeVersions failed: %v", err)
@@ -552,7 +539,6 @@ func (cli *TkeClient) GetTKEClusterKubeConfig(clusterID string, isExtranet bool)
 	req.ClusterId = common.StringPtr(clusterID)
 	req.IsExtranet = common.BoolPtr(isExtranet)
 
-	// tke DescribeClusterKubeconfig
 	resp, err := cli.tke.DescribeClusterKubeconfig(req)
 	if err != nil {
 		blog.Errorf("GetTKEClusterKubeConfig client DescribeClusterKubeconfig failed: %v", err)
@@ -583,7 +569,6 @@ func (cli *TkeClient) GetClusterEndpointStatus(clusterID string, isExtranet bool
 	req.ClusterId = common.StringPtr(clusterID)
 	req.IsExtranet = common.BoolPtr(isExtranet)
 
-	// tke DescribeClusterEndpointStatus
 	resp, err := cli.tke.DescribeClusterEndpointStatus(req)
 	if err != nil {
 		blog.Errorf("GetClusterEndpointStatus client DescribeClusterEndpointStatus failed: %v", err)
@@ -618,7 +603,6 @@ func (cli *TkeClient) CreateClusterEndpoint(clusterID string) error {
 	req.ClusterId = common.StringPtr(clusterID)
 	req.IsExtranet = common.BoolPtr(true)
 
-	// tke CreateClusterEndpoint
 	resp, err := cli.tke.CreateClusterEndpoint(req)
 	if err != nil {
 		blog.Errorf("client CreateClusterEndpoint failed: %v", err)
@@ -644,7 +628,6 @@ func (cli *TkeClient) DeleteClusterEndpoint(clusterID string) error {
 	req.ClusterId = common.StringPtr(clusterID)
 	req.IsExtranet = common.BoolPtr(true)
 
-	// tke DeleteClusterEndpoint
 	resp, err := cli.tke.DeleteClusterEndpoint(req)
 	if err != nil {
 		blog.Errorf("client DeleteClusterEndpoint failed: %v", err)
@@ -664,8 +647,6 @@ func (cli *TkeClient) GetTKEClusterImages() ([]*Images, error) {
 	}
 
 	req := tke.NewDescribeImagesRequest()
-
-	// tke DescribeImages
 	resp, err := cli.tke.DescribeImages(req)
 	if err != nil {
 		blog.Errorf("GetTKEClusterImages client DescribeImages failed: %v", err)
@@ -716,8 +697,6 @@ func (cli *TkeClient) CreateClusterNodePool(nodePool *CreateNodePoolInput) (stri
 		blog.Errorf("CreateClusterNodePool failed: LaunchConfigurePara is empty")
 		return "", fmt.Errorf("CreateClusterNodePool failed: LaunchConfigurePara is empty")
 	}
-
-	// tke CreateClusterNodePool
 	resp, err := cli.tke.CreateClusterNodePool(req)
 
 	if err != nil {
@@ -742,8 +721,6 @@ func (cli *TkeClient) DescribeClusterNodePools(clusterID string, filters []*Filt
 		req.Filters = append(req.Filters, &tke.Filter{
 			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
 	}
-
-	// tke DescribeClusterNodePools
 	resp, err := cli.tke.DescribeClusterNodePools(req)
 	if err != nil {
 		blog.Errorf("DescribeClusterNodePools client DescribeClusterNodePools failed: %v", err)
@@ -763,8 +740,6 @@ func (cli *TkeClient) DescribeClusterNodePoolDetail(clusterID string, nodePoolID
 	req := tke.NewDescribeClusterNodePoolDetailRequest()
 	req.ClusterId = common.StringPtr(clusterID)
 	req.NodePoolId = common.StringPtr(nodePoolID)
-
-	// tke DescribeClusterNodePoolDetail
 	resp, err := cli.tke.DescribeClusterNodePoolDetail(req)
 	if err != nil {
 		blog.Errorf("DescribeClusterNodePoolDetail failed: %v", err)
@@ -782,8 +757,6 @@ func (cli *TkeClient) DescribeClusterNodePoolDetail(clusterID string, nodePoolID
 // ModifyClusterNodePool modify cluster node pool
 func (cli *TkeClient) ModifyClusterNodePool(req *tke.ModifyClusterNodePoolRequest) error {
 	blog.Infof("ModifyClusterNodePool request: %s", utils.ToJSONString(req))
-
-	// tke ModifyClusterNodePool
 	resp, err := cli.tke.ModifyClusterNodePool(req)
 	if err != nil {
 		blog.Errorf("ModifyClusterNodePool failed: %v", err)
@@ -805,8 +778,6 @@ func (cli *TkeClient) DeleteClusterNodePool(clusterID string, nodePoolIDs []stri
 	req.ClusterId = common.StringPtr(clusterID)
 	req.NodePoolIds = common.StringPtrs(nodePoolIDs)
 	req.KeepInstance = common.BoolPtr(keepInstance)
-
-	// tke DeleteClusterNodePool
 	resp, err := cli.tke.DeleteClusterNodePool(req)
 	if err != nil {
 		blog.Errorf("DeleteClusterNodePool failed: %v", err)
@@ -820,8 +791,8 @@ func (cli *TkeClient) DeleteClusterNodePool(clusterID string, nodePoolIDs []stri
 	return nil
 }
 
-// ModifyNodePoolCapacity modify node pool desired capacity about asg
-func (cli *TkeClient) ModifyNodePoolCapacity(clusterID string, nodePoolID string,
+// ModifyNodePoolDesiredCapacityAboutAsg modify node pool desired capacity about asg
+func (cli *TkeClient) ModifyNodePoolDesiredCapacityAboutAsg(clusterID string, nodePoolID string,
 	desiredCapacity int64) error {
 	blog.Infof("ModifyNodePoolDesiredCapacityAboutAsg input: clusterID: %s, nodePoolID: %s, desiredCapacity: %d",
 		clusterID, nodePoolID, desiredCapacity)
@@ -829,8 +800,6 @@ func (cli *TkeClient) ModifyNodePoolCapacity(clusterID string, nodePoolID string
 	req.ClusterId = common.StringPtr(clusterID)
 	req.NodePoolId = common.StringPtr(nodePoolID)
 	req.DesiredCapacity = common.Int64Ptr(desiredCapacity)
-
-	// tke ModifyNodePoolDesiredCapacityAboutAsg
 	resp, err := cli.tke.ModifyNodePoolDesiredCapacityAboutAsg(req)
 	if err != nil {
 		blog.Errorf("ModifyNodePoolDesiredCapacityAboutAsg failed: %v", err)
@@ -853,8 +822,6 @@ func (cli *TkeClient) ModifyNodePoolInstanceTypes(clusterID string, nodePoolID s
 	req.ClusterId = common.StringPtr(clusterID)
 	req.NodePoolId = common.StringPtr(nodePoolID)
 	req.InstanceTypes = common.StringPtrs(instanceTypes)
-
-	// tke ModifyNodePoolInstanceTypes
 	resp, err := cli.tke.ModifyNodePoolInstanceTypes(req)
 	if err != nil {
 		blog.Errorf("ModifyNodePoolInstanceTypes failed: %v", err)
@@ -879,7 +846,6 @@ func (cli *TkeClient) RemoveNodeFromNodePool(clusterID string, nodePoolID string
 	for _, v := range allNodes {
 		if len(v) > 0 {
 			req.InstanceIds = common.StringPtrs(v)
-			// tke RemoveNodeFromNodePool
 			resp, err := cli.tke.RemoveNodeFromNodePool(req)
 			if err != nil {
 				blog.Errorf("RemoveNodeFromNodePool failed: %v", err)
@@ -906,7 +872,6 @@ func (cli *TkeClient) AddNodeToNodePool(clusterID string, nodePoolID string, nod
 	for _, v := range allNodes {
 		if len(v) > 0 {
 			req.InstanceIds = common.StringPtrs(v)
-			// tke AddNodeToNodePool
 			resp, err := cli.tke.AddNodeToNodePool(req)
 			if err != nil {
 				blog.Errorf("AddNodeToNodePool failed: %v", err)
@@ -939,7 +904,6 @@ func (cli *TkeClient) GetNodeGroupInstances(clusterID, nodeGroupID string) ([]*t
 	for got < total || first {
 		first = false
 		req.Offset = common.Int64Ptr(int64(got))
-		// tke DescribeClusterInstances
 		resp, err := cli.tke.DescribeClusterInstances(req)
 		if err != nil {
 			blog.Errorf("DescribeClusterInstances failed, err: %s", err.Error())
@@ -977,8 +941,6 @@ func (cli *TkeClient) DescribeOsImages(provider string) ([]*proto.OsImage, error
 	}
 
 	req := NewDescribeOSImagesRequest()
-
-	// tke DescribeOSImages
 	resp, err := cli.tkeCommon.DescribeOSImages(req)
 	if err != nil {
 		blog.Errorf("DescribeOsImages failed: %v", err)
@@ -1000,14 +962,14 @@ func (cli *TkeClient) DescribeOsImages(provider string) ([]*proto.OsImage, error
 		}
 
 		images = append(images, &proto.OsImage{
-			ImageID:         *image.ImageId,
-			Alias:           *image.Alias,
-			Arch:            *image.Arch,
-			OsCustomizeType: *image.OsCustomizeType,
-			OsName:          *image.OsName,
-			SeriesName:      *image.SeriesName,
-			Status:          *image.Status,
-			Provider:        icommon.PublicImageProvider,
+			ImageID:              *image.ImageId,
+			Alias:                *image.Alias,
+			Arch:                 *image.Arch,
+			OsCustomizeType:      *image.OsCustomizeType,
+			OsName:               *image.OsName,
+			SeriesName:           *image.SeriesName,
+			Status:               *image.Status,
+			Provider:             icommon.PublicImageProvider,
 		})
 	}
 

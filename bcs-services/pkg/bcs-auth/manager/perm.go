@@ -165,7 +165,7 @@ func (pm *PermManager) createUserGroup(ctx context.Context, gradeManagerID uint6
 	})
 	groups, err := pm.iamClient.CreateUserGroup(ctx, gradeManagerID, iam.CreateUserGroupRequest{Groups: userGroups})
 	if err != nil {
-		blog.Errorf("createUserGroup gradeManager[%v] failed: %v", gradeManagerID, err)
+		blog.Errorf("createUserGroup gradeManager[%v] failed: %v", err)
 		return 0, err
 	}
 	blog.Infof("createUserGroup gradeManager[%v] successful", gradeManagerID)
@@ -190,7 +190,7 @@ func (pm *PermManager) addUserGroupMember(ctx context.Context, userGroupID uint6
 		ExpiredAt: int(time.Now().Add(time.Hour * 24 * 30 * 6).Unix()),
 	})
 	if err != nil {
-		blog.Errorf("addUserGroupMember userGroup[%v] failed: %v", userGroupID, err)
+		blog.Errorf("addUserGroupMember userGroup[%v] failed: %v", err)
 		return err
 	}
 	blog.Infof("addUserGroupMember userGroup[%v] successful", userGroupID)

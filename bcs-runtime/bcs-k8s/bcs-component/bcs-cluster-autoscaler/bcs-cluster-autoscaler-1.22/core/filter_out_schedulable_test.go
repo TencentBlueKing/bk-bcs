@@ -102,10 +102,9 @@ func TestFilterOutSchedulableByPacking(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			predicateChecker, err := simulator.NewTestPredicateChecker()
 			clusterSnapshot := simulator.NewBasicClusterSnapshot()
-			assert.NoError(t, err)
 
 			for _, node := range tt.nodes {
-				err = clusterSnapshot.AddNode(node)
+				err := clusterSnapshot.AddNode(node)
 				assert.NoError(t, err)
 			}
 

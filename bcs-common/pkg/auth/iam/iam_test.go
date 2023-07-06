@@ -72,7 +72,7 @@ func TestIamClient_CreateGradeManagers(t *testing.T) {
 	authScopes = append(authScopes, BuildAuthorizationScope(SysProject, []ActionID{
 		ProjectView, ProjectEdit, ProjectDelete,
 	}, []LevelResource{
-		{
+		LevelResource{
 			Type: string(SysProject),
 			ID:   "xxx",
 			Name: "xxx",
@@ -164,7 +164,7 @@ func TestIamClient_AddUserGroupMembers(t *testing.T) {
 	t.Log("success")
 }
 
-func TestDeleteUserGroupMembers(t *testing.T) {
+func TestIamClient_DeleteUserGroupMembers(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -181,7 +181,7 @@ func TestDeleteUserGroupMembers(t *testing.T) {
 	t.Log("success")
 }
 
-func TestCreateUserGroupPolicies(t *testing.T) {
+func TestIamClient_CreateUserGroupPolicies(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -211,7 +211,7 @@ func TestCreateUserGroupPolicies(t *testing.T) {
 	t.Log("success")
 }
 
-func TestIsAllowedWithoutResource(t *testing.T) {
+func TestIamClient_IsAllowedWithoutResource(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -231,7 +231,7 @@ func TestIsAllowedWithoutResource(t *testing.T) {
 	t.Log(allow)
 }
 
-func TestIsAllowedWithResource(t *testing.T) {
+func TestIamClient_IsAllowedWithResource(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -280,7 +280,7 @@ func TestIsAllowedWithResource(t *testing.T) {
 	t.Log(allow)
 }
 
-func TestBatchResourceIsAllowed(t *testing.T) {
+func TestIamClient_BatchResourceIsAllowed(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -323,7 +323,7 @@ func TestBatchResourceIsAllowed(t *testing.T) {
 	t.Log(permission) // map[BCS-K8S-15200:true BCS-K8S-15201:true]
 }
 
-func TestResourceMultiAllowed(t *testing.T) {
+func TestIamClient_ResourceMultiActionsAllowed(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -360,7 +360,7 @@ type Resource struct {
 	ResourceID   string
 }
 
-func TestBatchResourceMultiAllowed(t *testing.T) {
+func TestIamClient_BatchResourceMultiActionsAllowed(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)
@@ -511,7 +511,7 @@ func TestIamClient_GetApplyURL(t *testing.T) {
 	t.Log(url)
 }
 
-func TestAuthResourceCreatorPerm(t *testing.T) {
+func TestIamClient_AuthResourceCreatorPerm(t *testing.T) {
 	cli, err := newIAMClient()
 	if err != nil {
 		t.Fatalf("newIAMClient failed: %v", err)

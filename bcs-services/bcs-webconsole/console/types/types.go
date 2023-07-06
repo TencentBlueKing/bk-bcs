@@ -119,7 +119,6 @@ type TimestampPodContext struct {
 	Timestamp int64 `json:"timestamp"`
 }
 
-// IsExpired 是否过期
 func (c *TimestampPodContext) IsExpired() bool {
 	expireTimestamp := time.Now().Add(-c.GetSessionTimeout()).Unix()
 	return c.Timestamp <= expireTimestamp

@@ -110,14 +110,11 @@ func GetLogger() *zap.Logger {
 // 使用默认 logger，避免使用时手动 GetLogger，可按需添加 Panic 等
 // 参考用法：
 // import (
-//
-//	log ".../internal/logging"
-//
+// 		log ".../internal/logging"
 // )
-//
-//	func main() {
-//			log.Info("log content: %s", content)
-//	}
+// func main() {
+// 		log.Info("log content: %s", content)
+// }
 func Info(msg string, vars ...interface{}) {
 	GetLogger().Info(fmt.Sprintf(msg, vars...))
 }

@@ -19,16 +19,15 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	bcsapicm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/micro/go-micro/v2/registry"
 	"github.com/patrickmn/go-cache"
-	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/discovery"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 const (
@@ -48,9 +47,6 @@ const (
 	CacheClusterBusinessKeyPrefix = "cached_cluster_manager_cluster_business"
 	// CacheClusterSharedKeyPrefix key prefix for cluster shared
 	CacheClusterSharedKeyPrefix = "cached_cluster_manager_shared"
-
-	// GetClusterURL get cluster url
-	GetClusterURL = "/bcsapi/v4/clustermanager/v1/cluster/%s"
 )
 
 // Options for init clusterManager
@@ -123,11 +119,17 @@ func (cm *ClusterManagerClient) GetProjectIDByClusterID(clusterID string) (strin
 	}
 	blog.V(3).Infof("GetProjectIDByClusterID miss clusterID cache")
 
-	// calling clustermanager through http
-	resp := models.GetClusterResp{}
-	bcsAPI := config.GetGlobalConfig().BcsAPI
-	url := fmt.Sprintf(GetClusterURL, clusterID)
-	err := bcsAPI.HttpRequest(http.MethodGet, url, nil, &resp)
+	cli, close, err := cm.getClusterManagerClient()
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
+	if err != nil {
+		blog.Errorf("GetProjectIDByClusterID failed: %v", err)
+		return "", err
+	}
+	resp, err := cli.GetCluster(context.Background(), &bcsapicm.GetClusterReq{ClusterID: clusterID})
 	if err != nil {
 		blog.Errorf("GetProjectIDByClusterID failed: %v", err.Error())
 		return "", err
@@ -164,12 +166,19 @@ func (cm *ClusterManagerClient) GetBusinessIDByClusterID(clusterID string) (stri
 	}
 	blog.V(3).Infof("GetBusinessIDByClusterID miss clusterID cache")
 
-	resp := &models.GetClusterResp{}
-	bcsAPI := config.GetGlobalConfig().BcsAPI
-	url := fmt.Sprintf(GetClusterURL, clusterID)
-	err := bcsAPI.HttpRequest(http.MethodGet, url, nil, resp)
+	cli, close, err := cm.getClusterManagerClient()
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
 	if err != nil {
-		blog.Errorf("GetProjectIDByClusterID failed: %v", err.Error())
+		blog.Errorf("GetBusinessIDByClusterID failed: %v", err)
+		return "", err
+	}
+	resp, err := cli.GetCluster(context.Background(), &bcsapicm.GetClusterReq{ClusterID: clusterID})
+	if err != nil {
+		blog.Errorf("GetBusinessIDByClusterID failed: %v", err.Error())
 		return "", err
 	}
 
@@ -185,6 +194,34 @@ func (cm *ClusterManagerClient) GetBusinessIDByClusterID(clusterID string) (stri
 	}
 
 	return businessID, nil
+}
+
+func (cm *ClusterManagerClient) getClusterManagerClient() (bcsapicm.ClusterManagerClient, func(), error) {
+	if cm == nil {
+		return nil, nil, errServerNotInit
+	}
+
+	// get bcs-cluster-manager server from etcd registry
+	node, err := cm.discovery.GetRandomServiceInstance()
+	if err != nil {
+		blog.Errorf("module[%s] GetRandomServiceInstance failed: %v", cm.opts.Module, err)
+		return nil, nil, err
+	}
+	blog.V(4).Infof("get random cluster-manager instance [%s] from etcd registry successful", node.Address)
+
+	cfg := bcsapi.Config{}
+	// discovery hosts
+	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
+	cfg.TLSConfig = cm.opts.ClientTLSConfig
+	cfg.InnerClientName = "bcs-user-manager"
+	clusterCli, close := bcsapicm.NewClusterManager(&cfg)
+
+	if clusterCli == nil {
+		blog.Errorf("create cluster manager cli from config: %+v failed, please check discovery", cfg)
+		return nil, nil, fmt.Errorf("no available clustermanager client")
+	}
+
+	return clusterCli, close, nil
 }
 
 // Stop stop clusterManagerClient

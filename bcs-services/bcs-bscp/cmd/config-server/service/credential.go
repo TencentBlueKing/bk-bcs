@@ -1,15 +1,3 @@
-/*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package service
 
 import (
@@ -21,8 +9,10 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
+	pbbase "bscp.io/pkg/protocol/core/base"
 	pbcredential "bscp.io/pkg/protocol/core/credential"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/tools"
 )
 
@@ -85,11 +75,36 @@ func (s *Service) ListCredentials(ctx context.Context, req *pbcs.ListCredentials
 		return nil, err
 	}
 
+	page := &pbbase.BasePage{
+		Start: req.Start,
+		Limit: req.Limit,
+	}
+
+	ft := &filter.Expression{
+		Op:    filter.Or,
+		Rules: []filter.RuleFactory{},
+	}
+
+	if req.SearchKey != "" {
+		ft.Rules = append(ft.Rules, &filter.AtomRule{
+			Field: "memo",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		}, &filter.AtomRule{
+			Field: "reviser",
+			Op:    filter.ContainsInsensitive.Factory(),
+			Value: req.SearchKey,
+		})
+	}
+
+	ftpb, err := ft.MarshalPB()
+	if err != nil {
+		return nil, err
+	}
 	r := &pbds.ListCredentialReq{
-		BizId:     bizID,
-		SearchKey: req.SearchKey,
-		Start:     req.Start,
-		Limit:     req.Limit,
+		BizId:  bizID,
+		Page:   page,
+		Filter: ftpb,
 	}
 
 	rp, err := s.client.DS.ListCredentials(grpcKit.RpcCtx(), r)

@@ -1,94 +1,94 @@
-/*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package table
 
 import (
 	"errors"
 	"fmt"
 	"time"
+
+	"bscp.io/pkg/criteria/enumor"
 )
 
-// Credential defines a credential's detail information
+// CredentialColumns defines credential's columns
+var CredentialColumns = mergeColumns(CredentialColumnDescriptor)
+
+// CredentialColumnDescriptor is Credential's column descriptors.
+var CredentialColumnDescriptor = mergeColumnDescriptors("",
+	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
+	mergeColumnDescriptors("spec", CredentialSpecColumnDescriptor),
+	mergeColumnDescriptors("attachment", CredentialAttachmentColumnDescriptor),
+	mergeColumnDescriptors("revision", RevisionColumnDescriptor),
+)
+
+// Credential defines a hook for an app to publish.
+// it contains the selector to define the scope of the matched instances.
 type Credential struct {
 	// ID is an auto-increased value, which is a unique identity of a Credential.
-	ID         uint32                `json:"id" gorm:"primaryKey"`
-	Spec       *CredentialSpec       `json:"spec" gorm:"embedded"`
-	Attachment *CredentialAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *Revision             `json:"revision" gorm:"embedded"`
+	ID         uint32                `db:"id" json:"id"`
+	Spec       *CredentialSpec       `db:"spec" json:"spec"`
+	Attachment *CredentialAttachment `db:"attachment" json:"attachment"`
+	Revision   *Revision             `db:"revision" json:"revision"`
 }
 
 // TableName  is the Credential's database table name.
-func (c *Credential) TableName() string {
-	return "credentials"
-}
-
-// AppID AuditRes interface
-func (c *Credential) AppID() uint32 {
-	return 0
-}
-
-// ResID AuditRes interface
-func (c *Credential) ResID() uint32 {
-	return c.ID
-}
-
-// ResType AuditRes interface
-func (c *Credential) ResType() string {
-	return "credential"
+func (s Credential) TableName() Name {
+	return CredentialTable
 }
 
 // ValidateCreate validate Credential is valid or not when create it.
-func (c *Credential) ValidateCreate() error {
+func (s Credential) ValidateCreate() error {
 
-	if c.ID > 0 {
+	if s.ID > 0 {
 		return errors.New("id should not be set")
 	}
 
-	if c.Spec == nil {
+	if s.Spec == nil {
 		return errors.New("spec not set")
 	}
 
-	if err := c.Spec.ValidateCreate(); err != nil {
+	if err := s.Spec.ValidateCreate(); err != nil {
 		return err
 	}
 
-	if c.Attachment == nil {
+	if s.Attachment == nil {
 		return errors.New("attachment not set")
 	}
 
-	if err := c.Attachment.Validate(); err != nil {
+	if err := s.Attachment.Validate(); err != nil {
 		return err
 	}
 
-	if c.Revision == nil {
+	if s.Revision == nil {
 		return errors.New("revision not set")
 	}
 
-	if err := c.Revision.ValidateCreate(); err != nil {
+	if err := s.Revision.ValidateCreate(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+// CredentialSpecColumns defines CredentialSpec's columns
+var CredentialSpecColumns = mergeColumns(CredentialSpecColumnDescriptor)
+
+// CredentialSpecColumnDescriptor is CredentialSpec's column descriptors.
+var CredentialSpecColumnDescriptor = ColumnDescriptors{
+	{Column: "credential_type", NamedC: "credential_type", Type: enumor.String},
+	{Column: "enc_credential", NamedC: "enc_credential", Type: enumor.String},
+	{Column: "enc_algorithm", NamedC: "enc_algorithm", Type: enumor.String},
+	{Column: "memo", NamedC: "memo", Type: enumor.String},
+	{Column: "enable", NamedC: "enable", Type: enumor.Boolean},
+	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
+}
+
 // CredentialSpec defines all the specifics for credential set by user.
 type CredentialSpec struct {
-	CredentialType CredentialType `json:"credential_type" gorm:"column:credential_type"`
-	EncCredential  string         `json:"enc_credential" gorm:"column:enc_credential"`
-	EncAlgorithm   string         `json:"enc_algorithm" gorm:"column:enc_algorithm"`
-	Memo           string         `json:"memo" gorm:"column:memo"`
-	Enable         bool           `json:"enable" gorm:"column:enable"`
-	ExpiredAt      time.Time      `json:"expired_at" gorm:"column:expired_at"`
+	CredentialType CredentialType `db:"credential_type" json:"credential_type"`
+	EncCredential  string         `db:"enc_credential" json:"enc_credential"`
+	EncAlgorithm   string         `db:"enc_algorithm" json:"enc_algorithm"`
+	Memo           string         `db:"memo" json:"memo"`
+	Enable         bool           `db:"enable"  json:"enable"`
+	ExpiredAt      time.Time      `db:"expired_at" json:"expired_at"`
 }
 
 const (
@@ -119,7 +119,7 @@ func (s CredentialType) String() string {
 }
 
 // ValidateCreate validate credential spec when it is created.
-func (c *CredentialSpec) ValidateCreate() error {
+func (c CredentialSpec) ValidateCreate() error {
 	if err := c.CredentialType.Validate(); err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (c *CredentialSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate credential spec when it is updated.
-func (c *CredentialSpec) ValidateUpdate() error {
+func (c CredentialSpec) ValidateUpdate() error {
 	if c.CredentialType != "" {
 		return errors.New("credential type cannot be updated once created")
 	}
@@ -142,16 +142,21 @@ func (c *CredentialSpec) ValidateUpdate() error {
 
 // CredentialAttachment defines the credential attachments.
 type CredentialAttachment struct {
-	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id"`
+}
+
+// CredentialAttachmentColumnDescriptor is CredentialAttachment's column descriptors.
+var CredentialAttachmentColumnDescriptor = ColumnDescriptors{
+	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
 }
 
 // IsEmpty test whether credential attachment is empty or not.
-func (c *CredentialAttachment) IsEmpty() bool {
+func (c CredentialAttachment) IsEmpty() bool {
 	return c.BizID == 0
 }
 
 // Validate whether credential attachment is valid or not.
-func (c *CredentialAttachment) Validate() error {
+func (c CredentialAttachment) Validate() error {
 	if c.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
 	}
@@ -159,13 +164,25 @@ func (c *CredentialAttachment) Validate() error {
 	return nil
 }
 
+// CredentialRevisionColumns defines all the Revision table's columns.
+var CredentialRevisionColumns = mergeColumns(CredentialRevisionColumnDescriptor)
+
+// CredentialRevisionColumnDescriptor is Revision's column descriptors.
+var CredentialRevisionColumnDescriptor = ColumnDescriptors{
+	{Column: "creator", NamedC: "creator", Type: enumor.String},
+	{Column: "reviser", NamedC: "reviser", Type: enumor.String},
+	{Column: "created_at", NamedC: "created_at", Type: enumor.Time},
+	{Column: "updated_at", NamedC: "updated_at", Type: enumor.Time},
+	{Column: "expired_at", NamedC: "expired_at", Type: enumor.Time},
+}
+
 // ValidateDelete validate the credential's info when delete it.
-func (c *Credential) ValidateDelete() error {
-	if c.ID <= 0 {
+func (s Credential) ValidateDelete() error {
+	if s.ID <= 0 {
 		return errors.New("credential id should be set")
 	}
 
-	if c.Attachment.BizID <= 0 {
+	if s.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
 
@@ -173,29 +190,29 @@ func (c *Credential) ValidateDelete() error {
 }
 
 // ValidateUpdate validate Credential is valid or not when update it.
-func (c *Credential) ValidateUpdate() error {
+func (s Credential) ValidateUpdate() error {
 
-	if c.ID <= 0 {
+	if s.ID <= 0 {
 		return errors.New("id should be set")
 	}
 
-	if c.Spec == nil {
+	if s.Spec == nil {
 		return errors.New("spec should be set")
 	}
 
-	if err := c.Spec.ValidateUpdate(); err != nil {
+	if err := s.Spec.ValidateUpdate(); err != nil {
 		return err
 	}
 
-	if c.Attachment == nil {
+	if s.Attachment == nil {
 		return errors.New("attachment should be set")
 	}
 
-	if c.Attachment.BizID <= 0 {
+	if s.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
 	}
 
-	if c.Revision == nil {
+	if s.Revision == nil {
 		return errors.New("revision not set")
 	}
 

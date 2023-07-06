@@ -22,16 +22,16 @@ import (
 )
 
 const (
-	// EventHandleConcurrencyNum xxx
+	// EventHandleConcurrencyNum TODO
 	// alert-system interface concurrency
 	EventHandleConcurrencyNum = 100
-	// EventHandleAlertEventNum xxx
+	// EventHandleAlertEventNum TODO
 	// alert-system handle batch EventNum
 	EventHandleAlertEventNum = 100
-	// EventHandleChanQueueLen xxx
+	// EventHandleChanQueueLen TODO
 	// alert-system chan QueueLen
 	EventHandleChanQueueLen = 1024
-	// EventHandleBatchAggregation xxx
+	// EventHandleBatchAggregation TODO
 	// alert-system batchAggregation switch
 	EventHandleBatchAggregation = false
 )

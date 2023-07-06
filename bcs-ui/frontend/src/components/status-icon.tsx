@@ -32,18 +32,12 @@ export default defineComponent({
         unknown: 'gray',
       }),
     },
-    type: {
-      type: String,
-      default: 'persistence', // persistence 或 result
-    },
   },
   setup(props) {
-    const { statusColorMap, statusTextMap, status, type } = toRefs(props);
+    const { statusColorMap, statusTextMap, status } = toRefs(props);
     const color = computed(() => statusColorMap.value[status.value.toLowerCase()]
       || statusColorMap.value[status.value]);
-    const statusClass = computed(() => (type.value === 'persistence'
-      ? `status-icon status-${color.value}`
-      : `status-icon-result status-${color.value}-result`));
+    const statusClass = computed(() => `status-icon status-${color.value}`);
     const statusText = computed(() => statusTextMap.value[status.value] || status.value || $i18n.t('未知状态'));
 
     return {

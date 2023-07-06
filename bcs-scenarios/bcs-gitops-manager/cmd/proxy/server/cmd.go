@@ -23,8 +23,8 @@ import (
 )
 
 var (
-	commandName = "bcs-gitops-proxy"
-	configFile  = "./bcs-gitops-proxy.json"
+	commandName string = "bcs-gitops-proxy"
+	configFile  string = "./bcs-gitops-proxy.json"
 )
 
 // NewCommand create command line for gitops manager

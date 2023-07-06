@@ -77,7 +77,7 @@ func (ap *appPool) PushEvent(appID uint32, es []*types.EventMeta) {
 }
 
 // gc NOTES
-// Note: GC
+// TODO: GC
 func (ap *appPool) gc() {
 	panic("implement this")
 }

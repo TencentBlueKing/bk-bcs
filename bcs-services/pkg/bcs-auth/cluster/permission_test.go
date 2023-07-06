@@ -135,7 +135,7 @@ func TestGetMultiClusterMultiActionPerm(t *testing.T) {
 	projectID := "b37778ec757544868a01e1f01f07037f"
 	actionIDs := []string{ClusterView.String(), ClusterManage.String(), ClusterDelete.String()}
 	clusterIDs := []string{"BCS-K8S-15091", "BCS-K8S-15092"}
-	allow, err := cli.GetMultiClusterMultiActionPerm("liming", projectID, clusterIDs, actionIDs)
+	allow, err := cli.GetMultiClusterMultiActionPermission("liming", projectID, clusterIDs, actionIDs)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -52,7 +52,7 @@ func (r *balancer) PickOne() string {
 		return r.endpoints[r.max]
 	}
 
-	r.index++
+	r.index += 1
 
 	return r.endpoints[r.index-1]
 }

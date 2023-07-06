@@ -70,7 +70,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 		return nil, status.Errorf(codes.PermissionDenied, "no permission to access bscp server")
 	}
 
-	// Note:
+	// TODO:
 	// 1. get the basic configurations for sidecar if necessary, and send it back to sidecar later.
 	// 2. collect the basic info for the app with biz dimension.
 
@@ -84,7 +84,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 			Repository: &sfs.RepositoryV1{
 				RepositoryType: decorator.GetRepositoryType(),
 				Root:           decorator.Root(),
-				// Note: TLS
+				// TODO: TLS
 				AccessKeyID:     decorator.AccessKeyID(),
 				SecretAccessKey: decorator.SecretAccessKey(),
 				Url:             decorator.Url(),

@@ -15,7 +15,6 @@ package cmd
 
 import (
 	"context"
-
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
 
@@ -23,7 +22,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cli/bcs-user-manager/pkg"
 )
 
-// newGetCmd create get command
 func newGetCmd() *cobra.Command {
 	getCmd := &cobra.Command{
 		Use:   "get",
@@ -41,7 +39,6 @@ func newGetCmd() *cobra.Command {
 	return getCmd
 }
 
-// getAdminUserCmd return admin user command
 func getAdminUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -54,7 +51,6 @@ func getAdminUserCmd() *cobra.Command {
 			cobra.OnInitialize(ensureConfig)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			// getAdminUser
 			client := pkg.NewClientWithConfiguration(ctx)
 			resp, err := client.GetAdminUser(userName)
 			if err != nil {
@@ -72,7 +68,6 @@ func getAdminUserCmd() *cobra.Command {
 	return subCmd
 }
 
-// getSaasUserCmd get saas user command
 func getSaasUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -86,7 +81,6 @@ func getSaasUserCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			// GetSaasUser
 			resp, err := client.GetSaasUser(userName)
 			if err != nil {
 				klog.Fatalf("get saas user failed: %v", err)
@@ -103,7 +97,6 @@ func getSaasUserCmd() *cobra.Command {
 	return subCmd
 }
 
-// getPlainUserCmd get plain user command
 func getPlainUserCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -117,7 +110,6 @@ func getPlainUserCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			// GetPlainUser
 			resp, err := client.GetPlainUser(userName)
 			if err != nil {
 				klog.Fatalf("get plain user failed: %v", err)
@@ -134,7 +126,6 @@ func getPlainUserCmd() *cobra.Command {
 	return subCmd
 }
 
-// getRegisterTokenCmd get register token command
 func getRegisterTokenCmd() *cobra.Command {
 	var clusterId string
 	subCmd := &cobra.Command{
@@ -148,7 +139,6 @@ func getRegisterTokenCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			// GetRegisterToken
 			resp, err := client.GetRegisterToken(clusterId)
 			if err != nil {
 				klog.Fatalf("search specified cluster token failed: %v", err)
@@ -165,7 +155,6 @@ func getRegisterTokenCmd() *cobra.Command {
 	return subCmd
 }
 
-// getCredentialsCmd get credentials command
 func getCredentialsCmd() *cobra.Command {
 	var clusterId string
 	subCmd := &cobra.Command{
@@ -179,7 +168,6 @@ func getCredentialsCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			// GetCredentials
 			resp, err := client.GetCredentials(clusterId)
 			if err != nil {
 				klog.Fatalf("get credential according cluster ID failed: %v", err)
@@ -196,7 +184,6 @@ func getCredentialsCmd() *cobra.Command {
 	return subCmd
 }
 
-// getPermissionCmd get permission command
 func getPermissionCmd() *cobra.Command {
 	var permissionForm string
 	subCmd := &cobra.Command{
@@ -210,7 +197,6 @@ func getPermissionCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			// GetPermission
 			resp, err := client.GetPermission(permissionForm)
 			if err != nil {
 				klog.Fatalf("get permissions failed: %v", err)
@@ -227,7 +213,6 @@ func getPermissionCmd() *cobra.Command {
 	return subCmd
 }
 
-// getTokenCmd get token command
 func getTokenCmd() *cobra.Command {
 	var userName string
 	subCmd := &cobra.Command{
@@ -241,7 +226,6 @@ func getTokenCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			// GetToken
 			resp, err := client.GetToken(userName)
 			if err != nil {
 				klog.Fatalf("get token failed: %v", err)
@@ -258,7 +242,6 @@ func getTokenCmd() *cobra.Command {
 	return subCmd
 }
 
-// getTokenByUserAndClusterIDCmd get token by user and clusterID command
 func getTokenByUserAndClusterIDCmd() *cobra.Command {
 	var request pkg.GetTokenByUserAndClusterIDRequest
 	subCmd := &cobra.Command{
@@ -272,7 +255,6 @@ func getTokenByUserAndClusterIDCmd() *cobra.Command {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			client := pkg.NewClientWithConfiguration(ctx)
-			// GetTokenByUserAndClusterID
 			resp, err := client.GetTokenByUserAndClusterID(request)
 			if err != nil {
 				klog.Fatalf("get token failed: %v", err)
@@ -280,7 +262,7 @@ func getTokenByUserAndClusterIDCmd() *cobra.Command {
 			if resp != nil && resp.Code != 0 {
 				klog.Fatalf("get token response code not 0 but %d: %s", resp.Code, resp.Message)
 			}
-			printer.PrintGetTokenInfoCmdResult(flagOutput, resp)
+			printer.PrintGetTokenByUserAndClusterIDCmdResult(flagOutput, resp)
 		},
 	}
 

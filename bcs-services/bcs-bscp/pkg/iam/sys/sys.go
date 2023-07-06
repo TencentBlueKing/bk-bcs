@@ -50,7 +50,7 @@ func (s *Sys) Register(ctx context.Context, host string) error {
 		return err
 	}
 
-	// Note: 如果更新的资源依赖新增的其他资源，会存在问题。如更新的实例视图，依赖新增的资源类型。
+	// TODO: 如果更新的资源依赖新增的其他资源，会存在问题。如更新的实例视图，依赖新增的资源类型。
 	removedResTypeMap, newResTypes, err := s.classResType(ctx, system.ResourceTypes)
 	if err != nil {
 		return err

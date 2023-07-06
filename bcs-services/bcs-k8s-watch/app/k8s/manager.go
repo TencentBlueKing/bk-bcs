@@ -233,7 +233,7 @@ func (mgr *WatcherManager) AddEventV1beta1(obj interface{}) {
 
 }
 
-// AddEventV1 handles add event.
+// AddEvent handles add event.
 func (mgr *WatcherManager) AddEventV1(obj interface{}) {
 	crdObj, ok := obj.(*apiextensionsV1.CustomResourceDefinition)
 	if !ok {
@@ -270,7 +270,7 @@ func (mgr *WatcherManager) AddEventV1(obj interface{}) {
 func (mgr *WatcherManager) UpdateEventV1beta1(oldObj, newObj interface{}) {
 }
 
-// UpdateEventV1 handles update event.
+// UpdateEvent handles update event.
 func (mgr *WatcherManager) UpdateEventV1(oldObj, newObj interface{}) {
 }
 
@@ -284,7 +284,7 @@ func (mgr *WatcherManager) DeleteEventV1beta1(obj interface{}) {
 	mgr.stopCrdWatcher(key)
 }
 
-// DeleteEventV1 handles delete event.
+// DeleteEvent handles delete event.
 func (mgr *WatcherManager) DeleteEventV1(obj interface{}) {
 	crdObj, ok := obj.(*apiextensionsV1.CustomResourceDefinition)
 	if !ok {

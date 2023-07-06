@@ -168,7 +168,6 @@ func (ws *WebhookServer) doAppHook(application *commtypes.ReplicaController) (*c
 		switch value {
 		default:
 			return patchedApplication, nil
-		// NOCC:goconst/string(设计如此)
 		case "y", "yes", "true", "on":
 			// do nothing, let it go
 		}
@@ -202,7 +201,6 @@ func (ws *WebhookServer) doDepHook(deployment *commtypes.BcsDeployment) (*commty
 		switch value {
 		default:
 			return patchedDeployment, nil
-		// NOCC:goconst/string(设计如此)
 		case "y", "yes", "true", "on":
 			// do nothing, let it go
 		}

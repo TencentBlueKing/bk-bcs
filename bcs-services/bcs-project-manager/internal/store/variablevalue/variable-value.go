@@ -36,7 +36,6 @@ const (
 	FieldKeyScope      = "scope"
 )
 
-// NOCC:deadcode/unused(设计如此:)
 var (
 	variableDefineIndexes = []drivers.Index{
 		{

@@ -406,16 +406,15 @@ func (client *StorageClient) listResource(url string, handlerName string) (data 
 
 // ListNamespaceResource list namespace resource
 func (client *StorageClient) ListNamespaceResource() (data []interface{}, err error) {
-	return client.ListNsResourceWithLabelSelector("")
+	return client.ListNamespaceResourceWithLabelSelector("")
 }
 
-// ListNsResourceWithLabelSelector list namespace resource with label selector
-func (client *StorageClient) ListNsResourceWithLabelSelector(labelSelector string) (
+// ListNamespaceResourceWithLabelSelector list namespace resource with label selector
+func (client *StorageClient) ListNamespaceResourceWithLabelSelector(labelSelector string) (
 	[]interface{}, error) {
 	const (
 		handlerName = HandlerListNamespaceName
 	)
-	// NOCC:ineffassign/assign(设计如此:此处仅初始化为空字符串)
 	urlWithParams := ""
 	if client.ResourceType == ResourceTypeEvent {
 		url, _ := client.GetURL()
@@ -444,7 +443,6 @@ func (client *StorageClient) ListNsResourceWithLabelSelector(labelSelector strin
 	offset := 0
 	var data []interface{}
 	for {
-		// NOCC:ineffassign/assign(设计如此:此处仅初始化为空字符串)
 		urlWithLimit := ""
 		if client.ResourceType == ResourceTypeEvent {
 			urlWithLimit = fmt.Sprintf("%s&length=%d&offset=%d", urlWithParams, StorageRequestLimit, offset)
@@ -482,7 +480,6 @@ func (client *StorageClient) ListClusterResource() (data []interface{}, err erro
 	return client.ListClusterResourceWithLabelSelector("")
 }
 
-// NOCC:tosa/fn_length(设计如此:无法再缩短)
 // ListClusterResourceWithLabelSelector list cluster resource with label selector
 func (client *StorageClient) ListClusterResourceWithLabelSelector(labelSelector string) ([]interface{}, error) {
 	const (

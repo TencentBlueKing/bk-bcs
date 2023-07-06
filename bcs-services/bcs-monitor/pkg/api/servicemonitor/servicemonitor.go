@@ -11,7 +11,7 @@
  *
  */
 
-package servicemonitor
+package service_monitor
 
 import (
 	"errors"
@@ -29,7 +29,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
-// GetMonitoringV1Client get monitoring client
 func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface, error) {
 	clusterId := c.Param("clusterId")
 	bcsConf := k8sclient.GetBCSConf()
@@ -51,10 +50,7 @@ func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface,
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace [get]
 func ListServiceMonitors(c *rest.Context) (interface{}, error) {
-	// 共享集群不展示列表
-	if c.SharedCluster {
-		return nil, nil
-	}
+
 	limit := c.Query("limit")
 	offset := c.Query("offset")
 	namespace := c.Query("namespace")
@@ -180,10 +176,6 @@ func DeleteServiceMonitor(c *rest.Context) (interface{}, error) {
 // @Success 200 {string} string
 // @Router  /service_monitors/batchdelete [delete]
 func BatchDeleteServiceMonitor(c *rest.Context) (interface{}, error) {
-	// 共享集群禁止批量删除
-	if c.SharedCluster {
-		return nil, fmt.Errorf("denied")
-	}
 	serviceMonitorDelReq := &BatchDeleteServiceMonitorReq{}
 	if err := c.ShouldBindJSON(serviceMonitorDelReq); err != nil {
 		return nil, err
@@ -295,6 +287,11 @@ func validateName(name string) bool {
 	if len(name) > 63 {
 		return false
 	}
+	//第一个正则表达式 ^[a-z][-a-z0-9]*$ 匹配以小写字母开头，后跟任意数量的小写字母、数字和短横线的字符串。这个正则表达式不允许字符串末尾有短横线，因为 [-a-z0-9]* 匹配任意数量的小写字母、数字和短横线，但它不需要匹配任何字符。
+	//
+	//第二个正则表达式 ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ 匹配以小写字母或数字开头，后跟任意数量的小写字母、数字和短横线的字符串。它允许字符串末尾有短横线，因为 ([-a-z0-9]*[a-z0-9])? 匹配任意数量的小写字母、数字和短横线，后跟一个小写字母或数字，这个组合出现零次或一次，因此字符串末尾可以是短横线或小写字母或数字。
+	//              ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+	//因此，虽然这两个正则表达式都匹配以小写字母或数字开头，后跟任意数量的小写字母、数字和短横线的字符串，但是第二个正则表达式允许字符串末尾有短横线，因此与第一个正则表达式不完全相同。
 	if match, _ := regexp.MatchString("^[a-z][-a-z0-9]*$", name); !match {
 		return false
 	}
@@ -312,7 +309,7 @@ func validateSelector(selector map[string]string) bool {
 
 // validateSampleLimit 校验参数是否合法
 func validateSampleLimit(samplelimit int) bool {
-	if SampleLimitMax >= samplelimit && samplelimit >= SampleLimitMin {
+	if SM_SAMPLE_LIMIT_MAX >= samplelimit && samplelimit >= SM_SAMPLE_LIMIT_MIN {
 		return true
 	}
 	return false

@@ -30,7 +30,6 @@ type JobFilter struct {
 
 const jobNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t JobFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, jobNestedTimeLayout)
 }

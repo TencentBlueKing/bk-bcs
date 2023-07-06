@@ -17,8 +17,6 @@ package filters
 import (
 	"fmt"
 
-	"github.com/emicklei/go-restful"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/auth"
@@ -26,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/resthdrs/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/server/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"github.com/emicklei/go-restful"
 )
 
 const (
@@ -34,7 +33,7 @@ const (
 	// CurrentCluster xxx
 	CurrentCluster = "bke_current_cluster"
 	// CurrentUserTokenType xxx
-	CurrentUserTokenType = "bke_current_usertoken_type" // nolint
+	CurrentUserTokenType = "bke_current_usertoken_type"
 )
 
 // ====================== //

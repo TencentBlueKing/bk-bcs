@@ -84,7 +84,7 @@ func deleteF(c *utils.ClientContext) error {
 	case "meshcluster":
 		return deleteMeshCluster(c)
 	default:
-		// unknown type, try Custom Resource
+		// unkown type, try Custom Resource
 		return deleteCustomResource(c)
 	}
 }

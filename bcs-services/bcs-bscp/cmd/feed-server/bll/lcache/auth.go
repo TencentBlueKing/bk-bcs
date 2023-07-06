@@ -71,7 +71,7 @@ func (au *Auth) Authorize(kt *kit.Kit, res *meta.ResourceAttribute) (bool, error
 
 	if err != gcache.KeyNotFoundError {
 		// this is not a not found error, log it.
-		logs.Errorf("get biz: %d, auth key: %s authorized from local cache failed, err: %v, rid: %s", res.BizID, key,
+		logs.Errorf("get biz: %d, auth key: %d authorized from local cache failed, err: %v, rid: %s", res.BizID, key,
 			err, kt.Rid)
 		// do not return here, try to refresh cache for now.
 	}

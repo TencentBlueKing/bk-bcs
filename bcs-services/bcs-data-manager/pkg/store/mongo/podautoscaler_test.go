@@ -25,7 +25,7 @@ import (
 	bcsdatamanager "github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/proto/bcs-data-manager"
 )
 
-func Test_InsertPodAutoscalerInfo(t *testing.T) {
+func TestModelPodAutoscaler_InsertPodAutoscalerInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -99,7 +99,7 @@ func Test_InsertPodAutoscalerInfo(t *testing.T) {
 	}
 }
 
-func Test_GetPodAutoscalerInfo(t *testing.T) {
+func TestModelPodAutoscaler_GetPodAutoscalerInfo(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -127,7 +127,7 @@ func Test_GetPodAutoscalerInfo(t *testing.T) {
 	}
 }
 
-func Test_GetPodAutoscalerList(t *testing.T) {
+func TestModelPodAutoscaler_GetPodAutoscalerList(t *testing.T) {
 	store := newTestMongo()
 	ctx := context.Background()
 	tests := []struct {
@@ -156,11 +156,11 @@ func Test_GetPodAutoscalerList(t *testing.T) {
 	}
 }
 
-func Test_GetRawPodAutoscalerInfo(t *testing.T) {
+func TestModelPodAutoscaler_GetRawPodAutoscalerInfo(t *testing.T) {
 
 }
 
-func Test_generateAutoscalerResponse(t *testing.T) {
+func TestModelPodAutoscaler_generateAutoscalerResponse(t *testing.T) {
 
 }
 

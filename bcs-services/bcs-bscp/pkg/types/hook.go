@@ -13,29 +13,43 @@ limitations under the License.
 package types
 
 import (
-	"errors"
-
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
+	"bscp.io/pkg/runtime/filter"
 )
 
 // ListHooksOption defines options to list group.
 type ListHooksOption struct {
-	BizID  uint32    `json:"biz_id"`
-	Name   string    `json:"name"`
-	Tag    string    `json:"tag"`
-	All    bool      `json:"all"`
-	NotTag bool      `json:"not_tag"`
-	Page   *BasePage `json:"page"`
+	BizID  uint32             `json:"biz_id"`
+	AppID  uint32             `json:"app_id"`
+	Filter *filter.Expression `json:"filter"`
+	Page   *BasePage          `json:"page"`
 }
 
 // Validate the list group options
 func (opt *ListHooksOption) Validate(po *PageOption) error {
 	if opt.BizID <= 0 {
-		return errors.New("invalid biz id, should >= 1")
+		return errf.New(errf.InvalidParameter, "invalid biz id, should >= 1")
+	}
+
+	if opt.AppID <= 0 {
+		return errf.New(errf.InvalidParameter, "invalid app id, should >= 1")
+	}
+
+	if opt.Filter == nil {
+		return errf.New(errf.InvalidParameter, "filter is nil")
+	}
+
+	exprOpt := &filter.ExprOption{
+		// remove biz_id,app_id because it's a required field in the option.
+		RuleFields: table.HookColumns.WithoutColumn("biz_id", "app_id"),
+	}
+	if err := opt.Filter.Validate(exprOpt); err != nil {
+		return err
 	}
 
 	if opt.Page == nil {
-		return errors.New("page is null")
+		return errf.New(errf.InvalidParameter, "page is null")
 	}
 
 	if err := opt.Page.Validate(po); err != nil {
@@ -49,10 +63,4 @@ func (opt *ListHooksOption) Validate(po *PageOption) error {
 type ListHookDetails struct {
 	Count   uint32        `json:"count"`
 	Details []*table.Hook `json:"details"`
-}
-
-// HookTagCount defines the response details of requested CountHookTag.
-type HookTagCount struct {
-	Tag    string `db:"tag" json:"tag"`
-	Counts uint32 `db:"counts" json:"counts"`
 }

@@ -25,7 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	jwtGo "github.com/golang-jwt/jwt/v4"
+	jwtGo "github.com/dgrijalva/jwt-go"
 	"github.com/micro/go-micro/v2/server"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
@@ -193,8 +193,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID options.CredentialScope) (bool, string,
-	[]authutils.ResourceAction, error) {
+func callIAM(username, action string, resourceID options.CredentialScope) (bool, string, []authutils.ResourceAction, error) {
 	// related actions
 	switch action {
 	case cluster.CanManageClusterOperation:

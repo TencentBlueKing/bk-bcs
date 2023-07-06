@@ -238,10 +238,10 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	ascID := ""
 	cloudNodeGroup := &tke.NodePool{}
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		np, errPool := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
-		if errPool != nil {
+		np, err := tkeCli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
+		if err != nil {
 			blog.Errorf("taskID[%s] DescribeClusterNodePoolDetail[%s/%s] failed: %v", taskID, cluster.SystemID,
-				group.CloudNodeGroupID, errPool)
+				group.CloudNodeGroupID, err)
 			return nil
 		}
 		if np == nil {

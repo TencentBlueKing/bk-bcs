@@ -67,7 +67,7 @@ type listNamespacesResp struct {
 	Code      int               `json:"code"`
 	Message   string            `json:"message"`
 	RequestID string            `json:"request_id"`
-	Data      ListNamespaceData `json:"data"`
+	Data      listNamespaceData `json:"data"`
 }
 
 type getAccessTokenData struct {
@@ -76,8 +76,7 @@ type getAccessTokenData struct {
 	ExpiresIn    int64  `json:"expires_in"`
 }
 
-// ListNamespaceData paas-cc namespace list entity
-type ListNamespaceData struct {
+type listNamespaceData struct {
 	Count   int64           `json:"count"`
 	Results []NamespaceData `json:"results"`
 }
@@ -232,7 +231,7 @@ func CreateNamespace(projectCode, clusterID, name, creator string) error {
 }
 
 // ListNamespaces request bcs cc api, list namespace records by projectID and clusterID
-func ListNamespaces(projectCode, clusterID string) (*ListNamespaceData, error) {
+func ListNamespaces(projectCode, clusterID string) (*listNamespaceData, error) {
 	bcsCCConf := config.GlobalConf.BCSCC
 	model := store.GetModel()
 	p, err := model.GetProject(context.Background(), projectCode)
@@ -372,7 +371,7 @@ func requestCommonAndParse(req gorequest.SuperAgent) error {
 	return nil
 }
 
-func requestListNamespacesAndParse(req gorequest.SuperAgent) (*ListNamespaceData, error) {
+func requestListNamespacesAndParse(req gorequest.SuperAgent) (*listNamespaceData, error) {
 
 	// 获取返回数据
 	headers := map[string]string{"Content-Type": "application/json"}

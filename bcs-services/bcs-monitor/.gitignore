@@ -28,4 +28,3 @@ etc/*dev*
 build.yml
 .codecc
 .vscode
-go.sum

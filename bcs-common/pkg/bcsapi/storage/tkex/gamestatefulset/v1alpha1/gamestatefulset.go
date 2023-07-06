@@ -16,12 +16,11 @@
 package gamestatefulset
 
 import (
+	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	hookv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/bcs-hook/apis/tkex/v1alpha1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common/update/inplaceupdate"
 )
 
 const (
@@ -182,6 +181,7 @@ type GameStatefulSetSpec struct {
 	// These are replicas in the sense that they are instantiations of the
 	// same Template, but individual replicas also have a consistent identity.
 	// If unspecified, defaults to 1.
+	// TODO: Consider a rename of this field.
 	// +kubebuilder:default=1
 	// +optional
 	Replicas *int32 `json:"replicas,omitempty" protobuf:"varint,1,opt,name=replicas"`
@@ -205,6 +205,7 @@ type GameStatefulSetSpec struct {
 	// this list must have at least one matching (by name) volumeMount in one
 	// container in the template. A claim in this list takes precedence over
 	// any volumes in the template, with the same name.
+	// TODO: Define the behavior if a claim already exists with the same name.
 	// +optional
 	VolumeClaimTemplates []core.PersistentVolumeClaim `json:"volumeClaimTemplates,omitempty" protobuf:"bytes,4,rep,name=volumeClaimTemplates"`
 

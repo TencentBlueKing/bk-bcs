@@ -110,7 +110,7 @@ func (g *generator) SimulationData(kt *kit.Kit) error {
 		return err
 	}
 
-	// NOTE: strategy related test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//if err := g.simulationApp3(kt.Ctx, header); err != nil {
 	//	return err
 	//}
@@ -208,7 +208,7 @@ func (g *generator) initApp2(ctx context.Context, header http.Header) error {
 		return err
 	}
 
-	// NOTE: strategy related test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//stgSetSpec := &table.StrategySetSpec{
 	//	Name: cases.RandName("strategy_set"),
 	//}

@@ -27,7 +27,6 @@ type ConfigMapFilter struct {
 
 const configMapNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t ConfigMapFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, configMapNestedTimeLayout)
 }

@@ -112,8 +112,7 @@ func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, 
 }
 
 // CanDeleteProject check user deleteProject perm
-func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool, string,
-	[]utils.ResourceAction, error) {
+func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool, string, []utils.ResourceAction, error) {
 	if bpp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -244,8 +243,8 @@ func (bpp *BCSProjectPerm) GetProjectMultiActionPermission(user, projectID strin
 		UserName: user}, projectNode)
 }
 
-// GetMultiProjectMultiActionPerm only support same instanceSelection
-func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPerm(user string, projectIDs,
+// GetMultiProjectMultiActionPermission only support same instanceSelection
+func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPermission(user string, projectIDs,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bpp == nil {
 		return nil, utils.ErrServerNotInited

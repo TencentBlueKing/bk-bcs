@@ -16,15 +16,15 @@ package config
 import (
 	"errors"
 	"time"
-	_ "time/tzdata" // tzdata
+	_ "time/tzdata" // tzdata TODO
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/i18n"
 )
 
 const (
-	// DevEnv dev env
+	// DevEnv TODO
 	DevEnv = "dev"
-	// ProdEnv prod env
+	// ProdEnv TODO
 	ProdEnv = "prod"
 	// LocalEnv 本地开发, 和前端区别
 	LocalEnv = "local"

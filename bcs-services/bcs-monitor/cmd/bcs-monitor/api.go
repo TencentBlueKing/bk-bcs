@@ -23,7 +23,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logrule"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
@@ -66,7 +65,6 @@ func runAPIServer(ctx context.Context, g *run.Group, opt *option) error {
 	g.Add(sd.Run, func(error) {})
 
 	bcs.CacheListClusters()
-	logrule.AutoCleanLogRule()
 
 	return nil
 }

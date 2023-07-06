@@ -107,7 +107,7 @@ import $store from '@/store';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import menusData, { IMenu } from './menus';
-import { releaseNode, switchLanguage } from '@/api/modules/project';
+import { releaseNode } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
 
 export default defineComponent({
@@ -178,15 +178,9 @@ export default defineComponent({
     };
 
     // 切换语言
-    const handleChangeLang = async (item) => {
+    const handleChangeLang = (item) => {
       $i18n.locale = item.id;
-      // dev模式不生效问题
-      if (process.env.NODE_ENV === 'development') {
-        setCookie('blueking_language', item.id);
-      }
-      await switchLanguage({
-        lang: item.id,
-      });
+      setCookie('blueking_language', item.id);
       window.location.reload();
     };
     // 帮助文档

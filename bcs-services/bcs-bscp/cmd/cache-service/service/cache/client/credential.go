@@ -135,20 +135,27 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential s
 	}
 
 	// list credential scopes
-	scopes, _, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
+	scopes, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
 	if err != nil {
 		return "", 0, err
 	}
 
 	// list all apps which can be matched by credential.
-	apps, _, err := c.op.App().List(kt, []uint32{bizID}, "", "", &types.BasePage{})
+	appDetails, err := c.op.App().List(kt, &types.ListAppsOption{
+		BizID: bizID,
+		Filter: &filter.Expression{
+			Op:    filter.And,
+			Rules: []filter.RuleFactory{},
+		},
+		Page: &types.BasePage{},
+	})
 	if err != nil {
 		return "", 0, err
 	}
 
-	appIDs := make([]uint32, 0, len(apps))
-	for _, app := range apps {
-		for _, scope := range scopes {
+	appIDs := make([]uint32, 0, len(appDetails.Details))
+	for _, app := range appDetails.Details {
+		for _, scope := range scopes.Details {
 			match, e := scope.Spec.CredentialScope.MatchApp(app.Spec.Name)
 			if e != nil {
 				return "", 0, e
@@ -183,7 +190,7 @@ func (c *client) queryMatchedCIFromCache(kt *kit.Kit, bizID uint32, credential s
 		return "", 0, err
 	}
 	for _, ci := range CIDetails.Details {
-		for _, scope := range scopes {
+		for _, scope := range scopes.Details {
 			match, e := scope.Spec.CredentialScope.MatchConfigItem(ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
 			if e != nil {
 				return "", 0, e
@@ -274,12 +281,12 @@ func (c *client) queryCredentialFromCahce(kt *kit.Kit, bizID uint32, credential 
 	if errors.Is(err, errf.ErrCredentialInvalid) {
 		return "", 0, errf.Newf(errf.InvalidParameter, "invalid credential: %s", credential)
 	}
-	details, _, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
+	details, err := c.op.CredentialScope().Get(kt, cred.ID, bizID)
 	if err != nil {
 		return "", 0, err
 	}
-	scope := make([]string, 0, len(details))
-	for _, detail := range details {
+	scope := make([]string, 0, len(details.Details))
+	for _, detail := range details.Details {
 		scope = append(scope, string(detail.Spec.CredentialScope))
 	}
 	credentialCache := &types.CredentialCache{

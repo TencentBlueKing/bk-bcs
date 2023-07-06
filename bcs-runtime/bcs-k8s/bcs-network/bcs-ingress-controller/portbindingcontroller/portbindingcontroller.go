@@ -165,9 +165,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	return ctrl.Result{}, nil
 }
 
-// createPortBinding create PortBinding by pods annotation
 func (pbr *PortBindingReconciler) createPortBinding(pod *k8scorev1.Pod) (ctrl.Result, error) {
-	// 1. 根据pod的注解（由webhook分配）获取对应的绑定端口
 	annotationValue, ok := pod.Annotations[constant.AnnotationForPortPoolBindings]
 	if !ok {
 		blog.Warnf("pod %s/%s has no annotation %s",
@@ -180,7 +178,6 @@ func (pbr *PortBindingReconciler) createPortBinding(pod *k8scorev1.Pod) (ctrl.Re
 			pod.GetName(), pod.GetNamespace(), constant.AnnotationForPortPoolPorts, err.Error(), annotationValue)
 		return ctrl.Result{}, nil
 	}
-	// 2. 根据Pod需要的绑定端口创建并初始化PortBinding
 	podPortBinding := &networkextensionv1.PortBinding{}
 	podPortBinding.SetName(pod.GetName())
 	podPortBinding.SetNamespace(pod.GetNamespace())
@@ -213,16 +210,8 @@ func (pbr *PortBindingReconciler) createPortBinding(pod *k8scorev1.Pod) (ctrl.Re
 	return ctrl.Result{}, nil
 }
 
-// cleanPortBinding clean portbinding resource
-// 删除portBinding顺序
-// 1. 删除Pod，进入clean流程
-// 2. 根据portBinding的item，清理相关的listener资源
-// 3. 等待所有item清理完毕后，记portBinding status为cleaned
-// 4. delete portBinding（加上DeletionTimeStamp）
-// 5. 移除portBinding Finalizers, 并从缓存中释放占用的端口
 func (pbr *PortBindingReconciler) cleanPortBinding(portBinding *networkextensionv1.PortBinding) (ctrl.Result, error) {
 	if portBinding.Status.Status == constant.PortBindingStatusCleaned {
-		// 支持绑定端口保留，如果在expired内pod重新创建，还会复用相同的portBinding数据
 		expired, err := isPortBindingExpired(portBinding)
 		if !expired && err == nil {
 			return ctrl.Result{

@@ -120,7 +120,7 @@ func (rp *repository) Delete(ctx context.Context, req *helmmanager.DeleteReposit
 
 	data, _ := json.Marshal(req)
 
-	resp, err := rp.delete(ctx, urlPrefix+fmt.Sprintf(urlGetRepository, projectCode, name), nil, data)
+	resp, err := rp.delete(ctx, urlPrefix+fmt.Sprintf(urlRepository, projectCode, name), nil, data)
 	if err != nil {
 		return err
 	}

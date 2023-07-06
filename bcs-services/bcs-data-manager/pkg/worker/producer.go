@@ -72,7 +72,6 @@ func NewProducer(rootCtx context.Context, msgQueue msgqueue.MessageQueue, cron *
 	}
 }
 
-// ImportKafkaConn import kafka conn
 func (p *Producer) ImportKafkaConn(conn kafka.KafkaInterface) {
 	p.kafkaConn = conn
 }
@@ -198,7 +197,6 @@ func (p *Producer) PublicProducer(dimension string) {
 }
 
 // ProjectProducer is the function to produce project data job and send to message queue
-// It takes in the dimension parameter.
 func (p *Producer) ProjectProducer(dimension string) {
 	startTime := time.Now()
 	var err error
@@ -239,7 +237,6 @@ func (p *Producer) ProjectProducer(dimension string) {
 }
 
 // ClusterProducer is the function to produce cluster data job and send to message queue
-// It takes in the dimension parameter.
 func (p *Producer) ClusterProducer(dimension string) {
 	startTime := time.Now()
 	jobTime := utils.FormatTime(time.Now(), dimension)
@@ -327,11 +324,7 @@ func (p *Producer) NamespaceProducer(dimension string) {
 		"currentTime:%v, cost:%v", len(namespaceList), jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
-// WorkloadProducer is a function that produces workload data jobs and sends them to the message queue.
-// It takes in the dimension parameter.
-// It retrieves the list of clusters from the Cluster Manager and creates a channel to count the number of workloads sent to the Kafka topic.
-// It creates a pool of goroutines to retrieve the workload data for each cluster in parallel.
-// It logs the number of workloads sent to the Kafka topic and the time it took to send them.
+// WorkloadProducer is the function to produce workload data job and send to message queue
 func (p *Producer) WorkloadProducer(dimension string) {
 	startTime := time.Now()
 	jobTime := utils.FormatTime(time.Now(), dimension)
@@ -339,14 +332,12 @@ func (p *Producer) WorkloadProducer(dimension string) {
 	defer func() {
 		prom.ReportProduceJobLatencyMetric(types.WorkloadType, dimension, err, startTime)
 	}()
-	// Get the connection to the Cluster Manager.
 	cmConn, err := p.CMClient.GetClusterManagerConn()
 	if err != nil {
 		blog.Errorf("get cm conn error:%v", err)
 		return
 	}
 	defer cmConn.Close()
-	// Create a gRPC client with header and retrieve the list of clusters.
 	cliWithHeader := p.CMClient.NewGrpcClientWithHeader(p.ctx, cmConn)
 	clusterList, err := p.resourceGetter.GetClusterIDList(cliWithHeader.Ctx, cliWithHeader.Cli)
 	if err != nil || clusterList == nil {
@@ -367,7 +358,6 @@ func (p *Producer) WorkloadProducer(dimension string) {
 		blog.Errorf("[producer] init new pool err:%v", err)
 		return
 	}
-	// Retrieve the workload data for each cluster in parallel.
 	blog.Infof("[producer] concurrency:%d", p.concurrency)
 	defer pool.Release()
 	for key := range clusterList {
@@ -384,12 +374,10 @@ func (p *Producer) WorkloadProducer(dimension string) {
 	wg.Wait()
 	time.Sleep(100 * time.Microsecond)
 	close(countCh)
-	// Log the number of workloads sent to the Kafka topic and the time it took to send them.
 	blog.Infof("[producer] send all workload job, count:%d, jobTime:%v, startTime:%v, "+
 		"currentTime:%v, cost:%v", totalWorkload, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
-// getSingleClusterWorkloadList get single cluster workload list
 func (p *Producer) getSingleClusterWorkloadList(jobTime time.Time, dimension string, countCh chan int,
 	clusterMeta *types.ClusterMeta) {
 	workloadList := make([]*types.WorkloadMeta, 0)
@@ -494,11 +482,6 @@ func (p *Producer) PodAutoscalerProducer(dimension string) {
 		"currentTime:%v, cost:%v", totalPodAutoscaler, jobTime, startTime, time.Now(), time.Now().Sub(startTime))
 }
 
-// getSingleClusterAutoscalerList get cluster pod autoscaler data list
-// It takes in the jobTime, dimension, countCh, and clusterMeta parameters.
-// It retrieves the namespace list for the cluster and then retrieves the pod autoscaler data for each namespace.
-// It generates and sends an autoscaler job for each pod autoscaler.
-// It logs the number of pod autoscalers sent to the Kafka topic.
 func (p *Producer) getSingleClusterAutoscalerList(jobTime time.Time, dimension string, countCh chan int,
 	clusterMeta *types.ClusterMeta) {
 	hpaList := make([]*types.PodAutoscalerMeta, 0)
@@ -509,14 +492,12 @@ func (p *Producer) getSingleClusterAutoscalerList(jobTime time.Time, dimension s
 	}()
 	switch clusterMeta.ClusterType {
 	case types.Kubernetes:
-		// Get the namespace list for the cluster.
 		namespaceList, err := p.resourceGetter.GetNamespaceListByCluster(p.ctx, clusterMeta,
 			p.k8sStorageCli, p.mesosStorageCli)
 		if err != nil {
 			blog.Errorf("get workload list error: %v", err)
 			return
 		}
-		// Get the pod autoscaler data for each namespace.
 		if hpaList, err = p.resourceGetter.GetPodAutoscalerList(types.HPAType, namespaceList,
 			p.k8sStorageCli); err != nil {
 			blog.Errorf("get hpa list error: %v", err)
@@ -530,7 +511,6 @@ func (p *Producer) getSingleClusterAutoscalerList(jobTime time.Time, dimension s
 	case types.Mesos:
 		return
 	}
-	// Generate and send an autoscaler job for each pod autoscaler.
 	p.genAndSendAutoscalerJob(types.HPAType, dimension, jobTime, hpaList)
 	p.genAndSendAutoscalerJob(types.GPAType, dimension, jobTime, gpaList)
 	blog.Infof("[producer] send cluster[%s] podAutoscaler job success, count: %d", clusterMeta.ClusterID,
@@ -538,7 +518,6 @@ func (p *Producer) getSingleClusterAutoscalerList(jobTime time.Time, dimension s
 }
 
 // SendJob is the function to send data job to msg queue
-// if it needs to send kafka, send to particular kafka topic
 func (p *Producer) SendJob(opts types.JobCommonOpts) error {
 	var err error
 	defer func() {
@@ -575,7 +554,6 @@ func (p *Producer) SendJob(opts types.JobCommonOpts) error {
 	return nil
 }
 
-// genAndSendAutoscalerJob generate pod autoscaler calculate job
 func (p *Producer) genAndSendAutoscalerJob(autoscalerType, dimension string, jobTime time.Time,
 	list []*types.PodAutoscalerMeta) {
 	for _, autoscaler := range list {

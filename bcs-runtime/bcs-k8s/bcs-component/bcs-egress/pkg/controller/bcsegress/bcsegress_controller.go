@@ -82,7 +82,7 @@ type ReconcileBCSEgress struct {
 	option *EgressOption
 	// identity comes from namespace/name in ENV
 	identity string
-	// proxy is interface for network flow control
+	// proxy is interface for network flow controll
 	proxy Proxy
 	// LastError for BCSEgress error recording
 	// * key is reconcile.Request.String()
@@ -129,7 +129,7 @@ func (r *ReconcileBCSEgress) Reconcile(request reconcile.Request) (reconcile.Res
 		klog.Errorf("reading BCSEgress %s failed, requeue...", request.String())
 		return reconcile.Result{}, err
 	}
-	// port conflict verification and filter, if port conflicts,
+	// port conflict verification and filter, if port conflics,
 	// do nothing until client fix them all.
 	tcps, https, err := r.fromBCSEgressToList(instance)
 	if err != nil {
@@ -215,7 +215,7 @@ func (r *ReconcileBCSEgress) Reconcile(request reconcile.Request) (reconcile.Res
 	return reconcile.Result{}, nil
 }
 
-// Init all BCSEgressController  instance running requirement
+// Init all BCSEgressController  instance running requirment
 func (r *ReconcileBCSEgress) Init(mgr manager.Manager) error {
 	// Create a new controller
 	c, err := controller.New("bcsegress-controller", mgr, controller.Options{Reconciler: r})
@@ -317,7 +317,7 @@ func (r *ReconcileBCSEgress) cleanRulesByLabel(cleanLabel map[string]string) err
 }
 
 // fromBCSEgressToList convert egress proxy rule to local cache
-// in conversion, we have to verify:
+// in convertion, we have to verify:
 // * first, find all conflict ports within this egress
 // * second, find all port conflicted with other egresses(already exist ones)
 // all return Configs are verified

@@ -23,6 +23,7 @@ import (
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
+	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
@@ -179,20 +180,23 @@ func (lw *loopWatch) loopOneStep(kt *kit.Kit, currentCursor uint32) (lastCursor 
 // events which are satisfied with the lag seconds continuously(one by one) until the not satisfied one occurred.
 func (lw *loopWatch) doOneStep(kt *kit.Kit, start uint32, limit uint, lagSeconds int) (lastCursor uint32, atEnd,
 	retry bool) {
-	// order these events with event id.
-	opt := &types.BasePage{Start: 0, Limit: limit, Sort: "id", Order: types.Ascending}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
-		logs.Errorf("validate page option failed, err: %v, rid: %s", err, kt.Rid)
-		return start, false, true
+
+	opts := &types.ListEventsOption{
+		Filter: &filter.Expression{
+			Op:    filter.And,
+			Rules: []filter.RuleFactory{&filter.AtomRule{Field: "id", Op: filter.GreaterThan.Factory(), Value: start}},
+		},
+		// order these events with event id.
+		Page: &types.BasePage{Count: false, Start: 0, Limit: limit, Sort: "id", Order: types.Ascending},
 	}
 
-	details, _, err := lw.ds.event.List(kt, start, opt)
+	result, err := lw.ds.event.List(kt, opts)
 	if err != nil {
 		logs.Errorf("list event failed, err: %v, rid: %s", err, kt.Rid)
 		return start, false, true
 	}
 
-	if len(details) == 0 {
+	if len(result.Details) == 0 {
 		logs.V(1).Infof("watch events with cursor: %d, limit: %d, but no events found, rid: %s", start, limit, kt.Rid)
 		return start, true, false
 	}
@@ -200,7 +204,7 @@ func (lw *loopWatch) doOneStep(kt *kit.Kit, start uint32, limit uint, lagSeconds
 	// filter out events which is satisfied with the lag seconds.
 	lag := time.Now().Unix() - int64(lagSeconds)
 	filterOut := make([]*table.Event, 0)
-	for _, one := range details {
+	for _, one := range result.Details {
 		if one.State.FinalStatus != table.UnknownFS {
 			// if the event do have a final status, it means the event related
 			// resource's db transaction has already finished with success or failed.

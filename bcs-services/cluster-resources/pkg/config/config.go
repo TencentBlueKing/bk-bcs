@@ -129,7 +129,7 @@ type ClusterResourcesConf struct {
 type TracingConf struct {
 	Enabled       bool              `yaml:"enabled" usage:"enable trace"`
 	Endpoint      string            `yaml:"endpoint" usage:"Collector service endpoint"`
-	Token         string            `yaml:"token" usage:"token for collector service"`
+	Token         string            `yaml:"token" usage:"token for collector sevice"`
 	ResourceAttrs map[string]string `yaml:"resourceAttrs" usage:"attributes of traced service"`
 }
 

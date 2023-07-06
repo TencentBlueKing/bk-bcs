@@ -151,7 +151,7 @@ func TestAppFactory(t *testing.T) {
 		}
 
 		release, cursorID, exist = factory.CurrentRelease(setting.AppSpec.Applications[0].AppID)
-		// Note: cursorID has not been used yet.
+		// TODO: cursorID has not been used yet.
 		if !exist || release != jobCtx.Descriptor.ReleaseID || cursorID != 0 {
 			retry++
 			sleepTime = sleepTime * 2

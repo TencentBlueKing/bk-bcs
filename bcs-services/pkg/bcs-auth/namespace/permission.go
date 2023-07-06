@@ -544,15 +544,21 @@ func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user, projectID, c
 	})
 	clusterApp := cluster.BuildClusterApplicationInstance(cluster.ClusterApplicationAction{
 		ActionID: cluster.ClusterView.String(),
-		Data:     []cluster.ProjectClusterData{{Project: projectID, Cluster: clusterID}},
+		Data: []cluster.ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
 	})
 	nsApp := BuildNamespaceApplicationInstance(NamespaceApplicationAction{
 		ActionID: NameSpaceView.String(),
-		Data:     []ProjectNamespaceData{{Project: projectID, Cluster: clusterID, Namespace: namespaceID}},
+		Data: []ProjectNamespaceData{
+			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
+		},
 	})
-	nssApp := BuildNSScopedAppInstance(NamespaceScopedApplicationAction{
+	nssApp := BuildNamespaceScopedApplicationInstance(NamespaceScopedApplicationAction{
 		ActionID: NameSpaceScopedCreate.String(),
-		Data:     []ProjectNamespaceData{{Project: projectID, Cluster: clusterID, Namespace: namespaceID}},
+		Data: []ProjectNamespaceData{
+			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
+		},
 	})
 
 	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
@@ -633,11 +639,15 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clu
 	})
 	nsApp := BuildNamespaceApplicationInstance(NamespaceApplicationAction{
 		ActionID: NameSpaceView.String(),
-		Data:     []ProjectNamespaceData{{Project: projectID, Cluster: clusterID, Namespace: namespaceID}},
+		Data: []ProjectNamespaceData{
+			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
+		},
 	})
-	nssApp := BuildNSScopedAppInstance(NamespaceScopedApplicationAction{
+	nssApp := BuildNamespaceScopedApplicationInstance(NamespaceScopedApplicationAction{
 		ActionID: NameSpaceScopedView.String(),
-		Data:     []ProjectNamespaceData{{Project: projectID, Cluster: clusterID, Namespace: namespaceID}},
+		Data: []ProjectNamespaceData{
+			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
+		},
 	})
 
 	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
@@ -718,11 +728,15 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, c
 	})
 	nsApp := BuildNamespaceApplicationInstance(NamespaceApplicationAction{
 		ActionID: NameSpaceView.String(),
-		Data:     []ProjectNamespaceData{{Project: projectID, Cluster: clusterID, Namespace: namespaceID}},
+		Data: []ProjectNamespaceData{
+			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
+		},
 	})
-	nssApp := BuildNSScopedAppInstance(NamespaceScopedApplicationAction{
+	nssApp := BuildNamespaceScopedApplicationInstance(NamespaceScopedApplicationAction{
 		ActionID: NameSpaceScopedUpdate.String(),
-		Data:     []ProjectNamespaceData{{Project: projectID, Cluster: clusterID, Namespace: namespaceID}},
+		Data: []ProjectNamespaceData{
+			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
+		},
 	})
 
 	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
@@ -797,15 +811,21 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, c
 	})
 	clusterApp := cluster.BuildClusterApplicationInstance(cluster.ClusterApplicationAction{
 		ActionID: cluster.ClusterView.String(),
-		Data:     []cluster.ProjectClusterData{{Project: projectID, Cluster: clusterID}},
+		Data: []cluster.ProjectClusterData{
+			{Project: projectID, Cluster: clusterID},
+		},
 	})
 	nsApp := BuildNamespaceApplicationInstance(NamespaceApplicationAction{
 		ActionID: NameSpaceView.String(),
-		Data:     []ProjectNamespaceData{{Project: projectID, Cluster: clusterID, Namespace: namespaceID}},
+		Data: []ProjectNamespaceData{
+			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
+		},
 	})
-	nssApp := BuildNSScopedAppInstance(NamespaceScopedApplicationAction{
+	nssApp := BuildNamespaceScopedApplicationInstance(NamespaceScopedApplicationAction{
 		ActionID: NameSpaceScopedDelete.String(),
-		Data:     []ProjectNamespaceData{{Project: projectID, Cluster: clusterID, Namespace: namespaceID}},
+		Data: []ProjectNamespaceData{
+			{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
+		},
 	})
 
 	url, _ := bnp.GenerateIAMApplicationURL(iam.SystemIDBKBCS, []iam.ApplicationAction{
@@ -814,8 +834,8 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, c
 	return allow, url, resources, nil
 }
 
-// GetMultiNamespaceMultiActionPerm only support same instanceSelection
-func (bnp *BCSNamespacePerm) GetMultiNamespaceMultiActionPerm(user string, namespaces []ProjectNamespaceData,
+// GetMultiNamespaceMultiActionPermission only support same instanceSelection
+func (bnp *BCSNamespacePerm) GetMultiNamespaceMultiActionPermission(user string, namespaces []ProjectNamespaceData,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bnp == nil {
 		return nil, utils.ErrServerNotInited

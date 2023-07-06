@@ -28,7 +28,7 @@ import (
 const (
 	queryAuthURI = "%s/bkiam/api/v1/perm/systems/%s/resources-perms/verify"
 	appCodeKey   = "X-BK-APP-CODE"
-	appSecretKey = "X-BK-APP-SECRET" // nolint
+	appSecretKey = "X-BK-APP-SECRET"
 )
 
 // NewClient xxx

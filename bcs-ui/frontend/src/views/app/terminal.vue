@@ -1,16 +1,15 @@
 <template>
   <FixedButton drag position="fixed" class="bottom-[20px] left-[85%]">
     <PopoverSelector trigger="click" offset="0, 6" placement="top">
-      <div class="flex items-center justify-center w-[116px] h-[32px] cursor-pointer">
-        <i class="bcs-icon bcs-icon-terminal mr5 text-[14px]"></i>
-        <div>WebConsole</div>
-        <!-- <i class="bcs-icon bcs-icon-helper ml5 cursor-default text-[14px]" @click="handleOpenLink"></i> -->
+      <div class="flex items-center h-[32px]">
+        <i class="bcs-icon bcs-icon-terminal mr5 cursor-default text-[14px]"></i>
+        <div class="cursor-default">WebConsole</div>
+        <i class="bcs-icon bcs-icon-helper ml5 cursor-default text-[14px]" @click="handleOpenLink"></i>
       </div>
       <template #content>
         <ClusterSelectPopover
           :selectable="false"
           :update-store="false"
-          :cluster-type="['independent', 'managed', 'virtual']"
           @click="(clusterID) => handleGotoConsole({ clusterID })" />
       </template>
     </PopoverSelector>

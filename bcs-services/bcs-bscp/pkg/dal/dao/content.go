@@ -140,7 +140,7 @@ func (dao *contentDao) CreateWithTx(kit *kit.Kit, tx *sharding.Tx, content *tabl
 }
 
 // Get content by id.
-// Note: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
+// TODO: !!!current db is sharded by biz_id,it can not adapt bcs project,need redesign
 func (dao *contentDao) Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error) {
 
 	if id == 0 {

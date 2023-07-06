@@ -16,11 +16,11 @@ package netservice
 import "strings"
 
 const (
-	// IPStatus_RESERVED the reserved status of ip
+	// IPStatus_RESERVED TODO
 	IPStatus_RESERVED = "reserved"
-	// IPStatus_ACTIVE the active status of ip
+	// IPStatus_ACTIVE TODO
 	IPStatus_ACTIVE = "active"
-	// IPStatus_AVAILABLE the available status of ip
+	// IPStatus_AVAILABLE TODO
 	IPStatus_AVAILABLE = "available"
 )
 
@@ -162,26 +162,26 @@ type SSLInfo struct {
 type NetType int
 
 const (
-	// RequestType_POOL pool type
+	// RequestType_POOL TODO
 	RequestType_POOL NetType = 1
-	// RequestType_HOST host type
+	// RequestType_HOST TODO
 	RequestType_HOST NetType = 2
-	// RequestType_LEASE lease type
+	// RequestType_LEASE TODO
 	RequestType_LEASE NetType = 3
-	// RequestType_RELEASE release type
+	// RequestType_RELEASE TODO
 	RequestType_RELEASE NetType = 4
 
-	// ResponseType_POOL poll type
+	// ResponseType_POOL TODO
 	ResponseType_POOL NetType = 5
-	// ResponseType_HOST host type
+	// ResponseType_HOST TODO
 	ResponseType_HOST NetType = 6
-	// ResponseType_LEASE lease type
+	// ResponseType_LEASE TODO
 	ResponseType_LEASE NetType = 7
-	// ResponseType_RELEASE release type
+	// ResponseType_RELEASE TODO
 	ResponseType_RELEASE NetType = 8
-	// ResponseType_PSTATIC pstatic type
+	// ResponseType_PSTATIC TODO
 	ResponseType_PSTATIC NetType = 9
-	// ResponseType_VIRTUALIP virtualip type
+	// ResponseType_VIRTUALIP TODO
 	ResponseType_VIRTUALIP NetType = 10
 )
 
@@ -248,9 +248,9 @@ type ResourceResponse struct {
 // /////////////////////////////////////////////////////////////
 
 const (
-	// ALL_IP_FAILED all ip failed
+	// ALL_IP_FAILED TODO
 	ALL_IP_FAILED int = 1
-	// SOME_IP_FAILED some ip failed
+	// SOME_IP_FAILED TODO
 	SOME_IP_FAILED int = 2
 )
 

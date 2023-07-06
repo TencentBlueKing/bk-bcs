@@ -123,17 +123,14 @@ func NewModelNamespace(db drivers.DB) *ModelNamespace {
 // InsertNamespaceInfo insert namespace data
 func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types.NamespaceMetrics,
 	opts *types.JobCommonOpts) error {
-	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return err
 	}
-	// Get the bucket time for the current time and dimension.
 	bucketTime, err := utils.GetBucketTime(opts.CurrentTime, opts.Dimension)
 	if err != nil {
 		return err
 	}
-	// Create a condition to find the existing namespace data in the database.
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ProjectIDKey:  opts.ProjectID,
 		ClusterIDKey:  opts.ClusterID,
@@ -141,12 +138,9 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types
 		DimensionKey:  opts.Dimension,
 		BucketTimeKey: bucketTime,
 	})
-
-	// Find the existing namespace data in the database.
 	retNamespace := &types.NamespaceData{}
 	err = m.DB.Table(m.TableName).Find(cond).One(ctx, retNamespace)
 	if err != nil {
-		// If the namespace data is not found, create a new bucket and insert the metrics.
 		if errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Infof(" namespace info not found, create a new bucket")
 			newMetrics := make([]*types.NamespaceMetrics, 0)
@@ -173,8 +167,6 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types
 		}
 		return err
 	}
-
-	// If the namespace data is found, update it with the new metrics.
 	m.preAggregate(retNamespace, metrics)
 	if retNamespace.BusinessID == "" {
 		retNamespace.BusinessID = opts.BusinessID
@@ -191,7 +183,6 @@ func (m *ModelNamespace) InsertNamespaceInfo(ctx context.Context, metrics *types
 func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 	request *bcsdatamanager.GetNamespaceInfoListRequest) ([]*bcsdatamanager.Namespace, int64, error) {
 	var total int64
-	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, total, err
@@ -269,7 +260,6 @@ func (m *ModelNamespace) GetNamespaceInfoList(ctx context.Context,
 // GetNamespaceInfo get namespace data with default time range
 func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	request *bcsdatamanager.GetNamespaceInfoRequest) (*bcsdatamanager.Namespace, error) {
-	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
@@ -357,53 +347,42 @@ func (m *ModelNamespace) GetNamespaceInfo(ctx context.Context,
 	}
 	startTime := namespaceMetrics[0].Time.Time().String()
 	endTime := namespaceMetrics[len(namespaceMetrics)-1].Time.Time().String()
-	return m.generateNamespaceResponse(namespacePublic, namespaceMetrics, namespaceMetricsMap[0],
-		startTime, endTime), nil
+	return m.generateNamespaceResponse(namespacePublic, namespaceMetrics, namespaceMetricsMap[0], startTime, endTime), nil
 }
 
-// GetRawNamespaceInfo is a function that retrieves raw namespace data without a time range.
+// GetRawNamespaceInfo get raw namespace data without time range
 func (m *ModelNamespace) GetRawNamespaceInfo(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string) ([]*types.NamespaceData, error) {
-	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
 	}
-	// Create a slice of conditions to filter the database query results.
 	cond := make([]*operator.Condition, 0)
-	// Add a condition for the project ID, dimension, and cluster ID.
 	cond1 := operator.NewLeafCondition(operator.Eq, operator.M{
 		ProjectIDKey: opts.ProjectID,
 		DimensionKey: opts.Dimension,
 		ClusterIDKey: opts.ClusterID,
 	})
 	cond = append(cond, cond1)
-	// If a namespace is specified, add a condition for the namespace.
 	if opts.Namespace != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 			NamespaceKey: opts.Namespace,
 		}))
 	}
-	// If a bucket is specified, add a condition for the bucket time.
 	if bucket != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 			BucketTimeKey: bucket,
 		}))
 	}
-	// Combine the conditions into a single branch condition with an "and" operator.
 	conds := operator.NewBranchCondition(operator.And, cond...)
-	// Create an empty slice of NamespaceData to store the results of the database query.
 	retNamespace := make([]*types.NamespaceData, 0)
-	// Query the database with the conditions and store the results in retNamespace.
 	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retNamespace)
 	if err != nil {
 		return nil, err
 	}
-	// Return the results.
 	return retNamespace, nil
 }
 
-// generateNamespaceResponse generate response, transfer storage namespace to proto namespace
 func (m *ModelNamespace) generateNamespaceResponse(public types.NamespacePublicMetrics,
 	metricSlice []*types.NamespaceMetrics,
 	data *types.NamespaceData, start, end string) *bcsdatamanager.Namespace {
@@ -450,19 +429,13 @@ func (m *ModelNamespace) generateNamespaceResponse(public types.NamespacePublicM
 	return response
 }
 
-// preAggregate is a function that performs pre-aggregation to get the minimum and maximum values of various metrics.
 func (m *ModelNamespace) preAggregate(data *types.NamespaceData, newMetric *types.NamespaceMetrics) {
-	// If data.MaxInstanceTime is nil, update it to newMetric.MaxInstanceTime.
-	// Otherwise, if newMetric.MaxInstanceTime is greater than data.MaxInstanceTime,
-	//update data.MaxInstanceTime to newMetric. MaxInstanceTime.
 	if data.MaxInstanceTime == nil {
 		data.MaxInstanceTime = newMetric.MaxInstanceTime
 	} else if newMetric.MaxInstanceTime.Value > data.MaxInstanceTime.Value {
 		data.MaxInstanceTime = newMetric.MaxInstanceTime
 	}
 
-	// Repeat the above process for MinInstanceTime, MaxCPUUsageTime, MinCPUUsageTime, MaxMemoryUsageTime,
-	// and MinMemoryUsageTime.
 	if data.MinInstanceTime == nil {
 		data.MinInstanceTime = newMetric.MinInstanceTime
 	} else if newMetric.MinInstanceTime.Value < data.MinInstanceTime.Value {
@@ -486,20 +459,17 @@ func (m *ModelNamespace) preAggregate(data *types.NamespaceData, newMetric *type
 	} else if newMetric.MaxMemoryUsageTime.Value > data.MaxMemoryUsageTime.Value {
 		data.MaxMemoryUsageTime = newMetric.MaxMemoryUsageTime
 	}
-
 	if data.MinMemoryUsageTime == nil {
 		data.MinMemoryUsageTime = newMetric.MinMemoryUsageTime
 	} else if newMetric.MinMemoryUsageTime.Value < data.MinMemoryUsageTime.Value {
 		data.MinMemoryUsageTime = newMetric.MinMemoryUsageTime
 	}
 
-	// Repeat the above process for MaxWorkloadUsage and MinWorkloadUsage.
 	if data.MaxWorkloadUsage == nil {
 		data.MaxWorkloadUsage = newMetric.MaxWorkloadUsage
 	} else if newMetric.MaxWorkloadUsage.Value > data.MaxWorkloadUsage.Value {
 		data.MaxWorkloadUsage = newMetric.MaxWorkloadUsage
 	}
-
 	if data.MinWorkloadUsage == nil {
 		data.MinWorkloadUsage = newMetric.MinWorkloadUsage
 	} else if newMetric.MinWorkloadUsage.Value < data.MinWorkloadUsage.Value {

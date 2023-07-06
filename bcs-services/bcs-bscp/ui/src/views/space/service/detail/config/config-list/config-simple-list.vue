@@ -52,24 +52,18 @@
     }
   }
 
-  const handleEditConfigOpen = (config: IConfigItem) => {
-    if (config.file_state === 'DELETE') {
-      return
-    }
+  const handleEditConfigOpen = (id: number) => {
     editDialogShow.value = true
-    configId.value = config.id
+    configId.value = id
   }
 
 </script>
 <template>
   <section class="current-config-list">
     <bk-loading :loading="loading">
+      <h4 class="version-name">{{ versionData.spec.name }}</h4>
       <div v-if="configList.length > 0" class="config-list-wrapper">
-        <div
-          v-for="config in configList"
-          :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
-          :key="config.id"
-          @click="handleEditConfigOpen(config)">
+        <div v-for="config in configList" class="config-item" :key="config.id" @click="handleEditConfigOpen(config.id)">
           <div class="config-name">{{ config.spec.name }}</div>
           <div class="config-type">{{ getConfigTypeName(config.spec.file_type) }}</div>
         </div>
@@ -88,7 +82,13 @@
     padding: 24px;
     height: 100%;
     background: #fafbfd;
-    overflow: auto;
+  }
+  .version-name {
+    margin: 0 0 16px 0;
+    height: 19px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #63656e;
   }
   .config-item {
     display: flex;
@@ -99,14 +99,7 @@
     box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.06);
     border-radius: 2px;
     cursor: pointer;
-    &.disabled {
-      cursor: not-allowed;
-      .config-type,
-      .config-name {
-        color: #dcdee5;
-      }
-    }
-    &:not(.disabled):hover {
+    &:hover {
       background: #e1ecff;
     }
     .config-name {

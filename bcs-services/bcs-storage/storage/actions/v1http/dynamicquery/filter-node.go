@@ -28,7 +28,6 @@ type NodeFilter struct {
 
 const nodeNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t NodeFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, nodeNestedTimeLayout)
 }

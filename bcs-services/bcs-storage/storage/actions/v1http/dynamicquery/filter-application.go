@@ -37,7 +37,6 @@ type ApplicationFilter struct {
 
 const applicationNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t ApplicationFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, applicationNestedTimeLayout)
 }

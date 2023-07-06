@@ -21,28 +21,16 @@ import (
 
 func (h *HttpServerClient) listNode(request *restful.Request, response *restful.Response) {
 	nodeName := request.QueryParameter("node_name")
-	nodeInternalIP := request.QueryParameter("node_ip")
-	if nodeName == "" && nodeInternalIP == "" {
-		_, _ = response.Write(CreateResponseData(errors.New("empty parameter: node_name and node_ip"), "", nil))
+	if nodeName == "" {
+		_, _ = response.Write(CreateResponseData(errors.New("empty parameter: node_name"), "", nil))
 		return
 	}
 
-	var nodeIPs []string
-	var err error
-	if nodeName != "" {
-		nodeIPs, err = h.NodeCache.GetNodeExternalIPsByName(nodeName)
-		if err != nil {
-			_, _ = response.Write(CreateResponseData(err, "", nil))
-			return
-		}
-	}
-	if nodeInternalIP != "" {
-		nodeIPs, err = h.NodeCache.GetNodeExternalIPsByIP(nodeInternalIP)
-		if err != nil {
-			_, _ = response.Write(CreateResponseData(err, "", nil))
-			return
-		}
+	nodeIps, err := h.NodeCache.GetNodeIps(nodeName)
+	if err != nil {
+		_, _ = response.Write(CreateResponseData(err, "", nil))
+		return
 	}
 
-	_, _ = response.Write(CreateResponseData(nil, "", nodeIPs))
+	_, _ = response.Write(CreateResponseData(nil, "", nodeIps))
 }

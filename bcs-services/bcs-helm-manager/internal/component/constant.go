@@ -13,6 +13,6 @@
 package component
 
 const (
-	// SuccessCode success code
+	// SuccessCode TODO
 	SuccessCode = 0
 )

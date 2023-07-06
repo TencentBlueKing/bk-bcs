@@ -79,7 +79,7 @@ func WithDisableWriteAuthAccess(opt *options.DisableWriteOption) Cmd {
 					if len(bizIDElement) == 1 {
 						bizID, err := strconv.ParseUint(bizIDElement, 10, 64)
 						if err != nil {
-							logs.Errorf("parse biz id %s failed, err: %v, rid: %s", bizIDElement, err, kt.Rid)
+							logs.Errorf("parse biz id %s failed, err: %v, rid: %s", bizIDElement[0], err, kt.Rid)
 							return nil, err
 						}
 

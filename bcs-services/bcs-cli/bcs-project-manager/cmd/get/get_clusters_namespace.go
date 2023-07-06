@@ -56,7 +56,7 @@ func listClustersNamespace() *cobra.Command {
 				klog.Infoln("list clusters namespaces failed: %v", err)
 				return
 			}
-			printer.PrintClusterNamespaceInTable(flagOutput, resp)
+			printer.PrintProjectClustersNamespaceInTable(flagOutput, resp)
 		},
 	}
 

@@ -22,14 +22,7 @@ const (
 	// we can refer to http://coolaf.com/tool/rd when testing
 	DefaultTokenLength = 32
 	// TokenKeyPrefix is the redis key for token
-	TokenKeyPrefix = "bcs_auth:token:" // NOCC:gas/crypto(误报)
+	TokenKeyPrefix = "bcs_auth:token:"
 	// TokenLimits for token
 	TokenLimits = 1
-
-	// RequestIDHeaderKey X-Request-Id
-	RequestIDHeaderKey = "X-Request-Id"
-	// RequestIDKey requestID
-	RequestIDKey = "requestID"
-	// TracerName go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
-	TracerName = "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )

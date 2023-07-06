@@ -146,7 +146,6 @@ func (m *ModelCluster) InsertClusterInfo(ctx context.Context, metrics *types.Clu
 	if err != nil {
 		return err
 	}
-	// generate essential condition
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		ProjectIDKey:  opts.ProjectID,
 		ClusterIDKey:  opts.ClusterID,
@@ -210,7 +209,6 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	if dimension == "" {
 		dimension = types.DimensionMinute
 	}
-	// generate essential condition
 	cond := make([]*operator.Condition, 0)
 	if request.GetProject() != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
@@ -283,7 +281,7 @@ func (m *ModelCluster) GetClusterInfoList(ctx context.Context,
 	return response, total, nil
 }
 
-// GetClusterInfo get cluster data for api, if startTime or endTime is empty, return metrics with default time range
+// GetClusterInfo get cluster data for api, return metrics with default time range
 func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	request *bcsdatamanager.GetClusterInfoRequest) (*bcsdatamanager.Cluster, error) {
 	err := ensureTable(ctx, &m.Public)
@@ -295,7 +293,6 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 		dimension = types.DimensionMinute
 	}
 	clusterMetricsMap := make([]*types.ClusterData, 0)
-	// Set the metric start time to the default start time for the given dimension or the request start time.
 	metricStartTime := getStartTime(dimension)
 	if request.GetStartTime() != 0 {
 		metricStartTime = time.Unix(request.GetStartTime(), 0)
@@ -305,8 +302,6 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 		metricEndTime = time.Unix(request.GetEndTime(), 0)
 	}
 	blog.Infof("get metric from %s to %s", metricStartTime, metricEndTime)
-	// 因为查询时有start time限制，所以需要用aggregate，从metrics里取出时间做筛选
-	// Create a pipeline of aggregation stages to filter and group the database query results.
 	pipeline := make([]map[string]interface{}, 0)
 	pipeline = append(pipeline,
 		map[string]interface{}{"$match": map[string]interface{}{
@@ -358,48 +353,38 @@ func (m *ModelCluster) GetClusterInfo(ctx context.Context,
 	return m.generateClusterResponse(clusterMetrics, clusterMetricsMap[0], dimension, startTime, endTime), nil
 }
 
-// GetRawClusterInfo retrieves raw cluster data without a time range.
+// GetRawClusterInfo get raw cluster data without time range
 func (m *ModelCluster) GetRawClusterInfo(ctx context.Context, opts *types.JobCommonOpts,
 	bucket string) ([]*types.ClusterData, error) {
-	// Ensure that the table exists in the database.
 	err := ensureTable(ctx, &m.Public)
 	if err != nil {
 		return nil, err
 	}
-	// Create a slice of conditions to filter the database query.
 	cond := make([]*operator.Condition, 0)
-	// Add a condition that checks for equality between the ProjectIDKey and DimensionKey fields of opts and the corresponding fields in the database.
 	cond1 := operator.NewLeafCondition(operator.Eq, operator.M{
 		ProjectIDKey: opts.ProjectID,
 		DimensionKey: opts.Dimension,
 	})
 	cond = append(cond, cond1)
-	// If opts.ClusterID is not an empty string, add a condition that checks for equality between the ClusterIDKey field in the database and opts.ClusterID.
 	if opts.ClusterID != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 			ClusterIDKey: opts.ClusterID,
 		}))
 	}
-	// If bucket is not an empty string, add a condition that checks for equality between the BucketTimeKey field in the database and bucket.
 	if bucket != "" {
 		cond = append(cond, operator.NewLeafCondition(operator.Eq, operator.M{
 			BucketTimeKey: bucket,
 		}))
 	}
-	// Combine all the conditions in the slice using the And operator.
 	conds := operator.NewBranchCondition(operator.And, cond...)
-	// Create an empty slice of ClusterData to store the results of the database query.
 	retCluster := make([]*types.ClusterData, 0)
-	// Query the database table with the conds condition and store the results in retCluster.
 	err = m.DB.Table(m.TableName).Find(conds).All(ctx, &retCluster)
 	if err != nil {
 		return nil, err
 	}
-	// Return the results of the database query and nil error.
 	return retCluster, nil
 }
 
-// generateClusterResponse 构造cluster response，将storage转化为 proto数据结构
 func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetrics, data *types.ClusterData,
 	dimension, startTime, endTime string) *bcsdatamanager.Cluster {
 	response := &bcsdatamanager.Cluster{
@@ -451,26 +436,25 @@ func (m *ModelCluster) generateClusterResponse(metricSlice []*types.ClusterMetri
 	return response
 }
 
-// preAggregateMax is a function that performs pre-aggregation to get the maximum value of various metrics.
 func (m *ModelCluster) preAggregateMax(data *types.ClusterData, newMetric *types.ClusterMetrics) {
-	// If both data.MaxInstance and newMetric.MaxInstance are not nil, get the maximum value and update data.MaxInstance.
 	if data.MaxInstance != nil && newMetric.MaxInstance != nil {
 		data.MaxInstance = getMax(data.MaxInstance, newMetric.MaxInstance)
 	} else if newMetric.MaxInstance != nil {
-		// If data.MaxInstance is nil but newMetric.MaxInstance is not, update data.MaxInstance to newMetric.MaxInstance.
 		data.MaxInstance = newMetric.MaxInstance
 	}
-	// Repeat the above process for MaxNode, MaxCPU, and MaxMemory.
+
 	if data.MaxNode != nil && newMetric.MaxNode != nil {
 		data.MaxNode = getMax(data.MaxNode, newMetric.MaxNode)
 	} else if newMetric.MaxNode != nil {
 		data.MaxNode = newMetric.MaxNode
 	}
+
 	if data.MaxCPU != nil && newMetric.MaxCPU != nil {
 		data.MaxCPU = getMax(data.MaxCPU, newMetric.MaxCPU)
 	} else if newMetric.MaxCPU != nil {
 		data.MaxCPU = newMetric.MaxCPU
 	}
+
 	if data.MaxMemory != nil && newMetric.MaxMemory != nil {
 		data.MaxMemory = getMax(data.MaxMemory, newMetric.MaxMemory)
 	} else if newMetric.MaxMemory != nil {
@@ -478,29 +462,29 @@ func (m *ModelCluster) preAggregateMax(data *types.ClusterData, newMetric *types
 	}
 }
 
-// preAggregateMin is a function that performs pre-aggregation to get the minimum value of various metrics.
 func (m *ModelCluster) preAggregateMin(data *types.ClusterData, newMetric *types.ClusterMetrics) {
-	// If both data.MinInstance and newMetric.MinInstance are not nil, get the minimum value and update data.MinInstance.
 	if data.MinInstance != nil && newMetric.MinInstance != nil {
 		data.MinInstance = getMin(data.MinInstance, newMetric.MinInstance)
 	} else if newMetric.MinInstance != nil {
-		// If data.MinInstance is nil but newMetric.MinInstance is not, update data.MinInstance to newMetric.MinInstance.
 		data.MinInstance = newMetric.MinInstance
 	}
-	// Repeat the above process for MinNode, MinCPU, and MinMemory.
+
 	if data.MinNode != nil && newMetric.MinNode != nil {
 		data.MinNode = getMin(data.MinNode, newMetric.MinNode)
 	} else if newMetric.MinNode != nil {
 		data.MinNode = newMetric.MinNode
 	}
+
 	if data.MinCPU != nil && newMetric.MinCPU != nil {
 		data.MinCPU = getMin(data.MinCPU, newMetric.MinCPU)
 	} else if newMetric.MinCPU != nil {
 		data.MinCPU = newMetric.MinCPU
 	}
+
 	if data.MinMemory != nil && newMetric.MinMemory != nil {
 		data.MinMemory = getMin(data.MinMemory, newMetric.MinMemory)
 	} else if newMetric.MinMemory != nil {
 		data.MinMemory = newMetric.MinMemory
 	}
+
 }

@@ -41,7 +41,6 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.1
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/sjson v1.2.5
 	go.etcd.io/etcd/api/v3 v3.5.8
@@ -61,7 +60,7 @@ require (
 	gorm.io/plugin/opentelemetry v0.1.2
 	gorm.io/plugin/prometheus v0.0.0-20230504115745-1aec2356381b
 	gorm.io/sharding v0.5.3
-	k8s.io/klog/v2 v2.100.1
+	k8s.io/klog/v2 v2.90.1
 )
 
 require (
@@ -72,7 +71,6 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/clbanning/mxj v1.8.4 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -88,7 +86,6 @@ require (
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -109,7 +106,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/mozillazg/go-httpheader v0.2.1 // indirect
 	github.com/parnurzeal/gorequest v0.2.16 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect

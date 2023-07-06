@@ -56,7 +56,7 @@ type TemplateSetResourceNode struct {
 func (trn TemplateSetResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	if trn.IsCreateTemplateSet {
 		return []iam.ResourceNode{
-			{
+			iam.ResourceNode{
 				System:    trn.SystemID,
 				RType:     string(project.SysProject),
 				RInstance: trn.ProjectID,
@@ -68,7 +68,7 @@ func (trn TemplateSetResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	}
 
 	return []iam.ResourceNode{
-		{
+		iam.ResourceNode{
 			System:    trn.SystemID,
 			RType:     string(SysTemplateSet),
 			RInstance: trn.ProjectID,

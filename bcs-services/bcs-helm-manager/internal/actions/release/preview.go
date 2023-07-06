@@ -96,8 +96,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 
 	// revision 之间对比，用于回滚
 	if r.req.GetRevision() != 0 {
-		newRelease := &release.Release{}
-		newRelease, err = r.releaseHandler.Cluster(r.req.GetClusterID()).Get(r.ctx, release.GetOption{
+		newRelease, err := r.releaseHandler.Cluster(r.req.GetClusterID()).Get(r.ctx, release.GetOption{
 			Namespace: r.req.GetNamespace(), Name: r.req.GetName(), Revision: int(r.req.GetRevision())})
 		if err != nil {
 			return nil, fmt.Errorf("get release revision %d failed, err %s", r.req.GetRevision(), err.Error())

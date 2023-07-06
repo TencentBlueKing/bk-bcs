@@ -34,7 +34,7 @@ import (
 var EnabledSelectItemsAPIResKind = []string{resCsts.Deploy, resCsts.GDeploy, resCsts.STS, resCsts.GSTS}
 
 // GetResSelectItems 为前端下拉框提供数据的 API，目前主要是 HPA 的 Schema 使用
-// 可以考虑其他的资源类型也走这个 API 而不是指定资源的 List API + Format（selectItems）
+// TODO 可以考虑其他的资源类型也走这个 API 而不是指定资源的 List API + Format（selectItems）
 func (h *Handler) GetResSelectItems(
 	ctx context.Context, req *clusterRes.GetResSelectItemsReq, resp *clusterRes.CommonResp,
 ) (err error) {

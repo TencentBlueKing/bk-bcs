@@ -88,7 +88,7 @@ func NewReconciler(clusterInfo common.Cluster, storageClient storage.Interface,
 	}
 
 	// check cluster type from cluster id
-	// [warning] some cluster with special name won't work
+	// TODO: some cluster with special name won't work
 	var clusterType string
 	if strings.Contains(strings.ToLower(clusterID), common.ClusterTypeMesos) {
 		clusterType = common.ClusterTypeMesos

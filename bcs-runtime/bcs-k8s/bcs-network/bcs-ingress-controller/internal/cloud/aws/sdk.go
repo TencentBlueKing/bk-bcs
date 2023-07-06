@@ -15,18 +15,20 @@ package aws
 import (
 	"context"
 	"fmt"
+	"os"
+	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
-	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog/glog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 )
 
 // SdkWrapper wrapper for aws sdk
@@ -102,13 +104,80 @@ func NewSdkWrapperWithSecretIDKey(secretID, secretKey string) (*SdkWrapper, erro
 	return NewSdkWrapper()
 }
 
+// getRegionClient create region client
+func (sw *SdkWrapper) getRegionClient(region string) *elbv2.Client {
+	cli, ok := sw.elbClientMap[region]
+	if !ok {
+		credentials := aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
+			return aws.Credentials{
+				AccessKeyID:     sw.secretID,
+				SecretAccessKey: sw.secretKey,
+			}, nil
+		})
+		options := elbv2.Options{Region: region, Credentials: credentials}
+		options.Retryer = retry.NewStandard(RetryerWithDefaultOptions)
+		newCli := elbv2.New(options)
+		sw.elbClientMap[region] = newCli
+		return newCli
+	}
+	return cli
+}
+
+func (sw *SdkWrapper) loadEnv() error {
+	if len(sw.secretID) == 0 {
+		sw.secretID = os.Getenv(EnvNameAWSAccessKeyID)
+	}
+	if len(sw.secretKey) == 0 {
+		sw.secretKey = os.Getenv(EnvNameAWSAccessKey)
+	}
+
+	qpsStr := os.Getenv(EnvNameAWSRateLimitQPS)
+	if len(qpsStr) != 0 {
+		qps, err := strconv.ParseInt(qpsStr, 10, 64)
+		if err != nil {
+			blog.Warnf("parse rate limit qps %s failed, err %s, use default %d",
+				qpsStr, err.Error(), defaultThrottleQPS)
+			sw.ratelimitqps = int64(defaultThrottleQPS)
+		} else {
+			sw.ratelimitqps = qps
+		}
+	} else {
+		sw.ratelimitqps = int64(defaultThrottleQPS)
+	}
+
+	bucketSizeStr := os.Getenv(EnvNameAWSRateLimitBucketSize)
+	if len(bucketSizeStr) != 0 {
+		bucketSize, err := strconv.ParseInt(bucketSizeStr, 10, 64)
+		if err != nil {
+			blog.Warnf("parse rate limit bucket size %s failed, err %s, use default %d",
+				bucketSizeStr, err.Error(), defaultBucketSize)
+			sw.ratelimitbucketSize = int64(defaultBucketSize)
+		} else {
+			sw.ratelimitbucketSize = bucketSize
+		}
+	} else {
+		sw.ratelimitbucketSize = int64(defaultBucketSize)
+	}
+	return nil
+}
+
+// call tryThrottle before each api call
+func (sw *SdkWrapper) tryThrottle() {
+	now := time.Now()
+	sw.throttler.Accept()
+	if latency := time.Since(now); latency > maxLatency {
+		pc, _, _, _ := runtime.Caller(2)
+		callerName := runtime.FuncForPC(pc).Name()
+		blog.Infof("Throttling request took %d ms, function: %s", latency, callerName)
+	}
+}
+
 // DescribeLoadBalancers describe load balancers
 func (sw *SdkWrapper) DescribeLoadBalancers(region string, input *elbv2.DescribeLoadBalancersInput) (
 	*elbv2.DescribeLoadBalancersOutput, error) {
 	blog.V(3).Infof("DescribeLoadBalancers input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -121,19 +190,16 @@ func (sw *SdkWrapper) DescribeLoadBalancers(region string, input *elbv2.Describe
 		rerr := ResolveError(err)
 		if rerr.IsExceededAttemptError() {
 			mf(metrics.LibCallStatusTimeout)
-			errMsg := fmt.Sprintf("DescribeLoadBalancers req[%s] out of maxRetry %d", common.ToJsonString(input),
-				maxRetry)
+			errMsg := fmt.Sprintf("DescribeLoadBalancers out of maxRetry %d", maxRetry)
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
 		if rerr.IsOperationError() {
 			mf(metrics.LibCallStatusErr)
-			errMsg := fmt.Sprintf("DescribeLoadBalancers req[%s] failed, err %s", common.ToJsonString(input),
-				err.Error())
+			errMsg := fmt.Sprintf("DescribeLoadBalancers failed, err %s", err.Error())
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DescribeLoadBalancers req[%s] failed, err: %s", common.ToJsonString(input), err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("DescribeLoadBalancers response: %s", common.ToJsonString(out))
@@ -147,7 +213,6 @@ func (sw *SdkWrapper) CreateListener(region string, input *elbv2.CreateListenerI
 	blog.V(3).Infof("CreateListener input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -171,7 +236,6 @@ func (sw *SdkWrapper) CreateListener(region string, input *elbv2.CreateListenerI
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("CreateListener failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("CreateListener response: %s", common.ToJsonString(out))
@@ -180,12 +244,11 @@ func (sw *SdkWrapper) CreateListener(region string, input *elbv2.CreateListenerI
 }
 
 // DescribeListeners describe listeners
-func (sw *SdkWrapper) DescribeListeners(region string, input *elbv2.DescribeListenersInput, logV int32) (
+func (sw *SdkWrapper) DescribeListeners(region string, input *elbv2.DescribeListenersInput) (
 	*elbv2.DescribeListenersOutput, error) {
-	blog.V(glog.Level(logV)).Infof("DescribeListeners input: %s", common.ToJsonString(input))
+	blog.V(3).Infof("DescribeListeners input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -209,10 +272,9 @@ func (sw *SdkWrapper) DescribeListeners(region string, input *elbv2.DescribeList
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DescribeListeners failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
-	blog.V(glog.Level(logV)).Infof("DescribeListeners response: %s", common.ToJsonString(out))
+	blog.V(3).Infof("DescribeListeners response: %s", common.ToJsonString(out))
 	mf(metrics.LibCallStatusOK)
 	return out, nil
 }
@@ -223,7 +285,6 @@ func (sw *SdkWrapper) DeleteListener(region string, input *elbv2.DeleteListenerI
 	blog.V(3).Infof("DeleteListener input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -247,7 +308,6 @@ func (sw *SdkWrapper) DeleteListener(region string, input *elbv2.DeleteListenerI
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DeleteListener failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("DeleteListener response: %s", common.ToJsonString(out))
@@ -261,7 +321,6 @@ func (sw *SdkWrapper) ModifyListener(region string, input *elbv2.ModifyListenerI
 	blog.V(3).Infof("ModifyListener input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -285,7 +344,6 @@ func (sw *SdkWrapper) ModifyListener(region string, input *elbv2.ModifyListenerI
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("ModifyListener failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("ModifyListener response: %s", common.ToJsonString(out))
@@ -299,7 +357,6 @@ func (sw *SdkWrapper) CreateRule(region string, input *elbv2.CreateRuleInput) (
 	blog.V(3).Infof("CreateRule input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -313,17 +370,16 @@ func (sw *SdkWrapper) CreateRule(region string, input *elbv2.CreateRuleInput) (
 		rerr := ResolveError(err)
 		if rerr.IsExceededAttemptError() {
 			mf(metrics.LibCallStatusTimeout)
-			errMsg := fmt.Sprintf("CreateRule req[%s] out of maxRetry %d", common.ToJsonString(input), maxRetry)
+			errMsg := fmt.Sprintf("CreateRule out of maxRetry %d", maxRetry)
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
 		if rerr.IsOperationError() {
 			mf(metrics.LibCallStatusErr)
-			errMsg := fmt.Sprintf("CreateRule req[%s] failed, err %s", common.ToJsonString(input), err.Error())
+			errMsg := fmt.Sprintf("CreateRule failed, err %s", err.Error())
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("CreateRule req[%s] failed, err: %s", common.ToJsonString(input), err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("CreateRule response: %s", common.ToJsonString(out))
@@ -332,12 +388,11 @@ func (sw *SdkWrapper) CreateRule(region string, input *elbv2.CreateRuleInput) (
 }
 
 // DescribeRules describe rules
-func (sw *SdkWrapper) DescribeRules(region string, input *elbv2.DescribeRulesInput, logV int32) (
+func (sw *SdkWrapper) DescribeRules(region string, input *elbv2.DescribeRulesInput) (
 	*elbv2.DescribeRulesOutput, error) {
-	blog.V(glog.Level(logV)).Infof("DescribeRules input: %s", common.ToJsonString(input))
+	blog.V(3).Infof("DescribeRules input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -351,20 +406,19 @@ func (sw *SdkWrapper) DescribeRules(region string, input *elbv2.DescribeRulesInp
 		rerr := ResolveError(err)
 		if rerr.IsExceededAttemptError() {
 			mf(metrics.LibCallStatusTimeout)
-			errMsg := fmt.Sprintf("DescribeRules req[%s] out of maxRetry %d", common.ToJsonString(input), maxRetry)
+			errMsg := fmt.Sprintf("DescribeRules out of maxRetry %d", maxRetry)
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
 		if rerr.IsOperationError() {
 			mf(metrics.LibCallStatusErr)
-			errMsg := fmt.Sprintf("DescribeRules req[%s] failed, err %s", common.ToJsonString(input), err.Error())
+			errMsg := fmt.Sprintf("DescribeRules failed, err %s", err.Error())
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DescribeRules req[%s] failed, err: %s", common.ToJsonString(input), err.Error())
 		return nil, rerr.Unwrap()
 	}
-	blog.V(glog.Level(logV)).Infof("DescribeRules response: %s", common.ToJsonString(out))
+	blog.V(3).Infof("DescribeRules response: %s", common.ToJsonString(out))
 	mf(metrics.LibCallStatusOK)
 	return out, nil
 }
@@ -375,7 +429,6 @@ func (sw *SdkWrapper) DeleteRule(region string, input *elbv2.DeleteRuleInput) (
 	blog.V(3).Infof("DeleteRule input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -399,7 +452,6 @@ func (sw *SdkWrapper) DeleteRule(region string, input *elbv2.DeleteRuleInput) (
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DeleteRule failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("DeleteRule response: %s", common.ToJsonString(out))
@@ -413,7 +465,6 @@ func (sw *SdkWrapper) ModifyRule(region string, input *elbv2.ModifyRuleInput) (
 	blog.V(3).Infof("ModifyRule input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -440,7 +491,6 @@ func (sw *SdkWrapper) ModifyRule(region string, input *elbv2.ModifyRuleInput) (
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("ModifyRule failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("ModifyRule response: %s", common.ToJsonString(out))
@@ -454,7 +504,6 @@ func (sw *SdkWrapper) CreateTargetGroup(region string, input *elbv2.CreateTarget
 	blog.V(3).Infof("CreateTargetGroup input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -478,7 +527,6 @@ func (sw *SdkWrapper) CreateTargetGroup(region string, input *elbv2.CreateTarget
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("CreateTargetGroup failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("CreateTargetGroup response: %s", common.ToJsonString(out))
@@ -492,7 +540,6 @@ func (sw *SdkWrapper) RegisterTargets(region string, input *elbv2.RegisterTarget
 	blog.V(3).Infof("RegisterTargets input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -516,7 +563,6 @@ func (sw *SdkWrapper) RegisterTargets(region string, input *elbv2.RegisterTarget
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("RegisterTargets failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("RegisterTargets response: %s", common.ToJsonString(out))
@@ -530,7 +576,6 @@ func (sw *SdkWrapper) DeregisterTargets(region string, input *elbv2.DeregisterTa
 	blog.V(3).Infof("DeregisterTargets input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -554,7 +599,6 @@ func (sw *SdkWrapper) DeregisterTargets(region string, input *elbv2.DeregisterTa
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DeregisterTargets failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("DeregisterTargets response: %s", common.ToJsonString(out))
@@ -568,7 +612,6 @@ func (sw *SdkWrapper) DescribeTargetGroups(region string, input *elbv2.DescribeT
 	blog.V(3).Infof("DescribeTargetGroups input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -587,7 +630,7 @@ func (sw *SdkWrapper) DescribeTargetGroups(region string, input *elbv2.DescribeT
 			return nil, fmt.Errorf(errMsg)
 		}
 		if strings.Contains(err.Error(), "response error StatusCode: 400") {
-			blog.Warnf("DescribeTargetGroups not found: %v, raw error: %s", input.Names, err.Error())
+			blog.Warnf("DescribeTargetGroups not found: %v", input.Names)
 			return &elbv2.DescribeTargetGroupsOutput{}, nil
 		}
 		if rerr.IsOperationError() {
@@ -596,7 +639,6 @@ func (sw *SdkWrapper) DescribeTargetGroups(region string, input *elbv2.DescribeT
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DescribeTargetGroups failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("DescribeTargetGroups response: %s", common.ToJsonString(out))
@@ -610,7 +652,6 @@ func (sw *SdkWrapper) DeleteTargetGroup(region string, input *elbv2.DeleteTarget
 	blog.V(3).Infof("DeleteTargetGroup input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -634,7 +675,6 @@ func (sw *SdkWrapper) DeleteTargetGroup(region string, input *elbv2.DeleteTarget
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DeleteTargetGroup failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("DeleteTargetGroup response: %s", common.ToJsonString(out))
@@ -648,7 +688,6 @@ func (sw *SdkWrapper) DescribeTargetGroupAttributes(region string, input *elbv2.
 	blog.V(3).Infof("DescribeTargetGroupAttributes input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -672,7 +711,6 @@ func (sw *SdkWrapper) DescribeTargetGroupAttributes(region string, input *elbv2.
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DescribeTargetGroupAttributes failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("DescribeTargetGroupAttributes response: %s", common.ToJsonString(out))
@@ -686,7 +724,6 @@ func (sw *SdkWrapper) ModifyTargetGroup(region string, input *elbv2.ModifyTarget
 	blog.V(3).Infof("ModifyTargetGroup input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -710,7 +747,6 @@ func (sw *SdkWrapper) ModifyTargetGroup(region string, input *elbv2.ModifyTarget
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("ModifyTargetGroup failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("ModifyTargetGroup response: %s", common.ToJsonString(out))
@@ -724,7 +760,6 @@ func (sw *SdkWrapper) ModifyTargetGroupAttributes(region string, input *elbv2.Mo
 	blog.V(3).Infof("ModifyTargetGroupAttributes input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -748,7 +783,6 @@ func (sw *SdkWrapper) ModifyTargetGroupAttributes(region string, input *elbv2.Mo
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("ModifyTargetGroupAttributes failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
 	blog.V(3).Infof("ModifyTargetGroupAttributes response: %s", common.ToJsonString(out))
@@ -759,11 +793,9 @@ func (sw *SdkWrapper) ModifyTargetGroupAttributes(region string, input *elbv2.Mo
 // DescribeTargetHealth describe target health
 func (sw *SdkWrapper) DescribeTargetHealth(region string, input *elbv2.DescribeTargetHealthInput) (
 	*elbv2.DescribeTargetHealthOutput, error) {
-	// 定时调用，log v4避免日志量过大
-	blog.V(4).Infof("DescribeTargetHealth input: %s", common.ToJsonString(input))
+	blog.V(3).Infof("DescribeTargetHealth input: %s", common.ToJsonString(input))
 
 	startTime := time.Now()
-	// 统计API调用延时/状态
 	mf := func(ret string) {
 		defer metrics.ReportLibRequestMetric(
 			SystemNameInMetricAWS,
@@ -787,10 +819,9 @@ func (sw *SdkWrapper) DescribeTargetHealth(region string, input *elbv2.DescribeT
 			blog.Errorf(errMsg)
 			return nil, fmt.Errorf(errMsg)
 		}
-		blog.Errorf("DescribeTargetHealth failed, err: %s", err.Error())
 		return nil, rerr.Unwrap()
 	}
-	blog.V(4).Infof("DescribeTargetHealth response: %s", common.ToJsonString(out))
+	blog.V(3).Infof("DescribeTargetHealth response: %s", common.ToJsonString(out))
 	mf(metrics.LibCallStatusOK)
 	return out, nil
 }

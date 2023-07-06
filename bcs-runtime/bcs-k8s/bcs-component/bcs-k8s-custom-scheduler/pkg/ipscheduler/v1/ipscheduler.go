@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/actions"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler/pkg/metrics"
 
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -243,6 +243,7 @@ func (i *IpScheduler) checkSchedulable(node v1.Node) error {
 
 	if len(matchedNetPool.Available) == 0 {
 		return fmt.Errorf("no available ip address anymore")
+	} else {
+		return nil
 	}
-	return nil
 }

@@ -84,8 +84,9 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 		return err
 	}
 
-	// 更新操作, 获取当前记录做审计
 	m := dao.genQ.TemplateSpace
+
+	// 更新操作, 获取当前记录做审计
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
 	if err != nil {
@@ -165,10 +166,10 @@ func (dao *templateSpaceDao) GetByUniqueKey(kit *kit.Kit, bizID uint32, name str
 	m := dao.genQ.TemplateSpace
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 
-	templateSpace, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
+	tplSpace, err := q.Where(m.BizID.Eq(bizID), m.Name.Eq(name)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get template space failed, err: %v", err)
+		return nil, fmt.Errorf("get templateSpace failed, err: %v", err)
 	}
 
-	return templateSpace, nil
+	return tplSpace, nil
 }

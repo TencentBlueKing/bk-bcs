@@ -59,7 +59,7 @@ func (s *Session) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 			res.Write([]byte("GitOps Proxy session failure")) // nolint
 		},
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // nolint
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 		ModifyResponse: func(r *http.Response) error {
 			blog.Infof("GitOps proxy %s response header details: %+v, status %s, code: %d",

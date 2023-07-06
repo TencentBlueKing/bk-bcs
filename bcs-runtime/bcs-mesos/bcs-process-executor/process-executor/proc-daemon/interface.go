@@ -11,7 +11,7 @@
  *
  */
 
-package procdaemon
+package proc_daemon
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-mesos/bcs-process-executor/process-executor/types"

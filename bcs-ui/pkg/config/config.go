@@ -80,7 +80,7 @@ func init() {
 	G = g
 }
 
-// IsLocalDevMode 是否本地开发模式
+// IsDevMode 是否本地开发模式
 func (c *Configuration) IsLocalDevMode() bool {
 	return c.Base.RunEnv == LocalEnv
 }
@@ -100,7 +100,7 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	return nil
 }
 
-// BCSDebugAPIHost 事件未分离, 在前端分流
+// DebugAPIHost 事件未分离, 在前端分流
 func (c *Configuration) BCSDebugAPIHost() string {
 	return c.BCS.Host
 }

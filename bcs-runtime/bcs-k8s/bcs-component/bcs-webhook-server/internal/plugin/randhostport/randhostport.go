@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"strconv"
 	"time"
 
@@ -46,10 +45,9 @@ func init() {
 
 // HostPortInjectorConfig config of host port injector
 type HostPortInjectorConfig struct {
-	StartPort         uint64 `json:"startPort"`
-	EndPort           uint64 `json:"endPort"`
-	EnableOrderAssign bool   `json:"enableOrderAssign"`
-	Kubeconfig        string `json:"kubeconfig"`
+	StartPort  uint64 `json:"startPort"`
+	EndPort    uint64 `json:"endPort"`
+	Kubeconfig string `json:"kubeconfig"`
 }
 
 // HostPortInjector host port injector
@@ -61,8 +59,6 @@ type HostPortInjector struct {
 	podLister corev1lister.PodLister
 
 	portCache *PortCache
-
-	nextAssignPort uint64
 }
 
 // AnnotationKey returns key of the randhostport plugin for hook server to identify
@@ -102,35 +98,27 @@ func (hpi *HostPortInjector) Init(configFilePath string) error {
 		}
 	}
 
-	if !hpi.conf.EnableOrderAssign {
-		if err = hpi.initCache(); err != nil {
-			return fmt.Errorf("init cache failed, err %s", err.Error())
-		}
-	} else {
-		portPeriod := hpi.conf.EndPort - hpi.conf.StartPort
-		hpi.nextAssignPort = uint64(rand.Int63n(int64(portPeriod)) + int64(hpi.conf.StartPort))
+	if err := hpi.initCache(); err != nil {
+		return fmt.Errorf("init cache failed, err %s", err.Error())
 	}
-
 	blog.Infof("randhostport plugin init cache successfully")
 
-	if !hpi.conf.EnableOrderAssign {
-		k8sClient, err = kubernetes.NewForConfig(restConfig)
-		if err != nil {
-			return fmt.Errorf("build kubeClient failed, err %s", err.Error())
-		}
-		hpi.k8sClient = k8sClient
-		corev1InformerFactory := kubeinformers.NewSharedInformerFactory(hpi.k8sClient, 0)
-		podInformer := corev1InformerFactory.Core().V1().Pods().Informer()
-		podLister := corev1InformerFactory.Core().V1().Pods().Lister()
-		podInformer.AddEventHandler(hpi)
-		hpi.podLister = podLister
-		hpi.stopCh = make(chan struct{})
-		corev1InformerFactory.Start(hpi.stopCh)
-		if !cache.WaitForCacheSync(hpi.stopCh, podInformer.HasSynced) {
-			return fmt.Errorf("pod cache synced failed")
-		}
+	k8sClient, err = kubernetes.NewForConfig(restConfig)
+	if err != nil {
+		return fmt.Errorf("build kubeClient failed, err %s", err.Error())
 	}
-	blog.Infof("randhostport plugin wait k8s informer cache synced successfully")
+	hpi.k8sClient = k8sClient
+	corev1InformerFactory := kubeinformers.NewSharedInformerFactory(hpi.k8sClient, 0)
+	podInformer := corev1InformerFactory.Core().V1().Pods().Informer()
+	podLister := corev1InformerFactory.Core().V1().Pods().Lister()
+	podInformer.AddEventHandler(hpi)
+	hpi.podLister = podLister
+	hpi.stopCh = make(chan struct{})
+	corev1InformerFactory.Start(hpi.stopCh)
+	if !cache.WaitForCacheSync(hpi.stopCh, podInformer.HasSynced) {
+		return fmt.Errorf("pod cache synced failed")
+	}
+	blog.Infof("randhostport plugin wait k8s informer cache synced successfullly")
 	return nil
 }
 
@@ -251,27 +239,19 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 		return nil, fmt.Errorf("not all ports %v in annotation match ports in container", portStrs)
 	}
 
+	// get rand host port
 	var hostPorts []*PortEntry
-	if !hpi.conf.EnableOrderAssign {
-		// get rand host port
-		hpi.portCache.Lock()
-		for i := 0; i < needInjectCount; i++ {
-			portEntry := hpi.portCache.PopPortEntry()
-			hostPorts = append(hostPorts, portEntry)
-		}
-		for _, hostPort := range hostPorts {
-			hostPort.Quantity = hostPort.Quantity + 1
-			hpi.portCache.PushPortEntry(hostPort)
-		}
-		hpi.portCache.Unlock()
-	} else {
-		// get order host port
-		for i := 0; i < needInjectCount; i++ {
-			portEntry := hpi.getOrderPortEntry()
-			blog.Infof("get order portentry %d for pod %s/%s", portEntry.Port, pod.GetName(), pod.GetNamespace())
-			hostPorts = append(hostPorts, portEntry)
-		}
+	hpi.portCache.Lock()
+	for i := 0; i < needInjectCount; i++ {
+		portEntry := hpi.portCache.PopPortEntry()
+		hostPorts = append(hostPorts, portEntry)
 	}
+	for _, hostPort := range hostPorts {
+		hostPort.Quantity = hostPort.Quantity + 1
+		hpi.portCache.PushPortEntry(hostPort)
+	}
+	hpi.portCache.Unlock()
+
 	var retPatches []types.PatchOperation
 	// patch affinity
 	retPatches = append(retPatches, hpi.generateAffinityPath(pod, hostPorts))
@@ -279,12 +259,8 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 	retPatches = append(retPatches, hpi.generateLabelPatch(pod, hostPorts))
 	// patch container port
 	hostPortCount := 0
-
-	// containerPort=>hostPort
-	hostPortMapping := make(map[uint64]uint64, len(containerPortsIndexList))
 	for containerIndex, portIndexList := range containerPortsIndexList {
 		for _, portIndex := range portIndexList {
-			containerPort := pod.Spec.Containers[containerIndex].Ports[portIndex].ContainerPort
 			// inject hostport into container port
 			retPatches = append(retPatches, types.PatchOperation{
 				Path:  fmt.Sprintf(PatchPathContainerHostPort, containerIndex, portIndex),
@@ -297,9 +273,6 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 					Op:    PatchOperationAdd,
 					Value: hostPorts[hostPortCount].Port,
 				})
-				hostPortMapping[hostPorts[hostPortCount].Port] = uint64(hostPorts[hostPortCount].Port)
-			} else {
-				hostPortMapping[uint64(containerPort)] = uint64(hostPorts[hostPortCount].Port)
 			}
 			hostPortCount++
 		}
@@ -315,29 +288,7 @@ func (hpi *HostPortInjector) injectToPod(pod *corev1.Pod) ([]types.PatchOperatio
 		retPatches = append(retPatches, envPatch)
 	}
 
-	// inject hostport into pod annotations
-	retPatches = append(retPatches, hpi.generateAnnotationsPatch(pod, hostPortMapping))
-	fmt.Println(retPatches)
-
 	return retPatches, nil
-}
-
-// generateAnnotationsPatch generate patch for pod annotations
-func (hpi *HostPortInjector) generateAnnotationsPatch(pod *corev1.Pod, hostPortMapping map[uint64]uint64) types.PatchOperation {
-	annotations := pod.Annotations
-	op := PatchOperationReplace
-	if len(annotations) == 0 {
-		op = PatchOperationAdd
-		annotations = make(map[string]string)
-	}
-	for containerPort, hostPort := range hostPortMapping {
-		annotations[fmt.Sprintf(annotationsRandHostportPrefix+"%d", containerPort)] = strconv.FormatUint(hostPort, 10)
-	}
-	return types.PatchOperation{
-		Path:  PatchPathPodAnnotations,
-		Op:    op,
-		Value: annotations,
-	}
 }
 
 func (hpi *HostPortInjector) generateEnvPatch(
@@ -496,15 +447,4 @@ func (hpi *HostPortInjector) OnDelete(obj interface{}) {
 		hpi.portCache.Unlock()
 		blog.V(5).Infof("descrease portentry %d quantity successfully", portNumber)
 	}
-}
-
-func (hpi *HostPortInjector) getOrderPortEntry() *PortEntry {
-	portEntry := &PortEntry{
-		Port: hpi.nextAssignPort,
-	}
-	hpi.nextAssignPort++
-	if hpi.nextAssignPort > hpi.conf.EndPort {
-		hpi.nextAssignPort = hpi.conf.StartPort
-	}
-	return portEntry
 }

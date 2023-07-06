@@ -137,7 +137,7 @@ func (disc *serviceMonitor) Start() error {
 	// apiextensions clientset for creating BcsLogConfig Crd
 	disc.extensionClientset, err = apiextensionsclient.NewForConfig(cfg)
 	if err != nil {
-		blog.Errorf("build apiextension client by kubeconfig %s error %s", disc.kubeconfig, err.Error())
+		blog.Errorf("build apiextension client by kubeconfig % error %s", disc.kubeconfig, err.Error())
 		return err
 	}
 	// create BcsLogConfig Crd

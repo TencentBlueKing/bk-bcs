@@ -453,7 +453,7 @@ func (w *Watcher) processNextWorkItem() bool {
 	if !isExisted {
 		data := w.genSyncData(tObj, nil, action.SyncDataActionDelete)
 		if data == nil {
-			// event should be filtered
+			// event should be filterd
 			return true
 		}
 		w.distributeDataToHandler(data)
@@ -462,7 +462,7 @@ func (w *Watcher) processNextWorkItem() bool {
 	}
 	data := w.genSyncData(tObj, storeObj, action.SyncDataActionUpdate)
 	if data == nil {
-		// event should be filtered
+		// event should be filterd
 		return true
 	}
 	w.distributeDataToHandler(data)

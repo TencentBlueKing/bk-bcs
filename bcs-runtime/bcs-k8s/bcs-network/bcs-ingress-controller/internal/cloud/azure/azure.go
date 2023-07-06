@@ -173,10 +173,10 @@ func (a *Alb) EnsureMultiListeners(region, lbID string, listeners []*networkexte
 		var err error
 		switch group[0].Spec.Protocol {
 		case AzureProtocolTCP, AzureProtocolUDP:
-			l4RetMap, inErr := a.ensureLoadBalancerListener(region, group)
-			if inErr != nil {
+			l4RetMap, err := a.ensureLoadBalancerListener(region, group)
+			if err != nil {
 				for _, li := range group {
-					retMap[li.GetName()] = cloud.Result{IsError: true, Err: inErr}
+					retMap[li.GetName()] = cloud.Result{IsError: true, Err: err}
 				}
 				continue
 			}

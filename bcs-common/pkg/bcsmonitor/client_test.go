@@ -13,11 +13,10 @@
 package bcsmonitor
 
 import (
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -245,7 +244,7 @@ func TestBcsMonitorClient_QueryRange(t *testing.T) {
 	}
 }
 
-func TestClientQueryRangeByPost(t *testing.T) {
+func TestBcsMonitorClient_QueryRangeByPost(t *testing.T) {
 	type fields struct {
 		opts             BcsMonitorClientOpt
 		defaultHeader    http.Header

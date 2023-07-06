@@ -23,8 +23,6 @@ import (
 // Update 更新节点池,更新成功返回nil
 func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 	timeRange := make([]*clustermanager.TimeRange, 0)
-
-	// nodeGroup time range
 	for _, v := range req.AutoScaling.TimeRanges {
 		timeRange = append(timeRange, &clustermanager.TimeRange{
 			Name:       v.Name,
@@ -34,7 +32,6 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 		})
 	}
 
-	// nodeGroup node disk mount
 	launchDataDisk := make([]*clustermanager.DataDisk, 0)
 	for _, v := range req.LaunchTemplate.DataDisks {
 		launchDataDisk = append(launchDataDisk, &clustermanager.DataDisk{
@@ -46,7 +43,6 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 		})
 	}
 
-	// nodeGroup taint
 	taint := make([]*clustermanager.Taint, 0)
 	for _, v := range req.NodeTemplate.Taints {
 		taint = append(taint, &clustermanager.Taint{
@@ -56,7 +52,6 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 		})
 	}
 
-	// nodeGroup node dataDisks
 	nodeDataDisk := make([]*clustermanager.DataDisk, 0)
 	for _, v := range req.NodeTemplate.DataDisks {
 		nodeDataDisk = append(nodeDataDisk, &clustermanager.DataDisk{
@@ -68,7 +63,6 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 		})
 	}
 
-	// nodeGroup plugins
 	outPlugins := make(map[string]*clustermanager.BKOpsPlugin)
 	for k, v := range req.NodeTemplate.BcsScaleOutAddons.Plugins {
 		outPlugins[k] = &clustermanager.BKOpsPlugin{
@@ -105,7 +99,7 @@ func (c *NodeGroupMgr) Update(req types.UpdateNodeGroupReq) (err error) {
 		}
 	}
 
-	// 构建UpdateNodeGroupRequest请求并更新节点池
+	//构建UpdateNodeGroupRequest请求并更新节点池
 	resp, err := c.client.UpdateNodeGroup(c.ctx, &clustermanager.UpdateNodeGroupRequest{
 		NodeGroupID:     req.NodeGroupID,
 		ClusterID:       req.ClusterID,

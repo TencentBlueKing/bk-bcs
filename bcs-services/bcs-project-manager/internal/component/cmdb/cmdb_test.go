@@ -20,12 +20,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	svcConfig "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 )
 
 var (
-	username = constant.AnonymousUsername
+	username = config.AnonymousUsername
 	bizID    = "1"
 )
 
@@ -36,7 +36,7 @@ func TestCheckMaintainer(t *testing.T) {
 	defer ts.Close()
 
 	// 需要加载配置，然后域名调整为mock的url
-	svcConfig.LoadConfig("../../../" + constant.DefaultConfigPath)
+	svcConfig.LoadConfig("../../../" + config.DefaultConfigPath)
 	svcConfig.GlobalConf.CMDB.Host = ts.URL
 	isMaintainer, err := IsMaintainer(username, bizID)
 	assert.Nil(t, err)

@@ -38,13 +38,13 @@ import (
 
 var (
 	// Used for flags.
-	cfgFile          string
-	bindAddress      string
-	port             int
-	outConfInfo      bool
-	appName          = "bcs-ui"
-	podIPsEnv        = "POD_IPs"        // 双栈监听环境变量
-	ipv6InterfaceEnv = "IPV6_INTERFACE" // ipv6本地网关地址
+	cfgFile       string
+	bindAddress   string
+	port          int
+	outConfInfo   bool
+	appName       = "bcs-ui"
+	podIPsEnv     = "POD_IPs"        // 双栈监听环境变量
+	ipv6Interface = "IPV6_INTERFACE" // ipv6本地网关地址
 
 	rootCmd = &cobra.Command{
 		Use:   appName,
@@ -66,14 +66,11 @@ var (
 	}
 )
 
-// RunSrv run srv
+// RunSrv
 func RunSrv() {
 	// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu
-	// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value
-	// for runtime.GOMAXPROCS.
-	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) {
-		klog.Infof(template, args)
-	})); err != nil {
+	// maxprocs will automate adjustment by using cgroups info about cpu limit if it set as value for runtime.GOMAXPROCS.
+	if _, err := maxprocs.Set(maxprocs.Logger(func(template string, args ...interface{}) { klog.Infof(template, args) })); err != nil {
 		klog.InfoS("Failed to set GOMAXPROCS automatically", "err", err)
 	}
 
@@ -201,7 +198,7 @@ func getIPv6AddrFromEnv(ipv4 string) string {
 	}
 
 	// local link ipv6 需要带上 interface， 格式如::%eth0
-	ipv6Interface := os.Getenv(ipv6InterfaceEnv)
+	ipv6Interface := os.Getenv(ipv6Interface)
 	if ipv6Interface != "" {
 		ipv6 = ipv6 + "%" + ipv6Interface
 	}

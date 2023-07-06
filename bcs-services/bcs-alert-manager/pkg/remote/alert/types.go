@@ -68,7 +68,7 @@ const (
 	// AlarmLabelsAlarmLevel labels level
 	AlarmLabelsAlarmLevel AlarmLabelsKey = "alarm_level"
 
-	// AlarmLabelsAlarmProjectID xxx
+	// AlarmLabelsAlarmProjectID TODO
 	AlarmLabelsAlarmProjectID AlarmLabelsKey = "project_id"
 )
 

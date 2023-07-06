@@ -82,7 +82,6 @@ func init() {
 	rootCmd.AddCommand(StoreGWCmd())
 	// 打印配置文件
 	rootCmd.AddCommand(ConfigViewCmd())
-	rootCmd.AddCommand(MigrateCmd())
 	rootCmd.AddCommand(VersionCmd())
 	rootCmd.Version = printVersion()
 	rootCmd.SetVersionTemplate(`{{printf "%s" .Version}}`)

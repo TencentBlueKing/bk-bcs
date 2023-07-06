@@ -23,7 +23,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// error code to be compatible with interfaces in bcs-api
+// error code to be compitable with interfaces in bcs-api
 const (
 	httpCodeClientError       = 400
 	httpCodeUnauthorizedError = 401

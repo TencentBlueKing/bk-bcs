@@ -34,7 +34,6 @@ type DeploymentFilter struct {
 
 const deploymentNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t DeploymentFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, deploymentNestedTimeLayout)
 }

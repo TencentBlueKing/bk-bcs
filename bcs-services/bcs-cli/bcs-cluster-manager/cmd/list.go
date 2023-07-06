@@ -61,5 +61,6 @@ func listClusterCmd() *cobra.Command {
 	}
 	subCmd.PersistentFlags().StringVarP(&request.ClusterName, "cluster_name", "n", "",
 		"the name of cluster")
+	// TODO 待继续补全
 	return subCmd
 }

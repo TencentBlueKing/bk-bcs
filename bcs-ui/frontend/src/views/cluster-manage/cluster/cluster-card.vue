@@ -48,71 +48,18 @@
               <ul slot="content" class="bg-[#fff]">
                 <li class="bcs-dropdown-item" @click="handleGotoClusterOverview(cluster)">{{$t('集群总览')}}</li>
                 <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'info')">{{$t('基本信息')}}</li>
-                <!-- vCluster集群 -->
-                <template v-if="cluster.clusterType === 'virtual'">
-                  <li
-                    class="bcs-dropdown-item"
-                    @click="handleGotoClusterDetail(cluster, 'quota')">
-                    {{ $t('配额管理') }}
-                  </li>
-                </template>
-                <!-- 其他集群 -->
-                <template v-else>
-                  <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'network')">{{$t('网络配置')}}</li>
-                  <li
-                    class="bcs-dropdown-item"
-                    @click="handleGotoClusterDetail(cluster, 'master')">
-                    {{$t('Master配置')}}
-                  </li>
-                  <li
-                    class="bcs-dropdown-item"
-                    v-authority="{
-                      clickable: perms[cluster.clusterID]
-                        && perms[cluster.clusterID].cluster_manage,
-                      actionId: 'cluster_manage',
-                      resourceName: cluster.clusterName,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: curProject.projectID,
-                        cluster_id: cluster.clusterID
-                      }
-                    }"
-                    key="nodeList"
-                    :disabled="cluster.clusterCategory === 'importer'"
-                    @click="handleGotoClusterNode(cluster)">
-                    {{$t('节点列表')}}
-                  </li>
-                  <li
-                    class="bcs-dropdown-item"
-                    v-if="clusterExtraInfo
-                      && clusterExtraInfo[cluster.clusterID]
-                      && clusterExtraInfo[cluster.clusterID].autoScale"
-                    key="ca"
-                    v-authority="{
-                      clickable: perms[cluster.clusterID]
-                        && perms[cluster.clusterID].cluster_manage,
-                      actionId: 'cluster_manage',
-                      resourceName: cluster.clusterName,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: curProject.projectID,
-                        cluster_id: cluster.clusterID
-                      }
-                    }"
-                    @click="handleGotoClusterCA(cluster)">
-                    {{$t('弹性扩缩容')}}
-                  </li>
-                </template>
-                <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
-                <li class="bcs-dropdown-item" @click="handleGotoWebConsole(cluster)">WebConsole</li>
-                <!-- vCluster集群删除 -->
+                <li class="bcs-dropdown-item" @click="handleGotoClusterDetail(cluster, 'network')">{{$t('网络配置')}}</li>
                 <li
                   class="bcs-dropdown-item"
-                  key="deletevCluster"
+                  @click="handleGotoClusterDetail(cluster, 'master')">
+                  {{$t('Master配置')}}
+                </li>
+                <li
+                  class="bcs-dropdown-item"
                   v-authority="{
                     clickable: perms[cluster.clusterID]
-                      && perms[cluster.clusterID].cluster_delete,
-                    actionId: 'cluster_delete',
+                      && perms[cluster.clusterID].cluster_manage,
+                    actionId: 'cluster_manage',
                     resourceName: cluster.clusterName,
                     disablePerms: true,
                     permCtx: {
@@ -120,11 +67,30 @@
                       cluster_id: cluster.clusterID
                     }
                   }"
-                  @click="handleDeleteCluster(cluster)"
-                  v-if="cluster.clusterType === 'virtual'">
-                  {{$t('删除')}}
+                  key="nodeList"
+                  :disabled="cluster.clusterCategory === 'importer'"
+                  @click="handleGotoClusterNode(cluster)">
+                  {{$t('节点列表')}}
                 </li>
-                <!-- 其他集群删除 -->
+                <li
+                  class="bcs-dropdown-item"
+                  key="ca"
+                  v-authority="{
+                    clickable: perms[cluster.clusterID]
+                      && perms[cluster.clusterID].cluster_manage,
+                    actionId: 'cluster_manage',
+                    resourceName: cluster.clusterName,
+                    disablePerms: true,
+                    permCtx: {
+                      project_id: curProject.projectID,
+                      cluster_id: cluster.clusterID
+                    }
+                  }"
+                  @click="handleGotoClusterCA(cluster)">
+                  {{$t('弹性扩缩容')}}
+                </li>
+                <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
+                <li class="bcs-dropdown-item" @click="handleGotoWebConsole(cluster)">WebConsole</li>
                 <li
                   :class="[
                     'bcs-dropdown-item',
@@ -147,8 +113,7 @@
                     disabled: !clusterNodesMap[cluster.clusterID] || clusterNodesMap[cluster.clusterID].length === 0,
                     placement: 'right'
                   }"
-                  @click="handleDeleteCluster(cluster)"
-                  v-else>
+                  @click="handleDeleteCluster(cluster)">
                   {{$t('删除')}}
                 </li>
               </ul>
@@ -175,14 +140,8 @@
           <div
             class="flex flex-col items-center"
             v-if="['INITIALIZATION', 'DELETING'].includes(cluster.status)">
-            <LoadingCell class="w-[32px] h-[32px]" />
-            <p class="mt-[8px]">
-              {{
-                clusterCurrentTaskDataMap[cluster.clusterID]
-                  ? clusterCurrentTaskDataMap[cluster.clusterID].taskName
-                  : statusTextMap[cluster.status]
-              }}
-            </p>
+            <LoadingCell class="bk-spin-loading-large" />
+            <p class="mt-[6px]">{{ statusTextMap[cluster.status] }}</p>
             <bk-button
               text
               class="text-[12px] mt-[4px]"
@@ -215,17 +174,11 @@
           </div>
           <!-- 正常 -->
           <template v-else-if="cluster.status === 'RUNNING'">
-            <!-- 指标信息(虚拟集群不展示磁盘信息) -->
+            <!-- 指标信息 -->
             <div
               v-for="item, index in clusterMetricList"
               :key="item.metric"
-              :class="[
-                'h-[28px] w-full',
-                {
-                  mb20: index < (clusterMetricList.length - 1),
-                  'opacity-0': cluster.clusterType === 'virtual' && item.metric === 'disk_usage'
-                }
-              ]">
+              :class="['h-[28px] w-full', { mb20: index < (clusterMetricList.length - 1) }]">
               <div class="flex place-content-between">
                 <span>{{item.title}}</span>
                 <span class="text-[#979BA5]">
@@ -301,10 +254,6 @@ export default defineComponent({
       default: '',
     },
     clusterNodesMap: {
-      type: Object,
-      default: () => ({}),
-    },
-    clusterCurrentTaskDataMap: {
       type: Object,
       default: () => ({}),
     },

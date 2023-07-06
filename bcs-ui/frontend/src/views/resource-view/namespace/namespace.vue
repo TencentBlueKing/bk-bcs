@@ -137,8 +137,8 @@
                 }"
                 v-bk-tooltips="{
                   content: `${$t('{used} / {total} (已使用/总量)', {
-                    used: row.used ? `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}GiB` : 0,
-                    total: `${row.quota.memoryLimits}B`,
+                    used: row.used ? `${unitConvert(row.used.memoryLimits, 'Gi', 'mem')}Gi` : 0,
+                    total: row.quota.memoryLimits,
                   })}`
                 }"
               ></bcs-round-progress>

@@ -141,7 +141,7 @@ func TestPerm_CanDeleteNamespace(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestCanCreateNSScopedResource(t *testing.T) {
+func TestPerm_CanCreateNamespaceScopedResource(t *testing.T) {
 	cli, err := newBcsNamespacePermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -160,7 +160,7 @@ func TestCanCreateNSScopedResource(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestCanViewNamespaceScopedResource(t *testing.T) {
+func TestPerm_CanViewNamespaceScopedResource(t *testing.T) {
 	cli, err := newBcsNamespacePermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -179,7 +179,7 @@ func TestCanViewNamespaceScopedResource(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestCanUpdateNSScopedResource(t *testing.T) {
+func TestPerm_CanUpdateNamespaceScopedResource(t *testing.T) {
 	cli, err := newBcsNamespacePermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -198,7 +198,7 @@ func TestCanUpdateNSScopedResource(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestCanDeleteNSScopedResource(t *testing.T) {
+func TestPerm_CanDeleteNamespaceScopedResource(t *testing.T) {
 	cli, err := newBcsNamespacePermCli()
 	if err != nil {
 		t.Fatal(err)

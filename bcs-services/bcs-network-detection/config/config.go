@@ -18,7 +18,7 @@ import "github.com/Tencent/bk-bcs/bcs-common/common/types"
 
 // Config xxx
 type Config struct {
-	// address, example: 127.0.0.1
+	// address, exmaple: 127.0.0.1
 	Address string
 	// port
 	Port uint

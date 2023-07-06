@@ -33,7 +33,7 @@ var defaultCommonOption = &cloudprovider.CommonOption{
 	},
 }
 
-func TestGetCVMImageIDByImageName(t *testing.T) {
+func TestNodeManager_GetCVMImageIDByImageName(t *testing.T) {
 	imageName1 := "Tencent tlinux xxx"
 	imageID, err := nodeManager.GetCVMImageIDByImageName(imageName1, &cloudprovider.CommonOption{
 		Account: &cmproto.Account{

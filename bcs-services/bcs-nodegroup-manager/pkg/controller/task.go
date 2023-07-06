@@ -123,9 +123,9 @@ func (c *taskController) handleNormalTask() {
 			blog.Errorf("[taskController] strategy %s consumerID is empty", strategy.Name)
 			continue
 		}
-		task, listErr := c.opt.ResourceManager.ListTasks(strategy.ResourcePool, strategy.ElasticNodeGroups[0].ConsumerID, nil)
+		task, err := c.opt.ResourceManager.ListTasks(strategy.ResourcePool, strategy.ElasticNodeGroups[0].ConsumerID, nil)
 		if err != nil {
-			blog.Errorf("[taskController] get strategy %s tasks err:%s", strategy.Name, listErr.Error())
+			blog.Errorf("[taskController] get strategy %s tasks err:%s", strategy.Name, err.Error())
 			return
 		}
 		if task != nil && len(task) != 0 {
@@ -145,7 +145,7 @@ func (c *taskController) handleNormalTask() {
 	terminatedTasks := c.getTerminatedTasks(tasks, scaleDownTaskList)
 	for _, task := range terminatedTasks {
 		task.Status = storage.TaskFinishedState
-		_, err = c.opt.Storage.UpdateTask(task, &storage.UpdateOptions{})
+		_, err := c.opt.Storage.UpdateTask(task, &storage.UpdateOptions{})
 		if err != nil {
 			blog.Errorf("[taskController]update task %s status to terminated failed:%s", task.TaskID, err.Error())
 			return
@@ -162,7 +162,6 @@ func (c *taskController) handleNormalTask() {
 }
 
 func (c *taskController) handleOneNormalTask(task *storage.ScaleDownTask) {
-	var err error
 	// only update info from resource manager
 	updateTask := &storage.ScaleDownTask{
 		TaskID:            task.TaskID,
@@ -174,7 +173,7 @@ func (c *taskController) handleOneNormalTask(task *storage.ScaleDownTask) {
 		UpdatedTime:       time.Now(),
 		Status:            task.Status,
 	}
-	updateTask, err = c.opt.Storage.UpdateTask(updateTask, &storage.UpdateOptions{
+	updateTask, err := c.opt.Storage.UpdateTask(updateTask, &storage.UpdateOptions{
 		CreateIfNotExist: true,
 	})
 	if err != nil {
@@ -198,16 +197,16 @@ func (c *taskController) handleOneNormalTask(task *storage.ScaleDownTask) {
 		//检查nodegroup里带标签的节点跟切片里的是否一致，不在切片里但有标签的，去掉
 		//如果执行时间在1小时内，不操作？
 		wg := sync.WaitGroup{}
-		pool, initErr := ants.NewPool(c.opt.Concurrency)
+		pool, err := ants.NewPool(c.opt.Concurrency)
 		if err != nil {
-			blog.Errorf("[taskController] task controller internal error, ants.NewPool failed: %s", initErr.Error())
+			blog.Errorf("[taskController] task controller internal error, ants.NewPool failed: %s", err.Error())
 			return
 		}
 		defer pool.Release()
 		for _, scaleDownDetail := range updateTask.ScaleDownGroups {
 			wg.Add(1)
 			detail := scaleDownDetail
-			err = pool.Submit(func() {
+			err := pool.Submit(func() {
 				c.removeNotReadyNodes(detail, task.TaskID)
 				wg.Done()
 			})
@@ -219,7 +218,7 @@ func (c *taskController) handleOneNormalTask(task *storage.ScaleDownTask) {
 		blog.Infof("[taskController] finish check task %s node status", task.TaskID)
 	} else {
 		// 数量不一致，要重选ip
-		if err = c.nodeSelector(updateTask); err != nil {
+		if err := c.nodeSelector(updateTask); err != nil {
 			blog.Errorf("[taskController] execute task %s node select failed:%s", task.TaskID, err.Error())
 			return
 		}
@@ -308,7 +307,6 @@ func checkExpiredTask(tasks []*storage.ScaleDownTask) []*storage.ScaleDownTask {
 }
 
 func (c *taskController) handleOneExpiredTask(task *storage.ScaleDownTask) error {
-	var err error
 	strategyName := task.NodeGroupStrategy
 	strategyDetail, err := c.opt.Storage.GetNodeGroupStrategy(strategyName, &storage.GetOptions{})
 	if err != nil {
@@ -317,7 +315,7 @@ func (c *taskController) handleOneExpiredTask(task *storage.ScaleDownTask) error
 	// clear scale up action
 	blog.Infof("[taskController] clean up scale up action")
 	for _, nodegroup := range strategyDetail.ElasticNodeGroups {
-		if _, err = c.opt.Storage.DeleteNodeGroupAction(&storage.NodeGroupAction{
+		if _, err := c.opt.Storage.DeleteNodeGroupAction(&storage.NodeGroupAction{
 			NodeGroupID: nodegroup.NodeGroupID,
 			Event:       storage.ScaleUpState,
 		}, &storage.DeleteOptions{}); err != nil {
@@ -344,7 +342,7 @@ func (c *taskController) handleOneExpiredTask(task *storage.ScaleDownTask) error
 			UpdatedTime:        time.Now(),
 			IsDeleted:          false,
 		}
-		_, err = c.opt.Storage.UpdateNodeGroupAction(action, &storage.UpdateOptions{CreateIfNotExist: true})
+		_, err := c.opt.Storage.UpdateNodeGroupAction(action, &storage.UpdateOptions{CreateIfNotExist: true})
 		if err != nil {
 			blog.Errorf("[taskController] update scaleDown by task action err. taskID:%s, nodegroupID:%s, clusterID:%s, "+
 				"err:%s", task.TaskID, scaleDownDetail.NodeGroupID, scaleDownDetail.ClusterID, err.Error())
@@ -359,16 +357,16 @@ func (c *taskController) handleOneExpiredTask(task *storage.ScaleDownTask) error
 			Message:     fmt.Sprintf("trigger by task %s", task.TaskID),
 			IsDeleted:   false,
 		}
-		if err = c.opt.Storage.CreateNodeGroupEvent(event, &storage.CreateOptions{}); err != nil {
+		if err := c.opt.Storage.CreateNodeGroupEvent(event, &storage.CreateOptions{}); err != nil {
 			// event only used for administrator tracing issue manually.
 			// failure of event operation is tolerable.
 			blog.Errorf("[taskController] controller create nodegroup %s scaleDown record failure, info: %s."+
 				"failure is tolerable, controller try best effort for next event record",
 				scaleDownDetail.NodeGroupID, err.Error())
 		}
-		nodegroupInfo, getErr := c.opt.Storage.GetNodeGroup(scaleDownDetail.NodeGroupID, &storage.GetOptions{})
+		nodegroupInfo, err := c.opt.Storage.GetNodeGroup(scaleDownDetail.NodeGroupID, &storage.GetOptions{})
 		if err != nil {
-			return fmt.Errorf("get nodegroup %s error:%s", scaleDownDetail.NodeGroupID, getErr.Error())
+			return fmt.Errorf("get nodegroup %s error:%s", scaleDownDetail.NodeGroupID, err.Error())
 		}
 		nodegroupInfo.DesiredSize = nodegroupInfo.DesiredSize - scaleDownDetail.NodeNum
 		nodegroupInfo.UpdatedTime = time.Now()
@@ -376,7 +374,7 @@ func (c *taskController) handleOneExpiredTask(task *storage.ScaleDownTask) error
 		nodegroupInfo.Status = storage.ScaleDownByTaskState
 		nodegroupInfo.HookConfirm = false
 		nodegroupInfo.Message = fmt.Sprintf("scale down %d nodes by task %s", scaleDownDetail.NodeNum, task.TaskID)
-		if _, err = c.opt.Storage.UpdateNodeGroup(nodegroupInfo, &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}); err != nil {
+		if _, err := c.opt.Storage.UpdateNodeGroup(nodegroupInfo, &storage.UpdateOptions{OverwriteZeroOrEmptyStr: true}); err != nil {
 			return fmt.Errorf("update nodegroup %s desire size error:%s", scaleDownDetail.NodeGroupID, err.Error())
 		}
 	}

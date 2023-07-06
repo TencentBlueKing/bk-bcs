@@ -234,7 +234,7 @@ func (s *Storage) List(cxt context.Context, key string, selector storage.Selecto
 	return objs, nil
 }
 
-// Close storage connection, clean resource
+// Close storage conenction, clean resource
 func (s *Storage) Close() {
 	blog.V(3).Infof("etcd storage %s exit.", s.pathPrefix)
 	s.client.Close()

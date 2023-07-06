@@ -15,16 +15,20 @@ package gcp
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"runtime"
 	"strconv"
+	"strings"
 	"time"
-
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/compute/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 )
 
 // SdkWrapper wrapper for gcp sdk
@@ -101,6 +105,105 @@ func NewSdkWrapperWithSecretIDKey(credentials []byte) (*SdkWrapper, error) {
 	sw := &SdkWrapper{}
 	sw.credentials = credentials
 	return NewSdkWrapper()
+}
+
+func (sw *SdkWrapper) loadEnv() error {
+	if len(sw.credentials) == 0 {
+		sw.credentials = []byte(os.Getenv(EnvNameGCPCredentials))
+	}
+
+	qpsStr := os.Getenv(EnvNameGCPRateLimitQPS)
+	if len(qpsStr) != 0 {
+		qps, err := strconv.ParseInt(qpsStr, 10, 64)
+		if err != nil {
+			blog.Warnf("parse rate limit qps %s failed, err %s, use default %d",
+				qpsStr, err.Error(), defaultThrottleQPS)
+			sw.ratelimitqps = int64(defaultThrottleQPS)
+		} else {
+			sw.ratelimitqps = qps
+		}
+	} else {
+		sw.ratelimitqps = int64(defaultThrottleQPS)
+	}
+
+	bucketSizeStr := os.Getenv(EnvNameGCPRateLimitBucketSize)
+	if len(bucketSizeStr) != 0 {
+		bucketSize, err := strconv.ParseInt(bucketSizeStr, 10, 64)
+		if err != nil {
+			blog.Warnf("parse rate limit bucket size %s failed, err %s, use default %d",
+				bucketSizeStr, err.Error(), defaultBucketSize)
+			sw.ratelimitbucketSize = int64(defaultBucketSize)
+		} else {
+			sw.ratelimitbucketSize = bucketSize
+		}
+	} else {
+		sw.ratelimitbucketSize = int64(defaultBucketSize)
+	}
+	return nil
+}
+
+// call tryThrottle before each api call
+func (sw *SdkWrapper) tryThrottle() {
+	now := time.Now()
+	sw.throttler.Accept()
+	if latency := time.Since(now); latency > maxLatency {
+		pc, _, _, _ := runtime.Caller(2)
+		callerName := runtime.FuncForPC(pc).Name()
+		blog.Infof("Throttling request took %d ms, function: %s", latency, callerName)
+	}
+}
+
+// IsNotFound returns true if the error is resource not found
+func IsNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+	ae, ok := err.(*googleapi.Error)
+	return ok && ae.Code == http.StatusNotFound
+}
+
+// Wait wait for cloud api async
+func (sw *SdkWrapper) Wait(ctx context.Context, project string, op *compute.Operation) error {
+	tk := time.NewTicker(defaultPollingInterval)
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-tk.C:
+			var resp *compute.Operation
+			var err error
+			blog.Infof("wait for operation %s", op.Name)
+			if op.Region != "" {
+				regionStrs := strings.Split(op.Region, "/")
+				region := regionStrs[len(regionStrs)-1]
+				resp, err = sw.computeService.RegionOperations.Get(project, region, op.Name).Context(ctx).Do()
+			}
+			if op.Zone != "" {
+				zoneStrs := strings.Split(op.Zone, "/")
+				zone := zoneStrs[len(zoneStrs)-1]
+				resp, err = sw.computeService.ZoneOperations.Get(project, zone, op.Name).Context(ctx).Do()
+			} else {
+				resp, err = sw.computeService.GlobalOperations.Get(project, op.Name).Context(ctx).Do()
+			}
+			if err != nil {
+				blog.Errorf("wait for operation %s failed, err %s", op.Name, err.Error())
+				return err
+			}
+			if resp == nil {
+				return fmt.Errorf("operation %s not found", op.Name)
+			}
+			if resp.Status == "DONE" {
+				if resp.Error != nil {
+					e, err := resp.Error.MarshalJSON()
+					if err != nil {
+						return err
+					}
+					return fmt.Errorf("operation %s failed, error: %s", resp.Name, string(e))
+				}
+				return nil
+			}
+		}
+	}
 }
 
 // GetAddress get address by name, if region is Global, it will get global address
@@ -220,12 +323,11 @@ func (sw *SdkWrapper) CreateNetworkEndpointGroups(project, zone, name, network, 
 		return fmt.Errorf(errMsg)
 	}
 
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	if inErr := sw.Wait(ctx, project, op); inErr != nil {
+	if err := sw.Wait(ctx, project, op); err != nil {
 		mf(metrics.LibCallStatusTimeout)
-		errMsg := fmt.Sprintf("CreateNetworkEndpointGroups failed, err %s", inErr.Error())
+		errMsg := fmt.Sprintf("CreateNetworkEndpointGroups failed, err %s", err.Error())
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
@@ -256,14 +358,13 @@ func (sw *SdkWrapper) DeleteNetworkEndpointGroups(project, zone, name string) er
 		return err
 	}
 
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	if inErr := sw.Wait(ctx, project, op); inErr != nil {
+	if err := sw.Wait(ctx, project, op); err != nil {
 		mf(metrics.LibCallStatusTimeout)
-		errMsg := fmt.Sprintf("DeleteNetworkEndpointGroups failed, err %s", inErr.Error())
+		errMsg := fmt.Sprintf("DeleteNetworkEndpointGroups failed, err %s", err.Error())
 		blog.Errorf(errMsg)
-		return inErr
+		return err
 	}
 
 	blog.V(3).Infof("DeleteNetworkEndpointGroups response: %s", common.ToJsonString(op))
@@ -384,12 +485,11 @@ func (sw *SdkWrapper) CreateHealthChecks(project string, healthCheck *compute.He
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	if inErr := sw.Wait(ctx, project, resp); inErr != nil {
+	if err := sw.Wait(ctx, project, resp); err != nil {
 		mf(metrics.LibCallStatusTimeout)
-		errMsg := fmt.Sprintf("CreateHealthChecks failed, err %s", inErr.Error())
+		errMsg := fmt.Sprintf("CreateHealthChecks failed, err %s", err.Error())
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
@@ -420,12 +520,11 @@ func (sw *SdkWrapper) UpdateHealthChecks(project string, healthCheck *compute.He
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	if inErr := sw.Wait(ctx, project, resp); inErr != nil {
+	if err := sw.Wait(ctx, project, resp); err != nil {
 		mf(metrics.LibCallStatusTimeout)
-		errMsg := fmt.Sprintf("UpdateHealthChecks failed, err %s", inErr.Error())
+		errMsg := fmt.Sprintf("UpdateHealthChecks failed, err %s", err.Error())
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
@@ -482,7 +581,6 @@ func (sw *SdkWrapper) CreateBackendService(project string, backendService *compu
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -570,7 +668,6 @@ func (sw *SdkWrapper) CreateURLMap(project string, urlMap *compute.UrlMap) error
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -632,7 +729,6 @@ func (sw *SdkWrapper) CreateTargetHTTPProxy(project string, targetHTTPProxy *com
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -694,7 +790,6 @@ func (sw *SdkWrapper) CreateTargetHTTPSProxy(project string, targetHTTPSProxy *c
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -731,7 +826,6 @@ func (sw *SdkWrapper) PatchBackendService(project, name string, backendService *
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -821,7 +915,6 @@ func (sw *SdkWrapper) AttachNetworkEndpoints(project, zone, name string, endpoin
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -859,7 +952,6 @@ func (sw *SdkWrapper) DetachNetworkEndpoints(project, zone, name string, endpoin
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -895,7 +987,6 @@ func (sw *SdkWrapper) PatchURLMaps(project, name string, urlMap *compute.UrlMap)
 		blog.Errorf(errMsg)
 		return fmt.Errorf(errMsg)
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -931,7 +1022,6 @@ func (sw *SdkWrapper) DeleteForwardingRules(project, name string) error {
 		blog.Errorf(errMsg)
 		return err
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -967,7 +1057,6 @@ func (sw *SdkWrapper) DeleteURLMaps(project, name string) error {
 		blog.Errorf(errMsg)
 		return err
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -1003,7 +1092,6 @@ func (sw *SdkWrapper) DeleteTargetHTTPProxy(project, name string) error {
 		blog.Errorf(errMsg)
 		return err
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -1039,7 +1127,6 @@ func (sw *SdkWrapper) DeleteTargetHTTPSProxy(project, name string) error {
 		blog.Errorf(errMsg)
 		return err
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -1075,7 +1162,6 @@ func (sw *SdkWrapper) DeleteHealthCheck(project, name string) error {
 		blog.Errorf(errMsg)
 		return err
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {
@@ -1111,7 +1197,6 @@ func (sw *SdkWrapper) DeleteBackendService(project, name string) error {
 		blog.Errorf(errMsg)
 		return err
 	}
-	// add default timeout to rpc call
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	if err := sw.Wait(ctx, project, resp); err != nil {

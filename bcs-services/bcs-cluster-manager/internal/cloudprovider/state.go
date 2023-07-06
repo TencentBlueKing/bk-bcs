@@ -148,7 +148,7 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 			}
 			// check this step is ok
 			if step.Status != TaskStatusSuccess {
-				// ok = false
+				ok = false
 				break
 			}
 		}

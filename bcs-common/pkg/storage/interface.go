@@ -15,7 +15,6 @@ package storage
 
 import (
 	"errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
 
@@ -50,7 +49,7 @@ type Storage interface {
 	// param selector: filter for origin data in storage, nil means no filter
 	// return watch.Interface: interface instance for watch
 	Watch(ctx context.Context, key, version string, selector Selector) (watch.Interface, error)
-	// WatchList xx
+	// WatchList TODO
 	// Watch begin to watch all items under key directory
 	// param ctx: reserved
 	// param key: specified key for watching
@@ -69,6 +68,6 @@ type Storage interface {
 	// param ignoreNotFound: no error returns when setting true even nil object
 	// param selector: filter for origin data in storage, nil means no filter
 	List(ctx context.Context, key string, selector Selector) (objs []meta.Object, err error)
-	// Close storage connection, clean resource
+	// Close storage conenction, clean resource
 	Close()
 }

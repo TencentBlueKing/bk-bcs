@@ -67,7 +67,6 @@ func ReportBcsWebhookServerAPIMetrics(handler, method, status string, started ti
 	requestLatencyAPI.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
 }
 
-// NOCC:tosa/fn_length(设计如此)
 // ReportBcsWebhookServerPluginLantency report call plugin lantency
 func ReportBcsWebhookServerPluginLantency(pluginName, status string, started time.Time) {
 	pluginLatency.WithLabelValues(pluginName, status).Observe(time.Since(started).Seconds())

@@ -23,6 +23,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/cache-service"
 	pbbase "bscp.io/pkg/protocol/core/base"
+	"bscp.io/pkg/runtime/filter"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/types"
 
@@ -182,8 +183,22 @@ func (ob *observer) doLoop(startCursor uint32) {
 const step = 200
 
 func (ob *observer) listEvents(kt *kit.Kit, startCursor uint32) (uint32, []*types.EventMeta, error) {
+	ft := &filter.Expression{
+		Op: filter.And,
+		Rules: []filter.RuleFactory{&filter.AtomRule{
+			Field: "id",
+			Op:    filter.GreaterThan.Factory(),
+			Value: startCursor,
+		}},
+	}
+
+	pb, err := ft.MarshalPB()
+	if err != nil {
+		return 0, nil, fmt.Errorf("marshal pb expression failed, err: %v", err)
+	}
+
 	opt := &pbcs.ListEventsReq{
-		StartCursor: startCursor,
+		Filter: pb,
 		Page: &pbbase.BasePage{
 			Start: 0,
 			Limit: step,

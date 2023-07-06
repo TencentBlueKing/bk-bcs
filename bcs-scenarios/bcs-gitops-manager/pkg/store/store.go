@@ -47,9 +47,7 @@ type Store interface {
 	CreateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
 	GetCluster(ctx context.Context, name string) (*v1alpha1.Cluster, error)
 	ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error)
-	ListClustersByProject(ctx context.Context, project string) (*v1alpha1.ClusterList, error)
 	UpdateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
-	DeleteCluster(ctx context.Context, name string) error
 
 	// Repository interface
 	GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error)
@@ -61,8 +59,6 @@ type Store interface {
 
 	// authentication token
 	GetToken(ctx context.Context) string
-
-	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application) error
 }
 
 // NewStore create storage client

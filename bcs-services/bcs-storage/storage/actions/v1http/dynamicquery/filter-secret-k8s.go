@@ -28,7 +28,6 @@ type SecretK8sFilter struct {
 
 const secretK8sNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t SecretK8sFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, secretK8sNestedTimeLayout)
 }

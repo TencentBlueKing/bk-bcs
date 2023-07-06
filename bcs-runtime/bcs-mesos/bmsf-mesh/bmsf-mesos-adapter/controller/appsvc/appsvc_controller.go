@@ -73,6 +73,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// TODO(user): Modify this to be the types you create
 	// Uncomment watch a Deployment created by AppSvc - change this for objects you create
 	return nil
 }
@@ -90,6 +91,7 @@ type ReconcileAppSvc struct {
 
 // Reconcile reads that state of the cluster for a AppSvc object and makes changes based on the state read
 // and what is in the AppSvc.Spec
+// TODO(user): Modify this Reconcile function to implement your Controller logic.  The scaffolding writes
 // a Deployment as an example
 // Automatically generate RBAC rules to allow the Controller to read and write Deployments
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
@@ -141,11 +143,13 @@ func (r *ReconcileAppSvc) handleQueue() {
 			default:
 				blog.Warnf("ReconcilerAppSvc get unknown Event Type: %s.", event.Type)
 			}
+			// todo(DeveloperJim) default info for timeout?
 		}
 	}
 }
 
 // onAdd add new AppSvc to kube-apiserver
+// todo(DeveloperJim): push event queue back when operation failed?
 func (r *ReconcileAppSvc) onAdd(svc *meshv1.AppSvc) {
 	instance := &meshv1.AppSvc{}
 	key, kerr := client.ObjectKeyFromObject(svc)
@@ -161,7 +165,7 @@ func (r *ReconcileAppSvc) onAdd(svc *meshv1.AppSvc) {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Object not found, create new one directly
-			if err = r.Create(context.TODO(), svc); err != nil {
+			if err := r.Create(context.TODO(), svc); err != nil {
 				blog.Errorf("ReconcileAppSvc create new AppSvc %s failed, %s", key.String(), err.Error())
 				return
 			}
@@ -202,7 +206,7 @@ func (r *ReconcileAppSvc) onUpdate(svc *meshv1.AppSvc) {
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Object not found, create new one directly
-			if err = r.Create(context.TODO(), svc); err != nil {
+			if err := r.Create(context.TODO(), svc); err != nil {
 				blog.Errorf("ReconcileAppSvc create new AppSvc %s on EventUpated failed, %s", key.String(), err.Error())
 				return
 			}

@@ -56,7 +56,6 @@ func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) 
 	})
 }
 
-// UpdateMany update many
 func UpdateMany(ctx context.Context, resourceType string, condition *operator.Condition, data interface{}) error {
 	// 创建连接
 	db := lib.NewStore(
@@ -160,7 +159,6 @@ func DoRelation(ctx context.Context, opt *lib.StoreGetOption, data operator.M, i
 	return UpdateMany(ctx, resourceType, opt.Cond, data)
 }
 
-// QueryHost query host
 func QueryHost(ctx context.Context, condition *operator.Condition) ([]operator.M, error) {
 	// option
 	opt := &lib.StoreGetOption{
@@ -171,7 +169,6 @@ func QueryHost(ctx context.Context, condition *operator.Condition) ([]operator.M
 	return GetData(ctx, tableName, opt)
 }
 
-// PutHostToDB put host to db
 func PutHostToDB(ctx context.Context, data operator.M, cond *operator.Condition) error {
 	// option
 	opt := &lib.StorePutOption{
@@ -183,7 +180,6 @@ func PutHostToDB(ctx context.Context, data operator.M, cond *operator.Condition)
 	return PutData(ctx, tableName, data, opt)
 }
 
-// RemoveHost remove host
 func RemoveHost(ctx context.Context, condition *operator.Condition) error {
 	// option
 	opt := &lib.StoreRemoveOption{

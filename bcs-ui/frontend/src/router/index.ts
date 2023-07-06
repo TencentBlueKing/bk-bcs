@@ -110,17 +110,6 @@ const router = new VueRouter({
   ],
 });
 
-// 自定义back逻辑
-VueRouter.prototype.back = () => {
-  if (window.history.length <= 2) {
-    router.push({
-      name: $store.state.curSideMenu?.route || 'home',
-    });
-  } else {
-    router.go(-1);
-  }
-};
-
 const cancelRequest = async () => {
   const allRequest = http.queue.get();
   const requestQueue = allRequest.filter(request => request.cancelWhenRouteChange);

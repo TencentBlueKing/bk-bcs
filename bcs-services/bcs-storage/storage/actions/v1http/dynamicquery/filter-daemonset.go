@@ -33,7 +33,6 @@ type DaemonSetFilter struct {
 
 const daemonSetNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t DaemonSetFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, daemonSetNestedTimeLayout)
 }

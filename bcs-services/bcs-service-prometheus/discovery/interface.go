@@ -31,15 +31,20 @@ const (
 
 // Discovery interface for prometheus discovery
 type Discovery interface {
+	// Start TODO
+	// start
 	Start() error
 
-	// GetPrometheusSdConfig get prometheus service discovery config
+	// GetPrometheusSdConfig TODO
+	// get prometheus service discovery config
 	GetPrometheusSdConfig(module string) ([]*types.PrometheusSdConfig, error)
 
-	// GetPromSdConfigFile get prometheus sd config file path
+	// GetPromSdConfigFile TODO
+	// get prometheus sd config file path
 	GetPromSdConfigFile(module string) string
 
-	// RegisterEventFunc register event handle function
+	// RegisterEventFunc TODO
+	// register event handle function
 	RegisterEventFunc(handleFunc EventHandleFunc)
 }
 

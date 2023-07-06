@@ -107,7 +107,6 @@ func NewHttpClientWithConfiguration(ctx context.Context) *HttpClient {
 	return &HttpClient{
 		&http.Client{
 			Transport: &http.Transport{
-				// NOCC:gas/tls(client工具)
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		},

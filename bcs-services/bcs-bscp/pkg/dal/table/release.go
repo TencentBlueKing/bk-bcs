@@ -36,29 +36,14 @@ type Release struct {
 	// ID is an auto-increased value, which is a unique identity
 	// of a commit.
 	ID         uint32             `db:"id" json:"id"`
-	Spec       *ReleaseSpec       `db:"spec" json:"spec" gorm:"embedded"`
-	Attachment *ReleaseAttachment `db:"attachment" json:"attachment" gorm:"embedded"`
-	Revision   *CreatedRevision   `db:"revision" json:"revision" gorm:"embedded"`
+	Spec       *ReleaseSpec       `db:"spec" json:"spec"`
+	Attachment *ReleaseAttachment `db:"attachment" json:"attachment"`
+	Revision   *CreatedRevision   `db:"revision" json:"revision"`
 }
 
 // TableName is the release's database table name.
 func (r Release) TableName() Name {
 	return ReleaseTable
-}
-
-// AppID AuditRes interface
-func (r *Release) AppID() uint32 {
-	return r.Attachment.AppID
-}
-
-// ResID AuditRes interface
-func (r *Release) ResID() uint32 {
-	return r.ID
-}
-
-// ResType AuditRes interface
-func (r *Release) ResType() string {
-	return "release"
 }
 
 // ValidateCreate a release's information
@@ -98,37 +83,19 @@ func (r Release) ValidateCreate() error {
 var ReleaseSpecColumns = mergeColumns(ReleaseSpecColumnDescriptor)
 
 // ReleaseSpecColumnDescriptor is ReleaseSpec's column descriptors.
-var ReleaseSpecColumnDescriptor = mergeColumnDescriptors("",
-	ColumnDescriptors{
-		{Column: "name", NamedC: "name", Type: enumor.String},
-		{Column: "memo", NamedC: "memo", Type: enumor.String},
-		{Column: "deprecated", NamedC: "deprecated", Type: enumor.Boolean},
-		{Column: "publish_num", NamedC: "publish_num", Type: enumor.Numeric},
-	},
-	mergeColumnDescriptors("hook", HookColumnDescriptor))
+var ReleaseSpecColumnDescriptor = ColumnDescriptors{
+	{Column: "name", NamedC: "name", Type: enumor.String},
+	{Column: "memo", NamedC: "memo", Type: enumor.String},
+	{Column: "deprecated", NamedC: "deprecated", Type: enumor.Boolean},
+	{Column: "publish_num", NamedC: "publish_num", Type: enumor.Numeric}}
 
-var HookColumnDescriptor = ColumnDescriptors{
-	{Column: "pre_hook_id", NamedC: "pre_hook_id", Type: enumor.Numeric},
-	{Column: "pre_hook_release_id", NamedC: "pre_hook_release_id", Type: enumor.Numeric},
-	{Column: "post_hook_id", NamedC: "post_hook_id", Type: enumor.Numeric},
-	{Column: "post_hook_release_id", NamedC: "post_hook_release_id", Type: enumor.Numeric},
-}
-
-// ReleaseSpec defines all the specifics related with a release, which is set by user.
+// ReleaseSpec defines all the specifics related with a release, which is
+// set by user.
 type ReleaseSpec struct {
-	Name       string       `db:"name" json:"name"`
-	Memo       string       `db:"memo" json:"memo"`
-	Deprecated bool         `db:"deprecated" json:"deprecated"`
-	PublishNum uint32       `db:"publish_num" json:"publish_num"`
-	Hook       *ReleaseHook `db:"hook" json:"hook" gorm:"embedded"`
-}
-
-// ReleaseHook is a resource's resource hook
-type ReleaseHook struct {
-	PreHookID         uint32 `db:"pre_hook_id" json:"pre_hook_id" gorm:"pre_hook_id"`
-	PreHookReleaseID  uint32 `db:"pre_hook_release_id" json:"pre_hook_release_id" gorm:"pre_hook_release_id"`
-	PostHookID        uint32 `db:"post_hook_id" json:"post_hook_id" gorm:"post_hook_id"`
-	PostHookReleaseID uint32 `db:"post_hook_release_id" json:"post_hook_release_id" gorm:"post_hook_release_id"`
+	Name       string `db:"name" json:"name"`
+	Memo       string `db:"memo" json:"memo"`
+	Deprecated bool   `db:"deprecated" json:"deprecated"`
+	PublishNum uint32 `db:"publish_num" json:"publish_num"`
 }
 
 // Validate a release specifics when it is created.
@@ -186,8 +153,8 @@ var ReleaseAttachmentColumnDescriptor = ColumnDescriptors{
 
 // ReleaseAttachment defines release related information.
 type ReleaseAttachment struct {
-	BizID uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
-	AppID uint32 `db:"app_id" json:"app_id" gorm:"column:app_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id"`
+	AppID uint32 `db:"app_id" json:"app_id"`
 }
 
 // IsEmpty test whether this release attachment is empty or not.

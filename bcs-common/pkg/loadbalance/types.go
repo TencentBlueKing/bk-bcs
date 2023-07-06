@@ -15,7 +15,6 @@ package loadbalance
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 // NewPtrExportService create default ExportService
@@ -46,13 +45,8 @@ type ExportPort struct {
 
 // DeepCopy copy src to dst by json
 func DeepCopy(src, dst *ExportService) {
-	dataBytes, err := json.Marshal(src)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	if err = json.Unmarshal(dataBytes, dst); err != nil {
-		fmt.Println(err.Error())
-	}
+	dataBytes, _ := json.Marshal(src)
+	json.Unmarshal(dataBytes, dst)
 }
 
 // ExportService info to hold export service

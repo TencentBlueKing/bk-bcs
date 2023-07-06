@@ -72,10 +72,6 @@ func makeRequest(ctx context.Context) {
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/", nil)
-	if err != nil {
-		fmt.Printf("new request failed, err:%v\n", err)
-		return
-	}
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {

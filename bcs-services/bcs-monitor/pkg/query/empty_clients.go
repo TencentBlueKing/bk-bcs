@@ -26,61 +26,57 @@ import (
 
 // 此包中实现thanos的metadata，target，rule，exemplar 的proxy接口 替换掉query模块中的各种各个用不到的模块
 
-// ErrNotImplement xxx
-var ErrNotImplement = errors.New("api not implement")
+// NotImplementErr xxx
+var NotImplementErr = errors.New("api not implement")
 
 // NewEmptyMetaDataClient xxx
-func NewEmptyMetaDataClient() *EmptyMetadataClient {
-	return &EmptyMetadataClient{}
+func NewEmptyMetaDataClient() *emptyMetadataClient {
+	return &emptyMetadataClient{}
 }
 
 // NewEmptyTargetClient :
-func NewEmptyTargetClient() *EmptyTargetClient {
-	return &EmptyTargetClient{}
+func NewEmptyTargetClient() *emptyTargetClient {
+	return &emptyTargetClient{}
 }
 
 // NewEmptyRuleClient :
-func NewEmptyRuleClient() *EmptyRuleClient {
-	return &EmptyRuleClient{}
+func NewEmptyRuleClient() *emptyRuleClient {
+	return &emptyRuleClient{}
 }
 
 // NewEmptyExemplarClient :
-func NewEmptyExemplarClient() *EmptyExemplarClient {
-	return &EmptyExemplarClient{}
+func NewEmptyExemplarClient() *emptyExemplarClient {
+	return &emptyExemplarClient{}
 }
 
-// EmptyMetadataClient empty metadata client
-type EmptyMetadataClient struct{}
+type emptyMetadataClient struct{}
 
 // MetricMetadata :
-func (e *EmptyMetadataClient) MetricMetadata(_ context.Context, _ *metadatapb.MetricMetadataRequest) (
+func (e *emptyMetadataClient) MetricMetadata(_ context.Context, _ *metadatapb.MetricMetadataRequest) (
 	map[string][]metadatapb.Meta, storage.Warnings, error) {
-	return nil, []error{ErrNotImplement}, nil
+	return nil, []error{NotImplementErr}, nil
 }
 
-// EmptyTargetClient empty target client
-type EmptyTargetClient struct{}
+type emptyTargetClient struct{}
 
 // Targets :
-func (e *EmptyTargetClient) Targets(_ context.Context, _ *targetspb.TargetsRequest) (*targetspb.TargetDiscovery,
+func (e *emptyTargetClient) Targets(_ context.Context, _ *targetspb.TargetsRequest) (*targetspb.TargetDiscovery,
 	storage.Warnings, error) {
-	return nil, []error{ErrNotImplement}, nil
+	return nil, []error{NotImplementErr}, nil
 }
 
-// EmptyRuleClient empty rule client
-type EmptyRuleClient struct{}
+type emptyRuleClient struct{}
 
 // Rules :
-func (e *EmptyRuleClient) Rules(_ context.Context, _ *rulespb.RulesRequest) (*rulespb.RuleGroups, storage.Warnings,
+func (e *emptyRuleClient) Rules(_ context.Context, _ *rulespb.RulesRequest) (*rulespb.RuleGroups, storage.Warnings,
 	error) {
-	return nil, []error{ErrNotImplement}, nil
+	return nil, []error{NotImplementErr}, nil
 }
 
-// EmptyExemplarClient empty exemplar client
-type EmptyExemplarClient struct{}
+type emptyExemplarClient struct{}
 
 // Exemplars :
-func (e *EmptyExemplarClient) Exemplars(_ context.Context, _ *exemplarspb.ExemplarsRequest) (
+func (e *emptyExemplarClient) Exemplars(_ context.Context, _ *exemplarspb.ExemplarsRequest) (
 	[]*exemplarspb.ExemplarData, storage.Warnings, error) {
-	return nil, []error{ErrNotImplement}, nil
+	return nil, []error{NotImplementErr}, nil
 }

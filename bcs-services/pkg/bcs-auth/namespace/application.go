@@ -135,8 +135,8 @@ type NamespaceScopedApplicationAction struct {
 	Data     []ProjectNamespaceData
 }
 
-// BuildNSScopedAppInstance build namespace scoped resource application
-func BuildNSScopedAppInstance(nsAppAction NamespaceScopedApplicationAction) iam.ApplicationAction {
+// BuildNamespaceScopedApplicationInstance build namespace scoped resource application
+func BuildNamespaceScopedApplicationInstance(nsAppAction NamespaceScopedApplicationAction) iam.ApplicationAction {
 	nsApp := utils.ClusterApplication{ActionID: nsAppAction.ActionID}
 	// namespace resource support one system, need to build multi instances if use extra system resource
 	instances := NamespaceScopedInstances{

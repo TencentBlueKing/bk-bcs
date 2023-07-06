@@ -58,9 +58,7 @@ func (b *ManifestRespBuilder) BuildList() (map[string]interface{}, error) {
 		uid, _ := mapx.GetItems(item.(map[string]interface{}), "metadata.uid")
 		manifestExt[uid.(string)] = formatFunc(item.(map[string]interface{}))
 	}
-	// 处理pod资源manifest返回数据过多问题
-	newManifest := formatter.FormatPodManifestRes(b.kind, b.manifest)
-	return map[string]interface{}{"manifest": newManifest, "manifestExt": manifestExt}, nil
+	return map[string]interface{}{"manifest": b.manifest, "manifestExt": manifestExt}, nil
 }
 
 // Build ...

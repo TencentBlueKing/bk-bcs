@@ -15,10 +15,8 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"runtime"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/server"
@@ -27,7 +25,6 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	rand.Seed(time.Now().UnixNano())
 
 	// create option object
 	op := options.NewServerOption()

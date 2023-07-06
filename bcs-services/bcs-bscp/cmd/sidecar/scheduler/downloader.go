@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	// Note: consider config these options.
+	// TODO: consider config these options.
 	defaultSwapBufferSize              = 2 * 1024 * 1024
 	defaultRangeDownloadByteSize       = 5 * defaultSwapBufferSize
 	requestAwaitResponseTimeoutSeconds = 10
@@ -174,7 +174,7 @@ func (dl *downloader) Download(vas *kit.Vas, downloadUri string, fileSize uint64
 }
 
 func (dl *downloader) initClient() *http.Client {
-	// Note: find a way to manage these configuration options.
+	// TODO: find a way to manage these configuration options.
 	transport := &http.Transport{
 		Proxy:               http.ProxyFromEnvironment,
 		TLSHandshakeTimeout: 5 * time.Second,
@@ -184,7 +184,7 @@ func (dl *downloader) initClient() *http.Client {
 			KeepAlive: 30 * time.Second,
 		}).Dial,
 		MaxIdleConnsPerHost: 10,
-		// Note: confirm this
+		// TODO: confirm this
 		ResponseHeaderTimeout: 15 * time.Minute,
 	}
 
@@ -333,7 +333,7 @@ func (exec *execDownload) downloadWithRange() error {
 	// calculate the total parts to be downloaded
 	totalParts := int(exec.fileSize / batchSize)
 	if (exec.fileSize % batchSize) > 0 {
-		totalParts++
+		totalParts += 1
 	}
 
 	var hitError error
@@ -352,7 +352,7 @@ func (exec *execDownload) downloadWithRange() error {
 			end = start + batchSize
 		}
 
-		end--
+		end -= 1
 
 		wg.Add(1)
 

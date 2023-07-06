@@ -202,7 +202,7 @@ func (cm *ClusterManager) initLocker() error {
 		blog.Errorf("init locker failed, err %s", err.Error())
 		return err
 	}
-	blog.Infof("init locker successfully")
+	blog.Infof("init locker successfullly")
 	cm.locker = locker
 	return nil
 }
@@ -326,7 +326,7 @@ func (cm *ClusterManager) initRemoteClient() error {
 	}
 
 	// init gse client
-	if err = gse.SetGseClient(gse.Options{
+	if err := gse.SetGseClient(gse.Options{
 		Enable:     cm.opt.Gse.Enable,
 		AppCode:    cm.opt.Gse.AppCode,
 		AppSecret:  cm.opt.Gse.AppSecret,
@@ -856,12 +856,12 @@ func (cm *ClusterManager) initMicro() error {
 func (cm *ClusterManager) initSignalHandler() {
 	// listen system signal
 	// to run in the container, should not trap SIGTERM
-	interrupt := make(chan os.Signal, 10)
-	signal.Notify(interrupt, syscall.SIGINT)
+	interupt := make(chan os.Signal, 10)
+	signal.Notify(interupt, syscall.SIGINT)
 	go func() {
 		select {
-		case e := <-interrupt:
-			blog.Infof("receive interrupt %s, do close", e.String())
+		case e := <-interupt:
+			blog.Infof("receive interupt %s, do close", e.String())
 			cm.close()
 		case <-cm.stopCh:
 			blog.Infof("stop channel, do close")

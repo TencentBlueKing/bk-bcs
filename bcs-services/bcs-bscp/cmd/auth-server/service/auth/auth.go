@@ -437,13 +437,13 @@ func (a *Auth) parseIamPathToAncestors(iamPath []string) ([]*meta.IamResourceIns
 }
 
 // getInstIDNameMap NOTES
-// Note how to get ancestor names? right now it means cc biz name,  which is not in bscp
+// TODO how to get ancestor names? right now it means cc biz name,  which is not in bscp
 // note that app id is generated in the form of {biz_id}-{app_id}
 // and right now pbds.ListInstancesReq requires biz id to be set, how to confirm this?
 // and return should be grouped by type to avoid duplicates
 // getInstIDNameMap get resource id to name map by resource ids, groups by resource type
 func (a *Auth) getInstIDNameMap(kt *kit.Kit, resTypeIDsMap map[client.TypeID][]string) (map[string]string, error) {
 
-	// Note implement this
+	// TODO implement this
 	return make(map[string]string), nil
 }

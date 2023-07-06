@@ -12,14 +12,13 @@ replace (
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220901090711-36bfa115011f
 	github.com/emicklei/go-restful v2.15.0+incompatible
-	// NOCC:horus-dependency-security(其他:老代码暂时忽略)
-	github.com/satori/go.uuid v1.2.0
 	github.com/json-iterator/go v1.1.12
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.16.0
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
+	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.24.2
 	k8s.io/apiextensions-apiserver v0.24.2

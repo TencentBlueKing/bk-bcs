@@ -21,13 +21,6 @@ import (
 )
 
 const (
-	// KindGameStatefulSet is the kind of GameStatefulSet
-	KindGameStatefulSet = "GameStatefulSet"
-	// ResourceGameStatefulSet is the resource of GameStatefulSet
-	ResourceGameStatefulSet = "gamestatefulsets"
-)
-
-const (
 	// ControllerRevisionHashLabelKey controller revision hash tag
 	ControllerRevisionHashLabelKey = "controller-revision-hash"
 	// GameStatefulSetRevisionLabel controller revision hash tag
@@ -218,7 +211,6 @@ type GameStatefulSetSpec struct {
 	// updateStrategy indicates the StatefulSetUpdateStrategy that will be
 	// employed to update Pods in the StatefulSet when a revision is made to
 	// Template.
-	// +kubebuilder:validation:Required
 	UpdateStrategy GameStatefulSetUpdateStrategy `json:"updateStrategy,omitempty" protobuf:"bytes,7,opt,name=updateStrategy"`
 
 	// PreDeleteUpdateStrategy indicates the PreDeleteUpdateStrategy that will be employed to

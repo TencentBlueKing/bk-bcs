@@ -34,15 +34,15 @@ var GroupAppBindColumnDescriptor = mergeColumnDescriptors("",
 type GroupAppBind struct {
 	// ID is an auto-increased value, which is a group app's
 	// unique identity.
-	ID      uint32 `db:"id" json:"id" gorm:"primaryKey"`
-	GroupID uint32 `db:"group_id" json:"group_id" gorm:"column:group_id"`
-	AppID   uint32 `db:"app_id" json:"app_id" gorm:"column:app_id"`
-	BizID   uint32 `db:"biz_id" json:"biz_id" gorm:"column:biz_id"`
+	ID      uint32 `db:"id" json:"id"`
+	GroupID uint32 `db:"group_id" json:"group_id"`
+	AppID   uint32 `db:"app_id" json:"app_id"`
+	BizID   uint32 `db:"biz_id" json:"biz_id"`
 }
 
 // TableName is the group app's database table name.
-func (c GroupAppBind) TableName() string {
-	return "group_app_binds"
+func (c GroupAppBind) TableName() Name {
+	return GroupAppBindTable
 }
 
 // ValidateCreate validate the group app's specific when create it.

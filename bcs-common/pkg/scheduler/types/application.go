@@ -14,10 +14,9 @@
 package types
 
 import (
-	"time"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos"
 	mesos_master "github.com/Tencent/bk-bcs/bcs-common/pkg/scheduler/mesosproto/mesos/master"
+	"time"
 
 	commtypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 	// "fmt"
@@ -66,7 +65,7 @@ const (
 	APP_STATUS_ERROR         = "Error"
 	APP_STATUS_OPERATING     = "Operating"
 	APP_STATUS_ROLLINGUPDATE = "RollingUpdate"
-	APP_STATUS_UNKNOWN       = "Unknown"
+	APP_STATUS_UNKOWN        = "Unknown"
 	APP_STATUS_ABNORMAL      = "Abnormal"
 )
 
@@ -84,7 +83,7 @@ const (
 
 	TASK_STATUS_RESTARTING = "Restarting"
 
-	TASK_STATUS_UNKNOWN = "Unknown"
+	TASK_STATUS_UNKOWN = "Unknown"
 )
 
 // taskgroup status

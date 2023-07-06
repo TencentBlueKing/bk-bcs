@@ -46,7 +46,7 @@ type Credential map[string]interface{}
 
 // RESTClient client with metrics, ratelimit and
 type RESTClient struct {
-	// Note: change to golang http client, because HttpClient does not have context
+	// TODO: change to golang http client, because HttpClient does not have context
 	httpCli    *httpclient.HttpClient
 	tlsConf    *tls.Config
 	throttle   throttle.RateLimiter

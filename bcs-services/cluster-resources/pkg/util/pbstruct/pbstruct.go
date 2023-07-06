@@ -81,7 +81,6 @@ func Map2pbStruct(m map[string]interface{}) (*spb.Struct, error) {
 
 // interface2pbValue interface -> structpb.Value
 // 参考 structpb.NewValue 实现，添加对 []string 类型的支持，若需要支持更多类型可按需添加
-// NOCC:CCN_threshold(设计如此)
 func interface2pbValue(v interface{}) (*spb.Value, error) {
 	switch v := v.(type) {
 	case nil:

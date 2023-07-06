@@ -17,15 +17,14 @@ package utils
 import (
 	"bufio"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs"
 	"log"
 	"net"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/ipvs"
 )
 
 const (
@@ -111,7 +110,6 @@ func WriteToFile(filePath string, content string) error {
 // SetIpvsStartup xxx
 func SetIpvsStartup(ipvsPersistDir string, toolPath string) error {
 	command := "chmod +x /etc/rc.d/rc.local"
-	// NOCC:(gas/subprocess) 设计如此
 	cmd := exec.Command("/bin/sh", "-c", command)
 	output, err := cmd.Output()
 	if err != nil {

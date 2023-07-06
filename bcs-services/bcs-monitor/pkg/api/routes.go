@@ -29,7 +29,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs" // docs xxx
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logrule"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logcollector"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
 	service_monitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/servicemonitor"
@@ -145,15 +145,13 @@ func registerRoutes(engine *gin.RouterGroup) {
 		route.GET("/telemetry/bkmonitor_agent/", rest.STDRestHandlerFunc(telemetry.IsBKMonitorAgent))
 
 		// bk-log 日志采集规则
-		route.POST("/log_collector/entrypoints", rest.RestHandlerFunc(logrule.GetEntrypoints))
-		route.GET("/log_collector/rules", rest.RestHandlerFunc(logrule.ListLogCollectors))
-		route.POST("/log_collector/rules", rest.RestHandlerFunc(logrule.CreateLogRule))
-		route.GET("/log_collector/rules/:id", rest.RestHandlerFunc(logrule.GetLogRule))
-		route.PUT("/log_collector/rules/:id", rest.RestHandlerFunc(logrule.UpdateLogRule))
-		route.DELETE("/log_collector/rules/:id", rest.RestHandlerFunc(logrule.DeleteLogRule))
-		route.POST("/log_collector/rules/:id/retry", rest.RestHandlerFunc(logrule.RetryLogRule))
-		route.POST("/log_collector/rules/:id/enable", rest.RestHandlerFunc(logrule.EnableLogRule))
-		route.POST("/log_collector/rules/:id/disable", rest.RestHandlerFunc(logrule.DisableLogRule))
+		route.POST("/log_collector/entrypoints", rest.RestHandlerFunc(logcollector.GetEntrypoints))
+		route.GET("/log_collector/rules", rest.RestHandlerFunc(logcollector.ListLogCollectors))
+		route.POST("/log_collector/rules", rest.RestHandlerFunc(logcollector.CreateLogCollector))
+		route.GET("/log_collector/rules/:id", rest.RestHandlerFunc(logcollector.GetCollector))
+		route.PUT("/log_collector/rules/:id", rest.RestHandlerFunc(logcollector.UpdateLogCollector))
+		route.DELETE("/log_collector/rules/:id", rest.RestHandlerFunc(logcollector.DeleteLogCollector))
+		route.POST("/log_collector/rules/:id/conversion", rest.RestHandlerFunc(logcollector.ConvertLogCollector))
 	}
 }
 
@@ -176,7 +174,6 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 		route.GET("/memory_request_usage", rest.RestHandlerFunc(metrics.ClusterMemoryRequestUsage))
 		route.GET("/disk_usage", rest.RestHandlerFunc(metrics.ClusterDiskUsage))
 		route.GET("/diskio_usage", rest.RestHandlerFunc(metrics.ClusterDiskioUsage))
-		route.GET("/pod_usage", rest.RestHandlerFunc(metrics.ClusterPodUsage))
 		route.GET("/nodes/:node/info", rest.RestHandlerFunc(metrics.GetNodeInfo))
 		route.GET("/nodes/:node/overview", rest.RestHandlerFunc(metrics.GetNodeOverview))
 		route.GET("/nodes/:node/cpu_usage", rest.RestHandlerFunc(metrics.GetNodeCPUUsage))

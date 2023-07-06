@@ -27,12 +27,8 @@ import (
 	schedulernodeinfo "k8s.io/kubernetes/pkg/scheduler/nodeinfo"
 )
 
-const (
-	// filterNodeResourceAnnoKey filters nodes when calculating buffer and total resource
-	filterNodeResourceAnnoKey = "io.tencent.bcs.dev/filter-node-resource"
-
-	valueTrue = "true"
-)
+// filterNodeResourceAnnoKey filters nodes when calculating buffer and total resource
+const filterNodeResourceAnnoKey = "io.tencent.bcs.dev/filter-node-resource"
 
 // podInfo contains Pod and score that corresponds to how important it is to handle the pod first.
 type podInfo struct {
@@ -150,10 +146,10 @@ func (estimator *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate 
 		if node.Labels["node.kubernetes.io/instance-type"] == "eklet" {
 			continue
 		}
-		if node.Annotations[filterNodeResourceAnnoKey] == valueTrue {
+		if node.Annotations[filterNodeResourceAnnoKey] == "true" {
 			continue
 		}
-		if node.Labels["node-role.kubernetes.io/master"] == valueTrue {
+		if node.Labels["node-role.kubernetes.io/master"] == "true" {
 			continue
 		}
 		allocatable := nodeInfo.AllocatableResource()

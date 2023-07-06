@@ -15,15 +15,9 @@ package entity
 
 // LogIndex for log index
 type LogIndex struct {
-	ProjectID      string `json:"project_id" bson:"projectID" gorm:"column:project_id"`
-	BizID          int    `json:"biz_id" bson:"bizID" gorm:"column:cc_app_id"`
-	STDDataID      int    `json:"std_data_id" bson:"stdDataID" gorm:"column:std_data_id"`
-	FileDataID     int    `json:"file_data_id" bson:"fileDataID" gorm:"column:file_data_id"`
-	STDIndexSetID  int    `json:"std_index_set_id" bson:"stdIndexSetID" gorm:"column:std_index_set_id"`
-	FileIndexSetID int    `json:"file_index_set_id" bson:"fileIndexSetID" gorm:"column:file_index_set_id"`
-}
-
-// TableName return log index table name
-func (LogIndex) TableName() string {
-	return "datalog_datalogplan"
+	ProjectID      string `json:"project_id" bson:"project_id"`
+	STDDataID      int    `json:"std_data_id" bson:"std_data_id"`
+	FileDataID     int    `json:"file_data_id" bson:"file_data_id"`
+	STDIndexSetID  int    `json:"std_index_set_id" bson:"std_index_set_id"`
+	FileIndexSetID int    `json:"file_index_set_id" bson:"file_index_set_id"`
 }

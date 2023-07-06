@@ -1,12 +1,10 @@
 /* eslint-disable camelcase */
 import { computed, ref, watch, Ref, set, reactive, toRef } from 'vue';
 import useInterval from '@/composables/use-interval';
-import { clusterDetail, cloudNodes, sharedclusters, createVCluster, deleteVCluster } from '@/api/modules/cluster-manager';
+import { clusterDetail, cloudNodes } from '@/api/modules/cluster-manager';
 import $store from '@/store';
 import $router from '@/router';
 import { ICluster } from '@/composables/use-app';
-import $bkMessage from '@/common/bkmagic';
-import $i18n from '@/i18n/i18n-setup';
 
 /**
  * 获取集群列表
@@ -18,28 +16,11 @@ export function useClusterList() {
   const curProjectId = computed(() => $store.getters.curProjectId);
   const clusterExtraInfo = ref({});
   const webAnnotations = ref({ perms: {} });
-  const clusterCurrentTaskDataMap = ref({});
-
-  const { taskList } = useTask();
   // 获取集群列表
   const getClusterList = async () => {
-    const res = await $store.dispatch('cluster/getClusterList', curProjectId.value); // 会自动更新clusterList缓存
+    const res = await $store.dispatch('cluster/getClusterList', curProjectId.value);
     clusterExtraInfo.value = res.clusterExtraInfo || {};
     webAnnotations.value = res.web_annotations || { perms: {} };
-
-    // 获取当前运行中集群的任务详情
-    clusterList.value
-      .forEach((item) => {
-        if (['INITIALIZATION', 'DELETING'].includes(item.status)) {
-          taskList(item).then(({ latestTask }) => {
-            const steps = latestTask?.stepSequence || [];
-            const task = steps.map(step => latestTask?.steps[step]).find(step => step.status === 'RUNNING');
-            clusterCurrentTaskDataMap.value[item.clusterID] = task;
-          });
-        } else {
-          clusterCurrentTaskDataMap.value[item.clusterID] = null;
-        }
-      });
   };
   // 开启轮询
   const { start, stop } = useInterval(getClusterList, 5000);
@@ -55,7 +36,6 @@ export function useClusterList() {
   });
 
   return {
-    clusterCurrentTaskDataMap,
     webAnnotations,
     clusterList,
     curProjectId,
@@ -248,37 +228,5 @@ export function useClusterInfo() {
     clusterAdvanceSettings,
     clusterData,
     extraInfo,
-  };
-}
-
-export function useVCluster() {
-  const loading = ref(false);
-  const sharedClusterList = ref<ICluster[]>([]);
-  async function getSharedclusters() {
-    loading.value = true;
-    sharedClusterList.value = await sharedclusters().catch(() => []);
-    loading.value = false;
-  }
-  async function handleCreateVCluster(params) {
-    const result = await createVCluster(params).catch(() => false);
-    result && $bkMessage({
-      theme: 'success',
-      message: $i18n.t('任务下发成功'),
-    });
-    return result;
-  }
-
-  async function handleDeleteVCluster(params) {
-    const result = await deleteVCluster(params).then(() => true)
-      .catch(() => false);
-    return result;
-  }
-
-  return {
-    loading,
-    sharedClusterList,
-    getSharedclusters,
-    handleCreateVCluster,
-    handleDeleteVCluster,
   };
 }

@@ -57,7 +57,7 @@ func New(opt cc.SidecarUpstream) (Interface, error) {
 	dialOpts := make([]grpc.DialOption, 0)
 	// blocks until the connection is established.
 	dialOpts = append(dialOpts, grpc.WithBlock())
-	// Note: confirm this
+	// TODO: confirm this
 	dialOpts = append(dialOpts, grpc.WithUserAgent("bscp-sidecar"))
 
 	if !opt.TLS.Enable() {
@@ -187,7 +187,7 @@ func (rc *rollingClient) EnableBounce(bounceIntervalHour uint) {
 func (rc *rollingClient) waitForStateChange() {
 	for {
 		if rc.conn.WaitForStateChange(context.TODO(), connectivity.Ready) {
-			// Note: loop and wait and then determine whether we need to create a
+			// TODO: loop and wait and then determine whether we need to create a
 			// new connection
 		}
 	}

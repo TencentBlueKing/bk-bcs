@@ -11,38 +11,55 @@
       type="empty"
       scene="part"
       class="!w-[320px]"
-      v-if="isClusterDataEmpty">
+      v-if="!clusterData.length">
     </bcs-exception>
     <div class="max-h-[400px] overflow-y-auto" v-else>
-      <div v-for="item, index in clusterData" :key="item.type">
-        <CollapseTitle
-          :title="`${item.title} (${item.list.length})`"
-          :collapse="collapseList.includes(item.type)"
+      <CollapseTitle
+        :title="`${$t('独立集群')} (${independentClusterList.length})`"
+        :collapse="independentCollapse"
+        class="px-[16px] mt-[8px]"
+        @click="independentCollapse = !independentCollapse" />
+      <ul class="bg-[#fff] overflow-auto text-[12px] text-[#63656e]" v-show="!independentCollapse">
+        <li
+          v-for="item in independentClusterList"
+          :key="item.clusterID"
           :class="[
-            'px-[16px]',
-            index === 0 ? 'mt-[8px]' : 'mt-[4px]'
+            'px-[40px] cursor-pointer hover:bg-[#eaf3ff] hover:text-[#3a84ff]',
+            {
+              'bg-[#eaf3ff] text-[#3a84ff]': selectable && localValue === item.clusterID
+            }
           ]"
-          @click="handleToggleCollapse(item.type)" />
-        <ul
-          class="bg-[#fff] overflow-auto text-[12px] text-[#63656e]"
-          v-show="!collapseList.includes(item.type)">
+          @click="handleClick(item.clusterID)">
+          <div class="flex flex-col justify-center h-[50px]">
+            <span class="bcs-ellipsis" v-bk-overflow-tips>{{ item.clusterName }}</span>
+            <span class="mt-[8px] text-[#979BA5]">{{ item.clusterID }}</span>
+          </div>
+        </li>
+      </ul>
+      <template v-if="clusterType !== 'independent'">
+        <CollapseTitle
+          :title="`${$t('共享集群')} (${sharedClusterList.length})`"
+          :collapse="sharedCollapse"
+          class="px-[16px] mt-[4px]"
+          @click="sharedCollapse = !sharedCollapse" />
+        <ul class="bg-[#fff] overflow-auto text-[12px] text-[#63656e]" v-show="!sharedCollapse">
           <li
-            v-for="cluster in item.list"
-            :key="cluster.clusterID"
+            v-for="item in sharedClusterList"
+            :key="item.clusterID"
             :class="[
               'px-[40px] cursor-pointer hover:bg-[#eaf3ff] hover:text-[#3a84ff]',
               {
-                'bg-[#eaf3ff] text-[#3a84ff]': selectable && localValue === cluster.clusterID
+                'bg-[#eaf3ff] text-[#3a84ff]': selectable && localValue === item.clusterID
               }
             ]"
-            @click="handleClick(cluster.clusterID)">
+            @click="handleClick(item.clusterID)">
             <div class="flex flex-col justify-center h-[50px]">
-              <span class="bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
-              <span class="mt-[8px] text-[#979BA5]">{{ cluster.clusterID }}</span>
+              <span class="bcs-ellipsis" v-bk-overflow-tips>{{ item.clusterName }}</span>
+              <span class="mt-[8px] text-[#979BA5]">{{ item.clusterID }}</span>
             </div>
           </li>
         </ul>
-      </div>
+      </template>
     </div>
   </div>
 </template>
@@ -58,8 +75,8 @@ const props = defineProps({
     default: '',
   },
   clusterType: {
-    type: [String, Array] as PropType<ClusterType|ClusterType[]>,
-    default: () => ['independent', 'managed'], // 默认只展示独立集群和托管集群
+    type: String as PropType<ClusterType>,
+    default: 'independent', // 默认只展示独立集群
   },
   updateStore: {
     type: Boolean,
@@ -76,10 +93,11 @@ const emits = defineEmits(['change', 'click']);
 const {
   keyword,
   localValue,
-  collapseList,
-  isClusterDataEmpty,
   clusterData,
-  handleToggleCollapse,
+  sharedClusterList,
+  independentClusterList,
+  sharedCollapse,
+  independentCollapse,
   handleClusterChange,
 } = useClusterSelector(emits, props.value, props.clusterType, props.updateStore);
 

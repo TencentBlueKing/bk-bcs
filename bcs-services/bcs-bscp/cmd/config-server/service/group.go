@@ -174,10 +174,24 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 	}
 
 	if len(appIDs) != 0 {
-		laReq := &pbds.ListAppsByIDsReq{
-			Ids: appIDs,
+		laft := &filter.Expression{
+			Op: filter.And,
+			Rules: []filter.RuleFactory{&filter.AtomRule{
+				Field: "id",
+				Op:    filter.In.Factory(),
+				Value: appIDs,
+			}},
 		}
-		laResp, e := s.client.DS.ListAppsByIDs(grpcKit.RpcCtx(), laReq)
+		laftpb, e := laft.MarshalPB()
+		if e != nil {
+			return nil, e
+		}
+		laReq := &pbds.ListAppsReq{
+			BizId:  req.BizId,
+			Filter: laftpb,
+			Page:   &pbbase.BasePage{},
+		}
+		laResp, e := s.client.DS.ListApps(grpcKit.RpcCtx(), laReq)
 		if e != nil {
 			logs.Errorf("list apps failed, err: %v, rid: %s", e, grpcKit.Rid)
 			return nil, e

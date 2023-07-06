@@ -48,4 +48,3 @@ const uiRequest = createRequest({
   prefix: '/bcsapi/v4/ui',
 });
 export const releaseNode = uiRequest('get', '/release_note');
-export const switchLanguage = uiRequest('put', '/switch_language');

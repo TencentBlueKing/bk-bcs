@@ -16,10 +16,9 @@ package v4
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"net/http"
 )
 
 // CreateExecReq xxx
@@ -53,16 +52,12 @@ func (bs *bcsScheduler) CreateContainerExec(clusterId, containerId, hostIp strin
 		return "", err
 	}
 
-	var resp []byte
-	resp, err = bs.requester.Do(
+	resp, err := bs.requester.Do(
 		fmt.Sprintf(bcsSchedulerCreateExecUri, bs.bcsAPIAddress, hostIp),
 		http.MethodPost,
 		data,
 		getClusterIDHeader(clusterId),
 	)
-	if err != nil {
-		return "", err
-	}
 
 	var execResp CreatExecResp
 	err = codec.DecJson(resp, &execResp)

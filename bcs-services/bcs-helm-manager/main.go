@@ -18,7 +18,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	microCfg "github.com/micro/go-micro/v2/config"
 	microYaml "github.com/micro/go-micro/v2/config/encoder/yaml"
@@ -75,10 +74,6 @@ func main() {
 
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
-	}
-	// 初始化 I18N 相关配置
-	if err = i18n.InitMsgMap(); err != nil {
-		blog.Fatalf("init i18n message map failed %s", err.Error())
 	}
 
 	blog.InitLogs(commonConf.LogConfig{

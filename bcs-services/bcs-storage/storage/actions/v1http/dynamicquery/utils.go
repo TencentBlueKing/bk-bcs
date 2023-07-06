@@ -47,7 +47,6 @@ var (
 	}
 )
 
-// DynamicParams dynamic params
 type DynamicParams struct {
 	req       *restful.Request
 	filter    qFilter
@@ -83,7 +82,7 @@ func newReqDynamic(req *restful.Request, filter qFilter, name string) *DynamicPa
 	}
 }
 
-// NewDynamic 创建 动态参数，兼容当前的使用
+//NewDynamic 创建 动态参数，兼容当前的使用
 // data中必须有clusterID、field、offset、limit相关字段
 func NewDynamic(ctx context.Context, filter qFilter, data operator.M, name string, selector []string, offset, limit int,
 ) *DynamicParams {
@@ -239,7 +238,6 @@ func (rd *DynamicParams) generateFilter() error {
 	return nil
 }
 
-// QueryDynamic query dynamic
 func (rd *DynamicParams) QueryDynamic() ([]operator.M, error) {
 	// 生成过滤条件
 	if err := rd.generateFilter(); err != nil {

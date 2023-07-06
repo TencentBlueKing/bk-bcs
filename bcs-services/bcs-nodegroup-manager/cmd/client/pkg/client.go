@@ -57,7 +57,7 @@ func NewNodeGroupMgrCli(ctx context.Context, config *Config) (nodegroupmanager.N
 	md := metadata.New(header)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
-	opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))) // nolint
+	opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})))
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(config.APIServer, opts...)
 	if err != nil {

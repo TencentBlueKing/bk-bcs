@@ -3,10 +3,8 @@ import { RouteConfig } from 'vue-router';
 const Cluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/index.vue');
 // 创建集群
 const ClusterCreate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/cluster-type.vue');
-// 创建腾讯云集群
-const CreateTencentCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/add-cluster.vue');
-// VCluster集群
-const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/add-vcluster.vue');
+// 表单模式
+const CreateFormCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/add-cluster.vue');
 // ee版本创建集群流程
 const CreateFormClusterEE = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-form-cluster-ee.vue');
 // import模式
@@ -45,20 +43,11 @@ export default [
       title: window.i18n.t('添加集群'),
     },
   },
-  // 创建集群
+  // 创建集群 - 表单模式
   {
-    path: 'clusters/tencent',
+    path: 'clusters/form',
     name: 'createFormCluster',
-    component: window.REGION === 'ieod' ? CreateTencentCloudCluster : CreateFormClusterEE,
-    meta: {
-      menuId: 'CLUSTER',
-    },
-  },
-  // 创建VCluster集群
-  {
-    path: 'clusters/vcluster',
-    name: 'createVCluster',
-    component: CreateVCluster,
+    component: window.REGION === 'ieod' ? CreateFormCluster : CreateFormClusterEE,
     meta: {
       menuId: 'CLUSTER',
     },

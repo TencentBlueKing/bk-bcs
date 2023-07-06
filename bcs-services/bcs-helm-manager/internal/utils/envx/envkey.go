@@ -13,6 +13,6 @@
 package envx
 
 var (
-	// LocalIP localIP
+	// LocalIP TODO
 	LocalIP = GetEnv("LOCAL_IP", "")
 )

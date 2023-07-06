@@ -5,6 +5,7 @@ import "bscp.io/pkg/protocol/core/event/event.proto";
 import "bscp.io/pkg/protocol/core/base/base.proto";
 import "bscp.io/pkg/protocol/core/app/app.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
 
 package pbcs;
 
@@ -143,9 +144,9 @@ message CurrentCursorReminderResp {
 }
 
 message ListEventsReq {
-    uint32          startCursor = 1;
+    google.protobuf.Struct filter = 1;
     // max page limit is 200
-    pbbase.BasePage page        = 2;
+    pbbase.BasePage        page   = 2;
 }
 
 message ListEventsResp {

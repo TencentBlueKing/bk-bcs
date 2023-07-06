@@ -13,13 +13,13 @@
 
 package options
 
-// ApiResourceList api resource list struct
+// ApiResourceList
 type ApiResourceList struct {
 	GroupVersion string        `json:"groupVersion"`
 	APIResources []APIResource `json:"apiResources"`
 }
 
-// APIResource api resource struct
+// APIResource
 type APIResource struct {
 	Name       string `json:"Name"`
 	Namespaced bool   `json:"Namespaced"`

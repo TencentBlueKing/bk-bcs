@@ -208,10 +208,10 @@ func CheckCleanNodeGroupNodesStatusTask(taskID string, stepName string) error {
 
 	// wait all nodes to be ready
 	err = cloudprovider.LoopDoFunc(ctx, func() error {
-		np, errPool := cli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
-		if errPool != nil {
+		np, err := cli.DescribeClusterNodePoolDetail(cluster.SystemID, group.CloudNodeGroupID)
+		if err != nil {
 			blog.Errorf("taskID[%s] CheckCleanNodeGroupNodesStatusTask[%s/%s] failed: %v", taskID, group.ClusterID,
-				group.CloudNodeGroupID, errPool)
+				group.CloudNodeGroupID, err)
 			return nil
 		}
 		if np == nil || np.NodeCountSummary == nil {

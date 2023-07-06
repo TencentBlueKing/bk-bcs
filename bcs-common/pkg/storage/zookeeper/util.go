@@ -15,13 +15,12 @@ package zookeeper
 
 import (
 	"fmt"
-	"path"
-	"sync"
-	"time"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
+	"path"
+	"sync"
+	"time"
 
 	"golang.org/x/net/context"
 )
@@ -35,7 +34,7 @@ import (
 // 	defaultWatchCheckPeriod = 60
 // )
 
-// PushWatchEventFn function to dispatch event
+// PushWatchEventFn function to dispath event
 // param EventType: zk event type
 // param string: event path, especially for delete event
 // param []byte: detail data for object, nil when it's deletion
@@ -87,7 +86,7 @@ type Node struct {
 	selfpath          string               // node absolute path
 	config            *Layer               // node config
 	allConfig         map[int]*Layer       // next layer configuration
-	parent            NodeWatch            // parent node for reference
+	parent            NodeWatch            // parent node for refference
 	client            *zkclient.ZkClient   // zookeeper client
 	childrenLock      sync.Mutex           // lock for map
 	children          map[string]NodeWatch // all children's watch

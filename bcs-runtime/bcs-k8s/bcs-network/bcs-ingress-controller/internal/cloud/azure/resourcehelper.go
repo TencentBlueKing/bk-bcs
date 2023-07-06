@@ -69,7 +69,6 @@ const (
 	ResourceTypeSSLProfile resourceType = "sslProfile"
 )
 
-// NewResourceHelper return resource helper
 func NewResourceHelper(subscriptionsID string, resourceGroupName string) *ResourceHelper {
 	return &ResourceHelper{
 		subscriptionsID:   subscriptionsID,

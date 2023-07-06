@@ -118,12 +118,12 @@ func (zkRD *ZkRegDiscv) Discover(path string) (<-chan *DiscoverEvent, error) {
 
 	env := make(chan *DiscoverEvent, 1)
 
-	go zkRD.loopDiscover(discvCtx, path, env)
+	go zkRD.loopDiscover(path, discvCtx, env)
 
 	return env, nil
 }
 
-func (zkRD *ZkRegDiscv) loopDiscover(discvCtx context.Context, path string, env chan *DiscoverEvent) {
+func (zkRD *ZkRegDiscv) loopDiscover(path string, discvCtx context.Context, env chan *DiscoverEvent) {
 	for {
 		discvEnv := &DiscoverEvent{
 			Err: nil,

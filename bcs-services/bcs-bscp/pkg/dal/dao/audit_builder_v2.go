@@ -41,7 +41,6 @@ type AuditPrepare interface {
 	PrepareCreate(obj AuditRes) AuditDo
 	PrepareUpdate(obj, oldObj AuditRes) AuditDo
 	PrepareDelete(obj AuditRes) AuditDo
-	PreparePublish(obj AuditRes) AuditDo
 }
 
 // initAuditBuilderV2 create a new audit builder instance.
@@ -161,27 +160,5 @@ func (ab *AuditBuilderV2) PrepareDelete(obj AuditRes) AuditDo {
 		return ab
 	}
 	ab.toAudit.Detail = string(js)
-	return ab
-}
-
-// PreparePublish 发布配置
-func (ab *AuditBuilderV2) PreparePublish(obj AuditRes) AuditDo {
-	ab.toAudit.ResourceType = enumor.AuditResourceType(obj.ResType())
-	ab.toAudit.ResourceID = obj.ResID()
-	ab.toAudit.Action = enumor.Publish
-	ab.prev = obj
-
-	detail := &table.AuditBasicDetail{
-		Prev:    ab.prev,
-		Changed: nil,
-	}
-
-	js, err := json.Marshal(detail)
-	if err != nil {
-		ab.hitErr = err
-		return ab
-	}
-	ab.toAudit.Detail = string(js)
-
 	return ab
 }

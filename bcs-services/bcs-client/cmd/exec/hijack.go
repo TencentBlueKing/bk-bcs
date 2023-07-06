@@ -16,18 +16,17 @@ package exec
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
+	"github.com/docker/docker/pkg/ioutils"
+	"github.com/moby/term"
 	"io"
 	"runtime"
 	"sync"
-
-	"github.com/docker/docker/pkg/ioutils"
-	"github.com/moby/term"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 )
 
 // The default escape key sequence: ctrl-p, ctrl-q
+// TODO: This could be moved to `pkg/term`.
 var defaultEscapeKeys = []byte{16, 17}
 
 // A hijackedIOStreamer handles copying input to and output from streams to the

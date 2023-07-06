@@ -65,7 +65,7 @@ func (sch *Scheduler) OnAppReleaseChange(event *sfs.ReleaseChangeEvent) {
 	// parse payload according the api version.
 	pl := new(sfs.ReleaseChangePayload)
 	if err := jsoni.Unmarshal(event.Payload, pl); err != nil {
-		// Note: sch.stream.FireEvent()
+		// TODO: sch.stream.FireEvent()
 		logs.Errorf("decode release change event payload failed, skip the event, err: %v, rid: %s", err, event.Rid)
 		return
 	}

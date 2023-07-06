@@ -14,7 +14,7 @@
           <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
             <bk-input
               :maxlength="64"
-              :placeholder="$t('请输入集群名称，不超过64个字符')"
+              :placeholder="$t('仅支持中文、英文、数字和字符{0}, 长短0~64字符', ['-_[]()【】（）'])"
               class="max-w-[600px]"
               v-model.trim="basicInfo.clusterName">
             </bk-input>
@@ -409,6 +409,13 @@ export default defineComponent({
         {
           required: true,
           message: $i18n.t('必填项'),
+          trigger: 'blur',
+        },
+        {
+          validator(value) {
+            return /^[\u4e00-\u9fa50-9a-zA-Z-_[\]()【】（）]+$/g.test(value);
+          },
+          message: $i18n.t('仅支持中文、英文、数字和字符{0}', ['-_[]()【】（）']),
           trigger: 'blur',
         },
       ],

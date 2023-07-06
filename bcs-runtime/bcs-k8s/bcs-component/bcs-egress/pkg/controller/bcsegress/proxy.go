@@ -14,7 +14,7 @@
 package bcsegress
 
 import (
-	"crypto/md5" // NOCC:gas/crypto(设计如此)
+	"crypto/md5"
 	"fmt"
 	"io"
 	"os"
@@ -53,7 +53,7 @@ type Proxy interface {
 	DeleteTCPRule(key string) error
 	UpdateTCPRule(cfg *TCPConfig) error
 
-	// Reload proxy for new configuration. egress is the rule reference why proxy
+	// Reload proxy for new configuration. egress is the rule referrence why proxy
 	// need to reload, proxy stores error information relative to this egress rule
 	// it's convenience for user to check egress last error for decision of reloading again
 	Reload(egress string) error
@@ -285,7 +285,7 @@ func (ngx *Nginx) Reload(egress string) error {
 		return err
 	}
 	// configuration validation
-	if err = ngx.configValidation(output); err != nil {
+	if err := ngx.configValidation(output); err != nil {
 		klog.Errorf("proxy nginx check egress %s new configuration %s failed, %s", egress, output, err.Error())
 		ngx.lastError[egress] = err
 		return err
@@ -348,7 +348,6 @@ func (ngx *Nginx) dataGeneration() *generator {
 
 func (ngx *Nginx) configValidation(filename string) error {
 	command := fmt.Sprintf("%s -t -c %s", ngx.option.ProxyExecutable, filename)
-	// NOCC:gas/subprocess(设计如此)
 	cmd := exec.Command("/bin/sh", "-c", command)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -382,7 +381,6 @@ func md5sum(filename string) (string, error) {
 		return "", fmt.Errorf("Open file %s failed: %s", filename, err.Error())
 	}
 	defer config.Close()
-	// NOCC:gas/crypto(设计如此)
 	md5Block := md5.New()
 	_, err = io.Copy(md5Block, config)
 	if err != nil {
@@ -416,7 +414,6 @@ func (ngx *Nginx) reloadNginx(config string) error {
 	klog.V(3).Infof("Replace config file %s success", config)
 	// ready to reload
 	command := fmt.Sprintf("%s -s reload", ngx.option.ProxyExecutable)
-	// NOCC:gas/subprocess(设计如此)
 	cmd := exec.Command("/bin/sh", "-c", command)
 	output, err := cmd.CombinedOutput()
 	if err != nil {

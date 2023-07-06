@@ -164,7 +164,6 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 }
 
 // UploadHandler 上传文件
-// NOCC:golint/fnsize(设计如此:)
 func (s *service) UploadHandler(c *gin.Context) {
 	authCtx := route.MustGetAuthContext(c)
 	uploadPath := c.PostForm("upload_path")
@@ -486,8 +485,8 @@ func (s *service) CreateContainerPortalSession(c *gin.Context) {
 		return
 	}
 
-	if e := consoleQuery.Validate(); e != nil {
-		msg := i18n.GetMessage(c, "请求参数错误{}", e)
+	if err := consoleQuery.Validate(); err != nil {
+		msg := i18n.GetMessage(c, "请求参数错误{}", err)
 		APIError(c, msg)
 		return
 	}

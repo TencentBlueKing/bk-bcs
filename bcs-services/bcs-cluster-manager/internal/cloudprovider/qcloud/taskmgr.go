@@ -1294,8 +1294,8 @@ func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAuto
 	return task, nil
 }
 
-// BuildSwitchAsOptionStatusTask build switch auto scaler option status task - 开启/关闭集群自动扩缩容
-func (t *Task) BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+// BuildSwitchAutoScalingOptionStatusTask build switch auto scaler option status task - 开启/关闭集群自动扩缩容
+func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	// validate request params
 	if scalingOption == nil {

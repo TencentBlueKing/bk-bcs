@@ -283,8 +283,8 @@ func (bcp *BCSCloudAccountPerm) AuthorizeResourceCreatorPerm(creator string, res
 	return nil
 }
 
-// GetMultiAccountMultiActionPerm only support same instanceSelection
-func (bcp *BCSCloudAccountPerm) GetMultiAccountMultiActionPerm(user, projectID string, accountIDs []string,
+// GetMultiAccountMultiActionPermission only support same instanceSelection
+func (bcp *BCSCloudAccountPerm) GetMultiAccountMultiActionPermission(user, projectID string, accountIDs []string,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bcp == nil {
 		return nil, utils.ErrServerNotInited

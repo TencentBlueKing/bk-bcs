@@ -129,7 +129,7 @@ func (w *watch) loopReceiveWatchedEvent(vas *kit.Vas, wStream pbfs.Upstream_Watc
 
 		if !sfs.IsAPIVersionMatch(event.ApiVersion) {
 			// 此处是不是不应该做版本兼容的校验？
-			// Note: set sidecar unhealthy, offline and exit.
+			// TODO: set sidecar unhealthy, offline and exit.
 			logs.Errorf("watch stream received incompatible event version: %s, rid: %s", event.ApiVersion.Format(),
 				event.Rid)
 			break
@@ -157,7 +157,7 @@ func (w *watch) loopReceiveWatchedEvent(vas *kit.Vas, wStream pbfs.Upstream_Watc
 		}
 	}
 
-	// Note: version is not compatible, do something
+	// TODO: version is not compatible, do something
 
 }
 

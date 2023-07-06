@@ -42,7 +42,6 @@ import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vu
 import BcsEmptyTableStatus from '@/components/empty-table-status.vue';
 import { chainable } from '@/common/util';
 import BcsErrorPlugin from '@/views/app/bcs-error';
-import '@/fonts/svg-icon/iconcool';
 
 Vue.config.devtools = process.env.NODE_ENV === 'development';
 Vue.prototype.$chainable = chainable;

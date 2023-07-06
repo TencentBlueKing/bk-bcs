@@ -30,7 +30,7 @@ type ProjectPlugin struct {
 }
 
 // Init all project sub path handler
-// project plugin is a subRouter, all path registered is relative
+// project plugin is a subRouter, all path registed is relative
 func (plugin *ProjectPlugin) Init() error {
 	// not allow requests
 	// POST /api/v1/projects

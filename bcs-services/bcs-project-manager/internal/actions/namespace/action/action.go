@@ -20,7 +20,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
-// NamespaceAction action for namespace
+//NamespaceAction action for namespace
 type NamespaceAction interface {
 	SyncNamespace(ctx context.Context, req *proto.SyncNamespaceRequest, resp *proto.SyncNamespaceResponse) error
 	WithdrawNamespace(ctx context.Context,

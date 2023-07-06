@@ -243,7 +243,7 @@ func GetRestConfig(k8sConfig *options.K8sConfig) (*rest.Config, error) {
 	}
 	if k8sConfig.Master != "" {
 		glog.Info("k8sConfig.Master is set: %s", k8sConfig.Master)
-		// NOCC:vetshadow/shadow(设计如此:这里err可以被覆盖)
+
 		u, err := url.Parse(k8sConfig.Master)
 		if err != nil {
 			return nil, err

@@ -197,8 +197,7 @@ func (c *PodClient) GetPVCMountInfo(
 		return pvcMountInfo
 	}
 
-	// 参考 https://github.com/kubernetes/kubectl/blob/92206a7303970ac055539a8ba6f93775d5f7643f/pkg/describe/describe.
-	// go#L1605
+	// 参考 https://github.com/kubernetes/kubectl/blob/92206a7303970ac055539a8ba6f93775d5f7643f/pkg/describe/describe.go#L1605
 	for _, pod := range mapx.GetList(ret.UnstructuredContent(), "items") {
 		p := pod.(map[string]interface{})
 		for _, volume := range mapx.GetList(p, "spec.volumes") {
@@ -258,7 +257,7 @@ func (c *PodClient) ExecCommand(
 
 // BatchDelete 批量删除 Pod（需为同一命名空间下的）
 // NOTE 由于 DeleteCollection 是基于 LabelSelector 等而非 PodName，因此这里还是单个单个 Pod 删除
-// 针对较多 Pod 同时删除的场景进行性能优化，比如拆分任务使用 goroutine 执行？
+// TODO 针对较多 Pod 同时删除的场景进行性能优化，比如拆分任务使用 goroutine 执行？
 func (c *PodClient) BatchDelete(
 	ctx context.Context, namespace string, podNames []string, opts metav1.DeleteOptions,
 ) (err error) {

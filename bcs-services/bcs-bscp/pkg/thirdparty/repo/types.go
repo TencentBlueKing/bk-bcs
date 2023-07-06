@@ -133,20 +133,6 @@ type UploadFileReq struct {
 	Content string `json:"content"`
 }
 
-// UploadResp upload response
-// Docs https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/generic/simple.md
-type UploadResp struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    *UploadData `json:"data"`
-}
-
-// UploadResp upload data
-type UploadData struct {
-	Size   int64  `json:"size"` // bkrepo always return 0
-	Sha256 string `json:"sha256"`
-}
-
 // DownloadFileReq is repo download file request struct
 type DownloadFileReq struct {
 	// BizID is business ID
@@ -246,19 +232,19 @@ type NodeOption struct {
 // normal path format: /generic/{project}/bscp-{version}-{biz_id}/file/{file sha256}
 func GenNodePath(opt *NodeOption) (string, error) {
 	if opt == nil {
-		return "", errors.New("option is nil")
+		return "", errf.New(errf.InvalidParameter, "option is nil")
 	}
 
 	if len(opt.Project) == 0 {
-		return "", errors.New("project should > 0")
+		return "", errf.New(errf.InvalidParameter, "project should > 0")
 	}
 
 	if opt.BizID == 0 {
-		return "", errors.New("biz_id should > 0")
+		return "", errf.New(errf.InvalidParameter, "biz_id should > 0")
 	}
 
 	if len(opt.Sign) != 64 {
-		return "", errors.New("file sha256 is not standard format")
+		return "", errf.New(errf.InvalidParameter, "file sha256 is not standard format")
 	}
 
 	repoName, err := GenRepoName(opt.BizID)
@@ -392,27 +378,19 @@ func (de *Decorator) RelativePath(sign string) string {
 	return nodeFrontPath + sign
 }
 
-// Url ..
 func (de *Decorator) Url() string {
 	return ""
 }
-
-// AccessKeyID ..
 func (de *Decorator) AccessKeyID() string {
 	return ""
 }
-
-// SecretAccessKey ..
 func (de *Decorator) SecretAccessKey() string {
 	return ""
 }
-
-// GetRepositoryType ..
 func (de *Decorator) GetRepositoryType() cc.StorageMode {
 	return cc.BkRepo
 }
 
-// DecoratorInter ..
 type DecoratorInter interface {
 	Root() string
 	RepoName() string
@@ -424,7 +402,6 @@ type DecoratorInter interface {
 	GetRepositoryType() cc.StorageMode
 }
 
-// RepositoryTypeInter ..
 type RepositoryTypeInter interface {
 	//IsProjectExist(ctx context.Context) error
 	CreateRepo(ctx context.Context, req *CreateRepoReq) error
@@ -434,20 +411,21 @@ type RepositoryTypeInter interface {
 	QueryMetadata(ctx context.Context, opt *NodeOption) (map[string]string, error)
 }
 
-// GenS3NodeFullPath ..
-func GenS3NodeFullPath(bizID uint32, sign string) (string, error) {
+func GenS3NodeFullPath(path, sign string) (string, error) {
+
+	if len(path) == 0 {
+		return "", errf.New(errf.InvalidParameter, "path is required")
+	}
 	if len(sign) == 0 {
-		return "", errors.New("sign is required")
+		return "", errf.New(errf.InvalidParameter, "sign is required")
 	}
 	if len(sign) != 64 {
-		return "", errors.New("file sha256 is not standard format")
+		return "", errf.New(errf.InvalidParameter, "file sha256 is not standard format")
 	}
 
-	repoName := fmt.Sprintf("bscp-%s-biz-%d", version, bizID)
-	return fmt.Sprintf("/%s%s%s", repoName, nodeFrontPath, sign), nil
+	return fmt.Sprintf("/%s%s%s", path, nodeFrontPath, sign), nil
 }
 
-// UriDecoratorInter ..
 type UriDecoratorInter interface {
 	Init(bizID uint32) DecoratorInter
 }
@@ -486,17 +464,12 @@ type DecoratorS3 struct {
 	secretAccessKey string
 }
 
-// Url ..
 func (de *DecoratorS3) Url() string {
 	return de.url
 }
-
-// AccessKeyID ..
 func (de *DecoratorS3) AccessKeyID() string {
 	return de.accessKeyID
 }
-
-// SecretAccessKey ..
 func (de *DecoratorS3) SecretAccessKey() string {
 	return de.secretAccessKey
 }
@@ -521,7 +494,6 @@ func (de *DecoratorS3) RelativePath(sign string) string {
 	return nodeFrontPath + sign
 }
 
-// GetRepositoryType ..
 func (de *DecoratorS3) GetRepositoryType() cc.StorageMode {
 	return cc.S3
 }

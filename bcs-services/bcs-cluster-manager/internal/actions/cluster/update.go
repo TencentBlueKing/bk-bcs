@@ -70,8 +70,7 @@ func (ua *UpdateAction) getCluster() error {
 	return nil
 }
 
-// validateBaseInfo 检查基本信息
-func (ua *UpdateAction) validateBaseInfo() {
+func (ua *UpdateAction) updateCluster() error {
 	if len(ua.req.ClusterName) != 0 {
 		ua.cluster.ClusterName = ua.req.ClusterName
 	}
@@ -96,8 +95,17 @@ func (ua *UpdateAction) validateBaseInfo() {
 	if len(ua.req.Environment) != 0 {
 		ua.cluster.Environment = ua.req.Environment
 	}
+	if len(ua.req.EngineType) != 0 {
+		ua.cluster.EngineType = ua.req.EngineType
+	}
+	if ua.req.IsExclusive != nil && ua.req.IsExclusive.GetValue() != ua.cluster.IsExclusive {
+		ua.cluster.IsExclusive = ua.req.IsExclusive.GetValue()
+	}
 	if len(ua.req.ClusterType) != 0 {
 		ua.cluster.ClusterType = ua.req.ClusterType
+	}
+	if len(ua.req.FederationClusterID) != 0 {
+		ua.cluster.FederationClusterID = ua.req.FederationClusterID
 	}
 	if ua.req.Labels != nil {
 		ua.cluster.Labels = ua.req.Labels
@@ -105,57 +113,14 @@ func (ua *UpdateAction) validateBaseInfo() {
 	if len(ua.req.Status) != 0 {
 		ua.cluster.Status = ua.req.Status
 	}
-	if len(ua.req.ManageType) != 0 {
-		ua.cluster.ManageType = ua.req.ManageType
-	}
-	if len(ua.req.CreateTime) > 0 {
-		ua.cluster.CreateTime = ua.req.CreateTime
-	}
-	if len(ua.req.Creator) > 0 {
-		ua.cluster.Creator = ua.req.Creator
-	}
-	if len(ua.req.SystemID) != 0 {
-		ua.cluster.SystemID = ua.req.SystemID
-	}
-	if len(ua.req.ModuleID) != 0 {
-		ua.cluster.ModuleID = ua.req.ModuleID
-	}
-	if len(ua.req.Description) > 0 {
-		ua.cluster.Description = ua.req.Description
-	}
-}
-
-// validateAdditionalInfo 检查附加信息
-func (ua *UpdateAction) validateAdditionalInfo() {
-	if len(ua.req.EngineType) != 0 {
-		ua.cluster.EngineType = ua.req.EngineType
-	}
-	if ua.req.IsExclusive != nil && ua.req.IsExclusive.GetValue() != ua.cluster.IsExclusive {
-		ua.cluster.IsExclusive = ua.req.IsExclusive.GetValue()
-	}
-	if len(ua.req.FederationClusterID) != 0 {
-		ua.cluster.FederationClusterID = ua.req.FederationClusterID
-	}
 	if ua.req.BcsAddons != nil {
 		ua.cluster.BcsAddons = ua.req.BcsAddons
 	}
 	if ua.req.ExtraAddons != nil {
 		ua.cluster.ExtraAddons = ua.req.ExtraAddons
 	}
-	if len(ua.req.ImportCategory) > 0 {
-		ua.cluster.ImportCategory = ua.req.ImportCategory
-	}
-	if len(ua.req.CloudAccountID) > 0 {
-		ua.cluster.CloudAccountID = ua.req.CloudAccountID
-	}
-	if len(ua.req.ExtraInfo) > 0 {
-		ua.cluster.ExtraInfo = ua.req.ExtraInfo
-	}
-	if ua.req.IsCommonCluster != nil {
-		ua.cluster.IsCommonCluster = ua.req.IsCommonCluster.GetValue()
-	}
-	if ua.req.IsShared != nil {
-		ua.cluster.IsShared = ua.req.IsShared.GetValue()
+	if len(ua.req.ManageType) != 0 {
+		ua.cluster.ManageType = ua.req.ManageType
 	}
 	if ua.req.NetworkSettings != nil {
 		ua.cluster.NetworkSettings = ua.req.NetworkSettings
@@ -166,23 +131,50 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	if ua.req.ClusterAdvanceSettings != nil {
 		ua.cluster.ClusterAdvanceSettings = ua.req.ClusterAdvanceSettings
 	}
-	if len(ua.req.ClusterCategory) > 0 {
-		ua.cluster.ClusterCategory = ua.req.ClusterCategory
+	if ua.req.NodeSettings != nil {
+		ua.cluster.NodeSettings = ua.req.NodeSettings
 	}
+	if len(ua.req.SystemID) != 0 {
+		ua.cluster.SystemID = ua.req.SystemID
+	}
+
 	if len(ua.req.NetworkType) != 0 {
 		ua.cluster.NetworkType = ua.req.NetworkType
+	}
+
+	if len(ua.req.ModuleID) != 0 {
+		ua.cluster.ModuleID = ua.req.ModuleID
+	}
+	if len(ua.req.Description) > 0 {
+		ua.cluster.Description = ua.req.Description
+	}
+	if len(ua.req.ClusterCategory) > 0 {
+		ua.cluster.ClusterCategory = ua.req.ClusterCategory
 	}
 	if len(ua.req.ExtraClusterID) > 0 {
 		ua.cluster.ExtraClusterID = ua.req.ExtraClusterID
 	}
-	if ua.req.NodeSettings != nil {
-		ua.cluster.NodeSettings = ua.req.NodeSettings
+	if ua.req.IsCommonCluster != nil {
+		ua.cluster.IsCommonCluster = ua.req.IsCommonCluster.GetValue()
 	}
-}
-
-func (ua *UpdateAction) updateCluster() error {
-	ua.validateBaseInfo()
-	ua.validateAdditionalInfo()
+	if ua.req.IsShared != nil {
+		ua.cluster.IsShared = ua.req.IsShared.GetValue()
+	}
+	if len(ua.req.CreateTime) > 0 {
+		ua.cluster.CreateTime = ua.req.CreateTime
+	}
+	if len(ua.req.Creator) > 0 {
+		ua.cluster.Creator = ua.req.Creator
+	}
+	if len(ua.req.ImportCategory) > 0 {
+		ua.cluster.ImportCategory = ua.req.ImportCategory
+	}
+	if len(ua.req.CloudAccountID) > 0 {
+		ua.cluster.CloudAccountID = ua.req.CloudAccountID
+	}
+	if len(ua.req.ExtraInfo) > 0 {
+		ua.cluster.ExtraInfo = ua.req.ExtraInfo
+	}
 
 	for _, ip := range ua.req.Master {
 		if ua.cluster.Master == nil {
@@ -208,7 +200,7 @@ func (ua *UpdateAction) updateCluster() error {
 func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
-	ua.resp.Result = code == common.BcsErrClusterManagerSuccess
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle handles update cluster request
@@ -308,7 +300,7 @@ func (ua *UpdateNodeAction) updateNodes() error {
 func (ua *UpdateNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
-	ua.resp.Result = code == common.BcsErrClusterManagerSuccess
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 	if ua.resp.Data == nil {
 		ua.resp.Data = &cmproto.NodeStatus{}
 	}
@@ -630,7 +622,7 @@ func (ua *AddNodesAction) validate() error {
 func (ua *AddNodesAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
-	ua.resp.Result = code == common.BcsErrClusterManagerSuccess
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle handles update cluster request

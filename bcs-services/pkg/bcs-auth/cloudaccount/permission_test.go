@@ -92,7 +92,7 @@ func TestPerm_GetMultiActionPermission(t *testing.T) {
 	projectID := "b37778ec757544868a01e1f01f07037f"
 	actionIDs := []string{AccountManage.String(), AccountUse.String(), project.ProjectView.String()}
 	accountIDs := []string{"BCS-K8S-15091", "BCS-K8S-15092"}
-	allow, err := cli.GetMultiAccountMultiActionPerm("liming", projectID, accountIDs, actionIDs)
+	allow, err := cli.GetMultiAccountMultiActionPermission("liming", projectID, accountIDs, actionIDs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestPerm_GetMultiActionPermission(t *testing.T) {
 	t.Log(allow)
 }
 
-func TestCanCreateCloudAccount(t *testing.T) {
+func TestBCSCloudAccountPerm_CanCreateCloudAccount(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)
@@ -114,7 +114,7 @@ func TestCanCreateCloudAccount(t *testing.T) {
 	t.Log(allow, url)
 }
 
-func TestAuthorizeResourceCreatorPerm(t *testing.T) {
+func TestBCSCloudAccountPerm_AuthorizeResourceCreatorPerm(t *testing.T) {
 	cli, err := newBcsClusterPermCli()
 	if err != nil {
 		t.Fatal(err)

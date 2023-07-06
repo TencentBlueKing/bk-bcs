@@ -392,7 +392,7 @@ func TransferHostModule(taskID string, stepName string) error {
 		var err error
 		hostIDs, err = nodeManClient.GetHostIDByIPs(bkBizID, ips)
 		if err != nil {
-			blog.Errorf("TransferHostModule %v failed, list nodeman hosts err %s", ips, err.Error())
+			blog.Errorf("TransferHostModule %s failed, list nodeman hosts err %s", err.Error())
 			return err
 		}
 		if len(hostIDs) == len(ips) {
@@ -415,7 +415,7 @@ func TransferHostModule(taskID string, stepName string) error {
 		return nil
 	}
 
-	blog.Infof("TransferHostModule %s successful", taskID)
+	blog.Infof("TransferHostModule %s sucessful", taskID)
 
 	// update step
 	_ = state.UpdateStepSucc(start, stepName)
@@ -468,7 +468,7 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 	ips := strings.Split(nodeIPs, ",")
 	hostIDs, err := nodeManClient.GetHostIDByIPs(bkBizID, ips)
 	if err != nil {
-		blog.Errorf("RemoveHostFromCMDBTask %v failed, list nodeman hosts err %s", ips, err.Error())
+		blog.Errorf("RemoveHostFromCMDBTask %s failed, list nodeman hosts err %s", err.Error())
 		_ = state.SkipFailure(start, stepName, fmt.Errorf("list nodeman hosts err %s", err.Error()))
 		return nil
 	}
@@ -501,7 +501,7 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 		_ = state.SkipFailure(start, stepName, fmt.Errorf("DeleteHost %v failed, %s", hostIDs, err.Error()))
 		return nil
 	}
-	blog.Infof("RemoveHostFromCMDBTask %s successful", taskID)
+	blog.Infof("RemoveHostFromCMDBTask %s sucessful", taskID)
 
 	// update step
 	_ = state.UpdateStepSucc(start, stepName)

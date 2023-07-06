@@ -40,11 +40,11 @@ const (
 type ScopeType string
 
 const (
-	// ScopeProjectId xxx
+	// ScopeProjectId TODO
 	ScopeProjectId ScopeType = "project_id" // 项目Id
-	// ScopeProjectCode xxx
+	// ScopeProjectCode TODO
 	ScopeProjectCode ScopeType = "project_code" // 项目Code
-	// ScopeClusterId xxx
+	// ScopeClusterId TODO
 	ScopeClusterId ScopeType = "cluster_id" // 集群Id
 )
 

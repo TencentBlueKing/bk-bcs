@@ -20,12 +20,11 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/client-go/kubernetes"
-	restclient "k8s.io/client-go/rest"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	m "github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-api/pkg/storages/sqlstore"
+	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 )
 
 // TurnCredentialsIntoConfig xxx
@@ -90,7 +89,7 @@ func makeKubeclient(clusterCredentials *m.ClusterCredentials) (*kubernetes.Clien
 
 func dialTls(host string) error {
 	conf := &tls.Config{
-		InsecureSkipVerify: true, // nolint
+		InsecureSkipVerify: true,
 	}
 	conn, err := tls.Dial("tcp", host, conf)
 	if err != nil {

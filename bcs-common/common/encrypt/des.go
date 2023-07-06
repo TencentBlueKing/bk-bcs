@@ -16,7 +16,7 @@ package encrypt
 import (
 	"bytes"
 	"crypto/cipher"
-	"crypto/des" // nolint
+	"crypto/des"
 	"encoding/base64"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
@@ -44,7 +44,7 @@ func PKCS5UnPadding(origData []byte) []byte {
 // DesEncryptToBase encrypt with priKey simply, out base64 string
 func DesEncryptToBase(src []byte) ([]byte, error) {
 	if len(priKey) != 0 {
-		block, err := des.NewTripleDESCipher([]byte(priKey)) // nolint
+		block, err := des.NewTripleDESCipher([]byte(priKey))
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +62,7 @@ func DesEncryptToBase(src []byte) ([]byte, error) {
 func DesDecryptFromBase(src []byte) ([]byte, error) {
 	if len(priKey) != 0 {
 		ori, _ := base64.StdEncoding.DecodeString(string(src))
-		block, err := des.NewTripleDESCipher([]byte(priKey)) // nolint
+		block, err := des.NewTripleDESCipher([]byte(priKey))
 		if err != nil {
 			return nil, err
 		}

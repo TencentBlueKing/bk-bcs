@@ -60,7 +60,7 @@ func ListLogCollectors(ctx context.Context, clusterID, spaceUID string) ([]ListB
 }
 
 // CreateLogCollectors create log collectors
-func CreateLogCollectors(ctx context.Context, req *CreateBCSCollectorReq) (*CreateBCSCollectorRespData, error) {
+func CreateLogCollectors(ctx context.Context, lc *LogCollector) (*CreateBCSCollectorRespData, error) {
 	url := fmt.Sprintf("%s/create_bcs_collector", config.G.BKLog.APIServer)
 	authInfo, err := component.GetBKAPIAuthorization()
 	if err != nil {
@@ -69,7 +69,7 @@ func CreateLogCollectors(ctx context.Context, req *CreateBCSCollectorReq) (*Crea
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
-		SetBody(req).
+		SetBody(lc).
 		Post(url)
 
 	if err != nil {
@@ -94,8 +94,7 @@ func CreateLogCollectors(ctx context.Context, req *CreateBCSCollectorReq) (*Crea
 }
 
 // UpdateLogCollectors update log collectors
-func UpdateLogCollectors(ctx context.Context, ruleID int, req *UpdateBCSCollectorReq) (*UpdateBCSCollectoRespData,
-	error) {
+func UpdateLogCollectors(ctx context.Context, ruleID int, lc *LogCollector) (*UpdateBCSCollectoRespData, error) {
 	url := fmt.Sprintf("%s/update_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
 	authInfo, err := component.GetBKAPIAuthorization()
 	if err != nil {
@@ -104,7 +103,7 @@ func UpdateLogCollectors(ctx context.Context, ruleID int, req *UpdateBCSCollecto
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
-		SetBody(req).
+		SetBody(lc).
 		Post(url)
 
 	if err != nil {
@@ -159,137 +158,4 @@ func DeleteLogCollectors(ctx context.Context, ruleID int) error {
 			result.GetCode(), result.Message, result.RequestID)
 	}
 	return nil
-}
-
-// RetryLogCollectors retry log collectors
-func RetryLogCollectors(ctx context.Context, ruleID int) error {
-	url := fmt.Sprintf("%s/retry_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
-	authInfo, err := component.GetBKAPIAuthorization()
-	if err != nil {
-		return err
-	}
-	resp, err := component.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Bkapi-Authorization", authInfo).
-		Post(url)
-
-	if err != nil {
-		return err
-	}
-
-	if !resp.IsSuccess() {
-		return errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
-	}
-
-	result := &BaseResp{}
-	err = json.Unmarshal(resp.Body(), result)
-	if err != nil {
-		return errors.Errorf("unmarshal resp body error, %s", err.Error())
-	}
-
-	if !result.IsSuccess() {
-		return errors.Errorf("retry log collectors error, code: %d, message: %s, request_id: %s",
-			result.GetCode(), result.Message, result.RequestID)
-	}
-	return nil
-}
-
-// StartLogCollectors start log collectors
-func StartLogCollectors(ctx context.Context, ruleID int) error {
-	url := fmt.Sprintf("%s/start_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
-	authInfo, err := component.GetBKAPIAuthorization()
-	if err != nil {
-		return err
-	}
-	resp, err := component.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Bkapi-Authorization", authInfo).
-		Post(url)
-
-	if err != nil {
-		return err
-	}
-
-	if !resp.IsSuccess() {
-		return errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
-	}
-
-	result := &BaseResp{}
-	err = json.Unmarshal(resp.Body(), result)
-	if err != nil {
-		return errors.Errorf("unmarshal resp body error, %s", err.Error())
-	}
-
-	if !result.IsSuccess() {
-		return errors.Errorf("start log collectors error, code: %d, message: %s, request_id: %s",
-			result.GetCode(), result.Message, result.RequestID)
-	}
-	return nil
-}
-
-// StopLogCollectors stop log collectors
-func StopLogCollectors(ctx context.Context, ruleID int) error {
-	url := fmt.Sprintf("%s/stop_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
-	authInfo, err := component.GetBKAPIAuthorization()
-	if err != nil {
-		return err
-	}
-	resp, err := component.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Bkapi-Authorization", authInfo).
-		Post(url)
-
-	if err != nil {
-		return err
-	}
-
-	if !resp.IsSuccess() {
-		return errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
-	}
-
-	result := &BaseResp{}
-	err = json.Unmarshal(resp.Body(), result)
-	if err != nil {
-		return errors.Errorf("unmarshal resp body error, %s", err.Error())
-	}
-
-	if !result.IsSuccess() {
-		return errors.Errorf("stop log collectors error, code: %d, message: %s, request_id: %s",
-			result.GetCode(), result.Message, result.RequestID)
-	}
-	return nil
-}
-
-// HasLog check indexSetID has log
-func HasLog(ctx context.Context, indexSetID int) (bool, error) {
-	url := fmt.Sprintf("%s/esquery_search", config.G.BKLog.APIServer)
-	authInfo, err := component.GetBKAPIAuthorization()
-	if err != nil {
-		return false, err
-	}
-	resp, err := component.GetClient().R().
-		SetContext(ctx).
-		SetHeader("X-Bkapi-Authorization", authInfo).
-		SetBody(map[string]interface{}{"index_set_id": indexSetID}).
-		Post(url)
-
-	if err != nil {
-		return false, err
-	}
-
-	if !resp.IsSuccess() {
-		return false, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
-	}
-
-	result := &QueryLogResp{}
-	err = json.Unmarshal(resp.Body(), result)
-	if err != nil {
-		return false, errors.Errorf("unmarshal resp body error, %s", err.Error())
-	}
-
-	if !result.IsSuccess() {
-		return false, errors.Errorf("has log esquery_search error, code: %d, message: %s, request_id: %s",
-			result.GetCode(), result.Message, result.RequestID)
-	}
-	return result.Data.Hits.Total > 0, nil
 }

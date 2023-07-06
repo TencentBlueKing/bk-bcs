@@ -14,7 +14,7 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
+import { defineComponent, ref } from 'vue';
 
 export default defineComponent({
   name: 'StepTabLabel',
@@ -36,9 +36,6 @@ export default defineComponent({
     },
   },
   setup(props) {
-    watch(() => props.active, () => {
-      innerActive.value = props.active;
-    });
     const innerActive = ref(props.active);
     const handleMouseEnter = () => {
       innerActive.value = true;

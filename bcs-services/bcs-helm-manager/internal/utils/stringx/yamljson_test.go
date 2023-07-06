@@ -80,16 +80,9 @@ metadata:
 `
 	var n yaml.MapSlice
 	err := yaml.Unmarshal([]byte(y), &n)
-	if err != nil {
-		t.Error(err)
-	}
 	// fmt.Println(n, err)
 	// fmt.Println(n[2])
-	var out []byte
-	out, err = yaml.Marshal(&n)
-	if err != nil {
-		t.Error(err)
-	}
+	out, err := yaml.Marshal(&n)
 	fmt.Println(string(out), err)
 }
 

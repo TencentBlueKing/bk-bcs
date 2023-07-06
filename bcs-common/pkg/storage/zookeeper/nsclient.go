@@ -16,15 +16,14 @@ package zookeeper
 import (
 	"context"
 	"fmt"
-	"path"
-	"strings"
-	"time"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
+	"path"
+	"strings"
+	"time"
 )
 
 // ZkConfig only data type node config
@@ -215,13 +214,12 @@ func (s *NSClient) Delete(ctx context.Context, key string) (obj meta.Object, err
 // * if key empty, watch all data
 // * if key is namespace, watch all data under namespace
 // * if key is namespace/name, watch detail data
-// watch is Stopped when any error occure, close event channel immediately
+// watch is Stopped when any error occure, close event channel immediatly
 // param cxt: context for background running, not used, only reserved now
 // param version: data version, not used, reserved
 // param selector: labels selector
 // return:
-//
-//	watch: watch implementation for changing event, need to Stop manually
+//  watch: watch implementation for changing event, need to Stop manually
 func (s *NSClient) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface, error) {
 	if strings.HasSuffix(key, "/") {
 		return nil, fmt.Errorf("error key formate")
@@ -341,13 +339,13 @@ func (s *NSClient) List(cxt context.Context, key string, selector storage.Select
 	return outs, nil
 }
 
-// Close storage connection, clean resource
+// Close storage conenction, clean resource
 func (s *NSClient) Close() {
 	blog.V(3).Infof("zookeeper event storage %s exit.", s.prefixPath)
 	s.client.Close()
 }
 
-// getLeafNode recursive get all leaf nodes, pay more attention
+// getLeafNode recursive get all leaf nodes, pay more attension
 func (s *NSClient) getLeafNode(node string) ([]string, error) {
 	if len(node) == 0 {
 		return nil, fmt.Errorf("empty node")

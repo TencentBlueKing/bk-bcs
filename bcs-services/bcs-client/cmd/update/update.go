@@ -80,7 +80,7 @@ func update(c *utils.ClientContext) error {
 	case "crd", "customresourcedefinition":
 		return updateCustomResourceDefinition(c)
 	default:
-		// unknown type, try CustomResource
+		// unkown type, try CustomResource
 		return updateCustomResource(c)
 	}
 }

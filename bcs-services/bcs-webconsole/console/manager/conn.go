@@ -16,12 +16,12 @@ package manager
 import (
 	"context"
 	"encoding/base64"
+	"github.com/gin-gonic/gin"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -83,8 +83,8 @@ func NewRemoteStreamConn(ctx context.Context, wsConn *websocket.Conn, mgr *Conso
 	return conn
 }
 
-// readInputMsg xxx
-func (r *RemoteStreamConn) readInputMsg() <-chan wsMessage {
+// ReadInputMsg xxx
+func (r *RemoteStreamConn) ReadInputMsg() <-chan wsMessage {
 	inputMsgChan := make(chan wsMessage)
 	go func() {
 		defer close(inputMsgChan)
@@ -131,8 +131,7 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	// 打印日志
 	if channel == LogChannel {
 		inputMsg, _ := r.bindMgr.HandleInputMsg(decodeMsg)
-		logger.Infof("UserName=%s  SessionID=%s  Command=%s",
-			r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
+		logger.Infof("UserName=%s  SessionID=%s  Command=%s", r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, string(inputMsg))
 		return nil, nil
 	}
 
@@ -265,7 +264,7 @@ func (r *RemoteStreamConn) WaitStreamDone(podCtx *types.PodContext) error {
 	}
 
 	// start reading
-	r.inputMsgChan = r.readInputMsg()
+	r.inputMsgChan = r.ReadInputMsg()
 
 	// Stream Copy IO, Wait Here
 	err = executor.Stream(remotecommand.StreamOptions{
@@ -366,7 +365,7 @@ func ZhLength(str string) int {
 		if unicode.Is(unicode.Han, i) {
 			length += 2
 		} else {
-			length++
+			length += 1
 		}
 	}
 

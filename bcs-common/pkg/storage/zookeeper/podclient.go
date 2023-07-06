@@ -15,15 +15,14 @@ package zookeeper
 
 import (
 	"fmt"
-	"path"
-	"strings"
-	"time"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/zkclient"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/meta"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/watch"
+	"path"
+	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 )
@@ -247,13 +246,12 @@ func (s *PodClient) recursiveDelete(p string) error {
 // * if key empty, watch all data
 // * if key is namespace, watch all data under namespace
 // * if key is namespace/name, watch detail data based-on application
-// watch is Stopped when any error occure, close event channel immediately
+// watch is Stopped when any error occure, close event channel immediatly
 // param cxt: context for background running, not used, only reserved now
 // param version: data version, not used, reserved
 // param selector: selector for target object data
 // return:
-//
-//	watch: watch implementation for changing event, need to Stop manually
+//  watch: watch implementation for changing event, need to Stop manually
 func (s *PodClient) Watch(cxt context.Context, key, version string, selector storage.Selector) (watch.Interface,
 	error) {
 	if strings.HasSuffix(key, "/") {
@@ -388,7 +386,7 @@ func (s *PodClient) List(cxt context.Context, key string, selector storage.Selec
 	return outs, nil
 }
 
-// Close storage connection, clean resource
+// Close storage conenction, clean resource
 // warnning: if you want to Close client, you have better close Watch first
 func (s *PodClient) Close() {
 	blog.V(3).Infof("podclient zookeeper event storage %s exit.", s.prefixPath)

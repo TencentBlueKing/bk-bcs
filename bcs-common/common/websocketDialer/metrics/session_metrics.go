@@ -66,7 +66,7 @@ var (
 			Namespace: "bcs_api",
 			Subsystem: "session_server",
 			Name:      "total_transmit_bytes",
-			Help:      "Total bytes transmitted",
+			Help:      "Total bytes transmited",
 		},
 		[]string{"clientkey"},
 	)
@@ -77,7 +77,7 @@ var (
 			Namespace: "bcs_api",
 			Subsystem: "session_server",
 			Name:      "total_transmit_error_bytes",
-			Help:      "Total error bytes transmitted",
+			Help:      "Total error bytes transmited",
 		},
 		[]string{"clientkey"},
 	)

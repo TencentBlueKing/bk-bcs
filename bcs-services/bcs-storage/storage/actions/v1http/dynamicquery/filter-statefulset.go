@@ -34,7 +34,6 @@ type StatefulSetFilter struct {
 
 const statefulSetNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t StatefulSetFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, statefulSetNestedTimeLayout)
 }

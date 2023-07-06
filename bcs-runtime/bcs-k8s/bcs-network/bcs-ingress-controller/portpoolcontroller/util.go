@@ -15,7 +15,6 @@ package portpoolcontroller
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	netextv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -31,18 +30,4 @@ func checkListenerLabels(labels map[string]string, portPoolName, itemName string
 	}
 
 	return true
-}
-
-func checkPortPoolStatus(pool *netextv1.PortPool) string {
-	statusReady := true
-	for _, ts := range pool.Status.PoolItemStatuses {
-		if ts.Status != constant.PortPoolItemStatusReady {
-			statusReady = false
-			break
-		}
-	}
-	if statusReady {
-		return constant.PortPoolStatusReady
-	}
-	return constant.PortPoolStatusNotReady
 }

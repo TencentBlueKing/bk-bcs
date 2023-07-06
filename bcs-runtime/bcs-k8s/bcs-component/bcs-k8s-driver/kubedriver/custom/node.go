@@ -16,9 +16,9 @@ package custom
 import (
 	"fmt"
 
-	"github.com/gofrs/uuid"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 // ServiceNode is node info for bcs services.
@@ -42,8 +42,7 @@ func NewServiceNode(info types.ServerInfo) ServiceNode {
 
 // PrimaryKey key for indexer
 func (n *ServiceNode) PrimaryKey() string {
-	u, _ := uuid.NewV4()
-	return fmt.Sprintf("%s", u.String())
+	return fmt.Sprintf("%s", uuid.NewV4())
 }
 
 // Payload content length

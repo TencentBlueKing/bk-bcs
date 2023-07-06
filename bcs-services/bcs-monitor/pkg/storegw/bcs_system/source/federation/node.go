@@ -21,73 +21,67 @@ import (
 )
 
 // GetNodeInfo 节点信息
-func (m *Federation) GetNodeInfo(ctx context.Context, projectID, clusterID, node string, t time.Time) (*base.NodeInfo,
+func (m *Federation) GetNodeInfo(ctx context.Context, projectId, clusterId, node string, t time.Time) (*base.NodeInfo,
 	error) {
 	return nil, nil
 }
 
 // GetNodeCPUUsage 节点CPU使用率
-func (m *Federation) GetNodeCPUUsage(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+func (m *Federation) GetNodeCPUUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeCPURequestUsage 节点CPU装箱率
-func (m *Federation) GetNodeCPURequestUsage(ctx context.Context, projectID, clusterID, node string,
-	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+func (m *Federation) GetNodeCPURequestUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeMemoryUsage 节点内存使用率
-func (m *Federation) GetNodeMemoryUsage(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+func (m *Federation) GetNodeMemoryUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeMemoryRequestUsage 节点内存装箱率
-func (m *Federation) GetNodeMemoryRequestUsage(ctx context.Context, projectID, clusterID, node string,
-	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+func (m *Federation) GetNodeMemoryRequestUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeDiskUsage 节点磁盘使用率
-func (m *Federation) GetNodeDiskUsage(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+func (m *Federation) GetNodeDiskUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeDiskioUsage 接触磁盘IO使用率
-func (m *Federation) GetNodeDiskioUsage(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+func (m *Federation) GetNodeDiskioUsage(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodePodCount PodCount
-func (m *Federation) GetNodePodCount(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
-	step time.Duration) ([]*prompb.TimeSeries, error) {
-	return nil, nil
-}
-
-// GetNodePodTotal PodTotal
-func (m *Federation) GetNodePodTotal(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+func (m *Federation) GetNodePodCount(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeContainerCount 容器数量
-func (m *Federation) GetNodeContainerCount(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+func (m *Federation) GetNodeContainerCount(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeNetworkTransmit 网络发送量
-func (m *Federation) GetNodeNetworkTransmit(ctx context.Context, projectID, clusterID, node string,
-	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
+func (m *Federation) GetNodeNetworkTransmit(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
+	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }
 
 // GetNodeNetworkReceive 节点网络接收量
-func (m *Federation) GetNodeNetworkReceive(ctx context.Context, projectID, clusterID, node string, start, end time.Time,
+func (m *Federation) GetNodeNetworkReceive(ctx context.Context, projectId, clusterId, node string, start, end time.Time,
 	step time.Duration) ([]*prompb.TimeSeries, error) {
 	return nil, nil
 }

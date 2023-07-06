@@ -23,7 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -54,7 +54,7 @@ func (a *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 		Name:        ns.GetName(),
 		Uid:         string(ns.GetUID()),
 		Status:      string(ns.Status.Phase),
-		CreateTime:  ns.GetCreationTimestamp().Format(constant.TimeLayout),
+		CreateTime:  ns.GetCreationTimestamp().Format(config.TimeLayout),
 		Labels:      []*proto.Label{},
 		Annotations: []*proto.Annotation{},
 	}

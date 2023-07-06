@@ -105,7 +105,6 @@ func InitCache() {
 			Actions: "GET",
 		},
 	}
-	// init roles
 	for _, role := range initRoles {
 		m := sqlstore.GetRole(role.Name)
 		if m == nil {
@@ -116,20 +115,16 @@ func InitCache() {
 		}
 	}
 
-	// user resource
 	Mutex = new(sync.RWMutex)
 	var ura []UserResourceAction
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 	for {
-		// get role from db
 		sqlstore.GCoreDB.Table("bcs_user_resource_roles").Select(
-			"bcs_user_resource_roles.user_id, bcs_user_resource_roles.resource_type, bcs_user_resource_roles." +
-				"resource, bcs_roles.actions").
+			"bcs_user_resource_roles.user_id, bcs_user_resource_roles.resource_type, bcs_user_resource_roles.resource, bcs_roles.actions").
 			Joins("left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id").Scan(&ura)
 
 		Mutex.Lock()
-		// cache permission
 		PermissionsCache = make(map[uint][]UserPermissions)
 		for _, v := range ura {
 			up := UserPermissions{
@@ -148,7 +143,6 @@ func InitCache() {
 }
 
 // GrantPermission grant permissions
-// NOCC:CCN_thresholde(设计如此),golint/fnsize(设计如此)
 func GrantPermission(request *restful.Request, response *restful.Response) {
 	start := time.Now()
 	ctx := request.Request.Context()
@@ -163,7 +157,6 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 		metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
-	// check apiVersion
 	if bp.APIVersion != "v1" {
 		blog.Log(ctx).Warnf("BcsPermission apiVersion must be v1")
 		message := fmt.Sprintf("errcode: %d, BcsPermission apiVersion must be v1", common.BcsErrApiBadRequest)
@@ -172,7 +165,6 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	// grant permission
 	for _, v := range bp.Spec.Permissions {
 		if v.ResourceType == "" {
 			metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
@@ -184,7 +176,6 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 		user := &models.BcsUser{
 			Name: v.UserName,
 		}
-		// get user
 		userInDb := sqlstore.GetUserByCondition(user)
 		if userInDb == nil {
 			metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
@@ -194,7 +185,6 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 			utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 			return
 		}
-		// get role
 		roleInDb := sqlstore.GetRole(v.Role)
 		if roleInDb == nil {
 			metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
@@ -205,7 +195,6 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 			return
 		}
 
-		// get user resource role
 		userResourceRole := &models.BcsUserResourceRole{
 			UserId:       userInDb.ID,
 			ResourceType: v.ResourceType,
@@ -218,16 +207,13 @@ func GrantPermission(request *restful.Request, response *restful.Response) {
 				v.Role, v.ResourceType, v.Resource, v.UserName)
 			continue
 		}
-		// create user resource role
 		err := sqlstore.CreateUserResourceRole(userResourceRole)
 		if err != nil {
 			metrics.ReportRequestAPIMetrics("GrantPermission", request.Request.Method, metrics.ErrStatus, start)
-			blog.Log(ctx).Errorf("failed to grant role [%s] of resourcetype [%s] and resource [%s] to user [%s]: %s",
-				v.Role,
+			blog.Log(ctx).Errorf("failed to grant role [%s] of resourcetype [%s] and resource [%s] to user [%s]: %s", v.Role,
 				v.ResourceType, v.Resource, v.UserName, err.Error()) //nolint
 			message := fmt.Sprintf(
-				"errcode: %d, failed to grant role [%s] of resourcetype [%s] and resource [%s] to user [%s]: %s",
-				common.BcsErrApiInternalDbError, v.Role, v.ResourceType, v.Resource, v.UserName, err.Error()) //nolint
+				"errcode: %d, failed to grant role [%s] of resourcetype [%s] and resource [%s] to user [%s]: %s", common.BcsErrApiInternalDbError, v.Role, v.ResourceType, v.Resource, v.UserName, err.Error()) //nolint
 			utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 			return
 		}
@@ -255,7 +241,6 @@ func GetPermission(request *restful.Request, response *restful.Response) {
 	user := &models.BcsUser{
 		Name: form.UserName,
 	}
-	// get user from db
 	userInDb := sqlstore.GetUserByCondition(user)
 	if userInDb == nil {
 		metrics.ReportRequestAPIMetrics("GetPermission", request.Request.Method, metrics.ErrStatus, start)
@@ -265,14 +250,11 @@ func GetPermission(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	// get user permissions
 	var permissions []PermissionsResp
 	sqlstore.GCoreDB.Table("bcs_user_resource_roles").Select(
 		"bcs_user_resource_roles.resource_type, bcs_user_resource_roles.resource, bcs_roles.name as role").
 		Joins(
-			"left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id where bcs_user_resource_roles."+
-				"user_id = ? and bcs_user_resource_roles.resource_type = ?", userInDb.ID, form.ResourceType).
-		Scan(&permissions)
+			"left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id where bcs_user_resource_roles.user_id = ? and bcs_user_resource_roles.resource_type = ?", userInDb.ID, form.ResourceType).Scan(&permissions)
 
 	data := utils.CreateResponseData(nil, "success", permissions)
 	response.Write([]byte(data))
@@ -295,7 +277,6 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 		metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
-	// check apiVersion
 	if bp.APIVersion != "v1" {
 		blog.Log(ctx).Warnf("BcsPermission apiVersion must be v1")
 		message := fmt.Sprintf("errcode: %d, BcsPermission apiVersion must be v1", common.BcsErrApiBadRequest)
@@ -304,7 +285,6 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	// get user permission
 	for _, v := range bp.Spec.Permissions {
 		user := &models.BcsUser{
 			Name: v.UserName,
@@ -318,20 +298,17 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 			utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 			return
 		}
-		// get role
 		roleInDb := sqlstore.GetRole(v.Role)
 		if roleInDb == nil {
 			metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.ErrStatus, start)
 			blog.Log(ctx).Warnf("failed to revoke permission of role [%s] from user [%s], role not exist",
 				v.Role, v.UserName)
-			message := fmt.Sprintf("errcode: %d, failed to revoke permission of role [%s] from user [%s], "+
-				"role not exist",
+			message := fmt.Sprintf("errcode: %d, failed to revoke permission of role [%s] from user [%s], role not exist",
 				common.BcsErrApiBadRequest, v.Role, v.UserName)
 			utils.WriteClientError(response, common.BcsErrApiBadRequest, message)
 			return
 		}
 
-		// get bcs user resource role
 		userResourceRole := &models.BcsUserResourceRole{
 			UserId:       userInDb.ID,
 			ResourceType: v.ResourceType,
@@ -348,12 +325,10 @@ func RevokePermission(request *restful.Request, response *restful.Response) {
 		err := sqlstore.DeleteUserResourceRole(urrInDb)
 		if err != nil {
 			metrics.ReportRequestAPIMetrics("RevokePermission", request.Request.Method, metrics.ErrStatus, start)
-			blog.Log(ctx).Errorf("failed to delete role [%s] of resourcetype [%s] and resource [%s] from user [%s]: %s",
-				v.Role,
+			blog.Log(ctx).Errorf("failed to delete role [%s] of resourcetype [%s] and resource [%s] from user [%s]: %s", v.Role,
 				v.ResourceType, v.Resource, v.UserName, err.Error()) //nolint
 			message := fmt.Sprintf(
-				"errcode: %d, failed to delete role [%s] of resourcetype [%s] and resource [%s] from user [%s]: %s",
-				common.BcsErrApiInternalDbError, v.Role, v.ResourceType, v.Resource, v.UserName, err.Error()) //nolint
+				"errcode: %d, failed to delete role [%s] of resourcetype [%s] and resource [%s] from user [%s]: %s", common.BcsErrApiInternalDbError, v.Role, v.ResourceType, v.Resource, v.UserName, err.Error()) //nolint
 			utils.WriteServerError(response, common.BcsErrApiInternalDbError, message)
 			return
 		}
@@ -381,7 +356,6 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	// get user from token
 	user, hasExpired := getUserFromToken(form.UserToken)
 	if user == nil {
 		blog.Log(ctx).Warnf("usertoken [%s] is invalid from %s, type: %s, resource: %s",
@@ -394,7 +368,6 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 		metrics.ReportRequestAPIMetrics("VerifyPermission", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
-	// check token expired
 	if hasExpired {
 		blog.Log(ctx).Warnf("usertoken [%s] is expired from %s, type: %s, resource: %s",
 			form.UserToken, request.Request.RemoteAddr, form.ResourceType, form.Resource)
@@ -408,9 +381,8 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	// check resource type
 	switch form.ResourceType {
-	case Cluster, Storage:
+	case "cluster", "storage":
 		allowed, message := verifyResourceReplica(user.ID, form.ResourceType, form.Resource, form.Action)
 
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
@@ -439,6 +411,8 @@ func VerifyPermission(request *restful.Request, response *restful.Response) {
 func verifyResourceReplica(userID uint, resourceType ResourceType, resource, action string) (bool, string) {
 	var op []OwnedPermissions
 	if resource == "" {
+		// sqlstore.GCoreDB.Table("bcs_user_resource_roles").Select("bcs_roles.actions").
+		//	Joins("left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id where bcs_user_resource_roles.user_id = ? and bcs_user_resource_roles.resource_type = ?", userId, resourceType).Scan(&op) //nolint
 
 		Mutex.RLock()
 		for _, v := range PermissionsCache[userID] {
@@ -448,8 +422,10 @@ func verifyResourceReplica(userID uint, resourceType ResourceType, resource, act
 		}
 		Mutex.RUnlock()
 	} else {
+		// sqlstore.GCoreDB.Table("bcs_user_resource_roles").Select("bcs_roles.actions").
+		//	Joins("left join bcs_roles on bcs_user_resource_roles.role_id = bcs_roles.id where bcs_user_resource_roles.user_id = ? and bcs_user_resource_roles.resource_type = ?
+		//	and (bcs_user_resource_roles.resource = ? or bcs_user_resource_roles.resource = ?)", userId, resourceType, resource, "*").Scan(&op) //nolint
 
-		// cache permission
 		Mutex.RLock()
 		for _, v := range PermissionsCache[userID] {
 			if v.ResourceType == resourceType && (v.Resource == resource || v.Resource == "*") {
@@ -469,7 +445,6 @@ func verifyResourceReplica(userID uint, resourceType ResourceType, resource, act
 	return false, "no permission"
 }
 
-// getUserInfoByToken get user info by token
 func getUserInfoByToken(ctx context.Context, s string) (*models.BcsUser, bool, bool) {
 	user, hasExpired := getUserFromToken(s)
 	if user != nil {
@@ -477,7 +452,6 @@ func getUserInfoByToken(ctx context.Context, s string) (*models.BcsUser, bool, b
 		return user, false, hasExpired
 	}
 
-	// get user from temp token
 	tempToken, hasExpired := getUserFromTempToken(s)
 	if tempToken != nil {
 		blog.Log(ctx).Infof("getUserInfoByToken getUserFromTempToken for %s success", tempToken.Username)
@@ -497,7 +471,6 @@ func getUserInfoByToken(ctx context.Context, s string) (*models.BcsUser, bool, b
 	return nil, false, false
 }
 
-// get user form token
 func getUserFromToken(s string) (*models.BcsUser, bool) {
 	u := models.BcsUser{
 		UserToken: s,
@@ -515,7 +488,6 @@ func getUserFromToken(s string) (*models.BcsUser, bool) {
 	return user, false
 }
 
-// getUserFromTempToken
 func getUserFromTempToken(s string) (*models.BcsTempToken, bool) {
 	token := &models.BcsTempToken{
 		Token: s,
@@ -532,7 +504,6 @@ func getUserFromTempToken(s string) (*models.BcsTempToken, bool) {
 	return tempUser, false
 }
 
-// parseAuthToken
 func parseAuthToken(authInfo string) string {
 	token := ""
 	if strings.Contains(authInfo, "Bearer") {
@@ -546,10 +517,9 @@ func parseAuthToken(authInfo string) string {
 	return token
 }
 
-// verifyPermissionV1
 func verifyPermissionV1(ctx context.Context, user *models.BcsUser, req VerifyPermissionReq) (bool, string) {
 	switch req.ResourceType {
-	case Cluster, Storage:
+	case Cluster, "storage":
 		allowed, message := verifyResourceReplica(user.ID, req.ResourceType, req.Resource, req.Action)
 		blog.Log(ctx).Infof("user %s access to type: %s, resource: %s, action: %s, permission: %t",
 			user.Name, req.ResourceType, req.Resource, req.Action, allowed)
@@ -579,7 +549,6 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 		return
 	}
 
-	// check request
 	err = req.validate()
 	if err != nil {
 		blog.Log(ctx).Errorf("VerifyPermissionV2 permission request from %s is invalid, %s", request.Request.RemoteAddr,
@@ -591,7 +560,13 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 
 	// permission switch for special case
 	if cli.PermSwitch {
-		switchPermission(ctx, request, response, start)
+		blog.Log(ctx).Infof("VerifyPermissionV2 permission from %s, switch is true", request.Request.RemoteAddr)
+		metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.SucStatus, start)
+		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
+			Allowed: true,
+			Message: "",
+		})
+		_, _ = response.Write([]byte(data))
 		return
 	}
 
@@ -608,7 +583,6 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 		metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.ErrStatus, start)
 		return
 	}
-	// check token expired
 	if hasExpired {
 		blog.Log(ctx).Warnf("AuthToken [%s] is expired from %s, type: %s, resource: %s",
 			req.UserToken, request.Request.RemoteAddr, req.ResourceType, req.Resource)
@@ -649,24 +623,7 @@ func (cli *PermVerifyClient) VerifyPermissionV2(request *restful.Request, respon
 		}
 	}
 
-	cli.verifyV2Permission(ctx, req, user, response)
-	metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.SucStatus, start)
-}
-
-// switch permission
-func switchPermission(ctx context.Context, request *restful.Request, response *restful.Response, start time.Time) {
-	blog.Log(ctx).Infof("VerifyPermissionV2 permission from %s, switch is true", request.Request.RemoteAddr)
-	metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.SucStatus, start)
-	data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
-		Allowed: true,
-		Message: "",
-	})
-	_, _ = response.Write([]byte(data))
-}
-
-// verify v2 permission
-func (cli *PermVerifyClient) verifyV2Permission(ctx context.Context, req VerifyPermissionReq, user *models.BcsUser,
-	response *restful.Response) {
+	// verify v2 permission
 	switch req.ResourceType {
 	case Cluster:
 		resource := ClusterResource{
@@ -676,7 +633,6 @@ func (cli *PermVerifyClient) verifyV2Permission(ctx context.Context, req VerifyP
 			URL:         req.RequestURL,
 		}
 
-		// cluster permission
 		blog.Log(ctx).Infof("user %s access to type: %s, resource: [%s]:[%s], action: %s, url: %s, project: %s",
 			user.Name, "cluster", resource.ClusterType, resource.ClusterID, req.Action, req.RequestURL,
 			req.ProjectID)
@@ -689,8 +645,7 @@ func (cli *PermVerifyClient) verifyV2Permission(ctx context.Context, req VerifyP
 		blog.Log(ctx).Infof("user %s access to type: %s, resource: %s, action: %s, permission: %t",
 			user.Name, "cluster", resource.ClusterType, req.Action, allowed)
 		_, _ = response.Write([]byte(data))
-	// verify storage permission
-	case Storage:
+	case "storage":
 		allowed, message := verifyResourceReplica(user.ID, req.ResourceType, req.Resource, req.Action)
 
 		data := utils.CreateResponseData(nil, "success", &VerifyPermissionResponse{
@@ -711,4 +666,6 @@ func (cli *PermVerifyClient) verifyV2Permission(ctx context.Context, req VerifyP
 			user.Name, req.ResourceType, req.Action, allowed)
 		_, _ = response.Write([]byte(data))
 	}
+
+	metrics.ReportRequestAPIMetrics("VerifyPermissionV2", request.Request.Method, metrics.SucStatus, start)
 }

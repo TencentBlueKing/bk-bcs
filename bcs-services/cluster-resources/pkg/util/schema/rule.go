@@ -93,7 +93,7 @@ type (
 	// remoteConfig.URL 不可为空，且为模板或者 http(s) url
 	remoteConfURLMustValid struct{}
 
-	// 为 bfInput 添加一些规则
+	// TODO 为 bfInput 添加一些规则
 
 	// ui:reactions 规则
 	// 如果 source 都是同一个，则应该变成从 source 字段，指定 target 字段的 state

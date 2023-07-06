@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bitly/go-simplejson"
+	simplejson "github.com/bitly/go-simplejson"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
@@ -82,13 +82,13 @@ func (bs *bcsScheduler) UpdateCustomResourceDefinition(clusterID, name string, d
 	// * if response is not json, low level http error
 	// * if response object is Status, we can read Status.message
 	// * Custom Resource Object when create successfully
-	replyJson, err := simplejson.NewJson(resp.Reply)
+	json, err := simplejson.NewJson(resp.Reply)
 	if err != nil {
 		return fmt.Errorf("response format is Not expected Json, http error: %s", string(resp.Reply))
 	}
-	replyKind, _ := replyJson.Get("kind").String()
+	replyKind, _ := json.Get("kind").String()
 	if replyKind == StatusKind {
-		msg, _ := replyJson.Get("message").String()
+		msg, _ := json.Get("message").String()
 		return fmt.Errorf("%s", msg)
 	}
 	return nil

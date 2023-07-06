@@ -11,15 +11,12 @@
  *
  */
 
-package servicemonitor
+package service_monitor
 
-// SampleLimitMax xxx
-const SampleLimitMax = 100000
+// 注意：常量定义的切片必须是升序排列的
+const SM_SAMPLE_LIMIT_MAX = 100000
+const SM_SAMPLE_LIMIT_MIN = 1
 
-// SampleLimitMin xxx
-const SampleLimitMin = 1
-
-// CreateServiceMonitorReq create service monitor req
 type CreateServiceMonitorReq struct {
 	ServiceName string            `json:"service_name"`
 	Path        string            `json:"path"`
@@ -32,7 +29,6 @@ type CreateServiceMonitorReq struct {
 	Params      map[string]string `json:"params"`
 }
 
-// Validate validate
 func (r CreateServiceMonitorReq) Validate() bool {
 	if validateName(r.Name) && validateSelector(r.Selector) && validateSampleLimit(r.SampleLimit) {
 		return true
@@ -40,18 +36,13 @@ func (r CreateServiceMonitorReq) Validate() bool {
 	return false
 }
 
-// BatchDeleteServiceMonitorReq batch delete service monitor req
 type BatchDeleteServiceMonitorReq struct {
 	ServiceMonitors []ServiceMonitor `json:"service_monitors"`
 }
-
-// ServiceMonitor service monitor
 type ServiceMonitor struct {
 	Namespace string `json:"namespace"`
 	Name      string `json:"name"`
 }
-
-// UpdateServiceMonitorReq update service monitor req
 type UpdateServiceMonitorReq struct {
 	ServiceName string            `json:"service_name"`
 	Path        string            `json:"path"`

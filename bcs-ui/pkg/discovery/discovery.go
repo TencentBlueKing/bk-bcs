@@ -33,15 +33,14 @@ import (
 
 const serverNameSuffix = ".bkbcs.tencent.com"
 
-// ServiceDiscovery service discovery
-type ServiceDiscovery struct {
+// serviceDiscovery
+type serviceDiscovery struct {
 	ctx context.Context
 	srv micro.Service
 }
 
 // NewServiceDiscovery :
-func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr,
-	addrIPv6 string) (*ServiceDiscovery, error) {
+func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertiseAddr, addrIPv6 string) (*serviceDiscovery, error) {
 	metadata := map[string]string{}
 	if addrIPv6 != "" {
 		metadata[types.IPV6] = addrIPv6
@@ -67,7 +66,7 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertise
 		micro.RegisterInterval(time.Second*15),
 	)
 
-	sd := &ServiceDiscovery{srv: service, ctx: ctx}
+	sd := &serviceDiscovery{srv: service, ctx: ctx}
 	if err := sd.init(); err != nil {
 		return nil, err
 	}
@@ -76,11 +75,11 @@ func NewServiceDiscovery(ctx context.Context, name, version, bindaddr, advertise
 }
 
 // Run xxx
-func (s *ServiceDiscovery) Run() error {
+func (s *serviceDiscovery) Run() error {
 	return s.srv.Run()
 }
 
-func (s *ServiceDiscovery) init() error {
+func (s *serviceDiscovery) init() error {
 	// etcd 服务发现注册
 	etcdRegistry, err := s.initEtcdRegistry()
 	if err != nil {
@@ -94,7 +93,7 @@ func (s *ServiceDiscovery) init() error {
 }
 
 // initEtcdRegistry etcd 服务注册
-func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
+func (s *serviceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 	endpoints := config.G.Viper.GetString("etcd.endpoints")
 	if endpoints == "" {
 		return nil, nil
@@ -116,25 +115,25 @@ func (s *ServiceDiscovery) initEtcdRegistry() (registry.Registry, error) {
 	return etcdRegistry, nil
 }
 
-// DummyCmd : 去掉 go-micro 命令行使用
-type DummyCmd struct{}
+// dummyCmd : 去掉 go-micro 命令行使用
+type dummyCmd struct{}
 
 // NewDummyCmd :
-func NewDummyCmd() *DummyCmd {
-	return &DummyCmd{}
+func NewDummyCmd() *dummyCmd {
+	return &dummyCmd{}
 }
 
 // App :
-func (c *DummyCmd) App() *cli.App {
+func (c *dummyCmd) App() *cli.App {
 	return &cli.App{}
 }
 
 // Init :
-func (c *DummyCmd) Init(opts ...cmd.Option) error {
+func (c *dummyCmd) Init(opts ...cmd.Option) error {
 	return nil
 }
 
 // Options :
-func (c *DummyCmd) Options() cmd.Options {
+func (c *dummyCmd) Options() cmd.Options {
 	return cmd.Options{}
 }

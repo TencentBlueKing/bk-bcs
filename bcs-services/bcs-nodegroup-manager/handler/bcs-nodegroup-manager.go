@@ -38,9 +38,6 @@ func New(storage storage.Storage) *NodegroupManager {
 }
 
 // GetClusterAutoscalerReview handles cluster autoscaler review request
-// get nodegroup scale policy, request by ca
-// scale up: num
-// scale down: num/ip
 func (e *NodegroupManager) GetClusterAutoscalerReview(ctx context.Context,
 	req *nodegroupmgr.ClusterAutoscalerReview, rsp *nodegroupmgr.ClusterAutoscalerReview) error {
 	blog.Info("Received NodegroupManager.GetClusterAutoscalerReview request. RequestId:%s", req.Request.Uid)
@@ -76,8 +73,6 @@ func (e *NodegroupManager) GetClusterAutoscalerReview(ctx context.Context,
 }
 
 // CreateNodePoolMgrStrategy create nodePoolMgrStrategy
-// createOption cannot be nil
-// when overwrite is false, it will return error if strategy exists
 func (e *NodegroupManager) CreateNodePoolMgrStrategy(ctx context.Context,
 	req *nodegroupmgr.CreateNodePoolMgrStrategyReq, rsp *nodegroupmgr.CreateNodePoolMgrStrategyRsp) error {
 	if req.Option == nil {
@@ -109,8 +104,6 @@ func (e *NodegroupManager) CreateNodePoolMgrStrategy(ctx context.Context,
 }
 
 // UpdateNodePoolMgrStrategy update nodePoolMgrStrategy
-// updateOption cannot be nil
-// when CreateIfNotExist is false, it will return error if strategy does not exist
 func (e *NodegroupManager) UpdateNodePoolMgrStrategy(ctx context.Context,
 	req *nodegroupmgr.UpdateNodePoolMgrStrategyReq, rsp *nodegroupmgr.CreateNodePoolMgrStrategyRsp) error {
 	if req.Option == nil {
@@ -144,7 +137,6 @@ func (e *NodegroupManager) UpdateNodePoolMgrStrategy(ctx context.Context,
 }
 
 // GetNodePoolMgrStrategy get nodePoolMgrStrategy
-// strategy name cannot be empty
 func (e *NodegroupManager) GetNodePoolMgrStrategy(ctx context.Context,
 	req *nodegroupmgr.GetNodePoolMgrStrategyReq, rsp *nodegroupmgr.GetNodePoolMgrStrategyRsp) error {
 	blog.Info("Received BcsNodegroupManager.GetNodePoolMgrStrategy request. name:%s", req.Name)
@@ -168,8 +160,6 @@ func (e *NodegroupManager) GetNodePoolMgrStrategy(ctx context.Context,
 }
 
 // ListNodePoolMgrStrategies get nodePoolMgrStrategy list
-// page: default 0
-// size: default 10
 func (e *NodegroupManager) ListNodePoolMgrStrategies(ctx context.Context,
 	req *nodegroupmgr.ListNodePoolMgrStrategyReq, rsp *nodegroupmgr.ListNodePoolMgrStrategyRsp) error {
 	page := int(req.Page)
@@ -203,7 +193,6 @@ func (e *NodegroupManager) ListNodePoolMgrStrategies(ctx context.Context,
 }
 
 // DeleteNodePoolMgrStrategy delete nodePoolMgrStrategy
-// strategy name cannot be empty
 func (e *NodegroupManager) DeleteNodePoolMgrStrategy(ctx context.Context,
 	req *nodegroupmgr.DeleteNodePoolMgrStrategyReq, rsp *nodegroupmgr.DeleteNodePoolMgrStrategyRsp) error {
 	blog.Infof("Received BcsNodegroupManager.DeleteNodePoolMgrStrategy request. Name: %s, operator:%s",
@@ -228,7 +217,6 @@ func (e *NodegroupManager) DeleteNodePoolMgrStrategy(ctx context.Context,
 	return nil
 }
 
-// transferToHandlerStrategy transfer storage strategy struct to proto struct
 func transferToHandlerStrategy(original *storage.NodeGroupMgrStrategy) *nodegroupmgr.NodeGroupStrategy {
 	reservedNodeGroup := &nodegroupmgr.ReservedNodeGroup{}
 	if original.ReservedNodeGroup != nil {
@@ -275,7 +263,6 @@ func transferToHandlerStrategy(original *storage.NodeGroupMgrStrategy) *nodegrou
 	}
 }
 
-// transferToStorageStrategy transfer proto strategy struct to storage local struct
 func transferToStorageStrategy(original *nodegroupmgr.NodeGroupStrategy) *storage.NodeGroupMgrStrategy {
 	reservedNodeGroup := &storage.GroupInfo{}
 	if original.ReservedNodeGroup != nil {
@@ -327,7 +314,6 @@ func transferToStorageStrategy(original *nodegroupmgr.NodeGroupStrategy) *storag
 	}
 }
 
-// transferToStorageNodegroup transfer proto nodegroup struct to storage local struct
 func transferToStorageNodegroup(origin *nodegroupmgr.NodeGroup,
 	storageNodegroup *storage.NodeGroup) (*storage.NodeGroup, bool) {
 	retNodegroup := &storage.NodeGroup{}
@@ -347,7 +333,6 @@ func transferToStorageNodegroup(origin *nodegroupmgr.NodeGroup,
 	return retNodegroup, false
 }
 
-// checkNodeGroupEqual check if pb.nodegroup is equal to storage.nodegroup
 func checkNodeGroupEqual(origin *nodegroupmgr.NodeGroup, storageNodegroup *storage.NodeGroup) bool {
 	if origin.DesiredSize != int32(storageNodegroup.CmDesiredSize) {
 		return false
@@ -374,7 +359,6 @@ func checkNodeGroupEqual(origin *nodegroupmgr.NodeGroup, storageNodegroup *stora
 	return true
 }
 
-// handleNodeGroup get scale down/up action of particular nodegroup
 func (e *NodegroupManager) handleNodeGroup(nodegroup *nodegroupmgr.NodeGroup,
 	uid string) ([]*nodegroupmgr.NodeScaleUpPolicy, []*nodegroupmgr.NodeScaleDownPolicy, error) {
 	nodegroupId := nodegroup.NodeGroupID
@@ -433,9 +417,6 @@ func (e *NodegroupManager) handleNodeGroup(nodegroup *nodegroupmgr.NodeGroup,
 	return scaleUpPolicies, scaleDownPolicies, nil
 }
 
-// updateNodeGroupStatus
-// update the process of  scale down/up action
-// update nodegroup hookConfirm
 func (e *NodegroupManager) updateNodeGroupStatus(response *nodegroupmgr.ClusterAutoscalerReview) {
 	for _, scaleUp := range response.Response.ScaleUps {
 		desireNum := int(scaleUp.DesiredSize)
@@ -489,7 +470,6 @@ func (e *NodegroupManager) updateNodeGroupStatus(response *nodegroupmgr.ClusterA
 	}
 }
 
-// calculate scale down/up process
 func calculateProcess(current, desired int) int {
 	if desired == 0 {
 		if current == 0 {

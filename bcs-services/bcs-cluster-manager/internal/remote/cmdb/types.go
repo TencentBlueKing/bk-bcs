@@ -179,7 +179,6 @@ type Rule struct {
 	Value    interface{} `json:"value"`
 }
 
-// ListHostsWithoutBizResponse resp
 type ListHostsWithoutBizResponse struct {
 	Code      int    `json:"code"`
 	Result    bool   `json:"result"`

@@ -18,12 +18,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/prometheus/client_golang/prometheus"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -106,7 +105,6 @@ func (cc *CloudCollector) getLbMap(
 	return retMap
 }
 
-// Start run
 func (cc *CloudCollector) Start() {
 	tiker := time.NewTicker(statusUpdateInterval)
 	for {

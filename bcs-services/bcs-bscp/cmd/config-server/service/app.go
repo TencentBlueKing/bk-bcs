@@ -19,6 +19,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -27,6 +28,7 @@ import (
 	pbapp "bscp.io/pkg/protocol/core/app"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/space"
+	"bscp.io/pkg/types"
 )
 
 // CreateApp create app with options
@@ -129,6 +131,43 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbcs.DeleteAppReq) (*pbcs.
 	return resp, nil
 }
 
+// ListApps list apps with filter.
+func (s *Service) ListApps(ctx context.Context, req *pbcs.ListAppsReq) (*pbcs.ListAppsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppsResp)
+
+	authRes := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.App, Action: meta.Find}, BizID: req.BizId}
+	err := s.authorizer.AuthorizeWithResp(kt, resp, authRes)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Page == nil {
+		return nil, errf.New(errf.InvalidParameter, "page is null")
+	}
+
+	if err = req.Page.BasePage().Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListAppsReq{
+		BizId:  req.BizId,
+		Filter: req.Filter,
+		Page:   req.Page,
+	}
+	rp, err := s.client.DS.ListApps(kt.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list apps failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListAppsResp{
+		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
 // GetApp get app with app id
 func (s *Service) GetApp(ctx context.Context, req *pbcs.GetAppReq) (*pbapp.App, error) {
 	kt := kit.FromGrpcContext(ctx)
@@ -180,6 +219,7 @@ func (s *Service) GetAppByName(ctx context.Context, req *pbcs.GetAppByNameReq) (
 // ListAppsRest list apps with rest filter
 func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (*pbcs.ListAppsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppsResp)
 
 	userSpaceResp, err := s.client.AS.ListUserSpace(kt.RpcCtx(), &pbas.ListUserSpaceReq{})
 	if err != nil {
@@ -227,7 +267,7 @@ func (s *Service) ListAppsRest(ctx context.Context, req *pbcs.ListAppsRestReq) (
 		}
 	}
 
-	resp := &pbcs.ListAppsResp{
+	resp = &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

@@ -122,8 +122,8 @@ func PrintDeleteTokenCmdResult(flagOutput string, resp *pkg.DeleteTokenResponse)
 	tw.Render()
 }
 
-// PrintGetTokenInfoCmdResult prints the response that get token
-func PrintGetTokenInfoCmdResult(flagOutput string, resp *pkg.GetTokenResponse) {
+// PrintGetTokenCmdResult prints the response that get token
+func PrintGetTokenCmdResult(flagOutput string, resp *pkg.GetTokenResponse) {
 	if flagOutput == outputTypeJSON {
 		if err := encodeJSON(resp); err != nil {
 			klog.Fatalf("get token output json to stdout failed: %s", err.Error())

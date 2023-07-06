@@ -160,8 +160,8 @@ type ErrorResponse struct {
 	Err            error         `json:"-"` // low-level runtime error
 	HTTPStatusCode int           `json:"-"` // http response status code
 	Error          *ErrorPayload `json:"error"`
-	loginURL       string
-	loginPlainURL  string
+	loginURL       string        `json:"-"` // login plain url
+	loginPlainURL  string        `json:"-"` // login url
 }
 
 // Render go-chi/render Renderer interface implement

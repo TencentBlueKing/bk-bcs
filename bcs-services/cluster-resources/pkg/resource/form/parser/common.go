@@ -23,7 +23,7 @@ import (
 )
 
 // GetResParseFunc 获取资源对应 Parser
-// Parser 目前为函数实现，可以考虑抽成 interface，如 DeployParser，STSParser etc
+// TODO Parser 目前为函数实现，可以考虑抽成 interface，如 DeployParser，STSParser etc
 func GetResParseFunc(
 	ctx context.Context, kind string,
 ) (func(manifest map[string]interface{}) map[string]interface{}, error) {

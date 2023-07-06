@@ -26,15 +26,13 @@
   }
 
   const props = withDefaults(defineProps<{
-    modelValue: string;
-    editable?: boolean;
-    language?: string;
+    modelValue: string,
+    editable?: boolean
   }>(), {
-    editable: true,
-    language: ''
+    editable: true
   })
 
-  const emit = defineEmits(['update:modelValue', 'change'])
+  const emit = defineEmits(['update:modelValue'])
 
   const codeEditorRef = ref()
   let editor: monaco.editor.IStandaloneCodeEditor
@@ -46,28 +44,18 @@
     }
   })
 
-  watch(() => props.language, (val) => {
-    monaco.editor.setModelLanguage(<monaco.editor.ITextModel>editor.getModel(), val)
-  })
-
-  watch(() => props.editable, val => {
-    editor.updateOptions({ readOnly: !val })
-  })
-
   onMounted(() => {
     if (!editor) {
       editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
         value: localVal.value,
         theme: 'vs-dark',
         automaticLayout: true,
-        language: props.language,
         readOnly: !props.editable
       })
     }
     editor.onDidChangeModelContent((val:any) => {
       localVal.value = editor.getValue();
       emit('update:modelValue', localVal.value)
-      emit('change', localVal.value)
     })
   })
 

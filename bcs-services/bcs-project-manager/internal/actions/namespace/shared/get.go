@@ -23,7 +23,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
@@ -66,7 +66,7 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 	retData := &proto.NamespaceData{
 		Name:       namespace.GetName(),
 		Uid:        string(namespace.GetUID()),
-		CreateTime: namespace.GetCreationTimestamp().Format(constant.TimeLayout),
+		CreateTime: namespace.GetCreationTimestamp().Format(config.TimeLayout),
 		Status:     string(namespace.Status.Phase),
 	}
 	// get quota
@@ -76,13 +76,13 @@ func (a *SharedNamespaceAction) GetNamespace(ctx context.Context,
 		retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(quota)
 	}
 	// get variables
-	variables, err := listNamespaceVariables(ctx, projectCode, clusterID, namespace.GetName())
-	if err != nil {
+	if variables, lErr := listNamespaceVariables(ctx, projectCode, clusterID, namespace.GetName()); lErr != nil {
 		logging.Error("get namespace %s/%s variables failed, err: %s",
-			clusterID, namespace.GetName(), err.Error())
-		return errorx.NewDBErr(err.Error())
+			clusterID, namespace.GetName(), lErr.Error())
+		return errorx.NewDBErr(lErr.Error())
+	} else {
+		retData.Variables = variables
 	}
-	retData.Variables = variables
 	if staging != nil {
 		retData.ItsmTicketType = staging.ItsmTicketType
 		retData.ItsmTicketSN = staging.ItsmTicketSN

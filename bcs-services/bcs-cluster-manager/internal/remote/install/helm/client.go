@@ -53,7 +53,7 @@ func SetHelmManagerClient(opts *Options) error {
 	return nil
 }
 
-// GetHelmManagerClient get user-manager client
+// GetUserManagerClient get user-manager client
 func GetHelmManagerClient() *HelmClient {
 	return helmClient
 }
@@ -116,7 +116,6 @@ func NewHelmClient(opts *Options) (*HelmClient, error) {
 	return helmClient, nil
 }
 
-// GetHelmManagerClient get helm client
 func (hm *HelmClient) GetHelmManagerClient() (helmmanager.HelmManagerClient, func(), error) {
 	if hm == nil {
 		return nil, nil, errNotInited

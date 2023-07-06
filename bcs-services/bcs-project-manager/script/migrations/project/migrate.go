@@ -42,6 +42,7 @@ import (
 
 const (
 	mysqlTableName = "projects"
+	mongoTableName = "bcsproject_project"
 	timeLayout     = "2006-01-02T15:04:05Z"
 )
 

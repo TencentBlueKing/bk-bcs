@@ -38,7 +38,7 @@ func TestWatchBus(t *testing.T) {
 		t.Errorf("create db client err %s", err.Error())
 	}
 
-	if err = db.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		t.Errorf("ping db err %s", err.Error())
 	}
 

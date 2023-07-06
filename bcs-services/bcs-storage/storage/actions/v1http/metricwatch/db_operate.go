@@ -18,7 +18,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
 )
 
-// GetStore get store
 func GetStore() *lib.Store {
 	return lib.NewStore(
 		apiserver.GetAPIResource().GetDBClient(dbConfig),

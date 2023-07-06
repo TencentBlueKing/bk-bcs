@@ -1,22 +1,10 @@
-/*
-Tencent is pleased to support the open source community by making Basic Service Configuration Platform available.
-Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
-Licensed under the MIT License (the "License"); you may not use this file except
-in compliance with the License. You may obtain a copy of the License at
-http://opensource.org/licenses/MIT
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "as IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-either express or implied. See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package service
 
 import (
 	"context"
-	"errors"
 	"time"
 
+	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -30,15 +18,23 @@ import (
 func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredentialReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	spec, err := req.Spec.CredentialSpec()
+	if err != nil {
+		logs.Errorf("get credential spec from pb failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+	now := time.Now()
 	credential := &table.Credential{
-		Spec:       req.Spec.CredentialSpec(),
+		Spec:       spec,
 		Attachment: req.Attachment.CredentialAttachment(),
 		Revision: &table.Revision{
-			Creator: kt.User,
-			Reviser: kt.User,
+			Creator:   kt.User,
+			Reviser:   kt.User,
+			CreatedAt: now,
+			UpdatedAt: now,
 		},
 	}
-	credential.Spec.ExpiredAt = time.Now()
+	credential.Spec.ExpiredAt = now
 	id, err := s.dao.Credential().Create(kt, credential)
 	if err != nil {
 		logs.Errorf("create credential failed, err: %v, rid: %s", err, kt.Rid)
@@ -54,21 +50,32 @@ func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredenti
 func (s *Service) ListCredentials(ctx context.Context, req *pbds.ListCredentialReq) (*pbds.ListCredentialResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit)}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
+	// parse pb struct filter to filter.Expression.
+	filter, err := pbbase.UnmarshalFromPbStructToExpr(req.Filter)
+	if err != nil {
+		logs.Errorf("unmarshal pb struct to expression failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	details, count, err := s.dao.Credential().List(kt, req.BizId, req.SearchKey, opt)
-
+	query := &types.ListCredentialsOption{
+		BizID:  req.BizId,
+		Page:   req.Page.BasePage(),
+		Filter: filter,
+	}
+	details, err := s.dao.Credential().List(kt, query)
 	if err != nil {
 		logs.Errorf("list credential failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
+	credentials, err := pbcredential.PbCredentials(details.Details)
+	if err != nil {
+		logs.Errorf("get pb credential failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 
 	resp := &pbds.ListCredentialResp{
-		Count:   uint32(count),
-		Details: pbcredential.PbCredentials(details),
+		Count:   details.Count,
+		Details: credentials,
 	}
 	return resp, nil
 }
@@ -83,14 +90,14 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbds.DeleteCredenti
 	}
 
 	// 查看credential_scopes表中的数据
-	_, count, err := s.dao.CredentialScope().Get(kt, req.Id, req.Attachment.BizId)
+	credentialScopes, err := s.dao.CredentialScope().Get(kt, req.Id, req.Attachment.BizId)
 	if err != nil {
 		logs.Errorf("get credential scope failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
-	if count != 0 {
-		return nil, errors.New("delete Credential failed, credential scope have data")
+	if credentialScopes.Count != 0 {
+		return nil, errf.New(errf.InvalidParameter, "delete Credential failed, credential scope have data")
 	}
 
 	if err := s.dao.Credential().Delete(kt, credential); err != nil {
@@ -105,12 +112,20 @@ func (s *Service) DeleteCredential(ctx context.Context, req *pbds.DeleteCredenti
 func (s *Service) UpdateCredential(ctx context.Context, req *pbds.UpdateCredentialReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	spec, err := req.Spec.CredentialSpec()
+	if err != nil {
+		logs.Errorf("get credential spec from pb failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	now := time.Now()
 	credential := &table.Credential{
 		ID:         req.Id,
-		Spec:       req.Spec.CredentialSpec(),
+		Spec:       spec,
 		Attachment: req.Attachment.CredentialAttachment(),
 		Revision: &table.Revision{
-			Reviser: kt.User,
+			Reviser:   kt.User,
+			UpdatedAt: now,
 		},
 	}
 	if err := s.dao.Credential().Update(kt, credential); err != nil {

@@ -50,7 +50,6 @@ type scaleUpResourcesDelta map[string]int64
 // due to errors talking to cloud provider
 const scaleUpLimitUnknown = math.MaxInt64
 
-// computeScaleUpResourcesLeftLimits computes the resource limits of scale up
 func computeScaleUpResourcesLeftLimits(
 	context *context.AutoscalingContext,
 	processors *ca_processors.AutoscalingProcessors,
@@ -110,7 +109,6 @@ func computeScaleUpResourcesLeftLimits(
 	return resultScaleUpLimits, nil
 }
 
-// calculateScaleUpCoresMemoryTotal calculate the total cores and memory
 func calculateScaleUpCoresMemoryTotal(
 	nodeGroups []cloudprovider.NodeGroup,
 	nodeInfos map[string]*schedulerframework.NodeInfo,
@@ -145,8 +143,6 @@ func calculateScaleUpCoresMemoryTotal(
 	return coresTotal, memoryTotal, nil
 }
 
-// calculateScaleUpGpusTotal calculate the total gpu
-// NOCC:tosa/fn_length(设计如此)
 func calculateScaleUpCustomResourcesTotal(
 	context *context.AutoscalingContext,
 	processors *ca_processors.AutoscalingProcessors,
@@ -207,7 +203,6 @@ func computeBelowMax(total int64, max int64) int64 {
 	return 0
 }
 
-// computeScaleUpResourcesDelta compute scale up resources delta
 func computeScaleUpResourcesDelta(context *context.AutoscalingContext,
 	processors *ca_processors.AutoscalingProcessors,
 	nodeInfo *schedulerframework.NodeInfo, nodeGroup cloudprovider.NodeGroup,
@@ -233,18 +228,15 @@ func computeScaleUpResourcesDelta(context *context.AutoscalingContext,
 	return resultScaleUpDelta, nil
 }
 
-// scaleUpLimitsCheckResult the check result of scale up limits
 type scaleUpLimitsCheckResult struct {
 	exceeded          bool
 	exceededResources []string
 }
 
-// scaleUpLimitsNotExceeded returns the result that limits not exceed
 func scaleUpLimitsNotExceeded() scaleUpLimitsCheckResult {
 	return scaleUpLimitsCheckResult{false, []string{}}
 }
 
-// checkScaleUpDeltaWithinLimits check whether the scale up delta is within limits
 func (limits *scaleUpResourcesLimits) checkScaleUpDeltaWithinLimits(
 	delta scaleUpResourcesDelta) scaleUpLimitsCheckResult {
 	exceededResources := sets.NewString()
@@ -263,17 +255,15 @@ func (limits *scaleUpResourcesLimits) checkScaleUpDeltaWithinLimits(
 	return scaleUpLimitsNotExceeded()
 }
 
-// getNodeInfoCoresAndMemory returns the cores and memory of nodeInfo
 func getNodeInfoCoresAndMemory(nodeInfo *schedulerframework.NodeInfo) (int64, int64) {
 	return getNodeCoresAndMemory(nodeInfo.Node())
 }
 
-// skippedReasons contains the skipped reason
 type skippedReasons struct {
 	message []string
 }
 
-// Reasons returns the specific reason
+// Reasons xxx
 func (sr *skippedReasons) Reasons() []string {
 	return sr.message
 }
@@ -284,13 +274,11 @@ var (
 	notReadyReason        = &skippedReasons{[]string{"not ready for scale-up"}}
 )
 
-// maxResourceLimitReached returns the reason of max resource limit reached
 func maxResourceLimitReached(resources []string) *skippedReasons {
 	return &skippedReasons{[]string{fmt.Sprintf("max cluster %s limit reached",
 		strings.Join(resources, ", "))}}
 }
 
-// computeExpansionOption computes scale up options
 func computeExpansionOption(context *contextinternal.Context, podEquivalenceGroups []*podEquivalenceGroup,
 	nodeGroup cloudprovider.NodeGroup, nodeInfo *schedulerframework.NodeInfo,
 	upcomingNodes []*schedulerframework.NodeInfo, bufferNotEnough bool) (expander.Option, error) {
@@ -456,7 +444,6 @@ func ScaleUp(context *contextinternal.Context, processors *ca_processors.Autosca
 		ConsideredNodeGroups:    nodeGroups}, nil
 }
 
-// optimizeBestOption generates the best scale up options
 func optimizeBestOption(context *contextinternal.Context, processors *ca_processors.AutoscalingProcessors,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, daemonSets []*appsv1.DaemonSet,
 	nodes []*apiv1.Node, upcomingNodes []*schedulerframework.NodeInfo,
@@ -575,7 +562,6 @@ func optimizeBestOption(context *contextinternal.Context, processors *ca_process
 	}, nil
 }
 
-// computeExpansionOptionForNodeGroups computes scale up option for each nodegroup
 func computeExpansionOptionForNodeGroups(context *contextinternal.Context, podEquivalenceGroups []*podEquivalenceGroup,
 	nodeGroups []cloudprovider.NodeGroup, nodeInfos map[string]*schedulerframework.NodeInfo,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, processors *ca_processors.AutoscalingProcessors,
@@ -652,8 +638,6 @@ func computeExpansionOptionForNodeGroups(context *contextinternal.Context, podEq
 	return expansionOptions, skippedNodeGroups, &status.ScaleUpStatus{Result: status.ScaleUpNotTried}, nil
 }
 
-// computeExpansionOptionForCreatedNodeGroups computes expansion option for created nodegroups
-// NOCC:tosa/fn_length(设计如此)
 func computeExpansionOptionForCreatedNodeGroups(context *contextinternal.Context,
 	podEquivalenceGroups []*podEquivalenceGroup, nodeInfos map[string]*schedulerframework.NodeInfo,
 	clusterStateRegistry *clusterstate.ClusterStateRegistry, processors *ca_processors.AutoscalingProcessors,
@@ -721,7 +705,6 @@ func computeExpansionOptionForCreatedNodeGroups(context *contextinternal.Context
 	return expansionOptions, createNodeGroupResults, &status.ScaleUpStatus{}, nil
 }
 
-// getRemainingPods return remaining pods
 func getRemainingPods(egs []*podEquivalenceGroup,
 	skipped map[string]status.Reasons) []status.NoScaleUpInfo {
 	remaining := []status.NoScaleUpInfo{}
@@ -741,7 +724,6 @@ func getRemainingPods(egs []*podEquivalenceGroup,
 	return remaining
 }
 
-// getPodsAwaitingEvaluation return pods awaiting evaluation
 func getPodsAwaitingEvaluation(egs []*podEquivalenceGroup, bestOption string) []*apiv1.Pod {
 	awaitsEvaluation := []*apiv1.Pod{}
 	for _, eg := range egs {
@@ -755,7 +737,6 @@ func getPodsAwaitingEvaluation(egs []*podEquivalenceGroup, bestOption string) []
 	return awaitsEvaluation
 }
 
-// filterNodeGroupsByPods return suitable nodegroups for pods
 func filterNodeGroupsByPods(
 	groups []cloudprovider.NodeGroup,
 	podsRequiredToFit []*apiv1.Pod,
@@ -788,7 +769,6 @@ groupsloop:
 	return result
 }
 
-// executeScaleUp execute scale up action with option
 func executeScaleUp(context *context.AutoscalingContext, clusterStateRegistry *clusterstate.ClusterStateRegistry,
 	info nodegroupset.ScaleUpInfo, gpuType string, now time.Time) errors.AutoscalerError {
 	klog.V(0).Infof("Scale-up: setting group %s size to %d", info.Group.Id(), info.NewSize)
@@ -815,7 +795,6 @@ func executeScaleUp(context *context.AutoscalingContext, clusterStateRegistry *c
 	return nil
 }
 
-// applyScaleUpResourcesLimits applys scale up resources limits on scale up option
 func applyScaleUpResourcesLimits(
 	context *context.AutoscalingContext,
 	processors *ca_processors.AutoscalingProcessors,

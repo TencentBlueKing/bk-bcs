@@ -818,8 +818,8 @@ func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAuto
 	return task, nil
 }
 
-// BuildSwitchAsOptionStatusTask switch auto scaling option status
-func (t *Task) BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
+// BuildSwitchAutoScalingOptionStatusTask switch auto scaling option status
+func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	// validate request params
 	if scalingOption == nil {

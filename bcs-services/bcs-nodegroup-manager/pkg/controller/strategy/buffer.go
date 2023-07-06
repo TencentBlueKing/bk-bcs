@@ -41,6 +41,7 @@ func (e *BufferStrategyExecutor) IsAbleToScaleDown(strategy *storage.NodeGroupMg
 	consumerID := strategy.ReservedNodeGroup.ConsumerID
 	if consumerID == "" {
 		return 0, false, fmt.Errorf("strategy %s consumer id is empty", strategy.Name)
+		// TODO: 补充通过cluster manager 获取consumer id 逻辑
 	}
 	// query relative ResourcePool information from resource-manager
 	pool, err := e.opt.ResourceManager.GetResourcePoolByCondition(strategy.ResourcePool, consumerID, "", nil)
@@ -76,6 +77,7 @@ func (e *BufferStrategyExecutor) IsAbleToScaleUp(strategy *storage.NodeGroupMgrS
 	consumerID := strategy.ReservedNodeGroup.ConsumerID
 	if consumerID == "" {
 		return 0, false, fmt.Errorf("strategy %s consumer id is empty", strategy.Name)
+		// TODO: 补充通过cluster manager 获取consumer id 逻辑
 	}
 	pool, getErr := e.opt.ResourceManager.GetResourcePoolByCondition(strategy.ResourcePool, consumerID, "", nil)
 	if getErr != nil {

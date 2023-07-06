@@ -21,7 +21,6 @@ import (
 )
 
 func init() {
-	// add current migration to migrator
 	migrator.GetMigrator().AddMigration(&migrator.Migration{
 		Version: "20230511114513",
 		Name:    "20230511114513_add_template",
@@ -31,7 +30,6 @@ func init() {
 	})
 }
 
-// mig20230511114513GormTestUp for up migration
 func mig20230511114513GormTestUp(tx *gorm.DB) error {
 	// TemplateSpaces ：模版空间
 	type TemplateSpaces struct {
@@ -145,7 +143,6 @@ func mig20230511114513GormTestUp(tx *gorm.DB) error {
 
 }
 
-// mig20230511114513GormDown for down migration
 func mig20230511114513GormDown(tx *gorm.DB) error {
 	// IDGenerators : ID生成器
 	type IDGenerators struct {

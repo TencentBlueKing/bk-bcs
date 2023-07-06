@@ -140,8 +140,8 @@ func (ar *AppRuntime) loopAppPublishReleaseJob(job *JobContext) {
 		}
 
 		if err := ar.workspace.PrepareReleaseDirectory(job.Descriptor.ReleaseID); err != nil {
-			logs.Errorf("prepare app: %d, job's release: %d directory failed, err: %s, rid: %s", ar.appID,
-				job.Descriptor.ReleaseID, err, job.Vas.Rid)
+			logs.Errorf("prepare app: %d, job's release: %d directory failed, err: %v, rid: %s", ar.appID,
+				job.Descriptor.ReleaseID, job.Vas.Rid)
 			job.RetryPolicy.Sleep()
 			continue
 		}
@@ -195,7 +195,7 @@ func (ar *AppRuntime) loopAppReleaseForOnce(vas *kit.Vas, desc *sfs.ReleaseEvent
 		return true
 	}
 
-	// Note: check if the CI has already been downloaded before in the other release,
+	// TODO: check if the CI has already been downloaded before in the other release,
 	// if yes, copy it to this release without download it from repository.
 
 	start := time.Now()

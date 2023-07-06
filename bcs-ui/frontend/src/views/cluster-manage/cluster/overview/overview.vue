@@ -52,8 +52,8 @@
           :metrics="['memory_usage']"
         />
       </div>
-      <!-- 磁盘容量(虚拟集群不展示磁盘信息) -->
-      <div class="flex-1 p-[20px] h-[360px]" v-if="curCluster.clusterType !== 'virtual'">
+      <!-- 磁盘容量 -->
+      <div class="flex-1 p-[20px] h-[360px]">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">{{ $t('磁盘容量') }}</span>
           <div>
@@ -170,8 +170,8 @@
           :metrics="['memory_request_usage']"
         />
       </div>
-      <!-- 磁盘IO(虚拟集群不展示磁盘信息) -->
-      <div class="flex-1 p-[20px] h-[360px]" v-if="curCluster.clusterType !== 'virtual'">
+      <!-- 磁盘IO -->
+      <div class="flex-1 p-[20px] h-[360px]">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">{{ $t('磁盘IO') }}</span>
           <div>
@@ -191,7 +191,7 @@
         </div>
         <ClusterOverviewChart
           :cluster-id="clusterId"
-          class="!h-[250px] mt-[17px]"
+          class="!h-[250px]"
           :colors="['#853cff']"
           :metrics="['diskio_usage']"
         />
@@ -200,10 +200,10 @@
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, onMounted, ref, toRefs, computed } from 'vue';
+import { defineComponent, onMounted, ref, toRefs } from 'vue';
 import ClusterOverviewChart from './cluster-overview-chart.vue';
 import $store from '@/store/index';
-import { useCluster, useProject } from '@/composables/use-app';
+import { useProject } from '@/composables/use-app';
 import { formatBytes } from '@/common/util';
 export default defineComponent({
   name: 'ClusterOverview',
@@ -217,8 +217,6 @@ export default defineComponent({
   },
   setup(props) {
     const { clusterId } = toRefs(props);
-    const { clusterList } = useCluster();
-    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value) || {});
     const { projectCode } = useProject();
     const overviewData = ref<{
       cpu_usage: any
@@ -251,7 +249,6 @@ export default defineComponent({
       getClusterOverview();
     });
     return {
-      curCluster,
       overviewData,
       conversionPercentUsed,
       formatBytes,

@@ -15,6 +15,8 @@ package table
 import (
 	"errors"
 	"fmt"
+
+	"bscp.io/pkg/criteria/enumor"
 )
 
 // Event table's primary key reserved 500(as is [1, 500]) ids as
@@ -26,41 +28,37 @@ import (
 // the cursor reminder's record.
 const EventCursorReminderPrimaryID = 1
 
+// EventColumns defines Event's columns
+var EventColumns = mergeColumns(EventColumnDescriptor)
+
+// EventColumnDescriptor is Event's column descriptors.
+var EventColumnDescriptor = mergeColumnDescriptors("",
+	ColumnDescriptors{{Column: "id", NamedC: "id", Type: enumor.Numeric}},
+	mergeColumnDescriptors("spec", EventSpecColumnDescriptor),
+	mergeColumnDescriptors("attachment", EventAttachmentColumnDescriptor),
+	mergeColumnDescriptors("state", EventStateColumnDescriptor),
+	mergeColumnDescriptors("revision", CreatedRevisionColumnDescriptor))
+
 // Event defines a resource's changes details, which is used to
 // do caching operations periodically.
 // an event can not be edited after created.
 type Event struct {
 	// ID is an auto-increased value, which is a unique identity
 	// of an event.
-	ID         uint32           `json:"id" gorm:"primaryKey"`
-	Spec       *EventSpec       `json:"spec" gorm:"embedded"`
-	Attachment *EventAttachment `json:"attachment" gorm:"embedded"`
-	State      *EventState      `json:"state" gorm:"embedded"`
-	Revision   *CreatedRevision `json:"revision" gorm:"embedded"`
+	ID         uint32           `db:"id" json:"id"`
+	Spec       *EventSpec       `db:"spec" json:"spec"`
+	Attachment *EventAttachment `db:"attachment" json:"attachment"`
+	State      *EventState      `db:"state" json:"state"`
+	Revision   *CreatedRevision `db:"revision" json:"revision"`
 }
 
 // TableName is resource change event's database table name.
-func (e *Event) TableName() string {
-	return "events"
-}
-
-// AppID AuditRes interface
-func (e *Event) AppID() uint32 {
-	return 0
-}
-
-// ResID AuditRes interface
-func (e *Event) ResID() uint32 {
-	return e.ID
-}
-
-// ResType AuditRes interface
-func (e *Event) ResType() string {
-	return "event"
+func (e Event) TableName() Name {
+	return EventTable
 }
 
 // ValidateCreate the event is valid or not when create it.
-func (e *Event) ValidateCreate() error {
+func (e Event) ValidateCreate() error {
 	if e.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -146,19 +144,29 @@ const (
 	CredentialEvent EventResource = "credential"
 )
 
+// EventSpecColumns defines EventSpec's columns
+var EventSpecColumns = mergeColumns(EventSpecColumnDescriptor)
+
+// EventSpecColumnDescriptor is EventSpec's column descriptors.
+var EventSpecColumnDescriptor = ColumnDescriptors{
+	{Column: "resource", NamedC: "resource", Type: enumor.String},
+	{Column: "resource_id", NamedC: "resource_id", Type: enumor.Numeric},
+	{Column: "resource_uid", NamedC: "resource_uid", Type: enumor.String},
+	{Column: "op_type", NamedC: "op_type", Type: enumor.String}}
+
 // EventSpec defines the specifics of event
 type EventSpec struct {
 	// Resource defines what kind of resource an event belongs to
-	Resource EventResource `json:"resource" gorm:"column:resource"`
+	Resource EventResource `db:"resource" json:"resource"`
 	// ResourceID is the identity of this changed resource with uint32 type.
-	ResourceID uint32 `json:"resource_id" gorm:"column:resource_id"`
+	ResourceID uint32 `db:"resource_id" json:"resource_id"`
 	// ResourceUid is the identity of this changed resource with string type.
-	ResourceUid string    `json:"resource_uid" gorm:"column:resource_uid"`
-	OpType      EventType `json:"op_type" gorm:"column:op_type"`
+	ResourceUid string    `db:"resource_uid" json:"resource_uid"`
+	OpType      EventType `db:"op_type" json:"op_type"`
 }
 
 // Validate event specifics
-func (e *EventSpec) Validate() error {
+func (e EventSpec) Validate() error {
 	if err := e.Resource.Validate(); err != nil {
 		return fmt.Errorf("validate resource failed, err: %v", err)
 	}
@@ -175,14 +183,22 @@ func (e *EventSpec) Validate() error {
 	return nil
 }
 
+// EventAttachmentColumns defines EventAttachment's columns
+var EventAttachmentColumns = mergeColumns(EventAttachmentColumnDescriptor)
+
+// EventAttachmentColumnDescriptor is EventAttachment's column descriptors.
+var EventAttachmentColumnDescriptor = ColumnDescriptors{
+	{Column: "biz_id", NamedC: "biz_id", Type: enumor.Numeric},
+	{Column: "app_id", NamedC: "app_id", Type: enumor.Numeric}}
+
 // EventAttachment is the attachment of an event.
 type EventAttachment struct {
-	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
-	AppID uint32 `json:"app_id" gorm:"column:app_id"`
+	BizID uint32 `db:"biz_id" json:"biz_id"`
+	AppID uint32 `db:"app_id" json:"app_id"`
 }
 
 // Validate the event attachment is valid or not.
-func (ea *EventAttachment) Validate() error {
+func (ea EventAttachment) Validate() error {
 	if ea.BizID <= 0 {
 		return errors.New("invalid biz id")
 	}
@@ -209,6 +225,13 @@ const (
 	FailedFS EventFinalStatus = 2
 )
 
+// EventStateColumns defines EventState's columns
+var EventStateColumns = mergeColumns(EventStateColumnDescriptor)
+
+// EventStateColumnDescriptor is EventState's column descriptors.
+var EventStateColumnDescriptor = ColumnDescriptors{
+	{Column: "final_status", NamedC: "final_status", Type: enumor.Numeric}}
+
 // EventState defines the generated event's related state infos.
 type EventState struct {
 	// As is known, event is inserted before the previous business logic
@@ -219,5 +242,5 @@ type EventState struct {
 	// real published release can be rollback(failed) on another db sharding).
 	// This status is updated after the sharding transaction is finished with
 	// a success or failed state.
-	FinalStatus EventFinalStatus `json:"final_status" gorm:"column:final_status"`
+	FinalStatus EventFinalStatus `db:"final_status" json:"final_status"`
 }

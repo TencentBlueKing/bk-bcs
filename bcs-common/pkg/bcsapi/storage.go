@@ -37,10 +37,10 @@ const (
 
 // Storage interface definition for bcs-storage
 type Storage interface {
-	// QueryMesosTaskgroup query mesos task groups
+	// QueryMesosTaskgroup TODO
 	// search all taskgroup by clusterID
 	QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, error)
-	// QueryK8SPod query k8s pods
+	// QueryK8SPod TODO
 	// query all pod information in specified cluster
 	QueryK8SPod(cluster, namespace string) ([]*storage.Pod, error)
 	// GetIPPoolDetailInfo get all underlay ip information

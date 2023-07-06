@@ -141,7 +141,7 @@ func TestDispatch(t *testing.T) {
 
 	// test terminate
 	mock = &mockAction{name: "test-terminate"}
-	_, err := GlobalOperator.Dispatch(mock, defaultTimeout)
+	done, err := GlobalOperator.Dispatch(mock, defaultTimeout)
 	if err == nil {
 		t.Error("dispatch should be error")
 	}

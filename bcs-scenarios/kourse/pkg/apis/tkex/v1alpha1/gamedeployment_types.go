@@ -21,13 +21,6 @@ import (
 )
 
 const (
-	// KindGameDeployment is the kind of GameDeployment
-	KindGameDeployment = "GameDeployment"
-	// ResourceGameDeployment is the resource of GameDeployment
-	ResourceGameDeployment = "gamedeployments"
-)
-
-const (
 	// GameDeploymentInstanceID is a unique id for Pods and PVCs.
 	// Each pod and the pvcs it owns have the same instance-id.
 	GameDeploymentInstanceID = "tkex.bkbcs.tencent.com/gamedeployment-instance-id"

@@ -97,8 +97,7 @@ type scaleTestResults struct {
 	scaleUpStatus    scaleUpStatusInfo
 }
 
-// scaleUpStatusInfo is a simplified form of a ScaleUpStatus, to avoid
-// mocking actual NodeGroup and Pod objects in test config.
+// scaleUpStatusInfo is a simplified form of a ScaleUpStatus, to avoid mocking actual NodeGroup and Pod objects in test config.
 type scaleUpStatusInfo struct {
 	result                  status.ScaleUpResult
 	podsTriggeredScaleUp    []string
@@ -194,21 +193,18 @@ type mockAutoprovisioningNodeGroupManager struct {
 	extraGroups int
 }
 
-func (p *mockAutoprovisioningNodeGroupManager) CreateNodeGroup(context *context.AutoscalingContext,
-	nodeGroup cloudprovider.NodeGroup) (nodegroups.CreateNodeGroupResult, errors.AutoscalerError) {
+func (p *mockAutoprovisioningNodeGroupManager) CreateNodeGroup(context *context.AutoscalingContext, nodeGroup cloudprovider.NodeGroup) (nodegroups.CreateNodeGroupResult, errors.AutoscalerError) {
 	newNodeGroup, err := nodeGroup.Create()
 	assert.NoError(p.t, err)
 	metrics.RegisterNodeGroupCreation()
 	extraGroups := []cloudprovider.NodeGroup{}
 	testGroup, ok := nodeGroup.(*testcloudprovider.TestNodeGroup)
 	if !ok {
-		return nodegroups.CreateNodeGroupResult{}, errors.ToAutoscalerError(errors.InternalError,
-			fmt.Errorf("expected test node group, found %v", reflect.TypeOf(nodeGroup)))
+		return nodegroups.CreateNodeGroupResult{}, errors.ToAutoscalerError(errors.InternalError, fmt.Errorf("expected test node group, found %v", reflect.TypeOf(nodeGroup)))
 	}
 	testCloudProvider, ok := context.CloudProvider.(*testcloudprovider.TestCloudProvider)
 	if !ok {
-		return nodegroups.CreateNodeGroupResult{}, errors.ToAutoscalerError(errors.InternalError,
-			fmt.Errorf("expected test CloudProvider, found %v", reflect.TypeOf(context.CloudProvider)))
+		return nodegroups.CreateNodeGroupResult{}, errors.ToAutoscalerError(errors.InternalError, fmt.Errorf("expected test CloudProvider, found %v", reflect.TypeOf(context.CloudProvider)))
 	}
 	for i := 0; i < p.extraGroups; i++ {
 		extraNodeGroup, err := testCloudProvider.NewNodeGroupWithId(
@@ -232,8 +228,7 @@ func (p *mockAutoprovisioningNodeGroupManager) CreateNodeGroup(context *context.
 	return result, nil
 }
 
-func (p *mockAutoprovisioningNodeGroupManager) RemoveUnneededNodeGroups(context *context.AutoscalingContext) (
-	removedNodeGroups []cloudprovider.NodeGroup, err error) {
+func (p *mockAutoprovisioningNodeGroupManager) RemoveUnneededNodeGroups(context *context.AutoscalingContext) (removedNodeGroups []cloudprovider.NodeGroup, err error) {
 	if !context.AutoscalingOptions.NodeAutoprovisioningEnabled {
 		return nil, nil
 	}
@@ -267,8 +262,7 @@ type mockAutoprovisioningNodeGroupListProcessor struct {
 	t *testing.T
 }
 
-func (p *mockAutoprovisioningNodeGroupListProcessor) Process(context *context.AutoscalingContext,
-	nodeGroups []cloudprovider.NodeGroup, nodeInfos map[string]*schedulerframework.NodeInfo,
+func (p *mockAutoprovisioningNodeGroupListProcessor) Process(context *context.AutoscalingContext, nodeGroups []cloudprovider.NodeGroup, nodeInfos map[string]*schedulerframework.NodeInfo,
 	unschedulablePods []*apiv1.Pod) ([]cloudprovider.NodeGroup, map[string]*schedulerframework.NodeInfo, error) {
 
 	machines, err := context.CloudProvider.GetAvailableMachineTypes()
@@ -276,8 +270,7 @@ func (p *mockAutoprovisioningNodeGroupListProcessor) Process(context *context.Au
 
 	bestLabels := labels.BestLabelSet(unschedulablePods)
 	for _, machineType := range machines {
-		nodeGroup, err := context.CloudProvider.NewNodeGroup(machineType, bestLabels,
-			map[string]string{}, []apiv1.Taint{}, map[string]resource.Quantity{})
+		nodeGroup, err := context.CloudProvider.NewNodeGroup(machineType, bestLabels, map[string]string{}, []apiv1.Taint{}, map[string]resource.Quantity{})
 		assert.NoError(p.t, err)
 		nodeInfo, err := nodeGroup.TemplateNodeInfo()
 		assert.NoError(p.t, err)
@@ -291,6 +284,5 @@ func (p *mockAutoprovisioningNodeGroupListProcessor) CleanUp() {
 }
 
 func newBackoff() backoff.Backoff {
-	return backoff.NewIdBasedExponentialBackoff(clusterstate.InitialNodeGroupBackoffDuration,
-		clusterstate.MaxNodeGroupBackoffDuration, clusterstate.NodeGroupBackoffResetTimeout)
+	return backoff.NewIdBasedExponentialBackoff(clusterstate.InitialNodeGroupBackoffDuration, clusterstate.MaxNodeGroupBackoffDuration, clusterstate.NodeGroupBackoffResetTimeout)
 }

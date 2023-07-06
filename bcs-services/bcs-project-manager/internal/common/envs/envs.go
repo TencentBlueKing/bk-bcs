@@ -22,7 +22,7 @@ import (
 // 以下变量值可通过环境变量指定
 var (
 	// LocalIP 服务运行 Pod IP，用于向etcd注册服务
-	LocalIP   = stringx.GetEnv("localIp", "")
+	LocalIP = stringx.GetEnv("localIp", "")
 	LocalIPV6 = stringx.GetEnv("localIpv6", "")
 	// MongoPwd mongo password
 	MongoPwd = stringx.GetEnv("mongoPwd", "")

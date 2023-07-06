@@ -131,7 +131,18 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 		pool.Status.PoolItemStatuses = append(pool.Status.PoolItemStatuses, ts)
 	}
 
-	pool.Status.Status = checkPortPoolStatus(pool)
+	statusReady := true
+	for _, ts := range pool.Status.PoolItemStatuses {
+		if ts.Status != constant.PortPoolItemStatusReady {
+			statusReady = false
+			break
+		}
+	}
+	if statusReady {
+		pool.Status.Status = constant.PortPoolStatusReady
+	} else {
+		pool.Status.Status = constant.PortPoolStatusNotReady
+	}
 
 	err := pph.k8sClient.Status().Update(context.Background(), pool, &client.UpdateOptions{})
 	if err != nil {
@@ -143,9 +154,37 @@ func (pph *PortPoolHandler) ensurePortPool(pool *networkextensionv1.PortPool) (b
 		return true, errors.Wrapf(err, "pool[%s/%s] ensurePortBinding failed", pool.GetNamespace(), pool.GetName())
 	}
 
-	// update related cache
+	pph.poolCache.Lock()
+	defer pph.poolCache.Unlock()
+
+	// delete item from pool cache
 	poolKey := ingresscommon.GetNamespacedNameKey(pool.GetName(), pool.GetNamespace())
-	pph.ensureCache(poolKey, tmpItemsStatus, successDeletedKeyMap, failedDeletedKeyMap, newItemStatusList, updateItemStatusMap)
+	for _, itemStatus := range tmpItemsStatus {
+		itemKey := itemStatus.GetKey()
+		if _, ok := successDeletedKeyMap[itemKey]; !ok {
+			if _, inOk := failedDeletedKeyMap[itemKey]; inOk {
+				pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus)
+				blog.Infof("set port pool %s item %s status to %s",
+					poolKey, itemStatus.ItemName, constant.PortPoolItemStatusDeleting)
+			}
+		} else {
+			pph.poolCache.DeletePortPoolItem(poolKey, itemKey)
+			blog.Infof("delete port pool %s item %s", poolKey, itemStatus.ItemName)
+		}
+	}
+	// add item to pool cache
+	for _, itemStatus := range newItemStatusList {
+		if err := pph.poolCache.AddPortPoolItem(poolKey, itemStatus); err != nil {
+			blog.Warnf("failed to add port pool %s item %v to cache, err %s", poolKey, itemStatus, err.Error())
+		} else {
+			blog.Infof("add port pool %s item %v to cache", poolKey, itemStatus)
+		}
+	}
+	// update item status
+	for _, itemStatus := range updateItemStatusMap {
+		pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus)
+		blog.Infof("set port pool %s item %s status to %s", poolKey, itemStatus.ItemName, itemStatus.Status)
+	}
 
 	if len(failedDeletedKeyMap) != 0 || shouldRetry {
 		return true, nil
@@ -271,39 +310,4 @@ func (pph *PortPoolHandler) ensurePortBinding(pool *networkextensionv1.PortPool)
 	}
 
 	return nil
-}
-
-func (pph *PortPoolHandler) ensureCache(poolKey string, tmpItemsStatus []*networkextensionv1.PortPoolItemStatus,
-	successDeletedKeyMap, failedDeletedKeyMap map[string]struct{}, newItemStatusList []*networkextensionv1.
-		PortPoolItemStatus, updateItemStatusMap map[string]*networkextensionv1.PortPoolItemStatus) {
-
-	pph.poolCache.Lock()
-	defer pph.poolCache.Unlock()
-
-	for _, itemStatus := range tmpItemsStatus {
-		itemKey := itemStatus.GetKey()
-		if _, ok := successDeletedKeyMap[itemKey]; !ok {
-			if _, inOk := failedDeletedKeyMap[itemKey]; inOk {
-				pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus)
-				blog.Infof("set port pool %s item %s status to %s",
-					poolKey, itemStatus.ItemName, constant.PortPoolItemStatusDeleting)
-			}
-		} else {
-			pph.poolCache.DeletePortPoolItem(poolKey, itemKey)
-			blog.Infof("delete port pool %s item %s", poolKey, itemStatus.ItemName)
-		}
-	}
-	// add item to pool cache
-	for _, itemStatus := range newItemStatusList {
-		if err := pph.poolCache.AddPortPoolItem(poolKey, itemStatus); err != nil {
-			blog.Warnf("failed to add port pool %s item %v to cache, err %s", poolKey, itemStatus, err.Error())
-		} else {
-			blog.Infof("add port pool %s item %v to cache", poolKey, itemStatus)
-		}
-	}
-	// update item status
-	for _, itemStatus := range updateItemStatusMap {
-		pph.poolCache.SetPortPoolItemStatus(poolKey, itemStatus)
-		blog.Infof("set port pool %s item %s status to %s", poolKey, itemStatus.ItemName, itemStatus.Status)
-	}
 }

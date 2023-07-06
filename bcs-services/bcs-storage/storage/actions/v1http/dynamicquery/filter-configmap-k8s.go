@@ -28,7 +28,6 @@ type ConfigMapK8sFilter struct {
 
 const configMapK8sNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t ConfigMapK8sFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, configMapK8sNestedTimeLayout)
 }

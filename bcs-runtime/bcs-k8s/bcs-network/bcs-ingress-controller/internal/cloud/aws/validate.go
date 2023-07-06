@@ -101,7 +101,7 @@ func (e *ElbValidater) validateIngressRule(rule *networkextensionv1.IngressRule)
 	switch rule.Protocol {
 	case ElbProtocolHTTP, ElbProtocolHTTPS:
 		if rule.ListenerAttribute != nil {
-			if ok, msg := e.validateApplicationListenerAttr(rule.ListenerAttribute); !ok {
+			if ok, msg := e.validateApplicationListenerAttribute(rule.ListenerAttribute); !ok {
 				return ok, msg
 			}
 		}
@@ -127,7 +127,7 @@ func (e *ElbValidater) validateIngressRule(rule *networkextensionv1.IngressRule)
 
 // validateAppListenerAttribute check aws application lb listener attribute
 // aws validater only check the HealthCheck and AWSAttribute
-func (e *ElbValidater) validateApplicationListenerAttr(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
+func (e *ElbValidater) validateApplicationListenerAttribute(attr *networkextensionv1.IngressListenerAttribute) (bool, string) {
 	// check HealthCheck
 	if attr.HealthCheck != nil {
 		if attr.HealthCheck.HealthNum != 0 && (attr.HealthCheck.HealthNum < 2 || attr.HealthCheck.HealthNum > 10) {
@@ -147,9 +147,8 @@ func (e *ElbValidater) validateApplicationListenerAttr(attr *networkextensionv1.
 		}
 		// check code
 		if len(attr.HealthCheck.HTTPCodeValues) != 0 && !checkHTTPCodeValues(attr.HealthCheck.HTTPCodeValues) {
-			return false, fmt.Sprintf(`invalid http code values %s, you can specify values between 200 and 499, 
-and the default value is 200. You can specify multiple values (for example,"200,
-202") or a range of values (for example, "200-299")`, attr.HealthCheck.HTTPCodeValues)
+			return false, fmt.Sprintf(`invalid http code values %s, you can specify values between 200 and 499, and the default value is 200. You can specify multiple values (for example,"200,202") or a range of values (for example, "200-299")`,
+				attr.HealthCheck.HTTPCodeValues)
 		}
 	}
 
@@ -263,7 +262,7 @@ func (e *ElbValidater) validateListenerRoute(r *networkextensionv1.Layer7Route) 
 		return false, "domain cannot be empty for 7 layer listener"
 	}
 	if r.ListenerAttribute != nil {
-		if ok, msg := e.validateApplicationListenerAttr(r.ListenerAttribute); !ok {
+		if ok, msg := e.validateApplicationListenerAttribute(r.ListenerAttribute); !ok {
 			return ok, msg
 		}
 	}
@@ -280,7 +279,7 @@ func (e *ElbValidater) validatePortMappingRoute(r *networkextensionv1.IngressPor
 		return false, "domain cannot be empty for 7 layer listener"
 	}
 	if r.ListenerAttribute != nil {
-		if ok, msg := e.validateApplicationListenerAttr(r.ListenerAttribute); !ok {
+		if ok, msg := e.validateApplicationListenerAttribute(r.ListenerAttribute); !ok {
 			return ok, msg
 		}
 	}

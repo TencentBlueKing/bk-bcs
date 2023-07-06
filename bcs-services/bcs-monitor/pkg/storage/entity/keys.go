@@ -15,18 +15,11 @@ package entity
 
 // 定义一批统一的key, 用在db相关的字段
 const (
-	FieldKeyObjectID       = "_id"
-	FieldKeyProjectID      = "projectID"
-	FieldKeyProjectCode    = "projectCode"
-	FieldKeyClusterID      = "clusterID"
-	FieldKeyName           = "name"
-	FieldKeyRuleID         = "ruleID"
-	FieldKeyRuleName       = "ruleName"
-	FieldKeyStatus         = "status"
-	FieldKeyMessage        = "message"
-	FieldKeyFileIndexSetID = "fileIndexSetID"
-	FieldKeyStdIndexSetID  = "stdIndexSetID"
-	FieldKeyFromRuleID     = "fromRule"
+	FieldKeyObjectID    = "_id"
+	FieldKeyProjectID   = "projectID"
+	FieldKeyProjectCode = "projectCode"
+	FieldKeyClusterID   = "clusterID"
+	FieldKeyName        = "name"
 
 	FieldKeyCreator   = "creator"
 	FieldKeyUpdator   = "updator"

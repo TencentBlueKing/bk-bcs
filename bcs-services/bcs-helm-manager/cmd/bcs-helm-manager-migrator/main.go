@@ -57,15 +57,11 @@ var (
 	// C define config
 	C *options.HelmManagerOptions
 
-	// mysql host
-	mysqlHost = envx.GetEnv("MYSQL_HOST", "")
-	// mysql port
-	mysqlPort = envx.GetEnv("MYSQL_PORT", "3306")
-	// mysql username
+	// mysql
+	mysqlHost     = envx.GetEnv("MYSQL_HOST", "")
+	mysqlPort     = envx.GetEnv("MYSQL_PORT", "3306")
 	mysqlUsername = envx.GetEnv("MYSQL_USERNAME", "")
-	// mysql password
 	mysqlPassword = envx.GetEnv("MYSQL_PASSWORD", "")
-	// mysql database
 	mysqlDatabase = envx.GetEnv("MYSQL_DATABASE", "")
 )
 
@@ -78,7 +74,6 @@ func parseFlags() {
 func main() {
 	parseFlags()
 	loadConfig()
-	// init registry
 	if err := initRegistry(); err != nil {
 		blog.Fatalf("init registry error, %s", err.Error())
 	}
@@ -99,7 +94,6 @@ func main() {
 		password = string(realPwd)
 	}
 
-	// init mongo options
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(C.Mongo.Address, ","),
 		ConnectTimeoutSeconds: int(C.Mongo.ConnectTimeout),
@@ -110,7 +104,6 @@ func main() {
 		MaxPoolSize:           uint64(C.Mongo.MaxPoolSize),
 		MinPoolSize:           uint64(C.Mongo.MinPoolSize),
 	}
-	// new mongo db
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {
 		blog.Fatalf("init mongo db failed, err %s", err.Error())
@@ -134,14 +127,12 @@ func main() {
 	migrateReleases(model, mysqlDB)
 }
 
-// migrate repo from saas to helm
 func migrateRepo(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 	repos := getSaasHelmRepo(mysqlDB)
 	existRepos := getHelmRepo(model)
 	blog.Infof("get %d repos from saas, %d repos from helmmanager", len(repos), len(existRepos))
 	syncRepos := 0
 	for _, repo := range repos {
-		// check repo is existed
 		exist := false
 		for _, v := range existRepos {
 			if v.ProjectID == repo.Name && v.Name == repo.Name {
@@ -153,7 +144,6 @@ func migrateRepo(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 
 		// sync project repo
 		if !exist {
-			// parse credential
 			if len(repo.CredentialString) == 0 {
 				blog.Infof("skip sync project %s chart repo, because credentials is null", repo.Name)
 				continue
@@ -165,7 +155,6 @@ func migrateRepo(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 					repo.CredentialString, err.Error())
 				continue
 			}
-			// create repo
 			now := time.Now().Unix()
 			err = model.CreateRepository(context.TODO(), &entity.Repository{
 				ProjectID:  repo.Name,
@@ -195,7 +184,6 @@ func migrateRepo(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 	blog.Infof("%d repos are synced", syncRepos)
 }
 
-// get helm repo from helmmanager db
 func getHelmRepo(model store.HelmManagerModel) []*entity.Repository {
 	options := &utils.ListOption{
 		Sort: map[string]int{},
@@ -212,7 +200,6 @@ func getHelmRepo(model store.HelmManagerModel) []*entity.Repository {
 	return repos
 }
 
-// get helm repo from saas db
 func getSaasHelmRepo(db *gorm.DB) []repo {
 	var repos []repo
 	err := db.Raw("SELECT r.id, r.url, r.name, r.project_id, ra.credentials FROM helm_repository AS r "+
@@ -225,7 +212,6 @@ func getSaasHelmRepo(db *gorm.DB) []repo {
 	return repos
 }
 
-// create public repo
 func createOrUpdatePublicRepo(model store.HelmManagerModel, projectID string) {
 	_, err := model.GetRepository(context.TODO(), projectID, common.PublicRepoName)
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
@@ -236,7 +222,6 @@ func createOrUpdatePublicRepo(model store.HelmManagerModel, projectID string) {
 		blog.Errorf("project %s has public repo, skip", projectID)
 		return
 	}
-	// create repo
 	now := time.Now().Unix()
 	err = model.CreateRepository(context.TODO(), &entity.Repository{
 		ProjectID:   projectID,
@@ -255,7 +240,6 @@ func createOrUpdatePublicRepo(model store.HelmManagerModel, projectID string) {
 	}
 }
 
-// migrate releases from saas
 func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 	releases := getSaasHelmReleases(mysqlDB)
 	blog.Infof("get %d releases from saas, syncing", len(releases))
@@ -265,21 +249,18 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 		if len(v.Name) == 0 || len(v.ClusterID) == 0 || len(v.Namespace) == 0 {
 			continue
 		}
-		// trans to helmmanager release entity
 		rl, err := v.toEntity()
 		if err != nil {
 			blog.Errorf("create releases %s in cluster %s namespace %s, err %s",
 				v.Name, v.ClusterID, v.Namespace, err.Error())
 			continue
 		}
-		// check release is exist
 		exist, err := model.GetRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			blog.Errorf("create releases %s in cluster %s namespace %s, err %s",
 				v.Name, v.ClusterID, v.Namespace, err.Error())
 			continue
 		}
-		// update release
 		if err == nil {
 			existReleases++
 			if rl.UpdateTime < exist.UpdateTime {
@@ -296,7 +277,6 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 				entity.FieldKeyStatus:       rl.Status,
 				entity.FieldKeyMessage:      rl.Message,
 			}
-			// update release
 			err = model.UpdateRelease(context.TODO(), v.ClusterID, v.Namespace, v.Name, up)
 			if err != nil {
 				blog.Errorf("update releases %s in cluster %s namespace %s, err %s",
@@ -304,7 +284,6 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 			}
 			continue
 		}
-		// create release
 		err = model.CreateRelease(context.TODO(), rl)
 		if err != nil {
 			blog.Errorf("create releases %s in cluster %s namespace %s, err %s",
@@ -316,7 +295,6 @@ func migrateReleases(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 	blog.Infof("%d releases are synced, %d releases are exist", syncReleases, existReleases)
 }
 
-// get saas helm releases from db
 func getSaasHelmReleases(db *gorm.DB) []release {
 	var releases []release
 	err := db.Raw("SELECT app.name,app.namespace,app.project_id,app.cluster_id,r.name AS repo," +
@@ -332,7 +310,6 @@ func getSaasHelmReleases(db *gorm.DB) []release {
 	return releases
 }
 
-// repo entity
 type repo struct {
 	ID               int    `json:"id,omitempty"`
 	URL              string `json:"url,omitempty" gorm:"column:url"`
@@ -341,13 +318,11 @@ type repo struct {
 	CredentialString string `json:"credentials,omitempty" gorm:"column:credentials"`
 }
 
-// repo credential
 type credential struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
 }
 
-// release entity
 type release struct {
 	Name         string    `json:"name"`
 	Namespace    string    `json:"namespace"`
@@ -368,7 +343,6 @@ type release struct {
 	Message      string    `json:"message"`
 }
 
-// trans release  entity
 func (r *release) toEntity() (*entity.Release, error) {
 	args := make([]string, 0)
 	flags := make([]map[string]interface{}, 0)
@@ -376,7 +350,6 @@ func (r *release) toEntity() (*entity.Release, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get %s cmd_flags %s error, err %s", r.Name, r.ArgString, err.Error())
 	}
-	// trans flag
 	for _, flag := range flags {
 		for k, v := range flag {
 			args = append(args, fmt.Sprintf("%s=%v", k, v))
@@ -387,7 +360,6 @@ func (r *release) toEntity() (*entity.Release, error) {
 	if r.Status != 1 {
 		status = helmrelease.StatusFailed
 	}
-	// init release struct
 	return &entity.Release{
 		Name:         r.Name,
 		Namespace:    r.Namespace,
@@ -409,7 +381,6 @@ func (r *release) toEntity() (*entity.Release, error) {
 	}, nil
 }
 
-// get project code from project
 func (r *release) getProjectCode() string {
 	p, err := project.GetProjectByCode(r.ProjectID)
 	if err != nil {
@@ -424,7 +395,6 @@ func mustInt(s string) int {
 	return v
 }
 
-// load config from yaml
 func loadConfig() {
 	opt := &options.HelmManagerOptions{}
 	config, err := microCfg.NewConfig(microCfg.WithReader(microJson.NewReader(
@@ -434,12 +404,10 @@ func loadConfig() {
 		blog.Fatalf("create config failed, %s", err.Error())
 	}
 
-	// load config from env
 	envSource := env.NewSource(
 		env.WithStrippedPrefix("HELM"),
 	)
 
-	// load config
 	if err = config.Load(
 		microFlg.NewSource(
 			microFlg.IncludeUnset(true),
@@ -448,7 +416,6 @@ func loadConfig() {
 		blog.Fatalf("load config from flag failed, %s", err.Error())
 	}
 
-	// get cocnfig from file and env
 	if len(config.Get("conf").String("")) > 0 {
 		err = config.Load(microFile.NewSource(microFile.WithPath(config.Get("conf").String(""))), envSource)
 		if err != nil {
@@ -456,20 +423,17 @@ func loadConfig() {
 		}
 	}
 
-	// scan config
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
 	}
 	C = opt
 }
 
-// init registry
 func initRegistry() error {
 	var (
 		tlsConfig *tls.Config
 		err       error
 	)
-	// get tls config
 	if len(C.TLS.ClientCert) != 0 && len(C.TLS.ClientKey) != 0 && len(C.TLS.ClientCa) != 0 {
 		tlsConfig, err = ssl.ClientTslConfVerity(C.TLS.ClientCa, C.TLS.ClientCert,
 			C.TLS.ClientKey, static.ClientCertPwd)
@@ -479,11 +443,9 @@ func initRegistry() error {
 		blog.Info("load helm manager client tls config successfully")
 	}
 
-	// get endpoints
 	etcdEndpoints := common.SplitAddrString(C.Etcd.EtcdEndpoints)
 	etcdSecure := false
 
-	// init etcd tls
 	var etcdTLS *tls.Config
 	if len(C.Etcd.EtcdCa) != 0 && len(C.Etcd.EtcdCert) != 0 && len(C.Etcd.EtcdKey) != 0 {
 		etcdSecure = true
@@ -495,7 +457,6 @@ func initRegistry() error {
 
 	blog.Infof("get etcd endpoints for registry: %v, with secure %t", etcdEndpoints, etcdSecure)
 
-	// new registry
 	reg := microEtcd.NewRegistry(
 		microRgt.Addrs(etcdEndpoints...),
 		microRgt.Secure(etcdSecure),

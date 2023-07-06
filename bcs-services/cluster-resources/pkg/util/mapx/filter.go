@@ -19,7 +19,7 @@ import (
 )
 
 // RemoveZeroSubItem 对 Map 中子项均为零值的项进行清理，返回值表示 Map 是否为空
-// 可以考虑支持 options，支持忽略布尔值，空列表等...
+// TODO 可以考虑支持 options，支持忽略布尔值，空列表等...
 func RemoveZeroSubItem(raw map[string]interface{}) bool { // nolint:cyclop
 	for key, val := range raw {
 		switch v := val.(type) {

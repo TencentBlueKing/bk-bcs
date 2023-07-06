@@ -73,7 +73,7 @@ func (p *pool) Pick() interface{} {
 	if p.curIndex == p.maxIndex {
 		p.curIndex = 0
 	} else {
-		p.curIndex++
+		p.curIndex += 1
 	}
 
 	return picked
@@ -114,7 +114,7 @@ func newOneClient(opt PoolOption) (interface{}, error) {
 		return nil, fmt.Errorf("dial service %s failed, err: %v", opt.ServiceName, err)
 	}
 
-	// Note: add ping test and wait for service ready.
+	// TODO: add ping test and wait for service ready.
 
 	return opt.NewClient(conn), nil
 }

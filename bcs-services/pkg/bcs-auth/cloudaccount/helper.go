@@ -58,7 +58,7 @@ type AccountResourceNode struct {
 func (arn AccountResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	if arn.IsCreateAccount {
 		return []iam.ResourceNode{
-			{
+			iam.ResourceNode{
 				System:    arn.SystemID,
 				RType:     string(project.SysProject),
 				RInstance: arn.ProjectID,
@@ -70,7 +70,7 @@ func (arn AccountResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	}
 
 	return []iam.ResourceNode{
-		{
+		iam.ResourceNode{
 			System:    arn.SystemID,
 			RType:     string(SysCloudAccount),
 			RInstance: arn.AccountID,

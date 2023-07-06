@@ -54,7 +54,6 @@ func MapBool2pbStruct(m map[string]map[string]bool) *spb.Struct {
 }
 
 // InterfaceToValue xxx
-// NOCC:golint/fnsize(设计如此:)
 func InterfaceToValue(v interface{}) *spb.Value {
 	switch v := v.(type) {
 	case nil:
@@ -143,7 +142,6 @@ func InterfaceToValue(v interface{}) *spb.Value {
 	}
 }
 
-// NOCC:golint/fnsize(设计如此:)
 func toValue(v reflect.Value) *spb.Value {
 	switch v.Kind() {
 	case reflect.Bool:

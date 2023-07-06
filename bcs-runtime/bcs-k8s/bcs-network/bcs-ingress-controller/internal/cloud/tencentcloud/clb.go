@@ -215,7 +215,23 @@ func (c *Clb) EnsureMultiListeners(
 	if err != nil {
 		return nil, err
 	}
-	addListeners, updatedListeners, deleteCloudListeners := compareListener(lbID, cloudListenerMap, listeners)
+	addListeners := make([]*networkextensionv1.Listener, 0)
+	updatedListeners := make([]*networkextensionv1.Listener, 0)
+	deleteCloudListeners := make([]*networkextensionv1.Listener, 0)
+	for _, li := range listeners {
+		cloudLi, ok := cloudListenerMap[common.GetListenerNameWithProtocol(
+			lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)]
+		if !ok {
+			addListeners = append(addListeners, li)
+		} else {
+			if strings.ToLower(cloudLi.Spec.Protocol) != strings.ToLower(li.Spec.Protocol) {
+				deleteCloudListeners = append(deleteCloudListeners, cloudLi)
+				addListeners = append(addListeners, li)
+			} else {
+				updatedListeners = append(updatedListeners, li)
+			}
+		}
+	}
 
 	if len(deleteCloudListeners) != 0 {
 		var delListenerIDs []string
@@ -230,13 +246,97 @@ func (c *Clb) EnsureMultiListeners(
 	}
 
 	retMap := make(map[string]cloud.Result)
-	for liName, res := range c.resolveCreateListener(region, addListeners) {
-		retMap[liName] = res
+	addListenerGroups := splitListenersToDiffProtocol(addListeners)
+	for _, group := range addListenerGroups {
+		if len(group) != 0 {
+			batches := splitListenersToDiffBatch(group)
+			for _, batch := range batches {
+				switch group[0].Spec.Protocol {
+				case ClbProtocolHTTP, ClbProtocolHTTPS:
+					liIDMap, err := c.batchCreate7LayerListener(region, batch)
+					if err != nil {
+						blog.Warnf("batch create 7 layer listener failed, err %s", err.Error())
+						for _, listener := range batch {
+							retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+						}
+						continue
+					}
+					for liName, res := range liIDMap {
+						retMap[liName] = res
+					}
+				case ClbProtocolTCP, ClbProtocolUDP:
+					liIDMap, err := c.batchCreate4LayerListener(region, batch)
+					if err != nil {
+						blog.Warnf("batch create 4 layer listener failed, err %s", err.Error())
+						for _, listener := range batch {
+							retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+						}
+						continue
+					}
+					for liName, res := range liIDMap {
+						retMap[liName] = res
+					}
+				default:
+					blog.Warnf("invalid batch protocol %s", group[0].Spec.Protocol)
+					continue
+				}
+			}
+		}
 	}
 
-	for liName, res := range c.resolveUpdateListener(region, updatedListeners, cloudListenerMap) {
-		retMap[liName] = res
+	updateListenerGroups := splitListenersToDiffProtocol(updatedListeners)
+	for _, group := range updateListenerGroups {
+		if len(group) != 0 {
+			cloudListenerGroup := make([]*networkextensionv1.Listener, 0)
+			for _, li := range group {
+				cloudListenerGroup = append(cloudListenerGroup, cloudListenerMap[common.GetListenerNameWithProtocol(
+					lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)])
+			}
+			switch group[0].Spec.Protocol {
+			case ClbProtocolHTTP, ClbProtocolHTTPS:
+				isErrArr, err := c.batchUpdate7LayerListeners(region, group, cloudListenerGroup)
+				if err != nil {
+					blog.Warnf("batch update 7 layer listeners %s failed, err %s", getListenerNames(group), err.Error())
+					for _, listener := range group {
+						retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+					}
+					continue
+				}
+				for index, err := range isErrArr {
+					if err == nil {
+						retMap[group[index].GetName()] = cloud.Result{
+							IsError: false,
+							Res:     cloudListenerGroup[index].Status.ListenerID}
+					} else {
+						retMap[group[index].GetName()] = cloud.Result{IsError: true, Err: err}
+						blog.Warnf("update 7 layer listener %s failed in batch, err: %+v", group[index].GetName(), err)
+					}
+				}
+			case ClbProtocolTCP, ClbProtocolUDP:
+				isErrArr, err := c.batchUpdate4LayerListener(region, group, cloudListenerGroup)
+				if err != nil {
+					blog.Infof("batch update 4 layer listeners %s failed, err %s", getListenerNames(group), err.Error())
+					for _, listener := range group {
+						retMap[listener.GetName()] = cloud.Result{IsError: true, Err: err}
+					}
+					continue
+				}
+				for index, err := range isErrArr {
+					if err == nil {
+						retMap[group[index].GetName()] = cloud.Result{IsError: false,
+							Res: cloudListenerGroup[index].Status.ListenerID}
+					} else {
+						retMap[group[index].GetName()] = cloud.Result{IsError: true, Err: err}
+						blog.Warnf("update 4 layer listener %s failed in batch", group[index].GetName())
+					}
+				}
+			default:
+				blog.Warnf("invalid batch protocol %s", group[0].Spec.Protocol)
+				continue
+			}
+		}
 	}
+
 	return retMap, nil
 }
 

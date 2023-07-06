@@ -340,7 +340,7 @@ func (sync *Synchronizer) doRequest(namespace, selector, kind string) (data []in
 	glog.V(2).Infof("sync request: namespace=%s, labelselector=%s, kind=%s, client.ResourceType=%s",
 		namespace, selector, kind, client.ResourceType)
 	if namespace != "" {
-		data, err = client.ListNsResourceWithLabelSelector(selector)
+		data, err = client.ListNamespaceResourceWithLabelSelector(selector)
 	} else {
 		data, err = client.ListClusterResourceWithLabelSelector(selector)
 	}

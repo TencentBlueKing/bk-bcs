@@ -16,9 +16,6 @@ package kubedriver
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
-	"net/http"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
@@ -27,8 +24,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/custom"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-driver/kubedriver/options"
 	disreg "github.com/Tencent/bk-bcs/bcs-services/bcs-k8s-watch/pkg/discovery/register"
+	"net"
+	"net/http"
 
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful"
 )
 
 const (
@@ -76,8 +75,10 @@ func StartServer(o *options.KubeDriverServerOptions) error {
 	}
 
 	if o.Environment == "prod" || o.Environment == "stag" {
+
 		if o.RegisterWithWebsocket {
-			if err = buildWebsocketToApi(o); err != nil {
+			err := buildWebsocketToApi(o)
+			if err != nil {
 				blog.Fatalf("err when register with websocket: %s", err.Error())
 				return err
 			}

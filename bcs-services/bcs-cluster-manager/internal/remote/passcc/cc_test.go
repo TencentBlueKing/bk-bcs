@@ -38,7 +38,7 @@ var server = &ClientConfig{
 	debug:     true,
 }
 
-func TestCreatePassCCClusterSnap(t *testing.T) {
+func TestClientConfig_CreatePassCCClusterSnapshoot(t *testing.T) {
 	token, err := server.getAccessToken(getPermServer())
 	if err != nil {
 		t.Fatal(err)
@@ -78,7 +78,7 @@ func TestCreatePassCCClusterSnap(t *testing.T) {
 	t.Log("success")
 }
 
-func TestDeletePassCCCluster(t *testing.T) {
+func TestClientConfig_DeletePassCCCluster(t *testing.T) {
 	token, err := server.getAccessToken(getPermServer())
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +93,7 @@ func TestDeletePassCCCluster(t *testing.T) {
 	t.Log("success")
 }
 
-func TestCreatePassCCCluster(t *testing.T) {
+func TestClientConfig_CreatePassCCCluster(t *testing.T) {
 	token, err := server.getAccessToken(getPermServer())
 	if err != nil {
 		t.Fatal(err)

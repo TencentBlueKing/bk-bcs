@@ -66,7 +66,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/swagger"
 )
 
-// clusterResourcesService
 type clusterResourcesService struct {
 	conf *config.ClusterResourcesConf
 
@@ -138,7 +137,6 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		log.Info(crSvc.ctx, "grpc serve dualStackListener with ipv6: %s", ipv6Addr)
 	}
 
-	// init micro server
 	grpcServer := microGrpc.NewServer(
 		server.Name(conf.ServiceDomain),
 		microGrpc.AuthTLS(crSvc.tlsConfig),
@@ -298,11 +296,16 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	endpoint := net.JoinHostPort(crSvc.conf.Server.Address, strconv.Itoa(crSvc.conf.Server.Port))
 	for _, epRegister := range []func(context.Context, *runtime.ServeMux, string, []grpc.DialOption) error{
 		clusterRes.RegisterBasicGwFromEndpoint,
-		clusterRes.RegisterNodeGwFromEndpoint, clusterRes.RegisterNamespaceGwFromEndpoint,
-		clusterRes.RegisterWorkloadGwFromEndpoint, clusterRes.RegisterNetworkGwFromEndpoint,
-		clusterRes.RegisterConfigGwFromEndpoint, clusterRes.RegisterStorageGwFromEndpoint,
-		clusterRes.RegisterRBACGwFromEndpoint, clusterRes.RegisterHPAGwFromEndpoint,
-		clusterRes.RegisterCustomResGwFromEndpoint, clusterRes.RegisterResourceGwFromEndpoint,
+		clusterRes.RegisterNodeGwFromEndpoint,
+		clusterRes.RegisterNamespaceGwFromEndpoint,
+		clusterRes.RegisterWorkloadGwFromEndpoint,
+		clusterRes.RegisterNetworkGwFromEndpoint,
+		clusterRes.RegisterConfigGwFromEndpoint,
+		clusterRes.RegisterStorageGwFromEndpoint,
+		clusterRes.RegisterRBACGwFromEndpoint,
+		clusterRes.RegisterHPAGwFromEndpoint,
+		clusterRes.RegisterCustomResGwFromEndpoint,
+		clusterRes.RegisterResourceGwFromEndpoint,
 	} {
 		err := epRegister(crSvc.ctx, rmMux, endpoint, grpcDialOpts)
 		if err != nil {
@@ -358,24 +361,20 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	}
 
 	go func() {
-		crSvc.run(httpAddr, dualStackListener)
+		var err error
+		log.Info(crSvc.ctx, "start http gateway server on address %s", httpAddr)
+		if crSvc.tlsConfig != nil {
+			crSvc.httpServer.TLSConfig = crSvc.tlsConfig
+			err = crSvc.httpServer.ServeTLS(dualStackListener, "", "")
+		} else {
+			err = crSvc.httpServer.Serve(dualStackListener)
+		}
+		if err != nil {
+			log.Error(crSvc.ctx, "start http gateway server failed: %v", err)
+			crSvc.stopCh <- struct{}{}
+		}
 	}()
 	return nil
-}
-
-func (crSvc *clusterResourcesService) run(httpAddr string, dualStackListener net.Listener) {
-	var err error
-	log.Info(crSvc.ctx, "start http gateway server on address %s", httpAddr)
-	if crSvc.tlsConfig != nil {
-		crSvc.httpServer.TLSConfig = crSvc.tlsConfig
-		err = crSvc.httpServer.ServeTLS(dualStackListener, "", "")
-	} else {
-		err = crSvc.httpServer.Serve(dualStackListener)
-	}
-	if err != nil {
-		log.Error(crSvc.ctx, "start http gateway server failed: %v", err)
-		crSvc.stopCh <- struct{}{}
-	}
 }
 
 // initMetricService 初始化 Metric 服务

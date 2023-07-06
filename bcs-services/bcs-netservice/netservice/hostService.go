@@ -16,11 +16,10 @@ package netservice
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"time"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	types "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/netservice"
+	"path/filepath"
+	"time"
 )
 
 // AddHost update host info
@@ -118,10 +117,10 @@ func (srv *NetService) DeleteHost(hostIP string, ipsDel []string) error {
 	if err != nil {
 		blog.Errorf("check Host %s container list err, %v", hostIP, err)
 		reportMetrics("deleteHost", stateStorageFailure, started)
-		return fmt.Errorf("check host %s container list err %s", hostIP, err.Error())
+		return fmt.Errorf("check host %s contianer list err %s", hostIP, err.Error())
 	}
 	if len(containerList) != 0 {
-		blog.Errorf("Host %s is still active, %d containers are deploying in it", hostIP, len(containerList))
+		blog.Errorf("Host %s is stil active, %d containers are deploying in it", hostIP, len(containerList))
 		reportMetrics("deleteHost", stateLogicFailure, started)
 		return fmt.Errorf("host %s is in active, %d container in it", hostIP, len(containerList))
 	}
@@ -193,6 +192,7 @@ func (srv *NetService) cleanIPAssignToHost(hostInfo *types.HostInfo, ips []strin
 			}
 		}
 		// dose not find in pool, error
+		// TODO: deal with delete failure
 		if !foundFlag {
 			blog.Errorf("ip %s is not in pool %s, cannot be deleted", ip, poolKey)
 			// if the ip is not found in reserved or available, just show error log, don't return

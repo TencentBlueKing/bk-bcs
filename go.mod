@@ -15,7 +15,7 @@ replace (
 
 require (
 	github.com/Microsoft/go-winio v0.4.15-0.20190919025122-fc70bd9a86b5
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230612022433-f63b3b850fe2
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20210818040851-76fdc539dc33
 	github.com/Tencent/bk-bcs/bcs-mesos/kubebkbcsv2 v0.0.0-00010101000000-000000000000
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/container-storage-interface/spec v0.3.0

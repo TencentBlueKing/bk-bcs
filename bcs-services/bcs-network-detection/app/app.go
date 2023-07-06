@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/app/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/networkdetection"
+	network_detection "github.com/Tencent/bk-bcs/bcs-services/bcs-network-detection/network-detection"
 )
 
 // Run app entrypoint
@@ -35,7 +35,7 @@ func Run(op *options.Option) error {
 		blog.Error("fail to save pid: err:%s", err.Error())
 	}
 
-	controller := networkdetection.NewNetworkDetection(conf)
+	controller := network_detection.NewNetworkDetection(conf)
 	err := controller.Start()
 	if err != nil {
 		blog.Errorf("NetworkDetection start failed: %s", err.Error())
@@ -62,7 +62,7 @@ func setConfig(conf *config.Config, op *options.Option) {
 	conf.ClientCert = &types.CertConfig{
 		CertPasswd: static.ClientCertPwd,
 	}
-	// server cert directory
+	// server cert directoty
 	if op.CertConfig.ServerCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ServerKeyFile != "" {
 
@@ -72,7 +72,7 @@ func setConfig(conf *config.Config, op *options.Option) {
 		conf.ServerCert.IsSSL = true
 	}
 
-	// client cert directory
+	// client cert directoty
 	if op.CertConfig.ClientCertFile != "" && op.CertConfig.CAFile != "" &&
 		op.CertConfig.ClientKeyFile != "" {
 

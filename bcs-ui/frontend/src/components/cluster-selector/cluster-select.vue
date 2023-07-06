@@ -9,29 +9,48 @@
     :remote-method="remoteMethod"
     :search-placeholder="$t('输入集群名或ID搜索')"
     @change="handleClusterChange">
+    <!-- 独立集群 -->
     <bcs-option-group
-      v-for="item, index in clusterData"
-      :key="item.type"
-      :name="item.title"
-      :is-collapse="collapseList.includes(item.type)"
-      :class="[
-        'mt-[8px]',
-        index === (clusterData.length - 1) ? 'mb-[4px]' : ''
-      ]">
+      :name="$t('独立集群')"
+      :is-collapse="independentCollapse"
+      :class="['mt-[8px]', { 'mb-[4px]': clusterType === 'independent' }]">
       <template #group-name>
         <CollapseTitle
-          :title="`${item.title} (${item.list.length})`"
-          :collapse="collapseList.includes(item.type)"
-          @click="handleToggleCollapse(item.type)" />
+          :title="`${$t('独立集群')} (${independentClusterList.length})`"
+          :collapse="independentCollapse"
+          @click="independentCollapse = !independentCollapse" />
       </template>
       <bcs-option
-        v-for="cluster in item.list"
-        :key="cluster.clusterID"
-        :id="cluster.clusterID"
-        :name="cluster.clusterName">
+        v-for="item in independentClusterList"
+        :key="item.clusterID"
+        :id="item.clusterID"
+        :name="item.clusterName">
         <div class="flex flex-col justify-center h-[50px] px-[12px]">
-          <span class="leading-6 bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
-          <span class="leading-4 text-[#979BA5]">{{ cluster.clusterID }}</span>
+          <span class="leading-6 bcs-ellipsis" v-bk-overflow-tips>{{ item.clusterName }}</span>
+          <span class="leading-4 text-[#979BA5]">{{ item.clusterID }}</span>
+        </div>
+      </bcs-option>
+    </bcs-option-group>
+    <!-- 共享集群 -->
+    <bcs-option-group
+      :name="$t('共享集群')"
+      :is-collapse="sharedCollapse"
+      class="mb-[8px]"
+      v-if="clusterType !== 'independent'">
+      <template #group-name>
+        <CollapseTitle
+          :title="`${$t('共享集群')} (${sharedClusterList.length})`"
+          :collapse="sharedCollapse"
+          @click="sharedCollapse = !sharedCollapse" />
+      </template>
+      <bcs-option
+        v-for="item in sharedClusterList"
+        :key="item.clusterID"
+        :id="item.clusterID"
+        :name="item.clusterName">
+        <div class="flex flex-col justify-center h-[50px] px-[12px]">
+          <span class="leading-none bcs-ellipsis" v-bk-overflow-tips>{{ item.clusterName }}</span>
+          <span class="leading-none mt-[8px] text-[#979BA5]">{{ item.clusterID }}</span>
         </div>
       </bcs-option>
     </bcs-option-group>
@@ -63,8 +82,8 @@ export default defineComponent({
       default: false,
     },
     clusterType: {
-      type: [String, Array] as PropType<ClusterType|ClusterType[]>,
-      default: () => ['independent', 'managed'],
+      type: String as PropType<ClusterType>,
+      default: 'independent', // 默认只展示独立集群
     },
   },
   emits: ['change'],
@@ -74,9 +93,10 @@ export default defineComponent({
     const {
       localValue,
       keyword,
-      collapseList,
-      clusterData,
-      handleToggleCollapse,
+      sharedClusterList,
+      independentClusterList,
+      sharedCollapse,
+      independentCollapse,
       handleClusterChange,
     } = useClusterSelector(ctx.emit, value.value, clusterType.value);
 
@@ -91,9 +111,10 @@ export default defineComponent({
 
     return {
       localValue,
-      collapseList,
-      clusterData,
-      handleToggleCollapse,
+      sharedClusterList,
+      independentClusterList,
+      sharedCollapse,
+      independentCollapse,
       remoteMethod,
       handleClusterChange,
     };

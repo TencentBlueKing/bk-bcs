@@ -38,7 +38,7 @@ func TestNewAlertServer(t *testing.T) {
 			GeneratorURL: "http://xxx",
 			Annotations: map[string]string{
 				"uuid":    "cee84faf-7ee3-11ea-xxx",
-				"message": "0.gseagent.gse.30012.1586932748085923931()status changed:Staging->Failed",
+				"message": "0.gseagent.gse.30012.1586932748085923931(9.4.146.229)status changed:Staging->Failed",
 			},
 			Labels: map[string]string{
 				"alertname":       "测试cee84faf",

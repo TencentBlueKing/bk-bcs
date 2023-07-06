@@ -91,9 +91,7 @@ func (o *RunOptions) addGPAFlags() {
 	pflag.BoolVar(&o.GeneralPodAutoscalerUseRESTClients,
 		"general-pod-autoscaler-use-rest-clients",
 		o.GeneralPodAutoscalerUseRESTClients,
-		"If set to true, causes the general pod autoscaler controller to use REST clients through the kube-aggregator,"+
-			" instead of using the legacy metrics client through the API server proxy."+
-			" This is required for custom metrics support in the general pod autoscaler.")
+		"If set to true, causes the general pod autoscaler controller to use REST clients through the kube-aggregator, instead of using the legacy metrics client through the API server proxy.  This is required for custom metrics support in the general pod autoscaler.")
 	pflag.DurationVar(&o.GeneralPodAutoscalerCPUInitializationPeriod.Duration,
 		"general-pod-autoscaler-cpu-initialization-period",
 		o.GeneralPodAutoscalerCPUInitializationPeriod.Duration,

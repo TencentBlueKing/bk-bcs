@@ -30,7 +30,6 @@ func NewDB(debug bool) (*gorm.DB, error) {
 	dbConf := cc.DataService().Sharding.AdminDatabase
 	dsn := sharding.URI(dbConf)
 	if debug {
-		// return the gorm db instance which prints debug log
 		return gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	}
 	return gorm.Open(mysql.Open(dsn), &gorm.Config{})

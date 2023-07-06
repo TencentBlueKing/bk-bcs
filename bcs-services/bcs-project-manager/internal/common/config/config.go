@@ -13,7 +13,7 @@
  */
 
 // Package config xxx
-package constant
+package config
 
 const (
 	// ServiceName BCS 服务名称
@@ -33,14 +33,8 @@ const (
 	// AnnotationKeyProjectCode annotation key projectCode
 	AnnotationKeyProjectCode = "io.tencent.bcs.projectcode"
 
-	// AnnotationKeyProjectCode annotation key vcluster clusterID
-	AnnotationKeyVcluster = "io.tencent.bcs.vcluster"
-
 	// AnnotationKeyProjectCode annotation key projectCode
 	AnnotationKeyCreator = "io.tencent.bcs.creator"
-
-	// FlagKeyEnableVcluster config flag key for enable vcluster
-	FlagKeyEnableVcluster = "enableVcluster"
 
 	// MaxMsgSize grpc限制的message的最大值
 	MaxMsgSize int = 50 * 1024 * 1024

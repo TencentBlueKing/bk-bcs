@@ -61,7 +61,7 @@ func (c *Cluster) buildClusterCreateScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(project.SysProject, []iam.ActionID{
 		cluster.ClusterCreate,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
@@ -73,12 +73,12 @@ func (c *Cluster) buildClusterOtherScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		cluster.ClusterManage, cluster.ClusterDelete, cluster.ClusterView, cluster.ClusterUse,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,
@@ -90,12 +90,12 @@ func (c *Cluster) buildClusterViewScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		cluster.ClusterView},
 		[]iam.LevelResource{
-			{
+			iam.LevelResource{
 				Type: string(project.SysProject),
 				ID:   c.ProjectID,
 				Name: c.ProjectName,
 			},
-			{
+			iam.LevelResource{
 				Type: string(cluster.SysCluster),
 				ID:   c.ClusterID,
 				Name: c.ClusterName,
@@ -107,12 +107,12 @@ func (c *Cluster) buildClusterScopedScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		cluster.ClusterScopedCreate, cluster.ClusterScopedDelete, cluster.ClusterScopedUpdate, cluster.ClusterScopedView,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,
@@ -124,12 +124,12 @@ func (c *Cluster) buildClusterScopedViewScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		cluster.ClusterScopedView,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,
@@ -141,12 +141,12 @@ func (c *Cluster) buildNamespaceCreateListScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		namespace.NameSpaceCreate, namespace.NameSpaceList,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,
@@ -158,12 +158,12 @@ func (c *Cluster) buildNamespaceListScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(cluster.SysCluster, []iam.ActionID{
 		namespace.NameSpaceList,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,
@@ -175,12 +175,12 @@ func (c *Cluster) buildNamespaceOtherScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(namespace.SysNamespace, []iam.ActionID{
 		namespace.NameSpaceDelete, namespace.NameSpaceUpdate, namespace.NameSpaceView,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,
@@ -192,12 +192,12 @@ func (c *Cluster) buildNamespaceViewScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(namespace.SysNamespace, []iam.ActionID{
 		namespace.NameSpaceView,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,
@@ -210,12 +210,12 @@ func (c *Cluster) buildNamespaceScopedScope() iam.AuthorizationScope {
 		namespace.NameSpaceScopedCreate, namespace.NameSpaceScopedDelete, namespace.NameSpaceScopedUpdate,
 		namespace.NameSpaceScopedView,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,
@@ -227,12 +227,12 @@ func (c *Cluster) buildNamespaceScopedViewScope() iam.AuthorizationScope {
 	return iam.BuildAuthorizationScope(namespace.SysNamespace, []iam.ActionID{
 		namespace.NameSpaceScopedView,
 	}, []iam.LevelResource{
-		{
+		iam.LevelResource{
 			Type: string(project.SysProject),
 			ID:   c.ProjectID,
 			Name: c.ProjectName,
 		},
-		{
+		iam.LevelResource{
 			Type: string(cluster.SysCluster),
 			ID:   c.ClusterID,
 			Name: c.ClusterName,

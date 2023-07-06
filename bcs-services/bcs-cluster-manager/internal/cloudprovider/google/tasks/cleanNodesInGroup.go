@@ -112,8 +112,8 @@ func deleteIgmInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 		return err
 	}
 	for _, ins := range igmInstances {
-		insInfo, errInfo := api.GetGCEResourceInfo(ins.Instance)
-		if errInfo != nil {
+		insInfo, err := api.GetGCEResourceInfo(ins.Instance)
+		if err != nil {
 			return err
 		}
 		instanceIDList = append(instanceIDList, insInfo[len(insInfo)-1])
@@ -130,7 +130,7 @@ func deleteIgmInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 
 	blog.Infof("deleteIgmInstances[%s] validateInstances[%v]", taskID, validateInstances)
 	err = retry.Do(func() error {
-		err = client.DeleteInstancesInMIG(ctx, info.NodeGroup.Region, igmInfo[len(igmInfo)-1], validateInstances)
+		err := client.DeleteInstancesInMIG(ctx, info.NodeGroup.Region, igmInfo[len(igmInfo)-1], validateInstances)
 		if err != nil {
 			blog.Errorf("deleteIgmInstances[%s] DeleteInstancesInMIG failed: %v", taskID, err)
 			return err

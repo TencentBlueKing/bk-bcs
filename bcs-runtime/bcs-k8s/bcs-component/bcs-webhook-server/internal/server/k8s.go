@@ -206,7 +206,6 @@ func (ws *WebhookServer) doK8sHook(ar v1beta1.AdmissionReview) *v1beta1.Admissio
 		switch value {
 		default:
 			return &v1beta1.AdmissionResponse{Allowed: true}
-		// NOCC:goconst/string(设计如此)
 		case "y", "yes", "true", "on":
 			// do nothing, let it go
 		}

@@ -246,13 +246,17 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 }
 
 // SearchProjects query project sort by ids
-func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchKey string,
-	pagination *page.Pagination) ([]Project, int64, error) {
+func (m *ModelProject) SearchProjects(
+	ctx context.Context,
+	ids []string,
+	searchKey string,
+	pagination *page.Pagination,
+) ([]Project, int64, error) {
 	if pagination.Limit == 0 {
 		pagination.Limit = page.DefaultPageLimit
 	}
 	projectList := make([]Project, 0)
-	matchPipeline := map[string]interface{}{"$match": map[string]interface{}{
+	matchPipline := map[string]interface{}{"$match": map[string]interface{}{
 		"$or": []map[string]interface{}{
 			{"name": map[string]interface{}{"$regex": searchKey, "$options": "i"}},
 			{"projectCode": map[string]interface{}{"$regex": searchKey, "$options": "i"}},
@@ -262,7 +266,7 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchK
 	}}
 	pipeline := make([]map[string]interface{}, 0)
 	if searchKey != "" {
-		pipeline = append(pipeline, matchPipeline)
+		pipeline = append(pipeline, matchPipline)
 	}
 	pipeline = append(pipeline,
 		map[string]interface{}{"$project": map[string]interface{}{
@@ -303,18 +307,18 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchK
 	if err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &projectList); err != nil {
 		return nil, 0, err
 	}
-	var counts []struct {
+	counts := []struct {
 		Count int64 `bson:"count"`
-	}
-	countPipeline := make([]map[string]interface{}, 0)
+	}{}
+	countPipline := make([]map[string]interface{}, 0)
 	if searchKey != "" {
-		countPipeline = append(countPipeline, matchPipeline)
+		countPipline = append(countPipline, matchPipline)
 	}
-	countPipeline = append(countPipeline, map[string]interface{}{"$group": map[string]interface{}{
+	countPipline = append(countPipline, map[string]interface{}{"$group": map[string]interface{}{
 		"_id":   nil,
 		"count": map[string]interface{}{"$sum": 1},
 	}})
-	if err := m.db.Table(m.tableName).Aggregation(ctx, countPipeline, &counts); err != nil {
+	if err := m.db.Table(m.tableName).Aggregation(ctx, countPipline, &counts); err != nil {
 		return nil, 0, err
 	}
 	var count int64

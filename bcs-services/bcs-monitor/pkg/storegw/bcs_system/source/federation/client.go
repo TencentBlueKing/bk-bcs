@@ -24,13 +24,12 @@ import (
 )
 
 // ClientFactory 自动切换Prometheus/蓝鲸监控
-func ClientFactory(ctx context.Context, clusterID string, source clientutil.MonitorSourceType) (
-	base.MetricHandler, error) {
+func ClientFactory(ctx context.Context, clusterId string, source clientutil.MonitorSourceType) (base.MetricHandler, error) {
 	switch source {
 	case clientutil.MonitorSourceCompute:
 		return compute.NewCompute(), nil
 	default:
-		ok, err := bkmonitor_client.IsBKMonitorEnabled(ctx, clusterID)
+		ok, err := bkmonitor_client.IsBKMonitorEnabled(ctx, clusterId)
 		if err != nil {
 			return nil, err
 		}

@@ -14,7 +14,6 @@
 package main
 
 import (
-	"context"
 	"crypto/tls"
 	"net"
 	"net/http"
@@ -31,10 +30,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/tracing"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/job/notify"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
@@ -49,19 +47,6 @@ func main() {
 	defer blog.CloseLogs()
 
 	app.Run(op)
-
-	//初始化 Tracer
-	shutdown, errorInitTracing := tracing.InitTracing(&op.TracingConf)
-	if errorInitTracing != nil {
-		blog.Info(errorInitTracing.Error())
-	}
-	if shutdown != nil {
-		defer func() {
-			if err := shutdown(context.Background()); err != nil {
-				blog.Infof("failed to shutdown TracerProvider: %s", err.Error())
-			}
-		}()
-	}
 
 	// etcd registry
 	etcdRegistry, err := turnOnEtcdRegistry(op)

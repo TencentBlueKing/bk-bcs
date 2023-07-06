@@ -14,9 +14,9 @@
 package config
 
 const (
-	// RedisStandAloneType xxx
+	// RedisStandAloneType TODO
 	RedisStandAloneType = "standalone" // 单节点redis
-	// RedisSentinelType xxx
+	// RedisSentinelType TODO
 	RedisSentinelType = "sentinel" // 哨兵模式redis，哨兵实例
 )
 

@@ -57,7 +57,7 @@ func genSceneData1() error {
 		return fmt.Errorf("create release err, %v, rid: %s", err, rid)
 	}
 
-	// NOTE: strategy related test depends on group, add group test first
+	// TODO: strategy related test depends on group, add group test first
 	//// create strategy set.
 	//setReq := &pbcs.CreateStrategySetReq{
 	//	BizId: stressBizId,

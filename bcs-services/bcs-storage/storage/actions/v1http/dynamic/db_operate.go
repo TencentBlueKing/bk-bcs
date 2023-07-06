@@ -22,11 +22,8 @@ import (
 	dbutils "github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/actions/v1http/utils"
 )
 
-/*
-	db方法
-*/
+// db方法
 
-// GetData get data from db
 func GetData(ctx context.Context, resourceType string, opt *lib.StoreGetOption) ([]operator.M, error) {
 	return dbutils.GetData(&dbutils.DBOperate{
 		Context:      ctx,

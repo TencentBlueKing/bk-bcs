@@ -152,7 +152,7 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 	}
 	// 1. get listener id
 	input := &elbv2.DescribeListenersInput{LoadBalancerArn: &listener.Spec.LoadbalancerID}
-	listeners, err := e.sdkWrapper.DescribeListeners(region, input, 3)
+	listeners, err := e.sdkWrapper.DescribeListeners(region, input)
 	if err != nil {
 		return fmt.Errorf("DescribeListeners failed, err %s", err.Error())
 	}
@@ -163,7 +163,7 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 	}
 
 	// 2. get listener's rules and all target groups
-	rules, tgs, err := e.getAllListenerRulesAndTargetGroups(region, *found.ListenerArn, 3)
+	rules, tgs, err := e.getAllListenerRulesAndTargetGroups(region, *found.ListenerArn)
 	if err != nil {
 		return err
 	}
@@ -177,18 +177,18 @@ func (e *Elb) DeleteListener(region string, listener *networkextensionv1.Listene
 
 	// 4. delete all listeners' rules
 	for _, rule := range rules {
-		out, inErr := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{RuleArns: []string{rule}}, 3)
-		if inErr != nil {
-			blog.Warnf("DescribeRules failed, err %s", inErr.Error())
+		out, err := e.sdkWrapper.DescribeRules(region, &elbv2.DescribeRulesInput{RuleArns: []string{rule}})
+		if err != nil {
+			blog.Warnf("DescribeRules failed, err %s", err.Error())
 			continue
 		}
 		// default rule cannot be deleted
 		if out.Rules != nil && out.Rules[0].IsDefault {
 			continue
 		}
-		_, inErr = e.sdkWrapper.DeleteRule(region, &elbv2.DeleteRuleInput{RuleArn: &rule})
-		if inErr != nil {
-			return fmt.Errorf("DeleteRule failed, err %s", inErr.Error())
+		_, err = e.sdkWrapper.DeleteRule(region, &elbv2.DeleteRuleInput{RuleArn: &rule})
+		if err != nil {
+			return fmt.Errorf("DeleteRule failed, err %s", err.Error())
 		}
 	}
 
@@ -316,13 +316,13 @@ func (e *Elb) DescribeBackendStatus(region, ns string, lbIDs []string) (map[stri
 	for _, lbID := range lbIDs {
 		listeners, err := e.sdkWrapper.DescribeListeners(region, &elbv2.DescribeListenersInput{
 			LoadBalancerArn: &lbID,
-		}, 4)
+		})
 		if err != nil {
 			return nil, fmt.Errorf("DescribeListeners failed, err %s", err.Error())
 		}
 		// 2. get all listener's target groups
 		for _, listener := range listeners.Listeners {
-			_, targetGroups, err := e.getAllListenerRulesAndTargetGroups(region, *listener.ListenerArn, 4)
+			_, targetGroups, err := e.getAllListenerRulesAndTargetGroups(region, *listener.ListenerArn)
 			if err != nil {
 				return nil, err
 			}

@@ -8,13 +8,11 @@ import "bscp.io/pkg/protocol/core/content/content.proto";
 import "bscp.io/pkg/protocol/core/credential/credential.proto";
 import "bscp.io/pkg/protocol/core/credential-scope/credential-scope.proto";
 import "bscp.io/pkg/protocol/core/hook/hook.proto";
-import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
 import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
-import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -48,6 +46,12 @@ service Config {
     rpc GetAppByName(GetAppByNameReq) returns (pbapp.App) {
         option (google.api.http) = {
             get: "/api/v1/config/biz/{biz_id}/apps/query/name/{app_name}"
+        };
+    }
+    rpc ListApps(ListAppsReq) returns (ListAppsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/list/app/app/biz_id/{biz_id}"
+            body : "*"
         };
     }
 
@@ -116,18 +120,6 @@ service Config {
         };
     }
 
-    rpc UpdateConfigHook(UpdateConfigHookReq) returns (UpdateConfigHookResp) {
-        option (google.api.http) = {
-            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks"
-            body : "*"
-        };
-    }
-    rpc GetConfigHook(GetConfigHookReq) returns (GetConfigHookResp) {
-        option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_hooks"
-        };
-    }
-
     rpc CreateCommit(CreateCommitReq) returns (CreateCommitResp) {
         option (google.api.http) = {
             post : "/api/v1/config/create/commit/commit/config_item_id/{config_item_id}/app_id/{app_id}/biz_id/{biz_id}"
@@ -161,66 +153,25 @@ service Config {
 
     rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/hooks"
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks"
             body : "*"
         };
     }
     rpc DeleteHook(DeleteHookReq) returns (DeleteHookResp) {
         option (google.api.http) = {
-            delete : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
+            delete : "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"
+        };
+    }
+    rpc UpdateHook(UpdateHookReq) returns (UpdateHookResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/{hook_id}"
+            body : "*"
         };
     }
     rpc ListHooks(ListHooksReq) returns (ListHooksResp) {
         option (google.api.http) = {
-            get :  "/api/v1/config/biz/{biz_id}/hooks"
-        };
-    }
-    rpc ListHookTags(ListHookTagsReq) returns (ListHookTagsResp) {
-        option (google.api.http) = {
-            get :  "/api/v1/config/biz/{biz_id}/hook_tags"
-        };
-    }
-    rpc GetHook(GetHookReq) returns (GetHookResp){
-        option (google.api.http) = {
-            get :  "/api/v1/config/biz/{biz_id}/hooks/{hook_id}"
-        };
-    }
-
-    rpc CreateHookRelease(CreateHookReleaseReq) returns (CreateHookReleaseResp){
-        option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases"
+            post : "/api/v1/config/biz/{biz_id}/apps/{app_id}/hooks/list"
             body : "*"
-        };
-    }
-    rpc ListHookRelease(ListHookReleaseReq) returns (ListHookReleaseResp){
-        option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases"
-        };
-    }
-    rpc DeleteHookRelease(DeleteHookReleaseReq) returns (DeleteHookReleaseResp){
-        option (google.api.http) = {
-            delete : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/{release_id}"
-        };
-    }
-    rpc PublishHookRelease(PublishHookReleaseReq) returns (PublishHookReleaseResp){
-        option (google.api.http) = {
-            put : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/{release_id}/publish"
-        };
-    }
-    rpc GetHookRelease(GetHookReleaseReq) returns (pbhr.HookRelease) {
-        option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/{release_id}"
-        };
-    }
-    rpc UpdateHookRelease(UpdateHookReleaseReq) returns (UpdateHookReleaseResp) {
-        option (google.api.http) = {
-            put : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/hook_releases/{release_id}"
-            body : "*"
-        };
-    }
-    rpc ListHookReleasesReferences(ListHookReleasesReferencesReq) returns (ListHookReleasesReferencesResp) {
-        option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/hooks/{hook_id}/references"
         };
     }
 
@@ -477,6 +428,12 @@ message GetAppByNameReq {
     string app_name = 2;
 }
 
+message ListAppsReq {
+    uint32                 biz_id = 1;
+    google.protobuf.Struct filter = 2;
+    pbbase.BasePage        page   = 3;
+}
+
 message ListAppsRestReq {
     uint32 biz_id   = 1;
     uint32 start    = 2;
@@ -623,36 +580,6 @@ message ListContentsResp {
     repeated pbcontent.Content details = 2;
 }
 
-message CreateConfigHookReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
-    uint32 pre_hook_id            = 3;
-    uint32 post_hook_id           = 4;
-}
-
-message CreateConfigHookResp {
-    uint32 id = 1;
-}
-
-message UpdateConfigHookReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
-    uint32 pre_hook_id            = 3;
-    uint32 post_hook_id           = 4;
-    bool   enable                 = 5;
-}
-
-message UpdateConfigHookResp {}
-
-message GetConfigHookReq {
-    uint32 biz_id                 = 1;
-    uint32 app_id                 = 2;
-}
-
-message  GetConfigHookResp {
-    pbch.ConfigHook config_hook   = 1;
-}
-
 message CreateCommitReq {
     uint32 biz_id         = 1;
     uint32 app_id         = 2;
@@ -716,144 +643,53 @@ message ListReleasedConfigItemsResp {
 }
 
 message CreateHookReq {
-    uint32 biz_id       = 1;
-    string name         = 2;
-    string release_name = 3;
-    string type         = 4;
-    string tag          = 5;
-    string memo         = 6;
-    string content      = 7;
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 release_id = 3;
+    string name       = 4;
+    string pre_type   = 5;
+    string pre_hook   = 6;
+    string post_type  = 7;
+    string post_hook  = 8;
 }
 
 message CreateHookResp {
     uint32 id = 1;
 }
 
+message UpdateHookReq {
+    uint32 biz_id     = 1;
+    uint32 app_id     = 2;
+    uint32 hook_id    = 3;
+    uint32 release_id = 4;
+    string name       = 5;
+    string pre_type   = 6;
+    string pre_hook   = 7;
+    string post_type  = 8;
+    string post_hook  = 9;
+}
+
+message UpdateHookResp {
+}
+
 message DeleteHookReq {
     uint32 biz_id  = 1;
-    uint32 hook_id = 2;
+    uint32 app_id  = 2;
+    uint32 hook_id = 3;
 }
 
 message DeleteHookResp {}
 
 message ListHooksReq {
-    uint32 biz_id  = 1;
-    string name    = 2;
-    string tag     = 3;
-    bool   all     = 4;
-    bool   not_tag = 5;
-    uint32 start   = 6;
-    uint32 limit   = 7;
+    uint32                 biz_id = 1;
+    uint32                 app_id = 2;
+    google.protobuf.Struct filter = 3;
+    pbbase.BasePage        page   = 4;
 }
 
 message ListHooksResp {
     uint32               count   = 1;
     repeated pbhook.Hook details = 2;
-}
-
-message ListHookTagsReq {
-    uint32 biz_id       = 1;
-}
-
-message ListHookTagsResp {
-    repeated pbhook.CountHookTags details = 1;
-}
-
-message CreateHookReleaseReq {
-    uint32 biz_id       = 1;
-    uint32 hook_id      = 2;
-    string name         = 3;
-    string memo         = 4;
-    string content      = 7;
-}
-
-message CreateHookReleaseResp {
-    uint32 id = 1;
-}
-
-message ListHookReleaseReq {
-    uint32 biz_id       = 1;
-    uint32 hook_id      = 2;
-    string search_key   = 3;
-    uint32 start        = 4;
-    uint32 limit        = 5;
-    bool   all          = 6;
-    string state        = 7;
-}
-
-message ListHookReleaseResp {
-    uint32   count                    = 1;
-    repeated pbhr.HookRelease details = 2;
-}
-
-message DeleteHookReleaseReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
-}
-
-message DeleteHookReleaseResp {}
-
-message PublishHookReleaseReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
-}
-
-message PublishHookReleaseResp {}
-
-message GetHookReq {
-    uint32 biz_id  = 1;
-    uint32 hook_id = 2;
-}
-
-message GetHookResp {
-    uint32 id = 1;
-    GetHookInfoSpec spec = 2;
-    pbhook.HookAttachment attachment = 3;
-    pbbase.Revision revision = 4;
-}
-
-message GetHookInfoSpec {
-    string name         = 1;
-    string type         = 3;
-    string tag          = 4;
-    string memo         = 5;
-    uint32 publish_num  = 7;
-    message Releases  {
-        uint32 not_release_id = 1;
-    }
-    Releases releases = 8;
-}
-
-message GetHookReleaseReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
-}
-
-message UpdateHookReleaseReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
-    string name            = 4;
-    string content         = 5;
-    string memo            = 6;
-}
-
-message UpdateHookReleaseResp {}
-
-message ListHookReleasesReferencesReq {
-    uint32 biz_id          = 1;
-    uint32 hook_id         = 2;
-    uint32 release_id      = 3;
-    uint32 start           = 4;
-    uint32 limit           = 5;
-}
-
-message ListHookReleasesReferencesResp {
-    uint32   count                                          = 1;
-    repeated pbhr.ListHookReleasesReferencesDetails details = 2;
 }
 
 message CreateTemplateSpaceReq {

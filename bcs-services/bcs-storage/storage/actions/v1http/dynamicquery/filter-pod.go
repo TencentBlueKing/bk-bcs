@@ -31,7 +31,6 @@ type PodFilter struct {
 
 const podNestedTimeLayout = NestedTimeLayout
 
-// GetCondition get condition
 func (t PodFilter) GetCondition() *operator.Condition {
 	return qGenerate(t, podNestedTimeLayout)
 }

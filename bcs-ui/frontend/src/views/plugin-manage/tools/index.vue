@@ -11,7 +11,6 @@
               :search.sync="searchKeyword"
               :cluster-id.sync="searchScope"
               :show-search="false"
-              :cluster-type="['independent', 'managed', 'virtual']"
               @search-change="search"
               @cluster-change="search"
               @refresh="refresh" />

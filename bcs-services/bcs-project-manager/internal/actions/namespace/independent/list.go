@@ -16,13 +16,15 @@ package independent
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -58,30 +60,39 @@ func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	if err != nil {
 		return errorx.NewDBErr(err.Error())
 	}
+	lock := &sync.Mutex{}
+	g, ctx := errgroup.WithContext(ctx)
 	retDatas := []*proto.NamespaceData{}
-	for _, ns := range nsList.Items {
-		retData := &proto.NamespaceData{
-			Name:        ns.GetName(),
-			Uid:         string(ns.GetUID()),
-			Status:      string(ns.Status.Phase),
-			CreateTime:  ns.GetCreationTimestamp().Format(constant.TimeLayout),
-			Labels:      []*proto.Label{},
-			Annotations: []*proto.Annotation{},
-		}
-		for k, v := range ns.Labels {
-			retData.Labels = append(retData.Labels, &proto.Label{Key: k, Value: v})
-		}
-		for k, v := range ns.Annotations {
-			retData.Annotations = append(retData.Annotations, &proto.Annotation{Key: k, Value: v})
-		}
-		// get quota
-		if quota, ok := quotaMap[ns.GetName()]; ok {
-			retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(&quota)
-		}
-		// get variables
-		retData.Variables = variablesMap[ns.GetName()]
-		retDatas = append(retDatas, retData)
+	for _, item := range nsList.Items {
+		ns := item
+		g.Go(func() error {
+			retData := &proto.NamespaceData{
+				Name:        ns.GetName(),
+				Uid:         string(ns.GetUID()),
+				Status:      string(ns.Status.Phase),
+				CreateTime:  ns.GetCreationTimestamp().Format(config.TimeLayout),
+				Labels:      []*proto.Label{},
+				Annotations: []*proto.Annotation{},
+			}
+			for k, v := range ns.Labels {
+				retData.Labels = append(retData.Labels, &proto.Label{Key: k, Value: v})
+			}
+			for k, v := range ns.Annotations {
+				retData.Annotations = append(retData.Annotations, &proto.Annotation{Key: k, Value: v})
+			}
+			// get quota
+			if quota, ok := quotaMap[ns.GetName()]; ok {
+				retData.Quota, retData.Used, retData.CpuUseRate, retData.MemoryUseRate = quotautils.TransferToProto(&quota)
+			}
+			// get variables
+			retData.Variables = variablesMap[ns.GetName()]
+			lock.Lock()
+			defer lock.Unlock()
+			retDatas = append(retDatas, retData)
+			return nil
+		})
 	}
+	g.Wait()
 	resp.Data = retDatas
 	go func() {
 		if err := common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), nsList.Items); err != nil {

@@ -18,8 +18,7 @@ import (
 	"crypto/tls"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
-
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
 
@@ -76,7 +75,6 @@ type UserMgrConfig struct {
 	PermissionSwitch bool
 	CommunityEdition bool
 	PassConfig       options.PassCCConfig
-	BcsAPI           *options.BcsAPI
 }
 
 var (

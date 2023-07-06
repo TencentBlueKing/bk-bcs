@@ -26,7 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
 
-// AksServiceImpl azure服务
 type AksServiceImpl struct {
 	resourcesGroup       string
 	netClient            *armnetwork.InterfacesClient
@@ -281,15 +280,15 @@ func (aks *AksServiceImpl) GetClusterUserCredentialsWithName(ctx context.Context
 func (aks *AksServiceImpl) GetClusterMonitoringUserCredentials(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
 	[]*armcontainerservice.CredentialResult, error) {
 	resourceGroupName := info.CmOption.Account.ResourceGroupName
-	return aks.GetClusterMonitorUserCredWithName(ctx, resourceGroupName, info.Cluster.SystemID)
+	return aks.GetClusterMonitoringUserCredentialsWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
-// GetClusterMonitorUserCredWithName 获取集群监控凭证(GetClusterMonitoringUserCredentialsWithName)
+// GetClusterMonitoringUserCredentialsWithName 获取集群监控凭证
 //
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
 //
 // resourceName - K8S名称(Cluster.SystemID).
-func (aks *AksServiceImpl) GetClusterMonitorUserCredWithName(ctx context.Context, resourceGroupName, resourceName string) (
+func (aks *AksServiceImpl) GetClusterMonitoringUserCredentialsWithName(ctx context.Context, resourceGroupName, resourceName string) (
 	[]*armcontainerservice.CredentialResult, error) {
 	credentials, err := aks.clustersClient.ListClusterMonitoringUserCredentials(ctx, resourceGroupName, resourceName, nil)
 	if err != nil {

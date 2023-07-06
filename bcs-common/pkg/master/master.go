@@ -21,7 +21,7 @@ import bcstypes "github.com/Tencent/bk-bcs/bcs-common/common/types"
 type Master interface {
 	Init() error                                  // init stage, like create connection
 	Finit()                                       // finit, release resource
-	Register() error                              // registry information to storage
+	Register() error                              // registery information to storage
 	Clean() error                                 // clean self node
 	IsMaster() bool                               // check if self is master or not
 	CheckSelfNode() (bool, error)                 // check self node exist, and data correct

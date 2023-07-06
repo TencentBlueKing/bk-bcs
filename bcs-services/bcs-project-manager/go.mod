@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager
 go 1.17
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-services/pkg => ../pkg
 	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
 	github.com/micro/go-micro/v2 => github.com/OvertimeDog/go-micro/v2 v2.9.3
 	go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
@@ -13,6 +14,7 @@ replace (
 
 require (
 	github.com/TencentBlueKing/iam-go-sdk v0.0.8
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.6.2
 	github.com/golang/glog v1.0.0
 	github.com/golang/protobuf v1.5.2
@@ -25,12 +27,12 @@ require (
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/prometheus/client_golang v1.11.1
 	github.com/spf13/cobra v1.3.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.0
 	go.mongodb.org/mongo-driver v1.5.3
 	go.uber.org/zap v1.19.1
 	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -108,7 +110,6 @@ require (
 	github.com/xdg-go/stringprep v1.0.2 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	go.uber.org/goleak v1.1.12 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
@@ -133,9 +134,8 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230607093333-1f5cd2719e19
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230202032803-47379be3c4c1
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20221018081229-065aeef813e6
 	github.com/coreos/etcd v3.3.25+incompatible
-	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 )

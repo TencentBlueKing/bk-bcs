@@ -38,6 +38,7 @@ func (plugin *WebhookPlugin) Init() error {
 	return nil
 }
 
+// TODO: webhook 保证性能，暂时只做登录态校验
 func (plugin *WebhookPlugin) executeWebhook(ctx context.Context, r *http.Request) *httpResponse {
 	user := ctx.Value("user").(*proxy.UserInfo)
 	blog.Infof("user %s request webhook", user.GetUser())

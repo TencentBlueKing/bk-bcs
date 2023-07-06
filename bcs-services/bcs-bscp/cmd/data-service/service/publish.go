@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"bscp.io/pkg/dal/orm"
 	"bscp.io/pkg/dal/table"
@@ -39,7 +40,8 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 		Memo:      req.Memo,
 		Groups:    req.Groups,
 		Revision: &table.CreatedRevision{
-			Creator: kt.User,
+			Creator:   kt.User,
+			CreatedAt: time.Now(),
 		},
 	}
 
@@ -79,7 +81,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	}
 
 	releasedCIs := make([]*table.ReleasedConfigItem, 0)
-	// Note: need to change batch operator to query config item and it's commit.
+	// TODO: need to change batch operator to query config item and it's commit.
 	// step2: query app's all config items.
 	cfgItems, err := s.queryAppConfigItemList(grpcKit, req.BizId, req.AppId)
 	if err != nil {
@@ -93,6 +95,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	}
 
 	// step3: query config item newest commit
+	now := time.Now()
 	for _, item := range cfgItems {
 		commit, e := s.queryCILatestCommit(grpcKit, req.BizId, req.AppId, item.ID)
 		if e != nil {
@@ -115,8 +118,7 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	}
 
 	// step4: begin transaction to create release and released config item.
-	//tx, err := s.dao.BeginTx(grpcKit, req.BizId)
-	tx := s.dao.GenQuery().Begin()
+	tx, err := s.dao.BeginTx(grpcKit, req.BizId)
 	if err != nil {
 		return nil, err
 	}
@@ -132,13 +134,14 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 			AppID: req.AppId,
 		},
 		Revision: &table.CreatedRevision{
-			Creator: grpcKit.User,
+			Creator:   grpcKit.User,
+			CreatedAt: now,
 		},
 	}
-	releaseID, err := s.dao.Release().CreateWithTxV2(grpcKit, tx, release)
+	releaseID, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
 	if err != nil {
 		logs.Errorf("create release failed, err: %v, rid: %s", err, grpcKit.Rid)
-		tx.Rollback()
+		tx.Rollback(grpcKit)
 		return nil, err
 	}
 
@@ -147,9 +150,9 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		rci.ReleaseID = releaseID
 	}
 
-	if err = s.dao.ReleasedCI().BulkCreateWithTxV2(grpcKit, tx, releasedCIs); err != nil {
+	if err = s.dao.ReleasedCI().BulkCreateWithTx(grpcKit, tx, releasedCIs); err != nil {
 		logs.Errorf("bulk create released config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		tx.Rollback()
+		tx.Rollback(grpcKit)
 		return nil, err
 	}
 
@@ -165,7 +168,8 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 		Memo:      req.ReleaseMemo,
 		Groups:    groupIDs,
 		Revision: &table.CreatedRevision{
-			Creator: kt.User,
+			Creator:   kt.User,
+			CreatedAt: time.Now(),
 		},
 	}
 	if e := s.validatePublishGroups(kt, opt); e != nil {
@@ -174,12 +178,12 @@ func (s *Service) GenerateReleaseAndPublish(ctx context.Context, req *pbds.Gener
 	pshID, err := s.dao.Publish().PublishWithTx(kt, tx, opt)
 	if err != nil {
 		logs.Errorf("publish strategy failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+		tx.Rollback(kt)
 		return nil, err
 	}
 
 	// step8: commit transaction.
-	if err = tx.Commit(); err != nil {
+	if err = tx.Commit(kt); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}

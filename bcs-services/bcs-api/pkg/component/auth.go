@@ -21,7 +21,7 @@ import (
 
 const (
 	appCodeKey   = "X-BK-APP-CODE"
-	appSecretKey = "X-BK-APP-SECRET" // nolint
+	appSecretKey = "X-BK-APP-SECRET"
 )
 
 // PaaSAuth auth configuration for bk-app

@@ -22,16 +22,16 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 )
 
-func (m *Prometheus) handlePodMetric(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
+func (m *Prometheus) handlePodMetric(ctx context.Context, projectId, clusterId, namespace string, podNameList []string,
 	promql string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	params := map[string]interface{}{
-		"clusterID":   clusterID,
+		"clusterId":   clusterId,
 		"namespace":   namespace,
 		"podNameList": utils.StringJoinWithRegex(podNameList, "|", "$"),
 		"provider":    PROVIDER,
 	}
 
-	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectID, promql, params, start, end, step)
+	matrix, _, err := bcsmonitor.QueryRangeMatrix(ctx, projectId, promql, params, start, end, step)
 	if err != nil {
 		return nil, err
 	}
@@ -40,43 +40,37 @@ func (m *Prometheus) handlePodMetric(ctx context.Context, projectID, clusterID, 
 }
 
 // GetPodCPUUsage POD 使用率
-func (m *Prometheus) GetPodCPUUsage(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
+func (m *Prometheus) GetPodCPUUsage(ctx context.Context, projectId, clusterId, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by (pod_name) (rate(container_cpu_usage_seconds_total{cluster_id="%<clusterID>s", ` +
-			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", ` +
-			`%<provider>s}[2m])) * 100`
+		`sum by (pod_name) (rate(container_cpu_usage_seconds_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", %<provider>s}[2m])) * 100`
 
-	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
+	return m.handlePodMetric(ctx, projectId, clusterId, namespace, podNameList, promql, start, end, step)
 }
 
 // GetPodMemoryUsed 内存使用量
-func (m *Prometheus) GetPodMemoryUsed(ctx context.Context, projectID, clusterID, namespace string, podNameList []string,
+func (m *Prometheus) GetPodMemoryUsed(ctx context.Context, projectId, clusterId, namespace string, podNameList []string,
 	start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by (pod_name) (container_memory_working_set_bytes{cluster_id="%<clusterID>s", ` +
-			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", ` +
-			`%<provider>s})`
+		`sum by (pod_name) (container_memory_working_set_bytes{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", container_name!="", container_name!="POD", %<provider>s})`
 
-	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
+	return m.handlePodMetric(ctx, projectId, clusterId, namespace, podNameList, promql, start, end, step)
 }
 
 // GetPodNetworkReceive 网络接收
-func (m *Prometheus) GetPodNetworkReceive(ctx context.Context, projectID, clusterID, namespace string,
+func (m *Prometheus) GetPodNetworkReceive(ctx context.Context, projectId, clusterId, namespace string,
 	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by (pod_name) (rate(container_network_receive_bytes_total{cluster_id="%<clusterID>s", ` +
-			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}[2m]))`
+		`sum by (pod_name) (rate(container_network_receive_bytes_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}[2m]))`
 
-	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
+	return m.handlePodMetric(ctx, projectId, clusterId, namespace, podNameList, promql, start, end, step)
 }
 
 // GetPodNetworkTransmit 网络发送
-func (m *Prometheus) GetPodNetworkTransmit(ctx context.Context, projectID, clusterID, namespace string,
+func (m *Prometheus) GetPodNetworkTransmit(ctx context.Context, projectId, clusterId, namespace string,
 	podNameList []string, start, end time.Time, step time.Duration) ([]*prompb.TimeSeries, error) {
 	promql :=
-		`sum by (pod_name) (rate(container_network_transmit_bytes_total{cluster_id="%<clusterID>s", ` +
-			`namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}[2m]))`
+		`sum by (pod_name) (rate(container_network_transmit_bytes_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podNameList>s", %<provider>s}[2m]))`
 
-	return m.handlePodMetric(ctx, projectID, clusterID, namespace, podNameList, promql, start, end, step)
+	return m.handlePodMetric(ctx, projectId, clusterId, namespace, podNameList, promql, start, end, step)
 }

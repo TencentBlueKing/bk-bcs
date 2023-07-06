@@ -1,4 +1,3 @@
-.code.yml merge=ours
 bcs-scenarios/kourse/go.mod merge=ours
 bcs-scenarios/kourse/Makefile merge=ours
 bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/server/init.go merge=ours

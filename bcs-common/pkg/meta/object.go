@@ -48,9 +48,9 @@ type List interface {
 }
 
 const (
-	// NamespaceIndex xx
+	// NamespaceIndex TODO
 	NamespaceIndex string = "namespace"
-	// ApplicationIndex xx
+	// ApplicationIndex TODO
 	// only taskgroup has the application index
 	ApplicationIndex string = "application"
 )

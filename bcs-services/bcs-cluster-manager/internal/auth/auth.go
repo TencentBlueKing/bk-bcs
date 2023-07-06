@@ -202,7 +202,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	}
 
 	resourceID := &resourceID{}
-	if err = json.Unmarshal(b, resourceID); err != nil {
+	if err := json.Unmarshal(b, resourceID); err != nil {
 		return false, err
 	}
 
@@ -212,7 +212,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	}
 
 	// check resourceID
-	if err = checkResourceID(resourceID); err != nil {
+	if err := checkResourceID(resourceID); err != nil {
 		return false, fmt.Errorf("auth failed: err %s", err.Error())
 	}
 

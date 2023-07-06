@@ -29,7 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-client/pkg/types"
 
-	"github.com/bitly/go-simplejson"
+	simplejson "github.com/bitly/go-simplejson"
 	"github.com/urfave/cli"
 )
 
@@ -71,7 +71,7 @@ func SetEnv(clusterID, namespace string) error {
 
 	var file *os.File
 	var err error
-	file, err = os.OpenFile(envPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666) // nolint
+	file, err = os.OpenFile(envPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	defer func() {
 		_ = file.Close()
 	}()

@@ -45,14 +45,6 @@ func ProjectParse() gin.HandlerFunc {
 		restContext.ProjectId = project.ProjectId
 		restContext.ProjectCode = project.Code
 
-		// get cluster info
-		cls, err := bcs.GetCluster(restContext.ClusterId)
-		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
-			return
-		}
-		restContext.SharedCluster = cls.IsShared
-
 		c.Next()
 	}
 }

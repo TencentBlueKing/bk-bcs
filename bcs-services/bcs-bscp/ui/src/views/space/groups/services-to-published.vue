@@ -45,9 +45,9 @@
     loading.value = false
   }
 
-  const getHref = (service: IGroupBindService) => {
-    const { href } = router.resolve({ name: 'service-config', params: { spaceId: spaceId.value, appId: service.app_id } })
-    return href
+  const goToConfigPage = (service: IGroupBindService) => {
+    const route = router.resolve({ name: 'service-config', params: { spaceId: spaceId.value, appId: service.app_id } })
+    window.open(route.href, '__blank')
   }
 
   const handlePageLimitChange = (val: number) => {
@@ -78,7 +78,7 @@
           <bk-table-column label="服务名称" prop="app_name"></bk-table-column>
           <bk-table-column label="服务版本">
             <template #default="{ row }">
-              <bk-link v-if="row.app_id" class="link-btn" theme="primary" target="_blank" :href="getHref(row)">{{ row.release_name }}</bk-link>
+              <bk-button text theme="primary" @click="goToConfigPage(row)">{{ row.release_name }}</bk-button>
             </template>
           </bk-table-column>
         </bk-table>
@@ -119,9 +119,6 @@
       font-size: 14px;
       background: #ffffff;
     }
-  }
-  .link-btn {
-    font-size: 12px;
   }
   .table-list-pagination {
     padding: 12px;

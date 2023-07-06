@@ -30,7 +30,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	otelmetric "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
-	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -61,12 +60,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	meter := mp.Meter("demo-client-meter")
 
+	// labels represent additional key-value descriptors that can be bound to a
 	// metric observer or recorder.
 	commonLabels := []attribute.KeyValue{
 		attribute.String("endpoint", "http_client"),
 		attribute.String("bar", "foo"),
 	}
+
+	requestLatency := otelmetric.Must(meter).NewFloat64Histogram(
+		"demo_client/request_latency",
+		otelmetric.WithDescription("The latency of requests processed"),
+	)
+
+	requestCount := otelmetric.Must(meter).
+		NewInt64Counter(
+			"demo_client/request_counts",
+			otelmetric.WithDescription("The number of requests processed"),
+		)
 
 	// start a http service for exposing metrics
 	http.Handle("/", exp)
@@ -82,13 +94,11 @@ func main() {
 			attribute.String("endpoint", "http_client"),
 		},
 	}
-	// init trace option
 	var traceOp []trace.Option
 	traceOp = append(traceOp, trace.TracerSwitch(traceOpts.TracingSwitch))
 	traceOp = append(traceOp, trace.ResourceAttrs(traceOpts.ResourceAttrs))
 	traceOp = append(traceOp, trace.ExporterURL(traceOpts.ExporterURL))
 
-	// init tracer provider
 	tp, err := trace.InitTracerProvider(traceOpts.ServiceName, traceOp...)
 	tracer := tp.Tracer(tracerName)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
@@ -108,25 +118,9 @@ func main() {
 		}
 	}(ctx)
 
-	do(ctx, tracer, commonLabels, mp)
-}
-
-func do(ctx context.Context, tracer oteltrace.Tracer, commonLabels []attribute.KeyValue, mp otelmetric.MeterProvider) {
-	meter := mp.Meter("demo-client-meter")
-	requestLatency := otelmetric.Must(meter).NewFloat64Histogram(
-		"demo_client/request_latency",
-		otelmetric.WithDescription("The latency of requests processed"),
-	)
-
-	requestCount := otelmetric.Must(meter).
-		NewInt64Counter(
-			"demo_client/request_counts",
-			otelmetric.WithDescription("The number of requests processed"),
-		)
 	for {
 		startTime := time.Now()
-		var span oteltrace.Span
-		ctx, span = tracer.Start(ctx, "Execute Request")
+		ctx, span := tracer.Start(ctx, "Execute Request")
 		log.Printf("traceID:%v, spanID:%v",
 			span.SpanContext().TraceID().String(), span.SpanContext().SpanID().String())
 		commonLabels2 := append(commonLabels,
@@ -151,11 +145,7 @@ func makeRequest(ctx context.Context) {
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/", nil)
-	if err != nil {
-		fmt.Printf("new request failed, err:%v\n", err)
-		return
-	}
-	_, span := utils.Tracer(tracerName).Start(ctx, "HTTP DO")
+	ctx, span := utils.Tracer(tracerName).Start(ctx, "HTTP DO")
 	log.Printf("traceID:%v, spanID:%v",
 		span.SpanContext().TraceID().String(), span.SpanContext().SpanID().String())
 	resp, err := client.Do(req)

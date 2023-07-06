@@ -32,10 +32,4 @@ const (
 const (
 	// RequestIDKey ...
 	RequestIDHeaderKey = "X-Request-Id"
-	// ContentDispositionKey content disposition key
-	ContentDispositionKey = "content-disposition"
-	// ContentDispositionKey content disposition key
-	ContentDispositionCapKey = "Content-Disposition"
-	// ContentDispositionValue contenct disposition value
-	ContentDispositionValue = "Content-Disposition"
 )
