@@ -52,3 +52,18 @@ export const ruleDetail = request2('get', '/log_collector/rules/$name');
 export const createLogRule = request2('post', '/log_collector/rules');
 export const updateLogRule = request2('put', '/log_collector/rules/$name');
 export const deleteLogRule = request2('delete', '/log_collector/rules/$name');
+
+// 日志规则
+const logRequest = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/monitor/api/projects/$projectCode/clusters/$clusterId',
+});
+export const logCollectorRules = logRequest('get', '/log_collector/rules');
+export const retryLogCollectorRule = logRequest('post', '/log_collector/rules/$ID/retry');
+export const enableLogCollector = logRequest('post', '/log_collector/rules/$ID/enable');
+export const disableLogCollector = logRequest('post', '/log_collector/rules/$ID/disable');
+export const deleteLogCollectorRule = logRequest('delete', '/log_collector/rules/$ID');
+export const logCollectorDetail = logRequest('get', '/log_collector/rules/$ID');
+export const createLogCollectorRule = logRequest('post', '/log_collector/rules');
+export const modifyLogCollectorRule = logRequest('put', '/log_collector/rules/$ID');
+export const logCollectorEntrypoints = logRequest('post', '/log_collector/entrypoints');

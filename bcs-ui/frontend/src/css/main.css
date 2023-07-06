@@ -19,8 +19,6 @@
     justify-content: center;
     cursor: pointer;
     color: #979ba5;
-    position: relative;
-    top: 1px;
     &:hover:not(.disabled) {
       background: #ddd;
       color: #3a84ff

@@ -111,32 +111,19 @@
                   theme="light dropdown"
                   :arrow="false"
                   trigger="click"
-                  v-if="row.containerID && !isSharedCluster">
+                  v-if="row.containerID">
                   <bk-button style="cursor: default;" text class="ml10">{{ $t('日志检索') }}</bk-button>
                   <div slot="content">
-                    <!-- 内部版 -->
-                    <ul v-if="$INTERNAL">
+                    <ul>
                       <a
-                        :href="logLinks[row.containerID] && logLinks[row.containerID].std_log_link"
+                        :href="logLinks[row.containerID] && logLinks[row.containerID].std_log_url"
                         target="_blank" class="dropdown-item">
                         {{ $t('标准输出检索') }}
                       </a>
                       <a
-                        :href="logLinks[row.containerID] && logLinks[row.containerID].file_log_link"
+                        :href="logLinks[row.containerID] && logLinks[row.containerID].file_log_url"
                         target="_blank" class="dropdown-item">
                         {{ $t('文件日志检索') }}
-                      </a>
-                    </ul>
-                    <ul v-else>
-                      <a
-                        :href="logLinks[row.containerID] && logLinks[row.containerID].std_log_link"
-                        target="_blank" class="dropdown-item">
-                        {{ $t('标准日志') }}
-                      </a>
-                      <a
-                        :href="logLinks[row.containerID] && logLinks[row.containerID].file_log_link"
-                        target="_blank" class="dropdown-item">
-                        {{ $t('文件路径日志') }}
                       </a>
                     </ul>
                   </div>
@@ -312,6 +299,7 @@ import EventQueryTableVue from '@/views/project-manage/event-query/event-query-t
 import $store from '@/store';
 import $router from '@/router';
 import { useConfig } from '@/composables/use-app';
+import { logCollectorEntrypoints } from '@/api/modules/monitor';
 
 export interface IDetail {
   manifest: any;
@@ -393,7 +381,6 @@ export default defineComponent({
     const container = ref<any[]>([]);
     const containerLoading = ref(false);
     const logLinks = ref({});
-    const curProject = computed(() => $store.state.curProject);
     const handleGetContainer = async () => {
       containerLoading.value = true;
       container.value = await $store.dispatch('dashboard/listContainers', {
@@ -403,14 +390,10 @@ export default defineComponent({
       });
       const containerIDs = container.value.map(item => item.containerID).filter(id => !!id);
       if (containerIDs.length) {
-        logLinks.value = _INTERNAL_.value
-          ? await $store.dispatch('dashboard/logLinks', {
-            container_ids: containerIDs.join(','),
-          })
-          : await $store.dispatch('crdcontroller/getLogLinks', {
-            container_ids: containerIDs.join(','),
-            bk_biz_id: curProject.value?.businessID,
-          });
+        logLinks.value = await logCollectorEntrypoints({
+          container_ids: containerIDs,
+          $clusterId: clusterId.value,
+        }).catch(() => ({}));
       }
       containerLoading.value = false;
     };
@@ -495,9 +478,6 @@ export default defineComponent({
     // 2. 日志检索
     const isDropdownShow = ref(false);
 
-    const isSharedCluster = computed(() => ($store.state.cluster.clusterList as any[])
-      .find(item => item.clusterID === clusterId.value)?.is_shared);
-
     onMounted(async () => {
       handleGetDetail();
       handleGetStorage();
@@ -525,7 +505,6 @@ export default defineComponent({
       showYamlPanel,
       isDropdownShow,
       logLinks,
-      isSharedCluster,
       timeZoneTransForm,
       handleShowYamlPanel,
       handleGetStorage,

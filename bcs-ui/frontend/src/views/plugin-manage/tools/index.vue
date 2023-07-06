@@ -501,9 +501,6 @@ export default {
         this.isInitLoading = false;
         this.isPageLoading = false;
       }
-      if (this.crdKind === 'BcsLog' && this.clusterList.filter(item => !item.is_shared).length) {
-        this.getLogPlans();
-      }
     },
 
     async haneldEnableCrdController(crdcontroller) {
@@ -617,25 +614,6 @@ export default {
         clearInterval(this.statusTimer[key]);
       }
       this.statusTimer = {};
-    },
-
-    async getLogPlans() {
-      const { projectId } = this;
-
-      try {
-        if (this.$INTERNAL) {
-          const res = await this.$store.dispatch('getLogPlans', projectId);
-          this.dataSource = res.data;
-        } else {
-          this.dataSource = await this.$store.dispatch('crdcontroller/getLogLinks', {
-            bk_biz_id: this.curProject.cc_app_id,
-          });
-        }
-      } catch (e) {
-        if (e.code !== 404) {
-          catchErrorHandler(e, this);
-        }
-      }
     },
 
     async enableLogPlans() {

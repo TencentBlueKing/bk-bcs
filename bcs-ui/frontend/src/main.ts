@@ -70,4 +70,12 @@ window.mainComponent = new Vue({
   i18n,
   template: '<App/>',
 });
-console.log(`%c${BK_CI_BUILD_NUM} \n ${BK_BCS_VERSION}`, 'color: #2DCB56');
+
+console.log(
+  `%c${BK_CI_BUILD_NUM} \n %c版本信息%c${BK_BCS_VERSION} %c>> ${new Date().toString()
+    .slice(0, 25)}<<`,
+  'color: #2DCB56',
+  'padding: 2px 5px; background: #ea3636; color: #fff; border-radius: 3px 0 0 3px;',
+  'padding: 2px 5px; background: #42c02e; color: #fff; border-radius: 0 3px 3px 0; font-weight: bold;',
+  'background-color: #3A84FF; color: #fff; padding: 2px 5px; border-radius: 3px; font-weight: bold;margin-left: 16px;',
+);

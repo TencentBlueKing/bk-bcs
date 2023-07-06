@@ -8,6 +8,7 @@
     :popover-min-width="320"
     :remote-method="remoteMethod"
     :search-placeholder="$t('输入集群名或ID搜索')"
+    :size="size"
     @change="handleClusterChange">
     <bcs-option-group
       v-for="item, index in clusterData"
@@ -65,6 +66,10 @@ export default defineComponent({
     clusterType: {
       type: [String, Array] as PropType<ClusterType|ClusterType[]>,
       default: () => ['independent', 'managed'],
+    },
+    size: {
+      type: String,
+      default: '',
     },
   },
   emits: ['change'],

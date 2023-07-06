@@ -71,13 +71,15 @@
         <div class="info-item">
           <span class="label">{{ $t('最大调度Pod数量') }}</span>
           <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxSurge')">
-            {{ String(spec.strategy.rollingUpdate.maxSurge).split('%')[0] }}%</span>
+            {{ spec.strategy.rollingUpdate.maxSurge }}
+          </span>
           <span class="value" v-else>--</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('最大不可用数量') }}</span>
           <span class="value" v-if="$chainable(spec, 'strategy.rollingUpdate.maxUnavailable')">
-            {{ String(spec.strategy.rollingUpdate.maxUnavailable).split('%')[0] }}%</span>
+            {{ spec.strategy.rollingUpdate.maxUnavailable }}
+          </span>
           <span class="value" v-else>--</span>
         </div>
         <div class="info-item">

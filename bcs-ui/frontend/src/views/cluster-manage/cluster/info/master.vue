@@ -7,28 +7,30 @@
         </span>
       </bk-form-item>
       <bk-form-item :label="$t('Master信息')">
-        <bk-table :data="masterData" v-bkloading="{ isLoading }" class="max-w-[800px]">
-          <bk-table-column :label="$t('主机名称')">
-            <template #default="{ row }">
-              {{ row.nodeName || '--' }}
+        <div class="flex max-w-[800px]">
+          <bk-table :data="masterData" v-bkloading="{ isLoading }">
+            <bk-table-column :label="$t('主机名称')">
+              <template #default="{ row }">
+                {{ row.nodeName || '--' }}
+              </template>
+            </bk-table-column>
+            <bk-table-column label="IPv4">
+              <template #default="{ row }">
+                {{ row.innerIP || '--' }}
+              </template>
+            </bk-table-column>
+            <bk-table-column label="IPv6">
+              <template #default="{ row }">
+                {{ row.innerIPv6 || '--' }}
+              </template>
+            </bk-table-column>
+            <template v-if="$INTERNAL">
+              <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
+              <bk-table-column :label="$t('机架')" prop="rack"></bk-table-column>
+              <bk-table-column :label="$t('机型')" prop="deviceClass"></bk-table-column>
             </template>
-          </bk-table-column>
-          <bk-table-column label="IPv4">
-            <template #default="{ row }">
-              {{ row.innerIP || '--' }}
-            </template>
-          </bk-table-column>
-          <bk-table-column label="IPv6">
-            <template #default="{ row }">
-              {{ row.innerIPv6 || '--' }}
-            </template>
-          </bk-table-column>
-          <template v-if="$INTERNAL">
-            <bk-table-column :label="$t('机房')" prop="idc"></bk-table-column>
-            <bk-table-column :label="$t('机架')" prop="rack"></bk-table-column>
-            <bk-table-column :label="$t('机型')" prop="deviceClass"></bk-table-column>
-          </template>
-        </bk-table>
+          </bk-table>
+        </div>
       </bk-form-item>
     </template>
     <template v-else>
@@ -61,6 +63,9 @@ import { useCluster } from '@/composables/use-app';
 import { defineComponent, ref, computed, onBeforeMount } from 'vue';
 import { masterList } from '@/api/modules/cluster-manager';
 import clusterScaleData from '../create/cluster-scale.json';
+import { copyText } from '@/common/util';
+import $bkMessage from '@/common/bkmagic';
+import $i18n from '@/i18n/i18n-setup';
 
 export default defineComponent({
   name: 'ClusterMaster',
@@ -84,13 +89,22 @@ export default defineComponent({
 
     // 独立集群Master信息
     const isLoading = ref(false);
-    const masterData = ref([]);
+    const masterData = ref<any[]>([]);
     const handleGetMasterData = async () => {
       isLoading.value = true;
       masterData.value = await masterList({
         $clusterId: props.clusterId,
       }).catch(() => []);
       isLoading.value = false;
+    };
+
+    // 复制IP
+    const handleCopyIPv4 = () => {
+      copyText(masterData.value.map(item => item.innerIP).join('\n'));
+      $bkMessage({
+        theme: 'success',
+        message: $i18n.t('复制成功'),
+      });
     };
 
     onBeforeMount(() => {
@@ -105,6 +119,7 @@ export default defineComponent({
       curClusterScale,
       isLoading,
       masterData,
+      handleCopyIPv4,
     };
   },
 });

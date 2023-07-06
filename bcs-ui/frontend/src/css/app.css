@@ -2522,7 +2522,8 @@ div.jsoneditor {
         .bk-dialog-type-header {
             .header {
                 font-size: 20px;
-                white-space: inherit;
+                word-break: break-word;
+                white-space: initial;
             }
         }
         .bk-dialog-type-sub-header {

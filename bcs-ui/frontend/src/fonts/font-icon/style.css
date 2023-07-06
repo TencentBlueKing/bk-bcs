@@ -890,3 +890,9 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-wenjian:before {
 	content: "\e22e";
 }
+.bcs-icon-setting:before {
+	content: "\e22f";
+}
+.bcs-icon-switch:before {
+	content: "\e230";
+}

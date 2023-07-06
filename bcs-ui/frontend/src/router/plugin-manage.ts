@@ -8,9 +8,8 @@ const MetricManage = () => import(/* webpackChunkName: 'plugin' */'@/views/plugi
 const LoadBalance = () => import(/* webpackChunkName: 'plugin' */'@/views/deploy-manage/templateset/network/loadbalance.vue');
 const LoadBalanceDetail = () => import(/* webpackChunkName: 'plugin' */'@/views/deploy-manage/templateset/network/loadbalance-detail.vue');
 
-// 新版日志采集
-const NewLogIndex = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/new-log/log.vue');
-const NewLogList = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/new-log/log-list.vue');
+// 日志采集
+const logCollector = () => import(/* webpackChunkName: 'plugin' */'@/views/plugin-manage/tools/log-collector/log-collector.vue');
 
 export default [
   // 组件库
@@ -26,26 +25,7 @@ export default [
   {
     path: 'log-collector',
     name: 'logCrdcontroller',
-    component: Index,
-    meta: {
-      crdKind: 'BcsLog',
-    },
-  },
-  // 新版日志采集
-  {
-    path: 'log',
-    name: 'newLogController',
-    component: NewLogIndex,
-  },
-  // 新版日志采集 - 配置
-  {
-    path: 'clusters/:clusterId/tools/log',
-    props: true,
-    name: 'newLogList',
-    component: NewLogList,
-    meta: {
-      menuId: 'NEW_LOG',
-    },
+    component: logCollector,
   },
   // DB授权配置
   {

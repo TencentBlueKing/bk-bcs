@@ -154,7 +154,11 @@
         <!-- 正常状态 -->
         <template v-else-if="row.status === 'RUNNING'">
           <bk-button text class="mr10" @click="handleGotoClusterOverview(row)">{{ $t('集群总览') }}</bk-button>
-          <bk-button text class="mr10" @click="handleGotoDashborad(row)">{{ $t('资源视图') }}</bk-button>
+          <bk-button
+            text
+            class="mr10"
+            v-if="row.clusterType === 'virtual'"
+            @click="handleGotoDashborad(row)">{{ $t('资源视图') }}</bk-button>
           <bk-button
             text
             class="mr10"

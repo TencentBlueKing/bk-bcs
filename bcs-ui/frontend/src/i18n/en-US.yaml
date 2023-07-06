@@ -2143,17 +2143,7 @@ Sorry，您的权限不足: 'Sorry, your authority is insufficient'
 所属命名空间: Naming space
 设置成功: Successfully set
 请填写Values 内容: Please fill in Values content
-请填写文件的绝对路径，不支持目录: Please fill in the absolute path of the file and do not support the directory
-支持通配符，但通配符仅支持文件级别的: 'Support the compatriots, but the compatriots only support file levels'
 '有效的示例: /data/log/*/*.log; /data/test.log; /data/log/log.*': 'Effective example: /data/log/*/*.log; /data/test.log; /data/log/log.*'
-'无效的示例: /data/log/*; /data/log': 'Example:/data/log/*;/data/log'
-'名称只能包含数字、英文和下划线, 且长度在5 ~ 50之间': >-
-  The name can only contain numbers, English, and lower lines, and the length is
-  between 5 and 50
-输入容器名: Input container name
-采集规则不存在: The collection rules do not exist
-'确认删除规则 {name}': 'Confirm the deletion rules {name}'
-未配置规则: Unconfigured rules
 同步状态: Synchronous state
 同步耗时: Synchronous time
 最后同步时间: Last sync time
@@ -2555,3 +2545,91 @@ nav:
   metric: Metric
   log: Log Collection
   monitor: Container Monitoring
+展开列表: Expand list
+生成新规则: Generate new rule
+'已生成新规则: <br/> {0}<br/>此规则自动清理期限:<br/>{1}': >-
+  New rule generated: <br/> {0}<br/>This rule will be automatically cleaned up
+  after: <br/>{1}
+旧: Old
+停用: Disable
+'生成新规则后，新旧版本规则采集到的日志数据将在 {0} 后完全同步，届时系统将自动为您清理旧规则。': >-
+  After generating a new rule, the log data collected by the old and new version
+  rules will be completely synchronized after {0}, and the system will
+  automatically clean up the old rules for you.
+'{0} 已生成新规则，是否再次生成？': '{0} has generated a new rule, do you want to generate it again?'
+继续生成: Continue to generate
+创建任务提交成功: Create task submitted successfully
+修改任务提交成功: Modify task submitted successfully
+组件更新: Component update
+立即更新: Update now
+最新版本号: Latest version number
+最新版本描述: Latest version description
+当前集群日志采集组件未启用: The current cluster log collection component is not enabled
+当前集群日志采集组件安装失败: The current cluster log collection component installation failed
+重新安装: Reinstall
+支持容器标准输出日志和文件路径日志的采集设置。日志采集服务已升级，旧版本规则建议「生成新规则」并及时清理。: >-
+  Supports the collection settings of container standard output logs and file
+  path logs. The log collection service has been upgraded. It is recommended to
+  "generate new rules" for old version rules and clean them up in time.
+规则名称/命名空间/更新人: Rule name / Namespace / Updater
+文件日志: File log
+标准输出日志: Standard output log
+下发中: Issuing
+下发失败: Failed to issue
+'确定重试规则 {0}': 'Are you sure to retry rule {0}?'
+重试任务提交成功: Retry task submitted successfully
+'确定启用规则 {0}': 'Are you sure to enable rule {0}?'
+'确定停用规则 {0}': 'Are you sure to disable rule {0}?'
+启用成功: Enabled successfully
+停用成功: Disabled successfully
+'确定删除规则 {0}': 'Are you sure to delete rule {0}?'
+工作负载: Workload
+日志路径: Log path
+查询文件日志: Query file log
+日志字符集: Log character set
+查询标准输出日志: Query standard output log
+过滤内容: Filter content
+字符串过滤: String filter
+分隔符过滤: Delimiter filter
+'第 {0} 列': 'Column {0}'
+自动添加 Pod 中的 labels: Automatically add labels in Pod
+并: And
+或: Or
+选择容器范围: Select container range
+所有选择范围可相互叠加并作用，除命名空间外，至少添加一种范围: >-
+  All selected ranges can be superimposed and applied to each other. At least
+  one range must be added except for the namespace
+按标签选择: Select by label
+如果添加多个标签，只会采集Pod上同时存在多个标签的容器日志: >-
+  If multiple labels are added, only the container logs with multiple labels
+  that exist on the Pod will be collected
+按工作负载选择: Select by workload
+按容器名称选择: Select by container name
+添加范围: Add range
+采集对象: Collection object
+容器内文件: File in container
+为减少传输和存储成本，可以过滤掉部分内容，默认不开启过滤: >-
+  To reduce transmission and storage costs, some content can be filtered out.
+  Filtering is not enabled by default
+不过滤: Do not filter
+include(保留匹配字符串): include (keep matching string)
+exclude(过滤匹配字符串): exclude (filter matching string)
+复杂的过滤条件（超过5个）会影响机器性能: Complex filtering conditions (more than 5) will affect machine performance
+是否自动添加 Pod 中的 labels: Whether to automatically add labels in Pod
+'仅支持英文, 数字和下划线, 且长度5~30字符': >-
+  Only supports English, numbers and underscores, and the length is 5~30
+  characters
+仅支持绝对路径: Only absolute paths are supported
+按容器名选择: Select by container name
+'请输入应用名称, 支持正则表达式': 'Please enter the application name, supports regular expressions'
+竖线(|): Vertical bar (|)
+'逗号(,)': 'Comma (,)'
+分号(;): Semicolon (;)
+第几列: Column number
+等于: Equal to
+增/删: Add/Delete
+条件关系: Conditional relationship
+功能开发中，暂不开放: 'Function under development, not yet available'
+当前集群日志采集组件未启用，请联系集群管理员处理: 'The current cluster log collection component is not enabled, please contact the cluster administrator to handle it'
+只支持星号（*）、问号（?）两种通配符: 'Only supports two wildcards: asterisk () and question mark (?)'
+反引号(`): 'Backtick (`)'

@@ -175,7 +175,6 @@ export const logCollectList = request('get', '/api/log_collect/projects/$project
 export const updateLogCollect = request('put', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
 export const deleteLogCollect = request('delete', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
 export const retrieveLogCollect = request('get', '/api/log_collect/projects/$projectId/clusters/$clusterId/configs/$configId/');
-export const getLogLinks = request('get', '/api/log_collect/projects/$projectId/log_links/');
 
 // node group(pool)
 export const nodeGroup = request('get', `${prefix}/clustermanager/v1/nodegroup`);

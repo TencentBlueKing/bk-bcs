@@ -30,13 +30,10 @@
                 <span class="border-bottom-tips">{{ $t('滚动升级') }}</span>
                 <div slot="content" v-if="$chainable(row.spec, 'strategy.rollingUpdate.maxSurge')">
                   <p>
-                    {{ $t('最大调度Pod数量（maxSurge）: {num}', {
-                      num: `${String(row.spec.strategy.rollingUpdate.maxSurge).split('%')[0]}%` }) }}
+                    {{ $t('最大调度Pod数量（maxSurge）: {num}', { num: row.spec.strategy.rollingUpdate.maxSurge }) }}
                   </p>
                   <p>
-                    {{ $t('最大不可用数量（maxUnavailable）: {num}', { num:
-                      `${String(row.spec.strategy.rollingUpdate.maxUnavailable)
-                        .split('%')[0]}%` }) }}
+                    {{ $t('最大不可用数量（maxUnavailable）: {num}', { num: row.spec.strategy.rollingUpdate.maxUnavailable }) }}
                   </p>
                 </div>
                 <div slot="content" v-else>

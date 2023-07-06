@@ -332,26 +332,6 @@ export default {
     },
 
     /**
-         * 实例详情页面获取 taskgroup 下的 container 集合的日志链接
-         *
-         * @param {Object} context store 上下文对象
-         * @param {Object} params 参数
-         * @param {Object} config 请求的配置
-         *
-         * @return {Promise} promise 对象
-         */
-    getContaintersLogLinks(context, params, config = {}) {
-      const { projectId } = params;
-      delete params.projectId;
-
-      return http.post(
-        `${DEVOPS_BCS_API_URL}/api/datalog/projects/${projectId}/log_links/`,
-        params,
-        config,
-      );
-    },
-
-    /**
          * 实例详情页面获取 containerIds
          *
          * @param {Object} context store 上下文对象
