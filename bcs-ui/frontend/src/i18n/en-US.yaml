@@ -2597,7 +2597,7 @@ nav:
 并: And
 或: Or
 选择容器范围: Select container range
-所有选择范围可相互叠加并作用，除命名空间外，至少添加一种范围: >-
+所有选择范围可相互叠加并作用，如果选择所有命名空间，至少添加一种范围: >-
   All selected ranges can be superimposed and applied to each other. At least
   one range must be added except for the namespace
 按标签选择: Select by label

@@ -73,6 +73,7 @@ export default [
     component: CreateVCluster,
     meta: {
       menuId: 'CLUSTER',
+      id: 'VCLUSTER',
     },
   },
   // 创建集群 - import导入模式

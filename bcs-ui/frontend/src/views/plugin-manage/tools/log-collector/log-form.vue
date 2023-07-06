@@ -11,7 +11,7 @@
               <span class="font-bold">{{ $t('选择容器范围') }}</span>
               <span class="ml-[12px]">
                 <i class="bk-icon icon-info-circle text-[#979BA5] text-[14px]"></i>
-                <span class="ml-[4px]">{{ $t('所有选择范围可相互叠加并作用，除命名空间外，至少添加一种范围') }}</span>
+                <span class="ml-[4px]">{{ $t('所有选择范围可相互叠加并作用，如果选择所有命名空间，至少添加一种范围') }}</span>
               </span>
             </template>
           </Row>
@@ -125,7 +125,7 @@
           <p
             class="text-[#EA3636] px-[12px] mt-[8px] flex items-center h-[20px]"
             v-if="hasNoConfig">
-            {{ $t('所有选择范围可相互叠加并作用，除命名空间外，至少添加一种范围') }}
+            {{ $t('所有选择范围可相互叠加并作用，如果选择所有命名空间，至少添加一种范围') }}
           </p>
         </div>
         <bk-form-item

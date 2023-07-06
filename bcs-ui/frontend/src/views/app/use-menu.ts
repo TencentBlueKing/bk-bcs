@@ -56,7 +56,7 @@ export default function useMenu() {
   const getCurrentMenuByRoute = (name: string, id?: string) => allLeafMenus.value
     .find(item => item.route === name || item.id === id);
   // 校验菜单是否开启
-  const validateMenuID = (menu: IMenu) => {
+  const validateMenuID = (menu: IMenu): boolean => {
     if (has(flagsMap.value, menu?.id || '') && !flagsMap.value[menu?.id || '']) {
       return false;
     }
@@ -71,9 +71,12 @@ export default function useMenu() {
     if (!flagsMap.value || !Object.keys(flagsMap.value)?.length) {
       await getFeatureFlags({ projectCode: route.params.projectCode });
     }
-    // 路由配置上带有menuId, 直接取ID
-    if (route.meta?.menuId) {
-      return !(has(flagsMap.value, route.meta.menuId) && !flagsMap.value[route.meta.menuId]);
+    // 路由配置上带有menuId（父菜单ID）或 ID（当前菜单ID）, 先判断配置的ID是否开启了feature_flag
+    if (route.meta?.id && has(flagsMap.value, route.meta?.id) && !flagsMap.value[route.meta.id]) {
+      return false;
+    }
+    if (route.meta?.menuId && has(flagsMap.value, route.meta.menuId) && !flagsMap.value[route.meta.menuId]) {
+      return false;
     }
     // 直接返回的菜单项不包含parent信息, 需要去menusDataMap找含有parent信息的菜单项
     const menuID = getCurrentMenuByRoute(route.name || '')?.id || '';

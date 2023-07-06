@@ -238,6 +238,12 @@ const handleGetDetail = async () => {
 
 // 显示列表
 const handleShowList = () => {
+  if (!editable.value && activeID.value) {
+    activeID.value = '';
+    emits('show-list');
+    return;
+  }
+  // 编辑态返回列表确认
   $bkInfo({
     title: $i18n.t('确认离开当前页?'),
     subTitle: $i18n.t('离开将会导致未保存信息丢失'),

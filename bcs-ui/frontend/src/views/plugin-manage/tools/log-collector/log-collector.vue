@@ -573,7 +573,7 @@ onBeforeMount(() => {
   background: #EAEBF0 !important;
   border: none !important;
   box-shadow: none !important;
-  width: 160px;
+  width: 160px !important;
   margin-left: 24px;
 }
 </style>
