@@ -88,6 +88,7 @@ func (h *EventHandler) PushQueue(nsName k8stypes.NamespacedName) {
 	h.eventQueue.Add(nsName)
 }
 
+// handleQueue get listener from eventQueue and store in EventCache
 func (h *EventHandler) handleQueue() bool {
 	// CAUTION: Done() function must be called at last for object Get() from eventQueue
 	obj, shutDown := h.eventQueue.Get()
@@ -167,6 +168,7 @@ func (h *EventHandler) doHandleMulti() error {
 			continue
 		}
 
+		// 根据事件类型区分处理
 		switch event.Type {
 		case EventAdd, EventUpdate:
 			if listener.Spec.EndPort > 0 {
@@ -178,6 +180,7 @@ func (h *EventHandler) doHandleMulti() error {
 			listenerDeleteList = append(listenerDeleteList, listener)
 		}
 	}
+	// 取出监听器后清空缓存
 	h.eventRecvCache.Clean()
 	h.queueLock.Unlock()
 
@@ -263,6 +266,7 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 		listenerIDMap, err = h.lbClient.EnsureMultiListeners(h.region, h.lbID, listeners)
 	}
 
+	// 返回error时认为这批监听器全部处理失败
 	if err != nil {
 		for _, li := range listeners {
 			obj := k8stypes.NamespacedName{
@@ -281,6 +285,7 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 		}
 		return err
 	}
+	// 不发success事件，避免Listener量大时Event事件影响etcd性能
 	for _, li := range listeners {
 		obj := k8stypes.NamespacedName{
 			Namespace: li.GetNamespace(),
@@ -356,22 +361,24 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 		}
 		return err
 	}
-
-	err = h.lbClient.DeleteMultiListeners(h.region, h.lbID, listeners)
-	if err != nil {
-		blog.Warnf("delete listeners failed, requeue listeners, err: %s", err.Error())
-		for _, li := range listeners {
-			obj := k8stypes.NamespacedName{
-				Namespace: li.GetNamespace(),
-				Name:      li.GetName(),
+	// 只有当LB未被删除时，才需要处理删除监听器
+	if err == nil {
+		err = h.lbClient.DeleteMultiListeners(h.region, h.lbID, listeners)
+		if err != nil {
+			blog.Warnf("delete listeners failed, requeue listeners, err: %s", err.Error())
+			for _, li := range listeners {
+				obj := k8stypes.NamespacedName{
+					Namespace: li.GetNamespace(),
+					Name:      li.GetName(),
+				}
+				h.recordListenerDeleteFailedEvent(li, err)
+				metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode,
+					metrics.ListenerMethodDeleteListener, err, startTime)
+				h.eventQueue.AddRateLimited(obj)
+				h.eventQueue.Done(obj)
 			}
-			h.recordListenerDeleteFailedEvent(li, err)
-			metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode,
-				metrics.ListenerMethodDeleteListener, err, startTime)
-			h.eventQueue.AddRateLimited(obj)
-			h.eventQueue.Done(obj)
+			return err
 		}
-		return err
 	}
 
 	for _, li := range listeners {
@@ -428,6 +435,7 @@ func (h *EventHandler) ensureListener(li *networkextensionv1.Listener) error {
 	startTime := time.Now()
 	var listenerID string
 	var err error
+	// 通过EndPort区分端口段监听器
 	if li.Spec.EndPort > 0 {
 		listenerID, err = h.lbClient.EnsureSegmentListener(h.region, li)
 		if err != nil {
@@ -453,8 +461,6 @@ func (h *EventHandler) ensureListener(li *networkextensionv1.Listener) error {
 			return fmt.Errorf("cloud lb client EnsureListener failed, err %s", err.Error())
 		}
 	}
-	// h.recordListenerSuccessEvent(li, listenerID)
-
 	if err = h.patchListenerStatus(li, listenerID, networkextensionv1.ListenerStatusSynced,
 		"ensure success"); err != nil {
 		metrics.ReportHandleListenerMetric(1, h.isBulkMode, metrics.ListenerMethodEnsureListener, err, startTime)
@@ -487,22 +493,24 @@ func (h *EventHandler) deleteListener(li *networkextensionv1.Listener) error {
 		blog.Errorf("cloud lb client DescribeLoadBalancer failed, err %s", err.Error())
 		return fmt.Errorf("cloud lb client DescribeLoadBalancer failed, err %s", err.Error())
 	}
-
-	if li.Spec.EndPort > 0 {
-		err = h.lbClient.DeleteSegmentListener(h.region, li)
-		if err != nil {
-			h.recordListenerDeleteFailedEvent(li, err)
-			metrics.ReportHandleListenerMetric(1, h.isBulkMode, metrics.ListenerMethodDeleteListener, err, startTime)
-			blog.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
-			return fmt.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
-		}
-	} else {
-		err = h.lbClient.DeleteListener(h.region, li)
-		if err != nil {
-			h.recordListenerDeleteFailedEvent(li, err)
-			metrics.ReportHandleListenerMetric(1, h.isBulkMode, metrics.ListenerMethodDeleteListener, err, startTime)
-			blog.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
-			return fmt.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
+	// 只有当LB未被删除时，才需要处理删除监听器
+	if err == nil {
+		if li.Spec.EndPort > 0 {
+			err = h.lbClient.DeleteSegmentListener(h.region, li)
+			if err != nil {
+				h.recordListenerDeleteFailedEvent(li, err)
+				metrics.ReportHandleListenerMetric(1, h.isBulkMode, metrics.ListenerMethodDeleteListener, err, startTime)
+				blog.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
+				return fmt.Errorf("cloud lb client DeleteSegmentListener failed, err %s", err.Error())
+			}
+		} else {
+			err = h.lbClient.DeleteListener(h.region, li)
+			if err != nil {
+				h.recordListenerDeleteFailedEvent(li, err)
+				metrics.ReportHandleListenerMetric(1, h.isBulkMode, metrics.ListenerMethodDeleteListener, err, startTime)
+				blog.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
+				return fmt.Errorf("cloud lb client DeleteListener failed, err %s", err.Error())
+			}
 		}
 	}
 
