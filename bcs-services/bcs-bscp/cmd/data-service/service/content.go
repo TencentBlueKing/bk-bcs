@@ -14,7 +14,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -31,8 +30,7 @@ func (s *Service) CreateContent(ctx context.Context, req *pbds.CreateContentReq)
 		Spec:       req.Spec.ContentSpec(),
 		Attachment: req.Attachment.ContentAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   grpcKit.User,
-			CreatedAt: time.Now(),
+			Creator: grpcKit.User,
 		},
 	}
 	id, err := s.dao.Content().Create(grpcKit, content)

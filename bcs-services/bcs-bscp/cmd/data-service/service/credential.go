@@ -38,7 +38,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *pbds.CreateCredenti
 			Reviser: kt.User,
 		},
 	}
-	credential.Spec.ExpiredAt = time.Now()
+	credential.Spec.ExpiredAt = time.Now().UTC()
 	id, err := s.dao.Credential().Create(kt, credential)
 	if err != nil {
 		logs.Errorf("create credential failed, err: %v, rid: %s", err, kt.Rid)
