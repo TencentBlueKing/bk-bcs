@@ -27,10 +27,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/sessions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
+	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 var (
@@ -79,6 +83,71 @@ func (c *AuthContext) BKAppCode() string {
 	}
 
 	return ""
+}
+
+// AuditMiddle audit middleware
+func AuditMiddle() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Method == http.MethodOptions {
+			c.Next()
+			return
+		}
+
+		authCtx := MustGetAuthContext(c)
+
+		actionID := ""
+		switch c.Request.Method {
+		case http.MethodPost:
+			actionID = namespace.NameSpaceScopedCreate.String()
+		case http.MethodDelete:
+			actionID = namespace.NameSpaceScopedDelete.String()
+		case http.MethodPut, http.MethodPatch:
+			actionID = namespace.NameSpaceScopedUpdate.String()
+		case http.MethodGet:
+			actionID = namespace.NameSpaceScopedView.String()
+		default:
+			c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{
+				Code:      types.ApiErrorCode,
+				Message:   fmt.Sprintf("invalid action[%s]", c.Request.Method),
+				RequestID: authCtx.RequestId,
+			})
+			return
+		}
+
+		if err := ValidateProjectCluster(c, authCtx); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{
+				Code:      types.ApiErrorCode,
+				Message:   err.Error(),
+				RequestID: authCtx.RequestId,
+			})
+			return
+		}
+
+		c.Set("auth_context", authCtx)
+
+		ns := GetNamespace(c)
+		nameSpaceID := authUtils.CalcIAMNsID(authCtx.ClusterId, ns)
+		resourceTypeID := string(namespace.SysNamespace)
+		instanceID := nameSpaceID
+		username := authCtx.Username
+		allow, err := iam.IsAllowedWithResource(c.Request.Context(), authCtx.ProjectId, authCtx.ClusterId, ns,
+			authCtx.Username)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, types.APIResponse{
+				Code:      types.ApiErrorCode,
+				Message:   err.Error(),
+				RequestID: authCtx.RequestId,
+			})
+			return
+		}
+		instanceData := map[string]interface{}{
+			"ProjectID": authCtx.ProjectId,
+			"ClusterID": authCtx.ClusterId,
+			"Namespace": ns,
+		}
+		defer audit.AddEvent(actionID, resourceTypeID, instanceID, username, allow, instanceData)
+		c.Next()
+	}
 }
 
 // WebAuthRequired Web类型, 不需要鉴权
