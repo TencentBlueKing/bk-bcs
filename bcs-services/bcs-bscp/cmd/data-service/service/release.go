@@ -16,7 +16,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	pbstruct "github.com/golang/protobuf/ptypes/struct"
 	"gorm.io/gorm"
@@ -45,7 +44,6 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		return nil, errors.New("app config items is empty")
 	}
 	// step2: query config item newest commit
-	now := time.Now()
 	for _, item := range cfgItems {
 		commit, e := s.dao.Commit().GetLatestCommit(grpcKit, req.Attachment.BizId, req.Attachment.AppId, item.ID)
 		if e != nil {
@@ -84,8 +82,7 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 		Spec:       req.Spec.ReleaseSpec(),
 		Attachment: req.Attachment.ReleaseAttachment(),
 		Revision: &table.CreatedRevision{
-			Creator:   grpcKit.User,
-			CreatedAt: now,
+			Creator: grpcKit.User,
 		},
 	}
 	id, err := s.dao.Release().CreateWithTx(grpcKit, tx, release)
@@ -201,6 +198,19 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 		Details: releases,
 	}
 	return resp, nil
+}
+
+// GetReleaseByName get release by release name.
+func (s *Service) GetReleaseByName(ctx context.Context, req *pbds.GetReleaseByNameReq) (*pbrelease.Release, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	release, err := s.dao.Release().GetByName(grpcKit, req.GetBizId(), req.GetAppId(), req.GetReleaseName())
+	if err != nil {
+		logs.Errorf("get release by name failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, fmt.Errorf("query release by name %s failed", req.GetReleaseName())
+	}
+
+	return pbrelease.PbRelease(release), nil
 }
 
 func (s *Service) queryPublishStatus(gcrs []*table.ReleasedGroup, releaseID uint32) (

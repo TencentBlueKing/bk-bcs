@@ -16,7 +16,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -245,14 +244,12 @@ func (s *Service) UpdateHookRelease(ctx context.Context, req *pbds.UpdateHookRel
 		logs.Errorf("update HookRelease spec from pb failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	now := time.Now()
 	hookRelease = &table.HookRelease{
 		ID:         req.Id,
 		Spec:       spec,
 		Attachment: req.Attachment.HookReleaseAttachment(),
 		Revision: &table.Revision{
-			Reviser:   kt.User,
-			UpdatedAt: now,
+			Reviser: kt.User,
 		},
 	}
 	if e := s.dao.HookRelease().Update(kt, hookRelease); e != nil {

@@ -310,7 +310,7 @@ func (dao *eventDao) RecordCursor(kit *kit.Kit, eventID uint32) error {
 
 	result, err := q.Where(m.ID.Eq(uint32(table.EventCursorReminderPrimaryID))).
 		Select(m.ResourceID, m.CreatedAt).
-		UpdateSimple(m.ResourceID.Value(eventID), m.CreatedAt.Value(time.Now()))
+		UpdateSimple(m.ResourceID.Value(eventID), m.CreatedAt.Value(time.Now().UTC()))
 	if err != nil {
 		return err
 	}
@@ -350,7 +350,7 @@ func (dao *eventDao) Purge(kit *kit.Kit, daysAgo uint) error {
 	q := dao.genQ.Event.WithContext(kit.Ctx)
 
 	var lastID uint32
-	oldDate := time.Now().AddDate(0, 0, -int(daysAgo))
+	oldDate := time.Now().UTC().AddDate(0, 0, -int(daysAgo))
 	if err := q.Select(m.ID).Where(m.CreatedAt.Lte(oldDate)).Order(m.ID.Desc()).Limit(1).Scan(&lastID); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil

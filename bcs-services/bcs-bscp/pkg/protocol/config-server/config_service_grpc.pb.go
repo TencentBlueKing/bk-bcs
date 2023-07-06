@@ -9,7 +9,9 @@ package pbcs
 import (
 	app "bscp.io/pkg/protocol/core/app"
 	base "bscp.io/pkg/protocol/core/base"
+	group "bscp.io/pkg/protocol/core/group"
 	hook_release "bscp.io/pkg/protocol/core/hook-release"
+	release "bscp.io/pkg/protocol/core/release"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -40,6 +42,7 @@ const (
 	Config_GetConfigHook_FullMethodName              = "/pbcs.Config/GetConfigHook"
 	Config_CreateRelease_FullMethodName              = "/pbcs.Config/CreateRelease"
 	Config_ListReleases_FullMethodName               = "/pbcs.Config/ListReleases"
+	Config_GetReleaseByName_FullMethodName           = "/pbcs.Config/GetReleaseByName"
 	Config_CreateHook_FullMethodName                 = "/pbcs.Config/CreateHook"
 	Config_DeleteHook_FullMethodName                 = "/pbcs.Config/DeleteHook"
 	Config_ListHooks_FullMethodName                  = "/pbcs.Config/ListHooks"
@@ -75,6 +78,7 @@ const (
 	Config_ListAllGroups_FullMethodName              = "/pbcs.Config/ListAllGroups"
 	Config_ListAppGroups_FullMethodName              = "/pbcs.Config/ListAppGroups"
 	Config_ListGroupReleasedApps_FullMethodName      = "/pbcs.Config/ListGroupReleasedApps"
+	Config_GetGroupByName_FullMethodName             = "/pbcs.Config/GetGroupByName"
 	Config_Publish_FullMethodName                    = "/pbcs.Config/Publish"
 	Config_GenerateReleaseAndPublish_FullMethodName  = "/pbcs.Config/GenerateReleaseAndPublish"
 	Config_CreateCredentials_FullMethodName          = "/pbcs.Config/CreateCredentials"
@@ -109,6 +113,7 @@ type ConfigClient interface {
 	GetConfigHook(ctx context.Context, in *GetConfigHookReq, opts ...grpc.CallOption) (*GetConfigHookResp, error)
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
+	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
@@ -146,6 +151,7 @@ type ConfigClient interface {
 	ListAllGroups(ctx context.Context, in *ListAllGroupsReq, opts ...grpc.CallOption) (*ListAllGroupsResp, error)
 	ListAppGroups(ctx context.Context, in *ListAppGroupsReq, opts ...grpc.CallOption) (*ListAppGroupsResp, error)
 	ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error)
+	GetGroupByName(ctx context.Context, in *GetGroupByNameReq, opts ...grpc.CallOption) (*group.Group, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	CreateCredentials(ctx context.Context, in *CreateCredentialReq, opts ...grpc.CallOption) (*CreateCredentialResp, error)
@@ -320,6 +326,15 @@ func (c *configClient) CreateRelease(ctx context.Context, in *CreateReleaseReq, 
 func (c *configClient) ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error) {
 	out := new(ListReleasesResp)
 	err := c.cc.Invoke(ctx, Config_ListReleases_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error) {
+	out := new(release.Release)
+	err := c.cc.Invoke(ctx, Config_GetReleaseByName_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -641,6 +656,15 @@ func (c *configClient) ListGroupReleasedApps(ctx context.Context, in *ListGroupR
 	return out, nil
 }
 
+func (c *configClient) GetGroupByName(ctx context.Context, in *GetGroupByNameReq, opts ...grpc.CallOption) (*group.Group, error) {
+	out := new(group.Group)
+	err := c.cc.Invoke(ctx, Config_GetGroupByName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
 	out := new(PublishResp)
 	err := c.cc.Invoke(ctx, Config_Publish_FullMethodName, in, out, opts...)
@@ -737,6 +761,7 @@ type ConfigServer interface {
 	GetConfigHook(context.Context, *GetConfigHookReq) (*GetConfigHookResp, error)
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
+	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
@@ -774,6 +799,7 @@ type ConfigServer interface {
 	ListAllGroups(context.Context, *ListAllGroupsReq) (*ListAllGroupsResp, error)
 	ListAppGroups(context.Context, *ListAppGroupsReq) (*ListAppGroupsResp, error)
 	ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error)
+	GetGroupByName(context.Context, *GetGroupByNameReq) (*group.Group, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
 	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
 	CreateCredentials(context.Context, *CreateCredentialReq) (*CreateCredentialResp, error)
@@ -841,6 +867,9 @@ func (UnimplementedConfigServer) CreateRelease(context.Context, *CreateReleaseRe
 }
 func (UnimplementedConfigServer) ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReleases not implemented")
+}
+func (UnimplementedConfigServer) GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseByName not implemented")
 }
 func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHook not implemented")
@@ -946,6 +975,9 @@ func (UnimplementedConfigServer) ListAppGroups(context.Context, *ListAppGroupsRe
 }
 func (UnimplementedConfigServer) ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGroupReleasedApps not implemented")
+}
+func (UnimplementedConfigServer) GetGroupByName(context.Context, *GetGroupByNameReq) (*group.Group, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGroupByName not implemented")
 }
 func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
@@ -1303,6 +1335,24 @@ func _Config_ListReleases_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListReleases(ctx, req.(*ListReleasesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetReleaseByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleaseByNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetReleaseByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetReleaseByName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetReleaseByName(ctx, req.(*GetReleaseByNameReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1937,6 +1987,24 @@ func _Config_ListGroupReleasedApps_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetGroupByName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupByNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetGroupByName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetGroupByName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetGroupByName(ctx, req.(*GetGroupByNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_Publish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PublishReq)
 	if err := dec(in); err != nil {
@@ -2161,6 +2229,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListReleases_Handler,
 		},
 		{
+			MethodName: "GetReleaseByName",
+			Handler:    _Config_GetReleaseByName_Handler,
+		},
+		{
 			MethodName: "CreateHook",
 			Handler:    _Config_CreateHook_Handler,
 		},
@@ -2299,6 +2371,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListGroupReleasedApps",
 			Handler:    _Config_ListGroupReleasedApps_Handler,
+		},
+		{
+			MethodName: "GetGroupByName",
+			Handler:    _Config_GetGroupByName_Handler,
 		},
 		{
 			MethodName: "Publish",

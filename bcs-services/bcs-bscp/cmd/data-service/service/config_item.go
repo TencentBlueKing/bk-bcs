@@ -35,16 +35,13 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	tx := s.dao.GenQuery().Begin()
-	now := time.Now()
 	// 1. create config item.
 	ci := &table.ConfigItem{
 		Spec:       req.ConfigItemSpec.ConfigItemSpec(),
 		Attachment: req.ConfigItemAttachment.ConfigItemAttachment(),
 		Revision: &table.Revision{
-			Creator:   grpcKit.User,
-			Reviser:   grpcKit.User,
-			CreatedAt: now,
-			UpdatedAt: now,
+			Creator: grpcKit.User,
+			Reviser: grpcKit.User,
 		},
 	}
 	ciID, err := s.dao.ConfigItem().CreateWithTx(grpcKit, tx, ci)
@@ -62,8 +59,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 			ConfigItemID: ciID,
 		},
 		Revision: &table.CreatedRevision{
-			Creator:   grpcKit.User,
-			CreatedAt: now,
+			Creator: grpcKit.User,
 		},
 	}
 	contentID, err := s.dao.Content().CreateWithTx(grpcKit, tx, content)
@@ -84,8 +80,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 			ConfigItemID: ciID,
 		},
 		Revision: &table.CreatedRevision{
-			Creator:   grpcKit.User,
-			CreatedAt: now,
+			Creator: grpcKit.User,
 		},
 	}
 	_, err = s.dao.Commit().CreateWithTx(grpcKit, tx, commit)
@@ -127,7 +122,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		logs.Errorf("check and compare config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	tx := s.dao.GenQuery().Begin()
 	if err := s.doBatchCreateConfigItems(grpcKit, tx, toCreate, now, req.BizId, req.AppId); err != nil {
 		tx.Rollback()
@@ -231,8 +226,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 				ConfigItemID: toCreateConfigItems[i].ID,
 			},
 			Revision: &table.CreatedRevision{
-				Creator:   kt.User,
-				CreatedAt: now,
+				Creator: kt.User,
 			},
 		})
 	}
@@ -253,8 +247,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 				ConfigItemID: toCreateConfigItems[i].ID,
 			},
 			Revision: &table.CreatedRevision{
-				Creator:   kt.User,
-				CreatedAt: now,
+				Creator: kt.User,
 			},
 		})
 	}
@@ -374,8 +367,7 @@ func (s *Service) createNewConfigItem(kt *kit.Kit, tx *gen.QueryTx, bizID, appID
 			ConfigItemID: ciID,
 		},
 		Revision: &table.CreatedRevision{
-			Creator:   kt.User,
-			CreatedAt: now,
+			Creator: kt.User,
 		},
 	}
 	contentID, err := s.dao.Content().CreateWithTx(kt, tx, content)
@@ -395,8 +387,7 @@ func (s *Service) createNewConfigItem(kt *kit.Kit, tx *gen.QueryTx, bizID, appID
 			ConfigItemID: ciID,
 		},
 		Revision: &table.CreatedRevision{
-			Creator:   kt.User,
-			CreatedAt: now,
+			Creator: kt.User,
 		},
 	}
 	_, err = s.dao.Commit().CreateWithTx(kt, tx, commit)
@@ -441,8 +432,7 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbds.UpdateConfigIt
 		Spec:       req.Spec.ConfigItemSpec(),
 		Attachment: req.Attachment.ConfigItemAttachment(),
 		Revision: &table.Revision{
-			Reviser:   grpcKit.User,
-			UpdatedAt: time.Now(),
+			Reviser: grpcKit.User,
 		},
 	}
 	if err := s.dao.ConfigItem().Update(grpcKit, ci); err != nil {
