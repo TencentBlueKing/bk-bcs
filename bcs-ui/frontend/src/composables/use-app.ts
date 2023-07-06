@@ -88,7 +88,7 @@ export function useCluster() {
     clusterID: string
     clusterName?: string
   }) => {
-    const url = `${window.DEVOPS_BCS_API_URL}/bcsapi/v4/webconsole/projects/${projectCode.value}/mgr/#cluster=${clusterID}`;
+    const url = `${window.BCS_API_HOST}/bcsapi/v4/webconsole/projects/${projectCode.value}/mgr/#cluster=${clusterID}`;
     // 缓存当前窗口，再次打开时重新进入
     if (terminalWins.value) {
       if (!terminalWins.value.closed) {
