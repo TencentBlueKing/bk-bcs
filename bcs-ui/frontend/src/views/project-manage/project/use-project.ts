@@ -6,7 +6,6 @@ import {
   businessList,
   createProject as handleCreateProject,
 } from '@/api/modules/project';
-import { userInfo } from '@/api/modules/user-manager';
 import { IProject } from '@/composables/use-app';
 import $store from '@/store';
 
@@ -111,14 +110,7 @@ export default function useProjects() {
     return result;
   }
 
-  async function getUserInfo() {
-    const data = await userInfo().catch(() => ({}));
-    $store.commit('updateUser', data);
-    return data;
-  }
-
   return {
-    getUserInfo,
     fetchProjectInfo,
     getProjectList,
     getAllProjectList,

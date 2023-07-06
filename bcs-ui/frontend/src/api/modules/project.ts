@@ -49,3 +49,4 @@ const uiRequest = createRequest({
 });
 export const releaseNode = uiRequest('get', '/release_note');
 export const switchLanguage = uiRequest('put', '/switch_language');
+export const featureFlags = uiRequest('get', '/feature_flag');

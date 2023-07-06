@@ -287,7 +287,7 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
-import { computed, defineComponent, onMounted, ref, toRefs, toRef, reactive } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 import { bkOverflowTips } from 'bk-magic-vue';
 import StatusIcon from '@/components/status-icon';
 import Metric from '@/components/metric.vue';
@@ -297,8 +297,7 @@ import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import fullScreen from '@/directives/full-screen';
 import EventQueryTableVue from '@/views/project-manage/event-query/event-query-table.vue';
 import $store from '@/store';
-import $router from '@/router';
-import { useConfig } from '@/composables/use-app';
+import { useConfig, useProject } from '@/composables/use-app';
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
 
 export interface IDetail {
@@ -348,7 +347,6 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
     const {
       isLoading,
       detail,
@@ -458,10 +456,10 @@ export default defineComponent({
 
     // 容器操作
     // 1. 跳转WebConsole
-    const projectId = computed(() => $route.value.params.projectId);
+    const { projectCode } = useProject();
     const terminalWins = new Map();
     const handleShowTerminal = (row) => {
-      const url = `${window.DEVOPS_BCS_API_URL}/web_console/projects/${projectId.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
+      const url = `${window.DEVOPS_BCS_API_URL}/bcsapi/v4/webconsole/projects/${projectCode.value}/clusters/${clusterId.value}/?namespace=${props.namespace}&pod_name=${props.name}&container_name=${row.name}`;
       if (terminalWins.has(row.containerID)) {
         const win = terminalWins.get(row.containerID);
         if (!win.closed) {

@@ -8,9 +8,9 @@ const CreateTencentCloudCluster = () => import(/* webpackChunkName: 'cluster' */
 // VCluster集群
 const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/add-vcluster.vue');
 // ee版本创建集群流程
-const CreateFormClusterEE = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-form-cluster-ee.vue');
+const CreateCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-cluster.vue');
 // import模式
-const CreateImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-import-cluster.vue');
+const CreateImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/import-cluster.vue');
 // 集群详情
 const ClusterDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-detail.vue');
 const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/node-overview.vue');
@@ -27,6 +27,9 @@ const InternalNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/
 const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool-detail.vue');
 const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/edit-node-pool.vue');
 const PodDetail = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/detail/index.vue');
+
+// 云凭证
+const tencentCloud = () => import(/* webpackChunkName: 'project' */'@/views/cluster-manage/cloudtoken/tencentCloud.vue');
 
 // 集群管理
 export default [
@@ -48,10 +51,19 @@ export default [
   // 创建集群
   {
     path: 'clusters/tencent',
-    name: 'createFormCluster',
-    component: window.REGION === 'ieod' ? CreateTencentCloudCluster : CreateFormClusterEE,
+    name: 'createTencentCloudCluster',
+    component: CreateTencentCloudCluster,
     meta: {
       menuId: 'CLUSTER',
+    },
+  },
+  {
+    path: 'clusters/create',
+    name: 'createCluster',
+    component: CreateCluster,
+    meta: {
+      menuId: 'CLUSTER',
+      title: window.i18n.t('添加集群'),
     },
   },
   // 创建VCluster集群
@@ -222,6 +234,15 @@ export default [
     component: window.REGION === 'ieod' ? InternalNodePoolDetail : NodePoolDetail,
     meta: {
       menuId: 'CLUSTER',
+    },
+  },
+  {
+    path: 'cluster/tencent-cloud',
+    name: 'tencentCloud',
+    component: tencentCloud,
+    meta: {
+      title: 'Tencent Cloud',
+      hideBack: true,
     },
   },
 ] as RouteConfig[];

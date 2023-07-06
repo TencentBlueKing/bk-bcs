@@ -79,7 +79,7 @@
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
-import { storageEvents, uatStorageEvents } from '@/api/modules/storage';
+import { storageEvents } from '@/api/modules/storage';
 import { formatDate } from '@/common/util';
 import $i18n from '@/i18n/i18n-setup';
 import { useCluster } from '@/composables/use-app';
@@ -138,8 +138,6 @@ export default defineComponent({
 
     const { curClusterId, clusterList } = useCluster();
     const { namespaceList, namespaceLoading, getNamespaceData } = useSelectItemsNamespace();
-
-    const isDebugCluster = computed(() => clusterList.value.find(item => item.clusterID === params.value.clusterId || item.clusterID === curClusterId.value)?.environment !== 'prod');
     const shortcuts = ref([
       {
         text: $i18n.t('近1小时'),
@@ -360,12 +358,10 @@ export default defineComponent({
     const handleGetEventList = async () => {
       const clusterId = params.value.clusterId || curClusterId.value;
       const cluster = clusterList.value.find(item => item.clusterID === clusterId);
-      if (cluster.is_shared && !params.value.namespace) return; // 共享集群没有命名空间时，不请求
+      if (cluster?.is_shared && !params.value.namespace) return; // 共享集群没有命名空间时，不请求
       eventLoading.value = true;
       const [start, end] = params.value.date;
-      // todo 临时处理
-      const eventAction = isDebugCluster.value ? uatStorageEvents : storageEvents;
-      const { data = [], total = 0 } = await eventAction({
+      const { data = [], total = 0 } = await storageEvents({
         offset: (pagination.value.current - 1) * pagination.value.limit,
         length: pagination.value.limit,
         clusterId,
@@ -433,7 +429,6 @@ export default defineComponent({
     });
 
     return {
-      isDebugCluster,
       kindList,
       filterData,
       params,

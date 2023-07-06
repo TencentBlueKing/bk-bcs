@@ -8,6 +8,7 @@ export interface IMenu {
   root?: IMenu
   tag?: string
   children?: IMenu[]
+  parent?: IMenu
 }
 
 const menus: IMenu[] = [
@@ -194,6 +195,18 @@ const menus: IMenu[] = [
         route: 'nodeTemplate',
         id: 'NODETEMPLATE',
       },
+      {
+        title: $i18n.t('nav.cloudToken'),
+        icon: 'bcs-icon-yunpingzhengguanli',
+        id: 'CLOUDTOKEN',
+        children: [
+          {
+            title: 'Tencent Cloud',
+            id: 'TENCENTCLOUD',
+            route: 'tencentCloud',
+          },
+        ],
+      },
     ],
   },
   {
@@ -220,7 +233,7 @@ const menus: IMenu[] = [
       },
       {
         title: $i18n.t('nav.templateSet'),
-        id: 'TEMPLATESET_v1.0',
+        id: 'TEMPLATESET_v1',
         icon: 'bcs-icon-templateset',
         children: [
           {

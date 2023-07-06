@@ -3,14 +3,16 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const figlet = require('figlet')
 const CompressionPlugin = require("compression-webpack-plugin");
 
+const args = process.argv.slice(2);
+
 module.exports = {
-  host: process.env.BK_LOCAL_HOST,
   port: 8004,
   cache: true,
   open: true,
   typescript: true,
   outputDir: './dist',
   bundleAnalysis: false,
+  customEnv: args[1] || '.bk.development.env',
   replaceStatic: {
     key: '{{ .STATIC_URL }}'
   },

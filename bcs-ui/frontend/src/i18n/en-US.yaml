@@ -2545,6 +2545,7 @@ nav:
   metric: Metric
   log: Log Collection
   monitor: Container Monitoring
+  cloudToken: Cloud Token
 展开列表: Expand list
 生成新规则: Generate new rule
 '已生成新规则: <br/> {0}<br/>此规则自动清理期限:<br/>{1}': >-

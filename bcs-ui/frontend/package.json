@@ -42,8 +42,9 @@
   },
   "devDependencies": {
     "@blueking/babel-preset-bk": "2.1.0-beta6",
-    "@blueking/cli-service-webpack": "0.0.0-beta.74",
+    "@blueking/cli-service-webpack": "0.0.0-beta.83",
     "@blueking/eslint-config-bk": "2.1.0-beta.12",
+    "@types/lodash": "^4.14.195",
     "compression-webpack-plugin": "^10.0.0",
     "cross-env": "^7.0.3",
     "enhanced-resolve": "^5.10.0",

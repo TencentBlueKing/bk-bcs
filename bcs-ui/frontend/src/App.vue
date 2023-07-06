@@ -20,13 +20,13 @@ import BkPaaSLogin from '@/views/app/login.vue';
 import PermDialog from '@/views/app/apply-perm.vue';
 import $i18n from '@/i18n/i18n-setup';
 import { bus } from '@/common/bus';
-import useProject from '@/views/project-manage/project/use-project';
+import { useAppData } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'App',
   components: { Navigation, BkPaaSLogin, PermDialog },
   setup() {
-    const { getUserInfo } = useProject();
+    const { getUserInfo } = useAppData();
     const isLoading = ref(false);
     const applyPermRef = ref<any>(null);
     const loginRef = ref<any>(null);
@@ -62,9 +62,7 @@ export default defineComponent({
       window.$loginModal = loginRef.value;
 
       isLoading.value = true;
-      await getUserInfo().catch((err) => {
-        console.error(err);
-      });
+      await getUserInfo();
       isLoading.value = false;
       document.title = $i18n.t('容器管理平台 | 腾讯蓝鲸智云');
     });

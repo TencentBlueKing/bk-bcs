@@ -8,7 +8,7 @@
         <span class="text-[#313238] text-[12px]">{{ curProject.projectCode }}</span>
       </bk-form-item>
       <bk-form-item class="!mt-[0px]" :label="$t('项目说明')">
-        <span class="text-[#313238] text-[12px]">{{ curProject.description }}</span>
+        <span class="text-[#313238] text-[12px]">{{ curProject.description || '--' }}</span>
       </bk-form-item>
     </bk-form>
   </BcsContent>

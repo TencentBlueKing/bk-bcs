@@ -1,5 +1,5 @@
 <template>
-  <section class="create-form-cluster bcs-content-wrapper">
+  <section class="create-form-cluster bcs-content-wrapper !overflow-auto">
     <bk-form :label-width="labelWidth" :model="basicInfo" :rules="basicDataRules" ref="basicFormRef">
       <bk-form-item :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
         <bk-input :maxlength="64" class="w640" v-model="basicInfo.clusterName"></bk-input>
@@ -96,7 +96,7 @@ import $i18n from '@/i18n/i18n-setup';
 import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
-  name: 'CreateFormCluster',
+  name: 'CreateCluster',
   components: {
     IpSelector,
     KeyValue,
@@ -227,7 +227,7 @@ export default defineComponent({
       const params = {
         environment: 'prod',
         projectID: curProject.value.project_id,
-        businessID: String(curProject.value.cc_app_id),
+        businessID: String(curProject.value.businessID),
         engineType: 'k8s',
         isExclusive: true,
         clusterType: 'single',
@@ -257,11 +257,11 @@ export default defineComponent({
           theme: 'success',
           message: $i18n.t('创建成功'),
         });
-        $router.push({ name: 'home' });
+        $router.push({ name: 'clusterMain' });
       }
     };
     const handleCancel = () => {
-      $router.push({ name: 'home' });
+      $router.back()
     };
     const toggleSettings = () => {
       expanded.value = !expanded.value;

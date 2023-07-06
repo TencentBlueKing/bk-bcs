@@ -50,12 +50,14 @@ import BcsContent from '../../components/bcs-content.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import { useConfig, useProject } from '@/composables/use-app';
+import { useAppData } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'CreateCluster',
   components: { BcsContent },
   setup() {
-    const { curProject } = useProject();
+    const { _INTERNAL_ } = useConfig();
+    const { flagsMap } = useAppData();
     const createList = ref([
       {
         icon: 'bcs-icon-color-vcluster',
@@ -63,7 +65,7 @@ export default defineComponent({
         subTitle: $i18n.t('无需提供主机资源，即可部署工作负载'),
         desc: $i18n.t('构建在共享集群资源之上的虚拟集群，可降低业务资源成本'),
         type: 'vCluster',
-        disabled: !curProject.value.enableVcluster,
+        disabled: !flagsMap.value.VCLUSTER,
       },
       {
         icon: 'bcs-icon-color-tencentcloud',
@@ -71,6 +73,7 @@ export default defineComponent({
         subTitle: $i18n.t('为腾讯内部创建 TKE 集群提供解决方案'),
         desc: $i18n.t('提供独立集群与托管集群两种集群模式，独立集群需自行维护，托管集群由腾讯云代为维护控制面'),
         type: 'tke',
+        disabled: !_INTERNAL_.value,
       },
       {
         icon: 'bcs-icon-color-publiccloud',
@@ -89,7 +92,6 @@ export default defineComponent({
         disabled: true,
       },
     ]);
-    const { _INTERNAL_ } = useConfig();
     const importList = computed(() => [
       {
         icon: 'bcs-icon-color-kubeconfig',
@@ -105,7 +107,7 @@ export default defineComponent({
         subTitle: $i18n.t('实现多云集群统一管理，降低业务管理成本'),
         desc: $i18n.t('目前支持腾讯云、亚马逊云、谷歌云、微软云四种云服务商集群创建。'),
         type: 'cloud',
-        disabled: true,
+        disabled: _INTERNAL_.value,
       },
     ]);
 
@@ -117,7 +119,10 @@ export default defineComponent({
           $router.push({ name: 'createVCluster' });
           break;
         case 'tke':
-          $router.push({ name: 'createFormCluster' });
+          $router.push({ name: 'createTencentCloudCluster' });
+          break;
+        case 'cloud':
+          $router.push({ name: 'createCluster' });
           break;
         case 'kubeconfig':
           $router.push({ name: 'createImportCluster' });

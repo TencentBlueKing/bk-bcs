@@ -45,7 +45,7 @@ import useMenu from './use-menu';
 export default defineComponent({
   name: 'SideMenu',
   setup() {
-    const { menus, disabledMenuIDs } = useMenu();
+    const { menus, disabledMenuIDs, flatLeafMenus } = useMenu();
     // 左侧菜单
     const activeMenu = ref<Partial<IMenu>>({});
     // 一级菜单
@@ -70,22 +70,6 @@ export default defineComponent({
       }
     }, { immediate: true });
 
-    // 扁平化子菜单
-    function flatLeafMenus(menus: IMenu[], root?: IMenu) {
-      const data: IMenu[] = [];
-      for (const item of menus) {
-        const rootMenu = root ?? item;
-        if (item.children?.length) {
-          data.push(...flatLeafMenus(item.children, rootMenu));
-        } else {
-          data.push({
-            root: rootMenu,
-            ...item,
-          });
-        }
-      }
-      return data;
-    };
     // 切换菜单
     const { projectCode } = useProject();
     const handleBeforeNavChange = () => false;

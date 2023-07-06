@@ -3,7 +3,6 @@ interface Window {
   mainComponent: any
   BCS_API_HOST: string
   DEVOPS_BCS_API_URL: string
-  BCS_DEBUG_API_HOST: string
   i18n: {
     t: (word: string) => string
   }

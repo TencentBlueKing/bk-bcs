@@ -15,7 +15,7 @@
         <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('社区论坛') }}</a> |
         <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('产品官网') }}</a>
       </div>
-      <p>Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved. Todo</p>
+      <p>Copyright © 2012-{{(new Date()).getFullYear()}} Tencent BlueKing. All Rights Reserved. {{ version }}</p>
     </div>
   </div>
 </template>
@@ -27,6 +27,7 @@ export default defineComponent({
   setup() {
     return {
       PAAS_HOST: window.PAAS_HOST,
+      version: localStorage.getItem('__bcs_latest_version__')
     };
   },
 });

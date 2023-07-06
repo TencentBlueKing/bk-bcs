@@ -77,7 +77,7 @@ export default defineComponent({
 </script>
 <style lang="postcss" scoped>
 .side-menu-wrapper {
-  max-height: calc(100vh - 164px);
+  max-height: calc(100vh - 170px);
   overflow-y: auto;
   &::-webkit-scrollbar {
     display: none;

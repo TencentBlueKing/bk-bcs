@@ -120,7 +120,7 @@
     </div>
 
     <!-- 共享集群使用案例 -->
-    <div class="user-token-example mt50" v-if="data.length && $INTERNAL">
+    <div class="user-token-example mt50" v-if="data.length && hasSharedCluster">
       <div class="example-item">
         <div class="title total-title">{{$t('共享集群kubectl与BCS API使用示例')}}:</div>
         <div class="code-wrapper">
@@ -235,6 +235,7 @@ import $store from '@/store';
 import $router from '@/router';
 import $bkMessage from '@/common/bkmagic';
 import $i18n from '@/i18n/i18n-setup';
+import { useCluster } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'UserToken',
@@ -243,6 +244,8 @@ export default defineComponent({
     'full-screen': fullScreen,
   },
   setup() {
+    const { clusterList } = useCluster();
+    const hasSharedCluster = computed(() => clusterList.value.some(item => !!item.is_shared));
     const goBack = () => {
       $router.back();
     };
@@ -466,6 +469,7 @@ export default defineComponent({
       shareDemoConfigExample,
       shareBcsApiExample,
       BK_IAM_APP_URL: window.BK_IAM_APP_URL,
+      hasSharedCluster,
     };
   },
 });

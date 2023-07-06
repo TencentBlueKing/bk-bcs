@@ -24,10 +24,7 @@
 * IN THE SOFTWARE.
 */
 import { request } from './request';
-
-// app
-export const projectFeatureFlag = request('get', '/api/projects/$projectId/clusters/$clusterId/feature_flags/');
-
+// todo 当前文件要废弃，请使用modules下面的API定义文件 !!!
 // log
 export const LOG_API_URL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId`;
 export const podContainersList = request('get', `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/containers`);
@@ -202,7 +199,6 @@ export const nodeUnCordon = request('put', `${prefix}/clustermanager/v1/node/unc
 
 export default {
   dashbordList,
-  projectFeatureFlag,
   podMetric,
   containerMetric,
   retrieveDetail,
