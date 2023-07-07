@@ -141,6 +141,7 @@ import { useVCluster } from '@/views/cluster-manage/cluster/use-cluster';
 import $i18n from '@/i18n/i18n-setup';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import { useProject } from '@/composables/use-app';
+import { uniq } from 'lodash';
 
 const steps = ref([
   { name: 'basicInfo', formRef: 'basicInfoRef', disabled: false },
@@ -264,7 +265,10 @@ const getRegionList = async () => {
 // };
 
 // 版本列表
-const versionList = computed(() => sharedClusterList.value.map(item => item.clusterBasicSettings?.version));
+const versionList = computed(() => {
+  const data = sharedClusterList.value.map(item => item.clusterBasicSettings?.version);
+  return uniq(data);
+});
 // const isVersionDisabled = (version) => {
 //   const { region } = basicInfo.value;
 //   return sharedClusterList.value

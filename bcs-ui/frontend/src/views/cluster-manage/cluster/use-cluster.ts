@@ -256,7 +256,9 @@ export function useVCluster() {
   const sharedClusterList = ref<ICluster[]>([]);
   async function getSharedclusters() {
     loading.value = true;
-    sharedClusterList.value = await sharedclusters().catch(() => []);
+    sharedClusterList.value = await sharedclusters({
+      showVCluster: true,
+    }).catch(() => []);
     loading.value = false;
   }
   async function handleCreateVCluster(params) {

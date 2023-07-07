@@ -23,7 +23,8 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
-import { podContainersList, podLogs, podLogsDownloadURL, podLogsStreamURL } from '@/api/base';
+import { podContainersList, podLogs, podLogsStreamURL } from '@/api/base';
+import { podLogsDownloadURL } from '@/api/modules/monitor';
 import request, { parseUrl } from '@/api/request';
 
 export default {
