@@ -35,6 +35,7 @@ var (
 	Release            *release
 	ReleasedConfigItem *releasedConfigItem
 	ReleasedGroup      *releasedGroup
+	ResourceLock       *resourceLock
 	Strategy           *strategy
 	Template           *template
 	TemplateRelease    *templateRelease
@@ -62,6 +63,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Release = &Q.Release
 	ReleasedConfigItem = &Q.ReleasedConfigItem
 	ReleasedGroup = &Q.ReleasedGroup
+	ResourceLock = &Q.ResourceLock
 	Strategy = &Q.Strategy
 	Template = &Q.Template
 	TemplateRelease = &Q.TemplateRelease
@@ -90,6 +92,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Release:            newRelease(db, opts...),
 		ReleasedConfigItem: newReleasedConfigItem(db, opts...),
 		ReleasedGroup:      newReleasedGroup(db, opts...),
+		ResourceLock:       newResourceLock(db, opts...),
 		Strategy:           newStrategy(db, opts...),
 		Template:           newTemplate(db, opts...),
 		TemplateRelease:    newTemplateRelease(db, opts...),
@@ -119,6 +122,7 @@ type Query struct {
 	Release            release
 	ReleasedConfigItem releasedConfigItem
 	ReleasedGroup      releasedGroup
+	ResourceLock       resourceLock
 	Strategy           strategy
 	Template           template
 	TemplateRelease    templateRelease
@@ -149,6 +153,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Release:            q.Release.clone(db),
 		ReleasedConfigItem: q.ReleasedConfigItem.clone(db),
 		ReleasedGroup:      q.ReleasedGroup.clone(db),
+		ResourceLock:       q.ResourceLock.clone(db),
 		Strategy:           q.Strategy.clone(db),
 		Template:           q.Template.clone(db),
 		TemplateRelease:    q.TemplateRelease.clone(db),
@@ -186,6 +191,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Release:            q.Release.replaceDB(db),
 		ReleasedConfigItem: q.ReleasedConfigItem.replaceDB(db),
 		ReleasedGroup:      q.ReleasedGroup.replaceDB(db),
+		ResourceLock:       q.ResourceLock.replaceDB(db),
 		Strategy:           q.Strategy.replaceDB(db),
 		Template:           q.Template.replaceDB(db),
 		TemplateRelease:    q.TemplateRelease.replaceDB(db),
@@ -213,6 +219,7 @@ type queryCtx struct {
 	Release            IReleaseDo
 	ReleasedConfigItem IReleasedConfigItemDo
 	ReleasedGroup      IReleasedGroupDo
+	ResourceLock       IResourceLockDo
 	Strategy           IStrategyDo
 	Template           ITemplateDo
 	TemplateRelease    ITemplateReleaseDo
@@ -240,6 +247,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Release:            q.Release.WithContext(ctx),
 		ReleasedConfigItem: q.ReleasedConfigItem.WithContext(ctx),
 		ReleasedGroup:      q.ReleasedGroup.WithContext(ctx),
+		ResourceLock:       q.ResourceLock.WithContext(ctx),
 		Strategy:           q.Strategy.WithContext(ctx),
 		Template:           q.Template.WithContext(ctx),
 		TemplateRelease:    q.TemplateRelease.WithContext(ctx),

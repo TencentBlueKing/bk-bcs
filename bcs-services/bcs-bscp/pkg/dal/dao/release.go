@@ -110,6 +110,7 @@ func (dao *releaseDao) List(kit *kit.Kit, opts *types.ListReleasesOption) (*type
 		searchKey := "%" + opts.SearchKey + "%"
 		query = query.Where(m.Name.Like(searchKey)).Or(m.Memo.Like(searchKey)).Or(m.Creator.Like(searchKey))
 	}
+	query = query.Order(m.ID.Desc())
 
 	var list []*table.Release
 	var count int64

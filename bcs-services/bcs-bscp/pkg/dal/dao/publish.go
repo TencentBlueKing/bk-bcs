@@ -97,7 +97,7 @@ func (dao *pubDao) Publish(kit *kit.Kit, opt *types.PublishOption) (uint32, erro
 		pubID = stgID
 		stg := genStrategy(kit, opt, stgID, groups)
 
-		sq := dao.genQ.Strategy.WithContext(kit.Ctx)
+		sq := tx.Strategy.WithContext(kit.Ctx)
 		if err := sq.Create(stg); err != nil {
 			return err
 		}
@@ -196,8 +196,8 @@ func (dao *pubDao) PublishWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.Publi
 
 	groupIDs := opt.Groups
 	if opt.All {
-		m := dao.genQ.ReleasedGroup
-		q := dao.genQ.ReleasedGroup.WithContext(kit.Ctx)
+		m := tx.ReleasedGroup
+		q := tx.ReleasedGroup.WithContext(kit.Ctx)
 		err := q.Select(m.GroupID).Where(m.BizID.Eq(opt.BizID), m.AppID.Eq(opt.AppID),
 			m.GroupID.Neq(0)).Scan(&groupIDs)
 		if err != nil {
@@ -211,8 +211,8 @@ func (dao *pubDao) PublishWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.Publi
 	var err error
 	// list groups if gray release
 	if len(groupIDs) > 0 {
-		m := dao.genQ.Group
-		q := dao.genQ.Group.WithContext(kit.Ctx)
+		m := tx.Group
+		q := tx.Group.WithContext(kit.Ctx)
 		groups, err = q.Where(m.ID.In(groupIDs...)).Find()
 		if err != nil {
 			logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
