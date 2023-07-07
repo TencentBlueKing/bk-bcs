@@ -20,6 +20,7 @@ import (
 	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	ginTracing "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/TencentBlueKing/bkmonitor-kits/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
@@ -131,6 +132,7 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 func registerRoutes(engine *gin.RouterGroup) {
 	// 日志相关接口
 	engine.Use(middleware.AuthenticationRequired(), middleware.ProjectParse(), middleware.NsScopeAuthorization())
+	engine.Use(ginTracing.Middleware("bcs-monitor-api"))
 
 	route := engine.Group("/projects/:projectId/clusters/:clusterId")
 	{
@@ -161,6 +163,7 @@ func registerRoutes(engine *gin.RouterGroup) {
 func registerMetricsRoutes(engine *gin.RouterGroup) {
 
 	engine.Use(middleware.AuthenticationRequired(), middleware.ProjectParse(), middleware.ProjectAuthorization())
+	engine.Use(ginTracing.Middleware("bcs-monitor-api"))
 
 	// 命名规范
 	// usage 代表 百分比
