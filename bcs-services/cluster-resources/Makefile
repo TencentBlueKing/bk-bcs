@@ -38,10 +38,6 @@ tidy:
 build: tidy
 	go build -ldflags ${LDFLAGS} -o bcs-cluster-resources *.go
 
-# compile third_party/swagger-ui to swagger/datafile.go，execute only once!
-swagger: proto
-	go-bindata --nocompress -pkg swagger -o swagger/datafile.go third_party/swagger-ui/...
-
 # build dev
 dev: tidy
 	go build -ldflags ${LGFLAGS4DEV} -o bcs-cluster-resources *.go
