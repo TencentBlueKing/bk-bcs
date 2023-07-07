@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230607093333-1f5cd2719e19
-	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230617024343-5e69341c7993
+	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230707021219-f1a826a905d5
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/TencentBlueKing/bkmonitor-kits v0.2.0
@@ -269,9 +269,8 @@ require (
 )
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common/pkg/otel => ../../bcs-common/pkg/otel
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
-	github.com/thanos-io/thanos => github.com/LidolLxf/thanos v0.26.1-0.20230703075001-19e94ac69fa7
+	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20230707020703-bac1f168813b
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
 )

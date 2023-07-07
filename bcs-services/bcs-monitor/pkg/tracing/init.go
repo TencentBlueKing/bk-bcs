@@ -27,7 +27,7 @@ var serviceName string
 
 // SetServiceName set serviceName
 func SetServiceName(s string) {
-	serviceName = s
+	serviceName = "bcs-monitor-" + s
 }
 
 // InitTracing init tracing
