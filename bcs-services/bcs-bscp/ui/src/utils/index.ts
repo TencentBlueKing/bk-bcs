@@ -37,5 +37,5 @@ export const copyToClipBoard = (content: string) => {
 
 // 时间格式化
 export const datetimeFormat = (str: string): string => {
-  return dayjs(str).format()
+  return dayjs(str).format('YYYY-MM-DD HH:mm:ss')
 }
