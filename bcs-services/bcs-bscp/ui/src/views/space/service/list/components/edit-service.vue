@@ -4,6 +4,7 @@
   import { storeToRefs } from 'pinia'
   import { useGlobalStore } from '../../../../../store/global'
   import { updateApp } from "../../../../../api/index"
+  import { datetimeFormat } from '../../../../../utils/index';
   import { IAppItem } from '../../../../../../types/app'
 
   const { spaceList } = storeToRefs(useGlobalStore())
@@ -123,7 +124,7 @@
             {{ props.service.revision.creator}}
           </bk-form-item>
           <bk-form-item :label="t('创建时间')">
-            {{ props.service.revision.create_at }}
+            {{ datetimeFormat(props.service.revision.create_at) }}
           </bk-form-item>
         </bk-form>
       </div>
@@ -171,7 +172,7 @@
           color: #3a84ff;
         }
       }
-      
+
     }
   }
 </style>
