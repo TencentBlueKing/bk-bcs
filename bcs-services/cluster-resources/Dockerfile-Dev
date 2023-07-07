@@ -16,9 +16,6 @@ COPY . .
 RUN go mod download
 RUN make build VERSION=$VERSION GITCOMMIT=$GITCOMMIT
 
-# package swagger dependency file
-RUN cp -R ./third_party/swagger-ui/* ./swagger/
-
 ENV EXAMPLE_FILE_BASE_DIR=/go/src/pkg/resource/example
 
 ENV FORM_TMPL_FILE_BASE_DIR=/go/src/pkg/resource/form/tmpl

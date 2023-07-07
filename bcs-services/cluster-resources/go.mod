@@ -13,7 +13,6 @@ require (
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dustin/go-humanize v1.0.0
-	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/envoyproxy/protoc-gen-validate v0.9.1
 	github.com/fatih/structs v1.1.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
@@ -55,6 +54,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.1.0 // indirect
+	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
@@ -85,6 +85,10 @@ require (
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-openapi/jsonpointer v0.19.5 // indirect
+	github.com/go-openapi/jsonreference v0.20.0 // indirect
+	github.com/go-openapi/spec v0.20.6 // indirect
+	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
@@ -101,10 +105,12 @@ require (
 	github.com/huandu/xstrings v1.3.1 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
@@ -129,6 +135,9 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/signalfx/splunk-otel-go v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/swaggo/files v1.0.1 // indirect
+	github.com/swaggo/http-swagger v1.3.4
+	github.com/swaggo/swag v1.8.1 // indirect
 	github.com/ugorji/go/codec v1.2.9 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/vmihailenco/go-tinylfu v0.2.2 // indirect

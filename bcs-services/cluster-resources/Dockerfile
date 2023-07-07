@@ -16,9 +16,6 @@ COPY . .
 RUN go mod download
 RUN make build VERSION=$VERSION GITCOMMIT=$GITCOMMIT
 
-# package swagger dependency files
-RUN cp -R ./third_party/swagger-ui/* ./swagger/
-
 # package example files
 ARG SRC_EXAMPLE_DIR=/go/src/pkg/resource/example
 ARG TARGET_EXAMPLE_DIR=/go/src/example
@@ -51,8 +48,6 @@ WORKDIR /data/workspace
 COPY --from=builder /go/src/bcs-cluster-resources /usr/bin/bcs-cluster-resources
 
 COPY --from=builder /go/src/etc /data/workspace/etc
-
-COPY --from=builder /go/src/swagger /data/workspace/swagger
 
 COPY --from=builder /go/src/example /data/workspace/example
 
