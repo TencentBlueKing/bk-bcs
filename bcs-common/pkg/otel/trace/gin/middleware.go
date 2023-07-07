@@ -118,6 +118,9 @@ func Middleware(server string, opts ...Option) gin.HandlerFunc {
 		// pass the span through the request context
 		c.Request = c.Request.WithContext(ctx)
 
+		// 返回写入traceparent
+		cfg.Propagators.Inject(ctx, propagation.HeaderCarrier(c.Writer.Header()))
+
 		// serve the request to the next middleware
 		c.Next()
 
