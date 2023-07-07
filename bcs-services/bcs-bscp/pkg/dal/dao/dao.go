@@ -114,7 +114,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 		return nil, fmt.Errorf("new audit dao failed, err: %v", err)
 	}
 	eventDao := &eventDao{genQ: genQ, idGen: idDao, auditDao: auditDao}
-	lockDao := &lockDao{orm: ormInst, idGen: idDao}
+	lockDao := &lockDao{genQ: genQ, idGen: idDao}
 
 	s := &set{
 		orm:               ormInst,
