@@ -159,7 +159,7 @@
               @click="handleAddPath"></i>
             <i
               :class="[
-                { '!cursor-not-allowed !text-[#EAEBF0]': formData.rule.config.paths.length === 1 || fromOldRule },
+                { '!cursor-not-allowed !text-[#EAEBF0]': (formData.rule.config.paths && formData.rule.config.paths.length === 1) || fromOldRule },
                 'text-[16px] text-[#C4C6CC] bk-icon icon-minus-circle-shape ml-[10px] cursor-pointer'
               ]"
               @click="handleDeletePath(index)"></i>
@@ -433,7 +433,7 @@ const handleSetFormData = () => {
   formData.value = cloneDeep(props.data || defaultData);
 
   // 采集对象是否为容器文件
-  isContainerFile.value = !!formData.value.rule.config.paths.length; // 要在空日志路径前面
+  isContainerFile.value = !!formData.value.rule.config.paths?.length; // 要在空日志路径前面
 
   // 如果过滤内容和分割符不存在就默认显示“不过滤”选项（纯前端逻辑）
   if (!formData.value.rule.config?.conditions?.match_content
@@ -454,7 +454,7 @@ const handleSetFormData = () => {
   }
 
   // 展示一组空的日志路径
-  if (!formData.value.rule.config.paths.length) {
+  if (!formData.value.rule.config.paths?.length) {
     formData.value.rule.config.paths = [''];
   }
 
@@ -626,7 +626,7 @@ const handleAddPath = () => {
   formData.value.rule.config.paths.push('');
 };
 const handleDeletePath = (index: number) => {
-  if (formData.value.rule.config.paths.length === 1) return;
+  if (formData.value.rule.config.paths?.length === 1) return;
   formData.value.rule.config.paths.splice(index, 1);
 };
 
