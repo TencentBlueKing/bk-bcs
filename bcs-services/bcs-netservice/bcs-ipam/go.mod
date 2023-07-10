@@ -3,7 +3,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-netservice/bcs-ipam
 go 1.18
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../../bcs-common
 	github.com/Tencent/bk-bcs/bcs-services/bcs-netservice => ../
 	github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
 	github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.4
@@ -12,7 +11,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230525082710-4d35a47c4273
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230707084844-155f32c8f606
 	github.com/Tencent/bk-bcs/bcs-services/bcs-netservice v0.0.0-00010101000000-000000000000
 	github.com/containernetworking/cni v1.1.1
 	github.com/fsouza/go-dockerclient v1.9.7
