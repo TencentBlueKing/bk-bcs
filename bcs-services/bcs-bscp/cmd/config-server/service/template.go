@@ -14,7 +14,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -35,6 +37,12 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 		ResourceID: req.TemplateSpaceId}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
+	}
+
+	idsLen := len(req.TemplateSetIds)
+	if idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
 	}
 
 	r := &pbds.CreateTemplateReq{
@@ -64,6 +72,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 				ByteSize:  req.ByteSize,
 			},
 		},
+		TemplateSetIds: req.TemplateSetIds,
 	}
 	rp, err := s.client.DS.CreateTemplate(grpcKit.RpcCtx(), r)
 	if err != nil {
@@ -159,5 +168,38 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
+	return resp, nil
+}
+
+// AddTemplateToTemplateSets add template to template sets
+func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbcs.AddTemplateToTemplateSetsReq) (
+	*pbcs.AddTemplateToTemplateSetsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.AddTemplateToTemplateSetsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Update,
+		ResourceID: req.TemplateId}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	idsLen := len(req.TemplateSetIds)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	r := &pbds.AddTemplateToTemplateSetsReq{
+		BizId:           req.BizId,
+		TemplateSpaceId: req.TemplateSpaceId,
+		TemplateId:      req.TemplateId,
+		TemplateSetIds:  req.TemplateSetIds,
+	}
+
+	if _, err := s.client.DS.AddTemplateToTemplateSets(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("update template failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
 	return resp, nil
 }

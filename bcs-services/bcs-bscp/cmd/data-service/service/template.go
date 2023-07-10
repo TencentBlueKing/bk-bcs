@@ -65,19 +65,19 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			Creator: kt.User,
 		},
 	}
-	_, err = s.dao.TemplateRelease().CreateWithTx(kt, tx, TemplateRelease)
-	if err != nil {
+	if _, err = s.dao.TemplateRelease().CreateWithTx(kt, tx, TemplateRelease); err != nil {
 		logs.Errorf("create template release failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
 	}
 
-	// 3. add current template to default template set
-	if err = s.dao.TemplateSet().AddTemplateToDefaultWithTx(kt, tx, template.Attachment.BizID,
-		template.Attachment.TemplateSpaceID, id); err != nil {
-		logs.Errorf("add current template to default template set failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	// 3. add current template to template sets if necessary
+	if len(req.TemplateSetIds) > 0 {
+		if err = s.dao.TemplateSet().AddTemplateToTemplateSets(kt, id, req.TemplateSetIds); err != nil {
+			logs.Errorf("add current template to template sets failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
 	tx.Commit()
@@ -148,15 +148,26 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 		return nil, err
 	}
 
-	// 2. delete current template from default template set
-	if err := s.dao.TemplateSet().DeleteTemplateFromDefaultWithTx(kt, tx, req.Attachment.BizId,
-		req.Attachment.TemplateSpaceId, req.Id); err != nil {
-		logs.Errorf("delete current template from default template set failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
+	tx.Commit()
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// AddTemplateToTemplateSets add a template to template sets.
+func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbds.AddTemplateToTemplateSetsReq) (*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
+		return nil, err
+	}
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
 		return nil, err
 	}
 
-	tx.Commit()
+	if err := s.dao.TemplateSet().AddTemplateToTemplateSets(kt, req.TemplateId, req.TemplateSetIds); err != nil {
+		logs.Errorf(" add template to template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
 
 	return new(pbbase.EmptyResp), nil
 }

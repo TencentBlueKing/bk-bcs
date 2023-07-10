@@ -96,6 +96,7 @@ service Data {
     rpc ListTemplates(ListTemplatesReq) returns (ListTemplatesResp) {}
     rpc UpdateTemplate(UpdateTemplateReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplate(DeleteTemplateReq) returns (pbbase.EmptyResp) {}
+    rpc AddTemplateToTemplateSets(AddTemplateToTemplateSetsReq) returns (pbbase.EmptyResp) {}
 
     // template release related interface.
     rpc CreateTemplateRelease(CreateTemplateReleaseReq) returns (CreateResp) {}
@@ -569,9 +570,10 @@ message CreateDefaultTemplateSpaceReq{
 }
 
 message CreateTemplateReq {
-    pbtemplate.TemplateAttachment attachment = 1;
-    pbtemplate.TemplateSpec       spec       = 2;
-    pbtr.TemplateReleaseSpec      tr_spec    = 3;
+    pbtemplate.TemplateAttachment attachment       = 1;
+    pbtemplate.TemplateSpec       spec             = 2;
+    pbtr.TemplateReleaseSpec      tr_spec          = 3;
+    repeated uint32               template_set_ids = 4;
 }
 
 message ListTemplatesReq {
@@ -595,6 +597,13 @@ message UpdateTemplateReq {
 message DeleteTemplateReq {
     uint32                        id         = 1;
     pbtemplate.TemplateAttachment attachment = 2;
+}
+
+message AddTemplateToTemplateSetsReq {
+    uint32          biz_id            = 1;
+    uint32          template_space_id = 2;
+    uint32          template_id       = 3;
+    repeated uint32 template_set_ids  = 4;
 }
 
 message CreateTemplateReleaseReq {

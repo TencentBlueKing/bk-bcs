@@ -16,6 +16,8 @@ import (
 	"errors"
 	"fmt"
 
+	"gorm.io/datatypes"
+	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/criteria/constant"
@@ -44,6 +46,8 @@ type TemplateSet interface {
 	DeleteTemplateFromDefaultWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID, templateID uint32) error
 	// ListByIDs list template sets by template set ids.
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error)
+	// AddTemplateToTemplateSets add a template to template sets.
+	AddTemplateToTemplateSets(kit *kit.Kit, tmplID uint32, tmplSetIDs []uint32) error
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -261,6 +265,18 @@ func (dao *templateSetDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.Templ
 	}
 
 	return result, nil
+}
+
+// AddTemplateToTemplateSets add a template to template sets.
+func (dao *templateSetDao) AddTemplateToTemplateSets(kit *kit.Kit, tmplID uint32, tmplSetIDs []uint32) error {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+	if _, err := q.Where(m.ID.In(tmplSetIDs...)).
+		Not(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+		Update(m.TemplateIDs, gorm.Expr("JSON_ARRAY_APPEND(template_ids, '$', ?)", tmplID)); err != nil {
+		return err
+	}
+	return nil
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template
