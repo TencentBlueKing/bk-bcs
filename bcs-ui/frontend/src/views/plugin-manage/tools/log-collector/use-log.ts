@@ -57,6 +57,7 @@ export interface IRuleData {
   old?: boolean
   new_rule_id?: boolean
   new_rule_name?: string// 前端拼接数据
+  new_rule_created_at?: string // 前端拼接数据
   name: string
   description: string
   entrypoint?: {
@@ -119,6 +120,7 @@ export default function useLog() {
     ruleList.value = data.map(item => ({
       ...item,
       new_rule_name: ruleMap[item.new_rule_id]?.name,
+      new_rule_created_at: ruleMap[item.new_rule_id]?.created_at,
     }));
     return ruleList.value;
   }

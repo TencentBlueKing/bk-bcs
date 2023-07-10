@@ -121,7 +121,7 @@
           @page-change="pageChange"
           @page-limit-change="pageSizeChange"
           v-if="!showEditStatus">
-          <bcs-table-column :label="$t('规则名称')" prop="name" show-overflow-tooltip sortable>
+          <bcs-table-column :label="$t('规则名称')" prop="name" sortable>
             <template #default="{ row }">
               <div class="flex">
                 <!-- 是否旧规则 -->
@@ -131,7 +131,7 @@
                   v-bk-tooltips="{
                     content: $t('已生成新规则: <br/> {0}<br/>此规则自动清理期限:<br/>{1}', [
                       row.new_rule_name,
-                      moment(row.updated_at).add(30, 'days').format('YYYY-MM-DD')
+                      moment(row.new_rule_created_at).add(30, 'days').format('YYYY-MM-DD')
                     ]),
                     disabled: !row.new_rule_id
                   }"
@@ -148,7 +148,7 @@
                   :disabled="['PENDING', 'RUNNING'].includes(row.status)"
                   text
                   @click="handleGotoDetail(row)">
-                  <span class="bcs-ellipsis">{{ row.name }}</span>
+                  <span class="bcs-ellipsis" v-bk-overflow-tips>{{ row.name }}</span>
                 </bcs-button>
               </div>
             </template>
@@ -352,6 +352,7 @@ const handleShowUpdateDialog = () => {
   showUpdateDialog.value = true;
 };
 const confirmUpdate = async () => {
+  ruleList.value = []; // 清空上一次列表数据
   const result = await updateOns({
     $clusterId: clusterId.value,
     $name: LOG_COLLECTOR,

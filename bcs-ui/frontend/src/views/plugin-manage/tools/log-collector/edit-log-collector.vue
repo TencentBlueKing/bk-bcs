@@ -51,7 +51,7 @@
                 v-bk-tooltips="{
                   content: $t('已生成新规则: <br/> {0}<br/>此规则自动清理期限:<br/>{1}', [
                     row.new_rule_name,
-                    moment(row.updated_at).add(30, 'days').format('YYYY-MM-DD')
+                    moment(row.new_rule_created_at).add(30, 'days').format('YYYY-MM-DD')
                   ]),
                   disabled: !row.new_rule_id
                 }"
