@@ -1183,6 +1183,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets:
+    post:
+      operationId: add_template_to_template_set
+      description: 添加模版到模版套餐
+      tags:
+        - 模版
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/add_to_template_sets
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases:
     post:
       operationId: create_template_release

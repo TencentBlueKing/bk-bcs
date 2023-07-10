@@ -22,6 +22,7 @@
 | privilege         | string   | 是   | 文件的权限，例如 755                                         |
 | sign              | string   | 是   | 配置内容的SHA256，合法长度为64位                             |
 | byte_size         | uint64   | 是   | 配置内容的大小，单位：字节                                   |
+| template_set_ids | []uint32 | 否 | 绑定到的模版套餐列表，可选项 |
 
 #### 调用示例
 
@@ -38,7 +39,11 @@
   "user_group": "root",
   "privilege": "755",
   "sign": "11e3a57c479ebfae641c5821ee70bf61dca74b8e6596b78950526c397a3bfe6b",
-  "byte_size": 1675
+  "byte_size": 1675,
+  "template_set_ids": [
+    1,
+    2
+  ]
 }
 ```
 
