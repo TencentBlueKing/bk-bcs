@@ -29,6 +29,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thanos-io/thanos/pkg/tracing/client"
 	"go.uber.org/automaxprocs/maxprocs"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/tracing"
 )
 
 type contextKey int
@@ -120,6 +123,19 @@ func main() {
 
 	if isPrintVersion() {
 		os.Exit(0)
+	}
+
+	//初始化 Tracer
+	shutdown, errorInitTracing := tracing.InitTracing(config.G.TracingConf)
+	if errorInitTracing != nil {
+		logger.Info(errorInitTracing.Error())
+	}
+	if shutdown != nil {
+		defer func() {
+			if err := shutdown(context.Background()); err != nil {
+				logger.Infof("failed to shutdown TracerProvider: %s", err.Error())
+			}
+		}()
 	}
 
 	// Running in container with limits but with empty/wrong value of GOMAXPROCS env var could lead to throttling by cpu

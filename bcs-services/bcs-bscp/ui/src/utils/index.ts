@@ -1,3 +1,5 @@
+import dayjs from 'dayjs'
+
 // 字节数转换为对应的显示单位
 export const byteUnitConverse = (size: number) => {
   if (0 <= size && size < 1024) {
@@ -31,4 +33,9 @@ export const copyToClipBoard = (content: string) => {
     document.execCommand('copy', true)
     document.body.removeChild($textarea)
   }
+}
+
+// 时间格式化
+export const datetimeFormat = (str: string): string => {
+  return dayjs(str).format('YYYY-MM-DD HH:mm:ss')
 }

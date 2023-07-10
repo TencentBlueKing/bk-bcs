@@ -45,6 +45,7 @@ type Configuration struct {
 	Credentials map[string][]*Credential `yaml:"-"`
 	Web         *WebConf                 `yaml:"web"`
 	QueryStore  *QueryStoreConf          `yaml:"query_store_conf"`
+	TracingConf *TracingConf             `yaml:"tracing_conf"`
 }
 
 // init 初始化
@@ -103,6 +104,7 @@ func newConfiguration() (*Configuration, error) {
 	c.BKMonitor = defaultBKMonitorConf()
 
 	c.BKLog = &BKLogConf{}
+	c.TracingConf = &TracingConf{}
 
 	return c, nil
 }

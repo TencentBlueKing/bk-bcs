@@ -9,6 +9,7 @@
   import { CONFIG_STATUS_MAP } from '../../../../../../../constants/config'
   import { getConfigList, deleteServiceConfigItem } from '../../../../../../../api/config'
   import { getConfigTypeName } from '../../../../../../../utils/config'
+  import { datetimeFormat } from '../../../../../../../utils/index'
   import EditConfig from './edit-config.vue'
   import CreateConfig from './create-config.vue'
   import PublishVersion from './publish-version/index.vue'
@@ -195,7 +196,11 @@
           </bk-table-column>
           <bk-table-column label="创建人" prop="revision.creator"></bk-table-column>
           <bk-table-column label="修改人" prop="revision.reviser"></bk-table-column>
-          <bk-table-column label="修改时间" prop="revision.update_at" :sort="true" :width="180"></bk-table-column>
+          <bk-table-column label="修改时间" :sort="true" :width="220">
+            <template #default="{ row }">
+              <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
+            </template>
+          </bk-table-column>
           <bk-table-column v-if="versionData.id === 0" label="变更状态">
             <template #default="{ row }">
                 <span v-if="row.file_state" :class="['status', row.file_state.toLowerCase()]">

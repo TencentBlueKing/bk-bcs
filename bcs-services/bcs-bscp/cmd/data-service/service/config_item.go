@@ -212,7 +212,7 @@ func (s *Service) doBatchCreateConfigItems(kt *kit.Kit, tx *gen.QueryTx,
 		}
 		toCreateConfigItems = append(toCreateConfigItems, ci)
 	}
-	if err := s.dao.ConfigItem().BatchCreateWithTx(kt, tx, toCreateConfigItems); err != nil {
+	if err := s.dao.ConfigItem().BatchCreateWithTx(kt, tx, bizID, appID, toCreateConfigItems); err != nil {
 		logs.Errorf("batch create config items failed, err: %v, rid: %s", err, kt.Rid)
 		return err
 	}

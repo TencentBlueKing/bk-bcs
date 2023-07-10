@@ -19,20 +19,16 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	"path"
+	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
-	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
-	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	goBindataAssetfs "github.com/elazarl/go-bindata-assetfs"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	microGrpc "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"go-micro.dev/v4"
 	"go-micro.dev/v4/registry"
@@ -40,6 +36,9 @@ import (
 	"google.golang.org/grpc"
 	grpcCreds "google.golang.org/grpc/credentials"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
+	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -314,24 +313,28 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	router := mux.NewRouter()
 	router.Handle("/{uri:.*}", rmMux)
 	log.Info(crSvc.ctx, "register grpc service handler to path /")
-
 	originMux := http.NewServeMux()
 	originMux.Handle("/", router)
 
 	// 检查是否需要启用 swagger 服务
-	if crSvc.conf.Swagger.Enabled && crSvc.conf.Swagger.Dir != "" {
+	if crSvc.conf.Swagger.Enabled {
 		log.Info(crSvc.ctx, "swagger doc is enabled")
-		// 挂载 swagger.json 文件目录
-		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, path.Join(crSvc.conf.Swagger.Dir, strings.TrimPrefix(r.URL.Path, "/swagger/")))
-		})
+		// 加载 swagger.json
 		// 配置 swagger-ui 服务
-		fileServer := http.FileServer(&goBindataAssetfs.AssetFS{
-			Asset:    swagger.Asset,
-			AssetDir: swagger.AssetDir,
-			Prefix:   "third_party/swagger-ui",
+		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
+			// 提取 URL 的扩展名
+			ext := filepath.Ext(r.URL.Path)
+			// 检查扩展名是否为 ".json"
+			if ext == ".json" {
+				// 设置响应头
+				w.Header().Set("Content-Type", "application/json")
+				file, _ := swagger.Assets.ReadFile("data/cluster-resources.swagger.json")
+				w.Write(file)
+				return
+			} else {
+				httpSwagger.Handler(httpSwagger.URL("/swagger/cluster-resources.swagger.json")).ServeHTTP(w, r)
+			}
 		})
-		originMux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", fileServer))
 	}
 
 	httpPort := strconv.Itoa(crSvc.conf.Server.HTTPPort)

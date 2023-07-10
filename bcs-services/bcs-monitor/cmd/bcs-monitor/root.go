@@ -27,6 +27,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config/watch"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/tracing"
 )
 
 var (
@@ -53,6 +54,8 @@ func Execute(ctx context.Context) error {
 		}
 
 		initConfig()
+		// 用于tracing init时不同模块的区分
+		tracing.SetServiceName(cmd.Use)
 	}
 	return rootCmd.ExecuteContext(ctx)
 }

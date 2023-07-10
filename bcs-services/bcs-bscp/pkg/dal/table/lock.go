@@ -39,11 +39,11 @@ var ResLockColumnDescriptor = ColumnDescriptors{
 // The ResCount is increased or decreased when an resource is created or deleted within the same database transaction,
 // this can help us to limit the count of a kind of resources.
 type ResourceLock struct {
-	ID       uint32 `db:"id" json:"id"`
-	BizID    uint32 `db:"biz_id" json:"biz_id"`
-	ResType  string `db:"res_type" json:"resource_type"`
-	ResKey   string `db:"res_key" json:"resource_key"`
-	ResCount uint32 `db:"res_count" json:"resource_count"`
+	ID       uint32 `db:"id" gorm:"primaryKey" json:"id"`
+	BizID    uint32 `db:"biz_id" gorm:"column:biz_id" json:"biz_id"`
+	ResType  string `db:"res_type" gorm:"column:res_type" json:"resource_type"`
+	ResKey   string `db:"res_key" gorm:"column:res_key" json:"resource_key"`
+	ResCount uint32 `db:"res_count" gorm:"column:res_count" json:"resource_count"`
 }
 
 // TableName is the lock's database table name.
