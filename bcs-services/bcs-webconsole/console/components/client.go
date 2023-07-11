@@ -18,7 +18,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 	"io"
 	"net/http"
 	"net/url"
@@ -31,6 +30,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 )
 
 type ctxKey int
