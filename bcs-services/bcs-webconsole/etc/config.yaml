@@ -57,3 +57,11 @@ etcd:
   ca: ""
   cert: ""
   key: ""
+
+tracing:
+  enabled: false
+  endpoint: ""
+  token: ""
+  resource_attrs:
+    k1: ""
+    k2: ""

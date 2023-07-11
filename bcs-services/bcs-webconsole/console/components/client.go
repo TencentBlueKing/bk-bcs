@@ -30,6 +30,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/metadata"
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/tracing"
 )
 
 type ctxKey int
@@ -173,8 +175,9 @@ func GetClient() *resty.Client {
 		clientOnce.Do(func() {
 			globalClient = resty.New().
 				SetTimeout(timeout).
-				SetDebug(false).   // 更多详情, 可以开启为 true
-				SetCookieJar(nil). // 后台API去掉 cookie 记录
+				SetTransport(tracing.NewTracingTransport(http.DefaultTransport)). // 设置tracingTransport 传递tracing
+				SetDebug(false).                                                  // 更多详情, 可以开启为 true
+				SetCookieJar(nil).                                                // 后台API去掉 cookie 记录
 				SetDebugBodyLimit(1024).
 				OnAfterResponse(restyAfterResponseHook).
 				SetPreRequestHook(restyBeforeRequestHook).
