@@ -16,6 +16,7 @@ package iam
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -23,13 +24,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/TencentBlueKing/iam-go-sdk"
 	"github.com/TencentBlueKing/iam-go-sdk/logger"
 	"github.com/TencentBlueKing/iam-go-sdk/metric"
+	"github.com/golang-migrate/migrate/v4/source"
 	"github.com/parnurzeal/gorequest"
 	"github.com/sirupsen/logrus"
+	"k8s.io/klog/v2"
 )
 
 // PermClient interface for IAM backend client
@@ -52,6 +53,14 @@ type PermClient interface {
 	DeleteUserGroupMembers(ctx context.Context, groupID uint64, request DeleteGroupMemberRequest) error
 	CreateUserGroupPolicies(ctx context.Context, groupID uint64, request AuthorizationScope) error
 	AuthResourceCreatorPerm(ctx context.Context, resource ResourceCreator, ancestors []Ancestor) error
+}
+
+// PermMigrateClient interface for IAM backend client
+type PermMigrateClient interface {
+	PermClient
+	// Migrate xxx
+	Migrate(db *sql.DB, driver source.Driver, migrateTable string, timeout time.Duration,
+		templateVar interface{}) error
 }
 
 var (
@@ -127,6 +136,36 @@ func NewIamClient(opt *Options) (PermClient, error) {
 	err := opt.validate()
 	if err != nil {
 		return nil, fmt.Errorf("NewIamClient options invalid: %v", err)
+	}
+
+	// register interface metric
+	if opt.Metric {
+		metric.RegisterMetrics()
+	}
+
+	client := &iamClient{
+		opt: opt,
+	}
+
+	if opt.External {
+		// true directCAll + ESB API
+		client.cli = iam.NewIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.IAMHost, opt.BkiIAMHost)
+	} else {
+		// false APIGW
+		client.cli = iam.NewAPIGatewayIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.GateWayHost)
+	}
+
+	// init IAM logger
+	setIAMLogger(opt)
+
+	return client, nil
+}
+
+// NewIamMigrateClient create iam backend client
+func NewIamMigrateClient(opt *Options) (PermMigrateClient, error) {
+	err := opt.validate()
+	if err != nil {
+		return nil, fmt.Errorf("NewIamMigrateClient options invalid: %v", err)
 	}
 
 	// register interface metric
@@ -240,8 +279,8 @@ func (ic *iamClient) ResourceMultiActionsAllowed(actions []string, request Permi
 	return ic.cli.ResourceMultiActionsAllowed(req)
 }
 
-// BatchResourceMultiActionsAllowed will check the permissions of batch-resource with multi-actions, multi actions and multi resource
-// resource action isAllow
+// BatchResourceMultiActionsAllowed will check the permissions of batch-resource with multi-actions,
+// multi actions and multi resource
 func (ic *iamClient) BatchResourceMultiActionsAllowed(actions []string, request PermissionRequest,
 	nodes [][]ResourceNode) (map[string]map[string]bool, error) {
 	if ic == nil {
@@ -293,7 +332,7 @@ func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []
 
 	url, err := ic.cli.GetApplyURL(application, user.BkToken, user.BkUserName)
 	if err != nil {
-		blog.Errorf("iam generate apply url failed: %s", err)
+		klog.Errorf("iam generate apply url failed: %s", err)
 		return IamAppURL, nil
 	}
 
@@ -319,7 +358,7 @@ func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManag
 
 	auth, err := ic.generateGateWayAuth("")
 	if err != nil {
-		blog.Errorf("CreateGradeManagers generateGateWayAuth failed: %v", err)
+		klog.Errorf("CreateGradeManagers generateGateWayAuth failed: %v", err)
 		return 0, err
 	}
 
@@ -334,7 +373,7 @@ func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManag
 		EndStruct(resp)
 
 	if len(errs) != 0 {
-		blog.Errorf("CreateGradeManagers gorequest errors=`%s`", errs)
+		klog.Errorf("CreateGradeManagers gorequest errors=`%s`", errs)
 		return 0, errs[0]
 	}
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
@@ -343,7 +382,7 @@ func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManag
 		return 0, errMsg
 	}
 
-	blog.Infof("CreateGradeManagers[%s:%s] successful", request.System, request.Name)
+	klog.Infof("CreateGradeManagers[%s:%s] successful", request.System, request.Name)
 	return resp.Data.ID, nil
 }
 
@@ -369,7 +408,7 @@ func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64,
 
 	auth, err := ic.generateGateWayAuth("")
 	if err != nil {
-		blog.Errorf("CreateUserGroup generateGateWayAuth failed: %v", err)
+		klog.Errorf("CreateUserGroup generateGateWayAuth failed: %v", err)
 		return nil, err
 	}
 
@@ -384,7 +423,7 @@ func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64,
 		EndStruct(resp)
 
 	if len(errs) != 0 {
-		blog.Errorf("CreateUserGroup gorequest errors=`%s`", errs)
+		klog.Errorf("CreateUserGroup gorequest errors=`%s`", errs)
 		return nil, errs[0]
 	}
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
@@ -393,7 +432,7 @@ func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64,
 		return nil, errMsg
 	}
 
-	blog.Infof("CreateUserGroup[%s:%v] successful", ic.opt.SystemID, gradeManagerID)
+	klog.Infof("CreateUserGroup[%s:%v] successful", ic.opt.SystemID, gradeManagerID)
 	return resp.Data, nil
 }
 
@@ -415,7 +454,7 @@ func (ic *iamClient) DeleteUserGroup(ctx context.Context, groupID uint64) error 
 
 	auth, err := ic.generateGateWayAuth("")
 	if err != nil {
-		blog.Errorf("DeleteUserGroup generateGateWayAuth failed: %v", err)
+		klog.Errorf("DeleteUserGroup generateGateWayAuth failed: %v", err)
 		return err
 	}
 
@@ -429,7 +468,7 @@ func (ic *iamClient) DeleteUserGroup(ctx context.Context, groupID uint64) error 
 		EndStruct(resp)
 
 	if len(errs) != 0 {
-		blog.Errorf("DeleteUserGroup gorequest errors=`%s`", errs)
+		klog.Errorf("DeleteUserGroup gorequest errors=`%s`", errs)
 		return errs[0]
 	}
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
@@ -438,7 +477,7 @@ func (ic *iamClient) DeleteUserGroup(ctx context.Context, groupID uint64) error 
 		return errMsg
 	}
 
-	blog.Infof("DeleteUserGroup[%s:%v] successful", ic.opt.SystemID, groupID)
+	klog.Infof("DeleteUserGroup[%s:%v] successful", ic.opt.SystemID, groupID)
 	return nil
 }
 
@@ -460,7 +499,7 @@ func (ic *iamClient) AddUserGroupMembers(ctx context.Context, groupID uint64, re
 
 	auth, err := ic.generateGateWayAuth("")
 	if err != nil {
-		blog.Errorf("AddUserGroupMembers generateGateWayAuth failed: %v", err)
+		klog.Errorf("AddUserGroupMembers generateGateWayAuth failed: %v", err)
 		return err
 	}
 
@@ -475,7 +514,7 @@ func (ic *iamClient) AddUserGroupMembers(ctx context.Context, groupID uint64, re
 		EndStruct(resp)
 
 	if len(errs) != 0 {
-		blog.Errorf("AddUserGroupMembers gorequest errors=`%s`", errs)
+		klog.Errorf("AddUserGroupMembers gorequest errors=`%s`", errs)
 		return errs[0]
 	}
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
@@ -484,7 +523,7 @@ func (ic *iamClient) AddUserGroupMembers(ctx context.Context, groupID uint64, re
 		return errMsg
 	}
 
-	blog.Infof("AddUserGroupMembers[%s:%v] successful", ic.opt.SystemID, groupID)
+	klog.Infof("AddUserGroupMembers[%s:%v] successful", ic.opt.SystemID, groupID)
 	return nil
 }
 
@@ -507,7 +546,7 @@ func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64,
 
 	auth, err := ic.generateGateWayAuth("")
 	if err != nil {
-		blog.Errorf("DeleteUserGroupMembers generateGateWayAuth failed: %v", err)
+		klog.Errorf("DeleteUserGroupMembers generateGateWayAuth failed: %v", err)
 		return err
 	}
 	if request.Type == "" {
@@ -529,7 +568,7 @@ func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64,
 		EndStruct(resp)
 
 	if len(errs) != 0 {
-		blog.Errorf("DeleteUserGroupMembers gorequest errors=`%s`", errs)
+		klog.Errorf("DeleteUserGroupMembers gorequest errors=`%s`", errs)
 		return errs[0]
 	}
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
@@ -538,7 +577,7 @@ func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64,
 		return errMsg
 	}
 
-	blog.Infof("DeleteUserGroupMembers[%s:%v] successful", ic.opt.SystemID, groupID)
+	klog.Infof("DeleteUserGroupMembers[%s:%v] successful", ic.opt.SystemID, groupID)
 	return nil
 }
 
@@ -560,7 +599,7 @@ func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, groupID uint64
 
 	auth, err := ic.generateGateWayAuth("")
 	if err != nil {
-		blog.Errorf("CreateUserGroupPolicies generateGateWayAuth failed: %v", err)
+		klog.Errorf("CreateUserGroupPolicies generateGateWayAuth failed: %v", err)
 		return err
 	}
 
@@ -575,7 +614,7 @@ func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, groupID uint64
 		EndStruct(resp)
 
 	if len(errs) != 0 {
-		blog.Errorf("CreateUserGroupPolicies gorequest errors=`%s`", errs)
+		klog.Errorf("CreateUserGroupPolicies gorequest errors=`%s`", errs)
 		return errs[0]
 	}
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
@@ -584,12 +623,13 @@ func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, groupID uint64
 		return errMsg
 	}
 
-	blog.Infof("CreateUserGroupPolicies[%s:%s] successful", request.System, groupID)
+	klog.Infof("CreateUserGroupPolicies[%s:%s] successful", request.System, groupID)
 	return nil
 }
 
 // AuthResourceCreatorPerm authorize creator resource perm
-func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource ResourceCreator, ancestors []Ancestor) error {
+func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource ResourceCreator,
+	ancestors []Ancestor) error {
 	var (
 		_    = "AuthResourceCreatorPerm"
 		path = "/api/v1/open/authorization/resource_creator_action/"
@@ -602,7 +642,7 @@ func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource Resou
 
 	auth, err := ic.generateGateWayAuth("")
 	if err != nil {
-		blog.Errorf("AuthResourceCreatorPerm generateGateWayAuth failed: %v", err)
+		klog.Errorf("AuthResourceCreatorPerm generateGateWayAuth failed: %v", err)
 		return err
 	}
 
@@ -619,7 +659,7 @@ func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource Resou
 		EndStruct(resp)
 
 	if len(errs) != 0 {
-		blog.Errorf("AuthResourceCreatorPerm gorequest errors=`%s`", errs)
+		klog.Errorf("AuthResourceCreatorPerm gorequest errors=`%s`", errs)
 		return errs[0]
 	}
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
@@ -628,7 +668,13 @@ func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource Resou
 		return errMsg
 	}
 
-	blog.Infof("AuthResourceCreatorPerm[%s:%s] successful[%+v]", request.System, resource.Creator, resp.Data)
+	klog.Infof("AuthResourceCreatorPerm[%s:%s] successful[%+v]", request.System, resource.Creator, resp.Data)
 
 	return nil
+}
+
+// Migrate migrate iam db
+func (ic *iamClient) Migrate(db *sql.DB, driver source.Driver, migrateTable string, timeout time.Duration,
+	templateVar interface{}) error {
+	return ic.cli.Migrate(db, driver, migrateTable, timeout, templateVar)
 }
