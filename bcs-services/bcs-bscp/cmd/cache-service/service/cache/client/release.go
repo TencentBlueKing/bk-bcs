@@ -95,7 +95,7 @@ func (c *client) refreshReleasedCICache(kt *kit.Kit, bizID uint32, releaseID uin
 	cancel := kt.CtxWithTimeoutMS(500)
 	defer cancel()
 
-	releasedCIs, err := c.op.ReleasedCI().ListAll(kt, bizID)
+	releasedCIs, err := c.op.ReleasedCI().ListAllByReleaseIDs(kt, []uint32{releaseID}, bizID)
 	if err != nil {
 		logs.Errorf("get biz: %d release: %d CI from db failed, err: %v, rid: %s", bizID, releaseID, err, kt.Rid)
 		return "", err
