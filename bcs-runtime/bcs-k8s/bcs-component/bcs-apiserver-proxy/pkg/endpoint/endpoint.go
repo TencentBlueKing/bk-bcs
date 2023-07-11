@@ -18,9 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/health"
 	"sync"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/health"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy/pkg/utils"
@@ -32,6 +33,7 @@ import (
 
 const (
 	masterLabel       = "node-role.kubernetes.io/master"
+	controlPlaneLabel = "node-role.kubernetes.io/control-plane"
 	defaultNamespace  = "default"
 	defaultKubernetes = "kubernetes"
 	schemeHTTPS       = "https"
@@ -192,7 +194,9 @@ func (ec *endpointsClient) getMaterNodes() ([]corev1.Node, error) {
 
 	masterNodes := []corev1.Node{}
 	for _, node := range clusterNodes.Items {
-		if _, ok := node.Labels[masterLabel]; ok {
+		_, ok := node.Labels[masterLabel]
+		_, ok2 := node.Labels[controlPlaneLabel]
+		if ok || ok2 {
 			masterNodes = append(masterNodes, node)
 		}
 	}
