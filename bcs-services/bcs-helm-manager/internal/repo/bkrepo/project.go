@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	projectGetURI    = "/repository/api/project/list?names="
+	projectCheckURI  = "/repository/api/project/exist/"
 	projectCreateURI = "/repository/api/project/create"
 )
 
@@ -32,14 +32,14 @@ func (ph *projectHandler) ensureProject(ctx context.Context, prj *repo.Project) 
 		return fmt.Errorf("project can not be empty")
 	}
 
-	_, err := ph.getProject(ctx, prj.Name)
-	if err == nil {
+	exist, err := ph.checkProject(ctx, prj.Name)
+	if err != nil {
+		blog.Errorf("ensure project %s, check project failed, %s", prj.Name, err.Error())
+		return err
+	}
+	if exist {
 		blog.Infof("ensure project %s, exist confirmed", prj.Name)
 		return nil
-	}
-	if err != errNotExist {
-		blog.Errorf("ensure project %s, get project failed, %s", prj.Name, err.Error())
-		return err
 	}
 
 	if err = ph.createProject(ctx, prj); err != nil && err != errAlreadyExist {
@@ -51,40 +51,27 @@ func (ph *projectHandler) ensureProject(ctx context.Context, prj *repo.Project) 
 	return nil
 }
 
-func (ph *projectHandler) getProject(ctx context.Context, name string) (*repo.Project, error) {
-	blog.Infof("get project from bk-repo: %s", name)
+func (ph *projectHandler) checkProject(ctx context.Context, name string) (bool, error) {
+	blog.Infof("check project from bk-repo: %s", name)
 
-	resp, err := ph.get(ctx, projectGetURI+name, nil, nil)
+	resp, err := ph.get(ctx, projectCheckURI+name, nil, nil)
 	if err != nil {
-		blog.Errorf("get project from bk-repo failed, %s, name: %s", err.Error(), name)
-		return nil, err
+		blog.Errorf("check project from bk-repo failed, %s, name: %s", err.Error(), name)
+		return false, err
 	}
 
-	var r getProjectResp
+	var r checkProjectResp
 	if err := json.Unmarshal(resp.Reply, &r); err != nil {
-		blog.Errorf("get project from bk-repo decode resp failed, %s, with resp %s", err.Error(), resp.Reply)
-		return nil, err
+		blog.Errorf("check project from bk-repo decode resp failed, %s, with resp %s", err.Error(), resp.Reply)
+		return false, err
 	}
 	if r.Code != respCodeOK {
-		blog.Errorf("get project from bk-repo get resp with error code %d, message %s, traceID %s",
+		blog.Errorf("check project from bk-repo get resp with error code %d, message %s, traceID %s",
 			r.Code, r.Message, r.TraceID)
-		return nil, fmt.Errorf("request error with code %d, %s", r.Code, r.Message)
+		return false, fmt.Errorf("request error with code %d, %s", r.Code, r.Message)
 	}
 
-	if len(r.Data) > 1 {
-		blog.Infof("get project from bk-repo get multi unexpected data %s, name: %s", len(r.Data), name)
-		return nil, fmt.Errorf("get multi resp data with name %s", name)
-	}
-	if len(r.Data) == 0 {
-		return nil, errNotExist
-	}
-
-	result := r.Data[0]
-	return &repo.Project{
-		Name:        result.Name,
-		DisplayName: result.DisplayName,
-		Description: result.Description,
-	}, nil
+	return r.Data, nil
 }
 
 func (ph *projectHandler) createProject(ctx context.Context, prj *repo.Project) error {
@@ -144,7 +131,7 @@ type createProjectResp struct {
 	basicResp
 }
 
-type getProjectResp struct {
+type checkProjectResp struct {
 	basicResp
-	Data []*project `json:"data"`
+	Data bool `json:"data"`
 }
