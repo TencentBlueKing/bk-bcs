@@ -188,7 +188,7 @@ func (dao *releasedCIDao) ListAllByReleaseIDs(kit *kit.Kit,
 	}
 
 	m := dao.genQ.ReleasedConfigItem
-	return m.WithContext(kit.Ctx).Where(m.AppID.In(releaseIDs...), m.BizID.Eq(bizID)).Find()
+	return m.WithContext(kit.Ctx).Where(m.ReleaseID.In(releaseIDs...), m.BizID.Eq(bizID)).Find()
 }
 
 // GetReleasedLately
