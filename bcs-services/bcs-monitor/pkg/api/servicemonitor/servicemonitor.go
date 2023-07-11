@@ -35,8 +35,9 @@ func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface,
 	bcsConf := k8sclient.GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	k8sconfig := &k8srest.Config{
-		Host:        host,
-		BearerToken: bcsConf.Token,
+		Host:            host,
+		BearerToken:     bcsConf.Token,
+		TLSClientConfig: k8srest.TLSClientConfig{Insecure: true},
 	}
 	config, err := v1client.NewForConfig(k8sconfig)
 	if err != nil {

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -123,12 +124,29 @@ func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
 	return nil
 }
 
+var dialer = &net.Dialer{
+	Timeout:   30 * time.Second,
+	KeepAlive: 30 * time.Second,
+}
+
+// defaultTransport default transport
+var defaultTransport http.RoundTripper = &http.Transport{
+	DialContext:           dialer.DialContext,
+	ForceAttemptHTTP2:     true,
+	MaxIdleConns:          100,
+	IdleConnTimeout:       90 * time.Second,
+	TLSHandshakeTimeout:   10 * time.Second,
+	ExpectContinueTimeout: 1 * time.Second,
+	// NOCC:gas/tls(设计如此)
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+}
+
 // GetClient : 新建Client, 设置公共参数，每次新建，cookies不复用
 func GetClient() *resty.Client {
 	if globalClient == nil {
 		clientOnce.Do(func() {
 			globalClient = resty.New().
-				SetTransport(otelhttp.NewTransport(http.DefaultTransport)).
+				SetTransport(otelhttp.NewTransport(defaultTransport)).
 				SetTimeout(timeout).
 				SetDebug(false).   // 更多详情, 可以开启为 true
 				SetCookieJar(nil). // 后台API去掉 cookie 记录

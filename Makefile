@@ -406,10 +406,6 @@ cluster-resources:pre
 	# etc config files
 	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/etc
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/etc/ ${PACKAGEPATH}/bcs-services/cluster-resources/etc/
-	# swagger files
-	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/swagger
-	cp -R ${BCS_SERVICES_PATH}/cluster-resources/third_party/swagger-ui/ ${PACKAGEPATH}/bcs-services/cluster-resources/swagger/swagger-ui/
-	cp ${BCS_SERVICES_PATH}/cluster-resources/swagger/data/cluster-resources.swagger.json ${PACKAGEPATH}/bcs-services/cluster-resources/swagger/cluster-resources.swagger.json
 	# example files
 	mkdir -p ${PACKAGEPATH}/bcs-services/cluster-resources/example/
 	cp -R ${BCS_SERVICES_PATH}/cluster-resources/pkg/resource/example/config/ ${PACKAGEPATH}/bcs-services/cluster-resources/example/config/
