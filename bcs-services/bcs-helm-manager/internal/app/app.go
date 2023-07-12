@@ -77,6 +77,11 @@ import (
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 )
 
+var (
+	// maxMsgSize define maximum message size that grpc server can send or receive. Default value is 50MB.
+	maxMsgSize = 1024 * 1024 * 50
+)
+
 // HelmManager describe the helm-service manager instance
 type HelmManager struct {
 	opt *options.HelmManagerOptions
@@ -364,7 +369,7 @@ func (hm *HelmManager) initMicro() error {
 		microSvc.RegisterTTL(30*time.Second),
 		microSvc.RegisterInterval(25*time.Second),
 		microSvc.Context(hm.ctx),
-		runtimex.MaxMsgSize(10*1024*1024),
+		runtimex.MaxMsgSize(maxMsgSize),
 		microSvc.BeforeStart(func() error {
 			return nil
 		}),
@@ -425,6 +430,7 @@ func (hm *HelmManager) initHTTPService() error {
 	)
 
 	grpcDialOpts := make([]grpc.DialOption, 0)
+	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize)))
 	if hm.tlsConfig != nil && hm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(gCred.NewTLS(hm.clientTLSConfig)))
 	} else {
