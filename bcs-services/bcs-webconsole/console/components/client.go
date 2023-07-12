@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -51,6 +52,23 @@ var (
 	}
 	clientOnce   sync.Once
 	globalClient *resty.Client
+
+	// dialer with timeout
+	dialer = &net.Dialer{
+		Timeout:   timeout,
+		KeepAlive: timeout,
+	}
+	// defaultTransport default transport
+	defaultTransport http.RoundTripper = &http.Transport{
+		DialContext:           dialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		// NOCC:gas/tls(设计如此)
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 )
 
 // WithRequestIDValue 设置 RequestId 值
@@ -175,9 +193,9 @@ func GetClient() *resty.Client {
 		clientOnce.Do(func() {
 			globalClient = resty.New().
 				SetTimeout(timeout).
-				SetTransport(tracing.NewTracingTransport(http.DefaultTransport)). // 设置tracingTransport 传递tracing
-				SetDebug(false).                                                  // 更多详情, 可以开启为 true
-				SetCookieJar(nil).                                                // 后台API去掉 cookie 记录
+				SetTransport(tracing.NewTracingTransport(defaultTransport)). // 设置tracingTransport 传递tracing
+				SetDebug(false).                                             // 更多详情, 可以开启为 true
+				SetCookieJar(nil).                                           // 后台API去掉 cookie 记录
 				SetDebugBodyLimit(1024).
 				OnAfterResponse(restyAfterResponseHook).
 				SetPreRequestHook(restyBeforeRequestHook).
