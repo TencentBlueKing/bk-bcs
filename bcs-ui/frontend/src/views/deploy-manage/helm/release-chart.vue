@@ -607,18 +607,24 @@ export default defineComponent({
       releaseLoading.value = true;
       const params = handleGetReleaseParams();
       const result = await handleReleaseChart(params);
-      result && $router.push({
-        name: 'releaseList',
-      });
+      if (result) {
+        isFormChanged.value = false;
+        $router.push({
+          name: 'releaseList',
+        });
+      }
       releaseLoading.value = false;
     };
     const handleConfirmUpdate = async () => {
       confirmLoading.value = true;
       const params = handleGetReleaseParams();
       const result = await handleUpdateRelease(params);
-      result && $router.push({
-        name: 'releaseList',
-      });
+      if (result) {
+        isFormChanged.value = false;
+        $router.push({
+          name: 'releaseList',
+        });
+      }
       confirmLoading.value = false;
     };
     // 预览

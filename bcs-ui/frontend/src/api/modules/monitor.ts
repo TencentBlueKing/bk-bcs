@@ -44,7 +44,7 @@ const request2 = createRequest({
 // 日志
 export const podContainersList = request2('get', '/namespaces/$namespaceId/pods/$podId/containers');
 export const podLogs = request2('get', '/namespaces/$namespaceId/pods/$podId/logs');
-export const podLogsDownloadURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName&previous=$previous`;
+export const podLogsDownloadURL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/download?container_name=$containerName&previous=$previous`;
 export const podLogsStreamURL = `${LOG_API_URL}/namespaces/$namespaceId/pods/$podId/logs/stream?container_name=$containerName&started_at=$startedAt`;
 export const logEntrypoints = request2('get', '/log_collector/entrypoints');
 export const logRules = request2('get', '/log_collector/rules');
