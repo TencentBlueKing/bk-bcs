@@ -189,5 +189,3 @@ require (
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230701022721-8cbd62252af8
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
 )
-
-require github.com/elazarl/go-bindata-assetfs v1.0.1 // indirect
