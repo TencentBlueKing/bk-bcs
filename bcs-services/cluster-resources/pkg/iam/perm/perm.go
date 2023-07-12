@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/audit"
 )
 
 // IAMPerm xxx
@@ -32,13 +33,25 @@ type IAMPerm struct {
 
 // CanAction 校验用户的 action_id 权限
 func (p *IAMPerm) CanAction(ctx Ctx, actionID string, useCache bool) (bool, error) {
-	if err := ctx.Validate([]string{actionID}); err != nil {
+	var allow bool
+	var err error
+	// 加入审计sdk
+	defer func() {
+		instanceData := map[string]interface{}{
+			"ProjectID": ctx.GetProjID(),
+			"ClusterID": ctx.GetClusterID(),
+			"Namespace": ctx.GetNamespace(),
+		}
+		audit.AddEvent(actionID, p.ResType, ctx.GetResID(), ctx.GetUsername(), allow, instanceData)
+	}()
+
+	if err = ctx.Validate([]string{actionID}); err != nil {
 		return false, err
 	}
 	if ctx.ForceRaise() {
 		return false, p.genIAMPermError(ctx, actionID)
 	}
-	allow, err := p.canAction(ctx, actionID, useCache)
+	allow, err = p.canAction(ctx, actionID, useCache)
 	if allow && err == nil {
 		return true, nil
 	}
@@ -60,6 +73,15 @@ func (p *IAMPerm) CanMultiActions(ctx Ctx, actionIDs []string) (allow bool, err 
 		perms, _ = p.Cli.ResInstMultiActionsAllowed(
 			ctx.GetUsername(), actionIDs, resReq.MakeResources([]string{ctx.GetResID()}),
 		)
+	}
+	// 加入审计sdk
+	for k, v := range perms {
+		instanceData := map[string]interface{}{
+			"ProjectID": ctx.GetProjID(),
+			"ClusterID": ctx.GetClusterID(),
+			"Namespace": ctx.GetNamespace(),
+		}
+		audit.AddEvent(k, p.ResType, ctx.GetResID(), ctx.GetUsername(), v, instanceData)
 	}
 	return p.canMultiActions(ctx, perms)
 }
