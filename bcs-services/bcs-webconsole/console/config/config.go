@@ -34,6 +34,7 @@ type Configurations struct {
 	WebConsole  *WebConsoleConf          `yaml:"webconsole"`
 	Web         *WebConf                 `yaml:"web"`
 	Etcd        *EtcdConf                `yaml:"etcd"`
+	Tracing     *TracingConf             `yaml:"tracing"`
 }
 
 // newConfigurations 新增配置
@@ -66,6 +67,10 @@ func newConfigurations() (*Configurations, error) {
 
 	c.Etcd = &EtcdConf{}
 	c.Etcd.Init()
+
+	// Tracing Config
+	c.Tracing = &TracingConf{}
+	c.Tracing.Init()
 
 	c.Credentials = map[string][]*Credential{}
 

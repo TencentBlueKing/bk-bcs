@@ -44,6 +44,8 @@ type Ctx interface {
 	ToMap() map[string]interface{}
 	// FromMap 根据 Map 数据更新 Context
 	FromMap(m map[string]interface{}) Ctx
+	// GetNamespace 获取命名空间
+	GetNamespace() string
 }
 
 // Perm 权限校验接口定义

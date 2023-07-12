@@ -139,7 +139,7 @@ func (c *cosClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) 
 
 	// cos only have etag, not for validate
 	metadata := &ObjectMetadata{
-		ByteSize: 0,
+		ByteSize: resp.ContentLength,
 		Sha256:   sign,
 	}
 

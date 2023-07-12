@@ -102,3 +102,8 @@ func (c *PermCtx) FromMap(m map[string]interface{}) perm.Ctx {
 	}
 	return c
 }
+
+// GetNamespace xxx
+func (c *PermCtx) GetNamespace() string {
+	return ""
+}
