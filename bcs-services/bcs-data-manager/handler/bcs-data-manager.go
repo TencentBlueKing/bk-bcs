@@ -403,3 +403,30 @@ func (e *BcsDataManager) GetPodAutoscaler(ctx context.Context, req *bcsdatamanag
 	prom.ReportAPIRequestMetric("GetPodAutoscaler", "grpc", prom.StatusOK, start)
 	return nil
 }
+
+// GetPowerTrading get operations data of powertrading
+// table: table name
+// startTime: timestamp
+// endTime: timestamp
+// params: others params
+func (e *BcsDataManager) GetPowerTrading(ctx context.Context, req *bcsdatamanager.GetPowerTradingDataRequest,
+	rsp *bcsdatamanager.GetPowerTradingDataResponse) error {
+	blog.Infof("Received GetPowerTrading.Call request. table name: %s, startTime: %s, endTime: %s, params: %+v",
+		req.GetTable(), req.GetStartTime(), req.GetEndTime(), req.GetParams())
+
+	start := time.Now()
+	result, total, err := e.model.GetPowerTradingInfo(ctx, req)
+	if err != nil {
+		rsp.Message = fmt.Sprintf("get powerTrading info error: %v", err)
+		rsp.Code = bcsCommon.AdditionErrorCode + 500
+		blog.Errorf(rsp.Message)
+		prom.ReportAPIRequestMetric("GetPowerTrading", "grpc", prom.StatusErr, start)
+		return nil
+	}
+	rsp.Data = result
+	rsp.Message = bcsCommon.BcsSuccessStr
+	rsp.Code = bcsCommon.BcsSuccess
+	rsp.Total = uint32(total)
+	prom.ReportAPIRequestMetric("GetPowerTrading", "grpc", prom.StatusOK, start)
+	return nil
+}

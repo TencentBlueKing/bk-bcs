@@ -16,6 +16,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 type server struct {
@@ -25,10 +26,11 @@ type server struct {
 	*ModelWorkload
 	*ModelPublic
 	*ModelPodAutoscaler
+	*ModelPowerTrading
 }
 
 // NewServer new db server
-func NewServer(db drivers.DB) store.Server {
+func NewServer(db drivers.DB, bkbaseConf *types.BkbaseConfig) store.Server {
 	return &server{
 		ModelCluster:       NewModelCluster(db),
 		ModelNamespace:     NewModelNamespace(db),
@@ -36,5 +38,6 @@ func NewServer(db drivers.DB) store.Server {
 		ModelProject:       NewModelProject(db),
 		ModelPublic:        NewModelPublic(db),
 		ModelPodAutoscaler: NewModelPodAutoscaler(db),
+		ModelPowerTrading:  NewModelPowerTrading(db, bkbaseConf),
 	}
 }

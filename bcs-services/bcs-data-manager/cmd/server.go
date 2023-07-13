@@ -222,7 +222,14 @@ func (s *Server) initModel() error {
 		return err
 	}
 	blog.Infof("init mongo db successfully")
-	modelSet := dmmongo.NewServer(mongoDB)
+
+	bkbaseConfig, err := s.opt.ParseBkbaseConfig()
+	if err != nil {
+		blog.Errorf("init bkbase config failed, err %s", err.Error())
+		return err
+	}
+
+	modelSet := dmmongo.NewServer(mongoDB, bkbaseConfig)
 	s.store = modelSet
 	blog.Infof("init store successfully")
 	return nil

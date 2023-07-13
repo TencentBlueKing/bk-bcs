@@ -14,12 +14,14 @@ package cmd
 
 import (
 	"crypto/tls"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
+	"io/ioutil"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
+	jsoniter "github.com/json-iterator/go"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 )
 
 // MongoOption option for mongo db
@@ -130,6 +132,7 @@ type DataManagerOptions struct {
 	NeedSendKafka          bool               `json:"needSendKafka"`
 	IgnoreBkMonitorCluster bool               `json:"ignoreBkMonitorCluster"`
 	QueryFromBkMonitor     bool               `json:"queryFromBkMonitor"`
+	BkbaseConfigPath       string             `json:"bkbaseConfigPath"`
 }
 
 // ClusterFilterRules rules for cluster filter
@@ -177,7 +180,8 @@ func NewDataManagerOptions() *DataManagerOptions {
 		Etcd: EtcdOption{
 			EtcdEndpoints: "127.0.0.1:2379",
 		},
-		Debug: true,
+		Debug:            true,
+		BkbaseConfigPath: "/data/bcs/bkbase/bkbaseconfig.json",
 	}
 }
 
@@ -187,6 +191,21 @@ func (opt *DataManagerOptions) GetEtcdRegistryTLS() (*tls.Config, error) {
 		opt.Etcd.EtcdKey, "")
 	if err != nil {
 		blog.Errorf("gateway-discovery etcd TLSConfig with CA/Cert/Key failed, %s", err.Error())
+		return nil, err
+	}
+	return config, nil
+}
+
+// ParseBkbaseConfig parse config for bkbase data
+func (opt *DataManagerOptions) ParseBkbaseConfig() (*types.BkbaseConfig, error) {
+	config := &types.BkbaseConfig{}
+	bytes, err := ioutil.ReadFile(opt.BkbaseConfigPath)
+	if err != nil {
+		blog.Errorf("open bkbase config file(%s) failed: %s", opt.BkbaseConfigPath, err.Error())
+		return nil, err
+	}
+	if err := jsoniter.Unmarshal(bytes, config); err != nil {
+		blog.Errorf("unmarshal config file(%s) failed: %s", opt.BkbaseConfigPath, err.Error())
 		return nil, err
 	}
 	return config, nil
