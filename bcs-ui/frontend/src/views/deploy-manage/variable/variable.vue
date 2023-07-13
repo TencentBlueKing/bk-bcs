@@ -327,9 +327,9 @@ export default defineComponent({
         },
         {
           validator(val) {
-            return /^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(val);
+            return /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(val);
           },
-          message: $i18n.t('只能包含字母、数字和下划线，且以字母开头，最大长度为64个字符'),
+          message: $i18n.t('只能包含字母、数字、中划线和下划线，且以字母开头，最大长度为64个字符'),
           trigger: 'blur',
         },
       ],
