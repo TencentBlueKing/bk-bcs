@@ -14,7 +14,7 @@
         <div class="info-item">1. {{$t('API密钥适用于 BCS API 调用与 kubeconfig')}}</div>
         <div class="info-item">2.
           <i18n path="API密钥与个人账户绑定，使用蓝鲸权限中心做权限控制，点击{0}可以查看与设置您的API密钥权限">
-            <a class="bk-text-button" :href="BK_IAM_APP_URL" target="_blank">
+            <a class="bk-text-button" :href="BK_IAM_HOST" target="_blank">
               {{ $t('权限中心') }}
             </a>
           </i18n>
@@ -468,7 +468,7 @@ export default defineComponent({
       shareKubeConfigExample,
       shareDemoConfigExample,
       shareBcsApiExample,
-      BK_IAM_APP_URL: window.BK_IAM_APP_URL,
+      BK_IAM_HOST: window.BK_IAM_HOST,
       hasSharedCluster,
     };
   },

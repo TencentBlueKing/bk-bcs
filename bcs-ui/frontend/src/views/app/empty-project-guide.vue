@@ -68,7 +68,7 @@ export default defineComponent({
     const $route = computed(() => toRef(reactive($router), 'currentRoute').value);
 
     function handleGotoIAM() {
-      window.open(`${window.BK_IAM_APP_URL}apply-join-user-group?system_id=bk_bcs_app`);
+      window.open(`${window.BK_IAM_HOST}/apply-join-user-group?system_id=bk_bcs_app`);
     }
     function handleGotoProjectManage() {
       if (window.REGION === 'ieod') {

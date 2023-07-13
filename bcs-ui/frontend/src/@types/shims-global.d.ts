@@ -9,7 +9,7 @@ interface Window {
   BCS_CONFIG: Record<string, string>
   REGION: string
   PAAS_HOST: string
-  BK_IAM_APP_URL: string
+  BK_IAM_HOST: string
   DEVOPS_HOST: string
   LOGIN_FULL: string
   BKMONITOR_HOST: string

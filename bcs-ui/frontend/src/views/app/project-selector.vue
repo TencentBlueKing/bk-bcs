@@ -149,7 +149,7 @@ export default defineComponent({
 
     // 申请项目权限
     const handleGotoIAM = () => {
-      window.open(`${window.BK_IAM_APP_URL}apply-join-user-group?system_id=bk_bcs_app`);
+      window.open(`${window.BK_IAM_HOST}/apply-join-user-group?system_id=bk_bcs_app`);
     };
     // 创建项目
     const handleCreateProject = () => {

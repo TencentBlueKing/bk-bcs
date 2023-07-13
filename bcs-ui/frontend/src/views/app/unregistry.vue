@@ -89,7 +89,7 @@ export default {
       return !isEmpty(this.ccKey);
     },
     iamDocLink() {
-      return `${window.BK_IAM_APP_URL}apply-custom-perm?system_id=bk_cmdb`;
+      return `${window.BK_IAM_HOST}/apply-custom-perm?system_id=bk_cmdb`;
     },
     ccDocLink() {
       return `${window.BK_CC_HOST}/#/resource/business`;
