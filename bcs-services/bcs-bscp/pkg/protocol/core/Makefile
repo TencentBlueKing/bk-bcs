@@ -19,6 +19,7 @@ all:
 	@cd template-release && make
 	@cd template-set && make
 	@cd app-template-binding && make
+	@cd template-binding-relation && make
 
 clean:
 	@cd base && make clean
@@ -41,3 +42,4 @@ clean:
 	@cd template-release && make clean
 	@cd template-set && make clean
 	@cd app-template-binding && make clean
+	@cd template-binding-relation && make clean

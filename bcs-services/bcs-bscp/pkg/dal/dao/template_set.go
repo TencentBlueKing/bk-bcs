@@ -42,6 +42,8 @@ type TemplateSet interface {
 	AddTemplateToDefaultWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID, templateID uint32) error
 	// DeleteTemplateFromDefaultWithTx delete a template from default template set with transaction
 	DeleteTemplateFromDefaultWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID, templateID uint32) error
+	// ListByIDs list template sets by template set ids.
+	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -247,6 +249,18 @@ func (dao *templateSetDao) DeleteTemplateFromDefaultWithTx(kit *kit.Kit, tx *gen
 		return err
 	}
 	return nil
+}
+
+// ListByIDs list template sets by template set ids.
+func (dao *templateSetDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+	result, err := q.Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template
