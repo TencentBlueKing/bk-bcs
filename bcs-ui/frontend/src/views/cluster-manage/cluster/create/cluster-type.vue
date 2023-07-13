@@ -88,7 +88,7 @@ export default defineComponent({
         subTitle: $i18n.t('为私有环境搭建集群提供解决方案'),
         desc: $i18n.t('如果业务环境无法使用任何云服务商产品，该功能可在私有化环境搭建K8S原生集群。'),
         type: 'k8s',
-        disabled: true,
+        disabled: _INTERNAL_.value,
       },
     ]);
     const importList = computed(() => [
@@ -105,7 +105,7 @@ export default defineComponent({
         title: $i18n.t('公有云集群'),
         subTitle: $i18n.t('实现多云集群统一管理，降低业务管理成本'),
         desc: $i18n.t('目前支持腾讯云、亚马逊云、谷歌云、微软云四种云服务商集群创建。'),
-        type: 'cloud',
+        type: 'import-cloud',
         disabled: _INTERNAL_.value,
       },
     ]);
@@ -120,11 +120,20 @@ export default defineComponent({
         case 'tke':
           $router.push({ name: 'createTencentCloudCluster' });
           break;
-        case 'cloud':
+        case 'k8s':
           $router.push({ name: 'createCluster' });
           break;
         case 'kubeconfig':
-          $router.push({ name: 'createImportCluster' });
+          $router.push({
+            name: 'importCluster',
+            params: { importType: 'kubeconfig' },
+          });
+          break;
+        case 'import-cloud':
+          $router.push({
+            name: 'importCluster',
+            params: { importType: 'provider' },
+          });
           break;
       }
     };

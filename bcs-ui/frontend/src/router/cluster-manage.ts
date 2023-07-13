@@ -10,7 +10,7 @@ const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cl
 // ee版本创建集群流程
 const CreateCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/create-cluster.vue');
 // import模式
-const CreateImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/import-cluster.vue');
+const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/create/import-cluster.vue');
 // 集群详情
 const ClusterDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/cluster-detail.vue');
 const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/node-overview.vue');
@@ -76,11 +76,12 @@ export default [
       id: 'VCLUSTER',
     },
   },
-  // 创建集群 - import导入模式
+  // 导入集群 - import导入模式
   {
-    path: 'clusters/import',
-    name: 'createImportCluster',
-    component: CreateImportCluster,
+    path: 'clusters/:importType/import',
+    name: 'importCluster',
+    component: ImportCluster,
+    props: true,
     meta: {
       menuId: 'CLUSTER',
       title: window.i18n.t('导入集群'),

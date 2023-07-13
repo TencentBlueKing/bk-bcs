@@ -1680,9 +1680,6 @@ Worker节点初始化配置: Worker node initialization configuration
 含义: meaning
 确认删除配置模版？: Confirm that delete the configuration template?
 非本平台部署release无法操作: Non -platform deployment of release cannot be operated
-只能包含字母、数字和下划线，且以字母开头，最大长度为64个字符: >-
-  It can only include letters, numbers, and subordinates, and start with the
-  letter, the maximum length is 64 characters
 作用域范围: Scope range
 KEY: Key
 输入Key搜索: Enter key search
@@ -2636,3 +2633,4 @@ exclude(过滤匹配字符串): exclude (filter matching string)
   the cluster administrator to handle it
 只支持星号（*）、问号（?）两种通配符: 'Only supports two wildcards: asterisk () and question mark (?)'
 反引号(`): Backtick (`)
+只能包含字母、数字、中划线和下划线，且以字母开头，最大长度为64个字符: 'It can only include letters, numbers, and subordinates, and start with the letter, the maximum length is 64 characters'

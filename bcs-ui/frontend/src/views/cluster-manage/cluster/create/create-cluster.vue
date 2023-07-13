@@ -261,7 +261,7 @@ export default defineComponent({
       }
     };
     const handleCancel = () => {
-      $router.back()
+      $router.back();
     };
     const toggleSettings = () => {
       expanded.value = !expanded.value;
@@ -315,6 +315,7 @@ export default defineComponent({
   /deep/ .bk-textarea-wrapper {
       width: 640px;
       height: 80px;
+      background-color: #fff;
   }
   /deep/ .w640 {
       width: 640px;

@@ -9,12 +9,12 @@
       <BkFormItem :label="$t('集群名称')" property="clusterName" error-display-type="normal" required>
         <bk-input :maxlength="64" v-model="importClusterInfo.clusterName"></bk-input>
       </BkFormItem>
-      <BkFormItem :label="$t('导入方式')">
+      <!-- <BkFormItem :label="$t('导入方式')">
         <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
           <bk-radio class="btn-group-first" value="kubeconfig">{{$t('kubeconfig')}}</bk-radio>
           <bk-radio value="provider">{{$t('云服务商')}}</bk-radio>
         </bk-radio-group>
-      </BkFormItem>
+      </BkFormItem> -->
       <BkFormItem :label="$t('集群环境')" required v-if="$INTERNAL">
         <bk-radio-group class="btn-group" v-model="importClusterInfo.environment">
           <bk-radio class="btn-group-first" value="debug">
@@ -183,15 +183,21 @@ import $i18n from '@/i18n/i18n-setup';
 import $bkMessage from '@/common/bkmagic';
 
 export default defineComponent({
-  name: 'CreateImportCluster',
+  name: 'ImportCluster',
   components: {
     CodeEditor,
     BkForm,
     BkFormItem,
   },
-  setup() {
+  props: {
+    importType: {
+      type: String,
+      default: 'kubeconfig',
+    },
+  },
+  setup(props) {
     const importClusterInfo = ref({
-      importType: 'kubeconfig',
+      importType: props.importType,
       clusterName: '',
       environment: 'prod',
       description: '',
@@ -464,6 +470,7 @@ export default defineComponent({
   /deep/ .bk-textarea-wrapper {
       width: 640px;
       height: 80px;
+      background-color: #fff;
   }
   /deep/ .cube-config {
       max-width: 1000px;
