@@ -24,9 +24,11 @@ import (
 
 	"github.com/kirito41dd/xslice"
 	"github.com/micro/go-micro/v2/registry"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 )
 
 const (
@@ -110,6 +112,27 @@ func StringContainInSlice(s string, l []string) bool {
 		}
 	}
 	return false
+}
+
+// GetNodeIPAddress get node address
+func GetNodeIPAddress(node *corev1.Node) ([]string, []string) {
+	ipv4Address := make([]string, 0)
+	ipv6Address := make([]string, 0)
+
+	for _, address := range node.Status.Addresses {
+		if address.Type == corev1.NodeInternalIP {
+			switch {
+			case util.IsIPv6(address.Address):
+				ipv6Address = append(ipv6Address, address.Address)
+			case util.IsIPv4(address.Address):
+				ipv4Address = append(ipv4Address, address.Address)
+			default:
+				blog.Errorf("unsupported ip type")
+			}
+		}
+	}
+
+	return ipv4Address, ipv6Address
 }
 
 // IntInSlice return true if i in l

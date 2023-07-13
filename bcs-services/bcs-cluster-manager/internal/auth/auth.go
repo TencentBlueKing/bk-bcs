@@ -37,6 +37,8 @@ var NoAuthMethod = []string{
 	"ClusterManager.CheckCloudKubeConfig",
 	"ClusterManager.ListCommonCluster",
 	"ClusterManager.CheckNodeInCluster",
+	"ClusterManager.ListProjectCluster",
+
 	// cloud
 	"ClusterManager.GetCloud",
 	"ClusterManager.ListCloud",

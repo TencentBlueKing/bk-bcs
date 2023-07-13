@@ -71,6 +71,8 @@ var DefaultClusterConfig = map[string]string{
 }
 
 const (
+	// InitClusterID initClusterID
+	InitClusterID = "BCS-K8S-00000"
 	// ClusterManager xxx
 	ClusterManager = "bcs-cluster-manager"
 

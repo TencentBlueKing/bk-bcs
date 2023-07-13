@@ -143,7 +143,7 @@ service ClusterManager {
 
   rpc ListProjectCluster(ListProjectClusterReq) returns (ListProjectClusterResp) {
     option (google.api.http) = {
-      get : "/clustermanager/v1/projects/{projectID}/cluster"
+      get : "/clustermanager/v1/projects/{projectID}/clusters"
     };
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "获取指定项目下的集群列表"

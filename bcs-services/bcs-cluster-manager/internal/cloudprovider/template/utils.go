@@ -20,11 +20,15 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
+	iutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // BcsKey bcsEnvs key
@@ -44,6 +48,8 @@ var (
 	BCSClientKey BcsKey = "bcs_client_key"
 	// BCSTokenKey xxx
 	BCSTokenKey BcsKey = "bcs_token"
+	// BCSApiIpsKey xxx
+	BCSApiIpsKey BcsKey = "bcs_api_ips"
 )
 
 func getClusterMasterIPs(cluster *proto.Cluster) string {
@@ -148,5 +154,38 @@ func getBcsEnvs(cluster *proto.Cluster) (string, error) {
 		bcsEnvs = append(bcsEnvs, getEnv(BCSTokenKey.String(), token))
 	}
 
+	ipStr, err := getInitClusterIPs(common.InitClusterID)
+	if err != nil {
+		blog.Errorf("getBcsEnvs BuildBcsInitClusterIPs[%s] failed: %v", common.InitClusterID, err)
+		return "", err
+	}
+	bcsEnvs = append(bcsEnvs, getEnv(BCSApiIpsKey.String(), ipStr))
+
 	return strings.Join(bcsEnvs, ";"), nil
+}
+
+// getInitClusterIPs 获取创始集群IP列表
+func getInitClusterIPs(clusterID string) (string, error) {
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+	nodes, err := k8sOperator.ListClusterNodes(context.Background(), clusterID)
+	if err != nil {
+		blog.Errorf("getInitClusterIPs[%s] failed: %v", err)
+		return "", err
+	}
+
+	var ips = make([]string, 0)
+	for i := range nodes {
+		ipv4s, ipv6s := iutils.GetNodeIPAddress(nodes[i])
+		if len(ipv4s) == 0 && len(ipv6s) == 0 {
+			continue
+		}
+		if len(ipv4s) > 0 {
+			ips = append(ips, ipv4s...)
+		}
+		if len(ipv6s) > 0 {
+			ips = append(ips, ipv6s...)
+		}
+	}
+
+	return strings.Join(ips, ","), nil
 }

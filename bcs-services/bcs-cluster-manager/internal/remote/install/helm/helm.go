@@ -186,7 +186,7 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 		}
 
 		return nil
-	}, retry.Attempts(retryCount), retry.Delay(defaultTimeOut))
+	}, retry.Attempts(retryCount), retry.Delay(defaultTimeOut), retry.DelayType(retry.FixedDelay))
 	if err != nil {
 		return fmt.Errorf("call api HelmInstaller InstallRelease failed: %v, resp: %s", err, utils.ToJSONString(resp))
 	}

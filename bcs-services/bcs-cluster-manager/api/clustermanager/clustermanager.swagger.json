@@ -4002,7 +4002,7 @@
         ]
       }
     },
-    "/clustermanager/v1/projects/{projectID}/cluster": {
+    "/clustermanager/v1/projects/{projectID}/clusters": {
       "get": {
         "summary": "查询项目下的集群列表",
         "description": "获取指定项目下的集群列表",
