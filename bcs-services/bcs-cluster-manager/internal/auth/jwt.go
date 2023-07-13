@@ -15,7 +15,10 @@
 package auth
 
 import (
+	"context"
+
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
@@ -39,4 +42,10 @@ func InitJWTClient(op *options.ClusterManagerOptions) error {
 // GetJWTClient get jwt client
 func GetJWTClient() *jwt.JWTClient {
 	return jwtClient
+}
+
+// GetUserFromCtx 通过 ctx 获取当前用户
+func GetUserFromCtx(ctx context.Context) string {
+	authUser, _ := middleauth.GetUserFromContext(ctx)
+	return authUser.GetUsername()
 }

@@ -9977,7 +9977,7 @@
           }
         },
         "web_annotations": {
-          "$ref": "#/definitions/clustermanagerWebAnnotations",
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
           "description": "用户所属项目的集群权限",
           "title": "web_annotations"
         }

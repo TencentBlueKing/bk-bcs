@@ -680,6 +680,18 @@ func getNodeDualAddress(node *corev1.Node) (string, string) {
 	return utils.SliceToString(ipv4s), utils.SliceToString(ipv6s)
 }
 
+// IsSupportAutoScale support autoscale feat
+func IsSupportAutoScale(cls proto.Cluster) bool {
+	if cls.ClusterType == common.ClusterTypeVirtual {
+		return false
+	}
+	if cls.ClusterCategory == Importer && cls.ImportCategory == KubeConfig {
+		return false
+	}
+
+	return true
+}
+
 func shieldClusterInfo(cluster *proto.Cluster) *proto.Cluster {
 	if cluster != nil {
 		cluster.KubeConfig = ""

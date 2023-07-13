@@ -4737,7 +4737,7 @@ message ListProjectClusterResp {
     title : "clusterExtraInfo",
     description : "集群其他标识信息,cluster结构之外的数据获取"
   }];
-  WebAnnotations web_annotations = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  WebAnnotationsV2 web_annotations = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "web_annotations",
     description : "用户所属项目的集群权限"
   }];

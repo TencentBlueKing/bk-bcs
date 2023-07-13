@@ -115,6 +115,8 @@ const (
 	ClusterTypeFederation = "federation"
 	// ClusterTypeSingle single cluster
 	ClusterTypeSingle = "single"
+	// ClusterTypeVirtual virtual cluster
+	ClusterTypeVirtual = "virtual"
 
 	// MicroMetaKeyHTTPPort http port in micro service meta
 	MicroMetaKeyHTTPPort = "httpport"

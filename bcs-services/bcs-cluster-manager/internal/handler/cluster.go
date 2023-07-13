@@ -169,25 +169,14 @@ func (cm *ClusterManager) ListProjectCluster(ctx context.Context,
 	if err != nil {
 		return err
 	}
+
 	start := time.Now()
-	ca := clusterac.NewListAction(cm.model, cm.iam)
-
-	newReq := &cmproto.ListClusterReq{
-		ProjectID: req.ProjectID,
-		Operator:  req.Operator,
-	}
-	newResp := &cmproto.ListClusterResp{}
-	ca.Handle(ctx, newReq, newResp)
-
-	resp.Code = newResp.Code
-	resp.Message = newResp.Message
-	resp.Data = newResp.Data
-	resp.ClusterExtraInfo = newResp.ClusterExtraInfo
-	resp.WebAnnotations = newResp.WebAnnotations
+	ca := clusterac.NewListProjectClusterAction(cm.model, cm.iam)
+	ca.Handle(ctx, req, resp)
 
 	metrics.ReportAPIRequestMetric("ListProjectCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListProjectCluster, req %v, resp.Code %d, resp.Message %s, resp.Data.Length",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListProjectCluster, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListProjectCluster, req %v, resp %v", reqID, req, resp)
 	return nil
 }
