@@ -133,9 +133,9 @@ func (t *TemplateSet) ValidateDelete() error {
 type TemplateSetSpec struct {
 	Name        string            `json:"name" gorm:"column:name"`
 	Memo        string            `json:"memo" gorm:"column:memo"`
-	TemplateIDs types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json"`
+	TemplateIDs types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
 	Public      bool              `json:"public" gorm:"column:public"`
-	BoundApps   types.Uint32Slice `json:"bound_apps" gorm:"column:bound_apps;type:json"`
+	BoundApps   types.Uint32Slice `json:"bound_apps" gorm:"column:bound_apps;type:json;default:'[]'"`
 }
 
 // TemplateSetType is the type of TemplateSet

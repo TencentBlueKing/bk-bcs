@@ -36,6 +36,8 @@ type Template interface {
 	List(kit *kit.Kit, bizID, templateSpaceID uint32, opt *types.BasePage) ([]*table.Template, int64, error)
 	// Delete one template instance.
 	Delete(kit *kit.Kit, template *table.Template) error
+	// DeleteWithTx delete one template instance with transaction.
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, template *table.Template) error
 	// GetByUniqueKey get template by unique key.
 	GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID uint32, name, path string) (*table.Template, error)
 	// GetByID get template by id.
@@ -167,7 +169,6 @@ func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, opt *t
 
 // Delete one template instance.
 func (dao *templateDao) Delete(kit *kit.Kit, g *table.Template) error {
-	// 参数校验
 	if err := g.ValidateDelete(); err != nil {
 		return err
 	}
@@ -194,6 +195,26 @@ func (dao *templateDao) Delete(kit *kit.Kit, g *table.Template) error {
 		return nil
 	}
 	if err := dao.genQ.Transaction(deleteTx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteWithTx delete one template instance with transaction.
+func (dao *templateDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Template) error {
+	if err := g.ValidateDelete(); err != nil {
+		return err
+	}
+
+	m := tx.Template
+	q := tx.Template.WithContext(kit.Ctx)
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
+		return err
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
+	if err := ad.Do(tx.Query); err != nil {
 		return err
 	}
 

@@ -46,6 +46,7 @@ type Set interface {
 	Template() Template
 	TemplateRelease() TemplateRelease
 	TemplateSet() TemplateSet
+	AppTemplateBinding() AppTemplateBinding
 	Group() Group
 	GroupAppBind() GroupAppBind
 	ReleasedGroup() ReleasedGroup
@@ -248,6 +249,15 @@ func (s *set) TemplateRelease() TemplateRelease {
 // TemplateSet returns the template set's DAO
 func (s *set) TemplateSet() TemplateSet {
 	return &templateSetDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// AppTemplateBinding returns the app template binding's DAO
+func (s *set) AppTemplateBinding() AppTemplateBinding {
+	return &appTemplateBindingDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

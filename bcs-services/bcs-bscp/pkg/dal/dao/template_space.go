@@ -15,6 +15,7 @@ package dao
 import (
 	"fmt"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -62,8 +63,8 @@ func (dao *templateSpaceDao) Create(kit *kit.Kit, g *table.TemplateSpace) (uint3
 
 	sg := &table.TemplateSet{
 		Spec: &table.TemplateSetSpec{
-			Name:   "默认套餐",
-			Memo:   "当前空间下的所有模版",
+			Name:   constant.DefaultTmplSetName,
+			Memo:   constant.DefaultTmplSetMemo,
 			Public: true,
 		},
 		Attachment: &table.TemplateSetAttachment{
@@ -208,11 +209,16 @@ func (dao *templateSpaceDao) GetAllBizs(kit *kit.Kit) ([]uint32, error) {
 
 // CreateDefault create default template space instance together with its default template set instance
 func (dao *templateSpaceDao) CreateDefault(kit *kit.Kit, bizID uint32) (uint32, error) {
+	// if the default template space already exists, return directly
+	if tmplSpace, err := dao.GetByUniqueKey(kit, bizID, "默认空间"); err == nil {
+		return tmplSpace.ID, nil
+	}
+
 	g := &table.TemplateSpace{
 		ID: 0,
 		Spec: &table.TemplateSpaceSpec{
-			Name: "默认空间",
-			Memo: "这是默认空间",
+			Name: constant.DefaultTmplSpaceName,
+			Memo: constant.DefaultTmplSpaceMemo,
 		},
 		Attachment: &table.TemplateSpaceAttachment{
 			BizID: kit.BizID,
@@ -230,8 +236,8 @@ func (dao *templateSpaceDao) CreateDefault(kit *kit.Kit, bizID uint32) (uint32, 
 
 	sg := &table.TemplateSet{
 		Spec: &table.TemplateSetSpec{
-			Name:   "默认套餐",
-			Memo:   "当前空间下的所有模版",
+			Name:   constant.DefaultTmplSetName,
+			Memo:   constant.DefaultTmplSetMemo,
 			Public: true,
 		},
 		Attachment: &table.TemplateSetAttachment{

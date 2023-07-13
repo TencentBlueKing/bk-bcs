@@ -72,10 +72,16 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 		return nil, err
 	}
 
-	if err := tx.Commit(); err != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, kt.Rid)
+	// 3. add current template to default template set
+	if err = s.dao.TemplateSet().AddTemplateToDefaultWithTx(kt, tx, template.Attachment.BizID,
+		template.Attachment.TemplateSpaceID, id); err != nil {
+		logs.Errorf("add current template to default template set failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
 		return nil, err
 	}
+
+	tx.Commit()
+
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
 }
@@ -129,14 +135,28 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateRe
 func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. delete template
 	Template := &table.Template{
 		ID:         req.Id,
 		Attachment: req.Attachment.TemplateAttachment(),
 	}
-	if err := s.dao.Template().Delete(kt, Template); err != nil {
+	if err := s.dao.Template().DeleteWithTx(kt, tx, Template); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
 		return nil, err
 	}
+
+	// 2. delete current template from default template set
+	if err := s.dao.TemplateSet().DeleteTemplateFromDefaultWithTx(kt, tx, req.Attachment.BizId,
+		req.Attachment.TemplateSpaceId, req.Id); err != nil {
+		logs.Errorf("delete current template from default template set failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
+		return nil, err
+	}
+
+	tx.Commit()
 
 	return new(pbbase.EmptyResp), nil
 }

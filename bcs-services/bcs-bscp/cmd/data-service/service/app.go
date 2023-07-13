@@ -16,9 +16,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	
+
 	"github.com/pkg/errors"
-	
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/table"

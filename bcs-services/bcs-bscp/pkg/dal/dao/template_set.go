@@ -18,6 +18,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -37,6 +38,10 @@ type TemplateSet interface {
 	Delete(kit *kit.Kit, templateSpace *table.TemplateSet) error
 	// GetByUniqueKey get template set by unique key.
 	GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID uint32, name string) (*table.TemplateSet, error)
+	// AddTemplateToDefaultWithTx add a template to default template set with transaction
+	AddTemplateToDefaultWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID, templateID uint32) error
+	// DeleteTemplateFromDefaultWithTx delete a template from default template set with transaction
+	DeleteTemplateFromDefaultWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID, templateID uint32) error
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -189,6 +194,59 @@ func (dao *templateSetDao) GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID u
 	}
 
 	return tplSet, nil
+}
+
+// AddTemplateToDefaultWithTx add a template to default template set with transaction
+func (dao *templateSetDao) AddTemplateToDefaultWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID,
+	templateID uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+
+	tmplSet, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID),
+		m.Name.Eq(constant.DefaultTmplSetName)).Take()
+	if err != nil {
+		return err
+	}
+	tmplSet.Spec.TemplateIDs = append(tmplSet.Spec.TemplateIDs, templateID)
+
+	if _, err = q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID),
+		m.Name.Eq(constant.DefaultTmplSetName)).Select(m.TemplateIDs).Updates(tmplSet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteTemplateFromDefaultWithTx delete a template from default template set with transaction
+func (dao *templateSetDao) DeleteTemplateFromDefaultWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID,
+	templateID uint32) error {
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+
+	tmplSet, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID),
+		m.Name.Eq(constant.DefaultTmplSetName)).Take()
+	if err != nil {
+		return err
+	}
+
+	// find the template id and delete it from the template ids field
+	indexToDelete := -1
+	for i, v := range tmplSet.Spec.TemplateIDs {
+		if v == templateID {
+			indexToDelete = i
+			break
+		}
+	}
+	if indexToDelete >= 0 {
+		tmplSet.Spec.TemplateIDs = append(
+			tmplSet.Spec.TemplateIDs[:indexToDelete], tmplSet.Spec.TemplateIDs[indexToDelete+1:]...)
+	}
+
+	if _, err = q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID),
+		m.Name.Eq(constant.DefaultTmplSetName)).Select(m.TemplateIDs).Updates(tmplSet); err != nil {
+		return err
+	}
+	return nil
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template

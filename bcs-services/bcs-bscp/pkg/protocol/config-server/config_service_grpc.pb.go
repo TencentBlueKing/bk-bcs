@@ -69,6 +69,10 @@ const (
 	Config_DeleteTemplateSet_FullMethodName          = "/pbcs.Config/DeleteTemplateSet"
 	Config_UpdateTemplateSet_FullMethodName          = "/pbcs.Config/UpdateTemplateSet"
 	Config_ListTemplateSets_FullMethodName           = "/pbcs.Config/ListTemplateSets"
+	Config_CreateAppTemplateBinding_FullMethodName   = "/pbcs.Config/CreateAppTemplateBinding"
+	Config_DeleteAppTemplateBinding_FullMethodName   = "/pbcs.Config/DeleteAppTemplateBinding"
+	Config_UpdateAppTemplateBinding_FullMethodName   = "/pbcs.Config/UpdateAppTemplateBinding"
+	Config_ListAppTemplateBindings_FullMethodName    = "/pbcs.Config/ListAppTemplateBindings"
 	Config_CreateGroup_FullMethodName                = "/pbcs.Config/CreateGroup"
 	Config_DeleteGroup_FullMethodName                = "/pbcs.Config/DeleteGroup"
 	Config_UpdateGroup_FullMethodName                = "/pbcs.Config/UpdateGroup"
@@ -140,6 +144,10 @@ type ConfigClient interface {
 	DeleteTemplateSet(ctx context.Context, in *DeleteTemplateSetReq, opts ...grpc.CallOption) (*DeleteTemplateSetResp, error)
 	UpdateTemplateSet(ctx context.Context, in *UpdateTemplateSetReq, opts ...grpc.CallOption) (*UpdateTemplateSetResp, error)
 	ListTemplateSets(ctx context.Context, in *ListTemplateSetsReq, opts ...grpc.CallOption) (*ListTemplateSetsResp, error)
+	CreateAppTemplateBinding(ctx context.Context, in *CreateAppTemplateBindingReq, opts ...grpc.CallOption) (*CreateAppTemplateBindingResp, error)
+	DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*DeleteAppTemplateBindingResp, error)
+	UpdateAppTemplateBinding(ctx context.Context, in *UpdateAppTemplateBindingReq, opts ...grpc.CallOption) (*UpdateAppTemplateBindingResp, error)
+	ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error)
 	CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupReq, opts ...grpc.CallOption) (*DeleteGroupResp, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupReq, opts ...grpc.CallOption) (*UpdateGroupResp, error)
@@ -587,6 +595,42 @@ func (c *configClient) ListTemplateSets(ctx context.Context, in *ListTemplateSet
 	return out, nil
 }
 
+func (c *configClient) CreateAppTemplateBinding(ctx context.Context, in *CreateAppTemplateBindingReq, opts ...grpc.CallOption) (*CreateAppTemplateBindingResp, error) {
+	out := new(CreateAppTemplateBindingResp)
+	err := c.cc.Invoke(ctx, Config_CreateAppTemplateBinding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) DeleteAppTemplateBinding(ctx context.Context, in *DeleteAppTemplateBindingReq, opts ...grpc.CallOption) (*DeleteAppTemplateBindingResp, error) {
+	out := new(DeleteAppTemplateBindingResp)
+	err := c.cc.Invoke(ctx, Config_DeleteAppTemplateBinding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) UpdateAppTemplateBinding(ctx context.Context, in *UpdateAppTemplateBindingReq, opts ...grpc.CallOption) (*UpdateAppTemplateBindingResp, error) {
+	out := new(UpdateAppTemplateBindingResp)
+	err := c.cc.Invoke(ctx, Config_UpdateAppTemplateBinding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error) {
+	out := new(ListAppTemplateBindingsResp)
+	err := c.cc.Invoke(ctx, Config_ListAppTemplateBindings_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateGroup(ctx context.Context, in *CreateGroupReq, opts ...grpc.CallOption) (*CreateGroupResp, error) {
 	out := new(CreateGroupResp)
 	err := c.cc.Invoke(ctx, Config_CreateGroup_FullMethodName, in, out, opts...)
@@ -768,6 +812,10 @@ type ConfigServer interface {
 	DeleteTemplateSet(context.Context, *DeleteTemplateSetReq) (*DeleteTemplateSetResp, error)
 	UpdateTemplateSet(context.Context, *UpdateTemplateSetReq) (*UpdateTemplateSetResp, error)
 	ListTemplateSets(context.Context, *ListTemplateSetsReq) (*ListTemplateSetsResp, error)
+	CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateAppTemplateBindingResp, error)
+	DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*DeleteAppTemplateBindingResp, error)
+	UpdateAppTemplateBinding(context.Context, *UpdateAppTemplateBindingReq) (*UpdateAppTemplateBindingResp, error)
+	ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error)
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 	DeleteGroup(context.Context, *DeleteGroupReq) (*DeleteGroupResp, error)
 	UpdateGroup(context.Context, *UpdateGroupReq) (*UpdateGroupResp, error)
@@ -928,6 +976,18 @@ func (UnimplementedConfigServer) UpdateTemplateSet(context.Context, *UpdateTempl
 }
 func (UnimplementedConfigServer) ListTemplateSets(context.Context, *ListTemplateSetsReq) (*ListTemplateSetsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSets not implemented")
+}
+func (UnimplementedConfigServer) CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateAppTemplateBindingResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAppTemplateBinding not implemented")
+}
+func (UnimplementedConfigServer) DeleteAppTemplateBinding(context.Context, *DeleteAppTemplateBindingReq) (*DeleteAppTemplateBindingResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAppTemplateBinding not implemented")
+}
+func (UnimplementedConfigServer) UpdateAppTemplateBinding(context.Context, *UpdateAppTemplateBindingReq) (*UpdateAppTemplateBindingResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppTemplateBinding not implemented")
+}
+func (UnimplementedConfigServer) ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAppTemplateBindings not implemented")
 }
 func (UnimplementedConfigServer) CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateGroup not implemented")
@@ -1829,6 +1889,78 @@ func _Config_ListTemplateSets_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CreateAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAppTemplateBindingReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CreateAppTemplateBinding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CreateAppTemplateBinding_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CreateAppTemplateBinding(ctx, req.(*CreateAppTemplateBindingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_DeleteAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAppTemplateBindingReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).DeleteAppTemplateBinding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_DeleteAppTemplateBinding_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).DeleteAppTemplateBinding(ctx, req.(*DeleteAppTemplateBindingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_UpdateAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAppTemplateBindingReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateAppTemplateBinding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateAppTemplateBinding_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateAppTemplateBinding(ctx, req.(*UpdateAppTemplateBindingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListAppTemplateBindings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppTemplateBindingsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListAppTemplateBindings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListAppTemplateBindings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListAppTemplateBindings(ctx, req.(*ListAppTemplateBindingsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateGroupReq)
 	if err := dec(in); err != nil {
@@ -2275,6 +2407,22 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTemplateSets",
 			Handler:    _Config_ListTemplateSets_Handler,
+		},
+		{
+			MethodName: "CreateAppTemplateBinding",
+			Handler:    _Config_CreateAppTemplateBinding_Handler,
+		},
+		{
+			MethodName: "DeleteAppTemplateBinding",
+			Handler:    _Config_DeleteAppTemplateBinding_Handler,
+		},
+		{
+			MethodName: "UpdateAppTemplateBinding",
+			Handler:    _Config_UpdateAppTemplateBinding_Handler,
+		},
+		{
+			MethodName: "ListAppTemplateBindings",
+			Handler:    _Config_ListAppTemplateBindings_Handler,
 		},
 		{
 			MethodName: "CreateGroup",
