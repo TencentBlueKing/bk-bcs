@@ -15,7 +15,7 @@
 package config
 
 import (
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v3"
 )
@@ -26,8 +26,8 @@ type Configuration struct {
 	BCS          *BCSConf                     `yaml:"bcs_conf"`
 	IAM          *IAMConf                     `yaml:"iam_conf"`
 	Web          *WebConf                     `yaml:"web"`
-	FrontendConf *FrontendConf                `yaml:"frontend_conf"`
 	Tracing      *TracingConf                 `yaml:"tracing"`
+	FrontendConf *FrontendConf                `yaml:"frontend_conf"`
 	FeatureFlags map[string]FeatureFlagOption `yaml:"feature_flags"`
 }
 
@@ -59,6 +59,7 @@ func newConfiguration() (*Configuration, error) {
 	c.BCS = &BCSConf{}
 	c.BCS.Init()
 
+	c.IAM = &IAMConf{}
 	c.FrontendConf = defaultFrontendConf()
 
 	c.Tracing = &TracingConf{}
@@ -110,7 +111,7 @@ func (c *Configuration) BCSDebugAPIHost() string {
 // ReadFromFile : read from config file
 func (c *Configuration) ReadFromFile(cfgFile string) error {
 	// 不支持inline, 需要使用 yaml 库
-	content, err := ioutil.ReadFile(cfgFile)
+	content, err := os.ReadFile(cfgFile)
 	if err != nil {
 		return err
 	}

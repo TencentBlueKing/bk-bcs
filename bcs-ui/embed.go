@@ -41,8 +41,6 @@ var (
 const (
 	confFilePath     = "frontend/dist/static/config.json"
 	defaultStaticURL = "/web"
-	// SITE_URL 前端Vue配置, 修改影响用户路由
-	defaultSiteURL = "/bcs"
 	// siteURLHeaderKey 前端前缀URL
 	siteURLHeaderKey = "X-BCS-SiteURL"
 )
@@ -153,12 +151,13 @@ func (e *EmbedWeb) IndexHandler() http.Handler {
 		// 头部指定 SiteURL, 使用头部的， 多域名访问场景
 		siteURL := r.Header.Get(siteURLHeaderKey)
 		if siteURL == "" {
-			siteURL = path.Join(config.G.Web.RoutePrefix, defaultSiteURL)
+			siteURL = config.G.Web.RoutePrefix
 		}
 
 		// 首页根路径下重定向跳转到 siteURL 前缀
-		if r.URL.Path == "/" {
+		if r.URL.Path == "/" && siteURL != "/" {
 			http.Redirect(w, r, siteURL, http.StatusMovedPermanently)
+			return
 		}
 
 		data := map[string]string{

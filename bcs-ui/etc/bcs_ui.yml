@@ -1,36 +1,45 @@
 base_conf:
-  time_zone: "Asia/Shanghai"
-  language_code: en
+  app_code: ""
+  app_secret: ""
+  system_id: ""
+  bk_username: ""
+  time_zone: Asia/Shanghai
+  language_code: en-us
   run_env: dev
-
+  region: ce
+  domain: ""
 bcs_conf:
   host: ""
   token: ""
-  jwt_public_key: ""
   verify: false
-bcs_env_conf:
-
+  jwt_public_key: ""
+iam_conf:
+  external: false
+  gateway_server: ""
+  iam_server: ""
+  bk_iam_erver: ""
+  metric: false
+  debug: false
 web:
-  route_prefix: "/bcsapi/v4/ui"
-  host:
+  host: http://127.0.0.1:8083
+  route_prefix: /bcs
   preferred_domains: ""
-
-etcd:
-  endpoints: "127.0.0.1:2379"
-  ca: ""
-  cert: ""
-  key: ""
-
+tracing:
+  enabled: false
+  endpoint: ""
+  token: ""
+  resource_attrs: {}
 frontend_conf:
-  hosts:
-    BKSRE_HOST: ""
-    SRC_IED_HOST: ""
-    DEVOPS_HOST: ""
-    devops_bcs_api_url: ""
-    DEVOPS_ARTIFACTORY_HOST: ""
-    BK_IAM_APP_URL: ""
-    PAAS_HOST: ""
-    BK_CC_HOST: ""
-    BKMONITOR_HOST: ""
-    BCS_API_HOST: ""
   docs: {}
+  hosts:
+    devops_host: ""
+    devops_bcs_api_url: ""
+    devops_artifactory_host: ""
+    bk_paas_host: ""
+    bk_iam_app_url: ""
+    bk_cc_host: ""
+    bk_monitor_host: ""
+    bk_sre_host: ""
+  features:
+    zh_cn: ""
+feature_flags: {}

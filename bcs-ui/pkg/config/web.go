@@ -42,7 +42,7 @@ func (c *WebConf) init() error {
 func defaultWebConf() *WebConf {
 	c := &WebConf{
 		Host:             "http://127.0.0.1:8083",
-		RoutePrefix:      "/ui",
+		RoutePrefix:      "/bcs",
 		PreferredDomains: "",
 	}
 	return c

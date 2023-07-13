@@ -33,6 +33,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/middleware"
 )
 
+const (
+	// 注册到网关的路由
+	apiRoutePrefix = "/bcsapi/v4/ui"
+)
+
 // WebServer :
 type WebServer struct {
 	ctx            context.Context
@@ -105,9 +110,11 @@ func (w *WebServer) newRouter() http.Handler {
 		r.Mount("/bcsapi", ReverseAPIHandler("bcs_host", config.G.BCS.Host))
 	}
 
-	if config.G.Web.RoutePrefix != "" && config.G.Web.RoutePrefix != "/" {
+	if config.G.Web.RoutePrefix != "" && config.G.Web.RoutePrefix != "/" && config.G.Web.RoutePrefix != apiRoutePrefix {
 		r.Mount(config.G.Web.RoutePrefix+"/", http.StripPrefix(config.G.Web.RoutePrefix, w.subRouter()))
 	}
+
+	r.Mount(apiRoutePrefix+"/", http.StripPrefix(apiRoutePrefix, w.subRouter()))
 	r.Mount("/", w.subRouter())
 
 	return r
@@ -119,25 +126,18 @@ func (w *WebServer) subRouter() http.Handler {
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
 
-	r.Route("/release_note", func(r chi.Router) {
-		// 单独使用metrics中间件的方式收集请求量、耗时
-		r.Use(metrics.RequestCollect("ReleaseNoteHandler"))
-		r.Get("/", w.ReleaseNoteHandler)
-	})
-
 	r.With(metrics.RequestCollect("FeatureFlagsHandler"), middleware.NeedProjectAuthorization).
 		Get("/feature_flags", w.FeatureFlagsHandler)
 
+	// 静态资源
 	r.Get("/web/*", w.embedWebServer.StaticFileHandler("/web").ServeHTTP)
+	r.With(metrics.RequestCollect("SwitchLanguageHandler")).Put("/switch_language", w.CookieSwitchLanguage)
+	r.With(metrics.RequestCollect("ReleaseNoteHandler")).Get("/release_note", w.ReleaseNoteHandler)
 
 	// vue 模版渲染
-	r.Route("/", func(r chi.Router) {
-		r.Use(metrics.RequestCollect("IndexHandler"))
-		r.Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
-	})
-	r.NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
+	r.With(metrics.RequestCollect("IndexHandler")).Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
+	r.With(metrics.RequestCollect("IndexHandler")).NotFound(w.embedWebServer.IndexHandler().ServeHTTP)
 
-	r.Put("/switch_language", w.CookieSwitchLanguage)
 	return r
 }
 
