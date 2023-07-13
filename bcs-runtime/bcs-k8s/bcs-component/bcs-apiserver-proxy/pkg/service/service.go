@@ -88,6 +88,7 @@ func (l *lvsProxy) CreateVirtualServer(vs string) error {
 		blog.Warn("CreateVirtualServer error: ", err)
 		return fmt.Errorf("new virtual server failed: %s", err)
 	}
+	blog.Infof("CreateVirtualServer %s:%d successful", virIP, virPort)
 
 	return nil
 }
@@ -137,7 +138,7 @@ func (l *lvsProxy) IsVirtualServerAvailable(vs string) bool {
 
 	resultVirServer := utils.BuildVirtualServer(vs, l.scheduler)
 	for _, vir := range virArray {
-		blog.Debug("IsVirtualServerAvailable debug: check vir ip: %s, port %v ", vir.Address.String(), vir.Port)
+		blog.V(5).Infof("IsVirtualServerAvailable debug: check vir ip: %s, port %v ", vir.Address.String(), vir.Port)
 		if vir.String() == resultVirServer.String() {
 			isExist = true
 		}

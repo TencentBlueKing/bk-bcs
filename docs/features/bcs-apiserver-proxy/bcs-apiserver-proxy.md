@@ -37,7 +37,7 @@ make apiserver-proxy-tools
 
   ```
 apiserver-proxy-tools --help 查看帮助
-初始化vs本地负载均衡规则
+初始化vs本地负载均衡规则(如果是ipv6,需要使用"[]"将ip地址括起来)
 apiserver-proxy-tools -cmd init -vs vip:vport -rs master0:port -rs master1:port -rs master2:port -scheduler sh
   ```
 
