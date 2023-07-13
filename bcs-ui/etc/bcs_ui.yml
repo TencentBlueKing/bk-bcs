@@ -36,7 +36,7 @@ frontend_conf:
     devops_bcs_api_url: ""
     devops_artifactory_host: ""
     bk_paas_host: ""
-    bk_iam_app_url: ""
+    bk_iam_host: ""
     bk_cc_host: ""
     bk_monitor_host: ""
     bk_sre_host: ""
