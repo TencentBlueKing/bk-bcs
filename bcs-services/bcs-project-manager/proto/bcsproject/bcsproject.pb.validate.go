@@ -102,8 +102,6 @@ func (m *Project) validate(all bool) error {
 
 	// no validation rules for BusinessName
 
-	// no validation rules for EnableVcluster
-
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
@@ -6487,7 +6485,7 @@ func (m *CreateVariableRequest) validate(all bool) error {
 	if !_CreateVariableRequest_Key_Pattern.MatchString(m.GetKey()) {
 		err := CreateVariableRequestValidationError{
 			field:  "Key",
-			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9_]*$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9-_]*$\"",
 		}
 		if !all {
 			return err
@@ -6590,7 +6588,7 @@ var _ interface {
 	ErrorName() string
 } = CreateVariableRequestValidationError{}
 
-var _CreateVariableRequest_Key_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
+var _CreateVariableRequest_Key_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-_]*$")
 
 var _CreateVariableRequest_Scope_InLookup = map[string]struct{}{
 	"global":    {},
@@ -6786,7 +6784,7 @@ func (m *UpdateVariableRequest) validate(all bool) error {
 	if !_UpdateVariableRequest_Key_Pattern.MatchString(m.GetKey()) {
 		err := UpdateVariableRequestValidationError{
 			field:  "Key",
-			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9_]*$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9-_]*$\"",
 		}
 		if !all {
 			return err
@@ -6889,7 +6887,7 @@ var _ interface {
 	ErrorName() string
 } = UpdateVariableRequestValidationError{}
 
-var _UpdateVariableRequest_Key_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
+var _UpdateVariableRequest_Key_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-_]*$")
 
 var _UpdateVariableRequest_Scope_InLookup = map[string]struct{}{
 	"global":    {},
@@ -11062,7 +11060,7 @@ func (m *ImportVariableData) validate(all bool) error {
 	if !_ImportVariableData_Key_Pattern.MatchString(m.GetKey()) {
 		err := ImportVariableDataValidationError{
 			field:  "Key",
-			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9_]*$\"",
+			reason: "value does not match regex pattern \"^[a-zA-Z][a-zA-Z0-9-_]*$\"",
 		}
 		if !all {
 			return err
@@ -11190,7 +11188,7 @@ var _ interface {
 	ErrorName() string
 } = ImportVariableDataValidationError{}
 
-var _ImportVariableData_Key_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9_]*$")
+var _ImportVariableData_Key_Pattern = regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-_]*$")
 
 // Validate checks the field values on ImportVariableVarData with the rules
 // defined in the proto definition for this message. If any rules are

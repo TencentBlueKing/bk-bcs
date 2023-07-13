@@ -186,7 +186,6 @@ type ProjectConfig struct {
 	App                    AppConfig                    `yaml:"app"`
 	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
 	ListForIAM             ListForIAMConfig             `yaml:"listForIAM"`
-	FeatureFlags           map[string]map[string]bool   `yaml:"featureFlags"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {
