@@ -112,10 +112,10 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 	}
 
 	var hasUnnamedApp bool
-	if !req.Force {
-		if len(boundCnt.Details) > 0 {
-			if boundCnt.Details[0].BoundUnnamedAppCount > 0 {
-				hasUnnamedApp = true
+	if len(boundCnt.Details) > 0 {
+		if boundCnt.Details[0].BoundUnnamedAppCount > 0 {
+			hasUnnamedApp = true
+			if !req.Force {
 				return nil, errors.New("template set is bound to unnamed app, please unbind first")
 			}
 		}

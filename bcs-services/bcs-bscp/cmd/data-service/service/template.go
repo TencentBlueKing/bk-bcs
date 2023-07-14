@@ -148,16 +148,20 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 	}
 
 	var hasTmplSet, hasUnnamedApp bool
-	if !req.Force {
-		if len(boundCnt.Details) > 0 {
-			if boundCnt.Details[0].BoundTemplateSetCount > 0 && boundCnt.Details[0].BoundUnnamedAppCount > 0 {
-				hasTmplSet, hasUnnamedApp = true, true
+	if len(boundCnt.Details) > 0 {
+		if boundCnt.Details[0].BoundTemplateSetCount > 0 && boundCnt.Details[0].BoundUnnamedAppCount > 0 {
+			hasTmplSet, hasUnnamedApp = true, true
+			if !req.Force {
 				return nil, errors.New("template is bound to template set and unnamed app, please unbind first")
-			} else if boundCnt.Details[0].BoundTemplateSetCount > 0 {
-				hasTmplSet = true
+			}
+		} else if boundCnt.Details[0].BoundTemplateSetCount > 0 {
+			hasTmplSet = true
+			if !req.Force {
 				return nil, errors.New("template is bound to template set, please unbind first")
-			} else if boundCnt.Details[0].BoundUnnamedAppCount > 0 {
-				hasUnnamedApp = true
+			}
+		} else if boundCnt.Details[0].BoundUnnamedAppCount > 0 {
+			hasUnnamedApp = true
+			if !req.Force {
 				return nil, errors.New("template is bound to unnamed app, please unbind first")
 			}
 		}
