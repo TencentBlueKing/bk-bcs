@@ -234,7 +234,7 @@ func (c *Clb) EnsureMultiListeners(
 		retMap[liName] = res
 	}
 
-	for liName, res := range c.resolveUpdateListener(region, updatedListeners, cloudListenerMap) {
+	for liName, res := range c.resolveUpdateListener(lbID, region, updatedListeners, cloudListenerMap) {
 		retMap[liName] = res
 	}
 	return retMap, nil

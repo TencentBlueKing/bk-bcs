@@ -873,7 +873,7 @@ func (c *Clb) resolveCreateListenerBatch(region, protocol string, batch []*netwo
 }
 
 // resolveUpdateListener update listeners
-func (c *Clb) resolveUpdateListener(region string, updatedListeners []*networkextensionv1.Listener,
+func (c *Clb) resolveUpdateListener(lbID, region string, updatedListeners []*networkextensionv1.Listener,
 	cloudListenerMap map[string]*networkextensionv1.Listener,
 ) map[string]cloud.Result {
 	retMap := make(map[string]cloud.Result)
@@ -881,7 +881,13 @@ func (c *Clb) resolveUpdateListener(region string, updatedListeners []*networkex
 	updateListenerGroups := splitListenersToDiffProtocol(updatedListeners)
 	for _, group := range updateListenerGroups {
 		if len(group) != 0 {
-			isErrArr, err := c.resolveUpdateListenerGroup(region, group, cloudListenerMap)
+			cloudListenerGroup := make([]*networkextensionv1.Listener, 0)
+			for _, li := range group {
+				cloudListenerGroup = append(cloudListenerGroup, cloudListenerMap[common.GetListenerNameWithProtocol(
+					lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)])
+			}
+
+			isErrArr, err := c.resolveUpdateListenerGroup(region, group, cloudListenerGroup)
 			// 如果err，认为这一批listener全部更新失败
 			if err != nil {
 				for _, listener := range group {
@@ -894,7 +900,7 @@ func (c *Clb) resolveUpdateListener(region string, updatedListeners []*networkex
 				if inErr == nil {
 					retMap[group[index].GetName()] = cloud.Result{
 						IsError: false,
-						Res:     group[index].Status.ListenerID}
+						Res:     cloudListenerGroup[index].Status.ListenerID}
 				} else {
 					retMap[group[index].GetName()] = cloud.Result{IsError: true, Err: inErr}
 					blog.Warnf("update 7 layer listener %s failed in batch, err: %+v", group[index].GetName(), inErr)
@@ -908,12 +914,7 @@ func (c *Clb) resolveUpdateListener(region string, updatedListeners []*networkex
 // resolveUpdateListenerGroup update listener group.
 // group listeners have same protocol
 func (c *Clb) resolveUpdateListenerGroup(region string, group []*networkextensionv1.Listener,
-	cloudListenerMap map[string]*networkextensionv1.Listener) ([]error, error) {
-	cloudListenerGroup := make([]*networkextensionv1.Listener, 0)
-	for _, li := range group {
-		cloudListenerGroup = append(cloudListenerGroup, cloudListenerMap[common.GetListenerNameWithProtocol(
-			li.Spec.LoadbalancerID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)])
-	}
+	cloudListenerGroup []*networkextensionv1.Listener) ([]error, error) {
 	switch group[0].Spec.Protocol {
 	case ClbProtocolHTTP, ClbProtocolHTTPS:
 		// layer7 -> http / https

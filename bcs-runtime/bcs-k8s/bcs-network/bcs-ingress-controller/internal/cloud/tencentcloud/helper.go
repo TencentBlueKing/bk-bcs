@@ -439,6 +439,11 @@ func (c *Clb) updateListenerAttrAndCerts(region, listenerID string, listener *ne
 		req.SniSwitch = tcommon.Int64Ptr(0)
 		req.KeepaliveEnable = tcommon.Int64Ptr(0)
 	}
+	// keep alive enable参数仅支持HTTPS/HTTP监听器
+	if listener.Spec.Protocol != networkextensionv1.ProtocolHTTPS && listener.Spec.Protocol != networkextensionv1.
+		ProtocolHTTP {
+		req.KeepaliveEnable = nil
+	}
 	certs := listener.Spec.Certificate
 	req.Certificate = transIngressCertificate(certs)
 	ctime := time.Now()
