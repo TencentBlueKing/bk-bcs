@@ -38,6 +38,8 @@ type TemplateRelease interface {
 	GetByUniqueKey(kit *kit.Kit, bizID, templateID uint32, releaseName string) (*table.TemplateRelease, error)
 	// ListByIDs list template releases by template release ids.
 	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateRelease, error)
+	// DeleteForTmplWithTx delete template release for one template with transaction.
+	DeleteForTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateID uint32) error
 }
 
 var _ TemplateRelease = new(templateReleaseDao)
@@ -188,6 +190,16 @@ func (dao *templateReleaseDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.T
 	}
 
 	return result, nil
+}
+
+// DeleteForTmplWithTx delete template release for one template with transaction.
+func (dao *templateReleaseDao) DeleteForTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateID uint32) error {
+	m := tx.TemplateRelease
+	q := tx.TemplateRelease.WithContext(kit.Ctx)
+	if _, err := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).Delete(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template release

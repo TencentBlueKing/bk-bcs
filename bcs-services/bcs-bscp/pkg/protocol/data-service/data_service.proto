@@ -597,6 +597,7 @@ message UpdateTemplateReq {
 message DeleteTemplateReq {
     uint32                        id         = 1;
     pbtemplate.TemplateAttachment attachment = 2;
+    bool                          force      = 3;
 }
 
 message AddTemplateToTemplateSetsReq {
@@ -655,6 +656,7 @@ message UpdateTemplateSetReq {
 message DeleteTemplateSetReq {
     uint32                       id         = 1;
     pbtset.TemplateSetAttachment attachment = 2;
+    bool                         force      = 3;
 }
 
 message CreateAppTemplateBindingReq {

@@ -56,13 +56,13 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		Name string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempSpaID_name_path,priority:2"`
-		Path string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempSpaID_name_path,priority:3"`
+		Name string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_tempSpaID_name_path,priority:3"`
+		Path string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_tempSpaID_name_path,priority:4"`
 		Memo string `gorm:"type:varchar(256) default ''"`
 
 		// Attachment is attachment info of the resource
-		BizID           uint `gorm:"type:bigint(1) unsigned not null"`
-		TemplateSpaceID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_tempSpaID_name_path,priority:1"`
+		BizID           uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempSpaID_name_path,priority:1"`
+		TemplateSpaceID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempSpaID_name_path,priority:2"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`
@@ -76,7 +76,7 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		ReleaseName string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempID_relName,priority:2"`
+		ReleaseName string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_tempID_relName,priority:3"`
 		ReleaseMemo string `gorm:"type:varchar(256) default ''"`
 		Name        string `gorm:"type:varchar(255) not null"`
 		Path        string `gorm:"type:varchar(255) not null"`
@@ -89,9 +89,9 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 		ByteSize    uint   `gorm:"type:bigint(1) unsigned not null"`
 
 		// Attachment is attachment info of the resource
-		BizID           uint `gorm:"type:bigint(1) unsigned not null"`
+		BizID           uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempID_relName,priority:1"`
 		TemplateSpaceID uint `gorm:"type:bigint(1) unsigned not null"`
-		TemplateID      uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_tempID_relName,priority:1"`
+		TemplateID      uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempID_relName,priority:2"`
 
 		// CreatedRevision is reversion info of the resource being created
 		Creator   string    `gorm:"type:varchar(64) not null"`
@@ -103,15 +103,15 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		Name        string `gorm:"type:varchar(255) not null;uniqueIndex:idx_tempSpaID_name,priority:2"`
+		Name        string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_tempSpaID_name,priority:3"`
 		Memo        string `gorm:"type:varchar(256) default ''"`
 		TemplateIDs string `gorm:"type:json not null"`
 		Public      bool   `gorm:"type:boolean default false"`
 		BoundApps   string `gorm:"type:json not null"`
 
 		// Attachment is attachment info of the resource
-		BizID           uint `gorm:"type:bigint(1) unsigned not null"`
-		TemplateSpaceID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_tempSpaID_name,priority:1"`
+		BizID           uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempSpaID_name,priority:1"`
+		TemplateSpaceID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempSpaID_name,priority:2"`
 
 		// Revision is revision info of the resource
 		Creator   string    `gorm:"type:varchar(64) not null"`

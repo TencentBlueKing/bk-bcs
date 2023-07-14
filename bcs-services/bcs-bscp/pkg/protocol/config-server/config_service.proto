@@ -977,6 +977,7 @@ message DeleteTemplateReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
+    bool   force             = 4;
 }
 
 message DeleteTemplateResp {}
@@ -1076,6 +1077,7 @@ message DeleteTemplateSetReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_set_id   = 3;
+    bool   force             = 4;
 }
 
 message DeleteTemplateSetResp {}

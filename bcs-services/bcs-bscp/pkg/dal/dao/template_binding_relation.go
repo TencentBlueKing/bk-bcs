@@ -19,6 +19,7 @@ import (
 
 	"gorm.io/datatypes"
 	rawgen "gorm.io/gen"
+	"gorm.io/gorm"
 )
 
 // TemplateBindingRelation supplies all the template binding relation query operations.
@@ -51,6 +52,10 @@ type TemplateBindingRelation interface {
 	ListTemplateSetBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]uint32, error)
 	// ListTemplateSetBoundNamedAppDetails list bound named app details of the target template set.
 	ListTemplateSetBoundNamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]*types.TmplSetBoundNamedAppDetail, error)
+	// DeleteTmplWithTx delete a template with transaction.
+	DeleteTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
+	// DeleteTmplSetWithTx delete a template set with transaction.
+	DeleteTmplSetWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error
 }
 
 var _ TemplateBindingRelation = new(templateBindingRelationDao)
@@ -287,4 +292,39 @@ func (dao *templateBindingRelationDao) ListTemplateSetBoundNamedAppDetails(kit *
 	}
 
 	return rs, nil
+}
+
+// DeleteTmplWithTx delete a template with transaction.
+func (dao *templateBindingRelationDao) DeleteTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error {
+	m := tx.ReleasedAppTemplateBinding
+	q := tx.ReleasedAppTemplateBinding.WithContext(kit.Ctx)
+	// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
+	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+		"JSON_TABLE (template_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+	if _, err := q.Where(m.BizID.Eq(bizID)).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+		Update(m.TemplateIDs, gorm.Expr(subQuery, tmplID)); err != nil {
+		return err
+	}
+
+	// NOTE: update the template binding whose format is {template set: [template releases]} as well
+	return nil
+}
+
+// DeleteTmplSetWithTx delete a template set with transaction.
+func (dao *templateBindingRelationDao) DeleteTmplSetWithTx(
+	kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error {
+	m := tx.ReleasedAppTemplateBinding
+	q := tx.ReleasedAppTemplateBinding.WithContext(kit.Ctx)
+	// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
+	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+		"JSON_TABLE (template_set_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+	if _, err := q.Where(m.BizID.Eq(bizID)).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(tmplSetID))...).
+		Update(m.TemplateIDs, gorm.Expr(subQuery, tmplSetID)); err != nil {
+		return err
+	}
+
+	// NOTE: update the template binding whose format is {template set: [template releases]} as well
+	return nil
 }

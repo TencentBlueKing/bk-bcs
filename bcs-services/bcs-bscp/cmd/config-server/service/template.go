@@ -103,6 +103,7 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbcs.DeleteTemplateRe
 			BizId:           grpcKit.BizID,
 			TemplateSpaceId: req.TemplateSpaceId,
 		},
+		Force: req.Force,
 	}
 	if _, err := s.client.DS.DeleteTemplate(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, grpcKit.Rid)

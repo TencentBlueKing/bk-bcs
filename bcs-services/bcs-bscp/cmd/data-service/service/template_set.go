@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"bscp.io/pkg/dal/table"
@@ -99,14 +100,50 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplateSetReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	r := &pbds.ListTemplateSetBoundCountsReq{
+		BizId:           req.Attachment.BizId,
+		TemplateSpaceId: req.Attachment.TemplateSpaceId,
+		TemplateSetIds:  []uint32{req.Id},
+	}
+	boundCnt, err := s.ListTemplateSetBoundCounts(ctx, r)
+	if err != nil {
+		logs.Errorf("delete template set failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	var hasUnnamedApp bool
+	if !req.Force {
+		if len(boundCnt.Details) > 0 {
+			if boundCnt.Details[0].BoundUnnamedAppCount > 0 {
+				hasUnnamedApp = true
+				return nil, errors.New("template set is bound to unnamed app, please unbind first")
+			}
+		}
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. delete template set
 	TemplateSet := &table.TemplateSet{
 		ID:         req.Id,
 		Attachment: req.Attachment.TemplateSetAttachment(),
 	}
-	if err := s.dao.TemplateSet().Delete(kt, TemplateSet); err != nil {
+	if err = s.dao.TemplateSet().DeleteWithTx(kt, tx, TemplateSet); err != nil {
 		logs.Errorf("delete template set failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
 		return nil, err
 	}
+
+	// 2. delete bound unnamed app if exists
+	if hasUnnamedApp {
+		if err = s.dao.TemplateBindingRelation().DeleteTmplSetWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+			logs.Errorf("delete template set failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	tx.Commit()
 
 	return new(pbbase.EmptyResp), nil
 }
