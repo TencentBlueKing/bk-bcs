@@ -133,6 +133,10 @@ type GameDeploymentScaleStrategy struct {
 	// PodsToDelete is the names of Pod should be deleted.
 	// Note that this list will be truncated for non-existing pod names.
 	PodsToDelete []string `json:"podsToDelete,omitempty"`
+	// CreateBatch is the batch size of pods should be created when the gamedeployment
+	// is first created. Defaults to 100%
+	// +kubebuilder:default="100%"
+	CreateBatch *intstr.IntOrString `json:"createBatch,omitempty"`
 }
 
 // GameDeploymentUpdateStrategy defines the update strategy of GameDeployment
