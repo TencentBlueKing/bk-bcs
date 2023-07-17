@@ -1,0 +1,50 @@
+#!/bin/bash
+
+#######################################
+# Tencent is pleased to support the open source community by making Blueking Container Service available.
+# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+# http://opensource.org/licenses/MIT
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#######################################
+
+set -euo pipefail
+
+safe_source() {
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
+}
+
+source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+for file in "${source_files[@]}"; do
+  safe_source "$file"
+done
+
+LOCALPV_DIR=${LOCALPV_DIR:${BK_HOME}/localpv}
+
+install -dv /mnt/blueking/vol{01..20} "LOCALPV_DIR"/vol{01..20} \
+  || utils::log "FATAL" "create mount dir failed"
+
+for i in {01..20}; do
+  src_dir="${BK_HOME}/localpv/vol$i"
+  dst_dir="/mnt/blueking/vol$i"
+  if grep -w "$src_dir" /etc/fstab; then
+    utils::log "WARN" "/etc/fstab: [$src_dir] already exists"
+  else
+    echo "$src_dir $dst_dir none defaults,bind 0 0" >>/etc/fstab \
+      || echo "add /etc/fstab failed"
+  fi
+done
+cat /etc/fstab
+# 挂载
+mount -av || utils::log "FATAL" "mount local pv dir failed"
