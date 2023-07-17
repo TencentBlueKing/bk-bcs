@@ -105,7 +105,7 @@ class VariableSLZ(serializers.ModelSerializer):
     scope = serializers.ChoiceField(choices=VariableScope.get_choices(), required=True)
     name = serializers.CharField(max_length=256, required=True)
     key = serializers.RegexField(
-        RE_KEY, max_length=64, required=True, error_messages={'invalid': _("KEY 只能包含字母、数字和下划线，且以字母开头，最大长度为64个字符")}
+        RE_KEY, max_length=64, required=True, error_messages={'invalid': _("KEY 只能包含字母、数字、中划线和下划线，且以字母开头，最大长度为64个字符")}
     )
     default = serializers.JSONField(required=False)
     desc = serializers.CharField(max_length=256, required=False, allow_blank=True)
@@ -191,7 +191,7 @@ class NsVariableSLZ(serializers.Serializer):
 class VariableItemSLZ(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=True)
     key = serializers.RegexField(
-        RE_KEY, max_length=64, required=True, error_messages={'invalid': _("KEY 只能包含字母、数字和下划线，且以字母开头，最大长度为64个字符")}
+        RE_KEY, max_length=64, required=True, error_messages={'invalid': _("KEY 只能包含字母、数字、中划线和下划线，且以字母开头，最大长度为64个字符")}
     )
     value = serializers.CharField(required=True)
     desc = serializers.CharField(default='')

@@ -32,11 +32,11 @@ VOL_NAME_PATTERN = "^[a-zA-Z{\$]{1}[a-zA-Z0-9-_{}\$]{0,254}$"
 KEY_NAME_PATTERN = "^[a-zA-Z{\$]{1}[a-zA-Z0-9-_.{}\$]{0,254}$"
 
 # 变量的格式
-VARIABLE_PATTERN = "[A-Za-z][A-Za-z0-9_]"
+VARIABLE_PATTERN = "[A-Za-z][A-Za-z0-9-_]"
 # 填写数字的地方，可以填写变量
 NUM_VAR_PATTERN = "^{{%s*}}$" % VARIABLE_PATTERN
 # 需要与 backend.templatesets.var_mgmt.serializers.py 中的说明保持一致
-NUM_VAR_ERROR_MSG = _("只能包含字母、数字和下划线，且以字母开头")
+NUM_VAR_ERROR_MSG = _("只能包含字母、数字、中划线和下划线，且以字母开头")
 # 文件目录正则
 # FILE_DIR_PATTERN = "((?!\.)[\w\d\-\.\/~]+)+$"
 FILE_DIR_PATTERN = "^((?!\.{\$)[\w\d\-\.\/~{}\$]+)+$"

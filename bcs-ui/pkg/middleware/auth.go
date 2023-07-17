@@ -55,11 +55,6 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 		}
 		// iam 鉴权，先校验 cluster_view 权限，因为 cluster_view 权限包含 project_view 权限，
 		// 避免用户申请 project_view 之后还要再单独申请 cluster_view 权限
-		client, err := iam.GetProjectPermClient()
-		if err != nil {
-			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, err.Error())
-			return
-		}
 		// 如果有 clusterID 参数，先校验 cluster_view 权限
 		clusterID := r.URL.Query().Get("clusterID")
 		if clusterID != "" {
@@ -83,6 +78,11 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 			}
 		}
 		// 校验 project_view 权限
+		client, err := iam.GetProjectPermClient()
+		if err != nil {
+			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
 		allow, url, actionList, err := client.CanViewProject(claims.UserName, project.ProjectID)
 		if err != nil {
 			rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, err.Error())
