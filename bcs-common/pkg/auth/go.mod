@@ -8,7 +8,7 @@ replace (
 )
 
 require (
-	github.com/TencentBlueKing/iam-go-sdk v0.1.2
+	github.com/TencentBlueKing/iam-go-sdk v0.1.3
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/parnurzeal/gorequest v0.2.16
