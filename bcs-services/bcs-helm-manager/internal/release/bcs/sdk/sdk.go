@@ -552,7 +552,7 @@ func parseArgs4Install(install *action.Install, args []string, valueOpts *values
 		"use development versions, too. Equivalent to version '>0.0.0-0'. If --version is set, this is ignored")
 	f.BoolVar(&install.DependencyUpdate, "dependency-update", false,
 		"update dependencies if they are missing before installing the chart")
-	f.BoolVar(&install.DisableOpenAPIValidation, "disable-openapi-validation", false,
+	f.BoolVar(&install.DisableOpenAPIValidation, "disable-openapi-validation", true,
 		"if set, the installation process will not validate rendered templates against "+
 			"the Kubernetes OpenAPI Schema")
 	f.BoolVar(&install.Atomic, "atomic", false,
@@ -589,7 +589,7 @@ func parseArgs4Upgrade(upgrade *action.Upgrade, args []string, valueOpts *values
 		"force resource updates through a replacement strategy")
 	f.BoolVar(&upgrade.DisableHooks, "no-hooks", false,
 		"disable pre/post upgrade hooks")
-	f.BoolVar(&upgrade.DisableOpenAPIValidation, "disable-openapi-validation", false,
+	f.BoolVar(&upgrade.DisableOpenAPIValidation, "disable-openapi-validation", true,
 		"if set, the upgrade process will not validate rendered templates against the Kubernetes OpenAPI Schema")
 	f.BoolVar(&upgrade.SkipCRDs, "skip-crds", false,
 		"if set, no CRDs will be installed when an upgrade is performed with install flag enabled. "+
