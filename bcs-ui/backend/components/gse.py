@@ -25,22 +25,24 @@ logger = logging.getLogger(__name__)
 GSE_HOST = settings.COMPONENT_HOST
 BK_APP_CODE = settings.APP_ID
 BK_APP_SECRET = settings.APP_TOKEN
-PREFIX_PATH = "/api/c/compapi"
-FUNCTION_PATH_MAP = {"agent_status": "/v2/gse/get_agent_status"}
+PREFIX_PATH = "/api/bk-gse/prod/api"
+FUNCTION_PATH_MAP = {"agent_status": "/v2/cluster/list_agent_state"}
 
 
-def get_agent_status(username, hosts, bk_supplier_id=0):
+def get_agent_status(username, agentIDList):
     url = "{host}{prefix_path}{path}".format(
         host=GSE_HOST, prefix_path=PREFIX_PATH, path=FUNCTION_PATH_MAP["agent_status"]
     )
 
-    data = {"bk_app_code": BK_APP_CODE, "bk_app_secret": BK_APP_SECRET, "bk_username": username, "hosts": hosts}
-    if bk_supplier_id is not None:
-        data["bk_supplier_id"] = bk_supplier_id
+    if len(agentIDList) == 0:
+        return []
+
+    data = {"bk_app_code": BK_APP_CODE, "bk_app_secret": BK_APP_SECRET, "bk_username": username,
+            "agent_id_list": agentIDList}
     resp = http_post(url, json=data)
     if resp.get("code") != ErrorCode.NoError:
         raise error_codes.APIError.f(resp.get("message"))
-    return resp.get("data", {}).values()
+    return resp.get("data", [])
 
 
 try:

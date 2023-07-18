@@ -37,6 +37,7 @@ DEFAULT_HOST_FIELDS = [
     'bk_host_outerip',
     'rack',
     'bk_cloud_id',
+    'bk_agent_id'
 ]
 
 # 默认从 0 开始查询

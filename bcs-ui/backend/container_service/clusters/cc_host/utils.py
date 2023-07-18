@@ -133,28 +133,30 @@ def is_host_selectable(host: Dict) -> bool:
 
 def update_gse_agent_status(username, host_list: List) -> List:
     """更新 GSE Agent 状态信息"""
-    gse_params = []
-    for info in host_list:
-        bk_cloud_id = info.get('bk_cloud_id') or 0
-        gse_params.extend(
-            [
-                {'plat_id': bk_cloud_id, 'bk_cloud_id': bk_cloud_id, 'ip': ip}
-                for ip in info.get('bk_host_innerip', '').split(',')
-            ]
-        )
-    gse_host_status_map = {info['ip']: info for info in gse.get_agent_status(username, gse_params)}
-    # 根据 IP 匹配更新 Agent 信息
-    cc_host_map = {host['bk_host_innerip']: host for host in host_list}
-    for ips in cc_host_map:
-        # 同主机可能存在多个 IP，任一 IP Agent 正常即可
-        for ip in ips.split(','):
-            if ip not in gse_host_status_map:
-                continue
-            ip_status = gse_host_status_map[ip]
-            cc_host_map[ips]['agent_alive'] = ip_status.get('bk_agent_alive')
-            break
+    agentIDList = []
+    for host in host_list:
+        if not host.get('bk_agent_id'):
+            continue
+        agentIDList.append(host.get('bk_agent_id', ""))
+    gse_host_status_array = gse.get_agent_status(username, agentIDList)
+    gse_host_status_map = {}
+    for agent_status in gse_host_status_array:
+        # Agent current status code:
+        # -1:UNKNOWN 0:INIT 1:STARTING 2:RUNNING 3:DAMAGED 4:BUSY 5:UPGRADING 6:STOPPING 7:UNINIT
+        status = 1
+        if agent_status.get("status_code", -1) != 2:
+            status = 0
+        gse_host_status_map[agent_status.get("bk_agent_id")] = status
 
-    return list(cc_host_map.values())
+    # 根据 IP 匹配更新 Agent 信息
+    result = []
+    for host in host_list:
+        host['agent_alive'] = 0
+        if host.get('bk_agent_id'):
+            host['agent_alive'] = gse_host_status_map.get(host.get('bk_agent_id'), 0)
+        result.append(host)
+
+    return result
 
 
 try:
