@@ -71,7 +71,7 @@ func (b *bkPaaSAuthClient) GetUserInfoByToken(ctx context.Context, host, uid, to
 
 // BuildLoginRedirectURL 登入跳转URL
 func (b *bkPaaSAuthClient) BuildLoginRedirectURL(r *http.Request, webHost string) string {
-	redirectURL := fmt.Sprintf("%s/?c_url=%s", b.conf.Host, url.QueryEscape(buildAbsoluteUri(webHost, r)))
+	redirectURL := fmt.Sprintf("%s/login/?c_url=%s", b.conf.Host, url.QueryEscape(buildAbsoluteUri(webHost, r)))
 	return redirectURL
 }
 

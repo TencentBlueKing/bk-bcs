@@ -147,5 +147,5 @@ build_ui:
 
 .PHONY: docker
 docker:
-	@docker build -t bcs-bscp:latest .
+	@docker build -t bk-bscp-hyper:latest .
 
