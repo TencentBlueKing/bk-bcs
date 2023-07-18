@@ -1,0 +1,316 @@
+#! /bin/bash
+
+#######################################
+# Tencent is pleased to support the open source community by making Blueking Container Service available.
+# Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+# Licensed under the MIT License (the "License"); you may not use this file except
+# in compliance with the License. You may obtain a copy of the License at
+# http://opensource.org/licenses/MIT
+# Unless required by applicable law or agreed to in writing, software distributed under
+# the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+# either express or implied. See the License for the specific language governing permissions and
+# limitations under the License.
+#######################################
+
+set -euo pipefail
+PROGRAM="$(basename "$0")"
+METRICS_VER="v0.6.3"
+SELF_DIR=$(dirname "$(readlink -f "$0")")
+ROOT_DIR="${SELF_DIR}/.."
+
+readonly PROGRAM METRICS_VER SELF_DIR ROOT_DIR
+
+usage_and_exit() {
+  cat <<EOF
+Usage:
+    $PROGRAM
+      [ -h --help -?  show usage ]
+      [ -v -V --version show script version]
+      [ apply ]
+      [ delete ]
+EOF
+  return "$1"
+}
+
+version() {
+  echo "$PROGRAM version $METRICS_VER"
+}
+
+safe_source() {
+  local source_file=$1
+  if [[ -f ${source_file} ]]; then
+    #shellcheck source=/dev/null
+    source "${source_file}"
+  else
+    echo "[ERROR]: FAIL to source, missing ${source_file}"
+    exit 1
+  fi
+}
+
+check_k8s_status() {
+  if ! command -v kubectl &>/dev/null; then
+    utils::log "FATAL" "can not find kubectl"
+  fi
+
+  if ! kubectl cluster-info 2>/dev/null; then
+    utils::log "FATAL" "fail to get k8s cluster info"
+  fi
+  return 0
+}
+
+op_metric() {
+  check_k8s_status
+
+  local image action
+  action=$1
+  if [[ -z ${BK_PUBLIC_REPO} ]]; then
+    image="registry.k8s.io/metrics-server/metrics-server:${METRICS_VER}"
+  else
+    image="${BK_PUBLIC_REPO}/registry.k8s.io/metrics-server/metrics-server:${METRICS_VER}"
+  fi
+
+  utils::log "INFO" "applying metrics-server"
+  cat <<EOF | kubectl "$action" -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k8s-app: metrics-server
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+  name: system:aggregated-metrics-reader
+rules:
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: system:metrics-server
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes/metrics
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server-auth-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: system:metrics-server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+spec:
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+    targetPort: https
+  selector:
+    k8s-app: metrics-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        k8s-app: metrics-server
+    spec:
+      containers:
+      - args:
+        - --cert-dir=/tmp
+        - --secure-port=4443
+        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+        - --kubelet-use-node-status-port
+        - --metric-resolution=15s
+        image: ${image}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /livez
+            port: https
+            scheme: HTTPS
+          periodSeconds: 10
+        name: metrics-server
+        ports:
+        - containerPort: 4443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: https
+            scheme: HTTPS
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-dir
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      serviceAccountName: metrics-server
+      volumes:
+      - emptyDir: {}
+        name: tmp-dir
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: v1beta1.metrics.k8s.io
+spec:
+  group: metrics.k8s.io
+  groupPriorityMinimum: 100
+  insecureSkipTLSVerify: true
+  service:
+    name: metrics-server
+    namespace: kube-system
+  version: v1beta1
+  versionPriority: 100
+EOF
+  utils::log "OK" "metrics-server installed"
+}
+
+main() {
+  local source_files
+  source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+  for file in "${source_files[@]}"; do
+    safe_source "$file"
+  done
+
+  (($# == 0)) && usage_and_exit 1
+
+  while (($# > 0)); do
+    case "$1" in
+      --help | -h | '-?')
+        usage_and_exit 0
+        ;;
+      --version | -v | -V)
+        version
+        exit 0
+        ;;
+      apply)
+        op_metric "apply"
+        break
+        ;;
+      delete)
+        op_metric "delete"
+        break
+        ;;
+      -*)
+        # ToDo: Unified standard error code
+        export ERR_CODE=1
+        utils::log "ERROR" "unkown para: $1"
+        ;;
+      *)
+        export ERR_CODE=1
+        utils::log "ERROR" "unkown command: $1"
+        break
+        ;;
+    esac
+    shift
+  done
+
+}
+
+main "$@"
