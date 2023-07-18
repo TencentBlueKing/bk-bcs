@@ -72,6 +72,33 @@ func parseChangelogName(value string) map[string]string {
 	return result
 }
 
+// initFeature :
+func (s *WebServer) initFeature(lang string) (*Feature, error) {
+	langTag := i18n.GetAvailableLanguage(lang, "zh")
+	feature := &Feature{}
+
+	// Priority read configured
+	content, ok := config.G.FrontendConf.Features[strings.ToLower(lang)]
+	if ok && content != "" {
+		return &Feature{Content: content}, nil
+	}
+
+	featureCorrectPath := featurePath
+	if langTag == language.English {
+		featureCorrectPath += "_en"
+	}
+	featureCorrectPath += ".md"
+	// 读取特性配置
+	f, err := s.embedWebServer.RootFS().ReadFile(featureCorrectPath)
+	if err != nil {
+		return nil, err
+	}
+	feature.Content = string(f)
+
+	return feature, nil
+
+}
+
 // initReleaseNote :
 func (s *WebServer) initReleaseNote() error {
 	// obtain the folder under CHANGELOG
@@ -100,7 +127,6 @@ func (s *WebServer) initReleaseNote() error {
 			return err
 		}
 
-		langTag := i18n.GetAvailableLanguage(fn, "zh")
 		// array of file contents
 		cls := make([]*ChangeLog, 0, len(langEntries))
 		for _, e := range langEntries {
@@ -127,24 +153,12 @@ func (s *WebServer) initReleaseNote() error {
 			return cls[i].Version > cls[j].Version
 		})
 
-		feature := &Feature{}
-		// Priority read configured
-		if _, ok := config.G.FrontendConf.Features[strings.ToLower(fn)]; ok {
-			feature.Content = config.G.FrontendConf.Features[strings.ToLower(fn)]
-		} else {
-			featureCorrectPath := featurePath
-			if langTag == language.English {
-				featureCorrectPath += "_en"
-			}
-			featureCorrectPath += ".md"
-			// 读取特性配置
-			f, err := s.embedWebServer.RootFS().ReadFile(featureCorrectPath)
-			if err != nil {
-				return err
-			}
-			feature.Content = string(f)
+		feature, err := s.initFeature(fn)
+		if err != nil {
+			return err
 		}
 
+		langTag := i18n.GetAvailableLanguage(fn, "zh")
 		releaseNoteLang[langTag] = ReleaseNote{
 			ChangeLogs: cls,
 			Feature:    feature,
