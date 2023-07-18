@@ -16,7 +16,6 @@ package helm
 import (
 	"context"
 	"fmt"
-	"github.com/avast/retry-go"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -24,6 +23,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
+	"github.com/avast/retry-go"
 )
 
 var (
@@ -186,7 +187,7 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 		}
 
 		return nil
-	}, retry.Attempts(retryCount), retry.Delay(defaultTimeOut))
+	}, retry.Attempts(retryCount), retry.Delay(defaultTimeOut), retry.DelayType(retry.FixedDelay))
 	if err != nil {
 		return fmt.Errorf("call api HelmInstaller InstallRelease failed: %v, resp: %s", err, utils.ToJSONString(resp))
 	}
@@ -201,7 +202,7 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 	}
 
 	// upgrade need app status deployed
-	ok, err := h.CheckAppStatus(clusterID, time.Minute*10)
+	ok, err := h.CheckAppStatus(clusterID, time.Minute*10, true)
 	if err != nil {
 		blog.Errorf("[HelmInstaller] Upgrade CheckAppStatus failed: %v", err)
 		return err
@@ -212,13 +213,15 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 
 	h.setRepo()
 	// get chart latest version
-	version, err := h.getChartLatestVersion(h.projectID, h.repo, h.chartName)
-	if err != nil {
-		blog.Errorf("[HelmInstaller] getChartLatestVersion failed: %v", err)
-		return err
-	}
+	/*
+		version, err := h.getChartLatestVersion(h.projectID, h.repo, h.chartName)
+		if err != nil {
+			blog.Errorf("[HelmInstaller] getChartLatestVersion failed: %v", err)
+			return err
+		}
+	*/
 
-	// update app
+	// update app: default not update chart version
 	req := &helmmanager.UpgradeReleaseV1Req{
 		ProjectCode: &h.projectID,
 		ClusterID:   &clusterID,
@@ -226,9 +229,9 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 		Name:        &h.releaseName,
 		Repository:  &h.repo,
 		Chart:       &h.chartName,
-		Version:     &version,
-		Values:      []string{values},
-		Args:        install.DefaultArgsFlag,
+		//Version:     &version,
+		Values: []string{values},
+		Args:   install.DefaultArgsFlag,
 	}
 
 	resp, err := h.client.UpgradeReleaseV1(context.Background(), req)
@@ -288,7 +291,7 @@ func (h *HelmInstaller) Uninstall(clusterID string) error {
 }
 
 // CheckAppStatus check app install status
-func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration) (bool, error) {
+func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, pre bool) (bool, error) {
 	if h.debug {
 		return true, nil
 	}
@@ -328,16 +331,32 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration) 
 		}
 
 		blog.Infof("[HelmInstaller] GetReleaseDetail status: %s", *resp.Data.Status)
+
+		// 前置检查
+		if pre {
+			switch *resp.Data.Status {
+			case DeployedInstall, DeployedRollback, DeployedUpgrade, FailedInstall,
+				FailedRollback, FailedUpgrade, FailedState, FailedUninstall:
+				return loop.EndLoop
+			default:
+			}
+
+			blog.Warnf("[HelmInstaller] GetReleaseDetail[%v] is on transitioning, waiting, %s", pre, utils.ToJSONString(resp.Data))
+			return nil
+		}
+
+		// 后置检查
+
 		// 成功状态 / 失败状态 则终止
 		switch *resp.Data.Status {
 		case DeployedInstall, DeployedRollback, DeployedUpgrade:
 			return loop.EndLoop
-		case FailedInstall, FailedRollback, FailedUpgrade:
+		case FailedInstall, FailedRollback, FailedUpgrade, FailedState:
 			return fmt.Errorf("[HelmInstaller] CheckAppStatus[%s] failed: %s", *resp.RequestID, *resp.Data.Status)
 		default:
 		}
 
-		blog.Warnf("[HelmInstaller] GetReleaseDetail is on transitioning, waiting, %s", utils.ToJSONString(resp.Data))
+		blog.Warnf("[HelmInstaller] GetReleaseDetail[%v] is on transitioning, waiting, %s", pre, utils.ToJSONString(resp.Data))
 		return nil
 	}, loop.LoopInterval(10*time.Second))
 	if err != nil {

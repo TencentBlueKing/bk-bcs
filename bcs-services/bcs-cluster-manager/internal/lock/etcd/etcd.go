@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package etcd xxx
 package etcd
 
 import (

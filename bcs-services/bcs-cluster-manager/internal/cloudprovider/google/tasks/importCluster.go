@@ -44,7 +44,10 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -65,7 +68,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -88,7 +91,10 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -107,7 +113,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
+	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
@@ -134,6 +140,9 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 
 func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	kubeCli, err := clusterops.NewKubeClient(data.Cluster.KubeConfig)
+	if err != nil {
+		return fmt.Errorf("importClusterInstances NewKubeClient failed: %v", err)
+	}
 
 	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {

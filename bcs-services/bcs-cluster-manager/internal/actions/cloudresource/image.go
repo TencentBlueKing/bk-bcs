@@ -59,13 +59,17 @@ func (la *ListCloudOsImageAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
-	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
-	if err != nil {
-		return err
+	la.cloud = cloud
+
+	if la.req.AccountID != "" {
+		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+		if err != nil {
+			return err
+		}
+
+		la.account = account
 	}
 
-	la.account = account
-	la.cloud = cloud
 	return nil
 }
 

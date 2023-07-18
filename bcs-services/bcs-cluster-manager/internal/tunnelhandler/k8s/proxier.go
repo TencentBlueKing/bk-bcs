@@ -15,6 +15,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"golang.org/x/tools/go/ssa/interp/testdata/src/errors"
 	"net/http"
 	"strings"
 	"sync"
@@ -135,13 +136,14 @@ func (f *TunnelProxyDispatcher) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 		}
 		return
 	}
-	status := common.NewNotFoundError(common.GroupResourceCluster, clusterID,
-		"no cluster session can be found using given cluster id")
+
+	// if clusterID not found websocket connection, cm will forbidden the request
+	status := common.NewForbiddenError(common.GroupResourceCluster, clusterID,
+		errors.New("no cluster session can be found using given cluster id"))
 	common.WriteKubeAPIError(rw, status)
 	return
 }
 
-// stripLeaveSlash xxx
 // like http.StripPrefix, but always leaves an initial slash. (so that our
 // regexps will work.)
 func stripLeaveSlash(prefix string, h http.Handler) http.Handler {

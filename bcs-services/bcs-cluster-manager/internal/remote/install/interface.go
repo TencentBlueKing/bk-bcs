@@ -13,7 +13,9 @@
 
 package install
 
-import "time"
+import (
+	"time"
+)
 
 // Installer is the interface for app installer
 type Installer interface {
@@ -21,7 +23,9 @@ type Installer interface {
 	Install(clusterID, values string) error
 	Upgrade(clusterID, values string) error
 	Uninstall(clusterID string) error
-	CheckAppStatus(clusterID string, timeout time.Duration) (bool, error)
+	// CheckAppStatus check app status. pre:true 前置检查；pre:false 后置检查
+	CheckAppStatus(clusterID string, timeout time.Duration, pre bool) (bool, error)
+	Close()
 }
 
 // InstallerType type

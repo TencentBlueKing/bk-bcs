@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package lock xxx
 package lock
 
 import (

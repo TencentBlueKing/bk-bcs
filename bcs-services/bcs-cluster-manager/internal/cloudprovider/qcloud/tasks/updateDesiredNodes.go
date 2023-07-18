@@ -15,7 +15,6 @@ package tasks
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -26,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 
 	"github.com/avast/retry-go"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
@@ -50,7 +50,8 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	desiredNodes := step.Params[cloudprovider.ScalingKey.String()]
+	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
+
 	nodeNum, _ := strconv.Atoi(desiredNodes)
 	operator := step.Params[cloudprovider.OperatorKey.String()]
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(operator) == 0 {
@@ -60,7 +61,12 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask GetClusterDependBasicInfo failed")
@@ -74,7 +80,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	activity, err := applyInstanceMachines(ctx, dependInfo, uint64(nodeNum))
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed: %s", err.Error())
+		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed %s", err.Error())
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -92,8 +98,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 }
 
 // applyInstanceMachines apply machines from asg
-func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) (*as.Activity,
-	error) {
+func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) (*as.Activity, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	var (
@@ -111,19 +116,18 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 	}
 
 	// get asgActivityID
-	err = cloudprovider.LoopDoFunc(context.Background(), func() error {
+	err = loop.LoopDoFunc(context.Background(), func() error {
 		activityID, err = asCli.ScaleOutInstances(asgID, nodeNum)
 		if err != nil {
 			if strings.Contains(err.Error(), as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY) {
-				blog.Infof("applyInstanceMachines[%s] ScaleOutInstances: %v", taskID,
-					as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY)
+				blog.Infof("applyInstanceMachines[%s] ScaleOutInstances: %v", taskID, as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY)
 				return nil
 			}
 			blog.Errorf("applyInstanceMachines[%s] ScaleOutInstances failed: %v", taskID, err)
 			return err
 		}
-		return cloudprovider.EndLoop
-	}, cloudprovider.LoopInterval(10*time.Second))
+		return loop.EndLoop
+	}, loop.LoopInterval(10*time.Second))
 	if err != nil || activityID == "" {
 		return nil, fmt.Errorf("applyInstanceMachines[%s] ScaleOutInstances failed: %v", taskID, err)
 	}
@@ -132,7 +136,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 	defer cancel()
 
 	// get activityID status
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
+	err = loop.LoopDoFunc(ctx, func() error {
 		activity, err = asCli.DescribeAutoScalingActivities(activityID)
 		if err != nil {
 			blog.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID, err)
@@ -142,19 +146,18 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		case api.SuccessfulActivity.String(), api.SuccessfulPartActivity.String():
 			blog.Infof("taskID[%s] DescribeAutoScalingActivities[%s] status[%s]",
 				taskID, activityID, *activity.StatusCode)
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		case api.FailedActivity.String():
 			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed, cause: %v, message: %v",
 				taskID, activityID, *activity.Cause, *activity.StatusMessage)
 		case api.CancelledActivity.String():
-			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID,
-				api.CancelledActivity.String())
+			return fmt.Errorf("taskID[%s] DescribeAutoScalingActivities[%s] failed: %v", taskID, activityID, api.CancelledActivity.String())
 		default:
 			blog.Infof("taskID[%s] DescribeAutoScalingActivities[%s] still creating, status[%s]",
 				taskID, activityID, *activity.StatusCode)
 			return nil
 		}
-	}, cloudprovider.LoopInterval(30*time.Second))
+	}, loop.LoopInterval(30*time.Second))
 	if err != nil {
 		blog.Errorf("taskID[%s] applyInstanceMachines[%s] failed: %v", taskID, activityID, err)
 		return nil, err
@@ -203,6 +206,7 @@ func recordClusterInstanceToDB(ctx context.Context, activity *as.Activity, state
 		blog.Errorf("recordClusterInstanceToDB[%s] failed: %v", taskID, err)
 	}
 	if len(nodeIPs) > 0 {
+		state.Task.CommonParams[cloudprovider.OriginNodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 	}
 
@@ -210,8 +214,7 @@ func recordClusterInstanceToDB(ctx context.Context, activity *as.Activity, state
 }
 
 // transInstancesToNode record success nodes to cm DB
-func transInstancesToNode(ctx context.Context, successInstanceID []string, info *cloudprovider.CloudDependBasicInfo) (
-	[]string, error) {
+func transInstancesToNode(ctx context.Context, successInstanceID []string, info *cloudprovider.CloudDependBasicInfo) ([]string, error) {
 	var (
 		cvmCli  = api.NodeManager{}
 		nodes   = make([]*proto.Node, 0)
@@ -241,7 +244,7 @@ func transInstancesToNode(ctx context.Context, successInstanceID []string, info 
 		n.NodeGroupID = info.NodeGroup.NodeGroupID
 		n.Passwd = info.NodeGroup.LaunchTemplate.InitLoginPassword
 		n.Status = common.StatusInitialization
-		err = cloudprovider.SaveNodeInfoToDB(n)
+		err = cloudprovider.SaveNodeInfoToDB(ctx, n, false)
 		if err != nil {
 			blog.Errorf("transInstancesToNode[%s] SaveNodeInfoToDB[%s] failed: %v", taskID, n.InnerIP, err)
 		}
@@ -281,101 +284,6 @@ func getAsgIDByNodePool(ctx context.Context, info *cloudprovider.CloudDependBasi
 	return *pool.AutoscalingGroupId, nil
 }
 
-func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
-	instanceIDs []string) ([]string, []string, error) {
-	var (
-		addSucessNodes  = make([]string, 0)
-		addFailureNodes = make([]string, 0)
-	)
-
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	// get qcloud client
-	cli, err := api.NewTkeClient(info.CmOption)
-	if err != nil {
-		blog.Errorf("checkClusterInstanceStatus[%s] failed, %s", taskID, err)
-		return nil, nil, err
-	}
-
-	// wait node group state to normal
-	timeCtx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
-	defer cancel()
-
-	// wait all nodes to be ready
-	err = cloudprovider.LoopDoFunc(timeCtx, func() error {
-		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
-			ClusterID:   info.Cluster.SystemID,
-			InstanceIDs: instanceIDs,
-		})
-		if errQuery != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
-			return nil
-		}
-
-		index := 0
-		running, failure := make([]string, 0), make([]string, 0)
-		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)
-			switch *ins.InstanceState {
-			case api.RunningInstanceTke.String():
-				running = append(running, *ins.InstanceId)
-				index++
-			case api.FailedInstanceTke.String():
-				failure = append(failure, *ins.InstanceId)
-				index++
-			default:
-			}
-		}
-
-		if index == len(instanceIDs) {
-			addSucessNodes = running
-			addFailureNodes = failure
-			return cloudprovider.EndLoop
-		}
-
-		return nil
-	}, cloudprovider.LoopInterval(20*time.Second))
-	// other error
-	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
-		blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
-		return nil, nil, err
-	}
-	// timeout error
-	if errors.Is(err, context.DeadlineExceeded) {
-		running, failure := make([]string, 0), make([]string, 0)
-		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
-			ClusterID:   info.Cluster.SystemID,
-			InstanceIDs: instanceIDs,
-		})
-		if errQuery != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
-			return nil, nil, errQuery
-		}
-		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)
-			switch *ins.InstanceState {
-			case api.RunningInstanceTke.String():
-				running = append(running, *ins.InstanceId)
-			default:
-				failure = append(failure, *ins.InstanceId)
-			}
-		}
-		addSucessNodes = running
-		addFailureNodes = failure
-	}
-	blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSucessNodes, addFailureNodes)
-
-	// set cluster node status
-	for _, n := range addFailureNodes {
-		err = cloudprovider.UpdateNodeStatusByInstanceID(n, common.StatusAddNodesFailed)
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] UpdateNodeStatusByInstanceID[%s] failed: %v", taskID, n, err)
-		}
-	}
-
-	return addSucessNodes, addFailureNodes, nil
-}
-
 // CheckClusterNodesStatusTask check update desired nodes status task. nodes already add to cluster, thus not rollback desiredNum and only record status
 func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	start := time.Now()
@@ -395,7 +303,8 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	successInstanceID := strings.Split(state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()], ",")
+	successInstanceID := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.SuccessNodeIDsKey.String(), ",")
 
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(successInstanceID) == 0 {
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: check parameter validate failed", taskID)
@@ -403,7 +312,11 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask GetClusterDependBasicInfo failed")
@@ -413,13 +326,25 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	successInstances, failureInstances, err := checkClusterInstanceStatus(ctx, dependInfo, successInstanceID)
-	if err != nil {
+	successInstances, failureInstances, err := CheckClusterInstanceStatus(ctx, dependInfo, successInstanceID)
+	if err != nil || len(successInstances) == 0 {
+		// rollback failed nodes
+
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	// rollback abnormal nodes
+	if len(failureInstances) > 0 {
+	}
+
+	blog.Infof("CheckClusterNodeStatusTask[%s] delivery succeed[%d] instances[%v] failed[%d] instances[%v]",
+		taskID, len(successInstances), successInstances, len(failureInstances), failureInstances)
+
+	// trans instanceIDs to ipList
+	ipList := cloudprovider.GetInstanceIPsByID(ctx, successInstances)
 
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
@@ -427,11 +352,16 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	}
 	if len(successInstances) > 0 {
 		state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()] = strings.Join(successInstances, ",")
-		// dynamic inject paras
-		state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(successInstances, ",")
 	}
 	if len(failureInstances) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(failureInstances, ",")
+	}
+
+	// successInstance ip list
+	if len(ipList) > 0 {
+		state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(ipList, ",")
+		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(ipList, ",")
+		state.Task.NodeIPList = ipList
 	}
 
 	// update step

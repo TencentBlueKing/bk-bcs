@@ -19,8 +19,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -59,7 +59,6 @@ func (h *BKAPIInstaller) IsInstalled(clusterID string) (bool, error) {
 	if h.debug {
 		return true, nil
 	}
-
 	resp, err := h.client.ListApps(h.projectID, clusterID, h.releaseNamespace, 1, 1000, 0)
 	if err != nil {
 		blog.Errorf("[BKAPIInstaller] list apps failed, err: %s", err.Error())
@@ -87,13 +86,11 @@ func (h *BKAPIInstaller) Install(clusterID, values string) error {
 	if h.debug {
 		return nil
 	}
-
 	// get namespace id
 	nsID, err := h.getNamespaceID(clusterID)
 	if err != nil {
 		return err
 	}
-
 	// get chart id
 	chartID, err := h.getChartID()
 	if err != nil {
@@ -109,7 +106,7 @@ func (h *BKAPIInstaller) Install(clusterID, values string) error {
 		ChartVersion:  chartID,
 		NamespaceInfo: nsID,
 		ValueFile:     values,
-		CmdFlags:      defaultCmdFlag,
+		CmdFlags:      install.DefaultCmdFlag,
 	}
 	resp, err := h.client.CreateApp(req)
 	if err != nil {
@@ -126,7 +123,6 @@ func (h *BKAPIInstaller) Install(clusterID, values string) error {
 	}
 	return nil
 }
-
 func (h *BKAPIInstaller) getNamespaceID(clusterID string) (int, error) {
 	nsList, err := h.client.ListNamespace(h.projectID, clusterID)
 	if err != nil {
@@ -192,7 +188,6 @@ func (h *BKAPIInstaller) getChartID() (int, error) {
 	}
 	blog.Errorf("[BKAPIInstaller] list charts failed, chart %s not found", h.chartName)
 	return 0, fmt.Errorf("list charts failed, chart %s not found", h.chartName)
-
 }
 
 // Upgrade upgrades the app
@@ -200,8 +195,6 @@ func (h *BKAPIInstaller) Upgrade(clusterID, values string) error {
 	if h.debug {
 		return nil
 	}
-
-	// 等待应用正常
 	ok, err := h.IsInstalled(clusterID)
 	if err != nil {
 		blog.Errorf("[BKAPIInstaller] check app installed failed, err: %s", err.Error())
@@ -210,11 +203,10 @@ func (h *BKAPIInstaller) Upgrade(clusterID, values string) error {
 	if !ok {
 		return fmt.Errorf("app %s not installed", h.releaseName)
 	}
-
 	// 等待应用正常
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*30)
 	defer cancel()
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
+	err = loop.LoopDoFunc(ctx, func() error {
 		// get app
 		app, errApp := h.client.GetApp(h.projectID, h.appID)
 		if errApp != nil {
@@ -229,11 +221,11 @@ func (h *BKAPIInstaller) Upgrade(clusterID, values string) error {
 				app.RequestID)
 		}
 		if !app.Data.TransitioningOn {
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		}
 		blog.Warnf("[BKAPIInstaller] app is on transitioning, waiting, %s", utils.ToJSONString(app.Data))
 		return nil
-	}, cloudprovider.LoopInterval(10*time.Second))
+	}, loop.LoopInterval(10*time.Second))
 	if err != nil {
 		blog.Errorf("[BKAPIInstaller] check app installed failed, err: %s", err.Error())
 		return err
@@ -247,7 +239,7 @@ func (h *BKAPIInstaller) Upgrade(clusterID, values string) error {
 		// 不更新版本
 		UpgradeVersion: -1,
 		ValueFile:      values,
-		CmdFlags:       defaultCmdFlag,
+		CmdFlags:       install.DefaultCmdFlag,
 	}
 	resp, err := h.client.UpdateApp(req)
 	if err != nil {
@@ -297,7 +289,7 @@ func (h *BKAPIInstaller) Uninstall(clusterID string) error {
 }
 
 // CheckAppStatus check app install status
-func (h *BKAPIInstaller) CheckAppStatus(clusterID string, timeout time.Duration) (bool, error) {
+func (h *BKAPIInstaller) CheckAppStatus(clusterID string, timeout time.Duration, pre bool) (bool, error) {
 	if h.debug {
 		return true, nil
 	}
@@ -316,7 +308,7 @@ func (h *BKAPIInstaller) CheckAppStatus(clusterID string, timeout time.Duration)
 	// 等待应用正常
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	err = cloudprovider.LoopDoFunc(ctx, func() error {
+	err = loop.LoopDoFunc(ctx, func() error {
 		// get app
 		app, errApp := h.client.GetApp(h.projectID, h.appID)
 		if errApp != nil {
@@ -337,11 +329,11 @@ func (h *BKAPIInstaller) CheckAppStatus(clusterID string, timeout time.Duration)
 		}
 		// 应用正常
 		if app.Data.TransitioningResult {
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		}
 		// 应用异常
 		return fmt.Errorf("check app failed, error: %s", app.Data.TransitioningMessage)
-	}, cloudprovider.LoopInterval(10*time.Second))
+	}, loop.LoopInterval(10*time.Second))
 	if err != nil {
 		blog.Errorf("[BKAPIInstaller] check app installed failed, err: %s", err.Error())
 		return false, err
@@ -349,4 +341,9 @@ func (h *BKAPIInstaller) CheckAppStatus(clusterID string, timeout time.Duration)
 
 	blog.Infof("[BKAPIInstaller] app install successful[%s:%v]", h.projectID, h.appID)
 	return true, nil
+}
+
+// Close clean operation
+func (h *BKAPIInstaller) Close() {
+	return
 }

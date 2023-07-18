@@ -21,20 +21,18 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 )
 
-func getPermServer() *auth.ClientSSM {
-	cli := auth.NewSSMClient(auth.Options{
-		Server:    "http://xxx.com",
-		AppCode:   "xxx",
-		AppSecret: "xxx",
-		Debug:     true,
+func getPermServer() *auth.ClientAuth {
+	cli := auth.NewAccessClient(auth.Options{
+		Server: "http://xxx",
+		Debug:  true,
 	})
 
 	return cli
 }
 
 var server = &ClientConfig{
-	server:    "xxx",
-	appCode:   "xxx",
+	server:    "http://xxx",
+	appCode:   "bcs-xxx",
 	appSecret: "xxx",
 	debug:     true,
 }
@@ -46,37 +44,14 @@ func TestCreatePassCCClusterSnap(t *testing.T) {
 	}
 	t.Log(token)
 
-	cls := &proto.Cluster{
-		ClusterID:   "BCS-K8S-xxxxx",
-		ClusterName: "xx",
-		Region:      "ap-nanjing",
-		VpcID:       "vpc-xxx",
-		ProjectID:   "xxx",
-		BusinessID:  "xxx",
-		Environment: "debug",
-		EngineType:  "k8s",
-		IsExclusive: false,
-		ClusterType: "single",
-		Creator:     "xxx",
-		CreateTime:  time.Now().String(),
-		UpdateTime:  time.Now().String(),
-		Master: map[string]*proto.Node{
-			"127.0.0.1": {
-				NodeID:  "",
-				InnerIP: "",
-			},
-		},
-		SystemID:    "cls-xxx",
-		ManageType:  "INDEPENDENT_CLUSTER",
-		Description: "xxx",
-	}
-
-	err = server.CreatePassCCClusterSnapshoot(cls)
+	namespaces, err := server.GetProjectSharedNamespaces("xxx", "BCS-K8S-xxx", getPermServer())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log("success")
+	for _, ns := range namespaces {
+		t.Logf(ns.Name)
+	}
 }
 
 func TestDeletePassCCCluster(t *testing.T) {
@@ -86,7 +61,47 @@ func TestDeletePassCCCluster(t *testing.T) {
 	}
 	t.Log(token)
 
-	err = server.DeletePassCCCluster("xxx", "BCS-K8S-xxxxx")
+	err = server.DeletePassCCCluster("xxx", "BCS-K8S-xxx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
+}
+
+func TestUpdatePassCCCluster(t *testing.T) {
+	token, err := server.getAccessToken(getPermServer())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(token)
+
+	cls := &proto.Cluster{
+		ClusterID:   "BCS-K8S-xxx",
+		ClusterName: "xxx",
+		Region:      "xxx",
+		VpcID:       "xxx",
+		ProjectID:   "xxx",
+		BusinessID:  "xxx",
+		Environment: "stag",
+		EngineType:  "k8s",
+		IsExclusive: false,
+		ClusterType: "single",
+		Creator:     "xxxx",
+		CreateTime:  time.Now().String(),
+		UpdateTime:  time.Now().String(),
+		Master: map[string]*proto.Node{
+			"xxx": {
+				NodeID:  "",
+				InnerIP: "",
+			},
+		},
+		SystemID:    "xxx",
+		ManageType:  "INDEPENDENT_CLUSTER",
+		Description: "测试集群",
+	}
+
+	err = server.UpdatePassCCCluster(cls)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,10 +117,10 @@ func TestCreatePassCCCluster(t *testing.T) {
 	t.Log(token)
 
 	cls := &proto.Cluster{
-		ClusterID:   "BCS-K8S-xxxxx",
+		ClusterID:   "BCS-K8S-xxx",
 		ClusterName: "Job - xxx",
-		Region:      "ap-guangzhou",
-		VpcID:       "vpc-xxx",
+		Region:      "xxx",
+		VpcID:       "xxx",
 		ProjectID:   "xxx",
 		BusinessID:  "xxx",
 		Environment: "debug",

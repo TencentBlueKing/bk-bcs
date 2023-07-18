@@ -13,6 +13,8 @@
 
 package utils
 
+import "context"
+
 // ContextKey xxx
 type ContextKey string
 
@@ -27,6 +29,27 @@ const (
 
 // HeaderKey string
 const (
-	// RequestIDKey ...
+	// RequestIDHeaderKey xxx
 	RequestIDHeaderKey = "X-Request-Id"
 )
+
+const (
+	// TraceID resource trace
+	TraceID        = "traceID"
+	defaultTraceID = "1234567890zxcvbnm"
+)
+
+// GetTraceIDFromContext get traceID from context
+func GetTraceIDFromContext(ctx context.Context) string {
+	if id, ok := ctx.Value(TraceID).(string); ok {
+		return id
+	}
+
+	return defaultTraceID
+}
+
+// WithTraceIDForContext inject traceID to context
+func WithTraceIDForContext(ctx context.Context, traceID string) context.Context {
+	// NOCC:golint/type(设计如此)
+	return context.WithValue(ctx, TraceID, traceID)
+}

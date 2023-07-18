@@ -44,18 +44,20 @@ func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
 func (ca *CreateAction) createCloudVPC() error {
 	timeStr := time.Now().Format(time.RFC3339)
 	cloudVPC := &cmproto.CloudVPC{
-		CloudID:     ca.req.CloudID,
-		Region:      ca.req.Region,
-		RegionName:  ca.req.RegionName,
-		NetworkType: ca.req.NetworkType,
-		VpcID:       ca.req.VpcID,
-		VpcName:     ca.req.VpcName,
-		Available:   ca.req.Available,
-		Extra:       ca.req.Extra,
-		Creator:     ca.req.Creator,
-		Updater:     ca.req.Creator,
-		CreatTime:   timeStr,
-		UpdateTime:  timeStr,
+		CloudID:       ca.req.CloudID,
+		Region:        ca.req.Region,
+		RegionName:    ca.req.RegionName,
+		NetworkType:   ca.req.NetworkType,
+		VpcID:         ca.req.VpcID,
+		VpcName:       ca.req.VpcName,
+		Available:     ca.req.Available,
+		Extra:         ca.req.Extra,
+		Creator:       ca.req.Creator,
+		Updater:       ca.req.Creator,
+		ReservedIPNum: ca.req.ReservedIPNum,
+		BusinessID:    ca.req.BusinessID,
+		CreatTime:     timeStr,
+		UpdateTime:    timeStr,
 	}
 	return ca.model.CreateCloudVPC(ca.ctx, cloudVPC)
 }

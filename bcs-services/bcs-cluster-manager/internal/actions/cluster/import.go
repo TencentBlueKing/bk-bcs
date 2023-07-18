@@ -32,9 +32,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/golang/protobuf/ptypes/wrappers"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ImportAction action for import cluster
@@ -172,7 +172,6 @@ func (ia *ImportAction) setResponseData(result bool) {
 		"cluster": ia.cluster,
 		"task":    ia.task,
 	}
-
 	data, err := utils.MapToProtobufStruct(respData)
 	if err != nil {
 		blog.Errorf("ImportAction[%s] trans Data failed: %v", ia.cluster.ClusterID, err)
@@ -217,6 +216,8 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 	}
 	// init cluster and set cloud default info
 	cls := ia.constructCluster()
+
+	// sync cloud cluster info to db
 	err = ia.syncClusterCloudConfig(cls)
 	if err != nil {
 		ia.setResp(common.BcsErrClusterManagerSyncCloudErr, err.Error())
@@ -249,6 +250,8 @@ func (ia *ImportAction) Handle(ctx context.Context, req *cmproto.ImportClusterRe
 		Message:      fmt.Sprintf("导入%s集群%s", cls.Provider, cls.ClusterID),
 		OpUser:       cls.Creator,
 		CreateTime:   time.Now().String(),
+		ClusterID:    ia.cluster.ClusterID,
+		ProjectID:    ia.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("import cluster[%s] CreateOperationLog failed: %v", cls.ClusterID, err)
@@ -263,8 +266,8 @@ func (ia *ImportAction) importClusterTask(ctx context.Context, cls *cmproto.Clus
 	// Import Cluster by CloudProvider, underlay cloud cluster manager interface
 	provider, err := cloudprovider.GetClusterMgr(ia.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get cluster %s relative cloud provider %s failed, %s", ia.req.ClusterID, ia.cloud.CloudProvider,
-			err.Error())
+		blog.Errorf("get cluster %s relative cloud provider %s failed, %s",
+			ia.req.ClusterID, ia.cloud.CloudProvider, err.Error())
 		ia.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return err
 	}
@@ -356,7 +359,9 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 	if req.NetworkType == "" {
 		req.NetworkType = common.ClusterOverlayNetwork
 	}
-	req.ClusterCategory = Importer
+	if req.ClusterCategory == "" {
+		req.ClusterCategory = Importer
+	}
 
 	if req.CloudMode == nil {
 		return fmt.Errorf("ImportCluster CommonValidate failed: CloudMode empty")
@@ -370,6 +375,7 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 		return fmt.Errorf("ImportCluster CommonValidate failed: %v", err)
 	}
 
+	// check account validate
 	if len(req.AccountID) > 0 {
 		_, err := ia.model.GetCloudAccount(ia.ctx, ia.cloud.CloudID, req.AccountID)
 		if err != nil {

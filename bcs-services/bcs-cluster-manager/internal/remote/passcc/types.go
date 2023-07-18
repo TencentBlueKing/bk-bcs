@@ -21,9 +21,9 @@ const (
 )
 
 const (
-	defaultEsbURL         = "http://9.140.129.207:8081"
-	defaultWebhookImage   = "xxx.com:8090/public/bcs/k8s/bcs-webhook-server:1.2.0"
-	defaultPrivilegeImage = "xxx.com:8090/public/bcs/k8s/gcs-privilege:1.0.0"
+	defaultEsbURL         = ""
+	defaultWebhookImage   = ""
+	defaultPrivilegeImage = ""
 )
 
 // ClusterParamsRequest xxx
@@ -140,4 +140,28 @@ type CommonResp struct {
 	Code      uint   `json:"code"`
 	Message   string `json:"message"`
 	RequestID string `json:"request_id"`
+}
+
+// GetProjectsNamespaces xxx
+type GetProjectsNamespaces struct {
+	DesireAllData int `json:"desire_all_data"`
+}
+
+// GetProjectsNamespacesResp xxx
+type GetProjectsNamespacesResp struct {
+	CommonResp `json:",inline"`
+	Data       ProjectsNamespacesData `json:"data"`
+}
+
+// ProjectsNamespacesData xxx
+type ProjectsNamespacesData struct {
+	Count   uint64             `json:"count"`
+	Results []ProjectNamespace `json:"results"`
+}
+
+// ProjectNamespace xxx
+type ProjectNamespace struct {
+	ProjectID string `json:"project_id"`
+	ClusterID string `json:"cluster_id"`
+	Name      string `json:"name"`
 }

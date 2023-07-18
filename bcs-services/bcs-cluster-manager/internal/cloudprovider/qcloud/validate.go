@@ -24,6 +24,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
@@ -31,7 +33,7 @@ var validateMgr sync.Once
 
 func init() {
 	validateMgr.Do(func() {
-		// init Cluster
+		//init Cluster
 		cloudprovider.InitCloudValidateManager("qcloud", &CloudValidate{})
 	})
 }
@@ -51,7 +53,7 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
-	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+	if opt.Account == nil || len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
 		return fmt.Errorf("%s ImportClusterValidate opt lost valid crendential info", cloudName)
 	}
 
@@ -65,13 +67,19 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 			return fmt.Errorf("%s ImportClusterValidate getTKEClient failed: %v", cloudName, err)
 		}
 
-		_, err = cli.GetTKECluster(req.CloudMode.CloudID)
+		tkeCluster, err := cli.GetTKECluster(req.CloudMode.CloudID)
 		if err != nil {
 			return fmt.Errorf("%s ImportClusterValidate GetTKECluster[%s] failed: %v", cloudName,
 				req.CloudMode.CloudID, err)
 		}
-		blog.Infof("%s ImportClusterValidate CloudMode CloudID[%s] success", cloudName, req.CloudMode.CloudID)
 
+		// 托管集群导入必须存在节点, 存在节点时才能打通集群链路
+		if *tkeCluster.ClusterType == common.ClusterManageTypeManaged && *tkeCluster.ClusterNodeNum == 0 {
+			return fmt.Errorf("%s ImportClusterValidate ManageTypeCluster[%s] must exist worker nodes",
+				req.CloudMode.CloudID, cloudName)
+		}
+
+		blog.Infof("%s ImportClusterValidate CloudMode CloudID[%s] success", cloudName, req.CloudMode.CloudID)
 		return nil
 	}
 
@@ -119,16 +127,20 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest,
 	account *proto.Account) error {
 	// call qcloud interface to check account
-	if c == nil || account == nil {
+	if c == nil || req == nil {
 		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
 	}
 
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
-		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid crendential info", cloudName)
+	if len(req.Region) == 0 || len(req.CloudID) == 0 {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid region info", cloudName)
 	}
 
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid region info", cloudName)
+	if options.GetEditionInfo().IsInnerEdition() {
+		return nil
+	}
+
+	if account == nil || len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s GetCloudRegionZonesValidate request lost valid crendential info", cloudName)
 	}
 
 	return nil
@@ -154,14 +166,11 @@ func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegio
 }
 
 // ListCloudSubnetsValidate xxx
-func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest, account *proto.Account) error {
+func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequest,
+	account *proto.Account) error {
 	// call qcloud interface to check account
-	if c == nil || account == nil {
+	if c == nil {
 		return fmt.Errorf("%s ListCloudSubnetsValidate request is empty", cloudName)
-	}
-
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
-		return fmt.Errorf("%s ListCloudSubnetsValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
@@ -178,35 +187,89 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
 	account *proto.Account) error {
 	// call qcloud interface to check account
-	if c == nil || account == nil {
+	if c == nil || req == nil {
 		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
-	}
-
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
-		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
 		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid region info", cloudName)
 	}
 
+	if options.GetEditionInfo().IsInnerEdition() {
+		return nil
+	}
+
+	if account == nil || len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListSecurityGroupsValidate request lost valid crendential info", cloudName)
+	}
+
+	return nil
+}
+
+// ListKeyPairsValidate list key pairs validate
+func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
+	// call qcloud interface to check account
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ListKeyPairsValidate request is empty", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid region info", cloudName)
+	}
+
+	if options.GetEditionInfo().IsInnerEdition() {
+		return nil
+	}
+
+	if account == nil || len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid crendential info", cloudName)
+	}
+
+	return nil
+}
+
+// ListInstancesValidate xxx
+func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error {
+	if c == nil || req == nil {
+		return fmt.Errorf("%s ListInstancesValidate request is empty", cloudName)
+	}
+
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListInstancesValidate request lost valid region info", cloudName)
+	}
+
+	if options.GetEditionInfo().IsInnerEdition() {
+		return nil
+	}
+
+	if account == nil || len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListInstancesValidate request lost valid crendential info", cloudName)
+	}
+
 	return nil
 }
 
 // ListInstanceTypeValidate xxx
-func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
 	// call qcloud interface to check account
-	if c == nil || account == nil {
+	if c == nil || req == nil {
 		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
-	}
-
-	if len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
-		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid crendential info", cloudName)
 	}
 
 	if len(req.Region) == 0 {
 		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid region info", cloudName)
+	}
+
+	if options.GetEditionInfo().IsInnerEdition() {
+		if len(req.ProjectID) == 0 {
+			return fmt.Errorf("%s ListInstanceTypeValidate request lost valid info", cloudName)
+		}
+
+		return nil
+	}
+
+	if account == nil || len(account.SecretID) == 0 || len(account.SecretKey) == 0 {
+		return fmt.Errorf("%s ListInstanceTypeValidate request lost valid crendential info", cloudName)
 	}
 
 	return nil
@@ -230,18 +293,50 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 	return nil
 }
 
+// AddNodesToClusterValidate xxx
+func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *cloudprovider.CommonOption) error {
+	// call qcloud interface to check account
+	if c == nil || req == nil {
+		return fmt.Errorf("%s AddNodesToClusterValidate request is empty", cloudName)
+	}
+
+	if req.IsExternalNode && req.NodeGroupID == "" {
+		return fmt.Errorf("%s AddNodesToClusterValidate must be depent NodeGroup", cloudName)
+	}
+
+	return nil
+}
+
+// DeleteNodesFromClusterValidate xxx
+func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest,
+	opt *cloudprovider.CommonOption) error {
+	// call qcloud interface to check account
+	if c == nil || req == nil {
+		return fmt.Errorf("%s DeleteNodesFromClusterValidate request is empty", cloudName)
+	}
+
+	if req.IsExternalNode && req.NodeGroupID == "" {
+		return fmt.Errorf("%s DeleteNodesFromClusterValidate must be depent NodeGroup", cloudName)
+	}
+
+	return nil
+}
+
 // CreateNodeGroupValidate xxx
 func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
 	opt *cloudprovider.CommonOption) error {
 
 	if len(req.Region) == 0 {
-		return fmt.Errorf("%s ListCloudOsImageValidate request lost valid region info", cloudName)
+		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid region info", cloudName)
 	}
 
-	// simply check instanceType conf info
-	if req.LaunchTemplate.CPU == 0 || req.LaunchTemplate.Mem == 0 {
-		return fmt.Errorf("validateLaunchTemplate cpu/mem empty")
-	}
+	/*
+		// simply check instanceType conf info
+		if req.LaunchTemplate.CPU == 0 || req.LaunchTemplate.Mem == 0 {
+			return fmt.Errorf("validateLaunchTemplate cpu/mem empty")
+		}
+	*/
+
 	// check internetAccess conf info
 	if req.LaunchTemplate.InternetAccess != nil {
 		bandwidth, _ := strconv.Atoi(req.LaunchTemplate.InternetAccess.InternetMaxBandwidth)

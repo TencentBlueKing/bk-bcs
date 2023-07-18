@@ -17,85 +17,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cloudaccount"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+
 	"github.com/micro/go-micro/v2/server"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 )
-
-// NoAuthMethod 不需要用户身份认证的方法
-var NoAuthMethod = []string{
-	// 集群相关
-	"ClusterManager.GetNodeInfo",
-	"ClusterManager.CheckCloudKubeConfig",
-	"ClusterManager.ListCommonCluster",
-	"ClusterManager.CheckNodeInCluster",
-	// cloud
-	"ClusterManager.GetCloud",
-	"ClusterManager.ListCloud",
-	// vpc
-	"ClusterManager.ListCloudVPC",
-	"ClusterManager.ListCloudRegions",
-	"ClusterManager.GetVPCCidr",
-	// cloud resource && support interface
-	"ClusterManager.GetCloudRegions",
-	"ClusterManager.GetCloudRegionZones",
-	"ClusterManager.ListCloudRegionCluster",
-	"ClusterManager.ListCloudSubnets",
-	"ClusterManager.ListCloudSecurityGroups",
-	"ClusterManager.ListCloudInstanceTypes",
-	"ClusterManager.ListCloudOsImage",
-	"ClusterManager.ListOperationLogs",
-	"ClusterManager.ListResourceSchema",
-	"ClusterManager.GetResourceSchema",
-	"ClusterManager.QueryPermByActionID",
-	"ClusterManager.ListBKCloud",
-	"ClusterManager.ListCCTopology",
-	"ClusterManager.GetBkSopsTemplateList",
-	"ClusterManager.GetBkSopsTemplateInfo",
-	"ClusterManager.GetInnerTemplateValues",
-	"ClusterManager.DebugBkSopsTask",
-	"ClusterManager.Health",
-	"ClusterManager.GetExternalNodeScriptByGroupID",
-
-	// nodeGroup resource
-	"ClusterManager.GetNodeGroup",
-	"ClusterManager.ListNodeGroup",
-	"ClusterManager.ListNodesInGroup",
-	"ClusterManager.ListNodesInGroupV2",
-	"ClusterManager.UpdateGroupDesiredSize",
-	"ClusterManager.UpdateGroupMinMaxSize",
-
-	// task resource
-	"ClusterManager.RetryTask",
-	"ClusterManager.GetTask",
-	"ClusterManager.ListTask",
-
-	// CA paras resource
-	"ClusterManager.GetAutoScalingOption",
-	"ClusterManager.ListAutoScalingOption",
-
-	// nodeTemplate
-	"ClusterManager.CreateNodeTemplate",
-	"ClusterManager.UpdateNodeTemplate",
-	"ClusterManager.DeleteNodeTemplate",
-	"ClusterManager.ListNodeTemplate",
-	"ClusterManager.GetNodeTemplate",
-
-	// cloud account
-	"ClusterManager.ListCloudAccount",
-	"ClusterManager.ListCloudAccountToPerm",
-
-	// cloud module flag
-	"ClusterManager.ListCloudModuleFlag",
-}
 
 // ClientPermissions client 类型用户拥有的权限，clientID -> actions
 var ClientPermissions = map[string][]string{}
@@ -179,7 +112,8 @@ func checkResourceID(resourceID *resourceID) error {
 		resourceID.ProjectID = task.ProjectID
 	}
 	if resourceID.CloudID != "" && resourceID.AccountID != "" && resourceID.ProjectID == "" {
-		cloud, err := cloudprovider.GetStorageModel().GetCloudAccount(context.TODO(), resourceID.CloudID, resourceID.AccountID)
+		cloud, err := cloudprovider.GetStorageModel().GetCloudAccount(context.TODO(),
+			resourceID.CloudID, resourceID.AccountID)
 		if err != nil {
 			return err
 		}
@@ -220,6 +154,8 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	if err != nil {
 		return false, err
 	}
+
+	blog.Infof("CheckUserPerm user[%s] allow[%v] url[%s] resources[%+v]", username, allow, url, resources)
 	if !allow && url != "" && resources != nil {
 		return false, &authutils.PermDeniedError{
 			Perms: authutils.PermData{

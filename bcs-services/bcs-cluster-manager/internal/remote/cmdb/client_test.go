@@ -14,6 +14,8 @@
 package cmdb
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -22,8 +24,8 @@ func getNewClient() *Client {
 		Enable:     true,
 		AppCode:    "xxx",
 		AppSecret:  "xxx",
-		Server:     "http://xxx.com",
-		BKUserName: "bcs",
+		Server:     "xxx",
+		BKUserName: "xxx",
 		Debug:      true,
 	})
 	if err != nil {
@@ -35,7 +37,7 @@ func getNewClient() *Client {
 
 func TestClient_QueryHostNumByBizID(t *testing.T) {
 	cli := getNewClient()
-	hosts, _, err := cli.QueryHostByBizID(0, Page{
+	hosts, _, err := cli.QueryHostByBizID(1, Page{
 		Start: 0,
 		Limit: 1,
 	})
@@ -46,31 +48,101 @@ func TestClient_QueryHostNumByBizID(t *testing.T) {
 	t.Log(hosts)
 }
 
-func TestClient_FetchAllHostsByBizID(t *testing.T) {
+func TestClient_QueryHostInfoWithoutBiz(t *testing.T) {
 	cli := getNewClient()
-	hosts, err := cli.FetchAllHostsByBizID(0)
+
+	ips := []string{"x"}
+	hostList, err := cli.QueryHostInfoWithoutBiz(ips, Page{
+		Start: 0,
+		Limit: len(ips),
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(hosts)
+
+	for _, h := range hostList {
+		fmt.Println(strings.ToLower(h.CpuModule))
+		t.Log(h, h.BkCloudID, h.NormalDeviceType, h.IDCCityName, h.BkAgentID, h.CpuModule, h.SubZoneID)
+	}
+}
+
+func TestClient_FindHostBizRelations(t *testing.T) {
+	cli := getNewClient()
+
+	hostBizRelations, err := cli.FindHostBizRelations([]int{2, 3})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(hostBizRelations[0].BkHostID, hostBizRelations[0].BkBizID, hostBizRelations[0].BkModuleID, hostBizRelations[0].BkSetID)
+	t.Log(hostBizRelations[1].BkHostID, hostBizRelations[1].BkBizID, hostBizRelations[1].BkModuleID, hostBizRelations[1].BkSetID)
+}
+
+func TestClient_TransHostToRecycleModule(t *testing.T) {
+	cli := getNewClient()
+
+	err := cli.TransHostToRecycleModule(1, []int{2, 3})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
 }
 
 func TestClient_GetBusinessMaintainer(t *testing.T) {
 	cli := getNewClient()
-	data, err := cli.GetBusinessMaintainer(1024)
+	data, err := cli.GetBusinessMaintainer(1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log(data.BKBizMaintainer)
+	t.Log(data.BKBizMaintainer, data.BKBizName)
 }
 
 func TestClient_GetBS2IDByBizID(t *testing.T) {
 	cli := getNewClient()
-	id, err := cli.GetBS2IDByBizID(0)
+	id, err := cli.GetBS2IDByBizID(1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Log(id)
+}
+
+func TestClient_GetBizInfo(t *testing.T) {
+	cli := getNewClient()
+	business, err := cli.GetBizInfo(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(business.BsiID, business.BsiName, business.BsipID, business.BsiProductId, business.BsiProductName, business.BsiL1, business.BsiL2)
+
+	// 查询一级业务详情
+	business1, err := cli.GetBizInfo(int64(business.BsiL1))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(business1.BsiName, business1.BsiL1)
+}
+
+func TestClient_GetCloudTags(t *testing.T) {
+	cli := getNewClient()
+	tags, err := cli.GetCloudTags(BizInfo{BizID: 1068}, "xxx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(tags)
+}
+
+func TestClient_ListTopology(t *testing.T) {
+	cli := getNewClient()
+	topo, err := cli.ListTopology(1, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(topo)
 }

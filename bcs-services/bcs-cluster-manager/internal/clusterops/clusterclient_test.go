@@ -19,7 +19,6 @@ import (
 )
 
 var config = `
-xxx
 `
 
 func TestNewKubeClient(t *testing.T) {

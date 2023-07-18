@@ -29,7 +29,7 @@ var validateMgr sync.Once
 
 func init() {
 	validateMgr.Do(func() {
-		// init Cluster
+		//init Cluster
 		cloudprovider.InitCloudValidateManager(cloudName, &CloudValidate{})
 	})
 }
@@ -100,8 +100,7 @@ func (c *CloudValidate) ImportCloudAccountValidate(account *proto.Account) error
 }
 
 // GetCloudRegionZonesValidate xxx
-func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error {
 	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s GetCloudRegionZonesValidate request is empty", cloudName)
@@ -120,8 +119,7 @@ func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZon
 }
 
 // ListCloudRegionClusterValidate xxx
-func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error {
 	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListCloudRegionClusterValidate request is empty", cloudName)
@@ -162,8 +160,7 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 }
 
 // ListSecurityGroupsValidate xxx
-func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error {
 	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListSecurityGroupsValidate request is empty", cloudName)
@@ -181,9 +178,22 @@ func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityG
 	return nil
 }
 
+// ListKeyPairsValidate list key pairs validate
+func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// ListInstancesValidate xxx
+func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error {
+	return nil
+}
+
 // ListInstanceTypeValidate xxx
-func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
 	// call cloud interface to check account
 	if c == nil || account == nil {
 		return fmt.Errorf("%s ListInstanceTypeValidate request is empty", cloudName)
@@ -220,22 +230,17 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 	return nil
 }
 
+// AddNodesToClusterValidate xxx
+func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *cloudprovider.CommonOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteNodesFromClusterValidate xxx
+func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest, opt *cloudprovider.CommonOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
 // CreateNodeGroupValidate xxx
-func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
-	opt *cloudprovider.CommonOption) error {
-	// call cloud interface to check account
-	if c == nil || opt.Account == nil {
-		return fmt.Errorf("%s CreateNodeGroupValidate request is empty", cloudName)
-	}
-
-	if len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 || len(opt.Account.ClientID) == 0 ||
-		len(opt.Account.ClientSecret) == 0 {
-		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid crendential info", cloudName)
-	}
-
-	if len(req.Region) == 0 {
-		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid region info", cloudName)
-	}
-
-	return nil
+func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
+	return cloudprovider.ErrCloudNotImplemented
 }

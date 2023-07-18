@@ -11,7 +11,6 @@
  *
  */
 
-// Package template xxx
 package template
 
 import (
@@ -26,65 +25,68 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
+// bksops task category
 const (
-	apiServer  = "apiServer"
-	etcdServer = "etcdServer"
-
-	createCluster = "create_cluster"
-	addNodes      = "add_nodes"
-
-	// defaultPolicy default cpu_manager policy
-	defaultPolicy = "none"
-	staticPolicy  = "static"
-
-	// bk-sops template vars prefix
-	prefix   = "CM"
-	template = "template"
-)
-
-var (
-	clusterID           = "CM.cluster.ClusterID"
-	clusterMasterIPs    = "CM.cluster.ClusterMasterIPs"
-	clusterMasterDomain = "CM.cluster.ClusterMasterDomain"
-	clusterEtcdDomain   = "CM.cluster.ClusterEtcdDomain"
-
-	clusterRegion         = "CM.cluster.ClusterRegion"
-	clusterVPC            = "CM.cluster.ClusterVPC"
-	clusterNetworkType    = "CM.cluster.ClusterNetworkType"
-	clusterBizID          = "CM.cluster.ClusterBizID"
-	clusterModuleID       = "CM.cluster.ClusterModuleID"
-	clusterExtraID        = "CM.cluster.ClusterExtraID"
-	clusterExtraClusterID = "CM.cluster.ClusterExtraClusterID"
-	clusterProjectID      = "CM.cluster.ClusterProjectID"
-	clusterExtraEnv       = "CM.cluster.CreateClusterExtraEnv"
-	addNodesExtraEnv      = "CM.cluster.AddNodesExtraEnv"
-	bcsCommonInfo         = "CM.bcs.CommonInfo"
-
-	// NOCC:gas/crypto(误报)
-	nodePasswd           = "CM.node.NodePasswd"
-	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy"
-	nodeIPList           = "CM.node.NodeIPList"
-	nodeOperator         = "CM.node.NodeOperator"
-
-	templateBusinessID = "CM.template.BusinessID"
-	templateOperator   = "CM.template.Operator"
+	// SystemInit bksops system init
+	SystemInit = "系统初始化"
+	// UserAfterInit bksops user after init
+	UserAfterInit = "用户后置初始化"
+	// UserBeforeInit bksops user defore init
+	UserBeforeInit = "用户前置初始化"
+	// UserPreInit bksops user pre init
+	UserPreInit = "缩容节点清理"
 )
 
 // using task commonName inject dynamic parameters when processing
 var (
 	// DynamicParameterInject inject parameter for bk-sops
 	DynamicParameterInject = map[string]string{
-		nodeIPList: "NodeIPList",
+		nodeIPList:         "NodeIPList",
+		externalNodeScript: "ExternalNodeScript",
+		clusterKubeConfig:  "KubeConfig",
 	}
 )
 
 // ExtraInfo extra template values
 type ExtraInfo struct {
-	InstancePasswd string
-	NodeIPList     string
-	NodeOperator   string
-	BusinessID     string
-	Operator       string
+	InstancePasswd     string
+	NodeIPList         string
+	NodeOperator       string
+	ModuleID           string
+	BusinessID         string
+	Operator           string
+	ExternalNodeScript string
+	ClusterKubeConfig  string
+	NodeGroupID        string
+	ShowSopsUrl        bool
+}
+
+// BuildSopsFactory xxx
+type BuildSopsFactory struct {
+	StepName string
+	Cluster  *proto.Cluster
+	Extra    ExtraInfo
+}
+
+// BuildSopsStep build sops task
+func (f BuildSopsFactory) BuildSopsStep(task *proto.Task, action *proto.Action, pre bool) error {
+	step := &BkSopsStepAction{
+		TaskName: f.StepName,
+		Actions: func() []string {
+			if pre {
+				return action.PreActions
+			}
+
+			return action.PostActions
+		}(),
+		Plugins: action.Plugins,
+	}
+	err := step.BuildBkSopsStepAction(task, f.Cluster, f.Extra)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // BkSopsStepAction build bksops step action
@@ -99,13 +101,13 @@ func (sopStep *BkSopsStepAction) BuildBkSopsStepAction(task *proto.Task, cluster
 	for _, name := range sopStep.Actions {
 		plugin, ok := sopStep.Plugins[name]
 		if ok {
-			pluginName := plugin.Params["template_name"]
-			if pluginName == "" {
-				pluginName = utils.RandomString(8)
+			taskName := sopStep.TaskName
+			if pluginName, ok := plugin.Params["template_name"]; ok && pluginName != "" {
+				taskName = pluginName
 			}
 
-			stepName := cloudprovider.BKSOPTask + "-" + pluginName
-			step, err := GenerateBKopsStep(sopStep.TaskName, stepName, cluster, plugin, info)
+			stepName := cloudprovider.BKSOPTask + "-" + utils.RandomString(8)
+			step, err := GenerateBKopsStep(taskName, stepName, cluster, plugin, info)
 			if err != nil {
 				return fmt.Errorf("BuildBkSopsStepAction step failed: %v", err)
 			}
@@ -122,6 +124,10 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 	info ExtraInfo) (*proto.Step, error) {
 	now := time.Now().Format(time.RFC3339)
 
+	if taskName == "" {
+		taskName = SystemInit
+	}
+
 	step := &proto.Step{
 		Name:   stepName,
 		System: plugin.System,
@@ -131,26 +137,45 @@ func GenerateBKopsStep(taskName, stepName string, cls *proto.Cluster, plugin *pr
 		Status: cloudprovider.TaskStatusNotStarted,
 		// method name is registered name to taskServer
 		TaskMethod: cloudprovider.BKSOPTask,
-		TaskName:   "标准运维任务",
+		TaskName:   taskName,
 	}
-	step.Params["url"] = plugin.Link
+	step.Params[cloudprovider.BkSopsUrlKey.String()] = plugin.Link
+	step.Params[cloudprovider.ShowSopsUrlKey.String()] = fmt.Sprintf("%v", info.ShowSopsUrl)
 
 	constants := make(map[string]string)
+	// 变量values值分3类: 1.标准参数  2.直接渲染参数 3.template渲染参数
 	for k, v := range plugin.Params {
-		if strings.HasPrefix(v, prefix) {
+		switch {
+		// 兼容自定义 业务ID/流程ID/流程user
+		case strings.HasPrefix(k, template) && !strings.HasPrefix(v, prefix):
+			step.Params[k] = v
+		case len(v) == 0:
+			continue
+		case len(strings.Split(v, ".")) == 3 && strings.HasPrefix(v, prefix):
 			tValue, err := getTemplateParameterByName(v, cls, info)
 			if err != nil {
 				blog.Errorf("%s GenerateBKopsStep failed: %v", taskName, err)
 				return nil, err
 			}
+			// 兼容自定义 业务ID/业务源
 			if strings.Contains(v, template) {
 				step.Params[k] = tValue
 				continue
 			}
 			constants[fmt.Sprintf("${%s}", k)] = tValue
-			continue
+		case renderTextContainTemplateVars(v):
+			blog.Infof("renderTextContainTemplateVars %v, info %+v", v, info)
+			render := NewRenderTemplateVars(cls, info.NodeIPList, info.NodeOperator)
+			tValue, err := render.RenderTxtVars("", v)
+			if err != nil {
+				blog.Errorf("%s GenerateBKopsStep RenderTxtVars failed: %v", taskName, err)
+				return nil, err
+			}
+			blog.Infof("renderTextContainTemplateVars %+v", tValue)
+			constants[fmt.Sprintf("${%s}", k)] = tValue
+		default:
+			constants[fmt.Sprintf("${%s}", k)] = v
 		}
-		step.Params[k] = v
 	}
 	constantsbyte, err := json.Marshal(&constants)
 	if err != nil {
@@ -193,11 +218,16 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 	case clusterNetworkType:
 		return cluster.GetNetworkType(), nil
 	case clusterBizID:
-		return cluster.GetBusinessID(), nil
+		if extra.BusinessID == "" {
+			return cluster.GetBusinessID(), nil
+		}
+		return extra.BusinessID, nil
 	case clusterModuleID:
-		return cluster.GetModuleID(), nil
+		return extra.ModuleID, nil
 	case clusterExtraID:
 		return getClusterType(cluster), nil
+	case clusterManageEnv:
+		return cluster.GetManageType(), nil
 	case clusterExtraClusterID:
 		return cluster.GetExtraClusterID(), nil
 	case clusterProjectID:
@@ -212,6 +242,16 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 			return nodeIPList, nil
 		}
 		return extra.NodeIPList, nil
+	case externalNodeScript:
+		if len(extra.ExternalNodeScript) == 0 {
+			return externalNodeScript, nil
+		}
+		return extra.ExternalNodeScript, nil
+	case clusterKubeConfig:
+		if len(extra.ClusterKubeConfig) == 0 {
+			return clusterKubeConfig, nil
+		}
+		return extra.ExternalNodeScript, nil
 	case nodeOperator:
 		return extra.NodeOperator, nil
 	case templateBusinessID:
@@ -228,6 +268,8 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 			return "", nil
 		}
 		return envs, nil
+	case nodeGroupID:
+		return extra.NodeGroupID, nil
 	default:
 	}
 

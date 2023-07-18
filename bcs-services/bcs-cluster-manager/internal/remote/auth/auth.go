@@ -21,6 +21,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 
 	"github.com/parnurzeal/gorequest"
 )
@@ -30,32 +32,26 @@ var (
 	errServerNotInit = errors.New("server not inited")
 )
 
-var ssmClient *ClientSSM
+var accessClient *ClientAuth
 
-// SetSSMClient set ssm client
-func SetSSMClient(options Options) error {
-	if !options.Enable {
-		ssmClient = nil
-		return nil
-	}
-	cli := NewSSMClient(options)
+// SetAccessClient set access token client
+func SetAccessClient(options Options) error {
+	cli := NewAccessClient(options)
 
-	ssmClient = cli
+	accessClient = cli
 	return nil
 }
 
-// GetSSMClient get perm client
-func GetSSMClient() *ClientSSM {
-	return ssmClient
+// GetAccessClient get access token client
+func GetAccessClient() *ClientAuth {
+	return accessClient
 }
 
-// NewSSMClient init SSM client
-func NewSSMClient(opt Options) *ClientSSM {
-	cli := &ClientSSM{
-		server:    opt.Server,
-		appCode:   opt.AppCode,
-		appSecret: opt.AppSecret,
-		debug:     opt.Debug,
+// NewAccessClient init access client
+func NewAccessClient(opt Options) *ClientAuth {
+	cli := &ClientAuth{
+		server: opt.Server,
+		debug:  opt.Debug,
 	}
 	return cli
 }
@@ -64,41 +60,39 @@ func NewSSMClient(opt Options) *ClientSSM {
 type Options struct {
 	// Server auth address
 	Server string
-	// AppCode app code
-	AppCode string
-	// AppSecret app secret
-	AppSecret string
-	// Enable enable feature
-	Enable bool
 	// Debug http debug
 	Debug bool
 }
 
-// ClientSSM ssm client
-type ClientSSM struct {
+// ClientAuth perm client
+type ClientAuth struct {
 	server string
-
-	appCode   string
-	appSecret string
-	debug     bool
+	debug  bool
 }
 
-// GetAccessToken get access token
-func (ssm *ClientSSM) GetAccessToken() (string, error) {
-	if ssm == nil {
+// GetAccessToken get application accessToken
+func (auth *ClientAuth) GetAccessToken(app utils.BkAppUser) (string, error) {
+	if auth == nil {
 		return "", errServerNotInit
 	}
 
 	const (
 		apiName = "GetAccessToken"
-		path    = "/api/v1/auth/access-tokens"
 	)
 
+	path := func() string {
+		if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
+			return "/api/v1/auth/access-tokens"
+		}
+
+		return "/auth_api/token/"
+	}()
+
 	var (
-		url = ssm.server + path
+		url = auth.server + path
 		req = &AccessRequest{
-			AppCode:    ssm.appCode,
-			AppSecret:  ssm.appSecret,
+			AppCode:    app.BkAppCode,
+			AppSecret:  app.BkAppSecret,
 			IDProvider: "client",
 			GrantType:  "client_credentials",
 			Env:        "prod",
@@ -106,22 +100,18 @@ func (ssm *ClientSSM) GetAccessToken() (string, error) {
 		resp = &AccessTokenResp{}
 	)
 
-	result, body, errs := gorequest.New().Timeout(defaultTimeOut).
-		Post(url).
-		Set("X-BK-APP-CODE", ssm.appCode).
-		Set("X-BK-APP-SECRET", ssm.appSecret).
+	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Post(url).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
-		Send(req).
-		EndStruct(resp)
+		Send(req).EndStruct(resp)
 
 	if len(errs) > 0 {
 		blog.Errorf("call api GetAccessToken failed: %v", errs[0])
 		return "", errs[0]
 	}
 
-	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+	if result.StatusCode != http.StatusOK || resp.Code != "0" {
 		errMsg := fmt.Errorf("call GetAccessToken API error: code[%v], body[%v], err[%s]",
 			result.StatusCode, string(body), resp.Message)
 		return "", errMsg

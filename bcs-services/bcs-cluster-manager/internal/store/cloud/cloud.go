@@ -11,7 +11,6 @@
  *
  */
 
-// Package cloud xxx
 package cloud
 
 import (
@@ -22,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
@@ -31,8 +31,8 @@ import (
 
 const (
 	tableName = "cloud"
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	tableKey               = "cloudid"
 	defaultCloudListLength = 1000
 )
@@ -67,7 +67,6 @@ func New(db drivers.DB) *ModelCloud {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelCloud) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

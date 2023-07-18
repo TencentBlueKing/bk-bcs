@@ -17,6 +17,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -57,7 +58,7 @@ func (la *ListBKCloudAction) listBKCloud() error {
 		return err
 	}
 
-	result, err := common.MarshalInterfaceToListValue(clouds)
+	result, err := utils.MarshalInterfaceToListValue(clouds)
 	if err != nil {
 		blog.Errorf("marshal clouds err, %s", err.Error())
 		la.setResp(common.BcsErrClusterManagerCommonErr, err.Error())

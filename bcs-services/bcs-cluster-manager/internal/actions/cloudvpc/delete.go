@@ -61,7 +61,7 @@ func (da *DeleteAction) Handle(
 		da.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	// try to get original data for return
+	//try to get original data for return
 	deletedCloudVPC, err := da.model.GetCloudVPC(da.ctx, da.req.CloudID, da.req.VpcID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

@@ -27,9 +27,9 @@ type NodeGroup struct {
 }
 
 // CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
-func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (*proto.Task,
-	error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
+	*proto.Task, error) {
+	return nil, nil
 }
 
 // DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
@@ -40,13 +40,18 @@ func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node
 }
 
 // UpdateNodeGroup update specified nodegroup configuration
-func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.UpdateNodeGroupOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode,
-	error) {
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetNodesInGroupV2 get all nodes belong to NodeGroup
+func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup,
+	opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -74,7 +79,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// SwitchNodeGroupAutoScaling 开/关CA - switch nodegroup auto scaling
+// SwitchNodeGroupAutoScaling switch nodegroup autoscaling
 func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool,
 	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
@@ -106,4 +111,21 @@ func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoSca
 func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// AddExternalNodeToCluster add external to cluster
+func (ng *NodeGroup) AddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteExternalNodeFromCluster remove external node from cluster
+func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetExternalNodeScript get nodegroup external node script
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+	return "", cloudprovider.ErrCloudNotImplemented
 }

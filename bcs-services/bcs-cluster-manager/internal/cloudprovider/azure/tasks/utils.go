@@ -15,9 +15,9 @@ package tasks
 
 import (
 	"context"
+	"errors"
 	"strconv"
 
-	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"

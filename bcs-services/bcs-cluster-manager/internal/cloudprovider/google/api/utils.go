@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
@@ -49,20 +50,6 @@ const (
 	UpdatePolicyActionReplace = "REPLACE"
 )
 
-// GkeServiceAccount for GKE service account
-type GkeServiceAccount struct {
-	Type                string `json:"type"`
-	ProjectID           string `json:"project_id"`
-	PrivateKeyID        string `json:"private_key_id"`
-	PrivateKey          string `json:"private_key"`
-	ClientEmail         string `json:"client_email"`
-	ClientID            string `json:"client_id"`
-	AuthURI             string `json:"auth_uri"`
-	TokenURI            string `json:"token_uri"`
-	AuthProviderCertURL string `json:"auth_provider_x509_cert_url"`
-	ClientCertURL       string `json:"client_x509_cert_url"`
-}
-
 // GCPClientSet google cloud platform client set
 type GCPClientSet struct {
 	*ComputeServiceClient
@@ -79,7 +66,6 @@ func NewGCPClientSet(opt *cloudprovider.CommonOption) (*GCPClientSet, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return &GCPClientSet{computeCli, containerCli}, nil
 }
 
@@ -98,13 +84,16 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 	if err != nil {
 		return "", err
 	}
+
 	// Get the kube cluster in given project.
 	parent := "projects/" + gkeProjectID + "/locations/" + region + "/clusters/" + clusterName
 	gkeCluster, err := client.Projects.Locations.Clusters.Get(parent).Do()
 	if err != nil {
 		return "", fmt.Errorf("GetClusterKubeConfig list clusters failed, project=%s: %v", gkeProjectID, err)
 	}
+
 	name := fmt.Sprintf("%s_%s_%s", gkeProjectID, gkeCluster.Location, gkeCluster.Name)
+
 	cert, err := base64.StdEncoding.DecodeString(gkeCluster.MasterAuth.ClusterCaCertificate)
 	if err != nil {
 		return "", fmt.Errorf("GetClusterKubeConfig invalid certificate failed, cluster=%s: %v", name, err)
@@ -125,10 +114,10 @@ func GetClusterKubeConfig(ctx context.Context, saSecret, gkeProjectID, region, c
 	}
 
 	var saToken string
-	saToken, err = cloudprovider.GenerateSAToken(restConfig)
+	saToken, err = cutils.GenerateSATokenByRestConfig(ctx, restConfig)
 	if err != nil {
-		return "", fmt.Errorf("GetClusterKubeConfig generate k8s serviceaccount token failed, project=%s cluster=%s: %v",
-			gkeProjectID, clusterName, err)
+		return "", fmt.Errorf("getClusterKubeConfig generate k8s serviceaccount token failed, "+
+			"project=%s cluster=%s: %v", gkeProjectID, clusterName, err)
 	}
 
 	typesConfig := &types.Config{

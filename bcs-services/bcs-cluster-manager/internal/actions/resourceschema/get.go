@@ -4,10 +4,11 @@
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under,
+ * Unless required by applicable law or agreed to in writing, software distributed under
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package resourceschema
@@ -21,6 +22,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // GetAction action for getting resource schema
@@ -44,7 +47,7 @@ func (ga *GetAction) setResp(code uint32, msg string) {
 }
 
 func (ga *GetAction) getSchema() error {
-	schemaList := []*common.ResourceSchema{}
+	schemaList := []*types.ResourceSchema{}
 	schemaBytes, err := ioutil.ReadFile(ga.schemaPath)
 	if err != nil {
 		blog.Errorf("load resource schema from file %s err: %v", ga.schemaPath, err)
@@ -57,18 +60,17 @@ func (ga *GetAction) getSchema() error {
 		return fmt.Errorf("load resource schema from file %s Unmarshal err: %v", ga.schemaPath, err)
 	}
 
-	var result *common.ResourceSchema
+	var result *types.ResourceSchema
 	for _, v := range schemaList {
 		if v.CloudID == ga.req.CloudID && v.Name == ga.req.Name {
 			result = v
 		}
 	}
-
 	if result == nil {
 		return fmt.Errorf("not found schema %s in cloud %s", ga.req.Name, ga.req.CloudID)
 	}
 
-	s, err := common.MarshalInterfaceToValue(result)
+	s, err := utils.MarshalInterfaceToValue(result)
 	if err != nil {
 		return fmt.Errorf("marshal schema %s in cloud %s failed, err %s", ga.req.Name, ga.req.CloudID, err.Error())
 	}
@@ -76,6 +78,7 @@ func (ga *GetAction) getSchema() error {
 	ga.resp.Data = s
 
 	return nil
+
 }
 
 // Handle handle get resource schema

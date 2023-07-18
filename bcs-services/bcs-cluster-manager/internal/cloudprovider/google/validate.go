@@ -69,13 +69,11 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		if err != nil {
 			return fmt.Errorf("%s ImportClusterValidate GetKubeConfigFromYAMLBody failed: %v", cloudName, err)
 		}
-
 		kubeRet := base64.StdEncoding.EncodeToString([]byte(req.CloudMode.KubeConfig))
 		kubeCli, err := clusterops.NewKubeClient(kubeRet)
 		if err != nil {
 			return fmt.Errorf("%s ImportClusterValidate NewKubeClient failed: %v", cloudName, err)
 		}
-
 		_, err = kubeCli.Discovery().ServerVersion()
 		if err != nil {
 			return fmt.Errorf("%s ImportClusterValidate connect cluster by kubeConfig failed: %v", cloudName, err)
@@ -195,6 +193,20 @@ func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityG
 	return nil
 }
 
+// ListKeyPairsValidate list key pairs validate
+func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
+	if len(req.Region) == 0 {
+		return fmt.Errorf("%s ListKeyPairsValidate request lost valid region info", cloudName)
+	}
+
+	return nil
+}
+
+// ListInstancesValidate xxx
+func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error {
+	return nil
+}
+
 // ListInstanceTypeValidate xxx
 func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
 	account *proto.Account) error {
@@ -260,5 +272,15 @@ func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupReques
 		return fmt.Errorf("%s CreateNodeGroupValidate request lost valid region info", cloudName)
 	}
 
+	return nil
+}
+
+// AddNodesToClusterValidate xxx
+func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// DeleteNodesFromClusterValidate xxx
+func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest, opt *cloudprovider.CommonOption) error {
 	return nil
 }

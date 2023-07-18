@@ -58,7 +58,13 @@ func (la *ListSecurityGroupsAction) validate() error {
 		return err
 	}
 
-	err = validate.ListSecurityGroupsValidate(la.req, la.account.Account)
+	err = validate.ListSecurityGroupsValidate(la.req, func() *cmproto.Account {
+		if la.account == nil || la.account.Account == nil {
+			return nil
+		}
+
+		return la.account.Account
+	}())
 	if err != nil {
 		return err
 	}
@@ -71,13 +77,17 @@ func (la *ListSecurityGroupsAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
-	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
-	if err != nil {
-		return err
+	la.cloud = cloud
+
+	if len(la.req.AccountID) > 0 {
+		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+		if err != nil {
+			return err
+		}
+
+		la.account = account
 	}
 
-	la.account = account
-	la.cloud = cloud
 	return nil
 }
 

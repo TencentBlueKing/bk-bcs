@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 )
 
@@ -54,19 +55,23 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	// extract parameter && check validate
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	operator := step.Params[cloudprovider.OperatorKey.String()]
+	user := step.Params[cloudprovider.OperatorKey.String()]
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	desiredNodes := step.Params[cloudprovider.ScalingKey.String()]
+	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	nodeNum, _ := strconv.Atoi(desiredNodes)
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(operator) == 0 {
+	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(user) == 0 {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask check parameters failed")
 		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: call GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask call GetClusterDependBasicInfo failed")
@@ -163,18 +168,18 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 	)
 	defer cancel()
 
-	err := cloudprovider.LoopDoFunc(ctx, func() error {
+	err := loop.LoopDoFunc(ctx, func() error {
 		pool, err := client.UpdatePoolAndReturn(ctx, targetPool, cluster.SystemID, *targetPool.Name)
 		if err == nil { // 扩容完成
 			targetPool.Properties = pool.Properties
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		}
 		if strings.Contains(err.Error(), "missing error information") { // 如果节点池正在扩容中，此时再次扩容，则会失败
 			return errors.Errorf("scaleUpNodePool[%s] continuous scale up fails", taskID)
 		}
 		// 扩容失败
 		return errors.Wrapf(err, "scaleUpNodePool[%s] UpdatePoolAndReturn failed(scale up)", taskID)
-	}, cloudprovider.LoopInterval(30*time.Second))
+	}, loop.LoopInterval(30*time.Second))
 
 	if err != nil {
 		return errors.Wrapf(err, "scaleUpNodePool[%s] UpdatePoolAndReturn failed(scale up)", taskID)
@@ -193,7 +198,7 @@ func checkScaleUp(rootCtx context.Context, client api.AksService, info *cloudpro
 	)
 	defer cancel()
 
-	err := cloudprovider.LoopDoFunc(ctx, func() error {
+	err := loop.LoopDoFunc(ctx, func() error {
 		agentPool, err := client.GetPoolAndReturn(ctx, info.Cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
 			return errors.Wrapf(err, "checkScaleUp[%s] call GetPoolAndReturn failed", taskID)
@@ -205,8 +210,8 @@ func checkScaleUp(rootCtx context.Context, client api.AksService, info *cloudpro
 			return nil
 		}
 		// 扩容完成
-		return cloudprovider.EndLoop
-	}, cloudprovider.LoopInterval(10*time.Second))
+		return loop.EndLoop
+	}, loop.LoopInterval(10*time.Second))
 	if err != nil {
 		return errors.Wrapf(err, "taskID[%s] checkScaleUp[%s][%s] failed", taskID, group.CloudNodeGroupID,
 			group.Name)
@@ -350,7 +355,7 @@ func transInstancesToNode(rootCtx context.Context, info *cloudprovider.CloudDepe
 		node.Passwd = info.NodeGroup.LaunchTemplate.InitLoginPassword
 
 		blog.Infof("transInstancesToNode save node:%s", utils.ObjToJson(node))
-		if err = cloudprovider.SaveNodeInfoToDB(node); err != nil {
+		if err = cloudprovider.SaveNodeInfoToDB(context.Background(), node, true); err != nil {
 			blog.Errorf("transInstancesToNode[%s] SaveNodeInfoToDB[%s] failed: %v", taskID, node.InnerIP, err)
 		}
 	}
@@ -411,7 +416,11 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, nodeGroupID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
 	if err != nil {
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask GetClusterDependBasicInfo failed")
@@ -467,7 +476,7 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 		return nil, nil, errors.Wrapf(err, "checkClusterInstanceStatus[%s] new client failed", taskID)
 	}
 
-	err = cloudprovider.LoopDoFunc(ctx, func() error { // wait all nodes to be ready
+	err = loop.LoopDoFunc(ctx, func() error { // wait all nodes to be ready
 		instanceList, err = client.ListInstanceByIDAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID, instanceIDs)
 		if err != nil {
 			return errors.Wrapf(err, "checkClusterInstanceStatus[%s] ListInstanceByIDAndReturn failed", taskID)
@@ -490,10 +499,10 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 		if index == len(instanceIDs) {
 			addSuccessNodes = running
 			addFailureNodes = failure
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		}
 		return nil
-	}, cloudprovider.LoopInterval(10*time.Second))
+	}, loop.LoopInterval(10*time.Second))
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) { // other error
 		return nil, nil, errors.Wrapf(err, "checkClusterInstanceStatus[%s] ListInstanceByIDAndReturn failed", taskID)
 	}

@@ -54,7 +54,6 @@ func NewCreateAction(model store.ClusterManagerModel, iam iam.PermClient) *Creat
 func (ca *CreateAction) createCloudAccount() error {
 	timeStr := time.Now().Format(time.RFC3339)
 	accountID := generateAccountID(ca.cloud)
-
 	cloudAccount := &cmproto.CloudAccount{
 		CloudID:     ca.req.CloudID,
 		ProjectID:   ca.req.ProjectID,
@@ -163,7 +162,6 @@ func (ca *CreateAction) checkCloudAccountName() error {
 	return nil
 }
 
-// generateAccountID xxx
 // generate random accountID
 func generateAccountID(cloud *cmproto.Cloud) string {
 	randomStr := utils.RandomString(8)

@@ -85,7 +85,7 @@ func (ko *K8SOperator) ClusterUpdateScheduleNode(ctx context.Context, nodeInfo N
 	return err
 }
 
-// ListClusterNodes list nodes in cluster
+// ListClusterNodes query cluster all nodes
 func (ko *K8SOperator) ListClusterNodes(ctx context.Context, clusterID string) ([]*v1.Node, error) {
 	if ko == nil {
 		return nil, ErrServerNotInit
@@ -114,6 +114,53 @@ func (ko *K8SOperator) ListClusterNodes(ctx context.Context, clusterID string) (
 	}
 
 	return nodes, nil
+}
+
+// QueryNodeOption query node option
+type QueryNodeOption struct {
+	ClusterID string
+	NodeName  string
+	NodeIP    string
+}
+
+// GetClusterNode query cluster node by nodeName or nodeIP
+func (ko *K8SOperator) GetClusterNode(ctx context.Context, nodeOption QueryNodeOption) (*v1.Node, error) {
+	if ko == nil {
+		return nil, ErrServerNotInit
+	}
+	if nodeOption.ClusterID == "" || (nodeOption.NodeIP == "" && nodeOption.NodeName == "") {
+		return nil, fmt.Errorf("GetClusterNode paras empty")
+	}
+
+	isName := len(nodeOption.NodeName) > 0
+	var (
+		nodes []*v1.Node
+		err   error
+	)
+	nodes, err = ko.ListClusterNodes(ctx, nodeOption.ClusterID)
+	if err != nil {
+		blog.Errorf("GetClusterNode ListClusterNodes failed: %v", err)
+		return nil, err
+	}
+	nodeIPsMap, nodeNamesMap := getClusterNodesMapInfo(nodes)
+
+	if isName {
+		node, ok := nodeNamesMap[nodeOption.NodeName]
+		if ok {
+			blog.Infof("GetClusterNode[%s] successful", nodeOption.NodeName)
+			return node, nil
+		}
+
+		return nil, fmt.Errorf("GetClusterNode[%s] NodeName[%s] not found", nodeOption.ClusterID, nodeOption.NodeName)
+	}
+
+	node, ok := nodeIPsMap[nodeOption.NodeIP]
+	if ok {
+		blog.Infof("GetClusterNode[%s] successful", nodeOption.NodeIP)
+		return node, nil
+	}
+
+	return nil, fmt.Errorf("GetClusterNode[%s] NodeIP[%s] not found", nodeOption.ClusterID, nodeOption.NodeIP)
 }
 
 // ListNodeOption list node option
@@ -202,9 +249,7 @@ type DrainHelper struct {
 
 	// DisableEviction forces drain to use delete rather than evict
 	DisableEviction bool
-
-	DryRun bool
-
+	DryRun          bool
 	// SkipWaitForDeleteTimeoutSeconds ignores pods that have a
 	// DeletionTimeStamp > N seconds. It's up to the user to decide when this
 	// option is appropriate; examples include the Node is unready and the pods
@@ -222,7 +267,6 @@ func (ko *K8SOperator) DrainNode(ctx context.Context, clusterID, nodeName string
 		blog.Errorf("DrainNode GetClusterClient failed: %v", err)
 		return err
 	}
-
 	drainer := &drain.Helper{
 		Ctx:                 ctx,
 		Client:              clientInterface,
@@ -230,6 +274,7 @@ func (ko *K8SOperator) DrainNode(ctx context.Context, clusterID, nodeName string
 		GracePeriodSeconds:  drainHelper.GracePeriodSeconds,
 		IgnoreAllDaemonSets: drainHelper.IgnoreAllDaemonSets,
 		Timeout:             time.Second * time.Duration(drainHelper.Timeout),
+		DeleteEmptyDirData:  drainHelper.DeleteLocalData,
 		Selector:            drainHelper.Selector,
 		PodSelector:         drainHelper.PodSelector,
 		DisableEviction:     drainHelper.DisableEviction,
@@ -282,6 +327,54 @@ func (ko *K8SOperator) UpdateNodeLabels(ctx context.Context, clusterID, nodeName
 	}
 	if err != nil {
 		blog.Errorf("UpdateNodeLabels CreateTwoWayMergePatch[%s] failed: %v", nodeName, err)
+	}
+
+	return err
+}
+
+// UpdateNodeAnnotations update node annotations
+func (ko *K8SOperator) UpdateNodeAnnotations(ctx context.Context, clusterID, nodeName string,
+	annotations map[string]string) error {
+	if ko == nil {
+		return ErrServerNotInit
+	}
+	clientInterface, err := ko.GetClusterClient(clusterID)
+	if err != nil {
+		blog.Errorf("UpdateNodeAnnotations GetClusterClient failed: %v", err)
+		return err
+	}
+
+	nodeCli := clientInterface.CoreV1().Nodes()
+	node, err := nodeCli.Get(ctx, nodeName, metav1.GetOptions{})
+	if err != nil {
+		blog.Errorf("UpdateNodeAnnotations GetClusterNode[%s] failed: %v", nodeName, err)
+		return err
+	}
+
+	oldData, err := json.Marshal(node)
+	if err != nil {
+		return err
+	}
+	// merge annotations
+	for k, v := range annotations {
+		node.Annotations[k] = v
+	}
+
+	newData, err := json.Marshal(node)
+	if err != nil {
+		return err
+	}
+
+	patchBytes, patchErr := strategicpatch.CreateTwoWayMergePatch(oldData, newData, node)
+	if patchErr == nil {
+		patchOptions := metav1.PatchOptions{}
+		_, err = nodeCli.Patch(ctx, nodeName, types.StrategicMergePatchType, patchBytes, patchOptions)
+	} else {
+		updateOptions := metav1.UpdateOptions{}
+		_, err = nodeCli.Update(ctx, node, updateOptions)
+	}
+	if err != nil {
+		blog.Errorf("UpdateNodeAnnotations CreateTwoWayMergePatch[%s] failed: %v", nodeName, err)
 	}
 
 	return err

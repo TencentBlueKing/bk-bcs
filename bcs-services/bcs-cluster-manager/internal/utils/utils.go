@@ -13,20 +13,27 @@
 package utils
 
 import (
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
+	"regexp"
 	"runtime/debug"
 	"strings"
 
-	"github.com/kirito41dd/xslice"
-	"github.com/micro/go-micro/v2/registry"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+
+	"github.com/kirito41dd/xslice"
+	"github.com/micro/go-micro/v2/registry"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 const (
@@ -36,42 +43,16 @@ const (
 	IPV6 = "ipv6"
 )
 
+const (
+	intel = "intel"
+	amd   = "amd"
+)
+
 // SplitAddrString split address string
 func SplitAddrString(addrs string) []string {
 	addrs = strings.Replace(addrs, ";", ",", -1)
 	addrArray := strings.Split(addrs, ",")
 	return addrArray
-}
-
-// SlicePtrToString to string by ","
-func SlicePtrToString(ips []*string) string {
-	if len(ips) == 0 {
-		return ""
-	}
-
-	ipList := make([]string, 0)
-	for _, ip := range ips {
-		ipList = append(ipList, *ip)
-	}
-
-	return strings.Join(ipList, ",")
-}
-
-// SliceToString to string by ","
-func SliceToString(slice []string) string {
-	if len(slice) == 0 {
-		return ""
-	}
-	if len(slice) == 1 {
-		return slice[0]
-	}
-
-	sList := make([]string, 0)
-	for _, s := range slice {
-		sList = append(sList, s)
-	}
-
-	return strings.Join(sList, ",")
 }
 
 // GetXRequestIDFromHTTPRequest get X-Request-Id from http request
@@ -112,6 +93,13 @@ func StringContainInSlice(s string, l []string) bool {
 	return false
 }
 
+// StringContainInMap returns true if given string contain in map
+func StringContainInMap(s string, m map[string]string) (bool, string) {
+	ele, exist := m[s]
+
+	return exist, ele
+}
+
 // IntInSlice return true if i in l
 func IntInSlice(i int, l []int) bool {
 	for _, obj := range l {
@@ -142,14 +130,59 @@ func ToJSONString(data interface{}) string {
 	return string(b)
 }
 
-// GetFileContent get file content
-func GetFileContent(file string) (string, error) {
-	body, err := ioutil.ReadFile(file)
-	if err != nil {
-		return "", err
+// ToStringObject convert data string to object
+func ToStringObject(data []byte, object interface{}) error {
+	return json.Unmarshal(data, object)
+}
+
+// SplitExistString split str1List exist str0List
+func SplitExistString(str0List []string, str1List []string) ([]string, []string) {
+	str0Map := sets.NewString(str0List...)
+	var (
+		existStr, notExistStr = make([]string, 0), make([]string, 0)
+	)
+	for i := range str1List {
+		if str0Map.Has(str1List[i]) {
+			existStr = append(existStr, str1List[i])
+			continue
+		}
+
+		notExistStr = append(notExistStr, str1List[i])
 	}
 
-	return string(body), nil
+	return existStr, notExistStr
+}
+
+// JudgeBase64 check str if is base64 string
+func JudgeBase64(str string) bool {
+	pattern := "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$"
+	matched, err := regexp.MatchString(pattern, str)
+	if err != nil {
+		return false
+	}
+	if !(len(str)%4 == 0 && matched) {
+		return false
+	}
+	unCodeStr, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return false
+	}
+	tranStr := base64.StdEncoding.EncodeToString(unCodeStr)
+	if str == tranStr {
+		return true
+	}
+	return false
+}
+
+// MergeMap merge map
+func MergeMap(mObj ...map[string]string) map[string]string {
+	newObj := map[string]string{}
+	for _, m := range mObj {
+		for k, v := range m {
+			newObj[k] = v
+		}
+	}
+	return newObj
 }
 
 // GetServerEndpointsFromRegistryNode get dual address
@@ -162,6 +195,47 @@ func GetServerEndpointsFromRegistryNode(nodeServer *registry.Node) []string {
 	}
 
 	return endpoints
+}
+
+// GetFileContent get file content
+func GetFileContent(file string) (string, error) {
+	body, err := ioutil.ReadFile(file)
+	if err != nil {
+		return "", err
+	}
+
+	return string(body), nil
+}
+
+// SlicePtrToString to string by ","
+func SlicePtrToString(ips []*string) string {
+	if len(ips) == 0 {
+		return ""
+	}
+
+	ipList := make([]string, 0)
+	for _, ip := range ips {
+		ipList = append(ipList, *ip)
+	}
+
+	return strings.Join(ipList, ",")
+}
+
+// SliceToString to string by ","
+func SliceToString(slice []string) string {
+	if len(slice) == 0 {
+		return ""
+	}
+	if len(slice) == 1 {
+		return slice[0]
+	}
+
+	sList := make([]string, 0)
+	for _, s := range slice {
+		sList = append(sList, s)
+	}
+
+	return strings.Join(sList, ",")
 }
 
 // CheckIPAddressType check ip address type
@@ -183,4 +257,142 @@ func CheckIPAddressType(ip string) (string, error) {
 	}
 
 	return "", fmt.Errorf("not supported ip type")
+}
+
+// Base64Encode encode src to base64
+func Base64Encode(src string) string {
+	return base64.StdEncoding.EncodeToString([]byte(src))
+}
+
+// Base64Decode encode src to base64
+func Base64Decode(src string) (string, error) {
+	if len(src) == 0 {
+		return src, nil
+	}
+
+	dst, err := base64.StdEncoding.DecodeString(src)
+	if err != nil {
+		return src, err
+	}
+
+	return string(dst), nil
+}
+
+// GetNodeIPAddress get node address
+func GetNodeIPAddress(node *corev1.Node) ([]string, []string) {
+	ipv4Address := make([]string, 0)
+	ipv6Address := make([]string, 0)
+
+	for _, address := range node.Status.Addresses {
+		if address.Type == corev1.NodeInternalIP {
+			switch {
+			case util.IsIPv6(address.Address):
+				ipv6Address = append(ipv6Address, address.Address)
+			case util.IsIPv4(address.Address):
+				ipv4Address = append(ipv4Address, address.Address)
+			default:
+				blog.Errorf("unsupported ip type")
+			}
+		}
+	}
+
+	return ipv4Address, ipv6Address
+}
+
+// GetValueFromMap get value from map
+func GetValueFromMap(m map[string]string, key string) string {
+	v, ok := m[key]
+	if !ok || v == "" {
+		return ""
+	}
+
+	return v
+}
+
+// StringsToMap strings to map, like k1=v1;k2=v2 to {k1:v1, k2:v2}
+func StringsToMap(str string) map[string]string {
+	desMap := make(map[string]string)
+	if len(str) == 0 {
+		return desMap
+	}
+
+	strSlice := strings.Split(str, ";")
+	if len(strSlice) == 0 {
+		return desMap
+	}
+
+	for _, sub := range strSlice {
+		if sub == "" {
+			continue
+		}
+		ss := strings.Split(sub, "=")
+		if len(ss) >= 1 {
+			desMap[ss[0]] = ss[1]
+		}
+	}
+	return desMap
+}
+
+// MapToStrings map to strings, like {k1:v1, k2:v2} to k1=v1;k2=v2
+func MapToStrings(m map[string]string) string {
+	strs := ""
+	for k, v := range m {
+		s := fmt.Sprintf("%s=%s;", k, v)
+		strs += s
+	}
+
+	return strs
+}
+
+// FakeIPV4Addr generate ipv4 address
+func FakeIPV4Addr() string {
+	buf := make([]byte, 4)
+	ip := rand.Uint32()
+	binary.LittleEndian.PutUint32(buf, ip)
+	return fmt.Sprintf("%s", net.IP(buf))
+}
+
+// GetCpuModuleType get cpuType label
+func GetCpuModuleType(cpu string) string {
+	lower := strings.ToLower(cpu)
+
+	if strings.Contains(lower, intel) {
+		return intel
+	}
+
+	if strings.Contains(lower, amd) {
+		return amd
+	}
+
+	return ""
+}
+
+// StringPtrToString ptrString to string
+func StringPtrToString(str *string) string {
+	if str == nil {
+		return ""
+	}
+
+	return *str
+}
+
+// MatchSubnet inner match subnet
+func MatchSubnet(subnetName, region string) bool {
+	var match bool
+	patterns := []string{fmt.Sprintf("^%s-[1-9]-[0-9]+", region)}
+
+	for _, pattern := range patterns {
+		m, _ := regexp.MatchString(pattern, subnetName)
+		match = match || m
+	}
+	return match
+}
+
+// GenerateNamespaceName generate vcluster namespace name
+func GenerateNamespaceName(prefix, projectCode string, clusterID string) string {
+	if prefix == "" {
+		prefix = "vcluster"
+	}
+
+	return fmt.Sprintf("%s-%s-%s", prefix, projectCode, strings.ToLower(clusterID))
 }

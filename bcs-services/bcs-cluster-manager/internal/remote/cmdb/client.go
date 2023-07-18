@@ -23,10 +23,37 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/parnurzeal/gorequest"
-
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+
+	"github.com/parnurzeal/gorequest"
 )
+
+// CmdbInterface for cloud Tags
+type CmdbInterface interface {
+	// GetCloudTags get cloud tags by BizInfo
+	GetCloudTags(bizInfo BizInfo, operator string) (map[string]string, error)
+	// GetBusinessMaintainer get biz maintainer
+	GetBusinessMaintainer(bizID int) (*BusinessData, error)
+	// FetchAllHostsByBizID fetch all hosts by bizID
+	FetchAllHostsByBizID(bizID int) ([]HostData, error)
+	// QueryHostInfoWithoutBiz get host detailed info by ips
+	QueryHostInfoWithoutBiz(ips []string, page Page) ([]HostDetailData, error)
+	// QueryHostByBizID get limited count biz host by page
+	QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
+	// FindHostBizRelations get biz relations by hostID
+	FindHostBizRelations(hostID []int) ([]HostBizRelations, error)
+	// TransHostToRecycleModule transfer host to idle pool on the same biz
+	TransHostToRecycleModule(bizID int, hostID []int) error
+	// GetBizInternalModule get biz idle pool module info
+	GetBizInternalModule(bizID int) (*BizInternalModuleData, error)
+	// TransHostAcrossBiz transfer host on the different biz
+	TransHostAcrossBiz(hostInfo TransHostAcrossBizInfo) error
+	// GetBS2IDByBizID get BS2ID by bizID
+	GetBS2IDByBizID(bizID int64) (int, error)
+	// GetBizInfo get biz info
+	GetBizInfo(bizID int64) (*Business, error)
+}
 
 // CmdbClient global cmdb client
 var CmdbClient *Client
@@ -75,7 +102,7 @@ var (
 	ErrServerNotInit = errors.New("server not inited")
 )
 
-// Options for cc client
+// Options for cmdb client
 type Options struct {
 	Enable     bool
 	AppCode    string
@@ -258,7 +285,7 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 		blog.Errorf("call api QueryHostNumByBizID failed: %v", respData.Message)
 		return 0, nil, fmt.Errorf(respData.Message)
 	}
-	// successfully request
+	//successfully request
 	blog.Infof("call api QueryHostNumByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -266,6 +293,154 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 	}
 
 	return 0, nil, fmt.Errorf("call api GetBS2IDByBizID failed")
+}
+
+// FindHostBizRelations query host biz relations by hostID
+func (c *Client) FindHostBizRelations(hostID []int) ([]HostBizRelations, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/find_host_biz_relations/", c.server)
+		request = &FindHostBizRelationsRequest{
+			BkHostID: hostID,
+		}
+		respData = &FindHostBizRelationsResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api FindHostBizRelations failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api FindHostBizRelations failed: %v", respData.Message)
+		return nil, fmt.Errorf(respData.Message)
+	}
+	//successfully request
+	blog.Infof("call api FindHostBizRelations with url(%s) successfully", reqURL)
+
+	return respData.Data, nil
+}
+
+// TransHostToRecycleModule trans host to recycleModule
+func (c *Client) TransHostToRecycleModule(bizID int, hostID []int) error {
+	if c == nil {
+		return ErrServerNotInit
+	}
+
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_recyclemodule/", c.server)
+		request = &TransHostToERecycleModuleRequest{
+			BkBizID:  bizID,
+			BkHostID: hostID,
+		}
+		respData = &TransHostToERecycleModuleResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api TransHostToRecycleModule failed: %v", errs[0])
+		return errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api TransHostToRecycleModule failed: %v", respData.Message)
+		return fmt.Errorf(respData.Message)
+	}
+	//successfully request
+	blog.Infof("call api TransHostToRecycleModule with url(%s) successfully", reqURL)
+
+	return nil
+}
+
+// GetBizInternalModule get biz recycle module info
+func (c *Client) GetBizInternalModule(bizID int) (*BizInternalModuleData, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/get_biz_internal_module/", c.server)
+		request = &QueryBizInternalModuleRequest{
+			BizID: bizID,
+		}
+		respData = &QueryBizInternalModuleResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		return nil, fmt.Errorf(respData.Message)
+	}
+
+	return &respData.Data, nil
+}
+
+// TransHostAcrossBiz trans host to other biz
+func (c *Client) TransHostAcrossBiz(hostInfo TransHostAcrossBizInfo) error {
+	if c == nil {
+		return ErrServerNotInit
+	}
+
+	var (
+		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_across_biz/", c.server)
+		request = &TransferHostAcrossBizRequest{
+			SrcBizID:   hostInfo.SrcBizID,
+			BkHostID:   hostInfo.HostID,
+			DstBizID:   hostInfo.DstBizID,
+			BkModuleID: hostInfo.DstModuleID,
+		}
+		respData = &TransferHostAcrossBizResponse{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		return errs[0]
+	}
+
+	if !respData.Result {
+		return fmt.Errorf(respData.Message)
+	}
+
+	return nil
 }
 
 // GetBusinessMaintainer get maintainers by bizID
@@ -303,7 +478,7 @@ func (c *Client) GetBusinessMaintainer(bizID int) (*BusinessData, error) {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
 		return nil, fmt.Errorf(respData.Message)
 	}
-	// successfully request
+	//successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -348,7 +523,7 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
 		return 0, fmt.Errorf(respData.Message)
 	}
-	// successfully request
+	//successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
 
 	if len(respData.Data.Info) > 0 {
@@ -356,6 +531,83 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 	}
 
 	return 0, fmt.Errorf("call api GetBS2IDByBizID failed")
+}
+
+// GetBizInfo get biz Info
+func (c *Client) GetBizInfo(bizID int64) (*Business, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	var (
+		reqURL  = fmt.Sprintf("%s/component/compapi/cmdb/get_query_info/", c.server)
+		request = &QueryBusinessInfoReq{
+			Method:    methodBusinessRaw,
+			ReqColumn: fieldBizInfo,
+			KeyValues: map[string]interface{}{
+				keyBizID: bizID,
+			},
+		}
+		respData = &QueryBusinessInfoResp{}
+	)
+
+	_, _, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(reqURL).
+		Set("Content-Type", "application/json").
+		Set("Accept", "application/json").
+		Set("X-Bkapi-Authorization", c.userAuth).
+		SetDebug(c.serverDebug).
+		Send(request).
+		EndStruct(&respData)
+	if len(errs) > 0 {
+		blog.Errorf("call api GetBizInfo failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if !respData.Result {
+		blog.Errorf("call api GetBizInfo failed: %v", respData.Message)
+		return nil, fmt.Errorf(respData.Message)
+	}
+	//successfully request
+	blog.Infof("call api GetBizInfo with url(%s) successfully", reqURL)
+
+	if len(respData.Data.Data) > 0 {
+		return &respData.Data.Data[0], nil
+	}
+
+	return nil, fmt.Errorf("call api GetBizInfo failed")
+}
+
+// GetCloudTags get cloud tags
+func (c *Client) GetCloudTags(bizInfo BizInfo, operator string) (map[string]string, error) {
+	if c == nil {
+		return nil, ErrServerNotInit
+	}
+
+	bizID, err := c.GetBS2IDByBizID(bizInfo.BizID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 查询二级业务详情
+	business2, err := c.GetBizInfo(int64(bizID))
+	if err != nil {
+		return nil, err
+	}
+	// 查询一级业务详情
+	business1, err := c.GetBizInfo(int64(business2.BsiL1))
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		KeyPart:      options.GetGlobalCMOptions().TagDepart,
+		KeyProduct:   business2.BsiProductName + fmt.Sprintf("_%v", business2.BsiProductId),
+		KeyOneBiz:    business1.BsiName + fmt.Sprintf("_%v", business2.BsiL1),
+		KeySecondBiz: business2.BsiName + fmt.Sprintf("_%v", business2.BsiL2),
+		KeyOperator:  operator,
+	}, nil
 }
 
 // TransferHostToIdleModule transfer host to idle module
@@ -463,35 +715,6 @@ func (c *Client) DeleteHost(hostID []int) error {
 	return nil
 }
 
-// GetBizInternalModule get biz internal module
-func (c *Client) GetBizInternalModule(bizID int) (*GetBizInternalModuleData, error) {
-	var (
-		reqURL   = fmt.Sprintf("%s/api/c/compapi/v2/cc/get_biz_internal_module?bk_biz_id=%d", c.server, bizID)
-		respData = &GetBizInternalModuleResponse{}
-	)
-
-	_, _, errs := gorequest.New().
-		Timeout(defaultTimeOut).
-		Get(reqURL).
-		Set("Content-Type", "application/json").
-		Set("Accept", "application/json").
-		Set("X-Bkapi-Authorization", c.userAuth).
-		SetDebug(c.serverDebug).
-		EndStruct(&respData)
-	if len(errs) > 0 {
-		blog.Errorf("call api GetBizInternalModule failed: %v", errs[0])
-		return nil, errs[0]
-	}
-
-	if !respData.Result || respData.Code != 0 {
-		blog.Errorf("call api GetBizInternalModule failed: %v", respData)
-		return nil, fmt.Errorf("call api GetBizInternalModule failed: %v", respData)
-	}
-	blog.Infof("call api GetBizInternalModule with url(%s) successfully", reqURL)
-
-	return &respData.Data, nil
-}
-
 // SearchBizInstTopo search biz inst topo
 func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
 	var (
@@ -522,12 +745,13 @@ func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
 }
 
 // ListTopology list topology
-func (c *Client) ListTopology(bizID int) (*SearchBizInstTopoData, error) {
+func (c *Client) ListTopology(bizID int, filterInter bool) (*SearchBizInstTopoData, error) {
 	internalModules, err := c.GetBizInternalModule(bizID)
-	internalModules.ReplaceName()
 	if err != nil {
 		return nil, err
 	}
+	internalModules.ReplaceName()
+
 	topos, err := c.SearchBizInstTopo(bizID)
 	if err != nil {
 		return nil, err
@@ -542,23 +766,27 @@ func (c *Client) ListTopology(bizID int) (*SearchBizInstTopoData, error) {
 		return nil, fmt.Errorf("topology is empty")
 	}
 	childs := make([]SearchBizInstTopoData, 0)
-	child := SearchBizInstTopoData{
-		BKInstID:   internalModules.BKSetID,
-		BKInstName: internalModules.BKSetName,
-		BKObjID:    "set",
-		BKObjName:  "set",
-		Child:      make([]SearchBizInstTopoData, 0),
-	}
-	for _, v := range internalModules.Modules {
-		child.Child = append(child.Child, SearchBizInstTopoData{
-			BKInstID:   v.BKModuleID,
-			BKInstName: v.BKModuleName,
-			BKObjID:    "module",
-			BKObjName:  "module",
+
+	if !filterInter {
+		child := SearchBizInstTopoData{
+			BKInstID:   internalModules.SetID,
+			BKInstName: internalModules.SetName,
+			BKObjID:    "set",
+			BKObjName:  "set",
 			Child:      make([]SearchBizInstTopoData, 0),
-		})
+		}
+		for _, v := range internalModules.ModuleInfo {
+			child.Child = append(child.Child, SearchBizInstTopoData{
+				BKInstID:   v.ModuleID,
+				BKInstName: v.ModuleName,
+				BKObjID:    "module",
+				BKObjName:  "module",
+				Child:      make([]SearchBizInstTopoData, 0),
+			})
+		}
+		childs = append(childs, child)
 	}
-	childs = append(childs, child)
+
 	childs = append(childs, topo.Child...)
 	topo.Child = childs
 	return topo, nil

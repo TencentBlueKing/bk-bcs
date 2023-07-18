@@ -51,12 +51,22 @@ func (la *ListNodeTypeAction) validate() error {
 		return err
 	}
 
+	// version for inner self resource pool
+	if la.req.Version == "" {
+		la.req.Version = "v1"
+	}
+
 	validate, err := cloudprovider.GetCloudValidateMgr(la.cloud.CloudProvider)
 	if err != nil {
 		return err
 	}
 
-	err = validate.ListInstanceTypeValidate(la.req, la.account.Account)
+	err = validate.ListInstanceTypeValidate(la.req, func() *cmproto.Account {
+		if la.account == nil || la.account.Account == nil {
+			return nil
+		}
+		return la.account.Account
+	}())
 	if err != nil {
 		return err
 	}
@@ -69,13 +79,16 @@ func (la *ListNodeTypeAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
-	account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
-	if err != nil {
-		return err
-	}
-
-	la.account = account
 	la.cloud = cloud
+
+	if la.req.AccountID != "" {
+		account, err := la.model.GetCloudAccount(la.ctx, la.req.CloudID, la.req.AccountID)
+		if err != nil {
+			return err
+		}
+
+		la.account = account
+	}
 	return nil
 }
 
@@ -105,8 +118,17 @@ func (la *ListNodeTypeAction) listCloudInstancetypes() error {
 	cmOption.Region = la.req.Region
 
 	// get instance types list
-	insTypes, err := nodeMgr.ListNodeInstanceType(la.req.Zone, la.req.NodeFamily,
-		la.req.Cpu, la.req.Memory, cmOption)
+	insTypes, err := nodeMgr.ListNodeInstanceType(cloudprovider.InstanceInfo{
+		Region:     la.req.Region,
+		Zone:       la.req.Zone,
+		NodeFamily: la.req.NodeFamily,
+		Cpu:        la.req.Cpu,
+		Memory:     la.req.Memory,
+		ProjectID:  la.req.ProjectID,
+		BizID:      la.req.BizID,
+		Version:    la.req.Version,
+		Provider:   la.req.Provider,
+	}, cmOption)
 	if err != nil {
 		return err
 	}

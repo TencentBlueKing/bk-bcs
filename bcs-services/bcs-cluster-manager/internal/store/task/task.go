@@ -11,7 +11,6 @@
  *
  */
 
-// Package task xxx
 package task
 
 import (
@@ -21,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	types "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/util"
@@ -29,9 +29,9 @@ import (
 )
 
 const (
-	tableName = "task"
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	TableName = "task"
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	tableKey              = "taskid"
 	defaultTaskListLength = 1000
 )
@@ -39,7 +39,7 @@ const (
 var (
 	taskIndexes = []drivers.Index{
 		{
-			Name: tableName + "_idx",
+			Name: TableName + "_idx",
 			Key: bson.D{
 				bson.E{Key: tableKey, Value: 1},
 			},
@@ -60,13 +60,12 @@ type ModelTask struct {
 // New create Task model
 func New(db drivers.DB) *ModelTask {
 	return &ModelTask{
-		tableName: util.DataTableNamePrefix + tableName,
+		tableName: util.DataTableNamePrefix + TableName,
 		indexes:   taskIndexes,
 		db:        db,
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelTask) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -109,9 +108,9 @@ func (m *ModelTask) UpdateTask(ctx context.Context, task *types.Task) error {
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		tableKey: task.TaskID,
 	})
-	// ! object all field update, make sure that task
-	// ! all fields are setting, otherwise some fields
-	// ! will be override with nil value
+	//! object all field update, make sure that task
+	//! all fields are setting, otherwise some fields
+	//! will be override with nil value
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": task})
 }
 
@@ -123,7 +122,7 @@ func (m *ModelTask) PatchTask(ctx context.Context, taskID string, patchs map[str
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		tableKey: taskID,
 	})
-	// ! we patch fields that need to be updated
+	//! we patch fields that need to be updated
 	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": patchs})
 }
 

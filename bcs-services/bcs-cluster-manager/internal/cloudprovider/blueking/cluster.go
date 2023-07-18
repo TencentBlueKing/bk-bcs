@@ -22,21 +22,33 @@ import (
 )
 
 func init() {
-	cloudprovider.InitClusterManager(cloudName, &Cluster{})
+	cloudprovider.InitClusterManager("blueking", &Cluster{})
 }
 
 // Cluster blueking kubernetes cluster management implementation
 type Cluster struct {
 }
 
-// CreateCluster create kubenretes cluster according cloudprovider
+// CreateVirtualCluster create virtual cluster by cloud provider
+func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteVirtualCluster delete virtual cluster
+func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+//CreateCluster create kubenretes cluster according cloudprovider
 func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
 	// call blueking interface to create cluster
 	if cls == nil {
 		return nil, fmt.Errorf("blueking CreateCluster cluster is empty")
 	}
 
-	if opt == nil || opt.Cloud == nil {
+	if opt == nil || opt.Cloud == nil || opt.Account == nil {
 		return nil, fmt.Errorf("blueking CreateCluster cluster opt or cloud is empty")
 	}
 
@@ -76,7 +88,7 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 	}
 
 	if len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
-		return nil, fmt.Errorf("blueking CreateCluster opt lost valid crendential info")
+		return nil, fmt.Errorf("blueking ImportCluster opt lost valid crendential info")
 	}
 
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
@@ -99,7 +111,7 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 	return task, nil
 }
 
-// DeleteCluster delete kubernetes cluster according cloudprovider
+//DeleteCluster delete kubernetes cluster according cloudprovider
 func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("blueking DeleteCluster cluster is empty")
@@ -129,7 +141,7 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 	return task, nil
 }
 
-// GetCluster get kubernetes cluster detail information according cloudprovider
+//GetCluster get kubernetes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
 	return nil, nil
 }
@@ -139,7 +151,7 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 	return nil, nil
 }
 
-// GetNodesInCluster get all nodes belong to cluster according cloudprovider
+//GetNodesInCluster get all nodes belong to cluster according cloudprovider
 func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNodesOption) ([]*proto.Node, error) {
 	return nil, nil
 }
@@ -213,13 +225,18 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
-	error) {
+func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
+	opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
 	if cls == nil || opt == nil {
 		return true, nil
 	}
 
 	return true, nil
+}
+
+// EnableExternalNodeSupport enable cluster support external node
+func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovider.EnableExternalNodeOption) error {
+	return nil
 }
 
 // ListOsImage list image os

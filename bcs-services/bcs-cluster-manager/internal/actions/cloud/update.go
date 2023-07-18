@@ -135,7 +135,7 @@ func (ua *UpdateAction) Handle(
 		blog.Errorf("find cloud %s failed when pre-update checking, err %s", req.CloudID, err.Error())
 		return
 	}
-	if err = ua.updateCloud(destCloud); err != nil {
+	if err := ua.updateCloud(destCloud); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

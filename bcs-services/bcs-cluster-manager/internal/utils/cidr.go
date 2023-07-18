@@ -16,6 +16,7 @@ package utils
 import (
 	"bytes"
 	"encoding/hex"
+	"math"
 	"math/big"
 	"net"
 	"strconv"
@@ -100,10 +101,8 @@ func (c CIDR) MaskSize() (ones, bits int) {
 
 // Mask xxx
 func (c CIDR) Mask() string {
-	mask, err := hex.DecodeString(c.ipnet.Mask.String())
-	if err != nil {
-		return ""
-	}
+	// NOCC:gas/error(设计如此)
+	mask, _ := hex.DecodeString(c.ipnet.Mask.String())
 	return net.IP([]byte(mask)).String()
 }
 
@@ -190,4 +189,9 @@ func DecrIP(ip net.IP) {
 // Compare IP a&b; a == b return 0; a > b return 1; a < b return -1
 func Compare(a, b net.IP) int {
 	return bytes.Compare(a, b)
+}
+
+// CalMaskLen cal maskLen by step
+func CalMaskLen(step float64) uint32 {
+	return uint32(32 - math.Ceil(math.Log2(step)))
 }

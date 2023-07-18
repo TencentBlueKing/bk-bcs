@@ -26,8 +26,20 @@ func init() {
 type Cluster struct {
 }
 
-// CreateCluster create kubenretes cluster according cloudprovider
+//CreateCluster create kubenretes cluster according cloudprovider
 func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CreateVirtualCluster create virtual cluster by cloud provider
+func (c *Cluster) CreateVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.CreateVirtualClusterOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteVirtualCluster delete virtual cluster
+func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
+	opt *cloudprovider.DeleteVirtualClusterOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -37,12 +49,12 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// DeleteCluster delete kubenretes cluster according cloudprovider
+//DeleteCluster delete kubenretes cluster according cloudprovider
 func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// GetCluster get kubenretes cluster detail information according cloudprovider
+//GetCluster get kubenretes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
@@ -52,31 +64,36 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// GetNodesInCluster get all nodes belong to cluster according cloudprovider
+//GetNodesInCluster get all nodes belong to cluster according cloudprovider
 func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNodesOption) ([]*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// AddNodesToCluster add new node to cluster according cloudprovider
+//AddNodesToCluster add new node to cluster according cloudprovider
 func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
 	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
-// DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
+//DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
 func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodesOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
 // CheckClusterCidrAvailable check cluster CIDR nodesNum when add nodes
-func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster, opt *cloudprovider.CheckClusterCIDROption) (bool,
-	error) {
+func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
+	opt *cloudprovider.CheckClusterCIDROption) (bool, error) {
 	if cls == nil || opt == nil {
 		return true, nil
 	}
 
 	return true, nil
+}
+
+// EnableExternalNodeSupport enable cluster support external node
+func (c *Cluster) EnableExternalNodeSupport(cls *proto.Cluster, opt *cloudprovider.EnableExternalNodeOption) error {
+	return nil
 }
 
 // ListOsImage list image os

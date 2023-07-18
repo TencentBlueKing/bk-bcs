@@ -14,6 +14,8 @@
 package api
 
 import (
+	"context"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"testing"
@@ -23,19 +25,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/regions"
-	cloudtke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
+
+	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 func getClient(region string) *TkeClient {
 	cli, _ := NewTkeClient(&cloudprovider.CommonOption{
 		Account: &cmproto.Account{
-			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
-			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+			SecretID:  os.Getenv(TencentCloudSecretIDClusterEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyClusterEnv),
 		},
 		Region: region,
+		CommonConf: cloudprovider.CloudConf{
+			CloudInternalEnable: true,
+			CloudDomain:         "tke.internal.tencentcloudapi.com",
+		},
 	})
 
 	return cli
@@ -53,10 +59,11 @@ func generateClusterCIDRInfo() *ClusterCIDRSettings {
 
 func generateClusterBasicInfo() *ClusterBasicSettings {
 	basicInfo := &ClusterBasicSettings{
-		ClusterOS:      "",
-		ClusterVersion: "",
-		ClusterName:    "BCS-K8S-xxxxx",
-		VpcID:          "vpc-xxxx",
+		ClusterOS:      "img-xxx",
+		ClusterVersion: "1.20.6",
+		ClusterName:    "xxx",
+		VpcID:          "vpc-xxx",
+		SubnetID:       "subnet-xxx",
 	}
 
 	tagTemplate := map[string]string{}
@@ -79,9 +86,10 @@ func generateClusterBasicInfo() *ClusterBasicSettings {
 
 func generateClusterAdvancedInfo() *ClusterAdvancedSettings {
 	advancedInfo := &ClusterAdvancedSettings{
-		IPVS:             true,
+		IPVS:             false,
 		ContainerRuntime: "docker",
 		RuntimeVersion:   "19.3",
+		NetworkType:      "CiliumOverlay",
 	}
 
 	if advancedInfo.ExtraArgs == nil {
@@ -99,7 +107,7 @@ func generateInstanceAdvanceInfo() *InstanceAdvancedSettings {
 	advanceInfo := &InstanceAdvancedSettings{
 		MountTarget:     "/data",
 		DockerGraphPath: "/data/bcs/service/docker",
-		Unschedulable:   common.Int64Ptr(1),
+		Unschedulable:   common.Int64Ptr(0),
 	}
 
 	return advanceInfo
@@ -107,12 +115,15 @@ func generateInstanceAdvanceInfo() *InstanceAdvancedSettings {
 
 func generateExistedInstance() *ExistedInstancesForNode {
 	passwd := utils.BuildInstancePwd()
+	fmt.Println(passwd)
 
-	masterInstanceIDs := []string{"ins-xxx", "ins-xxx", "ins-xxx"}
+	// masterInstanceIDs := []string{"ins-xxx", "ins-xxx", "ins-xxx"}
+
+	nodeInstance := []string{"ins-xxx"}
 	existedInstance := &ExistedInstancesForNode{
-		NodeRole: MASTER_ETCD.String(),
+		NodeRole: WORKER.String(),
 		ExistedInstancesPara: &ExistedInstancesPara{
-			InstanceIDs:   masterInstanceIDs,
+			InstanceIDs:   nodeInstance,
 			LoginSettings: &LoginSettings{Password: passwd},
 		},
 	}
@@ -121,11 +132,11 @@ func generateExistedInstance() *ExistedInstancesForNode {
 }
 
 func TestTkeClient_CreateTKECluster(t *testing.T) {
-	cli := getClient("ap-nanjing")
+	cli := getClient("ap-xxx")
 	req := &CreateClusterRequest{
 		AddNodeMode:      false,
-		Region:           "ap-nanjing",
-		ClusterType:      "INDEPENDENT_CLUSTER",
+		Region:           "ap-xxx",
+		ClusterType:      "MANAGED_CLUSTER", //"INDEPENDENT_CLUSTER",
 		ClusterCIDR:      generateClusterCIDRInfo(),
 		ClusterBasic:     generateClusterBasicInfo(),
 		ClusterAdvanced:  generateClusterAdvancedInfo(),
@@ -145,7 +156,7 @@ func TestTkeClient_CreateTKECluster(t *testing.T) {
 }
 
 func TestTkeClient_GetTKECluster(t *testing.T) {
-	cli := getClient("ap-guangzhou")
+	cli := getClient(regions.Nanjing)
 
 	cluster, err := cli.GetTKECluster("cls-xxx")
 	if err != nil {
@@ -154,24 +165,71 @@ func TestTkeClient_GetTKECluster(t *testing.T) {
 
 	t.Logf("%+v", *cluster.ClusterStatus)
 	t.Logf("%+v", *cluster.ClusterNetworkSettings.VpcId)
+	fmt.Println(*cluster.ClusterNetworkSettings.MaxNodePodNum)
+	fmt.Println(*cluster.ClusterNetworkSettings.MaxClusterServiceNum)
+	fmt.Println(*cluster.ClusterNetworkSettings.Ipvs)
+
+	fmt.Println(*cluster.ClusterType)
+	fmt.Println(*cluster.ClusterVersion)
+	fmt.Println(*cluster.ClusterOs)
+	fmt.Println(*cluster.ContainerRuntime)
+	fmt.Println(*cluster.EnableExternalNode)
+	fmt.Println(*cluster.ImageId)
+
+	//t.Logf("%+v", *cluster.ClusterNetworkSettings.Subnets[0])
+	fmt.Println(*cluster.ClusterNetworkSettings.ServiceCIDR)
+	fmt.Println(*cluster.ClusterNetworkSettings.ClusterCIDR)
+	fmt.Println(*cluster.ClusterNetworkSettings.Cni)
+
+	fmt.Println(*cluster.Property)
+	fmt.Println(*cluster.RuntimeVersion)
 }
 
-func TestTkeClient_ListTKECluster(t *testing.T) {
-	cli := getClient(regions.Guangzhou)
-
-	clusterList, err := cli.ListTKECluster()
+func TestGetTKEClusterKubeConfig(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	kubeBytes, err := cli.GetTKEClusterKubeConfig("cls-xxx", false)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for i := range clusterList {
-		t.Logf("%v\n", *clusterList[i].ClusterId)
+	t.Log(kubeBytes)
+}
+
+func TestGetClusterEndpointStatus(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	status, err := cli.GetClusterEndpointStatus("cls-xxx", true)
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	t.Log(status)
+}
+
+func TestCreateClusterEndpoint(t *testing.T) {
+	cli := getClient("ap-guangzhou")
+	err := cli.CreateClusterEndpoint("cls-xxx", ClusterEndpointConfig{IsExtranet: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
+}
+
+func TestDeleteClusterEndpoint(t *testing.T) {
+	cli := getClient("ap-nanjing")
+	err := cli.DeleteClusterEndpoint("cls-xxx", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
 }
 
 func TestAddExistedInstancesToCluster(t *testing.T) {
 	cli := getClient("ap-nanjing")
+
 	passwd := utils.BuildInstancePwd()
+	fmt.Println(passwd)
 
 	req := &AddExistedInstanceReq{
 		ClusterID:   "cls-xxx",
@@ -180,6 +238,23 @@ func TestAddExistedInstancesToCluster(t *testing.T) {
 			MountTarget:     MountTarget,
 			DockerGraphPath: DockerGraphPath,
 			Unschedulable:   common.Int64Ptr(1),
+			Labels: []*KeyValue{
+				{
+					Name:  "1",
+					Value: "2",
+				},
+				{
+					Name:  "3",
+					Value: "4",
+				},
+			},
+			TaintList: MapToTaints([]*cmproto.Taint{
+				{
+					Key:    "5",
+					Value:  "6",
+					Effect: "NoSchedule",
+				},
+			}),
 		},
 		LoginSetting: &LoginSettings{Password: passwd},
 	}
@@ -219,7 +294,7 @@ func TestTkeClient_DeleteTKECluster(t *testing.T) {
 
 func TestQueryTkeClusterAllInstances(t *testing.T) {
 	cli := getClient("ap-guangzhou")
-	instances, err := cli.QueryTkeClusterAllInstances("cls-xxx", QueryClusterInstanceFilter{
+	instances, err := cli.QueryTkeClusterAllInstances(context.Background(), "cls-xxx", QueryClusterInstanceFilter{
 		NodePoolID:           "",
 		NodePoolInstanceType: "",
 	})
@@ -276,39 +351,10 @@ func TestTkeClient_GetTKEClusterImages(t *testing.T) {
 	}
 }
 
-func TestGetTKEClusterKubeConfig(t *testing.T) {
-	cli := getClient("ap-guangzhou")
-	kubeBytes, err := cli.GetTKEClusterKubeConfig("cls-xxx", true)
-	if err != nil {
-		t.Fatal(err)
-	}
+func TestTkeClient_CloseVpcCniMode(t *testing.T) {
+	cli := getClient("ap-nanjing")
 
-	t.Log(kubeBytes)
-}
-
-func TestGetClusterEndpointStatus(t *testing.T) {
-	cli := getClient("ap-guangzhou")
-	status, err := cli.GetClusterEndpointStatus("cls-xxx", true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(status)
-}
-
-func TestCreateClusterEndpoint(t *testing.T) {
-	cli := getClient("ap-guangzhou")
-	err := cli.CreateClusterEndpoint("cls-xxx")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log("success")
-}
-
-func TestDeleteClusterEndpoint(t *testing.T) {
-	cli := getClient("ap-guangzhou")
-	err := cli.DeleteClusterEndpoint("cls-xxx")
+	err := cli.CloseVpcCniMode("cls-xxx")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -322,7 +368,7 @@ func TestTkeClient_EnableTKEVpcCniMode(t *testing.T) {
 		TkeClusterID:   "cls-xxx",
 		VpcCniType:     "tke-direct-eni",
 		SubnetsIDs:     []string{"subnet-xxx"},
-		EnableStaticIP: true,
+		EnableStaticIp: true,
 		ExpiredSeconds: 500,
 	})
 	if err != nil {
@@ -342,6 +388,21 @@ func TestTkeClient_EnableTKEVpcCniMode(t *testing.T) {
 			break
 		}
 	}
+}
+
+func TestTkeClient_AddVpcCniSubnets(t *testing.T) {
+	cli := getClient("ap-nanjing")
+
+	err := cli.AddVpcCniSubnets(&AddVpcCniSubnetsInput{
+		ClusterID: "cls-xxx",
+		VpcID:     "vpc-xxx",
+		SubnetIDs: []string{"subnet-xxx"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
 }
 
 func TestGetEnableVpcCniProgress(t *testing.T) {
@@ -418,7 +479,7 @@ func TestDescribeClusterNodePoolDetail(t *testing.T) {
 
 func TestModifyClusterNodePool(t *testing.T) {
 	cli := getClient("ap-guangzhou")
-	err := cli.ModifyClusterNodePool(&cloudtke.ModifyClusterNodePoolRequest{
+	err := cli.ModifyClusterNodePool(&tke.ModifyClusterNodePoolRequest{
 		ClusterId:   common.StringPtr("cls-xxx"),
 		NodePoolId:  common.StringPtr("np-xxx"),
 		Name:        common.StringPtr("test-node-pool"),
@@ -438,7 +499,7 @@ func TestDeleteClusterNodePool(t *testing.T) {
 	}
 }
 
-func TestModifyCapacityAboutAsg(t *testing.T) {
+func TestModifyNodePoolCapacityByAsg(t *testing.T) {
 	cli := getClient("ap-guangzhou")
 	err := cli.ModifyNodePoolCapacity("cls-xxx", "np-xxx", 1)
 	if err != nil {
@@ -462,10 +523,179 @@ func TestRemoveNodeFromNodePool(t *testing.T) {
 	}
 }
 
+func TestEnableExternalNodeSupport(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	err := cli.EnableExternalNodeSupport("cls-xxx", EnableExternalNodeConfig{
+		NetworkType: "Cilium VXLan",
+		ClusterCIDR: "xxx/20",
+		SubnetId:    "subnet-xxx",
+		Enabled:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
+}
+
+func TestCreateExternalNodePool(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	nodePoolID, err := cli.CreateExternalNodePool("cls-xxx", CreateExternalNodePoolConfig{
+		Name:             "xxx",
+		ContainerRuntime: "docker",
+		RuntimeVersion:   "19.3",
+		Labels: []*Label{
+			{
+				Name:  common.StringPtr("xxx"),
+				Value: common.StringPtr("yyy"),
+			},
+		},
+		Taints:                   nil,
+		InstanceAdvancedSettings: nil,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(nodePoolID)
+}
+
+func TestModifyExternalNodePool(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	err := cli.ModifyExternalNodePool("cls-xxx", ModifyExternalNodePoolConfig{
+		NodePoolId: "np-xxx",
+		Labels: []*Label{
+			{
+				Name:  common.StringPtr("xxx"),
+				Value: common.StringPtr("xxx"),
+			},
+		},
+		Taints: []*Taint{
+			{
+				Key:    common.StringPtr("xxx"),
+				Value:  common.StringPtr("1"),
+				Effect: common.StringPtr("PreferNoSchedule"),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
+}
+
+func TestDescribeExternalNodePools(t *testing.T) {
+	cli := getClient(regions.Shanghai)
+
+	nodePools, err := cli.DescribeExternalNodePools("cls-xxx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, pool := range nodePools {
+		t.Log(*pool.Name, *pool.NodePoolId, *pool.LifeState)
+	}
+}
+
+func TestDeleteExternalNodePool(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	err := cli.DeleteExternalNodePool("cls-xxx", DeleteExternalNodePoolConfig{
+		NodePoolIds: []string{"np-xxx"},
+		Force:       true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
+}
+
+func TestDescribeExternalNode(t *testing.T) {
+	cli := getClient(regions.Shanghai)
+
+	nodes, err := cli.DescribeExternalNode("cls-xxx", DescribeExternalNodeConfig{
+		NodePoolId: "np-xxx",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, node := range nodes {
+		t.Log(node.Name, node.NodePoolId, node.IP, node.Location, node.Status)
+	}
+}
+
+func TestDescribeExternalNodeScript(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	scriptInfo, err := cli.DescribeExternalNodeScript("cls-xxx", DescribeExternalNodeScriptConfig{
+		NodePoolId: "np-xxx",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(*scriptInfo.Link, "\n", *scriptInfo.Token, "\n", *scriptInfo.Command)
+
+	cmd := base64.StdEncoding.EncodeToString([]byte(*scriptInfo.Command))
+	t.Log(cmd)
+
+	src, _ := base64.StdEncoding.DecodeString(cmd)
+	t.Log(string(src))
+}
+
+func TestTkeClient_DeleteExternalNode(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	err := cli.DeleteExternalNode("cls-xxx", DeleteExternalNodeConfig{
+		Names: []string{"node-xxx"},
+		Force: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
+}
+
+func TestDescribeNodeSupportConfig(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	resp, err := cli.DescribeExternalNodeSupportConfig("cls-xxx")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(resp.Proxy)
+	t.Log(resp.Master)
+	t.Log(resp.FailedReason)
+	t.Log(resp.SwitchIP)
+	t.Log(resp.Enabled)
+	t.Log(resp.Status)
+	t.Log(resp.SubnetId, resp.NetworkType, resp.ClusterCIDR)
+}
+
+func TestDescribeVpcCniPodLimits(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	limits, err := cli.DescribeVpcCniPodLimits("ap-nanjing-1", "S5.LARGE16")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(limits.Limits.RouterEniNonStaticIP, limits.Limits.RouterEniStaticIP, limits.Limits.directEni)
+}
+
 func TestClient_DescribeOSImages(t *testing.T) {
 	cli := getClient(regions.Nanjing)
 
-	images, err := cli.DescribeOsImages(icommon.PublicImageProvider)
+	defaultCommonOption.Region = regions.Nanjing
+	images, err := cli.DescribeOsImages(icommon.PrivateImageProvider, defaultCommonOption)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -475,4 +705,39 @@ func TestClient_DescribeOSImages(t *testing.T) {
 	}
 
 	t.Log(len(images))
+}
+
+func TestAcquireClusterAdminRole(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	clusterID := "cls-xxx"
+	err := cli.AcquireClusterAdminRole(clusterID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("success")
+}
+
+func TestDescribeClusterKubeconfig(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	clusterID := "cls-xxx"
+	kube, err := cli.GetTKEClusterKubeConfig(clusterID, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(kube)
+}
+
+func TestNewTkeClient_GetTkeAppChartList(t *testing.T) {
+	cli := getClient(regions.Nanjing)
+
+	version, err := cli.GetTkeAppChartVersionByName("", "cos")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(version)
 }

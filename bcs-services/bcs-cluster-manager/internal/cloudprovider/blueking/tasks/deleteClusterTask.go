@@ -26,31 +26,16 @@ import (
 
 // CleanClusterDBInfoTask clean cluster DB info
 func CleanClusterDBInfoTask(taskID string, stepName string) error {
-	// delete node && nodeGroup && cluster
-	// get relative nodes by clusterID
 	start := time.Now()
-	// get task information and validate
-	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
-	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s get detail task information from storage failed, %s. task retry",
-			taskID, taskID, err.Error())
-		return err
-	}
 
-	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
-	if state.IsTerminated() {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s is terminated, step %s skip", taskID, taskID, stepName)
-		return fmt.Errorf("task %s terminated", taskID)
-	}
-	step, err := state.IsReadyToStep(stepName)
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
-			err.Error())
 		return err
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("CleanClusterDBInfoTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("UpdateCreateClusterDBInfoTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
 	blog.Infof("CleanClusterDBInfoTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
@@ -58,15 +43,18 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
+
+	// update cluster status deleting
+	cluster, err := cloudprovider.UpdateClusterStatus(clusterID, common.StatusDeleting)
 	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: get cluster for %s failed", taskID, clusterID)
-		retErr := fmt.Errorf("get cluster information failed, %s", err.Error())
+		blog.Errorf("CleanClusterDBInfoTask[%s]: delete cluster for %s failed", taskID, clusterID)
+		retErr := fmt.Errorf("delete cluster for %s failed, %s", clusterID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+	blog.Infof("CleanClusterDBInfoTask[%s]: delete cluster[%s] in DB successful", taskID, clusterID)
 
-	// delete nodes
+	// delete cluster nodes
 	err = cloudprovider.GetStorageModel().DeleteNodesByClusterID(context.Background(), cluster.ClusterID)
 	if err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: delete nodes for %s failed", taskID, clusterID)
@@ -76,41 +64,14 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	}
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete nodes for cluster[%s] in DB successful", taskID, clusterID)
 
-	// delete cluster
-	cluster.Status = common.StatusDeleting
-	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)
-	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: delete cluster for %s failed", taskID, clusterID)
-		retErr := fmt.Errorf("delete cluster for %s failed, %s", clusterID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	blog.Infof("CleanClusterDBInfoTask[%s]: delete cluster[%s] in DB successful", taskID, clusterID)
-
 	// sync clean cluster dependency(pass-cc/token/credential)
 	utils.SyncDeletePassCCCluster(taskID, cluster)
-	utils.DeleteBcsAgentToken(cluster)
+	utils.DeleteBcsAgentToken(cluster.ClusterID)
 	utils.DeleteClusterCredentialInfo(cluster.ClusterID)
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
-	return nil
-}
-
-// updateClusterStatus set cluster status
-func updateClusterStatus(clusterID string, status string) error {
-	cluster, err := cloudprovider.GetStorageModel().GetCluster(context.Background(), clusterID)
-	if err != nil {
-		return err
-	}
-
-	cluster.Status = status
-	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cluster)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }

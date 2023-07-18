@@ -20,14 +20,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/parnurzeal/gorequest"
 )
 
 // Interface for gse api
 type Interface interface {
 	// GetAgentStatus get agent status
-	GetAgentStatus(req *GetAgentStatusReq) (*GetAgentStatusResp, error)
+	GetAgentStatus(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2, error)
 }
 
 // GseClient global gse client
@@ -130,7 +129,8 @@ func (c *Client) GetAgentStatus(req *GetAgentStatusReqV2) (*GetAgentStatusRespV2
 	}
 
 	var (
-		reqURL   = fmt.Sprintf("%s/list_agent_state", c.server)
+		// v1 version: %s/get_agent_status/
+		reqURL   = fmt.Sprintf("%s/list_agent_statue", c.server)
 		respData = &GetAgentStatusRespV2{}
 	)
 

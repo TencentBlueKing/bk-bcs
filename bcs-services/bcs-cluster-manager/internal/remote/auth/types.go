@@ -15,35 +15,6 @@ package auth
 
 import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
-const (
-	// ServiceCode default bcs
-	ServiceCode = "bcs"
-	// ClusterProd prod
-	ClusterProd = "cluster_prod"
-	// ClusterTest test
-	ClusterTest = "cluster_test"
-)
-
-const (
-	// PolicyCreate create permission
-	PolicyCreate = "create"
-	// PolicyEdit edit permission
-	PolicyEdit = "edit"
-	// PolicyUse use permission
-	PolicyUse = "use"
-	// PolicyDelete delete permission
-	PolicyDelete = "delete"
-	// PolicyView view permission
-	PolicyView = "view"
-)
-
-const (
-	// NO_RES no resource
-	NO_RES = "**"
-	// ANY_RES any resource
-	ANY_RES = "*"
-)
-
 var (
 	// PolicyList policy list for v0
 	PolicyList = []string{"create", "delete", "view", "edit", "use", "deploy", "download"}
@@ -55,7 +26,7 @@ var (
 
 // CommonResp common resp
 type CommonResp struct {
-	Code      uint   `json:"code"`
+	Code      string `json:"code"`
 	Message   string `json:"message"`
 	RequestID string `json:"request_id"`
 }
@@ -66,7 +37,7 @@ type AccessRequest struct {
 	AppSecret  string `json:"app_secret"`
 	IDProvider string `json:"id_provider"`
 	GrantType  string `json:"grant_type"`
-	Env        string `json:"env"`
+	Env        string `json:"env_name"`
 }
 
 // AccessTokenResp response
@@ -130,25 +101,6 @@ type PermList struct {
 	ResourceType     string   `json:"resource_type"`
 }
 
-// GetAllSharedClusterPerm get sharedCluster perm policy for v0/v3
-func GetAllSharedClusterPerm() map[string]bool {
-	var (
-		defaultPerm = make(map[string]bool)
-		policyList  = make([]string, 0)
-	)
-	policyList = append(policyList, PolicyList...)
-	policyList = append(policyList, V3PolicyList...)
-
-	for _, p := range policyList {
-		defaultPerm[p] = false
-		if utils.StringInSlice(p, sharedClusterOpenPolicy) {
-			defaultPerm[p] = true
-		}
-	}
-
-	return defaultPerm
-}
-
 // GetV3SharedClusterPerm get sharedCluster perm policy
 func GetV3SharedClusterPerm() map[string]interface{} {
 	defaultPerm := make(map[string]interface{})
@@ -160,65 +112,4 @@ func GetV3SharedClusterPerm() map[string]interface{} {
 	}
 
 	return defaultPerm
-}
-
-// GetV0SharedClusterPerm get sharedCluster perm policy
-func GetV0SharedClusterPerm() map[string]bool {
-	defaultPerm := make(map[string]bool)
-	for _, p := range PolicyList {
-		defaultPerm[p] = false
-		if utils.StringInSlice(p, sharedClusterOpenPolicy) {
-			defaultPerm[p] = true
-		}
-	}
-
-	return defaultPerm
-}
-
-// GetInitPerm init perm policy
-func GetInitPerm() map[string]bool {
-	defaultPerm := make(map[string]bool)
-	for _, p := range PolicyList {
-		defaultPerm[p] = false
-	}
-
-	return defaultPerm
-}
-
-// ExistResourceTypeAndPolicyCode get cluster list in perm list
-func ExistResourceTypeAndPolicyCode(permList []PermList, policyResource PolicyResourceType) []string {
-	for i := range permList {
-		if permList[i].ResourceType == policyResource.ResourceType && permList[i].PolicyCode == policyResource.PolicyCode {
-			return permList[i].ResourceCodeList
-		}
-	}
-
-	return nil
-}
-
-// ClusterPermMatrix get init perm resourceType and policy
-func ClusterPermMatrix() []*PolicyResourceType {
-	permMatrix := make([]*PolicyResourceType, 0)
-	for _, policy := range PolicyList {
-		permMatrix = append(permMatrix, &PolicyResourceType{
-			PolicyCode:   policy,
-			ResourceType: ClusterTest,
-		})
-		permMatrix = append(permMatrix, &PolicyResourceType{
-			PolicyCode:   policy,
-			ResourceType: ClusterProd,
-		})
-	}
-
-	return permMatrix
-}
-
-// GetClusterResType get cluster type
-func GetClusterResType(env string) string {
-	switch env {
-	case "prod":
-		return ClusterProd
-	}
-
-	return ClusterTest
 }

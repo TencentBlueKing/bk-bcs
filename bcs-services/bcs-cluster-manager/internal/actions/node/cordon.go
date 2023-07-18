@@ -113,8 +113,7 @@ func (ua *UnCordonNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles node uncordon
-func (ua *UnCordonNodeAction) Handle(ctx context.Context, req *cmproto.UnCordonNodeRequest,
-	resp *cmproto.UnCordonNodeResponse) {
+func (ua *UnCordonNodeAction) Handle(ctx context.Context, req *cmproto.UnCordonNodeRequest, resp *cmproto.UnCordonNodeResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("uncordon cluster node failed, req or resp is empty")
 		return
@@ -224,8 +223,7 @@ func (ua *CordonNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles node cordon
-func (ua *CordonNodeAction) Handle(ctx context.Context, req *cmproto.CordonNodeRequest,
-	resp *cmproto.CordonNodeResponse) {
+func (ua *CordonNodeAction) Handle(ctx context.Context, req *cmproto.CordonNodeRequest, resp *cmproto.CordonNodeResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("cordon cluster node failed, req or resp is empty")
 		return

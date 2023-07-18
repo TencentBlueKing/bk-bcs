@@ -20,6 +20,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -27,6 +30,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+)
+
+// errors
+var (
+	nodePoolScaleUpErr = errors.New("the status of the aks node pool is scale up, and currently " +
+		"no operations can be performed on it")
+	nodePoolUpdatingErr = errors.New("the aks node pool status is in the process of being updating " +
+		"and no operations can be performed on it right now")
 )
 
 var groupMgr sync.Once
@@ -84,31 +96,32 @@ func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node
 }
 
 // UpdateNodeGroup 更新云上节点池 - update specified nodegroup configuration
-func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) error {
+func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.UpdateNodeGroupOption) (
+	*proto.Task, error) {
 	_, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), group.Provider, group.ClusterID)
 	if err != nil {
 		blog.Errorf("get cluster %s failed, %s", group.ClusterID, err.Error())
-		return err
+		return nil, err
 	}
 
 	// create aks client
-	client, err := api.NewAksServiceImplWithCommonOption(opt)
+	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create aks client failed, err: %s", err.Error())
-		return err
+		return nil, err
 	}
 	if group.NodeGroupID == "" || group.ClusterID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
-		return fmt.Errorf("nodegroup id or cluster id is empty")
+		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
 	}
 
 	// update agent pool
 	if err = ng.updateAgentPoolProperties(client, cluster, group); err != nil {
-		return errors.Wrapf(err, "UpdateNodeGroup: call updateAgentPoolProperties failed")
+		return nil, errors.Wrapf(err, "UpdateNodeGroup: call updateAgentPoolProperties failed")
 	}
 	// update virtual machine scale set
 	if err = ng.updateVMSSProperties(client, group); err != nil {
-		return errors.Wrapf(err, "UpdateNodeGroup: call updateVMSSProperties failed")
+		return nil, errors.Wrapf(err, "UpdateNodeGroup: call updateVMSSProperties failed")
 	}
 
 	// update bkCloudName
@@ -125,12 +138,18 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	//	return err
 	//}
 
-	return nil
+	return nil, nil
 }
 
 // GetNodesInGroup 从云上拉取该节点池的所有节点 - get all nodes belong to NodeGroup
-func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode,
+func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node,
 	error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetNodesInGroupV2 get all nodes belong to NodeGroup
+func (ng *NodeGroup) GetNodesInGroupV2(group *proto.NodeGroup,
+	opt *cloudprovider.CommonOption) ([]*proto.NodeGroupNode, error) {
 	if group.ClusterID == "" || group.NodeGroupID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
@@ -384,4 +403,136 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 		return nil, err
 	}
 	return task, nil
+}
+
+// AddExternalNodeToCluster add external to cluster
+func (ng *NodeGroup) AddExternalNodeToCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.AddExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// DeleteExternalNodeFromCluster remove external node from cluster
+func (ng *NodeGroup) DeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
+	opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// GetExternalNodeScript get nodegroup external node script
+func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup) (string, error) {
+	return "", cloudprovider.ErrCloudNotImplemented
+}
+
+// transAksNodeToNode 节点转换
+func transAksNodeToNode(node *armcompute.VirtualMachineScaleSetVM, vmIPMap map[string][]string) *proto.NodeGroupNode {
+	n := &proto.NodeGroupNode{NodeID: *node.InstanceID}
+	// azure 默认为节点，无法获取master
+	properties := node.Properties
+	if properties != nil && properties.ProvisioningState != nil {
+		switch *properties.ProvisioningState {
+		case api.NormalState:
+			n.Status = common.StatusRunning
+		case api.CreatingState:
+			n.Status = common.StatusInitialization
+		//case "failed":
+		//	n.Status = "FAILED"
+		default:
+			n.Status = *properties.ProvisioningState
+		}
+	}
+	if list, ok := vmIPMap[*node.Name]; ok && len(list) != 0 {
+		n.InnerIP = list[0]
+	}
+	return n
+}
+
+// updateAgentPoolProperties 更新 AKS 代理节点池 - update agent pool
+func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *proto.Cluster,
+	group *proto.NodeGroup) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	pool, err := client.GetPoolAndReturn(ctx, cluster.SystemID, group.CloudNodeGroupID)
+	if err != nil {
+		return errors.Wrapf(err, "UpdateNodeGroup: call GetAgentPool api failed")
+	}
+	if err = checkPoolState(pool); err != nil { // 更新前检查节点池的状态
+		return errors.Wrapf(err, "nodeGroupID: %s unable to update agent pool", group.NodeGroupID)
+	}
+
+	// 更新 pool
+	api.SetAgentPoolFromNodeGroup(group, pool)
+
+	// update agent pool
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	if _, err = client.UpdatePoolAndReturn(ctx, pool, cluster.SystemID, *pool.Name); err != nil {
+		return errors.Wrapf(err, "UpdateNodeGroup: call UpdateAgentPool api failed")
+	}
+
+	return nil
+}
+
+// updateVMSSProperties 更新虚拟机规模集 - update virtual machine scale set
+func (ng *NodeGroup) updateVMSSProperties(client api.AksService, group *proto.NodeGroup) error {
+	asg := group.AutoScaling
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	set, err := client.GetSetWithName(ctx, asg.AutoScalingName, asg.AutoScalingID)
+	if err != nil {
+		return errors.Wrapf(err, "UpdateNodeGroup: call GetSetWithName api failed")
+	}
+
+	if group.LaunchTemplate != nil && len(group.LaunchTemplate.UserData) != 0 {
+		set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.LaunchTemplate.UserData)
+	}
+	// 镜像引用-暂时置空处理，若不置空会导致无法更新set
+	api.SetImageReferenceNull(set)
+
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	if _, err = client.UpdateSetWithName(ctx, set, asg.AutoScalingName, asg.AutoScalingID); err != nil {
+		return errors.Wrapf(err, "UpdateNodeGroup: call UpdateSetWithName api failed")
+	}
+
+	return nil
+}
+
+// scaleUpPreCheck 扩容前置检查
+func (ng *NodeGroup) scaleUpPreCheck(clusterID, cloudID, nodeGroupID string) error {
+	info, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: nodeGroupID,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "call GetClusterDependBasicInfo failed")
+	}
+
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
+	if err != nil {
+		return errors.Wrapf(err, "new azure client failed")
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+	pool, err := client.GetPoolAndReturn(ctx, info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
+	if err != nil {
+		return errors.Wrapf(err, "call GetPoolAndReturn failed")
+	}
+
+	return checkPoolState(pool)
+}
+
+// checkPoolState 更新前，检查节点池的状态
+// 如果节点池正在 "更新中" 或 "扩容中"，将无法对其进行操作
+func checkPoolState(pool *armcontainerservice.AgentPool) error {
+	state := *pool.Properties.ProvisioningState
+	if state == api.UpdatingState {
+		return errors.Wrapf(nodePoolUpdatingErr, "cloudNodeGroupID: %s", *pool.Name)
+	}
+	if state == api.ScalingState {
+		return errors.Wrapf(nodePoolScaleUpErr, "cloudNodeGroupID: %s", *pool.Name)
+	}
+	return nil
 }

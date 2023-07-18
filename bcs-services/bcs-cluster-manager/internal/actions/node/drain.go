@@ -50,7 +50,6 @@ func (ua *DrainNodeAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
 	}
-
 	// set default GracePeriodSeconds
 	if ua.req.GracePeriodSeconds == 0 {
 		ua.req.GracePeriodSeconds = -1

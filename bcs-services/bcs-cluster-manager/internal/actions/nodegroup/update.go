@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
@@ -37,6 +38,7 @@ type UpdateAction struct {
 	group   *cmproto.NodeGroup
 	cluster *cmproto.Cluster
 	cloud   *cmproto.Cloud
+	task    *cmproto.Task
 	req     *cmproto.UpdateNodeGroupRequest
 	resp    *cmproto.UpdateNodeGroupResponse
 }
@@ -52,10 +54,10 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
-	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+	ua.resp.Result = code == common.BcsErrClusterManagerSuccess
 }
 
-// validate xxx
+// validate check
 func (ua *UpdateAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
@@ -66,18 +68,11 @@ func (ua *UpdateAction) validate() error {
 	if ua.req.ClusterID == "" {
 		return fmt.Errorf("clusterID is empty")
 	}
-	if err := validateDiskSize(ua.req.NodeTemplate.DataDisks...); err != nil {
-		return err
+	if ua.req.AutoScaling != nil && ua.req.AutoScaling.MinSize > ua.req.AutoScaling.MaxSize {
+		return fmt.Errorf("updateAction AutoScaling MinSize(%v) lt MaxSize(%v)",
+			ua.req.AutoScaling.MinSize, ua.req.AutoScaling.MaxSize)
 	}
-	if err := validateDiskSize(ua.req.LaunchTemplate.DataDisks...); err != nil {
-		return err
-	}
-	if err := validateDiskSize(ua.req.LaunchTemplate.SystemDisk); err != nil {
-		return err
-	}
-	if err := validateInternet(ua.req.LaunchTemplate.InternetAccess); err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -91,36 +86,65 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	if len(ua.req.Name) != 0 {
 		group.Name = ua.req.Name
 	}
+	if len(ua.req.Region) != 0 {
+		group.Region = ua.req.Region
+	}
+	if ua.req.EnableAutoscale != nil {
+		group.EnableAutoscale = ua.req.EnableAutoscale.GetValue()
+	}
+	if len(ua.req.Labels) > 0 {
+		group.Labels = ua.req.Labels
+	}
+	if len(ua.req.Tags) > 0 {
+		group.Tags = ua.req.Tags
+	}
+	if len(ua.req.ConsumerID) > 0 {
+		group.ConsumerID = ua.req.ConsumerID
+	}
+
+	// autoscaling
 	ua.modifyNodeGroupAutoScaling(group)
+	// launch template
 	ua.modifyNodeGroupLaunchTemplate(group)
+	// nodeTemplate
 	ua.modifyNodeGroupNodeTemplate(group)
-	group.Labels = ua.req.Labels
-	group.Taints = ua.req.Taints
-	group.Tags = ua.req.Tags
 	if len(ua.req.NodeOS) != 0 {
 		group.NodeOS = ua.req.NodeOS
 	}
-	if ua.req.BkCloudID != nil {
+	if ua.req.BkCloudID != nil && ua.req.CloudAreaName != nil {
 		group.Area = &cmproto.CloudArea{
 			BkCloudID:   ua.req.BkCloudID.GetValue(),
 			BkCloudName: ua.req.CloudAreaName.GetValue(),
 		}
 	}
+	group.Labels = ua.req.Labels
+	group.Tags = ua.req.Tags
+
+	removeSensitiveInfo(group)
 	ua.group = group
 }
 
 // modifyNodeGroupAutoScaling autoscaling field
 func (ua *UpdateAction) modifyNodeGroupAutoScaling(group *cmproto.NodeGroup) {
 	if ua.req.AutoScaling != nil {
+		if group.AutoScaling == nil {
+			group.AutoScaling = &cmproto.AutoScalingGroup{}
+		}
+		group.AutoScaling.MinSize = ua.req.AutoScaling.MinSize
 		if ua.req.AutoScaling.MaxSize != 0 {
 			group.AutoScaling.MaxSize = ua.req.AutoScaling.MaxSize
 		}
-		group.AutoScaling.MinSize = ua.req.AutoScaling.MinSize
+		if ua.req.AutoScaling.VpcID != "" {
+			group.AutoScaling.VpcID = ua.req.AutoScaling.VpcID
+		}
 		if ua.req.AutoScaling.DefaultCooldown != 0 {
 			group.AutoScaling.DefaultCooldown = ua.req.AutoScaling.DefaultCooldown
 		}
 		if ua.req.AutoScaling.SubnetIDs != nil {
 			group.AutoScaling.SubnetIDs = ua.req.AutoScaling.SubnetIDs
+		}
+		if ua.req.AutoScaling.Zones != nil {
+			group.AutoScaling.Zones = ua.req.AutoScaling.Zones
 		}
 		if ua.req.AutoScaling.RetryPolicy != "" {
 			group.AutoScaling.RetryPolicy = ua.req.AutoScaling.RetryPolicy
@@ -131,12 +155,27 @@ func (ua *UpdateAction) modifyNodeGroupAutoScaling(group *cmproto.NodeGroup) {
 		if ua.req.AutoScaling.ScalingMode != "" {
 			group.AutoScaling.ScalingMode = ua.req.AutoScaling.ScalingMode
 		}
+		if len(ua.req.AutoScaling.TimeRanges) > 0 {
+			group.AutoScaling.TimeRanges = ua.req.AutoScaling.TimeRanges
+		}
 	}
 }
 
 // modifyNodeGroupLaunchTemplate launchTemplate field
 func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) {
 	if ua.req.LaunchTemplate != nil {
+		if group.LaunchTemplate == nil {
+			group.LaunchTemplate = &cmproto.LaunchConfiguration{}
+		}
+		if ua.req.LaunchTemplate.CPU > 0 {
+			group.LaunchTemplate.CPU = ua.req.LaunchTemplate.CPU
+		}
+		if ua.req.LaunchTemplate.Mem > 0 {
+			group.LaunchTemplate.Mem = ua.req.LaunchTemplate.Mem
+		}
+		if ua.req.LaunchTemplate.GPU > 0 {
+			group.LaunchTemplate.GPU = ua.req.LaunchTemplate.GPU
+		}
 		if ua.req.LaunchTemplate.InstanceType != "" {
 			group.LaunchTemplate.InstanceType = ua.req.LaunchTemplate.InstanceType
 		}
@@ -146,8 +185,22 @@ func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) 
 		if ua.req.LaunchTemplate.InternetAccess != nil {
 			group.LaunchTemplate.InternetAccess = ua.req.LaunchTemplate.InternetAccess
 		}
+		if ua.req.LaunchTemplate.InitLoginUsername != "" {
+			group.LaunchTemplate.InitLoginUsername = ua.req.LaunchTemplate.InitLoginUsername
+		}
 		if ua.req.LaunchTemplate.InitLoginPassword != "" {
 			group.LaunchTemplate.InitLoginPassword = ua.req.LaunchTemplate.InitLoginPassword
+		}
+		if ua.req.LaunchTemplate.KeyPair != nil {
+			if group.LaunchTemplate.KeyPair == nil {
+				group.LaunchTemplate.KeyPair = &cmproto.KeyInfo{}
+			}
+			if len(ua.req.LaunchTemplate.KeyPair.GetKeyID()) > 0 {
+				group.LaunchTemplate.KeyPair.KeyID = ua.req.LaunchTemplate.KeyPair.GetKeyID()
+			}
+			if len(ua.req.LaunchTemplate.KeyPair.GetKeySecret()) > 0 {
+				group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(ua.req.LaunchTemplate.KeyPair.GetKeySecret())
+			}
 		}
 		if ua.req.LaunchTemplate.SecurityGroupIDs != nil {
 			group.LaunchTemplate.SecurityGroupIDs = ua.req.LaunchTemplate.SecurityGroupIDs
@@ -164,6 +217,7 @@ func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) 
 		if ua.req.LaunchTemplate.DataDisks != nil {
 			group.LaunchTemplate.DataDisks = ua.req.LaunchTemplate.DataDisks
 		}
+		group.LaunchTemplate.Selector = ua.req.LaunchTemplate.Selector
 		group.LaunchTemplate.IsMonitorService = ua.req.LaunchTemplate.IsMonitorService
 		group.LaunchTemplate.IsSecurityService = ua.req.LaunchTemplate.IsSecurityService
 	}
@@ -172,6 +226,9 @@ func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) 
 // modifyNodeGroupNodeTemplate nodeTemplate field
 func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 	if ua.req.NodeTemplate != nil {
+		if group.NodeTemplate == nil {
+			group.NodeTemplate = &cmproto.NodeTemplate{}
+		}
 		if ua.req.NodeTemplate.NodeTemplateID != "" {
 			group.NodeTemplate.NodeTemplateID = ua.req.NodeTemplate.NodeTemplateID
 		}
@@ -181,6 +238,12 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		if ua.req.NodeTemplate.ProjectID != "" {
 			group.NodeTemplate.ProjectID = ua.req.NodeTemplate.ProjectID
 		}
+		if len(ua.req.NodeTemplate.Labels) > 0 {
+			group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
+		}
+		if len(ua.req.NodeTemplate.Taints) > 0 {
+			group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints
+		}
 		if ua.req.NodeTemplate.DockerGraphPath != "" {
 			group.NodeTemplate.DockerGraphPath = ua.req.NodeTemplate.DockerGraphPath
 		}
@@ -189,6 +252,20 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		}
 		if ua.req.NodeTemplate.DataDisks != nil {
 			group.NodeTemplate.DataDisks = ua.req.NodeTemplate.DataDisks
+		}
+		if ua.req.NodeTemplate.UserScript != "" {
+			group.NodeTemplate.UserScript = utils.Base64Encode(ua.req.NodeTemplate.UserScript)
+		} else {
+			group.NodeTemplate.UserScript = ua.req.NodeTemplate.UserScript
+		}
+		// 组件参数设置: key 为组件标识，value 各模块进程启动参数，多个参数之间使用;间隔，例如Kubelet: root-dir=/var/lib/kubelet;"
+		if len(ua.req.NodeTemplate.ExtraArgs) > 0 {
+			group.NodeTemplate.ExtraArgs = ua.req.NodeTemplate.ExtraArgs
+		}
+		if ua.req.NodeTemplate.PreStartUserScript != "" {
+			group.NodeTemplate.PreStartUserScript = utils.Base64Encode(ua.req.NodeTemplate.PreStartUserScript)
+		} else {
+			group.NodeTemplate.PreStartUserScript = ua.req.NodeTemplate.PreStartUserScript
 		}
 		if ua.req.NodeTemplate.BcsScaleOutAddons != nil {
 			group.NodeTemplate.BcsScaleOutAddons = ua.req.NodeTemplate.BcsScaleOutAddons
@@ -202,18 +279,33 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 		if ua.req.NodeTemplate.ScaleInExtraAddons != nil {
 			group.NodeTemplate.ScaleInExtraAddons = ua.req.NodeTemplate.ScaleInExtraAddons
 		}
-		if ua.req.NodeTemplate.ModuleID != "" {
-			group.NodeTemplate.ModuleID = ua.req.NodeTemplate.ModuleID
-		}
-		if ua.req.NodeTemplate.ExtraArgs != nil {
-			group.NodeTemplate.ExtraArgs = ua.req.NodeTemplate.ExtraArgs
+		if ua.req.NodeTemplate.Runtime != nil {
+			group.NodeTemplate.Runtime = ua.req.NodeTemplate.Runtime
 		}
 		if ua.req.NodeTemplate.Module != nil {
 			group.NodeTemplate.Module = ua.req.NodeTemplate.Module
 		}
+		if ua.req.NodeTemplate.Creator != "" {
+			group.NodeTemplate.Creator = ua.req.NodeTemplate.Creator
+		}
+		if ua.req.NodeTemplate.Updater != "" {
+			group.NodeTemplate.Updater = ua.req.NodeTemplate.Updater
+		}
+		if ua.req.NodeTemplate.ScaleInPreScript != "" {
+			group.NodeTemplate.ScaleInPreScript = utils.Base64Encode(ua.req.NodeTemplate.ScaleInPreScript)
+		} else {
+			group.NodeTemplate.ScaleInPreScript = ua.req.NodeTemplate.ScaleInPreScript
+		}
+		if ua.req.NodeTemplate.ScaleInPostScript != "" {
+			group.NodeTemplate.ScaleInPostScript = utils.Base64Encode(ua.req.NodeTemplate.ScaleInPostScript)
+		} else {
+			group.NodeTemplate.ScaleInPostScript = ua.req.NodeTemplate.ScaleInPostScript
+		}
 		group.NodeTemplate.UnSchedulable = ua.req.NodeTemplate.UnSchedulable
 		group.NodeTemplate.Taints = ua.req.NodeTemplate.Taints
 		group.NodeTemplate.Labels = ua.req.NodeTemplate.Labels
+		group.NodeTemplate.Annotations = ua.req.NodeTemplate.Annotations
+		group.NodeTemplate.SkipSystemInit = ua.req.NodeTemplate.SkipSystemInit
 	}
 }
 
@@ -224,6 +316,7 @@ func (ua *UpdateAction) getRelativeResource() error {
 		blog.Errorf("get NodeGroup %s failed, %s", ua.req.NodeGroupID, err.Error())
 		return err
 	}
+	removeSensitiveInfo(group)
 	ua.group = group
 
 	// cluster
@@ -249,7 +342,7 @@ func (ua *UpdateAction) getRelativeResource() error {
 
 // updateCloudNodeGroup update cloud nodeGroup
 func (ua *UpdateAction) updateCloudNodeGroup() error {
-	// get credential for cloudprovider operation
+	//get credential for cloudprovider operation
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
 		Cloud:     ua.cloud,
 		AccountID: ua.cluster.CloudAccountID,
@@ -270,8 +363,13 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 	}
 	cmOption.Region = ua.group.Region
 
-	// update nodegroup
-	err = mgr.UpdateNodeGroup(ua.group, cmOption)
+	// update cloud nodeGroup implement or generate task running
+	task, err := mgr.UpdateNodeGroup(ua.group, &cloudprovider.UpdateNodeGroupOption{
+		CommonOption: *cmOption,
+		Cloud:        ua.cloud,
+		Cluster:      ua.cluster,
+		OnlyData:     ua.req.OnlyUpdateInfo,
+	})
 	if err != nil {
 		blog.Errorf("update nodegroup %s in cluster %s with cloudprovider %s failed, %s",
 			ua.group.NodeGroupID, ua.group.ClusterID, ua.cloud.CloudProvider, err.Error(),
@@ -279,22 +377,40 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 		return err
 	}
 	ua.resp.Data = ua.group
-	return nil
-}
 
-// setNodeGroupUpdating update group status
-func (ua *UpdateAction) setNodeGroupUpdating() error {
-	ua.group.Status = common.StatusNodeGroupUpdating
-	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
-		blog.Infof("update nodegroup %s failed, %v", ua.group.NodeGroupID, err)
+	// create task and dispatch task
+	if task != nil {
+		ua.task = task
+		// create task and dispatch task
+		if err = ua.model.CreateTask(ua.ctx, task); err != nil {
+			blog.Errorf("update nodegroup task for nodegroup %s failed, %s",
+				ua.group.NodeGroupID, err.Error(),
+			)
+			return err
+		}
+		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
+			blog.Errorf("dispatch update nodegroup task for nodegroup %s failed, %s",
+				ua.group.NodeGroupID, err.Error(),
+			)
+			return err
+		}
+		// update group info
+		if err = ua.saveNodeGroupStatus(common.StatusNodeGroupUpdating); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if err = ua.saveNodeGroupStatus(common.StatusRunning); err != nil {
 		return err
 	}
-	blog.Infof("update nodegroup %s successfully", ua.group.NodeGroupID)
+
 	return nil
 }
 
-// saveDB save nodeGroup
-func (ua *UpdateAction) saveDB(status string) error {
+// saveNodeGroupStatus save group status
+func (ua *UpdateAction) saveNodeGroupStatus(status string) error {
 	ua.group.Status = status
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
 		blog.Errorf("nodegroup %s update in cloudprovider %s success, but update failed in local storage, %s. detail: %+v",
@@ -306,23 +422,23 @@ func (ua *UpdateAction) saveDB(status string) error {
 	return nil
 }
 
-// checkStatus status check
+// checkStatus check status
 func (ua *UpdateAction) checkStatus() error {
 	// if nodegroup is creating/deleting/deleted, return error
-	if ua.group.Status == common.StatusCreateNodeGroupCreating || ua.group.Status == common.StatusDeleting ||
-		ua.group.Status == common.StatusDeleted {
-		err := fmt.Errorf("nodegroup %s status is not running, can not disable auto scale", ua.group.NodeGroupID)
+	if ua.group.Status == common.StatusCreateNodeGroupCreating || ua.group.Status == common.StatusDeleteNodeGroupDeleting ||
+		ua.group.Status == common.StatusCreateNodeGroupFailed || ua.group.Status == common.StatusDeleteNodeGroupFailed {
+		err := fmt.Errorf("nodegroup %s status is not running, can not update nodegroup", ua.group.NodeGroupID)
 		return err
 	}
 	return nil
 }
 
-// Handle handle update cluster credential
+// Handle handle update cluster nodeGroup
 func (ua *UpdateAction) Handle(
 	ctx context.Context, req *cmproto.UpdateNodeGroupRequest, resp *cmproto.UpdateNodeGroupResponse) {
 
 	if req == nil || resp == nil {
-		blog.Errorf("update cloud failed, req or resp is empty")
+		blog.Errorf("update cloud nodeGroup failed, req or resp is empty")
 		return
 	}
 	ua.ctx = ctx
@@ -344,30 +460,28 @@ func (ua *UpdateAction) Handle(
 		return
 	}
 
-	if err := ua.setNodeGroupUpdating(); err != nil {
-		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-
+	// sync update cloud nodeGroup
 	ua.modifyNodeGroupField()
 	if err := ua.updateCloudNodeGroup(); err != nil {
-		_ = ua.saveDB(common.StatusNodeGroupUpdateFailed)
+		_ = ua.saveNodeGroupStatus(common.StatusNodeGroupUpdateFailed)
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
-		return
-	}
-
-	if err := ua.saveDB(common.StatusRunning); err != nil {
-		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
 
 	if err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   ua.req.NodeGroupID,
-		TaskID:       "",
-		Message:      fmt.Sprintf("集群%s节点池%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
-		OpUser:       req.Updater,
-		CreateTime:   time.Now().Format(time.RFC3339),
+		TaskID: func() string {
+			if ua.task == nil {
+				return ""
+			}
+			return ua.task.TaskID
+		}(),
+		Message:    fmt.Sprintf("集群%s节点规格%s更新配置信息", ua.req.ClusterID, ua.req.NodeGroupID),
+		OpUser:     req.Updater,
+		CreateTime: time.Now().Format(time.RFC3339),
+		ClusterID:  ua.cluster.ClusterID,
+		ProjectID:  ua.cluster.ProjectID,
 	}); err != nil {
 		blog.Errorf("UpdateNodeGroup[%s] CreateOperationLog failed: %v", ua.req.NodeGroupID, err)
 	}
@@ -402,20 +516,20 @@ func (ua *MoveNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-// validate xxx
+// validate check
 func (ua *MoveNodeAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return err
 	}
-	// get nodegroup for validation
+	//get nodegroup for validation
 	destGroup, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		blog.Errorf("Get NodeGroup %s in pre-MoveNode checking failed, err %s", ua.req.NodeGroupID, err.Error())
 		return err
 	}
-	// check cluster info consistency
+	//check cluster info consistency
 	if destGroup.ClusterID != ua.req.ClusterID {
 		blog.Errorf(
 			"request ClusterID %s is not same with NodeGroup.ClusterID %s when MoveNode",
@@ -438,7 +552,7 @@ func (ua *MoveNodeAction) validate() error {
 		return err
 	}
 	ua.cluster = cluster
-	// get specified node for move validation
+	//get specified node for move validation
 	condM := make(operator.M)
 	condM["clusterid"] = ua.group.ClusterID
 	cond := operator.NewLeafCondition(operator.Eq, condM)
@@ -458,7 +572,7 @@ func (ua *MoveNodeAction) validate() error {
 			blog.Errorf("move node %s is not under Cluster %s when MoveNodeToNodeGroup %s",
 				ip, ua.group.ClusterID, ua.group.NodeGroupID,
 			)
-			err := fmt.Errorf("move node %s is not under cluster %s", ip, ua.group.ClusterID)
+			err = fmt.Errorf("move node %s is not under cluster %s", ip, ua.group.ClusterID)
 			ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 			return err
 		}
@@ -480,7 +594,7 @@ func (ua *MoveNodeAction) Handle(
 	ua.resp = resp
 
 	if err := ua.validate(); err != nil {
-		// valiate already setting response message
+		//valiate already setting response message
 		return
 	}
 
@@ -489,6 +603,7 @@ func (ua *MoveNodeAction) Handle(
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
+
 	// try to update Node
 	for _, node := range ua.moveNodes {
 		node.NodeGroupID = ua.group.NodeGroupID
@@ -506,9 +621,11 @@ func (ua *MoveNodeAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
 		TaskID:       "",
-		Message:      fmt.Sprintf("集群%s移入节点至节点池%s", ua.cluster.ClusterID, req.NodeGroupID),
+		Message:      fmt.Sprintf("集群%s移入节点至节点规格%s", ua.cluster.ClusterID, req.NodeGroupID),
 		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.group.ClusterID,
+		ProjectID:    ua.group.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("MoveNodesToGroup[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -519,7 +636,7 @@ func (ua *MoveNodeAction) Handle(
 }
 
 func (ua *MoveNodeAction) moveCloudNodeGroupNodes() error {
-	// try to move node in cloudprovider
+	//try to move node in cloudprovider
 	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, ua.group.Provider, ua.group.ClusterID)
 	if err != nil {
 		blog.Errorf("get cloud %s and project %s when move nodes %v to NodeGroup %s failed, %s",
@@ -561,46 +678,53 @@ func (ua *MoveNodeAction) moveCloudNodeGroupNodes() error {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return err
 	}
+
 	// create task and dispatch task
-	ua.resp.Data = task
-	if err = ua.model.CreateTask(ua.ctx, task); err != nil {
-		blog.Errorf("save move nodes to node group task for cluster %s failed, %s",
-			ua.group.ClusterID, err.Error(),
-		)
-		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return err
+	if task != nil {
+		ua.resp.Data = task
+		if err = ua.model.CreateTask(ua.ctx, task); err != nil {
+			blog.Errorf("save move nodes to node group task for cluster %s failed, %s",
+				ua.group.ClusterID, err.Error(),
+			)
+			ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+			return err
+		}
+		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
+			blog.Errorf("dispatch move nodes to node group task for cluster %s failed, %s",
+				ua.group.ClusterID, err.Error(),
+			)
+			ua.setResp(common.BcsErrClusterManagerTaskErr, err.Error())
+			return err
+		}
 	}
-	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
-		blog.Errorf("dispatch move nodes to node group task for cluster %s failed, %s",
-			ua.group.ClusterID, err.Error(),
-		)
-		ua.setResp(common.BcsErrClusterManagerTaskErr, err.Error())
-		return err
-	}
-	blog.Infof(
-		"Nodes %v move to NodeGroup %s in cloudprovider %s/%s successfully",
-		ua.req.Nodes, ua.group.NodeGroupID, cloud.CloudID, cloud.CloudProvider,
-	)
+
+	blog.Infof("Nodes %v move to NodeGroup %s in cloudprovider %s/%s successfully",
+		ua.req.Nodes, ua.group.NodeGroupID, cloud.CloudID, cloud.CloudProvider)
 	return nil
 }
 
 // UpdateDesiredNodeAction update action for desired nodes
 type UpdateDesiredNodeAction struct {
-	ctx   context.Context
-	model store.ClusterManagerModel
-	req   *cmproto.UpdateGroupDesiredNodeRequest
-	resp  *cmproto.UpdateGroupDesiredNodeResponse
+	ctx    context.Context
+	model  store.ClusterManagerModel
+	req    *cmproto.UpdateGroupDesiredNodeRequest
+	resp   *cmproto.UpdateGroupDesiredNodeResponse
+	locker lock.DistributedLock
 
-	group   *cmproto.NodeGroup
-	cluster *cmproto.Cluster
-	cloud   *cmproto.Cloud
-	task    *cmproto.Task
+	group    *cmproto.NodeGroup
+	cluster  *cmproto.Cluster
+	cloud    *cmproto.Cloud
+	asOption *cmproto.ClusterAutoScalingOption
+	// 兼容clusterManager和nodeManager
+	clusterCloud *cmproto.Cloud
+	task         *cmproto.Task
 }
 
 // NewUpdateDesiredNodeAction create update action for online cluster credential
-func NewUpdateDesiredNodeAction(model store.ClusterManagerModel) *UpdateDesiredNodeAction {
+func NewUpdateDesiredNodeAction(model store.ClusterManagerModel, lock lock.DistributedLock) *UpdateDesiredNodeAction {
 	return &UpdateDesiredNodeAction{
-		model: model,
+		model:  model,
+		locker: lock,
 	}
 }
 
@@ -608,9 +732,10 @@ func NewUpdateDesiredNodeAction(model store.ClusterManagerModel) *UpdateDesiredN
 func (ua *UpdateDesiredNodeAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
-	ua.resp.Result = code == common.BcsErrClusterManagerSuccess
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
+// validate check
 func (ua *UpdateDesiredNodeAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
@@ -654,6 +779,7 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 		Cloud:     ua.cloud,
 		Cluster:   ua.cluster,
 		NodeGroup: ua.group,
+		AsOption:  ua.asOption,
 		Operator:  ua.req.Operator,
 	})
 	if err != nil {
@@ -677,12 +803,11 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 
 	ua.task = task
 	ua.resp.Data = task
-	blog.Infof("scaling %d node, %v desired node task for NodeGroup successfully for %s", scaling, ua.req.DesiredNode,
-		ua.group.NodeGroupID)
+	blog.Infof("scaling %d node, %v desired node task for NodeGroup successfully for %s", scaling, ua.req.DesiredNode, ua.group.NodeGroupID)
 	return nil
 }
 
-// getRelativeData cloud/cluster data
+// getRelativeData cloud/cluster/asOption
 func (ua *UpdateDesiredNodeAction) getRelativeData() error {
 	cloud, cluster, err := actions.GetCloudAndCluster(ua.model, ua.group.Provider, ua.group.ClusterID)
 	if err != nil {
@@ -693,6 +818,17 @@ func (ua *UpdateDesiredNodeAction) getRelativeData() error {
 	}
 	ua.cluster = cluster
 	ua.cloud = cloud
+
+	clusterCloud, err := actions.GetCloudByCloudID(ua.model, ua.cluster.Provider)
+	if err != nil {
+		blog.Errorf("get clusterCloud %s when updateDesiredNode %d in NodeGroup %s failed, %s",
+			ua.cluster.Provider, ua.req.DesiredNode, ua.group.NodeGroupID, err.Error(),
+		)
+		return err
+	}
+	ua.clusterCloud = clusterCloud
+
+	ua.asOption, _ = actions.GetAsOptionByClusterID(ua.model, ua.group.ClusterID)
 
 	return nil
 }
@@ -710,7 +846,6 @@ func (ua *UpdateDesiredNodeAction) returnCurrentScaleNodesNum() (uint32, error) 
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return 0, err
 	}
-
 	mgr, err := cloudprovider.GetNodeGroupMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloud %s NodeGroupMgr when updateDesiredNode %d in NodeGroup %s failed, %s",
@@ -719,7 +854,6 @@ func (ua *UpdateDesiredNodeAction) returnCurrentScaleNodesNum() (uint32, error) 
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return 0, err
 	}
-
 	cmOption.Region = ua.group.Region
 	// pay more attention, in order to compatible with aws/tencentcloud/blueking
 	// implementation, no common UpdateDesiredNodes task flow definition, just
@@ -756,7 +890,39 @@ func (ua *UpdateDesiredNodeAction) updateNodeGroupDesiredSize(desiredNode uint32
 	return nil
 }
 
-// Handle update cluster credential
+// checkCloudClusterResource check cloud cluster resource
+func (ua *UpdateDesiredNodeAction) checkCloudClusterResource(scaleNodesNum uint32) error {
+	// check cluster common resource
+
+	// get cloudprovider cluster implementation
+	clusterMgr, err := cloudprovider.GetClusterMgr(ua.clusterCloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s ClusterManager for Cluster %s failed, %s",
+			ua.clusterCloud.CloudProvider, ua.cluster.ClusterID, err.Error(),
+		)
+		return err
+	}
+
+	// check cloud CIDR && autoScale cluster cidr
+	available, err := clusterMgr.CheckClusterCidrAvailable(ua.cluster, &cloudprovider.CheckClusterCIDROption{
+		IncomingNodeCnt: uint64(scaleNodesNum),
+		ExternalNode: func() bool {
+			if ua.group.GetNodeGroupType() == common.External.String() {
+				return true
+			}
+
+			return false
+		}(),
+	})
+	if !available {
+		blog.Infof("checkCloudClusterResource failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// Handle handle update cluster nodeGroup desired node
 func (ua *UpdateDesiredNodeAction) Handle(
 	ctx context.Context, req *cmproto.UpdateGroupDesiredNodeRequest, resp *cmproto.UpdateGroupDesiredNodeResponse) {
 
@@ -767,6 +933,12 @@ func (ua *UpdateDesiredNodeAction) Handle(
 	ua.ctx = ctx
 	ua.req = req
 	ua.resp = resp
+
+	const (
+		updateClusterDesiredNodeLockKey = "/bcs-services/bcs-cluster-manager/UpdateDesiredNodeAction"
+	)
+	ua.locker.Lock(updateClusterDesiredNodeLockKey, []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
+	defer ua.locker.Unlock(updateClusterDesiredNodeLockKey)
 
 	if err := ua.validate(); err != nil {
 		// validation already setting response
@@ -780,10 +952,20 @@ func (ua *UpdateDesiredNodeAction) Handle(
 	// update DesiredNode with cloud provider
 	scaleResp, err := ua.returnCurrentScaleNodesNum()
 	if err != nil {
-		blog.Errorf("udpateDesiredNode to %d for NodeGroup %s with cloudprovider %s failed, %s",
+		blog.Errorf("updateDesiredNode to %d for NodeGroup %s with cloudprovider %s failed, %s",
 			req.DesiredNode, ua.group.NodeGroupID, ua.cloud.CloudProvider, err.Error(),
 		)
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+		return
+	}
+
+	// check cluster cloud resource
+	err = ua.checkCloudClusterResource(scaleResp)
+	if err != nil {
+		blog.Errorf("updateDesiredNode to %d for NodeGroup %s checkCloudClusterResource failed, %s",
+			req.DesiredNode, ua.group.NodeGroupID, err.Error(),
+		)
+		ua.setResp(common.BcsErrClusterManagerCheckCloudClusterResourceErr, err.Error())
 		return
 	}
 
@@ -805,9 +987,11 @@ func (ua *UpdateDesiredNodeAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
 		TaskID:       ua.task.TaskID,
-		Message:      fmt.Sprintf("集群%s扩容节点池%s节点数至%v", ua.cluster.ClusterID, req.NodeGroupID, req.DesiredNode),
-		OpUser:       req.Operator,
+		Message:      fmt.Sprintf("集群%s扩容节点规格%s节点数至%v", ua.cluster.ClusterID, req.NodeGroupID, req.DesiredNode),
+		OpUser:       ua.group.Updater,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.cluster.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("UpdateDesiredNode[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
@@ -866,8 +1050,8 @@ func (ua *UpdateDesiredSizeAction) Handle(
 	destGroup.AutoScaling.DesiredSize = req.DesiredSize
 
 	if err = ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
-		blog.Errorf("nodegroup %s update desiredSize failed in local storage, %s",
-			destGroup.NodeGroupID, err.Error())
+		blog.Errorf("nodegroup %s update desiredSize[%s] failed in local storage, %s",
+			destGroup.NodeGroupID, destGroup, err.Error())
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
@@ -876,15 +1060,89 @@ func (ua *UpdateDesiredSizeAction) Handle(
 		ResourceType: common.NodeGroup.String(),
 		ResourceID:   req.NodeGroupID,
 		TaskID:       "",
-		Message:      fmt.Sprintf("更新集群%s节点池%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
+		Message:      fmt.Sprintf("更新集群%s节点规格%s期望扩容节点数至%d", destGroup.ClusterID, req.NodeGroupID, req.DesiredSize),
 		OpUser:       req.Operator,
 		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    destGroup.ClusterID,
+		ProjectID:    destGroup.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("UpdateGroupDesiredSize[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
 	}
 
 	blog.Infof("update nodegroup desiredSize %s successfully", destGroup.NodeGroupID)
+	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
+}
+
+// UpdateGroupMinMaxAction update nodegroup autoscaling min/max size
+type UpdateGroupMinMaxAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.UpdateGroupMinMaxSizeRequest
+	resp  *cmproto.UpdateGroupMinMaxSizeResponse
+}
+
+// NewUpdateGroupMinMaxAction create update action for group
+func NewUpdateGroupMinMaxAction(model store.ClusterManagerModel) *UpdateGroupMinMaxAction {
+	return &UpdateGroupMinMaxAction{
+		model: model,
+	}
+}
+
+func (ua *UpdateGroupMinMaxAction) setResp(code uint32, msg string) {
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+// validate check
+func (ua *UpdateGroupMinMaxAction) validate() error {
+	if err := ua.req.Validate(); err != nil {
+		return err
+	}
+
+	if ua.req.MinSize > ua.req.MaxSize {
+		return fmt.Errorf("UpdateGroupMinMaxAction minSize > maxSize")
+	}
+
+	return nil
+}
+
+// Handle handle update cluster credential
+func (ua *UpdateGroupMinMaxAction) Handle(
+	ctx context.Context, req *cmproto.UpdateGroupMinMaxSizeRequest, resp *cmproto.UpdateGroupMinMaxSizeResponse) {
+
+	if req == nil || resp == nil {
+		blog.Errorf("update nodegroup min/max failed, req or resp is empty")
+		return
+	}
+	ua.ctx = ctx
+	ua.req = req
+	ua.resp = resp
+
+	if err := ua.validate(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+	// get old project information, update fields if required
+	destGroup, err := ua.model.GetNodeGroup(ua.ctx, req.NodeGroupID)
+	if err != nil {
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		blog.Errorf("find nodegroup %s failed when pre-update checking, err %s", req.NodeGroupID, err.Error())
+		return
+	}
+	destGroup.AutoScaling.MinSize = req.MinSize
+	destGroup.AutoScaling.MaxSize = req.MaxSize
+
+	if err = ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
+		blog.Errorf("nodegroup %s update min/maxSize failed in local storage, %s",
+			destGroup.NodeGroupID, err.Error())
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	blog.Infof("update nodegroup min/maxSize %s successfully", destGroup.NodeGroupID)
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

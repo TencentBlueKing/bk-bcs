@@ -11,21 +11,27 @@
  *
  */
 
-// Package utils xxx
 package utils
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // SyncClusterInfoToPassCC sync clusterInfo to pass-cc
@@ -60,33 +66,50 @@ func SyncDeletePassCCCluster(taskID string, cluster *proto.Cluster) {
 }
 
 // BuildBcsAgentToken create cluster
-func BuildBcsAgentToken(cluster *proto.Cluster) (string, error) {
+func BuildBcsAgentToken(name string, isUser bool) (string, error) {
 	var (
 		token string
 		err   error
 	)
 
-	token, err = user.GetUserManagerClient().GetUserToken(cluster.ClusterID)
+	token, err = user.GetUserManagerClient().GetUserToken(name)
 	if err != nil {
+		blog.Errorf("BuildBcsAgentToken GetUserToken[%s] failed: %v", name, err)
 		return "", err
 	}
+	blog.Infof("BuildBcsAgentToken GetUserToken[%s] success", name)
 
 	if token == "" {
-		token, err = user.GetUserManagerClient().CreateUserToken(user.CreateTokenReq{
-			Username:   cluster.ClusterID,
-			Expiration: -1,
-		})
-		if err != nil {
-			return "", err
+		switch isUser {
+		case true:
+			token, err = user.GetUserManagerClient().CreateUserToken(user.CreateTokenReq{
+				Username:   name,
+				Expiration: -1,
+			})
+			if err != nil {
+				blog.Errorf("BuildBcsAgentToken CreateUserToken[%s] failed: %v", name, err)
+				return "", err
+			}
+			blog.Infof("BuildBcsAgentToken CreateUserToken[%s] success", name)
+		case false:
+			token, err = user.GetUserManagerClient().CreateClientToken(user.CreateClientTokenReq{
+				ClientName: name,
+				Expiration: -1,
+			})
+			if err != nil {
+				blog.Errorf("BuildBcsAgentToken CreateClientToken[%s] failed: %v", name, err)
+				return "", err
+			}
+			blog.Infof("BuildBcsAgentToken CreateClientToken[%s] success", name)
 		}
 	}
 
 	// grant permission
 	err = user.GetUserManagerClient().GrantUserPermission([]types.Permission{
 		{
-			UserName:     cluster.ClusterID,
+			UserName:     name,
 			ResourceType: user.ResourceTypeClusterManager,
-			Resource:     cluster.ClusterID,
+			Resource:     name,
 			Role:         user.PermissionManagerRole,
 		},
 	})
@@ -98,7 +121,7 @@ func BuildBcsAgentToken(cluster *proto.Cluster) (string, error) {
 }
 
 // DeleteBcsAgentToken revoke token&permission when delete cluster
-func DeleteBcsAgentToken(cluster *proto.Cluster) error {
+func DeleteBcsAgentToken(name string) error {
 	var (
 		token string
 		err   error
@@ -109,7 +132,7 @@ func DeleteBcsAgentToken(cluster *proto.Cluster) error {
 		return nil
 	}
 
-	token, err = user.GetUserManagerClient().GetUserToken(cluster.ClusterID)
+	token, err = user.GetUserManagerClient().GetUserToken(name)
 	if err != nil {
 		return err
 	}
@@ -124,9 +147,9 @@ func DeleteBcsAgentToken(cluster *proto.Cluster) error {
 	// grant permission
 	err = user.GetUserManagerClient().RevokeUserPermission([]types.Permission{
 		{
-			UserName:     cluster.ClusterID,
+			UserName:     name,
 			ResourceType: user.ResourceTypeClusterManager,
-			Resource:     cluster.ClusterID,
+			Resource:     name,
 			Role:         user.PermissionManagerRole,
 		},
 	})
@@ -139,21 +162,62 @@ func DeleteBcsAgentToken(cluster *proto.Cluster) error {
 
 // DeleteClusterCredentialInfo delete cluster credential info
 func DeleteClusterCredentialInfo(clusterID string) error {
-	err := cloudprovider.GetStorageModel().DeleteClusterCredential(context.Background(), clusterID)
-	if err != nil {
-		blog.Errorf("DeleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
-		return err
+	if len(clusterID) > 0 {
+		err := cloudprovider.GetStorageModel().DeleteClusterCredential(context.Background(), clusterID)
+		if err != nil {
+			blog.Errorf("DeleteClusterCredentialInfo[%s] failed: %v", clusterID, err)
+			return err
+		}
 	}
 
 	return nil
 }
 
-func getResourceType(env string) string {
-	if env == "prod" {
-		return auth.ClusterProd
+// GetCloudDefaultRuntimeVersion get cloud default k8sVersion runtimeInfo
+func GetCloudDefaultRuntimeVersion(cloud *proto.Cloud, version string) (*proto.RunTimeInfo, error) {
+	k8sVersion := version
+	if k8sVersion == "" || !utils.StringInSlice(version, cloud.GetClusterManagement().GetAvailableVersion()) {
+		return nil, fmt.Errorf("cloud[%s] not support version[%s]", cloud.CloudID, version)
 	}
 
-	return auth.ClusterTest
+	return GetCloudRuntimeVersions(cloud, version)
+}
+
+// GetCloudRuntimeVersions get cloud runtime versions
+func GetCloudRuntimeVersions(cloud *proto.Cloud, version string) (*proto.RunTimeInfo, error) {
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"cloudid":  cloud.CloudID,
+		"version":  version,
+		"moduleid": common.RuntimeFlag,
+	})
+
+	cloudModuleFlags, err := cloudprovider.GetStorageModel().ListCloudModuleFlag(context.Background(),
+		cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("GetCloudRuntimes[%s:%s:%s] failed: %v", cloud.CloudID, version, common.RuntimeFlag, err)
+		return nil, err
+	}
+
+	if len(cloudModuleFlags) == 0 {
+		blog.Infof("GetCloudRuntimes[%s:%s:%s] runtime empty", cloud.CloudID, version, common.RuntimeFlag)
+		return &proto.RunTimeInfo{
+			ContainerRuntime: common.DefaultDockerRuntime.Runtime,
+			RuntimeVersion:   common.DefaultDockerRuntime.Version,
+		}, nil
+	}
+
+	var defaultRuntime = &proto.RunTimeInfo{
+		ContainerRuntime: cloudModuleFlags[0].FlagName,
+		RuntimeVersion:   cloudModuleFlags[0].DefaultValue,
+	}
+	for i := range cloudModuleFlags {
+		if common.IsContainerdRuntime(cloudModuleFlags[i].FlagName) {
+			defaultRuntime.ContainerRuntime = cloudModuleFlags[i].FlagName
+			defaultRuntime.RuntimeVersion = cloudModuleFlags[i].DefaultValue
+		}
+	}
+
+	return defaultRuntime, nil
 }
 
 // ObjToPrettyJson obj to json
@@ -166,4 +230,24 @@ func ObjToPrettyJson(obj interface{}) string {
 func ObjToJson(obj interface{}) string {
 	marshal, _ := json.Marshal(obj)
 	return bytes.NewBuffer(marshal).String()
+}
+
+// AuthClusterResourceCreatorPerm auth resource cluster relative perms
+func AuthClusterResourceCreatorPerm(ctx context.Context, clusterID, clusterName, user string) {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	err := auth.IAMClient.AuthResourceCreatorPerm(ctx, iam.ResourceCreator{
+		ResourceType: string(iam.SysCluster),
+		ResourceID:   clusterID,
+		ResourceName: clusterName,
+		Creator:      user,
+	}, nil)
+	if err != nil {
+		blog.Errorf("AuthClusterResourceCreatorPerm[%s] resource[%s:%s] failed: %v",
+			taskID, clusterID, clusterName, user)
+		return
+	}
+
+	blog.Infof("AuthClusterResourceCreatorPerm[%s] resource[%s:%s] successful",
+		taskID, clusterID, clusterName, user)
 }

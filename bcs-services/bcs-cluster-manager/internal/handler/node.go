@@ -19,11 +19,27 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/node"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
+
+// RecordNodeInfo implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) RecordNodeInfo(ctx context.Context,
+	req *cmproto.RecordNodeInfoRequest, resp *cmproto.CommonResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := node.NewRecordNodeDataAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("RecordNodeInfo", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: RecordNodeInfo, req %v, resp %v", reqID, req, resp)
+	return nil
+}
 
 // CordonNode implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) CordonNode(ctx context.Context,
@@ -66,7 +82,8 @@ func (cm *ClusterManager) DrainNode(ctx context.Context,
 	ca := node.NewDrainNodeAction(cm.model, cm.kubeOp)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("DrainNode", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: DrainNode, req %v, resp %v", reqID, utils.ToJSONString(req), utils.ToJSONString(resp))
+	blog.Infof("reqID: %s, action: DrainNode, req %v, resp %v", reqID,
+		utils.ToJSONString(req), utils.ToJSONString(resp))
 	return nil
 }
 

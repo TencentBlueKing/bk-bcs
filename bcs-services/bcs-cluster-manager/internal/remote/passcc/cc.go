@@ -24,6 +24,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
+	iutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
 	"github.com/parnurzeal/gorequest"
 )
@@ -178,6 +180,52 @@ func (cc *ClientConfig) DeletePassCCCluster(projectID, clusterID string) error {
 	return nil
 }
 
+// GetProjectSharedNamespaces get namespaces in pass-cc
+func (cc *ClientConfig) GetProjectSharedNamespaces(projectID, clusterID string, auth *auth.ClientAuth) ([]ProjectNamespace, error) {
+	if cc == nil {
+		return nil, errServerNotInit
+	}
+	var (
+		_    = "GetProjectSharedNamespaces"
+		path = fmt.Sprintf("/projects/%s/clusters/%s/namespaces", projectID, clusterID)
+	)
+
+	// get access_token
+	token, err := cc.getAccessToken(auth)
+	if err != nil {
+		blog.Errorf("GetProjectSharedNamespaces call getAccessToken failed: %v", err)
+		return nil, err
+	}
+
+	var (
+		url  = cc.server + path
+		req  = &GetProjectsNamespaces{DesireAllData: 1}
+		resp = &GetProjectsNamespacesResp{}
+	)
+
+	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Get(url).
+		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("Content-Type", "application/json").
+		Set("Connection", "close").
+		SetDebug(true).
+		Send(req).
+		EndStruct(resp)
+
+	if len(errs) > 0 {
+		blog.Errorf("call api GetProjectSharedNamespaces failed: %v", errs[0])
+		return nil, errs[0]
+	}
+
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("call GetProjectSharedNamespaces API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return nil, errMsg
+	}
+
+	blog.Infof("GetProjectSharedNamespaces[%s:%s] successful", projectID, clusterID)
+	return resp.Data.Results, nil
+}
+
 // CreatePassCCCluster register cluster to pass-cc
 func (cc *ClientConfig) CreatePassCCCluster(cluster *proto.Cluster) error {
 	if cc == nil {
@@ -274,16 +322,22 @@ func (cc *ClientConfig) UpdatePassCCCluster(cluster *proto.Cluster) error {
 	return nil
 }
 
-func (cc *ClientConfig) getAccessToken(clientSSM *auth.ClientSSM) (string, error) {
+func (cc *ClientConfig) getAccessToken(clientAuth *auth.ClientAuth) (string, error) {
 	if cc == nil {
 		return "", errServerNotInit
 	}
 
-	if clientSSM != nil {
-		return clientSSM.GetAccessToken()
+	if clientAuth != nil {
+		return clientAuth.GetAccessToken(utils.BkAppUser{
+			BkAppCode:   cc.appCode,
+			BkAppSecret: cc.appSecret,
+		})
 	}
 
-	return auth.GetSSMClient().GetAccessToken()
+	return auth.GetAccessClient().GetAccessToken(utils.BkAppUser{
+		BkAppCode:   cc.appCode,
+		BkAppSecret: cc.appSecret,
+	})
 }
 
 func (cc *ClientConfig) transClusterToClusterSnap(cls *proto.Cluster) *CreateClusterConfParams {
@@ -355,19 +409,19 @@ func (cc *ClientConfig) transCMClusterToCC(cluster *proto.Cluster) *ClusterParam
 		areaID = 1
 	)
 
-	if strings.Contains(cc.server, "prod") {
-		if v, ok := prodAreaCode[cluster.Region]; ok {
-			areaID = v
-		}
-	} else {
-		if v, ok := testAreaCode[cluster.Region]; ok {
-			areaID = v
-		}
+	if v, ok := prodAreaCode[cluster.Region]; ok && strings.Contains(cc.server, "prod") {
+		areaID = v
+	} else if v, ok := testAreaCode[cluster.Region]; ok {
+		areaID = v
 	}
 
 	masterIPs := make([]ManagerMasters, 0)
-	for ip := range cluster.Master {
-		masterIPs = append(masterIPs, ManagerMasters{InnerIP: ip})
+	if len(cluster.Master) == 0 {
+		masterIPs = append(masterIPs, ManagerMasters{InnerIP: iutils.FakeIPV4Addr()})
+	} else {
+		for ip := range cluster.Master {
+			masterIPs = append(masterIPs, ManagerMasters{InnerIP: ip})
+		}
 	}
 
 	desc := cluster.Description

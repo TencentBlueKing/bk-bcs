@@ -49,49 +49,35 @@ func DecryptProjectCred(pro *proto.Project) error {
 	return nil
 }
 
-func isCredentialValid(cred *proto.Credential) bool {
-	if len(cred.ServiceAccountSecret) == 0 && (len(cred.Key) == 0 || len(cred.Secret) == 0) {
-		return false
-	}
-	return true
-}
-
-func isTKECredentialValid(cred *proto.Credential) bool {
-	if len(cred.Key) == 0 || len(cred.Secret) == 0 {
-		return false
-	}
-	return true
-}
-
 // EncryptCredential encrypt credential for storage
 func EncryptCredential(cred *proto.Credential) error {
 	if cred == nil {
 		return fmt.Errorf("lost credential info")
 	}
-	if !isCredentialValid(cred) {
-		return fmt.Errorf("lost serviceAccountSecret, key or secret information")
-	}
-	if isTKECredentialValid(cred) {
+
+	// tencentCloud
+	if len(cred.Key) > 0 {
 		destKey, err := encrypt.DesEncryptToBase([]byte(cred.Key))
 		if err != nil {
 			return err
 		}
-		keyStr := string(destKey)
+		cred.Key = string(destKey)
+	}
+	if len(cred.Secret) > 0 {
 		destSrt, err := encrypt.DesEncryptToBase([]byte(cred.Secret))
 		if err != nil {
 			return err
 		}
 		cred.Secret = string(destSrt)
-		cred.Key = keyStr
-		return nil
 	}
+
+	// gke
 	if len(cred.ServiceAccountSecret) != 0 {
 		destSas, err := encrypt.DesEncryptToBase([]byte(cred.ServiceAccountSecret))
 		if err != nil {
 			return err
 		}
 		cred.ServiceAccountSecret = string(destSas)
-		return nil
 	}
 
 	return nil
@@ -102,31 +88,31 @@ func DecryptCredential(cred *proto.Credential) error {
 	if cred == nil {
 		return fmt.Errorf("lost credential info")
 	}
-	if !isCredentialValid(cred) {
-		return fmt.Errorf("lost serviceAccountSecret, key or secret information")
-	}
-	if isTKECredentialValid(cred) {
+
+	// tencentCloud
+	if len(cred.Key) > 0 {
 		destKey, err := encrypt.DesDecryptFromBase([]byte(cred.Key))
 		if err != nil {
 			return err
 		}
-		keyStr := string(destKey)
+		cred.Key = string(destKey)
+	}
+	if len(cred.Secret) > 0 {
 		destSrt, err := encrypt.DesDecryptFromBase([]byte(cred.Secret))
 		if err != nil {
 			return err
 		}
 		cred.Secret = string(destSrt)
-		cred.Key = keyStr
-		return nil
 	}
+
+	// gke
 	if len(cred.ServiceAccountSecret) != 0 {
 		destSaKey, err := encrypt.DesDecryptFromBase([]byte(cred.ServiceAccountSecret))
 		if err != nil {
 			return err
 		}
-		SaKeyStr := string(destSaKey)
-		cred.ServiceAccountSecret = SaKeyStr
-		return nil
+		cred.ServiceAccountSecret = string(destSaKey)
 	}
+
 	return nil
 }

@@ -60,6 +60,9 @@ func (la *ListAction) listTask() error {
 	if len(la.req.Status) != 0 {
 		condM["status"] = la.req.Status
 	}
+	if len(la.req.NodeGroupID) != 0 {
+		condM["nodegroupid"] = la.req.NodeGroupID
+	}
 
 	cond := operator.NewLeafCondition(operator.Eq, condM)
 	// default listTask descending sort by start
@@ -73,6 +76,7 @@ func (la *ListAction) listTask() error {
 	}
 	for i := range tasks {
 		hiddenTaskPassword(&tasks[i])
+		//actions.FormatTaskTime(&tasks[i])
 
 		if len(la.req.NodeIP) > 0 {
 			exist := strContains(tasks[i].NodeIPList, la.req.NodeIP)
@@ -99,7 +103,7 @@ func (la *ListAction) setResp(code uint32, msg string) {
 	la.resp.LatestTask = la.LatestTask
 }
 
-// Handle handle list cluster credential
+// Handle list cluster credential
 func (la *ListAction) Handle(
 	ctx context.Context, req *cmproto.ListTaskRequest, resp *cmproto.ListTaskResponse) {
 	if req == nil || resp == nil {

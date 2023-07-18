@@ -14,6 +14,7 @@
 package api
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -25,10 +26,14 @@ import (
 func getVpcClient(region string) *VPCClient {
 	cli, err := NewVPCClient(&cloudprovider.CommonOption{
 		Account: &cmproto.Account{
-			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
-			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+			SecretID:  os.Getenv(TencentCloudSecretIDClusterEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyClusterEnv),
 		},
 		Region: region,
+		CommonConf: cloudprovider.CloudConf{
+			CloudInternalEnable: true,
+			VpcDomain:           "vpc.internal.tencentcloudapi.com",
+		},
 	})
 	if err != nil {
 		panic(err)
@@ -37,7 +42,7 @@ func getVpcClient(region string) *VPCClient {
 }
 
 func TestDescribeSecurityGroups(t *testing.T) {
-	cli := getVpcClient("ap-guangzhou")
+	cli := getVpcClient("ap-nanjing")
 	sg, err := cli.DescribeSecurityGroups(nil, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -46,10 +51,22 @@ func TestDescribeSecurityGroups(t *testing.T) {
 }
 
 func TestDescribeSubnets(t *testing.T) {
-	cli := getVpcClient("ap-guangzhou")
-	subnets, err := cli.DescribeSubnets(nil, nil)
+	cli := getVpcClient("ap-nanjing")
+
+	filter := make([]*Filter, 0)
+	filter = append(filter, &Filter{Name: "vpc-id", Values: []string{"vpc-xxx"}})
+
+	subnets, err := cli.DescribeSubnets(nil, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("subnets: %s, count: %d", utils.ToJSONString(subnets), len(subnets))
+
+	fmt.Println()
+
+	for i := range subnets {
+		if utils.MatchSubnet(*subnets[i].SubnetName, "ap-nanjing") {
+			t.Log(*subnets[i].VpcID, *subnets[i].SubnetID, *subnets[i].SubnetName, *subnets[i].AvailableIPAddressCount)
+		}
+	}
 }

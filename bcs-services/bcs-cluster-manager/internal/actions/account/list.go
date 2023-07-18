@@ -24,7 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -51,8 +50,8 @@ func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAct
 
 func (la *ListAction) listCloudAccount() error {
 	condM := make(operator.M)
-	// ! we don't setting bson tag in proto file
-	// ! all fields are in lowcase
+	//! we don't setting bson tag in proto file
+	//! all fields are in lowcase
 	if len(la.req.CloudID) != 0 {
 		condM["cloudid"] = la.req.CloudID
 	}
@@ -82,9 +81,9 @@ func (la *ListAction) listCloudAccount() error {
 		if err != nil {
 			blog.Errorf("getRelativeClustersByAccountID[%s] failed: %v", cloudAccounts[i].AccountID, err)
 		}
-		cloudAccounts[i].Account, err = shieldCloudSecret(cloudAccounts[i].Account)
+		cloudAccounts[i].Account, err = shieldCloudSecretKey(cloudAccounts[i].Account)
 		if err != nil {
-			blog.Errorf("shieldCloudSecret failed: %v", err)
+			blog.Errorf("shieldCloudSecretKey[%s] failed: %v", cloudAccounts[i].AccountID, err)
 		}
 
 		cloudAccountInfo := &cmproto.CloudAccountInfo{
@@ -152,8 +151,8 @@ func (la *ListAction) Handle(
 	return
 }
 
-// shieldCloudSecret return secret by '***'
-func shieldCloudSecret(account *cmproto.Account) (*cmproto.Account, error) {
+// shieldReturnCloudKey return key by '***'
+func shieldCloudSecretKey(account *cmproto.Account) (*cmproto.Account, error) {
 	shield := func(key string) string {
 		keyBytes := []byte(key)
 		if len(keyBytes) <= 4 {
@@ -176,11 +175,13 @@ func shieldCloudSecret(account *cmproto.Account) (*cmproto.Account, error) {
 
 	account.SecretKey = shield(account.SecretKey)
 	account.ClientSecret = shield(account.ClientSecret)
+
 	if account.ServiceAccountSecret != "" {
-		sa := &api.GkeServiceAccount{}
+		sa := &cmproto.GkeServiceAccount{}
 		if err := json.Unmarshal([]byte(account.ServiceAccountSecret), sa); err != nil {
 			return nil, err
 		}
+
 		shieldPrivateKey := shield(base64.StdEncoding.EncodeToString([]byte(sa.PrivateKey)))
 		sa.PrivateKey = shieldPrivateKey
 		shieldServiceAccountByte, err := json.Marshal(sa)
@@ -211,8 +212,8 @@ func NewListPermAction(model store.ClusterManagerModel) *ListPermDataAction {
 
 func (la *ListPermDataAction) listCloudAccount() error {
 	condEqual := make(operator.M)
-	// ! we don't setting bson tag in proto file
-	// ! all fields are in lowcase
+	//! we don't setting bson tag in proto file
+	//! all fields are in lowcase
 	if len(la.req.ProjectID) != 0 {
 		condEqual["projectid"] = la.req.ProjectID
 	}
@@ -261,6 +262,7 @@ func (la *ListPermDataAction) validate() error {
 	if la.req.ProjectID == "" && len(la.req.AccountID) == 0 && len(la.req.AccountName) == 0 {
 		return fmt.Errorf("ListPermDataAction query parameter is empty")
 	}
+
 	return nil
 }
 

@@ -354,18 +354,21 @@ func (c *ComputeServiceClient) ListInstanceGroupsInstances(ctx context.Context, 
 		req := &compute.InstanceGroupsListInstancesRequest{}
 		zoneInstance, err = c.computeServiceClient.InstanceGroups.ListInstances(c.gkeProjectID, c.location, name, req).
 			Context(ctx).Do()
+		if err != nil {
+			return nil, fmt.Errorf("gce client ListInstanceGroupsInstances[%s] failed: %v", name, err)
+		}
 		insts = zoneInstance.Items
 	case locationTypeRegions:
 		req := &compute.RegionInstanceGroupsListInstancesRequest{}
 		regionInstance, err = c.computeServiceClient.RegionInstanceGroups.
 			ListInstances(c.gkeProjectID, c.location, name, req).Context(ctx).Do()
+		if err != nil {
+			return nil, fmt.Errorf("gce client ListInstanceGroupsInstances[%s] failed: %v", name, err)
+		}
 		insts = regionInstance.Items
 	default:
 		return nil, fmt.Errorf("gce client ListInstanceGroupsInstances[%s] failed:"+
 			" location type is neither zones nor regions", name)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("gce client ListInstanceGroupsInstances[%s] failed: %v", name, err)
 	}
 	blog.Infof("gce client ListInstanceGroupsInstances[%s] successful", name)
 

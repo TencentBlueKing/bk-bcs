@@ -22,6 +22,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
 
 // updateNodeGroupCloudNodeGroupID set nodegroup cloudNodeGroupID
@@ -44,7 +45,7 @@ func updateNodeGroupCloudNodeGroupID(nodeGroupID string, newGroup *cmproto.NodeG
 }
 
 func checkOperationStatus(computeCli *api.ComputeServiceClient, url, taskID string, d time.Duration) error {
-	return cloudprovider.LoopDoFunc(context.Background(), func() error {
+	return loop.LoopDoFunc(context.Background(), func() error {
 		o, err := api.GetOperation(computeCli, url)
 		if err != nil {
 			return err
@@ -53,9 +54,9 @@ func checkOperationStatus(computeCli *api.ComputeServiceClient, url, taskID stri
 			if o.Error != nil {
 				return fmt.Errorf("%d, %s, %s", o.HttpErrorStatusCode, o.HttpErrorMessage, o.Error.Errors[0].Message)
 			}
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		}
 		blog.Infof("taskID[%s] operation %s still running", taskID, o.SelfLink)
 		return nil
-	}, cloudprovider.LoopInterval(d))
+	}, loop.LoopInterval(d))
 }

@@ -37,28 +37,15 @@ import (
 // ImportClusterNodesTask call tkeInterface or kubeConfig import cluster nodes
 func ImportClusterNodesTask(taskID string, stepName string) error {
 	start := time.Now()
-	// get task information and validate
-	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
-	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s get detail task information from storage failed, %s. "+
-			"task retry", taskID, taskID, err.Error())
-		return err
-	}
 
-	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
-	if state.IsTerminated() {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s is terminated, step %s skip", taskID, taskID, stepName)
-		return fmt.Errorf("task %s terminated", taskID)
-	}
-	step, err := state.IsReadyToStep(stepName)
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
-			err.Error())
 		return err
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("ImportClusterNodesTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("UpdateCreateClusterDBInfoTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
 	blog.Infof("ImportClusterNodesTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
@@ -66,9 +53,13 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	cloudID := step.Params["CloudID"]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID:   clusterID,
+		CloudID:     cloudID,
+		NodeGroupID: "",
+	})
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -95,7 +86,8 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CreateClusterShieldAlarmTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("CreateClusterShieldAlarmTask[%s] task %s %s update to storage fatal",
+			taskID, taskID, stepName)
 		return err
 	}
 	return nil
@@ -113,6 +105,7 @@ func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
 	if err != nil {
 		return err
 	}
+
 	err = cloudprovider.UpdateClusterCredentialByConfig(data.Cluster.ClusterID, config)
 	if err != nil {
 		return err
@@ -212,7 +205,6 @@ func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) (
 	if err != nil {
 		return nil, nil, err
 	}
-
 	nodeList, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, nil, err
@@ -228,7 +220,6 @@ func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) (
 			nodeIPs = append(nodeIPs, ip)
 		}
 	}
-
 	blog.Infof("get cluster[%s] masterIPs[%v] nodeIPs[%v]", data.Cluster.ClusterID, masterIPs, nodeIPs)
 	return masterIPs, nodeIPs, nil
 }

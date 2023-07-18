@@ -29,7 +29,7 @@ var validateMgr sync.Once
 
 func init() {
 	validateMgr.Do(func() {
-		// init Cluster
+		//init Cluster
 		cloudprovider.InitCloudValidateManager(cloudName, &CloudValidate{})
 	})
 }
@@ -85,15 +85,13 @@ func (c *CloudValidate) ImportCloudAccountValidate(req *proto.Account) error {
 }
 
 // GetCloudRegionZonesValidate xxx
-func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) GetCloudRegionZonesValidate(req *proto.GetCloudRegionZonesRequest, account *proto.Account) error {
 	// blueking cloud not cloud Account
 	return nil
 }
 
 // ListCloudRegionClusterValidate xxx
-func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) ListCloudRegionClusterValidate(req *proto.ListCloudRegionClusterRequest, account *proto.Account) error {
 	// blueking cloud not cloud Account
 	return nil
 }
@@ -104,14 +102,22 @@ func (c *CloudValidate) ListCloudSubnetsValidate(req *proto.ListCloudSubnetsRequ
 }
 
 // ListSecurityGroupsValidate xxx
-func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) ListSecurityGroupsValidate(req *proto.ListCloudSecurityGroupsRequest, account *proto.Account) error {
+	return nil
+}
+
+// ListKeyPairsValidate list key pairs validate
+func (c *CloudValidate) ListKeyPairsValidate(req *proto.ListKeyPairsRequest, account *proto.Account) error {
+	return nil
+}
+
+// ListInstancesValidate xxx
+func (c *CloudValidate) ListInstancesValidate(req *proto.ListCloudInstancesRequest, account *proto.Account) error {
 	return nil
 }
 
 // ListInstanceTypeValidate xxx
-func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest,
-	account *proto.Account) error {
+func (c *CloudValidate) ListInstanceTypeValidate(req *proto.ListCloudInstanceTypeRequest, account *proto.Account) error {
 	return nil
 }
 
@@ -120,8 +126,17 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 	return nil
 }
 
+// AddNodesToClusterValidate xxx
+func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
+// DeleteNodesFromClusterValidate xxx
+func (c *CloudValidate) DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest, opt *cloudprovider.CommonOption) error {
+	return nil
+}
+
 // CreateNodeGroupValidate xxx
-func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest,
-	opt *cloudprovider.CommonOption) error {
+func (c *CloudValidate) CreateNodeGroupValidate(req *proto.CreateNodeGroupRequest, opt *cloudprovider.CommonOption) error {
 	return nil
 }

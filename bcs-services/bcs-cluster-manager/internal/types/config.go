@@ -14,19 +14,12 @@
 package types
 
 import (
-	"github.com/ghodss/yaml"
 	"io/ioutil"
+
+	"github.com/ghodss/yaml"
 )
 
-// NOTE: This Config type definition is copied from k8s.io/client-go/tools/clientcmd/api/v1/types.go
-//       for parsing the kube config yaml. The "k8s.io/apimachinery/pkg/runtime" dependency has
-//       been removed.
-
-// Where possible, json tags match the cli argument names.
-// Top level config objects and all values required for proper functioning are not "omitempty".  Any truly optional piece of config is allowed to be omitted.
-
 // Config holds the information needed to build connect to remote kubernetes clusters as a given user
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type Config struct {
 	// Legacy field from pkg/api/types.go TypeMeta.
 	// +optional
@@ -53,8 +46,8 @@ type Config struct {
 type Preferences struct {
 	// +optional
 	Colors bool `json:"colors,omitempty"`
-	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
-	// +optional
+	// Extensions holds additional information. This is useful for extenders
+	// so that reads and writes don't clobber unknown fields
 	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
@@ -62,17 +55,15 @@ type Preferences struct {
 type ClusterInfo struct {
 	// Server is the address of the kubernetes cluster (https://hostname:port).
 	Server string `json:"server"`
-	// InsecureSkipTLSVerify skips the validity check for the server's certificate. This will make your HTTPS connections insecure.
-	// +optional
+	// InsecureSkipTLSVerify skips the validity check for the server's certificate.
+	//	This will make your HTTPS connections insecure.
 	InsecureSkipTLSVerify bool `json:"insecure-skip-tls-verify,omitempty"`
 	// CertificateAuthority is the path to a cert file for the certificate authority.
-	// +optional
 	CertificateAuthority string `json:"certificate-authority,omitempty"`
 	// CertificateAuthorityData contains PEM-encoded certificate authority certificates. Overrides CertificateAuthority
-	// +optional
 	CertificateAuthorityData []byte `json:"certificate-authority-data,omitempty"`
-	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
-	// +optional
+	// Extensions holds additional information. This is useful for extenders
+	// so that reads and writes don't clobber unknown fields
 	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
@@ -93,8 +84,8 @@ type AuthInfo struct {
 	// Token is the bearer token for authentication to the kubernetes cluster.
 	// +optional
 	Token string `json:"token,omitempty"`
-	// TokenFile is a pointer to a file that contains a bearer token (as described above).  If both Token and TokenFile are present, Token takes precedence.
-	// +optional
+	// TokenFile is a pointer to a file that contains a bearer token (as described above).
+	// If both Token and TokenFile are present, Token takes precedence.
 	TokenFile string `json:"tokenFile,omitempty"`
 	// Impersonate is the username to imperonate.  The name matches the flag.
 	// +optional
@@ -117,8 +108,8 @@ type AuthInfo struct {
 	// Exec specifies a custom exec-based authentication plugin for the kubernetes cluster.
 	// +optional
 	Exec *ExecConfig `json:"exec,omitempty"`
-	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
-	// +optional
+	// Extensions holds additional information. This is useful for extenders so that reads
+	// and writes don't clobber unknown fields
 	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 
@@ -131,8 +122,8 @@ type Context struct {
 	// Namespace is the default namespace to use on unspecified requests
 	// +optional
 	Namespace string `json:"namespace,omitempty"`
-	// Extensions holds additional information. This is useful for extenders so that reads and writes don't clobber unknown fields
-	// +optional
+	// Extensions holds additional information. This is useful for extenders
+	// so that reads and writes don't clobber unknown fields
 	Extensions []NamedExtension `json:"extensions,omitempty"`
 }
 

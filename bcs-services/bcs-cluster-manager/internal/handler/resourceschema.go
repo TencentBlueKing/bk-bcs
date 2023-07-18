@@ -22,6 +22,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/resourceschema"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -33,7 +34,7 @@ func (cm *ClusterManager) ListResourceSchema(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	la := resourceschema.NewListAction(cm.cmOptions.ResourceSchemaPath)
+	la := resourceschema.NewListAction(options.GetGlobalCMOptions().ResourceSchemaPath)
 	la.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListResourceSchema", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.V(3).Infof("reqID: %s, action: ListResourceSchema, req %v, resp %v", reqID, req, resp)
@@ -48,9 +49,10 @@ func (cm *ClusterManager) GetResourceSchema(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ga := resourceschema.NewGetAction(cm.cmOptions.ResourceSchemaPath)
+	ga := resourceschema.NewGetAction(options.GetGlobalCMOptions().ResourceSchemaPath)
 	ga.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("GetResourceSchema", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.V(3).Infof("reqID: %s, action: GetResourceSchema, req %v, resp %s", reqID, req, utils.ToJSONString(resp))
+	blog.V(3).Infof("reqID: %s, action: GetResourceSchema, req %v, resp %s",
+		reqID, req, utils.ToJSONString(resp))
 	return nil
 }

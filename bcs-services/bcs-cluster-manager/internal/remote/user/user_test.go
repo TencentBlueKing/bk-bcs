@@ -42,7 +42,7 @@ func TestUser_CreateUserToken(t *testing.T) {
 }
 
 func TestUser_GetUserToken(t *testing.T) {
-	token, err := cli.GetUserToken("BCS-K8S-40025")
+	token, err := cli.GetUserToken("BCS-K8S-xxx")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func TestUser_GrantUserPermission(t *testing.T) {
 		{
 			UserName:     "xxx",
 			ResourceType: ResourceTypeClusterManager,
-			Resource:     "BCS-K8S-15202",
+			Resource:     "BCS-K8S-xxx",
 			Role:         PermissionViewerRole,
 		},
 	})
@@ -80,7 +80,7 @@ func TestUser_RevokeUserPermission(t *testing.T) {
 		{
 			UserName:     "xxx",
 			ResourceType: ResourceTypeClusterManager,
-			Resource:     "BCS-K8S-15202",
+			Resource:     "BCS-K8S-xxx",
 			Role:         PermissionViewerRole,
 		},
 	})
@@ -89,8 +89,4 @@ func TestUser_RevokeUserPermission(t *testing.T) {
 	}
 
 	t.Log("success")
-}
-
-func TestUser_VerifyUserPermission(t *testing.T) {
-
 }

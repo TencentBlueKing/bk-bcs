@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -31,7 +29,7 @@ import (
 // DeleteAKSClusterTask delete cluster task
 func DeleteAKSClusterTask(taskID string, stepName string) error {
 	start := time.Now()
-	// get task information and validate
+	//get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -68,7 +66,7 @@ func DeleteAKSClusterTask(taskID string, stepName string) error {
 	cmOption.Region = cluster.Region
 
 	// get azure client
-	client, err := api.NewAksServiceImplWithCommonOption(cmOption)
+	cli, err := api.NewAksServiceImplWithCommonOption(cmOption)
 	if err != nil {
 		blog.Errorf("DeleteAKSClusterTask[%s]: get azure client for cluster[%s] in BasicInfo %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -78,25 +76,24 @@ func DeleteAKSClusterTask(taskID string, stepName string) error {
 	}
 
 	if cluster.SystemID != "" {
-		err = client.DeleteClusterWithName(context.Background(), cmOption.Account.ResourceGroupName, cluster.SystemID)
+		err = cli.DeleteClusterWithName(context.Background(), cmOption.Account.ResourceGroupName, cluster.SystemID)
 		if err != nil {
-			blog.Errorf("DeleteAKSClusterTask[%s]: BasicInfo[%s] step[%s] call azure DeleteAKSCluster failed: %v",
-				taskID, taskID, stepName, err)
+			blog.Errorf("DeleteAKSClusterTask[%s]: call azure DeleteAKSCluster failed: %v",
+				taskID, err)
 			retErr := fmt.Errorf("call azure DeleteAKSCluster failed: %s", err.Error())
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}
 		_ = cloudprovider.UpdateClusterSystemID(clusterID, "")
-		blog.Infof("DeleteAKSClusterTask[%s]: BasicInfo %s DeleteAKSCluster[%s] successful", taskID, taskID,
-			cluster.SystemID)
+		blog.Infof("DeleteAKSClusterTask[%s]: DeleteAKSCluster[%s] successful",
+			taskID, cluster.SystemID)
 	} else {
-		blog.Infof("DeleteAKSClusterTask[%s]: BasicInfo %s DeleteAKSCluster skip current step because SystemID empty",
-			taskID, taskID)
+		blog.Infof("DeleteAKSClusterTask[%s]: DeleteAKSCluster skip current step because SystemID empty", taskID)
 	}
 
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		return errors.Wrapf(err, "DeleteAKSClusterTask[%s]: BasicInfo %s %s update to storage fatal", taskID,
-			taskID, stepName)
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("DeleteAKSClusterTask[%s]: %s update to storage fatal", taskID, stepName)
+		return err
 	}
 	return nil
 }
@@ -106,7 +103,7 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	// delete node && nodeGroup && cluster
 	// get relative nodes by clusterID
 	start := time.Now()
-	// get task information and validate
+	//get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -157,9 +154,9 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete cluster[%s] in DB successful", taskID, clusterID)
 
 	utils.SyncDeletePassCCCluster(taskID, cluster)
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		return errors.Wrapf(err, "CleanClusterDBInfoTask[%s]: BasicInfo %s %s update to storage fatal", taskID,
-			taskID, stepName)
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("CleanClusterDBInfoTask[%s]: %s update to storage fatal", taskID, stepName)
+		return err
 	}
 	return nil
 }

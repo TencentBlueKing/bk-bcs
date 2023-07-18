@@ -22,24 +22,25 @@ import (
 	"testing"
 	"time"
 
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
-	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 )
 
 const (
-	TencentCloudSecretIDEnv  = "TENCENTCLOUD_SECRET_ID"
-	TencentCloudSecretKeyEnv = "TENCENTCLOUD_SECRET_KEY"
+	TencentCloudSecretIDClusterEnv  = "InnerKey"
+	TencentCloudSecretKeyClusterEnv = "InnerSecret"
 )
 
 func getASClient(region string) *ASClient {
 	cli, err := NewASClient(&cloudprovider.CommonOption{
 		Account: &cmproto.Account{
-			SecretID:  os.Getenv(TencentCloudSecretIDEnv),
-			SecretKey: os.Getenv(TencentCloudSecretKeyEnv),
+			SecretID:  os.Getenv(TencentCloudSecretIDClusterEnv),
+			SecretKey: os.Getenv(TencentCloudSecretKeyClusterEnv),
 		},
 		Region: region,
 	})
@@ -50,7 +51,7 @@ func getASClient(region string) *ASClient {
 }
 
 func TestDescribeAutoScalingInstances(t *testing.T) {
-	cli := getASClient("ap-guangzhou")
+	cli := getASClient("ap-xxx")
 	ins, err := cli.DescribeAutoScalingInstances("asg-xxx")
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +60,7 @@ func TestDescribeAutoScalingInstances(t *testing.T) {
 }
 
 func TestRemoveInstances(t *testing.T) {
-	cli := getASClient("ap-guangzhou")
+	cli := getASClient("ap-xxx")
 	acID, err := cli.RemoveInstances("asg-xxx", []string{"ins-xxx", "ins-xxx"})
 	if err != nil {
 		t.Fatal(err)
@@ -162,7 +163,7 @@ func TestASClient_ScaleOutInstances(t *testing.T) {
 	)
 
 	// wait all nodes to be ready
-	err = cloudprovider.LoopDoFunc(timeCtx, func() error {
+	err = loop.LoopDoFunc(timeCtx, func() error {
 		instances, err = tkeCli.QueryTkeClusterInstances(&DescribeClusterInstances{
 			ClusterID:   "cls-xxx",
 			InstanceIDs: successInstanceID,
@@ -189,11 +190,11 @@ func TestASClient_ScaleOutInstances(t *testing.T) {
 		if index == len(successInstanceID) {
 			addSucessNodes = running
 			addFailureNodes = failure
-			return cloudprovider.EndLoop
+			return loop.EndLoop
 		}
 
 		return nil
-	}, cloudprovider.LoopInterval(10*time.Second))
+	}, loop.LoopInterval(10*time.Second))
 	// other error
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		fmt.Printf("checkClusterInstanceStatus QueryTkeClusterInstances failed: %v", err)
@@ -213,7 +214,7 @@ func TestASClient_ScaleOutInstances2(t *testing.T) {
 		err        error
 	)
 
-	cloudprovider.LoopDoFunc(context.Background(), func() error {
+	loop.LoopDoFunc(context.Background(), func() error {
 		activityID, err = cli.ScaleOutInstances("asg-xxx", 2)
 		if err != nil {
 			if strings.Contains(err.Error(), as.RESOURCEUNAVAILABLE_AUTOSCALINGGROUPINACTIVITY) {
@@ -223,8 +224,8 @@ func TestASClient_ScaleOutInstances2(t *testing.T) {
 		}
 
 		fmt.Println(activityID)
-		return cloudprovider.EndLoop
-	}, cloudprovider.LoopInterval(1*time.Second))
+		return loop.EndLoop
+	}, loop.LoopInterval(1*time.Second))
 
 	if activityID == "" {
 		t.Fatal("failed")

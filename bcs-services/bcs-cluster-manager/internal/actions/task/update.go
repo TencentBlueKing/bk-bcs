@@ -15,6 +15,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -42,7 +43,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 
 func (ua *UpdateAction) updateTask(tsk *cmproto.Task) error {
 	timeStr := time.Now().Format(time.RFC3339)
-	// update field if required
+	//update field if required
 	tsk.LastUpdate = timeStr
 	tsk.Updater = ua.req.Updater
 	if len(ua.req.Status) != 0 {
@@ -92,7 +93,7 @@ func (ua *UpdateAction) Handle(
 		return
 	}
 
-	// get old Task information, update fields if required
+	//get old Task information, update fields if required
 	destTsk, err := ua.model.GetTask(ua.ctx, req.TaskID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -114,6 +115,9 @@ type RetryAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.RetryTaskRequest
 	resp  *cmproto.RetryTaskResponse
+
+	task    *cmproto.Task
+	cluster *cmproto.Cluster
 }
 
 // NewRetryAction create retry action for cluster retry
@@ -129,6 +133,99 @@ func (ua *RetryAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
+func (ua *RetryAction) getRelativeData() error {
+	task, err := ua.model.GetTask(ua.ctx, ua.req.TaskID)
+	if err != nil {
+		blog.Errorf("RetryTaskAction Task %s failed when retry task, err %s", ua.req.TaskID, err.Error())
+		return err
+	}
+	cluster, err := ua.model.GetCluster(ua.ctx, task.ClusterID)
+	if err != nil {
+		blog.Errorf("RetryTaskAction %s failed: %v", ua.req.TaskID, err)
+		return err
+	}
+
+	ua.task = task
+	ua.cluster = cluster
+
+	return nil
+}
+
+// ua.setResp(common.BcsErrClusterManagerTaskErr, errMsg)
+func (ua *RetryAction) validate() error {
+	if err := ua.req.Validate(); err != nil {
+		return err
+	}
+	// check task status
+	switch ua.task.Status {
+	case cloudprovider.TaskStatusInit, cloudprovider.TaskStatusRunning, cloudprovider.TaskStatusSuccess:
+		errMsg := fmt.Errorf("task[%s] status[%s] doing or done when retry task", ua.task.TaskID, ua.task.Status)
+		return errMsg
+	case cloudprovider.TaskStatusFailure, cloudprovider.TaskStatusTimeout:
+	}
+
+	return nil
+}
+
+func (ua *RetryAction) distributeTask() error {
+	ua.task.Status = cloudprovider.TaskStatusRunning
+	ua.task.Message = "task retrying"
+
+	err := ua.model.UpdateTask(ua.ctx, ua.task)
+	if err != nil {
+		blog.Errorf("RetryTaskAction[%s] updateTask failed: %v", ua.cluster.ClusterID, err)
+		return err
+	}
+	if err = taskserver.GetTaskServer().Dispatch(ua.task); err != nil {
+		blog.Errorf("dispatch retry task[%s] for cluster %s failed, %s", ua.req.TaskID, ua.task.ClusterID, err.Error())
+		return err
+	}
+	blog.Infof("retry cluster[%s] task[%s] type %s successfully", ua.task.ClusterID, ua.task.TaskID, ua.task.TaskType)
+
+	hiddenTaskPassword(ua.task)
+
+	ua.resp.Data = ua.task
+	return nil
+}
+
+func (ua *RetryAction) updateTaskDataStatus() error {
+	blog.Infof("RetryTaskAction[%s] taskType[%s]", ua.req.TaskID, ua.task.TaskType)
+
+	var err error
+	switch {
+	case strings.Contains(ua.task.TaskType, cloudprovider.CreateCluster.String()),
+		strings.Contains(ua.task.TaskType, cloudprovider.ImportCluster.String()),
+		strings.Contains(ua.task.TaskType, cloudprovider.CreateVirtualCluster.String()):
+		err = updateClusterStatus(ua.model, ua.cluster.ClusterID, common.StatusInitialization)
+	case strings.Contains(ua.task.TaskType, cloudprovider.DeleteCluster.String()),
+		strings.Contains(ua.task.TaskType, cloudprovider.DeleteVirtualCluster.String()):
+		err = updateClusterStatus(ua.model, ua.cluster.ClusterID, common.StatusDeleting)
+	case strings.Contains(ua.task.TaskType, cloudprovider.AddNodesToCluster.String()):
+		err = updateNodeStatus(ua.model, ua.task.NodeIPList, common.StatusInitialization)
+	case strings.Contains(ua.task.TaskType, cloudprovider.RemoveNodesFromCluster.String()):
+		err = updateNodeStatus(ua.model, ua.task.NodeIPList, common.StatusDeleting)
+	case strings.Contains(ua.task.TaskType, cloudprovider.CreateNodeGroup.String()):
+		err = updateNodeGroupStatus(ua.model, ua.task.NodeGroupID, common.StatusCreateNodeGroupCreating)
+	case strings.Contains(ua.task.TaskType, cloudprovider.DeleteNodeGroup.String()):
+		err = updateNodeGroupStatus(ua.model, ua.task.NodeGroupID, common.StatusDeleteNodeGroupDeleting)
+	case strings.HasSuffix(ua.task.TaskType, cloudprovider.UpdateNodeGroup.String()):
+		err = updateNodeGroupStatus(ua.model, ua.task.NodeGroupID, common.StatusUpdateNodeGroupUpdating)
+	case strings.HasSuffix(ua.task.TaskType, cloudprovider.UpdateNodeGroupDesiredNode.String()):
+		err = updateNodeStatus(ua.model, cloudprovider.ParseNodeIpOrIdFromCommonMap(ua.task.CommonParams,
+			cloudprovider.NodeIPsKey.String(), ","), common.StatusInitialization)
+	case strings.Contains(ua.task.TaskType, cloudprovider.CleanNodeGroupNodes.String()):
+		err = updateNodeStatus(ua.model, cloudprovider.ParseNodeIpOrIdFromCommonMap(ua.task.CommonParams,
+			cloudprovider.NodeIPsKey.String(), ","), common.StatusInitialization)
+	default:
+		blog.Warnf("RetryTaskAction[%s] not support taskType[%s]", ua.task.TaskID, ua.task.TaskType)
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Handle handle update cluster credential
 func (ua *RetryAction) Handle(
 	ctx context.Context, req *cmproto.RetryTaskRequest, resp *cmproto.RetryTaskResponse) {
@@ -141,43 +238,23 @@ func (ua *RetryAction) Handle(
 	ua.req = req
 	ua.resp = resp
 
-	if err := req.Validate(); err != nil {
+	if err := ua.getRelativeData(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	if err := ua.validate(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 
-	// get old task
-	task, err := ua.model.GetTask(ua.ctx, req.TaskID)
-	if err != nil {
-		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		blog.Errorf("find Task %s failed when retry task, err %s", req.TaskID, err.Error())
-		return
-	}
-	switch task.Status {
-	case cloudprovider.TaskStatusInit, cloudprovider.TaskStatusRunning, cloudprovider.TaskStatusSuccess:
-		errMsg := fmt.Sprintf("task[%s] status[%s] doing or done when retry task", task.TaskID, task.Status)
-		blog.Errorf(errMsg)
-		ua.setResp(common.BcsErrClusterManagerTaskErr, errMsg)
-		return
-	case cloudprovider.TaskStatusFailure, cloudprovider.TaskStatusTimeout:
-	}
-
-	task.Status = cloudprovider.TaskStatusRunning
-	task.Message = "task retrying"
-
-	err = ua.model.UpdateTask(ua.ctx, task)
-	if err != nil {
-		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		return
-	}
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
-		blog.Errorf("dispatch retry task[%s] for cluster %s failed, %s", task.TaskID, task.ClusterID, err.Error())
+	if err := ua.distributeTask(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerTaskErr, err.Error())
 		return
 	}
-	blog.Infof("retry cluster[%s] task[%s] type %s successfully", task.ClusterID, task.TaskID, task.TaskType)
+	// handle cluster data status and not block task, finally task will update data status
+	_ = ua.updateTaskDataStatus()
 
-	ua.resp.Data = task
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 	return
 }

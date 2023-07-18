@@ -17,14 +17,78 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"io/ioutil"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/user"
+	iutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+)
+
+const (
+	apiServer  = "apiServer"
+	etcdServer = "etcdServer"
+
+	createCluster = "create_cluster"
+	addNodes      = "add_nodes"
+
+	// defaultPolicy default cpu_manager policy
+	defaultPolicy = "none"
+	staticPolicy  = "static"
+
+	// bk-sops template vars prefix
+	prefix   = "CM"
+	template = "template"
+)
+
+var (
+	// cluster render info
+	clusterID           = "CM.cluster.ClusterID"
+	clusterMasterIPs    = "CM.cluster.ClusterMasterIPs"
+	clusterMasterDomain = "CM.cluster.ClusterMasterDomain"
+	clusterEtcdDomain   = "CM.cluster.ClusterEtcdDomain"
+
+	clusterRegion         = "CM.cluster.ClusterRegion"
+	clusterVPC            = "CM.cluster.ClusterVPC"
+	clusterNetworkType    = "CM.cluster.ClusterNetworkType"
+	clusterBizID          = "CM.cluster.ClusterBizID"
+	clusterModuleID       = "CM.cluster.ClusterModuleID"
+	clusterExtraID        = "CM.cluster.ClusterExtraID"
+	clusterExtraClusterID = "CM.cluster.ClusterExtraClusterID"
+	clusterProjectID      = "CM.cluster.ClusterProjectID"
+	clusterExtraEnv       = "CM.cluster.CreateClusterExtraEnv"
+	clusterManageEnv      = "CM.cluster.ClusterManageType"
+	addNodesExtraEnv      = "CM.cluster.AddNodesExtraEnv"
+	bcsCommonInfo         = "CM.bcs.CommonInfo"
+	clusterKubeConfig     = "CM.cluster.Kubeconfig"
+
+	// node render info
+	// NOCC:gas/crypto(误报)
+	nodePasswd           = "CM.node.NodePasswd"
+	nodeCPUManagerPolicy = "CM.node.NodeCPUManagerPolicy"
+	nodeIPList           = "CM.node.NodeIPList"
+
+	// nodeGroup render info
+	nodeGroupID = "CM.nodeGroup.NodeGroupID"
+
+	externalNodeScript = "CM.node.Script"
+	// 操作人员,追溯记录
+	nodeOperator = "CM.node.NodeOperator"
+
+	// 作为step参数动态注入业务ID和操作人员信息
+	templateBusinessID = "CM.template.BusinessID"
+	templateOperator   = "CM.template.Operator"
+
+	// NodeIPList dynamic inject node ips
+	NodeIPList = "CM.node.NodeIPList"
+	// ExternalNodeScript external script
+	ExternalNodeScript = "CM.node.Script"
 )
 
 // BcsKey bcsEnvs key
@@ -44,6 +108,8 @@ var (
 	BCSClientKey BcsKey = "bcs_client_key"
 	// BCSTokenKey xxx
 	BCSTokenKey BcsKey = "bcs_token"
+	// BCSApiIpsKey xxx
+	BCSApiIpsKey BcsKey = "bcs_api_ips"
 )
 
 func getClusterMasterIPs(cluster *proto.Cluster) string {
@@ -140,13 +206,49 @@ func getBcsEnvs(cluster *proto.Cluster) (string, error) {
 	}
 
 	if user.GetUserManagerClient() != nil {
-		token, err := utils.BuildBcsAgentToken(cluster)
+		token, err := utils.BuildBcsAgentToken(cluster.ClusterID, false)
 		if err != nil {
+			blog.Errorf("getBcsEnvs BuildBcsAgentToken[%s] failed: %v", cluster.ClusterID, err)
 			return "", err
 		}
 
 		bcsEnvs = append(bcsEnvs, getEnv(BCSTokenKey.String(), token))
 	}
+	if options.GetEditionInfo().IsCommunicationEdition() {
+		ipStr, err := getInitClusterIPs(common.InitClusterID)
+		if err != nil {
+			blog.Errorf("getBcsEnvs BuildBcsInitClusterIPs[%s] failed: %v", common.InitClusterID, err)
+			return "", err
+		}
+
+		bcsEnvs = append(bcsEnvs, getEnv(BCSApiIpsKey.String(), ipStr))
+	}
 
 	return strings.Join(bcsEnvs, ";"), nil
+}
+
+// getInitClusterIPs 获取创始集群IP列表
+func getInitClusterIPs(clusterID string) (string, error) {
+	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+	nodes, err := k8sOperator.ListClusterNodes(context.Background(), clusterID)
+	if err != nil {
+		blog.Errorf("getInitClusterIPs[%s] failed: %v", err)
+		return "", err
+	}
+
+	var ips = make([]string, 0)
+	for i := range nodes {
+		ipv4s, ipv6s := iutils.GetNodeIPAddress(nodes[i])
+		if len(ipv4s) == 0 && len(ipv6s) == 0 {
+			continue
+		}
+		if len(ipv4s) > 0 {
+			ips = append(ips, ipv4s...)
+		}
+		if len(ipv6s) > 0 {
+			ips = append(ips, ipv6s...)
+		}
+	}
+
+	return strings.Join(ips, ","), nil
 }

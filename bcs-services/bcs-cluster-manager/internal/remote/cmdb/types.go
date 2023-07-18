@@ -13,6 +13,36 @@
 
 package cmdb
 
+// idcZoneMap idc zone
+var idcZoneMap = map[string]string{
+	"nanjing":   "南京",
+	"guangzhou": "广州",
+	"shanghai":  "上海",
+	"beijing":   "北京",
+	"tianjin":   "天津",
+	"shenzhen":  "深圳",
+}
+
+// GetCityZoneByCityName trans cityName to region
+func GetCityZoneByCityName(name string) string {
+	for region, city := range idcZoneMap {
+		if name == city {
+			return region
+		}
+	}
+
+	return ""
+}
+
+// business cloud key info
+const (
+	KeyPart      = "运营部门"
+	KeyProduct   = "运营产品"
+	KeyOneBiz    = "一级业务"
+	KeySecondBiz = "二级业务"
+	KeyOperator  = "负责人"
+)
+
 // field result
 const (
 	fieldBS2NameID = "bs2_name_id"
@@ -32,6 +62,14 @@ const (
 	fieldDeviceClass = "svr_device_class"
 	fieldRack        = "rack"
 	fieldIDCName     = "idc_name"
+	fieldAgentId     = "bk_agent_id"
+
+	fieldSubZoneID = "sub_zone_id"    // 子ZoneID
+	fieldSubZone   = "sub_zone"       // 子Zone
+	fieldIDCAreaID = "bk_idc_area_id" // 区域ID
+	fieldIDCArea   = "bk_idc_area"    // 区域
+	fieldIspName   = "bk_isp_name"    // 所属运营商
+	fieldCpuModule = "bk_cpu_module"  // cpu型号
 
 	fieldHostCPU  = "bk_cpu"
 	fieldHostMem  = "bk_mem"
@@ -47,9 +85,9 @@ const (
 )
 
 var (
-	fieldHostDetailInfo = []string{fieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6, fieldHostID,
-		fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU,
-		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName}
+	fieldHostDetailInfo = []string{fieldCloudID, fieldHostIP, fieldHostIPv6, fieldHostOutIP, fieldHostOutIPV6, fieldHostID,
+		fieldDeviceType, fieldIDCCityName, fieldIDCCityID, fieldDeviceClass, fieldHostCPU, fieldCpuModule,
+		fieldHostMem, fieldHostDisk, fieldOperator, fieldBakOperator, fieldRack, fieldIDCName, fieldSubZoneID, fieldIspName}
 )
 
 // condition result
@@ -75,6 +113,14 @@ type Page struct {
 	Start int    `json:"start"`
 	Limit int    `json:"limit"`
 	Sort  string `json:"sort"`
+}
+
+// BaseResponse baseResp
+type BaseResponse struct {
+	Code      int    `json:"code"`
+	Result    bool   `json:"result"`
+	Message   string `json:"message"`
+	RequestID string `json:"request_id"`
 }
 
 // SearchBusinessRequest search business request
@@ -110,7 +156,7 @@ type BusinessData struct {
 	BKBizMaintainer string `json:"bk_biz_maintainer"`
 }
 
-// ListBizHostRequest xxx
+// ListBizHostRequest list biz host request
 type ListBizHostRequest struct {
 	Page        Page     `json:"page"`
 	BKBizID     int      `json:"bk_biz_id"`
@@ -119,7 +165,7 @@ type ListBizHostRequest struct {
 	Fields      []string `json:"fields"`
 }
 
-// ListBizHostsResponse xxx
+// ListBizHostsResponse list biz host resp
 type ListBizHostsResponse struct {
 	Code      int      `json:"code"`
 	Result    bool     `json:"result"`
@@ -128,13 +174,13 @@ type ListBizHostsResponse struct {
 	Data      HostResp `json:"data"`
 }
 
-// HostResp host resp
+// HostResp host data
 type HostResp struct {
 	Count int        `json:"count"`
 	Info  []HostData `json:"info"`
 }
 
-// HostData info
+// HostData host info
 type HostData struct {
 	BKHostID      int64  `json:"bk_host_id"`
 	BKHostInnerIP string `json:"bk_host_innerip"`
@@ -194,6 +240,7 @@ type ListHostsWithoutBizResponse struct {
 // HostDetailData host detailed info
 type HostDetailData struct {
 	HostData
+	BkCloudID        int64  `json:"bk_cloud_id"`
 	BkHostInnerIPV6  string `json:"bk_host_innerip_v6"`
 	BkHostOutIP      string `json:"bk_host_outerip"`
 	BkHostOutIPV6    string `json:"bk_host_outerip_v6"`
@@ -206,6 +253,9 @@ type HostDetailData struct {
 	HostMem          int64  `json:"bk_mem"`
 	HostDisk         int64  `json:"bk_disk"`
 	Rack             string `json:"rack"`
+	SubZoneID        string `json:"sub_zone_id"`
+	CpuModule        string `json:"bk_cpu_module"`
+	BkAgentID        string `json:"bk_agent_id"`
 }
 
 const (
@@ -216,7 +266,7 @@ const (
 )
 
 var (
-	reqColumns = []string{"BsiId", "BsipId", "BsiProductName", "BsiProductId", "BsiName"}
+	fieldBizInfo = []string{"BsiId", "BsipId", "BsiProductName", "BsiProductId", "BsiName", "BsiL1", "BsiL2"}
 )
 
 // QueryBusinessInfoReq query business request
@@ -242,11 +292,16 @@ type BusinessInfo struct {
 
 // Business business info
 type Business struct {
-	BsiID          int    `json:"BsiId"`
+	// 运营产品名称和ID
 	BsiProductName string `json:"BsiProductName"`
+	BsiProductId   int    `json:"BsiProductId"`
+	BsiID          int    `json:"BsiId"`
 	BsipID         int    `json:"BsipId"`
-	BsiName        string `json:"BsiName"`
-	BsiProductID   int    `json:"BsiProductId"`
+	// 业务名称
+	BsiName string `json:"BsiName"`
+	// 一级/二级业务ID
+	BsiL1 int `json:"BsiL1"`
+	BsiL2 int `json:"BsiL2"`
 }
 
 // BizInfo business id info
@@ -254,12 +309,105 @@ type BizInfo struct {
 	BizID int64 `json:"bizID"`
 }
 
-// BaseResponse baseResp
-type BaseResponse struct {
-	Code      int    `json:"code"`
-	Result    bool   `json:"result"`
-	Message   string `json:"message"`
-	RequestID string `json:"request_id"`
+// FindHostBizRelationsRequest xxx
+type FindHostBizRelationsRequest struct {
+	BkHostID []int `json:"bk_host_id"`
+	BkBizID  int   `json:"bk_biz_id,omitempty"`
+}
+
+// FindHostBizRelationsResponse xxx
+type FindHostBizRelationsResponse struct {
+	BaseResponse
+	Data []HostBizRelations `json:"data"`
+}
+
+// HostBizRelations xxx
+type HostBizRelations struct {
+	BkBizID           int    `json:"bk_biz_id"`
+	BkHostID          int    `json:"bk_host_id"`
+	BkModuleID        int    `json:"bk_module_id"`
+	BkSetID           int    `json:"bk_set_id"`
+	BkSupplierAccount string `json:"bk_supplier_account"`
+}
+
+// TransHostToERecycleModuleRequest xxx
+type TransHostToERecycleModuleRequest struct {
+	BkBizID    int   `json:"bk_biz_id"`
+	BkSetID    int   `json:"bk_set_id,omitempty"`
+	BkModuleID int   `json:"bk_module_id,omitempty"`
+	BkHostID   []int `json:"bk_host_id"`
+}
+
+// TransHostToERecycleModuleResponse xxx
+type TransHostToERecycleModuleResponse struct {
+	BaseResponse
+}
+
+// QueryBizInternalModuleRequest xxx
+type QueryBizInternalModuleRequest struct {
+	BizID int `json:"bk_biz_id"`
+}
+
+// QueryBizInternalModuleResponse xxx
+type QueryBizInternalModuleResponse struct {
+	BaseResponse
+	Data BizInternalModuleData `json:"data"`
+}
+
+// BizInternalModuleData xxx
+type BizInternalModuleData struct {
+	SetID      int      `json:"bk_set_id"`
+	SetName    string   `json:"bk_set_name"`
+	ModuleInfo []Module `json:"module"`
+}
+
+// Module module info
+type Module struct {
+	ModuleID        int    `json:"bk_module_id"`
+	ModuleName      string `json:"bk_module_name"`
+	Default         int    `json:"default"`
+	HostApplyEnable bool   `json:"host_apply_enabled"`
+}
+
+// moduleNameMaps map module name
+var moduleNameMaps = map[string]string{
+	"idle pool":    "空闲机池",
+	"idle host":    "空闲机",
+	"fault host":   "故障机",
+	"recycle host": "待回收",
+}
+
+// ReplaceName replace module name
+func (g *BizInternalModuleData) ReplaceName() {
+	if v, ok := moduleNameMaps[g.SetName]; ok {
+		g.SetName = v
+	}
+	for i := range g.ModuleInfo {
+		if v, ok := moduleNameMaps[g.ModuleInfo[i].ModuleName]; ok {
+			g.ModuleInfo[i].ModuleName = v
+		}
+	}
+}
+
+// TransHostAcrossBizInfo across biz
+type TransHostAcrossBizInfo struct {
+	SrcBizID    int
+	HostID      []int
+	DstBizID    int
+	DstModuleID int
+}
+
+// TransferHostAcrossBizRequest xxx
+type TransferHostAcrossBizRequest struct {
+	SrcBizID   int   `json:"src_bk_biz_id"`
+	BkHostID   []int `json:"bk_host_id"`
+	DstBizID   int   `json:"dst_bk_biz_id"`
+	BkModuleID int   `json:"bk_module_id"` // 主机要转移到的模块ID，该模块ID必须为下空闲机池set下的模块ID。
+}
+
+// TransferHostAcrossBizResponse xxx
+type TransferHostAcrossBizResponse struct {
+	BaseResponse
 }
 
 // TransferHostToIdleModuleRequest transfer host to idle module request
@@ -292,47 +440,6 @@ type DeleteHostRequest struct {
 // DeleteHostResponse delete host response
 type DeleteHostResponse struct {
 	BaseResponse
-}
-
-// GetBizInternalModuleResponse get biz internal module response
-type GetBizInternalModuleResponse struct {
-	BaseResponse
-	Data GetBizInternalModuleData `json:"data"`
-}
-
-// GetBizInternalModuleData get biz internal module data
-type GetBizInternalModuleData struct {
-	BKSetID   int                        `json:"bk_set_id"`
-	BKSetName string                     `json:"bk_set_name"`
-	Modules   []GetBizInternalModuleInfo `json:"module"`
-}
-
-// GetBizInternalModuleInfo get biz internal module info
-type GetBizInternalModuleInfo struct {
-	BKModuleID       int    `json:"bk_module_id"`
-	BKModuleName     string `json:"bk_module_name"`
-	Default          int    `json:"default"`
-	HostApplyEnabled bool   `json:"host_apply_enabled"`
-}
-
-// moduleNameMaps map module name
-var moduleNameMaps = map[string]string{
-	"idle pool":    "空闲机池",
-	"idle host":    "空闲机",
-	"fault host":   "故障机",
-	"recycle host": "待回收",
-}
-
-// ReplaceName replace module name
-func (g *GetBizInternalModuleData) ReplaceName() {
-	if v, ok := moduleNameMaps[g.BKSetName]; ok {
-		g.BKSetName = v
-	}
-	for i := range g.Modules {
-		if v, ok := moduleNameMaps[g.Modules[i].BKModuleName]; ok {
-			g.Modules[i].BKModuleName = v
-		}
-	}
 }
 
 // SearchBizInstTopoResponse search biz inst topo response

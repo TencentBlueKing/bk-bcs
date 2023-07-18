@@ -20,6 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -32,15 +33,21 @@ type PermInfo struct {
 // GetCloudAndCluster get relative cloud & cluster information
 func GetCloudAndCluster(model store.ClusterManagerModel,
 	cloudID string, clusterID string) (*proto.Cloud, *proto.Cluster, error) {
-	// get relative Cluster for information injection
+	//get relative Cluster for information injection
 	cluster, err := model.GetCluster(context.Background(), clusterID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cluster %s err, %s", clusterID, err.Error())
 	}
+
+	if cloudID == "" {
+		cloudID = cluster.Provider
+	}
+
 	cloud, err := model.GetCloud(context.Background(), cloudID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cloud %s err, %s", cloudID, err.Error())
 	}
+
 	return cloud, cluster, nil
 }
 
@@ -64,33 +71,34 @@ func GetNodeGroupByGroupID(model store.ClusterManagerModel, groupID string) (*pr
 	return nodeGroup, nil
 }
 
-// GetProjectByProjectID get project info
-func GetProjectByProjectID(model store.ClusterManagerModel, projectID string) (*proto.Project, error) {
-	project, err := model.GetProject(context.Background(), projectID)
+// GetNodeTemplateByTemplateID get nodeTemplate info
+func GetNodeTemplateByTemplateID(model store.ClusterManagerModel, templateID string) (*proto.NodeTemplate, error) {
+	nodeTemplate, err := model.GetNodeTemplateByID(context.Background(), templateID)
 	if err != nil {
-		return nil, fmt.Errorf("project %s err, %s", projectID, err.Error())
+		return nil, fmt.Errorf("nodeTemplate %s err, %s", templateID, err.Error())
 	}
 
-	return project, nil
+	return nodeTemplate, nil
+}
+
+// GetAsOptionByClusterID get asOption info
+func GetAsOptionByClusterID(model store.ClusterManagerModel, clusterID string) (*proto.ClusterAutoScalingOption, error) {
+	clsAsOption, err := model.GetAutoScalingOption(context.Background(), clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("clusterAOption %s err, %s", clusterID, err.Error())
+	}
+
+	return clsAsOption, nil
 }
 
 // GetClusterInfoByClusterID get cluster info
 func GetClusterInfoByClusterID(model store.ClusterManagerModel, clusterID string) (*proto.Cluster, error) {
 	cluster, err := model.GetCluster(context.Background(), clusterID)
 	if err != nil {
-		return nil, fmt.Errorf("project %s err, %s", clusterID, err.Error())
+		return nil, fmt.Errorf("cluster %s err, %s", clusterID, err.Error())
 	}
 
 	return cluster, nil
-}
-
-// GetDefaultClusterAutoScalingOption get default cluster auto scaling option
-func GetDefaultClusterAutoScalingOption(clusterID string) *proto.ClusterAutoScalingOption {
-	return &proto.ClusterAutoScalingOption{
-		Expander:            "random",
-		BufferResourceRatio: 100,
-		ClusterID:           clusterID,
-	}
 }
 
 // TaintToK8sTaint convert taint to k8s taint
@@ -117,4 +125,27 @@ func K8sTaintToTaint(taint []corev1.Taint) []*proto.Taint {
 		})
 	}
 	return taints
+}
+
+// TransNodeStatus 转换节点状态
+func TransNodeStatus(cmNodeStatus string, k8sNode *corev1.Node) string {
+	if cmNodeStatus == common.StatusInitialization || cmNodeStatus == common.StatusAddNodesFailed ||
+		cmNodeStatus == common.StatusDeleting || cmNodeStatus == common.StatusRemoveNodesFailed ||
+		cmNodeStatus == common.StatusRemoveCANodesFailed {
+		return cmNodeStatus
+	}
+	for _, v := range k8sNode.Status.Conditions {
+		if v.Type != corev1.NodeReady {
+			continue
+		}
+		if v.Status == corev1.ConditionTrue {
+			if k8sNode.Spec.Unschedulable {
+				return common.StatusNodeRemovable
+			}
+			return common.StatusRunning
+		}
+		return common.StatusNodeNotReady
+	}
+
+	return common.StatusNodeUnknown
 }

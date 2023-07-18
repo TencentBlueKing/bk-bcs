@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package options xxx
 package options
 
 // ListOption list option
@@ -23,4 +22,6 @@ type ListOption struct {
 	Limit int64
 	// All for all results
 	All bool
+	// Count for index
+	Count bool
 }

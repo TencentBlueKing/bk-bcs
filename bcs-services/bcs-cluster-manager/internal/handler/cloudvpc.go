@@ -80,7 +80,7 @@ func (cm *ClusterManager) ListCloudVPC(ctx context.Context,
 	ca := cloudvpc.NewListAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudVPC", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudVPC, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
+	blog.Infof("reqID: %s, action: ListCloudVPC, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %v",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudVPC, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -97,7 +97,7 @@ func (cm *ClusterManager) ListCloudRegions(ctx context.Context,
 	ca := cloudvpc.NewListRegionsAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudRegions", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudRegions, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
+	blog.Infof("reqID: %s, action: ListCloudRegions, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %v",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudRegions, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -114,7 +114,7 @@ func (cm *ClusterManager) GetVPCCidr(ctx context.Context,
 	ca := cloudvpc.NewGetVPCCidrAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudRegions", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudRegions, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
+	blog.Infof("reqID: %s, action: ListCloudRegions, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %v",
 		reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudRegions, req %v, resp %v", reqID, req, resp)
 	return nil
@@ -131,8 +131,8 @@ func (cm *ClusterManager) ListCloudSubnets(ctx context.Context,
 	ca := cloudvpc.NewListSubnetsAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudSubnets", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudSubnets, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListCloudSubnets, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudSubnets, req %v, resp %v", reqID, req, resp)
 	return nil
 }
@@ -148,8 +148,8 @@ func (cm *ClusterManager) ListCloudSecurityGroups(ctx context.Context,
 	ca := cloudvpc.NewListSecurityGroupsAction(cm.model)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("ListCloudSecurityGroups", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: ListCloudSecurityGroups, req %v, resp.Code %d, resp.Message %s, resp.Data.Length %d",
-		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.Infof("reqID: %s, action: ListCloudSecurityGroups, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCloudSecurityGroups, req %v, resp %v", reqID, req, resp)
 	return nil
 }

@@ -15,7 +15,6 @@ package cloudresource
 
 import (
 	"context"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -59,7 +58,6 @@ func (ga *GetCloudRegionsAction) listCloudRegions() error {
 		Account: ga.account.Account,
 		// Region trick data, cloud need underlying dependence
 		Region: defaultRegion,
-
 		CommonConf: cloudprovider.CloudConf{
 			CloudInternalEnable: ga.cloud.ConfInfo.CloudInternalEnable,
 			CloudDomain:         ga.cloud.ConfInfo.CloudDomain,
@@ -169,15 +167,18 @@ func (ga *GetCloudRegionZonesAction) listCloudRegionZones() error {
 		return err
 	}
 
-	zoneList, err := nodeMgr.GetZoneList(&cloudprovider.CommonOption{
-		Account: ga.account.Account,
-		Region:  ga.req.Region,
-		CommonConf: cloudprovider.CloudConf{
-			CloudInternalEnable: ga.cloud.ConfInfo.CloudInternalEnable,
-			CloudDomain:         ga.cloud.ConfInfo.CloudDomain,
-			MachineDomain:       ga.cloud.ConfInfo.MachineDomain,
-		},
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ga.cloud,
+		AccountID: ga.req.AccountID,
 	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s list zones failed, %s",
+			ga.cloud.CloudID, ga.cloud.CloudProvider, err.Error())
+		return err
+	}
+	cmOption.Region = ga.req.Region
+
+	zoneList, err := nodeMgr.GetZoneList(cmOption)
 	if err != nil {
 		return err
 	}
@@ -209,7 +210,12 @@ func (ga *GetCloudRegionZonesAction) validate() error {
 		return err
 	}
 
-	err = validate.GetCloudRegionZonesValidate(ga.req, ga.account.Account)
+	err = validate.GetCloudRegionZonesValidate(ga.req, func() *cmproto.Account {
+		if ga.account == nil || ga.account.Account == nil {
+			return nil
+		}
+		return ga.account.Account
+	}())
 	if err != nil {
 		return err
 	}
@@ -222,17 +228,21 @@ func (ga *GetCloudRegionZonesAction) getRelativeData() error {
 	if err != nil {
 		return err
 	}
-	account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID)
-	if err != nil {
-		return err
+	ga.cloud = cloud
+
+	if ga.req.AccountID != "" {
+		account, err := ga.model.GetCloudAccount(ga.ctx, ga.req.CloudID, ga.req.AccountID)
+		if err != nil {
+			return err
+		}
+
+		ga.account = account
 	}
 
-	ga.account = account
-	ga.cloud = cloud
 	return nil
 }
 
-// Handle handle list cloud regions
+// Handle list cloud regions
 func (ga *GetCloudRegionZonesAction) Handle(
 	ctx context.Context, req *cmproto.GetCloudRegionZonesRequest, resp *cmproto.GetCloudRegionZonesResponse) {
 	if req == nil || resp == nil {

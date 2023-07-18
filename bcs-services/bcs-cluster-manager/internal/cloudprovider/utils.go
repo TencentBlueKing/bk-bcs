@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -26,37 +27,62 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/bkmonitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
-	errs "github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
-	apierror "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-)
-
-const (
-	bcsNamespace              = "bcs-system"
-	clusterAdmin              = "cluster-admin"
-	bcsCusterManager          = "bcs-cluster-manager"
-	bcsClusterRoleBindingName = "bcs-system-cm-clusterRoleBinding"
 )
 
 const (
 	// BKSOPTask bk-sops common job
 	BKSOPTask = "bksopsjob"
+	// UnCordonNodesAction 节点可调度任务
+	UnCordonNodesAction = "unCordonNodes"
+	// CordonNodesAction 节点不可调度任务
+	CordonNodesAction = "cordonNodes"
 	// WatchTask watch component common job
 	WatchTask = "watchjob"
+	// RemoveHostFromCmdbAction remove host action
+	RemoveHostFromCmdbAction = "removeHostFromCmdb"
+	// InstallGseAgentAction install gseAgent action
+	InstallGseAgentAction = "installGseAgent"
+	// TransferHostModuleAction transfer module action
+	TransferHostModuleAction = "transferHostModule"
 	// EnsureAutoScalerAction install/update ca component
 	EnsureAutoScalerAction = "ensureAutoScaler"
+	// JobFastExecuteScriptAction execute script by job
+	JobFastExecuteScriptAction = "jobFastExecuteScript"
+	// InstallVclusterAction install vcluster
+	InstallVclusterAction = "installVcluster"
+	// DeleteVclusterAction uninstall vcluster
+	DeleteVclusterAction = "deleteVcluster"
+	// UpgradeVclusterAction upgrade vcluster
+	UpgradeVclusterAction = "upgradeVcluster"
+	// CreateNamespaceAction 创建命名空间任务
+	CreateNamespaceAction = "createNamespace"
+	// DeleteNamespaceAction 删除命名空间任务
+	DeleteNamespaceAction = "deleteNamespace"
+	// SetNodeLabelsAction 节点设置labels任务
+	SetNodeLabelsAction = "nodeSetLabels"
+	// SetNodeAnnotationsAction 节点设置Annotations任务
+	SetNodeAnnotationsAction = "nodeSetAnnotations"
+	// CheckKubeAgentStatusAction 检测agent组件状态
+	CheckKubeAgentStatusAction = "checkAgentStatus"
+	// CreateResourceQuotaAction 创建资源配额任务
+	CreateResourceQuotaAction = "createResourceQuota"
+	// DeleteResourceQuotaAction 删除资源配额任务
+	DeleteResourceQuotaAction = "deleteResourceQuota"
+	// ResourcePoolLabelAction 设置资源池标签
+	ResourcePoolLabelAction = "resourcePoolLabel"
 )
 
 var (
@@ -97,8 +123,19 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 	}
 
 	option := &CommonOption{}
+
+	// if credential not exist account, get from common cloud
+	if data.AccountID != "" {
+		// try to get credential in cluster
+		account, err := GetStorageModel().GetCloudAccount(context.Background(), data.Cloud.CloudID, data.AccountID)
+		if err != nil {
+			return nil, fmt.Errorf("GetCloudAccount failed: %v", err)
+		}
+		option.Account = account.Account
+	}
+
 	// get credential from cloud
-	if data.Cloud.CloudCredential != nil {
+	if option.Account == nil && data.Cloud.CloudCredential != nil {
 		option.Account = &proto.Account{
 			SecretID:             data.Cloud.CloudCredential.Key,
 			SecretKey:            data.Cloud.CloudCredential.Secret,
@@ -112,21 +149,12 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 		}
 	}
 
-	// if credential not exist cloud, get from cluster account
-	if option.Account == nil && data.AccountID != "" {
-		// try to get credential in cluster
-		account, err := GetStorageModel().GetCloudAccount(context.Background(), data.Cloud.CloudID, data.AccountID)
-		if err != nil {
-			return nil, fmt.Errorf("GetCloudAccount failed: %v", err)
-		}
-		option.Account = account.Account
-	}
-
 	// set cloud basic confInfo
 	option.CommonConf = CloudConf{
 		CloudInternalEnable: data.Cloud.ConfInfo.CloudInternalEnable,
 		CloudDomain:         data.Cloud.ConfInfo.CloudDomain,
 		MachineDomain:       data.Cloud.ConfInfo.MachineDomain,
+		VpcDomain:           data.Cloud.ConfInfo.VpcDomain,
 	}
 
 	// check cloud credential info
@@ -151,54 +179,6 @@ func checkCloudCredentialValidate(cloud *proto.Cloud, option *CommonOption) erro
 	return nil
 }
 
-// TaskType taskType
-type TaskType string
-
-// String toString
-func (tt TaskType) String() string {
-	return string(tt)
-}
-
-var (
-	// CreateCluster task
-	CreateCluster TaskType = "CreateCluster"
-	// ImportCluster task
-	ImportCluster TaskType = "ImportCluster"
-	// DeleteCluster task
-	DeleteCluster TaskType = "DeleteCluster"
-	// AddNodesToCluster task
-	AddNodesToCluster TaskType = "AddNodesToCluster"
-	// RemoveNodesFromCluster task
-	RemoveNodesFromCluster TaskType = "RemoveNodesFromCluster"
-
-	// CreateNodeGroup task
-	CreateNodeGroup TaskType = "CreateNodeGroup"
-	// UpdateNodeGroup task
-	UpdateNodeGroup TaskType = "UpdateNodeGroup"
-	// DeleteNodeGroup task
-	DeleteNodeGroup TaskType = "DeleteNodeGroup"
-	// MoveNodesToNodeGroup task
-	MoveNodesToNodeGroup TaskType = "MoveNodesToNodeGroup"
-	// SwitchNodeGroupAutoScaling task
-	SwitchNodeGroupAutoScaling TaskType = "SwitchNodeGroupAutoScaling"
-	// UpdateNodeGroupDesiredNode task
-	UpdateNodeGroupDesiredNode TaskType = "UpdateNodeGroupDesiredNode"
-	// CleanNodeGroupNodes task
-	CleanNodeGroupNodes TaskType = "CleanNodeGroupNodes"
-	// UpdateAutoScalingOption task
-	UpdateAutoScalingOption TaskType = "UpdateAutoScalingOption"
-	// SwitchAutoScalingOptionStatus task
-	SwitchAutoScalingOptionStatus TaskType = "SwitchAutoScalingOptionStatus"
-
-	// ApplyInstanceMachinesTask apply instance subTask
-	ApplyInstanceMachinesTask TaskType = "ApplyInstanceMachinesTask"
-)
-
-// GetTaskType getTaskType by cloud
-func GetTaskType(cloud string, taskName TaskType) string {
-	return fmt.Sprintf("%s-%s", cloud, taskName.String())
-}
-
 // CloudDependBasicInfo cloud depend cluster info
 type CloudDependBasicInfo struct {
 	// Cluster info
@@ -207,21 +187,32 @@ type CloudDependBasicInfo struct {
 	Cloud *proto.Cloud
 	// NodeGroup info
 	NodeGroup *proto.NodeGroup
+	// NodeTemplate info
+	NodeTemplate *proto.NodeTemplate
 	// CmOption option
 	CmOption *CommonOption
 }
 
+// GetBasicInfoReq getDependBasicInfo, clusterID and cloudID must be not empty
+type GetBasicInfoReq struct {
+	ClusterID      string
+	CloudID        string
+	NodeGroupID    string
+	NodeTemplateID string
+}
+
 // GetClusterDependBasicInfo get cluster/cloud/nodeGroup depend info, nodeGroup may be nil.
 // only get metadata, try not to change it
-func GetClusterDependBasicInfo(clusterID string, cloudID string, nodeGroupID string) (*CloudDependBasicInfo, error) {
+func GetClusterDependBasicInfo(request GetBasicInfoReq) (*CloudDependBasicInfo, error) {
 	var (
-		cluster   *proto.Cluster
-		cloud     *proto.Cloud
-		nodeGroup *proto.NodeGroup
-		err       error
+		cluster      *proto.Cluster
+		cloud        *proto.Cloud
+		nodeGroup    *proto.NodeGroup
+		nodeTemplate *proto.NodeTemplate
+		err          error
 	)
 
-	cloud, cluster, err = actions.GetCloudAndCluster(GetStorageModel(), cloudID, clusterID)
+	cloud, cluster, err = actions.GetCloudAndCluster(GetStorageModel(), request.CloudID, request.ClusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -236,33 +227,45 @@ func GetClusterDependBasicInfo(clusterID string, cloudID string, nodeGroupID str
 	}
 	cmOption.Region = cluster.Region
 
-	if len(nodeGroupID) > 0 {
-		nodeGroup, err = actions.GetNodeGroupByGroupID(GetStorageModel(), nodeGroupID)
+	if len(request.NodeGroupID) > 0 {
+		nodeGroup, err = actions.GetNodeGroupByGroupID(GetStorageModel(), request.NodeGroupID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if len(request.NodeTemplateID) > 0 {
+		nodeTemplate, err = actions.GetNodeTemplateByTemplateID(GetStorageModel(), request.NodeTemplateID)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return &CloudDependBasicInfo{cluster, cloud, nodeGroup, cmOption}, nil
+	return &CloudDependBasicInfo{cluster, cloud, nodeGroup,
+		nodeTemplate, cmOption}, nil
 }
 
 // UpdateClusterStatus set cluster status
-func UpdateClusterStatus(clusterID string, status string) error {
+func UpdateClusterStatus(clusterID string, status string) (*proto.Cluster, error) {
 	cluster, err := GetStorageModel().GetCluster(context.Background(), clusterID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cluster.Status = status
 	err = GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return cluster, nil
 }
 
-// UpdateCluster update cluster
+// GetClusterByID get cluster by clusterID
+func GetClusterByID(clusterID string) (*proto.Cluster, error) {
+	return GetStorageModel().GetCluster(context.Background(), clusterID)
+}
+
+// UpdateCluster set cluster status
 func UpdateCluster(cluster *proto.Cluster) error {
 	err := GetStorageModel().UpdateCluster(context.Background(), cluster)
 	if err != nil {
@@ -270,6 +273,17 @@ func UpdateCluster(cluster *proto.Cluster) error {
 	}
 
 	return nil
+}
+
+// GetClusterCredentialByClusterID get cluster credential what agent report
+func GetClusterCredentialByClusterID(ctx context.Context, clusterID string) (bool, error) {
+	_, exist, err := GetStorageModel().GetClusterCredential(ctx, clusterID)
+	if err != nil {
+		blog.Errorf("GetClusterCredentialByClusterID[%s] failed: %v", clusterID, err)
+		return false, err
+	}
+
+	return exist, nil
 }
 
 // UpdateClusterCredentialByConfig update clusterCredential by kubeConfig
@@ -320,7 +334,6 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 
 // ListNodesInClusterNodePool list nodeGroup nodes
 func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, error) {
-	goodNodes := make([]*proto.Node, 0)
 	condM := make(operator.M)
 	condM["nodegroupid"] = nodePoolID
 	condM["clusterid"] = clusterID
@@ -332,8 +345,12 @@ func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, er
 	}
 
 	// sum running & creating nodes, these status are ready to serve workload
+	var (
+		goodNodes []*proto.Node
+	)
 	for _, node := range nodes {
-		if node.Status == common.StatusRunning || node.Status == common.StatusInitialization {
+		if node.Status == common.StatusRunning || node.Status == common.StatusInitialization ||
+			node.Status == common.StatusAddNodesFailed {
 			goodNodes = append(goodNodes, node)
 		}
 	}
@@ -358,7 +375,7 @@ func GetNodesNumWhenApplyInstanceTask(clusterID, nodeGroupID, taskType, status s
 	currentScalingNodes := 0
 	for i := range taskList {
 		if utils.StringInSlice(taskList[i].CurrentStep, steps) {
-			desiredNodes := taskList[i].CommonParams[ScalingKey.String()]
+			desiredNodes := taskList[i].CommonParams[ScalingNodesNumKey.String()]
 			nodeNum, err := strconv.Atoi(desiredNodes)
 			if err != nil {
 				blog.Errorf("GetNodesNumWhenApplyInstanceTask strconv desiredNodes failed: %v", err)
@@ -380,7 +397,6 @@ func UpdateNodeGroupDesiredSize(groupID string, nodeNum int, scaleOut bool) erro
 	}
 
 	if scaleOut {
-		// 扩容失败
 		if group.AutoScaling.DesiredSize >= uint32(nodeNum) {
 			group.AutoScaling.DesiredSize = group.AutoScaling.DesiredSize - uint32(nodeNum)
 		} else {
@@ -402,29 +418,145 @@ func UpdateNodeGroupDesiredSize(groupID string, nodeNum int, scaleOut bool) erro
 }
 
 // SaveNodeInfoToDB save node to DB
-func SaveNodeInfoToDB(node *proto.Node) error {
-	instanceID := node.NodeID
+func SaveNodeInfoToDB(ctx context.Context, node *proto.Node, isIP bool) error {
+	var (
+		oldNode *proto.Node
+		err     error
+	)
+	taskID := GetTaskIDFromContext(ctx)
 
-	oldNode, err := GetStorageModel().GetNode(context.Background(), instanceID)
+	if isIP {
+		oldNode, err = GetStorageModel().GetNodeByIP(context.Background(), node.InnerIP)
+	} else {
+		oldNode, err = GetStorageModel().GetNode(context.Background(), node.NodeID)
+	}
+	blog.Infof("SaveNodeInfoToDB[%s] node[%s:%s] node[%+v] err: %v", taskID, node.InnerIP, node.NodeID, oldNode, err)
+
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
-		return fmt.Errorf("saveNodeInfoToDB getNode[%s] failed: %v", node.NodeID, err)
+		return fmt.Errorf("saveNodeInfoToDB[%s] getNode[%s] failed: %v", taskID, node.NodeID, err)
 	}
 
 	if oldNode == nil {
+		// check repeated cluster ips
+		inDb, inCluster := checkRepeatedNodes(ctx, node)
+		blog.Infof("SaveNodeInfoToDB[%s] cluster[%s] nodeGroup[%s] checkRepeatedNodes[%+v:%+v]",
+			taskID, node.ClusterID, node.NodeGroupID, inDb, inCluster)
+
+		if inDb && !inCluster {
+			GetStorageModel().DeleteNodeByIP(context.Background(), node.InnerIP)
+		}
+
 		err = GetStorageModel().CreateNode(context.Background(), node)
 		if err != nil {
-			return fmt.Errorf("saveNodeInfoToDB createNode[%s] failed: %v", node.NodeID, err)
+			return fmt.Errorf("saveNodeInfoToDB[%s] createNode[%s] failed: %v", taskID, node.InnerIP, err)
 		}
+
+		blog.Infof("saveNodeInfoToDB[%s] createNode[%s:%s] success", taskID, node.InnerIP, node.NodeID)
 
 		return nil
 	}
 
+	blog.Infof("saveNodeInfoToDB[%s] exist node[%s:%s]", taskID, node.InnerIP, node.NodeID)
 	err = GetStorageModel().UpdateNode(context.Background(), node)
 	if err != nil {
-		return fmt.Errorf("saveNodeInfoToDB updateNode[%s] failed: %v", node.NodeID, err)
+		return fmt.Errorf("saveNodeInfoToDB updateNode[%s] failed: %v", node.InnerIP, err)
 	}
 
 	return nil
+}
+
+// checkRepeatedNodes check ip repeated: ip in db, ip in cluster
+func checkRepeatedNodes(ctx context.Context, n *proto.Node) (bool, bool) {
+	var (
+		ip = n.InnerIP
+	)
+
+	taskID := GetTaskIDFromContext(ctx)
+
+	if ip != "" {
+		existNode, err := GetStorageModel().GetNodeByIP(context.Background(), ip)
+		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+			blog.Infof("checkRepeatedNodes[%s] GetNodeByIP[%s] failed: %v", taskID, ip, err)
+			return false, false
+		}
+		// db not exist ip
+		if existNode == nil {
+			blog.Infof("checkRepeatedNodes[%s] IP[%s] not exist db", taskID, ip)
+			return false, false
+		}
+
+		// check ip exist in cluster
+		clusterID := existNode.ClusterID
+		if clusterID == "" {
+			blog.Infof("checkRepeatedNodes[%s] IP[%s] clusterID empty", taskID, ip)
+			return true, false
+		}
+		found := checkNodeExistInCluster(clusterID, ip)
+		if found {
+			blog.Infof("checkRepeatedNodes[%s] IP[%s] exist in cluster[%s]", taskID, ip, clusterID)
+			return true, true
+		}
+		blog.Infof("checkRepeatedNodes[%s] IP[%s] not exist in cluster[%s]", taskID, ip, clusterID)
+
+		return true, false
+	}
+
+	return false, false
+}
+
+func checkNodeExistInCluster(clusterID, ip string) bool {
+	if clusterID == "" || ip == "" {
+		return false
+	}
+
+	found := false
+
+	k8sClient := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), GetStorageModel())
+	node, _ := k8sClient.GetClusterNode(context.Background(), clusterops.QueryNodeOption{
+		ClusterID: clusterID,
+		NodeIP:    ip,
+	})
+	if node != nil {
+		found = true
+		return found
+	}
+
+	return found
+}
+
+// GetInstanceIPsByID get InstanceIP by NodeID
+func GetInstanceIPsByID(ctx context.Context, nodeIDs []string) []string {
+	var (
+		nodeIPs = make([]string, 0)
+		taskID  = GetTaskIDFromContext(ctx)
+	)
+
+	for _, id := range nodeIDs {
+		node, err := GetStorageModel().GetNode(context.Background(), id)
+		if err != nil {
+			blog.Errorf("GetInstanceIPsByID[%s] nodeID[%s] failed: %v", taskID, id, err)
+			continue
+		}
+
+		nodeIPs = append(nodeIPs, node.InnerIP)
+	}
+
+	return nodeIPs
+}
+
+// GetNodesByInstanceIDs get nodes by instanceIDs
+func GetNodesByInstanceIDs(instanceIDs []string) []*proto.Node {
+	nodes := make([]*proto.Node, 0)
+	for _, id := range instanceIDs {
+		node, err := GetStorageModel().GetNode(context.Background(), id)
+		if err != nil {
+			continue
+		}
+
+		nodes = append(nodes, node)
+	}
+
+	return nodes
 }
 
 // UpdateNodeStatusByInstanceID update node status
@@ -460,6 +592,199 @@ func UpdateClusterSystemID(clusterID string, systemID string) error {
 	return nil
 }
 
+// UpdateNodeListStatus update nodeList status
+func UpdateNodeListStatus(isInstanceIP bool, instances []string, status string) error {
+	for i := range instances {
+		err := UpdateNodeStatus(isInstanceIP, instances[i], status)
+		if err != nil {
+			// batch update if one failed need to handle, other than task failed
+			continue
+		}
+	}
+
+	return nil
+}
+
+// UpdateNodeStatus update node status; isInstanceIP true, instance is InstanceIP; isInstanceIP true, instance is InstanceID
+func UpdateNodeStatus(isInstanceIP bool, instance, status string) error {
+	var (
+		node *proto.Node
+		err  error
+	)
+	if isInstanceIP {
+		node, err = GetStorageModel().GetNodeByIP(context.Background(), instance)
+	} else {
+		node, err = GetStorageModel().GetNode(context.Background(), instance)
+	}
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return err
+	}
+
+	if errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return nil
+	}
+
+	node.Status = status
+	err = GetStorageModel().UpdateNode(context.Background(), node)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetClusterMasterIPList get cluster masterIPs
+func GetClusterMasterIPList(cluster *proto.Cluster) []string {
+	masterIPs := make([]string, 0)
+	for masterIP := range cluster.Master {
+		masterIPs = append(masterIPs, masterIP)
+	}
+
+	return masterIPs
+}
+
+// StepOptions xxx
+type StepOptions struct {
+	Retry      uint32
+	SkipFailed bool
+}
+
+// StepOption xxx
+type StepOption func(opt *StepOptions)
+
+// WithStepRetry xxx
+func WithStepRetry(retry uint32) StepOption {
+	return func(opt *StepOptions) {
+		opt.Retry = retry
+	}
+}
+
+// WithStepSkipFailed xxx
+func WithStepSkipFailed(skip bool) StepOption {
+	return func(opt *StepOptions) {
+		opt.SkipFailed = skip
+	}
+}
+
+// InitTaskStep init task step
+func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
+	defaultOptions := &StepOptions{Retry: 0}
+	for _, opt := range opts {
+		opt(defaultOptions)
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	return &proto.Step{
+		Name:         stepInfo.StepMethod,
+		System:       "api",
+		Params:       make(map[string]string),
+		Retry:        0,
+		SkipOnFailed: false,
+		Start:        nowStr,
+		Status:       TaskStatusNotStarted,
+		TaskMethod:   stepInfo.StepMethod,
+		TaskName:     stepInfo.StepName,
+	}
+}
+
+// GetIDToIPMap get instanceID to instanceIP map
+func GetIDToIPMap(nodeIDs, nodeIPs []string) map[string]string {
+	idToIPMap := make(map[string]string, 0)
+	for i := range nodeIDs {
+		if i < len(nodeIPs) {
+			idToIPMap[nodeIDs[i]] = nodeIPs[i]
+		}
+	}
+
+	return idToIPMap
+}
+
+// IsExternalNodePool check group external nodePool
+func IsExternalNodePool(group *proto.NodeGroup) bool {
+	if group == nil {
+		return false
+	}
+	switch group.GetNodeGroupType() {
+	case common.External.String():
+		return true
+	case common.Normal.String(), "":
+		return false
+	}
+
+	return false
+}
+
+// ParseNodeIpOrIdFromCommonMap parse nodeIDs or nodeIPs by chart
+func ParseNodeIpOrIdFromCommonMap(taskCommonMap map[string]string, key string, chart string) []string {
+	val, ok := taskCommonMap[key]
+	if !ok || val == "" {
+		return nil
+	}
+
+	return strings.Split(val, chart)
+}
+
+// ParseMapFromStepParas from step parse k1=v1;k2=v2; to map
+func ParseMapFromStepParas(stepMap map[string]string, key string) map[string]string {
+	val, ok := stepMap[key]
+	if !ok || val == "" {
+		return nil
+	}
+
+	return utils.StringsToMap(val)
+}
+
+// GetScaleOutModuleID get scaleOut module ID
+func GetScaleOutModuleID(cls *proto.Cluster, asOption *proto.ClusterAutoScalingOption,
+	template *proto.NodeTemplate, isGroup bool) string {
+	if template != nil && template.Module != nil && template.Module.ScaleOutModuleID != "" {
+		return template.Module.ScaleOutModuleID
+	}
+	if isGroup && len(cls.GetModuleID()) > 0 {
+		return cls.GetModuleID()
+	}
+	if asOption != nil && asOption.Module != nil && asOption.Module.ScaleOutModuleID != "" {
+		return asOption.Module.ScaleOutModuleID
+	}
+
+	return ""
+}
+
+// GetScaleInModuleID get scaleIn module ID only from template
+func GetScaleInModuleID(asOption *proto.ClusterAutoScalingOption, template *proto.NodeTemplate) string {
+	if template != nil && template.Module != nil && template.Module.ScaleInModuleID != "" {
+		return template.Module.ScaleInModuleID
+	}
+	if asOption != nil && asOption.Module != nil && asOption.Module.ScaleInModuleID != "" {
+		return asOption.Module.ScaleInModuleID
+	}
+
+	return ""
+}
+
+// GetBusinessID get business id, default cluster business id
+func GetBusinessID(asOption *proto.ClusterAutoScalingOption, template *proto.NodeTemplate, scale bool) string {
+	getBizID := func(scale bool, scaleOut, scaleIn string) string {
+		switch scale {
+		case true:
+			return scaleOut
+		case false:
+			return scaleIn
+		}
+		return ""
+	}
+
+	if template != nil && template.Module != nil {
+		return getBizID(scale, template.Module.ScaleOutBizID, template.Module.ScaleInBizID)
+	}
+
+	if asOption != nil && asOption.Module != nil {
+		return getBizID(scale, asOption.Module.ScaleOutBizID, asOption.Module.ScaleInBizID)
+	}
+
+	return ""
+}
+
 // GetBKCloudName get bk cloud name by id
 func GetBKCloudName(bkCloudID int) string {
 	cli := nodeman.GetNodeManClient()
@@ -485,7 +810,7 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 	if cli == nil {
 		return ""
 	}
-	list, err := cli.ListTopology(bkBizID)
+	list, err := cli.ListTopology(bkBizID, false)
 	if err != nil {
 		blog.Errorf("list topology failed, err %s", err.Error())
 		return ""
@@ -506,197 +831,172 @@ func GetModuleName(bkBizID, bkModuleID int) string {
 	return name
 }
 
-// ImportClusterNodesToCM writes cluster nodes to DB
-func ImportClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
-	for _, n := range nodes {
-		innerIP := ""
-		for _, v := range n.Status.Addresses {
-			if v.Type == k8scorev1.NodeInternalIP {
-				innerIP = v.Address
-				break
-			}
+// UpdateNodeGroupCloudAndModuleInfo update cloudID && moduleInfo
+func UpdateNodeGroupCloudAndModuleInfo(nodeGroupID string, cloudGroupID string,
+	consumer bool, clusterBiz string) error {
+	group, err := GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
+	if err != nil {
+		return err
+	}
+	if consumer {
+		group.ConsumerID = cloudGroupID
+	} else {
+		group.CloudNodeGroupID = cloudGroupID
+	}
+
+	// update group module info
+	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil {
+		if group.NodeTemplate.Module.ScaleOutBizID == "" {
+			group.NodeTemplate.Module.ScaleOutBizID = clusterBiz
 		}
-		if innerIP == "" {
-			continue
+		if group.NodeTemplate.Module.ScaleInBizID == "" {
+			group.NodeTemplate.Module.ScaleInBizID = clusterBiz
 		}
-		node, err := GetStorageModel().GetNodeByIP(ctx, innerIP)
-		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
-			blog.Errorf("importClusterNodes GetNodeByIP[%s] failed: %v", innerIP, err)
-			// no import node when found err
+		if group.NodeTemplate.Module.ScaleOutModuleID != "" {
+			scaleOutBiz, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutBizID)
+			scaleOutModule, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleOutModuleID)
+			group.NodeTemplate.Module.ScaleOutModuleName = GetModuleName(scaleOutBiz, scaleOutModule)
+		}
+		if group.NodeTemplate.Module.ScaleInModuleID != "" {
+			scaleInBiz, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleInBizID)
+			scaleInModule, _ := strconv.Atoi(group.NodeTemplate.Module.ScaleInModuleID)
+			group.NodeTemplate.Module.ScaleInModuleName = GetModuleName(scaleInBiz, scaleInModule)
+		}
+	}
+	err = GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ShieldHostAlarm shield host alarm for user
+func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
+	taskID := GetTaskIDFromContext(ctx)
+	if len(ips) == 0 {
+		return fmt.Errorf("ShieldHostAlarm[%s] ips empty", taskID)
+	}
+
+	biz, _ := strconv.Atoi(bizID)
+	bizData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(biz)
+	if err != nil {
+		blog.Errorf("ShieldHostAlarm[%s] GetBusinessMaintainer[%s] failed: %v", taskID, bizID, err)
+		return err
+	}
+	maintainers := strings.Split(bizData.BKBizMaintainer, ",")
+	if len(maintainers) == 0 {
+		return fmt.Errorf("ShieldHostAlarm[%s] BKBizMaintainer[%s] empty", taskID, bizID)
+	}
+
+	hostData, err := cmdb.GetCmdbClient().QueryAllHostInfoWithoutBiz(ips)
+	if err != nil {
+		blog.Errorf("ShieldHostAlarm[%s] QueryAllHostInfoWithoutBiz[%+v] failed: %v", taskID, ips, err)
+		return err
+	}
+
+	hosts := make([]alarm.HostInfo, 0)
+	for i := range hostData {
+		hosts = append(hosts, alarm.HostInfo{
+			IP:      hostData[i].BKHostInnerIP,
+			CloudID: uint64(hostData[i].BkCloudID),
+		})
+	}
+
+	blog.Infof("ShieldHostAlarm[%s] bizID[%s] hostInfo[%+v]", taskID, bizID, hosts)
+	var alarms = []alarm.AlarmInterface{tmp.GetBKAlarmClient(), bkmonitor.GetBkMonitorClient()}
+	for i := range alarms {
+		err = alarms[i].ShieldHostAlarmConfig(maintainers[0], &alarm.ShieldHost{
+			BizID:    bizID,
+			HostList: hosts,
+		})
+		if err != nil {
+			blog.Errorf("ShieldHostAlarm[%s][%s] ShieldHostAlarmConfig failed: %v", taskID, alarms[i].Name(), err)
 			continue
 		}
 
-		if node == nil {
-			node = &proto.Node{
-				InnerIP:   innerIP,
-				Status:    common.StatusRunning,
-				ClusterID: clusterID,
-			}
-			err = GetStorageModel().CreateNode(ctx, node)
-			if err != nil {
-				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", innerIP, err)
-			}
-			continue
+		blog.Infof("ShieldHostAlarm[%s][%s] ShieldHostAlarmConfig success", taskID, alarms[i].Name())
+	}
+
+	return nil
+}
+
+// UpdateAutoScalingOptionModuleInfo update cluster ca moduleInfo
+func UpdateAutoScalingOptionModuleInfo(clusterID string) error {
+	cls, err := GetStorageModel().GetCluster(context.Background(), clusterID)
+	if err != nil {
+		return err
+	}
+
+	asOption, err := GetStorageModel().GetAutoScalingOption(context.Background(), clusterID)
+	if err != nil {
+		return err
+	}
+	// update asOption module info
+	if asOption.Module != nil {
+		if asOption.Module.ScaleOutBizID == "" {
+			asOption.Module.ScaleOutBizID = cls.BusinessID
+		}
+		if asOption.Module.ScaleInBizID == "" {
+			asOption.Module.ScaleInBizID = cls.BusinessID
+		}
+		if asOption.Module.ScaleOutModuleID != "" {
+			scaleOutBiz, _ := strconv.Atoi(asOption.Module.ScaleOutBizID)
+			scaleOutModule, _ := strconv.Atoi(asOption.Module.ScaleOutModuleID)
+			asOption.Module.ScaleOutModuleName = GetModuleName(scaleOutBiz, scaleOutModule)
+		}
+		if asOption.Module.ScaleInModuleID != "" {
+			scaleInBiz, _ := strconv.Atoi(asOption.Module.ScaleInBizID)
+			scaleInModule, _ := strconv.Atoi(asOption.Module.ScaleInModuleID)
+			asOption.Module.ScaleInModuleName = GetModuleName(scaleInBiz, scaleInModule)
+		}
+	}
+	err = GetStorageModel().UpdateAutoScalingOption(context.Background(), asOption)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ImportClusterNodesToCM writes cluster nodes to DB
+func ImportClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
+	for i := range nodes {
+		ipv4, ipv6 := utils.GetNodeIPAddress(&nodes[i])
+		node := &proto.Node{
+			InnerIP:   utils.SliceToString(ipv4),
+			InnerIPv6: utils.SliceToString(ipv6),
+			Status:    common.StatusRunning,
+			NodeName:  nodes[i].Name,
+			ClusterID: clusterID,
+		}
+		err := GetStorageModel().CreateNode(ctx, node)
+		if err != nil {
+			blog.Errorf("ImportClusterNodesToCM CreateNode[%s] failed: %v", nodes[i].Name, err)
 		}
 	}
 
 	return nil
 }
 
-// StepOptions xxx
-type StepOptions struct {
-	Retry      uint32
-	SkipFailed bool
-	TaskName   string
+// IsInDependentCluster check independent cluster
+func IsInDependentCluster(cluster *proto.Cluster) bool {
+	return cluster.ManageType == common.ClusterManageTypeIndependent
 }
 
-// StepOption xxx
-type StepOption func(opt *StepOptions)
-
-// WithStepRetry xxx
-func WithStepRetry(retry uint32) StepOption {
-	return func(opt *StepOptions) {
-		opt.Retry = retry
-	}
+// IsManagedCluster check managed cluster
+func IsManagedCluster(cluster *proto.Cluster) bool {
+	return cluster.ManageType == common.ClusterManageTypeManaged
 }
 
-// WithStepSkipFailed xxx
-func WithStepSkipFailed(skip bool) StepOption {
-	return func(opt *StepOptions) {
-		opt.SkipFailed = skip
-	}
-}
-
-// WithStepTaskName xxx
-func WithStepTaskName(taskName string) StepOption {
-	return func(opt *StepOptions) {
-		opt.TaskName = taskName
-	}
-}
-
-// InitTaskStep init task step
-func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
-	defaultOptions := &StepOptions{Retry: 0}
-	for _, opt := range opts {
-		opt(defaultOptions)
-	}
-	if defaultOptions.TaskName != "" {
-		stepInfo.StepName = defaultOptions.TaskName
-	}
-
-	nowStr := time.Now().Format(time.RFC3339)
-	return &proto.Step{
-		Name:         stepInfo.StepMethod,
-		System:       "api",
-		Params:       make(map[string]string),
-		Retry:        0,
-		SkipOnFailed: false,
-		Start:        nowStr,
-		Status:       TaskStatusNotStarted,
-		TaskMethod:   stepInfo.StepMethod,
-		TaskName:     stepInfo.StepName,
-	}
-}
-
-// GenerateSAToken generates a serviceAccountToken
-func GenerateSAToken(restConfig *rest.Config) (string, error) {
-	clientSet, err := kubernetes.NewForConfig(restConfig)
+// CheckManagedClusterExistNode if exist nodes
+func CheckManagedClusterExistNode(cluster *proto.Cluster) bool {
+	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": cluster.ClusterID})
+	nodes, err := GetStorageModel().ListNode(context.Background(), clusterCond, &storeopt.ListOption{})
 	if err != nil {
-		return "", fmt.Errorf("GenerateSAToken create clientset failed: %v", err)
+		blog.Errorf("CheckManagedClusterNodeNum %s Nodes failed, %s", cluster.ClusterID, err.Error())
+		return true
 	}
 
-	return GenerateServiceAccountToken(clientSet)
-}
-
-// GenerateServiceAccountToken generates a serviceAccountToken for clusterAdmin given a rest clientset
-func GenerateServiceAccountToken(clientset kubernetes.Interface) (string, error) {
-	_, err := clientset.CoreV1().Namespaces().Create(context.TODO(), &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bcsNamespace,
-		},
-	}, metav1.CreateOptions{})
-	if err != nil && !apierror.IsAlreadyExists(err) {
-		return "", err
-	}
-
-	serviceAccount := &v1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bcsCusterManager,
-		},
-	}
-
-	_, err = clientset.CoreV1().ServiceAccounts(bcsNamespace).Create(context.TODO(), serviceAccount, metav1.CreateOptions{})
-	if err != nil && !apierror.IsAlreadyExists(err) {
-		return "", fmt.Errorf("GenerateServiceAccountToken creating service account failed: %v", err)
-	}
-
-	adminRole := &rbacv1.ClusterRole{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: clusterAdmin,
-		},
-		Rules: []rbacv1.PolicyRule{
-			{
-				APIGroups: []string{"*"},
-				Resources: []string{"*"},
-				Verbs:     []string{"*"},
-			},
-			{
-				NonResourceURLs: []string{"*"},
-				Verbs:           []string{"*"},
-			},
-		},
-	}
-	clusterAdminRole, err := clientset.RbacV1().ClusterRoles().Get(context.TODO(), clusterAdmin, metav1.GetOptions{})
-	if err != nil {
-		clusterAdminRole, err = clientset.RbacV1().ClusterRoles().Create(context.TODO(), adminRole, metav1.CreateOptions{})
-		if err != nil {
-			return "", fmt.Errorf("GenerateServiceAccountToken create admin role failed: %v", err)
-		}
-	}
-
-	clusterRoleBinding := &rbacv1.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bcsClusterRoleBindingName,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      serviceAccount.Name,
-				Namespace: bcsNamespace,
-				APIGroup:  v1.GroupName,
-			},
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-			Name:     clusterAdminRole.Name,
-			APIGroup: rbacv1.GroupName,
-		},
-	}
-	if _, err = clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding,
-		metav1.CreateOptions{}); err != nil && !apierror.IsAlreadyExists(err) {
-		return "", fmt.Errorf("GenerateServiceAccountToken create role bindings failed: %v", err)
-	}
-	secret, err := GetSecretForServiceAccount(context.TODO(), clientset, serviceAccount)
-	if err != nil {
-		return "", fmt.Errorf("GenerateServiceAccountToken get secret for service account failed: %v", err)
-	}
-	if token, ok := secret.Data["token"]; ok {
-		return string(token), nil
-	}
-
-	return "", errs.New("GenerateServiceAccountToken fetch serviceAccountToken failed")
-}
-
-// GetSecretForServiceAccount gets Secret for the provided Service Account
-func GetSecretForServiceAccount(ctx context.Context, clientSet kubernetes.Interface, sa *v1.ServiceAccount) (*v1.Secret,
-	error) {
-	secretClient := clientSet.CoreV1().Secrets(sa.Namespace)
-	if len(sa.Secrets) == 0 {
-		return nil, errs.New("GetSecretForServiceAccount  serviceAccount secret is nil")
-	}
-	secret, err := secretClient.Get(ctx, sa.Secrets[0].Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return secret, nil
+	return len(nodes) > 0
 }

@@ -45,7 +45,7 @@ func NewListCloudClusterAction(model store.ClusterManagerModel) *ListCloudCluste
 	}
 }
 
-func (la *ListCloudClusterAction) listCloudRegions() error {
+func (la *ListCloudClusterAction) listCloudClusters() error {
 	clsMgr, err := cloudprovider.GetClusterMgr(la.cloud.CloudProvider)
 	if err != nil {
 		return err
@@ -92,7 +92,6 @@ func (la *ListCloudClusterAction) validate() error {
 	if err != nil {
 		return err
 	}
-
 	err = validate.ListCloudRegionClusterValidate(la.req, la.account.Account)
 	if err != nil {
 		return err
@@ -131,7 +130,7 @@ func (la *ListCloudClusterAction) Handle(
 		la.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
-	if err := la.listCloudRegions(); err != nil {
+	if err := la.listCloudClusters(); err != nil {
 		la.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

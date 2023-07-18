@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	// ErrServerNotInit ed error for server not init
+	// ErrServerNotInit error for server not init
 	ErrServerNotInit = errors.New("server not init")
 )
 
@@ -68,12 +68,13 @@ func NewKubeClient(kubeConfig string) (k8scorecliset.Interface, error) {
 
 	config.Burst = 200
 	config.QPS = 100
-	cli, err := k8scorecliset.NewForConfig(config)
-	if err != nil {
-		return nil, fmt.Errorf("build kube client failed: %s", err)
-	}
 
-	return cli, nil
+	return NewKubeClientByRestConfig(config)
+}
+
+// NewKubeClientByRestConfig get k8s client from rest config
+func NewKubeClientByRestConfig(config *rest.Config) (k8scorecliset.Interface, error) {
+	return k8scorecliset.NewForConfig(config)
 }
 
 // GetClusterClient get cluster client
@@ -85,7 +86,7 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 	if !found {
 		return nil, fmt.Errorf("cluster credential not found of %s", clusterID)
 	}
-	cfg := &rest.Config{}
+	cfg := &rest.Config{QPS: 50, Burst: 50}
 	if cred.ConnectMode == modules.BCSConnectModeTunnel {
 		if len(ko.opt.ClientCert) != 0 && len(ko.opt.ClientCa) != 0 && len(ko.opt.ClientKey) != 0 {
 			cfg.Host = "https://" + ko.opt.Address + ":" + strconv.Itoa(int(ko.opt.HTTPPort)) +
@@ -122,11 +123,18 @@ func (ko *K8SOperator) GetClusterClient(clusterID string) (k8scorecliset.Interfa
 		// get a random server
 		rand.Seed(time.Now().Unix())
 		cfg.Host = addressList[rand.Intn(len(addressList))]
-		cfg.TLSClientConfig = rest.TLSClientConfig{
-			Insecure: false,
-			CAData:   []byte(cred.CaCertData),
-			CertData: []byte(cred.ClientCert),
-			KeyData:  []byte(cred.ClientKey),
+
+		if len(cred.CaCertData) != 0 && len(cred.ClientCert) != 0 && len(cred.ClientKey) != 0 {
+			cfg.TLSClientConfig = rest.TLSClientConfig{
+				Insecure: true,
+				// CAData:   []byte(cred.CaCertData),
+				CertData: []byte(cred.ClientCert),
+				KeyData:  []byte(cred.ClientKey),
+			}
+		} else {
+			cfg.TLSClientConfig = rest.TLSClientConfig{
+				Insecure: true,
+			}
 		}
 		cfg.BearerToken = cred.UserToken
 		cliset, err := k8scorecliset.NewForConfig(cfg)

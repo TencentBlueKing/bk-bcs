@@ -16,7 +16,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -26,25 +25,22 @@ type ControllerOptions struct {
 	KubeClient *clusterops.K8SOperator
 	Locker     lock.DistributedLock
 	IAMClient  iam.PermClient
-	CmOptions  *options.ClusterManagerOptions
 }
 
 // ClusterManager server for cluster manager
 type ClusterManager struct {
-	kubeOp    *clusterops.K8SOperator
-	model     store.ClusterManagerModel
-	locker    lock.DistributedLock
-	iam       iam.PermClient
-	cmOptions *options.ClusterManagerOptions
+	kubeOp *clusterops.K8SOperator
+	model  store.ClusterManagerModel
+	locker lock.DistributedLock
+	iam    iam.PermClient
 }
 
 // NewClusterManager create clustermanager Handler
 func NewClusterManager(options *ControllerOptions) *ClusterManager {
 	return &ClusterManager{
-		model:     options.Model,
-		kubeOp:    options.KubeClient,
-		locker:    options.Locker,
-		iam:       options.IAMClient,
-		cmOptions: options.CmOptions,
+		model:  options.Model,
+		kubeOp: options.KubeClient,
+		locker: options.Locker,
+		iam:    options.IAMClient,
 	}
 }

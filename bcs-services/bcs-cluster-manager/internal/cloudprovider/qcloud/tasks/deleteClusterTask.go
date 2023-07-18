@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
@@ -29,23 +28,9 @@ import (
 // DeleteTKEClusterTask delete cluster task
 func DeleteTKEClusterTask(taskID string, stepName string) error {
 	start := time.Now()
-	// get task information and validate
-	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
-		blog.Errorf("DeleteTKEClusterTask[%s]: task %s get detail task information from storage failed, %s. task retry",
-			taskID, taskID, err.Error())
-		return err
-	}
-
-	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
-	if state.IsTerminated() {
-		blog.Errorf("DeleteTKEClusterTask[%s]: task %s is terminated, step %s skip", taskID, taskID, stepName)
-		return fmt.Errorf("task %s terminated", taskID)
-	}
-	step, err := state.IsReadyToStep(stepName)
-	if err != nil {
-		blog.Errorf("DeleteTKEClusterTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
-			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -58,39 +43,28 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	cloudID := step.Params["CloudID"]
-	deleteMode := step.Params["DeleteMode"]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	deleteMode := step.Params[cloudprovider.DeleteModeKey.String()]
 
 	// only support retain mode
 	if deleteMode != cloudprovider.Retain.String() {
 		deleteMode = cloudprovider.Retain.String()
 	}
 
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
-		blog.Errorf("DeleteTKEClusterTask[%s]: get cloud/project for cluster %s in task %s step %s failed, %s",
-			taskID, clusterID, taskID, stepName, err.Error())
+		blog.Errorf("DeleteTKEClusterTask[%s]: GetClusterDependBasicInfo for cluster %s "+
+			"in task %s step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
-	})
-	if err != nil {
-		blog.Errorf("DeleteTKEClusterTask[%s]: get credential for cluster %s in task %s step %s failed, %s",
-			taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	cmOption.Region = cluster.Region
-
 	// get qcloud client
-	cli, err := api.NewTkeClient(cmOption)
+	cli, err := api.NewTkeClient(dependInfo.CmOption)
 	if err != nil {
 		blog.Errorf("DeleteTKEClusterTask[%s]: get tke client for cluster[%s] in task %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -99,8 +73,8 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	if cluster.SystemID != "" {
-		err = cli.DeleteTKECluster(cluster.SystemID, api.DeleteMode(deleteMode))
+	if dependInfo.Cluster.SystemID != "" {
+		err = cli.DeleteTKECluster(dependInfo.Cluster.SystemID, api.DeleteMode(deleteMode))
 		if err != nil {
 			blog.Errorf("DeleteTKEClusterTask[%s]: task[%s] step[%s] call qcloud DeleteTKECluster failed: %v",
 				taskID, taskID, stepName, err)
@@ -109,10 +83,11 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 			return retErr
 		}
 		_ = updateClusterSystemID(clusterID, "")
-		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster[%s] successful", taskID, taskID, cluster.SystemID)
+		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster[%s] successful",
+			taskID, taskID, dependInfo.Cluster.SystemID)
 	} else {
-		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster skip current step because SystemID empty", taskID,
-			taskID)
+		blog.Infof("DeleteTKEClusterTask[%s]: task %s DeleteTKECluster skip current step "+
+			"because SystemID empty", taskID, taskID)
 	}
 
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
@@ -124,26 +99,10 @@ func DeleteTKEClusterTask(taskID string, stepName string) error {
 
 // CleanClusterDBInfoTask clean cluster DB info
 func CleanClusterDBInfoTask(taskID string, stepName string) error {
-	// delete node && nodeGroup && cluster
-	// get relative nodes by clusterID
 	start := time.Now()
-	// get task information and validate
-	task, err := cloudprovider.GetStorageModel().GetTask(context.Background(), taskID)
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s get detail task information from storage failed, %s. task retry",
-			taskID, taskID, err.Error())
-		return err
-	}
-
-	state := &cloudprovider.TaskState{Task: task, JobResult: cloudprovider.NewJobSyncResult(task)}
-	if state.IsTerminated() {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s is terminated, step %s skip", taskID, taskID, stepName)
-		return fmt.Errorf("task %s terminated", taskID)
-	}
-	step, err := state.IsReadyToStep(stepName)
-	if err != nil {
-		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s not turn to run step %s, err %s", taskID, taskID, stepName,
-			err.Error())
 		return err
 	}
 	// previous step successful when retry task
@@ -164,6 +123,13 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// delete cluster autoscalingOption
+	err = cloudprovider.GetStorageModel().DeleteAutoScalingOption(context.Background(), cluster.ClusterID)
+	if err != nil {
+		blog.Errorf("CleanClusterDBInfoTask[%s]: clean cluster[%s] "+
+			"autoscalingOption failed: %v", taskID, cluster.ClusterID, err)
+	}
+
 	// delete nodes
 	err = cloudprovider.GetStorageModel().DeleteNodesByClusterID(context.Background(), cluster.ClusterID)
 	if err != nil {
@@ -182,7 +148,8 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("CleanClusterDBInfoTask[%s]: delete nodeGroups for cluster[%s] in DB successful", taskID, clusterID)
+	blog.Infof("CleanClusterDBInfoTask[%s]: delete nodeGroups for cluster[%s] in DB successful",
+		taskID, clusterID)
 
 	// delete CIDR and only print logInfo
 	err = releaseClusterCIDR(cluster)
@@ -204,6 +171,13 @@ func CleanClusterDBInfoTask(taskID string, stepName string) error {
 	blog.Infof("CleanClusterDBInfoTask[%s]: delete cluster[%s] in DB successful", taskID, clusterID)
 
 	utils.SyncDeletePassCCCluster(taskID, cluster)
+	_ = utils.DeleteClusterCredentialInfo(cluster.ClusterID)
+
+	// virtual cluster need to clean cluster token
+	if cluster.ClusterType == icommon.ClusterTypeVirtual {
+		_ = utils.DeleteBcsAgentToken(clusterID)
+	}
+
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("CleanClusterDBInfoTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err

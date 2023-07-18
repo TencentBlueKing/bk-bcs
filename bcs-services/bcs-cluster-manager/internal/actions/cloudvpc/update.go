@@ -22,6 +22,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
 // UpdateAction update action for cluster vpc
@@ -56,8 +57,28 @@ func (ua *UpdateAction) updateCloudVPC(destCloudVPC *cmproto.CloudVPC) error {
 	if len(ua.req.Available) > 0 {
 		destCloudVPC.Available = ua.req.Available
 	}
+	if ua.req.ReservedIPNum != nil {
+		destCloudVPC.ReservedIPNum = ua.req.ReservedIPNum.GetValue()
+	}
+	if ua.req.BusinessID != nil {
+		destCloudVPC.BusinessID = ua.req.GetBusinessID().GetValue()
+	}
 
 	return ua.model.UpdateCloudVPC(ua.ctx, destCloudVPC)
+}
+
+func (ua *UpdateAction) validate() error {
+	err := ua.req.Validate()
+	if err != nil {
+		return err
+	}
+
+	if ua.req.ReservedIPNum.GetValue() <= 0 {
+
+		ua.req.ReservedIPNum = &wrappers.UInt32Value{Value: 0}
+	}
+
+	return nil
 }
 
 func (ua *UpdateAction) setResp(code uint32, msg string) {
@@ -78,7 +99,7 @@ func (ua *UpdateAction) Handle(
 	ua.req = req
 	ua.resp = resp
 
-	if err := req.Validate(); err != nil {
+	if err := ua.validate(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}

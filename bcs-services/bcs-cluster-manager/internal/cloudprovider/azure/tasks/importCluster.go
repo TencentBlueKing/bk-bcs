@@ -17,12 +17,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/pkg/errors"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
@@ -32,7 +32,7 @@ import (
 // ImportClusterNodesTask call aksInterface or kubeConfig import cluster nodes
 func ImportClusterNodesTask(taskID string, stepName string) error {
 	start := time.Now()
-	// get task information and validate
+	//get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -44,7 +44,11 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -53,12 +57,14 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	}
 
 	// import cluster instances
-	if err = importClusterInstances(basicInfo); err != nil {
+	err = importClusterInstances(basicInfo)
+	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterInstances failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
 	// 导入集群nodeResourceGroup
 	if err = importNodeResourceGroup(basicInfo); err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: importNodeResourceGroup failed: %v", taskID, err)
@@ -78,9 +84,9 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 
 	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		return errors.Wrapf(err, "ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID,
-			stepName)
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("ImportClusterNodesTask[%s] %s update to storage fatal", taskID, stepName)
+		return err
 	}
 	return nil
 }
@@ -88,7 +94,7 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
 func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	start := time.Now()
-	// get task information and validate
+	//get task information and validate
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
 	if err != nil {
 		return err
@@ -101,7 +107,10 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
-	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(clusterID, cloudID, "")
+	basicInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
@@ -110,7 +119,9 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	if err = importClusterCredential(ctx, basicInfo); err != nil {
+
+	err = importClusterCredential(ctx, basicInfo)
+	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: importClusterCredential failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterCredential failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -118,20 +129,20 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		return errors.Wrapf(err, "RegisterClusterKubeConfigTask[%s] BasicInfo %s %s update to storage fatal",
-			taskID, taskID, stepName)
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("RegisterClusterKubeConfigTask[%s] %s update to storage fatal", taskID, stepName)
+		return err
 	}
 	return nil
 }
 
 func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error {
-	client, err := api.NewAksServiceImplWithCommonOption(data.CmOption)
+	cli, err := api.NewAksServiceImplWithCommonOption(data.CmOption)
 	if err != nil {
 		return err
 	}
 
-	credentials, err := client.GetClusterAdminCredentials(ctx, data)
+	credentials, err := cli.GetClusterAdminCredentials(ctx, data)
 	if err != nil {
 		return err
 	}
@@ -171,7 +182,8 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		return fmt.Errorf("list nodes failed, %s", err.Error())
 	}
 
-	if err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID); err != nil {
+	err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
+	if err != nil {
 		return err
 	}
 
@@ -188,8 +200,10 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	if err != nil {
 		return errors.Wrapf(err, "create AksService failed")
 	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
 	managedCluster, err := client.GetCluster(ctx, info)
 	if err != nil {
 		return errors.Wrapf(err, "call GetCluster falied")
@@ -197,6 +211,7 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	if cluster.ExtraInfo == nil {
 		cluster.ExtraInfo = make(map[string]string)
 	}
+
 	cluster.ExtraInfo[api.NodeResourceGroup] = *managedCluster.Properties.NodeResourceGroup
 	return nil
 }
@@ -208,17 +223,22 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 	if err != nil {
 		return errors.Wrapf(err, "create AksService failed")
 	}
+
 	nodeResourceGroup := cluster.ExtraInfo[api.NodeResourceGroup]
 	blog.Infof("importVpcID nodeResourceGroup:%s", nodeResourceGroup)
+
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()
+
 	list, err := client.ListVirtualNetwork(ctx, nodeResourceGroup)
 	if err != nil {
 		return errors.Wrapf(err, "call ListVirtualNetwork failed")
 	}
+
 	//blog.Infof("importVpcID list:%s", toPrettyJsonString(list))
 	if len(list) > 0 {
 		cluster.VpcID = *list[0].Name
 	}
+
 	return nil
 }

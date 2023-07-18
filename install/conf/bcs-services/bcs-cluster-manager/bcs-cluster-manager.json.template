@@ -30,13 +30,16 @@
         "exchange": "${exchange}"
     },
     "bkOps": {
+        "server": "${bcsSopsServer}",
         "appCode": "${bcsAppCode}",
         "appSecret": "${bcsAppSecret}",
         "debug": ${debug},
-        "external": ${bcsOpsExternal},
+        "bkUserName": "${bcsBkUserName}",
         "createTaskURL": "${bcsCreateTaskURL}",
         "taskStatusURL": "${bcsTaskStatusURL}",
-        "startTaskURL": "${bcsStartTaskURL}"
+        "startTaskURL": "${bcsStartTaskURL}",
+        "templateURL": "${bcsSopsTemplateURL}",
+        "frontURL": "${bcsSopsFrontURL}"
     },
     "cmdb": {
         "enable": ${bcsCmdbEnable},
@@ -46,31 +49,34 @@
         "server": "${bcsCmdbServer}",
         "debug": ${bcsCmdbDebug}
     },
-    "nodeman": {
-        "enable": ${bcsNodeManEnable},
-        "appCode": "${bcsAppCode}",
-        "appSecret": "${bcsAppSecret}",
-        "bkUserName": "${bcsBkUserName}",
-        "server": "${bcsNodeManServer}",
-        "debug": ${bcsNodeManDebug}
+    "resource": {
+        "enable": ${bcsResourceManagerEnable},
+        "module": "${bcsResourceManagerModule}"
     },
-    "ssm": {
-        "server": "${bcsSsmServer}",
-        "appCode": "${bcsAppCode}",
-        "appSecret": "${bcsAppSecret}",
-        "enable": ${bcsSsmEnable},
-        "debug": ${bcsSsmDebug}
+    "cidr": {
+        "enable": ${bcsCidrManagerEnable},
+        "module": "${bcsCidrManagerModule}",
+        "tls": ${bcsCidrManagerTls}
+    },
+    "access": {
+        "server": "${bcsAuthServer}",
+        "debug": ${bcsAuthDebug}
     },
     "passcc": {
         "server": "${bcsPassServer}",
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
         "enable": ${bcsPassEnable},
         "debug": ${bcsPassDebug}
     },
-    "user": {
-        "enable": ${bcsUserEnable},
-        "gateWay": "${bcsUserGateWay}",
-        "isVerifyTLS": ${bcsUserVerifyTLS},
-        "token": "${bcsUserToken}"
+    "alarm": {
+        "server": "${bcsAlarmServer}",
+        "monitorServer": "${bcsMonitorServer}",
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "bkUserName": "${bcsBkUserName}",
+        "enable": ${bcsAlarmEnable},
+        "debug": ${bcsAlarmDebug}
     },
     "iam_config": {
         "systemID": "${bcsIAMSystemID}",
@@ -82,22 +88,7 @@
         "bkiIamServer": "${bcsIAMbkiHost}",
         "metric": ${bcsIAMMetric},
         "debug": ${bcsIAMDebug},
-        "iamApplyServer": "${bcsIAMApplyPermAddress}"
-    },
-    "auth": {
-        "enable": ${bcsAuthEnable},
-        "publicKeyFile": "${bcsAuthPublicKeyFile}",
-        "privateKeyFile": "${bcsAuthPrivateKeyFile}",
-        "clientPermissions": "${bcsAuthClientPermissions}",
-        "noAuthMethod": "${bcsAuthNoAuthMethod}"
-    },
-    "gse": {
-        "enable": ${bcsGseEnable},
-        "appCode": "${bcsGseAppCode}",
-        "appSecret": "${bcsGseAppSecret}",
-        "bkUserName": "${bcsGseBkUserName}",
-        "server": "${bcsGseServer}",
-        "debug": ${bcsGseDebug}
+        "applyPermAddress": "${bcsIAMApplyPermAddress}"
     },
     "bcsapp": {
         "server": "${bcsAppServer}",
@@ -125,11 +116,59 @@
             "isPublicRepo": ${bcsWatchIsPublicRepo},
             "storageServer": "${bcsStorageServer}"
         },
+        "vcluster": {
+            "httpServer": "${bcsHttpServer}",
+            "wsServer": "${bcsWsServer}",
+            "debugWsServer": "${bcsDebugWsServer}",
+            "chartName": "${bcsVclusterChartName}",
+            "releaseName": "${bcsVclusterReleaseName}",
+            "isPublicRepo": ${bcsVclusterIsPublicRepo}
+        },
         "registry": "${bcsImageRegistry}",
         "bcsApiGateway": "${bcsCAApiGateway}",
         "token": "${bcsCAToken}",
         "deployService": "${deployService}"
     },
+    "user": {
+        "enable": ${bcsUserEnable},
+        "gateWay": "${bcsUserGateWay}",
+        "isVerifyTLS": ${bcsUserVerifyTLS},
+        "token": "${bcsUserToken}"
+    },
+    "auth": {
+        "enable": ${bcsAuthEnable},
+        "publicKeyFile": "${bcsAuthPublicKeyFile}",
+        "privateKeyFile": "${bcsAuthPrivateKeyFile}",
+        "clientPermissions": "${bcsAuthClientPermissions}",
+        "noAuthMethod": "${bcsAuthNoAuthMethod}"
+    },
+    "gse": {
+        "enable": ${bcsGseEnable},
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "bkUserName": "${bcsBkUserName}",
+        "server": "${bcsGseServer}",
+        "debug": ${bcsGseDebug}
+    },
+    "job": {
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "bkUserName": "${bcsBkUserName}",
+        "server": "${bcsJobServer}",
+        "debug": ${bcsJobDebug},
+        "jobTaskLink": "${bcsJobTaskLink}"
+    },
+    "nodeman": {
+        "enable": ${bcsNodeManEnable},
+        "appCode": "${bcsAppCode}",
+        "appSecret": "${bcsAppSecret}",
+        "bkUserName": "${bcsBkUserName}",
+        "server": "${bcsNodeManServer}",
+        "debug": ${bcsNodeManDebug}
+    },
+    "tagDepart": "${tagDepart}",
+    "prefixVcluster": "${prefixVcluster}",
+    "version": "${bcsClusterManagerVersion}",
     "cloudTemplatePath": "${bcsCloudTemplatePath}",
     "resourceSchemaPath": "${bcsResourceSchemaPath}",
     "debug": ${bcsClusterManagerDebug},

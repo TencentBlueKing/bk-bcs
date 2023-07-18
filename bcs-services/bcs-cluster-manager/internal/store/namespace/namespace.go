@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package namespace xxx
 package namespace
 
 import (
@@ -28,8 +27,8 @@ import (
 )
 
 const (
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
 	namespaceKeyName                = "name"
 	namespaceKeyFederationClusterID = "federationClusterid"
 	namespaceTableName              = "namespace"
@@ -67,7 +66,6 @@ func New(db drivers.DB) *ModelNamespace {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelNamespace) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()

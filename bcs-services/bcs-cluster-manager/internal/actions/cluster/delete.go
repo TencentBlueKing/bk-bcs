@@ -129,6 +129,9 @@ func (da *DeleteAction) checkRelativeResource() error {
 }
 
 func (da *DeleteAction) canDelete() error {
+	if da.cluster.Status == common.StatusCreateClusterFailed {
+		return nil
+	}
 	if len(da.nodeGroups) != 0 {
 		return fmt.Errorf("cannot delete cluster, there is relative NodeGroup running")
 	}
@@ -192,11 +195,9 @@ func (da *DeleteAction) cleanLocalInformation() error {
 		}
 	}
 	// release cidr
-	if !da.isImporterCluster() {
-		if err := da.releaseClusterCIDR(da.cluster); err != nil {
-			return err
-		}
-	}
+	/*if err := da.releaseClusterCIDR(da.cluster); err != nil {
+		return err
+	}*/
 
 	// async delete cluster dependency info
 	go asyncDeleteImportedClusterInfo(context.Background(), da.model, da.cluster)
@@ -210,7 +211,7 @@ func (da *DeleteAction) cleanLocalInformation() error {
 }
 
 func (da *DeleteAction) deleteRelativeResource() error {
-	// clean cluster autoscaling option, No relative entity in cloud infrastructure
+	//clean cluster autoscaling option, No relative entity in cloud infrastructure
 	if da.scalingOption != nil {
 		if err := da.model.DeleteAutoScalingOption(da.ctx, da.scalingOption.ClusterID); err != nil {
 			blog.Errorf("clean Cluster AutoScalingOption %s storage information failed, %s",
@@ -227,8 +228,8 @@ func (da *DeleteAction) deleteRelativeResource() error {
 			return err
 		}
 	}
-	// ! NodeGroup update status for other operation deny, it manage Nodes,
-	// ! we don't delete it here, we delete it after all Nodes are releasing
+	//! NodeGroup update status for other operation deny, it manage Nodes,
+	//! we don't delete it here, we delete it after all Nodes are releasing
 	for _, group := range da.nodeGroups {
 		group.Status = common.StatusDeleting
 		if err := da.model.UpdateNodeGroup(da.ctx, &group); err != nil {
@@ -303,7 +304,8 @@ func (da *DeleteAction) validate(req *cmproto.DeleteClusterReq) error {
 		req.InstanceDeleteMode = cloudprovider.Retain.String()
 	}
 
-	if req.InstanceDeleteMode != cloudprovider.Terminate.String() && req.InstanceDeleteMode != cloudprovider.Retain.String() {
+	if req.InstanceDeleteMode != cloudprovider.Terminate.String() &&
+		req.InstanceDeleteMode != cloudprovider.Retain.String() {
 		return fmt.Errorf("deleteInstanceMode is terminate or retain when delete cluster")
 	}
 
@@ -313,8 +315,8 @@ func (da *DeleteAction) validate(req *cmproto.DeleteClusterReq) error {
 func (da *DeleteAction) getCloudInfo(ctx context.Context) error {
 	cloud, err := da.model.GetCloud(ctx, da.cluster.Provider)
 	if err != nil {
-		blog.Errorf("get Cluster %s provider %s information failed, %s", da.cluster.ClusterID, da.cluster.Provider,
-			err.Error())
+		blog.Errorf("get Cluster %s provider %s information failed, %s",
+			da.cluster.ClusterID, da.cluster.Provider, err.Error())
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return err
 	}
@@ -326,8 +328,7 @@ func (da *DeleteAction) getCloudInfo(ctx context.Context) error {
 	})
 	if err != nil {
 		blog.Errorf("get Credential failed when delete Cluster %s, %s. Cloud %s",
-			da.cluster.ClusterID, da.cloud.CloudID, err.Error(),
-		)
+			da.cluster.ClusterID, da.cloud.CloudID, err.Error())
 		da.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return err
 	}
@@ -375,9 +376,9 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 
 	// cluster is deleting && IsForced == false, return
 	if da.cluster.Status == common.StatusDeleting || da.cluster.Status == common.StatusDeleted {
-		blog.Warnf("Cluster %s is under %s and is not force deleting, simply return", req.ClusterID, da.cluster.Status)
+		blog.Warnf("Cluster %s is under %s and is not force deleting, simply return",
+			req.ClusterID, da.cluster.Status)
 		da.setResp(common.BcsErrClusterManagerTaskErr, "cluster is under deleting/deleted")
-		// retrieve specified task then return to user
 		return
 	}
 
@@ -393,7 +394,7 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 	//     and IsForced = false (check resource, can't delete cluster if resource do not nil).
 	// if delete importer cluster need to delete cluster extra data, thus set IsForced = true
 	if req.OnlyDeleteInfo || da.isImporterCluster() {
-		// clean all relative resource then delete cluster finally
+		//clean all relative resource then delete cluster finally
 		if err := da.cleanLocalInformation(); err != nil {
 			blog.Errorf("only delete Cluster %s local information err, %s", req.ClusterID, err.Error())
 			da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
@@ -448,6 +449,8 @@ func (da *DeleteAction) Handle(ctx context.Context, req *cmproto.DeleteClusterRe
 		Message:      fmt.Sprintf("删除%s集群%s", da.cluster.Provider, da.cluster.ClusterID),
 		OpUser:       da.req.Operator,
 		CreateTime:   time.Now().String(),
+		ClusterID:    da.cluster.ClusterID,
+		ProjectID:    da.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("delete cluster[%s] CreateOperationLog failed: %v", da.cluster.ClusterID, err)
@@ -466,8 +469,8 @@ func (da *DeleteAction) isImporterCluster() bool {
 func (da *DeleteAction) createDeleteClusterTask(req *cmproto.DeleteClusterReq) error {
 	clsMgr, err := cloudprovider.GetClusterMgr(da.cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get Cluster %s real CloudProvider %s manager failed, %s", req.ClusterID,
-			da.cloud.CloudProvider, err.Error())
+		blog.Errorf("get Cluster %s real CloudProvider %s manager failed, %s",
+			req.ClusterID, da.cloud.CloudProvider, err.Error())
 		da.setResp(common.BcsErrClusterManagerCommonErr, err.Error())
 		return err
 	}
@@ -524,11 +527,13 @@ type DeleteNodesAction struct {
 	req   *cmproto.DeleteNodesRequest
 	resp  *cmproto.DeleteNodesResponse
 
-	nodeIPList []string
-	cluster    *cmproto.Cluster
-	nodes      []*cmproto.Node
-	task       *cmproto.Task
-	cloud      *cmproto.Cloud
+	nodeIPList   []string
+	cluster      *cmproto.Cluster
+	nodes        []*cmproto.Node
+	task         *cmproto.Task
+	cloud        *cmproto.Cloud
+	nodeTemplate *cmproto.NodeTemplate
+	nodeGroup    *cmproto.NodeGroup
 }
 
 // NewDeleteNodesAction delete Nodes action
@@ -544,8 +549,14 @@ func (da *DeleteNodesAction) setResp(code uint32, msg string) {
 	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (da *DeleteNodesAction) getNodesByClusterAndIPs() ([]string, error) {
+func (da *DeleteNodesAction) getClsNodesByClsIDAndIplist() ([]string, error) {
 	err := da.getClusterBasicInfo()
+	if err != nil {
+		return nil, err
+	}
+
+	// check cloud validate
+	err = da.cloudCheckValidate()
 	if err != nil {
 		return nil, err
 	}
@@ -571,7 +582,7 @@ func (da *DeleteNodesAction) getNodesByClusterAndIPs() ([]string, error) {
 	// filter nodeGroup nodes
 	filterNodes := make(map[string]string, 0)
 	for i := range nodes {
-		if nodes[i].NodeGroupID != "" {
+		if nodes[i].NodeGroupID != "" && (nodes[i].NodeType == "" || nodes[i].NodeType == common.CVM.String()) {
 			filterNodes[nodes[i].InnerIP] = ""
 		}
 	}
@@ -612,24 +623,50 @@ func (da *DeleteNodesAction) transCloudNodeToDNodes(ips []string) error {
 	cmOption.Region = da.cluster.Region
 
 	// cluster check instance if exist, validate nodes existence
-	nodeList, err := nodeMgr.ListNodesByIP(ips, &cloudprovider.ListNodesOption{
-		Common:       cmOption,
-		ClusterVPCID: da.cluster.VpcID,
-	})
+	nodeList, err := da.getClusterNodesByIPs(nodeMgr, ips, cmOption)
 	if err != nil {
-		blog.Errorf("validate nodes %s existence failed, %s", da.req.Nodes, err.Error())
+		blog.Errorf("AddNodesAction transCloudNodeToDNodes getClusterNodesByIPs failed: %v", err)
 		return err
-	}
-	if len(nodeList) == 0 {
-		blog.Errorf("add nodes %v to Cluster %s validate failed, all Nodes are not under control",
-			da.req.Nodes, da.req.ClusterID,
-		)
-		return fmt.Errorf("all nodes don't controlled by cloudprovider %s", da.cloud.CloudProvider)
 	}
 	da.nodes = nodeList
 
 	blog.Infof("add nodes %v to Cluster %s validate successfully", da.req.Nodes, da.req.ClusterID)
 	return nil
+}
+
+func (da *DeleteNodesAction) getClusterNodesByIPs(nodeMgr cloudprovider.NodeManager, ips []string,
+	cmOption *cloudprovider.CommonOption) ([]*cmproto.Node, error) {
+	var (
+		nodeList []*cmproto.Node
+		err      error
+	)
+
+	// cluster check instance if exist, validate nodes existence
+	if da.req.IsExternalNode {
+		// get cloud support external nodes
+		nodeList, err = nodeMgr.ListExternalNodesByIP(ips, &cloudprovider.ListNodesOption{
+			Common: cmOption,
+		})
+	} else {
+		// get cloud support CVM nodes
+		nodeList, err = nodeMgr.ListNodesByIP(ips, &cloudprovider.ListNodesOption{
+			Common:       cmOption,
+			ClusterVPCID: da.cluster.VpcID,
+		})
+	}
+
+	if err != nil {
+		blog.Errorf("validate nodes %s existence failed, %s", ips, err.Error())
+		return nil, err
+	}
+	if len(nodeList) == 0 {
+		blog.Errorf("delete nodes %v from Cluster %s validate failed, all Nodes are not under control",
+			ips, da.req.ClusterID,
+		)
+		return nil, fmt.Errorf("all nodes don't controlled by cloudprovider %s", da.cloud.CloudProvider)
+	}
+
+	return nodeList, nil
 }
 
 func (da *DeleteNodesAction) validate() error {
@@ -676,6 +713,27 @@ func (da *DeleteNodesAction) getClusterBasicInfo() error {
 		return err
 	}
 	da.cloud = cloud
+
+	if len(da.req.NodeTemplateID) > 0 {
+		template, err := actions.GetNodeTemplateByTemplateID(da.model, da.req.NodeTemplateID)
+		if err != nil {
+			blog.Errorf("get Cluster %s getNodeTemplateByTemplateID %s failed, %s",
+				da.cluster.ClusterID, da.req.NodeTemplateID, err.Error(),
+			)
+			return err
+		}
+		da.nodeTemplate = template
+	}
+	if len(da.req.NodeGroupID) > 0 {
+		group, err := actions.GetNodeGroupByGroupID(da.model, da.req.NodeGroupID)
+		if err != nil {
+			blog.Errorf("get Cluster %s GetNodeGroupByGroupID %s failed, %s",
+				da.cluster.ClusterID, da.req.NodeGroupID, err.Error(),
+			)
+			return err
+		}
+		da.nodeGroup = group
+	}
 
 	return nil
 }
@@ -729,9 +787,9 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 	if da.req.OnlyDeleteInfo {
 		nodeInnerIPs, err := da.checkClusterNodeInfoDeletion()
 		if err != nil || len(nodeInnerIPs) == 0 {
-			da.setResp(common.BcsErrClusterManagerDataEmptyErr, fmt.Sprintf(
-				"DeleteNodesAction checkClusterNodeInfoDeletion failed: %s",
-				"nodeInnerIPs empty"))
+			da.setResp(common.BcsErrClusterManagerDataEmptyErr,
+				fmt.Sprintf("DeleteNodesAction checkClusterNodeInfoDeletion failed: %s",
+					"nodeInnerIPs empty"))
 			return
 		}
 
@@ -748,9 +806,9 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 	// step1: update node status deleting
 	// step2: generate task to async delete node and finally delete db nodes
 	// version 1 only to delete node info in db, need to manual delete cluster node by cloud provider
-	nodeInnerIPs, err := da.getNodesByClusterAndIPs()
+	nodeInnerIPs, err := da.getClsNodesByClsIDAndIplist()
 	if err != nil {
-		blog.Errorf("DeleteNodesAction getNodesByClusterAndIPs failed: %v", err)
+		blog.Errorf("DeleteNodesAction getClusterNodesByClusterIDAndInnerIP failed: %v", err)
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
@@ -779,6 +837,8 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 		Message:      fmt.Sprintf("集群%s下架节点", da.cluster.ClusterID),
 		OpUser:       da.req.Operator,
 		CreateTime:   time.Now().String(),
+		ClusterID:    da.cluster.ClusterID,
+		ProjectID:    da.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("deleteNodes from cluster[%s] CreateOperationLog failed: %v", da.cluster.ClusterID, err)
@@ -789,6 +849,82 @@ func (da *DeleteNodesAction) Handle(ctx context.Context, req *cmproto.DeleteNode
 	return
 }
 
+func (da *DeleteNodesAction) cloudCheckValidate() error {
+	validate, err := cloudprovider.GetCloudValidateMgr(da.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("DeleteNodesAction cloudCheckValidate failed: %v", err)
+		return err
+	}
+	err = validate.DeleteNodesFromClusterValidate(da.req, nil)
+	if err != nil {
+		blog.Errorf("DeleteNodesAction cloudCheckValidate failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (da *DeleteNodesAction) deleteExternalNodesFromCluster() error {
+	groupCloud, err := actions.GetCloudByCloudID(da.model, da.nodeGroup.Provider)
+	if err != nil {
+		blog.Errorf("DeleteNodesAction deleteExternalNodesFromCluster failed: %v", err)
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     groupCloud,
+		AccountID: da.cluster.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s when delete external nodes %s to cluster %s failed, %s",
+			groupCloud.CloudID, groupCloud.CloudProvider, da.req.Nodes, da.req.ClusterID, err.Error(),
+		)
+		return err
+	}
+	cmOption.Region = da.nodeGroup.Region
+
+	// get external node implement nodeMgr
+	nodeGroupMgr, err := cloudprovider.GetNodeGroupMgr(groupCloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s NodeGroupManager for add nodes %v to Cluster %s failed, %s",
+			da.cloud.CloudProvider, da.req.Nodes, da.req.ClusterID, err.Error(),
+		)
+		return err
+	}
+	task, err := nodeGroupMgr.DeleteExternalNodeFromCluster(da.nodeGroup, da.nodes, &cloudprovider.DeleteExternalNodesOption{
+		CommonOption: *cmOption,
+		Operator:     da.req.Operator,
+		Cloud:        groupCloud,
+		Cluster:      da.cluster,
+	})
+	if err != nil {
+		blog.Errorf("cloudprovider %s deleteExternalNodes %v to Cluster %s failed, %s",
+			groupCloud.CloudProvider, da.req.Nodes, da.req.ClusterID, err.Error(),
+		)
+		return err
+	}
+	// create task
+	if err := da.model.CreateTask(da.ctx, task); err != nil {
+		blog.Errorf("save deleteNodes task for cluster %s failed, %s",
+			da.cluster.ClusterID, err.Error(),
+		)
+		return err
+	}
+
+	// dispatch task
+	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+		blog.Errorf("dispatch deleteExternalNodesFromCluster task for cluster %s failed, %s",
+			da.cluster.ClusterName, err.Error(),
+		)
+		return err
+	}
+
+	da.task = task
+	blog.Infof("delete external nodes %v from cluster %s with cloudprovider %s processing, task info: %v",
+		da.req.Nodes, da.req.ClusterID, da.cloud.CloudProvider, task)
+
+	return nil
+}
+
 func (da *DeleteNodesAction) deleteNodesFromClusterTask() error {
 	// get cloudprovider cluster implementation
 	clusterMgr, err := cloudprovider.GetClusterMgr(da.cloud.CloudProvider)
@@ -797,6 +933,11 @@ func (da *DeleteNodesAction) deleteNodesFromClusterTask() error {
 			da.cloud.CloudProvider, da.req.Nodes, da.req.ClusterID, err.Error(),
 		)
 		return err
+	}
+
+	// add externalNodes to cluster
+	if da.req.IsExternalNode {
+		return da.deleteExternalNodesFromCluster()
 	}
 
 	// get credential for cloudprovider operation
@@ -818,6 +959,7 @@ func (da *DeleteNodesAction) deleteNodesFromClusterTask() error {
 		Operator:     da.req.Operator,
 		DeleteMode:   da.req.DeleteMode,
 		Cloud:        da.cloud,
+		NodeTemplate: da.nodeTemplate,
 	})
 	if err != nil {
 		blog.Errorf("cloudprovider %s deleteNodes %v from Cluster %s failed, %s",

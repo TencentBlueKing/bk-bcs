@@ -11,7 +11,6 @@
  *
  */
 
-// Package account xxx
 package account
 
 import (
@@ -30,11 +29,9 @@ import (
 
 const (
 	tableName = "cloudaccount"
-	// CloudKey xxx
-	// ! we don't setting bson tag in proto file,
-	// ! all struct key in mongo is lowcase in default
-	CloudKey = "cloudid"
-	// AccountIDKey xxx
+	//! we don't setting bson tag in proto file,
+	//! all struct key in mongo is lowcase in default
+	CloudKey                      = "cloudid"
 	AccountIDKey                  = "accountid"
 	defaultCloudAccountListLength = 4000
 )
@@ -70,7 +67,6 @@ func New(db drivers.DB) *ModelCloudAccount {
 	}
 }
 
-// ensureTable xxx
 // ensure table
 func (m *ModelCloudAccount) ensureTable(ctx context.Context) error {
 	m.isTableEnsuredMutex.RLock()
@@ -136,8 +132,7 @@ func (m *ModelCloudAccount) DeleteCloudAccount(ctx context.Context, cloudID stri
 }
 
 // GetCloudAccount get cloudAccount
-func (m *ModelCloudAccount) GetCloudAccount(ctx context.Context, cloudID, accountID string) (*types.CloudAccount,
-	error) {
+func (m *ModelCloudAccount) GetCloudAccount(ctx context.Context, cloudID, accountID string) (*types.CloudAccount, error) {
 	if err := m.ensureTable(ctx); err != nil {
 		return nil, err
 	}

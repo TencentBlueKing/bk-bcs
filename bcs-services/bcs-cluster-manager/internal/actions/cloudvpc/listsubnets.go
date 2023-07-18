@@ -29,6 +29,7 @@ type ListSubnetsAction struct {
 	ctx     context.Context
 	cloud   *cmproto.Cloud
 	account *cmproto.CloudAccount
+
 	model   store.ClusterManagerModel
 	req     *cmproto.ListCloudSubnetsRequest
 	resp    *cmproto.ListCloudSubnetsResponse

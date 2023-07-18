@@ -39,6 +39,7 @@ type UpdateAction struct {
 	req     *cmproto.UpdateClusterReq
 	resp    *cmproto.UpdateClusterResp
 	cluster *cmproto.Cluster
+	cloud   *cmproto.Cloud
 }
 
 // NewUpdateAction create update action
@@ -48,6 +49,7 @@ func NewUpdateAction(model store.ClusterManagerModel) *UpdateAction {
 	}
 }
 
+// validate check
 func (ua *UpdateAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
@@ -61,12 +63,20 @@ func (ua *UpdateAction) validate() error {
 	return nil
 }
 
+// getCluster cluster/cloud
 func (ua *UpdateAction) getCluster() error {
 	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
 	if err != nil {
 		return err
 	}
 	ua.cluster = cluster
+
+	cloud, err := ua.model.GetCloud(ua.ctx, cluster.Provider)
+	if err != nil {
+		return err
+	}
+	ua.cloud = cloud
+
 	return nil
 }
 
@@ -120,8 +130,8 @@ func (ua *UpdateAction) validateBaseInfo() {
 	if len(ua.req.ModuleID) != 0 {
 		ua.cluster.ModuleID = ua.req.ModuleID
 	}
-	if len(ua.req.Description) > 0 {
-		ua.cluster.Description = ua.req.Description
+	if ua.req.Description != nil {
+		ua.cluster.Description = ua.req.Description.GetValue()
 	}
 }
 
@@ -180,18 +190,28 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	}
 }
 
+// updateCluster update cluster info
 func (ua *UpdateAction) updateCluster() error {
+	// basic info
 	ua.validateBaseInfo()
+	// additional info
 	ua.validateAdditionalInfo()
 
-	for _, ip := range ua.req.Master {
-		if ua.cluster.Master == nil {
-			ua.cluster.Master = make(map[string]*cmproto.Node)
-		}
-		// add more details for Master Node
-		ua.cluster.Master[ip] = &cmproto.Node{
-			InnerIP: ip,
-			Status:  common.StatusRunning,
+	// trans masterIPs
+	if len(ua.req.Master) > 0 {
+		ua.cluster.Master = make(map[string]*cmproto.Node)
+
+		for _, ip := range ua.req.Master {
+			node, err := ua.transNodeIPToCloudNode(ip)
+			if err != nil {
+				blog.Errorf("updateCluster transNodeIPToCloudNode failed: %v", err)
+				ua.cluster.Master[ip] = &cmproto.Node{
+					InnerIP: ip,
+					Status:  common.StatusRunning,
+				}
+			} else {
+				ua.cluster.Master[ip] = node
+			}
 		}
 	}
 	ua.cluster.UpdateTime = time.Now().Format(time.RFC3339)
@@ -201,6 +221,8 @@ func (ua *UpdateAction) updateCluster() error {
 	if err != nil {
 		return err
 	}
+
+	// save data to passcc
 	updatePassCCClusterInfo(ua.cluster)
 	return nil
 }
@@ -209,6 +231,39 @@ func (ua *UpdateAction) setResp(code uint32, msg string) {
 	ua.resp.Code = code
 	ua.resp.Message = msg
 	ua.resp.Result = code == common.BcsErrClusterManagerSuccess
+}
+
+// transCloudNodeToDNodes by req nodeIPs trans to cloud node
+func (ua *UpdateAction) transNodeIPToCloudNode(ip string) (*cmproto.Node, error) {
+	nodeMgr, err := cloudprovider.GetNodeMgr(ua.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s NodeManager Cluster %s failed, %s",
+			ua.cloud.CloudProvider, ua.req.ClusterID, err.Error())
+		return nil, err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     ua.cloud,
+		AccountID: "",
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s cluster %s failed, %s",
+			ua.cloud.CloudID, ua.cloud.CloudProvider, ua.req.ClusterID, err.Error())
+		return nil, err
+	}
+	cmOption.Region = ua.cluster.Region
+
+	// cluster check instance if exist, validate nodes existence
+	node, err := nodeMgr.GetNodeByIP(ip, &cloudprovider.GetNodeOption{
+		Common:       cmOption,
+		ClusterVPCID: ua.cluster.VpcID,
+	})
+	if err != nil {
+		blog.Errorf("validate nodes %s existence failed, %s", ip, err.Error())
+		return nil, err
+	}
+	blog.Infof("get cloud[%s] IP[%s] to Node successfully", ua.cloud.CloudProvider, ip)
+
+	return node, nil
 }
 
 // Handle handles update cluster request
@@ -256,6 +311,7 @@ func NewUpdateNodeAction(model store.ClusterManagerModel) *UpdateNodeAction {
 	}
 }
 
+// validate check
 func (ua *UpdateNodeAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
@@ -268,6 +324,7 @@ func (ua *UpdateNodeAction) validate() error {
 	return nil
 }
 
+// updateNodeInfo update node info
 func (ua *UpdateNodeAction) updateNodeInfo(nodeIP string) error {
 	node, err := ua.model.GetNodeByIP(ua.ctx, nodeIP)
 	if err != nil {
@@ -353,7 +410,9 @@ type AddNodesAction struct {
 	task           *cmproto.Task
 	option         *cloudprovider.CommonOption
 	nodeGroup      *cmproto.NodeGroup
+	nodeTemplate   *cmproto.NodeTemplate
 	currentNodeCnt uint64
+	nodeScheduler  bool
 }
 
 // NewAddNodesAction create addNodes action
@@ -363,6 +422,72 @@ func NewAddNodesAction(model store.ClusterManagerModel) *AddNodesAction {
 	}
 }
 
+// addExternalNodesToCluster handle external nodes
+func (ua *AddNodesAction) addExternalNodesToCluster() error {
+	groupCloud, err := actions.GetCloudByCloudID(ua.model, ua.nodeGroup.Provider)
+	if err != nil {
+		blog.Errorf("AddNodesAction addExternalNodesToCluster failed: %v", err)
+		return err
+	}
+	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
+		Cloud:     groupCloud,
+		AccountID: ua.cluster.CloudAccountID,
+	})
+	if err != nil {
+		blog.Errorf("get credential for cloudprovider %s/%s when add nodes %s to cluster %s failed, %s",
+			groupCloud.CloudID, groupCloud.CloudProvider, ua.req.Nodes, ua.req.ClusterID, err.Error(),
+		)
+		return err
+	}
+	cmOption.Region = ua.nodeGroup.Region
+
+	// get external node implement nodeMgr
+	nodeGroupMgr, err := cloudprovider.GetNodeGroupMgr(groupCloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloudprovider %s NodeGroupManager for add nodes %v to Cluster %s failed, %s",
+			ua.cloud.CloudProvider, ua.req.Nodes, ua.req.ClusterID, err.Error(),
+		)
+		return err
+	}
+	task, err := nodeGroupMgr.AddExternalNodeToCluster(ua.nodeGroup, ua.nodes, &cloudprovider.AddExternalNodesOption{
+		CommonOption: *cmOption,
+		Operator:     ua.req.Operator,
+		Cloud:        groupCloud,
+		Cluster:      ua.cluster,
+	})
+	if err != nil {
+		blog.Errorf("cloudprovider %s addExternalNodes %v to Cluster %s failed, %s",
+			groupCloud.CloudProvider, ua.req.Nodes, ua.req.ClusterID, err.Error(),
+		)
+		return err
+	}
+
+	// create task
+	if err = ua.model.CreateTask(ua.ctx, task); err != nil {
+		blog.Errorf("save addNodesToCluster cluster task for cluster %s failed, %s",
+			ua.cluster.ClusterID, err.Error(),
+		)
+		return err
+	}
+
+	// dispatch task
+	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
+		blog.Errorf("dispatch addNodesToCLuster cluster task for cluster %s failed, %s",
+			ua.cluster.ClusterName, err.Error(),
+		)
+		return err
+	}
+
+	ua.task = task
+	blog.Infof("add nodes %v to cluster %s with cloudprovider %s processing, task info: %v",
+		ua.req.Nodes, ua.req.ClusterID, groupCloud.CloudProvider, task,
+	)
+	ua.resp.Data = task
+
+	return ua.saveNodesToStorage(common.StatusInitialization)
+}
+
+// addNodesToCluster handle normal nodes
 func (ua *AddNodesAction) addNodesToCluster() error {
 	// get cloudprovider cluster implementation
 	clusterMgr, err := cloudprovider.GetClusterMgr(ua.cloud.CloudProvider)
@@ -374,14 +499,19 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 	}
 	reinstall := len(ua.req.InitLoginPassword) != 0
 
-	// check cloud CIDR
+	// check cloud CIDR && autoScale cluster cidr
 	available, err := clusterMgr.CheckClusterCidrAvailable(ua.cluster, &cloudprovider.CheckClusterCIDROption{
-		CurrentNodeCnt:  ua.currentNodeCnt,
 		IncomingNodeCnt: uint64(len(ua.nodes)),
+		ExternalNode:    ua.req.IsExternalNode,
 	})
 	if !available {
 		blog.Infof("AddNodesAction addNodesToCluster failed: %v", err)
 		return err
+	}
+
+	// add externalNodes to cluster
+	if ua.req.IsExternalNode {
+		return ua.addExternalNodesToCluster()
 	}
 
 	// default reinstall system when add node to cluster
@@ -391,8 +521,10 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 		Reinstall:    reinstall,
 		InitPassword: ua.req.InitLoginPassword,
 		Cloud:        ua.cloud,
+		NodeTemplate: ua.nodeTemplate,
 		NodeGroupID:  ua.req.NodeGroupID,
 		Operator:     ua.req.Operator,
+		NodeSchedule: ua.nodeScheduler,
 	})
 	if err != nil {
 		blog.Errorf("cloudprovider %s addNodes %v to Cluster %s failed, %s",
@@ -402,7 +534,7 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 	}
 
 	// create task
-	if err := ua.model.CreateTask(ua.ctx, task); err != nil {
+	if err = ua.model.CreateTask(ua.ctx, task); err != nil {
 		blog.Errorf("save addNodesToCluster cluster task for cluster %s failed, %s",
 			ua.cluster.ClusterID, err.Error(),
 		)
@@ -410,7 +542,7 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 	}
 
 	// dispatch task
-	if err := taskserver.GetTaskServer().Dispatch(task); err != nil {
+	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 		blog.Errorf("dispatch addNodesToCLuster cluster task for cluster %s failed, %s",
 			ua.cluster.ClusterName, err.Error(),
 		)
@@ -425,11 +557,13 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 	return ua.saveNodesToStorage(common.StatusInitialization)
 }
 
+// saveNodesToStorage save nodes to db
 func (ua *AddNodesAction) saveNodesToStorage(status string) error {
 	for _, node := range ua.nodes {
 		node.ClusterID = ua.req.ClusterID
 		node.NodeGroupID = ua.req.NodeGroupID
 		node.Status = status
+		node.NodeTemplateID = ua.req.NodeTemplateID
 
 		oldNode, err := ua.model.GetNodeByIP(ua.ctx, node.InnerIP)
 		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
@@ -447,7 +581,7 @@ func (ua *AddNodesAction) saveNodesToStorage(status string) error {
 			continue
 		}
 
-		if err := ua.model.UpdateNode(ua.ctx, node); err != nil {
+		if err = ua.model.UpdateNode(ua.ctx, node); err != nil {
 			blog.Errorf("save node %s under cluster %s to storage failed, %s",
 				node.InnerIP, ua.req.ClusterID, err.Error(),
 			)
@@ -458,8 +592,34 @@ func (ua *AddNodesAction) saveNodesToStorage(status string) error {
 	return nil
 }
 
+// checkManagedClusterNodeNum check managed cluster nodes num
+func (ua *AddNodesAction) checkManagedClusterNodeNum() error {
+	if ua.cluster.ManageType != common.ClusterManageTypeManaged {
+		return nil
+	}
+
+	nodeStatus := []string{common.StatusRunning, common.StatusInitialization}
+	nodes, err := GetClusterStatusNodes(ua.model, ua.cluster, nodeStatus)
+	if err != nil {
+		blog.Errorf("checkManagedClusterNodeNum[%s] GetClusterStatusNodes failed: %v", ua.cluster.ClusterID, err)
+		return err
+	}
+
+	blog.Infof("checkManagedClusterNodeNum[%s] GetClusterStatusNodes[%v]", ua.cluster.ClusterID, len(nodes))
+	if len(nodes) > 0 {
+		return nil
+	}
+	ua.nodeScheduler = true
+
+	return nil
+}
+
+// checkNodeInCluster check node id in cluster
 func (ua *AddNodesAction) checkNodeInCluster() error {
-	// check if nodes are already in cluster
+	// get all masterIPs
+	masterIPs := getAllMasterIPs(ua.model)
+
+	//check if nodes are already in cluster
 	nodeStatus := []string{common.StatusRunning, common.StatusInitialization, common.StatusDeleting}
 	clusterCond := operator.NewLeafCondition(operator.Eq, operator.M{"clusterid": ua.cluster.ClusterID})
 	statusCond := operator.NewLeafCondition(operator.In, operator.M{"status": nodeStatus})
@@ -472,6 +632,11 @@ func (ua *AddNodesAction) checkNodeInCluster() error {
 	}
 	newNodeIP := make(map[string]string)
 	for _, ip := range ua.req.Nodes {
+		if cls, ok := masterIPs[ip]; ok {
+			blog.Errorf("add nodes %v to Cluster %s failed, Node %s is duplicated",
+				ua.req.Nodes, ua.req.ClusterID, ip)
+			return fmt.Errorf("node %s is already in Cluster[%s]", ip, cls.clusterID)
+		}
 		newNodeIP[ip] = ip
 	}
 	for _, node := range nodes {
@@ -488,7 +653,7 @@ func (ua *AddNodesAction) checkNodeInCluster() error {
 	return nil
 }
 
-// getClusterBasicInfo get cluster/cloud/project info
+// getCloudProjectInfo get cluster/cloud/project info
 func (ua *AddNodesAction) getClusterBasicInfo() error {
 	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
 	if err != nil {
@@ -505,6 +670,27 @@ func (ua *AddNodesAction) getClusterBasicInfo() error {
 		return err
 	}
 	ua.cloud = cloud
+
+	if len(ua.req.NodeTemplateID) > 0 {
+		template, errGet := actions.GetNodeTemplateByTemplateID(ua.model, ua.req.NodeTemplateID)
+		if errGet != nil {
+			blog.Errorf("get Cluster %s getNodeTemplateByTemplateID %s failed, %s",
+				ua.cluster.ClusterID, ua.req.NodeTemplateID, errGet.Error(),
+			)
+			return errGet
+		}
+		ua.nodeTemplate = template
+	}
+	if len(ua.req.NodeGroupID) > 0 {
+		group, errGet := actions.GetNodeGroupByGroupID(ua.model, ua.req.NodeGroupID)
+		if errGet != nil {
+			blog.Errorf("get Cluster %s GetNodeGroupByGroupID %s failed, %s",
+				ua.cluster.ClusterID, ua.req.NodeGroupID, errGet.Error(),
+			)
+			return errGet
+		}
+		ua.nodeGroup = group
+	}
 
 	return nil
 }
@@ -533,20 +719,10 @@ func (ua *AddNodesAction) transCloudNodeToDNodes() error {
 	ua.option = cmOption
 	ua.option.Region = ua.cluster.Region
 
-	// cluster check instance if exist, validate nodes existence
-	nodeList, err := nodeMgr.ListNodesByIP(ua.req.Nodes, &cloudprovider.ListNodesOption{
-		Common:       cmOption,
-		ClusterVPCID: ua.cluster.VpcID,
-	})
+	nodeList, err := ua.getClusterNodesByIPs(nodeMgr, cmOption)
 	if err != nil {
-		blog.Errorf("validate nodes %s existence failed, %s", ua.req.Nodes, err.Error())
+		blog.Errorf("AddNodesAction transCloudNodeToDNodes getClusterNodesByIPs failed: %v", err)
 		return err
-	}
-	if len(nodeList) == 0 {
-		blog.Errorf("add nodes %v to Cluster %s validate failed, all Nodes are not under control",
-			ua.req.Nodes, ua.req.ClusterID,
-		)
-		return fmt.Errorf("all nodes don't controlled by cloudprovider %s", ua.cloud.CloudProvider)
 	}
 	ua.nodes = nodeList
 
@@ -554,6 +730,59 @@ func (ua *AddNodesAction) transCloudNodeToDNodes() error {
 	return nil
 }
 
+// getClusterNodesByIPs cluster nodes by ips
+func (ua *AddNodesAction) getClusterNodesByIPs(nodeMgr cloudprovider.NodeManager,
+	cmOption *cloudprovider.CommonOption) ([]*cmproto.Node, error) {
+	var (
+		nodeList []*cmproto.Node
+		err      error
+	)
+
+	// cluster check instance if exist, validate nodes existence
+	if ua.req.IsExternalNode {
+		// get cloud support external nodes
+		nodeList, err = nodeMgr.ListExternalNodesByIP(ua.req.Nodes, &cloudprovider.ListNodesOption{
+			Common: cmOption,
+		})
+	} else {
+		// get cloud support CVM nodes
+		nodeList, err = nodeMgr.ListNodesByIP(ua.req.Nodes, &cloudprovider.ListNodesOption{
+			Common:       cmOption,
+			ClusterVPCID: ua.cluster.VpcID,
+		})
+	}
+
+	if err != nil {
+		blog.Errorf("validate nodes %s existence failed, %s", ua.req.Nodes, err.Error())
+		return nil, err
+	}
+	if len(nodeList) == 0 {
+		blog.Errorf("add nodes %v to Cluster %s validate failed, all Nodes are not under control",
+			ua.req.Nodes, ua.req.ClusterID,
+		)
+		return nil, fmt.Errorf("all nodes don't controlled by cloudprovider %s", ua.cloud.CloudProvider)
+	}
+
+	return nodeList, nil
+}
+
+// cloudCheckValidate cloud check
+func (ua *AddNodesAction) cloudCheckValidate() error {
+	validate, err := cloudprovider.GetCloudValidateMgr(ua.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("AddNodesAction cloudCheckValidate failed: %v", err)
+		return err
+	}
+	err = validate.AddNodesToClusterValidate(ua.req, nil)
+	if err != nil {
+		blog.Errorf("AddNodesAction cloudCheckValidate failed: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// validate check
 func (ua *AddNodesAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
@@ -568,6 +797,12 @@ func (ua *AddNodesAction) validate() error {
 
 	// get cluster basic info(project/cluster/cloud)
 	err := ua.getClusterBasicInfo()
+	if err != nil {
+		return err
+	}
+
+	// cloud validate
+	err = ua.cloudCheckValidate()
 	if err != nil {
 		return err
 	}
@@ -589,33 +824,14 @@ func (ua *AddNodesAction) validate() error {
 		return errMsg
 	}
 
-	// addNodes exist in cluster
-	if err = ua.checkNodeInCluster(); err != nil {
+	// check managed_type nodes
+	if err = ua.checkManagedClusterNodeNum(); err != nil {
 		return err
 	}
 
-	// check nodegroup information
-	// if need to add node to nodegroup, must cluster provider equal nodeGroup provider
-	// if len(nodeGroupID) == 0, add node to cluster but not belong nodeGroup
-	if len(ua.req.NodeGroupID) != 0 {
-		blog.Infof("add Nodes %v to NodeGroup %s when AddNodesToCluster %s",
-			ua.req.Nodes, ua.req.NodeGroupID, ua.req.ClusterID,
-		)
-		// try to get nodegroup
-		nodeGroup, err := ua.model.GetNodeGroup(ua.ctx, ua.req.NodeGroupID)
-		if err != nil {
-			blog.Errorf("get NodeGroup %s failed when AddNodesToCluster, %s", ua.req.NodeGroupID, err.Error())
-			return err
-		}
-		ua.nodeGroup = nodeGroup
-
-		// cloud provider should equal nodeGroup provider, provider is cloudID
-		if ua.cluster.Provider != nodeGroup.Provider {
-			blog.Errorf("add nodes %v to Cluster %s failed, Cluster and NodeGroup provider [%s/%s] must be same",
-				ua.req.Nodes, ua.req.ClusterID, ua.cluster.Provider, nodeGroup.Provider,
-			)
-			return fmt.Errorf("nodegroup and cluseter cloudprovider must be same")
-		}
+	// addNodes exist in cluster
+	if err = ua.checkNodeInCluster(); err != nil {
+		return err
 	}
 
 	// request nodes trans to cloudNode
@@ -670,8 +886,8 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 			ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 			return
 		}
-		blog.Infof("only create nodes %v information to local storage under cluster %s successfully", req.Nodes,
-			req.ClusterID)
+		blog.Infof("only create nodes %v information to local storage under cluster %s successfully",
+			req.Nodes, req.ClusterID)
 		ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 		return
 	}
@@ -683,13 +899,16 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 	}
 
 	// generate async task to call cloud provider for add nodes
-	// 1. task to add node in cluster 2. init node status initialization
+	// 1. check cluster cidr and auto scale cidr
+	// 2. add external nodes by nodeGroupMgr
+	// 3. task to add node in cluster
+	// 4. init node status initialization
 	if err := ua.addNodesToCluster(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
 	blog.Infof(
-		"add nodes %v inforamtion to local storage under cluster %s successfully",
+		"add nodes %v information to local storage under cluster %s successfully",
 		req.Nodes, req.ClusterID,
 	)
 
@@ -700,6 +919,8 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 		Message:      fmt.Sprintf("集群%s添加节点", ua.cluster.ClusterID),
 		OpUser:       req.Operator,
 		CreateTime:   time.Now().String(),
+		ClusterID:    ua.cluster.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
 	})
 	if err != nil {
 		blog.Errorf("AddNodesToCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)

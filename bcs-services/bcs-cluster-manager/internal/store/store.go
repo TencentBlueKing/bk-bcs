@@ -10,11 +10,11 @@
  * limitations under the License.
  */
 
-// Package store xxx
 package store
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -25,9 +25,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cloudvpc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/clustercredential"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/moduleflag"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/node"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodegroup"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/nodetemplate"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/operationlog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/project"
@@ -48,12 +50,16 @@ type ClusterManagerModel interface {
 	CreateNode(ctx context.Context, node *types.Node) error
 	UpdateNode(ctx context.Context, node *types.Node) error
 	DeleteNode(ctx context.Context, nodeID string) error
+	DeleteClusterNode(ctx context.Context, clusterID, nodeID string) error
 	DeleteNodesByIPs(ctx context.Context, ips []string) error
 	DeleteNodesByNodeIDs(ctx context.Context, nodeIDs []string) error
 	DeleteNodeByIP(ctx context.Context, ip string) error
+	DeleteClusterNodeByIP(ctx context.Context, clusterID, ip string) error
 	DeleteNodesByClusterID(ctx context.Context, clusterID string) error
 	GetNode(ctx context.Context, nodeID string) (*types.Node, error)
 	GetNodeByIP(ctx context.Context, ip string) (*types.Node, error)
+	GetClusterNode(ctx context.Context, clusterID, nodeID string) (*types.Node, error)
+	GetClusterNodeByIP(ctx context.Context, clusterID, ip string) (*types.Node, error)
 	ListNode(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]*types.Node, error)
 
 	CreateNamespace(ctx context.Context, ns *types.Namespace) error
@@ -75,8 +81,7 @@ type ClusterManagerModel interface {
 	ListClusterCredential(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
 		[]types.ClusterCredential, error)
 
-	// CreateTkeCidr xxx
-	// TKE CIDR information storage management
+	//TKE CIDR information storage management
 	CreateTkeCidr(ctx context.Context, cidr *types.TkeCidr) error
 	UpdateTkeCidr(ctx context.Context, cidr *types.TkeCidr) error
 	DeleteTkeCidr(ctx context.Context, vpc string, cidr string) error
@@ -84,40 +89,43 @@ type ClusterManagerModel interface {
 	ListTkeCidr(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.TkeCidr, error)
 	ListTkeCidrCount(ctx context.Context, opt *options.ListOption) ([]types.TkeCidrCount, error)
 
-	// CreateProject xxx
-	// project information storage management
+	//project information storage management
 	CreateProject(ctx context.Context, project *types.Project) error
 	UpdateProject(ctx context.Context, project *types.Project) error
 	DeleteProject(ctx context.Context, projectID string) error
 	GetProject(ctx context.Context, projectID string) (*types.Project, error)
 	ListProject(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Project, error)
 
-	// CreateCloud xxx
-	// cloud information storage management
+	//cloud information storage management
 	CreateCloud(ctx context.Context, cloud *types.Cloud) error
 	UpdateCloud(ctx context.Context, cloud *types.Cloud) error
 	DeleteCloud(ctx context.Context, cloudID string) error
 	GetCloud(ctx context.Context, cloudID string) (*types.Cloud, error)
 	ListCloud(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Cloud, error)
 
-	// CreateCloudVPC xxx
-	// cloud vpc information storage manager
+	//cloud vpc information storage manager
 	CreateCloudVPC(ctx context.Context, vpc *types.CloudVPC) error
 	UpdateCloudVPC(ctx context.Context, vpc *types.CloudVPC) error
 	DeleteCloudVPC(ctx context.Context, cloudID string, vpcID string) error
 	ListCloudVPC(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudVPC, error)
 	GetCloudVPC(ctx context.Context, cloudID, vpcID string) (*types.CloudVPC, error)
 
-	// CreateCloudAccount xxx
-	// cloud account info storage manager
+	//cloud account info storage manager
 	CreateCloudAccount(ctx context.Context, account *types.CloudAccount) error
 	UpdateCloudAccount(ctx context.Context, account *types.CloudAccount) error
 	DeleteCloudAccount(ctx context.Context, cloudID string, accountID string) error
 	ListCloudAccount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudAccount, error)
 	GetCloudAccount(ctx context.Context, cloudID, accountID string) (*types.CloudAccount, error)
 
-	// CreateNodeGroup xxx
-	// nodegroup information storage management
+	//cloud nodeTemplate info storage management
+	CreateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
+	UpdateNodeTemplate(ctx context.Context, template *types.NodeTemplate) error
+	DeleteNodeTemplate(ctx context.Context, projectID string, templateID string) error
+	ListNodeTemplate(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NodeTemplate, error)
+	GetNodeTemplate(ctx context.Context, projectID, templateID string) (*types.NodeTemplate, error)
+	GetNodeTemplateByID(ctx context.Context, templateID string) (*types.NodeTemplate, error)
+
+	//nodegroup information storage management
 	CreateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	UpdateNodeGroup(ctx context.Context, group *types.NodeGroup) error
 	DeleteNodeGroup(ctx context.Context, groupID string) error
@@ -125,8 +133,7 @@ type ClusterManagerModel interface {
 	ListNodeGroup(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.NodeGroup, error)
 	DeleteNodeGroupByClusterID(ctx context.Context, clusterID string) error
 
-	// CreateTask xxx
-	// task information storage management
+	//task information storage management
 	CreateTask(ctx context.Context, task *types.Task) error
 	UpdateTask(ctx context.Context, task *types.Task) error
 	PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error
@@ -134,22 +141,27 @@ type ClusterManagerModel interface {
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	ListTask(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.Task, error)
 
-	// CreateOperationLog xxx
 	// OperationLog
 	CreateOperationLog(ctx context.Context, log *types.OperationLog) error
 	DeleteOperationLogByResourceID(ctx context.Context, resourceIndex string) error
 	DeleteOperationLogByResourceType(ctx context.Context, resType string) error
 	ListOperationLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.OperationLog, error)
 	CountOperationLog(ctx context.Context, cond *operator.Condition) (int64, error)
+	ListAggreOperationLog(ctx context.Context, conds []bson.E, opt *options.ListOption) ([]types.TaskOperationLog, error)
 
-	// CreateAutoScalingOption xxx
-	// project information storage management
+	//project information storage management
 	CreateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
 	UpdateAutoScalingOption(ctx context.Context, option *types.ClusterAutoScalingOption) error
 	DeleteAutoScalingOption(ctx context.Context, clusterID string) error
 	GetAutoScalingOption(ctx context.Context, clusterID string) (*types.ClusterAutoScalingOption, error)
-	ListAutoScalingOption(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-		[]types.ClusterAutoScalingOption, error)
+	ListAutoScalingOption(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.ClusterAutoScalingOption, error)
+
+	// cloudModuleFlag storage management
+	CreateCloudModuleFlag(ctx context.Context, flag *types.CloudModuleFlag) error
+	UpdateCloudModuleFlag(ctx context.Context, flag *types.CloudModuleFlag) error
+	DeleteCloudModuleFlag(ctx context.Context, cloudID, version, module, flag string) error
+	GetCloudModuleFlag(ctx context.Context, cloudID, version, module, flag string) (*types.CloudModuleFlag, error)
+	ListCloudModuleFlag(ctx context.Context, cond *operator.Condition, opt *options.ListOption) ([]types.CloudModuleFlag, error)
 }
 
 // ModelSet a set of client
@@ -168,6 +180,8 @@ type ModelSet struct {
 	*cloudvpc.ModelCloudVPC
 	*operationlog.ModelOperationLog
 	*account.ModelCloudAccount
+	*nodetemplate.ModelNodeTemplate
+	*moduleflag.ModelCloudModuleFlag
 }
 
 // NewModelSet create model set
@@ -187,5 +201,7 @@ func NewModelSet(db drivers.DB) ClusterManagerModel {
 		ModelCloudVPC:          cloudvpc.New(db),
 		ModelOperationLog:      operationlog.New(db),
 		ModelCloudAccount:      account.New(db),
+		ModelNodeTemplate:      nodetemplate.New(db),
+		ModelCloudModuleFlag:   moduleflag.New(db),
 	}
 }

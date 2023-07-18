@@ -21,6 +21,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // ListAction action for list resource schema
@@ -44,7 +46,7 @@ func (ga *ListAction) setResp(code uint32, msg string) {
 }
 
 func (ga *ListAction) getSchema() error {
-	schemaList := []*common.ResourceSchema{}
+	schemaList := []*types.ResourceSchema{}
 	schemaBytes, err := ioutil.ReadFile(ga.schemaPath)
 	if err != nil {
 		blog.Errorf("load resource schema from file %s err: %v", ga.schemaPath, err)
@@ -57,14 +59,14 @@ func (ga *ListAction) getSchema() error {
 		return fmt.Errorf("load resource schema from file %s Unmarshal err: %v", ga.schemaPath, err)
 	}
 
-	var result []common.ResourceSchema
+	var result []types.ResourceSchema
 	for _, v := range schemaList {
 		if v.CloudID == ga.req.CloudID {
 			result = append(result, *v)
 		}
 	}
 
-	s, err := common.MarshalInterfaceToListValue(result)
+	s, err := utils.MarshalInterfaceToListValue(result)
 	if err != nil {
 		return fmt.Errorf("marshal schema failed, err %s", err.Error())
 	}

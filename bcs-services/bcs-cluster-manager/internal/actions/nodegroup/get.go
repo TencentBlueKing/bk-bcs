@@ -14,12 +14,14 @@ package nodegroup
 
 import (
 	"context"
-	"encoding/base64"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // GetAction action for getting cluster credential
@@ -65,6 +67,7 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
 	group = ga.pruneNodeGroup(group)
 	resp.Data = group
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
@@ -74,6 +77,9 @@ func (ga *GetAction) Handle(
 func removeSensitiveInfo(group *cmproto.NodeGroup) *cmproto.NodeGroup {
 	if group != nil && group.LaunchTemplate != nil {
 		group.LaunchTemplate.InitLoginPassword = ""
+		if group.LaunchTemplate.KeyPair != nil {
+			group.LaunchTemplate.KeyPair.KeySecret = ""
+		}
 	}
 	return group
 }
@@ -83,12 +89,123 @@ func (ga *GetAction) pruneNodeGroup(group *cmproto.NodeGroup) *cmproto.NodeGroup
 	group = removeSensitiveInfo(group)
 
 	// decode userscript
-	if group.NodeTemplate != nil && group.NodeTemplate.UserScript != "" {
-		userScript, err := base64.StdEncoding.DecodeString(group.NodeTemplate.UserScript)
-		if err != nil {
-			blog.Warnf("decode nodegroup %s user script failed, err: %s", group.NodeGroupID, err.Error())
-		}
-		group.NodeTemplate.UserScript = string(userScript)
+	if group.NodeTemplate != nil {
+		scaleOutPreScript, _ := utils.Base64Decode(group.NodeTemplate.PreStartUserScript)
+		group.NodeTemplate.PreStartUserScript = scaleOutPreScript
+		userScript, _ := utils.Base64Decode(group.NodeTemplate.UserScript)
+		group.NodeTemplate.UserScript = userScript
+		scaleInPre, _ := utils.Base64Decode(group.NodeTemplate.ScaleInPreScript)
+		group.NodeTemplate.ScaleInPreScript = scaleInPre
+		scaleInPost, _ := utils.Base64Decode(group.NodeTemplate.ScaleInPostScript)
+		group.NodeTemplate.ScaleInPostScript = scaleInPost
 	}
+
 	return group
+}
+
+// GetExternalNodeScriptAction for getting external node script action
+type GetExternalNodeScriptAction struct {
+	ctx context.Context
+
+	model     store.ClusterManagerModel
+	req       *cmproto.GetExternalNodeScriptRequest
+	resp      *cmproto.GetExternalNodeScriptResponse
+	nodeGroup *cmproto.NodeGroup
+	cloud     *cmproto.Cloud
+}
+
+// NewGetExternalNodesScriptAction create get action for group script
+func NewGetExternalNodesScriptAction(model store.ClusterManagerModel) *GetExternalNodeScriptAction {
+	return &GetExternalNodeScriptAction{
+		model: model,
+	}
+}
+
+func (ga *GetExternalNodeScriptAction) setResp(code uint32, msg string) {
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (ga *GetExternalNodeScriptAction) validate() error {
+	if err := ga.req.Validate(); err != nil {
+		return err
+	}
+
+	if ga.nodeGroup.Provider != utils.TencentCloud {
+		return fmt.Errorf("GetExternalNodeScriptAction not supported cloudType[%s]", ga.nodeGroup.Provider)
+	}
+	if ga.nodeGroup.NodeGroupType != common.External.String() {
+		return fmt.Errorf("GetExternalNodeScriptAction nodeGroupType[%s]", ga.nodeGroup.NodeGroupType)
+	}
+	if ga.nodeGroup.CloudNodeGroupID == "" {
+		return fmt.Errorf("GetExternalNodeScriptAction cloudNodeGroup empty")
+	}
+
+	return nil
+}
+
+func (ga *GetExternalNodeScriptAction) getExternalNodeScript() error {
+	mgr, err := cloudprovider.GetNodeGroupMgr(ga.cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get NodeGroup Manager cloudprovider %s/%s failed, %s",
+			ga.cloud.CloudID, ga.cloud.CloudProvider, err.Error())
+		return err
+	}
+
+	script, err := mgr.GetExternalNodeScript(ga.nodeGroup)
+	if err != nil {
+		blog.Errorf("GetExternalNodeScriptAction GetExternalNodeScript failed: %v", err)
+		return err
+	}
+	ga.resp.Data = script
+
+	return nil
+}
+
+func (ga *GetExternalNodeScriptAction) getRelativeData() error {
+	group, err := ga.model.GetNodeGroup(ga.ctx, ga.req.NodeGroupID)
+	if err != nil {
+		return err
+	}
+	ga.nodeGroup = group
+
+	cloud, err := ga.model.GetCloud(ga.ctx, group.Provider)
+	if err != nil {
+		return err
+	}
+	ga.cloud = cloud
+
+	return nil
+}
+
+// Handle handle get cluster credential
+func (ga *GetExternalNodeScriptAction) Handle(
+	ctx context.Context, req *cmproto.GetExternalNodeScriptRequest, resp *cmproto.GetExternalNodeScriptResponse) {
+	if req == nil || resp == nil {
+		blog.Errorf("get externalNodeScript failed, req or resp is empty")
+		return
+	}
+	ga.ctx = ctx
+	ga.req = req
+	ga.resp = resp
+
+	err := ga.getRelativeData()
+	if err != nil {
+		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	if err = ga.validate(); err != nil {
+		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	if err = ga.getExternalNodeScript(); err != nil {
+		ga.setResp(common.BcsErrClusterManagerExternalNodeScriptErr, err.Error())
+		return
+	}
+
+	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	return
 }

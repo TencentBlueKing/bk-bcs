@@ -84,8 +84,7 @@ func (da *DeleteAction) Handle(
 	_, err := da.model.GetCloudAccount(da.ctx, da.req.CloudID, da.req.AccountID)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
-		blog.Errorf("Get CloudAccount %s:%s in pre-delete checking failed, err %s", da.req.CloudID, da.req.AccountID,
-			err.Error())
+		blog.Errorf("Get CloudAccount %s:%s in pre-delete checking failed, err %s", da.req.CloudID, da.req.AccountID, err.Error())
 		return
 	}
 

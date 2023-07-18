@@ -14,6 +14,7 @@
 package watch
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/static"
 	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 
@@ -23,17 +24,23 @@ import (
 var (
 	defaultTemplateName = "bcs-k8s-watch"
 	defaultReplicas     = 1
+
+	defaultCpuMem = CpuMem{
+		Cpu:    "1",
+		Memory: "2Gi",
+	}
 )
 
 // ValuesTemplate watch values
 type ValuesTemplate struct {
 	ReplicaCount int `yaml:"replicaCount"`
 	Image        struct {
-		Registry string `yaml:"registry"`
+		Registry string `yaml:"registry,omitempty"`
 	}
 	Env struct {
 		ClusterID     string `yaml:"BK_BCS_clusterId"`
 		StorageServer string `yaml:"BK_BCS_customStorage"`
+		ClientPwd     string `yaml:"BK_BCS_clientKeyPassword"`
 	}
 	Secret struct {
 		CertsOverride bool   `yaml:"bcsCertsOverride"`
@@ -41,6 +48,19 @@ type ValuesTemplate struct {
 		ClientTlsCrt  string `yaml:"tls_crt"`
 		ClientTlsKey  string `yaml:"tls_key"`
 	}
+	Resources Resource `yaml:"resources"`
+}
+
+// Resource xxx
+type Resource struct {
+	Limits   CpuMem `yaml:"limits"`
+	Requests CpuMem `yaml:"requests"`
+}
+
+// CpuMem resource
+type CpuMem struct {
+	Cpu    string `yaml:"cpu"`
+	Memory string `yaml:"memory"`
 }
 
 // BcsWatch component paras
@@ -67,16 +87,18 @@ func (bw *BcsWatch) GetValues() (string, error) {
 	values := ValuesTemplate{
 		ReplicaCount: bw.Replicas,
 		Image: struct {
-			Registry string `yaml:"registry"`
+			Registry string `yaml:"registry,omitempty"`
 		}{
 			Registry: op.ComponentDeploy.Registry,
 		},
 		Env: struct {
 			ClusterID     string `yaml:"BK_BCS_clusterId"`
 			StorageServer string `yaml:"BK_BCS_customStorage"`
+			ClientPwd     string `yaml:"BK_BCS_clientKeyPassword"`
 		}{
 			ClusterID:     bw.ClusterID,
 			StorageServer: op.ComponentDeploy.Watch.StorageServer,
+			ClientPwd:     static.ClientCertPwd,
 		},
 		Secret: struct {
 			CertsOverride bool   `yaml:"bcsCertsOverride"`
@@ -88,6 +110,10 @@ func (bw *BcsWatch) GetValues() (string, error) {
 			ClientCaCrt:   clientCa,
 			ClientTlsCrt:  clientCert,
 			ClientTlsKey:  clientKey,
+		},
+		Resources: Resource{
+			Requests: defaultCpuMem,
+			Limits:   defaultCpuMem,
 		},
 	}
 	renderValues, _ := yaml.Marshal(values)

@@ -10,11 +10,12 @@
  * limitations under the License.
  */
 
-// Package util xxx
 package util
 
 import (
 	"context"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 )
@@ -22,6 +23,9 @@ import (
 const (
 	// DataTableNamePrefix is prefix of data table name
 	DataTableNamePrefix = "bcsclustermanagerv2_"
+
+	// DefaultLimit table default limit
+	DefaultLimit = 3000
 )
 
 // EnsureTable ensure object database table and table indexes
@@ -58,4 +62,142 @@ func MapInt2MapIf(m map[string]int) map[string]interface{} {
 		newM[k] = v
 	}
 	return newM
+}
+
+const (
+	Regex = "regex"
+)
+
+// Condition xxx
+func Condition(ope operator.Operator, src, dst string) bson.E {
+	switch ope {
+	case operator.Eq:
+		return bson.E{
+			Key: src,
+			Value: bson.M{
+				"$eq": dst,
+			},
+		}
+	case operator.Ne:
+		return bson.E{
+			Key: src,
+			Value: bson.M{
+				"$ne": dst,
+			},
+		}
+	case Regex:
+		return bson.E{
+			Key: src,
+			Value: bson.M{
+				"$regex": dst,
+			},
+		}
+	case operator.Lte:
+		return bson.E{
+			Key: src,
+			Value: bson.M{
+				"$lte": dst,
+			},
+		}
+	case operator.Gte:
+		return bson.E{
+			Key: src,
+			Value: bson.M{
+				"$gte": dst,
+			},
+		}
+	}
+
+	return bson.E{}
+}
+
+// UnionTable body
+type UnionTable struct {
+	DstTable   string
+	FromFields string
+	DstFields  string
+	AsField    string
+}
+
+// BuildLookUpCond build lookUp cond
+func BuildLookUpCond(t UnionTable) map[string]interface{} {
+	return map[string]interface{}{
+		"$lookup": BuildLookUpValue(t),
+	}
+}
+
+// BuildLookUpValue build lookup value
+func BuildLookUpValue(table UnionTable) map[string]interface{} {
+	return map[string]interface{}{
+		"from":         table.DstTable,
+		"localField":   table.FromFields,
+		"foreignField": table.DstFields,
+		"as":           table.AsField,
+	}
+}
+
+// BuildUnWindCond build unWind cond
+func BuildUnWindCond(asField string) map[string]interface{} {
+	return map[string]interface{}{
+		"$unwind": map[string]interface{}{
+			"path":                       "$" + asField,
+			"preserveNullAndEmptyArrays": true,
+		},
+	}
+}
+
+// BuildMatchExprCond build match/expr cond
+func BuildMatchExprCond(cond interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"$match": map[string]interface{}{
+			"expr": cond,
+		},
+	}
+}
+
+// BuildMatchCond build match cond
+func BuildMatchCond(cond map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"$match": cond,
+	}
+}
+
+// TransBsonEToMap trans to map interface
+func TransBsonEToMap(condE []bson.E) map[string]interface{} {
+	condM := make(map[string]interface{}, 0)
+	for i := range condE {
+		condM[condE[i].Key] = condE[i].Value
+	}
+
+	return condM
+}
+
+// BuildAndManyConds and conditions
+func BuildAndManyConds(conds []bson.E) map[string]interface{} {
+	return map[string]interface{}{
+		"$and": bson.D(conds),
+	}
+}
+
+// BuildProjectOutput build union table output
+func BuildProjectOutput(project interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"$project": project,
+	}
+}
+
+// BuildTaskOperationLogProject build task operation log
+func BuildTaskOperationLogProject() map[string]interface{} {
+	return map[string]interface{}{
+		"resourcetype": "$resourcetype",
+		"resourceid":   "$resourceid",
+		"taskid":       "$taskid",
+		"message":      "$message",
+		"opuser":       "$opuser",
+		"createtime":   "$createtime",
+		"tasktype":     "$task.tasktype",
+		"status":       "$task.status",
+		"clusterid":    "$clusterid",
+		"projectid":    "$projectid",
+	}
 }
