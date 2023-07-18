@@ -23,6 +23,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/pborman/ansi"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -38,6 +39,8 @@ import (
 // EndOfTransmission xxx
 // End-of-Transmission character ctrl-d
 const EndOfTransmission = "\u0004"
+
+var cmdParser = ansi.NewCmdParse()
 
 type wsMessage struct {
 	msgType int
@@ -140,7 +143,36 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, nil
 	}
+
+	_, ss, _ := ansi.Decode(inputMsg)
+	cmdParser.Exec = append(cmdParser.Exec, ss)
+
+	if ss.Code == InputLineBreaker {
+		if !inVim(cmdParser.Exec) {
+			cmdParser.CmdInput <- cmdParser.Exec
+		}
+		cmdParser.Exec = make([]*ansi.S, 0)
+	}
+	cmdParser.Cmd = ss
+	//解析键盘输入事件
+	go ansi.ReceivedCmdInChan(cmdParser)
+	//日志记录
+	go recordCmd(cmdParser, r)
 	return inputMsg, nil
+}
+
+func inVim(list []*ansi.S) bool {
+	if list[0].Code == ansi.CHT {
+		return true
+	}
+	return false
+}
+
+func recordCmd(c *ansi.CmdParse, r *RemoteStreamConn) {
+	for cmd := range c.RecordChan {
+		logger.Infof("UserName=%s  SessionID=%s  Command=%s",
+			r.bindMgr.PodCtx.Username, r.bindMgr.PodCtx.SessionId, cmd)
+	}
 }
 
 // Read : executor 回调读取 web 端的输入, 主动断开链接逻辑
@@ -171,6 +203,12 @@ func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 	if err != nil {
 		return 0, nil
 	}
+	//输入输出映射,用于查找历史命令
+	_, ss, e := ansi.Decode(outputMsg)
+	if e != nil {
+		logger.Error("decode output error:", e)
+	}
+	cmdParser.CmdResult[cmdParser.Cmd] = ss
 
 	output := []byte(base64.StdEncoding.EncodeToString(outputMsg))
 	r.outputMsgChan <- output
