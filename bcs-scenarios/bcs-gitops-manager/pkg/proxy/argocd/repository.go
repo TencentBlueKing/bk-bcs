@@ -107,7 +107,7 @@ func (plugin *RepositoryPlugin) repositoryCreateHandler(ctx context.Context, r *
 		}
 	}
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, localRepo.Project, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckProjectPermission(ctx, localRepo.Project, iam.ProjectEdit)
 	if err != nil {
 		return &httpResponse{
 			statusCode: statusCode,
@@ -128,7 +128,7 @@ func (plugin *RepositoryPlugin) repositoryEditHandler(ctx context.Context, r *ht
 		}
 	}
 
-	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectView)
+	_, statusCode, err := plugin.middleware.CheckRepositoryPermission(ctx, repo, iam.ProjectEdit)
 	if statusCode != http.StatusOK {
 		return &httpResponse{
 			statusCode: statusCode,

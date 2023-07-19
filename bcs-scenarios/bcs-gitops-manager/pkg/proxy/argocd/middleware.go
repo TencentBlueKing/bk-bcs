@@ -65,8 +65,13 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	requestID := uuid.New().String()
-	blog.Infof("[requestID=%s] manager received user '%s' serve [%s/%s]",
-		requestID, user.GetUser(), r.Method, r.URL.Path)
+	if user.ClientID != "" {
+		blog.Infof("[requestID=%s] manager received user '%s' with client '%s' serve [%s/%s]",
+			requestID, user.GetUser(), user.ClientID, r.Method, r.URL.Path)
+	} else {
+		blog.Infof("[requestID=%s] manager received user '%s' serve [%s/%s]",
+			requestID, user.GetUser(), r.Method, r.URL.Path)
+	}
 	defer func() {
 		blog.Infof("[requestID=%s] handle request cost time: %v", requestID, time.Since(start))
 	}()
@@ -97,23 +102,26 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 type MiddlewareInterface interface {
 	HttpWrapper(handler httpHandler) http.Handler
 
-	ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error)
+	CheckMultiProjectsPermission(ctx context.Context, projectIDs []string,
+		action []string) (map[string]map[string]bool, error)
 	CheckProjectPermission(ctx context.Context, projectName string,
 		action iam.ActionID) (*v1alpha1.AppProject, int, error)
 	CheckProjectPermissionByID(ctx context.Context, projectID string, action iam.ActionID) (int, error)
 
-	ListClusters(ctx context.Context, projectNames []string) (*v1alpha1.ClusterList, int, error)
-	CheckClusterCreatePermission(ctx context.Context, projectID string) (int, error)
+	CheckMultiClustersPermission(ctx context.Context, projectID string, clusterIDs []string,
+		actions []string) (map[string]map[string]bool, error)
 	CheckClusterPermission(ctx context.Context, clusterName string, action iam.ActionID) (int, error)
 
-	ListRepositories(ctx context.Context, projectNames []string,
-		needCheckPermission bool) (*v1alpha1.RepositoryList, int, error)
 	CheckRepositoryPermission(ctx context.Context, repoName string,
 		action iam.ActionID) (*v1alpha1.Repository, int, error)
-
-	ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error)
 	CheckApplicationPermission(ctx context.Context, appName string,
 		action iam.ActionID) (*v1alpha1.Application, int, error)
+
+	ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error)
+	ListClusters(ctx context.Context, projectNames []string) (*v1alpha1.ClusterList, int, error)
+	ListRepositories(ctx context.Context, projectNames []string,
+		needCheckPermission bool) (*v1alpha1.RepositoryList, int, error)
+	ListApplications(ctx context.Context, projectNames []string) (*v1alpha1.ApplicationList, error)
 
 	ProxySecretRequest(req *http.Request) *handler.SecretResponse
 }
@@ -145,44 +153,28 @@ func (h *MiddlewareHandler) HttpWrapper(handler httpHandler) http.Handler {
 	}
 }
 
-// ListProjects 根据用户权限列出具备权限的 Projects
-func (h *MiddlewareHandler) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error) {
+// CheckMultiProjectsPermission check multi projects with action
+func (h *MiddlewareHandler) CheckMultiProjectsPermission(ctx context.Context, projectIDs []string,
+	actions []string) (map[string]map[string]bool, error) {
 	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-	projectList, err := h.option.Storage.ListProjects(ctx)
-	if err != nil {
-		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list projects failed")
-	}
-	projectIDs := make([]string, 0, len(projectList.Items))
-	controlledProjects := make(map[string]v1alpha1.AppProject)
-	for i, app := range projectList.Items {
-		projectID := common.GetBCSProjectID(app.Annotations)
-		if projectID == "" {
-			continue
-		}
-		controlledProjects[projectID] = projectList.Items[i]
-		projectIDs = append(projectIDs, projectID)
-	}
-	if len(projectIDs) == 0 {
-		return &v1alpha1.AppProjectList{}, http.StatusOK, nil
-	}
-
-	action := string(project.ProjectView)
 	result, err := h.projectPermission.GetMultiProjectMultiActionPermission(
-		user.GetUser(), projectIDs, []string{action})
+		user.GetUser(), projectIDs, actions)
 	if err != nil {
-		return nil, http.StatusInternalServerError,
-			errors.Wrapf(err, "project permission auth center failed")
+		return nil, errors.Wrapf(err, "check multi project action failed")
 	}
-	// projectPermission check
-	finals := make([]v1alpha1.AppProject, 0, len(result))
-	for projectID, permits := range result {
-		if permits[action] {
-			appProject := controlledProjects[projectID]
-			finals = append(finals, appProject)
-		}
+	return result, nil
+}
+
+// CheckMultiClustersPermission check multi clusters with action
+func (h *MiddlewareHandler) CheckMultiClustersPermission(ctx context.Context, projectID string,
+	clusterIDs []string, actions []string) (map[string]map[string]bool, error) {
+	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
+	result, err := h.clusterPermission.GetMultiClusterMultiActionPermission(user.GetUser(), projectID,
+		clusterIDs, actions)
+	if err != nil {
+		return nil, errors.Wrapf(err, "check multi clusters action failed")
 	}
-	projectList.Items = finals
-	return projectList, http.StatusOK, nil
+	return result, nil
 }
 
 // CheckProjectPermission 检查登录态用户对于项目的权限
@@ -232,19 +224,6 @@ func (h *MiddlewareHandler) CheckProjectPermissionByID(ctx context.Context, proj
 	return http.StatusOK, nil
 }
 
-// CheckClusterCreatePermission 检查登录态用户是否有创建集群权限
-func (h *MiddlewareHandler) CheckClusterCreatePermission(ctx context.Context, projectID string) (int, error) {
-	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-	permit, _, err := h.clusterPermission.CanCreateCluster(user.GetUser(), projectID)
-	if err != nil {
-		return http.StatusInternalServerError, errors.Errorf("auth center failed")
-	}
-	if !permit {
-		return http.StatusForbidden, errors.Errorf("create cluster for project '%s' forbidden", projectID)
-	}
-	return http.StatusOK, nil
-}
-
 // CheckClusterPermission 检查登录态用户对于集群的权限
 func (h *MiddlewareHandler) CheckClusterPermission(ctx context.Context, clusterName string,
 	action iam.ActionID) (statusCode int, err error) {
@@ -281,11 +260,88 @@ func (h *MiddlewareHandler) CheckClusterPermission(ctx context.Context, clusterN
 	return http.StatusOK, nil
 }
 
+// CheckRepositoryPermission 检查登录态用户对于 Repo 仓库权限，Repo 权限与 Project 权限挂钩
+func (h *MiddlewareHandler) CheckRepositoryPermission(ctx context.Context, repoName string,
+	action iam.ActionID) (*v1alpha1.Repository, int, error) {
+	repo, err := h.option.Storage.GetRepository(ctx, repoName)
+	if err != nil {
+		return nil, http.StatusInternalServerError,
+			errors.Wrapf(err, "get repository '%s' from storage failed", repoName)
+	}
+	if repo == nil {
+		return nil, http.StatusNotFound, errors.Errorf("repository '%s' not found", repoName)
+	}
+	projectName := repo.Project
+	_, statusCode, err := h.CheckProjectPermission(ctx, projectName, action)
+	return repo, statusCode, err
+}
+
+// CheckApplicationPermission 检查应用的权限
+func (h *MiddlewareHandler) CheckApplicationPermission(ctx context.Context, appName string,
+	action iam.ActionID) (*v1alpha1.Application, int, error) {
+	app, err := h.option.Storage.GetApplication(ctx, appName)
+	if err != nil {
+		return nil, http.StatusInternalServerError, errors.Wrapf(err,
+			"get application '%s' from storage failed", appName)
+	}
+	if app == nil {
+		return nil, http.StatusNotFound, errors.Errorf("application '%s' not found", appName)
+	}
+	projectID := common.GetBCSProjectID(app.Annotations)
+	if projectID != "" {
+		statusCode, err := h.CheckProjectPermissionByID(ctx, projectID, action)
+		if err != nil {
+			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projectID)
+		}
+		return app, http.StatusOK, nil
+	}
+
+	_, statusCode, err := h.CheckProjectPermission(ctx, app.Spec.Project, action)
+	if err != nil {
+		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
+	}
+	return app, http.StatusOK, nil
+}
+
+// ListProjects 根据用户权限列出具备权限的 Projects
+func (h *MiddlewareHandler) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, int, error) {
+	projectList, err := h.option.Storage.ListProjects(ctx)
+	if err != nil {
+		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list projects failed")
+	}
+	projectIDs := make([]string, 0, len(projectList.Items))
+	controlledProjects := make(map[string]v1alpha1.AppProject)
+	for i, app := range projectList.Items {
+		projectID := common.GetBCSProjectID(app.Annotations)
+		if projectID == "" {
+			continue
+		}
+		controlledProjects[projectID] = projectList.Items[i]
+		projectIDs = append(projectIDs, projectID)
+	}
+	if len(projectIDs) == 0 {
+		return &v1alpha1.AppProjectList{}, http.StatusOK, nil
+	}
+	action := string(project.ProjectView)
+	result, err := h.CheckMultiProjectsPermission(ctx, projectIDs, []string{action})
+	if err != nil {
+		return nil, http.StatusInternalServerError,
+			errors.Wrapf(err, "project permission auth center failed")
+	}
+	finals := make([]v1alpha1.AppProject, 0, len(result))
+	for projectID, permits := range result {
+		if permits[action] {
+			appProject := controlledProjects[projectID]
+			finals = append(finals, appProject)
+		}
+	}
+	projectList.Items = finals
+	return projectList, http.StatusOK, nil
+}
+
 // ListClusters 根据项目名获取用户态下可以 view 的集群列表
-func (h *MiddlewareHandler) ListClusters(ctx context.Context, projectNames []string) (*v1alpha1.ClusterList,
-	int, error) {
-	user := ctx.Value(ctxKeyUser).(*proxy.UserInfo)
-	// get all clusters from argocd
+func (h *MiddlewareHandler) ListClusters(ctx context.Context, projectNames []string) (
+	*v1alpha1.ClusterList, int, error) {
 	clusterList, err := h.option.Storage.ListCluster(ctx)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list clusters from storage failure")
@@ -307,8 +363,7 @@ func (h *MiddlewareHandler) ListClusters(ctx context.Context, projectNames []str
 	action := string(cluster.ClusterView)
 	resultClusterList := &v1alpha1.ClusterList{}
 	for projectID, clusterIDs := range projectClusters {
-		result, err := h.clusterPermission.GetMultiClusterMultiActionPermission(user.GetUser(), projectID,
-			clusterIDs, []string{action})
+		result, err := h.CheckMultiClustersPermission(ctx, projectID, clusterIDs, []string{action})
 		if err != nil {
 			return nil, http.StatusInternalServerError,
 				errors.Wrapf(err, "check cluster permission occurred internal error")
@@ -353,22 +408,6 @@ func (h *MiddlewareHandler) ListRepositories(ctx context.Context, projectNames [
 	return repositories, http.StatusOK, nil
 }
 
-// CheckRepositoryPermission 检查登录态用户对于 Repo 仓库权限，Repo 权限与 Project 权限挂钩
-func (h *MiddlewareHandler) CheckRepositoryPermission(ctx context.Context, repoName string,
-	action iam.ActionID) (*v1alpha1.Repository, int, error) {
-	repo, err := h.option.Storage.GetRepository(ctx, repoName)
-	if err != nil {
-		return nil, http.StatusInternalServerError,
-			errors.Wrapf(err, "get repository '%s' from storage failed", repoName)
-	}
-	if repo == nil {
-		return nil, http.StatusNotFound, errors.Errorf("repository '%s' not found", repoName)
-	}
-	projectName := repo.Project
-	_, statusCode, err := h.CheckProjectPermission(ctx, projectName, action)
-	return repo, statusCode, err
-}
-
 // ListApplications 根据项目名称获取所有应用
 func (h *MiddlewareHandler) ListApplications(ctx context.Context,
 	projectNames []string) (*v1alpha1.ApplicationList, error) {
@@ -383,33 +422,6 @@ func (h *MiddlewareHandler) ListApplications(ctx context.Context,
 	return &v1alpha1.ApplicationList{
 		Items: appList,
 	}, nil
-}
-
-// CheckApplicationPermission 检查应用的权限
-func (h *MiddlewareHandler) CheckApplicationPermission(ctx context.Context, appName string,
-	action iam.ActionID) (*v1alpha1.Application, int, error) {
-	app, err := h.option.Storage.GetApplication(ctx, appName)
-	if err != nil {
-		return nil, http.StatusInternalServerError, errors.Wrapf(err,
-			"get application '%s' from storage failed", appName)
-	}
-	if app == nil {
-		return nil, http.StatusNotFound, errors.Errorf("application '%s' not found", appName)
-	}
-	projectID := common.GetBCSProjectID(app.Annotations)
-	if projectID != "" {
-		statusCode, err := h.CheckProjectPermissionByID(ctx, projectID, action)
-		if err != nil {
-			return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", projectID)
-		}
-		return app, http.StatusOK, nil
-	}
-
-	_, statusCode, err := h.CheckProjectPermission(ctx, app.Spec.Project, action)
-	if err != nil {
-		return nil, statusCode, errors.Wrapf(err, "check project '%s' permission failed", app.Spec.Project)
-	}
-	return app, http.StatusOK, nil
 }
 
 // ProxySecretRequest secret interface

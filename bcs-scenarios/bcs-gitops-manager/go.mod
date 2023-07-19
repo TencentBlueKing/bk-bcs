@@ -4,8 +4,8 @@ go 1.16
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20220919094211-a1b246e54e5a
-	github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230613090449-9c5bf107fe88
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220923140150-350b3bc988eb
+    github.com/Tencent/bk-bcs/bcs-common/pkg/otel v0.0.0-20230613090449-9c5bf107fe88
+    github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20220923140150-350b3bc988eb
 	github.com/agiledragon/gomonkey/v2 v2.10.1
 	github.com/argoproj-labs/argocd-vault-plugin v1.15.0
 	github.com/argoproj/argo-cd/v2 v2.6.2

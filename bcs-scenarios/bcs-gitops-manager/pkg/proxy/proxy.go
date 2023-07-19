@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
@@ -82,10 +83,23 @@ func (user *UserInfo) GetUser() string {
 	return ""
 }
 
+const (
+	headerBKUserName = "bkUserName"
+	adminClientUser  = "bcs-gitops-manager"
+)
+
 // GetJWTInfo from request
 func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	raw := req.Header.Get("Authorization")
-	return GetJWTInfoWithAuthorization(raw, client)
+	user, err := GetJWTInfoWithAuthorization(raw, client)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get authorization user failed")
+	}
+	if user.ClientID == adminClientUser {
+		userName := req.Header.Get(headerBKUserName)
+		user.UserName = userName
+	}
+	return user, nil
 }
 
 // GetJWTInfoWithAuthorization 根据 token 获取用户信息
