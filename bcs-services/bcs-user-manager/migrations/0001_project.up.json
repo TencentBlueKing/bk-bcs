@@ -1,0 +1,153 @@
+{
+  "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+  "enabled": true,
+  "operations": [
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "project",
+        "name": "项目",
+        "name_en": "bcs project",
+        "description": "容器服务项目",
+        "description_en": "bcs project",
+        "parents": [],
+        "provider_config": {
+          "path": "/bcsapi/v4/iam-provider/v1/projects/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "project_list",
+        "name": "容器服务项目",
+        "name_en": "BCS project",
+        "resource_type_chain": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_create",
+        "name": "项目创建",
+        "name_en": "create project",
+        "description": "用户创建项目",
+        "description_en": "create project",
+        "type": "create",
+        "related_resource_types": [],
+        "related_actions": [],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_view",
+        "name": "项目查看",
+        "name_en": "view project",
+        "description": "用户查看项目",
+        "description_en": "view project",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_edit",
+        "name": "项目编辑",
+        "name_en": "edit project",
+        "description": "用户编辑项目",
+        "description_en": "edit project",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_delete",
+        "name": "项目删除",
+        "name_en": "delete project",
+        "description": "用户删除项目",
+        "description_en": "user delete project",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+            "id": "project",
+            "name_alias": "",
+            "name_alias_en": "",
+            "selection_mode": "instance",
+            "related_instance_selections": [
+              {
+                "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+                "id": "project_list"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_creator_actions",
+      "data": {
+        "config": [
+          {
+            "id": "project",
+            "actions": [
+              {
+                "id": "project_edit",
+                "required": false
+              },
+              {
+                "id": "project_view",
+                "required": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

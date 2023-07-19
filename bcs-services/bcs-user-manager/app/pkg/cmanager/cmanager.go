@@ -86,13 +86,13 @@ func NewClusterManagerClient(opts *Options) *ClusterManagerClient {
 		cache: cache.New(time.Minute*5, time.Minute*60),
 	}
 
-	cmClient.ctx, cmClient.cancel = context.WithCancel(context.Background())
-	cmClient.discovery = discovery.NewServiceDiscovery(opts.Module, opts.EtcdRegistry)
-	err := cmClient.discovery.Start()
-	if err != nil {
-		blog.Errorf("start discovery client failed: %v", err)
-		return nil
-	}
+	// cmClient.ctx, cmClient.cancel = context.WithCancel(context.Background())
+	// cmClient.discovery = discovery.NewServiceDiscovery(opts.Module, opts.EtcdRegistry)
+	// err := cmClient.discovery.Start()
+	// if err != nil {
+	// 	blog.Errorf("start discovery client failed: %v", err)
+	// 	return nil
+	// }
 
 	return cmClient
 }

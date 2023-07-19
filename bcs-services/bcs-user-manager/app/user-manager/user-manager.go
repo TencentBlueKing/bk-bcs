@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/emicklei/go-restful"
 	"github.com/go-micro/plugins/v4/registry/etcd"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
@@ -36,10 +37,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/v1http/permission"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/migrations"
 )
 
 var (
@@ -52,7 +55,7 @@ type UserManager struct {
 	config   *config.UserMgrConfig
 	httpServ *httpserver.HttpServer
 
-	IamPermClient iam.PermClient
+	IamPermClient iam.PermMigrateClient
 	EtcdRegistry  registry.Registry
 	CmClient      *cmanager.ClusterManagerClient
 
@@ -209,7 +212,7 @@ func (u *UserManager) initIamPermClient() error {
 		BkiIAMHost:  u.config.IAMConfig.BkiIAMHost,
 		Metric:      u.config.IAMConfig.Metric,
 	}
-	iamCli, err := iam.NewIamClient(opt)
+	iamCli, err := iam.NewIamMigrateClient(opt)
 	if err != nil {
 		blog.Errorf("initIamPermClient failed: %v", err)
 		return err
@@ -258,6 +261,37 @@ func (u *UserManager) initEtcdRegistry() error {
 	return nil
 }
 
+// Migrate migrates something.
+//
+// op is a pointer to options.Migration.
+// It is the description of the parameter.
+// The function does not return anything.
+func (u *UserManager) migrate() {
+	go func() {
+		blog.Info("start iam migration")
+		tempVar := map[string]string{
+			"BK_IAM_SYSTEM_ID": u.config.IAMConfig.SystemID,
+			"APP_CODE":         u.config.IAMConfig.AppCode,
+			"BCS_HOST":         u.config.BcsAPI.Host,
+		}
+		d, err := iofs.New(migrations.MigrationFS, ".")
+		if err != nil {
+			blog.Errorf("get migrations files error, %s", err.Error())
+			return
+		}
+		if err := u.IamPermClient.Migrate(sqlstore.GCoreDB.DB(), d, "bk_iam_migrations",
+			5*time.Minute, tempVar); err != nil {
+			if strings.Contains(err.Error(), "no change") {
+				blog.Info("iam migration success")
+				return
+			}
+			blog.Errorf("migrate iam failed, %s", err.Error())
+			return
+		}
+		blog.Info("iam migration success")
+	}()
+}
+
 func (u *UserManager) initUserManagerServer() error {
 	err := u.initEtcdRegistry()
 	if err != nil {
@@ -288,6 +322,8 @@ func (u *UserManager) initUserManagerServer() error {
 	if err != nil {
 		return err
 	}
+
+	u.migrate()
 
 	return nil
 }

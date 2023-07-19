@@ -342,7 +342,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 	start := time.Now()
 
 	// check permission
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
+	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, true)
 	instanceData := map[string]interface{}{
 		"ProjectID": projectID,
 		"ClusterID": resource.ClusterID,
@@ -429,7 +429,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 		user, actionID, rn1)
 	start := time.Now()
 
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{*rn1}, false)
+	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{*rn1}, true)
 	instanceData := map[string]interface{}{
 		"ProjectID": projectID,
 		"ClusterID": resource.ClusterID,
@@ -574,7 +574,7 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 	start := time.Now()
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, false)
+	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, true)
 	instanceData := map[string]interface{}{
 		"ProjectID": projectID,
 		"ClusterID": resource.ClusterID,
