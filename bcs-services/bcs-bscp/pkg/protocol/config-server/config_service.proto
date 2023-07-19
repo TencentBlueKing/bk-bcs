@@ -919,9 +919,10 @@ message DeleteTemplateSpaceReq {
 message DeleteTemplateSpaceResp {}
 
 message ListTemplateSpacesReq {
-    uint32 biz_id = 1;
-    uint32 start  = 2;
-    uint32 limit  = 3;
+    uint32 biz_id     = 1;
+    string search_key = 2;
+    uint32 start      = 3;
+    uint32 limit      = 4;
 }
 
 message ListTemplateSpacesResp {
@@ -985,8 +986,9 @@ message DeleteTemplateResp {}
 message ListTemplatesReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
-    uint32 start             = 3;
-    uint32 limit             = 4;
+    string search_key        = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
 }
 
 message ListTemplatesResp {
@@ -1028,8 +1030,9 @@ message ListTemplateReleasesReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    uint32 start             = 4;
-    uint32 limit             = 5;
+    string search_key        = 4;
+    uint32 start             = 5;
+    uint32 limit             = 6;
 }
 
 message ListTemplateReleasesResp {
@@ -1085,8 +1088,9 @@ message DeleteTemplateSetResp {}
 message ListTemplateSetsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
-    uint32 start             = 3;
-    uint32 limit             = 4;
+    string search_key        = 3;
+    uint32 start             = 4;
+    uint32 limit             = 5;
 }
 
 message ListTemplateSetsResp {

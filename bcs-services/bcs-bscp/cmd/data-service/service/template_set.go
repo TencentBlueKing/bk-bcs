@@ -62,7 +62,7 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSe
 		return nil, err
 	}
 
-	details, count, err := s.dao.TemplateSet().List(kt, req.BizId, req.TemplateSpaceId, opt)
+	details, count, err := s.dao.TemplateSet().List(kt, req.BizId, req.TemplateSpaceId, req.SearchKey, opt)
 
 	if err != nil {
 		logs.Errorf("list template sets failed, err: %v, rid: %s", err, kt.Rid)

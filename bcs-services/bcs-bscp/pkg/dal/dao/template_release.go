@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 
+	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/gen"
@@ -31,7 +32,7 @@ type TemplateRelease interface {
 	// CreateWithTx create one template release instance with transaction.
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, template *table.TemplateRelease) (uint32, error)
 	// List templates with options.
-	List(kit *kit.Kit, bizID, templateID uint32, opt *types.BasePage) ([]*table.TemplateRelease, int64, error)
+	List(kit *kit.Kit, bizID, templateID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateRelease, int64, error)
 	// Delete one template release instance.
 	Delete(kit *kit.Kit, templateRelease *table.TemplateRelease) error
 	// GetByUniqueKey get template release by unique key.
@@ -116,12 +117,18 @@ func (dao *templateReleaseDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *ta
 }
 
 // List template releases with options.
-func (dao *templateReleaseDao) List(kit *kit.Kit, bizID, templateID uint32, opt *types.BasePage) (
+func (dao *templateReleaseDao) List(kit *kit.Kit, bizID, templateID uint32, searchKey string, opt *types.BasePage) (
 	[]*table.TemplateRelease, int64, error) {
 	m := dao.genQ.TemplateRelease
 	q := dao.genQ.TemplateRelease.WithContext(kit.Ctx)
 
+	var conds []rawgen.Condition
+	if searchKey != "" {
+		conds = append(conds, q.Where(m.ReleaseName.Regexp("(?i)"+searchKey)).Or(m.ReleaseMemo.Regexp("(?i)"+searchKey)))
+	}
+
 	result, count, err := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).
+		Where(conds...).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err

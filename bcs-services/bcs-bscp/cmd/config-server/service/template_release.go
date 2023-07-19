@@ -113,6 +113,7 @@ func (s *Service) ListTemplateReleases(ctx context.Context, req *pbcs.ListTempla
 		BizId:           grpcKit.BizID,
 		TemplateSpaceId: req.TemplateSpaceId,
 		TemplateId:      req.TemplateId,
+		SearchKey:       req.SearchKey,
 		Start:           req.Start,
 		Limit:           req.Limit,
 	}

@@ -70,7 +70,7 @@ func (s *Service) ListTemplateReleases(ctx context.Context, req *pbds.ListTempla
 		return nil, err
 	}
 
-	details, count, err := s.dao.TemplateRelease().List(kt, req.BizId, req.TemplateId, opt)
+	details, count, err := s.dao.TemplateRelease().List(kt, req.BizId, req.TemplateId, req.SearchKey, opt)
 
 	if err != nil {
 		logs.Errorf("list template releases failed, err: %v, rid: %s", err, kt.Rid)

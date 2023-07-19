@@ -15,6 +15,8 @@ package dao
 import (
 	"fmt"
 
+	rawgen "gorm.io/gen"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
@@ -29,7 +31,7 @@ type TemplateSpace interface {
 	// Update one template space's info.
 	Update(kit *kit.Kit, templateSpace *table.TemplateSpace) error
 	// List template spaces with options.
-	List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error)
+	List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateSpace, int64, error)
 	// Delete one template space instance.
 	Delete(kit *kit.Kit, templateSpace *table.TemplateSpace) error
 	// GetByUniqueKey get template space by unique key.
@@ -147,11 +149,18 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 }
 
 // List template spaces with options.
-func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error) {
+func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateSpace, int64, error) {
 	m := dao.genQ.TemplateSpace
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(opt.Offset(), opt.LimitInt())
+	var conds []rawgen.Condition
+	if searchKey != "" {
+		conds = append(conds, q.Where(m.Name.Regexp("(?i)"+searchKey)).Or(m.Memo.Regexp("(?i)"+searchKey)))
+	}
+
+	result, count, err := q.Where(m.BizID.Eq(bizID)).
+		Where(conds...).
+		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err
 	}

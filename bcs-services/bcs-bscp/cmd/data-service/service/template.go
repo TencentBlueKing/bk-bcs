@@ -96,7 +96,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 		return nil, err
 	}
 
-	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, opt)
+	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, req.SearchKey, opt)
 
 	if err != nil {
 		logs.Errorf("list template failed, err: %v, rid: %s", err, kt.Rid)

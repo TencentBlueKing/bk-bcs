@@ -34,7 +34,7 @@ type TemplateSet interface {
 	// Update one template set's info.
 	Update(kit *kit.Kit, templateSpace *table.TemplateSet) error
 	// List template sets with options.
-	List(kit *kit.Kit, bizID, templateSpaceID uint32, opt *types.BasePage) ([]*table.TemplateSet, int64, error)
+	List(kit *kit.Kit, bizID, templateSpaceID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateSet, int64, error)
 	// Delete one template set instance.
 	Delete(kit *kit.Kit, templateSet *table.TemplateSet) error
 	// DeleteWithTx delete one template set instance with transaction.
@@ -140,11 +140,18 @@ func (dao *templateSetDao) Update(kit *kit.Kit, g *table.TemplateSet) error {
 }
 
 // List template sets with options.
-func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, opt *types.BasePage) ([]*table.TemplateSet, int64, error) {
+func (dao *templateSetDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateSet, int64, error) {
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).FindByPage(opt.Offset(), opt.LimitInt())
+	var conds []rawgen.Condition
+	if searchKey != "" {
+		conds = append(conds, q.Where(m.Name.Regexp("(?i)"+searchKey)).Or(m.Memo.Regexp("(?i)"+searchKey)))
+	}
+
+	result, count, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).
+		Where(conds...).
+		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err
 	}

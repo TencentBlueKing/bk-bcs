@@ -155,6 +155,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbcs.ListTemplatesReq)
 	r := &pbds.ListTemplatesReq{
 		BizId:           grpcKit.BizID,
 		TemplateSpaceId: req.TemplateSpaceId,
+		SearchKey:       req.SearchKey,
 		Start:           req.Start,
 		Limit:           req.Limit,
 	}
