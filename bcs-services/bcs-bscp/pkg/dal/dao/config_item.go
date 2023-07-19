@@ -38,7 +38,7 @@ type ConfigItem interface {
 	// Get configItem by id
 	Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem, error)
 	// SearchAll search all configItem with searchKey.
-	SearchAll(kit *kit.Kit, searchKey string, bizID uint32) ([]*table.ConfigItem, error)
+	SearchAll(kit *kit.Kit, searchKey string, appID, bizID uint32) ([]*table.ConfigItem, error)
 	// ListAllByAppID list all configItem by appID
 	ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32) ([]*table.ConfigItem, error)
 	// Delete one configItem instance.
@@ -201,12 +201,12 @@ func (dao *configItemDao) Get(kit *kit.Kit, id, bizID uint32) (*table.ConfigItem
 }
 
 // SearchAll search all configItem by searchKey
-func (dao *configItemDao) SearchAll(kit *kit.Kit, searchKey string, bizID uint32) ([]*table.ConfigItem, error) {
+func (dao *configItemDao) SearchAll(kit *kit.Kit, searchKey string, appID, bizID uint32) ([]*table.ConfigItem, error) {
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "bizID can not be 0")
 	}
 	m := dao.genQ.ConfigItem
-	query := dao.genQ.ConfigItem.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID))
+	query := dao.genQ.ConfigItem.WithContext(kit.Ctx).Where(m.AppID.Eq(appID), m.BizID.Eq(bizID))
 	if searchKey != "" {
 		searchKey = "%" + searchKey + "%"
 		query = query.Where(m.Name.Like(searchKey)).Or(m.Creator.Like(searchKey)).Or(m.Reviser.Like(searchKey))

@@ -490,7 +490,7 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 
 	if req.ReleaseId == 0 {
 		// search all editing config items
-		details, err := s.dao.ConfigItem().SearchAll(grpcKit, req.SearchKey, req.BizId)
+		details, err := s.dao.ConfigItem().SearchAll(grpcKit, req.SearchKey, req.AppId, req.BizId)
 		if err != nil {
 			logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 			return nil, err
