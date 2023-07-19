@@ -321,20 +321,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		log.Info(crSvc.ctx, "swagger doc is enabled")
 		// 加载 swagger.json
 		// 配置 swagger-ui 服务
-		originMux.HandleFunc("/swagger/", func(w http.ResponseWriter, r *http.Request) {
-			// 提取 URL 的扩展名
-			ext := filepath.Ext(r.URL.Path)
-			// 检查扩展名是否为 ".json"
-			if ext == ".json" {
-				// 设置响应头
-				w.Header().Set("Content-Type", "application/json")
-				file, _ := swagger.Assets.ReadFile("data/cluster-resources.swagger.json")
-				w.Write(file)
-				return
-			} else {
-				httpSwagger.Handler(httpSwagger.URL("/swagger/cluster-resources.swagger.json")).ServeHTTP(w, r)
-			}
-		})
+		originMux.HandleFunc("/swagger/", handlerSwagger)
 	}
 
 	httpPort := strconv.Itoa(crSvc.conf.Server.HTTPPort)
@@ -364,6 +351,20 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		crSvc.run(httpAddr, dualStackListener)
 	}()
 	return nil
+}
+
+func handlerSwagger(w http.ResponseWriter, r *http.Request) {
+	// 提取 URL 的扩展名
+	ext := filepath.Ext(r.URL.Path)
+	// 检查扩展名是否为 ".json"
+	if ext == ".json" {
+		// 设置响应头
+		w.Header().Set("Content-Type", "application/json")
+		file, _ := swagger.Assets.ReadFile("data/cluster-resources.swagger.json")
+		w.Write(file)
+		return
+	}
+	httpSwagger.Handler(httpSwagger.URL("/swagger/cluster-resources.swagger.json")).ServeHTTP(w, r)
 }
 
 func (crSvc *clusterResourcesService) run(httpAddr string, dualStackListener net.Listener) {

@@ -39,6 +39,7 @@ source:
       # Misc
       - /bcs-scenarios/kourse
       - /bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go
+      - /bcs-common/pkg/bcsapiv4/storage/tkex/gamedeployment/v1alpha1/gamedeployment.go
       - /bcs-common/pkg/esb/apigateway/bkdata/types.go
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/core/scale_up.go
       - /bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/simulator/drain.go

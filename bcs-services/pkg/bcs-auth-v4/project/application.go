@@ -35,7 +35,7 @@ func (cls ProjectInstances) BuildInstances() [][]iam.Instance {
 
 	for i := range cls.ProjectList {
 		iamInstances = append(iamInstances, []iam.Instance{
-			iam.Instance{
+			{
 				ResourceType: string(SysProject),
 				ResourceID:   cls.ProjectList[i],
 			},

@@ -39,7 +39,7 @@ func (cls AccountInstances) BuildInstances() [][]iam.Instance {
 	if cls.IsCreateAccount && len(cls.Data) > 0 {
 		for i := range cls.Data {
 			iamInstances = append(iamInstances, []iam.Instance{
-				iam.Instance{
+				{
 					ResourceType: string(project.SysProject),
 					ResourceID:   cls.Data[i].Project,
 				},
@@ -51,11 +51,11 @@ func (cls AccountInstances) BuildInstances() [][]iam.Instance {
 
 	for i := range cls.Data {
 		iamInstances = append(iamInstances, []iam.Instance{
-			iam.Instance{
+			{
 				ResourceType: string(project.SysProject),
 				ResourceID:   cls.Data[i].Project,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(SysCloudAccount),
 				ResourceID:   cls.Data[i].Account,
 			},

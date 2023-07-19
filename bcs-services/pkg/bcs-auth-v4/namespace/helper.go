@@ -74,7 +74,7 @@ type NamespaceResourceNode struct {
 func (nrn NamespaceResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	if nrn.IsClusterPerm {
 		return []iam.ResourceNode{
-			iam.ResourceNode{
+			{
 				System:    nrn.SystemID,
 				RType:     string(cluster.SysCluster),
 				RInstance: nrn.ClusterID,
@@ -88,7 +88,7 @@ func (nrn NamespaceResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	}
 
 	return []iam.ResourceNode{
-		iam.ResourceNode{
+		{
 			System:    nrn.SystemID,
 			RType:     string(SysNamespace),
 			RInstance: nrn.Namespace,
@@ -111,7 +111,7 @@ type NamespaceScopedResourceNode struct {
 // BuildResourceNodes build namespace scoped iam.ResourceNode
 func (nrn NamespaceScopedResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	return []iam.ResourceNode{
-		iam.ResourceNode{
+		{
 			System:    nrn.SystemID,
 			RType:     string(SysNamespace),
 			RInstance: nrn.Namespace,

@@ -39,7 +39,7 @@ func (cls ClusterInstances) BuildInstances() [][]iam.Instance {
 	if cls.IsCreateCluster && len(cls.Data) > 0 {
 		for i := range cls.Data {
 			iamInstances = append(iamInstances, []iam.Instance{
-				iam.Instance{
+				{
 					ResourceType: string(project.SysProject),
 					ResourceID:   cls.Data[i].Project,
 				},
@@ -51,11 +51,11 @@ func (cls ClusterInstances) BuildInstances() [][]iam.Instance {
 
 	for i := range cls.Data {
 		iamInstances = append(iamInstances, []iam.Instance{
-			iam.Instance{
+			{
 				ResourceType: string(project.SysProject),
 				ResourceID:   cls.Data[i].Project,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(SysCluster),
 				ResourceID:   cls.Data[i].Cluster,
 			},
@@ -76,11 +76,11 @@ func (cls ClusterScopedInstances) BuildInstances() [][]iam.Instance {
 
 	for i := range cls.Data {
 		iamInstances = append(iamInstances, []iam.Instance{
-			iam.Instance{
+			{
 				ResourceType: string(project.SysProject),
 				ResourceID:   cls.Data[i].Project,
 			},
-			iam.Instance{
+			{
 				ResourceType: string(SysCluster),
 				ResourceID:   cls.Data[i].Cluster,
 			},

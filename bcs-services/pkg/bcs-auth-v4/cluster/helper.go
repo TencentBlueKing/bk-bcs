@@ -67,7 +67,7 @@ type ClusterResourceNode struct {
 func (crn ClusterResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	if crn.IsCreateCluster {
 		return []iam.ResourceNode{
-			iam.ResourceNode{
+			{
 				System:    crn.SystemID,
 				RType:     string(project.SysProject),
 				RInstance: crn.ProjectID,
@@ -79,7 +79,7 @@ func (crn ClusterResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	}
 
 	return []iam.ResourceNode{
-		iam.ResourceNode{
+		{
 			System:    crn.SystemID,
 			RType:     string(SysCluster),
 			RInstance: crn.ClusterID,
@@ -101,7 +101,7 @@ type ClusterScopedResourceNode struct {
 // BuildResourceNodes build namespace scoped iam.ResourceNode
 func (csr ClusterScopedResourceNode) BuildResourceNodes() []iam.ResourceNode {
 	return []iam.ResourceNode{
-		iam.ResourceNode{
+		{
 			System:    csr.SystemID,
 			RType:     string(SysCluster),
 			RInstance: csr.ClusterID,
