@@ -15,19 +15,39 @@ package options
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	netUrl "net/url"
+	"time"
 
 	"github.com/pkg/errors"
 )
 
 var client *http.Client
 
+var dialer = &net.Dialer{
+	Timeout:   30 * time.Second,
+	KeepAlive: 30 * time.Second,
+}
+
+// defaultTransport default transport
+var defaultTransport http.RoundTripper = &http.Transport{
+	DialContext:           dialer.DialContext,
+	ForceAttemptHTTP2:     true,
+	MaxIdleConns:          100,
+	IdleConnTimeout:       90 * time.Second,
+	TLSHandshakeTimeout:   10 * time.Second,
+	ExpectContinueTimeout: 1 * time.Second,
+	// NOCC:gas/tls(设计如此)
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+}
+
 func init() {
-	client = &http.Client{}
+	client = &http.Client{Transport: defaultTransport}
 }
 
 // BcsAPI bcs api config
