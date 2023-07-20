@@ -90,7 +90,7 @@ func getCommonModuleFlags(model store.ClusterManagerModel, cloudID, moduleID str
 	condM["cloudid"] = cloudID
 	condM["moduleid"] = moduleID
 
-	cond := operator.NewLeafCondition(operator.And, condM)
+	cond := operator.NewLeafCondition(operator.Eq, condM)
 
 	return model.ListCloudModuleFlag(context.Background(), cond, &storeopt.ListOption{})
 }

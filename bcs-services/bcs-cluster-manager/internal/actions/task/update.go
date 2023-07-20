@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -182,7 +183,7 @@ func (ua *RetryAction) distributeTask() error {
 	}
 	blog.Infof("retry cluster[%s] task[%s] type %s successfully", ua.task.ClusterID, ua.task.TaskID, ua.task.TaskType)
 
-	hiddenTaskPassword(ua.task)
+	utils.HiddenTaskPassword(ua.task)
 
 	ua.resp.Data = ua.task
 	return nil

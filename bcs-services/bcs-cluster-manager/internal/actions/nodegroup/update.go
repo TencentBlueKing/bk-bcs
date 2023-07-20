@@ -22,13 +22,14 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
+	iutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // UpdateAction update action for online cluster credential
@@ -120,7 +121,6 @@ func (ua *UpdateAction) modifyNodeGroupField() {
 	group.Labels = ua.req.Labels
 	group.Tags = ua.req.Tags
 
-	removeSensitiveInfo(group)
 	ua.group = group
 }
 
@@ -188,20 +188,23 @@ func (ua *UpdateAction) modifyNodeGroupLaunchTemplate(group *cmproto.NodeGroup) 
 		if ua.req.LaunchTemplate.InitLoginUsername != "" {
 			group.LaunchTemplate.InitLoginUsername = ua.req.LaunchTemplate.InitLoginUsername
 		}
-		if ua.req.LaunchTemplate.InitLoginPassword != "" {
-			group.LaunchTemplate.InitLoginPassword = ua.req.LaunchTemplate.InitLoginPassword
-		}
-		if ua.req.LaunchTemplate.KeyPair != nil {
-			if group.LaunchTemplate.KeyPair == nil {
-				group.LaunchTemplate.KeyPair = &cmproto.KeyInfo{}
+		// not allow update passwd or ssh key
+		/*
+			if ua.req.LaunchTemplate.InitLoginPassword != "" {
+				group.LaunchTemplate.InitLoginPassword = ua.req.LaunchTemplate.InitLoginPassword
 			}
-			if len(ua.req.LaunchTemplate.KeyPair.GetKeyID()) > 0 {
-				group.LaunchTemplate.KeyPair.KeyID = ua.req.LaunchTemplate.KeyPair.GetKeyID()
+			if ua.req.LaunchTemplate.KeyPair != nil {
+				if group.LaunchTemplate.KeyPair == nil {
+					group.LaunchTemplate.KeyPair = &cmproto.KeyInfo{}
+				}
+				if len(ua.req.LaunchTemplate.KeyPair.GetKeyID()) > 0 {
+					group.LaunchTemplate.KeyPair.KeyID = ua.req.LaunchTemplate.KeyPair.GetKeyID()
+				}
+				if len(ua.req.LaunchTemplate.KeyPair.GetKeySecret()) > 0 {
+					group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(ua.req.LaunchTemplate.KeyPair.GetKeySecret())
+				}
 			}
-			if len(ua.req.LaunchTemplate.KeyPair.GetKeySecret()) > 0 {
-				group.LaunchTemplate.KeyPair.KeySecret = utils.Base64Encode(ua.req.LaunchTemplate.KeyPair.GetKeySecret())
-			}
-		}
+		*/
 		if ua.req.LaunchTemplate.SecurityGroupIDs != nil {
 			group.LaunchTemplate.SecurityGroupIDs = ua.req.LaunchTemplate.SecurityGroupIDs
 		}
@@ -254,7 +257,7 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 			group.NodeTemplate.DataDisks = ua.req.NodeTemplate.DataDisks
 		}
 		if ua.req.NodeTemplate.UserScript != "" {
-			group.NodeTemplate.UserScript = utils.Base64Encode(ua.req.NodeTemplate.UserScript)
+			group.NodeTemplate.UserScript = iutils.Base64Encode(ua.req.NodeTemplate.UserScript)
 		} else {
 			group.NodeTemplate.UserScript = ua.req.NodeTemplate.UserScript
 		}
@@ -263,7 +266,7 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 			group.NodeTemplate.ExtraArgs = ua.req.NodeTemplate.ExtraArgs
 		}
 		if ua.req.NodeTemplate.PreStartUserScript != "" {
-			group.NodeTemplate.PreStartUserScript = utils.Base64Encode(ua.req.NodeTemplate.PreStartUserScript)
+			group.NodeTemplate.PreStartUserScript = iutils.Base64Encode(ua.req.NodeTemplate.PreStartUserScript)
 		} else {
 			group.NodeTemplate.PreStartUserScript = ua.req.NodeTemplate.PreStartUserScript
 		}
@@ -292,12 +295,12 @@ func (ua *UpdateAction) modifyNodeGroupNodeTemplate(group *cmproto.NodeGroup) {
 			group.NodeTemplate.Updater = ua.req.NodeTemplate.Updater
 		}
 		if ua.req.NodeTemplate.ScaleInPreScript != "" {
-			group.NodeTemplate.ScaleInPreScript = utils.Base64Encode(ua.req.NodeTemplate.ScaleInPreScript)
+			group.NodeTemplate.ScaleInPreScript = iutils.Base64Encode(ua.req.NodeTemplate.ScaleInPreScript)
 		} else {
 			group.NodeTemplate.ScaleInPreScript = ua.req.NodeTemplate.ScaleInPreScript
 		}
 		if ua.req.NodeTemplate.ScaleInPostScript != "" {
-			group.NodeTemplate.ScaleInPostScript = utils.Base64Encode(ua.req.NodeTemplate.ScaleInPostScript)
+			group.NodeTemplate.ScaleInPostScript = iutils.Base64Encode(ua.req.NodeTemplate.ScaleInPostScript)
 		} else {
 			group.NodeTemplate.ScaleInPostScript = ua.req.NodeTemplate.ScaleInPostScript
 		}
@@ -316,7 +319,6 @@ func (ua *UpdateAction) getRelativeResource() error {
 		blog.Errorf("get NodeGroup %s failed, %s", ua.req.NodeGroupID, err.Error())
 		return err
 	}
-	removeSensitiveInfo(group)
 	ua.group = group
 
 	// cluster
@@ -376,7 +378,6 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 		)
 		return err
 	}
-	ua.resp.Data = ua.group
 
 	// create task and dispatch task
 	if task != nil {
@@ -406,6 +407,7 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 		return err
 	}
 
+	ua.resp.Data = removeSensitiveInfo(ua.group)
 	return nil
 }
 
@@ -414,7 +416,7 @@ func (ua *UpdateAction) saveNodeGroupStatus(status string) error {
 	ua.group.Status = status
 	if err := ua.model.UpdateNodeGroup(ua.ctx, ua.group); err != nil {
 		blog.Errorf("nodegroup %s update in cloudprovider %s success, but update failed in local storage, %s. detail: %+v",
-			ua.group.NodeGroupID, ua.group.Provider, err.Error(), utils.ToJSONString(ua.group),
+			ua.group.NodeGroupID, ua.group.Provider, err.Error(), iutils.ToJSONString(ua.group),
 		)
 		return err
 	}
@@ -800,6 +802,8 @@ func (ua *UpdateDesiredNodeAction) handleTask(scaling uint32) error {
 		)
 		return err
 	}
+
+	utils.HiddenTaskPassword(task)
 
 	ua.task = task
 	ua.resp.Data = task

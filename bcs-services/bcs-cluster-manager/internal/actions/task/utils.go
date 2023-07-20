@@ -16,50 +16,10 @@ package task
 import (
 	"context"
 	"errors"
-	"strings"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
-
-// Passwd flag
-var Passwd = []string{"password", "passwd"}
-
-func strContains(ipList []string, ip string) bool {
-	for i := range ipList {
-		if strings.EqualFold(ipList[i], ip) {
-			return true
-		}
-	}
-	return false
-}
-
-func hiddenTaskPassword(task *proto.Task) {
-	if task != nil && len(task.Steps) > 0 {
-		for i := range task.Steps {
-			for k := range task.Steps[i].Params {
-				if utils.StringInSlice(k,
-					[]string{cloudprovider.BkSopsTaskUrlKey.String(), cloudprovider.ShowSopsUrlKey.String()}) {
-					continue
-				}
-				delete(task.Steps[i].Params, k)
-			}
-		}
-	}
-
-	if task != nil && len(task.CommonParams) > 0 {
-		for k, v := range task.CommonParams {
-			if utils.StringInSlice(strings.ToLower(k), Passwd) || utils.StringContainInSlice(v, Passwd) ||
-				utils.StringInSlice(k, []string{cloudprovider.DynamicClusterKubeConfigKey.String()}) {
-				delete(task.CommonParams, k)
-			}
-		}
-	}
-}
 
 func updateNodeGroupStatus(model store.ClusterManagerModel, nodeGroupID, status string) error {
 	group, err := model.GetNodeGroup(context.Background(), nodeGroupID)

@@ -52,6 +52,8 @@ const (
 	createNodeGroupTaskTemplate = "tke-create node group: %s/%s"
 	// deleteNodeGroupTaskTemplate bk-sops add task template
 	deleteNodeGroupTaskTemplate = "tke-delete node group: %s/%s"
+	// updateNodeGroupTaskTemplate bk-sops add task template
+	updateNodeGroupTaskTemplate = "tke-update node group: %s/%s"
 	// updateNodeGroupDesiredNode bk-sops add task template
 	updateNodeGroupDesiredNodeTemplate = "tke-update node group desired node: %s/%s"
 	// cleanNodeGroupNodesTaskTemplate bk-sops add task template

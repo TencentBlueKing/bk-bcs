@@ -9478,6 +9478,8 @@ func (m *ImageInfo) validate(all bool) error {
 
 	// no validation rules for ImageName
 
+	// no validation rules for ImageType
+
 	if len(errors) > 0 {
 		return ImageInfoMultiError(errors)
 	}

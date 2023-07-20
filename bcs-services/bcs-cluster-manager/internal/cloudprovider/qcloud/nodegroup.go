@@ -158,7 +158,21 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	}
 	blog.Infof("UpdateNodeGroup[%s] updateNormalNodePool successful", group.NodeGroupID)
 
-	return nil, nil
+	// build task
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when BuildUpdateNodeGroupTask in NodeGroup %s failed, %s",
+			opt.Cloud.CloudProvider, group.NodeGroupID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildUpdateNodeGroupTask(group, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("BuildUpdateNodeGroupTask failed: %v", err)
+		return nil, err
+	}
+
+	return task, nil
 }
 
 // updateExternalNodePool update external nodePool

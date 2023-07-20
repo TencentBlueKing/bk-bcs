@@ -1087,6 +1087,23 @@ func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeG
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+func getTransModuleInfo(asOption *proto.ClusterAutoScalingOption, group *proto.NodeGroup) string {
+	if group != nil && group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
+		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
+		return group.NodeTemplate.Module.ScaleOutModuleID
+	}
+
+	return asOption.GetModule().GetScaleOutModuleID()
+}
+
+func getAnnotationsByNg(group *proto.NodeGroup) map[string]string {
+	if group == nil || group.NodeTemplate == nil || len(group.NodeTemplate.Annotations) == 0 {
+		return nil
+	}
+
+	return group.GetNodeTemplate().GetAnnotations()
+}
+
 // BuildUpdateDesiredNodesTask build update desired nodes task
 func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
@@ -1151,9 +1168,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		// install gse agent
 		common.BuildInstallGseAgentTaskStep(task, opt.Cluster, group, passwd)
 		// transfer host module
-		if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
-			len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
-			common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, group.NodeTemplate.Module.ScaleOutModuleID)
+		moduleID := getTransModuleInfo(opt.AsOption, opt.NodeGroup)
+		if moduleID != "" {
+			common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID)
 		}
 	}
 
@@ -1238,6 +1255,9 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
 		}
 	}
+
+	// step4: set node annotations
+	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil, getAnnotationsByNg(opt.NodeGroup))
 
 	// step5: set resourcePool labels
 	common.BuildResourcePoolLabelTaskStep(task, opt.Cluster.ClusterID)
@@ -1579,5 +1599,46 @@ func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes 
 
 // BuildUpdateNodeGroupTask when update nodegroup, we need to create background task,
 func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CommonOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateNodeGroup),
+		TaskName:       cloudprovider.UpdateNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(updateNodeGroupTaskTemplate, group.ClusterID, group.NodeGroupID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupJob.String()
+	return task, nil
 }

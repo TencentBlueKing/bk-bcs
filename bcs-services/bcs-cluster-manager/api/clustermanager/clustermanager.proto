@@ -3179,6 +3179,10 @@ message ImageInfo {
     title: "imageName",
     description: "镜像名"
   }];
+  string imageType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "imageType",
+    description: "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE)"
+  }];
 }
 
 // ClusterAutoScalingOption cluster autoScaler module parameter

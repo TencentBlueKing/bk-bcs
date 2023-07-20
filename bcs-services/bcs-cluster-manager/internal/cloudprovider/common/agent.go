@@ -82,27 +82,27 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 
 	if len(nodeIPs) == 0 {
 		blog.Infof("InstallGSEAgentTask %s skip, cause of empty node", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("empty node ip"))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("empty node ip"))
 		return nil
 	}
 
 	bkCloudID, err := strconv.Atoi(bkCloudIDstring)
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s failed, invalid bkCloudID, err %s", taskID, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("invalid bkCloudID, err %s", err.Error()))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid bkCloudID, err %s", err.Error()))
 		return nil
 	}
 	bkBizID, err := strconv.Atoi(bkBizIDString)
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s failed, invalid bkBizID, err %s", taskID, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("invalid bkBizID, err %s", err.Error()))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid bkBizID, err %s", err.Error()))
 		return nil
 	}
 
 	nodeManClient := nodeman.GetNodeManClient()
 	if nodeManClient == nil {
 		blog.Errorf("nodeman client is not init")
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
 		return nil
 	}
 
@@ -110,7 +110,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 	clouds, err := nodeManClient.CloudList()
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s get cloud list error, %s", taskID, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("get cloud list error, %s", err.Error()))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("get cloud list error, %s", err.Error()))
 		return nil
 	}
 	apID := getAPID(bkCloudID, clouds)
@@ -147,7 +147,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 	job, err := nodeManClient.JobInstall(nodeman.InstallAgentJob, hosts)
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s install gse agent job error, %s", taskID, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("install gse agent job error, %s", err.Error()))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("install gse agent job error, %s", err.Error()))
 		return nil
 	}
 	blog.Infof("InstallGSEAgentTask %s install gse agent job(%d) url %s", taskID, job.JobID, job.JobURL)
@@ -175,7 +175,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error {
 	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s check gse agent install job status failed: %v", taskID, err)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("check gse agent install job status err: %s", err.Error()))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("check gse agent install job status err: %s", err.Error()))
 		return nil
 	}
 

@@ -42,7 +42,7 @@ var (
 
 // BuildTransferHostModuleStep build common transfer module step
 func BuildTransferHostModuleStep(task *proto.Task, businessID string, moduleID string) {
-	transStep := cloudprovider.InitTaskStep(transferHostModuleStep, cloudprovider.WithStepSkipFailed(true))
+	transStep := cloudprovider.InitTaskStep(transferHostModuleStep)
 
 	transStep.Params[cloudprovider.BKBizIDKey.String()] = businessID
 	transStep.Params[cloudprovider.BKModuleIDKey.String()] = moduleID
@@ -53,7 +53,7 @@ func BuildTransferHostModuleStep(task *proto.Task, businessID string, moduleID s
 
 // BuildRemoveHostStep build common remove host from cmdb step
 func BuildRemoveHostStep(task *proto.Task, bizID string, nodeIPs []string) {
-	removeStep := cloudprovider.InitTaskStep(removeHostFromCmdbStep)
+	removeStep := cloudprovider.InitTaskStep(removeHostFromCmdbStep, cloudprovider.WithStepSkipFailed(true))
 
 	removeStep.Params[cloudprovider.BKBizIDKey.String()] = bizID
 	removeStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
@@ -83,20 +83,20 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 
 	if len(nodeIPs) == 0 {
 		blog.Warnf("TransferHostModule %s skip, cause of empty node", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("empty node ip"))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("empty node ip"))
 		return nil
 	}
 
 	bkBizID, err := strconv.Atoi(bkBizIDString)
 	if err != nil {
 		blog.Errorf("TransferHostModule %s failed, invalid bkBizID, err %s", taskID, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("invalid bkBizID, err %s", err.Error()))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid bkBizID, err %s", err.Error()))
 		return nil
 	}
 	moduleID, err := strconv.Atoi(moduleIDString)
 	if err != nil {
 		blog.Errorf("TransferHostModule %s failed, invalid moduleID, err %s", taskID, err.Error())
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("invalid moduleID, err %s", err.Error()))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid moduleID, err %s", err.Error()))
 		return nil
 	}
 
@@ -104,13 +104,13 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 
 	if nodeManClient == nil {
 		blog.Errorf("TransferHostModule %s failed, nodeman client is not init", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
 		return nil
 	}
 	cmdbClient := cmdb.GetCmdbClient()
 	if cmdbClient == nil {
 		blog.Errorf("TransferHostModule %s failed, cmdb client is not init", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("cmdb client is not init"))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("cmdb client is not init"))
 		return nil
 	}
 
@@ -136,14 +136,14 @@ func TransferHostModuleTask(taskID string, stepName string) error {
 	}, loop.LoopInterval(3*time.Second))
 	if err != nil {
 		blog.Errorf("TransferHostModule %s get host id failed: %v", taskID, err)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("get host id err %s", err.Error()))
+		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("get host id err %s", err.Error()))
 		return nil
 	}
 
 	if err = cmdbClient.TransferHostModule(bkBizID, hostIDs, []int{moduleID}, false); err != nil {
 		blog.Errorf("TransferHostModule %s failed, bkBizID %d, hosts %v, err %s",
 			taskID, bkBizID, hostIDs, err.Error())
-		_ = state.SkipFailure(start, stepName,
+		_ = state.UpdateStepFailure(start, stepName,
 			fmt.Errorf("TransferHostModule failed, bkBizID %d, hosts %v, err %s", bkBizID, hostIDs, err.Error()))
 		return nil
 	}
@@ -208,7 +208,7 @@ func RemoveHostFromCMDBTask(taskID string, stepName string) error {
 
 	if len(hostIDs) == 0 {
 		blog.Warnf("RemoveHostFromCMDBTask %s skip, cause of empty host", taskID)
-		_ = state.SkipFailure(start, stepName, fmt.Errorf("empty host"))
+		_ = state.UpdateStepSucc(start, stepName)
 		return nil
 	}
 

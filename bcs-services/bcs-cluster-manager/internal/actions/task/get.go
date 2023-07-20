@@ -16,6 +16,7 @@ import (
 	"context"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -62,7 +63,7 @@ func (ga *GetAction) Handle(
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
-	hiddenTaskPassword(task)
+	utils.HiddenTaskPassword(task)
 	// actions.FormatTaskTime(task)
 
 	resp.Data = task

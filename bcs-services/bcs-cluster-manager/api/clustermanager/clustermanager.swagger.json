@@ -9797,6 +9797,11 @@
           "type": "string",
           "description": "镜像名",
           "title": "imageName"
+        },
+        "imageType": {
+          "type": "string",
+          "description": "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE)",
+          "title": "imageType"
         }
       },
       "title": "ImageInfo 创建cvm实例的镜像信息"

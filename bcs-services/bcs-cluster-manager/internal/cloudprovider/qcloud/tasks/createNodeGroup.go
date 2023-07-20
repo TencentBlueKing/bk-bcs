@@ -414,6 +414,11 @@ func generateInternetAccessible(asc *as.LaunchConfiguration) *proto.InternetAcce
 	if asc.InternetAccessible.PublicIpAssigned != nil {
 		internetAccess.PublicIPAssigned = *asc.InternetAccessible.PublicIpAssigned
 	}
+	// internet chargeType
+	if asc.InternetAccessible.InternetChargeType != nil {
+		internetAccess.InternetChargeType = *asc.InternetAccessible.InternetChargeType
+	}
+
 	return internetAccess
 }
 
@@ -517,7 +522,13 @@ func generateLaunchConfigurePara(template *proto.LaunchConfiguration,
 		InstanceChargeType:      &template.InstanceChargeType,
 		LoginSettings: &api.LoginSettings{
 			Password: template.InitLoginPassword,
-			KeyIds:   []string{template.GetKeyPair().GetKeyID()},
+			KeyIds: func() []string {
+				if template.GetKeyPair() == nil || template.GetKeyPair().GetKeyID() == "" {
+					return nil
+				}
+
+				return []string{template.GetKeyPair().GetKeyID()}
+			}(),
 		},
 		SecurityGroupIds: common.StringPtrs(template.SecurityGroupIDs),
 	}

@@ -584,7 +584,7 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 	}
 
 	if err := ensureAutoScalerWithInstaller(ctx, nodegroupList, asOption); err != nil {
-		blog.Errorf("EnsureAutoScalerTask[%s] for %s failed", taskID, clusterID)
+		blog.Errorf("EnsureAutoScalerTask[%s] for %s failed: %v", taskID, clusterID, err)
 		retErr := fmt.Errorf("EnsureAutoScalerTask failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr

@@ -367,6 +367,10 @@ func DeleteNamespaceTask(taskID string, stepName string) error {
 
 // BuildNodeAnnotationsTaskStep build node annotations (user define labels && common annotations) task step
 func BuildNodeAnnotationsTaskStep(task *proto.Task, clusterID string, nodeIPs []string, annotations map[string]string) {
+	if len(annotations) == 0 {
+		return
+	}
+
 	annotationsStep := cloudprovider.InitTaskStep(NodeSetAnnotationsActionStep)
 
 	annotationsStep.Params[cloudprovider.ClusterIDKey.String()] = clusterID
