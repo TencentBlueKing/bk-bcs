@@ -170,9 +170,11 @@ func (s *WebServer) subRouter() http.Handler {
 		r.Mount("/bscp", handler.ReverseProxyHandler("bscp_api", config.G.Web.Host))
 	}
 
+	r.With(metrics.RequestCollect("no-permission")).Get("/403.html", s.embedWebServer.Render403Handler(conf).ServeHTTP)
+
 	// vue 模版渲染
 	r.With(metrics.RequestCollect("index"), s.webAuthentication).Get("/", s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
-	r.With(metrics.RequestCollect("index")).NotFound(s.webAuthentication(s.embedWebServer.RenderIndexHandler(conf)).ServeHTTP)
+	r.With(metrics.RequestCollect("index"), s.webAuthentication).NotFound(s.embedWebServer.RenderIndexHandler(conf).ServeHTTP)
 
 	return r
 }
