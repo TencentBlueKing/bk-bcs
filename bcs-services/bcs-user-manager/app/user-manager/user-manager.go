@@ -33,7 +33,6 @@ import (
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/auth"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/middleware"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
@@ -57,7 +56,6 @@ type UserManager struct {
 
 	IamPermClient iam.PermMigrateClient
 	EtcdRegistry  registry.Registry
-	CmClient      *cmanager.ClusterManagerClient
 
 	permService *permission.PermVerifyClient
 }
@@ -143,7 +141,7 @@ func (u *UserManager) initRouters(ws *restful.WebService) {
 }
 
 func (u *UserManager) initPermService() error {
-	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch, u.IamPermClient, u.CmClient)
+	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch, u.IamPermClient)
 	u.permService = permService
 
 	return nil
@@ -183,23 +181,6 @@ func (u *UserManager) initPassCCService() error {
 	return nil
 }
 
-func (u *UserManager) initClusterManager() error {
-	opts := &cmanager.Options{
-		Module:          u.config.ClusterConfig.Module,
-		EtcdRegistry:    u.EtcdRegistry,
-		ClientTLSConfig: u.config.TlsClientConfig,
-	}
-
-	cli := cmanager.NewClusterManagerClient(opts)
-	if cli == nil {
-		errMsg := fmt.Errorf("initClusterManager failed")
-		return errMsg
-	}
-
-	u.CmClient = cli
-	return nil
-}
-
 func (u *UserManager) initIamPermClient() error {
 
 	opt := &iam.Options{
@@ -211,6 +192,7 @@ func (u *UserManager) initIamPermClient() error {
 		IAMHost:     u.config.IAMConfig.IAMHost,
 		BkiIAMHost:  u.config.IAMConfig.BkiIAMHost,
 		Metric:      u.config.IAMConfig.Metric,
+		Debug:       u.config.IAMConfig.ServerDebug,
 	}
 	iamCli, err := iam.NewIamMigrateClient(opt)
 	if err != nil {
@@ -219,6 +201,7 @@ func (u *UserManager) initIamPermClient() error {
 	}
 
 	u.IamPermClient = iamCli
+	config.GloablIAMClient = iamCli
 	return nil
 }
 
@@ -309,11 +292,6 @@ func (u *UserManager) initUserManagerServer() error {
 	}
 
 	err = u.initIamPermClient()
-	if err != nil {
-		return err
-	}
-
-	err = u.initClusterManager()
 	if err != nil {
 		return err
 	}

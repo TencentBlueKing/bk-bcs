@@ -11,19 +11,19 @@
  *
  */
 
-package models
+package cache
 
-// GetClusterResp get cluster response
-type GetClusterResp struct {
-	Code    uint32   `json:"code"`
-	Message string   `json:"message"`
-	Result  bool     `json:"result"`
-	Data    *Cluster `json:"data"`
-}
+import (
+	"time"
 
-// Cluster cluster data
-type Cluster struct {
-	ClusterID  string `json:"clusterID"`
-	ProjectID  string `json:"projectID"`
-	BusinessID string `json:"businessID"`
-}
+	"github.com/patrickmn/go-cache"
+)
+
+// LocalCache is a local cache
+var LocalCache = cache.New(time.Minute*5, time.Minute*60)
+
+// DefaultExpiration is default expiration
+var DefaultExpiration = time.Hour
+
+// NoExpiration is no expiration, -1
+var NoExpiration = cache.NoExpiration

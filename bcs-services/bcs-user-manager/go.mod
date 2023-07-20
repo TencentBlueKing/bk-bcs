@@ -7,11 +7,13 @@ require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230718124617-d89a291003e4
 	github.com/Tencent/bk-bcs/bcs-common/pkg/auth v0.0.0-20230718124617-d89a291003e4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230718124617-d89a291003e4
+	github.com/TencentBlueKing/iam-go-sdk v0.1.3
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/jinzhu/gorm v1.9.16
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -20,8 +22,10 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.2
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.28.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	k8s.io/apimachinery v0.23.1
+	k8s.io/klog/v2 v2.100.1
 )
 
 require (
@@ -31,7 +35,6 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.5 // indirect
 	github.com/TencentBlueKing/gopkg v1.1.0 // indirect
-	github.com/TencentBlueKing/iam-go-sdk v0.1.3 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
@@ -45,6 +48,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emicklei/go-restful-openapi v1.4.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
+	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
@@ -129,7 +133,6 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/utils v0.0.0-20210930125809-cb0fa318a74b // indirect
 	moul.io/http2curl v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect

@@ -25,8 +25,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/emicklei/go-restful"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
 	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"

@@ -13,6 +13,8 @@
 
 package utils
 
+import "context"
+
 // StringInSlice returns true if given string in slice
 func StringInSlice(s string, l []string) bool {
 	for _, objStr := range l {
@@ -30,3 +32,9 @@ const (
 	// ContextValueKeyRequestID request_id in context value
 	ContextValueKeyRequestID ContextValueKey = "X-Request-Id"
 )
+
+// GetRequestIDFromContext get request id from context
+func GetRequestIDFromContext(ctx context.Context) string {
+	requestID, _ := ctx.Value(ContextValueKeyRequestID).(string)
+	return requestID
+}

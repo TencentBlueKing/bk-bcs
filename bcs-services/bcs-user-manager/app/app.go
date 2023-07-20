@@ -24,9 +24,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/esb/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	usermanager "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
@@ -41,6 +42,9 @@ func Run(op *options.UserManagerOptions) {
 	}
 	// set userManager global config
 	config.SetGlobalConfig(conf)
+
+	// init cluster cache
+	component.CacheClusterList()
 
 	if conf.ClientCert.IsSSL {
 		cliTLS, err := ssl.ClientTslConfVerity(conf.ClientCert.CAFile, conf.ClientCert.CertFile, conf.ClientCert.KeyFile,
@@ -102,11 +106,11 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.BcsAPI = &op.BcsAPI
 
 	config.Tke = op.TKE
-	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretId))
+	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretID))
 	if err != nil {
 		return nil, fmt.Errorf("error decrypting tke secretId and exit: %s", err.Error())
 	}
-	config.Tke.SecretId = string(secretID)
+	config.Tke.SecretID = string(secretID)
 	secretKey, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretKey))
 	if err != nil {
 		return nil, fmt.Errorf("error decrypting tke secretKey and exit: %s", err.Error())

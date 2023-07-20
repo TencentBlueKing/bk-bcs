@@ -91,7 +91,7 @@ type IAMConfig struct {
 
 // TKEOptions tke api option
 type TKEOptions struct {
-	SecretId  string `json:"secret_id" value:"" usage:"tke user account secret id"`
+	SecretID  string `json:"secret_id" value:"" usage:"tke user account secret id"`
 	SecretKey string `json:"secret_key" value:"" usage:"tke user account secret key"`
 	CcsHost   string `json:"ccs_host" value:"" usage:"tke ccs host domain"`
 	CcsPath   string `json:"ccs_path" value:"" usage:"tke ccs path"`
@@ -138,4 +138,10 @@ type CmdbConfig struct {
 	AppSecret  string `json:"app_secret"`
 	BkUserName string `json:"bk_user_name"`
 	Host       string `json:"host"`
+}
+
+// BcsAPI bcs api config
+type BcsAPI struct {
+	Host  string `json:"host" usage:"enable http host"`
+	Token string `json:"token" usage:"token for calling service"`
 }

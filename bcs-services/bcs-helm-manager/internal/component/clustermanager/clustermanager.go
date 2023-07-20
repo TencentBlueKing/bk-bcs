@@ -104,6 +104,6 @@ func GetCluster(clusterID string) (*clustermanager.Cluster, error) {
 	if p.Code != 0 || p.Data == nil {
 		return nil, fmt.Errorf("GetCluster error, code: %d, message: %s", p.Code, p.GetMessage())
 	}
-	client.Cache.Set(key, p.Data, cache.NoExpiration)
+	client.Cache.Set(key, p.Data, defaultExpiration)
 	return p.Data, nil
 }

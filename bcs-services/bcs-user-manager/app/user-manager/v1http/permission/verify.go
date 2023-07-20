@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	blog "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/passcc"
@@ -62,20 +62,17 @@ const (
 )
 
 // NewPermVerifyClient verify permission client
-func NewPermVerifyClient(swi bool, iam iam.PermClient,
-	clusterCli *cmanager.ClusterManagerClient) *PermVerifyClient {
+func NewPermVerifyClient(swi bool, iam iam.PermClient) *PermVerifyClient {
 	return &PermVerifyClient{
-		PermSwitch:    swi,
-		PermClient:    iam,
-		ClusterClient: clusterCli,
+		PermSwitch: swi,
+		PermClient: iam,
 	}
 }
 
 // PermVerifyClient permission client
 type PermVerifyClient struct {
-	PermSwitch    bool
-	PermClient    iam.PermClient
-	ClusterClient *cmanager.ClusterManagerClient
+	PermSwitch bool
+	PermClient iam.PermClient
 }
 
 // returnClusterType
@@ -511,15 +508,15 @@ func (cli *PermVerifyClient) getProjectIDFromResource(ctx context.Context, resou
 
 	var (
 		projectID string
-		err       error
 	)
 	if resource.ProjectID != "" {
 		projectID = resource.ProjectID
 	} else {
-		projectID, err = cli.ClusterClient.GetProjectIDByClusterID(resource.ClusterID)
+		cls, err := component.GetClusterByClusterID(ctx, resource.ClusterID)
 		if err != nil {
-			return "", fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
+			return "", fmt.Errorf("GetClusterByClusterID[%s] failed", resource.ClusterID)
 		}
+		projectID = cls.ProjectID
 		blog.Log(ctx).Infof("get projectID %s from cluster %s", resource.ClusterID, projectID)
 	}
 

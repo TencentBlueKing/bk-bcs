@@ -23,9 +23,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	cmdb "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/cmdbv3"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/metrics"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/encrypt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
@@ -39,21 +39,18 @@ type ExtraTokenHandler struct {
 	notifyStore   sqlstore.TokenNotifyStore
 	cache         cache.Cache
 	jwtClient     jwt.BCSJWTAuthentication
-	clusterClient *cmanager.ClusterManagerClient
 	cmdbClient    *cmdb.Client
 	encryptPriKey string
 }
 
 // NewExtraTokenHandler creates a new ExtraTokenHandler
 func NewExtraTokenHandler(tokenStore sqlstore.TokenStore, notifyStore sqlstore.TokenNotifyStore, cache cache.Cache,
-	jwtClient jwt.BCSJWTAuthentication, clusterClient *cmanager.ClusterManagerClient,
-	cmdbClient *cmdb.Client) *ExtraTokenHandler {
+	jwtClient jwt.BCSJWTAuthentication, cmdbClient *cmdb.Client) *ExtraTokenHandler {
 	return &ExtraTokenHandler{
 		tokenStore:    tokenStore,
 		notifyStore:   notifyStore,
 		cache:         cache,
 		jwtClient:     jwtClient,
-		clusterClient: clusterClient,
 		cmdbClient:    cmdbClient,
 		encryptPriKey: os.Getenv("ENCRYPT_PRI_KEY"),
 	}
@@ -68,6 +65,7 @@ type ExtraTokenResponse struct {
 }
 
 // GetTokenByUserAndClusterID get token by user and cluster id
+// NOCC:golint/fnsize(设计如此)
 func (t *ExtraTokenHandler) GetTokenByUserAndClusterID(request *restful.Request, response *restful.Response) {
 	username := request.Request.URL.Query().Get("username")
 	clusterID := request.Request.URL.Query().Get("cluster_id")
@@ -80,15 +78,16 @@ func (t *ExtraTokenHandler) GetTokenByUserAndClusterID(request *restful.Request,
 		return
 	}
 
-	respBusinessID, err := t.clusterClient.GetBusinessIDByClusterID(clusterID)
+	cluster, err := component.GetClusterByClusterID(request.Request.Context(), clusterID)
+	respBusinessID := cluster.BusinessID
 	if err != nil {
-		blog.Errorf("GetBusinessIDByClusterID failed, err: %v", err.Error())
+		blog.Errorf("GetClusterByClusterID failed, err: %v", err.Error())
 		metrics.ReportRequestAPIMetrics("GetTokenByUserAndClusterID", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, err.Error())
 		return
 	}
 	if len(respBusinessID) == 0 {
-		blog.Errorf("GetBusinessIDByClusterID failed, cluster %s not found", clusterID)
+		blog.Errorf("GetClusterByClusterID failed, cluster %s not found", clusterID)
 		metrics.ReportRequestAPIMetrics("GetTokenByUserAndClusterID", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteServerError(response, common.BcsErrApiInternalDbError, fmt.Sprintf("cluster %s not found", clusterID))
 		return
