@@ -46,6 +46,7 @@ export const cloudClusterList = request('get', '/clouds/$cloudId/clusters');
 export const taskRetry = request('put', '/task/$taskId/retry');
 export const cloudDetail = request('get', '/cloud/$cloudId');
 export const cloudNodes = request('get', '/clouds/$cloudId/instances');
+export const cloudKeyPairs = request('get', '/clouds/$cloudId/keypairs');
 
 // node 操作
 export const getK8sNodes = request('get', '/cluster/$clusterId/node');

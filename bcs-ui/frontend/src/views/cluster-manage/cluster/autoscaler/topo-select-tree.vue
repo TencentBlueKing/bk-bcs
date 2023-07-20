@@ -60,7 +60,6 @@ export default defineComponent({
     const topoLoading = ref(false);
     const topoData = ref<any[]>([]);
     const addPathToTreeData = (data: any[], parent: string) => data
-      .filter(item => !(item.bk_obj_id === 'set' && item.bk_obj_name === 'set'))
       .map((item) => {
         const path = parent ? `${parent} / ${item.bk_inst_name}` : item.bk_inst_name;
         return {
@@ -73,6 +72,7 @@ export default defineComponent({
       topoLoading.value = true;
       const data = await ccTopology({
         $clusterId: props.clusterId,
+        filterInter: true,
       });
       topoData.value = addPathToTreeData([data], '');
       topoLoading.value = false;

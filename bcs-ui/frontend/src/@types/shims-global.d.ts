@@ -18,7 +18,7 @@ interface Window {
   $loginModal: any
 }
 
-declare const BK_CI_BUILD_NUM: string;
+declare const BK_BCS_WELCOME: string;
 
 declare const BK_BCS_VERSION: string;
 

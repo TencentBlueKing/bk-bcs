@@ -81,7 +81,7 @@ import {
   nodeUnCordon,
 } from '@/api/base';
 
-import { cloudDetail, clusterAutoScalingLogsV2 } from '@/api/modules/cluster-manager';
+import { cloudDetail, clusterAutoScalingLogsV2, cloudKeyPairs } from '@/api/modules/cluster-manager';
 
 export default {
   namespaced: true,
@@ -380,6 +380,10 @@ export default {
         .then(() => true)
         .catch(() => false);
       return result;
+    },
+    async cloudKeyPairs(ctx, params) {
+      const data = await cloudKeyPairs(params).catch(() => []);
+      return data;
     },
   },
 };

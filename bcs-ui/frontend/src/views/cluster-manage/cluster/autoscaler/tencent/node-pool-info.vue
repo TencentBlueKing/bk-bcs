@@ -1,148 +1,118 @@
-<!-- eslint-disable max-len -->
 <template>
-  <bk-form class="node-pool-info" :model="nodePoolInfo" :rules="nodePoolInfoRules" ref="formRef">
-    <bk-form-item :label="$t('节点池名称')" property="name" error-display-type="normal" required>
-      <bk-input v-model="nodePoolInfo.name"></bk-input>
-    </bk-form-item>
-    <bk-form-item
-      :label="$t('节点数量范围')"
-      property="nodeNumRange"
-      error-display-type="normal"
-      :desc="$t('在设定的节点范围内自动调节，不会超出该设定范围')">
-      <bk-input
-        class="w74"
-        v-model="nodePoolInfo.autoScaling.minSize"
-        :min="getSchemaByProp('autoScaling.minSize').minimum"
-        :max="getSchemaByProp('autoScaling.minSize').maximum"
-        type="number">
-      </bk-input>
-      <span>~</span>
-      <bk-input
-        class="w74"
-        v-model="nodePoolInfo.autoScaling.maxSize"
-        :min="getSchemaByProp('autoScaling.maxSize').minimum"
-        :max="getSchemaByProp('autoScaling.maxSize').maximum"
-        type="number">
-      </bk-input>
-    </bk-form-item>
-    <bk-form-item
-      :label="$t('是否启用节点池')"
-      :desc="$t('节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池')">
-      <bk-checkbox v-model="nodePoolInfo.enableAutoscale" :disabled="isEdit"></bk-checkbox>
-    </bk-form-item>
-    <!-- <bk-form-item :label="$t('是否开启调度')">
-            <bk-checkbox :true-value="0" :false-value="1"
-                v-model="nodePoolInfo.nodeTemplate.unSchedulable"></bk-checkbox>
-        </bk-form-item> -->
-    <bk-form-item label="Labels" property="labels" error-display-type="normal">
-      <KeyValue
-        class="labels"
-        :min-item="0"
-        :disable-delete-item="false"
-        v-model="nodePoolInfo.nodeTemplate.labels">
-      </KeyValue>
-    </bk-form-item>
-    <bk-form-item label="Taints" property="taints" error-display-type="normal">
-      <span
-        class="add-key-value-items" v-if="!nodePoolInfo.nodeTemplate.taints.length"
-        @click="handleAddTaints">
-        <i class="bk-icon icon-plus-circle-shape mr5"></i>
-        {{$t('添加')}}
-      </span>
-      <Taints
-        class="taints"
-        :effect-options="getSchemaByProp('nodeTemplate.taints.effect').enum"
-        :key-rules="[]"
-        v-model="nodePoolInfo.nodeTemplate.taints"
-        v-else>
-      </Taints>
-    </bk-form-item>
-    <bk-form-item
-      :label="$t('实例创建策略')"
-      :desc="$t('首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点池指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效')">
-      <bk-radio-group v-model="nodePoolInfo.autoScaling.multiZoneSubnetPolicy">
-        <bk-radio value="PRIORITY">{{$t('首选可用区（子网）优先')}}</bk-radio>
-        <bk-radio value="EQUALITY">{{$t('多可用区（子网）打散')}}</bk-radio>
-      </bk-radio-group>
-    </bk-form-item>
-    <bk-form-item
-      :label="$t('重试策略')"
-      :desc="$t('快速重试 ：立即重试，在较短时间内快速重试，连续失败超过一定次数（5次）后不再重试，<br/>间隔递增重试 ：间隔递增重试，随着连续失败次数的增加，重试间隔逐渐增大，重试间隔从秒级到1天不等，<br/>不重试：不进行重试，直到再次收到用户调用或者告警信息后才会重试')">
-      <bk-radio-group v-model="nodePoolInfo.autoScaling.retryPolicy">
-        <bk-radio value="IMMEDIATE_RETRY">{{$t('快速重试')}}</bk-radio>
-        <bk-radio value="INCREMENTAL_INTERVALS">{{$t('间隔递增重试')}}</bk-radio>
-        <bk-radio value="NO_RETRY">{{$t('不重试')}}</bk-radio>
-      </bk-radio-group>
-    </bk-form-item>
-    <bk-form-item
-      :label="$t('扩缩容模式')"
-      :desc="$t('释放模式：缩容时自动释放Cluster AutoScaler判断的空余节点， 扩容时自动创建新的CVM节点加入到伸缩组<br/>关机模式：扩容时优先对已关机的节点执行开机操作，节点数依旧不满足要求时再创建新的CVM节点')">
-      <bk-radio-group v-model="nodePoolInfo.autoScaling.scalingMode">
-        <bk-radio value="CLASSIC_SCALING">{{$t('释放模式')}}</bk-radio>
-        <bk-radio value="WAKE_UP_STOPPED_SCALING">{{$t('关机模式')}}</bk-radio>
-      </bk-radio-group>
-    </bk-form-item>
-    <bk-form-item
-      :label="$t('云区域')"
-      :desc="$t('Cluster Autoscaler组件在扩容节点时会使用节点管理API自动安装gse_agent，以保证监控、日志、标准运维的正常使用，这里的云区域是指节点管理安装gse_agent时指定的云区域，默认为“直连区域”')">
-      <bcs-select
-        :clearable="false"
-        :loading="cloudLoading"
-        v-model="nodePoolInfo.bkCloudID">
-        <bcs-option
-          v-for="item in cloudList"
-          :key="item.bk_cloud_id"
-          :id="item.bk_cloud_id"
-          :name="item.bk_cloud_name">
-        </bcs-option>
-      </bcs-select>
-    </bk-form-item>
-    <bk-form-item :label="$t('模块')">
-      <bcs-select
-        :show-empty="false"
-        allow-create
-        v-model="nodePoolInfo.nodeTemplate.module.scaleOutModuleName"
-        @clear="handleClearNode">
-        <bcs-big-tree
-          :data="topoData"
-          :options="{
-            idKey: 'bk_inst_id',
-            childrenKey: 'child',
-            nameKey: 'bk_inst_name'
-          }"
-          ref="treeRef"
-          default-expand-all
-          :default-checked-nodes="[nodePoolInfo.nodeTemplate.module.scaleOutModuleID]">
-          <template #default="{ data, node }">
-            <div @click="handleSelectNode(data, node)">
-              <bcs-radio
-                v-if="data.bk_obj_id === 'module'"
-                :checked="nodePoolInfo.nodeTemplate.module.scaleOutModuleID === String(data.bk_inst_id)">
-                {{ data.bk_inst_name }}
-              </bcs-radio>
-              <span v-else>{{ data.bk_inst_name }}</span>
+  <div class="node-pool-wrapper">
+    <bcs-resize-layout
+      placement="right"
+      :class="collapse ? '' : 'node-pool'"
+      collapsible
+      :initial-divide="400"
+      :border="false"
+      :min="3"
+      disabled
+      @collapse-change="handleCollapseChange">
+      <template #aside>
+        <ActionDoc type="autoscaler" class="aside" :title="$t('初始化配置说明')" />
+      </template>
+      <template #main>
+        <div class="main" ref="nodePoolInfoRef">
+          <FormGroup :title="$t('基本信息')" :allow-toggle="false">
+            <BasicPoolInfo
+              :schema="schema"
+              :default-values="defaultValues"
+              :is-edit="isEdit"
+              :cluster="cluster"
+              ref="basicInfoRef">
+            </BasicPoolInfo>
+          </FormGroup>
+          <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
+          <FormGroup :title="$t('Kubelet组件参数配置')" :allow-toggle="false">
+            <KubeletParams v-model="nodePoolInfoData.nodeTemplate.extraArgs.kubelet" ref="kubeletRef"></KubeletParams>
+          </FormGroup>
+          <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
+          <FormGroup :title="$t('扩容节点初始化配置')" :allow-toggle="false">
+            <p>{{$t('前置初始化')}}</p>
+            <bcs-input
+              type="textarea"
+              class="mt10"
+              :rows="6"
+              :placeholder="$t('请输入 bash 脚本')"
+              v-model="nodePoolInfoData.nodeTemplate.preStartUserScript">
+            </bcs-input>
+            <p class="mt-[32px]">{{$t('后置初始化')}}</p>
+            <div class="mt-[10px]">
+              <bcs-select class="max-w-[524px]" :clearable="false" v-model="scaleOutPostActionType">
+                <bcs-option id="simple" :name="$t('简单脚本执行')"></bcs-option>
+                <bcs-option id="complex" :name="$t('标准运维流程执行')"></bcs-option>
+              </bcs-select>
+              <bcs-input
+                type="textarea"
+                class="mt10"
+                :rows="6"
+                :placeholder="$t('请输入 bash 脚本')"
+                v-if="scaleOutPostActionType === 'simple'"
+                v-model="nodePoolInfoData.nodeTemplate.userScript">
+              </bcs-input>
+              <BkSops
+                class="mt10"
+                actions-key="postActions"
+                :cluster-id="cluster.clusterID"
+                :addons="nodePoolInfoData.nodeTemplate.scaleOutExtraAddons"
+                ref="scaleOutRef"
+                v-else>
+              </BkSops>
             </div>
-          </template>
-        </bcs-big-tree>
-      </bcs-select>
-    </bk-form-item>
-    <bk-form-item class="mt40" v-if="!isEdit">
-      <bk-button theme="primary" @click="handleNext">{{ $t('下一步') }}</bk-button>
-      <bk-button @click="handleCancel">{{ $t('取消') }}</bk-button>
-    </bk-form-item>
-  </bk-form>
+          </FormGroup>
+          <div class="px-[16px]"><bcs-divider class="!my-[0px]"></bcs-divider></div>
+          <FormGroup :title="$t('节点回收前清理配置')" :allow-toggle="false">
+            <bcs-select class="max-w-[524px]" :clearable="false" v-model="scaleInPreActionType">
+              <bcs-option id="simple" :name="$t('简单脚本执行')"></bcs-option>
+              <bcs-option id="complex" :name="$t('标准运维流程执行')"></bcs-option>
+            </bcs-select>
+            <bcs-input
+              type="textarea"
+              class="mt10"
+              :rows="6"
+              :placeholder="$t('请输入 bash 脚本')"
+              v-if="scaleInPreActionType === 'simple'"
+              v-model="nodePoolInfoData.nodeTemplate.scaleInPreScript">
+            </bcs-input>
+            <BkSops
+              class="mt10"
+              actions-key="preActions"
+              :addons="nodePoolInfoData.nodeTemplate.scaleInExtraAddons"
+              :cluster-id="cluster.clusterID"
+              ref="scaleInRef"
+              v-else>
+            </BkSops>
+          </FormGroup>
+        </div>
+      </template>
+    </bcs-resize-layout>
+    <div class="bcs-fixed-footer" v-if="showFooter">
+      <bcs-button @click="handlePre">{{$t('上一步')}}</bcs-button>
+      <bcs-button
+        theme="primary"
+        :loading="saveLoading"
+        class="ml10"
+        @click="handleSaveNodePoolData">
+        {{isEdit ? $t('保存节点规格') : $t('创建节点规格')}}
+      </bcs-button>
+      <bk-button class="ml10" @click="handleCancel">{{ $t('取消') }}</bk-button>
+    </div>
+  </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, toRefs, onMounted } from 'vue';
-import KeyValue from '@/views/cluster-manage/components/key-value.vue';
-import Taints from '@/views/cluster-manage/components/new-taints.vue';
+import { defineComponent, onMounted, ref, toRefs } from 'vue';
+import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
+import BasicPoolInfo from './basic-pool-info.vue';
+import KubeletParams from '../kubelet-params.vue';
+import BkSops from '../bk-sops.vue';
 import $router from '@/router';
-import $i18n from '@/i18n/i18n-setup';
-import Schema from '@/views/cluster-manage/cluster/autoscaler/resolve-schema';
-import { nodemanCloudList, ccTopology } from '@/api/base';
+import { mergeDeep } from '@/common/util';
+import ActionDoc from '@/views/cluster-manage/components/action-doc.vue';
 
 export default defineComponent({
-  components: { KeyValue, Taints },
+  name: 'NodePoolInfo',
+  components: { FormGroup, BasicPoolInfo, KubeletParams, BkSops, ActionDoc },
   props: {
     schema: {
       type: Object,
@@ -161,183 +131,142 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    showFooter: {
+      type: Boolean,
+      default: true,
+    },
+    saveLoading: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props, ctx) {
-    const { defaultValues, schema, cluster } = toRefs(props);
-    const formRef = ref<any>(null);
-    const nodePoolInfo = ref({
-      name: defaultValues.value.name || '', // 节点名称
-      autoScaling: {
-        maxSize: defaultValues.value.autoScaling.maxSize, // 节点数量范围
-        minSize: defaultValues.value.autoScaling.minSize,
-        scalingMode: defaultValues.value.autoScaling.scalingMode, // 扩缩容模式
-        multiZoneSubnetPolicy: defaultValues.value.autoScaling.multiZoneSubnetPolicy, // 实列创建策略
-        retryPolicy: defaultValues.value.autoScaling.retryPolicy, // 重试策略
-      },
-      enableAutoscale: defaultValues.value.enableAutoscale, // 是否开启弹性伸缩
+    const { defaultValues } = toRefs(props);
+    const nodePoolInfoData = ref({
       nodeTemplate: {
-        unSchedulable: defaultValues.value.nodeTemplate.unSchedulable || 0, // 是否开启调度 0 代表开启调度，1 不可调度
-        labels: defaultValues.value.nodeTemplate.labels || {}, // 标签
-        taints: defaultValues.value.nodeTemplate.taints || [], // 污点
-        module: {
-          scaleOutModuleID: defaultValues.value.nodeTemplate?.module?.scaleOutModuleID || '',
-          scaleOutModuleName: defaultValues.value.nodeTemplate?.module?.scaleOutModuleName || '',
+        extraArgs: {
+          kubelet: defaultValues.value?.nodeTemplate?.extraArgs?.kubelet || '',
         },
+        preStartUserScript: defaultValues.value?.nodeTemplate?.preStartUserScript || '', // 扩容前置脚本
+        userScript: defaultValues.value?.nodeTemplate?.userScript || '', // 扩容后置脚本
+        scaleOutExtraAddons: defaultValues.value?.nodeTemplate?.scaleOutExtraAddons || {}, // 扩容后置流程
+        scaleInPreScript: defaultValues.value?.nodeTemplate?.scaleInPreScript || '', // 缩容前置脚本
+        scaleInExtraAddons: defaultValues.value?.nodeTemplate?.scaleInExtraAddons || {}, // 缩容后置流程
+        labels: {}, // basic-pool-info里面赋值
       },
-      bkCloudID: defaultValues.value.bkCloudID || 0,
+      labels: {},
     });
 
-    const nodePoolInfoRules = ref({
-      name: [
-        {
-          required: true,
-          message: $i18n.t('必填项'),
-          trigger: 'blur',
-        },
-      ],
-      nodeNumRange: [
-        {
-          message: $i18n.t('请输入正确节点数量范围'),
-          trigger: 'blur',
-          validator: () => nodePoolInfo.value.autoScaling.minSize < nodePoolInfo.value.autoScaling.maxSize,
-        },
-      ],
-      labels: [
-        {
-          message: $i18n.t('标签值不能为空'),
-          trigger: 'custom',
-          validator: () => Object.keys(nodePoolInfo.value.nodeTemplate.labels)
-            .every(key => !!nodePoolInfo.value.nodeTemplate.labels[key]),
-        },
-      ],
-      taints: [
-        {
-          message: $i18n.t('taints不能有空字段'),
-          trigger: 'custom',
-          validator: () => nodePoolInfo.value.nodeTemplate.taints.every(item => item.key && item.value && item.effect),
-        },
-        {
-          message: $i18n.t('重复键'),
-          trigger: 'custom',
-          validator: () => {
-            const data = nodePoolInfo.value.nodeTemplate.taints.reduce((pre, item) => {
-              if (item.key) {
-                pre.push(item.key);
-              }
-              return pre;
-            }, []);
-            const removeDuplicateData = new Set(data);
-            return data.length === removeDuplicateData.size;
-          },
-        },
-      ],
-    });
+    const scaleOutPostActionType = ref<'complex' | 'simple'>('simple');
+    const scaleInPreActionType = ref<'complex' | 'simple'>('simple');
 
-    const handleAddTaints = () => {
-      nodePoolInfo.value.nodeTemplate.taints.push({
-        key: '',
-        value: '',
-        effect: 'PreferNoSchedule',
-      });
+    const nodePoolInfoRef = ref<any>(null);
+    const basicInfoRef = ref<any>(null);
+    const kubeletRef = ref<any>(null);
+    const scaleInRef = ref<any>(null);
+    const scaleOutRef = ref<any>(null);
+
+    const getNodePoolData = () => {
+      // 处理基本参数
+      nodePoolInfoData.value = mergeDeep(nodePoolInfoData.value, basicInfoRef.value?.nodePoolInfo || {});
+      // 处理扩容脚本参数
+      if (scaleOutPostActionType.value === 'complex') {
+        nodePoolInfoData.value.nodeTemplate.userScript = '';
+        nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons = scaleOutRef.value?.bkSopsData;
+      } else {
+        nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons = {};
+      }
+
+      // 处理缩容前置脚本参数
+      if (scaleInPreActionType.value === 'complex') {
+        nodePoolInfoData.value.nodeTemplate.scaleInPreScript = '';
+        nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons = scaleInRef.value?.bkSopsData;
+      } else {
+        nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons = {};
+      }
+
+      // 处理label参数 后端label放两地方
+      nodePoolInfoData.value.labels = nodePoolInfoData.value.nodeTemplate.labels;
+      return nodePoolInfoData.value;
     };
+    const validate = async () => {
+      const basicFormValidate = await basicInfoRef.value?.validate().catch(() => false);
+      if (!basicFormValidate) {
+        // 滚动到顶部
+        nodePoolInfoRef.value.scrollTop = 0;
+        return false;
+      }
+      const kubeletValidate = kubeletRef.value?.validateKubeletParams;
+      if (!kubeletValidate) return false;
 
-    const handleNext = async () => {
-      const result = await formRef.value?.validate();
+      return true;
+    };
+    const handlePre = () => {
+      ctx.emit('pre');
+    };
+    const handleSaveNodePoolData = async () => {
+      const result = await validate();
       if (!result) return;
 
-      ctx.emit('next', nodePoolInfo.value);
+      ctx.emit('next', getNodePoolData());
+      ctx.emit('confirm');
     };
     const handleCancel = () => {
       $router.back();
     };
 
-    const getSchemaByProp = props => Schema.getSchemaByProp(schema.value, props);
-    // 云区域列表
-    const cloudList = ref<any[]>([]);
-    const cloudLoading = ref(false);
-    const handleGetCloudList = async () => {
-      cloudLoading.value = true;
-      cloudList.value = await nodemanCloudList().catch(() => []);
-      cloudLoading.value = false;
+    const collapse = ref(false);
+    const handleCollapseChange = (value) => {
+      collapse.value = value;
     };
-    // 模块
-    const treeRef = ref<any>(null);
-    const topoLoading = ref(false);
-    const topoData = ref<any[]>([]);
-    const handleGetTopoData = async () => {
-      topoLoading.value = true;
-      const data = await ccTopology({
-        $clusterId: cluster.value?.clusterID,
-      });
-      topoData.value = [data];
-      topoLoading.value = false;
-    };
-    const getNodePath = (node) => {
-      if (node.parent) {
-        // eslint-disable-next-line camelcase
-        return `${getNodePath(node.parent)} / ${node?.data?.bk_inst_name}`;
-      }
-      // eslint-disable-next-line camelcase
-      return node?.data?.bk_inst_name;
-    };
-    const handleSelectNode = (data, node) => {
-      const path = getNodePath(node);
-      if (data.bk_obj_id === 'module') {
-        nodePoolInfo.value.nodeTemplate.module.scaleOutModuleID = String(data.bk_inst_id);
-        nodePoolInfo.value.nodeTemplate.module.scaleOutModuleName = path;
-      }
-    };
-    const handleClearNode = () => {
-      nodePoolInfo.value.nodeTemplate.module.scaleOutModuleID = '';
-      nodePoolInfo.value.nodeTemplate.module.scaleOutModuleName = '';
-    };
-
     onMounted(() => {
-      handleGetCloudList();
-      handleGetTopoData();
+      scaleOutPostActionType.value = nodePoolInfoData.value.nodeTemplate.scaleOutExtraAddons?.postActions?.length ? 'complex' : 'simple';
+      scaleInPreActionType.value = nodePoolInfoData.value.nodeTemplate.scaleInExtraAddons?.preActions?.length ? 'complex' : 'simple';
     });
     return {
-      cloudList,
-      cloudLoading,
-      formRef,
-      nodePoolInfo,
-      nodePoolInfoRules,
-      treeRef,
-      topoLoading,
-      topoData,
-      handleNext,
+      collapse,
+      nodePoolInfoRef,
+      basicInfoRef,
+      kubeletRef,
+      scaleInRef,
+      scaleOutRef,
+      scaleOutPostActionType,
+      scaleInPreActionType,
+      nodePoolInfoData,
+      getNodePoolData,
+      validate,
+      handlePre,
       handleCancel,
-      getSchemaByProp,
-      handleAddTaints,
-      handleSelectNode,
-      handleClearNode,
+      handleCollapseChange,
+      handleSaveNodePoolData,
     };
   },
 });
 </script>
 <style lang="postcss" scoped>
-.node-pool-info {
-    >>> .w74 {
-        width: 74px;
-    }
-    >>> .w160 {
-        width: 160px;
-    }
-    >>> .labels,
-    >>> .taints {
-        .bk-form-control {
-            width: 160px;
-        }
-    }
-    >>> .bk-form-content {
-        max-width: 600px;
-    }
-    >>> .add-key-value-items {
-        font-size: 14px;
-        color: #3a84ff;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-    }
+.node-pool-wrapper {
+  height: calc(100vh - 104px);
+}
+>>> .bk-resize-layout>.bk-resize-layout-aside:after {
+  content: unset;
+}
+.node-pool {
+  >>> .bk-resize-layout-aside {
+    border-left: none !important;
+  }
+}
+.aside {
+  border-left: none;
+  height: 100%;
+  overflow: auto;
+  background: #fff;
+  >>> .content-wrapper {
+    max-height: calc(100vh - 224px);
+  }
+}
+.main {
+  max-height: calc(100vh - 164px);
+  overflow: auto;
+  padding: 24px;
 }
 </style>

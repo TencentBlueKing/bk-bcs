@@ -332,6 +332,7 @@ import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import TextTips from '@/components/layout/TextTips.vue';
+import { sortBy } from 'lodash';
 
 export default defineComponent({
   components: { FormGroup, TextTips },
@@ -508,18 +509,24 @@ export default defineComponent({
     });
     // eslint-disable-next-line max-len
     const curInstanceItem = computed(() => instanceData.value.find(instance => instance.nodeType === nodePoolConfig.value.launchTemplate.instanceType) || {});
-    const cpuList = computed(() => instanceData.value.reduce((pre, item) => {
-      if (!pre.includes(item.cpu)) {
-        pre.push(item.cpu);
-      }
-      return pre;
-    }, []));
-    const memList = computed(() => instanceData.value.reduce((pre, item) => {
-      if (!pre.includes(item.memory)) {
-        pre.push(item.memory);
-      }
-      return pre;
-    }, []));
+    const cpuList = computed(() => {
+      const data = instanceData.value.reduce((pre, item) => {
+        if (!pre.includes(item.cpu)) {
+          pre.push(item.cpu);
+        }
+        return pre;
+      }, []);
+      return sortBy(data);
+    });
+    const memList = computed(() => {
+      const data = instanceData.value.reduce((pre, item) => {
+        if (!pre.includes(item.memory)) {
+          pre.push(item.memory);
+        }
+        return pre;
+      }, []);
+      return sortBy(data);
+    });
     const CPU = ref('');
     const Mem = ref('');
     watch(() => [
@@ -665,6 +672,7 @@ export default defineComponent({
       const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);;
       if (!basicFormValidate && nodeConfigRef.value) {
         nodeConfigRef.value.scrollTop = 0;
+        return false;
       }
       // 校验机型
       if (!nodePoolConfig.value.launchTemplate.instanceType) {
@@ -840,7 +848,8 @@ export default defineComponent({
     }
     .company {
         display: inline-block;
-        width: 30px;
+        min-width: 30px;
+        padding: 0 4px 0 4px;
         height: 32px;
         border: 1px solid #C4C6CC;
         text-align: center;

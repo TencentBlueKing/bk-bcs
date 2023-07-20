@@ -72,8 +72,8 @@ window.mainComponent = new Vue({
 });
 
 console.log(
-  `%c${BK_CI_BUILD_NUM} \n %c版本信息%c${BK_BCS_VERSION} %c>> ${new Date().toString()
-    .slice(0, 25)}<<`,
+  `%c${BK_BCS_WELCOME} \n %c版本信息%c${BK_BCS_VERSION}%c>> ${new Date().toString()
+    .slice(0, 16)}<<`,
   'color: #2DCB56',
   'padding: 2px 5px; background: #ea3636; color: #fff; border-radius: 3px 0 0 3px;',
   'padding: 2px 5px; background: #42c02e; color: #fff; border-radius: 0 3px 3px 0; font-weight: bold;',

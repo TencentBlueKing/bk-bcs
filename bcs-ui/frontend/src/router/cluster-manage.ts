@@ -18,11 +18,10 @@ const Node = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-mana
 const NodeTemplate = () => import(/* webpackChunkName: 'cluster'  */'@/views/cluster-manage/node-template/node-template.vue');
 const EditNodeTemplate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-template/edit-node-template.vue');
 const AddClusterNode = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/add-cluster-node.vue');
-const AutoScalerConfig = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/tencent/autoscaler-config.vue');
 const NodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/tencent/node-pool.vue');
 const NodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/tencent/node-pool-detail.vue');
 const EditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/tencent/edit-node-pool.vue');
-const InternalAutoScalerConfig = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/autoscaler-config.vue');
+const AutoScalerConfig = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/autoscaler-config.vue');
 const InternalNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool.vue');
 const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/node-pool-detail.vue');
 const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/cluster/autoscaler/internal/edit-node-pool.vue');
@@ -206,7 +205,7 @@ export default [
     path: 'clusters/:clusterId/autoscaler',
     name: 'autoScalerConfig',
     props: true,
-    component: window.REGION === 'ieod' ? InternalAutoScalerConfig : AutoScalerConfig,
+    component: AutoScalerConfig,
     meta: {
       menuId: 'CLUSTER',
     },

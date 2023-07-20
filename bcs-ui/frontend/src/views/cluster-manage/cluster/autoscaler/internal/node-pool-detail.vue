@@ -257,8 +257,8 @@ import $router from '@/router';
 import StatusIcon from '@/components/status-icon';
 import LoadingIcon from '@/components/loading-icon.vue';
 import useInterval from '@/composables/use-interval';
-import kubeletParams from './kubelet-params.vue';
-import UserAction from './user-action.vue';
+import kubeletParams from '../kubelet-params.vue';
+import UserAction from '../user-action.vue';
 import useChainingRef from '@/composables/use-chaining';
 import { cloudsZones } from '@/api/modules/cluster-manager';
 

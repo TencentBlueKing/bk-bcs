@@ -4,35 +4,37 @@
       <HeaderNav :list="navList"></HeaderNav>
     </template>
     <div v-bkloading="{ isLoading }">
-      <bcs-tab>
-        <bcs-tab-panel :label="$t('节点池信息')" name="basic">
-          <NodePoolInfo
-            :default-values="detailData"
-            :schema="schema"
-            :cluster="curCluster"
-            is-edit
-            v-if="!isLoading"
-            ref="nodePoolInfoRef">
-          </NodePoolInfo>
-        </bcs-tab-panel>
+      <bcs-tab class="node-pool-tab mb-[42px]">
         <bcs-tab-panel :label="$t('节点配置')" name="config">
           <NodeConfig
             :default-values="detailData"
             :schema="schema"
             :cluster="curCluster"
             is-edit
+            ref="nodePoolConfigRef"
             v-if="!isLoading">
           </NodeConfig>
         </bcs-tab-panel>
+        <bcs-tab-panel :label="$t('初始化配置')" name="basic">
+          <NodePoolInfo
+            :default-values="detailData"
+            :schema="schema"
+            :cluster="curCluster"
+            is-edit
+            :show-footer="false"
+            v-if="!isLoading"
+            ref="nodePoolInfoRef">
+          </NodePoolInfo>
+        </bcs-tab-panel>
       </bcs-tab>
-      <div class="mt10">
-        <bcs-button
-          theme="primary"
-          style="min-width: 88px"
-          :loading="saveLoading"
-          @click="handleEditNodePool">{{$t('保存')}}</bcs-button>
-        <bcs-button @click="handleCancel">{{$t('取消')}}</bcs-button>
-      </div>
+    </div>
+    <div class="bcs-fixed-footer">
+      <bcs-button
+        theme="primary"
+        class="min-w-[88px]"
+        :loading="saveLoading"
+        @click="handleEditNodePool">{{$t('保存')}}</bcs-button>
+      <bcs-button @click="handleCancel">{{$t('取消')}}</bcs-button>
     </div>
   </BcsContent>
 </template>
@@ -45,7 +47,7 @@ import $i18n from '@/i18n/i18n-setup';
 import NodePoolInfo from './node-pool-info.vue';
 import NodeConfig from './node-config.vue';
 import $store from '@/store/index';
-import $router from '@/router';
+import $router from '@/router/index';
 import { mergeDeep } from '@/common/util';
 
 export default defineComponent({
@@ -71,6 +73,7 @@ export default defineComponent({
 
     const detailData = ref<any>(null);
     const nodePoolInfoRef = ref<any>(null);
+    const nodePoolConfigRef = ref<any>(null);
     const { clusterList } = useClusterList();
     const curCluster = computed(() => ($store.state as any).cluster.clusterList
       ?.find(item => item.clusterID === clusterId.value) || {});
@@ -101,7 +104,7 @@ export default defineComponent({
         },
       },
       {
-        title: $i18n.t('编辑节点池'),
+        title: $i18n.t('编辑节点规格'),
         link: null,
       },
     ]);
@@ -129,19 +132,25 @@ export default defineComponent({
     const user = computed(() => $store.state.user);
     const saveLoading = ref(false);
     const handleEditNodePool = async () => {
-      const validate = await nodePoolInfoRef.value?.formRef.validate();
-      if (!validate) return;
+      const nodePoolInfoValidate = await nodePoolInfoRef.value?.validate();
+      const nodePoolConfigValidate = await nodePoolConfigRef.value?.validate();
+      if (!nodePoolInfoValidate || !nodePoolConfigValidate) return;
 
       saveLoading.value = true;
-      const nodePoolInfo = nodePoolInfoRef.value?.nodePoolInfo;
+      const nodePoolData = nodePoolInfoRef.value?.getNodePoolData();
+      const nodeConfigData = nodePoolConfigRef.value?.getNodePoolData();
       const data = {
+        ...mergeDeep({
+          nodeTemplate: {
+            module: detailData.value.nodeTemplate?.module || {},
+          },
+        }, nodeConfigData, nodePoolData),
         $nodeGroupID: detailData.value.nodeGroupID,
-        ...mergeDeep(detailData.value, nodePoolInfo),
         clusterID: curCluster.value.clusterID,
         region: curCluster.value.region,
         updater: user.value.username,
       };
-      console.log(data);
+      console.log(data, detailData.value, nodeConfigData, nodePoolData);
       const result = await $store.dispatch('clustermanager/updateNodeGroup', data);
       saveLoading.value = false;
       if (result) {
@@ -160,6 +169,15 @@ export default defineComponent({
       isLoading.value = true;
       await handleGetCloudDefaultValues();
       detailData.value = await handleGetNodeGroupDetail();
+      if (!detailData.value.nodeTemplate?.dataDisks?.length) {
+        detailData.value.nodeTemplate.dataDisks = detailData.value.launchTemplate.dataDisks.map((item, index) => ({
+          diskType: item.diskType,
+          diskSize: item.diskSize,
+          fileSystem: item.fileSystem || 'ext4',
+          autoFormatAndMount: true,
+          mountTarget: item.mountTarget || index > 0 ? `/data${index}` : '/data',
+        }));
+      }
       isLoading.value = false;
     });
     return {
@@ -170,9 +188,35 @@ export default defineComponent({
       detailData,
       navList,
       nodePoolInfoRef,
+      nodePoolConfigRef,
       handleCancel,
       handleEditNodePool,
     };
   },
 });
 </script>
+<style lang="postcss" scoped>
+>>> .node-pool-wrapper {
+  height: calc(100vh - 250px);
+  .bk-resize-layout-main .main {
+    max-height: calc(100vh - 260px);
+  }
+  .aside .content-wrapper {
+    max-height: calc(100vh - 312px);
+  }
+}
+
+>>> .node-config-wrapper {
+  max-height: calc(100vh - 252px);
+}
+
+>>> .node-pool-tab {
+  .bk-tab-section {
+    padding: 0;
+  }
+  .node-config {
+    margin-bottom: 0;
+    max-height: unset;
+  }
+}
+</style>

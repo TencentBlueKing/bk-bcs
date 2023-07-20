@@ -163,7 +163,6 @@ CPU使用率: CPU Usage
 删除失败: delete failed
 重试: Retry
 更多: More
-pod迁移: Pod Migration
 选择服务器: Select Host
 主机名称: Host Name
 内网IP: Inner IP
@@ -831,8 +830,6 @@ K8S官方维护的ingress-nginx: K8S officially maintained ingress-nginx
 必须与GCS权限模板中的“业务名”相同: Must be the same as "business name" in the GCS permission template
 DB访问地址: DB access address
 DB类型: DB type
-帐号: Account
-必须与GCS权限模板中的“帐号”相同: Consistent with account number in GCS permission template
 必须与GCS权限模板中的“数据库名称”相同: >-
   Consistent with the content of "database name" configured in the GCS
   permission template
@@ -1249,7 +1246,6 @@ IP格式有误或不存在，检查后重试！: 'IP format is wrong or does not
   numbers later
 请输入业务名称: Please enter the business name
 请输入DB访问地址: Please enter the DB access address
-请输入帐号: please enter your account
 请输入DB名称: Please enter the DB name
 请输入标签: Please enter the tag
 Values 内容发生如下变化，请确认后再点击“确定”更新: >-
@@ -1389,11 +1385,7 @@ kubeconfig可用性测试: kubeconfig usability testing
 卸载组件: Uninstall
 变更中...: changing
 确定卸载: Confirm Uninstall
-节点池信息: Node pool information
 节点配置: Node configuration
-新建节点池: New node pool
-节点池名称: Node pool name
-节点数量范围: Number of nodes
 是否开启调度: Whether to turn on scheduling
 实例创建策略: Example creation strategy
 多可用区（子网）打散: Multi -available area (Ziwang) dispersed
@@ -1430,18 +1422,14 @@ SSD云硬盘: SSD cloud hard disk
 不可用原因: Used for reason
 运行时组件: Running component
 运行时版本: Running version
-自定义脚本: Custom job
 上一步: Previous
-创建节点池: Create node pool
 该可用区暂不支持该机型: This available area does not support this model for the time being
 售卖: sell
 创建中: Creation
 更新中: updating
 已停用: terminated
 扩容算法: Expansion algorithm
-触发扩容资源阈值: Trigger the threshold for expansion resource
 触发缩容资源阈值 (CPU/内存): Trigger the threshold of resource shrinkage resource (CPU/memory)
-执行缩容等待时间: Perform the retractable waiting time
 等待 Pod 退出最长时间: Waiting for the pod for the longest time
 扩缩容检测时间间隔: Expansion tolerance detection time interval
 等待节点提供最长时间: Waiting for nodes to provide the longest time
@@ -1450,17 +1438,8 @@ SSD云硬盘: SSD cloud hard disk
 单次缩容最大节点数: The largest number of nodes of a single reckle
 连续两次缩容时间间隔: Two consecutive contraction time interval
 缩容失败后重试时间间隔: Rehabilitation time interval after retracting failure
-unready节点缩容等待时间: Unready node shrinkage waiting time
-unready节点超过集群总节点: Unready node exceeds the cluster total node
-允许unready节点: Allow Unready nodes
 编辑配置: Edit configuration
-节点池管理: Node pool management
-节点池 ID (名称): Node pool ID (name)
-节点池状态: Node pool status
 管理节点数量: Manage node quantity
-注意：若节点池已开启自动伸缩， 则数量将会随集群负载自动调整: >-
-  Note: If the node pool has been opened automatically, the number will be
-  automatically adjusted with the cluster load
 节点名称: Node name
 删除节点: Delete node
 扩缩容记录: AutoScaler record
@@ -1469,17 +1448,11 @@ unready节点超过集群总节点: Unready node exceeds the cluster total node
 开始时间: Starting time
 结束时间: End Time
 已关闭: closed
-删除节点池: Delete node pool
-'%': '%'
 保存配置: Save configuration
-编辑节点池: Edit node pool
-请输入正确节点数量范围: Please enter the correct number of nodes
 两次输入的密码不一致: The passwords that are input twice are inconsistent
 格式化并挂载于: Format and mount it on
 添加数据盘: Add data disk
 售罄: sold out
-节点池详情: Node pool details
-查看节点池详情: View the details of the node pool
 弹性扩缩容: Cluster Autoscaler
 云凭证使用: Cloud voucher use
 容器管理平台 | 腾讯蓝鲸智云: BlueKing Container Service | Tencent BlueKing
@@ -1487,26 +1460,6 @@ unready节点超过集群总节点: Unready node exceeds the cluster total node
 社区论坛: Community forum
 产品官网: Official website
 日志查询入口: Log query entrance
-自动扩缩容保护机制，集群中unready节点大于允许unready节点数量，且unready节点的比例大于设置的比例，会停止Cluster Autoscaler功能，否则Cluster Autoscaler功能正常运行: >-
-  The automatic expansion capacity protection mechanism, the Unready node in the
-  cluster is greater than allowing the number of Unready nodes, and the
-  proportion of the Unready node is greater than the setting ratio, which will
-  stop the CLuster AutoScaler function, otherwise the cluster autoscaler
-  function runs normally
-时停止自动扩缩容: Stop automatic expansion capacity when stopping
-random：在有多个节点池时，随机选择节点池<br/>least-waste：在有多个节点池时，以最小浪费原则选择，选择有最少可用资源的节点池<br/>most-pods：在有多个节点池时，选择容量最大（可以创建最多Pod）的节点池: >-
-  Random: When there are multiple node pools, choose the node pool random <br/>
-  Least-WASTE: When there are multiple node pools, choose the node pool with the
-  minimum waste of resources <br/> MOST- MOST- PODS: When there are multiple
-  nodes, the selection of node pools with the largest capacity (which can create
-  the most POD)
-如果节点池在设置的时间范围内没有提供可用资源，会导致此次自动扩容失败: >-
-  If the node pool does not provide available resources within the time range of
-  the setting, it will cause the automatic expansion failure
-Cluster Autocaler组件评估集群可以缩容多久后开始执行缩容，防止集群容量在短时间内或高或低于设置的缩容阈值造成频繁扩缩容操作: >-
-  The cluster autocaler component assessment cluster can start to execute the
-  contraction after how long it can be redeemed to prevent the cluster capacity
-  from or lower or lower than the setting threshold in a short period of time
 缩容节点时，等待 pod 停止的最长时间（不会遵守 terminationGracefulPeriodSecond，超时强杀）: >-
   When the reducing node, the maximum time to wait for the POD to stop (the
   TerminationGraceFuliodSecond will not be abide by the
@@ -1526,9 +1479,6 @@ Cluster Autoscaler: Cluster autoscaler
 自动扩容配置: Automatic expansion configuration
 自动缩容配置: Automatic contraction configuration
 允许缩容节点: Allowing capsule nodes
-Cluster Autoscaler 需要至少一个节点池，请停用 Cluster Autoscaler 后再删除: >-
-  Cluster AutoScaler needs at least one node pool, please stop the cluster
-  autoscaler before deleting
 K8S原生集群: K8s native cluster
 集群添加方式: Cluster adding method
 托管集群: Custody cluster
@@ -1876,11 +1826,6 @@ random：在有多个节点规格时，随机选择节点规格<br/>least-waste�
 '集群名称: {name}': 'Cluster Name: {name}'
 配置信息: Configuration information
 节点名: Node
-Cluster Autoscaler 需要至少一个节点池开启，请停用 Cluster Autoscaler 后再关闭: >-
-  Cluster AutoScale needs to open at least one node pool, please stop the
-  cluster autoscaler before closing
-关闭节点池: Close the node pool
-请删除节点后再删除节点池: Please delete nodes before deleting the node pool
 Pod 管理策略: POD management strategy
 请入名称、镜像、IP、Node搜索: 'Please enter the name, mirror image, IP, node search'
 输入名称、创建人、IP搜索: 'Enter name, founder, IP search'
@@ -1971,58 +1916,17 @@ Bash脚本内容: BASH script content
 标准运维模板名称: Standard operation and maintenance template name
 标准运维模板参数: Standard operation and maintenance template parameters
 参数名: parameter name
-自动扩缩容: Automatic expansion capacity
-启用节点池: Enable node pool
-请创建节点池并启用节点池自动扩缩容功能: >-
-  Please create a node pool and enable the automatic expansion capacity of the
-  node pool
-请至少启用 1 个节点池的自动扩缩容功能或创建新的节点池: >-
-  Please at least enable the automatic expansion function of the node pool or
-  create a new node pool
-已启用时会作为Cluster Autocaler的资源池，已关闭时不会作为Cluster Autocaler的资源池: >-
-  When it is enabled, it will be used as the resource pool of Cluster AutoCaler.
-  When it is closed, it will not be used as a resource pool for Cluster
-  Autocaler
-'确定删除节点池 {name} ': 'Determine the delete node pool {name}'
 推荐使用TencentOS Server: It is recommended to use Tencentos Server
-'范围: 10~32000, 步长: 10': 'Scope: 10 ~ 32000, steppe: 10'
-设置容器和镜像存储目录，建议存储到数据盘: >-
-  Set the container and mirror storage directory, it is recommended to store to
-  the data disk
-'指定自定义脚本来配置Node，即当Node启动后运行配置的脚本，需要自行保证脚本的可重入及重试逻辑, 脚本及其生成的日志文件可在节点的/usr/local/qcloud/tke/userscript路径查看': >-
-  Specify the node of the custom script, that is, when the node runs the script
-  that runs the configuration after startup, you need to ensure that the script
-  can be re -entered and retrieved logic./UserScript Path View
-保存节点池: Save node pool
 linux机器密码需8到30位，推荐使用12位以上的密码；且必须包含大写字母，小写字母和数字: >-
   The Linux machine password needs to be 8 to 30 digits, and more than 12
   passwords are recommended; and must include uppercase letters, lowercase
   letters, and numbers
-是否启用自动扩缩容: Whether to enable automatic expansion capacity
 云区域: Cloud area
-自定义数据: Custom data
-在设定的节点范围内自动调节，不会超出该设定范围: >-
-  Automatically adjust within the set node range, and will not exceed the scope
-  of the setting
-是否启用节点池: Whether to enable the node pool
-节点池启用后Autoscaler组件将会根据扩容算法使用该节点池资源，开启Autoscaler组件后必须要开启至少一个节点池: >-
-  After the node pool is enabled, the AutoScaler component will use the node
-  pool resource based on the expansion algorithm. After opening the AutoScaler
-  component, at least one node pool must be opened
-首选可用区（子网）优先：自动扩缩容会在您首选的可用区优先执行扩缩容，若首选可用区无法扩缩容，才会在其他可用区进行扩缩容<br/>多可用区（子网）打散 ：在节点池指定的多可用区（即指定多个子网）之间尽最大努力均匀分配CVM实例，只有配置了多个子网时该策略才能生效: >-
-  The preferred available zone (subnet) preferred: Automatic expansion capacity
-  will prioritize the expansion capacity in your preferred area. If the
-  preferred available area cannot expand capacity, the expansion capacity will
-  be performed in other available areas. <br/>The available area (subnet)
-  dispersed: The maximum effort to allocate the CVM instance between the
-  multiple available areas specified by the node pool (that is, specifies
-  multiple subnets). Only when the strategy is configured with multiple subnets
 Cluster Autoscaler组件在扩容节点时会使用节点管理API自动安装gse_agent，以保证监控、日志、标准运维的正常使用，这里的云区域是指节点管理安装gse_agent时指定的云区域，默认为“直连区域”: >-
   The Cluster Autoscaler component uses node management API to automatically
   install GSE_AGENT when expanding nodes to ensure the normal use of monitoring,
   logs, and standard operation and maintenance. The cloud area here refers to
   the cloud area specified when node management installation of GSE_AGENT.area"
-模块: Module
 集群指标过载: Cluster indicator overload
 集群总览: Cluster
 网络配置: Network Configuration
@@ -2633,4 +2537,17 @@ exclude(过滤匹配字符串): exclude (filter matching string)
   the cluster administrator to handle it
 只支持星号（*）、问号（?）两种通配符: 'Only supports two wildcards: asterisk () and question mark (?)'
 反引号(`): Backtick (`)
-只能包含字母、数字、中划线和下划线，且以字母开头，最大长度为64个字符: 'It can only include letters, numbers, and subordinates, and start with the letter, the maximum length is 64 characters'
+登录方式: ''
+密码登录: ''
+SSH 密钥登录: ''
+指定公钥: ''
+公钥将保存在扩容 CVM 服务器文件：~/:
+  ssh/authorized_keys: ''
+创建密钥: ''
+指定私钥: ''
+私钥数据会加密存储，用于给扩容 CVM 服务器安装 gse_agent: ''
+私钥属机密数据，不回显私钥数据: ''
+只能包含字母、数字和下划线，且以字母开头，最大长度为64个字符: ''
+账号: ''
+必须与GCS权限模板中的“账号”相同: ''
+请输入账号: ''

@@ -168,8 +168,8 @@
               <div class="bk-form-content">
                 <div class="bk-form-inline-item is-required" style="width: 270px;">
                   <label class="bk-label">
-                    {{$t('帐号')}}：
-                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.right="$t('必须与GCS权限模板中的“帐号”相同')"></i>
+                    {{$t('账号')}}：
+                    <i class="bcs-icon bcs-icon-question-circle label-icon" v-bk-tooltips.right="$t('必须与GCS权限模板中的“账号”相同')"></i>
                   </label>
                   <div class="bk-form-content">
                     <bkbcs-input
@@ -252,7 +252,7 @@
               <p class="value">{{curCrdInstance.db_type || '--'}}</p>
             </div>
             <div class="data-item">
-              <p class="key">{{$t('帐号')}}：</p>
+              <p class="key">{{$t('账号')}}：</p>
               <p class="value">{{curCrdInstance.call_user || '--'}}</p>
             </div>
             <div class="data-item">
@@ -786,7 +786,7 @@ export default {
       if (!this.curCrdInstance.call_user) {
         this.$bkMessage({
           theme: 'error',
-          message: this.$t('请输入帐号'),
+          message: this.$t('请输入账号'),
           delay: 5000,
         });
         return false;

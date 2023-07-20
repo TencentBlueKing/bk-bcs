@@ -33,8 +33,7 @@
             {{ $t('弹性扩缩容') }}
             <bk-tag theme="danger">NEW</bk-tag>
           </template>
-          <InternalAutoScaler :cluster-id="clusterId" v-if="$INTERNAL" />
-          <AutoScaler :cluster-id="clusterId" v-else />
+          <AutoScaler :cluster-id="clusterId" />
         </bcs-tab-panel>
       </template>
     </bcs-tab>
@@ -49,8 +48,7 @@ import Info from '@/views/cluster-manage/cluster/info/basic-info.vue';
 import VClusterQuota from '@/views/cluster-manage/cluster/info/vcluster-quota.vue';
 import Network from '@/views/cluster-manage/cluster/info/network.vue';
 import Master from '@/views/cluster-manage/cluster/info/master.vue';
-import AutoScaler from './autoscaler/tencent/autoscaler.vue';
-import InternalAutoScaler from './autoscaler/internal/autoscaler.vue';
+import AutoScaler from './autoscaler/autoscaler.vue';
 import $store from '@/store';
 import $router from '@/router';
 import { useCluster } from '@/composables/use-app';
@@ -64,7 +62,6 @@ export default defineComponent({
     Node,
     Overview,
     AutoScaler,
-    InternalAutoScaler,
     VClusterQuota,
   },
   props: {

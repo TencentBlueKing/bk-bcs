@@ -76,10 +76,10 @@ module.exports = {
     config
       .plugin('define')
       .tap(args => {
-        args[0].BK_CI_BUILD_NUM = JSON.stringify(figlet.textSync(`Welcome To BCS ${process.env.BK_CI_BUILD_NUM || 'dev'}`, {
+        args[0].BK_BCS_WELCOME = JSON.stringify(figlet.textSync('Welcome To BCS', {
           width: 120
         }))
-        args[0].BK_BCS_VERSION = JSON.stringify(`version: ${process.env.bcs_version || '--'}, commitID: ${process.env.BK_CI_GIT_REPO_HEAD_COMMIT_ID || '--'}`)
+        args[0].BK_BCS_VERSION = JSON.stringify(`version: ${process.env.bcs_version || '--'}, commitID: ${process.env.BK_CI_GIT_REPO_HEAD_COMMIT_ID || '--'}, build: ${process.env.BK_CI_BUILD_NUM || 'dev'}`)
         return args
       });
 

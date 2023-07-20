@@ -67,6 +67,7 @@ export default function useMenu() {
     return true;
   };
   const validateRouteEnable = async (route: Route) => {
+    if (!route.params.projectCode) return true; // 处理根路由
     // 首次加载时获取feature_flag数据
     if (!flagsMap.value || !Object.keys(flagsMap.value)?.length) {
       await getFeatureFlags({ projectCode: route.params.projectCode });

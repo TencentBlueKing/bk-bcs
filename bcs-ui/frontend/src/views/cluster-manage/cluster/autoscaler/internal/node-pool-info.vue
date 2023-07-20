@@ -104,8 +104,8 @@
 import { defineComponent, onMounted, ref, toRefs } from 'vue';
 import FormGroup from '@/views/cluster-manage/cluster/create/form-group.vue';
 import BasicPoolInfo from './basic-pool-info.vue';
-import KubeletParams from './kubelet-params.vue';
-import BkSops from './bk-sops.vue';
+import KubeletParams from '../kubelet-params.vue';
+import BkSops from '../bk-sops.vue';
 import $router from '@/router';
 import { mergeDeep } from '@/common/util';
 import ActionDoc from '@/views/cluster-manage/components/action-doc.vue';

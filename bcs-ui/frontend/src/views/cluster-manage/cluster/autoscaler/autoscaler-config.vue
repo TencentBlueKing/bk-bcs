@@ -257,6 +257,7 @@ import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 import TopoSelectTree from './topo-select-tree.vue';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import { useConfig } from '@/composables/use-app';
 
 export default defineComponent({
   components: {
@@ -319,13 +320,14 @@ export default defineComponent({
 
     const loading = ref(false);
     const user = computed(() => $store.state.user);
+    const { _INTERNAL_ } = useConfig();
     const handleSaveConfig = async () => {
       const validate = await formRef.value?.validate();
       if (!validate) return;
       loading.value = true;
       const result = await $store.dispatch('clustermanager/updateClusterAutoScaling', {
         ...autoscalerData.value,
-        provider: 'selfProvisionCloud',
+        provider: _INTERNAL_.value ? 'selfProvisionCloud' : '',
         updater: user.value.username,
         $clusterId: props.clusterId,
       });
@@ -379,7 +381,7 @@ export default defineComponent({
         // 开启或关闭扩缩容
         const result = await $store.dispatch('clustermanager/toggleClusterAutoScalingStatus', {
           enable: value,
-          provider: 'selfProvisionCloud',
+          provider: _INTERNAL_.value ? 'selfProvisionCloud' : '',
           $clusterId: props.clusterId,
           updater: user.value.username,
         });
