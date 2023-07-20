@@ -161,4 +161,4 @@ replace (
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 )
 
-replace github.com/pborman/ansi v1.0.0 => github.com/jonesyang12/ansi v0.0.0-20230717094828-f75af20fd8fa
+replace github.com/pborman/ansi v1.0.0 => github.com/jonesyang12/ansi v0.0.0-20230720115138-79e31feea02d

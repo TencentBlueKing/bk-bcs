@@ -16,6 +16,7 @@ package manager
 import (
 	"context"
 	"encoding/base64"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -145,27 +146,12 @@ func (r *RemoteStreamConn) HandleMsg(msgType int, msg []byte) ([]byte, error) {
 	}
 
 	_, ss, _ := ansi.Decode(inputMsg)
-	cmdParser.Exec = append(cmdParser.Exec, ss)
-
-	if ss.Code == InputLineBreaker {
-		if !inVim(cmdParser.Exec) {
-			cmdParser.CmdInput <- cmdParser.Exec
-		}
-		cmdParser.Exec = make([]*ansi.S, 0)
-	}
 	cmdParser.Cmd = ss
 	//解析键盘输入事件
-	go ansi.ReceivedCmdInChan(cmdParser)
+	go ansi.ReceivedCmdOutChan(cmdParser)
 	//日志记录
 	go recordCmd(cmdParser, r)
 	return inputMsg, nil
-}
-
-func inVim(list []*ansi.S) bool {
-	if list[0].Code == ansi.CHT {
-		return true
-	}
-	return false
 }
 
 func recordCmd(c *ansi.CmdParse, r *RemoteStreamConn) {
@@ -204,11 +190,31 @@ func (r *RemoteStreamConn) Write(p []byte) (int, error) {
 		return 0, nil
 	}
 	//输入输出映射,用于查找历史命令
-	_, ss, e := ansi.Decode(outputMsg)
+	out, ss, e := ansi.Decode(outputMsg)
 	if e != nil {
 		logger.Error("decode output error:", e)
 	}
+	if strings.ReplaceAll(string(ss.Code), "\b", "") == "" {
+		rex := regexp.MustCompile("\\x1b\\[\\d+P")
+		l := rex.Split(string(out), -1)
+		ss.Code = ansi.Name(l[len(l)-1])
+	}
 	cmdParser.CmdResult[cmdParser.Cmd] = ss
+	//排除无效输入信号
+	resultMap := make(map[*ansi.S][]*ansi.S)
+	if ss.Code != "\a" {
+		res := resultMap[cmdParser.Cmd]
+		res = append(res, ss)
+		resultMap[cmdParser.Cmd] = res
+	}
+	cmdParser.InOutMap = append(cmdParser.InOutMap, resultMap)
+	delete(resultMap, (*ansi.S)(nil))
+	for k, _ := range resultMap {
+		if k.Code == InputLineBreaker {
+			cmdParser.CmdOutput <- cmdParser.InOutMap
+			cmdParser.InOutMap = make([]map[*ansi.S][]*ansi.S, 0)
+		}
+	}
 
 	output := []byte(base64.StdEncoding.EncodeToString(outputMsg))
 	r.outputMsgChan <- output
