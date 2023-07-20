@@ -169,8 +169,7 @@ func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Ha
 				// 如果无权限, 跳转到403页面
 				for _, err := range multiErr.Errors {
 					if errors.Is(err, errf.ErrPermissionDenied) {
-						// 去除后缀字符规则 https://github.com/pkg/errors/blob/master/errors.go#L244
-						msg := strings.TrimSuffix(err.Error(), ": "+errors.Cause(err).Error())
+						msg := errf.GetErrMsg(err)
 						redirectURL := fmt.Sprintf("/403.html?msg=%s", base64.StdEncoding.EncodeToString([]byte(msg)))
 						http.Redirect(w, r, redirectURL, http.StatusFound)
 						return

@@ -20,6 +20,13 @@ import (
 	"bscp.io/pkg/cc"
 )
 
+const (
+	// BKLoginProvider 蓝鲸内部统一登入
+	BKLoginProvider = "BK_LOGIN"
+	// BKPaaSProvider 外部统一登入, 可使用主域名或者ESB查询
+	BKPaaSProvider = "BK_PAAS"
+)
+
 // LoginCredential uid/token for grpc auth
 type LoginCredential struct {
 	UID   string
@@ -36,7 +43,7 @@ type AuthLoginClient interface {
 
 // NewAuthLoginClient init client
 func NewAuthLoginClient(conf *cc.LoginAuthSettings) AuthLoginClient {
-	if conf.Provider == "BK_LOGIN" {
+	if conf.Provider == BKLoginProvider {
 		return &bkLoginAuthClient{conf: conf}
 	}
 	return &bkPaaSAuthClient{conf: conf}

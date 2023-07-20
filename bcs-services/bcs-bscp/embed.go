@@ -123,6 +123,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// get403Msg base64 decode msg
 func get403Msg(r *http.Request) string {
 	rawMsg := r.URL.Query().Get("msg")
 	if rawMsg == "" {
