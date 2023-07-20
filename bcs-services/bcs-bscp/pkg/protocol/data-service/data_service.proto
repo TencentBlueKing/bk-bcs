@@ -90,6 +90,7 @@ service Data {
     rpc DeleteTemplateSpace(DeleteTemplateSpaceReq) returns (pbbase.EmptyResp) {}
     rpc GetAllBizsOfTemplateSpaces(pbbase.EmptyReq) returns (GetAllBizsOfTemplateSpacesResp) {}
     rpc CreateDefaultTemplateSpace(CreateDefaultTemplateSpaceReq) returns (CreateResp) {}
+    rpc ListTemplateSpacesByIDs(ListTemplateSpacesByIDsReq) returns (ListTemplateSpacesByIDsResp) {}
 
     // template related interface.
     rpc CreateTemplate(CreateTemplateReq) returns (CreateResp) {}
@@ -97,11 +98,13 @@ service Data {
     rpc UpdateTemplate(UpdateTemplateReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplate(DeleteTemplateReq) returns (pbbase.EmptyResp) {}
     rpc AddTemplateToTemplateSets(AddTemplateToTemplateSetsReq) returns (pbbase.EmptyResp) {}
+    rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
 
     // template release related interface.
     rpc CreateTemplateRelease(CreateTemplateReleaseReq) returns (CreateResp) {}
     rpc ListTemplateReleases(ListTemplateReleasesReq) returns (ListTemplateReleasesResp) {}
     rpc DeleteTemplateRelease(DeleteTemplateReleaseReq) returns (pbbase.EmptyResp) {}
+    rpc ListTemplateReleasesByIDs(ListTemplateReleasesByIDsReq) returns (ListTemplateReleasesByIDsResp) {}
 
     // template set related interface.
     rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateResp) {}
@@ -109,6 +112,7 @@ service Data {
     rpc UpdateTemplateSet(UpdateTemplateSetReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (pbbase.EmptyResp) {}
     rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {}
+    rpc ListTemplateSetsByIDs(ListTemplateSetsByIDsReq) returns (ListTemplateSetsByIDsResp) {}
 
     // app template binding related interface.
     rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateResp) {}
@@ -571,6 +575,14 @@ message CreateDefaultTemplateSpaceReq{
     uint32 biz_id = 1;
 }
 
+message  ListTemplateSpacesByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplateSpacesByIDsResp {
+    repeated pbts.TemplateSpace details = 1;
+}
+
 message CreateTemplateReq {
     pbtemplate.TemplateAttachment attachment       = 1;
     pbtemplate.TemplateSpec       spec             = 2;
@@ -610,6 +622,14 @@ message AddTemplateToTemplateSetsReq {
     repeated uint32 template_set_ids  = 4;
 }
 
+message  ListTemplatesByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplatesByIDsResp {
+    repeated pbtemplate.Template details = 1;
+}
+
 message CreateTemplateReleaseReq {
     pbtr.TemplateReleaseAttachment attachment = 1;
     pbtr.TemplateReleaseSpec       spec       = 2;
@@ -632,6 +652,14 @@ message ListTemplateReleasesResp {
 message DeleteTemplateReleaseReq {
     uint32                         id         = 1;
     pbtr.TemplateReleaseAttachment attachment = 2;
+}
+
+message  ListTemplateReleasesByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplateReleasesByIDsResp {
+    repeated pbtr.TemplateRelease details = 1;
 }
 
 message CreateTemplateSetReq {
@@ -671,6 +699,14 @@ message ListAppTemplateSetsReq {
 }
 
 message ListAppTemplateSetsResp {
+    repeated pbtset.TemplateSet details = 1;
+}
+
+message  ListTemplateSetsByIDsReq {
+    repeated uint32 ids = 1;
+}
+
+message  ListTemplateSetsByIDsResp {
     repeated pbtset.TemplateSet details = 1;
 }
 

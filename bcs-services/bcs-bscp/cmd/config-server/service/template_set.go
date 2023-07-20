@@ -16,12 +16,14 @@ import (
 	"context"
 	"fmt"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbtset "bscp.io/pkg/protocol/core/template-set"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/tools"
 )
 
 // CreateTemplateSet create a template set
@@ -182,6 +184,45 @@ func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemp
 	}
 
 	resp = &pbcs.ListAppTemplateSetsResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListTemplateSetsByIDs list template sets by ids
+func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbcs.ListTemplateSetsByIDsReq) (*pbcs.
+	ListTemplateSetsByIDsResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListTemplateSetsByIDsResp)
+
+	// validate input param
+	ids := tools.SliceRepeatedElements(req.Ids)
+	if len(ids) > 0 {
+		return nil, fmt.Errorf("repeated ids: %v, id must be unique", ids)
+	}
+	idsLen := len(req.Ids)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSet, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListTemplateSetsByIDsReq{
+		Ids: req.Ids,
+	}
+
+	rp, err := s.client.DS.ListTemplateSetsByIDs(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListTemplateSetsByIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil

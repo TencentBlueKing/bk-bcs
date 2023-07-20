@@ -1089,6 +1089,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_spaces/list_by_ids:
+    post:
+      operationId: list_template_space_by_id
+      description: 根据ID查询模版空间
+      tags:
+        - 模版空间
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_spaces/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates:
     post:
       operationId: create_template
@@ -1207,6 +1231,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/biz/{biz_id}/templates/list_by_ids:
+    post:
+      operationId: list_template_by_id
+      description: 根据ID查询模版
+      tags:
+        - 模版
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/templates/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: []
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases:
     post:
       operationId: create_template_release
@@ -1278,6 +1326,30 @@ paths:
         authConfig:
           userVerifiedRequired: true
         disabledStages: []
+  /api/v1/config/biz/{biz_id}/template_releases/list_by_ids:
+    post:
+      operationId: list_template_release_by_id
+      description: 根据ID查询模版版本
+      tags:
+        - 模版版本
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_releases/list_by_ids
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
   /api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets:
     post:
       operationId: create_template_set
@@ -1389,6 +1461,30 @@ paths:
           type: HTTP
           method: get
           path: /api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: true
+        disabledStages: [ ]
+  /api/v1/config/biz/{biz_id}/template_sets/list_by_ids:
+    post:
+      operationId: list_template_set_by_id
+      description: 根据ID查询模版套餐
+      tags:
+        - 模版套餐
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /api/v1/config/biz/{biz_id}/template_sets/list_by_ids
           matchSubpath: false
           timeout: 0
           upstreams: { }

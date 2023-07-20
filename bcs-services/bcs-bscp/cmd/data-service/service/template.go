@@ -228,3 +228,21 @@ func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbds.AddTe
 
 	return new(pbbase.EmptyResp), nil
 }
+
+// ListTemplatesByIDs list templates by ids.
+func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbds.ListTemplatesByIDsReq) (*pbds.
+	ListTemplatesByIDsResp,
+	error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.Template().ListByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list template failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListTemplatesByIDsResp{
+		Details: pbtemplate.PbTemplates(details),
+	}
+	return resp, nil
+}

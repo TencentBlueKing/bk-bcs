@@ -229,6 +229,12 @@ service Config {
             body : "*"
         };
     }
+    rpc ListTemplateSpacesByIDs(ListTemplateSpacesByIDsReq) returns (ListTemplateSpacesByIDsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/list_by_ids"
+            body : "*"
+        };
+    }
 
     rpc CreateTemplate(CreateTemplateReq) returns (CreateTemplateResp) {
         option (google.api.http) = {
@@ -258,6 +264,12 @@ service Config {
             body : "*"
         };
     }
+    rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/templates/list_by_ids"
+            body : "*"
+        };
+    }
 
     rpc CreateTemplateRelease(CreateTemplateReleaseReq) returns (CreateTemplateReleaseResp) {
         option (google.api.http) = {
@@ -273,6 +285,12 @@ service Config {
     rpc DeleteTemplateRelease(DeleteTemplateReleaseReq) returns (DeleteTemplateReleaseResp) {
         option (google.api.http) = {
             delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}"
+        };
+    }
+    rpc ListTemplateReleasesByIDs(ListTemplateReleasesByIDsReq) returns (ListTemplateReleasesByIDsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_releases/list_by_ids"
+            body : "*"
         };
     }
 
@@ -301,6 +319,12 @@ service Config {
     rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets"
+        };
+    }
+    rpc ListTemplateSetsByIDs(ListTemplateSetsByIDsReq) returns (ListTemplateSetsByIDsResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_sets/list_by_ids"
+            body : "*"
         };
     }
 
@@ -947,6 +971,15 @@ message CreateDefaultTemplateSpaceResp{
     uint32 id = 1;
 }
 
+message ListTemplateSpacesByIDsReq {
+    uint32          biz_id = 1;
+    repeated uint32 ids    = 2;
+}
+
+message ListTemplateSpacesByIDsResp {
+    repeated pbts.TemplateSpace details = 1;
+}
+
 message CreateTemplateReq {
     uint32          biz_id            = 1;
     uint32          template_space_id = 2;
@@ -1010,6 +1043,15 @@ message AddTemplateToTemplateSetsReq {
 
 message AddTemplateToTemplateSetsResp {}
 
+message ListTemplatesByIDsReq {
+    uint32          biz_id = 1;
+    repeated uint32 ids    = 2;
+}
+
+message ListTemplatesByIDsResp {
+    repeated pbtemplate.Template details = 1;
+}
+
 message CreateTemplateReleaseReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
@@ -1053,6 +1095,15 @@ message DeleteTemplateReleaseReq {
 }
 
 message DeleteTemplateReleaseResp {}
+
+message ListTemplateReleasesByIDsReq {
+    uint32          biz_id = 1;
+    repeated uint32 ids    = 2;
+}
+
+message ListTemplateReleasesByIDsResp {
+    repeated pbtr.TemplateRelease details = 1;
+}
 
 message CreateTemplateSetReq {
     uint32          biz_id            = 1;
@@ -1110,6 +1161,15 @@ message ListAppTemplateSetsReq {
 }
 
 message ListAppTemplateSetsResp {
+    repeated pbtset.TemplateSet details = 1;
+}
+
+message ListTemplateSetsByIDsReq {
+    uint32          biz_id = 1;
+    repeated uint32 ids    = 2;
+}
+
+message ListTemplateSetsByIDsResp {
     repeated pbtset.TemplateSet details = 1;
 }
 

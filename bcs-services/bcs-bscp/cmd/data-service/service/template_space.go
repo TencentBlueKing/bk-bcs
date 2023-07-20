@@ -143,3 +143,20 @@ func (s *Service) CreateDefaultTemplateSpace(ctx context.Context, req *pbds.Crea
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
 }
+
+// ListTemplateSpacesByIDs list template space by ids.
+func (s *Service) ListTemplateSpacesByIDs(ctx context.Context, req *pbds.ListTemplateSpacesByIDsReq) (*pbds.
+	ListTemplateSpacesByIDsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.TemplateSpace().ListByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListTemplateSpacesByIDsResp{
+		Details: pbts.PbTemplateSpaces(details),
+	}
+	return resp, nil
+}

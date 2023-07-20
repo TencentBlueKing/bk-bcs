@@ -14,7 +14,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 
+	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/iam/meta"
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
@@ -23,6 +25,7 @@ import (
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbtr "bscp.io/pkg/protocol/core/template-release"
 	pbds "bscp.io/pkg/protocol/data-service"
+	"bscp.io/pkg/tools"
 )
 
 // CreateTemplateRelease create a template release
@@ -126,6 +129,44 @@ func (s *Service) ListTemplateReleases(ctx context.Context, req *pbcs.ListTempla
 
 	resp = &pbcs.ListTemplateReleasesResp{
 		Count:   rp.Count,
+		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// ListTemplateReleasesByIDs list template releases by ids
+func (s *Service) ListTemplateReleasesByIDs(ctx context.Context, req *pbcs.ListTemplateReleasesByIDsReq) (*pbcs.
+	ListTemplateReleasesByIDsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListTemplateReleasesByIDsResp)
+
+	// validate input param
+	ids := tools.SliceRepeatedElements(req.Ids)
+	if len(ids) > 0 {
+		return nil, fmt.Errorf("repeated ids: %v, id must be unique", ids)
+	}
+	idsLen := len(req.Ids)
+	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
+		return nil, fmt.Errorf("the length of ids is %d, it must be within the range of [1,%d]",
+			idsLen, constant.ArrayInputLenLimit)
+	}
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRelease, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListTemplateReleasesByIDsReq{
+		Ids: req.Ids,
+	}
+
+	rp, err := s.client.DS.ListTemplateReleasesByIDs(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list template releases failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListTemplateReleasesByIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil

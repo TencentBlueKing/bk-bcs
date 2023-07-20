@@ -210,3 +210,21 @@ func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbds.ListAppTemp
 	}
 	return resp, nil
 }
+
+// ListTemplateSetsByIDs list template set by ids.
+func (s *Service) ListTemplateSetsByIDs(ctx context.Context, req *pbds.ListTemplateSetsByIDsReq) (*pbds.
+	ListTemplateSetsByIDsResp,
+	error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.TemplateSet().ListByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListTemplateSetsByIDsResp{
+		Details: pbtset.PbTemplateSets(details),
+	}
+	return resp, nil
+}

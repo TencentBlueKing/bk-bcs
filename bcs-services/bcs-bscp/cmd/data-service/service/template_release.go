@@ -99,3 +99,20 @@ func (s *Service) DeleteTemplateRelease(ctx context.Context, req *pbds.DeleteTem
 
 	return new(pbbase.EmptyResp), nil
 }
+
+// ListTemplateReleasesByIDs list template release by ids.
+func (s *Service) ListTemplateReleasesByIDs(ctx context.Context, req *pbds.ListTemplateReleasesByIDsReq) (*pbds.
+	ListTemplateReleasesByIDsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.TemplateRelease().ListByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list template releases failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListTemplateReleasesByIDsResp{
+		Details: pbtr.PbTemplateReleases(details),
+	}
+	return resp, nil
+}

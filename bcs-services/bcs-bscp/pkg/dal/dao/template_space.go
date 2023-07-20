@@ -40,6 +40,8 @@ type TemplateSpace interface {
 	GetAllBizs(kit *kit.Kit) ([]uint32, error)
 	// CreateDefault create default template space instance together with its default template set instance
 	CreateDefault(kit *kit.Kit, bizID uint32) (uint32, error)
+	// ListByIDs list template spaces by template space ids.
+	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSpace, error)
 }
 
 var _ TemplateSpace = new(templateSpaceDao)
@@ -305,4 +307,16 @@ func (dao *templateSpaceDao) GetByUniqueKey(kit *kit.Kit, bizID uint32, name str
 	}
 
 	return templateSpace, nil
+}
+
+// ListByIDs list template spaces by template space ids.
+func (dao *templateSpaceDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSpace, error) {
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
+	result, err := q.Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
