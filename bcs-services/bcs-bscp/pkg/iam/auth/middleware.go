@@ -17,6 +17,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -169,8 +170,8 @@ func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Ha
 				// 如果无权限, 跳转到403页面
 				for _, err := range multiErr.Errors {
 					if errors.Is(err, errf.ErrPermissionDenied) {
-						msg := errf.GetErrMsg(err)
-						redirectURL := fmt.Sprintf("/403.html?msg=%s", base64.StdEncoding.EncodeToString([]byte(msg)))
+						msg := base64.StdEncoding.EncodeToString([]byte(errf.GetErrMsg(err)))
+						redirectURL := fmt.Sprintf("/403.html?msg=%s", url.QueryEscape(msg))
 						http.Redirect(w, r, redirectURL, http.StatusFound)
 						return
 					}
