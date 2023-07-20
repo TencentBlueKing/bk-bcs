@@ -209,7 +209,7 @@ func (dao *templateSpaceDao) GetAllBizs(kit *kit.Kit) ([]uint32, error) {
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 	var bizIDs []uint32
 
-	if err := q.Distinct(m.BizID).Pluck(m.ID, &bizIDs); err != nil {
+	if err := q.Distinct(m.BizID).Pluck(m.BizID, &bizIDs); err != nil {
 		return nil, err
 	}
 

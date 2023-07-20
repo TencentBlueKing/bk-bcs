@@ -117,6 +117,7 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbcs.UpdateTemplat
 			Public:      req.Public,
 			BoundApps:   req.BoundApps,
 		},
+		Force: req.Force,
 	}
 	if _, err := s.client.DS.UpdateTemplateSet(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("update template set failed, err: %v, rid: %s", err, grpcKit.Rid)

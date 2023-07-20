@@ -34,6 +34,8 @@ type TemplateSet interface {
 	Create(kit *kit.Kit, templateSpace *table.TemplateSet) (uint32, error)
 	// Update one template set's info.
 	Update(kit *kit.Kit, templateSpace *table.TemplateSet) error
+	// UpdateWithTx update one template set's info with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, templateSpace *table.TemplateSet) error
 	// List template sets with options.
 	List(kit *kit.Kit, bizID, templateSpaceID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateSet, int64, error)
 	// Delete one template set instance.
@@ -138,6 +140,37 @@ func (dao *templateSetDao) Update(kit *kit.Kit, g *table.TemplateSet) error {
 		return nil
 	}
 	if err := dao.genQ.Transaction(updateTx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateWithTx update one template set's info with transaction.
+func (dao *templateSetDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.TemplateSet) error {
+	if err := g.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	if err := dao.validateAttachmentExist(kit, g.Attachment); err != nil {
+		return err
+	}
+
+	// 更新操作, 获取当前记录做审计
+	m := tx.TemplateSet
+	q := tx.TemplateSet.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+		Select(m.Memo, m.Reviser, m.Public, m.BoundApps).
+		Updates(g); err != nil {
 		return err
 	}
 

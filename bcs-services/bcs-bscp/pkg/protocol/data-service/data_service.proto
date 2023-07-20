@@ -656,6 +656,7 @@ message UpdateTemplateSetReq {
     uint32                       id         = 1;
     pbtset.TemplateSetAttachment attachment = 2;
     pbtset.TemplateSetSpec       spec       = 3;
+    bool                         force      = 4;
 }
 
 message DeleteTemplateSetReq {

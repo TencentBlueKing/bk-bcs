@@ -84,6 +84,27 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSe
 func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplateSetReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	var (
+		hasInvisibleApp bool
+		invisibleApps   []uint32
+		err             error
+	)
+
+	if req.Spec.Public == false {
+		invisibleApps, err = s.dao.TemplateBindingRelation().ListTemplateSetInvisibleApps(kt, req.Attachment.BizId,
+			req.Id, req.Spec.BoundApps)
+		if err != nil {
+			logs.Errorf("update template set failed, err: %v, rid: %s", err, kt.Rid)
+			return nil, err
+		}
+		if len(invisibleApps) > 0 {
+			hasInvisibleApp = true
+			if !req.Force {
+				return nil, errors.New("template set is bound to unnamed app, please unbind first")
+			}
+		}
+	}
+
 	templateSet := &table.TemplateSet{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSetSpec(),
@@ -92,15 +113,30 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 			Reviser: kt.User,
 		},
 	}
-
 	if req.Spec.Public == true {
 		templateSet.Spec.BoundApps = []uint32{}
 	}
 
-	if err := s.dao.TemplateSet().Update(kt, templateSet); err != nil {
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. update template set
+	if err = s.dao.TemplateSet().UpdateWithTx(kt, tx, templateSet); err != nil {
 		logs.Errorf("update template set failed, err: %v, rid: %s", err, kt.Rid)
+		tx.Rollback()
 		return nil, err
 	}
+
+	// 2. delete template set for invisible apps if exists
+	if hasInvisibleApp {
+		if err = s.dao.TemplateBindingRelation().DeleteTmplSetForInvisibleAppsWithTx(kt, tx, req.Attachment.BizId,
+			req.Id, invisibleApps); err != nil {
+			logs.Errorf("delete template set for invisible apps failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	tx.Commit()
 
 	return new(pbbase.EmptyResp), nil
 }

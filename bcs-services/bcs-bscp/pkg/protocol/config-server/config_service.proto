@@ -1076,6 +1076,7 @@ message UpdateTemplateSetReq {
     repeated uint32 template_ids      = 5;
     bool            public            = 6;
     repeated uint32 bound_apps        = 7;
+    bool            force             = 8;
 }
 
 message UpdateTemplateSetResp {
