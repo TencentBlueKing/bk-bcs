@@ -44,10 +44,10 @@ func (s *Service) CreateAppTemplateBinding(ctx context.Context, req *pbcs.Create
 	}
 	repeatedTmplRevisiondIDs := tools.SliceRepeatedElements(templateRevisionIDs)
 	if len(repeatedTmplRevisiondIDs) > 0 {
-		return nil, fmt.Errorf("repeated template release ids: %v, id must be unique", repeatedTmplRevisiondIDs)
+		return nil, fmt.Errorf("repeated template revision ids: %v, id must be unique", repeatedTmplRevisiondIDs)
 	}
 	if len(templateRevisionIDs) > 500 {
-		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,500]",
+		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,500]",
 			len(templateRevisionIDs))
 	}
 
@@ -122,10 +122,10 @@ func (s *Service) UpdateAppTemplateBinding(ctx context.Context, req *pbcs.Update
 	}
 	repeatedTmplRevisiondIDs := tools.SliceRepeatedElements(templateRevisionIDs)
 	if len(repeatedTmplRevisiondIDs) > 0 {
-		return nil, fmt.Errorf("repeated template release ids: %v, id must be unique", repeatedTmplRevisiondIDs)
+		return nil, fmt.Errorf("repeated template revision ids: %v, id must be unique", repeatedTmplRevisiondIDs)
 	}
 	if len(templateRevisionIDs) > 500 {
-		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,500]",
+		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,500]",
 			len(templateRevisionIDs))
 	}
 
@@ -195,7 +195,7 @@ func parseBindings(bindings []*pbatb.TemplateBinding) (templateSetIDs, templateR
 			return nil, nil, fmt.Errorf("invalid template set id of bindings member: %d", b.TemplateSetId)
 		}
 		if len(b.TemplateRevisionIds) == 0 {
-			return nil, nil, errors.New("template release ids of bindings member can't be empty")
+			return nil, nil, errors.New("template revision ids of bindings member can't be empty")
 		}
 		templateSetIDs = append(templateSetIDs, b.TemplateSetId)
 		templateRevisionIDs = append(templateRevisionIDs, b.TemplateRevisionIds...)

@@ -39,8 +39,8 @@ Method：POST
       {
         "id": 2,
         "spec": {
-          "release_name": "v2",
-          "release_memo": "my second version",
+          "revision_name": "v20230712150315",
+          "revision_memo": "my second version",
           "name": "server11.yaml",
           "path": "/etc11",
           "file_type": "json",

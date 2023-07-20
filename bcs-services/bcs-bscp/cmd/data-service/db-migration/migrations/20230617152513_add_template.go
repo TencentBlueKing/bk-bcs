@@ -76,22 +76,22 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
-		ReleaseName string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_tempID_relName,priority:3"`
-		ReleaseMemo string `gorm:"type:varchar(256) default ''"`
-		Name        string `gorm:"type:varchar(255) not null"`
-		Path        string `gorm:"type:varchar(255) not null"`
-		FileType    string `gorm:"type:varchar(20) not null"`
-		FileMode    string `gorm:"type:varchar(20) not null"`
-		User        string `gorm:"type:varchar(64) not null"`
-		UserGroup   string `gorm:"type:varchar(64) not null"`
-		Privilege   string `gorm:"type:varchar(64) not null"`
-		Signature   string `gorm:"type:varchar(64) not null"`
-		ByteSize    uint   `gorm:"type:bigint(1) unsigned not null"`
+		RevisionName string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_tempID_revName,priority:3"`
+		RevisionMemo string `gorm:"type:varchar(256) default ''"`
+		Name         string `gorm:"type:varchar(255) not null"`
+		Path         string `gorm:"type:varchar(255) not null"`
+		FileType     string `gorm:"type:varchar(20) not null"`
+		FileMode     string `gorm:"type:varchar(20) not null"`
+		User         string `gorm:"type:varchar(64) not null"`
+		UserGroup    string `gorm:"type:varchar(64) not null"`
+		Privilege    string `gorm:"type:varchar(64) not null"`
+		Signature    string `gorm:"type:varchar(64) not null"`
+		ByteSize     uint   `gorm:"type:bigint(1) unsigned not null"`
 
 		// Attachment is attachment info of the resource
-		BizID           uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempID_relName,priority:1"`
+		BizID           uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempID_revName,priority:1"`
 		TemplateSpaceID uint `gorm:"type:bigint(1) unsigned not null"`
-		TemplateID      uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempID_relName,priority:2"`
+		TemplateID      uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_tempID_revName,priority:2"`
 
 		// CreatedRevision is reversion info of the resource being created
 		Creator   string    `gorm:"type:varchar(64) not null"`

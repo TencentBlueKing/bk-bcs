@@ -15,6 +15,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"bscp.io/pkg/dal/table"
 	"bscp.io/pkg/kit"
@@ -41,6 +42,7 @@ func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbds.CreateTe
 	}
 
 	spec := req.Spec.TemplateRevisionSpec()
+	spec.RevisionName = generateRevisionName()
 	// keep the revision's name and path same with template
 	spec.Name = template.Spec.Name
 	spec.Path = template.Spec.Path
@@ -115,4 +117,10 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbds.List
 		Details: pbtr.PbTemplateRevisions(details),
 	}
 	return resp, nil
+}
+
+func generateRevisionName() string {
+	// Format the current time as YYYYMMDDHHMMSS
+	timestamp := time.Now().Format("20060102150405")
+	return fmt.Sprintf("v%s", timestamp)
 }

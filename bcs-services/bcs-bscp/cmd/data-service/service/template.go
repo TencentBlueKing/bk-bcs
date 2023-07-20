@@ -35,6 +35,11 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 		req.Spec.Name, req.Spec.Path); err == nil {
 		return nil, fmt.Errorf("template's same name %s and path %s already exists", req.Spec.Name, req.Spec.Path)
 	}
+	if len(req.TemplateSetIds) > 0 {
+		if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
+			return nil, err
+		}
+	}
 
 	tx := s.dao.GenQuery().Begin()
 
@@ -54,9 +59,11 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 		return nil, err
 	}
 
-	// 2. create template release
+	// 2. create template revision
+	spec := req.TrSpec.TemplateRevisionSpec()
+	spec.RevisionName = generateRevisionName()
 	templateRevision := &table.TemplateRevision{
-		Spec: req.TrSpec.TemplateRevisionSpec(),
+		Spec: spec,
 		Attachment: &table.TemplateRevisionAttachment{
 			BizID:           template.Attachment.BizID,
 			TemplateSpaceID: template.Attachment.TemplateSpaceID,
@@ -67,7 +74,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 		},
 	}
 	if _, err = s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision); err != nil {
-		logs.Errorf("create template release failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
 	}
@@ -180,7 +187,7 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 		return nil, err
 	}
 
-	// 2. delete template releases of current template
+	// 2. delete template revisions of current template
 	if err = s.dao.TemplateRevision().DeleteForTmplWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()

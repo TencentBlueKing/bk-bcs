@@ -986,8 +986,8 @@ message CreateTemplateReq {
     string          name              = 3;
     string          path              = 4;
     string          memo              = 5;
-    string          revision_name      = 6;
-    string          revision_memo      = 7;
+    // string          revision_name     = 6;
+    string          revision_memo     = 7;
     string          file_type         = 8; // file_type is enum type
     string          file_mode         = 9; // file_mode is enum type
     string          user              = 10;
@@ -1056,8 +1056,8 @@ message CreateTemplateRevisionReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    string revision_name      = 4;
-    string revision_memo      = 5;
+    // string revision_name      = 4;
+    string revision_memo     = 5;
     string name              = 6;
     string path              = 7;
     string file_type         = 8; // file_type is enum type

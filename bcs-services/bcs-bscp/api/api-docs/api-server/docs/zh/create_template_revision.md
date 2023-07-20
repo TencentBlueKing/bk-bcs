@@ -11,8 +11,7 @@
 | biz_id            | uint32   | 是   | 业务ID                                                       |
 | template_space_id | uint32   | 是   | 模版空间ID                                                   |
 | template_id       | uint32   | 是   | 模版ID                                                       |
-| release_name      | string   | 是   | 版本名称。最大长度128个字符，仅允许使用中文、英文、数字、下划线、中划线、点，且必须以中文、英文、数字开头和结尾 |
-| release_memo      | string   | 否   | 版本描述。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾 |
+| revision_memo      | string   | 否   | 版本描述。最大长度256个字符，仅允许使用中文、英文、数字、下划线、中划线、空格，且必须以中文、英文、数字开头和结尾 |
 | file_type         | string   | 是   | 文件格式（枚举值：json、yaml、xml、binary）                  |
 | file_mode         | string   | 是   | 文件模式（枚举值：win、unix）                                |
 | user              | string   | 是   | 文件所属的用户, 例如root                                     |
@@ -25,8 +24,7 @@
 
 ```json
 {
-  "release_name": "v2",
-  "release_memo": "my second version",
+  "revision_memo": "my second version",
   "file_type": "json",
   "file_mode": "unix",
   "user": "mysql",

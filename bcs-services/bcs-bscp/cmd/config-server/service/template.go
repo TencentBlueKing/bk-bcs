@@ -57,7 +57,6 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 			Memo: req.Memo,
 		},
 		TrSpec: &pbtr.TemplateRevisionSpec{
-			RevisionName: req.RevisionName,
 			RevisionMemo: req.RevisionMemo,
 			Name:         req.Name,
 			Path:         req.Path,

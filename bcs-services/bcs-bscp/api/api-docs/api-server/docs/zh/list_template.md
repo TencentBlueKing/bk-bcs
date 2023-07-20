@@ -78,8 +78,8 @@
 | 参数名称     | 参数类型 | 描述         |
 | ------------ | -------- | ------------ |
 | name         | string   | 模版名称     |
-| release_name | string   | 模版版本名称 |
-| release_memo | string   | 模版版本描述 |
+| path | string   | 模版路径 |
+| memo | string   | 模版描述 |
 
 #### attachment
 
