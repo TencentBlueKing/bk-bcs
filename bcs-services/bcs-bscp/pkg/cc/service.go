@@ -123,6 +123,7 @@ type LoginAuthSettings struct {
 	Host      string `yaml:"host"`
 	InnerHost string `yaml:"innerHost"`
 	Provider  string `yaml:"provider"`
+	UseESB    bool   `yaml:"useEsb"`
 	GWPubKey  string `yaml:"gwPubkey"`
 }
 

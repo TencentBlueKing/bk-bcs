@@ -20,7 +20,6 @@ import (
 
 // SearchBizParams is esb search cmdb business parameter.
 type esbSearchBizParams struct {
-	*types.CommParams
 	*SearchBizParams
 }
 

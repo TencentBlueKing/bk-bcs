@@ -14,6 +14,7 @@ package bscp
 
 import (
 	"embed"
+	"encoding/base64"
 	"html/template"
 	"io/fs"
 	"mime"
@@ -46,6 +47,7 @@ type IndexConfig struct {
 // EmbedWebServer 前端 web server
 type EmbedWebServer interface {
 	RenderIndexHandler(conf *IndexConfig) http.Handler
+	Render403Handler(conf *IndexConfig) http.Handler
 	FaviconHandler(w http.ResponseWriter, r *http.Request)
 	StaticFileHandler(prefix string) http.Handler
 }
@@ -116,6 +118,35 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 		}
 
 		e.tpl.ExecuteTemplate(w, "index.html", tplData)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+// get403Msg base64 decode msg
+func get403Msg(r *http.Request) string {
+	rawMsg := r.URL.Query().Get("msg")
+	if rawMsg == "" {
+		return ""
+	}
+
+	b, err := base64.StdEncoding.DecodeString(rawMsg)
+	if err != nil {
+		return ""
+	}
+
+	return string(b)
+}
+
+// Render403Handler 403.html 页面
+func (e *EmbedWeb) Render403Handler(conf *IndexConfig) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		tplData := map[string]string{
+			"MSG":           get403Msg(r),
+			"BK_STATIC_URL": conf.StaticURL,
+		}
+
+		e.tpl.ExecuteTemplate(w, "403.html", tplData)
 	}
 
 	return http.HandlerFunc(fn)
