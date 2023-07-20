@@ -48,6 +48,8 @@ type TemplateSet interface {
 	AddTemplateToTemplateSets(kit *kit.Kit, tmplID uint32, tmplSetIDs []uint32) error
 	// DeleteTmplFromTmplSetsWithTx delete a template from template sets with transaction.
 	DeleteTmplFromTmplSetsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
+	// ListAppTmplSets list all the template sets of the app.
+	ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error)
 }
 
 var _ TemplateSet = new(templateSetDao)
@@ -124,7 +126,9 @@ func (dao *templateSetDao) Update(kit *kit.Kit, g *table.TemplateSet) error {
 	// 多个使用事务处理
 	updateTx := func(tx *gen.Query) error {
 		q = tx.TemplateSet.WithContext(kit.Ctx)
-		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Select(m.Memo, m.Reviser).Updates(g); err != nil {
+		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
+			Select(m.Memo, m.Reviser, m.Public, m.BoundApps).
+			Updates(g); err != nil {
 			return err
 		}
 
@@ -279,6 +283,17 @@ func (dao *templateSetDao) DeleteTmplFromTmplSetsWithTx(kit *kit.Kit, tx *gen.Qu
 		return err
 	}
 	return nil
+}
+
+// ListAppTmplSets list all the template sets of the app.
+func (dao *templateSetDao) ListAppTmplSets(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateSet, error) {
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+
+	return q.Where(m.BizID.Eq(bizID)).
+		Where(m.Public.Is(true)).
+		Or(rawgen.Cond(datatypes.JSONArrayQuery("bound_apps").Contains(appID))...).
+		Find()
 }
 
 // validateAttachmentExist validate if attachment resource exists before operating template

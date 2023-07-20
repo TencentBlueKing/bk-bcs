@@ -108,6 +108,7 @@ service Data {
     rpc ListTemplateSets(ListTemplateSetsReq) returns (ListTemplateSetsResp) {}
     rpc UpdateTemplateSet(UpdateTemplateSetReq) returns (pbbase.EmptyResp) {}
     rpc DeleteTemplateSet(DeleteTemplateSetReq) returns (pbbase.EmptyResp) {}
+    rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {}
 
     // app template binding related interface.
     rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateResp) {}
@@ -661,6 +662,15 @@ message DeleteTemplateSetReq {
     uint32                       id         = 1;
     pbtset.TemplateSetAttachment attachment = 2;
     bool                         force      = 3;
+}
+
+message ListAppTemplateSetsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ListAppTemplateSetsResp {
+    repeated pbtset.TemplateSet details = 1;
 }
 
 message CreateAppTemplateBindingReq {

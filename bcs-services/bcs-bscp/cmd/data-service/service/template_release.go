@@ -44,14 +44,14 @@ func (s *Service) CreateTemplateRelease(ctx context.Context, req *pbds.CreateTem
 	// keep the release's name and path same with template
 	spec.Name = template.Spec.Name
 	spec.Path = template.Spec.Path
-	TemplateRelease := &table.TemplateRelease{
+	templateRelease := &table.TemplateRelease{
 		Spec:       spec,
 		Attachment: req.Attachment.TemplateReleaseAttachment(),
 		Revision: &table.CreatedRevision{
 			Creator: kt.User,
 		},
 	}
-	id, err := s.dao.TemplateRelease().Create(kt, TemplateRelease)
+	id, err := s.dao.TemplateRelease().Create(kt, templateRelease)
 	if err != nil {
 		logs.Errorf("create template release failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -88,11 +88,11 @@ func (s *Service) ListTemplateReleases(ctx context.Context, req *pbds.ListTempla
 func (s *Service) DeleteTemplateRelease(ctx context.Context, req *pbds.DeleteTemplateReleaseReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	TemplateRelease := &table.TemplateRelease{
+	templateRelease := &table.TemplateRelease{
 		ID:         req.Id,
 		Attachment: req.Attachment.TemplateReleaseAttachment(),
 	}
-	if err := s.dao.TemplateRelease().Delete(kt, TemplateRelease); err != nil {
+	if err := s.dao.TemplateRelease().Delete(kt, templateRelease); err != nil {
 		logs.Errorf("delete template release failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}

@@ -35,7 +35,11 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbds.CreateTemplat
 		return nil, fmt.Errorf("template set's same name %s already exists", req.Spec.Name)
 	}
 
-	TemplateSet := &table.TemplateSet{
+	if req.Spec.Public == true {
+		req.Spec.BoundApps = []uint32{}
+	}
+
+	templateSet := &table.TemplateSet{
 		Spec:       req.Spec.TemplateSetSpec(),
 		Attachment: req.Attachment.TemplateSetAttachment(),
 		Revision: &table.Revision{
@@ -43,7 +47,7 @@ func (s *Service) CreateTemplateSet(ctx context.Context, req *pbds.CreateTemplat
 			Reviser: kt.User,
 		},
 	}
-	id, err := s.dao.TemplateSet().Create(kt, TemplateSet)
+	id, err := s.dao.TemplateSet().Create(kt, templateSet)
 	if err != nil {
 		logs.Errorf("create template set failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -80,7 +84,7 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbds.ListTemplateSe
 func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplateSetReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	TemplateSet := &table.TemplateSet{
+	templateSet := &table.TemplateSet{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSetSpec(),
 		Attachment: req.Attachment.TemplateSetAttachment(),
@@ -88,7 +92,12 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 			Reviser: kt.User,
 		},
 	}
-	if err := s.dao.TemplateSet().Update(kt, TemplateSet); err != nil {
+
+	if req.Spec.Public == true {
+		templateSet.Spec.BoundApps = []uint32{}
+	}
+
+	if err := s.dao.TemplateSet().Update(kt, templateSet); err != nil {
 		logs.Errorf("update template set failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -124,11 +133,11 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 	tx := s.dao.GenQuery().Begin()
 
 	// 1. delete template set
-	TemplateSet := &table.TemplateSet{
+	templateSet := &table.TemplateSet{
 		ID:         req.Id,
 		Attachment: req.Attachment.TemplateSetAttachment(),
 	}
-	if err = s.dao.TemplateSet().DeleteWithTx(kt, tx, TemplateSet); err != nil {
+	if err = s.dao.TemplateSet().DeleteWithTx(kt, tx, templateSet); err != nil {
 		logs.Errorf("delete template set failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
@@ -146,4 +155,22 @@ func (s *Service) DeleteTemplateSet(ctx context.Context, req *pbds.DeleteTemplat
 	tx.Commit()
 
 	return new(pbbase.EmptyResp), nil
+}
+
+// ListAppTemplateSets list app template set.
+func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbds.ListAppTemplateSetsReq) (*pbds.
+	ListAppTemplateSetsResp,
+	error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.TemplateSet().ListAppTmplSets(kt, req.BizId, req.AppId)
+	if err != nil {
+		logs.Errorf("list template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListAppTemplateSetsResp{
+		Details: pbtset.PbTemplateSets(details),
+	}
+	return resp, nil
 }

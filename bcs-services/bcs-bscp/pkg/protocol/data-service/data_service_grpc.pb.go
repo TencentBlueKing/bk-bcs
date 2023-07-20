@@ -83,6 +83,7 @@ const (
 	Data_ListTemplateSets_FullMethodName                          = "/pbds.Data/ListTemplateSets"
 	Data_UpdateTemplateSet_FullMethodName                         = "/pbds.Data/UpdateTemplateSet"
 	Data_DeleteTemplateSet_FullMethodName                         = "/pbds.Data/DeleteTemplateSet"
+	Data_ListAppTemplateSets_FullMethodName                       = "/pbds.Data/ListAppTemplateSets"
 	Data_CreateAppTemplateBinding_FullMethodName                  = "/pbds.Data/CreateAppTemplateBinding"
 	Data_ListAppTemplateBindings_FullMethodName                   = "/pbds.Data/ListAppTemplateBindings"
 	Data_UpdateAppTemplateBinding_FullMethodName                  = "/pbds.Data/UpdateAppTemplateBinding"
@@ -189,6 +190,7 @@ type DataClient interface {
 	ListTemplateSets(ctx context.Context, in *ListTemplateSetsReq, opts ...grpc.CallOption) (*ListTemplateSetsResp, error)
 	UpdateTemplateSet(ctx context.Context, in *UpdateTemplateSetReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	DeleteTemplateSet(ctx context.Context, in *DeleteTemplateSetReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	ListAppTemplateSets(ctx context.Context, in *ListAppTemplateSetsReq, opts ...grpc.CallOption) (*ListAppTemplateSetsResp, error)
 	// app template binding related interface.
 	CreateAppTemplateBinding(ctx context.Context, in *CreateAppTemplateBindingReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListAppTemplateBindings(ctx context.Context, in *ListAppTemplateBindingsReq, opts ...grpc.CallOption) (*ListAppTemplateBindingsResp, error)
@@ -743,6 +745,15 @@ func (c *dataClient) DeleteTemplateSet(ctx context.Context, in *DeleteTemplateSe
 	return out, nil
 }
 
+func (c *dataClient) ListAppTemplateSets(ctx context.Context, in *ListAppTemplateSetsReq, opts ...grpc.CallOption) (*ListAppTemplateSetsResp, error) {
+	out := new(ListAppTemplateSetsResp)
+	err := c.cc.Invoke(ctx, Data_ListAppTemplateSets_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) CreateAppTemplateBinding(ctx context.Context, in *CreateAppTemplateBindingReq, opts ...grpc.CallOption) (*CreateResp, error) {
 	out := new(CreateResp)
 	err := c.cc.Invoke(ctx, Data_CreateAppTemplateBinding_FullMethodName, in, out, opts...)
@@ -1095,6 +1106,7 @@ type DataServer interface {
 	ListTemplateSets(context.Context, *ListTemplateSetsReq) (*ListTemplateSetsResp, error)
 	UpdateTemplateSet(context.Context, *UpdateTemplateSetReq) (*base.EmptyResp, error)
 	DeleteTemplateSet(context.Context, *DeleteTemplateSetReq) (*base.EmptyResp, error)
+	ListAppTemplateSets(context.Context, *ListAppTemplateSetsReq) (*ListAppTemplateSetsResp, error)
 	// app template binding related interface.
 	CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateResp, error)
 	ListAppTemplateBindings(context.Context, *ListAppTemplateBindingsReq) (*ListAppTemplateBindingsResp, error)
@@ -1308,6 +1320,9 @@ func (UnimplementedDataServer) UpdateTemplateSet(context.Context, *UpdateTemplat
 }
 func (UnimplementedDataServer) DeleteTemplateSet(context.Context, *DeleteTemplateSetReq) (*base.EmptyResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTemplateSet not implemented")
+}
+func (UnimplementedDataServer) ListAppTemplateSets(context.Context, *ListAppTemplateSetsReq) (*ListAppTemplateSetsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAppTemplateSets not implemented")
 }
 func (UnimplementedDataServer) CreateAppTemplateBinding(context.Context, *CreateAppTemplateBindingReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAppTemplateBinding not implemented")
@@ -2422,6 +2437,24 @@ func _Data_DeleteTemplateSet_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListAppTemplateSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAppTemplateSetsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListAppTemplateSets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListAppTemplateSets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListAppTemplateSets(ctx, req.(*ListAppTemplateSetsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_CreateAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateAppTemplateBindingReq)
 	if err := dec(in); err != nil {
@@ -3210,6 +3243,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteTemplateSet",
 			Handler:    _Data_DeleteTemplateSet_Handler,
+		},
+		{
+			MethodName: "ListAppTemplateSets",
+			Handler:    _Data_ListAppTemplateSets_Handler,
 		},
 		{
 			MethodName: "CreateAppTemplateBinding",

@@ -156,3 +156,32 @@ func (s *Service) ListTemplateSets(ctx context.Context, req *pbcs.ListTemplateSe
 	}
 	return resp, nil
 }
+
+// ListAppTemplateSets list app template sets
+func (s *Service) ListAppTemplateSets(ctx context.Context, req *pbcs.ListAppTemplateSetsReq) (*pbcs.
+	ListAppTemplateSetsResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListAppTemplateSetsResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSet, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListAppTemplateSetsReq{
+		BizId: grpcKit.BizID,
+		AppId: req.AppId,
+	}
+
+	rp, err := s.client.DS.ListAppTemplateSets(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list app template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp = &pbcs.ListAppTemplateSetsResp{
+		Details: rp.Details,
+	}
+	return resp, nil
+}

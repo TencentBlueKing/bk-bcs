@@ -298,6 +298,11 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets"
         };
     }
+    rpc ListAppTemplateSets(ListAppTemplateSetsReq) returns (ListAppTemplateSetsResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets"
+        };
+    }
 
     rpc CreateAppTemplateBinding(CreateAppTemplateBindingReq) returns (CreateAppTemplateBindingResp) {
         option (google.api.http) = {
@@ -1096,6 +1101,15 @@ message ListTemplateSetsReq {
 message ListTemplateSetsResp {
     uint32                      count   = 1;
     repeated pbtset.TemplateSet details = 2;
+}
+
+message ListAppTemplateSetsReq {
+    uint32 biz_id = 1;
+    uint32 app_id = 2;
+}
+
+message ListAppTemplateSetsResp {
+    repeated pbtset.TemplateSet details = 1;
 }
 
 message CreateAppTemplateBindingReq {

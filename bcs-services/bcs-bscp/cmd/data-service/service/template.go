@@ -55,7 +55,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	}
 
 	// 2. create template release
-	TemplateRelease := &table.TemplateRelease{
+	templateRelease := &table.TemplateRelease{
 		Spec: req.TrSpec.TemplateReleaseSpec(),
 		Attachment: &table.TemplateReleaseAttachment{
 			BizID:           template.Attachment.BizID,
@@ -66,7 +66,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			Creator: kt.User,
 		},
 	}
-	if _, err = s.dao.TemplateRelease().CreateWithTx(kt, tx, TemplateRelease); err != nil {
+	if _, err = s.dao.TemplateRelease().CreateWithTx(kt, tx, templateRelease); err != nil {
 		logs.Errorf("create template release failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
@@ -115,7 +115,7 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateRe
 	kt := kit.FromGrpcContext(ctx)
 
 	now := time.Now()
-	Template := &table.Template{
+	template := &table.Template{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSpec(),
 		Attachment: req.Attachment.TemplateAttachment(),
@@ -124,7 +124,7 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateRe
 			UpdatedAt: now,
 		},
 	}
-	if err := s.dao.Template().Update(kt, Template); err != nil {
+	if err := s.dao.Template().Update(kt, template); err != nil {
 		logs.Errorf("update template failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -170,11 +170,11 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 	tx := s.dao.GenQuery().Begin()
 
 	// 1. delete template
-	Template := &table.Template{
+	template := &table.Template{
 		ID:         req.Id,
 		Attachment: req.Attachment.TemplateAttachment(),
 	}
-	if err = s.dao.Template().DeleteWithTx(kt, tx, Template); err != nil {
+	if err = s.dao.Template().DeleteWithTx(kt, tx, template); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
