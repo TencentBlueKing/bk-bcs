@@ -21,12 +21,12 @@ const (
 	codeNotHasPerm = 1302403 // 用户认证成功，但用户无应用访问权限
 )
 
-// IsLoginResult
+// IsLoginResult .
 type IsLoginResult struct {
 	BKUsername string `json:"bk_username"`
 }
 
-// IsLoginResp is cmdb search business response.
+// IsLoginResp is bklogin isLogin response.
 type IsLoginResp struct {
 	types.BaseResponse
 	IsLoginResult `json:"data"`

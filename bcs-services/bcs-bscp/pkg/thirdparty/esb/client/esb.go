@@ -13,15 +13,11 @@
 package client
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/rest"
 	"bscp.io/pkg/rest/client"
 	"bscp.io/pkg/thirdparty/esb/bklogin"
 	"bscp.io/pkg/thirdparty/esb/cmdb"
-	"bscp.io/pkg/thirdparty/esb/types"
 	"bscp.io/pkg/tools"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -47,6 +43,7 @@ func NewClient(cfg *cc.Esb, reg prometheus.Registerer) (Client, error) {
 		return nil, err
 	}
 
+	// esb 鉴权中间件
 	authTransport, err := newEsbAuthTransport(cfg, tools.NewCurlLogTransport(cli.Transport))
 	if err != nil {
 		return nil, err
@@ -82,39 +79,4 @@ func (e *esbCli) Cmdb() cmdb.Client {
 // BKLogin NOTES
 func (e *esbCli) BKLogin() bklogin.Client {
 	return e.bkloginCli
-}
-
-// curlLogTransport print curl log transport
-type esbAuthTransport struct {
-	Transport  http.RoundTripper
-	commParams *types.CommParams
-	authValue  string
-}
-
-func newEsbAuthTransport(cfg *cc.Esb, Transport http.RoundTripper) (http.RoundTripper, error) {
-	params := types.GetCommParams(cfg)
-	value, err := json.Marshal(params)
-	if err != nil {
-		return nil, err
-	}
-	t := &esbAuthTransport{
-		commParams: params,
-		authValue:  string(value),
-		Transport:  Transport,
-	}
-	return t, nil
-}
-
-// RoundTrip curlLog Transport
-func (t *esbAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("X-Bkapi-Authorization", t.authValue)
-	resp, err := t.transport(req).RoundTrip(req)
-	return resp, err
-}
-
-func (t *esbAuthTransport) transport(req *http.Request) http.RoundTripper {
-	if t.Transport != nil {
-		return t.Transport
-	}
-	return http.DefaultTransport
 }
