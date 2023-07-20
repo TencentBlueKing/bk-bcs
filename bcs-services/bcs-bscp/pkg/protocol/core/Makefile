@@ -16,7 +16,7 @@ all:
 	@cd template-space && make
 	@cd config-hook && make
 	@cd template && make
-	@cd template-release && make
+	@cd template-revision && make
 	@cd template-set && make
 	@cd app-template-binding && make
 	@cd template-binding-relation && make
@@ -39,7 +39,7 @@ clean:
 	@cd template-space && make clean
 	@cd config-hook && make clean
 	@cd template && make clean
-	@cd template-release && make clean
+	@cd template-revision && make clean
 	@cd template-set && make clean
 	@cd app-template-binding && make clean
 	@cd template-binding-relation && make clean

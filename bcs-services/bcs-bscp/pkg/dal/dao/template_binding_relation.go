@@ -19,6 +19,7 @@ import (
 
 	"gorm.io/datatypes"
 	rawgen "gorm.io/gen"
+	"gorm.io/gorm"
 )
 
 // TemplateBindingRelation supplies all the template binding relation query operations.
@@ -29,10 +30,10 @@ type TemplateBindingRelation interface {
 	GetTemplateBoundNamedAppCount(kit *kit.Kit, bizID, templateID uint32) (uint32, error)
 	// GetTemplateBoundTemplateSetCount get bound template set count of the target template.
 	GetTemplateBoundTemplateSetCount(kit *kit.Kit, bizID, templateID uint32) (uint32, error)
-	// GetTemplateReleaseBoundUnnamedAppCount get bound unnamed app count of the target template release.
-	GetTemplateReleaseBoundUnnamedAppCount(kit *kit.Kit, bizID, templateReleaseID uint32) (uint32, error)
-	// GetTemplateReleaseBoundNamedAppCount get bound named app count of the target template release.
-	GetTemplateReleaseBoundNamedAppCount(kit *kit.Kit, bizID, templateReleaseID uint32) (uint32, error)
+	// GetTemplateRevisionBoundUnnamedAppCount get bound unnamed app count of the target template release.
+	GetTemplateRevisionBoundUnnamedAppCount(kit *kit.Kit, bizID, templateRevisionID uint32) (uint32, error)
+	// GetTemplateRevisionBoundNamedAppCount get bound named app count of the target template release.
+	GetTemplateRevisionBoundNamedAppCount(kit *kit.Kit, bizID, templateRevisionID uint32) (uint32, error)
 	// GetTemplateSetBoundUnnamedAppCount get bound unnamed app count of the target template set.
 	GetTemplateSetBoundUnnamedAppCount(kit *kit.Kit, bizID, templateSetID uint32) (uint32, error)
 	// GetTemplateSetBoundNamedAppCount get bound named app count of the target template set.
@@ -43,14 +44,22 @@ type TemplateBindingRelation interface {
 	ListTemplateBoundNamedAppDetails(kit *kit.Kit, bizID, templateID uint32) ([]*types.TmplBoundNamedAppDetail, error)
 	// ListTemplateBoundTemplateSetDetails list bound template set details of the target template.
 	ListTemplateBoundTemplateSetDetails(kit *kit.Kit, bizID, templateID uint32) ([]uint32, error)
-	// ListTemplateReleaseBoundUnnamedAppDetails list bound unnamed app details of the target template release.
-	ListTemplateReleaseBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateReleaseID uint32) ([]uint32, error)
-	// ListTemplateReleaseBoundNamedAppDetails list bound named app details of the target template release.
-	ListTemplateReleaseBoundNamedAppDetails(kit *kit.Kit, bizID, templateReleaseID uint32) ([]*types.TmplReleaseBoundNamedAppDetail, error)
+	// ListTemplateRevisionBoundUnnamedAppDetails list bound unnamed app details of the target template release.
+	ListTemplateRevisionBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateRevisionID uint32) ([]uint32, error)
+	// ListTemplateRevisionBoundNamedAppDetails list bound named app details of the target template release.
+	ListTemplateRevisionBoundNamedAppDetails(kit *kit.Kit, bizID, templateRevisionID uint32) ([]*types.TmplRevisionBoundNamedAppDetail, error)
 	// ListTemplateSetBoundUnnamedAppDetails list bound unnamed app details of the target template set.
 	ListTemplateSetBoundUnnamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]uint32, error)
 	// ListTemplateSetBoundNamedAppDetails list bound named app details of the target template set.
 	ListTemplateSetBoundNamedAppDetails(kit *kit.Kit, bizID, templateSetID uint32) ([]*types.TmplSetBoundNamedAppDetail, error)
+	// ListTemplateSetInvisibleApps list invisible apps of the target template set when update its app visible scope.
+	ListTemplateSetInvisibleApps(kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) ([]uint32, error)
+	// DeleteTmplWithTx delete a template with transaction.
+	DeleteTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error
+	// DeleteTmplSetWithTx delete a template set with transaction.
+	DeleteTmplSetWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error
+	// DeleteTmplSetForInvisibleAppsWithTx delete a template set for invisible apps with transaction.
+	DeleteTmplSetForInvisibleAppsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32, appIDs []uint32) error
 }
 
 var _ TemplateBindingRelation = new(templateBindingRelationDao)
@@ -113,15 +122,15 @@ func (dao *templateBindingRelationDao) GetTemplateBoundTemplateSetCount(kit *kit
 	return rs.Counts, nil
 }
 
-// GetTemplateReleaseBoundUnnamedAppCount get bound unnamed app count of the target template release.
-func (dao *templateBindingRelationDao) GetTemplateReleaseBoundUnnamedAppCount(kit *kit.Kit, bizID,
-	templateReleaseID uint32) (uint32, error) {
+// GetTemplateRevisionBoundUnnamedAppCount get bound unnamed app count of the target template release.
+func (dao *templateBindingRelationDao) GetTemplateRevisionBoundUnnamedAppCount(kit *kit.Kit, bizID,
+	templateRevisionID uint32) (uint32, error) {
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
 	var rs countResult
 	if err := q.Select(m.AppID.Distinct().Count().As("counts")).
 		Where(m.BizID.Eq(bizID)).
-		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_release_ids").Contains(templateReleaseID))...).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_revision_ids").Contains(templateRevisionID))...).
 		Scan(&rs); err != nil {
 		return 0, err
 	}
@@ -129,15 +138,15 @@ func (dao *templateBindingRelationDao) GetTemplateReleaseBoundUnnamedAppCount(ki
 	return rs.Counts, nil
 }
 
-// GetTemplateReleaseBoundNamedAppCount get bound named app count of the target template release.
-func (dao *templateBindingRelationDao) GetTemplateReleaseBoundNamedAppCount(kit *kit.Kit, bizID,
-	templateReleaseID uint32) (uint32, error) {
+// GetTemplateRevisionBoundNamedAppCount get bound named app count of the target template release.
+func (dao *templateBindingRelationDao) GetTemplateRevisionBoundNamedAppCount(kit *kit.Kit, bizID,
+	templateRevisionID uint32) (uint32, error) {
 	m := dao.genQ.ReleasedAppTemplateBinding
 	q := dao.genQ.ReleasedAppTemplateBinding.WithContext(kit.Ctx)
 	var rs countResult
 	if err := q.Select(m.AppID.Distinct().Count().As("counts")).
 		Where(m.BizID.Eq(bizID)).
-		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_release_ids").Contains(templateReleaseID))...).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_revision_ids").Contains(templateRevisionID))...).
 		Scan(&rs); err != nil {
 		return 0, err
 	}
@@ -183,7 +192,7 @@ func (dao *templateBindingRelationDao) ListTemplateBoundUnnamedAppDetails(kit *k
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
 	var rs []*types.TmplBoundUnnamedAppDetail
-	if err := q.Select(m.AppID, m.TemplateReleaseIDs).
+	if err := q.Select(m.AppID, m.TemplateRevisionIDs).
 		Where(m.BizID.Eq(bizID)).
 		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(templateID))...).
 		Scan(&rs); err != nil {
@@ -199,7 +208,7 @@ func (dao *templateBindingRelationDao) ListTemplateBoundNamedAppDetails(kit *kit
 	m := dao.genQ.ReleasedAppTemplateBinding
 	q := dao.genQ.ReleasedAppTemplateBinding.WithContext(kit.Ctx)
 	var rs []*types.TmplBoundNamedAppDetail
-	if err := q.Select(m.AppID, m.ReleaseID, m.TemplateReleaseIDs).
+	if err := q.Select(m.AppID, m.ReleaseID, m.TemplateRevisionIDs).
 		Where(m.BizID.Eq(bizID)).
 		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(templateID))...).
 		Scan(&rs); err != nil {
@@ -225,15 +234,15 @@ func (dao *templateBindingRelationDao) ListTemplateBoundTemplateSetDetails(kit *
 	return templateSetIDs, nil
 }
 
-// ListTemplateReleaseBoundUnnamedAppDetails list bound unnamed app details of the target template release.
-func (dao *templateBindingRelationDao) ListTemplateReleaseBoundUnnamedAppDetails(kit *kit.Kit, bizID,
-	templateReleaseID uint32) ([]uint32, error) {
+// ListTemplateRevisionBoundUnnamedAppDetails list bound unnamed app details of the target template release.
+func (dao *templateBindingRelationDao) ListTemplateRevisionBoundUnnamedAppDetails(kit *kit.Kit, bizID,
+	templateRevisionID uint32) ([]uint32, error) {
 	m := dao.genQ.AppTemplateBinding
 	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
 	var appIDs []uint32
 	if err := q.Select(m.AppID).
 		Where(m.BizID.Eq(bizID)).
-		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_release_ids").Contains(templateReleaseID))...).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_revision_ids").Contains(templateRevisionID))...).
 		Pluck(m.AppID, &appIDs); err != nil {
 		return nil, err
 	}
@@ -241,15 +250,15 @@ func (dao *templateBindingRelationDao) ListTemplateReleaseBoundUnnamedAppDetails
 	return appIDs, nil
 }
 
-// ListTemplateReleaseBoundNamedAppDetails list bound named app details of the target template release.
-func (dao *templateBindingRelationDao) ListTemplateReleaseBoundNamedAppDetails(kit *kit.Kit, bizID,
-	templateReleaseID uint32) ([]*types.TmplReleaseBoundNamedAppDetail, error) {
+// ListTemplateRevisionBoundNamedAppDetails list bound named app details of the target template release.
+func (dao *templateBindingRelationDao) ListTemplateRevisionBoundNamedAppDetails(kit *kit.Kit, bizID,
+	templateRevisionID uint32) ([]*types.TmplRevisionBoundNamedAppDetail, error) {
 	m := dao.genQ.ReleasedAppTemplateBinding
 	q := dao.genQ.ReleasedAppTemplateBinding.WithContext(kit.Ctx)
-	var rs []*types.TmplReleaseBoundNamedAppDetail
+	var rs []*types.TmplRevisionBoundNamedAppDetail
 	if err := q.Select(m.AppID, m.ReleaseID).
 		Where(m.BizID.Eq(bizID)).
-		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_release_ids").Contains(templateReleaseID))...).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_revision_ids").Contains(templateRevisionID))...).
 		Scan(&rs); err != nil {
 		return nil, err
 	}
@@ -287,4 +296,75 @@ func (dao *templateBindingRelationDao) ListTemplateSetBoundNamedAppDetails(kit *
 	}
 
 	return rs, nil
+}
+
+// ListTemplateSetInvisibleApps list invisible apps of the target template set when update its app visible scope.
+func (dao *templateBindingRelationDao) ListTemplateSetInvisibleApps(
+	kit *kit.Kit, bizID, templateSetID uint32, boundApps []uint32) ([]uint32, error) {
+	var appIDs []uint32
+	m := dao.genQ.AppTemplateBinding
+	q := dao.genQ.AppTemplateBinding.WithContext(kit.Ctx)
+	if err := q.Distinct(m.AppID).
+		Where(m.BizID.Eq(bizID)).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(templateSetID))...).
+		Where(m.AppID.NotIn(boundApps...)).
+		Pluck(m.AppID, &appIDs); err != nil {
+		return nil, err
+	}
+
+	return appIDs, nil
+}
+
+// DeleteTmplWithTx delete a template with transaction.
+func (dao *templateBindingRelationDao) DeleteTmplWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, tmplID uint32) error {
+	m := tx.AppTemplateBinding
+	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
+	// subQuery get the array of template ids after delete the target template id, set it to '[]' if no records found
+	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+		"JSON_TABLE (template_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+	if _, err := q.Where(m.BizID.Eq(bizID)).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_ids").Contains(tmplID))...).
+		Update(m.TemplateIDs, gorm.Expr(subQuery, tmplID)); err != nil {
+		return err
+	}
+
+	// NOTE: update the template binding whose format is {template set: [template releases]} as well
+	return nil
+}
+
+// DeleteTmplSetWithTx delete a template set with transaction.
+func (dao *templateBindingRelationDao) DeleteTmplSetWithTx(
+	kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32) error {
+	m := tx.AppTemplateBinding
+	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
+	// subQuery get the array of template set ids after delete the target template set id, set it to '[]' if no records found
+	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+		"JSON_TABLE (template_set_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+	if _, err := q.Where(m.BizID.Eq(bizID)).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(tmplSetID))...).
+		Update(m.TemplateSetIDs, gorm.Expr(subQuery, tmplSetID)); err != nil {
+		return err
+	}
+
+	// NOTE: update the template binding whose format is {template set: [template releases]} as well
+	return nil
+}
+
+// DeleteTmplSetForInvisibleAppsWithTx delete a template set for invisible apps with transaction.
+func (dao *templateBindingRelationDao) DeleteTmplSetForInvisibleAppsWithTx(
+	kit *kit.Kit, tx *gen.QueryTx, bizID, tmplSetID uint32, appIDs []uint32) error {
+	m := tx.AppTemplateBinding
+	q := tx.AppTemplateBinding.WithContext(kit.Ctx)
+	// subQuery get the array of template set ids after delete the target template set id, set it to '[]' if no records found
+	subQuery := "COALESCE ((SELECT JSON_ARRAYAGG(oid) new_oids FROM " +
+		"JSON_TABLE (template_set_ids, '$[*]' COLUMNS (oid BIGINT (1) UNSIGNED PATH '$')) AS t1 WHERE oid<> ?), '[]')"
+	if _, err := q.Where(m.BizID.Eq(bizID)).
+		Where(m.AppID.In(appIDs...)).
+		Where(rawgen.Cond(datatypes.JSONArrayQuery("template_set_ids").Contains(tmplSetID))...).
+		Update(m.TemplateSetIDs, gorm.Expr(subQuery, tmplSetID)); err != nil {
+		return err
+	}
+
+	// NOTE: update the template binding whose format is {template set: [template releases]} as well
+	return nil
 }

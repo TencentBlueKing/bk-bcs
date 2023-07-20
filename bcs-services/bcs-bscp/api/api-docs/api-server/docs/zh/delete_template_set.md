@@ -11,6 +11,7 @@
 | biz_id            | uint32   | 是   | 业务ID     |
 | template_space_id | uint32   | 是   | 模版空间ID |
 | template_set_id   | uint32   | 是   | 模版套餐ID |
+| force             | bool     | 否   | 是否强制删除，如果为true，存在未命名服务引用的情况下，会级联删除它们，否则报错 |
 
 #### 调用示例
 

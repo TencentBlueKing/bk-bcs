@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 
+	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
 
 	"bscp.io/pkg/dal/gen"
@@ -33,7 +34,7 @@ type Template interface {
 	// Update one template's info.
 	Update(kit *kit.Kit, template *table.Template) error
 	// List templates with options.
-	List(kit *kit.Kit, bizID, templateSpaceID uint32, opt *types.BasePage) ([]*table.Template, int64, error)
+	List(kit *kit.Kit, bizID, templateSpaceID uint32, searchKey string, opt *types.BasePage) ([]*table.Template, int64, error)
 	// Delete one template instance.
 	Delete(kit *kit.Kit, template *table.Template) error
 	// DeleteWithTx delete one template instance with transaction.
@@ -155,12 +156,20 @@ func (dao *templateDao) Update(kit *kit.Kit, g *table.Template) error {
 }
 
 // List templates with options.
-func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, opt *types.BasePage) (
+func (dao *templateDao) List(kit *kit.Kit, bizID, templateSpaceID uint32, searchKey string, opt *types.BasePage) (
 	[]*table.Template, int64, error) {
 	m := dao.genQ.Template
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 
+	var conds []rawgen.Condition
+	if searchKey != "" {
+		conds = append(conds, q.Where(m.Name.Regexp("(?i)"+searchKey)).
+			Or(m.Memo.Regexp("(?i)"+searchKey)).
+			Or(m.Path.Regexp("(?i)"+searchKey)))
+	}
+
 	result, count, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID)).
+		Where(conds...).
 		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err
@@ -209,14 +218,19 @@ func (dao *templateDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Tem
 		return err
 	}
 
+	// 删除操作, 获取当前记录做审计
 	m := tx.Template
 	q := tx.Template.WithContext(kit.Ctx)
-	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
+	if err := ad.Do(tx.Query); err != nil {
 		return err
 	}
 
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
-	if err := ad.Do(tx.Query); err != nil {
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
 		return err
 	}
 

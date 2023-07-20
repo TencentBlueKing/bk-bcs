@@ -27,16 +27,18 @@ import (
 type Validator interface {
 	// ValidateTemplatesExist validate if templates exists
 	ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error
-	// ValidateTemplateReleasesExist validate if template releases exists
-	ValidateTemplateReleasesExist(kit *kit.Kit, templateReleaseIDs []uint32) error
+	// ValidateTemplateRevisionsExist validate if template releases exists
+	ValidateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error
 	// ValidateTemplateSetsExist validate if template sets exists
 	ValidateTemplateSetsExist(kit *kit.Kit, templateSetIDs []uint32) error
 	// ValidateTemplateExist validate if one template exists
 	ValidateTemplateExist(kit *kit.Kit, id uint32) error
-	// ValidateTemplateReleaseExist validate if one template release exists
-	ValidateTemplateReleaseExist(kit *kit.Kit, id uint32) error
+	// ValidateTemplateRevisionExist validate if one template release exists
+	ValidateTemplateRevisionExist(kit *kit.Kit, id uint32) error
 	// ValidateTemplateSetExist validate if one template set exists
 	ValidateTemplateSetExist(kit *kit.Kit, id uint32) error
+	// ValidateTemplateSpaceNoSubResource validate if one template space has not subresource
+	ValidateTemplateSpaceNoSubResource(kit *kit.Kit, id uint32) error
 }
 
 var _ Validator = new(validatorDao)
@@ -64,16 +66,16 @@ func (dao *validatorDao) ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint
 	return nil
 }
 
-// ValidateTemplateReleasesExist validate if template releases exists
-func (dao *validatorDao) ValidateTemplateReleasesExist(kit *kit.Kit, templateReleaseIDs []uint32) error {
-	m := dao.genQ.TemplateRelease
-	q := dao.genQ.TemplateRelease.WithContext(kit.Ctx)
+// ValidateTemplateRevisionsExist validate if template releases exists
+func (dao *validatorDao) ValidateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error {
+	m := dao.genQ.TemplateRevision
+	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 	var existIDs []uint32
-	if err := q.Where(m.ID.In(templateReleaseIDs...)).Pluck(m.ID, &existIDs); err != nil {
+	if err := q.Where(m.ID.In(templateRevisionIDs...)).Pluck(m.ID, &existIDs); err != nil {
 		return fmt.Errorf("validate template releases exist failed, err: %v", err)
 	}
 
-	diffIDs := tools.SliceDiff(templateReleaseIDs, existIDs)
+	diffIDs := tools.SliceDiff(templateRevisionIDs, existIDs)
 	if len(diffIDs) > 0 {
 		return fmt.Errorf("template release id in %v is not exist", diffIDs)
 	}
@@ -113,10 +115,10 @@ func (dao *validatorDao) ValidateTemplateExist(kit *kit.Kit, id uint32) error {
 	return nil
 }
 
-// ValidateTemplateReleaseExist validate if one template release exists
-func (dao *validatorDao) ValidateTemplateReleaseExist(kit *kit.Kit, id uint32) error {
-	m := dao.genQ.TemplateRelease
-	q := dao.genQ.TemplateRelease.WithContext(kit.Ctx)
+// ValidateTemplateRevisionExist validate if one template release exists
+func (dao *validatorDao) ValidateTemplateRevisionExist(kit *kit.Kit, id uint32) error {
+	m := dao.genQ.TemplateRevision
+	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 
 	if _, err := q.Where(m.ID.Eq(id)).Take(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -138,6 +140,36 @@ func (dao *validatorDao) ValidateTemplateSetExist(kit *kit.Kit, id uint32) error
 			return fmt.Errorf("template set %d is not exist", id)
 		}
 		return fmt.Errorf("get template set failed, err: %v", err)
+	}
+
+	return nil
+}
+
+// ValidateTemplateSpaceNoSubResource validate if one template space has not subresource
+func (dao *validatorDao) ValidateTemplateSpaceNoSubResource(kit *kit.Kit, id uint32) error {
+	var (
+		tmplSetCnt, tmplCnt int64
+		err                 error
+	)
+
+	m := dao.genQ.TemplateSet
+	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
+	if tmplSetCnt, err = q.Where(m.TemplateSpaceID.Eq(id)).Count(); err != nil {
+		return fmt.Errorf("get template set count failed, err: %v", err)
+	}
+	// when the tmplSetCnt is 1, the template set must be default template set
+	// in this scenario, allow the template space to be deleted
+	if tmplSetCnt > 1 {
+		return fmt.Errorf("there are template sets under the template space, need to delete them first")
+	}
+
+	tm := dao.genQ.Template
+	tq := dao.genQ.Template.WithContext(kit.Ctx)
+	if tmplCnt, err = tq.Where(tm.TemplateSpaceID.Eq(id)).Count(); err != nil {
+		return fmt.Errorf("get template count failed, err: %v", err)
+	}
+	if tmplCnt > 0 {
+		return fmt.Errorf("there are templates under the template space, need to delete them first")
 	}
 
 	return nil

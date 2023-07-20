@@ -1,18 +1,25 @@
+### 查询服务可见的模版套餐
+
+#### API基本信息
+
+API名称：list_app_template_set
+
+API Path：/api/v1/config/biz/{biz_id}/apps/{app_id}/template_sets
+
+Method：GET
+
 #### 描述
 
 该接口提供版本：v1.0.0+
 
-查询模版列表
+查询服务可见的所有模版套餐列表
 
 #### 输入参数
 
-| 参数名称          | 参数类型 | 必选 | 描述             |
-| ----------------- | -------- | ---- |----------------|
-| biz_id            | uint32   | 是   | 业务ID           |
-| template_space_id | uint32   | 是   | 模版空间ID         |
-| search_key | string | 否   | 搜索条件（名称、描述、路径） |
-| start             | uint32   | 是   | 分页起始值          |
-| limit             | uint32   | 是   | 分页大小           |
+| 参数名称 | 参数类型 | 必选 | 描述   |
+| -------- | -------- | ---- | ------ |
+| biz_id   | uint32   | 是   | 业务ID |
+| app_id   | uint32   | 是   | 应用ID |
 
 #### 调用示例
 
@@ -25,14 +32,18 @@
 ```json
 {
   "data": {
-    "count": 1,
     "details": [
       {
         "id": 1,
         "spec": {
-          "name": "server.yaml",
-          "path": "/etc",
-          "memo": "my first template"
+          "name": "template_set_001",
+          "memo": "my first template set",
+          "template_ids": [
+            1,
+            2
+          ],
+          "public": true,
+          "bound_apps": []
         },
         "attachment": {
           "biz_id": 2,
@@ -41,8 +52,8 @@
         "revision": {
           "creator": "bk-user-for-test-local",
           "reviser": "bk-user-for-test-local",
-          "create_at": "2023-05-31 15:50:20",
-          "update_at": "2023-05-31 16:43:09"
+          "create_at": "2023-06-05 21:14:45",
+          "update_at": "2023-06-05 21:14:45"
         }
       }
     ]
@@ -75,11 +86,13 @@
 
 #### spec
 
-| 参数名称     | 参数类型 | 描述         |
-| ------------ | -------- | ------------ |
-| name         | string   | 模版名称     |
-| path | string   | 模版路径 |
-| memo | string   | 模版描述 |
+| 参数名称     | 参数类型 | 描述                   |
+| ------------ | -------- | ---------------------- |
+| name         | string   | 模版套餐名称           |
+| memo         | string   | 模版套餐描述           |
+| template_ids | []uint32 | 引用的模版ID列表       |
+| public       | bool     | 是否公开对所有服务可见 |
+| bound_apps   | []uint32 | 指定可见的服务列表     |
 
 #### attachment
 

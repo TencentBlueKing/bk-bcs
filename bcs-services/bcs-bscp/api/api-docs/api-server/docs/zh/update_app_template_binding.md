@@ -20,14 +20,14 @@
   "bindings": [
   {
     "template_set_id": 1,
-    "template_release_ids": [
+    "template_revision_ids": [
       1,
       2
     ]
   },
   {
     "template_set_id": 3,
-    "template_release_ids": [
+    "template_revision_ids": [
       5,
       6
     ]

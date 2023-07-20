@@ -44,7 +44,7 @@ type Set interface {
 	HookRelease() HookRelease
 	TemplateSpace() TemplateSpace
 	Template() Template
-	TemplateRelease() TemplateRelease
+	TemplateRevision() TemplateRevision
 	TemplateSet() TemplateSet
 	AppTemplateBinding() AppTemplateBinding
 	TemplateBindingRelation() TemplateBindingRelation
@@ -239,9 +239,9 @@ func (s *set) Template() Template {
 	}
 }
 
-// TemplateRelease returns the template release's DAO
-func (s *set) TemplateRelease() TemplateRelease {
-	return &templateReleaseDao{
+// TemplateRevision returns the template release's DAO
+func (s *set) TemplateRevision() TemplateRevision {
+	return &templateRevisionDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

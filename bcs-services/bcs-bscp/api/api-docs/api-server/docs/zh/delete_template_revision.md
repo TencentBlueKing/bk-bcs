@@ -11,7 +11,7 @@
 | biz_id              | uint32   | 是   | 业务ID     |
 | template_space_id   | uint32   | 是   | 模版空间ID |
 | template_id         | uint32   | 是   | 模版ID     |
-| template_release_id | uint32   | 是   | 模版版本ID |
+| template_revision_id | uint32   | 是   | 模版版本ID |
 
 #### 调用示例
 

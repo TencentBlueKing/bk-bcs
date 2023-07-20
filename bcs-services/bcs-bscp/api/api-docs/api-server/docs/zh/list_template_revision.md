@@ -6,13 +6,15 @@
 
 #### 输入参数
 
-| 参数名称          | 参数类型 | 必选 | 描述       |
-| ----------------- | -------- | ---- | ---------- |
-| biz_id            | uint32   | 是   | 业务ID     |
-| template_space_id | uint32   | 是   | 模版空间ID |
-| template_id       | uint32   | 是   | 模版ID     |
-| start             | uint32   | 是   | 分页起始值 |
-| limit             | uint32   | 是   | 分页大小   |
+| 参数名称          | 参数类型 | 必选 | 描述           |
+| ----------------- | -------- | ---- |--------------|
+| biz_id            | uint32   | 是   | 业务ID         |
+| template_space_id | uint32   | 是   | 模版空间ID       |
+| template_id       | uint32   | 是   | 模版ID         |
+| search_key | string | 否   | 搜索条件（版本号、描述） |
+| start             | uint32   | 是   | 分页起始值        |
+| limit             | uint32   | 是   | 分页大小         |
+
 
 #### 调用示例
 
@@ -30,8 +32,8 @@
       {
         "id": 2,
         "spec": {
-          "release_name": "v2",
-          "release_memo": "my second version",
+          "revision_name": "v20230712150315",
+          "revision_memo": "my second version",
           "name": "server11.yaml",
           "path": "/etc11",
           "file_type": "json",

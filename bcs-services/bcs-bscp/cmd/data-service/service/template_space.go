@@ -33,7 +33,7 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTempl
 		return nil, fmt.Errorf("template space's same name %s already exists", req.Spec.Name)
 	}
 
-	TemplateSpace := &table.TemplateSpace{
+	templateSpace := &table.TemplateSpace{
 		Spec:       req.Spec.TemplateSpaceSpec(),
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
 		Revision: &table.Revision{
@@ -41,7 +41,7 @@ func (s *Service) CreateTemplateSpace(ctx context.Context, req *pbds.CreateTempl
 			Reviser: kt.User,
 		},
 	}
-	id, err := s.dao.TemplateSpace().Create(kt, TemplateSpace)
+	id, err := s.dao.TemplateSpace().Create(kt, templateSpace)
 	if err != nil {
 		logs.Errorf("create template space failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
@@ -60,7 +60,7 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 		return nil, err
 	}
 
-	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, opt)
+	details, count, err := s.dao.TemplateSpace().List(kt, req.BizId, req.SearchKey, opt)
 
 	if err != nil {
 		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
@@ -78,7 +78,7 @@ func (s *Service) ListTemplateSpaces(ctx context.Context, req *pbds.ListTemplate
 func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTemplateSpaceReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	TemplateSpace := &table.TemplateSpace{
+	templateSpace := &table.TemplateSpace{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSpaceSpec(),
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
@@ -86,7 +86,7 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTempl
 			Reviser: kt.User,
 		},
 	}
-	if err := s.dao.TemplateSpace().Update(kt, TemplateSpace); err != nil {
+	if err := s.dao.TemplateSpace().Update(kt, templateSpace); err != nil {
 		logs.Errorf("update template space failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -98,11 +98,15 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTempl
 func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbds.DeleteTemplateSpaceReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	TemplateSpace := &table.TemplateSpace{
+	if err := s.dao.Validator().ValidateTemplateSpaceNoSubResource(kt, req.Id); err != nil {
+		return nil, err
+	}
+
+	templateSpace := &table.TemplateSpace{
 		ID:         req.Id,
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
 	}
-	if err := s.dao.TemplateSpace().Delete(kt, TemplateSpace); err != nil {
+	if err := s.dao.TemplateSpace().Delete(kt, templateSpace); err != nil {
 		logs.Errorf("delete template space failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -137,5 +141,22 @@ func (s *Service) CreateDefaultTemplateSpace(ctx context.Context, req *pbds.Crea
 	}
 
 	resp := &pbds.CreateResp{Id: id}
+	return resp, nil
+}
+
+// ListTemplateSpacesByIDs list template space by ids.
+func (s *Service) ListTemplateSpacesByIDs(ctx context.Context, req *pbds.ListTemplateSpacesByIDsReq) (*pbds.
+	ListTemplateSpacesByIDsResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.TemplateSpace().ListByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListTemplateSpacesByIDsResp{
+		Details: pbts.PbTemplateSpaces(details),
+	}
 	return resp, nil
 }

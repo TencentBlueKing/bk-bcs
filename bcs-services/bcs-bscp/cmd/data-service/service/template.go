@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -34,6 +35,11 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 		req.Spec.Name, req.Spec.Path); err == nil {
 		return nil, fmt.Errorf("template's same name %s and path %s already exists", req.Spec.Name, req.Spec.Path)
 	}
+	if len(req.TemplateSetIds) > 0 {
+		if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
+			return nil, err
+		}
+	}
 
 	tx := s.dao.GenQuery().Begin()
 
@@ -53,10 +59,12 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 		return nil, err
 	}
 
-	// 2. create template release
-	TemplateRelease := &table.TemplateRelease{
-		Spec: req.TrSpec.TemplateReleaseSpec(),
-		Attachment: &table.TemplateReleaseAttachment{
+	// 2. create template revision
+	spec := req.TrSpec.TemplateRevisionSpec()
+	spec.RevisionName = generateRevisionName()
+	templateRevision := &table.TemplateRevision{
+		Spec: spec,
+		Attachment: &table.TemplateRevisionAttachment{
 			BizID:           template.Attachment.BizID,
 			TemplateSpaceID: template.Attachment.TemplateSpaceID,
 			TemplateID:      id,
@@ -65,19 +73,19 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			Creator: kt.User,
 		},
 	}
-	_, err = s.dao.TemplateRelease().CreateWithTx(kt, tx, TemplateRelease)
-	if err != nil {
-		logs.Errorf("create template release failed, err: %v, rid: %s", err, kt.Rid)
+	if _, err = s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision); err != nil {
+		logs.Errorf("create template revision failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
 	}
 
-	// 3. add current template to default template set
-	if err = s.dao.TemplateSet().AddTemplateToDefaultWithTx(kt, tx, template.Attachment.BizID,
-		template.Attachment.TemplateSpaceID, id); err != nil {
-		logs.Errorf("add current template to default template set failed, err: %v, rid: %s", err, kt.Rid)
-		tx.Rollback()
-		return nil, err
+	// 3. add current template to template sets if necessary
+	if len(req.TemplateSetIds) > 0 {
+		if err = s.dao.TemplateSet().AddTemplateToTemplateSets(kt, id, req.TemplateSetIds); err != nil {
+			logs.Errorf("add current template to template sets failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
 	tx.Commit()
@@ -95,7 +103,7 @@ func (s *Service) ListTemplates(ctx context.Context, req *pbds.ListTemplatesReq)
 		return nil, err
 	}
 
-	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, opt)
+	details, count, err := s.dao.Template().List(kt, req.BizId, req.TemplateSpaceId, req.SearchKey, opt)
 
 	if err != nil {
 		logs.Errorf("list template failed, err: %v, rid: %s", err, kt.Rid)
@@ -114,7 +122,7 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateRe
 	kt := kit.FromGrpcContext(ctx)
 
 	now := time.Now()
-	Template := &table.Template{
+	template := &table.Template{
 		ID:         req.Id,
 		Spec:       req.Spec.TemplateSpec(),
 		Attachment: req.Attachment.TemplateAttachment(),
@@ -123,7 +131,7 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateRe
 			UpdatedAt: now,
 		},
 	}
-	if err := s.dao.Template().Update(kt, Template); err != nil {
+	if err := s.dao.Template().Update(kt, template); err != nil {
 		logs.Errorf("update template failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
@@ -135,28 +143,113 @@ func (s *Service) UpdateTemplate(ctx context.Context, req *pbds.UpdateTemplateRe
 func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	r := &pbds.ListTemplateBoundCountsReq{
+		BizId:           req.Attachment.BizId,
+		TemplateSpaceId: req.Attachment.TemplateSpaceId,
+		TemplateIds:     []uint32{req.Id},
+	}
+	boundCnt, err := s.ListTemplateBoundCounts(ctx, r)
+	if err != nil {
+		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	var hasTmplSet, hasUnnamedApp bool
+	if len(boundCnt.Details) > 0 {
+		if boundCnt.Details[0].BoundTemplateSetCount > 0 && boundCnt.Details[0].BoundUnnamedAppCount > 0 {
+			hasTmplSet, hasUnnamedApp = true, true
+			if !req.Force {
+				return nil, errors.New("template is bound to template set and unnamed app, please unbind first")
+			}
+		} else if boundCnt.Details[0].BoundTemplateSetCount > 0 {
+			hasTmplSet = true
+			if !req.Force {
+				return nil, errors.New("template is bound to template set, please unbind first")
+			}
+		} else if boundCnt.Details[0].BoundUnnamedAppCount > 0 {
+			hasUnnamedApp = true
+			if !req.Force {
+				return nil, errors.New("template is bound to unnamed app, please unbind first")
+			}
+		}
+	}
+
 	tx := s.dao.GenQuery().Begin()
 
 	// 1. delete template
-	Template := &table.Template{
+	template := &table.Template{
 		ID:         req.Id,
 		Attachment: req.Attachment.TemplateAttachment(),
 	}
-	if err := s.dao.Template().DeleteWithTx(kt, tx, Template); err != nil {
+	if err = s.dao.Template().DeleteWithTx(kt, tx, template); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
 	}
 
-	// 2. delete current template from default template set
-	if err := s.dao.TemplateSet().DeleteTemplateFromDefaultWithTx(kt, tx, req.Attachment.BizId,
-		req.Attachment.TemplateSpaceId, req.Id); err != nil {
-		logs.Errorf("delete current template from default template set failed, err: %v, rid: %s", err, kt.Rid)
+	// 2. delete template revisions of current template
+	if err = s.dao.TemplateRevision().DeleteForTmplWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
+	}
+
+	// 3. delete bound template set if exists
+	if hasTmplSet {
+		if err = s.dao.TemplateSet().DeleteTmplFromTmplSetsWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	// 4. delete bound unnamed app if exists
+	if hasUnnamedApp {
+		if err = s.dao.TemplateBindingRelation().DeleteTmplWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+			logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
+			tx.Rollback()
+			return nil, err
+		}
 	}
 
 	tx.Commit()
 
 	return new(pbbase.EmptyResp), nil
+}
+
+// AddTemplateToTemplateSets add a template to template sets.
+func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbds.AddTemplateToTemplateSetsReq) (*pbbase.EmptyResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if err := s.dao.Validator().ValidateTemplateExist(kt, req.TemplateId); err != nil {
+		return nil, err
+	}
+	if err := s.dao.Validator().ValidateTemplateSetsExist(kt, req.TemplateSetIds); err != nil {
+		return nil, err
+	}
+
+	if err := s.dao.TemplateSet().AddTemplateToTemplateSets(kt, req.TemplateId, req.TemplateSetIds); err != nil {
+		logs.Errorf(" add template to template sets failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// ListTemplatesByIDs list templates by ids.
+func (s *Service) ListTemplatesByIDs(ctx context.Context, req *pbds.ListTemplatesByIDsReq) (*pbds.
+	ListTemplatesByIDsResp,
+	error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	details, err := s.dao.Template().ListByIDs(kt, req.Ids)
+	if err != nil {
+		logs.Errorf("list template failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	resp := &pbds.ListTemplatesByIDsResp{
+		Details: pbtemplate.PbTemplates(details),
+	}
+	return resp, nil
 }

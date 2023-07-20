@@ -17,7 +17,7 @@
 ```go
 type TemplateBinding struct {
 	TemplateSetID      uint32   `json:"template_set_id"`
-	TemplateReleaseIDs []uint32 `json:"template_release_ids"`
+	TemplateRevisionIDs []uint32 `json:"template_revision_ids"`
 }
 ```
 
@@ -28,14 +28,14 @@ type TemplateBinding struct {
   "bindings": [
   {
     "template_set_id": 1,
-    "template_release_ids": [
+    "template_revision_ids": [
       1,
       2
     ]
   },
   {
     "template_set_id": 2,
-    "template_release_ids": [
+    "template_revision_ids": [
       3,
       4
     ]

@@ -48,8 +48,8 @@ const (
 	TemplateSpace ResourceType = "template_space"
 	// Template resource's bscp auth resource type
 	Template ResourceType = "template"
-	// TemplateRelease resource's bscp auth resource type
-	TemplateRelease ResourceType = "template_release"
+	// TemplateRevision resource's bscp auth resource type
+	TemplateRevision ResourceType = "template_revision"
 	// TemplateSet resource's bscp auth resource type
 	TemplateSet ResourceType = "template_set"
 	// AppTemplateBinding resource's bscp auth resource type

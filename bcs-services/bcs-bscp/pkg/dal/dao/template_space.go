@@ -15,6 +15,8 @@ package dao
 import (
 	"fmt"
 
+	rawgen "gorm.io/gen"
+
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
@@ -29,7 +31,7 @@ type TemplateSpace interface {
 	// Update one template space's info.
 	Update(kit *kit.Kit, templateSpace *table.TemplateSpace) error
 	// List template spaces with options.
-	List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error)
+	List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateSpace, int64, error)
 	// Delete one template space instance.
 	Delete(kit *kit.Kit, templateSpace *table.TemplateSpace) error
 	// GetByUniqueKey get template space by unique key.
@@ -38,6 +40,8 @@ type TemplateSpace interface {
 	GetAllBizs(kit *kit.Kit) ([]uint32, error)
 	// CreateDefault create default template space instance together with its default template set instance
 	CreateDefault(kit *kit.Kit, bizID uint32) (uint32, error)
+	// ListByIDs list template spaces by template space ids.
+	ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSpace, error)
 }
 
 var _ TemplateSpace = new(templateSpaceDao)
@@ -147,11 +151,18 @@ func (dao *templateSpaceDao) Update(kit *kit.Kit, g *table.TemplateSpace) error 
 }
 
 // List template spaces with options.
-func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, opt *types.BasePage) ([]*table.TemplateSpace, int64, error) {
+func (dao *templateSpaceDao) List(kit *kit.Kit, bizID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateSpace, int64, error) {
 	m := dao.genQ.TemplateSpace
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 
-	result, count, err := q.Where(m.BizID.Eq(bizID)).FindByPage(opt.Offset(), opt.LimitInt())
+	var conds []rawgen.Condition
+	if searchKey != "" {
+		conds = append(conds, q.Where(m.Name.Regexp("(?i)"+searchKey)).Or(m.Memo.Regexp("(?i)"+searchKey)))
+	}
+
+	result, count, err := q.Where(m.BizID.Eq(bizID)).
+		Where(conds...).
+		FindByPage(opt.Offset(), opt.LimitInt())
 	if err != nil {
 		return nil, 0, err
 	}
@@ -200,7 +211,7 @@ func (dao *templateSpaceDao) GetAllBizs(kit *kit.Kit) ([]uint32, error) {
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 	var bizIDs []uint32
 
-	if err := q.Distinct(m.BizID).Pluck(m.ID, &bizIDs); err != nil {
+	if err := q.Distinct(m.BizID).Pluck(m.BizID, &bizIDs); err != nil {
 		return nil, err
 	}
 
@@ -296,4 +307,16 @@ func (dao *templateSpaceDao) GetByUniqueKey(kit *kit.Kit, bizID uint32, name str
 	}
 
 	return templateSpace, nil
+}
+
+// ListByIDs list template spaces by template space ids.
+func (dao *templateSpaceDao) ListByIDs(kit *kit.Kit, ids []uint32) ([]*table.TemplateSpace, error) {
+	m := dao.genQ.TemplateSpace
+	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
+	result, err := q.Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

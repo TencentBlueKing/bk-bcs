@@ -28,16 +28,16 @@
     "count": 2,
     "details": [
       {
-        "template_release_id": 1,
-        "template_release_name": "v1",
+        "template_revision_id": 1,
+        "template_revision_name": "v1",
         "app_id": 1,
         "app_name": "service001",
         "release_id": 1,
         "release_name": "v1.0"
       },
       {
-        "template_release_id": 2,
-        "template_release_name": "v2",
+        "template_revision_id": 2,
+        "template_revision_name": "v2",
         "app_id": 2,
         "app_name": "service002",
         "release_id": 2,
@@ -65,8 +65,8 @@
 
 | 参数名称              | 参数类型 | 描述                 |
 | --------------------- | -------- | -------------------- |
-| template_release_id   | uint32   | 模版版本ID           |
-| template_release_name | uint32   | 模版版本名称         |
+| template_revision_id   | uint32   | 模版版本ID           |
+| template_revision_name | uint32   | 模版版本名称         |
 | app_id                | uint32   | 被引用的服务ID       |
 | app_name              | uint32   | 被引用的服务名称     |
 | release_id            | uint32   | 被引用的服务版本ID   |
