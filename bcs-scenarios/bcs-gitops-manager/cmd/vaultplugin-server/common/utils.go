@@ -55,6 +55,13 @@ func GetVaultSecretName(project string) string {
 	return fmt.Sprintf(defaultProjectSecretName, project)
 }
 
+// GetVaultSecForProAnno vault secret存储在app annotations中的信息,主要是 secret_ns:secret_name 的格式
+func GetVaultSecForProAnno(project string) string {
+	secretNs := GetVaultSecretNamespace()
+	secretName := GetVaultSecretName(project)
+	return fmt.Sprintf(VaultSecretPattern, secretNs, secretName)
+}
+
 // GetVaultTokenForServer vault token
 func GetVaultTokenForServer() string {
 	if token := os.Getenv(vaultTokenForServerEnvKey); len(token) > 0 {

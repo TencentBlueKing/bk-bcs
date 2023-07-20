@@ -40,9 +40,11 @@ const (
 	vaultSecretNamespaceEnvKey  = "vaultSecretNamespace"
 	defaultVaultSecretNamespace = "default"
 
-	vaultTokenForServerEnvKey = "secretToken"
-
 	defaultProjectSecretName = "vault-secret-%s"
+	// VaultSecretPattern vault token info for project, mounts, token, ca
+	VaultSecretPattern = "%s:%s"
+
+	vaultTokenForServerEnvKey = "secretToken"
 
 	// GitopsServiceEnvKey gitops service name environment
 	GitopsServiceEnvKey = "GITOPS_SERVICE"

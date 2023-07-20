@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	vaultcommon "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy"
 	pb "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/proto"
@@ -117,7 +118,7 @@ func defaultAppProject(ns string, project *bcsproject.Project) *v1alpha1.AppProj
 				common.ProjectAliaName:      project.Name,
 				common.ProjectIDKey:         project.ProjectID,
 				common.ProjectBusinessIDKey: project.BusinessID,
-				common.SecretKey:            fmt.Sprintf("default:vault-secret-%s", project.Name),
+				common.SecretKey:            vaultcommon.GetVaultSecForProAnno(project.Name),
 			},
 		},
 		Spec: v1alpha1.AppProjectSpec{

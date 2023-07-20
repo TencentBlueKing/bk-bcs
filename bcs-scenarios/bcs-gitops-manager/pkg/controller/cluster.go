@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	vaultcommon "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -202,9 +203,20 @@ func (control *cluster) innerLoop(ctx context.Context) error {
 		blog.Infof("syncing clusters for project [%s]%s", appPro.Name, proID)
 		if err := control.syncClustersByProject(ctx, proID, appPro); err != nil {
 			blog.Errorf("sync clusters for project [%s]%s failed: %s", appPro.Name, proID, err.Error())
-			continue
+			//continue
 		}
-		blog.Infof("sync clusters for project [%s]%s success", appPro.Name, proID)
+		blog.Infof("sync clusters for project [%s]%s complete, next...", appPro.Name, proID)
+
+		// sync secret info to pro annotations
+		secretVal := vaultcommon.GetVaultSecForProAnno(appPro.Name)
+		if _, ok := appPro.Annotations[common.SecretKey]; !ok {
+			appPro.Annotations[common.SecretKey] = secretVal
+			if err := control.option.Storage.UpdateProject(ctx, appPro); err != nil {
+				blog.Errorf("sync secret info to pro annotations [%s]%s failed: %s", appPro.Name, proID, err.Error())
+				//continue
+			}
+			blog.Infof("sync secret info to pro annotations[val:%s] [%s]%s complete. next...", appPro.Name, proID, secretVal)
+		}
 
 		// 同步secret的初始化
 		if err := control.option.Secret.InitSecretRequest(appPro.Name); err != nil {

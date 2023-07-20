@@ -84,7 +84,7 @@ func (v1 *V1VaultPluginHandler) descryptionManifest(w http.ResponseWriter, r *ht
 	}
 	res, err := descryVaultSecret(secretname, req.Manifests)
 	if err != nil {
-		resp.Message = "Error descryp application's vault secretkey"
+		resp.Message = fmt.Sprintf("Error descryp application's vault secretkey, error: %v", err)
 		blog.Errorf("Unable to descryp application's vault secret, error: %v", err)
 		resp.Response(w, http.StatusInternalServerError)
 		return
@@ -261,14 +261,13 @@ func (v *VaultArgo) GetSecrets(path string, version string, annotations map[stri
 func (v *VaultArgo) GetIndividualSecret(kvpath, secret, version string, annotations map[string]string) (interface{}, error) {
 	data, err := v.GetSecrets(kvpath, version, annotations)
 	if err != nil {
-		// 忽略所有error，error时原样渲染
 		blog.Errorf("GetSecrets failed with error: %v", err)
-		return fmt.Sprintf(secretPathPattern, kvpath, secret), nil
+		return nil, err
 	}
 	// 忽略path存在,secret不存在
 	_, ok := data[secret]
 	if !ok {
-		return fmt.Sprintf(secretPathPattern, kvpath, secret), nil
+		return nil, fmt.Errorf("secret %v not found, path: %s", secret, kvpath)
 	}
 	return data[secret], nil
 }
