@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 
+	"bscp.io/pkg/criteria/constant"
 	"gorm.io/datatypes"
 	rawgen "gorm.io/gen"
 	"gorm.io/gorm"
@@ -173,6 +174,10 @@ func (dao *templateSetDao) Delete(kit *kit.Kit, g *table.TemplateSet) error {
 	if err != nil {
 		return err
 	}
+	// 不允许单独删除默认套餐，只能在删除模版空间时，对默认套餐进行级联删除
+	if oldOne.Spec.Name == constant.DefaultTmplSetName {
+		return errors.New("default template set can not be deleted")
+	}
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
 
 	// 多个使用事务处理
@@ -200,14 +205,23 @@ func (dao *templateSetDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.
 		return err
 	}
 
+	// 删除操作, 获取当前记录做审计
 	m := tx.TemplateSet
 	q := tx.TemplateSet.WithContext(kit.Ctx)
-	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	// 不允许单独删除默认套餐，只能在删除模版空间时，对默认套餐进行级联删除
+	if oldOne.Spec.Name == constant.DefaultTmplSetName {
+		return errors.New("default template set can not be deleted")
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
+	if err := ad.Do(tx.Query); err != nil {
 		return err
 	}
 
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
-	if err := ad.Do(tx.Query); err != nil {
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
 		return err
 	}
 

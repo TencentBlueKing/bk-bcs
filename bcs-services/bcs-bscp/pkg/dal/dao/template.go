@@ -218,14 +218,19 @@ func (dao *templateDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Tem
 		return err
 	}
 
+	// 删除操作, 获取当前记录做审计
 	m := tx.Template
 	q := tx.Template.WithContext(kit.Ctx)
-	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareDelete(oldOne)
+	if err := ad.Do(tx.Query); err != nil {
 		return err
 	}
 
-	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
-	if err := ad.Do(tx.Query); err != nil {
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID)).Delete(g); err != nil {
 		return err
 	}
 

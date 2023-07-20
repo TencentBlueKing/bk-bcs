@@ -98,6 +98,10 @@ func (s *Service) UpdateTemplateSpace(ctx context.Context, req *pbds.UpdateTempl
 func (s *Service) DeleteTemplateSpace(ctx context.Context, req *pbds.DeleteTemplateSpaceReq) (*pbbase.EmptyResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
+	if err := s.dao.Validator().ValidateTemplateSpaceNoSubResource(kt, req.Id); err != nil {
+		return nil, err
+	}
+
 	TemplateSpace := &table.TemplateSpace{
 		ID:         req.Id,
 		Attachment: req.Attachment.TemplateSpaceAttachment(),
