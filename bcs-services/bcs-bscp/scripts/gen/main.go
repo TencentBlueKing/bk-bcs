@@ -45,7 +45,7 @@ func main() {
 		table.ConfigHook{},
 		table.TemplateSpace{},
 		table.Template{},
-		table.TemplateRelease{},
+		table.TemplateRevision{},
 		table.ConfigItem{},
 		table.ReleasedConfigItem{},
 		table.Commit{},

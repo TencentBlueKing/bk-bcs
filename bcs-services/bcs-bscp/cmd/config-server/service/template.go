@@ -24,7 +24,7 @@ import (
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
 	pbtemplate "bscp.io/pkg/protocol/core/template"
-	pbtr "bscp.io/pkg/protocol/core/template-release"
+	pbtr "bscp.io/pkg/protocol/core/template-revision"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
 )
@@ -42,7 +42,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 
 	idsLen := len(req.TemplateSetIds)
 	if idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,%d]",
+		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,%d]",
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
@@ -56,13 +56,13 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 			Path: req.Path,
 			Memo: req.Memo,
 		},
-		TrSpec: &pbtr.TemplateReleaseSpec{
-			ReleaseName: req.ReleaseName,
-			ReleaseMemo: req.ReleaseMemo,
-			Name:        req.Name,
-			Path:        req.Path,
-			FileType:    req.FileType,
-			FileMode:    req.FileMode,
+		TrSpec: &pbtr.TemplateRevisionSpec{
+			RevisionName: req.RevisionName,
+			RevisionMemo: req.RevisionMemo,
+			Name:         req.Name,
+			Path:         req.Path,
+			FileType:     req.FileType,
+			FileMode:     req.FileMode,
 			Permission: &pbci.FilePermission{
 				User:      req.User,
 				UserGroup: req.UserGroup,
@@ -188,7 +188,7 @@ func (s *Service) AddTemplateToTemplateSets(ctx context.Context, req *pbcs.AddTe
 
 	idsLen := len(req.TemplateSetIds)
 	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,%d]",
+		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,%d]",
 			idsLen, constant.ArrayInputLenLimit)
 	}
 

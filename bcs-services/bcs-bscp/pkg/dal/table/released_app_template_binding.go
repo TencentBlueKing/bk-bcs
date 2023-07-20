@@ -94,12 +94,12 @@ func (t *ReleasedAppTemplateBinding) ValidateDelete() error {
 
 // ReleasedAppTemplateBindingSpec defines all the specifics for ReleasedAppTemplateBinding set by user.
 type ReleasedAppTemplateBindingSpec struct {
-	TemplateSpaceIDs   types.Uint32Slice `json:"template_space_ids" gorm:"column:template_space_ids;type:json;default:'[]'"`
-	TemplateSetIDs     types.Uint32Slice `json:"template_set_ids" gorm:"column:template_set_ids;type:json;default:'[]'"`
-	TemplateIDs        types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
-	TemplateReleaseIDs types.Uint32Slice `json:"template_release_ids" gorm:"column:template_release_ids;type:json;default:'[]'"`
-	Bindings           TemplateBindings  `json:"bindings" gorm:"column:bindings;type:json;default:'[]'"`
-	ReleaseID          uint32            `json:"release_id" gorm:"column:release_id"`
+	TemplateSpaceIDs    types.Uint32Slice `json:"template_space_ids" gorm:"column:template_space_ids;type:json;default:'[]'"`
+	TemplateSetIDs      types.Uint32Slice `json:"template_set_ids" gorm:"column:template_set_ids;type:json;default:'[]'"`
+	TemplateIDs         types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
+	TemplateRevisionIDs types.Uint32Slice `json:"template_revision_ids" gorm:"column:template_revision_ids;type:json;default:'[]'"`
+	Bindings            TemplateBindings  `json:"bindings" gorm:"column:bindings;type:json;default:'[]'"`
+	ReleaseID           uint32            `json:"release_id" gorm:"column:release_id"`
 }
 
 // ReleasedAppTemplateBindingType is the type of ReleasedAppTemplateBinding

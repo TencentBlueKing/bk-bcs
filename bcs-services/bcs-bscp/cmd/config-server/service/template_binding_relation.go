@@ -65,20 +65,20 @@ func (s *Service) ListTemplateBoundCounts(ctx context.Context, req *pbcs.ListTem
 	return resp, nil
 }
 
-// ListTemplateReleaseBoundCounts list template bound counts
-func (s *Service) ListTemplateReleaseBoundCounts(ctx context.Context, req *pbcs.ListTemplateReleaseBoundCountsReq) (
-	*pbcs.ListTemplateReleaseBoundCountsResp, error) {
+// ListTemplateRevisionBoundCounts list template bound counts
+func (s *Service) ListTemplateRevisionBoundCounts(ctx context.Context, req *pbcs.ListTemplateRevisionBoundCountsReq) (
+	*pbcs.ListTemplateRevisionBoundCountsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateReleaseBoundCountsResp)
+	resp := new(pbcs.ListTemplateRevisionBoundCountsResp)
 
 	// validate input param
-	ids := tools.SliceRepeatedElements(req.TemplateReleaseIds)
+	ids := tools.SliceRepeatedElements(req.TemplateRevisionIds)
 	if len(ids) > 0 {
-		return nil, fmt.Errorf("repeated template release ids: %v, id must be unique", ids)
+		return nil, fmt.Errorf("repeated template revision ids: %v, id must be unique", ids)
 	}
-	idsLen := len(req.TemplateReleaseIds)
+	idsLen := len(req.TemplateRevisionIds)
 	if idsLen <= 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template release ids is %d, it must be within the range of [1,%d]",
+		return nil, fmt.Errorf("the length of template revision ids is %d, it must be within the range of [1,%d]",
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
@@ -87,20 +87,20 @@ func (s *Service) ListTemplateReleaseBoundCounts(ctx context.Context, req *pbcs.
 		return nil, err
 	}
 
-	r := &pbds.ListTemplateReleaseBoundCountsReq{
-		BizId:              req.BizId,
-		TemplateSpaceId:    req.TemplateSpaceId,
-		TemplateId:         req.TemplateId,
-		TemplateReleaseIds: req.TemplateReleaseIds,
+	r := &pbds.ListTemplateRevisionBoundCountsReq{
+		BizId:               req.BizId,
+		TemplateSpaceId:     req.TemplateSpaceId,
+		TemplateId:          req.TemplateId,
+		TemplateRevisionIds: req.TemplateRevisionIds,
 	}
 
-	rp, err := s.client.DS.ListTemplateReleaseBoundCounts(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTemplateRevisionBoundCounts(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list template release bound counts failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list template revision bound counts failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateReleaseBoundCountsResp{
+	resp = &pbcs.ListTemplateRevisionBoundCountsResp{
 		Details: rp.Details,
 	}
 	return resp, nil
@@ -245,68 +245,68 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 	return resp, nil
 }
 
-// ListTemplateReleaseBoundUnnamedAppDetails list template release bound unnamed app details
-func (s *Service) ListTemplateReleaseBoundUnnamedAppDetails(ctx context.Context,
-	req *pbcs.ListTemplateReleaseBoundUnnamedAppDetailsReq) (
-	*pbcs.ListTemplateReleaseBoundUnnamedAppDetailsResp, error) {
+// ListTemplateRevisionBoundUnnamedAppDetails list template revision bound unnamed app details
+func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context,
+	req *pbcs.ListTemplateRevisionBoundUnnamedAppDetailsReq) (
+	*pbcs.ListTemplateRevisionBoundUnnamedAppDetailsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateReleaseBoundUnnamedAppDetailsResp)
+	resp := new(pbcs.ListTemplateRevisionBoundUnnamedAppDetailsResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
-	r := &pbds.ListTemplateReleaseBoundUnnamedAppDetailsReq{
-		BizId:             req.BizId,
-		TemplateSpaceId:   req.TemplateSpaceId,
-		TemplateId:        req.TemplateId,
-		TemplateReleaseId: req.TemplateReleaseId,
-		Start:             req.Start,
-		Limit:             req.Limit,
+	r := &pbds.ListTemplateRevisionBoundUnnamedAppDetailsReq{
+		BizId:              req.BizId,
+		TemplateSpaceId:    req.TemplateSpaceId,
+		TemplateId:         req.TemplateId,
+		TemplateRevisionId: req.TemplateRevisionId,
+		Start:              req.Start,
+		Limit:              req.Limit,
 	}
 
-	rp, err := s.client.DS.ListTemplateReleaseBoundUnnamedAppDetails(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTemplateRevisionBoundUnnamedAppDetails(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list template release bound unnamed app details failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list template revision bound unnamed app details failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateReleaseBoundUnnamedAppDetailsResp{
+	resp = &pbcs.ListTemplateRevisionBoundUnnamedAppDetailsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
-// ListTemplateReleaseBoundNamedAppDetails list template release bound named app details
-func (s *Service) ListTemplateReleaseBoundNamedAppDetails(ctx context.Context,
-	req *pbcs.ListTemplateReleaseBoundNamedAppDetailsReq) (
-	*pbcs.ListTemplateReleaseBoundNamedAppDetailsResp, error) {
+// ListTemplateRevisionBoundNamedAppDetails list template revision bound named app details
+func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
+	req *pbcs.ListTemplateRevisionBoundNamedAppDetailsReq) (
+	*pbcs.ListTemplateRevisionBoundNamedAppDetailsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateReleaseBoundNamedAppDetailsResp)
+	resp := new(pbcs.ListTemplateRevisionBoundNamedAppDetailsResp)
 
 	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Template, Action: meta.Find}, BizID: req.BizId}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
-	r := &pbds.ListTemplateReleaseBoundNamedAppDetailsReq{
-		BizId:             req.BizId,
-		TemplateSpaceId:   req.TemplateSpaceId,
-		TemplateId:        req.TemplateId,
-		TemplateReleaseId: req.TemplateReleaseId,
-		Start:             req.Start,
-		Limit:             req.Limit,
+	r := &pbds.ListTemplateRevisionBoundNamedAppDetailsReq{
+		BizId:              req.BizId,
+		TemplateSpaceId:    req.TemplateSpaceId,
+		TemplateId:         req.TemplateId,
+		TemplateRevisionId: req.TemplateRevisionId,
+		Start:              req.Start,
+		Limit:              req.Limit,
 	}
 
-	rp, err := s.client.DS.ListTemplateReleaseBoundNamedAppDetails(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTemplateRevisionBoundNamedAppDetails(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list template release bound named app details failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list template revision bound named app details failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateReleaseBoundNamedAppDetailsResp{
+	resp = &pbcs.ListTemplateRevisionBoundNamedAppDetailsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}

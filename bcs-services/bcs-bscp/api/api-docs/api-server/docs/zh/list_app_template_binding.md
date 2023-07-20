@@ -40,7 +40,7 @@
             3,
             4
           ],
-          "template_release_ids": [
+          "template_revision_ids": [
             1,
             2,
             3,
@@ -49,14 +49,14 @@
           "bindings": [
             {
               "template_set_id": 1,
-              "template_release_id": [
+              "template_revision_id": [
                 1,
                 2
               ]
             },
             {
               "template_set_id": 2,
-              " template_release_id": [
+              " template_revision_id": [
                 3,
                 4
               ]
@@ -109,7 +109,7 @@
 | template_space_ids   | []uint32           | 服务绑定的模版空间列表       |
 | template_set_ids     | []uint32           | 服务绑定的模版套餐列表       |
 | template_ids         | []uint32           | 服务绑定的模版列表           |
-| template_release_ids | []uint32           | 服务绑定的模版版本列表       |
+| template_revision_ids | []uint32           | 服务绑定的模版版本列表       |
 | bindings             | []template_binding | 服务绑定的套餐和模版版本关系 |
 
 #### attachment

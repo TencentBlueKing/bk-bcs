@@ -39,7 +39,7 @@ var (
 	ReleasedGroup              *releasedGroup
 	Strategy                   *strategy
 	Template                   *template
-	TemplateRelease            *templateRelease
+	TemplateRevision           *templateRevision
 	TemplateSet                *templateSet
 	TemplateSpace              *templateSpace
 )
@@ -68,7 +68,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	ReleasedGroup = &Q.ReleasedGroup
 	Strategy = &Q.Strategy
 	Template = &Q.Template
-	TemplateRelease = &Q.TemplateRelease
+	TemplateRevision = &Q.TemplateRevision
 	TemplateSet = &Q.TemplateSet
 	TemplateSpace = &Q.TemplateSpace
 }
@@ -98,7 +98,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		ReleasedGroup:              newReleasedGroup(db, opts...),
 		Strategy:                   newStrategy(db, opts...),
 		Template:                   newTemplate(db, opts...),
-		TemplateRelease:            newTemplateRelease(db, opts...),
+		TemplateRevision:           newTemplateRevision(db, opts...),
 		TemplateSet:                newTemplateSet(db, opts...),
 		TemplateSpace:              newTemplateSpace(db, opts...),
 	}
@@ -129,7 +129,7 @@ type Query struct {
 	ReleasedGroup              releasedGroup
 	Strategy                   strategy
 	Template                   template
-	TemplateRelease            templateRelease
+	TemplateRevision           templateRevision
 	TemplateSet                templateSet
 	TemplateSpace              templateSpace
 }
@@ -161,7 +161,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		ReleasedGroup:              q.ReleasedGroup.clone(db),
 		Strategy:                   q.Strategy.clone(db),
 		Template:                   q.Template.clone(db),
-		TemplateRelease:            q.TemplateRelease.clone(db),
+		TemplateRevision:           q.TemplateRevision.clone(db),
 		TemplateSet:                q.TemplateSet.clone(db),
 		TemplateSpace:              q.TemplateSpace.clone(db),
 	}
@@ -200,7 +200,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		ReleasedGroup:              q.ReleasedGroup.replaceDB(db),
 		Strategy:                   q.Strategy.replaceDB(db),
 		Template:                   q.Template.replaceDB(db),
-		TemplateRelease:            q.TemplateRelease.replaceDB(db),
+		TemplateRevision:           q.TemplateRevision.replaceDB(db),
 		TemplateSet:                q.TemplateSet.replaceDB(db),
 		TemplateSpace:              q.TemplateSpace.replaceDB(db),
 	}
@@ -229,7 +229,7 @@ type queryCtx struct {
 	ReleasedGroup              IReleasedGroupDo
 	Strategy                   IStrategyDo
 	Template                   ITemplateDo
-	TemplateRelease            ITemplateReleaseDo
+	TemplateRevision           ITemplateRevisionDo
 	TemplateSet                ITemplateSetDo
 	TemplateSpace              ITemplateSpaceDo
 }
@@ -258,7 +258,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		ReleasedGroup:              q.ReleasedGroup.WithContext(ctx),
 		Strategy:                   q.Strategy.WithContext(ctx),
 		Template:                   q.Template.WithContext(ctx),
-		TemplateRelease:            q.TemplateRelease.WithContext(ctx),
+		TemplateRevision:           q.TemplateRevision.WithContext(ctx),
 		TemplateSet:                q.TemplateSet.WithContext(ctx),
 		TemplateSpace:              q.TemplateSpace.WithContext(ctx),
 	}

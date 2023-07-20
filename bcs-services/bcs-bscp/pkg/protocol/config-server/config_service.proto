@@ -12,7 +12,7 @@ import "bscp.io/pkg/protocol/core/hook-release/hook_release.proto";
 import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
 import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_relation.proto";
-import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
+import "bscp.io/pkg/protocol/core/template-revision/template_revision.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
@@ -271,25 +271,25 @@ service Config {
         };
     }
 
-    rpc CreateTemplateRelease(CreateTemplateReleaseReq) returns (CreateTemplateReleaseResp) {
+    rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateTemplateRevisionResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases"
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions"
             body : "*"
         };
     }
-    rpc ListTemplateReleases(ListTemplateReleasesReq) returns (ListTemplateReleasesResp) {
+    rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases"
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions"
         };
     }
-    rpc DeleteTemplateRelease(DeleteTemplateReleaseReq) returns (DeleteTemplateReleaseResp) {
+    rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {
         option (google.api.http) = {
-            delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}"
+            delete : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}"
         };
     }
-    rpc ListTemplateReleasesByIDs(ListTemplateReleasesByIDsReq) returns (ListTemplateReleasesByIDsResp) {
+    rpc ListTemplateRevisionsByIDs(ListTemplateRevisionsByIDsReq) returns (ListTemplateRevisionsByIDsResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/template_releases/list_by_ids"
+            post : "/api/v1/config/biz/{biz_id}/template_revisions/list_by_ids"
             body : "*"
         };
     }
@@ -357,9 +357,9 @@ service Config {
             body : "*"
         };
     }
-    rpc ListTemplateReleaseBoundCounts(ListTemplateReleaseBoundCountsReq) returns (ListTemplateReleaseBoundCountsResp) {
+    rpc ListTemplateRevisionBoundCounts(ListTemplateRevisionBoundCountsReq) returns (ListTemplateRevisionBoundCountsResp) {
         option (google.api.http) = {
-            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/bound_counts"
+            post : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/bound_counts"
             body : "*"
         };
     }
@@ -387,16 +387,16 @@ service Config {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/bound_template_set_details"
         };
     }
-    rpc ListTemplateReleaseBoundUnnamedAppDetails(ListTemplateReleaseBoundUnnamedAppDetailsReq) returns
-        (ListTemplateReleaseBoundUnnamedAppDetailsResp) {
+    rpc ListTemplateRevisionBoundUnnamedAppDetails(ListTemplateRevisionBoundUnnamedAppDetailsReq) returns
+        (ListTemplateRevisionBoundUnnamedAppDetailsResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}/bound_unnamed_app_details"
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_unnamed_app_details"
         };
     }
-    rpc ListTemplateReleaseBoundNamedAppDetails(ListTemplateReleaseBoundNamedAppDetailsReq) returns
-        (ListTemplateReleaseBoundNamedAppDetailsResp) {
+    rpc ListTemplateRevisionBoundNamedAppDetails(ListTemplateRevisionBoundNamedAppDetailsReq) returns
+        (ListTemplateRevisionBoundNamedAppDetailsResp) {
         option (google.api.http) = {
-            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_releases/{template_release_id}/bound_named_app_details"
+            get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}/bound_named_app_details"
         };
     }
     rpc ListTemplateSetBoundUnnamedAppDetails(ListTemplateSetBoundUnnamedAppDetailsReq) returns
@@ -986,8 +986,8 @@ message CreateTemplateReq {
     string          name              = 3;
     string          path              = 4;
     string          memo              = 5;
-    string          release_name      = 6;
-    string          release_memo      = 7;
+    string          revision_name      = 6;
+    string          revision_memo      = 7;
     string          file_type         = 8; // file_type is enum type
     string          file_mode         = 9; // file_mode is enum type
     string          user              = 10;
@@ -1052,12 +1052,12 @@ message ListTemplatesByIDsResp {
     repeated pbtemplate.Template details = 1;
 }
 
-message CreateTemplateReleaseReq {
+message CreateTemplateRevisionReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
-    string release_name      = 4;
-    string release_memo      = 5;
+    string revision_name      = 4;
+    string revision_memo      = 5;
     string name              = 6;
     string path              = 7;
     string file_type         = 8; // file_type is enum type
@@ -1069,11 +1069,11 @@ message CreateTemplateReleaseReq {
     uint64 byte_size         = 14;
 }
 
-message CreateTemplateReleaseResp {
+message CreateTemplateRevisionResp {
     uint32 id = 1;
 }
 
-message ListTemplateReleasesReq {
+message ListTemplateRevisionsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
@@ -1082,27 +1082,27 @@ message ListTemplateReleasesReq {
     uint32 limit             = 6;
 }
 
-message ListTemplateReleasesResp {
-    uint32                        count   = 1;
-    repeated pbtr.TemplateRelease details = 2;
+message ListTemplateRevisionsResp {
+    uint32                         count   = 1;
+    repeated pbtr.TemplateRevision details = 2;
 }
 
-message DeleteTemplateReleaseReq {
-    uint32 biz_id              = 1;
-    uint32 template_space_id   = 2;
-    uint32 template_id         = 3;
-    uint32 template_release_id = 4;
+message DeleteTemplateRevisionReq {
+    uint32 biz_id               = 1;
+    uint32 template_space_id    = 2;
+    uint32 template_id          = 3;
+    uint32 template_revision_id = 4;
 }
 
-message DeleteTemplateReleaseResp {}
+message DeleteTemplateRevisionResp {}
 
-message ListTemplateReleasesByIDsReq {
+message ListTemplateRevisionsByIDsReq {
     uint32          biz_id = 1;
     repeated uint32 ids    = 2;
 }
 
-message ListTemplateReleasesByIDsResp {
-    repeated pbtr.TemplateRelease details = 1;
+message ListTemplateRevisionsByIDsResp {
+    repeated pbtr.TemplateRevision details = 1;
 }
 
 message CreateTemplateSetReq {
@@ -1221,15 +1221,15 @@ message ListTemplateBoundCountsResp {
     repeated pbtbr.TemplateBoundCounts details = 1;
 }
 
-message ListTemplateReleaseBoundCountsReq {
-    uint32          biz_id               = 1;
-    uint32          template_space_id    = 2;
-    uint32          template_id          = 3;
-    repeated uint32 template_release_ids = 4;
+message ListTemplateRevisionBoundCountsReq {
+    uint32          biz_id                = 1;
+    uint32          template_space_id     = 2;
+    uint32          template_id           = 3;
+    repeated uint32 template_revision_ids = 4;
 }
 
-message ListTemplateReleaseBoundCountsResp {
-    repeated pbtbr.TemplateReleaseBoundCounts details = 1;
+message ListTemplateRevisionBoundCountsResp {
+    repeated pbtbr.TemplateRevisionBoundCounts details = 1;
 }
 
 message ListTemplateSetBoundCountsReq {
@@ -1281,32 +1281,32 @@ message ListTemplateBoundTemplateSetDetailsResp {
     repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
 }
 
-message ListTemplateReleaseBoundUnnamedAppDetailsReq {
-    uint32 biz_id              = 1;
-    uint32 template_space_id   = 2;
-    uint32 template_id         = 3;
-    uint32 template_release_id = 4;
-    uint32 start               = 5;
-    uint32 limit               = 6;
+message ListTemplateRevisionBoundUnnamedAppDetailsReq {
+    uint32 biz_id               = 1;
+    uint32 template_space_id    = 2;
+    uint32 template_id          = 3;
+    uint32 template_revision_id = 4;
+    uint32 start                = 5;
+    uint32 limit                = 6;
 }
 
-message ListTemplateReleaseBoundUnnamedAppDetailsResp {
-    uint32                                              count   = 1;
-    repeated pbtbr.TemplateReleaseBoundUnnamedAppDetail details = 2;
+message ListTemplateRevisionBoundUnnamedAppDetailsResp {
+    uint32                                               count   = 1;
+    repeated pbtbr.TemplateRevisionBoundUnnamedAppDetail details = 2;
 }
 
-message ListTemplateReleaseBoundNamedAppDetailsReq {
-    uint32 biz_id              = 1;
-    uint32 template_space_id   = 2;
-    uint32 template_id         = 3;
-    uint32 template_release_id = 4;
-    uint32 start               = 5;
-    uint32 limit               = 6;
+message ListTemplateRevisionBoundNamedAppDetailsReq {
+    uint32 biz_id               = 1;
+    uint32 template_space_id    = 2;
+    uint32 template_id          = 3;
+    uint32 template_revision_id = 4;
+    uint32 start                = 5;
+    uint32 limit                = 6;
 }
 
-message ListTemplateReleaseBoundNamedAppDetailsResp {
-    uint32                                            count   = 1;
-    repeated pbtbr.TemplateReleaseBoundNamedAppDetail details = 2;
+message ListTemplateRevisionBoundNamedAppDetailsResp {
+    uint32                                             count   = 1;
+    repeated pbtbr.TemplateRevisionBoundNamedAppDetail details = 2;
 }
 
 message ListTemplateSetBoundUnnamedAppDetailsReq {

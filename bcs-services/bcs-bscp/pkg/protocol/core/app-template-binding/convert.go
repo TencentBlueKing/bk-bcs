@@ -42,11 +42,11 @@ func (m *AppTemplateBindingSpec) AppTemplateBindingSpec() *table.AppTemplateBind
 	}
 
 	return &table.AppTemplateBindingSpec{
-		TemplateSpaceIDs:   m.TemplateSpaceIds,
-		TemplateSetIDs:     m.TemplateSetIds,
-		TemplateIDs:        m.TemplateIds,
-		TemplateReleaseIDs: m.TemplateReleaseIds,
-		Bindings:           result,
+		TemplateSpaceIDs:    m.TemplateSpaceIds,
+		TemplateSetIDs:      m.TemplateSetIds,
+		TemplateIDs:         m.TemplateIds,
+		TemplateRevisionIDs: m.TemplateRevisionIds,
+		Bindings:            result,
 	}
 }
 
@@ -62,11 +62,11 @@ func PbAppTemplateBindingSpec(spec *table.AppTemplateBindingSpec) *AppTemplateBi
 	}
 
 	return &AppTemplateBindingSpec{
-		TemplateSpaceIds:   spec.TemplateSpaceIDs,
-		TemplateSetIds:     spec.TemplateSetIDs,
-		TemplateIds:        spec.TemplateIDs,
-		TemplateReleaseIds: spec.TemplateReleaseIDs,
-		Bindings:           result,
+		TemplateSpaceIds:    spec.TemplateSpaceIDs,
+		TemplateSetIds:      spec.TemplateSetIDs,
+		TemplateIds:         spec.TemplateIDs,
+		TemplateRevisionIds: spec.TemplateRevisionIDs,
+		Bindings:            result,
 	}
 }
 
@@ -77,8 +77,8 @@ func (m *TemplateBinding) TemplateBinding() *table.TemplateBinding {
 	}
 
 	return &table.TemplateBinding{
-		TemplateSetID:      m.TemplateSetId,
-		TemplateReleaseIDs: m.TemplateReleaseIds,
+		TemplateSetID:       m.TemplateSetId,
+		TemplateRevisionIDs: m.TemplateRevisionIds,
 	}
 }
 
@@ -89,8 +89,8 @@ func PbTemplateBinding(spec *table.TemplateBinding) *TemplateBinding {
 	}
 
 	return &TemplateBinding{
-		TemplateSetId:      spec.TemplateSetID,
-		TemplateReleaseIds: spec.TemplateReleaseIDs,
+		TemplateSetId:       spec.TemplateSetID,
+		TemplateRevisionIds: spec.TemplateRevisionIDs,
 	}
 }
 

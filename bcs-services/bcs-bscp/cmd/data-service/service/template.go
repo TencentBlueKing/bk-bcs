@@ -55,9 +55,9 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	}
 
 	// 2. create template release
-	templateRelease := &table.TemplateRelease{
-		Spec: req.TrSpec.TemplateReleaseSpec(),
-		Attachment: &table.TemplateReleaseAttachment{
+	templateRevision := &table.TemplateRevision{
+		Spec: req.TrSpec.TemplateRevisionSpec(),
+		Attachment: &table.TemplateRevisionAttachment{
 			BizID:           template.Attachment.BizID,
 			TemplateSpaceID: template.Attachment.TemplateSpaceID,
 			TemplateID:      id,
@@ -66,7 +66,7 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 			Creator: kt.User,
 		},
 	}
-	if _, err = s.dao.TemplateRelease().CreateWithTx(kt, tx, templateRelease); err != nil {
+	if _, err = s.dao.TemplateRevision().CreateWithTx(kt, tx, templateRevision); err != nil {
 		logs.Errorf("create template release failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err
@@ -181,7 +181,7 @@ func (s *Service) DeleteTemplate(ctx context.Context, req *pbds.DeleteTemplateRe
 	}
 
 	// 2. delete template releases of current template
-	if err = s.dao.TemplateRelease().DeleteForTmplWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+	if err = s.dao.TemplateRevision().DeleteForTmplWithTx(kt, tx, req.Attachment.BizId, req.Id); err != nil {
 		logs.Errorf("delete template failed, err: %v, rid: %s", err, kt.Rid)
 		tx.Rollback()
 		return nil, err

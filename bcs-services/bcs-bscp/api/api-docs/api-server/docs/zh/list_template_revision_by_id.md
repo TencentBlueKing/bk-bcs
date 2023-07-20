@@ -1,8 +1,8 @@
 #### API基本信息
 
-API名称：list_template_release_by_id
+API名称：list_template_revision_by_id
 
-API Path：/api/v1/config/biz/{biz_id}/template_releases/list_by_ids
+API Path：/api/v1/config/biz/{biz_id}/template_revisions/list_by_ids
 
 Method：POST
 

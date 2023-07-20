@@ -16,19 +16,19 @@ import "bscp.io/pkg/dal/types"
 
 // TmplBoundUnnamedAppDetail defines struct of template bound unnamed app detail.
 type TmplBoundUnnamedAppDetail struct {
-	AppID              uint32            `json:"app_id"`
-	TemplateReleaseIDs types.Uint32Slice `json:"template_release_ids"`
+	AppID               uint32            `json:"app_id"`
+	TemplateRevisionIDs types.Uint32Slice `json:"template_revision_ids"`
 }
 
 // TmplBoundNamedAppDetail defines struct of template bound named app detail.
 type TmplBoundNamedAppDetail struct {
-	AppID              uint32            `json:"app_id"`
-	ReleaseID          uint32            `json:"release_id"`
-	TemplateReleaseIDs types.Uint32Slice `json:"template_release_ids"`
+	AppID               uint32            `json:"app_id"`
+	ReleaseID           uint32            `json:"release_id"`
+	TemplateRevisionIDs types.Uint32Slice `json:"template_revision_ids"`
 }
 
-// TmplReleaseBoundNamedAppDetail defines struct of template release bound named app detail.
-type TmplReleaseBoundNamedAppDetail struct {
+// TmplRevisionBoundNamedAppDetail defines struct of template release bound named app detail.
+type TmplRevisionBoundNamedAppDetail struct {
 	AppID     uint32 `json:"app_id"`
 	ReleaseID uint32 `json:"release_id"`
 }

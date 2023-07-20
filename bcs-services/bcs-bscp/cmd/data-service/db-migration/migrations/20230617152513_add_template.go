@@ -71,8 +71,8 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
-	// TemplateReleases : 模版版本
-	type TemplateReleases struct {
+	// TemplateRevisions : 模版版本
+	type TemplateRevisions struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
 
 		// Spec is specifics of the resource defined with user
@@ -129,14 +129,14 @@ func mig20230617152513GormUp(tx *gorm.DB) error {
 	}
 
 	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").
-		AutoMigrate(&TemplateSpaces{}, &Templates{}, &TemplateReleases{}, &TemplateSets{}); err != nil {
+		AutoMigrate(&TemplateSpaces{}, &Templates{}, &TemplateRevisions{}, &TemplateSets{}); err != nil {
 		return err
 	}
 
 	if result := tx.Create([]IDGenerators{
 		{Resource: "template_spaces", MaxID: 0},
 		{Resource: "templates", MaxID: 0},
-		{Resource: "template_releases", MaxID: 0},
+		{Resource: "template_revisions", MaxID: 0},
 		{Resource: "template_sets", MaxID: 0},
 	}); result.Error != nil {
 		return result.Error
@@ -157,14 +157,14 @@ func mig20230617152513GormDown(tx *gorm.DB) error {
 	}
 
 	if err := tx.Migrator().
-		DropTable("template_spaces", "templates", "template_releases", "template_sets"); err != nil {
+		DropTable("template_spaces", "templates", "template_revisions", "template_sets"); err != nil {
 		return err
 	}
 
 	var resources = []string{
 		"template_spaces",
 		"templates",
-		"template_releases",
+		"template_revisions",
 		"template_sets",
 	}
 	if result := tx.Where("resource in ?", resources).Delete(&IDGenerators{}); result.Error != nil {

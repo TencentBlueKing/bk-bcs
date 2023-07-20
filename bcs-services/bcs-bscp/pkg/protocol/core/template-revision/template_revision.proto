@@ -6,20 +6,20 @@ import "bscp.io/pkg/protocol/core/content/content.proto";
 
 package pbtr;
 
-option go_package = "bscp.io/pkg/protocol/core/template-release;pbtr";
+option go_package = "bscp.io/pkg/protocol/core/template-revision;pbtr";
 
-// Template source resource reference: pkg/dal/table/template_release.go
-message TemplateRelease {
+// Template source resource reference: pkg/dal/table/template_revision.go
+message TemplateRevision {
     uint32                    id         = 1;
-    TemplateReleaseSpec       spec       = 2;
-    TemplateReleaseAttachment attachment = 3;
+    TemplateRevisionSpec       spec       = 2;
+    TemplateRevisionAttachment attachment = 3;
     pbbase.CreatedRevision    revision   = 4;
 }
 
-// TemplateReleaseSpec source resource reference: pkg/dal/table/template_release.go
-message TemplateReleaseSpec {
-    string                release_name = 1;
-    string                release_memo = 2;
+// TemplateRevisionSpec source resource reference: pkg/dal/table/template_revision.go
+message TemplateRevisionSpec {
+    string                revision_name = 1;
+    string                revision_memo = 2;
     string                name         = 3;
     string                path         = 4;
     string                file_type    = 5; // file_type is enum type
@@ -28,8 +28,8 @@ message TemplateReleaseSpec {
     pbcontent.ContentSpec content_spec = 8;
 }
 
-// TemplateReleaseAttachment source resource reference: pkg/dal/table/template_release.go
-message TemplateReleaseAttachment {
+// TemplateRevisionAttachment source resource reference: pkg/dal/table/template_revision.go
+message TemplateRevisionAttachment {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;

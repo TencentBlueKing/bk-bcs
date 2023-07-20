@@ -18,36 +18,36 @@ import (
 	"bscp.io/pkg/criteria/validator"
 )
 
-// TemplateRelease is template config item
-type TemplateRelease struct {
-	ID         uint32                     `json:"id" gorm:"primaryKey"`
-	Spec       *TemplateReleaseSpec       `json:"spec" gorm:"embedded"`
-	Attachment *TemplateReleaseAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *CreatedRevision           `json:"revision" gorm:"embedded"`
+// TemplateRevision is template config item
+type TemplateRevision struct {
+	ID         uint32                      `json:"id" gorm:"primaryKey"`
+	Spec       *TemplateRevisionSpec       `json:"spec" gorm:"embedded"`
+	Attachment *TemplateRevisionAttachment `json:"attachment" gorm:"embedded"`
+	Revision   *CreatedRevision            `json:"revision" gorm:"embedded"`
 }
 
-// TableName is the TemplateRelease's database table name.
-func (t *TemplateRelease) TableName() string {
-	return "template_releases"
+// TableName is the TemplateRevision's database table name.
+func (t *TemplateRevision) TableName() string {
+	return "template_revisions"
 }
 
 // AppID AuditRes interface
-func (t *TemplateRelease) AppID() uint32 {
+func (t *TemplateRevision) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (t *TemplateRelease) ResID() uint32 {
+func (t *TemplateRevision) ResID() uint32 {
 	return t.ID
 }
 
 // ResType AuditRes interface
-func (t *TemplateRelease) ResType() string {
-	return "template_release"
+func (t *TemplateRevision) ResType() string {
+	return "template_revision"
 }
 
-// ValidateCreate validate TemplateRelease is valid or not when create it.
-func (t *TemplateRelease) ValidateCreate() error {
+// ValidateCreate validate TemplateRevision is valid or not when create it.
+func (t *TemplateRevision) ValidateCreate() error {
 	if t.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -79,10 +79,10 @@ func (t *TemplateRelease) ValidateCreate() error {
 	return nil
 }
 
-// ValidateDelete validate the TemplateRelease's info when delete it.
-func (t *TemplateRelease) ValidateDelete() error {
+// ValidateDelete validate the TemplateRevision's info when delete it.
+func (t *TemplateRevision) ValidateDelete() error {
 	if t.ID <= 0 {
-		return errors.New("TemplateRelease id should be set")
+		return errors.New("TemplateRevision id should be set")
 	}
 
 	if t.Attachment == nil {
@@ -96,23 +96,23 @@ func (t *TemplateRelease) ValidateDelete() error {
 	return nil
 }
 
-// TemplateReleaseSpec defines all the specifics for TemplateRelease set by user.
-type TemplateReleaseSpec struct {
-	ReleaseName string          `json:"release_name" gorm:"column:release_name"`
-	ReleaseMemo string          `json:"release_memo" gorm:"column:release_memo"`
-	Name        string          `json:"name" gorm:"column:name"`
-	Path        string          `json:"path" gorm:"column:path"`
-	FileType    FileFormat      `json:"file_type" gorm:"column:file_type"`
-	FileMode    FileMode        `json:"file_mode" gorm:"column:file_mode"`
-	Permission  *FilePermission `json:"permission" gorm:"embedded"`
-	ContentSpec *ContentSpec    `json:"content" gorm:"embedded"`
+// TemplateRevisionSpec defines all the specifics for TemplateRevision set by user.
+type TemplateRevisionSpec struct {
+	RevisionName string          `json:"revision_name" gorm:"column:revision_name"`
+	RevisionMemo string          `json:"revision_memo" gorm:"column:revision_memo"`
+	Name         string          `json:"name" gorm:"column:name"`
+	Path         string          `json:"path" gorm:"column:path"`
+	FileType     FileFormat      `json:"file_type" gorm:"column:file_type"`
+	FileMode     FileMode        `json:"file_mode" gorm:"column:file_mode"`
+	Permission   *FilePermission `json:"permission" gorm:"embedded"`
+	ContentSpec  *ContentSpec    `json:"content" gorm:"embedded"`
 }
 
-// TemplateReleaseType is the type of TemplateRelease
-type TemplateReleaseType string
+// TemplateRevisionType is the type of TemplateRevision
+type TemplateRevisionType string
 
-// ValidateCreate validate TemplateRelease spec when it is created.
-func (t *TemplateReleaseSpec) ValidateCreate() error {
+// ValidateCreate validate TemplateRevision spec when it is created.
+func (t *TemplateRevisionSpec) ValidateCreate() error {
 	if err := validator.ValidateCfgItemName(t.Name); err != nil {
 		return err
 	}
@@ -136,24 +136,24 @@ func (t *TemplateReleaseSpec) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate TemplateRelease spec when it is updated.
-func (t *TemplateReleaseSpec) ValidateUpdate() error {
-	if err := validator.ValidateMemo(t.ReleaseMemo, false); err != nil {
+// ValidateUpdate validate TemplateRevision spec when it is updated.
+func (t *TemplateRevisionSpec) ValidateUpdate() error {
+	if err := validator.ValidateMemo(t.RevisionMemo, false); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// TemplateReleaseAttachment defines the TemplateRelease attachments.
-type TemplateReleaseAttachment struct {
+// TemplateRevisionAttachment defines the TemplateRevision attachments.
+type TemplateRevisionAttachment struct {
 	BizID           uint32 `json:"biz_id" gorm:"column:biz_id"`
 	TemplateSpaceID uint32 `json:"template_space_id" gorm:"column:template_space_id"`
 	TemplateID      uint32 `json:"template_id" gorm:"column:template_id"`
 }
 
-// Validate whether TemplateRelease attachment is valid or not.
-func (t *TemplateReleaseAttachment) Validate() error {
+// Validate whether TemplateRevision attachment is valid or not.
+func (t *TemplateRevisionAttachment) Validate() error {
 	if t.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
 	}

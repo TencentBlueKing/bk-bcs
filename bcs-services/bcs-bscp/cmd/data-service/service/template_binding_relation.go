@@ -91,25 +91,25 @@ func (s *Service) ListTemplateBoundCounts(ctx context.Context, req *pbds.ListTem
 	return resp, nil
 }
 
-// ListTemplateReleaseBoundCounts list template release bound counts.
-func (s *Service) ListTemplateReleaseBoundCounts(ctx context.Context, req *pbds.ListTemplateReleaseBoundCountsReq) (
-	*pbds.ListTemplateReleaseBoundCountsResp, error) {
+// ListTemplateRevisionBoundCounts list template revision bound counts.
+func (s *Service) ListTemplateRevisionBoundCounts(ctx context.Context, req *pbds.ListTemplateRevisionBoundCountsReq) (
+	*pbds.ListTemplateRevisionBoundCountsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateReleasesExist(kt, req.TemplateReleaseIds); err != nil {
+	if err := s.dao.Validator().ValidateTemplateRevisionsExist(kt, req.TemplateRevisionIds); err != nil {
 		return nil, err
 	}
 
 	var hitError error
-	details := make([]*pbtbr.TemplateReleaseBoundCounts, len(req.TemplateReleaseIds))
+	details := make([]*pbtbr.TemplateRevisionBoundCounts, len(req.TemplateRevisionIds))
 	pipe := make(chan struct{}, 10)
 	wg := sync.WaitGroup{}
 
-	for idx, tmplReleaseID := range req.TemplateReleaseIds {
+	for idx, tmplRevisionID := range req.TemplateRevisionIds {
 		wg.Add(1)
 
 		pipe <- struct{}{}
-		go func(idx int, tmplReleaseID uint32) {
+		go func(idx int, tmplRevisionID uint32) {
 			defer func() {
 				wg.Done()
 				<-pipe
@@ -121,32 +121,32 @@ func (s *Service) ListTemplateReleaseBoundCounts(ctx context.Context, req *pbds.
 			)
 
 			if unnamedAppCnt, err = s.dao.TemplateBindingRelation().
-				GetTemplateReleaseBoundUnnamedAppCount(kt, req.BizId, tmplReleaseID); err != nil {
+				GetTemplateRevisionBoundUnnamedAppCount(kt, req.BizId, tmplRevisionID); err != nil {
 				hitError = err
 				return
 			}
 			if namedAppCnt, err = s.dao.TemplateBindingRelation().
-				GetTemplateReleaseBoundNamedAppCount(kt, req.BizId, tmplReleaseID); err != nil {
+				GetTemplateRevisionBoundNamedAppCount(kt, req.BizId, tmplRevisionID); err != nil {
 				hitError = err
 				return
 			}
 
 			// save the result with index
-			details[idx] = &pbtbr.TemplateReleaseBoundCounts{
-				TemplateReleaseId:    tmplReleaseID,
+			details[idx] = &pbtbr.TemplateRevisionBoundCounts{
+				TemplateRevisionId:   tmplRevisionID,
 				BoundUnnamedAppCount: unnamedAppCnt,
 				BoundNamedAppCount:   namedAppCnt,
 			}
-		}(idx, tmplReleaseID)
+		}(idx, tmplRevisionID)
 	}
 	wg.Wait()
 
 	if hitError != nil {
-		logs.Errorf("list template release bound counts failed, err: %v, rid: %s", hitError, kt.Rid)
+		logs.Errorf("list template revision bound counts failed, err: %v, rid: %s", hitError, kt.Rid)
 		return nil, hitError
 	}
 
-	resp := &pbds.ListTemplateReleaseBoundCountsResp{
+	resp := &pbds.ListTemplateRevisionBoundCountsResp{
 		Details: details,
 	}
 	return resp, nil
@@ -235,16 +235,16 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 		return nil, err
 	}
 
-	// get template release details of the template
-	tmplReleases, _, err := s.dao.TemplateRelease().
+	// get template revision details of the template
+	tmplRevisions, _, err := s.dao.TemplateRevision().
 		List(kt, req.BizId, req.TemplateId, "", &types.BasePage{Start: 0, Limit: types.DefaultMaxPageLimit})
 	if err != nil {
 		logs.Errorf("list template bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	tmplReleaseMap := make(map[uint32]*table.TemplateRelease, len(tmplReleases))
-	for _, r := range tmplReleases {
-		tmplReleaseMap[r.ID] = r
+	tmplRevisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
+	for _, r := range tmplRevisions {
+		tmplRevisionMap[r.ID] = r
 	}
 
 	// get app details
@@ -265,13 +265,13 @@ func (s *Service) ListTemplateBoundUnnamedAppDetails(ctx context.Context,
 	// combine resp details
 	details := make([]*pbtbr.TemplateBoundUnnamedAppDetail, 0)
 	for _, r := range relations {
-		for _, id := range r.TemplateReleaseIDs {
-			if _, ok := tmplReleaseMap[id]; ok {
+		for _, id := range r.TemplateRevisionIDs {
+			if _, ok := tmplRevisionMap[id]; ok {
 				details = append(details, &pbtbr.TemplateBoundUnnamedAppDetail{
-					TemplateReleaseId:   id,
-					TemplateReleaseName: tmplReleaseMap[id].Spec.ReleaseName,
-					AppId:               r.AppID,
-					AppName:             appMap[r.AppID].Spec.Name,
+					TemplateRevisionId:   id,
+					TemplateRevisionName: tmplRevisionMap[id].Spec.RevisionName,
+					AppId:                r.AppID,
+					AppName:              appMap[r.AppID].Spec.Name,
 				})
 			}
 		}
@@ -315,16 +315,16 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 		return nil, err
 	}
 
-	// get template release details of the template
-	tmplReleases, _, err := s.dao.TemplateRelease().
+	// get template revision details of the template
+	tmplRevisions, _, err := s.dao.TemplateRevision().
 		List(kt, req.BizId, req.TemplateId, "", &types.BasePage{Start: 0, Limit: types.DefaultMaxPageLimit})
 	if err != nil {
 		logs.Errorf("list template bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	tmplReleaseMap := make(map[uint32]*table.TemplateRelease, len(tmplReleases))
-	for _, r := range tmplReleases {
-		tmplReleaseMap[r.ID] = r
+	tmplRevisionMap := make(map[uint32]*table.TemplateRevision, len(tmplRevisions))
+	for _, r := range tmplRevisions {
+		tmplRevisionMap[r.ID] = r
 	}
 
 	// get app and release details
@@ -356,15 +356,15 @@ func (s *Service) ListTemplateBoundNamedAppDetails(ctx context.Context,
 	// combine resp details
 	details := make([]*pbtbr.TemplateBoundNamedAppDetail, 0)
 	for _, r := range relations {
-		for _, id := range r.TemplateReleaseIDs {
-			if _, ok := tmplReleaseMap[id]; ok {
+		for _, id := range r.TemplateRevisionIDs {
+			if _, ok := tmplRevisionMap[id]; ok {
 				details = append(details, &pbtbr.TemplateBoundNamedAppDetail{
-					TemplateReleaseId:   id,
-					TemplateReleaseName: tmplReleaseMap[id].Spec.ReleaseName,
-					AppId:               r.AppID,
-					AppName:             appMap[r.AppID].Spec.Name,
-					ReleaseId:           r.ReleaseID,
-					ReleaseName:         releaseMap[r.ReleaseID].Spec.Name,
+					TemplateRevisionId:   id,
+					TemplateRevisionName: tmplRevisionMap[id].Spec.RevisionName,
+					AppId:                r.AppID,
+					AppName:              appMap[r.AppID].Spec.Name,
+					ReleaseId:            r.ReleaseID,
+					ReleaseName:          releaseMap[r.ReleaseID].Spec.Name,
 				})
 			}
 		}
@@ -444,13 +444,13 @@ func (s *Service) ListTemplateBoundTemplateSetDetails(ctx context.Context,
 	return resp, nil
 }
 
-// ListTemplateReleaseBoundUnnamedAppDetails list template release bound unnamed app details.
-func (s *Service) ListTemplateReleaseBoundUnnamedAppDetails(ctx context.Context,
-	req *pbds.ListTemplateReleaseBoundUnnamedAppDetailsReq) (
-	*pbds.ListTemplateReleaseBoundUnnamedAppDetailsResp, error) {
+// ListTemplateRevisionBoundUnnamedAppDetails list template revision bound unnamed app details.
+func (s *Service) ListTemplateRevisionBoundUnnamedAppDetails(ctx context.Context,
+	req *pbds.ListTemplateRevisionBoundUnnamedAppDetailsReq) (
+	*pbds.ListTemplateRevisionBoundUnnamedAppDetailsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateReleaseExist(kt, req.TemplateReleaseId); err != nil {
+	if err := s.dao.Validator().ValidateTemplateRevisionExist(kt, req.TemplateRevisionId); err != nil {
 		return nil, err
 	}
 
@@ -460,16 +460,16 @@ func (s *Service) ListTemplateReleaseBoundUnnamedAppDetails(ctx context.Context,
 	}
 
 	appIDs, err := s.dao.TemplateBindingRelation().
-		ListTemplateReleaseBoundUnnamedAppDetails(kt, req.BizId, req.TemplateId)
+		ListTemplateRevisionBoundUnnamedAppDetails(kt, req.BizId, req.TemplateId)
 	if err != nil {
-		logs.Errorf("list template release bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list template revision bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
 	// get app details
 	apps, err := s.dao.App().ListAppsByIDs(kt, appIDs)
 	if err != nil {
-		logs.Errorf("list template release bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list template revision bound unnamed app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	appMap := make(map[uint32]*table.App, len(apps))
@@ -478,9 +478,9 @@ func (s *Service) ListTemplateReleaseBoundUnnamedAppDetails(ctx context.Context,
 	}
 
 	// combine resp details
-	details := make([]*pbtbr.TemplateReleaseBoundUnnamedAppDetail, 0)
+	details := make([]*pbtbr.TemplateRevisionBoundUnnamedAppDetail, 0)
 	for _, id := range appIDs {
-		details = append(details, &pbtbr.TemplateReleaseBoundUnnamedAppDetail{
+		details = append(details, &pbtbr.TemplateRevisionBoundUnnamedAppDetail{
 			AppId:   id,
 			AppName: appMap[id].Spec.Name,
 		})
@@ -495,20 +495,20 @@ func (s *Service) ListTemplateReleaseBoundUnnamedAppDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateReleaseBoundUnnamedAppDetailsResp{
+	resp := &pbds.ListTemplateRevisionBoundUnnamedAppDetailsResp{
 		Count:   uint32(len(details)),
 		Details: details,
 	}
 	return resp, nil
 }
 
-// ListTemplateReleaseBoundNamedAppDetails list template release bound named app details.
-func (s *Service) ListTemplateReleaseBoundNamedAppDetails(ctx context.Context,
-	req *pbds.ListTemplateReleaseBoundNamedAppDetailsReq) (
-	*pbds.ListTemplateReleaseBoundNamedAppDetailsResp, error) {
+// ListTemplateRevisionBoundNamedAppDetails list template revision bound named app details.
+func (s *Service) ListTemplateRevisionBoundNamedAppDetails(ctx context.Context,
+	req *pbds.ListTemplateRevisionBoundNamedAppDetailsReq) (
+	*pbds.ListTemplateRevisionBoundNamedAppDetailsResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := s.dao.Validator().ValidateTemplateReleaseExist(kt, req.TemplateReleaseId); err != nil {
+	if err := s.dao.Validator().ValidateTemplateRevisionExist(kt, req.TemplateRevisionId); err != nil {
 		return nil, err
 	}
 
@@ -518,9 +518,9 @@ func (s *Service) ListTemplateReleaseBoundNamedAppDetails(ctx context.Context,
 	}
 
 	relations, err := s.dao.TemplateBindingRelation().
-		ListTemplateReleaseBoundNamedAppDetails(kt, req.BizId, req.TemplateId)
+		ListTemplateRevisionBoundNamedAppDetails(kt, req.BizId, req.TemplateId)
 	if err != nil {
-		logs.Errorf("list template release bound named app details failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list template revision bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 
@@ -533,7 +533,7 @@ func (s *Service) ListTemplateReleaseBoundNamedAppDetails(ctx context.Context,
 	}
 	apps, err := s.dao.App().ListAppsByIDs(kt, appIDs)
 	if err != nil {
-		logs.Errorf("list template release bound named app details failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list template revision bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	appMap := make(map[uint32]*table.App, len(apps))
@@ -542,7 +542,7 @@ func (s *Service) ListTemplateReleaseBoundNamedAppDetails(ctx context.Context,
 	}
 	releases, err := s.dao.Release().ListAllByIDs(kt, appIDs, req.BizId)
 	if err != nil {
-		logs.Errorf("list template release bound named app details failed, err: %v, rid: %s", err, kt.Rid)
+		logs.Errorf("list template revision bound named app details failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
 	releaseMap := make(map[uint32]*table.Release, len(releases))
@@ -551,9 +551,9 @@ func (s *Service) ListTemplateReleaseBoundNamedAppDetails(ctx context.Context,
 	}
 
 	// combine resp details
-	details := make([]*pbtbr.TemplateReleaseBoundNamedAppDetail, 0)
+	details := make([]*pbtbr.TemplateRevisionBoundNamedAppDetail, 0)
 	for _, r := range relations {
-		details = append(details, &pbtbr.TemplateReleaseBoundNamedAppDetail{
+		details = append(details, &pbtbr.TemplateRevisionBoundNamedAppDetail{
 			AppId:       r.AppID,
 			AppName:     appMap[r.AppID].Spec.Name,
 			ReleaseId:   r.ReleaseID,
@@ -570,7 +570,7 @@ func (s *Service) ListTemplateReleaseBoundNamedAppDetails(ctx context.Context,
 		details = details[req.Start : req.Start+req.Limit]
 	}
 
-	resp := &pbds.ListTemplateReleaseBoundNamedAppDetailsResp{
+	resp := &pbds.ListTemplateRevisionBoundNamedAppDetailsResp{
 		Count:   uint32(len(details)),
 		Details: details,
 	}

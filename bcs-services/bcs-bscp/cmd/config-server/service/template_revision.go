@@ -23,35 +23,35 @@ import (
 	pbcs "bscp.io/pkg/protocol/config-server"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
-	pbtr "bscp.io/pkg/protocol/core/template-release"
+	pbtr "bscp.io/pkg/protocol/core/template-revision"
 	pbds "bscp.io/pkg/protocol/data-service"
 	"bscp.io/pkg/tools"
 )
 
-// CreateTemplateRelease create a template release
-func (s *Service) CreateTemplateRelease(ctx context.Context, req *pbcs.CreateTemplateReleaseReq) (*pbcs.CreateTemplateReleaseResp, error) {
+// CreateTemplateRevision create a template Revision
+func (s *Service) CreateTemplateRevision(ctx context.Context, req *pbcs.CreateTemplateRevisionReq) (*pbcs.CreateTemplateRevisionResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.CreateTemplateReleaseResp)
+	resp := new(pbcs.CreateTemplateRevisionResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRelease, Action: meta.Create,
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRevision, Action: meta.Create,
 		ResourceID: req.TemplateId}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
-	r := &pbds.CreateTemplateReleaseReq{
-		Attachment: &pbtr.TemplateReleaseAttachment{
+	r := &pbds.CreateTemplateRevisionReq{
+		Attachment: &pbtr.TemplateRevisionAttachment{
 			BizId:           grpcKit.BizID,
 			TemplateSpaceId: req.TemplateSpaceId,
 			TemplateId:      req.TemplateId,
 		},
-		Spec: &pbtr.TemplateReleaseSpec{
-			ReleaseName: req.ReleaseName,
-			ReleaseMemo: req.ReleaseMemo,
-			Name:        req.Name,
-			Path:        req.Path,
-			FileType:    req.FileType,
-			FileMode:    req.FileMode,
+		Spec: &pbtr.TemplateRevisionSpec{
+			RevisionName: req.RevisionName,
+			RevisionMemo: req.RevisionMemo,
+			Name:         req.Name,
+			Path:         req.Path,
+			FileType:     req.FileType,
+			FileMode:     req.FileMode,
 			Permission: &pbci.FilePermission{
 				User:      req.User,
 				UserGroup: req.UserGroup,
@@ -63,56 +63,56 @@ func (s *Service) CreateTemplateRelease(ctx context.Context, req *pbcs.CreateTem
 			},
 		},
 	}
-	rp, err := s.client.DS.CreateTemplateRelease(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.CreateTemplateRevision(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("create template release failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("create template Revision failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.CreateTemplateReleaseResp{
+	resp = &pbcs.CreateTemplateRevisionResp{
 		Id: rp.Id,
 	}
 	return resp, nil
 }
 
-// DeleteTemplateRelease delete a template release
-func (s *Service) DeleteTemplateRelease(ctx context.Context, req *pbcs.DeleteTemplateReleaseReq) (*pbcs.DeleteTemplateReleaseResp, error) {
+// DeleteTemplateRevision delete a template Revision
+func (s *Service) DeleteTemplateRevision(ctx context.Context, req *pbcs.DeleteTemplateRevisionReq) (*pbcs.DeleteTemplateRevisionResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.DeleteTemplateReleaseResp)
+	resp := new(pbcs.DeleteTemplateRevisionResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRelease, Action: meta.Delete,
-		ResourceID: req.TemplateReleaseId}, BizID: grpcKit.BizID}
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRevision, Action: meta.Delete,
+		ResourceID: req.TemplateRevisionId}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
-	r := &pbds.DeleteTemplateReleaseReq{
-		Id: req.TemplateReleaseId,
-		Attachment: &pbtr.TemplateReleaseAttachment{
+	r := &pbds.DeleteTemplateRevisionReq{
+		Id: req.TemplateRevisionId,
+		Attachment: &pbtr.TemplateRevisionAttachment{
 			BizId:           grpcKit.BizID,
 			TemplateSpaceId: req.TemplateSpaceId,
 			TemplateId:      req.TemplateId,
 		},
 	}
-	if _, err := s.client.DS.DeleteTemplateRelease(grpcKit.RpcCtx(), r); err != nil {
-		logs.Errorf("delete template release failed, err: %v, rid: %s", err, grpcKit.Rid)
+	if _, err := s.client.DS.DeleteTemplateRevision(grpcKit.RpcCtx(), r); err != nil {
+		logs.Errorf("delete template Revision failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
 	return resp, nil
 }
 
-// ListTemplateReleases list template releases
-func (s *Service) ListTemplateReleases(ctx context.Context, req *pbcs.ListTemplateReleasesReq) (*pbcs.ListTemplateReleasesResp, error) {
+// ListTemplateRevisions list template Revisions
+func (s *Service) ListTemplateRevisions(ctx context.Context, req *pbcs.ListTemplateRevisionsReq) (*pbcs.ListTemplateRevisionsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateReleasesResp)
+	resp := new(pbcs.ListTemplateRevisionsResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRelease, Action: meta.Find}, BizID: grpcKit.BizID}
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRevision, Action: meta.Find}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
-	r := &pbds.ListTemplateReleasesReq{
+	r := &pbds.ListTemplateRevisionsReq{
 		BizId:           grpcKit.BizID,
 		TemplateSpaceId: req.TemplateSpaceId,
 		TemplateId:      req.TemplateId,
@@ -121,24 +121,24 @@ func (s *Service) ListTemplateReleases(ctx context.Context, req *pbcs.ListTempla
 		Limit:           req.Limit,
 	}
 
-	rp, err := s.client.DS.ListTemplateReleases(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTemplateRevisions(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list template releases failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list template Revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateReleasesResp{
+	resp = &pbcs.ListTemplateRevisionsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
 	return resp, nil
 }
 
-// ListTemplateReleasesByIDs list template releases by ids
-func (s *Service) ListTemplateReleasesByIDs(ctx context.Context, req *pbcs.ListTemplateReleasesByIDsReq) (*pbcs.
-	ListTemplateReleasesByIDsResp, error) {
+// ListTemplateRevisionsByIDs list template Revisions by ids
+func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbcs.ListTemplateRevisionsByIDsReq) (*pbcs.
+	ListTemplateRevisionsByIDsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.ListTemplateReleasesByIDsResp)
+	resp := new(pbcs.ListTemplateRevisionsByIDsResp)
 
 	// validate input param
 	ids := tools.SliceRepeatedElements(req.Ids)
@@ -151,22 +151,22 @@ func (s *Service) ListTemplateReleasesByIDs(ctx context.Context, req *pbcs.ListT
 			idsLen, constant.ArrayInputLenLimit)
 	}
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRelease, Action: meta.Find}, BizID: grpcKit.BizID}
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateRevision, Action: meta.Find}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
-	r := &pbds.ListTemplateReleasesByIDsReq{
+	r := &pbds.ListTemplateRevisionsByIDsReq{
 		Ids: req.Ids,
 	}
 
-	rp, err := s.client.DS.ListTemplateReleasesByIDs(grpcKit.RpcCtx(), r)
+	rp, err := s.client.DS.ListTemplateRevisionsByIDs(grpcKit.RpcCtx(), r)
 	if err != nil {
-		logs.Errorf("list template releases failed, err: %v, rid: %s", err, grpcKit.Rid)
+		logs.Errorf("list template Revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
 
-	resp = &pbcs.ListTemplateReleasesByIDsResp{
+	resp = &pbcs.ListTemplateRevisionsByIDsResp{
 		Details: rp.Details,
 	}
 	return resp, nil

@@ -11,13 +11,13 @@
 | biz_id               | uint32   | 是   | 业务ID                            |
 | template_space_id    | uint32   | 是   | 模版空间ID                        |
 | template_id          | uint32   | 是   | 模版ID                            |
-| template_release_ids | []uint32 | 是   | 要查询的模版版本ID列表，最多200个 |
+| template_revision_ids | []uint32 | 是   | 要查询的模版版本ID列表，最多200个 |
 
 #### 调用示例
 
 ```json
 {
-  "template_release_ids": [
+  "template_revision_ids": [
     1,
     2
   ]
@@ -31,12 +31,12 @@
   "data": {
     "details": [
       {
-        "template_release_id": 1,
+        "template_revision_id": 1,
         "bound_unnamed_app_count": 2,
         "bound_named_app_count": 3,
       },
       {
-        "template_release_id": 2,
+        "template_revision_id": 2,
         "bound_unnamed_app_count": 5,
         "bound_named_app_count": 6,
       }

@@ -16,7 +16,7 @@ import "bscp.io/pkg/protocol/core/release/release.proto";
 import "bscp.io/pkg/protocol/core/released-ci/released_ci.proto";
 import "bscp.io/pkg/protocol/core/template/template.proto";
 import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_relation.proto";
-import "bscp.io/pkg/protocol/core/template-release/template_release.proto";
+import "bscp.io/pkg/protocol/core/template-revision/template_revision.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
 import "google/api/annotations.proto";
@@ -101,10 +101,10 @@ service Data {
     rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
 
     // template release related interface.
-    rpc CreateTemplateRelease(CreateTemplateReleaseReq) returns (CreateResp) {}
-    rpc ListTemplateReleases(ListTemplateReleasesReq) returns (ListTemplateReleasesResp) {}
-    rpc DeleteTemplateRelease(DeleteTemplateReleaseReq) returns (pbbase.EmptyResp) {}
-    rpc ListTemplateReleasesByIDs(ListTemplateReleasesByIDsReq) returns (ListTemplateReleasesByIDsResp) {}
+    rpc CreateTemplateRevision(CreateTemplateRevisionReq) returns (CreateResp) {}
+    rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {}
+    rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (pbbase.EmptyResp) {}
+    rpc ListTemplateRevisionsByIDs(ListTemplateRevisionsByIDsReq) returns (ListTemplateRevisionsByIDsResp) {}
 
     // template set related interface.
     rpc CreateTemplateSet(CreateTemplateSetReq) returns (CreateResp) {}
@@ -122,7 +122,7 @@ service Data {
 
     // template binding relation related interface.
     rpc ListTemplateBoundCounts(ListTemplateBoundCountsReq) returns (ListTemplateBoundCountsResp) {}
-    rpc ListTemplateReleaseBoundCounts(ListTemplateReleaseBoundCountsReq) returns (ListTemplateReleaseBoundCountsResp){}
+    rpc ListTemplateRevisionBoundCounts(ListTemplateRevisionBoundCountsReq) returns (ListTemplateRevisionBoundCountsResp){}
     rpc ListTemplateSetBoundCounts(ListTemplateSetBoundCountsReq) returns (ListTemplateSetBoundCountsResp){}
     rpc ListTemplateBoundUnnamedAppDetails(ListTemplateBoundUnnamedAppDetailsReq) returns
         (ListTemplateBoundUnnamedAppDetailsResp){}
@@ -130,10 +130,10 @@ service Data {
         (ListTemplateBoundNamedAppDetailsResp) {}
     rpc ListTemplateBoundTemplateSetDetails(ListTemplateBoundTemplateSetDetailsReq) returns
         (ListTemplateBoundTemplateSetDetailsResp) {}
-    rpc ListTemplateReleaseBoundUnnamedAppDetails(ListTemplateReleaseBoundUnnamedAppDetailsReq) returns
-        (ListTemplateReleaseBoundUnnamedAppDetailsResp){}
-    rpc ListTemplateReleaseBoundNamedAppDetails(ListTemplateReleaseBoundNamedAppDetailsReq) returns
-        (ListTemplateReleaseBoundNamedAppDetailsResp) {}
+    rpc ListTemplateRevisionBoundUnnamedAppDetails(ListTemplateRevisionBoundUnnamedAppDetailsReq) returns
+        (ListTemplateRevisionBoundUnnamedAppDetailsResp){}
+    rpc ListTemplateRevisionBoundNamedAppDetails(ListTemplateRevisionBoundNamedAppDetailsReq) returns
+        (ListTemplateRevisionBoundNamedAppDetailsResp) {}
     rpc ListTemplateSetBoundUnnamedAppDetails(ListTemplateSetBoundUnnamedAppDetailsReq) returns
         (ListTemplateSetBoundUnnamedAppDetailsResp){}
     rpc ListTemplateSetBoundNamedAppDetails(ListTemplateSetBoundNamedAppDetailsReq) returns
@@ -586,7 +586,7 @@ message  ListTemplateSpacesByIDsResp {
 message CreateTemplateReq {
     pbtemplate.TemplateAttachment attachment       = 1;
     pbtemplate.TemplateSpec       spec             = 2;
-    pbtr.TemplateReleaseSpec      tr_spec          = 3;
+    pbtr.TemplateRevisionSpec     tr_spec          = 3;
     repeated uint32               template_set_ids = 4;
 }
 
@@ -630,12 +630,12 @@ message  ListTemplatesByIDsResp {
     repeated pbtemplate.Template details = 1;
 }
 
-message CreateTemplateReleaseReq {
-    pbtr.TemplateReleaseAttachment attachment = 1;
-    pbtr.TemplateReleaseSpec       spec       = 2;
+message CreateTemplateRevisionReq {
+    pbtr.TemplateRevisionAttachment attachment = 1;
+    pbtr.TemplateRevisionSpec       spec       = 2;
 }
 
-message ListTemplateReleasesReq {
+message ListTemplateRevisionsReq {
     uint32 biz_id            = 1;
     uint32 template_space_id = 2;
     uint32 template_id       = 3;
@@ -644,22 +644,22 @@ message ListTemplateReleasesReq {
     uint32 limit             = 6;
 }
 
-message ListTemplateReleasesResp {
-    uint32                        count   = 1;
-    repeated pbtr.TemplateRelease details = 2;
+message ListTemplateRevisionsResp {
+    uint32                         count   = 1;
+    repeated pbtr.TemplateRevision details = 2;
 }
 
-message DeleteTemplateReleaseReq {
-    uint32                         id         = 1;
-    pbtr.TemplateReleaseAttachment attachment = 2;
+message DeleteTemplateRevisionReq {
+    uint32                          id         = 1;
+    pbtr.TemplateRevisionAttachment attachment = 2;
 }
 
-message  ListTemplateReleasesByIDsReq {
+message  ListTemplateRevisionsByIDsReq {
     repeated uint32 ids = 1;
 }
 
-message  ListTemplateReleasesByIDsResp {
-    repeated pbtr.TemplateRelease details = 1;
+message  ListTemplateRevisionsByIDsResp {
+    repeated pbtr.TemplateRevision details = 1;
 }
 
 message CreateTemplateSetReq {
@@ -748,15 +748,15 @@ message ListTemplateBoundCountsResp {
     repeated pbtbr.TemplateBoundCounts details = 1;
 }
 
-message ListTemplateReleaseBoundCountsReq {
-    uint32          biz_id               = 1;
-    uint32          template_space_id    = 2;
-    uint32          template_id          = 3;
-    repeated uint32 template_release_ids = 4;
+message ListTemplateRevisionBoundCountsReq {
+    uint32          biz_id                = 1;
+    uint32          template_space_id     = 2;
+    uint32          template_id           = 3;
+    repeated uint32 template_revision_ids = 4;
 }
 
-message ListTemplateReleaseBoundCountsResp {
-    repeated pbtbr.TemplateReleaseBoundCounts details = 1;
+message ListTemplateRevisionBoundCountsResp {
+    repeated pbtbr.TemplateRevisionBoundCounts details = 1;
 }
 
 message ListTemplateSetBoundCountsReq {
@@ -808,32 +808,32 @@ message ListTemplateBoundTemplateSetDetailsResp {
     repeated pbtbr.TemplateBoundTemplateSetDetail details = 2;
 }
 
-message ListTemplateReleaseBoundUnnamedAppDetailsReq {
-    uint32 biz_id              = 1;
-    uint32 template_space_id   = 2;
-    uint32 template_id         = 3;
-    uint32 template_release_id = 4;
-    uint32 start               = 5;
-    uint32 limit               = 6;
+message ListTemplateRevisionBoundUnnamedAppDetailsReq {
+    uint32 biz_id               = 1;
+    uint32 template_space_id    = 2;
+    uint32 template_id          = 3;
+    uint32 template_revision_id = 4;
+    uint32 start                = 5;
+    uint32 limit                = 6;
 }
 
-message ListTemplateReleaseBoundUnnamedAppDetailsResp {
-    uint32                                              count   = 1;
-    repeated pbtbr.TemplateReleaseBoundUnnamedAppDetail details = 2;
+message ListTemplateRevisionBoundUnnamedAppDetailsResp {
+    uint32                                               count   = 1;
+    repeated pbtbr.TemplateRevisionBoundUnnamedAppDetail details = 2;
 }
 
-message ListTemplateReleaseBoundNamedAppDetailsReq {
-    uint32 biz_id              = 1;
-    uint32 template_space_id   = 2;
-    uint32 template_id         = 3;
-    uint32 template_release_id = 4;
-    uint32 start               = 5;
-    uint32 limit               = 6;
+message ListTemplateRevisionBoundNamedAppDetailsReq {
+    uint32 biz_id               = 1;
+    uint32 template_space_id    = 2;
+    uint32 template_id          = 3;
+    uint32 template_revision_id = 4;
+    uint32 start                = 5;
+    uint32 limit                = 6;
 }
 
-message ListTemplateReleaseBoundNamedAppDetailsResp {
-    uint32                                            count   = 1;
-    repeated pbtbr.TemplateReleaseBoundNamedAppDetail details = 2;
+message ListTemplateRevisionBoundNamedAppDetailsResp {
+    uint32                                             count   = 1;
+    repeated pbtbr.TemplateRevisionBoundNamedAppDetail details = 2;
 }
 
 message ListTemplateSetBoundUnnamedAppDetailsReq {

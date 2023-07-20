@@ -27,14 +27,14 @@ import (
 type Validator interface {
 	// ValidateTemplatesExist validate if templates exists
 	ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint32) error
-	// ValidateTemplateReleasesExist validate if template releases exists
-	ValidateTemplateReleasesExist(kit *kit.Kit, templateReleaseIDs []uint32) error
+	// ValidateTemplateRevisionsExist validate if template releases exists
+	ValidateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error
 	// ValidateTemplateSetsExist validate if template sets exists
 	ValidateTemplateSetsExist(kit *kit.Kit, templateSetIDs []uint32) error
 	// ValidateTemplateExist validate if one template exists
 	ValidateTemplateExist(kit *kit.Kit, id uint32) error
-	// ValidateTemplateReleaseExist validate if one template release exists
-	ValidateTemplateReleaseExist(kit *kit.Kit, id uint32) error
+	// ValidateTemplateRevisionExist validate if one template release exists
+	ValidateTemplateRevisionExist(kit *kit.Kit, id uint32) error
 	// ValidateTemplateSetExist validate if one template set exists
 	ValidateTemplateSetExist(kit *kit.Kit, id uint32) error
 	// ValidateTemplateSpaceNoSubResource validate if one template space has not subresource
@@ -66,16 +66,16 @@ func (dao *validatorDao) ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint
 	return nil
 }
 
-// ValidateTemplateReleasesExist validate if template releases exists
-func (dao *validatorDao) ValidateTemplateReleasesExist(kit *kit.Kit, templateReleaseIDs []uint32) error {
-	m := dao.genQ.TemplateRelease
-	q := dao.genQ.TemplateRelease.WithContext(kit.Ctx)
+// ValidateTemplateRevisionsExist validate if template releases exists
+func (dao *validatorDao) ValidateTemplateRevisionsExist(kit *kit.Kit, templateRevisionIDs []uint32) error {
+	m := dao.genQ.TemplateRevision
+	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 	var existIDs []uint32
-	if err := q.Where(m.ID.In(templateReleaseIDs...)).Pluck(m.ID, &existIDs); err != nil {
+	if err := q.Where(m.ID.In(templateRevisionIDs...)).Pluck(m.ID, &existIDs); err != nil {
 		return fmt.Errorf("validate template releases exist failed, err: %v", err)
 	}
 
-	diffIDs := tools.SliceDiff(templateReleaseIDs, existIDs)
+	diffIDs := tools.SliceDiff(templateRevisionIDs, existIDs)
 	if len(diffIDs) > 0 {
 		return fmt.Errorf("template release id in %v is not exist", diffIDs)
 	}
@@ -115,10 +115,10 @@ func (dao *validatorDao) ValidateTemplateExist(kit *kit.Kit, id uint32) error {
 	return nil
 }
 
-// ValidateTemplateReleaseExist validate if one template release exists
-func (dao *validatorDao) ValidateTemplateReleaseExist(kit *kit.Kit, id uint32) error {
-	m := dao.genQ.TemplateRelease
-	q := dao.genQ.TemplateRelease.WithContext(kit.Ctx)
+// ValidateTemplateRevisionExist validate if one template release exists
+func (dao *validatorDao) ValidateTemplateRevisionExist(kit *kit.Kit, id uint32) error {
+	m := dao.genQ.TemplateRevision
+	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 
 	if _, err := q.Where(m.ID.Eq(id)).Take(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
