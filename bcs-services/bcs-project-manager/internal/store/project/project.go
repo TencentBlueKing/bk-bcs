@@ -256,25 +256,30 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 
 // SearchProjects query project sort by ids
 // NOCC:golint/fnsize(设计如此:该方法较长且不可拆分)
-func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchKey string,
+func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchKey, kind string,
 	pagination *page.Pagination) ([]Project, int64, error) {
 	if pagination.Limit == 0 {
 		pagination.Limit = page.DefaultPageLimit
 	}
 	projectList := make([]Project, 0)
-	matchPipline := bson.D{
-		{"$match", bson.D{
-			{"$or", bson.A{
-				bson.D{{"name", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
-				bson.D{{"projectCode", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
-				bson.D{{"projectID", fmt.Sprintf("\"%s\"", searchKey)}},
-				bson.D{{"businessID", fmt.Sprintf("\"%s\"", searchKey)}},
-			}},
-		}},
+	matchElement := bson.D{}
+	if kind != "" {
+		matchElement = append(matchElement, bson.E{Key: "kind", Value: kind})
 	}
-	pipeline := mongo.Pipeline{}
 	if searchKey != "" {
+		matchElement = append(matchElement, bson.E{Key: "$or", Value: bson.A{
+			bson.D{{"name", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
+			bson.D{{"projectCode", bson.D{{"$regex", searchKey}, {"$options", "i"}}}},
+			bson.D{{"projectID", fmt.Sprintf("\"%s\"", searchKey)}},
+			bson.D{{"businessID", fmt.Sprintf("\"%s\"", searchKey)}},
+		}})
+	}
+	matchPipline := bson.D{{"$match", matchElement}}
+	pipeline := mongo.Pipeline{}
+	countPipeline := mongo.Pipeline{}
+	if kind != "" || searchKey != "" {
 		pipeline = append(pipeline, matchPipline)
+		countPipeline = append(countPipeline, matchPipline)
 	}
 	pipeline = append(pipeline, bson.D{
 		{"$addFields", bson.D{
@@ -334,10 +339,6 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchK
 	var counts []struct {
 		Count int64 `bson:"count"`
 	}
-	countPipeline := mongo.Pipeline{}
-	if searchKey != "" {
-		countPipeline = append(countPipeline, matchPipline)
-	}
 	countPipeline = append(countPipeline, bson.D{
 		{"$group", bson.D{
 			{"_id", nil},
@@ -356,15 +357,17 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchK
 }
 
 // ListProjectByIDs query project by project ids
-func (m *ModelProject) ListProjectByIDs(
-	ctx context.Context,
-	ids []string,
-	pagination *page.Pagination,
-) ([]Project, int64, error) {
+func (m *ModelProject) ListProjectByIDs(ctx context.Context, kind string, ids []string, pagination *page.Pagination) (
+	[]Project, int64, error) {
 	projectList := make([]Project, 0)
-	condM := make(operator.M)
-	condM["projectID"] = ids
-	cond := operator.NewLeafCondition(operator.In, condM)
+	condKind := make(operator.M)
+	condID := make(operator.M)
+	if kind != "" {
+		condKind["kind"] = kind
+	}
+	condID["projectID"] = ids
+	cond := operator.NewBranchCondition(operator.And,
+		operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
 	finder := m.db.Table(m.tableName).Find(cond)
 	// 获取总量
 	total, err := finder.Count(ctx)

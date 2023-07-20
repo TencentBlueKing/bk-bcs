@@ -129,13 +129,17 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 		}
 		if req.All {
 			// all 为 true 时，返回所有项目并排序和分页，支持模糊查询
-			projects, total, err = lap.model.SearchProjects(ctx, ids, req.SearchKey,
+			projects, total, err = lap.model.SearchProjects(ctx, ids, req.SearchKey, req.Kind,
 				&page.Pagination{Offset: req.Offset, Limit: req.Limit})
 		} else if any {
 			// all 为 false 时，直接返回所有有权限的项目，分页和模糊查询无效
-			projects, total, err = lap.model.ListProjects(ctx, operator.EmptyCondition, &page.Pagination{All: true})
+			cond := operator.EmptyCondition
+			if req.Kind != "" {
+				cond = operator.NewLeafCondition(operator.Eq, operator.M{"kind": req.Kind})
+			}
+			projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
 		} else {
-			projects, total, err = lap.model.ListProjectByIDs(ctx, ids, &page.Pagination{All: true})
+			projects, total, err = lap.model.ListProjectByIDs(ctx, req.Kind, ids, &page.Pagination{All: true})
 		}
 		if err != nil {
 			return nil, err

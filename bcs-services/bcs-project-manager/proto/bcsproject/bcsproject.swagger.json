@@ -44,6 +44,13 @@
             "format": "boolean"
           },
           {
+            "name": "kind",
+            "description": "kind. 按kind过滤项目",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "searchKey",
             "description": "businessID. 仅在all为true时生效, 表示通过项目名称/项目英文名模糊查询或项目ID/业务ID精确查询",
             "in": "query",

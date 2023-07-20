@@ -1588,6 +1588,8 @@ func (m *ListAuthorizedProjReq) validate(all bool) error {
 
 	// no validation rules for All
 
+	// no validation rules for Kind
+
 	// no validation rules for SearchKey
 
 	// no validation rules for Offset

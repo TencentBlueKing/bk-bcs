@@ -27,6 +27,19 @@ func RemoveDuplicateValues(strSlice []string) []string {
 	return result
 }
 
+// RemoveDuplicateValuesInt 删除重复的值
+func RemoveDuplicateValuesInt(intSlice []int) []int {
+	keys := make(map[int]bool)
+	result := []int{}
+	for _, s := range intSlice {
+		if _, v := keys[s]; !v {
+			keys[s] = true
+			result = append(result, s)
+		}
+	}
+	return result
+}
+
 // StringInSlice 判断字符串是否存在 Slice 中
 func StringInSlice(str string, list []string) bool {
 	for _, item := range list {
