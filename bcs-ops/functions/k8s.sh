@@ -47,3 +47,28 @@ k8s::safe_add_helmrepo() {
   fi
   return 0
 }
+
+#######################################
+# add vip to K8S apiserver certs
+# Arguments:
+# $1: vip
+# Return:
+# add vip success - return 0
+# add vip fail - return 1
+#######################################
+k8s::add_vip_to_cert() {
+  vip=$1
+  local kubeadm_config_file="/tmp/kubeadm-$(date +%Y-%m-%d).yaml"
+  kubectl -n kube-system get configmap kubeadm-config -o jsonpath='{.data.ClusterConfiguration}' > ${kubeadm_config_file}
+  if $(grep -q certSANs ${kubeadm_config_file}); then
+    sed -i "/certSANs/a \  \- \"${vip}\"" ${kubeadm_config_file}
+  else
+    sed -i "/apiServer:/a \  certSANs:\n  - \"${vip}\"" ${kubeadm_config_file}
+  fi
+  install -dv /etc/kubernetes/pki/backup-$(date +%Y-%m-%d)
+  mv -f /etc/kubernetes/pki/apiserver.{crt,key} /etc/kubernetes/pki/backup-$(date +%Y-%m-%d)
+  kubeadm init phase certs apiserver --config ${kubeadm_config_file} \
+  || utils::log "ERROR" "failed to add ${vip} to apiserver cert"
+  rm -f ${kubeadm_config_file}
+  utils::log "OK" "added ${vip} to apiserver cert"
+}

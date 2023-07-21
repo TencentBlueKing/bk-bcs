@@ -41,17 +41,16 @@ safe_source() {
   return 0
 }
 
-source_files=("${ROOT_DIR}/functions/utils.sh")
-for file in "${source_files[@]}"; do
-  safe_source "$file"
-done
-
 "${ROOT_DIR}"/system/config_envfile.sh -c init
-
 "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools
 "${ROOT_DIR}"/k8s/render_kubeadm
+
+source_files=("${ROOT_DIR}/functions/utils.sh" "${ROOT_DIR}/env/bcs.env")
+for file in "${source_files[@]}"; do
+  safe_source "$file"
+done
 
 # ToDo: import image: cni\metric
 if [[ -n ${BCS_OFFLINE:-} ]]; then
@@ -69,6 +68,23 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   "${ROOT_DIR}"/k8s/install_cni.sh
   "${ROOT_DIR}"/k8s/operate_metrics_server apply
   "${ROOT_DIR}"/k8s/render_k8s_joincmd
+  if [ ${ENABLE_APISERVER_HA} == "true" ]; then
+    [ -z ${VIP} ] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
+    if [ ${APISERVER_HA_MODE} == "kube-vip" ]; then
+      "${ROOT_DIR}"/k8s/operate_kube_vip apply
+    elif [ ${APISERVER_HA_MODE} == "bcs-apiserver-proxy" ]; then
+      "${ROOT_DIR}"/k8s/operate_bap apply
+    fi
+  fi
 else
-  kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11
+  kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
+  || utils::log "FATAL" "failed to join master ${LAN_IP}"
+  if [ ${ENABLE_APISERVER_HA} == "true" ]; then
+    [ -z ${VIP} ] && utils::log "ERROR" "apiserver HA is enabled but VIP is not set"
+    "${ROOT_DIR}"/system/config_bc.s_dns -u "${LAN_IP}" k8s-api.bcs.local
+    systemctl restart kubelet.service
+    if [ ${APISERVER_HA_MODE} == "kube-vip" ]; then
+      "${ROOT_DIR}"/k8s/operate_kube_vip apply
+    fi
+  fi
 fi

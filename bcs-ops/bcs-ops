@@ -37,7 +37,7 @@ Usage:
     [ -r --render      suppport: ${RENDER_PROJECTS[*]}]
     [ -c --clean       support: ${CLEAN_PROJECTS[*]}]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
@@ -88,7 +88,7 @@ install_metrics_server() {
 }
 
 render_bcsenv() {
-  "${ROOT_DIR}"/system/config_envfile.sh init
+  "${ROOT_DIR}"/system/config_envfile.sh -c init
 }
 
 render_kubeadm() {

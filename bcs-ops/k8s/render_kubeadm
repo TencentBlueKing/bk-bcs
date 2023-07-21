@@ -34,7 +34,7 @@ Usage:
         dump: print bcs.env file.
         clean: clean bcs.env file ]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {

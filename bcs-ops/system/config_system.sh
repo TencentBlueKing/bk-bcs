@@ -38,7 +38,7 @@ Usage:
 	     dns: del bcs dns
 		 systcl: del bcs sysctl ]
 EOF
-  return "$1"
+  exit "$1"
 }
 
 version() {
