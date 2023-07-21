@@ -49,19 +49,19 @@ func (ep EndPoint) String() string {
 
 // SplitServer split server to ip, port
 func SplitServer(server string) (string, uint32) {
-	s := strings.Split(server, ":")
-	if len(s) != 2 {
-		blog.Warn("SplitServer error: len(s) is not two.")
+	s, p, err := net.SplitHostPort(server)
+	if err != nil {
+		blog.Errorf("SplitServer error: ", err)
+		return "", 0
+	}
+	port, err := strconv.Atoi(p)
+	if err != nil {
+		blog.Errorf("SplitServer error: ", err)
 		return "", 0
 	}
 	blog.V(5).Infof("SplitServer debug: IP: %s, Port: %s", s[0], s[1])
 
-	p, err := strconv.Atoi(s[1])
-	if err != nil {
-		blog.Warn("SplitServer error: ", err)
-		return "", 0
-	}
-	return s[0], uint32(p)
+	return s, uint32(port)
 }
 
 // BuildVirtualServer build vip to ipvs.VirtualServer
