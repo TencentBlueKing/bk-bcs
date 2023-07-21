@@ -32,7 +32,7 @@ import (
 func NewQueryableCreator(reg *prometheus.Registry, kitLogger gokit.Logger,
 	discoveryClient *DiscoveryClient) query.QueryableCreator {
 	proxy := store.NewProxyStore(kitLogger, reg, discoveryClient.Endpoints().GetStoreClients, component.Query, nil,
-		storeResponseTimeout)
+		storeResponseTimeout, store.LazyRetrieval)
 
 	queryableCreator := query.NewQueryableCreator(
 		kitLogger,

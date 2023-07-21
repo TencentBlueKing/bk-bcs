@@ -32,6 +32,7 @@ const (
 	unhealthyStoreTimeout             = time.Minute * 5  // 健康检查的时间
 	storeResponseTimeout              = time.Second * 20 // 查询store的超时时间
 	defaultEvaluationInterval         = time.Minute * 1  // 自查询的默认处理间隔。这里用不到
+	endpointInfoTimeout               = time.Minute * 5  // thanos端点超时时间
 )
 
 var queryReplicaLabels = []string{"prometheus_replica"}
