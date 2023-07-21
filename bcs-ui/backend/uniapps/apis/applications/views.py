@@ -935,7 +935,7 @@ class BatchUpdateInstance(BaseBatchHandleInstance, app_views.BaseAPI):
         # 查询相应的实例信息
         version_id = None
         ns_var_map = {}
-        if request.user.app_code in ["gcloud", "workbench"]:
+        if request.user.app_code in ["gcloud", "workbench", "bksops"]:
             inst_id_list, inst_variables, ns_id_name_map, ns_var_map, instance_num = self.get_params_from_gcloud(
                 request, project_id, real_category
             )
