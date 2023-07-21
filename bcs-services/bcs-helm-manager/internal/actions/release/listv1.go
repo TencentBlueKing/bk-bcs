@@ -18,21 +18,21 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
+	clusterClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
+	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
 
 // NewListReleaseV1Action return a new ListReleaseAction instance
@@ -87,7 +87,7 @@ func (l *ListReleaseV1Action) list() (*helmmanager.ReleaseListData, error) {
 	option := l.getOption()
 
 	// if cluster is shared, return release form database only
-	cluster, err := clustermanager.GetCluster(clusterID)
+	cluster, err := clusterClient.GetClusterInfo(l.ctx, clusterID)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster info error, %s", err.Error())
 	}
@@ -136,7 +136,7 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Status = v.Status
 			}
 			// 集群中版本比数据库中的版本新，则使用集群中的数据
-			if *v.Revision >= *newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Revision {
+			if v.Revision >= newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Revision {
 				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].ChartVersion = v.ChartVersion
 				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].UpdateTime = v.UpdateTime
 				newReleaseMap[l.getReleaseKey(v.GetNamespace(), v.GetName())].Message = v.Message
@@ -154,8 +154,8 @@ func (l *ListReleaseV1Action) mergeReleases(clusterReleases,
 	}
 
 	for k := range newReleaseMap {
-		nsID := authUtils.CalcIAMNsID(l.req.GetClusterID(), *newReleaseMap[k].Namespace)
-		newReleaseMap[k].IamNamespaceID = &nsID
+		nsID := authUtils.CalcIAMNsID(l.req.GetClusterID(), newReleaseMap[k].Namespace)
+		newReleaseMap[k].IamNamespaceID = nsID
 		release = append(release, newReleaseMap[k])
 	}
 
@@ -230,8 +230,8 @@ func (l *ListReleaseV1Action) getCondition(shared bool) *operator.Condition {
 func (l *ListReleaseV1Action) setResp(err common.HelmManagerError, message string, r *helmmanager.ReleaseListData) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	l.resp.Code = &code
-	l.resp.Message = &msg
+	l.resp.Code = code
+	l.resp.Message = msg
 	l.resp.Result = err.OK()
 	l.resp.Data = r
 }

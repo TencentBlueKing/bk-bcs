@@ -14,37 +14,38 @@
 package app
 
 import (
-	// pprof
-	_ "net/http/pprof"
-
-	"context"
-	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
-	"os/signal"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"syscall"
 	"time"
+	// pprof
+	"context"
+	"crypto/tls"
+	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
 
+	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
+	microGrpc "github.com/go-micro/plugins/v4/server/grpc"
 	"github.com/gorilla/mux"
 	ggRuntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	microCfg "github.com/micro/go-micro/v2/config"
-	"github.com/micro/go-micro/v2/config/source"
-	microRgt "github.com/micro/go-micro/v2/registry"
-	microEtcd "github.com/micro/go-micro/v2/registry/etcd"
-	microSvc "github.com/micro/go-micro/v2/service"
-	microGrpc "github.com/micro/go-micro/v2/service/grpc"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go-micro.dev/v4"
+	microCfg "go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/source"
+	microRgt "go-micro.dev/v4/registry"
+	"go-micro.dev/v4/server"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	gCred "google.golang.org/grpc/credentials"
-	"gopkg.in/yaml.v2"
+	"google.golang.org/grpc/credentials/insecure"
+	"gopkg.in/yaml.v3"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
@@ -58,7 +59,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
@@ -74,19 +75,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/wrapper"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-)
-
-var (
-	// maxMsgSize define maximum message size that grpc server can send or receive. Default value is 50MB.
-	maxMsgSize = 1024 * 1024 * 50
+	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/middleware"
 )
 
 // HelmManager describe the helm-service manager instance
 type HelmManager struct {
 	opt *options.HelmManagerOptions
 
-	microSvc  microSvc.Service
+	microSvc  micro.Service
 	microRgt  microRgt.Registry
 	discovery *discovery.ModuleDiscovery
 
@@ -137,11 +133,12 @@ func (hm *HelmManager) Init() error {
 		hm.initRegistry,
 		hm.initJWTClient,
 		hm.initIAMClient,
-		hm.InitComponentConfig,
 		hm.initDiscovery,
 		hm.initMicro,
+		hm.initHandler,
 		hm.initHTTPService,
 		hm.initMetric,
+		hm.initComponentClient,
 	} {
 		if err := f(); err != nil {
 			return err
@@ -158,7 +155,6 @@ func (hm *HelmManager) Init() error {
 // Run helm manager server
 func (hm *HelmManager) Run() error {
 	eg, _ := errgroup.WithContext(hm.ctx)
-
 	eg.Go(func() error {
 		return hm.watch()
 	})
@@ -168,7 +164,7 @@ func (hm *HelmManager) Run() error {
 	})
 	// wait all svc to run
 	if err := eg.Wait(); err != nil {
-		defer blog.CloseLogs()
+		//defer blog.CloseLogs()
 		return err
 	}
 	return nil
@@ -181,8 +177,7 @@ func (hm *HelmManager) RegistryStop() {
 		signalChan := make(chan os.Signal, 1)
 		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 		<-signalChan
-		blog.Infof("Got OS shutdown signal, shutting down bcs-helm-manager server gracefully...")
-
+		blog.Fatalf("Got OS shutdown signal, shutting down bcs-helm-manager server gracefully...")
 		hm.ctxCancelFunc()
 	}()
 }
@@ -235,7 +230,7 @@ func (hm *HelmManager) initModel() error {
 	return nil
 }
 
-// initAddons get add-ons list from config
+// // initAddons get add-ons list from config
 func (hm *HelmManager) initAddons() error {
 	if hm.opt.Release.AddonsConfigFile == "" {
 		return nil
@@ -351,36 +346,62 @@ func (hm *HelmManager) initMicro() error {
 	if v := net.ParseIP(ipv6); v != nil && !v.IsLoopback() {
 		metadata[types.IPV6] = net.JoinHostPort(ipv6, port)
 	}
-
 	// init micro auth middleware, middleware will check user perm
 	authWrapper := middleauth.NewGoMicroAuth(auth.GetJWTClient()).
 		EnableSkipHandler(auth.SkipHandler).
 		EnableSkipClient(auth.SkipClient).
 		SetCheckUserPerm(auth.CheckUserPerm)
 
-	// init micro service
-	svc := microGrpc.NewService(
-		microSvc.Name(common.ServiceDomain),
-		microSvc.Metadata(metadata),
-		microGrpc.WithTLS(hm.tlsConfig),
-		microSvc.Address(net.JoinHostPort(ipv4, port)),
-		microSvc.Registry(hm.microRgt),
-		microSvc.Version(version.BcsVersion),
-		microSvc.RegisterTTL(30*time.Second),
-		microSvc.RegisterInterval(25*time.Second),
-		microSvc.Context(hm.ctx),
-		runtimex.MaxMsgSize(maxMsgSize),
-		microSvc.BeforeStart(func() error {
+	// 创建grpc服务
+	svc := microGrpc.NewServer(
+		server.Name(common.ServiceDomain),
+		microGrpc.AuthTLS(hm.tlsConfig),
+		server.Address(net.JoinHostPort(ipv4, port)),
+		server.Registry(hm.microRgt),
+		server.Version(version.BcsVersion),
+		server.RegisterTTL(30*time.Second),
+		server.RegisterInterval(25*time.Second),
+		server.Context(hm.ctx),
+		microGrpc.MaxMsgSize(10*1024*1024),
+		server.WrapHandler(
+			// 记录请求
+			wrapper.RequestLogWarpper(),
+		),
+		server.WrapHandler(
+			// 处理返回
+			wrapper.ResponseWrapper(),
+		),
+		server.WrapHandler(
+			// 认证
+			authWrapper.AuthenticationFunc(),
+		),
+		server.WrapHandler(
+			// 从request解析项目信息
+			wrapper.ParseProjectIDWrapper(),
+		),
+		server.WrapHandler(
+			// 授权
+			authWrapper.AuthorizationFunc(),
+		),
+	)
+	// 初始化
+	if err := svc.Init(); err != nil {
+		return err
+	}
+	// 创建micro服务
+	hm.microSvc = micro.NewService(
+		micro.Server(svc),
+		micro.BeforeStart(func() error {
 			return nil
 		}),
-		microSvc.AfterStart(func() error {
+		micro.AfterStart(func() error {
 			return hm.discovery.Start()
 		}),
-		microSvc.BeforeStop(func() error {
+		micro.BeforeStop(func() error {
 			hm.discovery.Stop()
 			return nil
 		}),
-		microSvc.AfterStop(func() error {
+		micro.AfterStop(func() error {
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
 			hm.httpServer.Shutdown(ctx)
@@ -388,31 +409,27 @@ func (hm *HelmManager) initMicro() error {
 			operation.GlobalOperator.WaitTerminate(ctx, time.Second)
 			return nil
 		}),
-		microSvc.WrapHandler(
-			wrapper.RequestLogWarpper,
-			wrapper.ResponseWrapper,
-			authWrapper.AuthenticationFunc,
-			wrapper.ParseProjectIDWrapper,
-			authWrapper.AuthorizationFunc,
-		),
-	)
-	svc.Init()
+		micro.Metadata(metadata))
+	blog.Info("register cluster resources handler to micro successfully.")
+	return nil
+}
 
+// initHandler 注册多个 Handler
+func (hm *HelmManager) initHandler() error {
+	var err error
 	// register helmmanager handler
-	if err := helmmanager.RegisterHelmManagerHandler(
-		svc.Server(), handler.NewHelmManager(hm.model, hm.platform, hm.opt, hm.releaseHandler)); err != nil {
-		blog.Errorf("register helm handler to micro failed: %s", err.Error())
-		return nil
-	}
-	// register cluster addons handler
-	if err := helmmanager.RegisterClusterAddonsHandler(
-		svc.Server(), handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, hm.addons,
-			hm.releaseHandler)); err != nil {
-		blog.Errorf("register addons handler to micro failed: %s", err.Error())
-		return nil
+	if err = helmmanager.RegisterHelmManagerHandler(hm.microSvc.Server(),
+		handler.NewHelmManager(hm.model, hm.platform, hm.opt, hm.releaseHandler)); err != nil {
+		err = fmt.Errorf("register helm handler to micro failed: %s", err.Error())
+		return err
 	}
 
-	hm.microSvc = svc
+	// register cluster addons handler
+	if err = helmmanager.RegisterClusterAddonsHandler(hm.microSvc.Server(),
+		handler.NewAddonsHandler(hm.model, hm.opt, hm.platform, hm.addons, hm.releaseHandler)); err != nil {
+		err = fmt.Errorf("register addons handler to micro failed: %s", err.Error())
+		return err
+	}
 	blog.Info("success to register helm manager handler to micro")
 	return nil
 }
@@ -428,13 +445,12 @@ func (hm *HelmManager) initHTTPService() error {
 		ggRuntime.WithDisablePathLengthFallback(),
 		ggRuntime.WithProtoErrorHandler(runtimex.CustomHTTPError),
 	)
-
 	grpcDialOpts := make([]grpc.DialOption, 0)
-	grpcDialOpts = append(grpcDialOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize)))
 	if hm.tlsConfig != nil && hm.clientTLSConfig != nil {
 		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(gCred.NewTLS(hm.clientTLSConfig)))
 	} else {
-		grpcDialOpts = append(grpcDialOpts, grpc.WithInsecure())
+		// Note the use of insecure transport here. TLS is recommended in production.
+		grpcDialOpts = append(grpcDialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
 	// register helmmanager gatewasy
@@ -494,31 +510,6 @@ func (hm *HelmManager) initHTTPService() error {
 	return nil
 }
 
-// initMetric brings up a service and listen on a metric port, for providing metric data
-func (hm *HelmManager) initMetric() error {
-	metricMux := http.NewServeMux()
-	blog.Info("init metric handler")
-	metricMux.Handle("/metrics", promhttp.Handler())
-	// server address
-	addresses := []string{hm.opt.Address}
-	if len(hm.opt.IPv6Address) > 0 {
-		addresses = append(addresses, hm.opt.IPv6Address)
-	}
-	hm.metricServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.MetricPort)), "", metricMux)
-
-	go func() {
-		var err error
-		blog.Infof("start metric server on address %+v", addresses)
-		if err = hm.metricServer.ListenAndServe(); err != nil {
-			blog.Errorf("start metric server failed, %s", err.Error())
-			hm.stopCh <- struct{}{}
-		}
-	}()
-
-	operation.GlobalOperator.ReportOperatorCount()
-	return nil
-}
-
 // initTLSConfig xxx
 // init server and client tls config
 func (hm *HelmManager) initTLSConfig() error {
@@ -543,6 +534,31 @@ func (hm *HelmManager) initTLSConfig() error {
 		hm.clientTLSConfig = tlsConfig
 		blog.Info("load helm manager client tls config successfully")
 	}
+	return nil
+}
+
+// initMetric brings up a service and listen on a metric port, for providing metric data
+func (hm *HelmManager) initMetric() error {
+	metricMux := http.NewServeMux()
+	blog.Info("init metric handler")
+	metricMux.Handle("/metrics", promhttp.Handler())
+	// server address
+	addresses := []string{hm.opt.Address}
+	if len(hm.opt.IPv6Address) > 0 {
+		addresses = append(addresses, hm.opt.IPv6Address)
+	}
+	hm.metricServer = ipv6server.NewIPv6Server(addresses, strconv.Itoa(int(hm.opt.MetricPort)), "", metricMux)
+
+	go func() {
+		var err error
+		blog.Infof("start metric server on address %+v", addresses)
+		if err = hm.metricServer.ListenAndServe(); err != nil {
+			blog.Errorf("start metric server failed, %s", err.Error())
+			hm.stopCh <- struct{}{}
+		}
+	}()
+
+	operation.GlobalOperator.ReportOperatorCount()
 	return nil
 }
 
@@ -586,8 +602,9 @@ func (hm *HelmManager) initIAMClient() error {
 	return nil
 }
 
+// 从目录加载 Yaml 文件
 func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
-	fs, err := ioutil.ReadDir(dir)
+	fs, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +615,7 @@ func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
 			continue
 		}
 
-		data, err := ioutil.ReadFile(filepath.Join(dir, f.Name()))
+		data, err := os.ReadFile(filepath.Join(dir, f.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -611,7 +628,6 @@ func loadYamlFilesFromDir(dir string) ([]*release.File, error) {
 
 	return r, nil
 }
-
 func (hm *HelmManager) getServerAddress() error {
 	// 通过环境变量获取LocalIP，这里是用的是podIP
 	if hm.opt.UseLocalIP && envx.LocalIP != "" {
@@ -619,27 +635,6 @@ func (hm *HelmManager) getServerAddress() error {
 		hm.opt.InsecureAddress = envx.LocalIP
 	}
 	hm.opt.IPv6Address = util.InitIPv6Address(hm.opt.IPv6Address)
-	return nil
-}
-
-// InitComponentConfig init component config
-func (hm *HelmManager) InitComponentConfig() error {
-	err := project.NewClient(hm.clientTLSConfig, hm.microRgt)
-	if err != nil {
-		blog.Error("init project client error, %s", err.Error())
-		return err
-	}
-	err = clustermanager.NewClient(hm.clientTLSConfig, hm.microRgt)
-	if err != nil {
-		blog.Error("init clustermanager client error, %s", err.Error())
-		return err
-	}
-	err = storage.NewClient(hm.clientTLSConfig)
-	if err != nil {
-		blog.Error("init storage client error, %s", err.Error())
-		return err
-	}
-	blog.Info("init all client successfully")
 	return nil
 }
 
@@ -673,5 +668,21 @@ func (hm *HelmManager) watch() error {
 			blog.Infof("reload credential conf from %s", string(value.Bytes()))
 		}
 	})
+	return nil
+}
+
+// initComponentClient 初始化依赖组件 Client
+func (hm *HelmManager) initComponentClient() (err error) {
+	// ClusterManager
+	cluster.InitCMClient()
+	// ProjectManager
+	project.InitProjClient()
+	// Storage
+	err = storage.NewClient(hm.clientTLSConfig)
+	if err != nil {
+		blog.Error("init storage client error, %s", err.Error())
+		return err
+	}
+	blog.Info("init all client successfully")
 	return nil
 }

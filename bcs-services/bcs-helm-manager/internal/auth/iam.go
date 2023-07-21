@@ -16,17 +16,18 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
+	clusterClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
 
 var (
@@ -88,7 +89,7 @@ func GetUserNamespacePermList(username, projectID, clusterID string, namespaces 
 func ReleaseResourcePermCheck(username, projectCode, projectID, clusterID string, namespaceCreated, clusterScope bool,
 	namespaces []string, isShardCluster bool) (bool, string, []utils.ResourceAction, error) {
 	// 如果是共享集群，且集群不属于该项目，说明是用户使用共享集群，需要单独鉴权
-	cls, err := clustermanager.GetCluster(clusterID)
+	cls, err := clusterClient.GetClusterInfo(context.TODO(), clusterID)
 	if err != nil {
 		return false, "", nil, err
 	}
@@ -247,13 +248,13 @@ func getApplications(projectID, clusterID string, namespaceCreated, clusterScope
 		},
 	}))
 	if clusterScope {
-		apps = append(apps, cluster.BuildClusterScopedApplicationInstance(cluster.ClusterScopedApplicationAction{
+		apps = append(apps, cluster.BuildClusterScopedAppInstance(cluster.ClusterScopedApplicationAction{
 			ActionID: cluster.ClusterScopedCreate.String(),
 			Data: []cluster.ProjectClusterData{
 				{Project: projectID, Cluster: clusterID},
 			},
 		}))
-		apps = append(apps, cluster.BuildClusterScopedApplicationInstance(cluster.ClusterScopedApplicationAction{
+		apps = append(apps, cluster.BuildClusterScopedAppInstance(cluster.ClusterScopedApplicationAction{
 			ActionID: cluster.ClusterScopedUpdate.String(),
 			Data: []cluster.ProjectClusterData{
 				{Project: projectID, Cluster: clusterID},
@@ -277,14 +278,14 @@ func getApplications(projectID, clusterID string, namespaceCreated, clusterScope
 				{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
 			},
 		}))
-		apps = append(apps, namespace.BuildNamespaceScopedApplicationInstance(
+		apps = append(apps, namespace.BuildNSScopedAppInstance(
 			namespace.NamespaceScopedApplicationAction{
 				ActionID: namespace.NameSpaceScopedCreate.String(),
 				Data: []namespace.ProjectNamespaceData{
 					{Project: projectID, Cluster: clusterID, Namespace: namespaceID},
 				},
 			}))
-		apps = append(apps, namespace.BuildNamespaceScopedApplicationInstance(
+		apps = append(apps, namespace.BuildNSScopedAppInstance(
 			namespace.NamespaceScopedApplicationAction{
 				ActionID: namespace.NameSpaceScopedUpdate.String(),
 				Data: []namespace.ProjectNamespaceData{

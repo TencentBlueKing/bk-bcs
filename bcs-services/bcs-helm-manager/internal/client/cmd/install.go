@@ -16,10 +16,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -68,13 +68,13 @@ func Install(cmd *cobra.Command, args []string) {
 	}
 
 	req.Name = common.GetStringP(args[0])
-	req.Namespace = &flagNamespace
-	req.ClusterID = &flagCluster
-	req.ProjectCode = &flagProject
+	req.Namespace = flagNamespace
+	req.ClusterID = flagCluster
+	req.ProjectCode = flagProject
 	if flagRepository == "" {
 		flagRepository = flagProject
 	}
-	req.Repository = &flagRepository
+	req.Repository = flagRepository
 	req.Chart = common.GetStringP(args[1])
 	req.Version = common.GetStringP(args[2])
 	req.Values = values

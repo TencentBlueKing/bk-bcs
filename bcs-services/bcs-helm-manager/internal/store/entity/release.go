@@ -17,7 +17,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/utils"
 )
 
 // Release 定义了chart的部署信息, 存储在helm-manager的数据库中, 用于对部署版本做记录

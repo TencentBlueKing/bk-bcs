@@ -76,8 +76,8 @@ func (g *GetRepositoryAction) get(projectCode, name string) error {
 func (g *GetRepositoryAction) setResp(err common.HelmManagerError, message string, r *helmmanager.Repository) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	g.resp.Code = &code
-	g.resp.Message = &msg
+	g.resp.Code = code
+	g.resp.Message = msg
 	g.resp.Result = err.OK()
 	g.resp.Data = r
 }

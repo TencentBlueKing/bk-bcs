@@ -13,9 +13,13 @@
 package stringx
 
 import (
+	"math/rand"
 	"regexp"
 	"strings"
 )
+
+// DefaultCharset 默认字符集（用于生成随机字符串）
+const DefaultCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
 // SplitString 分割字符串, 允许半角逗号、分号及空格
 func SplitString(str string) []string {
@@ -79,4 +83,16 @@ func SplitManifests(bigFile string) []string {
 		res = append(res, d)
 	}
 	return res
+}
+
+// Rand 生成随机字符串，若使用默认字符集，则 charset 传入空字符串即可
+func Rand(n int, charset string) string {
+	if charset == "" {
+		charset = DefaultCharset
+	}
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }

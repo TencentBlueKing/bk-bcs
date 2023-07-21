@@ -13,8 +13,8 @@
 package runtimex
 
 import (
-	"github.com/micro/go-micro/v2/server/grpc"
-	microSvc "github.com/micro/go-micro/v2/service"
+	"github.com/go-micro/plugins/v4/server/grpc"
+	microSvc "go-micro.dev/v4"
 )
 
 // MaxMsgSize of the max msg size

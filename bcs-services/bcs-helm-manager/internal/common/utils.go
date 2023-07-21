@@ -45,39 +45,39 @@ func GetStoredTime(t int64) time.Time {
 }
 
 // GetStringP return ptr of copied string
-func GetStringP(s string) *string {
+func GetStringP(s string) string {
 	p := s
-	return &p
+	return p
 }
 
 // GetInt32P return ptr of copied int32
-func GetInt32P(s int32) *int32 {
+func GetInt32P(s int32) int32 {
 	p := s
-	return &p
+	return p
 }
 
 // GetInt64P return ptr of copied int64
-func GetInt64P(s int64) *int64 {
+func GetInt64P(s int64) int64 {
 	p := s
-	return &p
+	return p
 }
 
 // GetBoolP return ptr of copied bool
-func GetBoolP(s bool) *bool {
+func GetBoolP(s bool) bool {
 	p := s
-	return &p
+	return p
 }
 
 // GetUint32P return ptr of copied uint32
-func GetUint32P(s uint32) *uint32 {
+func GetUint32P(s uint32) uint32 {
 	p := s
-	return &p
+	return p
 }
 
 // GetFloat64P return ptr of copied float64
-func GetFloat64P(s float64) *float64 {
+func GetFloat64P(s float64) float64 {
 	p := s
-	return &p
+	return p
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

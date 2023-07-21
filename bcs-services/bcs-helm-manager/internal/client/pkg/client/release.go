@@ -148,16 +148,16 @@ func (rl *release) List(ctx context.Context, req *helmmanager.ListReleaseV1Req) 
 // listReleaseQuery
 func (rl *release) listReleaseQuery(req *helmmanager.ListReleaseV1Req) url.Values {
 	query := url.Values{}
-	if req.Page != nil {
+	if req.Page != 0 {
 		query.Set("page", strconv.FormatInt(int64(req.GetPage()), 10))
 	}
-	if req.Size != nil {
+	if req.Size != 0 {
 		query.Set("size", strconv.FormatInt(int64(req.GetSize()), 10))
 	}
-	if req.Namespace != nil {
+	if req.Namespace != "" {
 		query.Set("namespace", req.GetNamespace())
 	}
-	if req.Name != nil {
+	if req.Name != "" {
 		query.Set("name", req.GetName())
 	}
 	return query

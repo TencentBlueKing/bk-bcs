@@ -15,9 +15,10 @@ package handler
 import (
 	"context"
 
+	"google.golang.org/genproto/googleapis/api/httpbody"
+
 	actionChart "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/actions/chart"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
 // ListChartV1 provide the actions to list charts

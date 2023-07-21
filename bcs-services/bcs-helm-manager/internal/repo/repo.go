@@ -188,13 +188,13 @@ type Chart struct {
 // Transfer2Proto transfer the data into protobuf struct
 func (c *Chart) Transfer2Proto() *helmmanager.Chart {
 	return &helmmanager.Chart{
-		Name:              common.GetStringP(c.Name),
-		Key:               common.GetStringP(c.Key),
-		Type:              common.GetStringP(c.Type),
-		LatestVersion:     common.GetStringP(c.Version),
-		LatestAppVersion:  common.GetStringP(c.AppVersion),
-		LatestDescription: common.GetStringP(c.Description),
-		CreateBy:          common.GetStringP(c.CreateBy),
+		Name:              c.Name,
+		Key:               c.Key,
+		Type:              c.Type,
+		LatestVersion:     c.Version,
+		LatestAppVersion:  c.AppVersion,
+		LatestDescription: c.Description,
+		CreateBy:          c.CreateBy,
 		UpdateBy:          common.GetStringP(c.UpdateBy),
 		CreateTime:        common.GetStringP(c.CreateTime),
 		UpdateTime:        common.GetStringP(c.UpdateTime),
@@ -253,7 +253,7 @@ func (cd *ChartDetail) Transfer2Proto(repoURL string) *helmmanager.ChartDetail {
 		Name:     common.GetStringP(cd.Name),
 		Version:  common.GetStringP(cd.Version),
 		Contents: make(map[string]*helmmanager.FileContent),
-		Url:      &chartURL,
+		Url:      chartURL,
 	}
 
 	for k, v := range cd.Contents {

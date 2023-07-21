@@ -16,11 +16,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/client/cmd/printer"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
-
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -41,10 +41,10 @@ func GetReleaseHistory(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	req.ProjectCode = &flagProject
+	req.ProjectCode = flagProject
 	req.Name = common.GetStringP(args[0])
-	req.Namespace = &flagNamespace
-	req.ClusterID = &flagCluster
+	req.Namespace = flagNamespace
+	req.ClusterID = flagCluster
 
 	c := newClientWithConfiguration()
 	r, err := c.Release().GetReleaseHistory(cmd.Context(), req)

@@ -16,9 +16,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
@@ -137,7 +137,7 @@ func (s *StopAddonsAction) saveDB(ctx context.Context, ns, chartName string) err
 func (s *StopAddonsAction) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	s.resp.Code = &code
-	s.resp.Message = &msg
+	s.resp.Code = code
+	s.resp.Message = msg
 	s.resp.Result = err.OK()
 }

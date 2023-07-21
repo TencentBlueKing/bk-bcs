@@ -13,8 +13,8 @@
 package auth
 
 import (
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/project"
 )
 
 // ActionPermissions action 对应权限中心的权限

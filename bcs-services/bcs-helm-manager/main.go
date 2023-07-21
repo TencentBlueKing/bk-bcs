@@ -15,17 +15,18 @@ package main
 import (
 	"flag"
 
+	microYaml "github.com/go-micro/plugins/v4/config/encoder/yaml"
+	microCfg "go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/reader"
+	microJson "go-micro.dev/v4/config/reader/json"
+	"go-micro.dev/v4/config/source/env"
+	microFile "go-micro.dev/v4/config/source/file"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	commonConf "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
-	microCfg "github.com/micro/go-micro/v2/config"
-	microYaml "github.com/micro/go-micro/v2/config/encoder/yaml"
-	"github.com/micro/go-micro/v2/config/reader"
-	microJson "github.com/micro/go-micro/v2/config/reader/json"
-	"github.com/micro/go-micro/v2/config/source/env"
-	microFile "github.com/micro/go-micro/v2/config/source/file"
 )
 
 var (
@@ -41,11 +42,13 @@ func parseFlags() {
 }
 func main() {
 	parseFlags()
-
 	opt := &options.HelmManagerOptions{}
+
+	// new config
 	config, err := microCfg.NewConfig(microCfg.WithReader(microJson.NewReader(
 		reader.WithEncoder(microYaml.NewEncoder()),
 	)))
+
 	if err != nil {
 		blog.Fatalf("create config failed, %s", err.Error())
 	}
@@ -53,7 +56,6 @@ func main() {
 	envSource := env.NewSource(
 		env.WithStrippedPrefix("HELM"),
 	)
-
 	// 加载主配置
 	if len(conf) > 0 {
 		err = config.Load(microFile.NewSource(microFile.WithPath(conf)), envSource)
@@ -76,6 +78,7 @@ func main() {
 	if err = config.Scan(opt); err != nil {
 		blog.Fatalf("scan config failed, %s", err.Error())
 	}
+
 	// 初始化 I18N 相关配置
 	if err = i18n.InitMsgMap(); err != nil {
 		blog.Fatalf("init i18n message map failed %s", err.Error())
@@ -96,7 +99,7 @@ func main() {
 	blog.Info(string(config.Bytes()))
 	options.GlobalOptions = opt
 	helmManager := app.NewHelmManager(opt, credConf)
-	if err := helmManager.Init(); err != nil {
+	if err = helmManager.Init(); err != nil {
 		blog.Fatalf("init helm manager failed, %s", err.Error())
 	}
 	helmManager.RegistryStop()
@@ -114,7 +117,7 @@ func makeMicroCredConf(filePath string) (microCfg.Config, error) {
 		return nil, err
 	}
 
-	if err := config.Load(microFile.NewSource(microFile.WithPath(filePath))); err != nil {
+	if err = config.Load(microFile.NewSource(microFile.WithPath(filePath))); err != nil {
 		return nil, err
 	}
 	return config, nil

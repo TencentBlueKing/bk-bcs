@@ -89,7 +89,7 @@ var shouldRemoveAnnotations = []string{
 	"io.tencent.paas.version",
 }
 
-func removeCustomAnnotations(manifest string) *string {
+func removeCustomAnnotations(manifest string) string {
 	// Split the input string into lines
 	lines := strings.Split(manifest, "\n")
 
@@ -113,5 +113,5 @@ func removeCustomAnnotations(manifest string) *string {
 
 	// Join the filtered lines into a single string
 	result := strings.Join(filteredLines, "\n")
-	return &result
+	return result
 }

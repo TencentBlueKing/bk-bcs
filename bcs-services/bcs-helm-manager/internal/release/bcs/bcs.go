@@ -25,9 +25,6 @@ import (
 func New(c release.Config) release.Handler {
 	return &handler{
 		config: &c,
-		sdkClientGroup: sdk.NewGroup(sdk.Config{
-			PatchTemplates: c.PatchTemplates,
-		}),
 	}
 }
 

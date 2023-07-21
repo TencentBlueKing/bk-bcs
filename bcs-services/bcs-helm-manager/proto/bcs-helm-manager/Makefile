@@ -46,3 +46,9 @@ clean:
 
 docker:
 	@docker build -t ${PROTO_IMAGE} .
+
+
+proto:
+	protoc -I/third_party --proto_path=/proto --micro_out=:. --go_out=:. --go-grpc_out=:. \
+		--grpc-gateway_out=allow_delete_body=true,logtostderr=true,register_func_suffix=Gw:. \
+		--validate_out=lang=go:. --swagger_out=allow_delete_body=true,logtostderr=true:. *.proto

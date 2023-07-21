@@ -57,35 +57,35 @@ var GlobalOperator = &operator{
 
 // Operator operator
 type operator struct {
-	operationCount *int32
+	operationCount int32
 	// quit all operation when got terminate signal
 	terminate chan struct{}
 	// pause when operator can't add operation, 0 means unpause, 1 means pause, default is 0
-	pause *uint32
+	pause uint32
 	once  sync.Once
 }
 
 func (o *operator) inc() {
-	atomic.AddInt32(o.operationCount, 1)
+	atomic.AddInt32(&o.operationCount, 1)
 }
 
 func (o *operator) dec() {
-	atomic.AddInt32(o.operationCount, -1)
+	atomic.AddInt32(&o.operationCount, -1)
 }
 
 func (o *operator) isPause() bool {
-	return atomic.LoadUint32(o.pause) == 1
+	return atomic.LoadUint32(&o.pause) == 1
 }
 
 // GetOperationCount get operation count
 func (o *operator) GetOperationCount() int32 {
-	return atomic.LoadInt32(o.operationCount)
+	return atomic.LoadInt32(&o.operationCount)
 }
 
 // TerminateOperation terminate operation
 func (o *operator) TerminateOperation() {
 	// pause operator
-	atomic.AddUint32(o.pause, 1)
+	atomic.AddUint32(&o.pause, 1)
 	for i := 0; i < int(o.GetOperationCount()); i++ {
 		o.terminate <- struct{}{}
 	}

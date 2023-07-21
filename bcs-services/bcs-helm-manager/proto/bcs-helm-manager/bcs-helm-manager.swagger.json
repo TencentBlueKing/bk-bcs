@@ -28,7 +28,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -52,7 +52,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -90,7 +90,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -138,7 +138,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -183,7 +183,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -236,7 +236,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -291,7 +291,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -346,7 +346,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -398,7 +398,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -458,7 +458,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -518,7 +518,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -580,7 +580,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -641,7 +641,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -703,7 +703,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -765,7 +765,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -827,7 +827,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -881,7 +881,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -951,7 +951,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -982,7 +982,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1023,7 +1023,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1061,7 +1061,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1107,7 +1107,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1155,7 +1155,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1218,7 +1218,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1263,7 +1263,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1310,7 +1310,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1365,7 +1365,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1428,7 +1428,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1480,7 +1480,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1534,7 +1534,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -1690,7 +1690,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         }
@@ -1803,7 +1802,9 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/helmmanagerFileContent"
-          }
+          },
+          "description": "chart包所含文件",
+          "title": "contents"
         },
         "url": {
           "type": "string",
@@ -1940,7 +1941,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -1986,7 +1986,6 @@
         },
         "takeover": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为接管已存在的仓库",
           "title": "takeover"
         },
@@ -2007,7 +2006,6 @@
         },
         "remote": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为远程仓库",
           "title": "remote"
         },
@@ -2051,7 +2049,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2090,7 +2087,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2124,7 +2120,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2175,7 +2170,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2229,7 +2223,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2267,7 +2260,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2336,7 +2328,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2378,7 +2369,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2417,7 +2407,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2459,7 +2448,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2498,7 +2486,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2568,7 +2555,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2669,7 +2655,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2703,7 +2688,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2744,7 +2728,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2783,7 +2766,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2822,7 +2804,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -2861,7 +2842,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -3161,13 +3141,17 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/helmmanagerFileContent"
-          }
+          },
+          "description": "新版本 release manifest 内容，根据资源类型分类，键格式：{Kind}/{name}",
+          "title": "newContents"
         },
         "oldContents": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/helmmanagerFileContent"
-          }
+          },
+          "description": "旧版本 release manifest 内容，根据资源类型分类，键格式：{Kind}/{name}",
+          "title": "oldContents"
         },
         "newContent": {
           "type": "string",
@@ -3261,7 +3245,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -3319,7 +3302,6 @@
         },
         "remote": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为远程仓库",
           "title": "remote"
         },
@@ -3365,7 +3347,6 @@
         },
         "public": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否是公共仓库",
           "title": "public"
         }
@@ -3420,7 +3401,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -3475,7 +3455,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -3529,7 +3508,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -3589,7 +3567,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -3627,7 +3604,6 @@
         },
         "remote": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否为远程仓库",
           "title": "remote"
         },
@@ -3666,7 +3642,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -3736,7 +3711,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -3837,7 +3811,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },

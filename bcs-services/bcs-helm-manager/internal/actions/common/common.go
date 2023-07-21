@@ -17,7 +17,6 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
@@ -50,7 +49,7 @@ func (aa *AvailableAction) Handle(ctx context.Context,
 func (aa *AvailableAction) setResp(err common.HelmManagerError, message string) {
 	code := err.Int32()
 	msg := err.ErrorMessage(message)
-	aa.resp.Code = &code
-	aa.resp.Message = &msg
+	aa.resp.Code = code
+	aa.resp.Message = msg
 	aa.resp.Result = err.OK()
 }
