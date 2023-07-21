@@ -21,7 +21,9 @@ import (
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
 	"bscp.io/cmd/auth-server/options"
@@ -30,6 +32,7 @@ import (
 	"bscp.io/cmd/auth-server/service/initial"
 	"bscp.io/pkg/cc"
 	"bscp.io/pkg/components/bkpaas"
+	"bscp.io/pkg/criteria/errf"
 	iamauth "bscp.io/pkg/iam/auth"
 	"bscp.io/pkg/iam/client"
 	"bscp.io/pkg/iam/meta"
@@ -297,8 +300,21 @@ func (s *Service) GetUserInfo(ctx context.Context, req *pbas.UserCredentialReq) 
 	conf := cc.AuthServer().LoginAuth
 	authLoginClient := bkpaas.NewAuthLoginClient(&conf)
 
-	username, err := authLoginClient.GetUserInfoByToken(ctx, host, req.GetUid(), token)
+	var (
+		username string
+		err      error
+	)
+
+	if cc.AuthServer().LoginAuth.UseESB && cc.AuthServer().LoginAuth.Provider != bkpaas.BKLoginProvider {
+		username, err = s.client.Esb.BKLogin().IsLogin(ctx, token)
+	} else {
+		username, err = authLoginClient.GetUserInfoByToken(ctx, host, req.GetUid(), token)
+	}
+
 	if err != nil {
+		if errors.Is(err, errf.ErrPermissionDenied) {
+			return nil, status.New(codes.PermissionDenied, errf.GetErrMsg(err)).Err()
+		}
 		return nil, err
 	}
 

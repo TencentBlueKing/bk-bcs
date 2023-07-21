@@ -21,11 +21,9 @@ import (
 
 	"github.com/bluele/gcache"
 
-	"bscp.io/pkg/cc"
 	"bscp.io/pkg/criteria/constant"
 	"bscp.io/pkg/criteria/uuid"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/thirdparty/esb/types"
 )
 
 // Client is an esb client to request cmdb.
@@ -39,18 +37,16 @@ type Client interface {
 }
 
 // NewClient initialize a new cmdb client
-func NewClient(client rest.ClientInterface, config *cc.Esb) Client {
+func NewClient(client rest.ClientInterface) Client {
 	return &cmdb{
 		client: client,
-		config: config,
 		cache:  gcache.New(1000).Expiration(time.Hour * 24).EvictType(gcache.TYPE_LRU).Build(),
 	}
 }
 
 // cmdb is an esb client to request cmdb.
 type cmdb struct {
-	cache  gcache.Cache
-	config *cc.Esb
+	cache gcache.Cache
 	// http client instance
 	client rest.ClientInterface
 }
@@ -60,7 +56,6 @@ func (c *cmdb) SearchBusiness(ctx context.Context, params *SearchBizParams) (*Se
 	resp := new(SearchBizResp)
 
 	req := &esbSearchBizParams{
-		CommParams:      types.GetCommParams(c.config),
 		SearchBizParams: params,
 	}
 

@@ -73,12 +73,22 @@ func (hc *HealthConfig) IsHTTPAPIHealth(addr string, port uint32) bool {
 		return false
 	}
 
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
-		// NOCC:gas/tls(设计如此)
-		InsecureSkipVerify: true,
-	}
 	url := fmt.Sprintf("%s://%s:%d%s", hc.Shem, addr, port, hc.Path)
-	resp, err := http.Get(url)
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				// NOCC:gas/tls(设计如此)
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		blog.Errorf("http health check failed, %v", err)
+		return false
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		blog.Errorf("IsHTTPAPIHealth[%s] error: %v", url, err)
 		return false

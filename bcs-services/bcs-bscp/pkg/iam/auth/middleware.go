@@ -14,7 +14,10 @@
 package auth
 
 import (
+	"encoding/base64"
+	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -24,6 +27,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"bscp.io/pkg/components"
@@ -76,7 +80,13 @@ func (a authorizer) initKitWithCookie(r *http.Request, k *kit.Kit, multiErr *mul
 	resp, err := a.authClient.GetUserInfo(r.Context(), req)
 	if err != nil {
 		s := status.Convert(err)
-		multiErr.Errors = append(multiErr.Errors, errors.Wrap(errors.New(s.Message()), "auth with cookie"))
+		// 无权限的需要特殊跳转
+		if s.Code() == codes.PermissionDenied {
+			multiErr.Errors = append(multiErr.Errors, errors.Wrap(errf.ErrPermissionDenied, s.Message()))
+		} else {
+			multiErr.Errors = append(multiErr.Errors, errors.Wrap(errors.New(s.Message()), "auth with cookie"))
+		}
+
 		return false
 	}
 
@@ -157,6 +167,16 @@ func (a authorizer) WebAuthentication(webHost string) func(http.Handler) http.Ha
 			switch {
 			case a.initKitWithCookie(r, k, multiErr):
 			default:
+				// 如果无权限, 跳转到403页面
+				for _, err := range multiErr.Errors {
+					if errors.Is(err, errf.ErrPermissionDenied) {
+						msg := base64.StdEncoding.EncodeToString([]byte(errf.GetErrMsg(err)))
+						redirectURL := fmt.Sprintf("/403.html?msg=%s", url.QueryEscape(msg))
+						http.Redirect(w, r, redirectURL, http.StatusFound)
+						return
+					}
+				}
+
 				// web类型做302跳转登入
 				http.Redirect(w, r, a.authLoginClient.BuildLoginRedirectURL(r, webHost), http.StatusFound)
 				return
