@@ -42,10 +42,11 @@ type httpWrapper struct {
 }
 
 type httpResponse struct {
-	isGrpc     bool
-	obj        interface{}
-	statusCode int
-	err        error
+	isGrpc       bool
+	obj          interface{}
+	statusCode   int
+	err          error
+	notUnmarshal bool
 }
 
 type ContextKey string
@@ -94,7 +95,11 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if resp.isGrpc {
 		proxy.GRPCResponse(rw, resp.obj)
 	} else {
-		proxy.JSONResponse(rw, resp.obj)
+		if resp.notUnmarshal {
+			proxy.DirectlyResponse(rw, resp.obj)
+		} else {
+			proxy.JSONResponse(rw, resp.obj)
+		}
 	}
 }
 

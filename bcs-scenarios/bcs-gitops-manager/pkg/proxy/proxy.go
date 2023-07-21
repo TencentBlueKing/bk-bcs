@@ -85,7 +85,8 @@ func (user *UserInfo) GetUser() string {
 
 const (
 	headerBKUserName = "bkUserName"
-	adminClientUser  = "bcs-gitops-manager"
+	AdminClientUser  = "admin"
+	AdminGitOpsUser  = "bcs-gitops-manager"
 )
 
 // GetJWTInfo from request
@@ -95,7 +96,7 @@ func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "get authorization user failed")
 	}
-	if user.ClientID == adminClientUser {
+	if user.ClientID == AdminGitOpsUser || user.ClientID == AdminClientUser {
 		userName := req.Header.Get(headerBKUserName)
 		user.UserName = userName
 	}
@@ -136,6 +137,11 @@ func JSONResponse(w http.ResponseWriter, obj interface{}) {
 	w.WriteHeader(http.StatusOK)
 	content, _ := json.Marshal(obj)
 	fmt.Fprintln(w, string(content))
+}
+
+func DirectlyResponse(w http.ResponseWriter, obj interface{}) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, obj)
 }
 
 var (

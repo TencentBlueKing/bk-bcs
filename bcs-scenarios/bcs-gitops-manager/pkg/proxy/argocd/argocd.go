@@ -109,10 +109,14 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 			"/{package:[a-z]+}.{service:[A-Z][a-zA-Z]+}/{method:[A-Z][a-zA-Z]+}").Subrouter(),
 		middleware: middleware,
 	}
+	metricPlugin := &MetricPlugin{
+		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/metric").Subrouter(),
+		middleware: middleware,
+	}
 	initializer := []func() error{
 		projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
-		secretPlugin.Init,
+		secretPlugin.Init, metricPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy
