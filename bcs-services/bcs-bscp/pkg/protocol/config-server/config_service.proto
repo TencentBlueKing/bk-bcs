@@ -15,6 +15,7 @@ import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_rel
 import "bscp.io/pkg/protocol/core/template-revision/template_revision.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
+import "bscp.io/pkg/protocol/core/template-variable/template_variable.proto";
 import "bscp.io/pkg/protocol/core/config-hook/config_hook.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
@@ -409,6 +410,29 @@ service Config {
         (ListTemplateSetBoundNamedAppDetailsResp) {
         option (google.api.http) = {
             get : "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_sets/{template_set_id}/bound_named_app_details"
+        };
+    }
+
+    rpc CreateTemplateVariable(CreateTemplateVariableReq) returns (CreateTemplateVariableResp) {
+        option (google.api.http) = {
+            post : "/api/v1/config/biz/{biz_id}/template_variables"
+            body : "*"
+        };
+    }
+    rpc DeleteTemplateVariable(DeleteTemplateVariableReq) returns (DeleteTemplateVariableResp) {
+        option (google.api.http) = {
+            delete : "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
+        };
+    }
+    rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (UpdateTemplateVariableResp) {
+        option (google.api.http) = {
+            put : "/api/v1/config/biz/{biz_id}/template_variables/{template_variable_id}"
+            body : "*"
+        };
+    }
+    rpc ListTemplateVariables(ListTemplateVariablesReq) returns (ListTemplateVariablesResp) {
+        option (google.api.http) = {
+            get : "/api/v1/config/biz/{biz_id}/template_variables"
         };
     }
 
@@ -1333,6 +1357,47 @@ message ListTemplateSetBoundNamedAppDetailsReq {
 message ListTemplateSetBoundNamedAppDetailsResp {
     uint32                                        count   = 1;
     repeated pbtbr.TemplateSetBoundNamedAppDetail details = 2;
+}
+
+message CreateTemplateVariableReq {
+    uint32 biz_id      = 1;
+    string name        = 2;
+    string type        = 3;
+    string default_val = 4;
+    string memo        = 5;
+}
+
+message CreateTemplateVariableResp {
+    uint32 id = 1;
+}
+
+message UpdateTemplateVariableReq {
+    uint32 biz_id               = 1;
+    uint32 template_variable_id = 2;
+    string default_val          = 3;
+    string memo                 = 4;
+}
+
+message UpdateTemplateVariableResp {
+}
+
+message DeleteTemplateVariableReq {
+    uint32 biz_id               = 1;
+    uint32 template_variable_id = 2;
+}
+
+message DeleteTemplateVariableResp {}
+
+message ListTemplateVariablesReq {
+    uint32 biz_id     = 1;
+    string search_key = 2;
+    uint32 start      = 3;
+    uint32 limit      = 4;
+}
+
+message ListTemplateVariablesResp {
+    uint32                         count   = 1;
+    repeated pbtv.TemplateVariable details = 2;
 }
 
 message CreateGroupReq {

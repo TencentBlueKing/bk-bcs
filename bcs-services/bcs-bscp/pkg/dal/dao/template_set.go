@@ -31,11 +31,11 @@ import (
 // TemplateSet supplies all the template set related operations.
 type TemplateSet interface {
 	// Create one template set instance.
-	Create(kit *kit.Kit, templateSpace *table.TemplateSet) (uint32, error)
+	Create(kit *kit.Kit, templateSet *table.TemplateSet) (uint32, error)
 	// Update one template set's info.
-	Update(kit *kit.Kit, templateSpace *table.TemplateSet) error
+	Update(kit *kit.Kit, templateSet *table.TemplateSet) error
 	// UpdateWithTx update one template set's info with transaction.
-	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, templateSpace *table.TemplateSet) error
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, templateSet *table.TemplateSet) error
 	// List template sets with options.
 	List(kit *kit.Kit, bizID, templateSpaceID uint32, searchKey string, opt *types.BasePage) ([]*table.TemplateSet, int64, error)
 	// Delete one template set instance.
@@ -273,7 +273,7 @@ func (dao *templateSetDao) GetByUniqueKey(kit *kit.Kit, bizID, templateSpaceID u
 
 	tplSet, err := q.Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID), m.Name.Eq(name)).Take()
 	if err != nil {
-		return nil, fmt.Errorf("get templateSpace failed, err: %v", err)
+		return nil, fmt.Errorf("get template space failed, err: %v", err)
 	}
 
 	return tplSet, nil

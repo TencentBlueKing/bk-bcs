@@ -16,39 +16,38 @@ import (
 	"errors"
 
 	"bscp.io/pkg/criteria/validator"
-	"bscp.io/pkg/dal/types"
 )
 
-// TemplateSet 模版套餐
-type TemplateSet struct {
-	ID         uint32                 `json:"id" gorm:"primaryKey"`
-	Spec       *TemplateSetSpec       `json:"spec" gorm:"embedded"`
-	Attachment *TemplateSetAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *Revision              `json:"revision" gorm:"embedded"`
+// TemplateVariable 模版变量
+type TemplateVariable struct {
+	ID         uint32                      `json:"id" gorm:"primaryKey"`
+	Spec       *TemplateVariableSpec       `json:"spec" gorm:"embedded"`
+	Attachment *TemplateVariableAttachment `json:"attachment" gorm:"embedded"`
+	Revision   *Revision                   `json:"revision" gorm:"embedded"`
 }
 
-// TableName is the template set's database table name.
-func (t *TemplateSet) TableName() string {
-	return "template_sets"
+// TableName is the template variable's database table name.
+func (t *TemplateVariable) TableName() string {
+	return "template_variables"
 }
 
 // AppID AuditRes interface
-func (t *TemplateSet) AppID() uint32 {
+func (t *TemplateVariable) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (t *TemplateSet) ResID() uint32 {
+func (t *TemplateVariable) ResID() uint32 {
 	return t.ID
 }
 
 // ResType AuditRes interface
-func (t *TemplateSet) ResType() string {
-	return "template_set"
+func (t *TemplateVariable) ResType() string {
+	return "template_variable"
 }
 
-// ValidateCreate validate template set is valid or not when create it.
-func (t *TemplateSet) ValidateCreate() error {
+// ValidateCreate validate template variable is valid or not when create it.
+func (t *TemplateVariable) ValidateCreate() error {
 	if t.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -80,8 +79,8 @@ func (t *TemplateSet) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate template set is valid or not when update it.
-func (t *TemplateSet) ValidateUpdate() error {
+// ValidateUpdate validate template variable is valid or not when update it.
+func (t *TemplateVariable) ValidateUpdate() error {
 
 	if t.ID <= 0 {
 		return errors.New("id should be set")
@@ -112,10 +111,10 @@ func (t *TemplateSet) ValidateUpdate() error {
 	return nil
 }
 
-// ValidateDelete validate the template set's info when delete it.
-func (t *TemplateSet) ValidateDelete() error {
+// ValidateDelete validate the template variable's info when delete it.
+func (t *TemplateVariable) ValidateDelete() error {
 	if t.ID <= 0 {
-		return errors.New("template set id should be set")
+		return errors.New("template variable id should be set")
 	}
 
 	if t.Attachment == nil {
@@ -129,17 +128,16 @@ func (t *TemplateSet) ValidateDelete() error {
 	return nil
 }
 
-// TemplateSetSpec defines all the specifics for template set set by user.
-type TemplateSetSpec struct {
-	Name        string            `json:"name" gorm:"column:name"`
-	Memo        string            `json:"memo" gorm:"column:memo"`
-	TemplateIDs types.Uint32Slice `json:"template_ids" gorm:"column:template_ids;type:json;default:'[]'"`
-	Public      bool              `json:"public" gorm:"column:public"`
-	BoundApps   types.Uint32Slice `json:"bound_apps" gorm:"column:bound_apps;type:json;default:'[]'"`
+// TemplateVariableSpec defines all the specifics for template variable set by user.
+type TemplateVariableSpec struct {
+	Name       string `json:"name" gorm:"column:name"`
+	Type       string `json:"type" gorm:"column:type"`
+	DefaultVal string `json:"default_val" gorm:"column:default_val"`
+	Memo       string `json:"memo" gorm:"column:memo"`
 }
 
-// ValidateCreate validate template set spec when it is created.
-func (t *TemplateSetSpec) ValidateCreate() error {
+// ValidateCreate validate template variable spec when it is created.
+func (t *TemplateVariableSpec) ValidateCreate() error {
 	if err := validator.ValidateName(t.Name); err != nil {
 		return err
 	}
@@ -147,8 +145,8 @@ func (t *TemplateSetSpec) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate template set spec when it is updated.
-func (t *TemplateSetSpec) ValidateUpdate() error {
+// ValidateUpdate validate template variable spec when it is updated.
+func (t *TemplateVariableSpec) ValidateUpdate() error {
 	if err := validator.ValidateMemo(t.Memo, false); err != nil {
 		return err
 	}
@@ -156,20 +154,15 @@ func (t *TemplateSetSpec) ValidateUpdate() error {
 	return nil
 }
 
-// TemplateSetAttachment defines the template set attachments.
-type TemplateSetAttachment struct {
-	BizID           uint32 `json:"biz_id" gorm:"column:biz_id"`
-	TemplateSpaceID uint32 `json:"template_space_id" gorm:"column:template_space_id"`
+// TemplateVariableAttachment defines the template variable attachments.
+type TemplateVariableAttachment struct {
+	BizID uint32 `json:"biz_id" gorm:"column:biz_id"`
 }
 
-// Validate whether TemplateSet attachment is valid or not.
-func (t *TemplateSetAttachment) Validate() error {
+// Validate whether template variable attachment is valid or not.
+func (t *TemplateVariableAttachment) Validate() error {
 	if t.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
-	}
-
-	if t.TemplateSpaceID <= 0 {
-		return errors.New("invalid attachment template space id")
 	}
 
 	return nil

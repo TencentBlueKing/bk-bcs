@@ -42,6 +42,7 @@ var (
 	TemplateRevision           *templateRevision
 	TemplateSet                *templateSet
 	TemplateSpace              *templateSpace
+	TemplateVariable           *templateVariable
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -71,6 +72,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	TemplateRevision = &Q.TemplateRevision
 	TemplateSet = &Q.TemplateSet
 	TemplateSpace = &Q.TemplateSpace
+	TemplateVariable = &Q.TemplateVariable
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
@@ -101,6 +103,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		TemplateRevision:           newTemplateRevision(db, opts...),
 		TemplateSet:                newTemplateSet(db, opts...),
 		TemplateSpace:              newTemplateSpace(db, opts...),
+		TemplateVariable:           newTemplateVariable(db, opts...),
 	}
 }
 
@@ -132,6 +135,7 @@ type Query struct {
 	TemplateRevision           templateRevision
 	TemplateSet                templateSet
 	TemplateSpace              templateSpace
+	TemplateVariable           templateVariable
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -164,6 +168,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		TemplateRevision:           q.TemplateRevision.clone(db),
 		TemplateSet:                q.TemplateSet.clone(db),
 		TemplateSpace:              q.TemplateSpace.clone(db),
+		TemplateVariable:           q.TemplateVariable.clone(db),
 	}
 }
 
@@ -203,6 +208,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		TemplateRevision:           q.TemplateRevision.replaceDB(db),
 		TemplateSet:                q.TemplateSet.replaceDB(db),
 		TemplateSpace:              q.TemplateSpace.replaceDB(db),
+		TemplateVariable:           q.TemplateVariable.replaceDB(db),
 	}
 }
 
@@ -232,6 +238,7 @@ type queryCtx struct {
 	TemplateRevision           ITemplateRevisionDo
 	TemplateSet                ITemplateSetDo
 	TemplateSpace              ITemplateSpaceDo
+	TemplateVariable           ITemplateVariableDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
@@ -261,6 +268,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		TemplateRevision:           q.TemplateRevision.WithContext(ctx),
 		TemplateSet:                q.TemplateSet.WithContext(ctx),
 		TemplateSpace:              q.TemplateSpace.WithContext(ctx),
+		TemplateVariable:           q.TemplateVariable.WithContext(ctx),
 	}
 }
 
