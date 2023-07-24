@@ -33,7 +33,7 @@ import (
 // 需要取指针, 不能用常量
 var (
 	// 最多返回 10W 条日志
-	MAX_TAIL_LINES  = 100 * 1000
+	MAX_TAIL_LINES  = int64(100 * 1000)
 	MAX_LIMIT_BYTES = 30 * 1024 * 1024 // 最多 30M 数据
 
 	// 默认返回 100 条日志
@@ -60,7 +60,7 @@ func (q *LogQuery) makeOptions() (*v1.PodLogOptions, error) {
 
 	// 开始时间, 需要用做查询
 	if q.StartedAt != "" {
-		opt.TailLines = &DEFAULT_TAIL_LINES
+		opt.TailLines = &MAX_TAIL_LINES
 
 		t, err := time.Parse(time.RFC3339Nano, q.StartedAt)
 		if err != nil {
@@ -233,7 +233,7 @@ func GetPodLog(ctx context.Context, clusterId, namespace, podname string, opt *L
 		}
 
 		// 只返回当前历史数据
-		if opt.FinishedAt != "" && log.Time == opt.FinishedAt {
+		if opt.FinishedAt != "" && log.Time >= opt.FinishedAt {
 			break
 		}
 
