@@ -768,7 +768,11 @@ export default defineComponent({
         // cpu: nodePoolConfig.value.launchTemplate.CPU,
         // memory: nodePoolConfig.value.launchTemplate.Mem,
       });
-      instanceData.value = data.sort((pre, current) => pre.cpu - current.cpu);
+      instanceData.value = data.sort((pre, current) => {
+        if (pre.status !== 'SELL') return 1;
+        if (current.status !== 'SELL') return 0;
+        return pre.cpu - current.cpu;
+      });
       handleSetDefaultInstance();
       instanceTypesLoading.value = false;
     };
@@ -807,9 +811,9 @@ export default defineComponent({
     });
 
     // 登录方式
-    const loginType = ref<'ssh'|'password'>(nodePoolConfig.value.launchTemplate.initLoginPassword
-      ? 'password'
-      : 'ssh');
+    const loginType = ref<'ssh'|'password'>(nodePoolConfig.value.launchTemplate.keyPair.keyID
+      ? 'ssh'
+      : 'password');
     const handleLoginTypeChange = (type) => {
       if (type === 'ssh') {
         nodePoolConfig.value.launchTemplate.initLoginPassword = '';

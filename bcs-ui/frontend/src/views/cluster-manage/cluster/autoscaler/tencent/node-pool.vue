@@ -140,6 +140,7 @@ export default defineComponent({
           name: 'clusterDetail',
           query: {
             active: 'autoscaler',
+            scrollToBottom: true,
           },
         });
       }
