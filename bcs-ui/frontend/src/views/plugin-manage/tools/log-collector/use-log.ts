@@ -62,11 +62,17 @@ export interface IRuleData {
   description: string
   entrypoint?: {
     file_log_url: string
+    file_bk_base_url: string
     std_log_url: string
+    std_bk_base_url: string
   }
   rule: {
     add_pod_label: boolean
     extra_labels: {key: string, value: string}[]
+    data_info: {
+      file_bkdata_data_id: number
+      std_bkdata_data_id: number
+    }
     config: {
       namespaces: string[]
       paths: string[]

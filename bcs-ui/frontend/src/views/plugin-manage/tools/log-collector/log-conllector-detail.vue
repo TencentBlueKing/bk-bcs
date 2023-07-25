@@ -51,13 +51,25 @@
                 class="flex items-center leading-none mt-[8px]">
                 {{ item }}
               </div>
-              <bcs-button
-                text
-                class="!text-[12px]"
-                :disabled="data.status === 'TERMINATED'"
-                @click="openLink(data.entrypoint && data.entrypoint.file_log_url)">
-                {{ $t('查询文件日志') }}
-              </bcs-button>
+              <div>
+                <bcs-button
+                  text
+                  class="!text-[12px]"
+                  :disabled="data.status === 'TERMINATED'"
+                  @click="openLink(data.entrypoint && data.entrypoint.file_log_url)">
+                  {{ $t('查询文件日志') }}
+                </bcs-button>
+                <span class="text-[#979BA5] ml-[8px]">
+                  ({{ $t('数据ID') }}: {{ data.rule.data_info.file_bkdata_data_id || '--' }})
+                </span>
+                <span
+                  class="bcs-icon-btn ml-[8px]"
+                  v-if="data.entrypoint && data.entrypoint.file_bk_base_url"
+                  v-bk-tooltips="$t('前往计算平台清洗日志')"
+                  @click="openLink(data.entrypoint ? data.entrypoint.file_bk_base_url : '')">
+                  <i class="bcs-icon bcs-icon-shujuqingxi"></i>
+                </span>
+              </div>
             </div>
           </bcs-form-item>
           <bcs-form-item :label="$t('日志字符集')" class="config-form-item">
@@ -72,6 +84,16 @@
             @click="openLink(data.entrypoint && data.entrypoint.std_log_url)">
             <div class="h-[32px] relative top-[1px]">{{ $t('查询标准输出日志') }}</div>
           </bcs-button>
+          <span class="text-[#979BA5] ml-[8px]">
+            ({{ $t('数据ID') }}: {{ data.rule.data_info.std_bkdata_data_id || '--' }})
+          </span>
+          <span
+            class="bcs-icon-btn ml-[8px]"
+            v-if="data.entrypoint && data.entrypoint.std_bk_base_url"
+            v-bk-tooltips="$t('前往计算平台清洗日志')"
+            @click="openLink(data.entrypoint ? data.entrypoint.std_bk_base_url : '')">
+            <i class="bcs-icon bcs-icon-shujuqingxi"></i>
+          </span>
         </bcs-form-item>
         <bcs-form-item :label="$t('过滤内容')" class="config-form-item">
           <!-- 字符串过滤 -->
