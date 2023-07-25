@@ -134,6 +134,8 @@ func (w *WebServer) subRouter() http.Handler {
 	r.With(metrics.RequestCollect("SwitchLanguageHandler")).Put("/switch_language", w.CookieSwitchLanguage)
 	r.With(metrics.RequestCollect("ReleaseNoteHandler")).Get("/release_note", w.ReleaseNoteHandler)
 
+	r.With(metrics.RequestCollect("no_permission")).Get("/403.html", w.embedWebServer.Render403Handler().ServeHTTP)
+
 	// vue 模版渲染
 	r.With(metrics.RequestCollect("IndexHandler")).Get("/", w.embedWebServer.IndexHandler().ServeHTTP)
 	r.With(metrics.RequestCollect("IndexHandler")).NotFound(w.embedWebServer.IndexHandler().ServeHTTP)

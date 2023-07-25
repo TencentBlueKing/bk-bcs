@@ -14,6 +14,7 @@ package bcsui
 
 import (
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -48,6 +49,7 @@ const (
 // EmbedWebServer embed web server
 type EmbedWebServer interface {
 	IndexHandler() http.Handler
+	Render403Handler() http.Handler
 	FaviconHandler(w http.ResponseWriter, r *http.Request)
 	StaticFileHandler(prefix string) http.Handler
 	RootFS() embed.FS
@@ -77,7 +79,7 @@ func NewEmbedWeb() *EmbedWeb {
 	}
 
 	// 模版路径
-	tpl := template.Must(template.New("").ParseFS(frontendAssets, "frontend/dist/*.html"))
+	tpl := template.Must(template.New("").ParseFS(frontendAssets, "frontend/dist/*.html", "frontend/dist/static/*.html"))
 
 	root := http.FS(dist)
 
@@ -256,4 +258,33 @@ func (e *EmbedWeb) StaticFileHandler(prefix string) http.Handler {
 	}
 
 	return http.StripPrefix(prefix, http.HandlerFunc(fn))
+}
+
+// get403Msg base64 decode msg
+func get403Msg(r *http.Request) string {
+	rawMsg := r.URL.Query().Get("msg")
+	if rawMsg == "" {
+		return ""
+	}
+
+	b, err := base64.StdEncoding.DecodeString(rawMsg)
+	if err != nil {
+		return ""
+	}
+
+	return string(b)
+}
+
+// Render403Handler 403.html 页面
+func (e *EmbedWeb) Render403Handler() http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		tplData := map[string]string{
+			"MSG":        get403Msg(r),
+			"STATIC_URL": path.Join(config.G.Web.RoutePrefix, defaultStaticURL),
+		}
+
+		e.tpl.ExecuteTemplate(w, "403.html", tplData)
+	}
+
+	return http.HandlerFunc(fn)
 }
