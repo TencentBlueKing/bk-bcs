@@ -76,6 +76,26 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
 	}
 
+	// TemplateVariables : 用于模版变量的管理
+	type TemplateVariables struct {
+		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
+
+		// Spec is specifics of the resource defined with user
+		Name       string `gorm:"type:varchar(255) not null;uniqueIndex:idx_bizID_name,priority:2"`
+		Type       string `gorm:"type:varchar(20) not null"`
+		DefaultVal string `gorm:"type:json not null"`
+		Memo       string `gorm:"type:varchar(256) default ''"`
+
+		// Attachment is attachment info of the resource
+		BizID uint `gorm:"type:bigint(1) unsigned not null;uniqueIndex:idx_bizID_name,priority:1"`
+
+		// Revision is revision info of the resource
+		Creator   string    `gorm:"type:varchar(64) not null"`
+		Reviser   string    `gorm:"type:varchar(64) not null"`
+		CreatedAt time.Time `gorm:"type:datetime(6) not null"`
+		UpdatedAt time.Time `gorm:"type:datetime(6) not null"`
+	}
+
 	// AppTemplateVariables : 记录未命名版本服务引用的模版配置项渲染用的变量(变量kv存为json串：variables字段)
 	type AppTemplateVariables struct {
 		ID uint `gorm:"type:bigint(1) unsigned not null;primaryKey;autoIncrement:false"`
@@ -122,6 +142,7 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 	if err := tx.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8mb4").AutoMigrate(
 		&AppTemplateBindings{},
 		&ReleasedAppTemplateBindings{},
+		&TemplateVariables{},
 		&AppTemplateVariables{},
 		&ReleasedAppTemplateVariables{},
 	); err != nil {
@@ -131,6 +152,7 @@ func mig20230625152115GormAddAppTemplateRelatedUp(tx *gorm.DB) error {
 	if result := tx.Create([]IDGenerators{
 		{Resource: "app_template_bindings", MaxID: 0},
 		{Resource: "released_app_template_bindings", MaxID: 0},
+		{Resource: "template_variables", MaxID: 0},
 		{Resource: "app_template_variables", MaxID: 0},
 		{Resource: "released_template_variables", MaxID: 0},
 	}); result.Error != nil {
@@ -154,6 +176,7 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 	if err := tx.Migrator().DropTable(
 		"app_template_bindings",
 		"released_app_template_bindings",
+		"template_variables",
 		"app_template_variables",
 		"released_template_variables",
 	); err != nil {
@@ -163,6 +186,7 @@ func mig20230625152115GormAddAppTemplateRelatedDown(tx *gorm.DB) error {
 	var resources = []string{
 		"app_template_bindings",
 		"released_app_template_bindings",
+		"template_variables",
 		"app_template_variables",
 		"released_template_variables",
 	}

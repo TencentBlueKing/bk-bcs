@@ -19,6 +19,7 @@ import "bscp.io/pkg/protocol/core/template-binding-relation/template_binding_rel
 import "bscp.io/pkg/protocol/core/template-revision/template_revision.proto";
 import "bscp.io/pkg/protocol/core/template-set/template_set.proto";
 import "bscp.io/pkg/protocol/core/template-space/template_space.proto";
+import "bscp.io/pkg/protocol/core/template-variable/template_variable.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
 
@@ -138,6 +139,12 @@ service Data {
         (ListTemplateSetBoundUnnamedAppDetailsResp){}
     rpc ListTemplateSetBoundNamedAppDetails(ListTemplateSetBoundNamedAppDetailsReq) returns
         (ListTemplateSetBoundNamedAppDetailsResp){}
+
+    // template variable related interface.
+    rpc CreateTemplateVariable(CreateTemplateVariableReq) returns (CreateResp) {}
+    rpc ListTemplateVariables(ListTemplateVariablesReq) returns (ListTemplateVariablesResp) {}
+    rpc UpdateTemplateVariable(UpdateTemplateVariableReq) returns (pbbase.EmptyResp) {}
+    rpc DeleteTemplateVariable(DeleteTemplateVariableReq) returns (pbbase.EmptyResp) {}
 
     // group related interface.
     rpc CreateGroup(CreateGroupReq) returns (CreateResp) {}
@@ -860,6 +867,34 @@ message ListTemplateSetBoundNamedAppDetailsReq {
 message ListTemplateSetBoundNamedAppDetailsResp {
     uint32                                        count   = 1;
     repeated pbtbr.TemplateSetBoundNamedAppDetail details = 2;
+}
+
+message CreateTemplateVariableReq {
+    pbtv.TemplateVariableAttachment attachment = 1;
+    pbtv.TemplateVariableSpec       spec       = 2;
+}
+
+message ListTemplateVariablesReq {
+    uint32 biz_id     = 1;
+    string search_key = 2;
+    uint32 start      = 3;
+    uint32 limit      = 4;
+}
+
+message ListTemplateVariablesResp {
+    uint32                         count   = 1;
+    repeated pbtv.TemplateVariable details = 2;
+}
+
+message UpdateTemplateVariableReq {
+    uint32                          id         = 1;
+    pbtv.TemplateVariableAttachment attachment = 2;
+    pbtv.TemplateVariableSpec       spec       = 3;
+}
+
+message DeleteTemplateVariableReq {
+    uint32                          id         = 1;
+    pbtv.TemplateVariableAttachment attachment = 2;
 }
 
 message CreateGroupReq {

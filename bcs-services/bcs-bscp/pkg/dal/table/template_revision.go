@@ -18,7 +18,7 @@ import (
 	"bscp.io/pkg/criteria/validator"
 )
 
-// TemplateRevision is template config item
+// TemplateRevision 模版版本
 type TemplateRevision struct {
 	ID         uint32                      `json:"id" gorm:"primaryKey"`
 	Spec       *TemplateRevisionSpec       `json:"spec" gorm:"embedded"`
@@ -26,7 +26,7 @@ type TemplateRevision struct {
 	Revision   *CreatedRevision            `json:"revision" gorm:"embedded"`
 }
 
-// TableName is the TemplateRevision's database table name.
+// TableName is the template revision's database table name.
 func (t *TemplateRevision) TableName() string {
 	return "template_revisions"
 }
@@ -46,7 +46,7 @@ func (t *TemplateRevision) ResType() string {
 	return "template_revision"
 }
 
-// ValidateCreate validate TemplateRevision is valid or not when create it.
+// ValidateCreate validate template revision is valid or not when create it.
 func (t *TemplateRevision) ValidateCreate() error {
 	if t.ID > 0 {
 		return errors.New("id should not be set")
@@ -79,10 +79,10 @@ func (t *TemplateRevision) ValidateCreate() error {
 	return nil
 }
 
-// ValidateDelete validate the TemplateRevision's info when delete it.
+// ValidateDelete validate the template revision's info when delete it.
 func (t *TemplateRevision) ValidateDelete() error {
 	if t.ID <= 0 {
-		return errors.New("TemplateRevision id should be set")
+		return errors.New("template revision id should be set")
 	}
 
 	if t.Attachment == nil {
@@ -96,7 +96,7 @@ func (t *TemplateRevision) ValidateDelete() error {
 	return nil
 }
 
-// TemplateRevisionSpec defines all the specifics for TemplateRevision set by user.
+// TemplateRevisionSpec defines all the specifics for template revision set by user.
 type TemplateRevisionSpec struct {
 	RevisionName string          `json:"revision_name" gorm:"column:revision_name"`
 	RevisionMemo string          `json:"revision_memo" gorm:"column:revision_memo"`
@@ -108,10 +108,7 @@ type TemplateRevisionSpec struct {
 	ContentSpec  *ContentSpec    `json:"content" gorm:"embedded"`
 }
 
-// TemplateRevisionType is the type of TemplateRevision
-type TemplateRevisionType string
-
-// ValidateCreate validate TemplateRevision spec when it is created.
+// ValidateCreate validate template revision spec when it is created.
 func (t *TemplateRevisionSpec) ValidateCreate() error {
 	if err := validator.ValidateCfgItemName(t.Name); err != nil {
 		return err
@@ -136,7 +133,7 @@ func (t *TemplateRevisionSpec) ValidateCreate() error {
 	return nil
 }
 
-// ValidateUpdate validate TemplateRevision spec when it is updated.
+// ValidateUpdate validate template revision spec when it is updated.
 func (t *TemplateRevisionSpec) ValidateUpdate() error {
 	if err := validator.ValidateMemo(t.RevisionMemo, false); err != nil {
 		return err
@@ -145,14 +142,14 @@ func (t *TemplateRevisionSpec) ValidateUpdate() error {
 	return nil
 }
 
-// TemplateRevisionAttachment defines the TemplateRevision attachments.
+// TemplateRevisionAttachment defines the template revision attachments.
 type TemplateRevisionAttachment struct {
 	BizID           uint32 `json:"biz_id" gorm:"column:biz_id"`
 	TemplateSpaceID uint32 `json:"template_space_id" gorm:"column:template_space_id"`
 	TemplateID      uint32 `json:"template_id" gorm:"column:template_id"`
 }
 
-// Validate whether TemplateRevision attachment is valid or not.
+// Validate whether template revision attachment is valid or not.
 func (t *TemplateRevisionAttachment) Validate() error {
 	if t.BizID <= 0 {
 		return errors.New("invalid attachment biz id")
