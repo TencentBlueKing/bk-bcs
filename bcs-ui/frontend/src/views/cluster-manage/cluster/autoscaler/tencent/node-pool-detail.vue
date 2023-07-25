@@ -32,9 +32,9 @@
             {{ nodePoolData.autoScaling.maxSize }}
           </bk-form-item>
           <bk-form-item
-            :label="$t('是否开启调度')"
+            :label="$t('是否启用节点规格')"
             :desc="$t('节点规格启用后Autoscaler组件将会根据扩容算法使用该节点规格资源，开启Autoscaler组件后必须要开启至少一个节点规格')">
-            {{nodePoolData.nodeTemplate.unSchedulable ? $t('否') : $t('是')}}
+            {{nodePoolData.enableAutoscale ? $t('是') : $t('否')}}
           </bk-form-item>
           <bk-form-item :label="$t('标签')">
             <bk-button

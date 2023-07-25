@@ -28,6 +28,7 @@
           name="autoscaler"
           :label="$t('弹性扩缩容')"
           render-directive="if"
+          ref="autoScalerTabRef"
           v-if="showAutoScaler">
           <template #label>
             {{ $t('弹性扩缩容') }}
@@ -40,7 +41,7 @@
   </BcsContent>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
+import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Node from '../node-list/node.vue';
 import Overview from '@/views/cluster-manage/cluster/overview/overview.vue';
@@ -74,9 +75,13 @@ export default defineComponent({
       default: '',
       required: true,
     },
+    scrollToBottom: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup(props) {
-    const { active, clusterId } = toRefs(props);
+    const { active, clusterId, scrollToBottom } = toRefs(props);
     const activeTabName = ref(active.value);
     const isLoading = ref(false);
 
@@ -95,6 +100,16 @@ export default defineComponent({
       });
     };
     const showAutoScaler = computed(() => cloudDetail.value && !cloudDetail.value?.confInfo?.disableNodeGroup);
+
+    // 滚动到底部
+    const autoScalerTabRef = ref<any>();
+    watch(showAutoScaler, () => {
+      if (!scrollToBottom.value || active.value !== 'autoscaler' || !showAutoScaler.value) return;
+
+      setTimeout(() => {
+        autoScalerTabRef.value.$el.scrollTop = autoScalerTabRef.value.$el.scrollHeight;
+      }, 10);
+    }, { immediate: true });
     // tab change事件
     const handleTabChange = (name) => {
       $router.replace({
@@ -117,6 +132,7 @@ export default defineComponent({
       isLoading,
       curCluster,
       handleTabChange,
+      autoScalerTabRef,
     };
   },
 });
