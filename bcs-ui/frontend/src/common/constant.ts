@@ -3,7 +3,7 @@ export const CUR_SELECT_CRD = '__CUR_SELECT_CRD__';
 // 节点管理表格列展示配置
 export const CLUSTER_NODE_TABLE_COL = '_CLUSTER_NODE_TABLE_COL_';
 export const NODE_TEMPLATE_ID = '_node-template-id_';
-export const SPECIAL_REGEXP = /[`\s~!@#$%^&*()_+<>?:"{},./;'[\]]/;
+export const SPECIAL_REGEXP = /[`\s~!@#$%^&*()+<>?:"{},./;'[\]]/;
 export const LABEL_KEY_REGEXP = '^(?=.{1,253}$)([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\\/)?([A-Za-z0-9][-A-Za-z0-9_.]{0,61})?[A-Za-z0-9]$';
 export const KEY_REGEXP = '^(([A-Za-z0-9][-A-Za-z0-9_./]*)?[A-Za-z0-9])?$';
 export const VALUE_REGEXP = '^(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?$';
