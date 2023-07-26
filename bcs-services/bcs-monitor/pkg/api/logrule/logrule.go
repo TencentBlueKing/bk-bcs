@@ -38,8 +38,10 @@ type GetEntrypointsReq struct {
 
 // Entrypoint entrypoint
 type Entrypoint struct {
-	STDLogURL  string `json:"std_log_url"`
-	FileLogURL string `json:"file_log_url"`
+	STDLogURL     string `json:"std_log_url"`
+	FileLogURL    string `json:"file_log_url"`
+	STDBKBaseURL  string `json:"std_bk_base_url"`  // 跳转到数据平台地址
+	FileBKBaseURL string `json:"file_bk_base_url"` // 跳转到数据平台地址
 }
 
 // GetEntrypoints 获取容器日志查询入口
@@ -115,8 +117,6 @@ func ListLogCollectors(c *rest.Context) (interface{}, error) {
 	}
 
 	sort.Sort(GetLogRuleRespSortByName(result))
-	// 仅需要名称排序
-	// sort.Sort(GetLogRuleRespSortByStatus(result))
 	return result, nil
 }
 
@@ -307,14 +307,33 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 		return nil, err
 	}
 
-	if rule.RuleID == 0 {
-		return nil, errors.Errorf("invalid rule id, please recreate log rule")
-	}
-
 	data := entity.M{
-		entity.FieldKeyStatus:  entity.SuccessStatus,
+		entity.FieldKeyStatus:  entity.PendingStatus,
 		entity.FieldKeyMessage: "",
 		entity.FieldKeyUpdator: c.Username,
+	}
+	// 重新创建
+	if rule.RuleID == 0 {
+		// 创建 bklog 规则耗时比较长，异步调用
+		ruleName := fmt.Sprintf("%s_%s", rule.Name, rand.String(5))
+		data.Update(entity.FieldKeyRuleName, ruleName)
+		// 更新状态
+		err = store.UpdateLogRule(c.Context, id, data)
+		if err != nil {
+			return nil, err
+		}
+		go createBKLog(&bklog.CreateBCSCollectorReq{
+			SpaceUID:              GetSpaceID(c.ProjectCode),
+			ProjectID:             c.ProjectId,
+			CollectorConfigName:   ruleName,
+			CollectorConfigNameEN: ruleName,
+			Description:           rule.Description,
+			BCSClusterID:          c.ClusterId,
+			AddPodLabel:           rule.Rule.AddPodLabel,
+			ExtraLabels:           rule.Rule.ExtraLabels,
+			LogRuleContainer:      []bklog.LogRuleContainer{rule.Rule.LogRuleContainer},
+		})
+		return nil, nil
 	}
 
 	// 重试 bklog collector
@@ -322,6 +341,7 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		data.Update(entity.FieldKeyStatus, entity.FailedStatus)
 		data.Update(entity.FieldKeyMessage, err.Error())
+		store.UpdateLogRule(c.Context, id, data)
 		return nil, err
 	}
 

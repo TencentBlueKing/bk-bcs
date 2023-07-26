@@ -301,9 +301,9 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	resp.Status = e.Status
 	resp.Message = e.Message
 	resp.Entrypoint = Entrypoint{
-		STDLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", config.G.BKLog.Entrypoint,
+		STDLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", strings.TrimRight(config.G.BKLog.Entrypoint, "/"),
 			e.RuleSTDIndexSetID, e.ProjectCode),
-		FileLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", config.G.BKLog.Entrypoint,
+		FileLogURL: fmt.Sprintf("%s/#/retrieve/%d?spaceUid=bkci__%s", strings.TrimRight(config.G.BKLog.Entrypoint, "/"),
 			e.RuleFileIndexSetID, e.ProjectCode),
 	}
 	resp.Config = bklog.LogRule{
@@ -318,6 +318,15 @@ func (resp *GetLogRuleResp) loadFromEntity(e *entity.LogRule, lcs []bklog.ListBC
 	for _, v := range lcs {
 		if e.RuleID == v.RuleID {
 			resp.Config = v.ToLogRule()
+			// append bkbase info
+			if resp.Config.DataInfo.FileBKDataDataID != 0 {
+				resp.Entrypoint.FileBKBaseURL = getBKBaseEntrypoing(config.G.BKLog.BKBaseEntrypoint,
+					resp.Config.DataInfo.FileBKDataDataID)
+			}
+			if resp.Config.DataInfo.StdBKDataDataID != 0 {
+				resp.Entrypoint.STDBKBaseURL = getBKBaseEntrypoing(config.G.BKLog.BKBaseEntrypoint,
+					resp.Config.DataInfo.StdBKDataDataID)
+			}
 			if resp.Status == entity.FailedStatus || resp.Status == entity.PendingStatus {
 				break
 			}
@@ -473,4 +482,9 @@ func getClusterLogRules(ctx context.Context, projectID, clusterID string) ([]*en
 	listOption := &utils.ListOption{Sort: map[string]interface{}{"updatedAt": 1}}
 	_, listInDB, err := store.ListLogRules(ctx, cond, listOption)
 	return listInDB, err
+}
+
+func getBKBaseEntrypoing(host string, dataID int) string {
+	return fmt.Sprintf("%s/#/data-hub-detail/index/%d?data_scenario=custom",
+		strings.TrimRight(host, "/"), dataID)
 }

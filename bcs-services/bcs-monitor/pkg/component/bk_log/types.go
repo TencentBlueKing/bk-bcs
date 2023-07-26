@@ -30,6 +30,7 @@ type LogRule struct {
 	AddPodLabel      bool             `json:"add_pod_label"`
 	ExtraLabels      []Label          `json:"extra_labels"`
 	LogRuleContainer LogRuleContainer `json:"config"`
+	DataInfo         DataInfo         `json:"data_info"`
 }
 
 // LogRuleContainer log rule container config
@@ -93,6 +94,14 @@ func (s SeparatorFilters) IntFieldIndex() int {
 		return 1
 	}
 	return int(i)
+}
+
+// DataInfo data info
+type DataInfo struct {
+	FileDataID       int `json:"file_data_id"`        // 文件日志 dataid
+	StdDataID        int `json:"std_data_id"`         // 标准输出日志 dataid
+	FileBKDataDataID int `json:"file_bkdata_data_id"` // 计算平台文件日志 dataid
+	StdBKDataDataID  int `json:"std_bkdata_data_id"`  // 计算平台标准输出日志 dataid
 }
 
 // BaseResp base resp
@@ -166,6 +175,13 @@ func (resp *ListBCSCollectorRespData) ToLogRule() LogRule {
 			LabelSelector: conf.LabelSelector,
 			Container:     conf.Container,
 		}
+		// append data info
+		rule.DataInfo = DataInfo{
+			FileDataID:       conf.BkDataID,
+			StdDataID:        conf.StdoutConf.BkDataID,
+			FileBKDataDataID: conf.BKDataDataID,
+			StdBKDataDataID:  conf.StdoutConf.BKDataDataID,
+		}
 	}
 	return rule
 }
@@ -195,6 +211,7 @@ func (resp *ListBCSCollectorRespData) Message() string {
 type ContainerConfig struct {
 	ID            int           `json:"id"`
 	BkDataID      int           `json:"bk_data_id"`
+	BKDataDataID  int           `json:"bkdata_data_id"` // 计算平台 dataid
 	Namespaces    []string      `json:"namespaces"`
 	AnyNamespace  bool          `json:"any_namespace"`
 	DataEncoding  string        `json:"data_encoding"`
@@ -216,7 +233,8 @@ type Params struct {
 
 // StdoutConf stdout config
 type StdoutConf struct {
-	BkDataID int `json:"bk_data_id"`
+	BkDataID     int `json:"bk_data_id"`
+	BKDataDataID int `json:"bkdata_data_id"` // 计算平台 dataid
 }
 
 // CreateBCSCollectorReq req
