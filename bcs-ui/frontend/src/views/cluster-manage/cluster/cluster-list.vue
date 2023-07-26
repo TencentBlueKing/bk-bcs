@@ -231,7 +231,7 @@
                     }
                   }"
                   key="deletevCluster"
-                  v-if="row.clusterType === 'virtual'"
+                  v-if="row.clusterType === 'virtual' || row.clusterCategory === 'importer'"
                   @click="handleDeleteCluster(row)">
                   {{ $t('删除') }}
                 </li>

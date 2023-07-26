@@ -315,6 +315,7 @@ export default defineComponent({
     const handleDeleteCluster = (cluster) => {
       if (
         cluster.clusterType !== 'virtual'
+        && cluster.clusterCategory !== 'importer'
         && clusterNodesMap.value[cluster.clusterID]?.length > 0
         && cluster.status === 'RUNNING'
       ) return;

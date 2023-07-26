@@ -105,7 +105,7 @@
                 </template>
                 <li class="bcs-dropdown-item" @click="handleGotoToken">KubeConfig</li>
                 <li class="bcs-dropdown-item" @click="handleGotoWebConsole(cluster)">WebConsole</li>
-                <!-- vCluster集群删除 -->
+                <!-- vCluster集群和导入删除 -->
                 <li
                   class="bcs-dropdown-item"
                   key="deletevCluster"
@@ -121,7 +121,7 @@
                     }
                   }"
                   @click="handleDeleteCluster(cluster)"
-                  v-if="cluster.clusterType === 'virtual'">
+                  v-if="cluster.clusterType === 'virtual' || cluster.clusterCategory === 'importer'">
                   {{$t('删除')}}
                 </li>
                 <!-- 其他集群删除 -->
