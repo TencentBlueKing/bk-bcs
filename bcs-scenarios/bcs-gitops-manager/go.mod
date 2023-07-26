@@ -13,6 +13,7 @@ require (
 	github.com/asim/go-micro/plugins/registry/etcd/v4 v4.7.0
 	github.com/asim/go-micro/plugins/server/grpc/v4 v4.7.0
 	github.com/asim/go-micro/plugins/sync/etcd/v4 v4.7.0
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.9.1
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/protobuf v1.5.3

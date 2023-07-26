@@ -16,7 +16,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
+	"github.com/avast/retry-go"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -27,6 +29,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/common"
 )
+
+const (
+	retryDelay = 3 * time.Second
+	retryNum   = 4
+)
+
+// 递增重试
+func incrementalBackoff(n uint, err error, config *retry.Config) time.Duration {
+	return time.Duration(n+1) * time.Second
+}
 
 // VaultSecretManager vault client
 type VaultSecretManager struct {
@@ -166,7 +178,7 @@ func (m *VaultSecretManager) InitProject(project string) error {
 	_, err = m.kclient.CoreV1().Secrets(common.GetVaultSecretNamespace()).Create(context.Background(), ksecret, metav1.CreateOptions{})
 	if err != nil {
 		m.deferInit(project)
-		blog.Infof("project[%s] initSecret failed, err: %s.", project, err)
+		blog.Errorf("project[%s] initSecret failed, err: %s.", project, err)
 		return errors.Wrapf(err, "create Secret %s err", ksecret.Name)
 	}
 
@@ -175,11 +187,24 @@ func (m *VaultSecretManager) InitProject(project string) error {
 
 // GetSecret interface for get secret
 func (m *VaultSecretManager) GetSecret(ctx context.Context, req *SecretRequest) (map[string]interface{}, error) {
-	secret, err := m.client.KVv2(req.Project).Get(ctx, req.Path)
+	var sec *vault.KVSecret
+	var err error
+
+	err = retry.Do(
+		func() error {
+			sec, err = m.client.KVv2(req.Project).Get(ctx, req.Path)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+		retry.Attempts(retryNum),
+		retry.DelayType(incrementalBackoff),
+	)
 	if err != nil {
 		return nil, err
 	}
-	return secret.Data, nil
+	return sec.Data, nil
 }
 
 // GetMetadata interface for get metadata

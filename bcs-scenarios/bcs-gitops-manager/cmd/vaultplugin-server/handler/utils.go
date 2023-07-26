@@ -22,18 +22,22 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
-func getGitopsAppSecretkey(ctx context.Context, st store.Store, application string) (string, error) {
+func getGitopsAppSecretkey(
+	ctx context.Context,
+	st store.Store,
+	application string,
+) (secretname string, projectname string, err error) {
 	app, err := st.GetApplication(ctx, application)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get gitops application")
+		return "", "", errors.Wrap(err, "failed to get gitops application")
 	}
 	project, err := st.GetProject(ctx, app.Spec.Project)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get gitops project")
+		return "", project.Name, errors.Wrap(err, "failed to get gitops project")
 	}
 	secretKey, ok := project.GetAnnotations()[common.SecretKey]
 	if !ok {
-		return "", fmt.Errorf("get secret key error, secretkey is empty")
+		return "", project.Name, fmt.Errorf("get secret key error, secretkey is empty")
 	}
-	return secretKey, nil
+	return secretKey, project.Name, nil
 }

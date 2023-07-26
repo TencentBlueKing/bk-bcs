@@ -15,13 +15,14 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/common"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/vaultplugin-server/secret"
 	"github.com/argoproj-labs/argocd-vault-plugin/pkg/auth/vault"
 	"github.com/argoproj-labs/argocd-vault-plugin/pkg/config"
 	"github.com/argoproj-labs/argocd-vault-plugin/pkg/kube"
@@ -75,14 +76,14 @@ func (v1 *V1VaultPluginHandler) descryptionManifest(w http.ResponseWriter, r *ht
 		resp.Response(w, http.StatusBadRequest)
 		return
 	}
-	secretname, err := getGitopsAppSecretkey(ctx, v1.Opts.GitopsStore, req.Application)
+	secretname, projectname, err := getGitopsAppSecretkey(ctx, v1.Opts.GitopsStore, req.Application)
 	if err != nil {
 		resp.Message = "Error getting application's vault secretkey"
 		blog.Errorf("Unable to get application's vault secretkey, error: %v", err)
 		resp.Response(w, http.StatusInternalServerError)
 		return
 	}
-	res, err := descryVaultSecret(secretname, req.Manifests)
+	res, err := descryVaultSecret(projectname, secretname, req.Manifests, v1.Opts.Secret)
 	if err != nil {
 		resp.Message = fmt.Sprintf("Error descryp application's vault secretkey, error: %v", err)
 		blog.Errorf("Unable to descryp application's vault secret, error: %v", err)
@@ -93,7 +94,7 @@ func (v1 *V1VaultPluginHandler) descryptionManifest(w http.ResponseWriter, r *ht
 	resp.Response(w, http.StatusOK)
 }
 
-func descryVaultSecret(secretName string, manifestsstring []string) (res []string, err error) {
+func descryVaultSecret(projectname string, secretName string, manifestsstring []string, secretManager secret.SecretManagerWithVersion) (res []string, err error) {
 	res = make([]string, 0)
 	v := viper.New()
 	cmdConfig, err := config.New(v, &config.Options{
@@ -106,7 +107,7 @@ func descryVaultSecret(secretName string, manifestsstring []string) (res []strin
 	if err != nil {
 		return
 	}
-	backend := NewVaultArgoBackend(&vault.TokenAuth{}, apiClient, v.GetString(types.EnvAvpKvVersion))
+	backend := NewVaultArgoBackend(&vault.TokenAuth{}, apiClient, v.GetString(types.EnvAvpKvVersion), secretManager, projectname)
 	cmdConfig.Backend = backend
 
 	err = cmdConfig.Backend.Login()
@@ -175,16 +176,26 @@ func (e SecretNotFountErr) Error() string {
 // VaultArgo is a struct for working with a Vault backend
 type VaultArgo struct {
 	types.AuthType
-	VaultClient *api.Client
-	KvVersion   string
+	VaultClient        *api.Client
+	KvVersion          string
+	vaultSecretManager secret.SecretManagerWithVersion
+	project            string
 }
 
 // NewVaultArgoBackend initializes a new Vault Backend
-func NewVaultArgoBackend(auth types.AuthType, client *api.Client, kv string) *VaultArgo {
+func NewVaultArgoBackend(
+	auth types.AuthType,
+	client *api.Client,
+	kv string,
+	secretManager secret.SecretManagerWithVersion,
+	project string,
+) *VaultArgo {
 	vault := &VaultArgo{
-		KvVersion:   kv,
-		AuthType:    auth,
-		VaultClient: client,
+		KvVersion:          kv,
+		AuthType:           auth,
+		VaultClient:        client,
+		vaultSecretManager: secretManager,
+		project:            project,
 	}
 	return vault
 }
@@ -199,60 +210,12 @@ func (v *VaultArgo) Login() error {
 }
 
 // GetSecrets gets secrets from vault and returns the formatted data
-func (v *VaultArgo) GetSecrets(path string, version string, annotations map[string]string) (map[string]interface{}, error) {
-	var secret *api.Secret
-	var err error
-
-	var kvVersion = v.KvVersion
-	if kv, ok := annotations[types.VaultKVVersionAnnotation]; ok {
-		kvVersion = kv
-	}
-
-	// Vault KV-V1 doesn't support versioning so we only honor `version` if KV-V2 is used
-	if version != "" && kvVersion == "2" {
-		utils.VerboseToStdErr("Hashicorp Vault getting kv pairs from KV-V2 path %s at version %s", path, version)
-		secret, err = v.VaultClient.Logical().ReadWithData(path, map[string][]string{
-			"version": {version},
-		})
-	} else {
-		utils.VerboseToStdErr("Hashicorp Vault getting kv pairs from KV-V1 path %s", path)
-		secret, err = v.VaultClient.Logical().Read(path)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	utils.VerboseToStdErr("Hashicorp Vault get kv pairs response: %v", secret)
-
-	if secret == nil {
-		// Do not mention `version` in error message when it's not honored (KV-V1)
-		// if version == "" || kvVersion == "1" {
-		// 	// return nil, fmt.Errorf("Could not find secrets at path %s", path)
-		// }
-		// 忽略找不到密钥的错误
-		return nil, SecretNotFountErr{}
-		// return nil, fmt.Errorf("Could not find secrets at path %s with version %s", path, version)
-	}
-
-	if kvVersion == "2" {
-		if _, ok := secret.Data["data"]; ok {
-			if secret.Data["data"] != nil {
-				return secret.Data["data"].(map[string]interface{}), nil
-			}
-			return nil, fmt.Errorf("The secret version %s for Vault path %s is nil - is this version of the secret deleted?", version, path)
-		}
-		if len(secret.Data) == 0 {
-			return nil, fmt.Errorf("The Vault path: %s is empty - did you forget to include /data/ in the Vault path for kv-v2?", path)
-		}
-		return nil, errors.New("Could not get data from Vault, check that kv-v2 is the correct engine")
-	}
-
-	if kvVersion == "1" {
-		return secret.Data, nil
-	}
-
-	return nil, errors.New("Unsupported kvVersion specified")
+func (v *VaultArgo) GetSecrets(kvpath string, version string, annotations map[string]string) (map[string]interface{}, error) {
+	_, secretpath := common.ParseKvPath(kvpath)
+	return v.vaultSecretManager.GetSecret(context.Background(), &secret.SecretRequest{
+		Project: v.project,
+		Path:    secretpath,
+	})
 }
 
 // GetIndividualSecret will get the specific secret (placeholder) from the SM backend

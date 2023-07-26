@@ -98,9 +98,9 @@ func (e *BcsGitopsHandler) StartupProject(ctx context.Context, req *pb.ProjectSy
 	}
 
 	// 完成project同步之后，需要初始化secret vault相关信息
-	if err := e.option.SecretClient.InitSecretRequest(project.Name); err != nil {
+	if err := e.option.SecretClient.InitSecretRequest(project.ProjectCode); err != nil {
 		return e.startProjectResult(resp, failedCode, "",
-			errors.Wrapf(err, "init secret project '%s' failed", project.Name))
+			errors.Wrapf(err, "init secret project '%s' failed", project.ProjectCode))
 	}
 	return e.startProjectResult(resp, successCode, "ok", nil)
 }
