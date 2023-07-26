@@ -251,6 +251,15 @@ service HelmManager {
             summary: "查询指定集群的chart release历史信息"
         };
     }
+    rpc GetReleaseManifest(GetReleaseManifestReq) returns (GetReleaseManifestResp) {
+        option (google.api.http) = {
+            get: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/revisions/{revision}/manifest"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            description: "查询指定集群的chart release manifest"
+            summary: "查询指定集群的chart release manifest"
+        };
+    }
     rpc GetReleaseStatus(GetReleaseStatusReq) returns (CommonListResp) {
         option (google.api.http) = {
             get: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/status"
@@ -2221,6 +2230,70 @@ message ReleaseHistory {
         title: "values",
         description: "release values"
     }];
+}
+
+message GetReleaseManifestReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetReleaseManifestReq"
+            description : "get release manifest的参数"
+        }
+    };
+
+    required string name = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "chart release名称"
+    }, (validate.rules).string = {min_len : 1}];
+    required string namespace = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "namespace",
+        description: "所在的namespace"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    required string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "所在的集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    required string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectCode",
+        description: "项目代码"
+    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    required uint32 revision = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "revision",
+        description: "release 版本"
+    }];
+}
+
+message GetReleaseManifestResp {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "GetReleaseManifestResp"
+            description : "get release manifest的返回"
+        }
+    };
+
+    optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "code",
+        description: "返回错误码"
+    }];
+    optional string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "message",
+        description: "返回错误信息"
+    }];
+    optional bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "result",
+        description: "返回结果"
+    }];
+    map<string, FileContent> data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "data",
+        description: "release manifest"
+    }];
+    optional string requestID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "requestID",
+        description: "requestID"
+    }];
+    optional WebAnnotations web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+    }, json_name = "web_annotations"];
 }
 
 message GetReleaseStatusReq {

@@ -45,6 +45,7 @@ var ActionPermissions = map[string]string{
 	"HelmManager.RollbackReleaseV1":  namespace.CanUpdateNamespaceScopedResourceOperation,
 	"HelmManager.ReleasePreview":     project.CanViewProjectOperation,
 	"HelmManager.GetReleaseHistory":  namespace.CanViewNamespaceScopedResourceOperation,
+	"HelmManager.GetReleaseManifest": namespace.CanViewNamespaceScopedResourceOperation,
 	"HelmManager.GetReleaseStatus":   project.CanViewProjectOperation,
 	"HelmManager.GetReleasePods":     project.CanViewProjectOperation,
 
