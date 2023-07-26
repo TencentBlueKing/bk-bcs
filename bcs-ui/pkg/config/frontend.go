@@ -16,6 +16,7 @@ package config
 
 // HostConf :
 type HostConf struct {
+	SiteURL               string `yaml:"site_url"`                // 前端路由URL
 	DevOpsHost            string `yaml:"devops_host"`             // 蓝盾
 	DevOpsBCSAPIURL       string `yaml:"devops_bcs_api_url"`      // SaaS Backend api 地址
 	DevOpsArtifactoryHost string `yaml:"devops_artifactory_host"` // 制品库地址
@@ -37,7 +38,7 @@ type FrontendConf struct {
 func defaultFrontendConf() *FrontendConf {
 	c := &FrontendConf{
 		Docs:     map[string]string{},
-		Host:     &HostConf{},
+		Host:     &HostConf{SiteURL: "/bcs"},
 		Features: map[string]string{"zh_cn": ""},
 	}
 	return c
