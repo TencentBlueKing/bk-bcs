@@ -420,6 +420,9 @@ export default defineComponent({
     const { labelWidth, initFormLabelWidth } = useFormLabel();
     onMounted(() => {
       initFormLabelWidth(importFormRef.value);
+      if (props.importType === 'provider') {
+        handleGetCloudList();
+      }
     });
     return {
       regionLoading,
