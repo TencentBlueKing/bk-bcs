@@ -23,6 +23,7 @@ local plugin_name = "bcs-auth"
 local schema = {
     type = "object",
     properties = {
+        bk_login_host_esb = {type = "string", description = "bk login host esb"},
         bk_login_host = {type = "string", description = "bk login host (with scheme prefix)"},
         private_key = {type = "string", description = "jwt private_key"},
         bkapigw_jwt_verify_key = {type = "string", description = "jwt verify key for bkapigw"},
@@ -33,7 +34,9 @@ local schema = {
         redis_port = {type = "integer", default = 6379, description = "redis for bcs-auth plugin: port"},
         redis_password = {type = "string", description = "redis for bcs-auth plugin: password"},
         redis_database = {type = "integer", default = 0, description = "redis for bcs-auth plugin: database num"},
-        run_env = {type = "string", default = "ce", description = "apisix on ce or cloud env"}
+        run_env = {type = "string", default = "ce", description = "apisix on ce or cloud env"},
+        bk_app_code = {type = "string", description = "bk_app_code"},
+        bk_app_secret = {type = "string", description = "bk_app_secret"}
     },
     required = {"bk_login_host", "private_key", "redis_host", "redis_password"},
 }
@@ -72,6 +75,12 @@ local function redirect_login(conf, ctx)
     return 302
 end
 
+local function redirect_403(conf, ctx)
+    local msg_base64 = ngx.encode_base64(tostring(ctx.var.bk_login_message))
+    local msg_base64_uri = ngx_escape_uri(msg_base64)
+    core.response.set_header("Location", tab_concat({ctx.var.scheme, "://", ctx.var.host, "/403.html?msg=", msg_base64_uri}))
+    return 302
+end
 
 function _M.rewrite(conf, ctx)
     local user_agent = core.request.header(ctx, "User-Agent")
@@ -79,6 +88,21 @@ function _M.rewrite(conf, ctx)
 
     local auth = authentication:new(use_login, conf.run_env)
     local jwt_token = auth:authenticate(conf, ctx)
+
+    --core.log.warn("rewrite, code: " .. tostring(ctx.var.bk_login_code) .. " msg: "
+    --        .. tostring(ctx.var.bk_login_message) .. " esb: " .. tostring(conf.bk_login_host_esb))
+
+    -- 1302403 用户认证成功，但用户无应用访问权限，跳转到403页面
+    if ctx.var.bk_login_code == 1302403 then
+        return redirect_403(conf, ctx)
+    end
+
+    -- 1302100 用户认证失败，即用户登录态无效，跳转到login页面
+    if ctx.var.bk_login_code == 1302100 then
+        return redirect_login(conf, ctx)
+    end
+
+    --core.log.warn("jwt_token: ", tostring(jwt_token))
 
     if not jwt_token then
         if use_login then

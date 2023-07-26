@@ -97,14 +97,32 @@ function LoginTokenAuthentication:fetch_credential(conf, ctx)
 end
 
 function LoginTokenAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
+    if conf.bk_login_host_esb then
+        local data = bklogin.get_username_for_token_esb(credential, conf)
+        local username
+        if data["result"] then
+            username = data["data"]["bk_username"]
+        end
+        return {
+            username = username,
+            usertype = "user",
+            bk_login_code = data["code"],
+            bk_login_message= data["message"],
+        }
+    end
+
     return {
         username = bklogin.get_username_for_token(credential, conf.bk_login_host),
         usertype = "user",
     }
 end
 
-function LoginTokenAuthentication:get_jwt(credential, conf)
-    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:session_id:", true, bklogin.get_username_for_token)
+function LoginTokenAuthentication:get_jwt(credential, conf, ctx)
+    if conf.bk_login_host_esb then
+        return jwt:get_jwt_from_redis(credential, conf, ctx,  "bcs_auth:session_id:", true, bklogin.get_username_for_token_esb)
+    end
+
+    return jwt:get_jwt_from_redis(credential, conf, ctx, "bcs_auth:session_id:", true, bklogin.get_username_for_token)
 end
 ------------ LoginTokenAuthentication end ------------
 
@@ -162,8 +180,8 @@ function TokenAuthentication:injected_user_info(credential, jwt_str, conf, ctx)
     return retV
 end
 
-function TokenAuthentication:get_jwt(credential, conf)
-    return jwt:get_jwt_from_redis(credential, conf, "bcs_auth:token:", false)
+function TokenAuthentication:get_jwt(credential, conf, ctx)
+    return jwt:get_jwt_from_redis(credential, conf, ctx, "bcs_auth:token:", false)
 end
 ------------ TokenAuthentication end ------------
 
@@ -227,7 +245,7 @@ function APIGWAuthentication:fetch_credential(conf, ctx)
             return nil, nil
         end)
         if not bcs_payload then
-            local bcs_jwt_token = TokenAuthentication:get_jwt({user_token=credential.bcs_token}, conf)
+            local bcs_jwt_token = TokenAuthentication:get_jwt({user_token=credential.bcs_token}, conf, ctx)
             bcs_payload = get_username_by_TokenAuthentication_jwt(bcs_jwt_token)
         end
 
@@ -302,7 +320,8 @@ function _M:authenticate(conf, ctx)
     if not credential or not credential.user_token then
         return nil
     end
-    local jwt_str = self.backend:get_jwt(credential, conf)
+    local jwt_str = self.backend:get_jwt(credential, conf, ctx)
+
     -- 向上下文注入用户信息
     if jwt_str then
         local userinfo = self.backend:injected_user_info(credential, jwt_str, conf, ctx)
@@ -316,6 +335,8 @@ function _M:authenticate(conf, ctx)
         ctx.var["bcs_username"] = userinfo.username
         ctx.var["bk_app_code"] = userinfo.bk_app_code
         ctx.var["bcs_client_id"] = userinfo.client_id
+        ctx.var["bk_login_code"] = userinfo.bk_login_code
+        ctx.var["bk_login_message"] = userinfo.bk_login_message
     end
     return jwt_str
 end
