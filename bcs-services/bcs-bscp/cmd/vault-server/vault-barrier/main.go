@@ -7,11 +7,17 @@ import (
 )
 
 func main() {
+	args := []string{
+		"server",
+		"-dev",
+		"-dev-root-token-id=root",
+		"-dev-plugin-dir=./vault/plugins", // 指定插件目录
+	}
 
-	os.Args = append(os.Args, "server")
-	os.Args = append(os.Args, "-dev")
-	os.Args = append(os.Args, "-dev-root-token-id=root")
-	os.Args = append(os.Args, "-dev-plugin-dir=./vault/plugins") // 指定插件目录
+	// 可以启动自定义命令
+	if len(os.Args) > 1 {
+		args = os.Args[1:]
+	}
 
-	os.Exit(command.Run(os.Args[1:]))
+	os.Exit(command.Run(args))
 }
