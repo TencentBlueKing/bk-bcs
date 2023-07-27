@@ -162,8 +162,8 @@ func (m *Migrator) Up(step int) error {
 		count++
 	}
 
-	if err := tx.Commit(); err != nil {
-		fmt.Printf("commit transaction failed, err: %v", err)
+	if err := tx.Commit().Error; err != nil {
+		fmt.Printf("commit transaction failed, err: %s", err.Error())
 	}
 
 	return nil
@@ -200,7 +200,9 @@ func (m *Migrator) Down(step int) error {
 		count++
 	}
 
-	tx.Commit()
+	if err := tx.Commit().Error; err != nil {
+		fmt.Printf("commit transaction failed, err: %s", err.Error())
+	}
 
 	return nil
 }

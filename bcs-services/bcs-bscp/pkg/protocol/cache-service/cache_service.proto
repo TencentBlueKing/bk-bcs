@@ -33,6 +33,15 @@ service Cache {
         };
     }
 
+    rpc GetReleasedHook(GetReleasedHookReq) returns (JsonRawResp) {
+        // response data is a json array raw of released hook
+        // reference pkg/dal/table/released_ci.go/ReleasedConfigItem
+        option (google.api.http) = {
+            post: "/api/v1/cache/hook/released/biz_id/{biz_id}"
+            body: "*"
+        };
+    }
+
     rpc ListAppReleasedGroups(ListAppReleasedGroupsReq) returns(JsonRawResp) {
         option (google.api.http) = {
             get: "/api/v1/cache/biz/{biz_id}/apps/{app_id}/released_groups"
@@ -93,6 +102,11 @@ message GetAppMetaReq {
 }
 
 message GetReleasedCIReq {
+    uint32 biz_id     = 1;
+    uint32 release_id = 2;
+}
+
+message GetReleasedHookReq {
     uint32 biz_id     = 1;
     uint32 release_id = 2;
 }

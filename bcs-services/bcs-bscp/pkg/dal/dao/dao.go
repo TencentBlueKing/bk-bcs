@@ -42,7 +42,8 @@ type Set interface {
 	Release() Release
 	ReleasedCI() ReleasedCI
 	Hook() Hook
-	HookRelease() HookRelease
+	HookRevision() HookRevision
+	ReleasedHook() ReleasedHook
 	TemplateSpace() TemplateSpace
 	Template() Template
 	TemplateRelease() TemplateRelease
@@ -57,7 +58,6 @@ type Set interface {
 	Healthz() error
 	Credential() Credential
 	CredentialScope() CredentialScope
-	ConfigHook() ConfigHook
 }
 
 // NewDaoSet create the DAO set instance.
@@ -219,12 +219,21 @@ func (s *set) Hook() Hook {
 	}
 }
 
-// HookRelease returns the hookRelease's DAO
-func (s *set) HookRelease() HookRelease {
-	return &hookReleaseDao{
+// HookRevision returns the hookRevision's DAO
+func (s *set) HookRevision() HookRevision {
+	return &hookRevisionDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
+	}
+}
+
+// ReleasedHook returns the released hook's DAO
+func (s *set) ReleasedHook() ReleasedHook {
+	return &releasedHookDao{
+		genQ:     s.genQ,
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
 	}
 }
 
@@ -355,14 +364,5 @@ func (s *set) CredentialScope() CredentialScope {
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,
-	}
-}
-
-// ConfigHook returns the configHook's DAO
-func (s *set) ConfigHook() ConfigHook {
-	return &configHookDao{
-		genQ:     s.genQ,
-		idGen:    s.idGen,
-		auditDao: s.auditDao,
 	}
 }

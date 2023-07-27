@@ -19,7 +19,6 @@ import (
 	"bscp.io/pkg/kit"
 	"bscp.io/pkg/logs"
 	pbcs "bscp.io/pkg/protocol/config-server"
-	pbch "bscp.io/pkg/protocol/core/config-hook"
 	pbds "bscp.io/pkg/protocol/data-service"
 )
 
@@ -29,81 +28,21 @@ func (s *Service) UpdateConfigHook(ctx context.Context, req *pbcs.UpdateConfigHo
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.UpdateConfigHookResp)
 
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update}, BizID: grpcKit.BizID}
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Update}, BizID: grpcKit.BizID}
 	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
 		return nil, err
 	}
 
-	r := &pbds.GetConfigHookReq{
-		BizId: req.BizId,
-		AppId: req.AppId,
+	r := &pbds.UpdateConfigHookReq{
+		BizId:      req.BizId,
+		AppId:      req.AppId,
+		PreHookId:  req.PreHookId,
+		PostHookId: req.PostHookId,
 	}
-	ch, err := s.client.DS.GetConfigHook(grpcKit.RpcCtx(), r)
-	if err != nil {
-		logs.Errorf("update ConfigHook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	if ch.Id == 0 {
-		createR := &pbds.CreateConfigHookReq{
-			Attachment: &pbch.ConfigHookAttachment{
-				BizId: req.BizId,
-				AppId: req.AppId,
-			},
-			Spec: &pbch.ConfigHookSpec{
-				PreHookId:  req.PreHookId,
-				PostHookId: req.PostHookId,
-			},
-		}
-
-		_, err = s.client.DS.CreateConfigHook(grpcKit.RpcCtx(), createR)
-		if err != nil {
-			logs.Errorf("create ConfigHook failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-		return resp, nil
-	}
-
-	updateR := &pbds.UpdateConfigHookReq{
-		Attachment: &pbch.ConfigHookAttachment{
-			BizId: req.BizId,
-			AppId: req.AppId,
-		},
-		Spec: &pbch.ConfigHookSpec{
-			PreHookId:  req.PreHookId,
-			PostHookId: req.PostHookId,
-		},
-	}
-	if _, e := s.client.DS.UpdateConfigHook(grpcKit.RpcCtx(), updateR); e != nil {
+	if _, e := s.client.DS.UpdateConfigHook(grpcKit.RpcCtx(), r); e != nil {
 		logs.Errorf("update ConfigHook failed, err: %v, rid: %s", e, grpcKit.Rid)
 		return nil, e
 	}
 
 	return resp, nil
-}
-
-// GetConfigHook get a ConfigHook
-func (s *Service) GetConfigHook(ctx context.Context, req *pbcs.GetConfigHookReq) (*pbcs.GetConfigHookResp, error) {
-
-	grpcKit := kit.FromGrpcContext(ctx)
-	resp := new(pbcs.GetConfigHookResp)
-
-	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Update}, BizID: grpcKit.BizID}
-	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
-		return nil, err
-	}
-
-	r := &pbds.GetConfigHookReq{
-		BizId: req.BizId,
-		AppId: req.AppId,
-	}
-
-	hook, err := s.client.DS.GetConfigHook(grpcKit.RpcCtx(), r)
-	if err != nil {
-		logs.Errorf("get ConfigHook failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	return &pbcs.GetConfigHookResp{ConfigHook: hook}, nil
-
 }

@@ -101,8 +101,7 @@ func (h Hook) ValidateDelete() error {
 type HookSpec struct {
 	Name string `json:"name" gorm:"column:name"`
 	// Type is the hook type of hook
-	Type       HookType `json:"type" gorm:"column:type"`
-	PublishNum uint32   `json:"publish_num" gorm:"column:publish_num"`
+	Type       ScriptType `json:"type" gorm:"column:type"`
 	// Tag
 	Tag  string `json:"tag" gorm:"column:tag"`
 	Memo string `json:"memo" gorm:"column:memo"`
@@ -110,17 +109,22 @@ type HookSpec struct {
 
 const (
 	// Shell is the type for shell hook
-	Shell HookType = "shell"
+	Shell ScriptType = "shell"
 
 	// Python is the type for python hook
-	Python HookType = "python"
+	Python ScriptType = "python"
 )
 
-// HookType is the type of hook
-type HookType string
+// ScriptType is the type of hook script
+type ScriptType string
+
+// String returns string value of ScriptType
+func (s ScriptType) String() string {
+	return string(s)
+}
 
 // Validate validate the hook type
-func (s HookType) Validate() error {
+func (s ScriptType) Validate() error {
 	if s == "" {
 		return nil
 	}

@@ -10,7 +10,7 @@ import (
 	app "bscp.io/pkg/protocol/core/app"
 	base "bscp.io/pkg/protocol/core/base"
 	group "bscp.io/pkg/protocol/core/group"
-	hook_release "bscp.io/pkg/protocol/core/hook-release"
+	hook_revision "bscp.io/pkg/protocol/core/hook-revision"
 	release "bscp.io/pkg/protocol/core/release"
 	context "context"
 	grpc "google.golang.org/grpc"
@@ -39,7 +39,6 @@ const (
 	Config_ListConfigItems_FullMethodName            = "/pbcs.Config/ListConfigItems"
 	Config_ListConfigItemCount_FullMethodName        = "/pbcs.Config/ListConfigItemCount"
 	Config_UpdateConfigHook_FullMethodName           = "/pbcs.Config/UpdateConfigHook"
-	Config_GetConfigHook_FullMethodName              = "/pbcs.Config/GetConfigHook"
 	Config_CreateRelease_FullMethodName              = "/pbcs.Config/CreateRelease"
 	Config_ListReleases_FullMethodName               = "/pbcs.Config/ListReleases"
 	Config_GetReleaseByName_FullMethodName           = "/pbcs.Config/GetReleaseByName"
@@ -48,13 +47,15 @@ const (
 	Config_ListHooks_FullMethodName                  = "/pbcs.Config/ListHooks"
 	Config_ListHookTags_FullMethodName               = "/pbcs.Config/ListHookTags"
 	Config_GetHook_FullMethodName                    = "/pbcs.Config/GetHook"
-	Config_CreateHookRelease_FullMethodName          = "/pbcs.Config/CreateHookRelease"
-	Config_ListHookRelease_FullMethodName            = "/pbcs.Config/ListHookRelease"
-	Config_DeleteHookRelease_FullMethodName          = "/pbcs.Config/DeleteHookRelease"
-	Config_PublishHookRelease_FullMethodName         = "/pbcs.Config/PublishHookRelease"
-	Config_GetHookRelease_FullMethodName             = "/pbcs.Config/GetHookRelease"
-	Config_UpdateHookRelease_FullMethodName          = "/pbcs.Config/UpdateHookRelease"
-	Config_ListHookReleasesReferences_FullMethodName = "/pbcs.Config/ListHookReleasesReferences"
+	Config_CreateHookRevision_FullMethodName         = "/pbcs.Config/CreateHookRevision"
+	Config_ListHookRevisions_FullMethodName          = "/pbcs.Config/ListHookRevisions"
+	Config_DeleteHookRevision_FullMethodName         = "/pbcs.Config/DeleteHookRevision"
+	Config_PublishHookRevision_FullMethodName        = "/pbcs.Config/PublishHookRevision"
+	Config_GetHookRevision_FullMethodName            = "/pbcs.Config/GetHookRevision"
+	Config_UpdateHookRevision_FullMethodName         = "/pbcs.Config/UpdateHookRevision"
+	Config_ListHookReferences_FullMethodName         = "/pbcs.Config/ListHookReferences"
+	Config_ListHookRevisionReferences_FullMethodName = "/pbcs.Config/ListHookRevisionReferences"
+	Config_GetReleaseHook_FullMethodName             = "/pbcs.Config/GetReleaseHook"
 	Config_CreateTemplateSpace_FullMethodName        = "/pbcs.Config/CreateTemplateSpace"
 	Config_DeleteTemplateSpace_FullMethodName        = "/pbcs.Config/DeleteTemplateSpace"
 	Config_UpdateTemplateSpace_FullMethodName        = "/pbcs.Config/UpdateTemplateSpace"
@@ -110,7 +111,6 @@ type ConfigClient interface {
 	ListConfigItems(ctx context.Context, in *ListConfigItemsReq, opts ...grpc.CallOption) (*ListConfigItemsResp, error)
 	ListConfigItemCount(ctx context.Context, in *ListConfigItemCountReq, opts ...grpc.CallOption) (*ListConfigItemCountResp, error)
 	UpdateConfigHook(ctx context.Context, in *UpdateConfigHookReq, opts ...grpc.CallOption) (*UpdateConfigHookResp, error)
-	GetConfigHook(ctx context.Context, in *GetConfigHookReq, opts ...grpc.CallOption) (*GetConfigHookResp, error)
 	CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error)
 	ListReleases(ctx context.Context, in *ListReleasesReq, opts ...grpc.CallOption) (*ListReleasesResp, error)
 	GetReleaseByName(ctx context.Context, in *GetReleaseByNameReq, opts ...grpc.CallOption) (*release.Release, error)
@@ -119,13 +119,15 @@ type ConfigClient interface {
 	ListHooks(ctx context.Context, in *ListHooksReq, opts ...grpc.CallOption) (*ListHooksResp, error)
 	ListHookTags(ctx context.Context, in *ListHookTagsReq, opts ...grpc.CallOption) (*ListHookTagsResp, error)
 	GetHook(ctx context.Context, in *GetHookReq, opts ...grpc.CallOption) (*GetHookResp, error)
-	CreateHookRelease(ctx context.Context, in *CreateHookReleaseReq, opts ...grpc.CallOption) (*CreateHookReleaseResp, error)
-	ListHookRelease(ctx context.Context, in *ListHookReleaseReq, opts ...grpc.CallOption) (*ListHookReleaseResp, error)
-	DeleteHookRelease(ctx context.Context, in *DeleteHookReleaseReq, opts ...grpc.CallOption) (*DeleteHookReleaseResp, error)
-	PublishHookRelease(ctx context.Context, in *PublishHookReleaseReq, opts ...grpc.CallOption) (*PublishHookReleaseResp, error)
-	GetHookRelease(ctx context.Context, in *GetHookReleaseReq, opts ...grpc.CallOption) (*hook_release.HookRelease, error)
-	UpdateHookRelease(ctx context.Context, in *UpdateHookReleaseReq, opts ...grpc.CallOption) (*UpdateHookReleaseResp, error)
-	ListHookReleasesReferences(ctx context.Context, in *ListHookReleasesReferencesReq, opts ...grpc.CallOption) (*ListHookReleasesReferencesResp, error)
+	CreateHookRevision(ctx context.Context, in *CreateHookRevisionReq, opts ...grpc.CallOption) (*CreateHookRevisionResp, error)
+	ListHookRevisions(ctx context.Context, in *ListHookRevisionsReq, opts ...grpc.CallOption) (*ListHookRevisionsResp, error)
+	DeleteHookRevision(ctx context.Context, in *DeleteHookRevisionReq, opts ...grpc.CallOption) (*DeleteHookRevisionResp, error)
+	PublishHookRevision(ctx context.Context, in *PublishHookRevisionReq, opts ...grpc.CallOption) (*PublishHookRevisionResp, error)
+	GetHookRevision(ctx context.Context, in *GetHookRevisionReq, opts ...grpc.CallOption) (*hook_revision.HookRevision, error)
+	UpdateHookRevision(ctx context.Context, in *UpdateHookRevisionReq, opts ...grpc.CallOption) (*UpdateHookRevisionResp, error)
+	ListHookReferences(ctx context.Context, in *ListHookReferencesReq, opts ...grpc.CallOption) (*ListHookReferencesResp, error)
+	ListHookRevisionReferences(ctx context.Context, in *ListHookRevisionReferencesReq, opts ...grpc.CallOption) (*ListHookRevisionReferencesResp, error)
+	GetReleaseHook(ctx context.Context, in *GetReleaseHookReq, opts ...grpc.CallOption) (*GetReleaseHookResp, error)
 	CreateTemplateSpace(ctx context.Context, in *CreateTemplateSpaceReq, opts ...grpc.CallOption) (*CreateTemplateSpaceResp, error)
 	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...grpc.CallOption) (*DeleteTemplateSpaceResp, error)
 	UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, opts ...grpc.CallOption) (*UpdateTemplateSpaceResp, error)
@@ -305,15 +307,6 @@ func (c *configClient) UpdateConfigHook(ctx context.Context, in *UpdateConfigHoo
 	return out, nil
 }
 
-func (c *configClient) GetConfigHook(ctx context.Context, in *GetConfigHookReq, opts ...grpc.CallOption) (*GetConfigHookResp, error) {
-	out := new(GetConfigHookResp)
-	err := c.cc.Invoke(ctx, Config_GetConfigHook_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *configClient) CreateRelease(ctx context.Context, in *CreateReleaseReq, opts ...grpc.CallOption) (*CreateReleaseResp, error) {
 	out := new(CreateReleaseResp)
 	err := c.cc.Invoke(ctx, Config_CreateRelease_FullMethodName, in, out, opts...)
@@ -386,63 +379,81 @@ func (c *configClient) GetHook(ctx context.Context, in *GetHookReq, opts ...grpc
 	return out, nil
 }
 
-func (c *configClient) CreateHookRelease(ctx context.Context, in *CreateHookReleaseReq, opts ...grpc.CallOption) (*CreateHookReleaseResp, error) {
-	out := new(CreateHookReleaseResp)
-	err := c.cc.Invoke(ctx, Config_CreateHookRelease_FullMethodName, in, out, opts...)
+func (c *configClient) CreateHookRevision(ctx context.Context, in *CreateHookRevisionReq, opts ...grpc.CallOption) (*CreateHookRevisionResp, error) {
+	out := new(CreateHookRevisionResp)
+	err := c.cc.Invoke(ctx, Config_CreateHookRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *configClient) ListHookRelease(ctx context.Context, in *ListHookReleaseReq, opts ...grpc.CallOption) (*ListHookReleaseResp, error) {
-	out := new(ListHookReleaseResp)
-	err := c.cc.Invoke(ctx, Config_ListHookRelease_FullMethodName, in, out, opts...)
+func (c *configClient) ListHookRevisions(ctx context.Context, in *ListHookRevisionsReq, opts ...grpc.CallOption) (*ListHookRevisionsResp, error) {
+	out := new(ListHookRevisionsResp)
+	err := c.cc.Invoke(ctx, Config_ListHookRevisions_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *configClient) DeleteHookRelease(ctx context.Context, in *DeleteHookReleaseReq, opts ...grpc.CallOption) (*DeleteHookReleaseResp, error) {
-	out := new(DeleteHookReleaseResp)
-	err := c.cc.Invoke(ctx, Config_DeleteHookRelease_FullMethodName, in, out, opts...)
+func (c *configClient) DeleteHookRevision(ctx context.Context, in *DeleteHookRevisionReq, opts ...grpc.CallOption) (*DeleteHookRevisionResp, error) {
+	out := new(DeleteHookRevisionResp)
+	err := c.cc.Invoke(ctx, Config_DeleteHookRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *configClient) PublishHookRelease(ctx context.Context, in *PublishHookReleaseReq, opts ...grpc.CallOption) (*PublishHookReleaseResp, error) {
-	out := new(PublishHookReleaseResp)
-	err := c.cc.Invoke(ctx, Config_PublishHookRelease_FullMethodName, in, out, opts...)
+func (c *configClient) PublishHookRevision(ctx context.Context, in *PublishHookRevisionReq, opts ...grpc.CallOption) (*PublishHookRevisionResp, error) {
+	out := new(PublishHookRevisionResp)
+	err := c.cc.Invoke(ctx, Config_PublishHookRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *configClient) GetHookRelease(ctx context.Context, in *GetHookReleaseReq, opts ...grpc.CallOption) (*hook_release.HookRelease, error) {
-	out := new(hook_release.HookRelease)
-	err := c.cc.Invoke(ctx, Config_GetHookRelease_FullMethodName, in, out, opts...)
+func (c *configClient) GetHookRevision(ctx context.Context, in *GetHookRevisionReq, opts ...grpc.CallOption) (*hook_revision.HookRevision, error) {
+	out := new(hook_revision.HookRevision)
+	err := c.cc.Invoke(ctx, Config_GetHookRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *configClient) UpdateHookRelease(ctx context.Context, in *UpdateHookReleaseReq, opts ...grpc.CallOption) (*UpdateHookReleaseResp, error) {
-	out := new(UpdateHookReleaseResp)
-	err := c.cc.Invoke(ctx, Config_UpdateHookRelease_FullMethodName, in, out, opts...)
+func (c *configClient) UpdateHookRevision(ctx context.Context, in *UpdateHookRevisionReq, opts ...grpc.CallOption) (*UpdateHookRevisionResp, error) {
+	out := new(UpdateHookRevisionResp)
+	err := c.cc.Invoke(ctx, Config_UpdateHookRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *configClient) ListHookReleasesReferences(ctx context.Context, in *ListHookReleasesReferencesReq, opts ...grpc.CallOption) (*ListHookReleasesReferencesResp, error) {
-	out := new(ListHookReleasesReferencesResp)
-	err := c.cc.Invoke(ctx, Config_ListHookReleasesReferences_FullMethodName, in, out, opts...)
+func (c *configClient) ListHookReferences(ctx context.Context, in *ListHookReferencesReq, opts ...grpc.CallOption) (*ListHookReferencesResp, error) {
+	out := new(ListHookReferencesResp)
+	err := c.cc.Invoke(ctx, Config_ListHookReferences_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListHookRevisionReferences(ctx context.Context, in *ListHookRevisionReferencesReq, opts ...grpc.CallOption) (*ListHookRevisionReferencesResp, error) {
+	out := new(ListHookRevisionReferencesResp)
+	err := c.cc.Invoke(ctx, Config_ListHookRevisionReferences_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetReleaseHook(ctx context.Context, in *GetReleaseHookReq, opts ...grpc.CallOption) (*GetReleaseHookResp, error) {
+	out := new(GetReleaseHookResp)
+	err := c.cc.Invoke(ctx, Config_GetReleaseHook_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -758,7 +769,6 @@ type ConfigServer interface {
 	ListConfigItems(context.Context, *ListConfigItemsReq) (*ListConfigItemsResp, error)
 	ListConfigItemCount(context.Context, *ListConfigItemCountReq) (*ListConfigItemCountResp, error)
 	UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error)
-	GetConfigHook(context.Context, *GetConfigHookReq) (*GetConfigHookResp, error)
 	CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error)
 	ListReleases(context.Context, *ListReleasesReq) (*ListReleasesResp, error)
 	GetReleaseByName(context.Context, *GetReleaseByNameReq) (*release.Release, error)
@@ -767,13 +777,15 @@ type ConfigServer interface {
 	ListHooks(context.Context, *ListHooksReq) (*ListHooksResp, error)
 	ListHookTags(context.Context, *ListHookTagsReq) (*ListHookTagsResp, error)
 	GetHook(context.Context, *GetHookReq) (*GetHookResp, error)
-	CreateHookRelease(context.Context, *CreateHookReleaseReq) (*CreateHookReleaseResp, error)
-	ListHookRelease(context.Context, *ListHookReleaseReq) (*ListHookReleaseResp, error)
-	DeleteHookRelease(context.Context, *DeleteHookReleaseReq) (*DeleteHookReleaseResp, error)
-	PublishHookRelease(context.Context, *PublishHookReleaseReq) (*PublishHookReleaseResp, error)
-	GetHookRelease(context.Context, *GetHookReleaseReq) (*hook_release.HookRelease, error)
-	UpdateHookRelease(context.Context, *UpdateHookReleaseReq) (*UpdateHookReleaseResp, error)
-	ListHookReleasesReferences(context.Context, *ListHookReleasesReferencesReq) (*ListHookReleasesReferencesResp, error)
+	CreateHookRevision(context.Context, *CreateHookRevisionReq) (*CreateHookRevisionResp, error)
+	ListHookRevisions(context.Context, *ListHookRevisionsReq) (*ListHookRevisionsResp, error)
+	DeleteHookRevision(context.Context, *DeleteHookRevisionReq) (*DeleteHookRevisionResp, error)
+	PublishHookRevision(context.Context, *PublishHookRevisionReq) (*PublishHookRevisionResp, error)
+	GetHookRevision(context.Context, *GetHookRevisionReq) (*hook_revision.HookRevision, error)
+	UpdateHookRevision(context.Context, *UpdateHookRevisionReq) (*UpdateHookRevisionResp, error)
+	ListHookReferences(context.Context, *ListHookReferencesReq) (*ListHookReferencesResp, error)
+	ListHookRevisionReferences(context.Context, *ListHookRevisionReferencesReq) (*ListHookRevisionReferencesResp, error)
+	GetReleaseHook(context.Context, *GetReleaseHookReq) (*GetReleaseHookResp, error)
 	CreateTemplateSpace(context.Context, *CreateTemplateSpaceReq) (*CreateTemplateSpaceResp, error)
 	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq) (*DeleteTemplateSpaceResp, error)
 	UpdateTemplateSpace(context.Context, *UpdateTemplateSpaceReq) (*UpdateTemplateSpaceResp, error)
@@ -859,9 +871,6 @@ func (UnimplementedConfigServer) ListConfigItemCount(context.Context, *ListConfi
 func (UnimplementedConfigServer) UpdateConfigHook(context.Context, *UpdateConfigHookReq) (*UpdateConfigHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateConfigHook not implemented")
 }
-func (UnimplementedConfigServer) GetConfigHook(context.Context, *GetConfigHookReq) (*GetConfigHookResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetConfigHook not implemented")
-}
 func (UnimplementedConfigServer) CreateRelease(context.Context, *CreateReleaseReq) (*CreateReleaseResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRelease not implemented")
 }
@@ -886,26 +895,32 @@ func (UnimplementedConfigServer) ListHookTags(context.Context, *ListHookTagsReq)
 func (UnimplementedConfigServer) GetHook(context.Context, *GetHookReq) (*GetHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHook not implemented")
 }
-func (UnimplementedConfigServer) CreateHookRelease(context.Context, *CreateHookReleaseReq) (*CreateHookReleaseResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateHookRelease not implemented")
+func (UnimplementedConfigServer) CreateHookRevision(context.Context, *CreateHookRevisionReq) (*CreateHookRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateHookRevision not implemented")
 }
-func (UnimplementedConfigServer) ListHookRelease(context.Context, *ListHookReleaseReq) (*ListHookReleaseResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListHookRelease not implemented")
+func (UnimplementedConfigServer) ListHookRevisions(context.Context, *ListHookRevisionsReq) (*ListHookRevisionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListHookRevisions not implemented")
 }
-func (UnimplementedConfigServer) DeleteHookRelease(context.Context, *DeleteHookReleaseReq) (*DeleteHookReleaseResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteHookRelease not implemented")
+func (UnimplementedConfigServer) DeleteHookRevision(context.Context, *DeleteHookRevisionReq) (*DeleteHookRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteHookRevision not implemented")
 }
-func (UnimplementedConfigServer) PublishHookRelease(context.Context, *PublishHookReleaseReq) (*PublishHookReleaseResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PublishHookRelease not implemented")
+func (UnimplementedConfigServer) PublishHookRevision(context.Context, *PublishHookRevisionReq) (*PublishHookRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PublishHookRevision not implemented")
 }
-func (UnimplementedConfigServer) GetHookRelease(context.Context, *GetHookReleaseReq) (*hook_release.HookRelease, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetHookRelease not implemented")
+func (UnimplementedConfigServer) GetHookRevision(context.Context, *GetHookRevisionReq) (*hook_revision.HookRevision, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHookRevision not implemented")
 }
-func (UnimplementedConfigServer) UpdateHookRelease(context.Context, *UpdateHookReleaseReq) (*UpdateHookReleaseResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateHookRelease not implemented")
+func (UnimplementedConfigServer) UpdateHookRevision(context.Context, *UpdateHookRevisionReq) (*UpdateHookRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateHookRevision not implemented")
 }
-func (UnimplementedConfigServer) ListHookReleasesReferences(context.Context, *ListHookReleasesReferencesReq) (*ListHookReleasesReferencesResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListHookReleasesReferences not implemented")
+func (UnimplementedConfigServer) ListHookReferences(context.Context, *ListHookReferencesReq) (*ListHookReferencesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListHookReferences not implemented")
+}
+func (UnimplementedConfigServer) ListHookRevisionReferences(context.Context, *ListHookRevisionReferencesReq) (*ListHookRevisionReferencesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListHookRevisionReferences not implemented")
+}
+func (UnimplementedConfigServer) GetReleaseHook(context.Context, *GetReleaseHookReq) (*GetReleaseHookResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseHook not implemented")
 }
 func (UnimplementedConfigServer) CreateTemplateSpace(context.Context, *CreateTemplateSpaceReq) (*CreateTemplateSpaceResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateSpace not implemented")
@@ -1285,24 +1300,6 @@ func _Config_UpdateConfigHook_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_GetConfigHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetConfigHookReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ConfigServer).GetConfigHook(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Config_GetConfigHook_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).GetConfigHook(ctx, req.(*GetConfigHookReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Config_CreateRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateReleaseReq)
 	if err := dec(in); err != nil {
@@ -1447,128 +1444,164 @@ func _Config_GetHook_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_CreateHookRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateHookReleaseReq)
+func _Config_CreateHookRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateHookRevisionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).CreateHookRelease(ctx, in)
+		return srv.(ConfigServer).CreateHookRevision(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Config_CreateHookRelease_FullMethodName,
+		FullMethod: Config_CreateHookRevision_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).CreateHookRelease(ctx, req.(*CreateHookReleaseReq))
+		return srv.(ConfigServer).CreateHookRevision(ctx, req.(*CreateHookRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_ListHookRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListHookReleaseReq)
+func _Config_ListHookRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListHookRevisionsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).ListHookRelease(ctx, in)
+		return srv.(ConfigServer).ListHookRevisions(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Config_ListHookRelease_FullMethodName,
+		FullMethod: Config_ListHookRevisions_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListHookRelease(ctx, req.(*ListHookReleaseReq))
+		return srv.(ConfigServer).ListHookRevisions(ctx, req.(*ListHookRevisionsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_DeleteHookRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteHookReleaseReq)
+func _Config_DeleteHookRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteHookRevisionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).DeleteHookRelease(ctx, in)
+		return srv.(ConfigServer).DeleteHookRevision(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Config_DeleteHookRelease_FullMethodName,
+		FullMethod: Config_DeleteHookRevision_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).DeleteHookRelease(ctx, req.(*DeleteHookReleaseReq))
+		return srv.(ConfigServer).DeleteHookRevision(ctx, req.(*DeleteHookRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_PublishHookRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PublishHookReleaseReq)
+func _Config_PublishHookRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublishHookRevisionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).PublishHookRelease(ctx, in)
+		return srv.(ConfigServer).PublishHookRevision(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Config_PublishHookRelease_FullMethodName,
+		FullMethod: Config_PublishHookRevision_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).PublishHookRelease(ctx, req.(*PublishHookReleaseReq))
+		return srv.(ConfigServer).PublishHookRevision(ctx, req.(*PublishHookRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_GetHookRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetHookReleaseReq)
+func _Config_GetHookRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHookRevisionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).GetHookRelease(ctx, in)
+		return srv.(ConfigServer).GetHookRevision(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Config_GetHookRelease_FullMethodName,
+		FullMethod: Config_GetHookRevision_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).GetHookRelease(ctx, req.(*GetHookReleaseReq))
+		return srv.(ConfigServer).GetHookRevision(ctx, req.(*GetHookRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_UpdateHookRelease_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateHookReleaseReq)
+func _Config_UpdateHookRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateHookRevisionReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).UpdateHookRelease(ctx, in)
+		return srv.(ConfigServer).UpdateHookRevision(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Config_UpdateHookRelease_FullMethodName,
+		FullMethod: Config_UpdateHookRevision_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).UpdateHookRelease(ctx, req.(*UpdateHookReleaseReq))
+		return srv.(ConfigServer).UpdateHookRevision(ctx, req.(*UpdateHookRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Config_ListHookReleasesReferences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListHookReleasesReferencesReq)
+func _Config_ListHookReferences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListHookReferencesReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ConfigServer).ListHookReleasesReferences(ctx, in)
+		return srv.(ConfigServer).ListHookReferences(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Config_ListHookReleasesReferences_FullMethodName,
+		FullMethod: Config_ListHookReferences_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ConfigServer).ListHookReleasesReferences(ctx, req.(*ListHookReleasesReferencesReq))
+		return srv.(ConfigServer).ListHookReferences(ctx, req.(*ListHookReferencesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListHookRevisionReferences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListHookRevisionReferencesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListHookRevisionReferences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListHookRevisionReferences_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListHookRevisionReferences(ctx, req.(*ListHookRevisionReferencesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetReleaseHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleaseHookReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetReleaseHook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetReleaseHook_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetReleaseHook(ctx, req.(*GetReleaseHookReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2217,10 +2250,6 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_UpdateConfigHook_Handler,
 		},
 		{
-			MethodName: "GetConfigHook",
-			Handler:    _Config_GetConfigHook_Handler,
-		},
-		{
 			MethodName: "CreateRelease",
 			Handler:    _Config_CreateRelease_Handler,
 		},
@@ -2253,32 +2282,40 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_GetHook_Handler,
 		},
 		{
-			MethodName: "CreateHookRelease",
-			Handler:    _Config_CreateHookRelease_Handler,
+			MethodName: "CreateHookRevision",
+			Handler:    _Config_CreateHookRevision_Handler,
 		},
 		{
-			MethodName: "ListHookRelease",
-			Handler:    _Config_ListHookRelease_Handler,
+			MethodName: "ListHookRevisions",
+			Handler:    _Config_ListHookRevisions_Handler,
 		},
 		{
-			MethodName: "DeleteHookRelease",
-			Handler:    _Config_DeleteHookRelease_Handler,
+			MethodName: "DeleteHookRevision",
+			Handler:    _Config_DeleteHookRevision_Handler,
 		},
 		{
-			MethodName: "PublishHookRelease",
-			Handler:    _Config_PublishHookRelease_Handler,
+			MethodName: "PublishHookRevision",
+			Handler:    _Config_PublishHookRevision_Handler,
 		},
 		{
-			MethodName: "GetHookRelease",
-			Handler:    _Config_GetHookRelease_Handler,
+			MethodName: "GetHookRevision",
+			Handler:    _Config_GetHookRevision_Handler,
 		},
 		{
-			MethodName: "UpdateHookRelease",
-			Handler:    _Config_UpdateHookRelease_Handler,
+			MethodName: "UpdateHookRevision",
+			Handler:    _Config_UpdateHookRevision_Handler,
 		},
 		{
-			MethodName: "ListHookReleasesReferences",
-			Handler:    _Config_ListHookReleasesReferences_Handler,
+			MethodName: "ListHookReferences",
+			Handler:    _Config_ListHookReferences_Handler,
+		},
+		{
+			MethodName: "ListHookRevisionReferences",
+			Handler:    _Config_ListHookRevisionReferences_Handler,
+		},
+		{
+			MethodName: "GetReleaseHook",
+			Handler:    _Config_GetReleaseHook_Handler,
 		},
 		{
 			MethodName: "CreateTemplateSpace",

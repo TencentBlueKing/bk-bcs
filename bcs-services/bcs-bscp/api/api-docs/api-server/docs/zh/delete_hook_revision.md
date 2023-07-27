@@ -10,7 +10,7 @@
 | ---------- | -------- | ---- | ------ |
 | biz_id     | uint32   | 是   | 业务ID |
 | hook_id    | uint32   | 是   | hookID |
-| release_id | uint32   | 是   | 版本ID |
+| revision_id | uint32   | 是   | 版本ID |
 
 #### 调用示例
 

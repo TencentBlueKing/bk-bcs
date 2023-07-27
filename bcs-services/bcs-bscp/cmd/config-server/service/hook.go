@@ -14,7 +14,6 @@ package service
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 
 	"bscp.io/pkg/iam/meta"
@@ -38,18 +37,16 @@ func (s *Service) CreateHook(ctx context.Context, req *pbcs.CreateHookReq) (*pbc
 		return nil, err
 	}
 
-	contentBase64 := base64.StdEncoding.EncodeToString([]byte(req.Content))
 	r := &pbds.CreateHookReq{
 		Attachment: &pbhook.HookAttachment{
 			BizId: grpcKit.BizID,
 		},
 		Spec: &pbhook.HookSpec{
-			Name:        req.Name,
-			ReleaseName: req.ReleaseName,
-			Type:        req.Type,
-			Tag:         req.Tag,
-			Memo:        req.Memo,
-			Content:     contentBase64,
+			Name:    req.Name,
+			Type:    req.Type,
+			Tag:     req.Tag,
+			Memo:    req.Memo,
+			Content: req.Content,
 		},
 	}
 	rp, err := s.client.DS.CreateHook(grpcKit.RpcCtx(), r)
@@ -76,10 +73,9 @@ func (s *Service) DeleteHook(ctx context.Context, req *pbcs.DeleteHookReq) (*pbc
 	}
 
 	r := &pbds.DeleteHookReq{
-		Id: req.HookId,
-		Attachment: &pbhook.HookAttachment{
-			BizId: grpcKit.BizID,
-		},
+		BizId:  req.BizId,
+		HookId: req.HookId,
+		Force:  req.Force,
 	}
 	if _, err := s.client.DS.DeleteHook(grpcKit.RpcCtx(), r); err != nil {
 		logs.Errorf("delete hook failed, err: %v, rid: %s", err, grpcKit.Rid)
@@ -127,9 +123,18 @@ func (s *Service) ListHooks(ctx context.Context, req *pbcs.ListHooksReq) (*pbcs.
 		return nil, err
 	}
 
+	details := make([]*pbcs.ListHooksResp_ListHooksData, 0, len(rp.Details))
+	for _, detail := range rp.Details {
+		details = append(details, &pbcs.ListHooksResp_ListHooksData{
+			Hook:          detail.Hook,
+			BoundNum:      detail.BoundNum,
+			ConfirmDelete: detail.ConfirmDelete,
+		})
+	}
+
 	resp = &pbcs.ListHooksResp{
 		Count:   rp.Count,
-		Details: rp.Details,
+		Details: details,
 	}
 
 	return resp, nil
@@ -185,12 +190,11 @@ func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetH
 	resp = &pbcs.GetHookResp{
 		Id: hook.Id,
 		Spec: &pbcs.GetHookInfoSpec{
-			Name:       hook.Spec.Name,
-			Type:       hook.Spec.Type,
-			Tag:        hook.Spec.Tag,
-			Memo:       hook.Spec.Memo,
-			PublishNum: hook.Spec.PublishNum,
-			Releases:   &pbcs.GetHookInfoSpec_Releases{NotReleaseId: hook.Spec.Releases.NotReleaseId},
+			Name:     hook.Spec.Name,
+			Type:     hook.Spec.Type,
+			Tag:      hook.Spec.Tag,
+			Memo:     hook.Spec.Memo,
+			Releases: &pbcs.GetHookInfoSpec_Releases{NotReleaseId: hook.Spec.Releases.NotReleaseId},
 		},
 		Attachment: &pbhook.HookAttachment{BizId: hook.Attachment.BizId},
 		Revision: &pbbase.Revision{
@@ -199,6 +203,105 @@ func (s *Service) GetHook(ctx context.Context, req *pbcs.GetHookReq) (*pbcs.GetH
 			CreateAt: hook.Revision.Creator,
 			UpdateAt: hook.Revision.UpdateAt,
 		},
+	}
+
+	return resp, nil
+}
+
+// ListHookReferences 查询hook版本被引用列表
+func (s *Service) ListHookReferences(ctx context.Context,
+	req *pbcs.ListHookReferencesReq) (*pbcs.ListHookReferencesResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.ListHookReferencesResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.TemplateSpace, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.ListHookReferencesReq{
+		BizId:  req.BizId,
+		HookId: req.HookId,
+		Limit:  req.Limit,
+		Start:  req.Start,
+	}
+
+	rp, err := s.client.DS.ListHookReferences(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("list TemplateSpaces failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	details := []*pbcs.ListHookReferencesResp_Detail{}
+
+	for _, detail := range rp.Details {
+		details = append(details, &pbcs.ListHookReferencesResp_Detail{
+			HookRevisionId:   detail.HookRevisionId,
+			HookRevisionName: detail.HookRevisionName,
+			AppId:            detail.AppId,
+			AppName:          detail.AppName,
+			ReleaseId:        detail.ReleaseId,
+			ReleaseName:      detail.ReleaseName,
+			Type:             detail.Type,
+		})
+	}
+	resp = &pbcs.ListHookReferencesResp{
+		Count:   rp.Count,
+		Details: details,
+	}
+
+	return resp, nil
+
+}
+
+// GetReleaseHook get release's pre hook and post hook
+func (s *Service) GetReleaseHook(ctx context.Context, req *pbcs.GetReleaseHookReq) (*pbcs.GetReleaseHookResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	resp := new(pbcs.GetReleaseHookResp)
+
+	res := &meta.ResourceAttribute{Basic: &meta.Basic{Type: meta.Release, Action: meta.Find}, BizID: grpcKit.BizID}
+	if err := s.authorizer.AuthorizeWithResp(grpcKit, resp, res); err != nil {
+		return nil, err
+	}
+
+	r := &pbds.GetReleaseHookReq{
+		BizId:     req.BizId,
+		AppId:     req.AppId,
+		ReleaseId: req.ReleaseId,
+	}
+
+	grhResp, err := s.client.DS.GetReleaseHook(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("get hook failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	var pre, post *pbcs.GetReleaseHookResp_Hook
+	if grhResp.PreHook != nil {
+		pre = &pbcs.GetReleaseHookResp_Hook{
+			HookId:           grhResp.PreHook.HookId,
+			HookName:         grhResp.PreHook.HookName,
+			HookRevisionId:   grhResp.PreHook.HookRevisionId,
+			HookRevisionName: grhResp.PreHook.HookRevisionName,
+			Type:             grhResp.PreHook.Type,
+			Content:          grhResp.PreHook.Content,
+		}
+	}
+	if grhResp.PostHook != nil {
+		post = &pbcs.GetReleaseHookResp_Hook{
+			HookId:           grhResp.PostHook.HookId,
+			HookName:         grhResp.PostHook.HookName,
+			HookRevisionId:   grhResp.PostHook.HookRevisionId,
+			HookRevisionName: grhResp.PostHook.HookRevisionName,
+			Type:             grhResp.PostHook.Type,
+			Content:          grhResp.PostHook.Content,
+		}
+	}
+	resp = &pbcs.GetReleaseHookResp{
+		PreHook:  pre,
+		PostHook: post,
 	}
 
 	return resp, nil
