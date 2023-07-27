@@ -76,24 +76,24 @@ func (as *vaultService) prepare(opt *options.Option) error {
 		return fmt.Errorf("load settings from config files failed, err: %v", err)
 	}
 
-	logs.InitLogger(cc.AuthServer().Log.Logs())
+	logs.InitLogger(cc.VaultServer().Log.Logs())
 
 	logs.Infof("load settings from config file success.")
 
 	// init metrics
-	metrics.InitMetrics(net.JoinHostPort(cc.AuthServer().Network.BindIP,
-		strconv.Itoa(int(cc.AuthServer().Network.RpcPort))))
+	metrics.InitMetrics(net.JoinHostPort(cc.VaultServer().Network.BindIP,
+		strconv.Itoa(int(cc.VaultServer().Network.RpcPort))))
 
-	etcdOpt, err := cc.AuthServer().Service.Etcd.ToConfig()
+	etcdOpt, err := cc.VaultServer().Service.Etcd.ToConfig()
 	if err != nil {
 		return fmt.Errorf("get etcd config failed, err: %v", err)
 	}
 
-	// register auth server.
+	// register vault server.
 	svcOpt := serviced.ServiceOption{
-		Name: cc.AuthServerName,
-		IP:   cc.AuthServer().Network.BindIP,
-		Port: cc.AuthServer().Network.RpcPort,
+		Name: cc.VaultServerName,
+		IP:   cc.VaultServer().Network.BindIP,
+		Port: cc.VaultServer().Network.RpcPort,
 		Uid:  uuid.UUID(),
 	}
 	sd, err := serviced.NewServiceD(etcdOpt, svcOpt)
@@ -127,7 +127,7 @@ func (as *vaultService) listenAndServe() error {
 			grpc_recovery.StreamServerInterceptor(recoveryOpt),
 		),
 	}
-	network := cc.AuthServer().Network
+	network := cc.VaultServer().Network
 	if network.TLS.Enable() {
 		tls := network.TLS
 		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
@@ -161,12 +161,12 @@ func (as *vaultService) listenAndServe() error {
 		notifier := shutdown.AddNotifier()
 		select {
 		case <-notifier.Signal:
-			logs.Infof("start shutdown auth server grpc server gracefully...")
+			logs.Infof("start shutdown vault server grpc server gracefully...")
 
 			as.serve.GracefulStop()
 			notifier.Done()
 
-			logs.Infof("shutdown auth server grpc server success...")
+			logs.Infof("shutdown vault server grpc server success...")
 
 		}
 	}()
@@ -191,7 +191,7 @@ func (as *vaultService) listenAndServe() error {
 
 // gwListenAndServe listen the http serve and set up the shutdown gracefully job.
 func (as *vaultService) gwListenAndServe() error {
-	network := cc.AuthServer().Network
+	network := cc.VaultServer().Network
 	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
 
 	handler, err := as.service.Handler()
@@ -204,12 +204,12 @@ func (as *vaultService) gwListenAndServe() error {
 		notifier := shutdown.AddNotifier()
 		select {
 		case <-notifier.Signal:
-			logs.Infof("start shutdown auth server http server gracefully...")
+			logs.Infof("start shutdown vault server http server gracefully...")
 
 			as.gwServe.Close()
 			notifier.Done()
 
-			logs.Infof("shutdown auth server http server success...")
+			logs.Infof("shutdown vault server http server success...")
 		}
 	}()
 
@@ -256,9 +256,9 @@ func (as *vaultService) finalizer() {
 // register the grpc serve.
 func (as *vaultService) register() error {
 	if err := as.sd.Register(); err != nil {
-		return fmt.Errorf("register auth server failed, err: %v", err)
+		return fmt.Errorf("register vault server failed, err: %v", err)
 	}
 
-	logs.Infof("register auth server to etcd success.")
+	logs.Infof("register vault server to etcd success.")
 	return nil
 }

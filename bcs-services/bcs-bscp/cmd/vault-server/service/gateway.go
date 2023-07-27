@@ -22,7 +22,6 @@ import (
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/rest"
-	"bscp.io/pkg/runtime/handler"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 )
@@ -51,8 +50,6 @@ func (g *gateway) handler() http.Handler {
 	r.Get("/-/healthy", g.HealthyHandler)
 	r.Get("/-/ready", g.ReadyHandler)
 	r.Get("/healthz", g.Healthz)
-
-	r.Mount("/", handler.RegisterCommonToolHandler())
 
 	return r
 }
