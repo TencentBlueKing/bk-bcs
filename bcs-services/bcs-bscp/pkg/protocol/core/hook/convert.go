@@ -45,26 +45,24 @@ func (m *HookSpec) HookSpec() (*table.HookSpec, error) {
 
 	return &table.HookSpec{
 		Name: m.Name,
-		Type: table.HookType(m.Type),
+		Type: table.ScriptType(m.Type),
 		Tag:  m.Tag,
 		Memo: m.Memo,
 	}, nil
 }
 
 // PbHookSpec convert table HookSpec to pb HookSpec
-func PbHookSpec(spec *table.HookSpec) (*HookSpec, error) {
+func PbHookSpec(spec *table.HookSpec) *HookSpec {
 	if spec == nil {
-		return nil, nil
+		return nil
 	}
 
 	return &HookSpec{
-		Name:        spec.Name,
-		ReleaseName: spec.Name,
-		Type:        string(spec.Type),
-		Tag:         spec.Tag,
-		Memo:        spec.Memo,
-		PublishNum:  spec.PublishNum,
-	}, nil
+		Name: spec.Name,
+		Type: string(spec.Type),
+		Tag:  spec.Tag,
+		Memo: spec.Memo,
+	}
 }
 
 // HookAttachment convert pb HookAttachment to table HookAttachment
@@ -90,40 +88,31 @@ func PbHookAttachment(at *table.HookAttachment) *HookAttachment {
 }
 
 // PbHooks convert table Hook to pb Hook
-func PbHooks(s []*table.Hook) ([]*Hook, error) {
+func PbHooks(s []*table.Hook) []*Hook {
 	if s == nil {
-		return make([]*Hook, 0), nil
+		return make([]*Hook, 0)
 	}
 
 	result := make([]*Hook, 0)
 	for _, one := range s {
-		hook, err := PbHook(one)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, hook)
+		result = append(result, PbHook(one))
 	}
 
-	return result, nil
+	return result
 }
 
 // PbHook convert table Hook to pb Hook
-func PbHook(s *table.Hook) (*Hook, error) {
+func PbHook(s *table.Hook) *Hook {
 	if s == nil {
-		return nil, nil
-	}
-
-	spec, err := PbHookSpec(s.Spec)
-	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	return &Hook{
 		Id:         s.ID,
-		Spec:       spec,
+		Spec:       PbHookSpec(s.Spec),
 		Attachment: PbHookAttachment(s.Attachment),
 		Revision:   pbbase.PbRevision(s.Revision),
-	}, nil
+	}
 }
 
 // UnmarshalSelector unmarshal pb struct to selector.

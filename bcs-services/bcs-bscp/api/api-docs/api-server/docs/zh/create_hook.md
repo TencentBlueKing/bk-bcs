@@ -3,6 +3,7 @@
 该接口提供版本：v1.0.0+
 
 创建hook脚本，为某个app设置对应的前置、后置hook脚本。
+创建hook脚本时，会默认创建一个脚本版本，版本名称由系统生成。
 
 #### 输入参数
 
@@ -10,7 +11,6 @@
 | ------------ | ------------ | ------ |-------------------------------------|
 | biz_id       | uint32   | 是   | 业务id                                |
 | name         | string   | 是   | 脚本名称                              |
-| release_name | string   | 是   | 版本号                                |
 | type         | string   | 是   | hook脚本类型，当前类型有shell、python |
 | tag          | string   | 否   | 脚本标签                              |
 | memo         | string   | 否   | 脚本描述                              |
@@ -21,7 +21,6 @@
 ```json
 {
     "name": "myhook003",
-    "release_name": "v1",
     "type": "shell",
     "tag": "自动化脚本2",
     "content": "#!/bin/bash\n\nnow=$(date +'%Y-%m-%d %H:%M:%S')\necho \"hello, start at $now\"\n",

@@ -15,57 +15,57 @@ package table
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"bscp.io/pkg/criteria/validator"
 )
 
-// HookRelease 脚本版本
-type HookRelease struct {
+// HookRevision 脚本版本
+type HookRevision struct {
 	// ID is an auto-increased value, which is a unique identity of a hook.
 	ID uint32 `db:"id" json:"id"`
 
-	Spec       *HookReleaseSpec       `json:"spec" gorm:"embedded"`
-	Attachment *HookReleaseAttachment `json:"attachment" gorm:"embedded"`
-	Revision   *Revision              `json:"revision" gorm:"embedded"`
+	Spec       *HookRevisionSpec       `json:"spec" gorm:"embedded"`
+	Attachment *HookRevisionAttachment `json:"attachment" gorm:"embedded"`
+	Revision   *Revision               `json:"revision" gorm:"embedded"`
 }
 
-// HookReleaseSpec defines all the specifics for hook set by user.
-type HookReleaseSpec struct {
-	Name       string            `json:"name" gorm:"column:name"`
-	PublishNum uint32            `json:"publish_num" gorm:"column:publish_num"`
-	State      HookReleaseStatus `json:"state" gorm:"column:state"`
-	Content    string            `json:"content" gorm:"column:content"`
-	Memo       string            `json:"memo" gorm:"column:memo"`
+// HookRevisionSpec defines all the specifics for hook set by user.
+type HookRevisionSpec struct {
+	Name    string             `json:"name" gorm:"column:name"`
+	State   HookRevisionStatus `json:"state" gorm:"column:state"`
+	Content string             `json:"content" gorm:"column:content"`
+	Memo    string             `json:"memo" gorm:"column:memo"`
 }
 
-// HookReleaseAttachment defines the hook attachments.
-type HookReleaseAttachment struct {
+// HookRevisionAttachment defines the hook attachments.
+type HookRevisionAttachment struct {
 	BizID  uint32 `json:"biz_id" gorm:"column:biz_id"`
 	HookID uint32 `json:"hook_id" gorm:"column:hook_id"`
 }
 
 // TableName is the hook's database table name.
-func (r *HookRelease) TableName() Name {
-	return "hook_releases"
+func (r *HookRevision) TableName() Name {
+	return "hook_revisions"
 }
 
 // AppID AuditRes interface
-func (r *HookRelease) AppID() uint32 {
+func (r *HookRevision) AppID() uint32 {
 	return 0
 }
 
 // ResID AuditRes interface
-func (r *HookRelease) ResID() uint32 {
+func (r *HookRevision) ResID() uint32 {
 	return r.ID
 }
 
 // ResType AuditRes interface
-func (r *HookRelease) ResType() string {
-	return "hook_releases"
+func (r *HookRevision) ResType() string {
+	return "hook_revisions"
 }
 
 // ValidateCreate validate hook is valid or not when create it.
-func (r *HookRelease) ValidateCreate() error {
+func (r *HookRevision) ValidateCreate() error {
 
 	if r.Spec == nil {
 		return errors.New("spec not set")
@@ -95,7 +95,7 @@ func (r *HookRelease) ValidateCreate() error {
 }
 
 // ValidateCreate validate spec when created.
-func (s *HookReleaseSpec) ValidateCreate() error {
+func (s *HookRevisionSpec) ValidateCreate() error {
 
 	if err := validator.ValidateName(s.Name); err != nil {
 		return err
@@ -103,13 +103,17 @@ func (s *HookReleaseSpec) ValidateCreate() error {
 
 	if err := validator.ValidateMemo(s.Memo, false); err != nil {
 		return err
+	}
+
+	if strings.Trim(strings.Trim(s.Content, ""), "\n") == "" {
+		return errors.New("content should not be empty")
 	}
 
 	return nil
 }
 
 // ValidateUpdate validate spec when updated.
-func (s *HookReleaseSpec) ValidateUpdate() error {
+func (s *HookRevisionSpec) ValidateUpdate() error {
 
 	if err := validator.ValidateName(s.Name); err != nil {
 		return err
@@ -119,11 +123,15 @@ func (s *HookReleaseSpec) ValidateUpdate() error {
 		return err
 	}
 
+	if strings.Trim(strings.Trim(s.Content, ""), "\n") == "" {
+		return errors.New("content should not be empty")
+	}
+
 	return nil
 }
 
 // Validate validate Attachment.
-func (a HookReleaseAttachment) Validate() error {
+func (a HookRevisionAttachment) Validate() error {
 
 	if a.BizID <= 0 {
 		return errors.New("biz id should be set")
@@ -136,10 +144,10 @@ func (a HookReleaseAttachment) Validate() error {
 	return nil
 }
 
-// ValidateDelete validate the hook release info when delete it.
-func (r HookRelease) ValidateDelete() error {
+// ValidateDelete validate the hook revision info when delete it.
+func (r HookRevision) ValidateDelete() error {
 	if r.ID <= 0 {
-		return errors.New("hook release id should be set")
+		return errors.New("hook revision id should be set")
 	}
 
 	if r.Attachment.BizID <= 0 {
@@ -153,8 +161,8 @@ func (r HookRelease) ValidateDelete() error {
 	return nil
 }
 
-// ValidateDeleteByHookID validate the hook release info when delete it.
-func (r HookRelease) ValidateDeleteByHookID() error {
+// ValidateDeleteByHookID validate the hook revision info when delete it.
+func (r HookRevision) ValidateDeleteByHookID() error {
 
 	if r.Attachment.BizID <= 0 {
 		return errors.New("biz id should be set")
@@ -168,10 +176,10 @@ func (r HookRelease) ValidateDeleteByHookID() error {
 }
 
 // ValidatePublish validate the Publish
-func (r HookRelease) ValidatePublish() error {
+func (r HookRevision) ValidatePublish() error {
 
 	if r.ID <= 0 {
-		return errors.New("hook release id should be set")
+		return errors.New("hook revision id should be set")
 	}
 
 	if r.Attachment.BizID <= 0 {
@@ -186,10 +194,10 @@ func (r HookRelease) ValidatePublish() error {
 }
 
 // ValidateUpdate validate the update
-func (r HookRelease) ValidateUpdate() error {
+func (r HookRevision) ValidateUpdate() error {
 
 	if r.ID <= 0 {
-		return errors.New("hook release id should be set")
+		return errors.New("hook revision id should be set")
 	}
 
 	if r.Attachment.BizID <= 0 {
@@ -220,32 +228,32 @@ func (r HookRelease) ValidateUpdate() error {
 }
 
 const (
-	// NotDeployedHookReleased ....
-	NotDeployedHookReleased HookReleaseStatus = "not_deployed"
+	// HookRevisionStatusNotDeployed ....
+	HookRevisionStatusNotDeployed HookRevisionStatus = "not_deployed"
 
-	// DeployedHookReleased ...
-	DeployedHookReleased HookReleaseStatus = "deployed"
+	// HookRevisionStatusDeployed ...
+	HookRevisionStatusDeployed HookRevisionStatus = "deployed"
 
-	// ShutdownHookReleased ...
-	ShutdownHookReleased HookReleaseStatus = "shutdown"
+	// HookRevisionStatusShutdown ...
+	HookRevisionStatusShutdown HookRevisionStatus = "shutdown"
 )
 
-// HookReleaseStatus defines hook release status.
-type HookReleaseStatus string
+// HookRevisionStatus defines hook revision status.
+type HookRevisionStatus string
 
-// String returns hook release status string.
-func (s HookReleaseStatus) String() string {
+// String returns hook revision status string.
+func (s HookRevisionStatus) String() string {
 	return string(s)
 }
 
 // Validate strategy set type.
-func (s HookReleaseStatus) Validate() error {
+func (s HookRevisionStatus) Validate() error {
 	switch s {
-	case ShutdownHookReleased:
-	case NotDeployedHookReleased:
-	case DeployedHookReleased:
+	case HookRevisionStatusShutdown:
+	case HookRevisionStatusNotDeployed:
+	case HookRevisionStatusDeployed:
 	default:
-		return fmt.Errorf("unsupported hook release released status: %s", s)
+		return fmt.Errorf("unsupported hook revision status: %s", s)
 	}
 
 	return nil

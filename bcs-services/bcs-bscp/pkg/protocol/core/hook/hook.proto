@@ -17,12 +17,10 @@ message Hook {
 // HookSpec source resource reference: pkg/dal/table/hook.go
 message HookSpec {
     string name         = 1;
-    string release_name = 2;
-    string type         = 3;
-    string tag          = 4;
-    string memo         = 5;
-    string content      = 6;
-    uint32 publish_num  = 7;
+    string type         = 2;
+    string tag          = 3;
+    string memo         = 4;
+    string content      = 5;
 }
 
 // HookAttachment source resource reference: pkg/dal/table/hook.go

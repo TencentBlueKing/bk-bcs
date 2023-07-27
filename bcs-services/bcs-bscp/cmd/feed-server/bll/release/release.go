@@ -29,6 +29,7 @@ import (
 	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
+	pbhook "bscp.io/pkg/protocol/core/hook"
 )
 
 // New initialize the release service instance.
@@ -75,11 +76,21 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 		return nil, err
 	}
 
+	pre, post, err := rs.cache.ReleasedHook.Get(kt, opts.BizID, releaseID)
+
 	uriDec := rs.provider.URIDecorator(opts.BizID)
 	meta := &types.AppLatestReleaseMeta{
 		ReleaseId: releaseID,
 		Repository: &types.Repository{
 			Root: uriDec.Root(),
+		},
+		PreHook: &pbhook.HookSpec{
+			Type:    pre.Type,
+			Content: pre.Content,
+		},
+		PostHook: &pbhook.HookSpec{
+			Type:    post.Type,
+			Content: post.Content,
 		},
 	}
 	ciList := make([]*types.ReleasedCIMeta, len(rci))

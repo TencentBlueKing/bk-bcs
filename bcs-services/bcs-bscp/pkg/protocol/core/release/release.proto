@@ -22,7 +22,6 @@ message ReleaseSpec {
     string memo                 = 2;
     bool deprecated             = 3;
     uint32 publish_num          = 4;
-    Hook hook                   = 5;
 }
 
 // ReleaseStatus status that not in db
@@ -44,11 +43,4 @@ message ReleaseStatus {
 message ReleaseAttachment {
     uint32 biz_id = 1;
     uint32 app_id = 2;
-}
-
-message Hook {
-    uint32 pre_hook_id          = 1;
-    uint32 pre_hook_release_id  = 2;
-    uint32 post_hook_id         = 3;
-    uint32 post_hook_release_id = 4;
 }

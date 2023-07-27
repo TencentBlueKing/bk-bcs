@@ -21,7 +21,6 @@ var (
 	ArchivedApp        *archivedApp
 	Audit              *audit
 	Commit             *commit
-	ConfigHook         *configHook
 	ConfigItem         *configItem
 	Content            *content
 	Credential         *credential
@@ -30,11 +29,12 @@ var (
 	Group              *group
 	GroupAppBind       *groupAppBind
 	Hook               *hook
-	HookRelease        *hookRelease
+	HookRevision       *hookRevision
 	IDGenerator        *iDGenerator
 	Release            *release
 	ReleasedConfigItem *releasedConfigItem
 	ReleasedGroup      *releasedGroup
+	ReleasedHook       *releasedHook
 	ResourceLock       *resourceLock
 	Strategy           *strategy
 	Template           *template
@@ -49,7 +49,6 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	ArchivedApp = &Q.ArchivedApp
 	Audit = &Q.Audit
 	Commit = &Q.Commit
-	ConfigHook = &Q.ConfigHook
 	ConfigItem = &Q.ConfigItem
 	Content = &Q.Content
 	Credential = &Q.Credential
@@ -58,11 +57,12 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Group = &Q.Group
 	GroupAppBind = &Q.GroupAppBind
 	Hook = &Q.Hook
-	HookRelease = &Q.HookRelease
+	HookRevision = &Q.HookRevision
 	IDGenerator = &Q.IDGenerator
 	Release = &Q.Release
 	ReleasedConfigItem = &Q.ReleasedConfigItem
 	ReleasedGroup = &Q.ReleasedGroup
+	ReleasedHook = &Q.ReleasedHook
 	ResourceLock = &Q.ResourceLock
 	Strategy = &Q.Strategy
 	Template = &Q.Template
@@ -78,7 +78,6 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		ArchivedApp:        newArchivedApp(db, opts...),
 		Audit:              newAudit(db, opts...),
 		Commit:             newCommit(db, opts...),
-		ConfigHook:         newConfigHook(db, opts...),
 		ConfigItem:         newConfigItem(db, opts...),
 		Content:            newContent(db, opts...),
 		Credential:         newCredential(db, opts...),
@@ -87,11 +86,12 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Group:              newGroup(db, opts...),
 		GroupAppBind:       newGroupAppBind(db, opts...),
 		Hook:               newHook(db, opts...),
-		HookRelease:        newHookRelease(db, opts...),
+		HookRevision:       newHookRevision(db, opts...),
 		IDGenerator:        newIDGenerator(db, opts...),
 		Release:            newRelease(db, opts...),
 		ReleasedConfigItem: newReleasedConfigItem(db, opts...),
 		ReleasedGroup:      newReleasedGroup(db, opts...),
+		ReleasedHook:       newReleasedHook(db, opts...),
 		ResourceLock:       newResourceLock(db, opts...),
 		Strategy:           newStrategy(db, opts...),
 		Template:           newTemplate(db, opts...),
@@ -108,7 +108,6 @@ type Query struct {
 	ArchivedApp        archivedApp
 	Audit              audit
 	Commit             commit
-	ConfigHook         configHook
 	ConfigItem         configItem
 	Content            content
 	Credential         credential
@@ -117,11 +116,12 @@ type Query struct {
 	Group              group
 	GroupAppBind       groupAppBind
 	Hook               hook
-	HookRelease        hookRelease
+	HookRevision       hookRevision
 	IDGenerator        iDGenerator
 	Release            release
 	ReleasedConfigItem releasedConfigItem
 	ReleasedGroup      releasedGroup
+	ReleasedHook       releasedHook
 	ResourceLock       resourceLock
 	Strategy           strategy
 	Template           template
@@ -139,7 +139,6 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		ArchivedApp:        q.ArchivedApp.clone(db),
 		Audit:              q.Audit.clone(db),
 		Commit:             q.Commit.clone(db),
-		ConfigHook:         q.ConfigHook.clone(db),
 		ConfigItem:         q.ConfigItem.clone(db),
 		Content:            q.Content.clone(db),
 		Credential:         q.Credential.clone(db),
@@ -148,11 +147,12 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Group:              q.Group.clone(db),
 		GroupAppBind:       q.GroupAppBind.clone(db),
 		Hook:               q.Hook.clone(db),
-		HookRelease:        q.HookRelease.clone(db),
+		HookRevision:       q.HookRevision.clone(db),
 		IDGenerator:        q.IDGenerator.clone(db),
 		Release:            q.Release.clone(db),
 		ReleasedConfigItem: q.ReleasedConfigItem.clone(db),
 		ReleasedGroup:      q.ReleasedGroup.clone(db),
+		ReleasedHook:       q.ReleasedHook.clone(db),
 		ResourceLock:       q.ResourceLock.clone(db),
 		Strategy:           q.Strategy.clone(db),
 		Template:           q.Template.clone(db),
@@ -177,7 +177,6 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		ArchivedApp:        q.ArchivedApp.replaceDB(db),
 		Audit:              q.Audit.replaceDB(db),
 		Commit:             q.Commit.replaceDB(db),
-		ConfigHook:         q.ConfigHook.replaceDB(db),
 		ConfigItem:         q.ConfigItem.replaceDB(db),
 		Content:            q.Content.replaceDB(db),
 		Credential:         q.Credential.replaceDB(db),
@@ -186,11 +185,12 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Group:              q.Group.replaceDB(db),
 		GroupAppBind:       q.GroupAppBind.replaceDB(db),
 		Hook:               q.Hook.replaceDB(db),
-		HookRelease:        q.HookRelease.replaceDB(db),
+		HookRevision:       q.HookRevision.replaceDB(db),
 		IDGenerator:        q.IDGenerator.replaceDB(db),
 		Release:            q.Release.replaceDB(db),
 		ReleasedConfigItem: q.ReleasedConfigItem.replaceDB(db),
 		ReleasedGroup:      q.ReleasedGroup.replaceDB(db),
+		ReleasedHook:       q.ReleasedHook.replaceDB(db),
 		ResourceLock:       q.ResourceLock.replaceDB(db),
 		Strategy:           q.Strategy.replaceDB(db),
 		Template:           q.Template.replaceDB(db),
@@ -205,7 +205,6 @@ type queryCtx struct {
 	ArchivedApp        IArchivedAppDo
 	Audit              IAuditDo
 	Commit             ICommitDo
-	ConfigHook         IConfigHookDo
 	ConfigItem         IConfigItemDo
 	Content            IContentDo
 	Credential         ICredentialDo
@@ -214,11 +213,12 @@ type queryCtx struct {
 	Group              IGroupDo
 	GroupAppBind       IGroupAppBindDo
 	Hook               IHookDo
-	HookRelease        IHookReleaseDo
+	HookRevision       IHookRevisionDo
 	IDGenerator        IIDGeneratorDo
 	Release            IReleaseDo
 	ReleasedConfigItem IReleasedConfigItemDo
 	ReleasedGroup      IReleasedGroupDo
+	ReleasedHook       IReleasedHookDo
 	ResourceLock       IResourceLockDo
 	Strategy           IStrategyDo
 	Template           ITemplateDo
@@ -233,7 +233,6 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		ArchivedApp:        q.ArchivedApp.WithContext(ctx),
 		Audit:              q.Audit.WithContext(ctx),
 		Commit:             q.Commit.WithContext(ctx),
-		ConfigHook:         q.ConfigHook.WithContext(ctx),
 		ConfigItem:         q.ConfigItem.WithContext(ctx),
 		Content:            q.Content.WithContext(ctx),
 		Credential:         q.Credential.WithContext(ctx),
@@ -242,11 +241,12 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Group:              q.Group.WithContext(ctx),
 		GroupAppBind:       q.GroupAppBind.WithContext(ctx),
 		Hook:               q.Hook.WithContext(ctx),
-		HookRelease:        q.HookRelease.WithContext(ctx),
+		HookRevision:       q.HookRevision.WithContext(ctx),
 		IDGenerator:        q.IDGenerator.WithContext(ctx),
 		Release:            q.Release.WithContext(ctx),
 		ReleasedConfigItem: q.ReleasedConfigItem.WithContext(ctx),
 		ReleasedGroup:      q.ReleasedGroup.WithContext(ctx),
+		ReleasedHook:       q.ReleasedHook.WithContext(ctx),
 		ResourceLock:       q.ResourceLock.WithContext(ctx),
 		Strategy:           q.Strategy.WithContext(ctx),
 		Template:           q.Template.WithContext(ctx),

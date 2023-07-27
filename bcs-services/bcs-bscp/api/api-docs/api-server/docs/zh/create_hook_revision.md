@@ -4,6 +4,7 @@
 
 
 创建hook版本，新建的版本状态为“未上线”，hook下存在一个“未上线”版本时，不能创建新的版本
+版本名称为系统自动生成，不需要填写
 
 ### 输入参数
 
@@ -11,7 +12,6 @@
 | -------- | -------- | ---- | -------- |
 | biz_id   | uint32   | 是   | 业务ID   |
 | hook_id  | uint32   | 是   | 脚本ID   |
-| name     | string   | 是   | 版本号   |
 | memo     | string   | 是   | 版本日志 |
 | content  | string   | 是   | 脚本内容 |
 
@@ -19,7 +19,6 @@
 
 ```json
 {
-    "name": "myhook001",
     "content": "#!/bin/bash\n\nnow=$(date +'%Y-%m-%d %H:%M:%S')\necho \"hello, start at $now\"\n",
     "memo": "from datetime import datetime"
 }

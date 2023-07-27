@@ -32,6 +32,7 @@ import (
 	"bscp.io/pkg/logs"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbct "bscp.io/pkg/protocol/core/content"
+	pbhook "bscp.io/pkg/protocol/core/hook"
 	"bscp.io/pkg/runtime/shutdown"
 	sfs "bscp.io/pkg/sf-share"
 	"bscp.io/pkg/types"
@@ -274,12 +275,19 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 		sch.retry.Add(cursorID, one)
 		return
 	}
+	preHook, postHook, err := sch.lc.ReleasedHook.Get(kt, inst.BizID, releaseID)
+	if err != nil {
+		logs.Errorf("get %s [sn: %d] released[%d] hook failed, err: %v, rid: %s", inst.Format(), one.sn, releaseID, err,
+			kt.Rid)
+		sch.retry.Add(cursorID, one)
+		return
+	}
 
 	if len(ciList) == 0 {
 		return
 	}
 
-	event := sch.buildEvent(inst, ciList, releaseID, cursorID)
+	event := sch.buildEvent(inst, ciList, preHook, postHook, releaseID, cursorID)
 	if one.Receiver.Notify(event, inst.Uid, one.sn) {
 		logs.Warnf("notify app instance event failed, need retry, biz: %d, app: %d, uid: %s, sn: %d, rid: %s",
 			inst.BizID, inst.AppID, inst.Uid, one.sn, kt.Rid)
@@ -287,9 +295,8 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 	}
 }
 
-func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.ReleaseCICache, releaseID uint32,
-	cursorID uint32) *Event {
-
+func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.ReleaseCICache,
+	pre *types.ReleasedHookCache, post *types.ReleasedHookCache, releaseID uint32, cursorID uint32) *Event {
 	uriD := sch.provider.URIDecorator(inst.BizID)
 	ciMeta := make([]*sfs.ConfigItemMetaV1, len(ciList))
 	for idx, one := range ciList {
@@ -321,6 +328,19 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
 		}
 	}
+	var preHook, postHook *pbhook.HookSpec
+	if pre != nil {
+		preHook = &pbhook.HookSpec{
+			Type:    pre.Type,
+			Content: pre.Content,
+		}
+	}
+	if post != nil {
+		postHook = &pbhook.HookSpec{
+			Type:    post.Type,
+			Content: post.Content,
+		}
+	}
 
 	return &Event{
 		Change: &sfs.ReleaseEventMetaV1{
@@ -332,6 +352,8 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 				Root: uriD.Root(),
 				Url:  uriD.Url(),
 			},
+			PreHook:  preHook,
+			PostHook: postHook,
 		},
 		Instance: inst,
 		CursorID: cursorID,
