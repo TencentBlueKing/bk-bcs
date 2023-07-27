@@ -27,7 +27,6 @@ type Configurations struct {
 	Base        *BaseConf                `yaml:"base_conf"`
 	Auth        *AuthConf                `yaml:"auth_conf"`
 	Logging     *LogConf                 `yaml:"logging"`
-	BKAPIGW     *BKAPIGWConf             `yaml:"bkapigw_conf"`
 	BCS         *BCSConf                 `yaml:"bcs_conf"`
 	Credentials map[string][]*Credential `yaml:"-"`
 	Redis       *RedisConf               `yaml:"redis"`
@@ -47,9 +46,6 @@ func newConfigurations() (*Configurations, error) {
 	// Auth Config
 	c.Auth = &AuthConf{}
 	c.Auth.Init()
-
-	c.BKAPIGW = &BKAPIGWConf{}
-	c.BKAPIGW.Init()
 
 	// logging
 	c.Logging = &LogConf{}
@@ -208,10 +204,6 @@ func (c *Configurations) ReadFrom(content []byte) error {
 	}
 
 	if err := c.BCS.InitJWTPubKey(); err != nil {
-		return err
-	}
-
-	if err := c.BKAPIGW.InitJWTPubKey(); err != nil {
 		return err
 	}
 
