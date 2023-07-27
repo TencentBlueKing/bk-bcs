@@ -19,7 +19,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"sync"
 
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -32,10 +31,8 @@ import (
 	"bscp.io/pkg/criteria/uuid"
 	"bscp.io/pkg/logs"
 	"bscp.io/pkg/metrics"
-	pbas "bscp.io/pkg/protocol/auth-server"
+	pbvs "bscp.io/pkg/protocol/vault-server"
 	"bscp.io/pkg/runtime/brpc"
-	"bscp.io/pkg/runtime/ctl"
-	"bscp.io/pkg/runtime/ctl/cmd"
 	"bscp.io/pkg/runtime/shutdown"
 	"bscp.io/pkg/serviced"
 	"bscp.io/pkg/tools"
@@ -43,7 +40,7 @@ import (
 
 // Run start the config server
 func Run(opt *options.Option) error {
-	as := new(authService)
+	as := new(vaultService)
 	if err := as.prepare(opt); err != nil {
 		return err
 	}
@@ -65,19 +62,15 @@ func Run(opt *options.Option) error {
 	return nil
 }
 
-type authService struct {
+type vaultService struct {
 	serve   *grpc.Server
 	gwServe *http.Server
 	service *service.Service
 	sd      serviced.ServiceDiscover
-	// disableAuth defines whether iam authorization is disabled
-	disableAuth bool
-	// disableWriteOpt defines which biz's write operation needs to be disabled
-	disableWriteOpt *options.DisableWriteOption
 }
 
 // prepare do prepare jobs before run config server.
-func (as *authService) prepare(opt *options.Option) error {
+func (as *vaultService) prepare(opt *options.Option) error {
 	// load settings from config file.
 	if err := cc.LoadSettings(opt.Sys); err != nil {
 		return fmt.Errorf("load settings from config files failed, err: %v", err)
@@ -111,27 +104,11 @@ func (as *authService) prepare(opt *options.Option) error {
 	as.sd = sd
 	logs.Infof("create service discovery success.")
 
-	as.disableWriteOpt = &options.DisableWriteOption{
-		IsDisabled: false,
-		IsAll:      false,
-		BizIDMap:   sync.Map{},
-	}
-
-	// init bscp control tool
-	if err := ctl.LoadCtl(append(ctl.WithBasics(sd), cmd.WithWrites(as.disableWriteOpt)...)...); err != nil {
-		return fmt.Errorf("load control tool failed, err: %v", err)
-	}
-
-	as.disableAuth = opt.DisableAuth
-	if opt.DisableAuth {
-		logs.Infof("authorize function is disabled.")
-	}
-
 	return nil
 }
 
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
-func (as *authService) listenAndServe() error {
+func (as *vaultService) listenAndServe() error {
 	// generate standard grpc server grpcMetrics.
 	grpcMetrics := grpc_prometheus.NewServerMetrics()
 	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
@@ -165,11 +142,11 @@ func (as *authService) listenAndServe() error {
 	}
 
 	serve := grpc.NewServer(opts...)
-	svc, err := service.NewService(as.sd, cc.AuthServer().IAM, as.disableAuth, as.disableWriteOpt)
+	svc, err := service.NewService(as.sd)
 	if err != nil {
 		return fmt.Errorf("initialize service failed, err: %v", err)
 	}
-	pbas.RegisterAuthServer(serve, svc)
+	pbvs.RegisterVaultServer(serve, svc)
 
 	// initialize and register standard grpc server grpcMetrics.
 	grpcMetrics.InitializeMetrics(serve)
@@ -213,7 +190,7 @@ func (as *authService) listenAndServe() error {
 }
 
 // gwListenAndServe listen the http serve and set up the shutdown gracefully job.
-func (as *authService) gwListenAndServe() error {
+func (as *vaultService) gwListenAndServe() error {
 	network := cc.AuthServer().Network
 	addr := net.JoinHostPort(network.BindIP, strconv.Itoa(int(network.HttpPort)))
 
@@ -267,7 +244,7 @@ func (as *authService) gwListenAndServe() error {
 	return nil
 }
 
-func (as *authService) finalizer() {
+func (as *vaultService) finalizer() {
 	if err := as.sd.Deregister(); err != nil {
 		logs.Errorf("process service shutdown, but deregister failed, err: %v", err)
 		return
@@ -277,7 +254,7 @@ func (as *authService) finalizer() {
 }
 
 // register the grpc serve.
-func (as *authService) register() error {
+func (as *vaultService) register() error {
 	if err := as.sd.Register(); err != nil {
 		return fmt.Errorf("register auth server failed, err: %v", err)
 	}
