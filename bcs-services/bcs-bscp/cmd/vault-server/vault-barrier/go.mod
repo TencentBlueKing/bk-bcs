@@ -2,6 +2,15 @@ module bscp.io/cmd/vault-server/vault-barrier
 
 go 1.20
 
+// alias github.com/hashicorp/vault release commit
+replace (
+	github.com/hashicorp/vault/api => github.com/hashicorp/vault/api v1.9.3-0.20230721171514-bf23fe8636b0
+	github.com/hashicorp/vault/api/auth/approle => github.com/hashicorp/vault/api/auth/approle v0.4.2-0.20230721171514-bf23fe8636b0
+	github.com/hashicorp/vault/api/auth/kubernetes => github.com/hashicorp/vault/api/auth/kubernetes v0.4.2-0.20230721171514-bf23fe8636b0
+	github.com/hashicorp/vault/api/auth/userpass => github.com/hashicorp/vault/api/auth/userpass v0.4.2-0.20230721171514-bf23fe8636b0
+	github.com/hashicorp/vault/sdk => github.com/hashicorp/vault/sdk v0.9.2-0.20230721171514-bf23fe8636b0
+)
+
 require github.com/hashicorp/vault v1.14.1
 
 require (
