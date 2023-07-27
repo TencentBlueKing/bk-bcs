@@ -14,7 +14,10 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"testing"
+
+	"bscp.io/pkg/tools"
 
 	"github.com/hashicorp/vault/sdk/logical"
 )
@@ -50,13 +53,18 @@ func TestKvEncryptRsa(t *testing.T) {
 		Path:      keyPath,
 		Storage:   storage,
 		Data: map[string]interface{}{
-			"type": "RSA",
-			//"public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxnuITzBfSs+5yDEhOTt5\n9kZtDQB0DLsyaKRp3NqBp9f8Uu0uQVSuW5yQRSu7Ned6qiiMvpNFODSAKoBk6LgH\noZbU2xJQlRAAj75npjHJtda65ANURjjuX165zRRrirpZg5KFvJ5m5nx+XKxme514\nv8Rf2dhL0dIjzK45Ew4+DDQhbZ84KywAMkHhL+jN00zJsDQ2npkV7/n2bVx/1mLa\n/aL0fjpUqQ6WwaRshIamD+zYx11+G5NF+E1yInx5bQOOGAKbm+UILpltYLjZi7gR\nEwnJkL3K9S4WUmj0oD7Ivczk8qZwGuAQFovGFK5DG1OuQ0j/BXHCzK+7C3+l+pB7\nuwIDAQAB\n-----END PUBLIC KEY-----",
+			"algorithm": "rsa",
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
 		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+
+	// 解析出私钥
+	privateKeyPEM, ok := resp.Data["private_key"].(string)
+	if !ok {
+		t.Fatalf("failed to get key:%v resp:%#v", err, resp)
 	}
 
 	kvEncrypt := "apps/1/kvs/1/encrypt"
@@ -65,12 +73,32 @@ func TestKvEncryptRsa(t *testing.T) {
 		Path:      kvEncrypt,
 		Storage:   storage,
 		Data: map[string]interface{}{
-			"algorithm": "RSA",
+			"algorithm": "rsa",
 			"key_name":  "2",
 		},
 	}
 	resp, err = b.HandleRequest(context.Background(), req)
 	if err != nil || (resp != nil && resp.IsError()) {
+		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+
+	ciphertextBase64, ok := resp.Data["ciphertext"].(string)
+	if !ok {
+		t.Fatalf("failed to get ciphertext:%v resp:%#v", err, resp)
+	}
+
+	ciphertext, err := base64.StdEncoding.DecodeString(ciphertextBase64)
+
+	privateKey, err := tools.RSAPrivateKeyFromPEM([]byte(privateKeyPEM))
+	if err != nil {
+		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+
+	plaintext, err := tools.RSADecryptWithPrivateKey(privateKey, []byte(ciphertext))
+	if err != nil {
+		t.Fatalf("err:%v resp:%#v", err, resp)
+	}
+	if string(plaintext) != "MQ==" {
 		t.Fatalf("err:%v resp:%#v", err, resp)
 	}
 

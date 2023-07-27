@@ -17,7 +17,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"errors"
 	"fmt"
 )
 
@@ -32,101 +31,74 @@ func GenerateRSAKeyPair(keySize int) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	return privateKey, &privateKey.PublicKey, nil
 }
 
-func GenerateRSAKeyPairToString(keySize int) (string, string, error) {
-	privateKey, publicKey, err := GenerateRSAKeyPair(keySize)
-	if err != nil {
-		return "", "", err
-	}
-
-	privateKeyStr, err := PrivateKeyToString(privateKey)
-	if err != nil {
-		return "", "", err
-	}
-
-	publicKeyStr, err := PublicKeyToString(publicKey)
-	if err != nil {
-		return "", "", err
-	}
-
-	return privateKeyStr, publicKeyStr, nil
-
-}
-
-func PrivateKeyToString(privateKey *rsa.PrivateKey) (string, error) {
-	privateKey.Validate()
-	// 将私钥转换成PEM格式
-	privateKeyBytes := x509.MarshalPKCS1PrivateKey(privateKey)
-	privateKeyPEM := pem.EncodeToMemory(&pem.Block{
+func RSAPrivateKeyToPEM(privateKey *rsa.PrivateKey) []byte {
+	// 将私钥编码为PEM格式
+	privateKeyPEM := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
-		Bytes: privateKeyBytes,
-	})
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	}
 
-	// 返回PEM格式的私钥字符串
-	return string(privateKeyPEM), nil
+	return pem.EncodeToMemory(privateKeyPEM)
 }
 
-func PublicKeyToString(publicKey *rsa.PublicKey) (string, error) {
-	// 将公钥转换成PEM格式
-	publicKeyBytes, err := x509.MarshalPKIXPublicKey(publicKey)
-	if err != nil {
-		return "", err
-	}
-	publicKeyPEM := pem.EncodeToMemory(&pem.Block{
+func RSAPublicKeyToPEM(publicKey *rsa.PublicKey) []byte {
+	// 将公钥编码为PEM格式
+	publicKeyPEM := &pem.Block{
 		Type:  "RSA PUBLIC KEY",
-		Bytes: publicKeyBytes,
-	})
-
-	// 返回PEM格式的公钥字符串
-	return string(publicKeyPEM), nil
-}
-
-func VerifyRSAPublicKey(publicKey string) error {
-	//msg := []byte(plain)
-	// 解码公钥
-	pubBlock, _ := pem.Decode([]byte(publicKey))
-	// 读取公钥
-	pubKeyValue, err := x509.ParsePKIXPublicKey(pubBlock.Bytes)
-	if err != nil {
-		return err
+		Bytes: x509.MarshalPKCS1PublicKey(publicKey),
 	}
 
-	pub := pubKeyValue.(*rsa.PublicKey)
-	// 检查公钥是否有效
-	if pub.N == nil || pub.E == 0 {
-		return errors.New("invalid RSA public key")
-	}
-
-	return nil
+	return pem.EncodeToMemory(publicKeyPEM)
 }
 
-// EncryptRSAWithPublicKey encrypts data using an RSA public key.
-// Parameter pemPublicKey is the PEM formatted RSA public key string.
-// Parameter data is the data to be encrypted.
-// It returns the encrypted data or an error.
-func EncryptRSAWithPublicKey(pemPublicKey []byte, data []byte) ([]byte, error) {
-	// 将 PEM 格式的公钥解码
-	block, _ := pem.Decode(pemPublicKey)
+func RSAPrivateKeyFromPEM(pemData []byte) (*rsa.PrivateKey, error) {
+	// 解码PEM格式的数据
+	block, _ := pem.Decode(pemData)
 	if block == nil {
-		return nil, errors.New("failed to decode PEM block")
+		return nil, fmt.Errorf("failed to decode PEM block")
 	}
 
-	// 使用 ParsePKIXPublicKey 方法解析公钥
-	publicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	// 解析DER格式的私钥数据
+	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse public key: %w", err)
+		return nil, err
 	}
 
-	// 将解析后的公钥转换为 *rsa.PublicKey 类型
-	rsaPublicKey, ok := publicKey.(*rsa.PublicKey)
-	if !ok {
-		return nil, errors.New("failed to convert public key to RSA public key")
+	return privateKey, nil
+}
+
+func RSAPublicKeyFromPEM(pemData []byte) (*rsa.PublicKey, error) {
+	// 解码PEM格式的数据
+	block, _ := pem.Decode(pemData)
+	if block == nil {
+		return nil, fmt.Errorf("failed to decode PEM block")
 	}
 
+	// 解析DER格式的公钥数据
+	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return publicKey, nil
+}
+
+func RSAEncryptWithPublicKey(pubKey *rsa.PublicKey, plaintext []byte) ([]byte, error) {
 	// 使用公钥加密数据
-	ciphertext, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPublicKey, data)
+	ciphertext, err := rsa.EncryptPKCS1v15(rand.Reader, pubKey, plaintext)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encrypt data: %w", err)
+		return nil, err
 	}
 
 	return ciphertext, nil
+}
+
+func RSADecryptWithPrivateKey(privKey *rsa.PrivateKey, ciphertext []byte) ([]byte, error) {
+	// 使用私钥解密数据
+	plaintext, err := rsa.DecryptPKCS1v15(rand.Reader, privKey, ciphertext)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
 }

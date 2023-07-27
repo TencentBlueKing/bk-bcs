@@ -28,41 +28,73 @@ func GenerateSM2KeyPair(random io.Reader) (*sm2.PrivateKey, error) {
 	return privateKey, nil
 }
 
-func GenerateSM2KeyPairToString(random io.Reader) (string, string, error) {
-
-	privateKey, err := GenerateSM2KeyPair(random)
-	if err != nil {
-		return "", "", err
-	}
-
+// SM2PrivateKeyToPEM 将私钥编码为PEM格式
+func SM2PrivateKeyToPEM(privateKey *sm2.PrivateKey) ([]byte, error) {
 	privateKeyToPem, err := x509.WritePrivateKeyToPem(privateKey, nil)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
-	//4.进行SM2公钥断言
-	publicKey := privateKey.Public().(*sm2.PublicKey)
-	//5.将公钥通过x509序列化并进行pem编码
-
-	publicKeyToPem, err := x509.WritePublicKeyToPem(publicKey)
-	if err != nil {
-		return "", "", err
-	}
-
-	return string(privateKeyToPem), string(publicKeyToPem), nil
-
+	return privateKeyToPem, nil
 }
+
+// SM2PublicKeyToPEM 将公钥编码为PEM格式
+func SM2PublicKeyToPEM(publicKey *sm2.PublicKey) ([]byte, error) {
+	publicKeyPEM, err := x509.WritePublicKeyToPem(publicKey)
+	if err != nil {
+		return nil, err
+	}
+	return publicKeyPEM, nil
+}
+
+// SM2PrivateKeyFromPEM 解码PEM格式的数据
+func SM2PrivateKeyFromPEM(pemData []byte) (*sm2.PrivateKey, error) {
+
+	privateKeyFromPem, err := x509.ReadPrivateKeyFromPem(pemData, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return privateKeyFromPem, nil
+}
+
+// SM2PublicKeyFromPEM 解码PEM格式的数据
+func SM2PublicKeyFromPEM(pemData []byte) (*sm2.PublicKey, error) {
+	publicKeyFromPem, err := x509.ReadPublicKeyFromPem(pemData)
+	if err != nil {
+		return nil, err
+	}
+
+	return publicKeyFromPem, nil
+}
+
+// SM2EncryptWithPublicKey 使用公钥加密数据
+func SM2EncryptWithPublicKey(pubKey *sm2.PublicKey, plaintext []byte) ([]byte, error) {
+	cipherText, err := pubKey.EncryptAsn1(plaintext, rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+	return cipherText, nil
+}
+
+// SM2DecryptWithPrivateKey 使用私钥解密数据
+func SM2DecryptWithPrivateKey(privateKey *sm2.PrivateKey, ciphertext []byte) ([]byte, error) {
+	plaintext, err := privateKey.DecryptAsn1(ciphertext)
+	if err != nil {
+		return nil, err
+	}
+
+	return plaintext, nil
+}
+
+// 公钥转成pem
+
+// 私钥转成pem
+
+// pem转成公钥
+
+// pem转成私钥
 
 // 加密
-func EncryptSM2(plainText []byte, publicKey []byte) ([]byte, error) {
 
-	publicKeyFromPem, err := x509.ReadPublicKeyFromPem(publicKey)
-	if err != nil {
-		return nil, err
-	}
-	cipherByte, err := publicKeyFromPem.EncryptAsn1(plainText, rand.Reader)
-	if err != nil {
-		return nil, err
-	}
-	return cipherByte, nil
-}
+// 解密

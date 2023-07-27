@@ -75,13 +75,21 @@ func (b *backend) pathEncryptWrite(ctx context.Context, req *logical.Request, d 
 	var ciphertext string
 	switch algorithm {
 	case string(RSAEncryption):
-		ciphertextByte, e := tools.EncryptRSAWithPublicKey([]byte(key.Key), []byte(kv.Value))
+		publicKey, e := tools.RSAPublicKeyFromPEM([]byte(key.Key))
+		if e != nil {
+			return nil, e
+		}
+		ciphertextByte, e := tools.RSAEncryptWithPublicKey(publicKey, []byte(kv.Value))
 		if e != nil {
 			return nil, e
 		}
 		ciphertext = string(ciphertextByte)
 	case string(SM2Encryption):
-		ciphertextByte, e := tools.EncryptSM2([]byte(kv.Value), []byte(key.Key))
+		publicKey, e := tools.SM2PublicKeyFromPEM([]byte(kv.Value))
+		if e != nil {
+			return nil, e
+		}
+		ciphertextByte, e := tools.SM2EncryptWithPublicKey(publicKey, []byte(key.Key))
 		if e != nil {
 			return nil, e
 		}

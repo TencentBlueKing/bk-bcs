@@ -67,7 +67,7 @@ func Test_case1(t *testing.T) {
 		Path:      path,
 		Storage:   s,
 		Data: map[string]interface{}{
-			"type":       "RSA",
+			"algorithm":  "RSA",
 			"public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxnuITzBfSs+5yDEhOTt5\n9kZtDQB0DLsyaKRp3NqBp9f8Uu0uQVSuW5yQRSu7Ned6qiiMvpNFODSAKoBk6LgH\noZbU2xJQlRAAj75npjHJtda65ANURjjuX165zRRrirpZg5KFvJ5m5nx+XKxme514\nv8Rf2dhL0dIjzK45Ew4+DDQhbZ84KywAMkHhL+jN00zJsDQ2npkV7/n2bVx/1mLa\n/aL0fjpUqQ6WwaRshIamD+zYx11+G5NF+E1yInx5bQOOGAKbm+UILpltYLjZi7gR\nEwnJkL3K9S4WUmj0oD7Ivczk8qZwGuAQFovGFK5DG1OuQ0j/BXHCzK+7C3+l+pB7\nuwIDAQAB\n-----END PUBLIC KEY-----",
 		},
 	}

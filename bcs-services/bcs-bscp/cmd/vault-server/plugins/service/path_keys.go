@@ -31,111 +31,76 @@ func (b *backend) pathKeys() *framework.Path {
 			"/keys/" + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
 			"app_id": {
-				Type:        framework.TypeString,
-				Description: "....",
+				Type: framework.TypeString,
 			},
 			"name": {
-				Type:        framework.TypeString,
-				Description: "....",
+				Type: framework.TypeString,
 			},
-			"type": {
-				Type:        framework.TypeString,
-				Description: "....",
+			"algorithm": {
+				Type: framework.TypeString,
 			},
 			"public_key": {
-				Type:        framework.TypeString,
-				Description: "....",
+				Type: framework.TypeString,
 			},
 			"length": {
-				Type:        framework.TypeInt,
-				Description: "",
-				Default:     DefaultKeySize,
+				Type:    framework.TypeInt,
+				Default: DefaultKeySize,
 			},
 		},
 
 		Operations: map[logical.Operation]framework.OperationHandler{
 			logical.CreateOperation: &framework.PathOperation{
 				Callback: b.pathKeysCreate,
-				Summary:  "创建keys",
 			},
 			logical.UpdateOperation: &framework.PathOperation{
 				Callback: b.pathKeysCreate,
-				Summary:  "更新keys",
 			},
 			logical.ReadOperation: &framework.PathOperation{
 				Callback: b.pathKeysRead,
-				Summary:  "读取Kv",
 			},
 			logical.DeleteOperation: &framework.PathOperation{
 				Callback: b.pathKeysDelete,
-				Summary:  "",
 			},
-			logical.ListOperation: &framework.PathOperation{
-				Callback: nil,
-				Summary:  "",
-			},
-
-			//logical.ListOperation: &framework.PathOperation{
-			//	Callback: b.pathKvWrite,
-			//},
 		},
 	}
 }
 
+// DefaultKeySize 默认密码长度
 const DefaultKeySize = 2048
 
 // EncryptionAlgorithm 表示加密算法的枚举类型
 type EncryptionAlgorithm string
 
 const (
-	RSAEncryption EncryptionAlgorithm = "RSA"
-	AESEncryption EncryptionAlgorithm = "AES"
-	SM2Encryption EncryptionAlgorithm = "SM2"
-	SM4Encryption EncryptionAlgorithm = "SM4"
-	// 添加其他类型的加密算法...
+	RSAEncryption EncryptionAlgorithm = "rsa"
+	AESEncryption EncryptionAlgorithm = "aes"
+	SM2Encryption EncryptionAlgorithm = "sm2"
+	SM4Encryption EncryptionAlgorithm = "sm4"
 )
 
-// EncryptedKey 保存不同类型的加密密钥及其对应的加密算法
-type EncryptedKey struct {
-	AppID     string
-	Name      string
-	Algorithm EncryptionAlgorithm
-	Key       string
-}
-
-func (e *EncryptedKey) ValidateEncryptionAlgorithm() error {
-
-	switch e.Algorithm {
-	case RSAEncryption:
-	case AESEncryption:
-	case SM2Encryption:
-	case SM4Encryption:
-	default:
-		return errors.New("unsupported encryption algorithm")
-	}
-
-	return nil
-
-}
-
-func (e *EncryptedKey) VerifyPublicKey() error {
+// verifyPublicKey Check whether the public key is valid
+func (s *keyStorage) verifyPublicKey() error {
 
 	// Check the algorithm used by the public key
-	switch e.Algorithm {
+	switch s.Algorithm {
 	case RSAEncryption:
-		if err := tools.VerifyRSAPublicKey(e.Key); err != nil {
+		if _, err := tools.RSAPublicKeyFromPEM([]byte(s.Key)); err != nil {
 			return err
 		}
 	case SM2Encryption:
+		if _, err := tools.SM2PublicKeyFromPEM([]byte(s.Key)); err != nil {
+			return err
+		}
+
 	}
 
 	return nil
-
 }
 
+// GetKeyStorage Get key store
 func (b *backend) GetKeyStorage(ctx context.Context, s logical.Storage, appID, name, algorithm string) (*keyStorage, error) {
 
-	path := fmt.Sprintf("apps/%s/keys/%s", appID, name)
+	path := fmt.Sprintf("apps/%s/keys/%s/%s", appID, name, algorithm)
 
 	entry, err := s.Get(ctx, path)
 	if err != nil {
@@ -143,7 +108,7 @@ func (b *backend) GetKeyStorage(ctx context.Context, s logical.Storage, appID, n
 	}
 
 	if entry == nil {
-		return nil, nil
+		return nil, errors.New("")
 	}
 
 	k := new(keyStorage)
@@ -156,75 +121,99 @@ func (b *backend) GetKeyStorage(ctx context.Context, s logical.Storage, appID, n
 
 }
 
-func (e *EncryptedKey) ValidateCreate() error {
+// validate Check whether the algorithm field is in the enumeration range
+func (e EncryptionAlgorithm) validate() error {
+	switch e {
+	case RSAEncryption:
+	case AESEncryption:
+	case SM2Encryption:
+	case SM4Encryption:
+	default:
+		return errors.New("unsupported encryption algorithm")
+	}
 
-	if e.AppID == "" {
+	return nil
+}
+
+// validateCreate It is used to verify the key saving
+func (s *keyStorage) validateCreate() error {
+	if s.AppID == "" {
 		return errors.New("app_id cannot be empty")
 	}
 
-	if e.Name == "" {
+	if s.Name == "" {
 		return errors.New("name cannot be empty")
 	}
 
-	if err := e.ValidateEncryptionAlgorithm(); err != nil {
+	if err := s.Algorithm.validate(); err != nil {
 		return err
 	}
 
-	if e.Key != "" {
-		if err := e.VerifyPublicKey(); err != nil {
+	if s.Key != "" {
+		if err := s.verifyPublicKey(); err != nil {
 			return err
 		}
 	}
 
 	return nil
-
 }
 
+// pathKeysCreate
 func (b *backend) pathKeysCreate(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	name := d.Get("name").(string)
 	appID := d.Get("app_id").(string)
 	pubKey := d.Get("public_key").(string)
-	algorithm := d.Get("type").(string)
+	algorithm := d.Get("algorithm").(string)
 	length := d.Get("length").(int)
 
-	encryptedKey := &EncryptedKey{
+	s := &keyStorage{
 		AppID:     appID,
 		Name:      name,
 		Algorithm: EncryptionAlgorithm(algorithm),
 		Key:       pubKey,
 	}
 
-	if err := encryptedKey.ValidateCreate(); err != nil {
+	if err := s.validateCreate(); err != nil {
 		return nil, err
 	}
 
 	var privKey string
-	if encryptedKey.Key == "" {
-		switch encryptedKey.Algorithm {
+	if s.Key == "" {
+		switch s.Algorithm {
 		case RSAEncryption:
-			privKeyTmp, pubKeyTmp, err := tools.GenerateRSAKeyPairToString(length)
+			privateKey, publicKey, err := tools.GenerateRSAKeyPair(length)
 			if err != nil {
 				return nil, err
 			}
-			encryptedKey.Key = pubKeyTmp
-			privKey = privKeyTmp
+			// 转换为PEM
+			s.Key = string(tools.RSAPublicKeyToPEM(publicKey))
+			privKey = string(tools.RSAPrivateKeyToPEM(privateKey))
 		case SM2Encryption:
-			privKeyTmp, pubKeyTmp, err := tools.GenerateSM2KeyPairToString(b.GetRandomReader())
+			privateKey, err := tools.GenerateSM2KeyPair(b.GetRandomReader())
 			if err != nil {
 				return nil, err
 			}
-			encryptedKey.Key = pubKeyTmp
-			privKey = privKeyTmp
+			privateKeyPem, err := tools.SM2PrivateKeyToPEM(privateKey)
+			if err != nil {
+				return nil, err
+			}
+			publicKeyPem, err := tools.SM2PublicKeyToPEM(&privateKey.PublicKey)
+			if err != nil {
+				return nil, err
+			}
+
+			s.Key = string(publicKeyPem)
+			privKey = string(privateKeyPem)
 		}
 	}
 
-	encryptedKeyByte, err := json.Marshal(encryptedKey)
+	encryptedKeyByte, err := json.Marshal(s)
 	if err != nil {
 		return nil, err
 	}
 
-	path := fmt.Sprintf("apps/%s/keys/%s", appID, name)
+	path := fmt.Sprintf("apps/%s/keys/%s/%s", appID, name, algorithm)
 	entry := &logical.StorageEntry{
 		Key:   path,
 		Value: encryptedKeyByte,
@@ -247,31 +236,32 @@ func (b *backend) pathKeysCreate(ctx context.Context, req *logical.Request, d *f
 func (b *backend) pathKeysRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	name := d.Get("name").(string)
+	if name == "" {
+		return logical.ErrorResponse("missing name parameter"), nil
+	}
 	appID := d.Get("app_id").(string)
+	if appID == "" {
+		return logical.ErrorResponse("missing app_id parameter"), nil
+	}
+	algorithm := d.Get("algorithm").(string)
+	if err := EncryptionAlgorithm(algorithm).validate(); err != nil {
+		return nil, err
+	}
 
-	path := fmt.Sprintf("apps/%s/keys/%s", appID, name)
-
-	entry, err := req.Storage.Get(ctx, path)
+	s, err := b.GetKeyStorage(ctx, req.Storage, appID, name, algorithm)
 	if err != nil {
 		return nil, err
 	}
 
-	key := new(EncryptedKey)
-	err = entry.DecodeJSON(key)
-	if err != nil {
-		return nil, err
-	}
-
-	fetchedData := entry.Value
-	if fetchedData == nil {
-		resp := logical.ErrorResponse("No value at %v%v", req.MountPoint, path)
+	if s == nil {
+		resp := logical.ErrorResponse("No value at %v", req.MountPoint)
 		return resp, nil
 	}
 
 	// Generate the response
 	resp := &logical.Response{
 		Data: map[string]interface{}{
-			"data": key,
+			"pub_key": s.Key,
 		},
 	}
 
@@ -282,9 +272,19 @@ func (b *backend) pathKeysRead(ctx context.Context, req *logical.Request, d *fra
 func (b *backend) pathKeysDelete(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 
 	name := d.Get("name").(string)
+	if name == "" {
+		return logical.ErrorResponse("missing name parameter"), nil
+	}
 	appID := d.Get("app_id").(string)
+	if appID == "" {
+		return logical.ErrorResponse("missing app_id parameter"), nil
+	}
+	algorithm := d.Get("algorithm").(string)
+	if err := EncryptionAlgorithm(algorithm).validate(); err != nil {
+		return nil, err
+	}
 
-	path := fmt.Sprintf("apps/%s/keys/%s", appID, name)
+	path := fmt.Sprintf("apps/%s/keys/%s/%s", appID, name, algorithm)
 
 	if err := req.Storage.Delete(ctx, path); err != nil {
 		return nil, err
