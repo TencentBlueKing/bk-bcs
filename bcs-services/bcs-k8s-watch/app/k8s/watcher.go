@@ -341,7 +341,7 @@ func (w *Watcher) DeleteEvent(obj interface{}) {
 }
 
 // UpdateEvent is event handler for update resource event.
-func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) { //todo panic
+func (w *Watcher) UpdateEvent(oldObj, newObj interface{}) {
 	// convert to unstructured object
 	oldUnstructuredObj, oOk := oldObj.(*unstructured.Unstructured)
 	newUnstructuredObj, nOk := newObj.(*unstructured.Unstructured)
