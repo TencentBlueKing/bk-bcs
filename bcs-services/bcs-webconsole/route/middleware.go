@@ -147,7 +147,12 @@ func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 	}
 
 	// AppCode 认证
-	appCode := authCtx.BindBCS.BKAppCode
+	appCode := c.GetHeader("X-BKAPI-JWT-APPCODE")
+	if appCode != "" {
+		authCtx.BindBCS = &UserClaimsInfo{
+			BKAppCode: appCode,
+		}
+	}
 
 	if username != "" || appCode != "" {
 		return true
