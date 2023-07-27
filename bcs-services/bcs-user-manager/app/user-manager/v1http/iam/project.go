@@ -78,9 +78,8 @@ func (p ProjectProvider) FetchInstanceInfo(req resource.Request) resource.Respon
 		}
 	}
 
-	offset := req.Page.Offset / req.Page.Limit
 	params := map[string]string{"projectIDs": strings.Join(filter.IDs, ",")}
-	result, err := component.QueryProjects(context.Background(), req.Page.Limit, offset, params)
+	result, err := component.QueryProjects(context.Background(), len(filter.IDs), 0, params)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,

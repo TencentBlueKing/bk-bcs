@@ -1,0 +1,63 @@
+{
+  "system_id": "{{ .BK_IAM_SYSTEM_ID }}",
+  "enabled": true,
+  "operations": [
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "project",
+        "name": "项目",
+        "name_en": "bcs project",
+        "description": "容器服务项目",
+        "description_en": "bcs project",
+        "parents": [],
+        "provider_config": {
+          "path": "/bcsapi/v4/usermanager/v1/iam-provider/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cluster",
+        "name": "集群",
+        "name_en": "cluster",
+        "description": "集群",
+        "description_en": "cluster",
+        "provider_config": {
+          "path": "/bcsapi/v4/usermanager/v1/iam-provider/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "namespace",
+        "name": "命名空间",
+        "name_en": "namespace",
+        "description": "命名空间",
+        "description_en": "namespace",
+        "provider_config": {
+          "path": "/bcsapi/v4/usermanager/v1/iam-provider/resources/"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cloud_account",
+        "name": "云账号",
+        "name_en": "cloud_account",
+        "description": "云账号",
+        "description_en": "cloud_account",
+        "provider_config": {
+          "path": "/bcsapi/v4/usermanager/v1/iam-provider/resources/"
+        },
+        "version": 1
+      }
+    }
+  ]
+}

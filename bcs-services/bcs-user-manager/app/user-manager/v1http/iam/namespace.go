@@ -60,7 +60,16 @@ func (p NamespaceProvider) ListInstance(req resource.Request) resource.Response 
 	}
 	projectID := filter.Ancestors[0].ID
 	clusterID := filter.Ancestors[1].ID
-	result, err := component.GetClusterNamespaces(context.Background(), projectID, clusterID)
+	// get project code from project id
+	project, err := component.GetProject(context.Background(), projectID)
+	if err != nil {
+		return resource.Response{
+			Code:    SystemErrCode,
+			Message: err.Error(),
+		}
+	}
+
+	result, err := component.GetClusterNamespaces(context.Background(), project.ProjectCode, clusterID)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,
@@ -134,7 +143,16 @@ func (p NamespaceProvider) SearchInstance(req resource.Request) resource.Respons
 	}
 	projectID := filter.Ancestors[0].ID
 	clusterID := filter.Ancestors[1].ID
-	result, err := component.GetClusterNamespaces(context.Background(), projectID, clusterID)
+	// get project code from project id
+	project, err := component.GetProject(context.Background(), projectID)
+	if err != nil {
+		return resource.Response{
+			Code:    SystemErrCode,
+			Message: err.Error(),
+		}
+	}
+
+	result, err := component.GetClusterNamespaces(context.Background(), project.ProjectCode, clusterID)
 	if err != nil {
 		return resource.Response{
 			Code:    SystemErrCode,

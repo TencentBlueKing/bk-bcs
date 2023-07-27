@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 
@@ -38,6 +39,33 @@ type Project struct {
 	ProjectID   string `json:"projectID"`
 	Name        string `json:"name"`
 	ProjectCode string `json:"projectCode"`
+}
+
+// GetProject 通过 project_id/code 获取项目信息
+func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
+	cacheKey := fmt.Sprintf("bcs.GetProject:%s", projectIDOrCode)
+	if cacheResult, ok := cache.LocalCache.Get(cacheKey); ok {
+		return cacheResult.(*Project), nil
+	}
+
+	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", config.GetGlobalConfig().BcsAPI.Host, projectIDOrCode)
+	resp, err := GetClient().R().
+		SetContext(ctx).
+		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
+		Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	project := new(Project)
+	if err := UnmarshalBKResult(resp, project); err != nil {
+		return nil, err
+	}
+
+	cache.LocalCache.Set(cacheKey, project, time.Hour*1)
+
+	return project, nil
 }
 
 // QueryProjects query projects
