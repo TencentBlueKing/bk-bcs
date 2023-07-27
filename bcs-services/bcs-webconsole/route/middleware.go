@@ -14,7 +14,6 @@
 package route
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -60,7 +59,6 @@ type AuthContext struct {
 	ClusterId   string            `json:"cluster_id"`
 	BindEnv     *EnvToken         `json:"bind_env"`
 	BindBCS     *UserClaimsInfo   `json:"bind_bcs"`
-	BindAPIGW   *APIGWToken       `json:"bind_apigw"`
 	BindCluster *bcs.Cluster      `json:"bind_cluster"`
 	BindProject *bcs.Project      `json:"bind_project"`
 	BindSession *types.PodContext `json:"bind_session"`
@@ -71,11 +69,6 @@ func (c *AuthContext) BKAppCode() string {
 	// BCS网关
 	if c.BindBCS != nil && c.BindBCS.BKAppCode != "" {
 		return c.BindBCS.BKAppCode
-	}
-
-	// 蓝鲸网关
-	if c.BindAPIGW != nil && c.BindAPIGW.App.Verified {
-		return c.BindAPIGW.App.AppCode
 	}
 
 	return ""
@@ -120,7 +113,6 @@ func APIAuthRequired() gin.HandlerFunc {
 
 		switch {
 		case initContextWithPortalSession(c, authCtx):
-		case initContextWithAPIGW(c, authCtx):
 		case initContextWithBCSJwt(c, authCtx):
 		case initContextWithDevEnv(c, authCtx):
 		default:
@@ -155,12 +147,7 @@ func initContextWithDevEnv(c *gin.Context, authCtx *AuthContext) bool {
 	}
 
 	// AppCode 认证
-	appCode := c.GetHeader("X-BKAPI-JWT-APPCODE")
-	if appCode != "" {
-		authCtx.BindAPIGW = &APIGWToken{
-			App: &APIGWApp{AppCode: appCode, Verified: true},
-		}
-	}
+	appCode := authCtx.BindBCS.BKAppCode
 
 	if username != "" || appCode != "" {
 		return true
@@ -194,55 +181,6 @@ func BCSJWTDecode(jwtToken string) (*UserClaimsInfo, error) {
 	return claims, nil
 }
 
-// APIGWApp xxx
-type APIGWApp struct {
-	AppCode  string `json:"app_code"`
-	Verified bool   `json:"verified"`
-}
-
-// APIGWUser xxx
-type APIGWUser struct {
-	Username string `json:"username"`
-	Verified bool   `json:"verified"`
-}
-
-// APIGWToken 返回信息
-type APIGWToken struct {
-	App  *APIGWApp  `json:"app"`
-	User *APIGWUser `json:"user"`
-	*jwt.StandardClaims
-}
-
-// String xxx
-func (a *APIGWToken) String() string {
-	return fmt.Sprintf("<%s, %v>", a.App.AppCode, a.App.Verified)
-}
-
-// BKAPIGWJWTDecode 蓝鲸网关 JWT 解码
-func BKAPIGWJWTDecode(jwtToken string) (*APIGWToken, error) {
-	if config.G.BKAPIGW.JWTPubKeyObj == nil {
-		return nil, errors.New("jwt public key not set")
-	}
-
-	token, err := jwt.ParseWithClaims(jwtToken, &APIGWToken{}, func(token *jwt.Token) (interface{}, error) {
-		return config.G.BKAPIGW.JWTPubKeyObj, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if !token.Valid {
-		return nil, errors.New("jwt token not valid")
-	}
-
-	claims, ok := token.Claims.(*APIGWToken)
-	if !ok {
-		return nil, errors.New("jwt token not BKAPIGW issuer")
-
-	}
-	return claims, nil
-}
-
 // UserClaimsInfo custom jwt claims
 type UserClaimsInfo struct {
 	SubType      string `json:"sub_type"`
@@ -270,23 +208,6 @@ func initContextWithBCSJwt(c *gin.Context, authCtx *AuthContext) bool {
 
 	authCtx.BindBCS = claims
 	authCtx.Username = claims.UserName
-	return true
-}
-
-func initContextWithAPIGW(c *gin.Context, authCtx *AuthContext) bool {
-	// get jwt info from headers
-	tokenString := c.GetHeader("X-Bkapi-Jwt")
-	if tokenString == "" {
-		return false
-	}
-
-	token, err := BKAPIGWJWTDecode(tokenString)
-	if err != nil {
-		return false
-	}
-
-	authCtx.BindAPIGW = token
-
 	return true
 }
 
