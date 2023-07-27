@@ -14,12 +14,7 @@ export interface IConfigVersion {
   spec: {
     name: string;
     memo: string;
-    hook: {
-      post_hook_id: number;
-      post_hook_release_id: number;
-      pre_hook_id: number;
-      pre_hook_release_id: number;
-    }
+    hook: IVersionHook;
   };
   status: {
     publish_status: string;
@@ -77,17 +72,9 @@ export interface IFileConfigContentSummary {
 export interface IConfigDiffDetail {
   id: number;
   name: string;
-  file_type: string;
-  current: {
-    signature: string;
-    byte_size: string;
-    update_at: string;
-  }
-  base: {
-    signature: string;
-    byte_size: string;
-    update_at: string;
-  }
+  type: string;
+  current: string;
+  base: string;
 }
 
 // 配置项列表查询接口请求参数
@@ -120,4 +107,12 @@ export interface IReleasedGroup {
     labels_and: IGroupRuleItem[]
   };
   uid: string;
+}
+
+// 版本下的脚本配置
+export interface IVersionHook {
+  post_hook_id: number;
+  post_hook_release_id: number;
+  pre_hook_id: number;
+  pre_hook_release_id: number;
 }

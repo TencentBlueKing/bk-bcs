@@ -263,7 +263,7 @@
               @page-limit-change="handlePageLimitChange">
               <template #operations="{ data }">
                 <div v-if="data.spec" class="action-btns">
-                  <bk-button v-if="data.spec.state === 'not_deployed'" text theme="primary" @click="handlePublishClick(data)">上线</bk-button>
+                  <bk-button v-if="['not_deployed', 'shutdown'].includes(data.spec.state)" text theme="primary" @click="handlePublishClick(data)">上线</bk-button>
                   <bk-button v-if="data.spec.state === 'not_deployed'" text theme="primary" @click="handleEditVersionClick">编辑</bk-button>
                   <bk-button text theme="primary" @click="handleVersionDiff(data)">版本对比</bk-button>
                   <bk-button
