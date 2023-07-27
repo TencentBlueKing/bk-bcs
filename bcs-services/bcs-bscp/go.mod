@@ -28,7 +28,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/vault v1.14.1
 	github.com/hashicorp/vault/api v1.9.2
-	github.com/hashicorp/vault/sdk v0.9.2-0.20230530190758-08ee474850e0
+	github.com/hashicorp/vault/sdk v0.9.2
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/json-iterator/go v1.1.12
 	github.com/oklog/run v1.1.0

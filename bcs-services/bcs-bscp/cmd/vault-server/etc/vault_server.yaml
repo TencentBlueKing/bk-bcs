@@ -3,9 +3,9 @@ network:
   # bindIP is ip where server working on.
   bindIP:
   # rpcPort is port where server listen to rpc port.
-  rpcPort: 9513
+  rpcPort: 9515
   # httpPort is port where server listen to http port.
-  httpPort: 9613
+  httpPort: 9615
   # defines tls related options.
   tls:
     # server should be accessed without verifying the TLS certificate.
@@ -18,11 +18,6 @@ network:
     caFile:
     # the password to decrypt the certificate.
     password:
-
-# 登入鉴权
-loginAuth:
-  host: ""
-  innerHost: ""
 
 # defines service related settings.
 service:
@@ -49,28 +44,6 @@ service:
       caFile:
       # the password to decrypt the certificate.
       password:
-
-# defines all the iam related settings.
-iam:
-  # endpoints is a seed list of host:port addresses of iam nodes.
-  endpoints:
-    - 127.0.0.1:6666
-  # appCode is bscp app code.
-  appCode: bk-bscp
-  # appSecret is bscp app secret.
-  appSecret: xxxx
-  # defines tls related options.
-  tls:
-    # server should be accessed without verifying the TLS certificate.
-    insecureSkipVerify:
-    # server requires TLS client certificate authentication.
-    certFile:
-    # server requires TLS client certificate authentication.
-    keyFile:
-    # trusted root certificates for server.
-    caFile:
-    # the password to decrypt the certificate.
-    password:
 
 # defines log's related configuration
 log:
