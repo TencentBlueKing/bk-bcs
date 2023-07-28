@@ -50,6 +50,7 @@ type ListHooksWithReferDetail struct {
 	Hook                *table.Hook `json:"hook" gorm:"embedded"`
 	ReferCount          int64       `json:"refer_count" gorm:"column:refer_count"`
 	BoundEditingRelease bool        `json:"refer_editing_release" gorm:"column:refer_editing_release"`
+	PublishedRevisionID uint32      `json:"published_revision_id" gorm:"column:published_revision_id"`
 }
 
 // ListHookReferencesOption defines options to list hook references.

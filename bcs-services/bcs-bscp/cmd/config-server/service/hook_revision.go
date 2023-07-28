@@ -255,11 +255,13 @@ func (s *Service) ListHookRevisionReferences(ctx context.Context,
 	details := []*pbcs.ListHookRevisionReferencesResp_Detail{}
 	for _, detail := range rp.Details {
 		details = append(details, &pbcs.ListHookRevisionReferencesResp_Detail{
-			AppId:       detail.AppId,
-			AppName:     detail.AppName,
-			ReleaseId:   detail.ReleaseId,
-			ReleaseName: detail.ReleaseName,
-			Type:        detail.Type,
+			RevisionId:   detail.RevisionId,
+			RevisionName: detail.RevisionName,
+			AppId:        detail.AppId,
+			AppName:      detail.AppName,
+			ReleaseId:    detail.ReleaseId,
+			ReleaseName:  detail.ReleaseName,
+			Type:         detail.Type,
 		})
 	}
 

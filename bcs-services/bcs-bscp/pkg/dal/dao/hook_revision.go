@@ -274,7 +274,8 @@ func (dao *hookRevisionDao) ListHookRevisionReferences(kit *kit.Kit, opt *types.
 	var err error
 
 	count, err = rh.WithContext(kit.Ctx).
-		Select(rh.HookType.As("hook_type"), a.ID.As("app_id"), a.Name.As("app_name"),
+		Select(rh.HookRevisionID.As("revision_id"), rh.HookRevisionName.As("revision_name"),
+			rh.HookType.As("hook_type"), a.ID.As("app_id"), a.Name.As("app_name"),
 			r.ID.As("release_id"), r.Name.As("release_name")).
 		LeftJoin(a, rh.AppID.EqCol(a.ID)).
 		LeftJoin(r, rh.ReleaseID.EqCol(r.ID)).
