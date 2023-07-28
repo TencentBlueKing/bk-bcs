@@ -30,11 +30,12 @@ import (
 // @Summary PodMonitor列表数据
 // @Tags    Metrics
 // @Success 200 {string} string
-// @Router  /pod_monitors/namespaces/:namespace [get]
+// @Router  /namespaces/:namespace/pod_monitors [get]
 func ListPodMonitors(c *rest.Context) (interface{}, error) {
+	podMonitor := make([]*v1.PodMonitor, 0)
 	// 共享集群不展示列表
 	if c.SharedCluster {
-		return nil, nil
+		return podMonitor, nil
 	}
 	limit := c.Query("limit")
 	offset := c.Query("offset")
@@ -61,7 +62,6 @@ func ListPodMonitors(c *rest.Context) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	podMonitor := make([]*v1.PodMonitor, 0)
 	for _, v := range data.Items {
 		podMonitor = append(podMonitor, v)
 	}
@@ -72,7 +72,7 @@ func ListPodMonitors(c *rest.Context) (interface{}, error) {
 // @Summary PodMonitor列表数据
 // @Tags    Metrics
 // @Success 200 {string} string
-// @Router  /pod_monitors/create/namespaces/:namespace/podmonitors/:name [post]
+// @Router  /namespaces/:namespace/pod_monitors [post]
 func CreatePodMonitor(c *rest.Context) (interface{}, error) {
 	podMonitorReq := &CreatePodMonitorReq{}
 	if err := c.ShouldBindJSON(podMonitorReq); err != nil {
@@ -136,7 +136,7 @@ func CreatePodMonitor(c *rest.Context) (interface{}, error) {
 // @Summary 删除PodMonitor
 // @Tags    Metrics
 // @Success 200 {string} string
-// @Router  /pod_monitors/namespaces/:namespace/podmonitors/:name [delete]
+// @Router  /namespaces/:namespace/pod_monitors/:name [delete]
 func DeletePodMonitor(c *rest.Context) (interface{}, error) {
 	name := c.Param("name")
 	flag := validateName(name)
@@ -159,7 +159,7 @@ func DeletePodMonitor(c *rest.Context) (interface{}, error) {
 // @Summary 批量删除PodMonitor
 // @Tags    Metrics
 // @Success 200 {string} string
-// @Router  /pod_monitors/batchdelete [delete]
+// @Router  /pod_monitors/batchdelete [post]
 func BatchDeletePodMonitor(c *rest.Context) (interface{}, error) {
 	// 共享集群禁止批量删除
 	if c.SharedCluster {
@@ -187,7 +187,7 @@ func BatchDeletePodMonitor(c *rest.Context) (interface{}, error) {
 // @Summary 删除PodMonitor
 // @Tags    Metrics
 // @Success 200 {string} string
-// @Router  /pod_monitors/namespaces/:namespace/podmonitors/:name [delete]
+// @Router  /namespaces/:namespace/pod_monitors/:name [get]
 func GetPodMonitor(c *rest.Context) (interface{}, error) {
 	name := c.Param("name")
 	flag := validateName(name)
@@ -210,7 +210,7 @@ func GetPodMonitor(c *rest.Context) (interface{}, error) {
 // @Summary PodMonitor列表数据
 // @Tags    Metrics
 // @Success 200 {string} string
-// @Router  /pod_monitors/update/namespaces/:namespace/podmonitors/:name [put]
+// @Router  /namespaces/:namespace/pod_monitors/:name [put]
 func UpdatePodMonitor(c *rest.Context) (interface{}, error) {
 	podMonitorReq := &UpdatePodMonitorReq{}
 	if err := c.ShouldBindJSON(podMonitorReq); err != nil {
