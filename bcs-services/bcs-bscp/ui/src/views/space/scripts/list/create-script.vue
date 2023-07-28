@@ -20,7 +20,6 @@
   const formData = ref<IScriptEditingForm>({
     name: '',
     tag: '',
-    release_name: '',
     memo: '',
     type: EScriptType.Shell,
     content: '',
@@ -86,9 +85,6 @@
           <bk-form-item class="fixed-width-form"  property="memo" label="脚本描述">
             <bk-input v-model="formData.memo" type="textarea" :rows="3" :maxlength="200" />
           </bk-form-item>
-          <bk-form-item class="fixed-width-form"  property="release_name" label="版本号" required>
-            <bk-input v-model="formData.release_name" />
-          </bk-form-item>
           <bk-form-item label="脚本内容"  property="content" required>
             <div class="script-content-wrapper">
               <ScriptEditor v-model="formData.content" :language="formData.type">
@@ -105,7 +101,7 @@
                 </template>
               </ScriptEditor>
             </div>
-          </bk-form-item>
+          </bk-form-item> 
         </bk-form>
       </div>
     </template>

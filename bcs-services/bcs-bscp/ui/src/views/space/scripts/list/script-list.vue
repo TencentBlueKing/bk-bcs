@@ -77,20 +77,26 @@
     refreshList()
   }
 
+  const handleOpenCitedSlider = (id: number) => {
+    currentId.value = id
+    showCiteSlider.value = true
+  }
+
   const handleEditClick = (script: IScriptItem) => {
-    router.push({ name: 'script-version-manage', params: { spaceId: spaceId.value, scriptId: script.id } })
+    router.push({ name: 'script-version-manage', params: { spaceId: spaceId.value, scriptId: script.hook.id } })
     versionListPageShouldOpenEdit.value = true
   }
 
   // 删除分组
   const handleDeleteScript = (script: IScriptItem) => {
     InfoBox({
-      title: `确认是否删除脚本【${script.spec.name}?】`,
-      infoType: "danger",
+      title: `确认是否删除脚本【${script.hook.spec.name}?】`,
+      subTitle: `${script.confirm_delete ? '当前脚本有被服务未命名版本引用，删除后，未命名版本里的引用将会被删除，是否确认删除？' : ''}`,
+      infoType: "warning",
       headerAlign: "center" as const,
       footerAlign: "center" as const,
       onConfirm: async () => {
-        await deleteScript(spaceId.value, script.id)
+        await deleteScript(spaceId.value, script.hook.id)
         if (scriptsData.value.length === 1 && pagination.value.current > 1) {
           pagination.value.current = pagination.value.current - 1
         }
@@ -159,32 +165,30 @@
         </bk-input>
       </div>
       <bk-table :border="['outer']" :data="scriptsData">
-        <bk-table-column label="脚本名称" prop="spec.name"></bk-table-column>
-        <bk-table-column label="脚本语言" prop="spec.type" width="120"></bk-table-column>
+        <bk-table-column label="脚本名称" prop="hook.spec.name"></bk-table-column>
+        <bk-table-column label="脚本语言" prop="hook.spec.type" width="120"></bk-table-column>
         <bk-table-column label="分类标签">
           <template #default="{ row }">
-            <span v-if="row.spec">{{ row.spec.tag || '--' }}</span>
+            <span v-if="row.hook">{{ row.hook.spec.tag || '--' }}</span>
           </template>
         </bk-table-column>
         <bk-table-column label="被引用" width="100">
           <template #default="{ row }">
-            <template v-if="row.spec">
-              <bk-button v-if="row.spec.publish_num > 0" text theme="primary" @click="showCiteSlider = true">{{ row.spec.publish_num }}</bk-button>
+              <bk-button v-if="row.bound_num > 0" text theme="primary" @click="handleOpenCitedSlider(row.hook.id)">{{ row.bound_num }}</bk-button>
               <span v-else>0</span>
-            </template>
           </template>
         </bk-table-column>
-        <bk-table-column label="更新人" prop="revision.reviser"></bk-table-column>
+        <bk-table-column label="更新人" prop="hook.revision.reviser"></bk-table-column>
         <bk-table-column label="更新时间" width="220">
           <template #default="{ row }">
-            <span v-if="row.revision">{{ datetimeFormat(row.revision.update_at) }}</span>
+            <span v-if="row.hook">{{ datetimeFormat(row.hook.revision.update_at) }}</span>
           </template>
         </bk-table-column>
         <bk-table-column label="操作">
           <template #default="{ row }" width="180">
             <div class="action-btns">
               <bk-button text theme="primary" @click="handleEditClick(row)">编辑</bk-button>
-              <bk-button text theme="primary" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.id } })">版本管理</bk-button>
+              <bk-button text theme="primary" @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">版本管理</bk-button>
               <bk-button text theme="primary" @click="handleDeleteScript(row)">删除</bk-button>
             </div>
           </template>

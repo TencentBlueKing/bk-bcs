@@ -1,25 +1,25 @@
 <script setup lang="ts">
   import { RightShape } from 'bkui-vue/lib/icon';
-  import { IScriptVersion } from '../../../../../types/script';
+  import { IScriptVersionListItem } from '../../../../../types/script';
   import { IPagination } from '../../../../../types/index';
 
   const props = defineProps<{
-    list: IScriptVersion[];
+    list: IScriptVersionListItem[];
     pagination: IPagination;
     versionId: number;
   }>()
 
   const emits = defineEmits(['pageChange', 'select'])
 
-  const getRowCls = (data: IScriptVersion) => {
-    if (data.id === props.versionId) {
+  const getRowCls = (data: IScriptVersionListItem) => {
+    if (data.hook_revision.id === props.versionId) {
       return 'selected'
     }
     return ''
   }
 
-  const handleSelectVersion = (event: Event|undefined, data: IScriptVersion) => {
-    emits('select', data)
+  const handleSelectVersion = (event: Event|undefined, data: IScriptVersionListItem) => {
+    emits('select', data.hook_revision)
   }
 
 </script>
@@ -31,9 +31,9 @@
     @row-click="handleSelectVersion">
     <bk-table-column label="版本号" show-overflow-tooltip>
       <template #default="{ row }">
-        <div v-if="row.spec" class="version-name-wrapper">
-          <div class="name">{{ row.spec.name }}</div>
-          <RightShape v-if="props.versionId === row.id" class="arrow-icon" />
+        <div v-if="row.hook_revision" class="version-name-wrapper">
+          <div class="name">{{ row.hook_revision.spec.name }}</div>
+          <RightShape v-if="props.versionId === row.hook_revision.id" class="arrow-icon" />
         </div>
       </template>
     </bk-table-column>
