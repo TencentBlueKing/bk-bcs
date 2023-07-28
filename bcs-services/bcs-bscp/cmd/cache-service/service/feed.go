@@ -81,12 +81,11 @@ func (s *Service) GetReleasedHook(ctx context.Context, req *pbcs.GetReleasedHook
 		return nil, errf.New(errf.InvalidParameter, "invalid biz id or release id")
 	}
 
-	// kt := kit.FromGrpcContext(ctx)
-	// hooks, err := s.op.GetReleasedHook(kt, req.BizId, req.ReleaseId)
-	// if err != nil {
-	// 	return nil, err1
-	// }
-	hooks := ""
+	kt := kit.FromGrpcContext(ctx)
+	hooks, err := s.op.GetReleasedHook(kt, req.BizId, req.ReleaseId)
+	if err != nil {
+		return nil, err
+	}
 
 	return &pbcs.JsonRawResp{
 		JsonRaw: hooks,

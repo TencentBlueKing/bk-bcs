@@ -29,6 +29,8 @@ type ReleasedHook interface {
 	UpsertWithTx(kit *kit.Kit, tx *gen.QueryTx, rh *table.ReleasedHook) error
 	// Get gets the released hook.
 	Get(kit *kit.Kit, bizID, appID, releaseID uint32, tp table.HookType) (*table.ReleasedHook, error)
+	// GetByReleaseID gets the pre hook and post hook by release id.
+	GetByReleaseID(kit *kit.Kit, bizID, releaseID uint32) (*table.ReleasedHook, *table.ReleasedHook, error)
 	// CreateWithTx creates a new released hook with transaction.
 	CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, releasedHook *table.ReleasedHook) (uint32, error)
 	// ListAll list all released hooks in biz
@@ -79,6 +81,41 @@ func (dao *releasedHookDao) Get(kit *kit.Kit, bizID, appID, releaseID uint32, tp
 	}
 	rh.Content = string(content)
 	return rh, nil
+}
+
+// GetByReleaseID gets the pre hook and post hook by release id.
+func (dao *releasedHookDao) GetByReleaseID(kit *kit.Kit, bizID, releaseID uint32) (
+	*table.ReleasedHook, *table.ReleasedHook, error) {
+	if bizID == 0 {
+		return nil, nil, errf.New(errf.InvalidParameter, "bizID is 0")
+	}
+	m := dao.genQ.ReleasedHook
+	pre, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.ReleaseID.Eq(releaseID),
+		m.HookType.Eq(table.PreHook.String())).Take()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil, err
+	}
+	if pre != nil {
+		content, e := base64.StdEncoding.DecodeString(pre.Content)
+		if e != nil {
+			return nil, nil, e
+		}
+		pre.Content = string(content)
+	}
+	post, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.ReleaseID.Eq(releaseID),
+		m.HookType.Eq(table.PostHook.String())).Take()
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil, err
+	}
+	if post != nil {
+		content, e := base64.StdEncoding.DecodeString(post.Content)
+		if e != nil {
+			return nil, nil, e
+		}
+		post.Content = string(content)
+	}
+
+	return pre, post, nil
 }
 
 // UpsertWithTx upserts the released hook with transaction.

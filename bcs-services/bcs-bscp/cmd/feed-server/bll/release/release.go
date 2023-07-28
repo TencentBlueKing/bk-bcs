@@ -84,14 +84,18 @@ func (rs *ReleasedService) ListAppLatestReleaseMeta(kt *kit.Kit, opts *types.App
 		Repository: &types.Repository{
 			Root: uriDec.Root(),
 		},
-		PreHook: &pbhook.HookSpec{
-			Type:    pre.Type,
+	}
+	if pre != nil {
+		meta.PreHook = &pbhook.HookSpec{
+			Type:    pre.Type.String(),
 			Content: pre.Content,
-		},
-		PostHook: &pbhook.HookSpec{
-			Type:    post.Type,
+		}
+	}
+	if post != nil {
+		meta.PostHook = &pbhook.HookSpec{
+			Type:    post.Type.String(),
 			Content: post.Content,
-		},
+		}
 	}
 	ciList := make([]*types.ReleasedCIMeta, len(rci))
 	for idx, one := range rci {

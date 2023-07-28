@@ -331,13 +331,13 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 	var preHook, postHook *pbhook.HookSpec
 	if pre != nil {
 		preHook = &pbhook.HookSpec{
-			Type:    pre.Type,
+			Type:    pre.Type.String(),
 			Content: pre.Content,
 		}
 	}
 	if post != nil {
 		postHook = &pbhook.HookSpec{
-			Type:    post.Type,
+			Type:    post.Type.String(),
 			Content: post.Content,
 		}
 	}

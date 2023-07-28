@@ -27,8 +27,9 @@ var Key = &keyGenerator{
 	nullKeyTTLRange:             [2]int{60, 120},
 	releasedGroupTTLRange:       [2]int{30 * 60, 60 * 60},
 	credentialMatchedCITTLRange: [2]int{30 * 60, 60 * 60},
-	credentialTTLRange:          [2]int{1, 5},
+	credentialTTLRange:          [2]int{5, 60},
 	releasedCITTLRange:          [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
+	releasedHookTTLRange:        [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	appMetaTTLRange:             [2]int{6 * oneDaySeconds, 7 * oneDaySeconds},
 	appHasRITTLRange:            [2]int{5 * 60, 10 * 60},
 }
@@ -39,6 +40,7 @@ const (
 	cacheHead string = "bscp"
 
 	releasedConfigItem  namespace = "released-ci"
+	releasedHook        namespace = "released-hook"
 	releasedGroup       namespace = "released-group"
 	credentialMatchedCI namespace = "credential-matched-ci"
 	credential          namespace = "credential"
@@ -52,6 +54,7 @@ type keyGenerator struct {
 	credentialMatchedCITTLRange [2]int
 	credentialTTLRange          [2]int
 	releasedCITTLRange          [2]int
+	releasedHookTTLRange        [2]int
 	appMetaTTLRange             [2]int
 	appHasRITTLRange            [2]int
 }
@@ -138,6 +141,27 @@ func (k keyGenerator) ReleasedCITtlSec(withRange bool) int {
 	}
 
 	return k.releasedCITTLRange[1]
+}
+
+// ReleasedHook generate a release's hook cache key to save pre and post hook undert his release
+func (k keyGenerator) ReleasedHook(bizID uint32, releaseID uint32) string {
+	return element{
+		biz: bizID,
+		ns:  releasedHook,
+		key: strconv.FormatUint(uint64(releaseID), 10),
+	}.String()
+}
+
+// ReleasedHookTtlSec generate the current released hook's TTL seconds
+func (k keyGenerator) ReleasedHookTtlSec(withRange bool) int {
+
+	if withRange {
+		rand.Seed(time.Now().UnixNano())
+		seconds := rand.Intn(k.releasedHookTTLRange[1]-k.releasedHookTTLRange[0]) + k.releasedHookTTLRange[0]
+		return seconds
+	}
+
+	return k.releasedHookTTLRange[1]
 }
 
 // AppMeta generate the app id cache key.
