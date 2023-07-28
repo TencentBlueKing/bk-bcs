@@ -167,3 +167,22 @@ func DataService() DataServiceSetting {
 
 	return *s
 }
+
+// DataService return data service Setting.
+func VaultServer() VaultServerSetting {
+	rt.lock.Lock()
+	defer rt.lock.Unlock()
+
+	if !rt.Ready() {
+		logs.ErrorDepthf(1, "runtime not ready, return empty data service setting")
+		return VaultServerSetting{}
+	}
+
+	s, ok := rt.settings.(*VaultServerSetting)
+	if !ok {
+		logs.ErrorDepthf(1, "current %s service can not get data service setting", ServiceName())
+		return VaultServerSetting{}
+	}
+
+	return *s
+}
