@@ -5,8 +5,8 @@
   import { IScriptItem } from '../../../../../../types/script'
   import { useGlobalStore } from '../../../../../store/global'
   import { useConfigStore } from '../../../../../store/config'
-  import { getScriptList, getScriptVersionList, getScriptVersionDetail } from '../../../../../api/script'
-  import { getConfigInitScript, updateConfigInitScript } from '../../../../../api/config'
+  import { getScriptList, getScriptVersionDetail } from '../../../../../api/script'
+  import { getConfigScript, getDefaultConfigScriptData, updateConfigInitScript } from '../../../../../api/config'
   import ScriptEditor from '../../../scripts/components/script-editor.vue'
 
   const { spaceId } = storeToRefs(useGlobalStore())
@@ -17,7 +17,7 @@
   }>()
 
   const scriptsLoading = ref(false)
-  const scriptsData = ref<{ id: number; name: string; type: string; }[]>([])
+  const scriptsData = ref<{ id: number; versionId: number; name: string; type: string; }[]>([])
   const previewConfig = ref({
     open: false,
     type: '',
@@ -26,15 +26,19 @@
   })
   const contentLoading = ref(false)
   const scriptCiteData = ref({
-    post_hook_id: 0,
-    post_hook_release_id: 0,
-    pre_hook_id: 0,
-    pre_hook_release_id: 0
+    pre_hook: getDefaultConfigScriptData(),
+    post_hook: getDefaultConfigScriptData()
   })
   const scriptCiteDataLoading = ref(false)
-  const formData = ref({
-    pre: 0,
-    post: 0
+  const formData = ref<{ pre: { id: number; versionId: number }; post: { id: number; versionId: number } }>({
+    pre: {
+      id: 0,
+      versionId: 0
+    },
+    post: {
+      id: 0,
+      versionId: 0
+    }
   })
   const pending = ref(false)
 
@@ -45,9 +49,9 @@
 
   // 配置数据是否修改
   const dataChanged = computed(() => {
-    const { pre_hook_id, post_hook_id } = scriptCiteData.value
+    const { pre_hook, post_hook } = scriptCiteData.value
     const { pre, post } = formData.value
-    return pre_hook_id !== pre || post_hook_id !== post
+    return pre_hook.hook_id !== pre.id || post_hook.hook_id !== post.id
   })
 
   watch(() => versionData.value.id, () => {
@@ -67,49 +71,46 @@
       all: true
     }
     const res = await getScriptList(spaceId.value, params)
-    const list = res.details.map((item: IScriptItem) => {
-      return { id: item.id, name: item.spec.name, type: item.spec.type }
+    const list = (<IScriptItem[]>res.details).filter(item => item.published_revision_id).map(item => {
+      return { id: item.hook.id, versionId: item.published_revision_id, name: item.hook.spec.name, type: item.hook.spec.type }
     })
-    scriptsData.value = [{ id: 0, name: '<不使用脚本>' }, ...list]
+    scriptsData.value = [{ id: 0, versionId: 0, name: '<不使用脚本>', type: '' }, ...list]
     scriptsLoading.value = false
   }
 
   // 获取初始化脚本配置
   const getScriptSetting = async () => {
-    if (versionData.value.id) {
-      scriptCiteData.value = { ...versionData.value.spec.hook }
-    } else {
-      scriptCiteDataLoading.value = true
-      const res = await getConfigInitScript(spaceId.value, props.appId)
-      scriptCiteData.value = res.data.config_hook.spec
-      scriptCiteDataLoading.value = false
-    }
+    scriptCiteDataLoading.value = true
+    scriptCiteData.value = await getConfigScript(spaceId.value, props.appId, versionData.value.id)
+    scriptCiteDataLoading.value = false
     formData.value = {
-      pre: scriptCiteData.value.pre_hook_id,
-      post: scriptCiteData.value.post_hook_id
+      pre: {
+        id: scriptCiteData.value.pre_hook.hook_id,
+        versionId: scriptCiteData.value.pre_hook.hook_revision_id
+      },
+      post: {
+        id: scriptCiteData.value.post_hook.hook_id,
+        versionId: scriptCiteData.value.post_hook.hook_revision_id
+      }
     }
   }
 
   const getPreviewContent = async (scriptId: number, versionId: number) => {
     contentLoading.value = true
-    if (viewMode.value) { // 查看模式，直接通过脚本版本id查询参数版本详情
-      const res = await getScriptVersionDetail(spaceId.value, scriptId, versionId)
-      previewConfig.value.content = res.spec.content
-    } else { // 编辑模式，通过已上线状态去筛选脚本版本列表数据
-      const params = {
-        start: 0,
-        all: true,
-        state: 'deployed'
-      }
-      const res = await getScriptVersionList(spaceId.value, scriptId, params)
-      if (res.details[0]) {
-        previewConfig.value.content = res.details[0].spec.content
-      }
-    }
+    const res = await getScriptVersionDetail(spaceId.value, scriptId, versionId)
+    previewConfig.value.content = res.spec.content
     contentLoading.value = false
   }
 
-  const handleSelectScript = (type: string) => {
+  const handleSelectScript = (id: number, type: string) => {
+    const script = scriptsData.value.find(item => item.id === id)
+    if (script) {
+      if (type === 'pre') {
+        formData.value.pre.versionId = script.versionId
+      } else {
+        formData.value.post.versionId = script.versionId
+      }
+    }
     if (previewConfig.value.open) {
       handleOpenPreview(type)
     }
@@ -117,8 +118,8 @@
 
   // 点击预览
   const handleOpenPreview = (type: string) => {
-    const id = type === 'pre' ? formData.value.pre : formData.value.post
-    const versionId = type === 'pre' ? scriptCiteData.value.pre_hook_release_id : scriptCiteData.value.post_hook_release_id
+    const id = type === 'pre' ? formData.value.pre.id : formData.value.post.id
+    const versionId = type === 'pre' ? formData.value.pre.versionId : formData.value.post.versionId
     const script = scriptsData.value.find(item => item.id === id)
     if (script) {
       previewConfig.value = {
@@ -137,8 +138,8 @@
       pending.value = true
       const { pre, post } = formData.value
       const params = {
-        pre_hook_id: pre,
-        post_hook_id: post
+        pre_hook_id: pre.id,
+        post_hook_id: post.id
       }
       await updateConfigInitScript(spaceId.value, props.appId, params)
       BkMessage({
@@ -160,18 +161,18 @@
         <bk-form-item label="前置脚本">
           <div class="select-wrapper">
             <bk-select
-              v-model="formData.pre"
+              v-model="formData.pre.id"
               :clearable="false"
               :disabled="viewMode"
               :loading="scriptsLoading"
-              @change="handleSelectScript('pre')">
+              @change="handleSelectScript($event, 'pre')">
               <bk-option v-for="script in scriptsData" :key="script.id" :value="script.id" :label="script.name"></bk-option>
             </bk-select>
             <bk-button
               class="preview-button"
               text
               theme="primary"
-              :disabled="formData.pre === 0"
+              :disabled="typeof formData.pre.id !== 'number' || formData.pre.id === 0"
               @click="handleOpenPreview('pre')">
               预览
             </bk-button>
@@ -180,18 +181,18 @@
         <bk-form-item label="后置脚本">
           <div class="select-wrapper">
             <bk-select
-              v-model="formData.post"
+              v-model="formData.post.id"
               :clearable="false"
               :disabled="viewMode"
               :loading="scriptsLoading"
-              @change="handleSelectScript('post')">
+              @change="handleSelectScript($event, 'post')">
               <bk-option v-for="script in scriptsData" :key="script.id" :value="script.id" :label="script.name"></bk-option>
             </bk-select>
             <bk-button
               class="preview-button"
               text
               theme="primary"
-              :disabled="formData.post === 0"
+              :disabled="typeof formData.post.id !== 'number' || formData.post.id === 0"
               @click="handleOpenPreview('post')">
               预览
             </bk-button>

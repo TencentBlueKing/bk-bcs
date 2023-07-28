@@ -1,18 +1,19 @@
 <script lang="ts" setup>
-  import { ref, onMounted, computed, watch } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import { useRoute } from 'vue-router'
-  import { IVersionHook } from '../../../../../../../../../types/config'
-  import { getScriptVersionDetail } from '../../../../../../../../api/script'
+  import { storeToRefs } from 'pinia'
+  import { useServiceStore } from '../../../../../../../../store/service'
+  import { getConfigScript } from '../../../../../../../../api/config'
   import { getDiffType } from '../../../../../../../../utils/index'
   import MenuList from './menu-list.vue'
 
   const route = useRoute()
-  const bkBizId = String(route.params.spaceId)
+  const bkBizId = ref(String(route.params.spaceId))
+  const { appData } = storeToRefs(useServiceStore())
 
   const props = defineProps<{
+    currentVersionId: number;
     baseVersionId: number;
-    currentHook: IVersionHook;
-    baseHook: IVersionHook;
     value: string|number|undefined;
   }>()
 
@@ -48,10 +49,10 @@
   ])
   const selected = ref()
 
-  watch(() => props.baseHook, async(val) => {
+  watch(() => props.baseVersionId, async(val) => {
     await updateDiff(val, 'base')
-    if (typeof selected === 'string') {
-      selectScript(selected)
+    if (typeof selected.value === 'string') {
+      selectScript(selected.value)
     }
   })
 
@@ -62,30 +63,22 @@
   })
 
   onMounted(() => {
-    updateDiff(props.currentHook, 'current')
+    updateDiff(props.currentVersionId, 'current')
   })
-
-  // 获取脚本内容
-  const getScriptDetail = (id: number, versionId: number) => {
-    if (id) {
-      return getScriptVersionDetail(bkBizId, id, versionId).then(res => {
-        const { content, type } = res.spec
-        return { content, language: type }
-      })
-    }
-    return { language: '', content: '' }
-  }
   
 
   // 计算前置脚本或后置脚本差异
-  const updateDiff = async(hook: IVersionHook, type: 'current'|'base') => {
-    const { pre_hook_id, pre_hook_release_id, post_hook_id, post_hook_release_id } = hook
-    const [preHook, postHook] = await Promise.all([
-      getScriptDetail(pre_hook_id, pre_hook_release_id),
-      getScriptDetail(post_hook_id, post_hook_release_id)
-    ])
-    scriptDetailList.value[0][type] = preHook
-    scriptDetailList.value[1][type] = postHook
+  const updateDiff = async(id: number, type: 'current'|'base') => {
+    const scriptSetting = await getConfigScript(bkBizId.value, <number>appData.value.id, id)
+    const { pre_hook, post_hook } = scriptSetting
+    scriptDetailList.value[0][type] = {
+      language: pre_hook.type,
+      content: pre_hook.content
+    }
+    scriptDetailList.value[1][type] = {
+      language: post_hook.type,
+      content: post_hook.content
+    }
     // 选择基准版本后才计算变更状态
     if (props.baseVersionId) {
       scriptDetailList.value[0].type = getDiffType(scriptDetailList.value[0].base.content, scriptDetailList.value[0].current.content)

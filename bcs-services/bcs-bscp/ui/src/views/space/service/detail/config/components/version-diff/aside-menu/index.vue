@@ -1,6 +1,5 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
-  import { IVersionHook } from '../../../../../../../../../types/config'
   import { IDiffDetail } from '../../../../../../../../../types/service';
   import Configs from './configs.vue'
   import Scripts from './scripts.vue'
@@ -8,8 +7,6 @@
   const props = defineProps<{
     baseVersionId: number;
     currentVersionId: number;
-    baseHook: IVersionHook;
-    currentHook: IVersionHook;
     currentConfigId?: number;
   }>()
 
@@ -32,8 +29,7 @@
       @selected="handleSelect" />
     <Scripts
       :base-version-id="props.baseVersionId"
-      :base-hook="props.baseHook"
-      :current-hook="props.currentHook"
+      :current-version-id="props.currentVersionId"
       :value="selectedMenu"
       @selected="handleSelect" />
   </div>

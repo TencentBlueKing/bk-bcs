@@ -14,7 +14,6 @@ export interface IConfigVersion {
   spec: {
     name: string;
     memo: string;
-    hook: IVersionHook;
   };
   status: {
     publish_status: string;
@@ -107,12 +106,4 @@ export interface IReleasedGroup {
     labels_and: IGroupRuleItem[]
   };
   uid: string;
-}
-
-// 版本下的脚本配置
-export interface IVersionHook {
-  post_hook_id: number;
-  post_hook_release_id: number;
-  pre_hook_id: number;
-  pre_hook_release_id: number;
 }

@@ -39,19 +39,6 @@
     return versionListLoading.value
   })
 
-  const baseHook = computed(() => {
-    const versionDetail = versionList.value.find(item => item.id === selectedVersion.value)
-    if (versionDetail) {
-      return versionDetail.spec.hook
-    }
-    return {
-      post_hook_id: 0,
-      post_hook_release_id: 0,
-      pre_hook_id: 0,
-      pre_hook_release_id: 0
-    }
-  })
-
   watch(() => props.show, async(val) => {
     if (val) {
       getVersionList()
@@ -102,8 +89,6 @@
           <AsideMenu
             :base-version-id="selectedVersion"
             :current-version-id="currentVersion.id"
-            :base-hook="baseHook"
-            :current-hook="props.currentVersion.spec.hook"
             :current-config-id="props.currentConfigId"
             @selected="handleSelect" />
           <div :class="['diff-content-area', { light: selectedDiff.contentType === 'file' }]">
