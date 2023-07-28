@@ -54,7 +54,7 @@ const (
 	// the maximum size of one CI'S json raw size is about 1.1 KB.
 	// one app's maximum number of CI is 50.
 	// so the released CI cache should cover the most scenario of the user cases.
-	maxRCISizeKB = 30 * 0.5 * 1024
+	maxRCISizeKB = 30 * 0.5 * 1024 // 15KB
 )
 
 // ReleasedCI is the instance of the released ci cache.

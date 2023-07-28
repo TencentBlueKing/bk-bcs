@@ -20,6 +20,7 @@ import (
 	"bscp.io/pkg/criteria/validator"
 	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
+	pbhook "bscp.io/pkg/protocol/core/hook"
 )
 
 // AppInstanceMeta defines an app instance's metadata information.
@@ -89,6 +90,8 @@ type AppLatestReleaseMeta struct {
 	ReleaseId   uint32            `json:"release_id,omitempty"`
 	Repository  *Repository       `json:"repository,omitempty"`
 	ConfigItems []*ReleasedCIMeta `json:"config_items,omitempty"`
+	PreHook     *pbhook.HookSpec  `json:"pre_hook,omitempty"`
+	PostHook    *pbhook.HookSpec  `json:"post_hook,omitempty"`
 }
 
 // Repository data.

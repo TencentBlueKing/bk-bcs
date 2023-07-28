@@ -272,6 +272,8 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 			Root: metas.Repository.Root,
 		},
 		FileMetas: fileMetas,
+		PreHook:   metas.PreHook,
+		PostHook:  metas.PostHook,
 	}
 
 	return resp, nil

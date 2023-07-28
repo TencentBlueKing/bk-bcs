@@ -71,6 +71,16 @@ func initMetric() *metric {
 	}, []string{"rsc", "biz"})
 	metrics.Register().MustRegister(m.releasedCIByteSize)
 
+	m.releasedHookByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace:   metrics.Namespace,
+		Subsystem:   metrics.CSCacheSubSys,
+		Name:        "released_hook_size_bytes",
+		Help:        "the total hook size of an biz's hooks in bytes",
+		ConstLabels: labels,
+		Buckets:     []float64{500, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 7000, 10000},
+	}, []string{"rsc", "biz"})
+	metrics.Register().MustRegister(m.releasedHookByteSize)
+
 	m.credentialByteSize = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace:   metrics.Namespace,
 		Subsystem:   metrics.CSCacheSubSys,
@@ -100,6 +110,9 @@ type metric struct {
 	// record the total size of an app's all the configure-items of one release with bytes.
 	releasedCIByteSize *prometheus.HistogramVec
 
+	// record the total size of an release's pre hook and post hook of one release with bytes.
+	releasedHookByteSize *prometheus.HistogramVec
+
 	// record the total size of an biz's credentials with bytes.
 	credentialByteSize *prometheus.HistogramVec
 }
@@ -109,6 +122,7 @@ const (
 	amRes            = "app-meta"
 	instRes          = "instance"
 	releasedCIRes    = "release-ci"
+	releasedHookRes  = "release-hook"
 	strategyRes      = "strategy"
 	releasedGroupRes = "released-group"
 )

@@ -26,6 +26,7 @@ import (
 	pbcommit "bscp.io/pkg/protocol/core/commit"
 	pbci "bscp.io/pkg/protocol/core/config-item"
 	pbcontent "bscp.io/pkg/protocol/core/content"
+	pbhook "bscp.io/pkg/protocol/core/hook"
 	pbfs "bscp.io/pkg/protocol/feed-server"
 	"bscp.io/pkg/runtime/jsoni"
 )
@@ -186,6 +187,8 @@ type ReleaseEventMetaV1 struct {
 	ReleaseID  uint32              `json:"releaseID"`
 	CIMetas    []*ConfigItemMetaV1 `json:"ciMetas"`
 	Repository *RepositoryV1       `json:"repository"`
+	PreHook    *pbhook.HookSpec    `json:"preHook"`
+	PostHook   *pbhook.HookSpec    `json:"postHook"`
 }
 
 // InstanceSpec defines the specifics for an app instance to watch the event.

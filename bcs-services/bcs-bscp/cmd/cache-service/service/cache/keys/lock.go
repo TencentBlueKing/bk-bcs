@@ -34,6 +34,11 @@ func (rk resKind) ReleasedCI(releaseID uint32) string {
 	return fmt.Sprintf("rci-%d", releaseID)
 }
 
+// ReleasedHook return the released hook's resource kind
+func (rk resKind) ReleasedHook(releaseID uint32) string {
+	return fmt.Sprintf("rhook-%d", releaseID)
+}
+
 // CheckAppHasRI return the check app has released instance resource kind.
 func (rk resKind) CheckAppHasRI(appID uint32) string {
 	return fmt.Sprintf("app-cri-%d", appID)

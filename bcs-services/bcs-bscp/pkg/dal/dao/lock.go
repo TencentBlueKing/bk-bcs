@@ -15,9 +15,9 @@ package dao
 import (
 	"errors"
 	"fmt"
-	
+
 	"gorm.io/gorm"
-	
+
 	"bscp.io/pkg/criteria/errf"
 	"bscp.io/pkg/dal/gen"
 	"bscp.io/pkg/dal/table"
