@@ -17,7 +17,6 @@ export interface IScriptListQuery {
 export interface IScriptEditingForm {
   name: string;
   tag: string;
-  release_name: string;
   memo: string;
   type: EScriptType;
   content: string;
@@ -25,23 +24,28 @@ export interface IScriptEditingForm {
 
 // 脚本
 export interface IScriptItem {
-  id: number;
-  spec: {
-      name: string;
-      type: string;
-      tag: string;
-      publish_num: number;
-      momo: string;
-  };
-  attachment: {
-      biz_id: number;
+  bound_num: number;
+  confirm_delete: boolean;
+  hook: {
+    id: number;
+    spec: {
+        name: string;
+        type: string;
+        tag: string;
+        publish_num: number;
+        momo: string;
+    };
+    attachment: {
+        biz_id: number;
+    },
+    revision: {
+        creator: string;
+        reviser: string;
+        create_at: string;
+        update_at: string;
+    }
   },
-  revision: {
-      creator: string;
-      reviser: string;
-      create_at: string;
-      update_at: string;
-  }
+  published_revision_id: number;
 }
 
 // 脚本标签
@@ -72,6 +76,13 @@ export interface IScriptVersion {
   }
 }
 
+// 脚本版本列表项
+export interface IScriptVersionListItem {
+  bound_num: number;
+  confirm_delete: boolean;
+  hook_revision: IScriptVersion
+}
+
 // 脚本版本新建、编辑表单
 export interface IScriptVersionForm {
   id: number;
@@ -96,12 +107,4 @@ export interface IScriptCitedItem {
   config_release_name: string;
   config_release_id: number;
   pub_state: string;
-}
-
-// 服务配置项初始化脚本配置
-export interface IConfigInitScript {
-  pre_hook_id: number|string;
-  pre_hook_release_id: number|string;
-  post_hook_id: number|string;
-  post_hook_release_id: number|string;
 }
