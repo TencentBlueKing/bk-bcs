@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
@@ -250,4 +251,38 @@ func AuthClusterResourceCreatorPerm(ctx context.Context, clusterID, clusterName,
 
 	blog.Infof("AuthClusterResourceCreatorPerm[%s] resource[%s:%s] successful",
 		taskID, clusterID, clusterName, user)
+}
+
+// GetKubeletParas get kubelet paras from nodeTemplate
+func GetKubeletParas(template *proto.NodeTemplate) map[string]string {
+	if template == nil || template.ExtraArgs == nil || template.ExtraArgs[common.Kubelet] == "" {
+		return common.DefaultNodeConfig
+	}
+
+	kubeletValues := strings.Split(template.ExtraArgs[common.Kubelet], ";")
+	if len(kubeletValues) == 0 {
+		return common.DefaultNodeConfig
+	}
+
+	var (
+		exist = false
+	)
+	for i := range kubeletValues {
+		kvs := strings.Split(kubeletValues[i], "=")
+		if len(kvs) != 2 {
+			continue
+		}
+		if kvs[0] == common.RootDir {
+			exist = true
+			break
+		}
+	}
+	if exist {
+		return template.ExtraArgs
+	}
+
+	kubeletValues = append(kubeletValues, fmt.Sprintf("%s=%s", common.RootDir, common.RootDirValue))
+	return map[string]string{
+		common.Kubelet: strings.Join(kubeletValues, ";"),
+	}
 }

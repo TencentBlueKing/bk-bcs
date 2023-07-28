@@ -17,11 +17,11 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"net/http"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 
 	"github.com/parnurzeal/gorequest"
@@ -70,49 +70,102 @@ type ClientAuth struct {
 	debug  bool
 }
 
-// GetAccessToken get application accessToken
+// GetAccessToken get application access token
 func (auth *ClientAuth) GetAccessToken(app utils.BkAppUser) (string, error) {
+	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
+		return auth.GetAccessTokenBySsm(app)
+	}
+
+	return auth.GetAccessTokenByGateWay(app)
+}
+
+// GetAccessTokenBySsm by ssm for Communication/EnterpriseEdition
+func (auth *ClientAuth) GetAccessTokenBySsm(app utils.BkAppUser) (string, error) {
 	if auth == nil {
 		return "", errServerNotInit
 	}
 
-	const (
-		apiName = "GetAccessToken"
+	var (
+		_    = "GetAccessTokenBySsm"
+		path = "/api/v1/auth/access-tokens"
 	)
-
-	path := func() string {
-		if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
-			return "/api/v1/auth/access-tokens"
-		}
-
-		return "/auth_api/token/"
-	}()
 
 	var (
 		url = auth.server + path
-		req = &AccessRequest{
+		req = &AccessSsmRequest{
 			AppCode:    app.BkAppCode,
 			AppSecret:  app.BkAppSecret,
 			IDProvider: "client",
 			GrantType:  "client_credentials",
 			Env:        "prod",
 		}
-		resp = &AccessTokenResp{}
+		resp = &AccessTokenSsmResp{}
 	)
 
-	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Post(url).
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("X-BK-APP-CODE", app.BkAppCode).
+		Set("X-BK-APP-SECRET", app.BkAppSecret).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
-		Send(req).EndStruct(resp)
+		Send(req).
+		EndStruct(resp)
 
 	if len(errs) > 0 {
-		blog.Errorf("call api GetAccessToken failed: %v", errs[0])
+		blog.Errorf("call api GetAccessTokenBySsm failed: %v", errs[0])
+		return "", errs[0]
+	}
+
+	if result.StatusCode != http.StatusOK || resp.Code != 0 {
+		errMsg := fmt.Errorf("call GetAccessTokenBySsm API error: code[%v], body[%v], err[%s]",
+			result.StatusCode, string(body), resp.Message)
+		return "", errMsg
+	}
+
+	return resp.Data.AccessToken, nil
+}
+
+// GetAccessTokenByGateWay get application accessToken for interEdition
+func (auth *ClientAuth) GetAccessTokenByGateWay(app utils.BkAppUser) (string, error) {
+	if auth == nil {
+		return "", errServerNotInit
+	}
+
+	var (
+		_    = "GetAccessTokenByGateWay"
+		path = "/auth_api/token/"
+	)
+
+	var (
+		url = auth.server + path
+		req = &AccessGateWayRequest{
+			AppCode:    app.BkAppCode,
+			AppSecret:  app.BkAppSecret,
+			IDProvider: "client",
+			GrantType:  "client_credentials",
+			Env:        "prod",
+		}
+		resp = &AccessTokenGateWayResp{}
+	)
+
+	result, body, errs := gorequest.New().
+		Timeout(defaultTimeOut).
+		Post(url).
+		Set("Content-Type", "application/json").
+		Set("Connection", "close").
+		SetDebug(true).
+		Send(req).
+		EndStruct(resp)
+
+	if len(errs) > 0 {
+		blog.Errorf("call api GetAccessTokenByGateWay failed: %v", errs[0])
 		return "", errs[0]
 	}
 
 	if result.StatusCode != http.StatusOK || resp.Code != "0" {
-		errMsg := fmt.Errorf("call GetAccessToken API error: code[%v], body[%v], err[%s]",
+		errMsg := fmt.Errorf("call GetAccessTokenByGateWay API error: code[%v], body[%v], err[%s]",
 			result.StatusCode, string(body), resp.Message)
 		return "", errMsg
 	}

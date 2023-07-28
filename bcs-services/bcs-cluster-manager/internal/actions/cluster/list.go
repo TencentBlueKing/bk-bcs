@@ -58,11 +58,13 @@ func NewListAction(model store.ClusterManagerModel, iam iam.PermClient) *ListAct
 	}
 }
 
+// validate request validation
 func (la *ListAction) validate() error {
 	if err := la.req.Validate(); err != nil {
 		return err
 	}
 
+	// env
 	if len(la.req.Environment) > 0 {
 		_, ok := EnvironmentLookup[la.req.Environment]
 		if !ok {
@@ -70,6 +72,7 @@ func (la *ListAction) validate() error {
 		}
 	}
 
+	// engineType
 	if len(la.req.EngineType) > 0 {
 		_, ok := EngineTypeLookup[la.req.EngineType]
 		if !ok {
@@ -77,6 +80,7 @@ func (la *ListAction) validate() error {
 		}
 	}
 
+	// clusterType
 	if len(la.req.ClusterType) > 0 {
 		_, ok := ClusterTypeLookup[la.req.ClusterType]
 		if !ok {
@@ -106,6 +110,7 @@ func (la *ListAction) getSharedCluster() error {
 		clusterIDs = append(clusterIDs, clusterList[i].ClusterID)
 	}
 
+	// set webAnnotations
 	if la.resp.WebAnnotations == nil {
 		la.resp.WebAnnotations = &cmproto.WebAnnotations{
 			Perms: make(map[string]*spb.Struct),
@@ -129,6 +134,7 @@ func (la *ListAction) getSharedCluster() error {
 	return nil
 }
 
+// listCluster cluster list
 func (la *ListAction) listCluster() error {
 	getSharedCluster := true
 
@@ -223,6 +229,7 @@ func (la *ListAction) GetProjectClustersV3Perm(user actions.PermInfo, clusterLis
 		err    error
 	)
 
+	// get user clusterList perms
 	v3Perm, err = getUserClusterPermList(la.iam, user, clusterList)
 	if err != nil {
 		blog.Errorf("listCluster GetUserClusterPermList failed: %v", err.Error())
@@ -300,6 +307,7 @@ func (la *ListProjectClusterAction) validate() error {
 	return nil
 }
 
+// listProjectCluster get project clusters
 func (la *ListProjectClusterAction) listProjectCluster() error {
 	condM := make(operator.M)
 
@@ -349,6 +357,7 @@ func (la *ListProjectClusterAction) listProjectCluster() error {
 	return nil
 }
 
+// getWebAnnotations get cluster perms
 func (la *ListProjectClusterAction) getWebAnnotations(projectID string, clusterIDs []string,
 	sharedClusters []*cmproto.Cluster) *cmproto.WebAnnotationsV2 {
 	username := iauth.GetUserFromCtx(la.ctx)
@@ -385,6 +394,7 @@ func (la *ListProjectClusterAction) getWebAnnotations(projectID string, clusterI
 		perms[id] = signalPerms[id]
 	}
 
+	// marshal data
 	s, err := utils.MarshalInterfaceToValue(perms)
 	if err != nil {
 		blog.Errorf("MarshalInterfaceToValue failed, perms %v, err: %s", perms, err.Error())
@@ -405,6 +415,7 @@ func (la *ListProjectClusterAction) GetProjectClustersV3Perm(user actions.PermIn
 		err    error
 	)
 
+	// get user perms
 	v3Perm, err = getUserClusterPermList(la.iam, user, clusterList)
 	if err != nil {
 		blog.Errorf("listCluster GetUserClusterPermList failed: %v", err.Error())
@@ -580,6 +591,7 @@ func (la *ListNodesInClusterAction) validate() error {
 		return err
 	}
 
+	// get cluster & cloud
 	la.cluster, err = la.model.GetCluster(la.ctx, la.req.ClusterID)
 	if err != nil {
 		return err
@@ -619,6 +631,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 		return err
 	}
 
+	// remove passwd
 	if !la.req.ShowPwd {
 		removeNodeSensitiveInfo(nodes)
 	}
@@ -628,6 +641,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 		cmNodes = append(cmNodes, transNodeToClusterNode(la.model, nodes[i]))
 	}
 
+	// get cluster nodes
 	k8sNodes := filterNodesRole(la.getK8sNodes(cmNodes), false)
 	la.nodes = mergeClusterNodes(la.req.ClusterID, cmNodes, k8sNodes)
 
@@ -699,6 +713,7 @@ func (la *ListNodesInClusterAction) handleNodes() {
 		zoneMap[zones[i].Zone] = zones[i]
 	}
 
+	// get node zoneName
 	for i := range la.nodes {
 		zone, ok := zoneMap[la.nodes[i].ZoneID]
 		if ok {
@@ -741,6 +756,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 		return err
 	}
 
+	// get cluster masters
 	masters, err := la.k8sOp.ListClusterNodes(la.ctx, la.req.ClusterID)
 	if err != nil {
 		blog.Warnf("ListClusterNodes %s failed, %s", la.req.ClusterID, err.Error())
@@ -750,6 +766,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 	masters = filterNodesRole(masters, true)
 	la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
 
+	// append cmdb host info
 	la.appendHostInfo()
 	// la.appendNodeAgent()
 	return nil

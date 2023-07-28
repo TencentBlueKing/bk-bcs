@@ -24,6 +24,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -612,12 +613,12 @@ func generateInstanceAdvanceSettings(template *proto.NodeTemplate) *api.Instance
 		}
 	}
 	// extra args
-	if template.ExtraArgs != nil {
-		// parse kubelet extra args
-		kubeletArgs := strings.Split(template.ExtraArgs[Kubelet], ";")
-		if len(kubeletArgs) > 0 {
-			result.ExtraArgs = &api.InstanceExtraArgs{Kubelet: kubeletArgs}
-		}
+	kubeletMap := cutils.GetKubeletParas(template)
+	// parse kubelet extra args
+	kubeletArgs := strings.Split(kubeletMap[Kubelet], ";")
+	if len(kubeletArgs) > 0 {
+		result.ExtraArgs = &api.InstanceExtraArgs{Kubelet: kubeletArgs}
 	}
+
 	return result
 }
